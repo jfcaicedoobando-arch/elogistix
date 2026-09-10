@@ -1,26 +1,29 @@
 /**
  * Editor de conceptos para DialogCrearNotaCredito. Extraído para
  * mantener el dialog ≤ 200 líneas.
+ *
+ * v13.823.297 — los totales salieron a `NotaCreditoResumen`; cada renglón
+ * muestra su importe con formato de moneda.
  */
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
+import { formatCurrency } from "@/lib/formatters/numbers";
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 interface Props {
   conceptos: ConceptoNotaCredito[];
-  monto: number;
   monedaFactura: string;
-  excedeSaldo: boolean;
   onAdd: () => void;
   onUpdate: (i: number, patch: Partial<ConceptoNotaCredito>) => void;
   onRemove: (i: number) => void;
 }
 
 export function NotaCreditoConceptosEditor(props: Props) {
-  const { conceptos, monto, monedaFactura, excedeSaldo, onAdd, onUpdate, onRemove } = props;
+  const { conceptos, monedaFactura, onAdd, onUpdate, onRemove } = props;
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -62,12 +65,13 @@ export function NotaCreditoConceptosEditor(props: Props) {
               />
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">
-              <Label size="sm">Clave SAT</Label>
-              <Input
-                value={c.clave_sat ?? ""}
-                onChange={(e) => onUpdate(i, { clave_sat: e.target.value })}
-                aria-label={`Clave SAT del concepto ${i + 1}`}
-              />
+              <Label size="sm">Importe</Label>
+              <p className="h-10 flex items-center justify-end tabular-nums text-body-sm">
+                {formatCurrency(
+                  subtotalLinea(Number(c.cantidad), Number(c.precio_unitario)),
+                  monedaFactura,
+                )}
+              </p>
             </div>
             <div className="col-span-1 flex justify-end">
               <Button
@@ -81,15 +85,6 @@ export function NotaCreditoConceptosEditor(props: Props) {
           </div>
         ))}
       </div>
-      <div className="flex justify-end text-body pt-1">
-        <span className="text-muted-foreground mr-2">Total:</span>
-        <strong className={`tabular-nums ${excedeSaldo ? "text-destructive" : ""}`}>
-          {monto.toFixed(2)} {monedaFactura}
-        </strong>
-      </div>
-      {excedeSaldo && (
-        <p className="text-body-sm text-destructive">El monto excede el saldo de la factura.</p>
-      )}
     </div>
   );
 }
