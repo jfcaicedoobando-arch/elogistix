@@ -153,6 +153,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
     type: "E",
     use: ctx.uso_cfdi,
     payment_form: ctx.forma_pago,
+    // Guía de llenado del SAT: un egreso no admite parcialidades ni REP.
+    payment_method: "PUE",
     currency: ctx.moneda,
     related: [ctx.uuid_factura_relacionada],
     relationship: "01",
