@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.269] - 2026-09-10
+- **fix(embarques)**: con filtro por Estado (p. ej. Borrador) el pie de paginación ya usa el total filtrado — 4 expedientes muestran "Página 1 de 1 · 1–4 de 4" en lugar del total global; la tabla y la paginación dejan de contradecirse.
+
 ## [13.823.268] - 2026-09-10
 - **mejora(costeo)**: Tarifas marítimas aprovecha mejor el escritorio HD con indicadores compactos, filtros y selector de vista en una sola franja, contenedor integrado bajo Ruta, columnas prioritarias estables y grupos más densos; conserva cálculos, aprobaciones y datos.
 
