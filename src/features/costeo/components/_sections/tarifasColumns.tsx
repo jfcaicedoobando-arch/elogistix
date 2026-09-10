@@ -61,7 +61,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
         align: "right",
         className: "tabular-nums hidden 2xl:table-cell",
         headerClassName: "hidden 2xl:table-cell",
-      }
+      },
       cell: ({ row }) => usd(Number(row.original.flete_base)),
     },
     {
