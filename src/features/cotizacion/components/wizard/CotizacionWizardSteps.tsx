@@ -6,7 +6,9 @@
  * `useWatch` por campo para evitar re-renders del wizard completo al teclear.
  */
 import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWatch } from "react-hook-form";
+
 import SeccionConceptosVentaCotizacion from "@/features/cotizacion/components/SeccionConceptosVentaCotizacion";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenCotizacion";
