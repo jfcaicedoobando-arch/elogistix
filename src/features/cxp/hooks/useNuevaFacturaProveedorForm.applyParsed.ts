@@ -11,6 +11,7 @@ import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
 import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import type { PendingCfdi } from "./useNuevaFacturaProveedorForm.helpers";
+import type { VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
 
 export interface ParsedApplyDeps {
   organizationId: string | null;
@@ -22,6 +23,10 @@ export interface ParsedApplyDeps {
   setTcOrigen: Dispatch<SetStateAction<TcOrigen>>;
   setTcFechaAplicada: Dispatch<SetStateAction<string | undefined>>;
   manualTcRef: MutableRefObject<boolean>;
+  /** Moneda de la factura antes de aplicar el documento parseado. */
+  monedaActual?: string;
+  /** Limpia los vínculos congelados en la moneda anterior. */
+  setVinculos?: Dispatch<SetStateAction<VinculosState>>;
 }
 
 function applyResult(deps: ParsedApplyDeps, result: {
