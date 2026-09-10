@@ -45,6 +45,11 @@ export async function crearAjustesFacturaProveedor(
   input: CrearAjustesInput,
 ): Promise<CrearAjustesResult> {
   const deltas = Object.values(input.vinculos)
+    // Candado de moneda: `monto` y `montoOriginal` se congelan en la moneda que
+    // la factura tenía al marcar el costo. Si esa moneda ya no es la de la
+    // factura, el delta compara peras con manzanas y produciría un ajuste
+    // fantasma (ELIMP00358: 60 USD − 1,013.68 MXN = −953.68). Se descarta.
+    .filter((v) => !v.monedaBase || v.monedaBase === input.moneda)
     .map((v) => ({
       vinculo: v,
       delta: currency(v.monto, { precision: 4 }).subtract(v.montoOriginal).value,
