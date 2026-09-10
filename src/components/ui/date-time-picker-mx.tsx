@@ -51,7 +51,7 @@ export function DateTimePickerMx({
   const avisoId = `${id ?? autoErrorId}-aviso`;
   const [open, setOpen] = useState(false);
   const {
-    text, invalid, inputRef, iso, hora, commit, handleChange, emitir, limpiar,
+    text, invalid, inputRef, iso, hora, commit, handleChange, handlePaste, emitir, limpiar,
   } = useDateTimePickerMxValor(value, onChange);
 
   const showError = invalid || !!errorText;
