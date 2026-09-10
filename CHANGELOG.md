@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.284] - 2026-09-10
+- **ui(cotizaciones, paso 2)**: la tabla de costos ya cabe en pantalla. Anchos de columna recortados (`COSTO_GRID_MIN_W` 1240px → 1040px) para que Utilidad, Margen y las acciones no queden fuera de vista en 1440px con barra lateral; los importes se muestran sin prefijo de moneda repetido (la moneda vive en el título de la sección) y en una sola línea.
+- **ui(cotizaciones)**: el icono de moneda pasa al lado del título de la sección (`WizardSection` acepta `icon`) en lugar de flotar junto al botón "Agregar".
+- **ui(cotizaciones, paso 3)**: los renglones de conceptos se alinean con el paso 2: columna de unidad más ancha, etiquetas unificadas ("Venta unit." / "Venta total" en vez de "P. Unitario" / "Total") y notas por renglón bajo demanda con el mismo botón del paso 2.
+- **ui(cotizaciones)**: notas compactas de una línea (expandibles) en pasos 2 y 3; espacio inferior reservado para que la barra fija de totales no tape la última leyenda del paso.
+- **ui(cotizaciones, paso 4)**: el aviso final deja de ser advertencia ámbar y pasa a informativo, con texto según el caso ("Se guardarán los cambios…" al editar, "…estado Borrador" al crear).
+- Sin cambios de cálculo, guardado, RPCs, permisos, IVA ni tipo de cambio.
+- Validación local: typecheck, ESLint focalizado, 748 pruebas de cotizaciones en verde y revisión visual de los 4 pasos a 1440px. CI/RLS/E2E completos quedan a GitHub Actions.
+
+
+
 ## [13.823.283] - 2026-09-10
 - **ui(cotizaciones)**: estandarización visual del wizard (pasos 1-4). Un solo ancho de contenido (antes los pasos 2-4 se encajonaban más angostos que el paso 1 y el contenido "saltaba"); pasos 2, 3 y 4 migrados a `WizardSection` para igualar título, espaciado y check de completado con el paso 1.
 - **ui(cotizaciones, paso 2)**: la cuadrícula de costos ahora tiene encabezados de columna (Concepto · Proveedor · Unidad · Cant. · Costo unit. · Venta unit. · Costo total · Venta total · Utilidad · Margen) con anchos compartidos entre encabezado, renglón y pie de totales (`costosLocal/columnasCosto.ts`); el pie ya cae bajo su columna. Las notas por renglón pasan a botón bajo demanda en lugar de campo siempre abierto.
