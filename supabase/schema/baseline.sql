@@ -28730,21 +28730,32 @@ BEGIN
   -- Ola 2 · O2.2: se bloquea por pendientes REALES (nota de pendiente o
   -- cola de recálculo), no por la bandera `definitiva` que sólo se marca al
   -- cerrar (círculo vicioso que obligaba a "forzar" todos los cierres).
-  SELECT COUNT(*) INTO v_com_count FROM comisiones_devengadas cd
-   WHERE cd.embarque_id=p_embarque_id
-     AND cd.estado='Devengada' AND cd.deleted_at IS NULL
-     AND cd.nota IS NOT NULL;
-  IF EXISTS (SELECT 1 FROM comisiones_recalculo_pendiente crp
-               JOIN pagos_factura pf2 ON pf2.id = crp.pago_factura_id
-               JOIN facturas f2 ON f2.id = pf2.factura_id
-              WHERE f2.embarque_id = p_embarque_id
-                AND crp.resuelto_at IS NULL) THEN
-    v_com_count := v_com_count + 1;
+  -- v13.823.291: si el embarque no genera comisión (override propio o cliente
+  -- marcado `sin_comision`), el check NO bloquea: la UI ya lo muestra en gris
+  -- "No aplica" y el checklist se veía completo mientras el candado contaba una
+  -- comisión huérfana (ELIMP00298: nota "Sin vendedora asignada al embarque").
+  v_sin_comision := public.resolver_sin_comision(p_embarque_id);
+  IF v_sin_comision THEN
+    v_com_count := 0;
+  ELSE
+    SELECT COUNT(*) INTO v_com_count FROM comisiones_devengadas cd
+     WHERE cd.embarque_id=p_embarque_id
+       AND cd.estado='Devengada' AND cd.deleted_at IS NULL
+       AND cd.nota IS NOT NULL;
+    IF EXISTS (SELECT 1 FROM comisiones_recalculo_pendiente crp
+                 JOIN pagos_factura pf2 ON pf2.id = crp.pago_factura_id
+                 JOIN facturas f2 ON f2.id = pf2.factura_id
+                WHERE f2.embarque_id = p_embarque_id
+                  AND crp.resuelto_at IS NULL) THEN
+      v_com_count := v_com_count + 1;
+    END IF;
   END IF;
   v_ok := (v_com_count=0); v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','comisiones_definitivas','ok',v_ok,
-    'detalle', jsonb_build_object('no_definitivas', v_com_count)));
+    'detalle', jsonb_build_object('no_definitivas', v_com_count,
+      'sin_comision', v_sin_comision)));
+
   BEGIN
     v_pnl := public.pnl_financiero_embarque(p_embarque_id);
     v_utilidad_mxn := COALESCE((v_pnl->>'utilidad_mxn')::numeric, 0);
