@@ -13,6 +13,7 @@ import { z } from "zod";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
+import { ivaExcedeTasaMaxima } from "@/features/cxp/utils/ivaPlausible";
 
 export interface FacturaFormValidationContext {
   total: number;
@@ -97,6 +98,11 @@ function validarImportes(values: Valores, refCtx: RefCtx, ctx: FacturaFormValida
     if (texto.trim() !== "" && Number(texto) < 0) {
       refCtx.addIssue({ code: "custom", path: [campo], message: mensaje });
     }
+  }
+  // FP-000256: IVA fantasma. El total se deriva de subtotal + IVA, así que un
+  // IVA imposible (50 sobre 60) infla la factura sin renglón que lo respalde.
+  if (ivaExcedeTasaMaxima(Number(values.subtotal) || 0, Number(values.iva) || 0)) {
+    refCtx.addIssue({ code: "custom", path: ["iva"], message: COPY_VALIDACION.ivaMayorATasaMaxima });
   }
   if (ctx.total <= 0) {
     refCtx.addIssue({ code: "custom", path: ["subtotal"], message: COPY_VALIDACION.totalMayorACero });
