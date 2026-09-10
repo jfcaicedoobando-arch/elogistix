@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.288] - 2026-09-10
+- **fix(compras)**: FP-000256 (WAN HAI `034G545923`) tenía IVA 50 USD sobre un subtotal de 60 USD leído del PDF, inflando el total a 110 USD sin renglón que lo respalde. Se corrigió a IVA 0 / total 60 USD (sin pagos, sin aprobar) con nota en bitácora; renglones, proveedor, embarque y folio intactos.
+- **fix(compras)**: la captura y la edición de facturas de proveedor bloquean un IVA mayor al 16% del subtotal (`ivaExcedeTasaMaxima`), en lugar de sólo advertir con el monto declarado por operaciones.
+- **fix(compras)**: `_cxp_validar_aprobacion` gana `LC_CXP_IVA_IMPLAUSIBLE` como red de seguridad al aprobar (IVA > 16% del subtotal + 0.01 de tolerancia).
+
 ## [13.823.287] - 2026-09-10
 - **fix(facturación)**: un pago cuyo REP fue cancelado ante el SAT queda **anulado**: deja de contar en `saldo_factura`, `saldo_factura_bruto`, `recalcular_estado_factura`, `cartera_pendiente`, `cxc_aging_clientes`, `direccion_totales` y `portal_factura_resumen_saldo`. Las facturas dejan de mostrarse "Pagada" con el único cobro cancelado (21 facturas históricas recalculadas sin tocar importes ni comprobantes).
 - **fix(comisiones)**: `calcular_comision_pago` trata el pago con REP cancelado igual que un pago eliminado — comisión `Cancelada`, o `Por recuperar` si ya se había liquidado.
