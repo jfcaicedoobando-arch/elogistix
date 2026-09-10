@@ -130,7 +130,7 @@ export function useEmbarquesPageState() {
     pageSize,
     totalCountServer: resultadoServer?.count ?? 0,
   });
-  const { expedientesCount, contenedoresCount, totalPages, totalCountServer, paginationTotal } = counts;
+  const { expedientesCount, contenedoresCount, totalPages, paginationTotal } = counts;
 
   const filtered = useMemo(() => {
     if (!fullSetActivo) return dedupedAll;

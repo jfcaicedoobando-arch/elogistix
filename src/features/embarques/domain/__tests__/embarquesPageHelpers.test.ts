@@ -60,10 +60,29 @@ describe("embarquesPageHelpers", () => {
     expect(off.expedientesCount).toBe(100);
     expect(off.contenedoresCount).toBe(100);
     expect(off.totalPages).toBe(10);
+    expect(off.paginationTotal).toBe(100);
     const on = computeCounts({ estadoFilterActivo: true, ...base });
     expect(on.expedientesCount).toBe(2);
     expect(on.contenedoresCount).toBe(3);
     expect(on.totalPages).toBe(1);
+    expect(on.paginationTotal).toBe(2);
+  });
+
+  it("computeCounts: filtro Borrador (4 filas) => paginación 1–4 de 4", () => {
+    // Regresión 13.823.269: con Estado=Borrador el pie decía "1–7 de 7"
+    // (total global sin filtrar) aunque la tabla mostraba 4 expedientes.
+    const cuatro = [row({ id: "1" }), row({ id: "2" }), row({ id: "3" }), row({ id: "4" })];
+    const r = computeCounts({
+      estadoFilterActivo: true,
+      dedupedAll: cuatro,
+      containersForView: cuatro,
+      sortedAll: cuatro,
+      pageSize: 50,
+      totalCountServer: 7,
+    });
+    expect(r.paginationTotal).toBe(4);
+    expect(r.totalPages).toBe(1);
+    expect(r.expedientesCount).toBe(4);
   });
 
   it("resolveExtras escoge branchB cuando estado activo y branchA cuando no", () => {
