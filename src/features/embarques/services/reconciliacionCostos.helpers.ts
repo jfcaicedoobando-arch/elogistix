@@ -5,6 +5,8 @@
 
 export interface FacturaVinculada {
   proveedor_factura_id: string;
+  /** Folio interno de Libre Carga (FP-XXXXXX); es el que se busca en el sistema. */
+  folio_interno: string | null;
   folio_proveedor: string;
   fecha_emision: string | null;
   fecha_vencimiento: string | null;
