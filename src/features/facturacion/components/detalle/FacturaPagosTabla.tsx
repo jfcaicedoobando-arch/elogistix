@@ -46,15 +46,41 @@ interface Props {
 export function FacturaPagosTabla({
   pagos, facturaId, moneda, canEdit, onEliminar, onCancelarRep, onPreviewRep,
 }: Props) {
+  // v13.823.287 — un pago con REP cancelado queda ANULADO: se conserva como
+  // antecedente fiscal pero ya no cuenta para el saldo de la factura.
+  const anulado = (p: PagoRow) => p.estado_rep === "Cancelado";
+  const importeClase = (p: PagoRow) =>
+    anulado(p) ? "text-muted-foreground line-through" : undefined;
+
   const columns: ColumnDef<PagoRow, unknown>[] = defineColumns<PagoRow>([
-    { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha }, cell: ({ row }) => formatDate(row.original.fecha_pago) },
+    {
+      id: "fecha", header: "Fecha", meta: { width: COL_W.fecha },
+      cell: ({ row }) => (
+        <div className="space-y-0.5">
+          <div>{formatDate(row.original.fecha_pago)}</div>
+          {anulado(row.original) && (
+            <div className="text-label text-muted-foreground">Anulado</div>
+          )}
+        </div>
+      ),
+    },
     {
       id: "monto", header: "Monto", meta: { width: COL_W.monto, align: "right" },
-      cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda),
+      cell: ({ row }) => (
+        <span className={importeClase(row.original)}>
+          {formatCurrency(Number(row.original.monto), row.original.moneda)}
+        </span>
+      ),
     },
     {
       id: "aplicado", header: "Aplicado", meta: { width: COL_W.monto, align: "right" },
-      cell: ({ row }) => formatCurrency(Number(row.original.monto_aplicado_factura), moneda),
+      cell: ({ row }) => (
+        <span className={importeClase(row.original)}>
+          {anulado(row.original)
+            ? formatCurrency(0, moneda)
+            : formatCurrency(Number(row.original.monto_aplicado_factura), moneda)}
+        </span>
+      ),
     },
     {
       id: "forma", header: "Forma", meta: { width: COL_W.short },
@@ -81,11 +107,13 @@ export function FacturaPagosTabla({
             estadoRep={p.estado_rep ?? null}
             serieRep={p.serie_rep ?? null}
             folioRep={p.folio_rep ?? null}
+            cancellationStatus={p.rep_cancellation_status ?? null}
             onPreview={onPreviewRep}
           />
         );
       },
     },
+
     ...(canEdit
       ? [{
           id: "acciones", header: "", meta: { width: COL_W.acciones },
