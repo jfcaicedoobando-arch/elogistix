@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.274] - 2026-09-10
+- **fix(embarques)**: el presupuesto de la pestaña Utilidad (conceptos de venta, costo y seguro) usa el tipo de cambio congelado del embarque, igual que Costos; antes se derivaba del DOF de la ETA y cambiaba al mover fechas. Facturas reales de cliente/proveedor conservan su T/C documental con el del embarque como respaldo. Nueva prueba SQL `pnl_presupuesto_tc_congelado.sql`.
+
+
 ## [13.823.273] - 2026-09-10
 - **fix(cotizaciones)**: el detalle pluraliza correctamente vigencia y demás contadores visibles (`1 día`, `N días`); la barra de totales prioriza las monedas con conceptos y omite importes cero sin mezclar ni recalcular divisas.
 
