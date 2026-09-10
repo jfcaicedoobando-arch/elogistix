@@ -42,7 +42,7 @@ export default function Embarques() {
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize, limpiarFiltros,
-    filtered, expedientesCount, contenedoresCount, totalPages, totalCount, alertasResumen,
+    filtered, expedientesCount, totalPages, totalCount, alertasResumen,
   } = state;
 
 
@@ -62,7 +62,7 @@ export default function Embarques() {
   // de la tabla y parecía una carga colgada.
   const headerDescription = isLoading
     ? "Cargando embarques…"
-    : buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+    : buildEmbarquesDescription(expedientesCount, filterEstado !== "todos");
 
 
 
