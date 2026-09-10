@@ -21,9 +21,10 @@ describe("MR-UI-01: título del documento", () => {
 });
 
 describe("MR-UI-02: tabla usable en 1280x720", () => {
-  it("Flete y Recargos se retiran bajo xl para liberar ancho", () => {
-    const matches = columnas.match(/hidden xl:table-cell/g) ?? [];
+  it("Flete y Recargos se retiran bajo 2xl para liberar ancho en HD", () => {
+    const matches = columnas.match(/hidden 2xl:table-cell/g) ?? [];
     expect(matches.length).toBeGreaterThanOrEqual(2);
+    expect(columnas).not.toContain("hidden xl:table-cell");
     expect(columnas).not.toContain("hidden lg:table-cell");
   });
   it("Acciones queda fija a la derecha cuando hay desbordamiento", () => {
