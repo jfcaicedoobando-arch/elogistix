@@ -113,4 +113,9 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "La serie ya tiene facturas emitidas: no se puede cambiar su prefijo ni su folio inicial.",
   LC_BACKFILL_SIN_MONTO_CONFIABLE:
     "No se puede completar el histórico porque el monto original no es confiable. Captura el importe manualmente.",
+
+  LC_OVERRIDE_FUERA_DE_SELECCION:
+    "Un ajuste de IVA apunta a un concepto que no está en esta proforma. Recarga la pantalla y vuelve a seleccionar los conceptos.",
+  LC_PROFORMA_REQUIERE_ACEPTACION:
+    "Sólo se pueden facturar proformas aceptadas por el cliente. Registra la aceptación antes de convertirla a factura.",
 };
