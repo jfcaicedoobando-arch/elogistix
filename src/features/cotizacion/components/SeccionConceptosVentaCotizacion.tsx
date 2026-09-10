@@ -1,6 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WizardSection } from "@/components/shared/WizardSection";
 import { AlertTriangle, Plus } from "lucide-react";
+
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks";
