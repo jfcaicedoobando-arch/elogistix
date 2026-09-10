@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { esUuid } from "@/lib/esUuid";
 import { fromDb, fromDbChecked } from "@/lib/supabase/cast";
 import { proformaRowsDbSchema } from "@/features/cotizacion/services/readSchemas";
 
