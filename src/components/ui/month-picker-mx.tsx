@@ -9,7 +9,7 @@ import {
   pickerErrorClass, pickerIconClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
 import { PATRON_PERIODO } from "./date-picker-mx-segmentos";
-import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { manejarAtajosSegmento } from "./date-picker-mx-teclado";
 import { MonthPickerMxPanel } from "./month-picker-mx-panel";
 import { Hint } from "@/components/shared/Hint";
 import { useMonthPickerMxValor, ymADisplay } from "./month-picker-mx-valor";
@@ -43,7 +43,7 @@ export function MonthPickerMx({
   const errorId = id ? `${id}-error` : autoErrorId;
   const [open, setOpen] = useState(false);
   const {
-    text, invalid, inputRef, commit, handleChange, emitir, limpiar,
+    text, invalid, inputRef, commit, handleChange, handlePaste, emitir, limpiar,
   } = useMonthPickerMxValor(value, onChange);
 
   const showError = invalid || !!errorText;
@@ -65,8 +65,9 @@ export function MonthPickerMx({
           autoComplete="off"
           value={text}
           onChange={handleChange}
-          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
+          onFocus={(e) => e.currentTarget.select()}
+          onPaste={handlePaste}
+
           onKeyDown={(e) => {
             if (e.key === "Escape" && open) {
               e.preventDefault();

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.290] - 2026-09-10
+- **fix(ui)**: `DatePickerMx` ya permite teclear la fecha corrida sobre una fecha existente — al enfocar se selecciona todo el texto, la máscara pasa los dígitos excedentes al siguiente segmento (`13/032` → `13/03/2`) y se conserva la posición del cursor a media captura (`caretTrasMascara`); se quitó `maxLength` que descartaba dígitos.
+- **fix(ui)**: `-`, `_`, `+` y `=` dejaron de ser atajos de ±1 día en los pickers MX: son separadores válidos (`13-03-2026`). Subir/bajar queda en `↑`/`↓`, `Re Pág`/`Av Pág` y `T` = hoy.
+- **fix(ui)**: el pegado de fechas lo maneja el picker (siempre `preventDefault`) y `parseFlexible` acepta hora/zona (`2026-03-13T10:00`), año de 2 dígitos (`13/3/26`), texto con ruido (`Vence: 13/03/2026 (viernes)`) y sólo dígitos (`13032026`, `20260313`); si no hay fecha reconocible marca "Fecha inválida" en lugar de dejar texto mutilado.
+- **fix(ui)**: `DateTimePickerMx` y `MonthPickerMx` ganan el mismo pegado tolerante (fecha con hora, `YYYY-MM`, fecha completa) y selección total al enfocar.
+
+
+
 ## [13.823.289] - 2026-09-10
 - **ui(embarques)**: en el tab Costos, la columna "Factura(s)" muestra el folio interno de Libre Carga (`FP-XXXXXX`) en lugar del folio del proveedor, y la etiqueta es un enlace al detalle de la factura de proveedor (`/compras/facturas/:id`). El folio del proveedor se conserva en el tooltip; si falta folio interno se muestra el del proveedor.
 

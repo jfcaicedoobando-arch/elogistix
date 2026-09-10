@@ -31,8 +31,11 @@ export function resolverAtajo(e: EventoTecla): AccionAtajo | null {
 
   const k = e.key;
   if (k === "t" || k === "T" || k === "h" || k === "H") return { tipo: "hoy" };
-  if (k === "+" || k === "=" || k === "ArrowUp") return { tipo: "ajustar", delta: 1 };
-  if (k === "-" || k === "_" || k === "ArrowDown") return { tipo: "ajustar", delta: -1 };
+  // v13.823.290 — `+ = - _` ya NO son atajos: son separadores válidos al
+  // teclear una fecha (`13-03-2026`). Subir/bajar queda en las flechas.
+  if (k === "ArrowUp") return { tipo: "ajustar", delta: 1 };
+  if (k === "ArrowDown") return { tipo: "ajustar", delta: -1 };
+
   if (k === "PageUp") {
     return { tipo: "ajustarUnidad", unidad: e.shiftKey ? "anio" : "mes", delta: 1 };
   }

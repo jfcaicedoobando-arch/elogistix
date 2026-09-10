@@ -8,7 +8,7 @@ import { useDatePickerMxValor } from "./date-picker-mx-valor";
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 import { manejarTeclaFecha } from "./date-picker-mx-keys";
 import { PATRON_FECHA } from "./date-picker-mx-segmentos";
-import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { manejarAtajosSegmento } from "./date-picker-mx-teclado";
 import { motivoInhabilMx } from "@/lib/date/festivosMx";
 import {
   MENSAJE_FECHA_INVALIDA, PICKER_AYUDA_TECLADO, PLACEHOLDER_FECHA, pickerAvisoClass,
@@ -91,8 +91,10 @@ export function DatePickerMx({
           autoFocus={autoFocus}
           value={text}
           onChange={handleChange}
-          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA)}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA)}
+          // v13.823.290 — al enfocar se selecciona TODO: el primer dígito
+          // reinicia la captura y se puede teclear la fecha corrida encima.
+          onFocus={() => inputRef.current?.select()}
+
           onKeyDown={(e) => {
             const consumida = manejarTeclaFecha(e, {
               open,
@@ -122,7 +124,7 @@ export function DatePickerMx({
           aria-label={ariaLabel ?? (id ? undefined : title)}
           aria-invalid={showError || undefined}
           aria-describedby={describedBy}
-          maxLength={10}
+
           className="flex-1 min-w-0 bg-transparent text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         />
 

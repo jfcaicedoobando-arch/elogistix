@@ -15,7 +15,7 @@ import {
 import { Hint } from "@/components/shared/Hint";
 import { dateToIso, isoToDate } from "./date-picker-mx-helpers";
 import { PATRON_FECHA_HORA } from "./date-picker-mx-segmentos";
-import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { manejarAtajosSegmento } from "./date-picker-mx-teclado";
 import {
   HORA_DEFAULT, useDateTimePickerMxValor, valorADisplay,
 } from "./date-time-picker-mx-valor";
@@ -51,7 +51,7 @@ export function DateTimePickerMx({
   const avisoId = `${id ?? autoErrorId}-aviso`;
   const [open, setOpen] = useState(false);
   const {
-    text, invalid, inputRef, iso, hora, commit, handleChange, emitir, limpiar,
+    text, invalid, inputRef, iso, hora, commit, handleChange, handlePaste, emitir, limpiar,
   } = useDateTimePickerMxValor(value, onChange);
 
   const showError = invalid || !!errorText;
@@ -81,8 +81,9 @@ export function DateTimePickerMx({
           autoComplete="off"
           value={text}
           onChange={handleChange}
-          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA_HORA)}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA_HORA)}
+          onFocus={(e) => e.currentTarget.select()}
+          onPaste={handlePaste}
+
           onKeyDown={(e) => {
             if (e.key === "Escape" && open) {
               e.preventDefault();

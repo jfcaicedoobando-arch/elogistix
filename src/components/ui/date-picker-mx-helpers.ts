@@ -52,22 +52,59 @@ export function applyMask(raw: string): string {
  *  - `1/`        → `01/`
  *  - `01/1`      → `01/1` (aún puede volverse `01/12`)
  *  - `01032026`  → `01/03/2026` (captura corrida, delega en `applyMask`)
+ *  - `13/032`    → `13/03/2` (el dígito excedente pasa al siguiente segmento)
+ *
+ * `pad = false` desactiva el cero a la izquierda: se usa cuando el cursor está
+ * a media captura y agregar dígitos desplazaría el caret (v13.823.290).
  */
-export function applyMaskTyping(raw: string): string {
+export function applyMaskTyping(raw: string, pad = true): string {
   const limpio = raw.replace(/[^\d/.-]/g, "");
   if (!/[/.-]/.test(limpio)) return applyMask(limpio);
   const trailing = /[/.-]$/.test(limpio);
   const partes = limpio.split(/[/.-]+/).slice(0, 3);
   while (partes.length > 1 && partes[partes.length - 1] === "") partes.pop();
-  const cerradas = trailing ? partes.length : partes.length - 1;
 
-  const out = partes.map((p, i) => {
-    const v = p.slice(0, i === 2 ? 4 : 2);
-    return i < 2 && i < cerradas ? v.padStart(2, "0") : v;
-  });
+  // Los dígitos que ya no caben en un segmento pasan al siguiente: así se
+  // puede teclear corrido aunque la máscara ya haya insertado el separador.
+  const capacidad = [2, 2, 4];
+  const crudos: string[] = [];
+  let excedente = "";
+  for (let i = 0; i < 3; i += 1) {
+    const seg = partes[i] ?? "";
+    if (!seg && !excedente) break;
+    const bruto = seg || excedente;
+    excedente = seg ? bruto.slice(capacidad[i]) : "";
+    crudos.push(bruto.slice(0, capacidad[i]));
+  }
+
+  const cerradas = Math.max(
+    trailing ? partes.length : partes.length - 1,
+    crudos.length - 1,
+  );
+  const out = crudos.map((v, i) => (
+    pad && i < 2 && i < cerradas ? v.padStart(2, "0") : v
+  ));
   const res = out.join("/") + (trailing && out.length < 3 ? "/" : "");
   return res.slice(0, 10);
 }
+
+
+/**
+ * Posición del caret dentro del texto enmascarado para conservar el mismo
+ * número de dígitos a la izquierda del cursor.
+ */
+export function caretTrasMascara(masked: string, digitosAntes: number): number {
+  if (digitosAntes <= 0) return 0;
+  let vistos = 0;
+  for (let i = 0; i < masked.length; i += 1) {
+    if (masked[i] >= "0" && masked[i] <= "9") {
+      vistos += 1;
+      if (vistos === digitosAntes) return i + 1;
+    }
+  }
+  return masked.length;
+}
+
 
 
 /** Parsea DD/MM/YYYY → ISO YYYY-MM-DD, o `null` si es inválido. */
@@ -105,25 +142,55 @@ function buildIso(y: number, m: number, d: number): string | null {
   return dateToIso(date);
 }
 
+/** Quita hora/zona y el texto sobrante alrededor de la fecha pegada. */
+function limpiarRuido(s: string): string {
+  return s
+    .replace(/[t\s]\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\s*(z|[ap]\.?\s?m\.?|[+-]\d{2}:?\d{2})?$/i, "")
+    .replace(/^\D+/, "")
+    .replace(/\D+$/, "")
+    .trim();
+}
+
+/** Año de dos dígitos → siglo con pivote 70 (`26` → 2026, `98` → 1998). */
+function anioPleno(n: number): number {
+  if (n >= 100) return n;
+  return n < 70 ? 2000 + n : 1900 + n;
+}
+
+/** Fallback: sólo dígitos (`13032026` = DDMMYYYY, `20260313` = YYYYMMDD, `130326`). */
+function porDigitos(s: string): string | null {
+  const d = s.replace(/\D/g, "");
+  if (d.length === 8) {
+    return buildIso(Number(d.slice(4)), Number(d.slice(2, 4)), Number(d.slice(0, 2)))
+      ?? buildIso(Number(d.slice(0, 4)), Number(d.slice(4, 6)), Number(d.slice(6, 8)));
+  }
+  if (d.length === 6) {
+    return buildIso(anioPleno(Number(d.slice(4))), Number(d.slice(2, 4)), Number(d.slice(0, 2)));
+  }
+  return null;
+}
+
 /**
  * Parseo tolerante para valores pegados desde otras fuentes. Acepta:
- *  - `DD/MM/YYYY`, `D/M/YYYY` con separadores `/`, `-` o `.`
- *  - `YYYY-MM-DD` / `YYYY/MM/DD` (ISO)
+ *  - `DD/MM/YYYY`, `D/M/YYYY`, `D/M/YY` con separadores `/`, `-` o `.`
+ *  - `YYYY-MM-DD` / `YYYY/MM/DD` (ISO), con o sin hora (`2026-03-13T10:00`)
  *  - `DD [de] MMM[M...] [de] YYYY` en español (enero…diciembre / ene…dic)
+ *  - Texto con ruido alrededor (`Vence: 13/03/2026 (viernes)`)
+ *  - Sólo dígitos (`13032026`, `20260313`, `130326`)
  * Devuelve ISO `YYYY-MM-DD` o `null` si no logra reconocer un valor válido.
  */
 export function parseFlexible(raw: string): string | null {
   if (!raw) return null;
-  const s = raw.trim().toLowerCase();
+  const s = limpiarRuido(raw.trim().toLowerCase());
   if (!s) return null;
 
   // ISO YYYY-MM-DD o YYYY/MM/DD
-  const iso = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  const iso = s.match(/^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})$/);
   if (iso) return buildIso(Number(iso[1]), Number(iso[2]), Number(iso[3]));
 
-  // DD[/-.]MM[/-.]YYYY
-  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
-  if (dmy) return buildIso(Number(dmy[3]), Number(dmy[2]), Number(dmy[1]));
+  // DD[/-.]MM[/-.]YY(YY)
+  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/);
+  if (dmy) return buildIso(anioPleno(Number(dmy[3])), Number(dmy[2]), Number(dmy[1]));
 
   // DD [de] MES [de] YYYY (español)
   const es = s.match(/^(\d{1,2})\s+(?:de\s+)?([a-záéíóú]+)\.?\s+(?:de\s+)?(\d{4})$/i);
@@ -135,5 +202,6 @@ export function parseFlexible(raw: string): string | null {
     if (idx >= 0) return buildIso(Number(es[3]), idx + 1, Number(es[1]));
   }
 
-  return null;
+  return porDigitos(s);
 }
+

@@ -6,7 +6,7 @@
  * separadores se insertan solos (`14/08/2026 09:30`).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { parseDisplay } from "./date-picker-mx-helpers";
+import { parseDisplay, parseFlexible } from "./date-picker-mx-helpers";
 
 export const HORA_DEFAULT = "09:00";
 
@@ -84,6 +84,23 @@ export function useDateTimePickerMxValor(value: string, onChange: (v: string) =>
     }
   };
 
+  /**
+   * Pegado tolerante (v13.823.290): el picker siempre toma el control para
+   * aceptar fecha con o sin hora, ISO, texto con ruido o sólo dígitos.
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pegado = e.clipboardData.getData("text");
+    if (!pegado.trim()) return;
+    const isoFecha = parseFlexible(pegado);
+    if (!isoFecha) { setInvalid(true); if (value) onChange(""); return; }
+    const h = pegado.match(/(\d{1,2}):(\d{2})/);
+    const hh = h ? Math.min(Number(h[1]), 23) : Number(HORA_DEFAULT.slice(0, 2));
+    const mi = h ? Math.min(Number(h[2]), 59) : 0;
+    emitir(`${isoFecha}T${String(hh).padStart(2, "0")}:${String(mi).padStart(2, "0")}`);
+  };
+
+
   const limpiar = () => {
     setText("");
     setInvalid(false);
@@ -94,5 +111,8 @@ export function useDateTimePickerMxValor(value: string, onChange: (v: string) =>
   const iso = /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : "";
   const hora = value.slice(11, 16) || HORA_DEFAULT;
 
-  return { text, invalid, inputRef, iso, hora, commit, handleChange, emitir, limpiar };
+  return {
+    text, invalid, inputRef, iso, hora, commit, handleChange, handlePaste, emitir, limpiar,
+  };
+
 }
