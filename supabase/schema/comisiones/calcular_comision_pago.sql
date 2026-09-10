@@ -23,7 +23,9 @@ DECLARE
   v_cobrado_acotado numeric(14,2);
 BEGIN
   SELECT * INTO v_pago FROM pagos_factura WHERE id = p_pago_factura_id;
-  IF NOT FOUND OR v_pago.deleted_at IS NOT NULL THEN
+  -- v13.823.287: un pago con REP cancelado esta anulado y se revierte igual
+  -- que un pago eliminado (Cancelada, o Por recuperar si ya se liquido).
+  IF NOT FOUND OR v_pago.deleted_at IS NOT NULL OR v_pago.estado_rep = 'Cancelado' THEN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
@@ -31,7 +33,7 @@ BEGIN
     -- liquidada: no se cancela en silencio, se marca para recuperacion.
     UPDATE comisiones_devengadas
        SET estado = 'Por recuperar',
-           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago eliminado con comision liquidada'),
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago anulado o eliminado con comision liquidada'),
            updated_at = now()
      WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
