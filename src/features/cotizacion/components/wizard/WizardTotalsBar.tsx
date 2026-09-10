@@ -33,12 +33,14 @@ export function WizardTotalsBar({ plUSD, plMXN }: Props) {
   const hayMXN = plMXN.totalVenta > 0;
 
   return (
+    // v13.823.286 — ya no flota sobre el contenido: vive dentro del pie del
+    // wizard, en la misma franja que Anterior/Siguiente.
     <div
       role="status"
       aria-label="Totales de la cotización"
-      className="sticky bottom-0 left-0 right-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sticky-top"
+      className="border-b pb-2 mb-2"
     >
-      <div className="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-body">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-body">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <Metric label="Costo" mxn={plMXN.totalCosto} usd={plUSD.totalCosto} />
           {/* Bugs 4 y 5: costo, venta y margen salen de la MISMA fuente (los

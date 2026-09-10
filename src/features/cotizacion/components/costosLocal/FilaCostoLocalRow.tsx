@@ -16,6 +16,9 @@ import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaS
 import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
 import { cn } from "@/lib/utils";
 
+/** Formato de presentación de los campos de dinero (sin prefijo de moneda). */
+const formatoMonto = (n: number) => formatNumber(n, { decimals: 2 });
+
 interface Props {
   fila: FilaCostoLocal;
   gi: number;
@@ -33,8 +36,14 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
     parse: parseCantidad,
     fallback: 1,
   });
-  const costoField = useNumericField(fila.costo_unitario, (n) => onUpdate(gi, "costo_unitario", n));
-  const ventaField = useNumericField(fila.precio_venta, (n) => onUpdate(gi, "precio_venta", n));
+  // v13.823.286 — los campos de dinero se leen con formato al salir del campo
+  // (6100 → 6,100.00), igual que las columnas calculadas del mismo renglón.
+  const costoField = useNumericField(fila.costo_unitario, (n) => onUpdate(gi, "costo_unitario", n), {
+    formatDisplay: formatoMonto,
+  });
+  const ventaField = useNumericField(fila.precio_venta, (n) => onUpdate(gi, "precio_venta", n), {
+    formatDisplay: formatoMonto,
+  });
   const cantidadExcedida = cantidadFueraDeRango(fila.cantidad);
   const costoTotal = fila.cantidad * fila.costo_unitario;
   const ventaTotal = fila.cantidad * fila.precio_venta;
@@ -48,7 +57,9 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
   // El campo de notas ya no vive abierto en cada renglón (hacía la tabla
   // altísima): se abre a demanda y queda abierto si la fila ya trae notas.
   const [notasAbiertas, setNotasAbiertas] = useState(false);
-  const mostrarNotas = notasAbiertas || !!fila.notas;
+  // v13.823.286 — cerradas por defecto incluso si ya hay texto: el icono queda
+  // resaltado como indicador y la lista deja de crecer de alto.
+  const mostrarNotas = notasAbiertas;
 
   return (
     <div
@@ -91,6 +102,9 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
           className={cn("h-9 text-body", COL_COSTO.proveedor)}
           placeholder="Proveedor"
           aria-label="Proveedor"
+          /* El nombre largo se corta en el campo; el valor completo se lee al
+             pasar el cursor en vez de ensanchar la columna. */
+          title={fila.proveedor || undefined}
         />
 
         <div className={COL_COSTO.unidad}>

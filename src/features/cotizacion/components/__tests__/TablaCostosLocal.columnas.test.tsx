@@ -46,9 +46,12 @@ function renderTabla(f: FilaCostoLocal = fila) {
 describe("TablaCostosLocal · columnas alineadas", () => {
   it("muestra encabezados de columna cuando hay filas", () => {
     renderTabla();
-    for (const label of ["Concepto", "Proveedor", "Unidad", "Cant.", "Costo unit.", "Venta unit.", "Costo total", "Venta total", "Utilidad", "Margen"]) {
+    for (const label of ["Concepto", "Proveedor", "Unidad", "Cant.", "Costo unit.", "Venta unit.", "Costo total", "Venta total", "Margen"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
+    // v13.823.286: "Utilidad" aparece también en el resumen compacto del pie
+    // que se muestra cuando las columnas calculadas están ocultas.
+    expect(screen.getAllByText(/Utilidad/).length).toBeGreaterThan(0);
   });
 
   it("el total de la columna usa el mismo ancho que su encabezado", () => {
@@ -77,7 +80,9 @@ describe("TablaCostosLocal · columnas alineadas", () => {
     expect(screen.getByText(/Sin costos/)).toBeInTheDocument();
   });
 
-  it("las notas están cerradas hasta pedirlas y abiertas si la fila ya trae notas", () => {
+  // v13.823.286: las notas quedan cerradas aunque la fila ya traiga texto (el
+  // icono es el indicador); así la tabla no crece de alto sola.
+  it("las notas están cerradas hasta pedirlas, incluso si la fila ya trae notas", () => {
     const { unmount } = renderTabla();
     expect(screen.queryByLabelText("Notas del concepto")).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Agregar notas"));
@@ -85,6 +90,8 @@ describe("TablaCostosLocal · columnas alineadas", () => {
     unmount();
 
     renderTabla({ ...fila, notas: "Sujeto a revisión" });
+    expect(screen.queryByLabelText("Notas del concepto")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Agregar notas"));
     expect(screen.getByLabelText("Notas del concepto")).toHaveValue("Sujeto a revisión");
   });
 });
