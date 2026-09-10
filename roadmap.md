@@ -5,7 +5,7 @@
 - [x] Unificar filtros, contador y selector de vista en una sola franja
 - [x] Priorizar Ruta, Total USD, Vigencia, Estado y Acciones sin superposición
 - [x] Pulir densidad y jerarquía de la vista agrupada
-- [ ] Validación focalizada, visual, versión, changelog y manifiesto
+- [x] Validación focalizada, visual, versión, changelog y manifiesto
 
 ## Remate tarifas marítimas 13.823.266
 - [x] MR-UI-02 P2 — Fondos opacos en celdas sticky Ruta/Acciones para filas pares, hover y selección

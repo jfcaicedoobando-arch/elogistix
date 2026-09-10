@@ -32,7 +32,6 @@ export default function CosteoTarifas() {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
 
-  const showList = !s.isLoading && s.tarifasFiltradas.length > 0;
   const showEmpty = !s.isLoading && !s.isError && s.tarifasFiltradas.length === 0;
 
   return (
