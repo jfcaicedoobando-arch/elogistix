@@ -59,7 +59,8 @@ describe("calcularSaldoFactura (canon A1)", () => {
 
 describe("esEstadoSinSaldo", () => {
   it("sólo reconoce los estados terminales", () => {
-    expect(esEstadoSinSaldo("Pagada")).toBe(true);
+    expect(esEstadoSinSaldo("Cancelada")).toBe(true);
+    expect(esEstadoSinSaldo("Pagada")).toBe(false);
     expect(esEstadoSinSaldo("Emitida")).toBe(false);
     expect(esEstadoSinSaldo(null)).toBe(false);
     expect(esEstadoSinSaldo(undefined)).toBe(false);
