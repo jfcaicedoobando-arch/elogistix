@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$
+AS $$
 DECLARE
   v_emb embarques%ROWTYPE;
   v_checks jsonb := '[]'::jsonb; v_puede boolean := true; v_ok boolean;
@@ -283,5 +283,5 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$
+END $$
 ;
