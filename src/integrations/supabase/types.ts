@@ -511,6 +511,7 @@ export type Database = {
           importado_por: string | null
           motivo_ignorar: string
           organization_id: string
+          origen: string
           pago_factura_id: string | null
           pago_factura_lote_id: string | null
           pago_proveedor_id: string | null
@@ -537,6 +538,7 @@ export type Database = {
           importado_por?: string | null
           motivo_ignorar?: string
           organization_id?: string
+          origen?: string
           pago_factura_id?: string | null
           pago_factura_lote_id?: string | null
           pago_proveedor_id?: string | null
@@ -563,6 +565,7 @@ export type Database = {
           importado_por?: string | null
           motivo_ignorar?: string
           organization_id?: string
+          origen?: string
           pago_factura_id?: string | null
           pago_factura_lote_id?: string | null
           pago_proveedor_id?: string | null
@@ -8987,6 +8990,10 @@ export type Database = {
         Args: { p_cotizacion_id: string; p_motivo?: string }
         Returns: number
       }
+      asegurar_movimiento_cobro_factura: {
+        Args: { p_pago_id: string }
+        Returns: Json
+      }
       asignar_conceptos_a_proforma: {
         Args: { p_concepto_ids: string[]; p_proforma_id: string }
         Returns: {
@@ -10679,6 +10686,7 @@ export type Database = {
         }
         Returns: number
       }
+      movimiento_origen_por_hash: { Args: { p_hash: string }; Returns: string }
       nc_aplicadas_en_moneda_factura: {
         Args: { p_factura_id: string }
         Returns: number
