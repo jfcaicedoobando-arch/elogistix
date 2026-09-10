@@ -11,20 +11,21 @@ interface Props {
   /** Columna derecha: bitácora, historial, avisos contextuales. */
   rail?: ReactNode;
   className?: string;
+  /** Breakpoint a partir del cual el historial se coloca al costado. */
+  railBreakpoint?: "xl" | "2xl";
 }
 
-export function DocumentoLayout({ children, rail, className }: Props) {
+export function DocumentoLayout({ children, rail, className, railBreakpoint = "xl" }: Props) {
   if (!rail) {
     return <div className={cn("space-y-4", className)}>{children}</div>;
   }
   return (
     <div
       className={cn(
-        // v13.548.0: el riel se coloca al costado desde `xl` (1280). En `lg`
-        // dejaba la columna principal en ~380px y la tabla de conceptos se
-        // cortaba; ahora debajo de 1280 el historial se apila al final.
-        "grid grid-cols-1 gap-4 xl:grid-cols-[1fr_19rem] 2xl:grid-cols-[1fr_21rem]",
-
+        "grid grid-cols-1 gap-4",
+        railBreakpoint === "xl"
+          ? "xl:grid-cols-[1fr_19rem] 2xl:grid-cols-[1fr_21rem]"
+          : "2xl:grid-cols-[1fr_21rem]",
         className,
       )}
     >

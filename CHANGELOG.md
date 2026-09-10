@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.272] - 2026-09-10
+- **fix(embarques/proformas)**: el checklist de cierre renumera consecutivamente sólo sus secciones visibles; en proformas el historial se apila debajo a 1280×720 para mantener completos y legibles Importe e IVA.
+
 ## [13.823.271] - 2026-09-10
 - **fix(cotizaciones)**: pluralización de vigencia en detalle — `1 día` en lugar de `1 días`; se mantiene `N días` para N ≠ 1.
 

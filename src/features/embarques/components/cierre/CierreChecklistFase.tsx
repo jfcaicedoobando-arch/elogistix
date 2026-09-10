@@ -40,7 +40,7 @@ export function CierreChecklistFase({
           </Badge>
         }
       >
-        {grupo.fase.numero}. {grupo.fase.titulo}
+        {grupo.numeroVisible}. {grupo.fase.titulo}
       </SectionHeading>
       <ul className="space-y-2">
         {grupo.checks.map((c) => (

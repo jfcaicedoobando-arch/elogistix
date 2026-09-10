@@ -49,6 +49,21 @@ describe("agruparChecksPorFase", () => {
     expect(grupos[0].fase.id).toBe("otros");
   });
 
+  it("renumera consecutivamente las fases visibles cuando falta una intermedia", () => {
+    const grupos = agruparChecksPorFase([
+      { regla: "documentos_completos", ok: true },
+      { regla: "facturas_entrantes_capturadas", ok: false },
+      { regla: "venta_conceptos_facturados", ok: false },
+    ]);
+
+    expect(grupos.map((grupo) => grupo.fase.id)).toEqual([
+      "documentos",
+      "costos",
+      "facturacion",
+    ]);
+    expect(grupos.map((grupo) => grupo.numeroVisible)).toEqual([1, 2, 3]);
+  });
+
   it("sin checks devuelve lista vacía", () => {
     expect(agruparChecksPorFase([])).toEqual([]);
   });

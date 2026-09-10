@@ -13,6 +13,8 @@ export interface CheckCierreEntrada {
 
 export interface GrupoCierre {
   fase: FaseCierre;
+  /** Posición consecutiva entre las fases que sí se muestran. */
+  numeroVisible: number;
   checks: CheckCierreEntrada[];
   okCount: number;
   total: number;
@@ -35,6 +37,7 @@ export function agruparChecksPorFase(checks: readonly CheckCierreEntrada[]): Gru
 
     grupos.push({
       fase,
+      numeroVisible: grupos.length + 1,
       checks: items,
       okCount: items.filter((c) => c.ok).length,
       total: items.length,
