@@ -13,6 +13,10 @@ const columnas = readFileSync(
   join(ROOT, "src/features/costeo/components/_sections/tarifasColumns.tsx"),
   "utf8",
 );
+const tabla = readFileSync(
+  join(ROOT, "src/features/costeo/components/CosteoTarifasTable.tsx"),
+  "utf8",
+);
 
 describe("MR-UI-01: título del documento", () => {
   it("CosteoTarifas fija el título de la pestaña", () => {
@@ -27,7 +31,13 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
     expect(columnas).not.toContain("hidden xl:table-cell");
     expect(columnas).not.toContain("hidden lg:table-cell");
   });
-  it("Acciones queda fija a la derecha cuando hay desbordamiento", () => {
+  it("Estado reserva el ancho de Acciones y ambas quedan fijas sin superponerse", () => {
     expect(columnas).toContain("stickyRight: true");
+    expect(columnas).toContain('width: COL_W.nombre,\n        className: "sticky right-40');
+    expect(columnas).toContain('headerClassName: "sticky right-40');
+  });
+  it("muestra un affordance visible para el desplazamiento horizontal en HD", () => {
+    expect(tabla).toContain("Desplaza horizontalmente para consultar columnas secundarias");
+    expect(tabla).toContain("2xl:hidden");
   });
 });

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.265] - 2026-09-10
+- **fix(costeo)**: remate MR-UI-02 — Estado queda fijo inmediatamente a la izquierda de Acciones con 160 px reservados, evitando que chips y botones se superpongan en 1280×720; una pista visible señala el desplazamiento horizontal de columnas secundarias.
+
 ## [13.823.264] - 2026-09-10
 - **fix(costeo)**: residual MR-UI-02 — Flete y Recargos ahora se ocultan bajo 2xl (anteriormente bajo xl), para que Ruta, Total USD, Vigencia, Estado y Acciones quepan en 1280×720 sin scroll horizontal inicial; se mantiene sticky derecho de Acciones y el affordance de desplazamiento de `DataTable`.
 
