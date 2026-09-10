@@ -132,7 +132,12 @@ export function calcularEstatus(
 
 /** Mapea una fila cruda (con joins embebidos) al shape de UI. */
 export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
-  const pagosActivos = (f.pagos_factura ?? []).filter((p) => !p.deleted_at);
+  // v13.823.295 — los pagos con REP cancelado están anulados: no suman a
+  // cobrado ni aparecen en la cartera del cliente (el antecedente fiscal vive
+  // en el detalle de la factura).
+  const pagosActivos = (f.pagos_factura ?? []).filter(
+    (p) => !p.deleted_at && !esPagoAnulado(p),
+  );
   const notasActivas = (f.factura_notas_credito ?? []).filter(
     (n) => !n.deleted_at && n.estado === "Aplicada",
   );
