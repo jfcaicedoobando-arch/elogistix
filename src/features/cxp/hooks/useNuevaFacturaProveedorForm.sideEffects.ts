@@ -107,6 +107,7 @@ export async function vincularSafe(params: {
             proveedorId: values.provId,
             proveedorNombre: values.provNombre,
             vinculos,
+            totalFactura: total,
           });
           ajustesCreados = r.ajustesCreados;
         } catch (ajErr) {
