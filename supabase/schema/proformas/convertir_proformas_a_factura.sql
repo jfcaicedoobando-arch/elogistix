@@ -1,7 +1,7 @@
 -- Fuente canónica de public.convertir_proformas_a_factura
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
--- Última migración: 20260913000400_r170_02_fecha_negocio_mx.sql (R170-02, fecha de negocio MX).
+-- Última migración: guard LC_PROFORMA_REQUIERE_ACEPTACION (v13.823.279).
 
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas
@@ -75,6 +75,20 @@ BEGIN
     WHERE id = ANY(p_proforma_ids) AND estado_proforma = 'facturada'
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_YA_FACTURADA: una o más proformas ya fueron facturadas' USING ERRCODE='P0002';
+  END IF;
+
+  -- v13.823.279 — Candado de aceptación: la UI ya oculta la acción para
+  -- proformas pendientes o rechazadas, pero la RPC podía llamarse directo y
+  -- facturar sin la respuesta del cliente. Para clientes de casa, la RPC
+  -- `aceptar_proforma_sin_autorizacion` deja `estado_cliente = 'aceptada'`,
+  -- así que ese flujo sigue funcionando igual.
+  IF EXISTS (
+    SELECT 1 FROM public.proformas
+    WHERE id = ANY(p_proforma_ids)
+      AND deleted_at IS NULL
+      AND coalesce(estado_cliente, 'pendiente') <> 'aceptada'
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_REQUIERE_ACEPTACION: una o más proformas no están aceptadas por el cliente (pendiente o rechazada)' USING ERRCODE='P0002';
   END IF;
 
   SELECT * INTO v_first FROM public.proformas
