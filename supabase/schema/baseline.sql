@@ -23483,30 +23483,32 @@ CREATE FUNCTION public.recalcular_estado_factura() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_factura_id uuid;
-  v_total numeric;
-  v_pagado numeric;
-  v_ncs numeric;
-  v_saldo numeric;
-  v_vencimiento date;
-  v_estado_actual estado_factura;
-  v_nuevo_estado estado_factura;
+  v_factura_id uuid; v_total numeric; v_pagado numeric; v_saldo numeric;
+  v_vencimiento date; v_estado_actual estado_factura; v_nuevo_estado estado_factura;
   v_prev_flag text;
 BEGIN
   v_factura_id := COALESCE(NEW.factura_id, OLD.factura_id);
-  SELECT total, fecha_vencimiento, estado
-    INTO v_total, v_vencimiento, v_estado_actual
-  FROM facturas
-  WHERE id = v_factura_id;
+
+  SELECT total, fecha_vencimiento, estado INTO v_total, v_vencimiento, v_estado_actual
+  FROM facturas WHERE id = v_factura_id;
+
   IF v_estado_actual IN ('Cancelada', 'Borrador', 'Sustituida') THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
+
+  -- v13.823.294: `saldo_factura` devuelve 0 cuando la factura ya está 'Pagada'
+  -- (atajo para facturas legacy sin pagos capturados). Eso hacía imposible
+  -- salir de 'Pagada' al anularse el único pago por REP cancelado.
+  -- `saldo_factura_bruto` calcula el saldo real y también excluye pagos con
+  -- REP cancelado.
+  v_saldo := public.saldo_factura_bruto(v_factura_id);
+
+  -- v13.823.287: los pagos con REP cancelado estan anulados y no cuentan.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
-  FROM public.pagos_factura
-  WHERE factura_id = v_factura_id AND deleted_at IS NULL;
-  -- OLA 1 · C1: NC convertidas a la moneda de la factura (fuente única).
-  v_ncs := public._nc_aplicadas_moneda_factura(v_factura_id);
-  v_saldo := COALESCE(v_total, 0) - v_pagado - COALESCE(v_ncs, 0);
+  FROM pagos_factura
+  WHERE factura_id = v_factura_id AND deleted_at IS NULL
+    AND COALESCE(estado_rep, '') <> 'Cancelado';
+
   IF v_saldo <= 0.01 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN

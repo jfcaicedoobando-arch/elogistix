@@ -22,7 +22,12 @@ BEGIN
     RETURN COALESCE(NEW, OLD);
   END IF;
 
-  v_saldo := public.saldo_factura(v_factura_id);
+  -- v13.823.294: `saldo_factura` devuelve 0 cuando la factura ya está 'Pagada'
+  -- (atajo para facturas legacy sin pagos capturados). Eso hacía imposible
+  -- salir de 'Pagada' al anularse el único pago por REP cancelado.
+  -- `saldo_factura_bruto` calcula el saldo real y también excluye pagos con
+  -- REP cancelado.
+  v_saldo := public.saldo_factura_bruto(v_factura_id);
 
   -- v13.823.287: los pagos con REP cancelado estan anulados y no cuentan.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
