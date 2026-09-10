@@ -1,21 +1,112 @@
--- Fuente canónica de public.saldo_factura.
--- v13.646.0 (BUG-04): las notas de crédito se convierten a la moneda de la
--- factura con la cascada CFDI > DOF > TC del embarque, igual que cartera_pendiente.
+-- Fuente canónica del SALDO DE FACTURA (Ola v17 — fuente única de verdad).
+--
+-- Un solo cálculo: public._saldo_factura_calc
+--   saldo = total − Σ pagos vigentes − Σ NC aplicadas (en moneda de la factura)
+-- Terminal (saldo 0) SÓLO 'Cancelada' y 'Sustituida'. 'Pagada' ya NO es
+-- terminal: ese atajo legacy creaba la circularidad saldo → estado → saldo que
+-- impedía sacar de 'Pagada' una factura cuyo único pago quedó ANULADO por
+-- cancelación del REP (bug F1015).
+--
+-- Envolturas (sólo ACL, sin fórmula propia):
+--   public.saldo_factura       — ACL por organización + portal del cliente.
+--   public.saldo_factura_bruto — ACL por organización (usada por el trigger
+--                                recalcular_estado_factura).
+--
+-- Helpers PUROS (IMMUTABLE, sin acceso a tablas → seguros para authenticated):
+--   public.nc_convertida_a_moneda_factura — única cascada de conversión de NC.
+--   public.pago_rep_anulado               — única definición de pago anulado.
 
-CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)
- RETURNS numeric
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION public.nc_convertida_a_moneda_factura(
+  p_monto numeric,
+  p_moneda_nc text,
+  p_tc_nc numeric,
+  p_moneda_factura text,
+  p_tc_factura numeric
+)
+RETURNS numeric
+LANGUAGE sql
+IMMUTABLE
+SET search_path TO ''
+AS $function$
+  SELECT CASE
+    WHEN p_monto IS NULL OR p_moneda_factura IS NULL THEN 0
+    WHEN p_moneda_nc = p_moneda_factura THEN p_monto
+    WHEN p_moneda_factura = 'MXN' AND p_moneda_nc <> 'MXN' AND COALESCE(p_tc_nc, 0) > 1
+      THEN p_monto * p_tc_nc
+    WHEN p_moneda_factura <> 'MXN' AND p_moneda_nc = 'MXN' AND COALESCE(p_tc_factura, 0) > 1
+      THEN p_monto / p_tc_factura
+    WHEN p_moneda_factura <> 'MXN' AND p_moneda_nc <> 'MXN'
+         AND p_moneda_factura <> p_moneda_nc
+         AND COALESCE(p_tc_nc, 0) > 1 AND COALESCE(p_tc_factura, 0) > 1
+      THEN (p_monto * p_tc_nc) / p_tc_factura
+    ELSE 0
+  END
+$function$;
+
+REVOKE ALL ON FUNCTION public.nc_convertida_a_moneda_factura(numeric, text, numeric, text, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.nc_convertida_a_moneda_factura(numeric, text, numeric, text, numeric) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.pago_rep_anulado(p_estado_rep text)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+SET search_path TO ''
+AS $function$
+  SELECT lower(btrim(COALESCE(p_estado_rep, ''))) = 'cancelado'
+$function$;
+
+REVOKE ALL ON FUNCTION public.pago_rep_anulado(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.pago_rep_anulado(text) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public._saldo_factura_calc(p_factura_id uuid)
+RETURNS numeric
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_total numeric; v_estado estado_factura; v_org uuid;
-  v_caller_org uuid; v_uid uuid; v_pagos numeric; v_ncs numeric;
-  v_moneda text; v_tc numeric; v_cliente uuid;
+  v_total numeric; v_moneda text; v_tc numeric; v_estado estado_factura;
+  v_pagos numeric; v_ncs numeric;
 BEGIN
-  SELECT total, estado, organization_id, moneda::text, tipo_cambio, cliente_id
-    INTO v_total, v_estado, v_org, v_moneda, v_tc, v_cliente
-  FROM public.facturas WHERE id = p_factura_id AND deleted_at IS NULL;
+  SELECT f.total, f.moneda::text, f.tipo_cambio, f.estado
+    INTO v_total, v_moneda, v_tc, v_estado
+  FROM public.facturas f
+  WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
+  IF NOT FOUND THEN RETURN 0; END IF;
+
+  IF v_estado IN ('Cancelada', 'Sustituida') THEN RETURN 0; END IF;
+
+  SELECT COALESCE(SUM(p.monto_aplicado_factura), 0) INTO v_pagos
+  FROM public.pagos_factura p
+  WHERE p.factura_id = p_factura_id AND p.deleted_at IS NULL
+    AND NOT public.pago_rep_anulado(p.estado_rep);
+
+  SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+           nc.monto, nc.moneda::text, nc.tipo_cambio, v_moneda, v_tc)), 0)
+    INTO v_ncs
+  FROM public.factura_notas_credito nc
+  WHERE nc.factura_id = p_factura_id
+    AND nc.deleted_at IS NULL
+    AND nc.estado = 'Aplicada';
+
+  RETURN COALESCE(v_total, 0) - COALESCE(v_pagos, 0) - COALESCE(v_ncs, 0);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public._saldo_factura_calc(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._saldo_factura_calc(uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)
+RETURNS numeric
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid; v_cliente uuid; v_uid uuid; v_caller_org uuid;
+BEGIN
+  SELECT f.organization_id, f.cliente_id INTO v_org, v_cliente
+  FROM public.facturas f WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
   IF NOT FOUND THEN RETURN 0; END IF;
 
   v_uid := auth.uid();
@@ -33,42 +124,42 @@ BEGIN
     END IF;
   END IF;
 
-  -- BUG-2026-08-25: 'Pagada' también es terminal (facturas legacy sin pagos
-  -- capturados generaban adeudo fantasma en el estado de cuenta).
-  -- v13.823.145: 'Borrador' NO es terminal — una factura sin timbrar debe
-  -- reportar saldo por cobrar (antes mostraba "cobrado = total" sin pagos).
-  IF v_estado IN ('Cancelada', 'Sustituida', 'Pagada') THEN RETURN 0; END IF;
-
-  -- v13.823.287: un pago cuyo REP fue cancelado ante el SAT queda ANULADO:
-  -- conserva su historia fiscal pero deja de contar para el saldo.
-  SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagos
-  FROM public.pagos_factura
-  WHERE factura_id = p_factura_id AND deleted_at IS NULL
-    AND COALESCE(estado_rep, '') <> 'Cancelado';
-
-  -- BUG-04 (auditoría 2026-08-18): misma conversión que `cartera_pendiente`.
-  SELECT COALESCE(SUM(
-      CASE
-        WHEN nc.moneda::text = v_moneda THEN nc.monto
-        WHEN v_moneda = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-          THEN nc.monto * nc.tipo_cambio
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text = 'MXN' AND v_tc > 1
-          THEN nc.monto / v_tc
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text <> 'MXN'
-             AND v_moneda <> nc.moneda::text
-             AND nc.tipo_cambio > 1 AND v_tc > 1
-          THEN (nc.monto * nc.tipo_cambio) / v_tc
-        ELSE 0
-      END), 0) INTO v_ncs
-  FROM public.factura_notas_credito nc
-  WHERE nc.factura_id = p_factura_id AND nc.deleted_at IS NULL AND nc.estado = 'Aplicada';
-
-  RETURN COALESCE(v_total, 0) - v_pagos - v_ncs;
+  RETURN public._saldo_factura_calc(p_factura_id);
 END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.saldo_factura(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.saldo_factura(uuid) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.saldo_factura_bruto(p_factura_id uuid)
+RETURNS numeric
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid; v_uid uuid; v_caller_org uuid;
+BEGIN
+  SELECT f.organization_id INTO v_org
+  FROM public.facturas f WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
+  IF NOT FOUND THEN RETURN 0; END IF;
+
+  v_uid := auth.uid();
+  v_caller_org := public.current_user_org_id();
+  IF v_uid IS NOT NULL
+     AND auth.role() <> 'service_role'
+     AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
+    IF v_caller_org IS NULL OR v_org IS DISTINCT FROM v_caller_org THEN
+      RETURN 0;
+    END IF;
+  END IF;
+
+  RETURN public._saldo_factura_calc(p_factura_id);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.saldo_factura_bruto(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_bruto(uuid) TO authenticated, service_role;
 
 -- Guard: impide registrar NC en moneda no convertible.
 CREATE OR REPLACE FUNCTION public.guard_nc_cliente_moneda_convertible()

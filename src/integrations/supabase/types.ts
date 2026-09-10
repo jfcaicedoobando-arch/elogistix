@@ -8723,6 +8723,7 @@ export type Database = {
         Args: { p_permitir_generico?: boolean; p_rfc: string }
         Returns: boolean
       }
+      _saldo_factura_calc: { Args: { p_factura_id: string }; Returns: number }
       _seed_demo_limpiar_financiero: { Args: never; Returns: undefined }
       _tipo_iva_desde_tasa: {
         Args: { _aplica_iva: boolean; _tasa: number }
@@ -10682,6 +10683,16 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: number
       }
+      nc_convertida_a_moneda_factura: {
+        Args: {
+          p_moneda_factura: string
+          p_moneda_nc: string
+          p_monto: number
+          p_tc_factura: number
+          p_tc_nc: number
+        }
+        Returns: number
+      }
       notificacion_cliente_marcar_leida: {
         Args: { p_id: string }
         Returns: undefined
@@ -10741,6 +10752,7 @@ export type Database = {
       org_requerida: { Args: { p_org: string }; Returns: string }
       org_scope: { Args: never; Returns: string }
       pago_detalle: { Args: { p_id: string; p_tipo: string }; Returns: Json }
+      pago_rep_anulado: { Args: { p_estado_rep: string }; Returns: boolean }
       pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
       portal_factura_resumen_saldo: {
         Args: { p_factura_id: string }

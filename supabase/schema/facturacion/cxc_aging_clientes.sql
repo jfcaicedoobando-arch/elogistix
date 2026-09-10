@@ -29,12 +29,15 @@ BEGIN
     FROM public.pagos_factura pf
     JOIN public.facturas f ON f.id = pf.factura_id AND f.deleted_at IS NULL
     WHERE pf.deleted_at IS NULL
-      AND COALESCE(pf.estado_rep, '') <> 'Cancelado'
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY pf.factura_id
   ),
+  -- Ola v17: antes restaba ncf.monto EN CRUDO (NC en USD contra facturas MXN).
   nc AS (
-    SELECT ncf.factura_id, COALESCE(SUM(ncf.monto), 0) AS aplicado
+    SELECT ncf.factura_id,
+           COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+             ncf.monto, ncf.moneda::text, ncf.tipo_cambio, f.moneda::text, f.tipo_cambio)), 0) AS aplicado
     FROM public.factura_notas_credito ncf
     JOIN public.facturas f ON f.id = ncf.factura_id AND f.deleted_at IS NULL
     WHERE ncf.estado = 'Aplicada' AND ncf.deleted_at IS NULL
