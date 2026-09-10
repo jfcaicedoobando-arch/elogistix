@@ -9,7 +9,7 @@ import {
   pickerErrorClass, pickerIconClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
 import { PATRON_PERIODO } from "./date-picker-mx-segmentos";
-import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { manejarAtajosSegmento } from "./date-picker-mx-teclado";
 import { MonthPickerMxPanel } from "./month-picker-mx-panel";
 import { Hint } from "@/components/shared/Hint";
 import { useMonthPickerMxValor, ymADisplay } from "./month-picker-mx-valor";
