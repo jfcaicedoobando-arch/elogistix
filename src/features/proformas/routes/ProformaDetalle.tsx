@@ -90,6 +90,7 @@ function ProformaDetalleContent({ data }: ContentProps) {
   return (
     <PageContainer>
       <DocumentoDetalleShell
+        railBreakpoint="2xl"
         kpis={buildKpisProforma({
           totales,
           diasCredito: proforma.dias_credito,

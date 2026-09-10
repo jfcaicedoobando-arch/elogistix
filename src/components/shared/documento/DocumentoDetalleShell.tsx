@@ -24,17 +24,19 @@ interface Props {
   /** Cuerpo principal: normalmente `DocumentoTabs`. */
   children: ReactNode;
   className?: string;
+  /** Breakpoint a partir del cual el historial se coloca al costado. */
+  railBreakpoint?: "xl" | "2xl";
 }
 
 export function DocumentoDetalleShell({
-  header, kpis, banners, rail, children, className,
+  header, kpis, banners, rail, children, className, railBreakpoint,
 }: Props) {
   return (
     <div className={cn("space-y-4", className)}>
       {header}
       {kpis && kpis.length > 0 ? <DocumentoKpiStrip kpis={kpis} /> : null}
       {banners}
-      <DocumentoLayout rail={rail}>{children}</DocumentoLayout>
+      <DocumentoLayout rail={rail} railBreakpoint={railBreakpoint}>{children}</DocumentoLayout>
     </div>
   );
 }

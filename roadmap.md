@@ -1,5 +1,10 @@
 # Roadmap
 
+## Remate Embarques/Proformas 13.823.272
+- [x] Renumerar consecutivamente las fases visibles del checklist de cierre
+- [x] Apilar el historial de proforma debajo en HD para no recortar importes
+- [ ] Cierre: regresiones focalizadas, versión, changelog y manifiesto; sin publicar
+
 ## Pulido visual de Tarifas marítimas 13.823.268
 - [x] Compactar encabezado e indicadores para mostrar más filas en 1280×720
 - [x] Unificar filtros, contador y selector de vista en una sola franja
