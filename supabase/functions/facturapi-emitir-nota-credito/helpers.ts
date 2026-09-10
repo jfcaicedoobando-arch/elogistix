@@ -54,6 +54,8 @@ export interface FacturapiNcPayload {
   serie?: string;
   use: string;
   payment_form: string;
+  /** Los CFDI de egreso no admiten parcialidades: siempre PUE. */
+  payment_method: "PUE";
   currency: string;
   exchange?: number;
   /** Ola 4 · N1 — tag de correlación PENDING:<uuid>. */
