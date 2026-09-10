@@ -2,8 +2,8 @@
 
 ## Remate tarifas marítimas 13.823.266
 - [x] MR-UI-02 P2 — Fondos opacos en celdas sticky Ruta/Acciones para filas pares, hover y selección
-- [ ] Regresión mínima y validación visual 1280×720 con scroll/sidebar expandido y colapsado
-- [ ] Cierre: versión patch, changelog y manifiesto; sin publicar ni suites globales
+- [x] Regresión mínima y validación visual 1280×720 con fila par/impar y sidebar expandido/colapsado
+- [x] Cierre: versión patch, changelog y manifiesto; sin publicar ni suites globales
 
 ## Bloque toasts (aprobado)
 - [ ] Pulir sonner.tsx: X centrada verticalmente, quitar hueco ícono-texto, X con área de toque cómoda
