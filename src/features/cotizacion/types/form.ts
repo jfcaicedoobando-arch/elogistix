@@ -109,6 +109,8 @@ export interface CotizacionInitialData {
   oportunidad_id?: string | null;
   /** A1/A7: moneda persistida; se conserva como moneda del vínculo al editar. */
   moneda?: string | null;
+  /** 13.823.281: TC USD/MXN congelado (sólo para el encabezado de una cotización mixta). */
+  tipo_cambio_usd?: number | null;
   prospecto_empresa: string;
   prospecto_contacto: string;
   prospecto_email: string;

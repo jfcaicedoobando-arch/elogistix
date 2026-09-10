@@ -25,6 +25,10 @@ function rowsOpcionales(c: CotizacionRow): [string, string][] {
   if (c.frecuencia) out.push(['Frecuencia', c.frecuencia]);
   if (c.ruta_texto) out.push(['Ruta', c.ruta_texto]);
   if (c.tipo_movimiento) out.push(['Tipo de movimiento', c.tipo_movimiento]);
+  // 13.823.281: cotización mixta USD/MXN. Se informa el TC usado SÓLO para el
+  // total del encabezado; cada concepto conserva su moneda e importe original.
+  const tc = Number(c.tipo_cambio_usd ?? 0);
+  if (tc > 0) out.push(['Tipo de cambio USD/MXN', `${tc.toFixed(4)} (sólo para el total del encabezado)`]);
   return out;
 }
 

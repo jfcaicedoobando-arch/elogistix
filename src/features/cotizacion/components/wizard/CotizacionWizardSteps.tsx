@@ -13,6 +13,8 @@ import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenC
 import PasoDatosGenerales from "@/features/cotizacion/components/wizard/PasoDatosGenerales";
 import Paso1ProgressSidebar from "@/features/cotizacion/components/wizard/Paso1ProgressSidebar";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
+import { TipoCambioCotizacionCard } from "@/features/cotizacion/components/wizard/TipoCambioCotizacionCard";
+import { hayMezclaDeMonedas } from "@/features/cotizacion/domain/mezclaMonedas";
 
 type WizardForm = ReturnType<typeof import("@/features/cotizacion/hooks").useCotizacionWizardForm>;
 
@@ -36,6 +38,9 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
   const modo = useWatch({ control, name: "modo" });
   const incoterm = useWatch({ control, name: "incoterm" });
   const tipo = useWatch({ control, name: "tipo" });
+
+  // 13.823.281: el TC sólo se pide cuando de verdad hay importes en ambas monedas.
+  const hayMezclaMonedas = hayMezclaDeMonedas(w.conceptosUSD, w.conceptosMXN);
 
   if (w.currentStep === 1) {
     return (
@@ -66,6 +71,9 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
               <Info className="h-4 w-4 flex-shrink-0" />
               Pre-llenado desde Costos y utilidad. Puedes ajustar si es necesario.
             </div>
+          )}
+          {hayMezclaMonedas && (
+            <TipoCambioCotizacionCard value={w.tipoCambioUsd} onChange={w.setTipoCambioUsd} />
           )}
           <SeccionConceptosVentaCotizacion
             conceptosUSD={w.conceptosUSD}

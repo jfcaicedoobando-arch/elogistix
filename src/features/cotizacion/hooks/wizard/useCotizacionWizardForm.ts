@@ -55,6 +55,13 @@ interface HookDeps {
   onFinalized?: (cotizacionId: string) => void;
 }
 
+/** 13.823.281: TC persistido → estado inicial (sólo valores positivos válidos). */
+function tcInicial(valor: number | null | undefined): number | null {
+  const n = Number(valor ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+
 /**
  * Orquestador del wizard de cotización.
  * Combina form-state + cálculos + handlers de pasos (delegados a useCotizacionWizardSteps).
@@ -92,6 +99,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
   const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
+  // 13.823.281: TC USD/MXN de la cotización. Vive fuera del form porque sólo
+  // afecta el subtotal del encabezado en cotizaciones mixtas (no es un dato de
+  // los datos generales ni participa en el autosave del paso 1).
+  const [tipoCambioUsd, setTipoCambioUsd] = useState<number | null>(
+    tcInicial(initialData?.tipo_cambio_usd),
+  );
 
   const conceptos = useConceptosVentaCotizacion({ initialUSD, initialMXN });
   const {
@@ -148,7 +161,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     currentStep, setCurrentStep,
     msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
-    totalUSD, tasaIva, buildPaso1Data,
+    totalUSD, tasaIva, tipoCambioUsd, buildPaso1Data,
     mutations: mutationsGuardadas, onFinalized,
   });
 
@@ -164,6 +177,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     conceptosUSD, conceptosMXN,
     actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
+    tipoCambioUsd, setTipoCambioUsd,
     plUSD, plMXN,
     costosUSD: costosUSDFiltered,
     costosMXN: costosMXNFiltered,

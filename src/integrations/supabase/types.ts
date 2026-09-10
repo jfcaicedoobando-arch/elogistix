@@ -2664,6 +2664,7 @@ export type Database = {
           tarifas_informativas: Json
           tiempo_transito_dias: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_usd: number | null
           tipo_carga: string
           tipo_contenedor: string | null
           tipo_documento: string
@@ -2753,6 +2754,7 @@ export type Database = {
           tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_usd?: number | null
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_documento?: string
@@ -2842,6 +2844,7 @@ export type Database = {
           tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_usd?: number | null
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_documento?: string
