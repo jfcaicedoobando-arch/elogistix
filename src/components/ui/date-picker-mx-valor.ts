@@ -72,11 +72,25 @@ export function useDatePickerMxValor({
     if (value) onChange("");
   }, [emitIfValid, onChange, value]);
 
+  const colocarCaret = (pos: number) => {
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (el && document.activeElement === el) el.setSelectionRange(pos, pos);
+    });
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
+    const raw = e.target.value;
+    const pos = e.target.selectionStart ?? raw.length;
+    const alFinal = pos >= raw.length;
     // Máscara tolerante: respeta los separadores tecleados (`1/3/2026`).
-    const masked = applyMaskTyping(e.target.value);
+    // A media captura no se rellena con ceros para no desplazar el cursor.
+    const masked = applyMaskTyping(raw, alFinal);
     setText(masked);
+    colocarCaret(alFinal
+      ? masked.length
+      : caretTrasMascara(masked, raw.slice(0, pos).replace(/\D/g, "").length));
     if (invalid) setInvalid(false);
     if (masked.length === 10) {
       const iso = parseDisplay(masked);
@@ -88,15 +102,21 @@ export function useDatePickerMxValor({
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
+    // El pegado SIEMPRE lo maneja el picker: el navegador mutilaría formatos
+    // con hora o texto alrededor (v13.823.290).
+    e.preventDefault();
     const pegado = e.clipboardData.getData("text");
-    if (!pegado) return;
+    if (!pegado.trim()) return;
     const iso = parseFlexible(pegado);
     if (iso) {
-      e.preventDefault();
       setText(isoToDisplay(iso));
       emitIfValid(iso);
+      return;
     }
+    setInvalid(true);
+    if (value) onChange("");
   };
+
 
   const limpiar = () => {
     setText("");
