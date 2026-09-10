@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.297] - 2026-09-10
+- **feat(facturacion)**: modal de nueva nota de crédito simplificado — atajos "Por el saldo completo", selección de conceptos de la factura y descuento por porcentaje; resumen con subtotal, IVA, total y saldo resultante antes de guardar.
+- **fix(facturacion)**: el uso del CFDI de la NC queda fijo en `G02` (única clave que el SAT acepta en un egreso) y la forma de pago se sugiere sola: `15` Condonación si la factura no tiene cobros vigentes, o la forma del cobro si ya se cobró (cobros con REP cancelado no cuentan).
+- **fix(facturapi)**: `buildNcPayload` envía `payment_method: "PUE"` explícito; los CFDI de egreso no admiten parcialidades.
+
+
 ## [13.823.296] - 2026-09-10
 - **refactor(facturacion)**: fuente ÚNICA de verdad del saldo de factura. Nuevo `public._saldo_factura_calc` (total − cobros vigentes − NC aplicadas en moneda de la factura); `saldo_factura` y `saldo_factura_bruto` quedan como envolturas de ACL sin fórmula propia. Se eliminó el atajo legacy "si estado = `Pagada` entonces saldo 0", que hacía depender el saldo del estado y el estado del saldo (circularidad, bug F1015). Terminal = `Cancelada` / `Sustituida`.
 - **fix(cobranza)**: `cobranza_listado` y `cobranza_agregados` excluyen los cobros ANULADOS por REP cancelado (única divergencia que quedaba contra `saldo_factura`, `cartera_pendiente`, `cxc_aging_clientes` y el portal): Cobranza ya no muestra menos adeudo que el resto.
