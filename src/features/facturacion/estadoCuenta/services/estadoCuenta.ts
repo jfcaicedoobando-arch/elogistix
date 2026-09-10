@@ -59,7 +59,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
     .select(`
       id, numero, cliente_id, cliente_nombre, expediente,
       moneda, total, fecha_emision, fecha_vencimiento, estado,
-      pagos_factura(id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, deleted_at),
+      pagos_factura(id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, estado_rep, deleted_at),
       factura_notas_credito(id, folio, fecha_emision, monto, estado, deleted_at)
     `)
     .in("cliente_id", filters.clienteIds)
