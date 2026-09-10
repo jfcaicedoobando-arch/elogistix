@@ -128,7 +128,7 @@ export async function loadFacturas(orgId: string | null, desdeIso: string) {
   const ids = (facturas ?? []).map((f) => f.id);
   if (ids.length === 0) return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[] };
   const { data: pagos, error: e2 } = await supabase.from("pagos_factura")
-    .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago")
+    .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago, estado_rep")
     .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS);
   if (e2) throw e2;
   assertNotTruncated(pagos, LIMITE_PAGOS, "direccion.loadPagos");
@@ -161,7 +161,7 @@ export async function loadCarteraAbierta(orgId: string | null): Promise<{
   // Borrador/Aprobada/Timbrada/Cancelada y NC eliminadas no restan.
   const [pagosRes, ncsRes] = await Promise.all([
     supabase.from("pagos_factura")
-      .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago")
+      .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago, estado_rep")
       .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS),
     supabase.from("factura_notas_credito")
       .select("factura_id, monto, moneda, tipo_cambio")
