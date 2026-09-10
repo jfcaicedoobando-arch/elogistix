@@ -3,7 +3,7 @@
 ## Remate Cotizaciones 13.823.273
 - [x] Pluralizar vigencia y demás contadores visibles de días
 - [x] Omitir monedas sin conceptos en la barra de totales, sin alterar cálculos
-- [ ] Cierre: regresiones focalizadas, versión, changelog y manifiesto; sin publicar
+- [x] Cierre: regresiones focalizadas, versión, changelog y manifiesto; sin publicar
 
 ## Remate Embarques/Proformas 13.823.272
 - [x] Renumerar consecutivamente las fases visibles del checklist de cierre
