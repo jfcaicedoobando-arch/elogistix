@@ -4,6 +4,7 @@
  * factura(s) ligadas y estado de pago.
  */
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -149,13 +150,21 @@ export function GrupoCostosProveedor({
                             {f.facturas.map(fa => (
                               <Tooltip key={fa.proveedor_factura_id}>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="w-fit gap-1 font-normal text-body-sm cursor-help">
-                                    <FileText className="h-3 w-3" />
-                                    {fa.folio_proveedor} · {fmtFecha(fa.fecha_emision)}
-                                  </Badge>
+                                  <Link
+                                    to={`/compras/facturas/${fa.proveedor_factura_id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label={`Abrir factura ${fa.folio_interno ?? fa.folio_proveedor}`}
+                                    className="w-fit"
+                                  >
+                                    <Badge variant="outline" className="w-fit gap-1 font-normal text-body-sm hover:bg-muted">
+                                      <FileText className="h-3 w-3" />
+                                      {fa.folio_interno ?? fa.folio_proveedor} · {fmtFecha(fa.fecha_emision)}
+                                    </Badge>
+                                  </Link>
                                 </TooltipTrigger>
                                 <TooltipContent className="text-body-sm">
-                                  <div className="font-medium">{fa.folio_proveedor}</div>
+                                  <div className="font-medium">{fa.folio_interno ?? fa.folio_proveedor}</div>
+                                  <div>Folio proveedor: {fa.folio_proveedor}</div>
                                   <div>Monto: {formatCurrency(fa.monto, f.moneda)}</div>
                                   <div>Emisión: {fmtFecha(fa.fecha_emision)}</div>
                                   {fa.fecha_vencimiento && <div>Vencimiento: {fmtFecha(fa.fecha_vencimiento)}</div>}

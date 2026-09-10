@@ -5,6 +5,8 @@
 
 export interface FacturaVinculada {
   proveedor_factura_id: string;
+  /** Folio interno de Libre Carga (FP-XXXXXX); es el que se busca en el sistema. */
+  folio_interno: string | null;
   folio_proveedor: string;
   fecha_emision: string | null;
   fecha_vencimiento: string | null;
@@ -63,6 +65,7 @@ export interface PFCRow {
   descripcion?: string | null;
   proveedor_facturas: {
     id: string;
+    folio_interno?: string | null;
     folio_proveedor: string;
     fecha_emision?: string | null;
     fecha_vencimiento?: string | null;
@@ -116,6 +119,7 @@ export function buildFilasReconciliacion(
     const arr = porConcepto.get(v.concepto_costo_id) ?? [];
     arr.push({
       proveedor_factura_id: v.proveedor_facturas.id,
+      folio_interno: v.proveedor_facturas.folio_interno ?? null,
       folio_proveedor: v.proveedor_facturas.folio_proveedor,
       fecha_emision: v.proveedor_facturas.fecha_emision ?? null,
       fecha_vencimiento: v.proveedor_facturas.fecha_vencimiento ?? null,

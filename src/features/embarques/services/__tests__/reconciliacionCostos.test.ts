@@ -42,6 +42,17 @@ describe("buildFilasReconciliacion", () => {
     expect(filas[0].facturas).toHaveLength(2);
   });
 
+  it("propaga el folio interno de Libre Carga y tolera su ausencia", () => {
+    const vinc = [
+      { monto: 600, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_interno: "FP-000256", folio_proveedor: "034G545923", deleted_at: null } },
+      { monto: 400, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", deleted_at: null } },
+    ];
+    const filas = buildFilasReconciliacion(conceptos, vinc);
+    expect(filas[0].facturas[0].folio_interno).toBe("FP-000256");
+    expect(filas[0].facturas[0].folio_proveedor).toBe("034G545923");
+    expect(filas[0].facturas[1].folio_interno).toBeNull();
+  });
+
   it("ignora vínculos cuyas facturas estén soft-deleted", () => {
     const vinc = [
       { monto: 500, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", deleted_at: "2026-01-01" } },
@@ -65,7 +76,7 @@ describe("calcularResumen", () => {
       { concepto_costo_id: "a", concepto: "", proveedor_nombre: "", moneda: "USD",
         cotizado: 1000, real_facturado: 1100, diferencia: 100, desviacion_pct: 10,
         estado_liquidacion: "Pagado", estatus_renglon: "excedente" as const,
-        facturas: [{ proveedor_factura_id: "f", folio_proveedor: "F", fecha_emision: null, fecha_vencimiento: null, estatus_pago: null, descripcion: null, monto: 1100 }] },
+        facturas: [{ proveedor_factura_id: "f", folio_interno: "FP-000001", folio_proveedor: "F", fecha_emision: null, fecha_vencimiento: null, estatus_pago: null, descripcion: null, monto: 1100 }] },
       { concepto_costo_id: "b", concepto: "", proveedor_nombre: "", moneda: "USD",
         cotizado: 500, real_facturado: 0, diferencia: -500, desviacion_pct: -100,
         estado_liquidacion: "Pendiente", estatus_renglon: "sin_match" as const, facturas: [] },

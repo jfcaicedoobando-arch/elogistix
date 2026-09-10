@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.289] - 2026-09-10
+- **ui(embarques)**: en el tab Costos, la columna "Factura(s)" muestra el folio interno de Libre Carga (`FP-XXXXXX`) en lugar del folio del proveedor, y la etiqueta es un enlace al detalle de la factura de proveedor (`/compras/facturas/:id`). El folio del proveedor se conserva en el tooltip; si falta folio interno se muestra el del proveedor.
+
 ## [13.823.288] - 2026-09-10
 - **fix(compras)**: FP-000256 (WAN HAI `034G545923`) tenía IVA 50 USD sobre un subtotal de 60 USD leído del PDF, inflando el total a 110 USD sin renglón que lo respalde. Se corrigió a IVA 0 / total 60 USD (sin pagos, sin aprobar) con nota en bitácora; renglones, proveedor, embarque y folio intactos.
 - **fix(compras)**: la captura y la edición de facturas de proveedor bloquean un IVA mayor al 16% del subtotal (`ivaExcedeTasaMaxima`), en lugar de sólo advertir con el monto declarado por operaciones.
