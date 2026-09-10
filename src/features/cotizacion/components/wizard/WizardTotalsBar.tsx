@@ -74,15 +74,21 @@ function Margen({ moneda, pl }: { moneda: "USD" | "MXN"; pl: TotalesPL }) {
 }
 
 function Metric({ label, mxn, usd }: { label: string; mxn: number; usd: number }) {
+  const hayMXN = mxn > 0;
+  const hayUSD = usd > 0;
+
   return (
     <div className="flex flex-col leading-tight">
       <span className="text-overline">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="font-medium tabular-nums">{formatCurrency(mxn, "MXN")}</span>
-        {usd > 0 && (
+        {hayMXN && <span className="font-medium tabular-nums">{formatCurrency(mxn, "MXN")}</span>}
+        {hayUSD && (
           <span className="text-body-sm text-muted-foreground tabular-nums">
-            ({formatCurrency(usd, "USD")})
+            {hayMXN ? `(${formatCurrency(usd, "USD")})` : formatCurrency(usd, "USD")}
           </span>
+        )}
+        {!hayMXN && !hayUSD && (
+          <span className="font-medium tabular-nums">{formatCurrency(0, "MXN")}</span>
         )}
       </div>
     </div>

@@ -73,6 +73,19 @@ describe("buildDatosGenerales", () => {
     expect(v1).toBe("1 día (2026-09-10)");
     expect(v15).toBe("15 días (2026-09-24)");
   });
+
+  it("pluraliza los demás contadores visibles de días", () => {
+    const rows = buildDatosGenerales({
+      ...base,
+      modo: "Marítimo",
+      tipo_embarque: "FCL",
+      tiempo_transito_dias: 1,
+      dias_libres_destino: 1,
+    } as CotizacionRow);
+
+    expect(rows).toContainEqual(["Tiempo de tránsito", "1 día"]);
+    expect(rows).toContainEqual(["Días libres en destino", "1 día"]);
+  });
 });
 
 describe("buildMercancia", () => {

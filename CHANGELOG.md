@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.273] - 2026-09-10
+- **fix(cotizaciones)**: el detalle pluraliza correctamente vigencia y demás contadores visibles (`1 día`, `N días`); la barra de totales prioriza las monedas con conceptos y omite importes cero sin mezclar ni recalcular divisas.
+
 ## [13.823.272] - 2026-09-10
 - **fix(embarques/proformas)**: el checklist de cierre renumera consecutivamente sólo sus secciones visibles; en proformas el historial se apila debajo a 1280×720 para mantener completos y legibles Importe e IVA.
 

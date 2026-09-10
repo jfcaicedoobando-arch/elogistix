@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hint } from "@/components/shared/Hint";
 import { formatDate, formatCurrency, nombreDesdeEmail } from "@/lib/formatters";
+import { pluralizar } from "@/lib/format/pluralizar";
 
 interface Cotizacion {
   modo: string;
@@ -42,8 +43,8 @@ function baseRows(c: Cotizacion): Row[] {
     {
       label: "Vigencia",
       value: c.fecha_vigencia
-        ? `${c.vigencia_dias} días (hasta ${formatDate(c.fecha_vigencia)})`
-        : `${c.vigencia_dias} días`,
+        ? `${pluralizar(c.vigencia_dias, "día")} (hasta ${formatDate(c.fecha_vigencia)})`
+        : pluralizar(c.vigencia_dias, "día"),
     },
 
     { label: "Operador", value: c.operador ? nombreDesdeEmail(c.operador) : "-", title: c.operador || "" },
@@ -55,15 +56,15 @@ function maritimeRows(c: Cotizacion): Row[] {
   const rows: Row[] = [];
   const isFCL = c.tipo_embarque === "FCL";
   const isLCL = c.tipo_embarque === "LCL";
-  if (isFCL && c.dias_libres_destino > 0) rows.push({ label: "Días libres en destino", value: `${c.dias_libres_destino} días` });
+  if (isFCL && c.dias_libres_destino > 0) rows.push({ label: "Días libres en destino", value: pluralizar(c.dias_libres_destino, "día") });
   if (isFCL) rows.push({ label: "Carta garantía", value: c.carta_garantia ? "Sí" : "No" });
-  if (isLCL && c.dias_almacenaje > 0) rows.push({ label: "Días libres de almacenaje", value: `${c.dias_almacenaje} días` });
+  if (isLCL && c.dias_almacenaje > 0) rows.push({ label: "Días libres de almacenaje", value: pluralizar(c.dias_almacenaje, "día") });
   return rows;
 }
 
 function optionalRows(c: Cotizacion): Row[] {
   const rows: Row[] = [];
-  if (c.tiempo_transito_dias != null) rows.push({ label: "Tiempo de tránsito", value: `${c.tiempo_transito_dias} días` });
+  if (c.tiempo_transito_dias != null) rows.push({ label: "Tiempo de tránsito", value: pluralizar(c.tiempo_transito_dias, "día") });
   if (c.frecuencia) rows.push({ label: "Frecuencia", value: c.frecuencia });
   if (c.ruta_texto) rows.push({ label: "Ruta", value: c.ruta_texto, title: c.ruta_texto, colSpan2: true });
   // Ola 18: la validez propuesta ES la vigencia. Sólo se muestra aparte si por
