@@ -29,19 +29,27 @@ export function TabProformas({ isInRange, estadoInicial }: {
   const { canEmitirFactura } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
+  // v13.823.278 — quien no puede emitir facturas (vendedor, gerente comercial)
+  // ya no ve la casilla de selección: antes podía seleccionar y quedaba con el
+  // botón "Fusionar/Convertir" deshabilitado sin explicación. El guard del
+  // backend no cambia.
   const columns = useMemo(
-    () => buildProformasColumns({
-      selection: {
-        selectedIds: c.selectedIds,
-        toggle: c.toggleSelected,
-        isSelectable: c.isConvertible,
-      },
-    }),
-    [c.selectedIds, c.toggleSelected, c.isConvertible],
+    () => buildProformasColumns(
+      canEmitirFactura
+        ? {
+            selection: {
+              selectedIds: c.selectedIds,
+              toggle: c.toggleSelected,
+              isSelectable: c.isConvertible,
+            },
+          }
+        : {},
+    ),
+    [canEmitirFactura, c.selectedIds, c.toggleSelected, c.isConvertible],
   );
 
-  const seleccionados = c.selectedProformas.length;
-  const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente && canEmitirFactura;
+  const seleccionados = canEmitirFactura ? c.selectedProformas.length : 0;
+  const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente;
 
   return (
     <CargaGuard
