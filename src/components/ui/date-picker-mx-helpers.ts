@@ -52,6 +52,7 @@ export function applyMask(raw: string): string {
  *  - `1/`        → `01/`
  *  - `01/1`      → `01/1` (aún puede volverse `01/12`)
  *  - `01032026`  → `01/03/2026` (captura corrida, delega en `applyMask`)
+ *  - `13/032`    → `13/03/2` (el dígito excedente pasa al siguiente segmento)
  *
  * `pad = false` desactiva el cero a la izquierda: se usa cuando el cursor está
  * a media captura y agregar dígitos desplazaría el caret (v13.823.290).
@@ -62,15 +63,31 @@ export function applyMaskTyping(raw: string, pad = true): string {
   const trailing = /[/.-]$/.test(limpio);
   const partes = limpio.split(/[/.-]+/).slice(0, 3);
   while (partes.length > 1 && partes[partes.length - 1] === "") partes.pop();
-  const cerradas = trailing ? partes.length : partes.length - 1;
 
-  const out = partes.map((p, i) => {
-    const v = p.slice(0, i === 2 ? 4 : 2);
-    return pad && i < 2 && i < cerradas ? v.padStart(2, "0") : v;
-  });
+  // Los dígitos que ya no caben en un segmento pasan al siguiente: así se
+  // puede teclear corrido aunque la máscara ya haya insertado el separador.
+  const capacidad = [2, 2, 4];
+  const crudos: string[] = [];
+  let excedente = "";
+  for (let i = 0; i < 3; i += 1) {
+    const seg = partes[i] ?? "";
+    if (!seg && !excedente) break;
+    const bruto = seg || excedente;
+    excedente = seg ? bruto.slice(capacidad[i]) : "";
+    crudos.push(bruto.slice(0, capacidad[i]));
+  }
+
+  const cerradas = Math.max(
+    trailing ? partes.length : partes.length - 1,
+    crudos.length - 1,
+  );
+  const out = crudos.map((v, i) => (
+    pad && i < 2 && i < cerradas ? v.padStart(2, "0") : v
+  ));
   const res = out.join("/") + (trailing && out.length < 3 ? "/" : "");
   return res.slice(0, 10);
 }
+
 
 /**
  * Posición del caret dentro del texto enmascarado para conservar el mismo
