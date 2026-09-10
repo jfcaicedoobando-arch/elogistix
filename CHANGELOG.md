@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.282] - 2026-09-10
+- **fix(CxP, embarques)**: al capturar una factura de proveedor, el importe marcado en cada costo del embarque se congelaba en la moneda que la factura tenía en ese momento. Si la moneda cambiaba después (lectura con IA o corrección manual), el ajuste de costo comparaba importes de monedas distintas y escribía un descuento inexistente en el embarque (ELIMP00358: 60 USD contra 1,013.68 MXN = −953.68 USD, factura 034G545923). Ahora el vínculo guarda su `monedaBase`, aplicar un XML/PDF con otra moneda limpia lo marcado y `crearAjustesFacturaProveedor` descarta cualquier renglón cuya moneda congelada no sea la de la factura.
+- **fix(datos)**: borrado lógico del renglón «Ajuste factura 034G545923: Cargos Destino» (−953.68 USD) del embarque ELIMP00358 vía `crear_ajustes_factura_proveedor_rpc(..., '[]')`. El costo real de 60 USD, la factura y sus pagos quedaron intactos.
+- Validación local: typecheck, ESLint focalizado y 16 pruebas focalizadas de CxP (ajustes, reducer de vínculos y precarga multi-moneda). CI/RLS/E2E completos quedan a GitHub Actions.
+
 ## [13.823.281] - 2026-09-10
 - **feat(cotizaciones)**: cotización híbrida USD + MXN. Nueva columna `cotizaciones.tipo_cambio_usd` (positiva o nula) y captura del T/C en el paso 3, con botón «Traer TC DOF de hoy». El T/C se congela en la cotización y sólo se usa para expresar el subtotal del encabezado en una moneda; cada concepto conserva su moneda e importe originales y el IVA no cambia. Sin T/C se sigue bloqueando el guardado, ahora con un mensaje que explica cómo capturarlo.
 - **feat(PDF cotización)**: cuando existe T/C congelado se imprime «Tipo de cambio USD/MXN» aclarando que aplica sólo al total del encabezado.
