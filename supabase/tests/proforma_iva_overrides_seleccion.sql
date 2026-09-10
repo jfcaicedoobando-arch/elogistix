@@ -26,9 +26,13 @@ BEGIN
   INSERT INTO auth.users (id, email)
   VALUES ('bbbb2222-2222-2222-2222-22222222bbbb', 'iva.overrides@test.mx')
   ON CONFLICT (id) DO NOTHING;
+  -- `_assert_writer` exige admin/operador/contador en public.user_roles.
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES ('bbbb1111-1111-1111-1111-11111111bbbb',
-          'bbbb2222-2222-2222-2222-22222222bbbb', 'customer_service')
+          'bbbb2222-2222-2222-2222-22222222bbbb', 'contador')
+  ON CONFLICT DO NOTHING;
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES ('bbbb2222-2222-2222-2222-22222222bbbb', 'contador'::public.app_role)
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes (id, organization_id, nombre, email)

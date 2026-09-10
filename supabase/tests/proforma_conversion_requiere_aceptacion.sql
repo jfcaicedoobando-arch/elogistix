@@ -46,26 +46,38 @@ BEGIN
           'cccc1111-1111-1111-1111-11111111cccc', 'TEST', 'T')
   ON CONFLICT (id) DO NOTHING;
 
-  -- Tres proformas del mismo cliente/organización, sin embarque, con un
+  -- `conceptos_venta.embarque_id` es NOT NULL: los conceptos siempre
+  -- cuelgan de un embarque real.
+  INSERT INTO public.embarques
+    (id, organization_id, cliente_id, expediente, estado, modo, tipo)
+  VALUES ('cccc8888-8888-8888-8888-88888888cccc',
+          'cccc1111-1111-1111-1111-11111111cccc',
+          'cccc3333-3333-3333-3333-33333333cccc',
+          'ELCNV0001', 'Confirmado',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Tres proformas del mismo cliente/organización/embarque, con un
   -- concepto de venta MXN cada una. Sólo cambia `estado_cliente`.
   INSERT INTO public.proformas
     (id, organization_id, numero, cliente_id, cliente_nombre, expediente,
-     estado_cliente, subtotal_mxn, iva_mxn, total_mxn)
+     embarque_id, estado_cliente, subtotal_mxn, iva_mxn, total_mxn)
   VALUES
     ('cccc4444-4444-4444-4444-44444444cccc', 'cccc1111-1111-1111-1111-11111111cccc',
      'PRO-TEST-PEND', 'cccc3333-3333-3333-3333-33333333cccc', 'Cliente Conversion',
-     'ELCNV0001', 'pendiente', 1000, 160, 1160),
+     'ELCNV0001', 'cccc8888-8888-8888-8888-88888888cccc', 'pendiente', 1000, 160, 1160),
     ('cccc5555-5555-5555-5555-55555555cccc', 'cccc1111-1111-1111-1111-11111111cccc',
      'PRO-TEST-RECH', 'cccc3333-3333-3333-3333-33333333cccc', 'Cliente Conversion',
-     'ELCNV0002', 'rechazada', 1000, 160, 1160),
+     'ELCNV0001', 'cccc8888-8888-8888-8888-88888888cccc', 'rechazada', 1000, 160, 1160),
     ('cccc6666-6666-6666-6666-66666666cccc', 'cccc1111-1111-1111-1111-11111111cccc',
      'PRO-TEST-ACEP', 'cccc3333-3333-3333-3333-33333333cccc', 'Cliente Conversion',
-     'ELCNV0003', 'aceptada', 1000, 160, 1160);
+     'ELCNV0001', 'cccc8888-8888-8888-8888-88888888cccc', 'aceptada', 1000, 160, 1160);
 
   INSERT INTO public.conceptos_venta
-    (organization_id, proforma_id, descripcion, cantidad, precio_unitario,
-     total, moneda, aplica_iva, tasa_iva_aplicada)
-  SELECT 'cccc1111-1111-1111-1111-11111111cccc', p, 'Flete', 1, 1000, 1000,
+    (organization_id, embarque_id, proforma_id, descripcion, cantidad,
+     precio_unitario, total, moneda, aplica_iva, tasa_iva_aplicada)
+  SELECT 'cccc1111-1111-1111-1111-11111111cccc',
+         'cccc8888-8888-8888-8888-88888888cccc', p, 'Flete', 1, 1000, 1000,
          'MXN'::public.moneda, true, 0.16
   FROM unnest(ARRAY[
     'cccc4444-4444-4444-4444-44444444cccc'::uuid,

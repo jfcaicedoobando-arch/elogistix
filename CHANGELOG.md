@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.280] - 2026-09-10
+- **fix(base, replay)**: los candados `LC_PROFORMA_REQUIERE_ACEPTACION` y `LC_OVERRIDE_FUERA_DE_SELECCION` se perdían al reconstruir la base desde cero: sus migraciones (2026-09-10) tienen timestamp anterior a `20260913000400_r170_02_fecha_negocio_mx.sql`, que redefine ambas funciones sin los candados. Nueva migración `20260913001400_r279_reaplica_guards_proformas_post_r170_02.sql` que reaplica las definiciones vivas (mismo cuerpo R170-02 + candados) después del corte. Sin cambios de datos, permisos ni fórmulas fiscales.
+- **fix(pruebas SQL)**: `proforma_iva_overrides_seleccion.sql` siembra el rol financiero en `user_roles` (lo exige `_assert_writer`) y `proforma_conversion_requiere_aceptacion.sql` crea el embarque requerido por `conceptos_venta.embarque_id NOT NULL`. Antes fallaban por fixture, no por producto.
+- **chore(baseline)**: `supabase/schema/baseline.sql` regenerada; incluía además el T/C congelado del presupuesto (`pnl_financiero_embarque`, v13.823.274) que faltaba en el snapshot.
+- Validación local: 104/104 guards de base, 34/34 suites RLS, integridad de esquema, prueba de concurrencia de cotización ganadora y baseline sin diff.
+
 ## [13.823.279] - 2026-09-10
 - **fix(proformas, integridad)**: convertir proformas a factura ahora exige que cada proforma esté aceptada por el cliente (`estado_cliente = 'aceptada'`). Pendiente o rechazada se rechazan con `LC_PROFORMA_REQUIERE_ACEPTACION` dentro de la misma transacción, sin crear facturas ni marcar nada como facturado. La UI ya lo ocultaba, pero la RPC podía llamarse directo y saltarse la aceptación. Los clientes de casa no cambian: `aceptar_proforma_sin_autorizacion` ya deja ese estado. Nueva prueba SQL `proforma_conversion_requiere_aceptacion.sql` (pendiente, rechazada y aceptada).
 
