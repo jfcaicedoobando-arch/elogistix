@@ -5,8 +5,7 @@
  */
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { LayoutList, Plus, Rows3 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
@@ -23,7 +22,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import {
   useCosteoTarifasPageState,
   DEFAULT_ESTADO,
-  type ViewMode,
 } from "./useCosteoTarifasPageState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
@@ -34,11 +32,10 @@ export default function CosteoTarifas() {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
 
-  const showList = !s.isLoading && s.tarifasFiltradas.length > 0;
   const showEmpty = !s.isLoading && !s.isError && s.tarifasFiltradas.length === 0;
 
   return (
-    <PageContainer>
+    <PageContainer className="short:space-y-3">
       <PageHeader
         title="Tarifas marítimas"
         description="Matriz de tarifas por agente, naviera, ruta y contenedor. Moneda base: USD."
@@ -90,6 +87,9 @@ export default function CosteoTarifas() {
         pendientesCount={s.pendientesCount}
         onClearAll={s.clearAll}
         hasActiveFilters={s.hasActiveFilters}
+        total={s.tarifasFiltradas.length}
+        viewMode={s.viewMode}
+        onViewModeChange={s.changeView}
       />
 
       <TarifasFilterChips
@@ -107,36 +107,6 @@ export default function CosteoTarifas() {
         onClearBusqueda={() => s.setBusqueda("")}
         onClearAll={s.clearAll}
       />
-
-      {showList && (
-        <div className="flex items-center justify-between">
-          <span className="text-body-sm text-muted-foreground tabular-nums">
-            {s.tarifasFiltradas.length}{" "}
-            {s.tarifasFiltradas.length === 1 ? "tarifa" : "tarifas"}
-          </span>
-          <ToggleGroup
-            type="single"
-            value={s.viewMode}
-            onValueChange={(v) => v && s.changeView(v as ViewMode)}
-            aria-label="Modo de vista"
-          >
-            <ToggleGroupItem
-              value="agrupada"
-              aria-label="Vista agrupada por ruta"
-              className="h-8 px-3 text-body-sm"
-            >
-              <Rows3 className="size-4 mr-1" />Agrupada
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="tabla"
-              aria-label="Vista tabla plana"
-              className="h-8 px-3 text-body-sm"
-            >
-              <LayoutList className="size-4 mr-1" />Tabla
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-      )}
 
       {s.isError ? (
         <ErrorState onRetry={() => void s.refetch()} />

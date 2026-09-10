@@ -12,6 +12,7 @@ import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { buildTarifasColumns, type TarifaRow } from "./_sections/tarifasColumns";
 import { todayLocalISO } from "@/lib/date/today";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   tarifas: TarifaRow[];
@@ -66,6 +67,8 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
         rowKey={(t) => t.id}
         isLoading={isLoading}
         emptyMessage="Sin tarifas."
+        density={TABLE_DENSITY.listado}
+        stickyHeader
       />
 
       <DialogRechazarTarifa

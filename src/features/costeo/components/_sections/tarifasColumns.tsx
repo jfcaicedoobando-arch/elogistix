@@ -25,8 +25,13 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
       sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
       enableSorting: true,
-      meta: { sticky: true, className: "text-body" },
-      cell: ({ row }) => `${row.original.puerto_origen_nombre} → ${row.original.puerto_destino_nombre}`,
+      meta: { sticky: true, width: COL_W.ruta, className: "text-body" },
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <div className="font-medium">{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
+          <div className="text-label text-muted-foreground 2xl:hidden">{row.original.tipo_contenedor_nombre}</div>
+        </div>
+      ),
     },
     {
       id: "agente",
@@ -34,10 +39,11 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => t.agente_nombre,
       sortingFn: sortByString((t) => t.agente_nombre),
       enableSorting: true,
+      meta: { width: COL_W.texto },
       cell: ({ row }) => (
-        <div>
+        <div className="min-w-0">
           <div className="font-medium">{row.original.agente_nombre}</div>
-          <div className="text-body-sm text-muted-foreground">{row.original.naviera_nombre}</div>
+          <div className="truncate text-body-sm text-muted-foreground">{row.original.naviera_nombre}</div>
         </div>
       ),
     },
@@ -46,6 +52,10 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       header: "Contenedor",
       accessorFn: (t) => t.tipo_contenedor_nombre,
       enableSorting: true,
+      meta: {
+        className: "hidden 2xl:table-cell",
+        headerClassName: "hidden 2xl:table-cell",
+      },
       cell: ({ row }) => row.original.tipo_contenedor_nombre,
     },
     {
@@ -83,7 +93,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => t.total_comparable,
       sortingFn: sortByNumber((t) => t.total_comparable),
       enableSorting: true,
-      meta: { align: "right", className: "tabular-nums" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums" },
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";
@@ -107,7 +117,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => t.vigente_hasta,
       sortingFn: sortByDate((t) => t.vigente_hasta),
       enableSorting: true,
-      meta: { className: "text-body-sm" },
+      meta: { width: COL_W.ruta, className: "text-body-sm" },
       cell: ({ row }) => {
         const t = row.original;
         const hint = vigenciaHint(t.vigente_hasta);
@@ -130,7 +140,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       enableSorting: true,
       // MR-UI-02: Estado permanece en el flujo horizontal. Sólo Acciones se
       // fija para evitar que esta celda cubra Contenedor, Total o Vigencia.
-      meta: { width: COL_W.nombre },
+      meta: { width: COL_W.estado },
       cell: ({ row }) => {
         const t = row.original;
         return (
@@ -148,7 +158,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       header: "Acciones",
       // MR-UI-02: sólo Acciones permanece fija y conserva Aprobar/Rechazar
       // visibles y enfocables mientras el resto de columnas se desplaza.
-      meta: { width: COL_W.nombre, align: "right", stickyRight: true },
+      meta: { width: COL_W.estado, align: "right", stickyRight: true },
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";

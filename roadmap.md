@@ -1,5 +1,12 @@
 # Roadmap
 
+## Pulido visual de Tarifas marítimas 13.823.268
+- [x] Compactar encabezado e indicadores para mostrar más filas en 1280×720
+- [x] Unificar filtros, contador y selector de vista en una sola franja
+- [x] Priorizar Ruta, Total USD, Vigencia, Estado y Acciones sin superposición
+- [x] Pulir densidad y jerarquía de la vista agrupada
+- [x] Validación focalizada, visual, versión, changelog y manifiesto
+
 ## Remate tarifas marítimas 13.823.266
 - [x] MR-UI-02 P2 — Fondos opacos en celdas sticky Ruta/Acciones para filas pares, hover y selección
 - [x] Regresión mínima y validación visual 1280×720 con fila par/impar y sidebar expandido/colapsado

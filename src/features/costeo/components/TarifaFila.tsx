@@ -87,7 +87,7 @@ export function TarifaFila({
 
   return (
     <div
-      className={`${FILA_GRID} py-2.5 text-body transition-colors hover:bg-muted/40 ${esMejor ? "row-highlight-success" : ""} ${atenuar ? "opacity-60" : ""}`}
+      className={`${FILA_GRID} py-2 text-body transition-colors hover:bg-muted/40 ${esMejor ? "row-highlight-success" : ""} ${atenuar ? "opacity-60" : ""}`}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
