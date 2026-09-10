@@ -1,5 +1,11 @@
 # Roadmap
 
+## Integridad proformas 13.823.276
+- [x] Restringir overrides de IVA a p_concepto_ids y rechazar ajenos (LC_OVERRIDE_FUERA_DE_SELECCION)
+- [x] Prueba SQL de regresión (override ajeno rechazado, válido aplicado, atómico)
+- [x] Cierre: versión, changelog y manifiesto; sin publicar ni suites globales
+
+
 ## Remate Cotizaciones 13.823.273
 - [x] Pluralizar vigencia y demás contadores visibles de días
 - [x] Omitir monedas sin conceptos en la barra de totales, sin alterar cálculos
