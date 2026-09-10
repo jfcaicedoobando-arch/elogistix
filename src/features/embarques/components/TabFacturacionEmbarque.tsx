@@ -37,7 +37,12 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
   // v13.334.8 — Un embarque Cerrado tiene bloqueada la edición de conceptos a
   // nivel BD (trigger `trg_bloquear_cierre`). Se refleja en la UI para no
   // ofrecer acciones que fallarían con un error técnico.
-  const s = useTabFacturacionState(embarque, canEditProp);
+  // v13.823.278 — el permiso genérico del embarque (operaciones o finanzas) NO
+  // basta para proformas: generar/eliminar/aprobar exige `PROFORMAS_ESCRITURA`
+  // (espejo de las policies RLS). Comercial y ventas siguen viendo el tab en
+  // sólo lectura, sin perder sus permisos de costos ni documentos.
+  const { canEditarProforma } = usePermissions();
+  const s = useTabFacturacionState(embarque, canEditProp && canEditarProforma);
   const {
     embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
     estadosConceptos, conceptosElegibles, conceptosHuerfanos, borradorVacio,
