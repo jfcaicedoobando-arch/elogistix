@@ -87,7 +87,7 @@ export async function fetchFacturasMes(orgId: string | null, desde: string, hast
     // fecha fiscal. La consulta cubre AMBOS orígenes: emisión con holgura o
     // timbrado dentro del mes; el filtro en memoria por fecha fiscal decide.
     .or(
-      `fecha_emision.gte.${corre(desde, -HOLGURA_DIAS)}.and.fecha_emision.lte.${corre(hasta, HOLGURA_DIAS)},` +
+      `and(fecha_emision.gte.${corre(desde, -HOLGURA_DIAS)},fecha_emision.lte.${corre(hasta, HOLGURA_DIAS)}),` +
         `and(timbrado_en.gte.${desde}T00:00:00Z,timbrado_en.lte.${hasta}T23:59:59.999Z)`,
     )
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
