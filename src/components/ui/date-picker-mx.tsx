@@ -8,7 +8,7 @@ import { useDatePickerMxValor } from "./date-picker-mx-valor";
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 import { manejarTeclaFecha } from "./date-picker-mx-keys";
 import { PATRON_FECHA } from "./date-picker-mx-segmentos";
-import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { manejarAtajosSegmento } from "./date-picker-mx-teclado";
 import { motivoInhabilMx } from "@/lib/date/festivosMx";
 import {
   MENSAJE_FECHA_INVALIDA, PICKER_AYUDA_TECLADO, PLACEHOLDER_FECHA, pickerAvisoClass,
