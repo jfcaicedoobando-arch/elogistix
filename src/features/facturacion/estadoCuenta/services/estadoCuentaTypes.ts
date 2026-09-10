@@ -6,7 +6,7 @@
  * (`diasVencido`, `calcularEstatus`) sin tocar la capa de datos.
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
-import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
+import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactura";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
 
