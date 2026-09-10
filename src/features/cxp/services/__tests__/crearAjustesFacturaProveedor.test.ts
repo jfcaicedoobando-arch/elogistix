@@ -92,6 +92,29 @@ describe("crearAjustesFacturaProveedor", () => {
     expect(r.ajustesCreados).toBe(1);
   });
 
+  it("descarta el ajuste legacy sin monedaBase cuyo delta excede el total de la factura (ELIMP00368)", async () => {
+    const r = await crearAjustesFacturaProveedor({
+      ...baseInput,
+      totalFactura: 34400,
+      // Base congelada en MXN (34,400 × 16.8947) contra factura en USD.
+      vinculos: { c1: v("e1", "Flete Maritimo", 34400, 581177.68) },
+    });
+    expect(r.ajustesCreados).toBe(0);
+    expect(mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc")).toBeUndefined();
+  });
+
+  it("conserva el descuento legítimo dentro del total de la factura", async () => {
+    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
+      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
+    });
+    const r = await crearAjustesFacturaProveedor({
+      ...baseInput,
+      totalFactura: 18639.6,
+      vinculos: { c1: v("e1", "Flete Maritimo", 18639.6, 19150) },
+    });
+    expect(r.ajustesCreados).toBe(1);
+  });
+
   it("crea múltiples ajustes agrupados por vínculo", async () => {
     mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
       data: { ajustes_creados: 2, folio: "FP-000039" }, error: null,
