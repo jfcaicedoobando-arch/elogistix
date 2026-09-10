@@ -461,3 +461,10 @@ BEGIN
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
 $function$;
+-- Privilegios explícitos (idénticos a R170-02): `CREATE OR REPLACE` los
+-- conserva, pero se declaran para que la auditoría de migraciones los vea.
+REVOKE ALL ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO authenticated, service_role;
