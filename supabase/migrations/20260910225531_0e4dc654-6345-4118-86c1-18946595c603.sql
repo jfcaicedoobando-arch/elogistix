@@ -1,13 +1,9 @@
--- Fuente canónica de public.recalcular_estado_factura
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.recalcular_estado_factura()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
 DECLARE
   v_factura_id uuid; v_total numeric; v_pagado numeric; v_saldo numeric;
   v_vencimiento date; v_estado_actual estado_factura; v_nuevo_estado estado_factura;
@@ -60,5 +56,4 @@ BEGIN
 
   RETURN COALESCE(NEW, OLD);
 END;
-$function$
- name:recalcular_estado_factura schema:public;
+$$;
