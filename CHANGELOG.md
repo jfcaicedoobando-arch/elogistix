@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.823.279] - 2026-09-10
+- **fix(proformas, integridad)**: convertir proformas a factura ahora exige que cada proforma esté aceptada por el cliente (`estado_cliente = 'aceptada'`). Pendiente o rechazada se rechazan con `LC_PROFORMA_REQUIERE_ACEPTACION` dentro de la misma transacción, sin crear facturas ni marcar nada como facturado. La UI ya lo ocultaba, pero la RPC podía llamarse directo y saltarse la aceptación. Los clientes de casa no cambian: `aceptar_proforma_sin_autorizacion` ya deja ese estado. Nueva prueba SQL `proforma_conversion_requiere_aceptacion.sql` (pendiente, rechazada y aceptada).
+
 ## [13.823.278] - 2026-09-10
+
 - **fix(proformas, permisos)**: la pestaña de Facturación del embarque usa el permiso específico de proformas (espejo de las reglas de la base) en vez del permiso general del embarque: generar, eliminar y aprobar quedan para administración, operación y contabilidad; comercial y ventas la ven en modo lectura sin perder sus permisos de costos ni documentos.
 - **fix(proformas, listado)**: en /proformas la casilla de selección y la acción "Fusionar / Convertir a factura" sólo aparecen para quien puede emitir facturas. Antes ventas podía seleccionar y quedaba con el botón deshabilitado sin explicación.
 - Pruebas: pestaña de facturación con y sin permiso de proformas; listado con y sin permiso de emisión.
