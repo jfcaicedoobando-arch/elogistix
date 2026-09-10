@@ -57,6 +57,10 @@ export function computeCounts(i: CountsInput) {
   const sourceForPages = i.estadoFilterActivo ? i.sortedAll.length : i.totalCountServer;
   return {
     totalCountServer: i.totalCountServer,
+    // 13.823.269: con filtro de estado la colección visible es la filtrada en
+    // cliente; la paginación (total, rango "1–4 de 4", botones) debe derivarse
+    // de ella, no del total global del servidor — si no, el pie contradice la tabla.
+    paginationTotal: i.estadoFilterActivo ? i.dedupedAll.length : i.totalCountServer,
     expedientesCount: i.estadoFilterActivo ? i.dedupedAll.length : i.totalCountServer,
     contenedoresCount: i.estadoFilterActivo
       ? i.containersForView.length
