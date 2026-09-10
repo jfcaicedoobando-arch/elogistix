@@ -26,6 +26,7 @@ BEGIN
     SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) AS monto, COUNT(*)::int AS n
     FROM public.pagos_factura pf
     WHERE pf.factura_id = p_factura_id AND pf.deleted_at IS NULL
+      AND COALESCE(pf.estado_rep, '') <> 'Cancelado'
   ), nc AS (
     SELECT COALESCE(SUM(
       CASE

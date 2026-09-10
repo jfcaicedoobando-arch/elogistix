@@ -39,9 +39,12 @@ BEGIN
   -- reportar saldo por cobrar (antes mostraba "cobrado = total" sin pagos).
   IF v_estado IN ('Cancelada', 'Sustituida', 'Pagada') THEN RETURN 0; END IF;
 
+  -- v13.823.287: un pago cuyo REP fue cancelado ante el SAT queda ANULADO:
+  -- conserva su historia fiscal pero deja de contar para el saldo.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagos
   FROM public.pagos_factura
-  WHERE factura_id = p_factura_id AND deleted_at IS NULL;
+  WHERE factura_id = p_factura_id AND deleted_at IS NULL
+    AND COALESCE(estado_rep, '') <> 'Cancelado';
 
   -- BUG-04 (auditoría 2026-08-18): misma conversión que `cartera_pendiente`.
   SELECT COALESCE(SUM(

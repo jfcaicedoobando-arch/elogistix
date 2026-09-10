@@ -51,6 +51,7 @@ BEGIN
     JOIN facturas f ON f.id = pf.factura_id
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
+      AND COALESCE(pf.estado_rep, '') <> 'Cancelado'
       AND pf.fecha_pago >= p_desde
       AND pf.organization_id = public.org_scope()
     GROUP BY f.moneda

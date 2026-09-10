@@ -29,6 +29,7 @@ BEGIN
     FROM public.pagos_factura pf
     JOIN public.facturas f ON f.id = pf.factura_id AND f.deleted_at IS NULL
     WHERE pf.deleted_at IS NULL
+      AND COALESCE(pf.estado_rep, '') <> 'Cancelado'
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY pf.factura_id
   ),
