@@ -91,11 +91,27 @@ export function useMonthPickerMxValor(value: string, onChange: (v: string) => vo
     }
   };
 
+  /** Pegado tolerante (v13.823.290): `MM/AAAA`, `YYYY-MM`, fecha completa. */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pegado = e.clipboardData.getData("text").trim();
+    if (!pegado) return;
+    const directo = parsearPeriodo(pegado)
+      ?? (/^\d{4}[/.-]\d{1,2}$/.test(pegado)
+        ? `${pegado.slice(0, 4)}-${String(Number(pegado.slice(5))).padStart(2, "0")}`
+        : null);
+    const ym = directo ?? parseFlexible(pegado)?.slice(0, 7) ?? null;
+    if (ym) { emitir(ym); return; }
+    setInvalid(true);
+    if (value) onChange("");
+  };
+
   const limpiar = () => {
     setText("");
     setInvalid(false);
     onChange("");
   };
 
-  return { text, invalid, inputRef, commit, handleChange, emitir, limpiar };
+  return { text, invalid, inputRef, commit, handleChange, handlePaste, emitir, limpiar };
 }
+
