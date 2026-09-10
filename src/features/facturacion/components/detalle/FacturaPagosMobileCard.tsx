@@ -41,11 +41,14 @@ export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, on
   const repVivo = !!row.uuid_rep && !row.rep_cancelado_en && cs !== "accepted";
   const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
   const repCancelable = repVivo && !repEnVerificacion;
+  // v13.823.287 — el pago con REP cancelado queda anulado (no suma al saldo).
+  const anulado = row.estado_rep === "Cancelado";
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="font-semibold text-body">{formatDate(row.fecha_pago)}</div>
+          {anulado && <div className="text-label text-muted-foreground">Anulado</div>}
           <div className="text-body-sm text-muted-foreground">
             {labelDeCatalogo(FORMAS_PAGO_SAT, row.forma_pago)}
           </div>
@@ -56,7 +59,7 @@ export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, on
         <MoneyCell
           label="Monto"
           value={formatCurrency(Number(row.monto), row.moneda)}
-          highlight
+          highlight={!anulado}
           className="shrink-0 max-w-[48%]"
         />
       </div>
@@ -67,8 +70,10 @@ export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, on
           estadoRep={row.estado_rep ?? null}
           serieRep={row.serie_rep ?? null}
           folioRep={row.folio_rep ?? null}
+          cancellationStatus={row.rep_cancellation_status ?? null}
           onPreview={onPreviewRep}
         />
+
         {canEdit && (
           <div className="flex items-center gap-1">
             {repCancelable && (
