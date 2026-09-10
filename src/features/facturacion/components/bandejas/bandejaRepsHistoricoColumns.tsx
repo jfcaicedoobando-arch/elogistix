@@ -5,7 +5,8 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileDown, FileCode } from "lucide-react";
+import { FileDown, FileCode, RefreshCw } from "lucide-react";
+
 import { defineColumns } from "@/components/shared/DataTable";
 import { Hint } from "@/components/shared/Hint";
 
