@@ -65,6 +65,7 @@ export interface PFCRow {
   descripcion?: string | null;
   proveedor_facturas: {
     id: string;
+    folio_interno?: string | null;
     folio_proveedor: string;
     fecha_emision?: string | null;
     fecha_vencimiento?: string | null;
