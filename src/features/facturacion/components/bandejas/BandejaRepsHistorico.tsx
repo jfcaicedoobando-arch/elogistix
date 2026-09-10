@@ -39,9 +39,15 @@ export function BandejaRepsHistorico() {
   }, []);
 
   const columns = useMemo(
-    () => buildRepsHistoricoColumns({ onDescargar: (id, tipo) => void descargar(id, tipo), descargando }),
-    [descargar, descargando],
+    () => buildRepsHistoricoColumns({
+      onDescargar: (id, tipo) => void descargar(id, tipo),
+      descargando,
+      onActualizarSat: (id) => consultar.mutate(id),
+      actualizando: consultar.isPending ? consultar.variables ?? null : null,
+    }),
+    [descargar, descargando, consultar],
   );
+
 
   const paged = useClientPagedList<FilaRepHistorico>({
     data,
