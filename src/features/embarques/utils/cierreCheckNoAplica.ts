@@ -109,9 +109,15 @@ export function calcularReglasNoAplica(
 ): Map<string, string> {
   const noAplica = new Map<string, string>();
 
-  if (opciones.sinComision) {
+  // v13.823.291 — la validación del cierre ya informa `detalle.sin_comision`,
+  // así que el gris no depende de que el hook de exclusión haya cargado.
+  const sinComision =
+    opciones.sinComision === true ||
+    checks.some((c) => REGLAS_COMISION.has(c.regla) && pick(c.detalle, "sin_comision") === true);
+  if (sinComision) {
     marcar(noAplica, checks, (c) => REGLAS_COMISION.has(c.regla), MOTIVO_SIN_COMISION);
   }
+
   marcarCxc(noAplica, checks);
   marcarCxp(noAplica, checks);
   marcarRentabilidad(noAplica, checks);

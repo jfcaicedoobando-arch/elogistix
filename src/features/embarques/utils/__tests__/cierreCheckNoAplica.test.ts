@@ -85,3 +85,29 @@ describe("calcularReglasNoAplica", () => {
     expect(map.get("comision_calculada")).toBe(MOTIVO_SIN_COMISION);
   });
 });
+
+describe("cierre · comisiones sin comisión reportado por la RPC", () => {
+  it("usa detalle.sin_comision aunque el hook de exclusión no haya cargado", () => {
+    const map = calcularReglasNoAplica([
+      { regla: "costo_conceptos_con_factura", ok: true },
+      {
+        regla: "comisiones_definitivas",
+        ok: true,
+        detalle: { no_definitivas: 0, sin_comision: true },
+      },
+    ]);
+    expect(map.get("comisiones_definitivas")).toBe(MOTIVO_SIN_COMISION);
+  });
+
+  it("no marca gris cuando la RPC reporta sin_comision falso", () => {
+    const map = calcularReglasNoAplica([
+      { regla: "costo_conceptos_con_factura", ok: true },
+      {
+        regla: "comisiones_definitivas",
+        ok: false,
+        detalle: { no_definitivas: 1, sin_comision: false },
+      },
+    ]);
+    expect(map.has("comisiones_definitivas")).toBe(false);
+  });
+});
