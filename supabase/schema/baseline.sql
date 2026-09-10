@@ -28518,7 +28518,7 @@ DECLARE
   v_cxp_saldo numeric := 0; v_cxp_por_moneda jsonb := '[]'::jsonb;
   v_docs_faltantes int;
   v_utilidad_mxn numeric; v_venta_mxn numeric; v_margen_min numeric; v_margen_pct numeric;
-  v_pnl jsonb; v_com_count int;
+  v_pnl jsonb; v_com_count int; v_sin_comision boolean := false;
   v_cont_incompletos int := 0; v_cont_ids uuid[] := ARRAY[]::uuid[];
   v_cont_sin_fechas int := 0; v_cont_fechas_ids uuid[] := ARRAY[]::uuid[];
   v_tiene_contenedores boolean := false;
