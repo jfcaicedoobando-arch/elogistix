@@ -31,6 +31,9 @@ describe("WizardTotalsBar", () => {
       />,
     );
     expect(screen.getByText(/Margen USD/)).toBeInTheDocument();
+    expect(screen.getByText("USD 500.00")).toBeInTheDocument();
+    expect(screen.getByText("USD 800.00")).toBeInTheDocument();
+    expect(screen.queryByText("MXN 0.00")).not.toBeInTheDocument();
   });
 
   it("aplica color ámbar cuando el margen está entre 5% y 15%", () => {

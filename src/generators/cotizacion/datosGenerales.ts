@@ -4,31 +4,28 @@ import {
   resolveTipoContenedorNombre,
   type TipoContenedorCatalogo,
 } from '@/features/cotizacion/utils/resolveTipoContenedorNombre';
+import { pluralizar } from '@/lib/format/pluralizar';
 
 function rowsMaritimo(c: CotizacionRow): [string, string][] {
   if (c.modo !== 'Marítimo') return [];
   const out: [string, string][] = [];
   if (c.tipo_embarque === 'FCL') {
-    if (c.dias_libres_destino > 0) out.push(['Días libres en destino', `${c.dias_libres_destino} días`]);
+    if (c.dias_libres_destino > 0) out.push(['Días libres en destino', pluralizar(c.dias_libres_destino, 'día')]);
     out.push(['Carta garantía', c.carta_garantia ? 'Sí' : 'No']);
   }
   if (c.tipo_embarque === 'LCL' && c.dias_almacenaje > 0) {
-    out.push(['Días libres de almacenaje', `${c.dias_almacenaje} días`]);
+    out.push(['Días libres de almacenaje', pluralizar(c.dias_almacenaje, 'día')]);
   }
   return out;
 }
 
 function rowsOpcionales(c: CotizacionRow): [string, string][] {
   const out: [string, string][] = [];
-  if (c.tiempo_transito_dias != null) out.push(['Tiempo de tránsito', `${c.tiempo_transito_dias} días`]);
+  if (c.tiempo_transito_dias != null) out.push(['Tiempo de tránsito', pluralizar(c.tiempo_transito_dias, 'día')]);
   if (c.frecuencia) out.push(['Frecuencia', c.frecuencia]);
   if (c.ruta_texto) out.push(['Ruta', c.ruta_texto]);
   if (c.tipo_movimiento) out.push(['Tipo de movimiento', c.tipo_movimiento]);
   return out;
-}
-
-function pluralizarDias(n: number): string {
-  return `${n} ${n === 1 ? 'día' : 'días'}`;
 }
 
 export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
@@ -38,7 +35,7 @@ export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
     ['Incoterm', c.incoterm],
     ['Origen', c.origen || '-'],
     ['Destino', c.destino || '-'],
-    ['Vigencia', `${pluralizarDias(c.vigencia_dias)}${c.fecha_vigencia ? ` (${formatDate(c.fecha_vigencia)})` : ''}`],
+    ['Vigencia', `${pluralizar(c.vigencia_dias, 'día')}${c.fecha_vigencia ? ` (${formatDate(c.fecha_vigencia)})` : ''}`],
     ['Operador', c.operador || '-'],
   ];
   const seguro: [string, string] = [

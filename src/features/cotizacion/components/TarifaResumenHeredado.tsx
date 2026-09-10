@@ -17,6 +17,7 @@ import TarifaResumenHeredadoEditMode from "./TarifaResumenHeredadoEditMode";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { pluralizar } from "@/lib/format/pluralizar";
 
 interface Props {
   tarifa: TopTarifaRow;
@@ -52,7 +53,7 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
   const rows: Row[] = [
     {
       label: "Tiempo de tránsito",
-      value: transito != null ? `${transito} días` : "",
+      value: transito != null ? pluralizar(transito, "día") : "",
       mostrar: true,
     },
     {
@@ -62,12 +63,12 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
     },
     {
       label: "Días libres en destino (demoras)",
-      value: diasLibres != null ? `${diasLibres} días` : "",
+      value: diasLibres != null ? pluralizar(diasLibres, "día") : "",
       mostrar: esFCL,
     },
     {
       label: "Días libres de almacenaje",
-      value: diasAlmacenaje != null ? `${diasAlmacenaje} días` : "",
+      value: diasAlmacenaje != null ? pluralizar(diasAlmacenaje, "día") : "",
       mostrar: esLCL,
     },
     {
