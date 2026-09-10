@@ -1,17 +1,17 @@
 {
-  "version": "13.823.253",
-  "generatedAt": "2026-09-09T03:39:58.696Z",
+  "version": "13.823.280",
+  "generatedAt": "2026-09-10T07:46:09.605Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 3640,
+    "total": 3651,
     "bySeverity": {
-      "SAFE": 1042,
+      "SAFE": 1047,
       "LOW": 174,
-      "MEDIUM": 2424,
+      "MEDIUM": 2430,
       "HIGH": 0,
       "CRITICAL": 0
     },
@@ -52,17 +52,17 @@
         "weight": 22
       },
       {
+        "file": "src/generators/cotizacion/__tests__/datosGenerales.test.ts",
+        "total": 11,
+        "weight": 22
+      },
+      {
         "file": "src/features/configuracion/index.ts",
         "total": 10,
         "weight": 20
       },
       {
         "file": "src/features/cotizacion/services/__tests__/informativa.test.ts",
-        "total": 10,
-        "weight": 20
-      },
-      {
-        "file": "src/features/cotizacion/services/__tests__/wizard.test.ts",
         "total": 10,
         "weight": 20
       }
