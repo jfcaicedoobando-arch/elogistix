@@ -5,84 +5,85 @@
  *  - el pegado acepta formatos con hora, año de 2 dígitos o sólo dígitos.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 function renderCampo(value = "") {
   const onChange = vi.fn();
   render(<DatePickerMx id="f" title="Fecha de pago" value={value} onChange={onChange} />);
-  return { input: document.getElementById("f") as HTMLInputElement, onChange };
+  const input = document.getElementById("f") as HTMLInputElement;
+  fireEvent.focus(input);
+  return { input, onChange };
+}
+
+/**
+ * Simula teclear carácter por carácter. Al enfocar, el campo queda
+ * seleccionado por completo: el primer carácter reemplaza todo el texto.
+ */
+function teclear(input: HTMLInputElement, texto: string) {
+  [...texto].forEach((ch, i) => {
+    fireEvent.keyDown(input, { key: ch });
+    const base = i === 0 ? "" : input.value;
+    fireEvent.change(input, { target: { value: `${base}${ch}` } });
+  });
+}
+
+function pegar(input: HTMLInputElement, texto: string) {
+  fireEvent.paste(input, { clipboardData: { getData: () => texto } });
 }
 
 describe("DatePickerMx · captura", () => {
-  it("acepta guiones tecleados (13-03-2026)", async () => {
-    const user = userEvent.setup();
+  it("acepta guiones tecleados (13-03-2026)", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.keyboard("13-03-2026");
+    teclear(input, "13-03-2026");
     expect(input.value).toBe("13/03/2026");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("acepta puntos tecleados (13.03.2026)", async () => {
-    const user = userEvent.setup();
+  it("acepta puntos tecleados (13.03.2026)", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.keyboard("13.03.2026");
+    teclear(input, "13.03.2026");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("permite teclear corrido encima de una fecha existente", async () => {
-    const user = userEvent.setup();
+  it("permite teclear corrido encima de una fecha existente", () => {
     const { input, onChange } = renderCampo("2026-01-01");
     expect(input.value).toBe("01/01/2026");
-    await user.click(input);
-    await user.keyboard("13032026");
+    teclear(input, "13032026");
     expect(input.value).toBe("13/03/2026");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 });
 
 describe("DatePickerMx · pegado", () => {
-  it("pega una fecha ISO con hora", async () => {
-    const user = userEvent.setup();
+  it("pega una fecha ISO con hora", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.paste("2026-03-13T10:00");
+    pegar(input, "2026-03-13T10:00");
     expect(input.value).toBe("13/03/2026");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("pega DD/M/YY con año de dos dígitos", async () => {
-    const user = userEvent.setup();
+  it("pega DD/M/YY con año de dos dígitos", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.paste("13/3/26");
+    pegar(input, "13/3/26");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("pega sólo dígitos (13032026)", async () => {
-    const user = userEvent.setup();
+  it("pega sólo dígitos (13032026)", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.paste("13032026");
+    pegar(input, "13032026");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("pega texto con ruido alrededor", async () => {
-    const user = userEvent.setup();
+  it("pega texto con ruido alrededor", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.paste("Vence: 13/03/2026 (viernes)");
+    pegar(input, "Vence: 13/03/2026 (viernes)");
     expect(onChange).toHaveBeenLastCalledWith("2026-03-13");
   });
 
-  it("avisa cuando el texto pegado no es una fecha", async () => {
-    const user = userEvent.setup();
+  it("avisa cuando el texto pegado no es una fecha", () => {
     const { input, onChange } = renderCampo();
-    await user.click(input);
-    await user.paste("pendiente");
+    pegar(input, "pendiente");
     expect(onChange).not.toHaveBeenCalled();
     expect(screen.getByText(/fecha inválida/i)).toBeInTheDocument();
   });
