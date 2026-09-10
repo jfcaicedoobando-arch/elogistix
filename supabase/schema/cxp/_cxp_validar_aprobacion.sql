@@ -27,6 +27,7 @@ DECLARE
   v_total_mxn numeric(18,4);
   v_umbral numeric;
   v_tipo_contable text;
+  v_iva_max numeric(18,4);
   v_c record;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
@@ -69,6 +70,18 @@ BEGIN
       to_char(COALESCE(v_row.subtotal,0),'FM999,999,999,990.00'),
       to_char(v_diferencia,              'FM999,999,999,990.00'),
       to_char(v_tolerancia,              'FM999,999,999,990.00');
+  END IF;
+
+  -- FP-000256: "IVA fantasma". El total se deriva de subtotal + IVA + IEPS −
+  -- retenciones, así que un IVA imposible (50 sobre un subtotal de 60) infla la
+  -- factura sin ningún renglón que lo respalde. En México el IVA trasladado
+  -- nunca excede el 16% de la base.
+  v_iva_max := COALESCE(v_row.subtotal,0) * 0.16 + 0.02;
+  IF COALESCE(v_row.iva,0) > v_iva_max THEN
+    RAISE EXCEPTION 'LC_CXP_IVA_IMPLAUSIBLE: El IVA capturado (%) es mayor al 16%% del subtotal (%). Corrige el IVA de la factura antes de aprobar; el máximo aceptable es %.',
+      to_char(COALESCE(v_row.iva,0),      'FM999,999,999,990.00'),
+      to_char(COALESCE(v_row.subtotal,0), 'FM999,999,999,990.00'),
+      to_char(v_iva_max,                  'FM999,999,999,990.00');
   END IF;
 
   -- Tope de sobrecosto POR CONCEPTO, sumando todas las facturas vivas ligadas
