@@ -59,6 +59,8 @@ Deno.test("buildNcPayload arma type E, related y relationship 01", () => {
   assertEquals(p.serie, "NC");
   assertEquals(p.items.length, 1);
   assertEquals(p.items[0].product.taxes[0].rate, 0.16);
+  // Guía de llenado del SAT: los egresos siempre se timbran PUE.
+  assertEquals(p.payment_method, "PUE");
 });
 
 Deno.test("validateNcContext aplica la banda fiscal 5..40 en moneda extranjera", () => {
