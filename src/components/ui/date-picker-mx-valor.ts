@@ -5,8 +5,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  applyMaskTyping, isoToDisplay, parseDisplay, parseFlexible,
+  applyMaskTyping, caretTrasMascara, isoToDisplay, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
+
 
 interface Params {
   value: string;
