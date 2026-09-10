@@ -4484,6 +4484,19 @@ BEGIN
   RETURN NULL;
 END;
 $$;
+CREATE FUNCTION public._trg_reversar_movimiento_rep_cancelado() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.estado_rep = 'Cancelado'
+     AND COALESCE(OLD.estado_rep,'') IS DISTINCT FROM 'Cancelado'
+     AND NEW.deleted_at IS NULL THEN
+    PERFORM public.reversar_movimiento_cobro_rep_cancelado(NEW.id);
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._validar_cronologia_evento_embarque() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -25974,6 +25987,60 @@ BEGIN
     'tarifa_id_vigente',CASE WHEN v_tarifa_vigente THEN v_cot.tarifa_id ELSE NULL END);
 END;
 $$;
+CREATE FUNCTION public.reversar_movimiento_cobro_rep_cancelado(p_pago_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_mov bbva_movimientos%ROWTYPE;
+  v_motivo text := 'REP cancelado: el cobro se anuló';
+  v_accion text;
+BEGIN
+  SELECT * INTO v_mov
+    FROM bbva_movimientos
+   WHERE pago_factura_id = p_pago_id
+     AND deleted_at IS NULL
+   ORDER BY importado_en NULLS LAST, id
+   LIMIT 1;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('reversado', false, 'motivo', 'sin_movimiento');
+  END IF;
+
+  IF COALESCE(v_mov.hash_dedupe,'') LIKE 'cobro-%' THEN
+    UPDATE bbva_movimientos
+       SET deleted_at = now(),
+           deleted_by = auth.uid(),
+           motivo_ignorar = v_motivo
+     WHERE id = v_mov.id;
+    v_accion := 'reversar_movimiento_cobro_rep_cancelado';
+  ELSE
+    UPDATE bbva_movimientos
+       SET pago_factura_id = NULL,
+           estado_conciliacion = 'Pendiente',
+           motivo_ignorar = v_motivo
+     WHERE id = v_mov.id;
+    v_accion := 'desvincular_movimiento_cobro_rep_cancelado';
+  END IF;
+
+  PERFORM public.registrar_bitacora(
+    'tesoreria',
+    v_accion,
+    v_mov.id,
+    COALESCE(v_mov.concepto, ''),
+    jsonb_build_object(
+      'pago_factura_id', p_pago_id,
+      'cuenta_bancaria_id', v_mov.cuenta_bancaria_id,
+      'abono', v_mov.abono,
+      'motivo', v_motivo,
+      'origen', CASE WHEN COALESCE(v_mov.hash_dedupe,'') LIKE 'cobro-%' THEN 'sistema' ELSE 'estado_cuenta' END
+    ),
+    v_mov.organization_id,
+    auth.uid()
+  );
+
+  RETURN jsonb_build_object('reversado', true, 'movimiento_id', v_mov.id, 'accion', v_accion);
+END;
+$$;
 CREATE FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) RETURNS uuid[]
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -31702,6 +31769,7 @@ CREATE TRIGGER trg_proveedores_nombre_mayusculas BEFORE INSERT OR UPDATE OF nomb
 CREATE TRIGGER trg_reabrir_entrantes_factura AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW WHEN ((((new.estado IS DISTINCT FROM old.estado) AND (new.estado = 'Cancelada'::public.estado_proveedor_factura)) OR ((new.deleted_at IS DISTINCT FROM old.deleted_at) AND (new.deleted_at IS NOT NULL)))) EXECUTE FUNCTION public._reabrir_entrantes_factura();
 CREATE TRIGGER trg_recalcular_estado_factura AFTER INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.recalcular_estado_factura();
 CREATE TRIGGER trg_recalcular_estado_factura_nc AFTER INSERT OR UPDATE OF estado, monto, deleted_at ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.recalcular_estado_factura();
+CREATE TRIGGER trg_reversar_movimiento_rep_cancelado AFTER UPDATE OF estado_rep ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_reversar_movimiento_rep_cancelado();
 CREATE TRIGGER trg_reverse_ajustes_factura_proveedor AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW WHEN ((((new.estado IS DISTINCT FROM old.estado) AND (new.estado = 'Cancelada'::public.estado_proveedor_factura)) OR ((new.deleted_at IS DISTINCT FROM old.deleted_at) AND (new.deleted_at IS NOT NULL)))) EXECUTE FUNCTION public.tg_reverse_ajustes_factura_proveedor();
 CREATE TRIGGER trg_seguros_embarque_updated_at BEFORE UPDATE ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_set_embarque_created_by BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.set_embarque_created_by();
@@ -33079,6 +33147,8 @@ GRANT ALL ON FUNCTION public._trg_promover_por_liquidar() TO service_role;
 REVOKE ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO authenticated;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO service_role;
+REVOKE ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() TO service_role;
 REVOKE ALL ON FUNCTION public._validar_cronologia_evento_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO service_role;
@@ -34144,6 +34214,8 @@ GRANT ALL ON FUNCTION public.retirar_factura_entrante(p_documento_id uuid) TO se
 REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.reversar_movimiento_cobro_rep_cancelado(p_pago_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reversar_movimiento_cobro_rep_cancelado(p_pago_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) TO service_role;

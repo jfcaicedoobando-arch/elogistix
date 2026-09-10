@@ -11236,6 +11236,10 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: Json
       }
+      reversar_movimiento_cobro_rep_cancelado: {
+        Args: { p_pago_id: string }
+        Returns: Json
+      }
       revertir_proforma_al_cancelar_sustitucion: {
         Args: { p_factura_id: string }
         Returns: string[]

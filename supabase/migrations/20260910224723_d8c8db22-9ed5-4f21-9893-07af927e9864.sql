@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.reversar_movimiento_cobro_rep_cancelado(uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() FROM anon, authenticated;
