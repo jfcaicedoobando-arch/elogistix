@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.283] - 2026-09-10
+- **ui(cotizaciones)**: estandarización visual del wizard (pasos 1-4). Un solo ancho de contenido (antes los pasos 2-4 se encajonaban más angostos que el paso 1 y el contenido "saltaba"); pasos 2, 3 y 4 migrados a `WizardSection` para igualar título, espaciado y check de completado con el paso 1.
+- **ui(cotizaciones, paso 2)**: la cuadrícula de costos ahora tiene encabezados de columna (Concepto · Proveedor · Unidad · Cant. · Costo unit. · Venta unit. · Costo total · Venta total · Utilidad · Margen) con anchos compartidos entre encabezado, renglón y pie de totales (`costosLocal/columnasCosto.ts`); el pie ya cae bajo su columna. Las notas por renglón pasan a botón bajo demanda en lugar de campo siempre abierto.
+- **ui(cotizaciones)**: la utilidad consolidada deja de repetirse. Se retira la tarjeta duplicada del paso 2 (queda la barra fija inferior + pie por tabla + insignia por renglón) y el paso 4 reutiliza `ResumenPL` en lugar de duplicar las tarjetas.
+- **ui(cotizaciones)**: todos los avisos del wizard pasan por `Alert` con variante (`info`/`warning`), en vez de banners artesanales con colores propios en cada paso.
+- **i18n/es-MX**: textos visibles unificados a "Utilidad" y "Margen" ("Resumen P&L" → "Resumen de utilidad", "P&L USD/MXN", "Total Costo/Venta", "profit" fuera de la interfaz).
+- Sin cambios de cálculo, guardado, RPCs, permisos, IVA ni tipo de cambio.
+- Validación local: typecheck, ESLint focalizado y 750 pruebas focalizadas de cotizaciones + `no-raw-callout` en verde. CI/RLS/E2E completos quedan a GitHub Actions.
+
 ## [13.823.282] - 2026-09-10
 - **fix(CxP, embarques)**: al capturar una factura de proveedor, el importe marcado en cada costo del embarque se congelaba en la moneda que la factura tenía en ese momento. Si la moneda cambiaba después (lectura con IA o corrección manual), el ajuste de costo comparaba importes de monedas distintas y escribía un descuento inexistente en el embarque (ELIMP00358: 60 USD contra 1,013.68 MXN = −953.68 USD, factura 034G545923). Ahora el vínculo guarda su `monedaBase`, aplicar un XML/PDF con otra moneda limpia lo marcado y `crearAjustesFacturaProveedor` descarta cualquier renglón cuya moneda congelada no sea la de la factura.
 - **fix(datos)**: borrado lógico del renglón «Ajuste factura 034G545923: Cargos Destino» (−953.68 USD) del embarque ELIMP00358 vía `crear_ajustes_factura_proveedor_rpc(..., '[]')`. El costo real de 60 USD, la factura y sus pagos quedaron intactos.

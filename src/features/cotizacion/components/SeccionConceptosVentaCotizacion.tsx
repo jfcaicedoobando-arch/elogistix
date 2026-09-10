@@ -1,6 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WizardSection } from "@/components/shared/WizardSection";
 import { AlertTriangle, Plus } from "lucide-react";
+
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks";
@@ -52,36 +54,34 @@ export default function SeccionConceptosVentaCotizacion({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Conceptos en USD</CardTitle>
-            {agregarConceptoPrefill ? (
-              <AgregarConceptoInline
-                monedaFija="USD"
-                triggerLabel="Agregar"
-                onAgregar={agregarConceptoPrefill}
-              />
-            ) : (
-              <Button variant="outline" size="sm" onClick={agregarConceptoUSD}>
-                <Plus className="h-4 w-4 mr-1" /> Agregar
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <WizardSection
+        title="Conceptos en USD"
+        contentClassName="space-y-3"
+        actions={
+          agregarConceptoPrefill ? (
+            <AgregarConceptoInline
+              monedaFija="USD"
+              triggerLabel="Agregar"
+              onAgregar={agregarConceptoPrefill}
+            />
+          ) : (
+            <Button variant="outline" size="sm" onClick={agregarConceptoUSD}>
+              <Plus className="h-4 w-4 mr-1" /> Agregar
+            </Button>
+          )
+        }
+      >
+        <>
           {mixtasUSD.length > 0 && (
-            <div
-              data-testid="bucket-mixed-warning-usd"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-foreground"
-            >
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>
+            <Alert variant="warning" data-testid="bucket-mixed-warning-usd">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
                 Hay {mixtasUSD.length} fila(s) con moneda distinta a USD ({mixtasUSD.map(f => `#${f.index + 1}: ${f.moneda}`).join(', ')}).
                 Este bucket suma en moneda nativa: ajusta la moneda de la fila o muévela al bucket MXN.
-              </span>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
+
           {conceptosUSD.map((c, i) => (
             <ConceptoRowUSD
               key={i}
@@ -103,38 +103,35 @@ export default function SeccionConceptosVentaCotizacion({
               <span className="text-body font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </>
+      </WizardSection>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Conceptos en MXN + IVA</CardTitle>
-            {agregarConceptoPrefill ? (
-              <AgregarConceptoInline
-                monedaFija="MXN"
-                triggerLabel="Agregar"
-                onAgregar={agregarConceptoPrefill}
-              />
-            ) : (
-              <Button variant="outline" size="sm" onClick={agregarConceptoMXN}>
-                <Plus className="h-4 w-4 mr-1" /> Agregar
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <WizardSection
+        title="Conceptos en MXN + IVA"
+        contentClassName="space-y-3"
+        actions={
+          agregarConceptoPrefill ? (
+            <AgregarConceptoInline
+              monedaFija="MXN"
+              triggerLabel="Agregar"
+              onAgregar={agregarConceptoPrefill}
+            />
+          ) : (
+            <Button variant="outline" size="sm" onClick={agregarConceptoMXN}>
+              <Plus className="h-4 w-4 mr-1" /> Agregar
+            </Button>
+          )
+        }
+      >
+        <>
           {mixtasMXN.length > 0 && (
-            <div
-              data-testid="bucket-mixed-warning-mxn"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-foreground"
-            >
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>
+            <Alert variant="warning" data-testid="bucket-mixed-warning-mxn">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
                 Hay {mixtasMXN.length} fila(s) con moneda distinta a MXN ({mixtasMXN.map(f => `#${f.index + 1}: ${f.moneda}`).join(', ')}).
                 Ajusta la moneda o mueve la fila al bucket USD para evitar mezcla.
-              </span>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
           {conceptosMXN.map((c, i) => (
             <ConceptoRowMXN
@@ -152,8 +149,9 @@ export default function SeccionConceptosVentaCotizacion({
             <span className="text-body">IVA ({tasaPctMXN}): {formatCurrency(ivaMXN, 'MXN')}</span>
             <span className="text-body font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
           </div>
-        </CardContent>
-      </Card>
+        </>
+      </WizardSection>
+
 
       <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
