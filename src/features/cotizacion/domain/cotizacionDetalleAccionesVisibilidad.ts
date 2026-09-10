@@ -28,6 +28,10 @@ export function visibilidadAcciones(params: {
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
+  const sinEmbarqueAun = esAceptada && !tieneEmbarquesVinculados;
+  // v13.823.277 — puerta común de "generar el embarque": cotización aceptada de
+  // un cliente real, sin embarque previo y con un rol que la RPC autoriza.
+  const puertaEmbarque = sinEmbarqueAun && !esProspecto && puedeCrearEmbarque;
   return {
     esEnCaptura: estado === "Borrador" || estado === "Solicitada",
     // v13.823.277 — el bloque sólo aparece si el rol tiene al menos una de las
