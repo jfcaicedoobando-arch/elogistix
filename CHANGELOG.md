@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.294] - 2026-09-10
+- **fix(facturacion)**: una factura ya no se queda atorada en `Pagada` cuando su único pago se anula por cancelación del REP. `recalcular_estado_factura` calcula el saldo con `saldo_factura_bruto` en lugar de `saldo_factura`, que devuelve 0 en cuanto el estado es `Pagada` (atajo legacy) y creaba un círculo vicioso. Se conserva el early-return de `Cancelada / Borrador / Sustituida` y el flag `app.recalc_estado_factura`.
+- **data(facturacion)**: se recalcularon las 21 facturas afectadas (1015–1048, INDIMEX TRADING): 18 quedaron `Emitida` y 3 `Vencida`, y vuelven a aparecer en cartera y antigüedad de saldos. No se tocaron importes, IVA, comprobantes, REPs, pagos (siguen visibles como "Anulado") ni comisiones.
+
+
 ## [13.823.293] - 2026-09-10
 - **fix(tesoreria)**: al cancelarse un REP ahora se reversa la entrada de dinero del cobro. Nueva `reversar_movimiento_cobro_rep_cancelado(uuid)` (SECURITY DEFINER, `search_path=public`, sólo `service_role`): si el movimiento lo generó el sistema (`hash_dedupe LIKE 'cobro-%'`) se hace soft-delete con motivo "REP cancelado: el cobro se anuló"; si es una línea real del estado de cuenta se desvincula el pago y vuelve a `Pendiente`. Todo queda en `bitacora_actividad`; no se tocan importes, fecha, saldo, cuenta ni organización.
 - **fix(tesoreria)**: trigger `trg_reversar_movimiento_rep_cancelado` (`AFTER UPDATE OF estado_rep ON pagos_factura`) aplica la reversa automáticamente al pasar a `Cancelado`.
