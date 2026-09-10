@@ -128,7 +128,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         />
       </div>
 
-      {borradorVacio && (
+      {borradorVacio && canEdit && (
         <ProformaInconsistenteAlert
           proformaBorrador={borradorVacio}
           conceptosPendientes={conceptosHuerfanos}
