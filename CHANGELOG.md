@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.292] - 2026-09-10
+- **fix(embarques)**: si el embarque ya se cerró (por ejemplo, con el cierre automático al liquidarse el último saldo) el botón "Cerrar embarque" ya no muestra un error rojo: `cerrarEmbarque` devuelve `{ yaCerrado: true }` y la UI avisa "Este embarque ya se cerró" y refresca candado, checklist e historial. Caso ELIMP00245 (cierre automático 31 s antes del clic).
+- **ui(embarques)**: `useValidacionCierre` revalida al entrar a la pestaña (`refetchOnMount: "always"`, `staleTime` 5 s) para no ofrecer un botón obsoleto.
+
 ## [13.823.291] - 2026-09-10
 - **fix(embarques)**: `validar_cierre_embarque` respeta `resolver_sin_comision`: si el embarque está excluido de comisión (override propio o cliente marcado `sin_comision`), el check `comisiones_definitivas` ya no bloquea y reporta `detalle.sin_comision`. Antes el checklist se veía completo (la UI pinta esos puntos en gris y los excluye del conteo) mientras el candado contaba una comisión huérfana — ELIMP00298 no podía cerrarse.
 - **fix(embarques)**: la comisión atorada de ELIMP00298 (`7e510f4f…`, nota "Sin vendedora asignada al embarque") se recalculó con `calcular_comision_pago` y quedó `Cancelada` / 0 MXN con nota "Embarque excluido de comisión"; no se borró el registro ni se tocó el pago, la factura ni los importes.
