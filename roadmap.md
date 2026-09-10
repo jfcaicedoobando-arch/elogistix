@@ -64,3 +64,10 @@
 - [x] `visibilidadAcciones`: oculta Crear embarque y el aviso de venta faltante sin permiso
 - [x] Pruebas por rol (contador, gerente_comercial, vendedor, ejecutivo_pricing, coordinador_logistico, gerente_operaciones)
 - [x] Cierre: versión, changelog y manifiesto; suites completas sólo en GitHub Actions
+
+## 13.823.278 — Permisos de proformas en embarque y listado
+- [x] Pestaña Facturación del embarque usa el permiso específico de proformas (no el genérico)
+- [x] Aviso de borrador inconsistente sólo con permiso de escritura
+- [x] /proformas oculta casilla de selección y acción de fusionar sin permiso de emisión
+- [x] Pruebas UI: sin permiso (vendedor/gerente comercial) vs con permiso (contador/operador)
+- [x] Cierre: versión, changelog, manifiesto; suites completas en GitHub Actions
