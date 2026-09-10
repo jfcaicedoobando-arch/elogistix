@@ -37,6 +37,12 @@ function applyResult(deps: ParsedApplyDeps, result: {
   tcOrigen: TcOrigen;
   tcFechaAplicada?: string | undefined;
 }) {
+  // Los montos vinculados viven en la moneda de la factura: si el documento
+  // trae otra moneda, lo marcado antes dejaría de ser comparable y generaría
+  // un ajuste de costo fantasma (ELIMP00358: 60 USD vs 1,013.68 MXN).
+  if (deps.monedaActual && deps.monedaActual !== result.values.moneda) {
+    deps.setVinculos?.({});
+  }
   deps.setValues(result.values);
   deps.setErrors({});
   deps.setPendingCfdi(result.pendingCfdi);
