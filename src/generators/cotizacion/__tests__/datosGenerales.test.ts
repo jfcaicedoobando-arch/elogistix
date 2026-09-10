@@ -64,6 +64,15 @@ describe("buildDatosGenerales", () => {
     expect(keys).toContain("Días libres en destino");
     expect(keys).toContain("Carta garantía");
   });
+
+  it("pluraliza Vigencia: 1 día y N días", () => {
+    const unDia = buildDatosGenerales({ ...base, vigencia_dias: 1, fecha_vigencia: "2026-09-10" } as CotizacionRow);
+    const muchos = buildDatosGenerales({ ...base, vigencia_dias: 15, fecha_vigencia: "2026-09-24" } as CotizacionRow);
+    const v1 = unDia.find(([k]) => k === "Vigencia")?.[1];
+    const v15 = muchos.find(([k]) => k === "Vigencia")?.[1];
+    expect(v1).toBe("1 día (2026-09-10)");
+    expect(v15).toBe("15 días (2026-09-24)");
+  });
 });
 
 describe("buildMercancia", () => {

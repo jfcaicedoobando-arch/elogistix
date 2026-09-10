@@ -27,6 +27,10 @@ function rowsOpcionales(c: CotizacionRow): [string, string][] {
   return out;
 }
 
+function pluralizarDias(n: number): string {
+  return `${n} ${n === 1 ? 'día' : 'días'}`;
+}
+
 export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
   const base: [string, string][] = [
     ['Modo', c.modo],
@@ -34,7 +38,7 @@ export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
     ['Incoterm', c.incoterm],
     ['Origen', c.origen || '-'],
     ['Destino', c.destino || '-'],
-    ['Vigencia', `${c.vigencia_dias} días${c.fecha_vigencia ? ` (${formatDate(c.fecha_vigencia)})` : ''}`],
+    ['Vigencia', `${pluralizarDias(c.vigencia_dias)}${c.fecha_vigencia ? ` (${formatDate(c.fecha_vigencia)})` : ''}`],
     ['Operador', c.operador || '-'],
   ];
   const seguro: [string, string] = [
