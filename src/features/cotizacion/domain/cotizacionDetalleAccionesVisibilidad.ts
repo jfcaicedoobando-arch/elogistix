@@ -15,10 +15,16 @@ export function visibilidadAcciones(params: {
   tieneOportunidad: boolean;
   /** P0 — sin venta capturada no se puede generar el embarque. */
   tieneVenta: boolean;
+  /**
+   * v13.823.277 — ¿el rol puede generar el embarque borrador? Espejo de
+   * `crear_embarque_borrador_core` (admin/operador/super_admin): sin esto,
+   * comercial y finanzas veían un botón que terminaba en 42501.
+   */
+  puedeCrearEmbarque: boolean;
 }) {
   const {
     estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad, tieneVenta,
+    puedeAltaCliente, tieneOportunidad, tieneVenta, puedeCrearEmbarque,
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;

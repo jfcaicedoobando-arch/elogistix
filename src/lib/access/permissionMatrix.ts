@@ -142,6 +142,33 @@ export const ALTA_CLIENTES: readonly AppRole[] = [
   "auxiliar_contable",
 ];
 
+/**
+ * Roles que pueden ACEPTAR/RECHAZAR una cotización. Espejo EXACTO de
+ * `public.aceptar_cotizacion_version`: administración/dirección + comercial y
+ * operación. Finanzas (contador, tesorero, cobranza) NO acepta cotizaciones.
+ * Al cambiar esta lista hay que cambiar también esa RPC.
+ */
+export const ACEPTAR_COTIZACION: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+  "vendedor",
+  "operador",
+  "gerente_operaciones",
+];
+
+/**
+ * Roles que pueden generar el embarque borrador desde una cotización. Espejo
+ * EXACTO de `public.crear_embarque_borrador_core`: sólo super admin, admin y
+ * operador. Al cambiar esta lista hay que cambiar también esa función.
+ */
+export const CREAR_EMBARQUE_BORRADOR: readonly AppRole[] = [
+  "super_admin",
+  "admin",
+  "operador",
+];
+
 export {
   CRM_CONFIG,
   CRM_TOMAR_LEAD,

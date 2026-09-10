@@ -1,9 +1,21 @@
 /**
  * Q-04 — Acciones permitidas en el detalle de cotización.
  * Extraído de `cotizacion.ts` (Power-of-10).
+ *
+ * v13.823.277 — las listas de roles son espejo de las reglas reales de la base
+ * de datos, para no mostrar botones que la RPC rechaza con 42501:
+ *  - enviar/rechazar → `public.puede_escribir_cotizaciones()` (`SALES`);
+ *  - aceptar → `public.aceptar_cotizacion_version` (`ACEPTAR_COTIZACION`);
+ *  - crear embarque → `public.crear_embarque_borrador_core`
+ *    (`CREAR_EMBARQUE_BORRADOR`).
  */
 import type { AppRole } from "@/types/appRole";
-import { FINANCE, OPERATIONS, SALES, hasRole } from "@/lib/access/permissionMatrix";
+import {
+  ACEPTAR_COTIZACION,
+  CREAR_EMBARQUE_BORRADOR,
+  SALES,
+  hasRole,
+} from "@/lib/access/permissionMatrix";
 
 /** Estados de cotización relevantes para las acciones del detalle. */
 export type EstadoCotizacionAccion = "Borrador" | "Solicitada" | "Enviada" | "Aceptada" | "Rechazada" | string;
@@ -13,11 +25,8 @@ export interface AccionesCotizacionPermitidas {
   enviar: boolean;
   aceptar: boolean;
   rechazar: boolean;
-}
-
-/** ¿El rol puede editar/gestionar cotizaciones (capturar, enviar, aceptar, rechazar)? */
-function puedeGestionarCotizacion(rol: AppRole | null | undefined): boolean {
-  return hasRole(OPERATIONS, rol) || hasRole(FINANCE, rol) || hasRole(SALES, rol);
+  /** ¿El rol puede generar el embarque borrador? (espejo de la RPC). */
+  crearEmbarque: boolean;
 }
 
 /**
@@ -26,11 +35,12 @@ function puedeGestionarCotizacion(rol: AppRole | null | undefined): boolean {
  *
  * Reglas de negocio:
  *  - "Exportar PDF": siempre visible (no depende de estado, total ni rol).
- *  - "Enviar" / "Marcar enviada": sólo si el rol puede gestionar la cotización,
+ *  - "Enviar" / "Marcar enviada": sólo si el rol puede escribir cotizaciones,
  *    el estado es "Borrador" o "Solicitada" y el total es mayor a cero
  *    (evita enviar/aceptar cotizaciones vacías, p.ej. un borrador en $0.00).
- *  - "Aceptar" / "Rechazar": sólo si el rol puede gestionar la cotización,
- *    el estado es "Enviada" y el total es mayor a cero.
+ *  - "Aceptar" / "Rechazar": aceptar exige un rol autorizado por la RPC de
+ *    aceptación; rechazar sólo escritura de cotizaciones. Ambos requieren
+ *    total mayor a cero.
  */
 export interface ContextoSoDCotizacion {
   /** Usuario que creó la cotización. */
@@ -54,7 +64,8 @@ export function accionesCotizacionPermitidas(
    */
   requiereAutorizacionCliente = true,
 ): AccionesCotizacionPermitidas {
-  const puedeGestionar = puedeGestionarCotizacion(rol);
+  const puedeEscribir = hasRole(SALES, rol);
+  const puedeAceptarRol = hasRole(ACEPTAR_COTIZACION, rol);
   const tieneTotal = Number(total) > 0;
 
   // Q-04b — Segregación de funciones: quien creó la cotización no puede
@@ -65,16 +76,17 @@ export function accionesCotizacionPermitidas(
   const exentoSoD = Boolean(rol) && ROLES_SOD_EXENTOS.includes(rol as AppRole);
   const bloqueadoPorSoD = esAutor && !exentoSoD;
 
-  const enviar = puedeGestionar && tieneTotal && (estado === "Borrador" || estado === "Solicitada");
+  const enviar = puedeEscribir && tieneTotal && (estado === "Borrador" || estado === "Solicitada");
   const estadosAceptables = requiereAutorizacionCliente
     ? ["Enviada"]
     : ["Enviada", "Borrador", "Solicitada"];
-  const aceptarRechazar = puedeGestionar && tieneTotal && estadosAceptables.includes(estado);
+  const enEstadoRespuesta = tieneTotal && estadosAceptables.includes(estado);
 
   return {
     exportarPdf: true,
     enviar,
-    aceptar: aceptarRechazar && !bloqueadoPorSoD,
-    rechazar: aceptarRechazar,
+    aceptar: enEstadoRespuesta && puedeAceptarRol && !bloqueadoPorSoD,
+    rechazar: enEstadoRespuesta && puedeEscribir,
+    crearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
   };
 }
