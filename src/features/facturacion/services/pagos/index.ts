@@ -3,7 +3,7 @@ import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
-import type { Moneda } from "@/types/db";
+
 import { CAP_LISTA } from "@/constants/queryCaps";
 
 
@@ -98,23 +98,13 @@ export async function registrarPagoFactura(
   );
   const pagoId = (data as { id?: string } | null)?.id ?? null;
   // El abono bancario sólo se crea si el usuario indicó la cuenta destino.
+  // Ola v17: lo registra la RPC `asegurar_movimiento_cobro_factura` (punto
+  // único de escritura, idempotente y con la conversión de moneda del lado del
+  // servidor). `ya_existe` no es un fallo: el abono ya está en el banco.
   let movimientoBancario: RegistrarPagoResult["movimientoBancario"] = "no_aplica";
   if (pagoId && input.cuenta_bancaria_id) {
-    const ok = await crearMovimientoBancarioCobro({
-      pagoId,
-      facturaId: input.factura_id,
-      cuentaBancariaId: input.cuenta_bancaria_id,
-      fechaPago: input.fecha_pago,
-      monto: input.monto,
-      moneda: input.moneda as Moneda,
-      // C4: `tipo_cambio` aquí es el ratio pago→factura, NO el TC MXN/USD del
-      // DOF. Pasarlo al movimiento bancario descuadraba el saldo; el abono se
-      // registra sólo si la cuenta es de la misma moneda que el cobro.
-      tipoCambioUsd: null,
-      referencia: input.referencia,
-      userId: created_by,
-    });
-    movimientoBancario = ok ? "creado" : "fallido";
+    const res = await crearMovimientoBancarioCobro(pagoId);
+    movimientoBancario = res.ok || res.motivo === "ya_existe" ? "creado" : "fallido";
   }
   // P2-6 (R5): los pagos de cliente no aparecían en la bitácora/actividad
   // (sólo los de proveedor), así que la línea de tiempo quedaba incompleta.

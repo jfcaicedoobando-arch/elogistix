@@ -25,8 +25,9 @@ describe("calcularSaldoFactura (canon A1)", () => {
     expect(r.saldo).toBe(500);
   });
 
-  // BUG-2026-08-25: facturas legacy marcadas Pagada sin pagos capturados.
-  it.each(["Pagada", "Cancelada", "Sustituida"])(
+  // Ola v17: terminal = Cancelada / Sustituida. 'Pagada' YA NO lo es: el saldo
+  // no puede depender del estado (circularidad saldo → estado → saldo).
+  it.each(["Cancelada", "Sustituida"])(
     "devuelve saldo 0 en estado terminal %s aunque no haya pagos",
     (estado) => {
       const r = calcularSaldoFactura(1000, [], [], estado);
@@ -35,6 +36,12 @@ describe("calcularSaldoFactura (canon A1)", () => {
       expect(r.total).toBe(1000);
     },
   );
+
+  it("una factura 'Pagada' sin pagos capturados reporta su saldo real", () => {
+    const r = calcularSaldoFactura(1000, [], [], "Pagada");
+    expect(r.saldo).toBe(1000);
+    expect(r.liquidada).toBe(false);
+  });
 
   // v13.823.145: un CFDI sin timbrar sigue pendiente por cobrar.
   it("conserva el saldo en Borrador (sin timbrar)", () => {
@@ -52,7 +59,8 @@ describe("calcularSaldoFactura (canon A1)", () => {
 
 describe("esEstadoSinSaldo", () => {
   it("sólo reconoce los estados terminales", () => {
-    expect(esEstadoSinSaldo("Pagada")).toBe(true);
+    expect(esEstadoSinSaldo("Cancelada")).toBe(true);
+    expect(esEstadoSinSaldo("Pagada")).toBe(false);
     expect(esEstadoSinSaldo("Emitida")).toBe(false);
     expect(esEstadoSinSaldo(null)).toBe(false);
     expect(esEstadoSinSaldo(undefined)).toBe(false);
