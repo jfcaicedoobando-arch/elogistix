@@ -35,6 +35,14 @@ export interface CrearAjustesInput {
   proveedorId: string;
   proveedorNombre: string;
   vinculos: Record<string, VinculoLinea>;
+  /**
+   * Total de la factura en su propia moneda. Un ajuste nace de la diferencia
+   * contra ESTA factura, así que jamás puede excederla: si lo hace, la base
+   * congelada estaba en otra moneda (ELIMP00368: −546,777.68 USD sobre una
+   * factura de 34,400 USD). Sirve de candado para vínculos legacy que no
+   * declaran `monedaBase`. La RPC valida lo mismo en el servidor.
+   */
+  totalFactura?: number;
 }
 
 export interface CrearAjustesResult {
@@ -54,7 +62,15 @@ export async function crearAjustesFacturaProveedor(
       vinculo: v,
       delta: currency(v.monto, { precision: 4 }).subtract(v.montoOriginal).value,
     }))
-    .filter((x) => Math.abs(x.delta) > TOLERANCIA);
+    .filter((x) => Math.abs(x.delta) > TOLERANCIA)
+    // Candado de magnitud: cierra el hueco de los vínculos legacy sin
+    // `monedaBase`. Si el delta supera el total de la propia factura no es un
+    // descuento real, es una mezcla de monedas. Sólo aplica cuando conocemos el
+    // total (>0) para no bloquear flujos que no lo pasan.
+    .filter((x) => {
+      const tope = Number(input.totalFactura ?? 0);
+      return tope <= 0 || Math.abs(x.delta) <= tope + TOLERANCIA;
+    });
 
   if (deltas.length === 0) return { ajustesCreados: 0 };
 
