@@ -54,10 +54,13 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => Number(t.flete_base),
       sortingFn: sortByNumber((t) => Number(t.flete_base)),
       enableSorting: true,
+      // MR-UI-02: Flete y Recargos se ocultan bajo xl (1280–1535 px) para que
+      // Estado y Acciones entren al primer viewport en HD; el desglose sigue
+      // disponible en pantallas amplias y el Total ya incluye ambos montos.
       meta: {
         align: "right",
-        className: "tabular-nums hidden lg:table-cell",
-        headerClassName: "hidden lg:table-cell",
+        className: "tabular-nums hidden xl:table-cell",
+        headerClassName: "hidden xl:table-cell",
       },
       cell: ({ row }) => usd(Number(row.original.flete_base)),
     },
@@ -69,8 +72,8 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       enableSorting: true,
       meta: {
         align: "right",
-        className: "tabular-nums hidden lg:table-cell",
-        headerClassName: "hidden lg:table-cell",
+        className: "tabular-nums hidden xl:table-cell",
+        headerClassName: "hidden xl:table-cell",
       },
       cell: ({ row }) => usd(row.original.recargos_total),
     },
@@ -140,7 +143,10 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
     {
       id: "acciones",
       header: "Acciones",
-      meta: { width: COL_W.nombre, align: "right" },
+      // MR-UI-02: si la tabla desborda (nombres de puerto largos), Acciones
+      // queda pegada a la derecha con sombra-affordance: Aprobar/Rechazar
+      // siguen visibles y enfocables sin desplazarse.
+      meta: { width: COL_W.nombre, align: "right", stickyRight: true },
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";
