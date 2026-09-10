@@ -43,7 +43,7 @@ export function MonthPickerMx({
   const errorId = id ? `${id}-error` : autoErrorId;
   const [open, setOpen] = useState(false);
   const {
-    text, invalid, inputRef, commit, handleChange, emitir, limpiar,
+    text, invalid, inputRef, commit, handleChange, handlePaste, emitir, limpiar,
   } = useMonthPickerMxValor(value, onChange);
 
   const showError = invalid || !!errorText;
