@@ -10929,6 +10929,19 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_YA_FACTURADA: una o más proformas ya fueron facturadas' USING ERRCODE='P0002';
   END IF;
+  -- v13.823.279 — Candado de aceptación: la UI ya oculta la acción para
+  -- proformas pendientes o rechazadas, pero la RPC podía llamarse directo y
+  -- facturar sin la respuesta del cliente. Para clientes de casa, la RPC
+  -- `aceptar_proforma_sin_autorizacion` deja `estado_cliente = 'aceptada'`,
+  -- así que ese flujo sigue funcionando igual.
+  IF EXISTS (
+    SELECT 1 FROM public.proformas
+    WHERE id = ANY(p_proforma_ids)
+      AND deleted_at IS NULL
+      AND coalesce(estado_cliente, 'pendiente') <> 'aceptada'
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_REQUIERE_ACEPTACION: una o más proformas no están aceptadas por el cliente (pendiente o rechazada)' USING ERRCODE='P0002';
+  END IF;
   SELECT * INTO v_first FROM public.proformas
     WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
   v_org := v_first.organization_id;
@@ -12377,6 +12390,7 @@ DECLARE
   v_actualizados int;
   v_ajenos int;
   v_no_soportados int;
+  v_overrides_fuera int;
   -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
   v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
@@ -12440,6 +12454,16 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
   IF p_iva_overrides IS NOT NULL AND p_iva_overrides <> '{}'::jsonb THEN
+    -- Integridad: un override sólo puede tocar conceptos de ESTA selección.
+    -- Antes, el UPDATE no filtraba por p_concepto_ids y podía cambiar
+    -- aplica_iva de cualquier otro concepto del mismo embarque.
+    SELECT COUNT(*) INTO v_overrides_fuera
+    FROM jsonb_object_keys(p_iva_overrides) AS k(id)
+    WHERE NOT (k.id::uuid = ANY(p_concepto_ids));
+    IF v_overrides_fuera > 0 THEN
+      RAISE EXCEPTION 'LC_OVERRIDE_FUERA_DE_SELECCION: % ajuste(s) de IVA apuntan a conceptos que no están en esta proforma; recarga la pantalla', v_overrides_fuera
+        USING ERRCODE = 'P0001';
+    END IF;
     FOR v_override IN
       SELECT key AS concepto_id, (value)::text::boolean AS aplica
       FROM jsonb_each(p_iva_overrides)
@@ -12448,7 +12472,8 @@ BEGIN
       SET aplica_iva = v_override.aplica
       WHERE id = v_override.concepto_id::uuid
         AND organization_id = v_org
-        AND embarque_id = p_embarque_id;
+        AND embarque_id = p_embarque_id
+        AND id = ANY(p_concepto_ids);
     END LOOP;
   END IF;
   SELECT
@@ -21008,12 +21033,10 @@ DECLARE
   _tc_usd numeric; _tc_eur numeric; _org uuid;
   _has_pf boolean; _has_seg boolean;
   _estado_costos text;
-  _fecha_emb date;
   _base jsonb;
 BEGIN
-  SELECT COALESCE(tipo_cambio_usd,0), COALESCE(tipo_cambio_eur,0), organization_id,
-         COALESCE(eta, fecha_llegada_real, etd, fecha_creacion::date)
-    INTO _tc_usd, _tc_eur, _org, _fecha_emb
+  SELECT COALESCE(tipo_cambio_usd,0), COALESCE(tipo_cambio_eur,0), organization_id
+    INTO _tc_usd, _tc_eur, _org
   FROM public.embarques WHERE id = _embarque_id AND deleted_at IS NULL;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque % no encontrado', _embarque_id;
@@ -21031,10 +21054,13 @@ BEGIN
     _estado_costos := 'completo';
   END IF;
   WITH
+  -- P1 (v13.823.274): el presupuesto usa EXCLUSIVAMENTE el T/C congelado del
+  -- embarque (misma base que la pestaña Costos). Antes se derivaba del DOF de
+  -- ETA/ETD, por lo que el presupuesto cambiaba al mover la ETA.
   cv AS (
     SELECT lower(trim(coalesce(descripcion,'(sin concepto)'))) AS concepto,
            moneda::text AS moneda, coalesce(total,0)::numeric AS monto,
-           (SELECT t.tc FROM public.tc_para_documento(_fecha_emb, moneda::text, NULL, CASE WHEN UPPER(moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc
+           CASE WHEN UPPER(moneda::text) = 'EUR' THEN NULLIF(_tc_eur,0) ELSE NULLIF(_tc_usd,0) END AS tc_doc
     FROM public.conceptos_venta
     WHERE embarque_id = _embarque_id AND deleted_at IS NULL
   ),
@@ -21042,7 +21068,7 @@ BEGIN
     SELECT lower(trim(coalesce(concepto,'(sin concepto)'))) AS concepto,
            moneda::text AS moneda, coalesce(monto,0)::numeric AS monto,
            proveedor_id, coalesce(proveedor_nombre,'(sin proveedor)') AS proveedor_nombre,
-           (SELECT t.tc FROM public.tc_para_documento(_fecha_emb, moneda::text, NULL, CASE WHEN UPPER(moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc
+           CASE WHEN UPPER(moneda::text) = 'EUR' THEN NULLIF(_tc_eur,0) ELSE NULLIF(_tc_usd,0) END AS tc_doc
     FROM public.conceptos_costo
     WHERE embarque_id = _embarque_id AND deleted_at IS NULL
   ),
@@ -21050,7 +21076,7 @@ BEGIN
     SELECT 'seguro de carga'::text AS concepto, moneda::text AS moneda,
            coalesce(prima,0)::numeric AS monto,
            NULL::uuid AS proveedor_id, aseguradora AS proveedor_nombre,
-           (SELECT t.tc FROM public.tc_para_documento(_fecha_emb, moneda::text, NULL, CASE WHEN UPPER(moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc
+           CASE WHEN UPPER(moneda::text) = 'EUR' THEN NULLIF(_tc_eur,0) ELSE NULLIF(_tc_usd,0) END AS tc_doc
     FROM public.seguros_embarque
     WHERE embarque_id = _embarque_id AND deleted_at IS NULL
   ),
@@ -21079,8 +21105,6 @@ BEGIN
   pf AS (
     SELECT id, proveedor_id, coalesce(proveedor_nombre,'(sin proveedor)') AS proveedor_nombre,
            coalesce(NULLIF(total,0), subtotal, 0)::numeric AS total,
-           -- Base gravable (sin IVA): subtotal si existe; si no, total menos
-           -- impuestos capturados. Nunca negativa.
            GREATEST(
              coalesce(
                NULLIF(subtotal,0),
@@ -21099,7 +21123,6 @@ BEGIN
     WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
   ),
   pf_neto AS (
-    -- Costo real = base gravable menos notas de crédito prorrateadas a esa base.
     SELECT pf.id, pf.proveedor_id, pf.proveedor_nombre, pf.moneda, pf.estado, pf.tc_doc,
            pf.base_gravable
              - coalesce((SELECT sum(monto) FROM pnc WHERE proveedor_factura_id = pf.id),0)

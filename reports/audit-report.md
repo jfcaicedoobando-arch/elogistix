@@ -1,6 +1,6 @@
-# Audit Report — 13.823.253
+# Audit Report — 13.823.280
 
-Generado: 2026-09-09T03:39:58.696Z
+Generado: 2026-09-10T07:46:09.605Z
 
 ## Resumen
 
@@ -9,7 +9,7 @@ Generado: 2026-09-09T03:39:58.696Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3640 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3651 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 14/51 validados (28%) |
 
@@ -26,13 +26,13 @@ Generado: 2026-09-09T03:39:58.696Z
 
 ## Casts
 
-Total: **3640** — HIGH: **0**, CRITICAL: **0**
+Total: **3651** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 1042 |
+| SAFE | 1047 |
 | LOW | 174 |
-| MEDIUM | 2424 |
+| MEDIUM | 2430 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -47,9 +47,9 @@ Total: **3640** — HIGH: **0**, CRITICAL: **0**
 | 5 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 |
 | 6 | `src/features/dashboard/direccion/services/loaders.ts` | 14 | 25 |
 | 7 | `src/features/embarques/hooks/__tests__/useNuevoEmbarqueCotVinculada.test.tsx` | 11 | 22 |
-| 8 | `src/features/configuracion/index.ts` | 10 | 20 |
-| 9 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
-| 10 | `src/features/cotizacion/services/__tests__/wizard.test.ts` | 10 | 20 |
+| 8 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 11 | 22 |
+| 9 | `src/features/configuracion/index.ts` | 10 | 20 |
+| 10 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
 
 ## Boundaries de datos (`fromDb`)
 

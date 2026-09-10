@@ -83,7 +83,13 @@ describe("Fase J — ciclo de cotización", () => {
     // v13.823.153 — la regla vive en el módulo de dominio (refactor Power-of-10);
     // el componente sólo consume la bandera.
     const dominio = fs.readFileSync(domainPath, "utf8");
-    expect(dominio).toMatch(/mostrarRecotizar\s*[:=]\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/);
+    // v13.823.277 — la condición se nombró `sinEmbarqueAun` (misma regla:
+    // cotización aceptada y sin embarque vinculado), reutilizada por las demás
+    // banderas del encabezado.
+    expect(dominio).toMatch(
+      /const\s+sinEmbarqueAun\s*=\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/,
+    );
+    expect(dominio).toMatch(/mostrarRecotizar\s*:\s*sinEmbarqueAun/);
     expect(src).toMatch(/\{mostrarRecotizar\s*&&/);
   });
 });
