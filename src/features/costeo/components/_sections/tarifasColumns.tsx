@@ -128,6 +128,13 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       header: "Estado",
       accessorFn: (t) => t.estado_aprobacion ?? "vigente",
       enableSorting: true,
+      // MR-UI-02: Acciones reserva 160 px (`COL_W.nombre`). Estado se fija
+      // inmediatamente a su izquierda para que ambos planos nunca se monten.
+      meta: {
+        width: COL_W.nombre,
+        className: "sticky right-40 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+        headerClassName: "sticky right-40 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+      },
       cell: ({ row }) => {
         const t = row.original;
         return (
@@ -143,9 +150,8 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
     {
       id: "acciones",
       header: "Acciones",
-      // MR-UI-02: si la tabla desborda (nombres de puerto largos), Acciones
-      // queda pegada a la derecha con sombra-affordance: Aprobar/Rechazar
-      // siguen visibles y enfocables sin desplazarse.
+      // MR-UI-02: Acciones ocupa 160 px a la derecha; Estado usa ese mismo
+      // ancho como offset. Aprobar/Rechazar siguen visibles y enfocables.
       meta: { width: COL_W.nombre, align: "right", stickyRight: true },
       cell: ({ row }) => {
         const t = row.original;

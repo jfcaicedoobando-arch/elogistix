@@ -5,6 +5,7 @@
  * v13.182.0: columnas extraídas a `_sections/tarifasColumns.tsx` (Wave 2).
  */
 import { useMemo, useState } from "react";
+import { MoveHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
@@ -52,6 +53,13 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
 
   return (
     <Card>
+      <div
+        role="note"
+        className="flex items-center justify-end gap-1 border-b px-4 py-2 text-label text-muted-foreground 2xl:hidden"
+      >
+        <MoveHorizontal className="size-4" aria-hidden="true" />
+        Desplaza horizontalmente para consultar columnas secundarias
+      </div>
       <DataTable<TarifaRow>
         columns={columns}
         data={tarifas}
