@@ -18,6 +18,8 @@ export function toggleVinculoReducer(
    * que pasarlo convertido, o el delta sería un ajuste fantasma (872.57 − 51).
    */
   montoBaseEnMonedaFactura?: number,
+  /** Moneda de la factura al congelar la base (ver `VinculoLinea.monedaBase`). */
+  monedaFactura?: string,
 ): VinculosState {
   const next = { ...prev };
   if (!checked) { delete next[c.id]; return next; }
@@ -27,6 +29,7 @@ export function toggleVinculoReducer(
     descripcion: c.concepto,
     monto: base,
     montoOriginal: base,
+    monedaBase: monedaFactura,
   };
   return next;
 }
@@ -44,12 +47,15 @@ export function setVinculoMontoReducer(
 
 export function aplicarSugerenciasReducer(
   sugs: ReadonlyArray<{ conceptoId: string; concepto: string; monto: number; embarque_id: string }>,
+  /** Moneda de la factura al congelar la base (ver `VinculoLinea.monedaBase`). */
+  monedaFactura?: string,
 ): VinculosState {
   const next: VinculosState = {};
   for (const s of sugs) {
     next[s.conceptoId] = {
       embarqueId: s.embarque_id, descripcion: s.concepto,
       monto: s.monto, montoOriginal: s.monto,
+      monedaBase: monedaFactura,
     };
   }
   return next;
