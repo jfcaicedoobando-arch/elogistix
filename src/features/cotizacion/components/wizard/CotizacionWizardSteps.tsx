@@ -57,10 +57,10 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
 
   // Un solo marco: los pasos 2-4 ya no se encajonan en un contenedor más
   // angosto que el paso 1; el ancho lo fija `WizardShell` (max-w-6xl).
-  // `pb-16` deja aire debajo para que la barra fija de totales no tape la
-  // última leyenda del paso.
+  // v13.823.286: la barra de totales se movió al pie del wizard, así que ya no
+  // hace falta reservar aire extra abajo para que no tape el contenido.
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6">
 
       {w.currentStep === 2 && (
         <SeccionCostosInternosPLUnificado

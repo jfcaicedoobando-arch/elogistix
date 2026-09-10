@@ -27,6 +27,13 @@ interface Options {
   parse?: (raw: string) => number;
   /** Valor mínimo a confirmar cuando el campo queda vacío. */
   fallback?: number;
+  /**
+   * v13.823.286 — formato de presentación cuando el campo NO tiene foco
+   * (p. ej. `6100` → `6,100.00` en campos de dinero). Al enfocar se vuelve a
+   * mostrar el número plano para editar sin pelear con los separadores; el
+   * parseo y el momento del commit no cambian.
+   */
+  formatDisplay?: (n: number) => string;
 }
 
 export function useNumericField(
@@ -34,7 +41,7 @@ export function useNumericField(
   commit: (n: number) => void,
   options: Options = {},
 ): NumericFieldBinding {
-  const { parse = parseImporte, fallback = 0 } = options;
+  const { parse = parseImporte, fallback = 0, formatDisplay } = options;
   const [raw, setRaw] = useState<string | null>(null);
 
   const onFocus = useCallback(() => {
@@ -51,8 +58,10 @@ export function useNumericField(
     setRaw(null);
   }, [raw, commit, parse, fallback]);
 
+  const display = value === 0 ? "" : formatDisplay ? formatDisplay(value) : String(value);
+
   return {
-    value: raw ?? (value === 0 ? "" : String(value)),
+    value: raw ?? display,
     onFocus,
     onChange,
     onBlur,

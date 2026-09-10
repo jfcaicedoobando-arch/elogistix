@@ -130,17 +130,22 @@ export default function CotizacionWizardLayout({
         isBusy={isBusy}
         contentMaxWidth="6xl"
         footer={
-          <CotizacionWizardFooter
-            currentStep={w.currentStep}
-            isPending={w.isPending}
-            isProcessing={isProcessing}
-            saveLabel={saveLabel}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSave={handleSave}
-            onCotizarSinDesglose={handleOpenSinDesglose}
-            canSkipCostos={canCotizarSinDesglose}
-          />
+          <>
+            {/* v13.823.286: los totales viven en el pie, no flotando sobre el
+                contenido del paso. */}
+            {mostrarTotales && <WizardTotalsBar plUSD={w.plUSD} plMXN={w.plMXN} />}
+            <CotizacionWizardFooter
+              currentStep={w.currentStep}
+              isPending={w.isPending}
+              isProcessing={isProcessing}
+              saveLabel={saveLabel}
+              onBack={handleBack}
+              onNext={handleNext}
+              onSave={handleSave}
+              onCotizarSinDesglose={handleOpenSinDesglose}
+              canSkipCostos={canCotizarSinDesglose}
+            />
+          </>
         }
       >
         {w.currentStep === 1 && w.vinculoCrmError && (
@@ -165,12 +170,6 @@ export default function CotizacionWizardLayout({
           sinDesgloseFlag={sinDesgloseFlag}
           irACargarCostos={irACargarCostos}
         />
-        {mostrarTotales && (
-          <WizardTotalsBar
-            plUSD={w.plUSD}
-            plMXN={w.plMXN}
-          />
-        )}
       </WizardShell>
 
       <ConfirmSinDesgloseDialog

@@ -96,11 +96,28 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             )}
           >
             <span className={COL_COSTO.concepto}>Totales</span>
-            <span className={COL_COSTO.proveedor} />
-            <span className={COL_COSTO.unidad} />
-            <span className={COL_COSTO.cantidad} />
-            <span className={COL_COSTO.costoUnitario} />
-            <span className={COL_COSTO.ventaUnitaria} />
+            {/* v13.823.286 — en pantallas medianas las columnas calculadas están
+                ocultas: el pie muestra las cifras en una línea compacta. */}
+            <span className="xl:hidden flex-1 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 tabular-nums">
+              <span className="text-muted-foreground font-normal">
+                Costo <span className="font-semibold text-foreground">{formatNumber(totales.totalCosto, { decimals: 2 })}</span>
+              </span>
+              <span className="text-muted-foreground font-normal">
+                Venta <span className="font-semibold text-foreground">{formatNumber(totales.totalVenta, { decimals: 2 })}</span>
+              </span>
+              <span className="text-muted-foreground font-normal">
+                Utilidad{" "}
+                <span className={cn("font-semibold", totales.profit >= 0 ? "text-success" : "text-destructive")}>
+                  {formatNumber(totales.profit, { decimals: 2 })}
+                </span>
+              </span>
+              <ProfitBadge porcentaje={totales.porcentaje} />
+            </span>
+            <span className={cn("hidden xl:block", COL_COSTO.proveedor)} />
+            <span className={cn("hidden xl:block", COL_COSTO.unidad)} />
+            <span className={cn("hidden xl:block", COL_COSTO.cantidad)} />
+            <span className={cn("hidden xl:block", COL_COSTO.costoUnitario)} />
+            <span className={cn("hidden xl:block", COL_COSTO.ventaUnitaria)} />
             <span className={cn("text-right tabular-nums", COL_COSTO.costoTotal)}>
               {formatNumber(totales.totalCosto, { decimals: 2 })}
             </span>
