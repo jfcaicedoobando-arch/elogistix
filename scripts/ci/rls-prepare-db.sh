@@ -79,4 +79,4 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   exit 1
 done
 
-echo "✓ BD preparada · $aplicadas migraciones posteriores al squash aplicadas"
+echo "✓ BD preparada · $aplicadas migraciones aplicadas · $omitidas_datos de datos omitidas"
