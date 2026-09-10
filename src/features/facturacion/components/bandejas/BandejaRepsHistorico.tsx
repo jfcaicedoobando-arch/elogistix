@@ -19,7 +19,9 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 
 export function BandejaRepsHistorico() {
   const { data, isLoading, isError, refetch } = useRepsHistorico();
+  const consultar = useConsultarRep();
   const [descargando, setDescargando] = useState<string | null>(null);
+
 
   const descargar = useCallback(async (pagoId: string, tipo: "pdf" | "xml") => {
     setDescargando(`${pagoId}:${tipo}`);
