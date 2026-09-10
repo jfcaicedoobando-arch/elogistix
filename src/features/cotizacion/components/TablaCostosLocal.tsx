@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatNumber } from "@/lib/formatters";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
@@ -63,16 +63,16 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
   return (
     <WizardSection
       title={title}
+      icon={icon}
+      description={`Importes en ${moneda}`}
       actions={
-        <div className="flex items-center gap-2">
-          {icon}
-          <Button variant="outline" size="sm" onClick={() => onAdd(moneda)}>
-            <Plus className="h-4 w-4 mr-1" /> Agregar
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => onAdd(moneda)}>
+          <Plus className="h-4 w-4 mr-1" /> Agregar
+        </Button>
       }
       contentClassName="space-y-0"
     >
+
       <div className="border rounded-md overflow-x-auto">
         {hayFilas && <EncabezadoColumnas />}
         {!hayFilas && (
@@ -102,10 +102,10 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             <span className={COL_COSTO.costoUnitario} />
             <span className={COL_COSTO.ventaUnitaria} />
             <span className={cn("text-right tabular-nums", COL_COSTO.costoTotal)}>
-              {formatCurrency(totales.totalCosto, moneda)}
+              {formatNumber(totales.totalCosto, { decimals: 2 })}
             </span>
             <span className={cn("text-right tabular-nums", COL_COSTO.ventaTotal)}>
-              {formatCurrency(totales.totalVenta, moneda)}
+              {formatNumber(totales.totalVenta, { decimals: 2 })}
             </span>
             <span
               className={cn(
@@ -114,8 +114,9 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                 totales.profit >= 0 ? "text-success" : "text-destructive",
               )}
             >
-              {formatCurrency(totales.profit, moneda)}
+              {formatNumber(totales.profit, { decimals: 2 })}
             </span>
+
             <div className={cn("flex justify-center", COL_COSTO.margen)}>
               <ProfitBadge porcentaje={totales.porcentaje} />
             </div>

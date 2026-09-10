@@ -57,8 +57,11 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
 
   // Un solo marco: los pasos 2-4 ya no se encajonan en un contenedor más
   // angosto que el paso 1; el ancho lo fija `WizardShell` (max-w-6xl).
+  // `pb-16` deja aire debajo para que la barra fija de totales no tape la
+  // última leyenda del paso.
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
+
       {w.currentStep === 2 && (
         <SeccionCostosInternosPLUnificado
           tipo="local"
@@ -121,6 +124,8 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
             tipo={tipo}
             totalUSD={w.totalUSD}
             totalMXN={w.totalMXN}
+            esEdicion={w.isEditMode}
+
           />
         </>
       )}
