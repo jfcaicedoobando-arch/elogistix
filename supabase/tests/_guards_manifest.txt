@@ -112,3 +112,4 @@ supabase/tests/r216_cot_tipo_servicio_contract.sql
 supabase/tests/r217_crear_embarque_completo_idempotencia_contract.sql
 supabase/tests/proforma_iva_overrides_seleccion.sql
 supabase/tests/proforma_conversion_requiere_aceptacion.sql
+supabase/tests/cxp_sobrecosto_misma_moneda.sql

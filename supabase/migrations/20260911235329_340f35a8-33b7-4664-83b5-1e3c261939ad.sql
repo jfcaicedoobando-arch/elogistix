@@ -1,12 +1,3 @@
--- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260911235329_340f35a8-33b7-4664-83b5-1e3c261939ad.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
--- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
--- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
--- FP-000221: los gastos cuya categoría no es CostoDirectoEmbarque (Administracion /
--- Venta) quedan exentos del umbral y del vínculo a embarque; sólo se les exige
--- justificación del gasto.
-
 CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
