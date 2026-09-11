@@ -49,12 +49,26 @@ stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction
 echo "▶ Replay de migraciones posteriores al squash"
 shopt -s nullglob
 aplicadas=0
+omitidas_datos=0
+# Migraciones de DATOS de un registro concreto (limpiezas puntuales de
+# producción). No aportan esquema y en una BD recién creada el registro no
+# existe, así que su RPC aborta y tumbaba el replay. Los archivos de
+# supabase/migrations/ son inmutables: la lista es el único lugar donde se
+# declaran. Sólo se agregan migraciones SIN DDL.
+DATA_ONLY="supabase/schema/squash/data-only.txt"
 for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   base="$(basename "$f")"
   # El corte por timestamp no basta: hay migraciones creadas DESPUÉS del squash
   # con timestamp anterior al corte. La fuente de verdad es el inventario de
   # archivos incluidos en el squash.
   grep -qxF "$base" "$SQUASH_INCLUDED" && continue
+
+  if [ -r "$DATA_ONLY" ] && grep -qxF "$base" "$DATA_ONLY"; then
+    echo "⏭ $base (migración de datos puntual, sin DDL)"
+    omitidas_datos=$((omitidas_datos + 1))
+    continue
+  fi
+
 
   echo "▶ $base"
   if stub_extensiones "$f" | "${PSQL[@]}" --single-transaction; then
@@ -65,4 +79,4 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   exit 1
 done
 
-echo "✓ BD preparada · $aplicadas migraciones posteriores al squash aplicadas"
+echo "✓ BD preparada · $aplicadas migraciones aplicadas · $omitidas_datos de datos omitidas"

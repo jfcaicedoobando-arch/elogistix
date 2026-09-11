@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-09-10
+# Cast Audit — generado 2026-09-11
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3651**
+Total de `as` casts detectados: **3655**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 1047     | 28.7% |
+| SAFE      | 0 | 1049     | 28.7% |
 | LOW       | 1 | 174      | 4.8% |
-| MEDIUM    | 2 | 2430   | 66.6% |
+| MEDIUM    | 2 | 2432   | 66.5% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
