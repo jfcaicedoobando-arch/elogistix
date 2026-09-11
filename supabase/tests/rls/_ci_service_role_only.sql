@@ -139,4 +139,12 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.seleccionar_lote_sat_semanal(integer)'),
   ('public.tg_facturas_link_proforma()'),
   ('public.tg_liberar_folio_proveedor_factura()'),
-  ('public.venta_embarque_mxn_neta(uuid, numeric, numeric)');
+  ('public.venta_embarque_mxn_neta(uuid, numeric, numeric)'),
+  -- v13.823.296 (Ola v17 · fuente única del saldo): el cálculo canónico lo
+  -- consumen sólo las envolturas de ACL saldo_factura/saldo_factura_bruto.
+  ('public._saldo_factura_calc(uuid)'),
+  -- v13.823.293: reversa del espejo bancario de un cobro con REP cancelado;
+  -- la dispara el trigger de pagos_factura, nunca el cliente.
+  ('public.reversar_movimiento_cobro_rep_cancelado(uuid)'),
+  -- v13.823.296: auditoría informativa de cobranza; sólo la corre el cron.
+  ('public.auditar_consistencia_cobranza()');
