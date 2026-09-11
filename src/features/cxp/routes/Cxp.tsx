@@ -180,6 +180,8 @@ export default function Cxp() {
                   totalPages,
                   onPageChange: f.setPage,
                   pageSize: f.pageSize,
+                  onPageSizeChange: f.setPageSize,
+                  pageSizeOptions: [50, 100, 200],
                   total: data.length,
                 }}
                 mobileCard={(fact) => (
