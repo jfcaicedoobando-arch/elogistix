@@ -12,6 +12,10 @@ import { useState } from "react";
 import { useDebounce } from "@/hooks/shared";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
+import {
+  CXP_SORT_KEY_DEFAULT,
+  type CxpSortDir,
+} from "@/features/cxp/services/proveedorFacturas.orden";
 import type { Moneda } from "@/types/db";
 
 export type AprobacionFiltro = "todos" | "pendiente" | "aprobada" | "rechazada";
@@ -57,7 +61,9 @@ export function useCxpPageState() {
   const search = tf.search;
   const debouncedSearch = useDebounce(search, 300);
   const page = tf.page;
-  const pageSize = 100;
+  const pageSize = tf.pageSize;
+  const sortKey = tf.filters.sortKey || null;
+  const sortDir = (tf.filters.sortDir === "asc" ? "asc" : "desc") as CxpSortDir;
   const estatus = tf.filters.estatus as EstatusCxP | "todos";
   const moneda = tf.filters.moneda as "todas" | Moneda;
   const origen = tf.filters.origen as "Nacional" | "Extranjero" | "todos";
