@@ -119,13 +119,20 @@ BEGIN
   INSERT INTO public.pagos_factura
     (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
      monto_aplicado_factura, forma_pago, referencia, notas,
-     diferencia_cambiaria_mxn, estado_rep)
+     diferencia_cambiaria_mxn)
   VALUES
     ('44444444-4444-4444-4444-4444444444a7',
      '33333333-3333-3333-3333-3333333333a7',
      '11111111-1111-1111-1111-1111111111a5',
-     CURRENT_DATE, 3000, 'MXN', 1, 3000, 'Transferencia', 'REP-CANCELADO', '', 0,
-     'Cancelado');
+     CURRENT_DATE, 3000, 'MXN', 1, 3000, 'Transferencia', 'REP-CANCELADO', '', 0);
+
+  -- El estado del REP lo define el sistema al timbrar/cancelar (un trigger
+  -- normaliza el valor en el INSERT), así que se marca la cancelación después,
+  -- igual que en producción.
+  UPDATE public.pagos_factura
+     SET estado_rep = 'Cancelado'
+   WHERE id = '44444444-4444-4444-4444-4444444444a7';
+
 
   SELECT public.saldo_factura('33333333-3333-3333-3333-3333333333a7') INTO v_saldo;
   IF COALESCE(v_saldo, -1) <> 3000 THEN
