@@ -113,6 +113,14 @@ export function useCxpPageState() {
     page,
     setPage: tf.setPage,
     pageSize,
+    setPageSize: tf.setPageSize,
+    sortKey,
+    sortDir,
+    /** Cambiar el orden regresa a la primera página (el conjunto se reacomoda). */
+    setSort: (key: string | null, dir: CxpSortDir) => {
+      tf.setFilter("sortKey", key ?? "");
+      tf.setFilter("sortDir", dir);
+    },
     estatus,
     setEstatus: (v: EstatusCxP | "todos") => tf.setFilter("estatus", v),
     moneda,
