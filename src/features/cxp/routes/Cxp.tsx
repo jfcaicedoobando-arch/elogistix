@@ -53,10 +53,20 @@ export default function Cxp() {
   // Una página fuera de rango (deep link viejo, o menos resultados tras
   // filtrar) mostraba una tabla vacía aunque hubiera coincidencias.
   const pageActual = Math.min(f.page, totalPages - 1);
-  const pageData = useMemo(
-    () => data.slice(pageActual * f.pageSize, (pageActual + 1) * f.pageSize),
-    [data, pageActual, f.pageSize],
+  // El orden se aplica al conjunto COMPLETO y después se corta la página:
+  // antes TanStack ordenaba sólo las filas ya cortadas y "ordenar por folio"
+  // acomodaba únicamente las 100 visibles.
+  const dataOrdenada = useMemo(
+    () => ordenarFacturasCxP(data, f.sortKey, f.sortDir),
+    [data, f.sortKey, f.sortDir],
   );
+  const pageData = useMemo(
+    () => dataOrdenada.slice(pageActual * f.pageSize, (pageActual + 1) * f.pageSize),
+    [dataOrdenada, pageActual, f.pageSize],
+  );
+  // Las canceladas se ocultan por defecto (ver `incluirCanceladasCxP`): sin
+  // aviso el usuario cree que faltan facturas.
+  const canceladasOcultas = f.estatus === "todos" && !f.search.trim();
 
   // Máquina de estados excluyente: antes un error de carga dejaba `data` en []
   // y se montaba el empty state, ocultando el botón "Reintentar".
