@@ -15,6 +15,7 @@ import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 /** Formato de presentación de los campos de dinero (sin prefijo de moneda). */
 const formatoMonto = (n: number) => formatNumber(n, { decimals: 2 });
