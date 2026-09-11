@@ -1,3 +1,4 @@
+# Changelog
 
 ## [13.823.302] - 2026-09-11
 - **fix(cxp)**: el candado de sobrecosto al aprobar facturas de proveedor (`_cxp_validar_aprobacion`) ya compara en la moneda original cuando el costo comprometido y todas las facturas ligadas están en la misma moneda; antes convertía cada lado a MXN con tipos de cambio distintos (el del expediente vs. el de la factura) y fabricaba un `LC_CXP_SOBRECOSTO` inexistente (FP-000256: 60 USD vs 60 USD leídos como 1,039.90 vs 1,168.29 MXN). Con monedas distintas se conserva la ruta MXN y el margen del 5% no cambia.
