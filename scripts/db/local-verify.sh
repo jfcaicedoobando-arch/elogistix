@@ -245,12 +245,23 @@ if [ "$REUSE" != "1" ]; then
   migr_log="$LOGDIR/migrations.log"
   : > "$migr_log"
   total=0
+  omitidas_datos=0
+  # Migraciones de datos puntuales (limpiezas de producción) no aportan esquema
+  # y abortan en una base limpia. Fuente única compartida con rls-prepare-db.sh.
+  DATA_ONLY="supabase/schema/squash/data-only.txt"
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
     # El corte por timestamp no basta: hay migraciones creadas DESPUÉS del
     # squash con timestamp anterior al corte. La fuente de verdad es el
     # inventario de archivos realmente incluidos en el squash.
     grep -qxF "$base" "$SQUASH_INCLUDED" && continue
+
+    if [ -r "$DATA_ONLY" ] && grep -qxF "$base" "$DATA_ONLY"; then
+      echo "⏭ $base (migración de datos puntual, sin DDL)" >> "$migr_log"
+      omitidas_datos=$((omitidas_datos + 1))
+      continue
+    fi
+
     echo "▶ $base" >> "$migr_log"
 
     if stub_ext "$f" | "${PSQL[@]}" --single-transaction >> "$migr_log" 2>&1; then
@@ -262,7 +273,7 @@ if [ "$REUSE" != "1" ]; then
     tail -n 30 "$migr_log" >&2
     exit 1
   done
-  ok "$total migraciones nuevas aplicadas"
+  ok "$total migraciones nuevas aplicadas · $omitidas_datos de datos omitidas"
 
 
   # Snapshot ANTES de _ci_post_migrate.sql: es el estado que producen sólo las

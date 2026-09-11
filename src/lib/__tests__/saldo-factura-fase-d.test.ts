@@ -1,14 +1,10 @@
 /**
  * Guardrail Fase D (v13.301.73) — definición única de "factura viva" con NCs.
  *
- * Blinda que la última migración que redefine `saldo_factura`, `validar_cierre_embarque`,
- * `recalcular_cobro_embarques` y `recalcular_estado_factura`:
- *  - Crea la función pública `saldo_factura(uuid)`.
- *  - Excluye `Cancelada`, `Sustituida` y `Borrador` de las funciones de cierre y cobro
- *    (antes sólo excluía `Cancelada`).
- *  - Resta notas de crédito aplicadas del saldo.
- *  - Recalcula el estado de la factura con base en `saldo_factura` (no sólo pagos).
- *  - Registra el trigger espejo sobre `factura_notas_credito`.
+ * v13.823.299: la arquitectura evolucionó. El cálculo canónico vive en
+ * `_saldo_factura_calc(uuid)` (helper SECURITY DEFINER sin ACL) y las
+ * envolturas `saldo_factura(uuid)` / `saldo_factura_bruto(uuid)` añaden la
+ * validación de tenencia multi-tenant/portal. Este test blinda ese contrato.
  */
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
@@ -36,62 +32,85 @@ function readLatestMigrationWith(marker: string): string {
 }
 
 describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
-  // v13.343.1 — Se separan las dos fuentes: la última migración que redefine
-  // `saldo_factura` (puede ser una reparación puntual) y la migración canónica
-  // de Fase D que además redefine `validar_cierre_embarque`.
-  const sql = readLatestMigrationWith(
+  const faseD = readMigration("20260722013500_faseD_reconsolidada_v13_305_10.sql");
+  const calcSql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public._saldo_factura_calc(p_factura_id uuid)",
+  );
+  const aclSql = readLatestMigrationWith(
     "CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)",
   );
-  const faseD = readMigration("20260722013500_faseD_reconsolidada_v13_305_10.sql");
+  const brutoSql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.saldo_factura_bruto(p_factura_id uuid)",
+  );
+  const validarSql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)",
+  );
+  const recalcSql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.recalcular_estado_factura()",
+  );
 
-
-  it("crea la función pública saldo_factura(uuid)", () => {
-    expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.saldo_factura\(p_factura_id uuid\)/);
-  });
-
-  it("saldo_factura devuelve 0 para estados terminales (incluye Pagada)", () => {
-    // v13.743.6 (BUG-2026-08-25): 'Pagada' se sumó a la lista de estados sin saldo
-    // porque las facturas legacy migradas sin pagos capturados inflaban el adeudo.
-    expect(sql).toMatch(
-      /IF v_estado IN \('Cancelada', 'Sustituida', 'Pagada'\) THEN RETURN 0;/,
+  it("existe el cálculo canónico _saldo_factura_calc(uuid)", () => {
+    expect(calcSql).toMatch(
+      /CREATE OR REPLACE FUNCTION public\._saldo_factura_calc\(p_factura_id uuid\)/,
     );
   });
 
-  it("saldo_factura resta pagos y notas de crédito aplicadas no borradas", () => {
-    expect(sql).toMatch(/FROM public\.pagos_factura[\s\S]{0,120}deleted_at IS NULL/);
-    expect(sql).toMatch(
+  it("saldo_factura y saldo_factura_bruto delegan en _saldo_factura_calc", () => {
+    expect(aclSql).toMatch(/RETURN public\._saldo_factura_calc\(p_factura_id\);/);
+    expect(brutoSql).toMatch(/RETURN public\._saldo_factura_calc\(p_factura_id\);/);
+  });
+
+  it("_saldo_factura_calc devuelve 0 sólo para estados terminales Cancelada/Sustituida", () => {
+    expect(calcSql).toMatch(
+      /IF v_estado IN \('Cancelada', 'Sustituida'\) THEN RETURN 0;/,
+    );
+  });
+
+  it("_saldo_factura_calc excluye pagos cuyo REP fue cancelado ante el SAT", () => {
+    expect(calcSql).toMatch(/AND NOT public\.pago_rep_anulado\(p\.estado_rep\)/);
+  });
+
+  it("_saldo_factura_calc resta notas de crédito aplicadas no borradas", () => {
+    expect(calcSql).toMatch(
       /FROM public\.factura_notas_credito[\s\S]{0,200}estado = 'Aplicada'/,
     );
-    expect(sql).toMatch(/RETURN COALESCE\(v_total, 0\) - v_pagos - v_ncs;/);
+    expect(calcSql).toMatch(
+      /RETURN COALESCE\(v_total, 0\) - COALESCE\(v_pagos, 0\) - COALESCE\(v_ncs, 0\);/,
+    );
   });
 
-  it("validar_cierre_embarque regla cxc_cobrada usa saldo_factura", () => {
-    // Debe haber una llamada a saldo_factura(f.id) dentro de la sección de regla 6.
-    expect(faseD).toMatch(/SUM\(public\.saldo_factura\(f\.id\)\)/);
-    // El estado ok se evalúa sobre el saldo (<= 0.01), no sobre total <= pagado.
-    expect(faseD).toMatch(/v_ok := \(v_cxc_saldo <= 0\.01\)/);
-    // Y el detalle expone total, pagado, notas_credito y saldo.
-    expect(faseD).toMatch(/'notas_credito', v_cxc_ncs/);
-    expect(faseD).toMatch(/'saldo', v_cxc_saldo/);
+  it("validar_cierre_embarque regla cxc_cobrada evalúa saldo por moneda", () => {
+    // La regla CxC compara el saldo por moneda contra 0.01; no compara saldo
+    // total mezclado porque sumar USD + MXN ocultaría facturas pendientes.
+    expect(validarSql).toMatch(/public\.saldo_factura\(f\.id\)/);
+    expect(validarSql).toMatch(
+      /WHERE \(m->>'saldo'\)::numeric > 0\.01/,
+    );
+    // Y expone total, pagado, notas_credito y saldo por moneda.
+    expect(validarSql).toMatch(/'notas_credito',\s*notas_credito/);
+    expect(validarSql).toMatch(/'saldo',\s*GREATEST\(saldo,0\)/);
   });
 
   it("cierre y cobro excluyen Sustituida y Borrador (no solo Cancelada)", () => {
-    // validar_cierre_embarque: filtro sobre facturas para regla cxc_cobrada.
-    expect(faseD).toMatch(
-      /f\.estado NOT IN \('Cancelada', 'Sustituida', 'Borrador'\)/,
+    expect(validarSql).toMatch(
+      /f\.estado NOT IN \('Cancelada',?\s*'Sustituida',?\s*'Borrador'\)/,
     );
-    // recalcular_cobro_embarques: cuenta total vivas con el mismo filtro.
     expect(faseD).toMatch(
       /count\(\*\) FILTER \(WHERE f\.estado NOT IN \('Cancelada','Sustituida','Borrador'\)\)/,
     );
   });
 
-  it("recalcular_estado_factura considera NCs vía saldo_factura", () => {
-    // Trigger recalcula usando saldo_factura, no sólo la suma de pagos.
-    expect(faseD).toMatch(/v_saldo := public\.saldo_factura\(v_factura_id\)/);
-    expect(faseD).toMatch(/IF v_saldo <= 0\.01 THEN[\s\S]{0,60}v_nuevo_estado := 'Pagada'/);
-    // Y respeta Sustituida junto a Cancelada/Borrador (no toca su estado).
-    expect(faseD).toMatch(
+  it("recalcular_estado_factura usa saldo_factura_bruto y excluye pagos anulados", () => {
+    // v13.823.294: el trigger usa saldo_factura_bruto (saldo real) en lugar de
+    // saldo_factura (que tenía un atajo para facturas Pagadas sin pagos).
+    expect(recalcSql).toMatch(/v_saldo := public\.saldo_factura_bruto\(v_factura_id\);/);
+    expect(recalcSql).toMatch(
+      /COALESCE\(estado_rep, ''\) <> 'Cancelado'/,
+    );
+  });
+
+  it("recalcular_estado_factura no muta estados terminales", () => {
+    expect(recalcSql).toMatch(
       /IF v_estado_actual IN \('Cancelada', 'Borrador', 'Sustituida'\) THEN/,
     );
   });

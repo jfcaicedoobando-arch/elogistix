@@ -224,3 +224,18 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ============================================================================
+-- Helper CI para sembrar un usuario mínimo en auth.users. En producción GoTrue
+-- crea este registro automáticamente; en las suites efímeras auth.users es un
+-- stub vacío y public.user_roles tiene FK hacia él. Las suites deben llamar a
+-- esta función con cada user_id ANTES de insertar en organization_members o
+-- user_roles. El helper es idempotente y vive sólo dentro de la transacción.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION pg_temp.seed_auth_user(p_user_id uuid, p_email text DEFAULT NULL)
+RETURNS void
+LANGUAGE sql AS $$
+  INSERT INTO auth.users (id, email, created_at)
+  VALUES (p_user_id, COALESCE(p_email, p_user_id::text || '@test.local'), now())
+  ON CONFLICT (id) DO NOTHING;
+$$;

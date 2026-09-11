@@ -52,7 +52,7 @@ describe("describirFacturaExistente", () => {
     expect(describirFacturaExistente(EXISTENTE)).toBe("FP-000123 · Vigente · aprobada");
   });
 
-  it("cae al folio del proveedor cuando no hay folio interno", () => {
+  it("describirFacturaExistente cae al folio del proveedor cuando no hay folio interno", () => {
     expect(describirFacturaExistente({ ...EXISTENTE, folio_interno: null }))
       .toBe("9593 · Vigente · aprobada");
   });

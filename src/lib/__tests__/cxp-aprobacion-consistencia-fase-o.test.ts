@@ -8,6 +8,11 @@
  *    no cancelado, misma organización, y UUID SAT verificado.
  *  - REVOKE de PUBLIC/anon + GRANT restringido a authenticated y service_role.
  *  - `aprobar_factura_proveedor` invoca la validación sólo cuando `p_aprobar`.
+ *
+ * v13.823.299: la función se redefinió con un parámetro adicional (justificación)
+ * en una migración posterior; los permisos canónicos quedaron en la migración
+ * inmediatamente anterior. Por eso separamos la búsqueda de definición y la
+ * búsqueda de permisos.
  */
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
@@ -31,9 +36,15 @@ describe("Fase O — Validación de aprobación CxP", () => {
     "CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion",
   );
 
+  // Los permisos pueden vivir en una migración distinta (redefinición con
+  // firma extendida). Buscamos la última que contenga el REVOKE/GRANT canónico.
+  const permsSql = readLatestContaining(
+    "REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion",
+  );
+
   it("declara la función `_cxp_validar_aprobacion(uuid)` como SECURITY DEFINER", () => {
     expect(sql).toMatch(
-      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(\s*p_factura_id uuid(,\s*p_justificacion text DEFAULT NULL::text)?\s*\)[\s\S]*?SECURITY DEFINER/,
+      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(\s*p_factura_id uuid(,[\s\S]*?)?\)[\s\S]*?SECURITY DEFINER/,
     );
   });
 
@@ -68,18 +79,18 @@ describe("Fase O — Validación de aprobación CxP", () => {
   // interno; sólo lo invoca `aprobar_factura_proveedor` (SECURITY DEFINER, corre
   // como dueño). Por eso `authenticated` ya NO tiene EXECUTE.
   it("revoca EXECUTE de PUBLIC/anon/authenticated y otorga sólo a service_role", () => {
-    expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM PUBLIC/,
+    expect(permsSql).toMatch(
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(,[\s\S]*?)?\) FROM PUBLIC/,
     );
-    expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM (PUBLIC, )?anon/,
+    expect(permsSql).toMatch(
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(,[\s\S]*?)?\) FROM (PUBLIC, )?anon/,
     );
 
-    expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM authenticated/,
+    expect(permsSql).toMatch(
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(,[\s\S]*?)?\) FROM authenticated/,
     );
-    expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) TO service_role/,
+    expect(permsSql).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid(,[\s\S]*?)?\) TO service_role/,
     );
   });
 
@@ -93,7 +104,7 @@ describe("Fase O — Validación de aprobación CxP", () => {
       "CREATE OR REPLACE FUNCTION public.aprobar_factura_proveedor",
     );
     expect(wrapperSql).toMatch(
-      /IF p_aprobar THEN\s+PERFORM public\._cxp_validar_aprobacion\(p_id(, p_motivo)?\)/,
+      /IF p_aprobar THEN\s+PERFORM public\._cxp_validar_aprobacion\(p_id(,[\s\S]*?)?\)/,
     );
   });
 });

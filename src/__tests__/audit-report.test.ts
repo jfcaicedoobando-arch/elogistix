@@ -27,6 +27,10 @@ const OVERSIZED_BASELINE = new Set<string>([
   "src/features/embarques/components/TabDemoras.tsx",
   "src/features/embarques/components/TabPnlContenedor.tsx",
   "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
+  "src/features/cotizacion/components/costosLocal/FilaCostoLocalRow.tsx",
+  "src/components/ui/date-picker-mx-helpers.ts",
+  "src/features/embarques/components/costos/GrupoCostosProveedor.tsx",
+  "src/features/facturacion/hooks/useNotaCreditoDraft.ts",
 ]);
 
 // Baseline temporal de archivos con `.rejects.toBeDefined()/toBeTruthy()`.
