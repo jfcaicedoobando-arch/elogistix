@@ -224,3 +224,27 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ============================================================================
+-- Stub CI para membresías: en producción GoTrue crea auth.users, pero en las
+-- suites efímeras la tabla auth.users es un stub vacío. El trigger AFTER INSERT
+-- de sincronización de roles intenta escribir en public.user_roles, cuya FK
+-- exige que el usuario exista en auth.users. Este trigger temporal (vive sólo
+-- dentro de la transacción de cada suite) asegura ese registro sin modificar el
+-- fixture de cada test.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION pg_temp.ensure_auth_user_for_membership()
+RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO auth.users (id, email, created_at)
+  VALUES (NEW.user_id, NEW.user_id::text || '@test.local', now())
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_ci_ensure_auth_user ON public.organization_members;
+CREATE TRIGGER trg_ci_ensure_auth_user
+BEFORE INSERT OR UPDATE OF user_id ON public.organization_members
+FOR EACH ROW EXECUTE FUNCTION pg_temp.ensure_auth_user_for_membership();
