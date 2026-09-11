@@ -58,10 +58,10 @@ describe("buscarEmbarquesPorTexto — escapado del término", () => {
     expect(exprOr()).toContain('expediente.ilike."%EL ""RAPIDO""%"');
   });
 
-  it("excluye embarques eliminados y conserva el filtro de estados", async () => {
+  it("excluye eliminados pero YA NO esconde cerrados/cancelados (se muestran deshabilitados)", async () => {
     await buscarEmbarquesPorTexto("EXP", "org-1");
     const call = mock.tableCalls.find((c) => c.table === "embarques");
     expect(call?.ops).toContain("is");
-    expect(call?.ops).toContain("not");
+    expect(call?.ops).not.toContain("not");
   });
 });
