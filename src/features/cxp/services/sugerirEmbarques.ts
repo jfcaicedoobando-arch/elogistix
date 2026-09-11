@@ -21,9 +21,9 @@ import type { Moneda } from "@/types/db";
  */
 export const ESTADOS_EMBARQUE_NO_VINCULABLES = ["Cerrado", "Cancelado"] as const;
 
-/** Filtro PostgREST `in (...)` para los estados no vinculables. */
-export const FILTRO_ESTADOS_NO_VINCULABLES =
-  `(${ESTADOS_EMBARQUE_NO_VINCULABLES.join(",")})`;
+/** Motivo mostrado en la UI cuando el expediente no acepta costos nuevos. */
+export const MOTIVO_EMBARQUE_NO_VINCULABLE =
+  "Este expediente está cerrado o cancelado y no acepta costos nuevos. Reábrelo para capturar la factura.";
 
 /** `true` si el estado del embarque impide vincularle costos nuevos. */
 export function esEstadoNoVinculable(estado: string | null | undefined): boolean {
