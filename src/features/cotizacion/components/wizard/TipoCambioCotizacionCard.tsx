@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks";
 import { hoyMx } from "@/lib/date/mx";
 import { formatDate } from "@/lib/formatters";
@@ -23,6 +24,13 @@ interface Props {
 export function TipoCambioCotizacionCard({ value, onChange }: Props) {
   const hoy = hoyMx();
   const { data: dof, isFetching } = useTcDofPorFecha(hoy);
+  // Texto crudo mientras se teclea: sin esto, "18." se renderiza como "18"
+  // (String(18)) y el siguiente dígito produce "185" en vez de "18.5".
+  const [texto, setTexto] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTexto(null);
+  }, [value]);
 
   return (
     <Card data-testid="tc-cotizacion-card">
@@ -56,10 +64,13 @@ export function TipoCambioCotizacionCard({ value, onChange }: Props) {
             <Input
               id="cot-tc-usd"
               inputMode="decimal"
-              value={value == null ? "" : String(value)}
+              value={texto ?? (value == null ? "" : String(value))}
               placeholder="0.0000"
+              onFocus={(e) => setTexto(e.target.value)}
+              onBlur={() => setTexto(null)}
               onChange={(e) => {
                 const limpio = e.target.value.replace(/[^\d.]/g, "");
+                setTexto(limpio);
                 const n = Number(limpio);
                 onChange(limpio === "" || !Number.isFinite(n) || n <= 0 ? null : n);
               }}
