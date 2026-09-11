@@ -79,32 +79,37 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
     );
   });
 
-  it("validar_cierre_embarque regla cxc_cobrada usa saldo_factura", () => {
-    // Debe haber una llamada a saldo_factura(f.id) dentro de la sección de regla 6.
+  it("validar_cierre_embarque regla cxc_cobrada evalúa saldo por moneda", () => {
+    // La regla CxC compara el saldo por moneda contra 0.01; no compara saldo
+    // total mezclado porque sumar USD + MXN ocultaría facturas pendientes.
     expect(validarSql).toMatch(/public\.saldo_factura\(f\.id\)/);
-    // El estado ok se evalúa sobre el saldo (<= 0.01), no sobre total <= pagado.
-    expect(validarSql).toMatch(/v_ok := \(v_cxc_saldo <= 0\.01\)/);
-    // Y el detalle expone total, pagado, notas_credito y saldo.
-    expect(validarSql).toMatch(/'notas_credito', v_cxc_ncs/);
-    expect(validarSql).toMatch(/'saldo', v_cxc_saldo/);
+    expect(validarSql).toMatch(
+      /WHERE \(m->>'saldo'\)::numeric > 0\.01/,
+    );
+    // Y expone total, pagado, notas_credito y saldo por moneda.
+    expect(validarSql).toMatch(/'notas_credito', notas_credito/);
+    expect(validarSql).toMatch(/'saldo', GREATEST\(saldo,0\)/);
   });
 
   it("cierre y cobro excluyen Sustituida y Borrador (no solo Cancelada)", () => {
-    // validar_cierre_embarque: filtro sobre facturas para regla cxc_cobrada.
     expect(validarSql).toMatch(
       /f\.estado NOT IN \('Cancelada', 'Sustituida', 'Borrador'\)/,
     );
-    // recalcular_cobro_embarques: cuenta total vivas con el mismo filtro.
     expect(faseD).toMatch(
       /count\(\*\) FILTER \(WHERE f\.estado NOT IN \('Cancelada','Sustituida','Borrador'\)\)/,
     );
   });
 
-  it("recalcular_estado_factura considera NCs vía helper canónico", () => {
-    // El trigger recalcula usando _nc_aplicadas_moneda_factura o su sucesor,
-    // nunca restando el monto crudo de la NC.
-    expect(recalcSql).toMatch(/public\._nc_aplicadas_moneda_factura\(v_factura_id\)/);
-    // Y respeta Sustituida junto a Cancelada/Borrador (no toca su estado).
+  it("recalcular_estado_factura usa saldo_factura_bruto y excluye pagos anulados", () => {
+    // v13.823.294: el trigger usa saldo_factura_bruto (saldo real) en lugar de
+    // saldo_factura (que tenía un atajo para facturas Pagadas sin pagos).
+    expect(recalcSql).toMatch(/v_saldo := public\.saldo_factura_bruto\(v_factura_id\);/);
+    expect(recalcSql).toMatch(
+      /COALESCE\(estado_rep, ''\) <> 'Cancelado'/,
+    );
+  });
+
+  it("recalcular_estado_factura no muta estados terminales", () => {
     expect(recalcSql).toMatch(
       /IF v_estado_actual IN \('Cancelada', 'Borrador', 'Sustituida'\) THEN/,
     );
