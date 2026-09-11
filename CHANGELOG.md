@@ -11,7 +11,7 @@
 ## [13.823.298] - 2026-09-11
 - **fix(seguridad)**: se cerró el acceso directo de `authenticated` a tres funciones internas que debían ser sólo del sistema (`_saldo_factura_calc`, `reversar_movimiento_cobro_rep_cancelado`, `auditar_consistencia_cobranza`); la migración original no incluía los `REVOKE` que sí declaraban los espejos canónicos. Las envolturas `saldo_factura` / `saldo_factura_bruto`, el trigger de pagos y el cron siguen funcionando igual.
 - **test(cxc)**: `cxc_guard_pagada_sin_saldo` se alineó con la regla única del saldo (Ola v17): `Pagada` ya NO fabrica saldo 0 (sólo `Cancelada` / `Sustituida`), y se agregó el caso del cobro anulado por REP cancelado, que no debe abatir el saldo.
-- **chore(ci)**: `scripts/ci/rls-prepare-db.sh` omite en el replay las migraciones de datos puntuales listadas en `supabase/schema/squash/data-only.txt` (limpiezas de un registro de producción que no no aportan esquema y tumbaban el replay en una base vacía). Baseline de esquema regenerada.
+- **chore(ci)**: `scripts/ci/rls-prepare-db.sh` omite en el replay las migraciones de datos puntuales listadas en `supabase/schema/squash/data-only.txt` (limpiezas de un registro de producción que no aportan esquema y tumbaban el replay en una base vacía). Baseline de esquema regenerada.
 
 
 ## [13.823.297] - 2026-09-10
