@@ -87,7 +87,7 @@ export default function Cxp() {
         description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => exportarCxpCsv(data)} disabled={data.length === 0}>
+            <Button variant="outline" onClick={() => exportarCxpCsv(dataOrdenada)} disabled={data.length === 0}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
             <Button variant="outline" onClick={() => navigate(ROUTES.REPORTES_CARTERA)}>
