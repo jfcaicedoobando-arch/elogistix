@@ -24,6 +24,13 @@ interface Props {
 export function TipoCambioCotizacionCard({ value, onChange }: Props) {
   const hoy = hoyMx();
   const { data: dof, isFetching } = useTcDofPorFecha(hoy);
+  // Texto crudo mientras se teclea: sin esto, "18." se renderiza como "18"
+  // (String(18)) y el siguiente dígito produce "185" en vez de "18.5".
+  const [texto, setTexto] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTexto(null);
+  }, [value]);
 
   return (
     <Card data-testid="tc-cotizacion-card">
