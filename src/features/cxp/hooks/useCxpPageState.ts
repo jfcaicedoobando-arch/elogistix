@@ -23,6 +23,10 @@ type CxpFiltrosUrl = {
   aprobacion: string;
   proveedorId: string;
   categoriaPresupuestoId: string;
+  /** Orden global (columna + dirección). Vive en la URL, no en TanStack:
+   *  la pantalla ordena TODAS las facturas antes de cortar la página. */
+  sortKey: string;
+  sortDir: string;
 };
 
 const DEFAULTS: CxpFiltrosUrl = {
@@ -32,6 +36,8 @@ const DEFAULTS: CxpFiltrosUrl = {
   aprobacion: "todos",
   proveedorId: "todos",
   categoriaPresupuestoId: "todas",
+  sortKey: CXP_SORT_KEY_DEFAULT,
+  sortDir: "desc",
 };
 
 export function useCxpPageState() {
