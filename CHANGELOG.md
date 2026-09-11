@@ -1,9 +1,17 @@
 # Changelog
 
+## [13.823.299] - 2026-09-11
+- **fix(ci)**: `scripts/db/local-verify.sh` ahora respeta `supabase/schema/squash/data-only.txt`, igual que `scripts/ci/rls-prepare-db.sh`; esto permite que el replay aplique migraciones posteriores a una limpieza de datos puntual de producción.
+- **test(ci)**: `supabase/tests/rls/_helpers.sql` expone `pg_temp.seed_auth_user` para que las suites RLS siembren usuarios en el stub de `auth.users` sin depender del orden de ejecución de triggers.
+- **test(arquitectura)**: se sincronizaron las allowlists temporales de archivos oversized entre `src/__tests__/audit-report.test.ts` y `src/lib/__tests__/architecture-baseline.test.ts`.
+- **test(saldo-factura)**: `src/lib/__tests__/saldo-factura-fase-d.test.ts` se actualizó al canon Ola v17 (`_saldo_factura_calc`, envolturas ACL, exclusión de REP cancelado y saldo CxC por moneda).
+- **test(cxp)**: `src/lib/__tests__/cxp-aprobacion-consistencia-fase-o.test.ts` separa la búsqueda de la definición de `_cxp_validar_aprobacion` de la búsqueda de sus permisos `REVOKE`/`GRANT`, que quedaron en migraciones distintas tras una redefinición.
+- **chore(ci)**: `scripts/db/postcheck.sh` ejecuta los guards conductuales secuencialmente (`JOBS=1`) para evitar deadlocks entre fixtures que usan `handle_new_user_signup` (advisory lock global) y los que insertan directamente en `organization_members`.
+
 ## [13.823.298] - 2026-09-11
 - **fix(seguridad)**: se cerró el acceso directo de `authenticated` a tres funciones internas que debían ser sólo del sistema (`_saldo_factura_calc`, `reversar_movimiento_cobro_rep_cancelado`, `auditar_consistencia_cobranza`); la migración original no incluía los `REVOKE` que sí declaraban los espejos canónicos. Las envolturas `saldo_factura` / `saldo_factura_bruto`, el trigger de pagos y el cron siguen funcionando igual.
 - **test(cxc)**: `cxc_guard_pagada_sin_saldo` se alineó con la regla única del saldo (Ola v17): `Pagada` ya NO fabrica saldo 0 (sólo `Cancelada` / `Sustituida`), y se agregó el caso del cobro anulado por REP cancelado, que no debe abatir el saldo.
-- **chore(ci)**: `scripts/ci/rls-prepare-db.sh` omite en el replay las migraciones de datos puntuales listadas en `supabase/schema/squash/data-only.txt` (limpiezas de un registro de producción que no aportan esquema y tumbaban el replay en una base vacía). Baseline de esquema regenerada.
+- **chore(ci)**: `scripts/ci/rls-prepare-db.sh` omite en el replay las migraciones de datos puntuales listadas en `supabase/schema/squash/data-only.txt` (limpiezas de un registro de producción que no no aportan esquema y tumbaban el replay en una base vacía). Baseline de esquema regenerada.
 
 
 ## [13.823.297] - 2026-09-10
