@@ -30,6 +30,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { formatDate, toTitleCase, formatCurrency } from "@/lib/formatters";
+import { ordenarFacturasCxP } from "@/features/cxp/services/proveedorFacturas.orden";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
