@@ -21,9 +21,9 @@ import type { Moneda } from "@/types/db";
  */
 export const ESTADOS_EMBARQUE_NO_VINCULABLES = ["Cerrado", "Cancelado"] as const;
 
-/** Filtro PostgREST `in (...)` para los estados no vinculables. */
-export const FILTRO_ESTADOS_NO_VINCULABLES =
-  `(${ESTADOS_EMBARQUE_NO_VINCULABLES.join(",")})`;
+/** Motivo mostrado en la UI cuando el expediente no acepta costos nuevos. */
+export const MOTIVO_EMBARQUE_NO_VINCULABLE =
+  "Este expediente está cerrado o cancelado y no acepta costos nuevos. Reábrelo para capturar la factura.";
 
 /** `true` si el estado del embarque impide vincularle costos nuevos. */
 export function esEstadoNoVinculable(estado: string | null | undefined): boolean {
@@ -56,6 +56,12 @@ export async function sugerirEmbarquesParaProveedor(
   return (data ?? []) as EmbarqueSugerido[];
 }
 
+/**
+ * v13.823.301 — La búsqueda manual ya NO esconde los expedientes Cerrados /
+ * Cancelados: desaparecer sin explicación hacía pensar que el expediente no
+ * existía. Se devuelven con su `estado` y la UI los muestra deshabilitados con
+ * el motivo; el candado sigue siendo `esEstadoNoVinculable` + el trigger de BD.
+ */
 export async function buscarEmbarquesPorTexto(
   q: string,
   organizationId: string | null,
@@ -67,7 +73,6 @@ export async function buscarEmbarquesPorTexto(
     .from("embarques")
     .select("id, expediente, cliente_nombre, estado, etd, eta, bl_master, bl_house")
     .eq("organization_id", organizationId)
-    .not("estado", "in", FILTRO_ESTADOS_NO_VINCULABLES)
     // Tanda 2 · hallazgo 4: el texto es dato, no sintaxis PostgREST — `orIlike`
     // escapa `%`/`_`/`\` y entrecomilla `,`/`(`/`)`/`"`.
     .or(orIlike(["expediente", "bl_master", "bl_house", "cliente_nombre"], term))

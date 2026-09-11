@@ -21,6 +21,10 @@ import {
   type EmbarqueSugerido,
 } from "@/features/cxp/hooks";
 
+import {
+  esEstadoNoVinculable,
+  MOTIVO_EMBARQUE_NO_VINCULABLE,
+} from "@/features/cxp/services/sugerirEmbarques";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { formatFechaEs } from "@/lib/formatters";
 
@@ -113,8 +117,8 @@ export function SugerirEmbarqueBlock({
       {!loading && lista.length === 0 && (
         <p className="text-body-sm text-muted-foreground italic">
           {term.length >= 2
-            ? "No encontramos embarques con ese texto. Los embarques cerrados o cancelados no se muestran."
-            : "No hay sugerencias automáticas. Busca por expediente o BL (no se muestran embarques cerrados ni cancelados)."}
+            ? "No encontramos expedientes con ese texto."
+            : "No hay sugerencias automáticas. Busca por expediente, BL o cliente."}
         </p>
       )}
 
@@ -125,26 +129,48 @@ export function SugerirEmbarqueBlock({
               Sugeridos para {proveedorNombre}:
             </p>
           )}
-          {lista.map((e) => (
-            <Button
-              key={e.embarque_id}
-              type="button"
-              variant="ghost"
-              aria-label={`Vincular embarque ${e.expediente ?? e.embarque_id.slice(0, 8)}`}
-              onClick={() => handlePick(e)}
-              className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-md border bg-background px-3 py-2 text-left font-normal hover:border-accent hover:bg-accent/5 transition-colors"
-            >
-              <div className="flex items-center gap-2 text-body">
-                <span className="font-mono font-medium">{e.expediente ?? "—"}</span>
-                <span className="text-muted-foreground truncate">· {e.cliente_nombre ?? "Sin cliente"}</span>
-                {e.estado && <Badge variant="secondary" className="ml-auto text-body-sm">{e.estado}</Badge>}
-              </div>
-              <div className="text-body-sm text-muted-foreground mt-0.5 flex items-center gap-2">
-                <span className="text-accent">{e.match_tipo}</span>
-                {e.eta && <span>· ETA {formatFechaEs(e.eta)}</span>}
-              </div>
-            </Button>
-          ))}
+          {lista.map((e) => {
+            const bloqueado = esEstadoNoVinculable(e.estado);
+            const exp = e.expediente ?? e.embarque_id.slice(0, 8);
+            return (
+              <Button
+                key={e.embarque_id}
+                type="button"
+                variant="ghost"
+                disabled={bloqueado}
+                aria-label={
+                  bloqueado
+                    ? `Expediente ${exp} no disponible: ${MOTIVO_EMBARQUE_NO_VINCULABLE}`
+                    : `Vincular embarque ${exp}`
+                }
+                onClick={() => handlePick(e)}
+                className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-md border bg-background px-3 py-2 text-left font-normal hover:border-accent hover:bg-accent/5 transition-colors disabled:opacity-100 disabled:bg-muted/40"
+              >
+                <div className="flex items-center gap-2 text-body">
+                  <span className="font-mono font-medium">{e.expediente ?? "—"}</span>
+                  <span className="text-muted-foreground truncate">· {e.cliente_nombre ?? "Sin cliente"}</span>
+                  {e.estado && (
+                    <Badge
+                      variant={bloqueado ? "outline" : "secondary"}
+                      className="ml-auto text-body-sm"
+                    >
+                      {e.estado}
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-body-sm text-muted-foreground mt-0.5 flex items-center gap-2">
+                  {bloqueado ? (
+                    <span className="text-warning">{MOTIVO_EMBARQUE_NO_VINCULABLE}</span>
+                  ) : (
+                    <>
+                      <span className="text-accent">{e.match_tipo}</span>
+                      {e.eta && <span>· ETA {formatFechaEs(e.eta)}</span>}
+                    </>
+                  )}
+                </div>
+              </Button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -12,6 +12,10 @@ import { useState } from "react";
 import { useDebounce } from "@/hooks/shared";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
+import {
+  CXP_SORT_KEY_DEFAULT,
+  type CxpSortDir,
+} from "@/features/cxp/services/proveedorFacturas.orden";
 import type { Moneda } from "@/types/db";
 
 export type AprobacionFiltro = "todos" | "pendiente" | "aprobada" | "rechazada";
@@ -23,6 +27,10 @@ type CxpFiltrosUrl = {
   aprobacion: string;
   proveedorId: string;
   categoriaPresupuestoId: string;
+  /** Orden global (columna + dirección). Vive en la URL, no en TanStack:
+   *  la pantalla ordena TODAS las facturas antes de cortar la página. */
+  sortKey: string;
+  sortDir: string;
 };
 
 const DEFAULTS: CxpFiltrosUrl = {
@@ -32,6 +40,8 @@ const DEFAULTS: CxpFiltrosUrl = {
   aprobacion: "todos",
   proveedorId: "todos",
   categoriaPresupuestoId: "todas",
+  sortKey: CXP_SORT_KEY_DEFAULT,
+  sortDir: "desc",
 };
 
 export function useCxpPageState() {
@@ -51,7 +61,9 @@ export function useCxpPageState() {
   const search = tf.search;
   const debouncedSearch = useDebounce(search, 300);
   const page = tf.page;
-  const pageSize = 100;
+  const pageSize = tf.pageSize;
+  const sortKey = tf.filters.sortKey || null;
+  const sortDir = (tf.filters.sortDir === "asc" ? "asc" : "desc") as CxpSortDir;
   const estatus = tf.filters.estatus as EstatusCxP | "todos";
   const moneda = tf.filters.moneda as "todas" | Moneda;
   const origen = tf.filters.origen as "Nacional" | "Extranjero" | "todos";
@@ -101,6 +113,14 @@ export function useCxpPageState() {
     page,
     setPage: tf.setPage,
     pageSize,
+    setPageSize: tf.setPageSize,
+    sortKey,
+    sortDir,
+    /** Cambiar el orden regresa a la primera página (el conjunto se reacomoda). */
+    setSort: (key: string | null, dir: CxpSortDir) => {
+      tf.setFilter("sortKey", key ?? "");
+      tf.setFilter("sortDir", dir);
+    },
     estatus,
     setEstatus: (v: EstatusCxP | "todos") => tf.setFilter("estatus", v),
     moneda,

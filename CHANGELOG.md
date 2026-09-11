@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.301] - 2026-09-11
+- **fix(cxp)**: el listado `/compras/facturas` ordena TODAS las facturas filtradas antes de cortar la página (`proveedorFacturas.orden.ts`, orden en la URL, regreso a página 1 al reordenar); antes el orden sólo acomodaba las 100 filas visibles.
+- **feat(cxp/ui)**: aviso de facturas canceladas ocultas con acceso directo a verlas y selector de 50/100/200 filas por página; la exportación CSV respeta el orden en pantalla.
+- **fix(cxp/ui)**: la búsqueda de expediente al capturar una factura ya muestra los expedientes Cerrado/Cancelado deshabilitados con el motivo, en vez de esconderlos; el candado de negocio (`esEstadoNoVinculable` + trigger de BD) no cambia.
+
+
 ## [13.823.300] - 2026-09-11
 - **fix(errores)**: se añadieron los mensajes amigables faltantes para `LC_CXP_IVA_IMPLAUSIBLE` (IVA mayor al 16% del subtotal al aprobar una factura de proveedor) y `LC_AJUSTE_DESPROPORCIONADO` (ajuste que excede el total de la factura) en `lcCodeMessages.financiero.ts`; el candado de cobertura `lcCodeCoverage` vuelve a verde.
 - **fix(accesibilidad)**: `FilaCostoLocalRow` (wizard de cotización) migra el `title=` nativo del campo Proveedor al tooltip accesible `Hint`, cumpliendo el candado `no-title-nativo`.

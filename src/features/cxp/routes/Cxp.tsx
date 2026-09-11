@@ -30,6 +30,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { formatDate, toTitleCase, formatCurrency } from "@/lib/formatters";
+import { ordenarFacturasCxP } from "@/features/cxp/services/proveedorFacturas.orden";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
@@ -53,10 +54,20 @@ export default function Cxp() {
   // Una página fuera de rango (deep link viejo, o menos resultados tras
   // filtrar) mostraba una tabla vacía aunque hubiera coincidencias.
   const pageActual = Math.min(f.page, totalPages - 1);
-  const pageData = useMemo(
-    () => data.slice(pageActual * f.pageSize, (pageActual + 1) * f.pageSize),
-    [data, pageActual, f.pageSize],
+  // El orden se aplica al conjunto COMPLETO y después se corta la página:
+  // antes TanStack ordenaba sólo las filas ya cortadas y "ordenar por folio"
+  // acomodaba únicamente las 100 visibles.
+  const dataOrdenada = useMemo(
+    () => ordenarFacturasCxP(data, f.sortKey, f.sortDir),
+    [data, f.sortKey, f.sortDir],
   );
+  const pageData = useMemo(
+    () => dataOrdenada.slice(pageActual * f.pageSize, (pageActual + 1) * f.pageSize),
+    [dataOrdenada, pageActual, f.pageSize],
+  );
+  // Las canceladas se ocultan por defecto (ver `incluirCanceladasCxP`): sin
+  // aviso el usuario cree que faltan facturas.
+  const canceladasOcultas = f.estatus === "todos" && !f.search.trim();
 
   // Máquina de estados excluyente: antes un error de carga dejaba `data` en []
   // y se montaba el empty state, ocultando el botón "Reintentar".
@@ -76,7 +87,7 @@ export default function Cxp() {
         description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => exportarCxpCsv(data)} disabled={data.length === 0}>
+            <Button variant="outline" onClick={() => exportarCxpCsv(dataOrdenada)} disabled={data.length === 0}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
             <Button variant="outline" onClick={() => navigate(ROUTES.REPORTES_CARTERA)}>
@@ -120,6 +131,19 @@ export default function Cxp() {
 
       <Card>
         <CardContent className="p-0">
+          {estado === "data" && canceladasOcultas && (
+            <div className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-4 py-2 text-body-sm text-muted-foreground">
+              <span>Las facturas canceladas no se muestran en esta vista.</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-body-sm"
+                onClick={() => f.setEstatus("Cancelada")}
+              >
+                Ver canceladas
+              </Button>
+            </div>
+          )}
           {estado === "error" ? (
             <ErrorStateInline
               message="No pudimos cargar las facturas de proveedor. Revisa tu conexión e inténtalo de nuevo."
@@ -139,7 +163,11 @@ export default function Cxp() {
                 emptyMessage="No hay facturas que coincidan con los filtros"
                 rowKey={(f) => f.id}
                 density={TABLE_DENSITY.embebida}
-                initialSort={{ key: "folio_interno", dir: "desc" }}
+                // `server` = TanStack no reordena las filas que recibe; el
+                // orden lo aplica la pantalla sobre la lista completa.
+                sortMode="server"
+                controlledSort={{ key: f.sortKey, dir: f.sortDir }}
+                onSortChange={f.setSort}
                 onRowClick={abrirDetalle}
                 stickyHeader
                 columnVisibility={colVis.visibility}
@@ -152,6 +180,8 @@ export default function Cxp() {
                   totalPages,
                   onPageChange: f.setPage,
                   pageSize: f.pageSize,
+                  onPageSizeChange: f.setPageSize,
+                  pageSizeOptions: [50, 100, 200],
                   total: data.length,
                 }}
                 mobileCard={(fact) => (
