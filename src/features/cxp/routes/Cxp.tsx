@@ -131,6 +131,19 @@ export default function Cxp() {
 
       <Card>
         <CardContent className="p-0">
+          {estado === "data" && canceladasOcultas && (
+            <div className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-4 py-2 text-body-sm text-muted-foreground">
+              <span>Las facturas canceladas no se muestran en esta vista.</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-body-sm"
+                onClick={() => f.setEstatus("Cancelada")}
+              >
+                Ver canceladas
+              </Button>
+            </div>
+          )}
           {estado === "error" ? (
             <ErrorStateInline
               message="No pudimos cargar las facturas de proveedor. Revisa tu conexión e inténtalo de nuevo."
@@ -150,7 +163,11 @@ export default function Cxp() {
                 emptyMessage="No hay facturas que coincidan con los filtros"
                 rowKey={(f) => f.id}
                 density={TABLE_DENSITY.embebida}
-                initialSort={{ key: "folio_interno", dir: "desc" }}
+                // `server` = TanStack no reordena las filas que recibe; el
+                // orden lo aplica la pantalla sobre la lista completa.
+                sortMode="server"
+                controlledSort={{ key: f.sortKey, dir: f.sortDir }}
+                onSortChange={f.setSort}
                 onRowClick={abrirDetalle}
                 stickyHeader
                 columnVisibility={colVis.visibility}
