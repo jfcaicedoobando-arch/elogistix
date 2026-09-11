@@ -96,16 +96,17 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
           />
         </div>
 
-        <Input
-          value={fila.proveedor}
-          onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
-          className={cn("h-9 text-body", COL_COSTO.proveedor)}
-          placeholder="Proveedor"
-          aria-label="Proveedor"
-          /* El nombre largo se corta en el campo; el valor completo se lee al
-             pasar el cursor en vez de ensanchar la columna. */
-          title={fila.proveedor || undefined}
-        />
+        {/* El nombre largo se corta en el campo; el valor completo se lee
+            en un tooltip accesible en vez de ensanchar la columna. */}
+        <Hint label={fila.proveedor || undefined}>
+          <Input
+            value={fila.proveedor}
+            onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
+            className={cn("h-9 text-body", COL_COSTO.proveedor)}
+            placeholder="Proveedor"
+            aria-label="Proveedor"
+          />
+        </Hint>
 
         <div className={COL_COSTO.unidad}>
           <UnidadMedidaSelect
