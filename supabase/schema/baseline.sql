@@ -652,21 +652,21 @@ BEGIN
     INTO v_metodo, v_total
     FROM public.facturas f
    WHERE f.id = NEW.factura_id;
-  -- Factura inexistente (lo resuelve la FK) o PPD: sin restricción extra.
   IF NOT FOUND OR v_metodo IS DISTINCT FROM 'PUE' THEN
     RETURN NEW;
   END IF;
-  -- Una sola exhibición: no puede coexistir con otro pago vivo de la factura.
+  -- v13.823.287: un pago con REP cancelado esta anulado y no ocupa la
+  -- unica exhibicion de una factura PUE.
   SELECT count(*) INTO v_otros
     FROM public.pagos_factura p
    WHERE p.factura_id = NEW.factura_id
      AND p.deleted_at IS NULL
+     AND COALESCE(p.estado_rep, '') <> 'Cancelado'
      AND p.id IS DISTINCT FROM NEW.id;
   IF v_otros > 0 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
       USING ERRCODE = 'P0001';
   END IF;
-  -- El pago debe liquidar el total de la factura (tolerancia 0.05 por redondeo).
   IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.05 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: la factura es PUE; registra el cobro por el total (%) en una sola exhibición. Si el cliente abona, cambia la factura a PPD.', v_total
       USING ERRCODE = 'P0001';
@@ -1638,6 +1638,15 @@ BEGIN
       NEW.conciliado_por := NULL;
     END IF;
   END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._bbva_set_origen() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  NEW.origen := public.movimiento_origen_por_hash(NEW.hash_dedupe);
   RETURN NEW;
 END;
 $$;
@@ -2738,6 +2747,7 @@ DECLARE
   v_total_mxn numeric(18,4);
   v_umbral numeric;
   v_tipo_contable text;
+  v_iva_max numeric(18,4);
   v_c record;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
@@ -2775,6 +2785,17 @@ BEGIN
       to_char(COALESCE(v_row.subtotal,0),'FM999,999,999,990.00'),
       to_char(v_diferencia,              'FM999,999,999,990.00'),
       to_char(v_tolerancia,              'FM999,999,999,990.00');
+  END IF;
+  -- FP-000256: "IVA fantasma". El total se deriva de subtotal + IVA + IEPS −
+  -- retenciones, así que un IVA imposible (50 sobre un subtotal de 60) infla la
+  -- factura sin ningún renglón que lo respalde. En México el IVA trasladado
+  -- nunca excede el 16% de la base.
+  v_iva_max := COALESCE(v_row.subtotal,0) * 0.16 + 0.02;
+  IF COALESCE(v_row.iva,0) > v_iva_max THEN
+    RAISE EXCEPTION 'LC_CXP_IVA_IMPLAUSIBLE: El IVA capturado (%) es mayor al 16%% del subtotal (%). Corrige el IVA de la factura antes de aprobar; el máximo aceptable es %.',
+      to_char(COALESCE(v_row.iva,0),      'FM999,999,999,990.00'),
+      to_char(COALESCE(v_row.subtotal,0), 'FM999,999,999,990.00'),
+      to_char(v_iva_max,                  'FM999,999,999,990.00');
   END IF;
   -- Tope de sobrecosto POR CONCEPTO, sumando todas las facturas vivas ligadas
   -- a ese concepto y normalizando ambos lados a MXN.
@@ -4284,6 +4305,34 @@ BEGIN
   RETURN v ~ '^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$';
 END;
 $_$;
+CREATE FUNCTION public._saldo_factura_calc(p_factura_id uuid) RETURNS numeric
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_total numeric; v_moneda text; v_tc numeric; v_estado estado_factura;
+  v_pagos numeric; v_ncs numeric;
+BEGIN
+  SELECT f.total, f.moneda::text, f.tipo_cambio, f.estado
+    INTO v_total, v_moneda, v_tc, v_estado
+  FROM public.facturas f
+  WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
+  IF NOT FOUND THEN RETURN 0; END IF;
+  IF v_estado IN ('Cancelada', 'Sustituida') THEN RETURN 0; END IF;
+  SELECT COALESCE(SUM(p.monto_aplicado_factura), 0) INTO v_pagos
+  FROM public.pagos_factura p
+  WHERE p.factura_id = p_factura_id AND p.deleted_at IS NULL
+    AND NOT public.pago_rep_anulado(p.estado_rep);
+  SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+           nc.monto, nc.moneda::text, nc.tipo_cambio, v_moneda, v_tc)), 0)
+    INTO v_ncs
+  FROM public.factura_notas_credito nc
+  WHERE nc.factura_id = p_factura_id
+    AND nc.deleted_at IS NULL
+    AND nc.estado = 'Aplicada';
+  RETURN COALESCE(v_total, 0) - COALESCE(v_pagos, 0) - COALESCE(v_ncs, 0);
+END;
+$$;
 CREATE FUNCTION public._seed_demo_limpiar_financiero() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -6282,6 +6331,91 @@ BEGIN
   RETURN v_version;
 END;
 $$;
+CREATE FUNCTION public.asegurar_movimiento_cobro_factura(p_pago_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_pago pagos_factura%ROWTYPE;
+  v_moneda_cuenta text;
+  v_concepto text;
+  v_abono numeric;
+  v_mov_id uuid;
+BEGIN
+  SELECT * INTO v_pago FROM public.pagos_factura
+   WHERE id = p_pago_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_PAGO_NO_ENCONTRADO: el cobro no existe o fue eliminado'
+      USING ERRCODE = '22023';
+  END IF;
+  PERFORM public._assert_writer(v_pago.organization_id);
+  IF v_pago.cuenta_bancaria_id IS NULL THEN
+    RETURN jsonb_build_object('creado', false, 'motivo', 'sin_cuenta_bancaria');
+  END IF;
+  IF public.pago_rep_anulado(v_pago.estado_rep) THEN
+    RETURN jsonb_build_object('creado', false, 'motivo', 'pago_anulado');
+  END IF;
+  -- Ya existe un movimiento vivo ligado a este cobro.
+  SELECT id INTO v_mov_id FROM public.bbva_movimientos
+   WHERE deleted_at IS NULL
+     AND (pago_factura_id = p_pago_id OR hash_dedupe = 'cobro-' || p_pago_id::text)
+   LIMIT 1;
+  IF v_mov_id IS NOT NULL THEN
+    RETURN jsonb_build_object('creado', false, 'motivo', 'ya_existe', 'movimiento_id', v_mov_id);
+  END IF;
+  SELECT cb.moneda::text INTO v_moneda_cuenta
+    FROM public.cuentas_bancarias cb
+   WHERE cb.id = v_pago.cuenta_bancaria_id
+     AND cb.organization_id = v_pago.organization_id;
+  IF v_moneda_cuenta IS NULL THEN
+    RAISE EXCEPTION 'LC_CUENTA_NO_ENCONTRADA: la cuenta bancaria del cobro no existe en esta organización'
+      USING ERRCODE = '22023';
+  END IF;
+  -- Fail-closed: sin TC no se inventa conversión.
+  IF v_moneda_cuenta <> v_pago.moneda::text AND COALESCE(v_pago.tipo_cambio, 0) <= 0 THEN
+    RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: captura el tipo de cambio del cobro para abonarlo en una cuenta en %', v_moneda_cuenta
+      USING ERRCODE = '22023';
+  END IF;
+  v_abono := CASE
+    WHEN v_moneda_cuenta = v_pago.moneda::text THEN v_pago.monto
+    WHEN v_pago.moneda::text <> 'MXN' AND v_moneda_cuenta = 'MXN' THEN v_pago.monto * v_pago.tipo_cambio
+    WHEN v_pago.moneda::text = 'MXN' AND v_moneda_cuenta <> 'MXN' THEN v_pago.monto / v_pago.tipo_cambio
+    ELSE v_pago.monto
+  END;
+  SELECT 'Cobro factura ' || COALESCE(f.numero, 's/folio') || ' — ' || COALESCE(f.cliente_nombre, 'cliente')
+    INTO v_concepto
+    FROM public.facturas f WHERE f.id = v_pago.factura_id;
+  INSERT INTO public.bbva_movimientos (
+    organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, pago_factura_id,
+    conciliado_por, conciliado_at, importado_por
+  ) VALUES (
+    v_pago.organization_id, v_pago.cuenta_bancaria_id, v_pago.fecha_pago,
+    COALESCE(v_concepto, 'Cobro de factura'), COALESCE(v_pago.referencia, ''),
+    0, v_abono, 'cobro-' || p_pago_id::text, 'Conciliado', p_pago_id,
+    auth.uid(), now(), auth.uid()
+  )
+  ON CONFLICT (cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL
+  DO NOTHING
+  RETURNING id INTO v_mov_id;
+  IF v_mov_id IS NULL THEN
+    SELECT id INTO v_mov_id FROM public.bbva_movimientos
+     WHERE cuenta_bancaria_id = v_pago.cuenta_bancaria_id
+       AND hash_dedupe = 'cobro-' || p_pago_id::text
+       AND deleted_at IS NULL
+     LIMIT 1;
+    RETURN jsonb_build_object('creado', false, 'motivo', 'ya_existe', 'movimiento_id', v_mov_id);
+  END IF;
+  PERFORM public.registrar_bitacora(
+    'tesoreria', 'crear_movimiento_bancario_cobro', v_mov_id,
+    COALESCE(v_concepto, ''),
+    jsonb_build_object('pago_factura_id', p_pago_id, 'abono', v_abono,
+                       'cuenta_bancaria_id', v_pago.cuenta_bancaria_id),
+    v_pago.organization_id, auth.uid()
+  );
+  RETURN jsonb_build_object('creado', true, 'movimiento_id', v_mov_id, 'abono', v_abono);
+END;
+$$;
 CREATE TABLE public.proformas (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     numero text NOT NULL,
@@ -6938,6 +7072,71 @@ BEGIN
         'expediente', COALESCE(p_expediente, ''),
         'transiciones_permitidas', v_permitidas
       )::text;
+END;
+$$;
+CREATE FUNCTION public.auditar_consistencia_cobranza() RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_estado integer := 0;
+  v_sin_espejo integer := 0;
+  v_dia text := to_char((now() AT TIME ZONE 'America/Mexico_City')::date, 'YYYY-MM-DD');
+BEGIN
+  -- 1) Estado de factura incoherente con su saldo canónico.
+  WITH d AS (
+    SELECT f.id, f.numero, f.organization_id, f.estado::text AS estado,
+           public._saldo_factura_calc(f.id) AS saldo,
+           COALESCE((SELECT SUM(p.monto_aplicado_factura) FROM public.pagos_factura p
+                      WHERE p.factura_id = f.id AND p.deleted_at IS NULL
+                        AND NOT public.pago_rep_anulado(p.estado_rep)), 0) AS pagado
+    FROM public.facturas f
+    WHERE f.deleted_at IS NULL
+      AND f.estado::text IN ('Emitida','Parcialmente pagada','Vencida','Pagada')
+  ), inc AS (
+    SELECT d.*, CASE
+        WHEN d.saldo <= 0.01 THEN 'Pagada'
+        WHEN d.pagado > 0 THEN 'Parcialmente pagada'
+        ELSE d.estado
+      END AS esperado
+    FROM d
+  )
+  INSERT INTO public.alertas_sistema (severity, source, message, payload, dedupe_key)
+  SELECT 'warning', 'auditoria_cobranza',
+         'Factura ' || COALESCE(i.numero, i.id::text) || ': estado ' || i.estado
+           || ' no coincide con su saldo (' || round(i.saldo, 2) || ')',
+         jsonb_build_object('factura_id', i.id, 'organization_id', i.organization_id,
+                            'estado', i.estado, 'estado_esperado', i.esperado,
+                            'saldo', i.saldo, 'pagado', i.pagado),
+         'cobranza-estado-' || i.id::text || '-' || v_dia
+  FROM inc i
+  WHERE i.esperado <> i.estado
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS v_estado = ROW_COUNT;
+  -- 2) Cobro vigente con cuenta bancaria pero sin movimiento en el banco.
+  INSERT INTO public.alertas_sistema (severity, source, message, payload, dedupe_key)
+  SELECT 'warning', 'auditoria_cobranza',
+         'Cobro sin movimiento bancario (factura ' || COALESCE(f.numero, '') || ')',
+         jsonb_build_object('pago_factura_id', p.id, 'factura_id', p.factura_id,
+                            'organization_id', p.organization_id,
+                            'cuenta_bancaria_id', p.cuenta_bancaria_id,
+                            'monto', p.monto, 'moneda', p.moneda::text),
+         'cobranza-sin-espejo-' || p.id::text || '-' || v_dia
+  FROM public.pagos_factura p
+  JOIN public.facturas f ON f.id = p.factura_id
+  WHERE p.deleted_at IS NULL
+    AND p.cuenta_bancaria_id IS NOT NULL
+    AND NOT public.pago_rep_anulado(p.estado_rep)
+    AND p.lote_id IS NULL
+    AND p.fecha_pago >= (now() AT TIME ZONE 'America/Mexico_City')::date - INTERVAL '90 days'
+    AND NOT EXISTS (
+      SELECT 1 FROM public.bbva_movimientos m
+       WHERE m.deleted_at IS NULL
+         AND (m.pago_factura_id = p.id OR m.hash_dedupe = 'cobro-' || p.id::text)
+    )
+  ON CONFLICT DO NOTHING;
+  GET DIAGNOSTICS v_sin_espejo = ROW_COUNT;
+  RETURN jsonb_build_object('estados_incoherentes', v_estado, 'cobros_sin_espejo', v_sin_espejo);
 END;
 $$;
 CREATE FUNCTION public.auditoria_capturar_snapshot(p_organization_id uuid) RETURNS uuid
@@ -8399,7 +8598,9 @@ DECLARE
   v_cobrado_acotado numeric(14,2);
 BEGIN
   SELECT * INTO v_pago FROM pagos_factura WHERE id = p_pago_factura_id;
-  IF NOT FOUND OR v_pago.deleted_at IS NOT NULL THEN
+  -- v13.823.287: un pago con REP cancelado esta anulado y se revierte igual
+  -- que un pago eliminado (Cancelada, o Por recuperar si ya se liquido).
+  IF NOT FOUND OR v_pago.deleted_at IS NOT NULL OR v_pago.estado_rep = 'Cancelado' THEN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
@@ -8407,7 +8608,7 @@ BEGIN
     -- liquidada: no se cancela en silencio, se marca para recuperacion.
     UPDATE comisiones_devengadas
        SET estado = 'Por recuperar',
-           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago eliminado con comision liquidada'),
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago anulado o eliminado con comision liquidada'),
            updated_at = now()
      WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
@@ -9282,21 +9483,11 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
       f.estado::text AS estado, f.cliente_nombre, f.tipo_cambio AS factura_tc,
       COALESCE(f.cancellation_status, 'none') AS cancellation_status,
       COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
-                 WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL),0) AS pagado,
+                 WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
+                   AND NOT public.pago_rep_anulado(pf.estado_rep)),0) AS pagado,
       COALESCE((
-        SELECT SUM(
-          CASE
-            WHEN nc.moneda::text = f.moneda::text THEN nc.monto
-            WHEN f.moneda::text = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-              THEN nc.monto * nc.tipo_cambio
-            WHEN f.moneda::text <> 'MXN' AND nc.moneda::text = 'MXN' AND f.tipo_cambio > 1
-              THEN nc.monto / f.tipo_cambio
-            WHEN f.moneda::text <> 'MXN' AND nc.moneda::text <> 'MXN'
-                 AND f.moneda::text <> nc.moneda::text
-                 AND nc.tipo_cambio > 1 AND f.tipo_cambio > 1
-              THEN (nc.monto * nc.tipo_cambio) / f.tipo_cambio
-            ELSE 0
-          END)
+        SELECT SUM(public.nc_convertida_a_moneda_factura(
+                 nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda::text, f.tipo_cambio))
         FROM public.factura_notas_credito nc
         WHERE nc.factura_id = f.id
           AND nc.deleted_at IS NULL
@@ -9945,10 +10136,8 @@ BEGIN
       SELECT SUM(pf.monto_aplicado_factura) AS pagado
       FROM pagos_factura pf
       WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+        AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
-    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
-    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
-    -- y devolvía saldos y KPIs de cartera incorrectos.
     LEFT JOIN LATERAL (
       SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
     ) nc ON true
@@ -10006,10 +10195,8 @@ BEGIN
       SELECT SUM(pf.monto_aplicado_factura) AS pagado
       FROM pagos_factura pf
       WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+        AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
-    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
-    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
-    -- y devolvía saldos y KPIs de cartera incorrectos.
     LEFT JOIN LATERAL (
       SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
     ) nc ON true
@@ -11654,6 +11841,21 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_EMBARQUE_AJENO: todo ajuste debe referenciar un embarque vigente de la misma organización que la factura'
       USING ERRCODE = '42501';
+  END IF;
+  -- v13.823.285 · candado de magnitud: un ajuste nace de la diferencia entre el
+  -- costo devengado y la MISMA factura, así que nunca puede superar el total de
+  -- la factura. Cuando la base congelada quedó en otra moneda (p. ej. el costo
+  -- convertido a MXN contra una factura en USD) el delta era un "ajuste
+  -- fantasma" que inflaba la utilidad del embarque (ELIMP00368: -546,777.68 USD
+  -- sobre una factura de 34,400 USD). Se rechaza en el servidor para que ni una
+  -- versión vieja del front pueda volver a insertarlo.
+  IF EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(COALESCE(p_ajustes, '[]'::jsonb)) AS a
+    WHERE abs(COALESCE((a->>'monto')::numeric, 0)) > COALESCE(v_fact.total, 0) + 0.01
+  ) THEN
+    RAISE EXCEPTION 'LC_AJUSTE_DESPROPORCIONADO: el ajuste no puede exceder el total de la factura (%). Revisa la moneda del costo vinculado.', v_fact.total
+      USING ERRCODE = '22003';
   END IF;
   -- Ola 5 · RG4-3: capturar ANTES de cualquier DELETE los ids de todos los
   -- conceptos de ajuste de esta factura (vivos o ya soft-borrados).
@@ -13617,11 +13819,14 @@ BEGIN
     FROM public.pagos_factura pf
     JOIN public.facturas f ON f.id = pf.factura_id AND f.deleted_at IS NULL
     WHERE pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY pf.factura_id
   ),
   nc AS (
-    SELECT ncf.factura_id, COALESCE(SUM(ncf.monto), 0) AS aplicado
+    SELECT ncf.factura_id,
+           COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+             ncf.monto, ncf.moneda::text, ncf.tipo_cambio, f.moneda::text, f.tipo_cambio)), 0) AS aplicado
     FROM public.factura_notas_credito ncf
     JOIN public.facturas f ON f.id = ncf.factura_id AND f.deleted_at IS NULL
     WHERE ncf.estado = 'Aplicada' AND ncf.deleted_at IS NULL
@@ -14929,6 +15134,7 @@ BEGIN
     JOIN facturas f ON f.id = pf.factura_id
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
+      AND COALESCE(pf.estado_rep, '') <> 'Cancelado'
       AND pf.fecha_pago >= p_desde
       AND pf.organization_id = public.org_scope()
     GROUP BY f.moneda
@@ -20166,6 +20372,16 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.movimiento_origen_por_hash(p_hash text) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO ''
+    AS $$
+  SELECT CASE
+    WHEN COALESCE(p_hash, '') ~ '^(cobro|cobro-lote|pago|pago-programado|pago-lote|lote|devolucion|traspaso)-'
+      THEN 'sistema'
+    ELSE 'estado_cuenta'
+  END
+$$;
 CREATE FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) RETURNS numeric
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -20197,6 +20413,24 @@ BEGIN
     AND nc.estado = 'Aplicada';
   RETURN COALESCE(v_ncs, 0);
 END;
+$$;
+CREATE FUNCTION public.nc_convertida_a_moneda_factura(p_monto numeric, p_moneda_nc text, p_tc_nc numeric, p_moneda_factura text, p_tc_factura numeric) RETURNS numeric
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO ''
+    AS $$
+  SELECT CASE
+    WHEN p_monto IS NULL OR p_moneda_factura IS NULL THEN 0
+    WHEN p_moneda_nc = p_moneda_factura THEN p_monto
+    WHEN p_moneda_factura = 'MXN' AND p_moneda_nc <> 'MXN' AND COALESCE(p_tc_nc, 0) > 1
+      THEN p_monto * p_tc_nc
+    WHEN p_moneda_factura <> 'MXN' AND p_moneda_nc = 'MXN' AND COALESCE(p_tc_factura, 0) > 1
+      THEN p_monto / p_tc_factura
+    WHEN p_moneda_factura <> 'MXN' AND p_moneda_nc <> 'MXN'
+         AND p_moneda_factura <> p_moneda_nc
+         AND COALESCE(p_tc_nc, 0) > 1 AND COALESCE(p_tc_factura, 0) > 1
+      THEN (p_monto * p_tc_nc) / p_tc_factura
+    ELSE 0
+  END
 $$;
 CREATE FUNCTION public.notif_cli_on_embarque_estado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -21038,6 +21272,12 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.pago_rep_anulado(p_estado_rep text) RETURNS boolean
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO ''
+    AS $$
+  SELECT lower(btrim(COALESCE(p_estado_rep, ''))) = 'cancelado'
+$$;
 CREATE FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -21260,10 +21500,10 @@ CREATE FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) RETURNS T
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_cliente uuid; v_moneda text; v_tc numeric; v_total numeric;
+  v_cliente uuid; v_moneda text; v_tc numeric; v_total numeric; v_estado estado_factura;
 BEGIN
-  SELECT f.cliente_id, f.moneda::text, f.tipo_cambio, f.total
-    INTO v_cliente, v_moneda, v_tc, v_total
+  SELECT f.cliente_id, f.moneda::text, f.tipo_cambio, f.total, f.estado
+    INTO v_cliente, v_moneda, v_tc, v_total, v_estado
   FROM public.facturas f
   WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
   IF NOT FOUND THEN RETURN; END IF;
@@ -21276,25 +21516,18 @@ BEGIN
     SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) AS monto, COUNT(*)::int AS n
     FROM public.pagos_factura pf
     WHERE pf.factura_id = p_factura_id AND pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
   ), nc AS (
-    SELECT COALESCE(SUM(
-      CASE
-        WHEN n.moneda::text = v_moneda THEN n.monto
-        WHEN v_moneda = 'MXN' AND n.moneda::text <> 'MXN' AND n.tipo_cambio > 1
-          THEN n.monto * n.tipo_cambio
-        WHEN v_moneda <> 'MXN' AND n.moneda::text = 'MXN' AND v_tc > 1
-          THEN n.monto / v_tc
-        WHEN v_moneda <> 'MXN' AND n.moneda::text <> 'MXN'
-             AND v_moneda <> n.moneda::text
-             AND n.tipo_cambio > 1 AND v_tc > 1
-          THEN (n.monto * n.tipo_cambio) / v_tc
-        ELSE 0
-      END), 0) AS monto, COUNT(*)::int AS n
+    SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+             n.monto, n.moneda::text, n.tipo_cambio, v_moneda, v_tc)), 0) AS monto,
+           COUNT(*)::int AS n
     FROM public.factura_notas_credito n
     WHERE n.factura_id = p_factura_id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
   )
   SELECT COALESCE(v_total, 0), p.monto, nc.monto,
-         public.saldo_factura(p_factura_id), p.n, nc.n
+         CASE WHEN v_estado IN ('Cancelada','Sustituida') THEN 0
+              ELSE COALESCE(v_total, 0) - p.monto - nc.monto END,
+         p.n, nc.n
   FROM p, nc;
 END;
 $$;
@@ -23488,27 +23721,22 @@ DECLARE
   v_prev_flag text;
 BEGIN
   v_factura_id := COALESCE(NEW.factura_id, OLD.factura_id);
-
   SELECT total, fecha_vencimiento, estado INTO v_total, v_vencimiento, v_estado_actual
   FROM facturas WHERE id = v_factura_id;
-
   IF v_estado_actual IN ('Cancelada', 'Borrador', 'Sustituida') THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-
   -- v13.823.294: `saldo_factura` devuelve 0 cuando la factura ya está 'Pagada'
   -- (atajo para facturas legacy sin pagos capturados). Eso hacía imposible
   -- salir de 'Pagada' al anularse el único pago por REP cancelado.
   -- `saldo_factura_bruto` calcula el saldo real y también excluye pagos con
   -- REP cancelado.
   v_saldo := public.saldo_factura_bruto(v_factura_id);
-
   -- v13.823.287: los pagos con REP cancelado estan anulados y no cuentan.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
   FROM pagos_factura
   WHERE factura_id = v_factura_id AND deleted_at IS NULL
     AND COALESCE(estado_rep, '') <> 'Cancelado';
-
   IF v_saldo <= 0.01 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN
@@ -23518,6 +23746,10 @@ BEGIN
   ELSE
     v_nuevo_estado := 'Emitida';
   END IF;
+  -- v13.308.3 — Marcar recálculo autorizado para que guard_estado_factura
+  -- permita fijar Pagada / Parcialmente pagada / Vencida. Se usa
+  -- is_local=true (SET LOCAL) para restringir el efecto a esta
+  -- transacción/función.
   v_prev_flag := current_setting('app.recalc_estado_factura', true);
   PERFORM set_config('app.recalc_estado_factura', '1', true);
   UPDATE facturas
@@ -25997,6 +26229,9 @@ DECLARE
   v_mov bbva_movimientos%ROWTYPE;
   v_motivo text := 'REP cancelado: el cobro se anuló';
   v_accion text;
+  v_lote uuid;
+  v_vigentes integer;
+  v_es_espejo boolean;
 BEGIN
   SELECT * INTO v_mov
     FROM bbva_movimientos
@@ -26005,10 +26240,45 @@ BEGIN
    ORDER BY importado_en NULLS LAST, id
    LIMIT 1;
   IF NOT FOUND THEN
-    RETURN jsonb_build_object('reversado', false, 'motivo', 'sin_movimiento');
+    -- Cobro en lote: el movimiento espejo cuelga del lote.
+    SELECT lote_id INTO v_lote FROM pagos_factura WHERE id = p_pago_id;
+    IF v_lote IS NULL THEN
+      RETURN jsonb_build_object('reversado', false, 'motivo', 'sin_movimiento');
+    END IF;
+    SELECT * INTO v_mov
+      FROM bbva_movimientos
+     WHERE pago_factura_lote_id = v_lote
+       AND deleted_at IS NULL
+     ORDER BY importado_en NULLS LAST, id
+     LIMIT 1;
+    IF NOT FOUND THEN
+      RETURN jsonb_build_object('reversado', false, 'motivo', 'sin_movimiento');
+    END IF;
+    SELECT COUNT(*) INTO v_vigentes
+      FROM pagos_factura pf
+     WHERE pf.lote_id = v_lote
+       AND pf.deleted_at IS NULL
+       AND NOT public.pago_rep_anulado(pf.estado_rep);
+    IF v_vigentes > 0 THEN
+      -- Quedan cobros vigentes en el lote: el movimiento sigue respaldando
+      -- dinero real. Se marca para revisión manual en vez de borrarlo.
+      UPDATE bbva_movimientos
+         SET motivo_ignorar = v_motivo || ' (revisar lote: ' || v_vigentes || ' cobro(s) vigente(s))'
+       WHERE id = v_mov.id;
+      PERFORM public.registrar_bitacora(
+        'tesoreria', 'revisar_movimiento_lote_rep_cancelado', v_mov.id,
+        COALESCE(v_mov.concepto, ''),
+        jsonb_build_object('pago_factura_id', p_pago_id, 'lote_id', v_lote,
+                           'cobros_vigentes', v_vigentes, 'motivo', v_motivo),
+        v_mov.organization_id, auth.uid()
+      );
+      RETURN jsonb_build_object('reversado', false, 'motivo', 'lote_con_cobros_vigentes',
+                                'movimiento_id', v_mov.id, 'cobros_vigentes', v_vigentes);
+    END IF;
   END IF;
-
-  IF COALESCE(v_mov.hash_dedupe,'') LIKE 'cobro-%' THEN
+  -- Espejo generado por el sistema (incluye el del lote) => soft-delete.
+  v_es_espejo := COALESCE(v_mov.origen, 'estado_cuenta') = 'sistema';
+  IF v_es_espejo THEN
     UPDATE bbva_movimientos
        SET deleted_at = now(),
            deleted_by = auth.uid(),
@@ -26016,6 +26286,7 @@ BEGIN
      WHERE id = v_mov.id;
     v_accion := 'reversar_movimiento_cobro_rep_cancelado';
   ELSE
+    -- Línea real del estado de cuenta: el dinero existe, sólo se desvincula.
     UPDATE bbva_movimientos
        SET pago_factura_id = NULL,
            estado_conciliacion = 'Pendiente',
@@ -26023,7 +26294,6 @@ BEGIN
      WHERE id = v_mov.id;
     v_accion := 'desvincular_movimiento_cobro_rep_cancelado';
   END IF;
-
   PERFORM public.registrar_bitacora(
     'tesoreria',
     v_accion,
@@ -26034,12 +26304,11 @@ BEGIN
       'cuenta_bancaria_id', v_mov.cuenta_bancaria_id,
       'abono', v_mov.abono,
       'motivo', v_motivo,
-      'origen', CASE WHEN COALESCE(v_mov.hash_dedupe,'') LIKE 'cobro-%' THEN 'sistema' ELSE 'estado_cuenta' END
+      'origen', COALESCE(v_mov.origen, 'estado_cuenta')
     ),
     v_mov.organization_id,
     auth.uid()
   );
-
   RETURN jsonb_build_object('reversado', true, 'movimiento_id', v_mov.id, 'accion', v_accion);
 END;
 $$;
@@ -26290,13 +26559,10 @@ CREATE FUNCTION public.saldo_factura(p_factura_id uuid) RETURNS numeric
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_total numeric; v_estado estado_factura; v_org uuid;
-  v_caller_org uuid; v_uid uuid; v_pagos numeric; v_ncs numeric;
-  v_moneda text; v_tc numeric; v_cliente uuid;
+  v_org uuid; v_cliente uuid; v_uid uuid; v_caller_org uuid;
 BEGIN
-  SELECT total, estado, organization_id, moneda::text, tipo_cambio, cliente_id
-    INTO v_total, v_estado, v_org, v_moneda, v_tc, v_cliente
-  FROM public.facturas WHERE id = p_factura_id AND deleted_at IS NULL;
+  SELECT f.organization_id, f.cliente_id INTO v_org, v_cliente
+  FROM public.facturas f WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
   IF NOT FOUND THEN RETURN 0; END IF;
   v_uid := auth.uid();
   v_caller_org := public.current_user_org_id();
@@ -26311,31 +26577,7 @@ BEGIN
       END IF;
     END IF;
   END IF;
-  -- BUG-2026-08-25: 'Pagada' también es terminal (facturas legacy sin pagos
-  -- capturados generaban adeudo fantasma en el estado de cuenta).
-  -- v13.823.145: 'Borrador' NO es terminal — una factura sin timbrar debe
-  -- reportar saldo por cobrar (antes mostraba "cobrado = total" sin pagos).
-  IF v_estado IN ('Cancelada', 'Sustituida', 'Pagada') THEN RETURN 0; END IF;
-  SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagos
-  FROM public.pagos_factura
-  WHERE factura_id = p_factura_id AND deleted_at IS NULL;
-  -- BUG-04 (auditoría 2026-08-18): misma conversión que `cartera_pendiente`.
-  SELECT COALESCE(SUM(
-      CASE
-        WHEN nc.moneda::text = v_moneda THEN nc.monto
-        WHEN v_moneda = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-          THEN nc.monto * nc.tipo_cambio
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text = 'MXN' AND v_tc > 1
-          THEN nc.monto / v_tc
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text <> 'MXN'
-             AND v_moneda <> nc.moneda::text
-             AND nc.tipo_cambio > 1 AND v_tc > 1
-          THEN (nc.monto * nc.tipo_cambio) / v_tc
-        ELSE 0
-      END), 0) INTO v_ncs
-  FROM public.factura_notas_credito nc
-  WHERE nc.factura_id = p_factura_id AND nc.deleted_at IS NULL AND nc.estado = 'Aplicada';
-  RETURN COALESCE(v_total, 0) - v_pagos - v_ncs;
+  RETURN public._saldo_factura_calc(p_factura_id);
 END;
 $$;
 CREATE FUNCTION public.saldo_factura_bruto(p_factura_id uuid) RETURNS numeric
@@ -26343,13 +26585,10 @@ CREATE FUNCTION public.saldo_factura_bruto(p_factura_id uuid) RETURNS numeric
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_total numeric; v_org uuid; v_uid uuid; v_caller_org uuid;
-  v_pagos numeric; v_ncs numeric;
+  v_org uuid; v_uid uuid; v_caller_org uuid;
 BEGIN
-  SELECT f.total, f.organization_id INTO v_total, v_org
-  FROM public.facturas f
-  WHERE f.id = p_factura_id AND f.deleted_at IS NULL
-    AND f.estado NOT IN ('Cancelada', 'Sustituida', 'Borrador');
+  SELECT f.organization_id INTO v_org
+  FROM public.facturas f WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
   IF NOT FOUND THEN RETURN 0; END IF;
   v_uid := auth.uid();
   v_caller_org := public.current_user_org_id();
@@ -26360,11 +26599,7 @@ BEGIN
       RETURN 0;
     END IF;
   END IF;
-  SELECT COALESCE(SUM(p.monto_aplicado_factura), 0) INTO v_pagos
-  FROM public.pagos_factura p
-  WHERE p.factura_id = p_factura_id AND p.deleted_at IS NULL;
-  v_ncs := public._nc_aplicadas_moneda_factura(p_factura_id);
-  RETURN COALESCE(v_total, 0) - v_pagos - COALESCE(v_ncs, 0);
+  RETURN public._saldo_factura_calc(p_factura_id);
 END;
 $$;
 CREATE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid) RETURNS jsonb
@@ -28824,7 +29059,6 @@ BEGIN
     'regla','comisiones_definitivas','ok',v_ok,
     'detalle', jsonb_build_object('no_definitivas', v_com_count,
       'sin_comision', v_sin_comision)));
-
   BEGIN
     v_pnl := public.pnl_financiero_embarque(p_embarque_id);
     v_utilidad_mxn := COALESCE((v_pnl->>'utilidad_mxn')::numeric, 0);
@@ -29071,7 +29305,9 @@ CREATE TABLE public.bbva_movimientos (
     pago_proveedor_lote_id uuid,
     pago_factura_lote_id uuid,
     traspaso_id uuid,
-    CONSTRAINT bbva_movimientos_cargo_abono_check CHECK (((cargo >= (0)::numeric) AND (abono >= (0)::numeric) AND ((((cargo > (0)::numeric))::integer + ((abono > (0)::numeric))::integer) = 1)))
+    origen text DEFAULT 'estado_cuenta'::text NOT NULL,
+    CONSTRAINT bbva_movimientos_cargo_abono_check CHECK (((cargo >= (0)::numeric) AND (abono >= (0)::numeric) AND ((((cargo > (0)::numeric))::integer + ((abono > (0)::numeric))::integer) = 1))),
+    CONSTRAINT bbva_movimientos_origen_check CHECK ((origen = ANY (ARRAY['sistema'::text, 'estado_cuenta'::text])))
 );
 ALTER TABLE ONLY public.bbva_movimientos FORCE ROW LEVEL SECURITY;
 CREATE TABLE public.bitacora_actividad (
@@ -29536,6 +29772,7 @@ CREATE TABLE public.cotizaciones (
     naviera_id uuid,
     origen_portal boolean DEFAULT false NOT NULL,
     created_by uuid DEFAULT auth.uid(),
+    tipo_cambio_usd numeric,
     CONSTRAINT cotizaciones_estado_revalidacion_chk CHECK ((estado_revalidacion = ANY (ARRAY['ninguna'::text, 'pendiente_reaprobacion'::text, 'reaprobada'::text, 'rechazada'::text]))),
     CONSTRAINT cotizaciones_peso_nonneg CHECK ((peso_kg >= (0)::numeric)),
     CONSTRAINT cotizaciones_piezas_nonneg CHECK ((piezas >= 0)),
@@ -30886,6 +31123,8 @@ ALTER TABLE ONLY public.cotizaciones
     ADD CONSTRAINT cotizaciones_id_org_uniq UNIQUE (id, organization_id);
 ALTER TABLE ONLY public.cotizaciones
     ADD CONSTRAINT cotizaciones_pkey PRIMARY KEY (id);
+ALTER TABLE public.cotizaciones
+    ADD CONSTRAINT cotizaciones_tipo_cambio_usd_positivo CHECK (((tipo_cambio_usd IS NULL) OR (tipo_cambio_usd > (0)::numeric))) NOT VALID;
 ALTER TABLE ONLY public.crm_actividades
     ADD CONSTRAINT crm_actividades_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.crm_comentarios_oportunidad
@@ -31510,6 +31749,7 @@ CREATE TRIGGER trg_agentes_propaga_nombre AFTER UPDATE OF nombre ON public.coste
 CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.anticipos_aplicaciones FOR EACH ROW EXECUTE FUNCTION public.tg_anticipo_saldo();
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_bbva_guard_update BEFORE UPDATE ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_guard_update();
+CREATE TRIGGER trg_bbva_set_origen BEFORE INSERT ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_set_origen();
 CREATE TRIGGER trg_bitacora_facturas_estado AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._bitacora_facturas_estado();
 CREATE TRIGGER trg_bitacora_fin_bbva AFTER UPDATE OF cargo, abono, fecha ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('tesoreria', 'cargo', 'abono', 'fecha');
 CREATE TRIGGER trg_bitacora_fin_comisiones AFTER UPDATE OF porcentaje_aplicado, comision_mxn, estado ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('cxp', 'porcentaje_aplicado', 'comision_mxn', 'estado');
@@ -32961,6 +33201,8 @@ GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uui
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._bbva_guard_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bbva_guard_update() TO service_role;
+GRANT ALL ON FUNCTION public._bbva_set_origen() TO authenticated;
+GRANT ALL ON FUNCTION public._bbva_set_origen() TO service_role;
 REVOKE ALL ON FUNCTION public._bitacora_cambio_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bitacora_cambio_financiero() TO service_role;
 REVOKE ALL ON FUNCTION public._bitacora_facturas_estado() FROM PUBLIC;
@@ -33131,6 +33373,8 @@ GRANT ALL ON FUNCTION public._resolver_proveedor_por_nombre(p_org uuid, p_nombre
 REVOKE ALL ON FUNCTION public._rfc_valido(p_rfc text, p_permitir_generico boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._rfc_valido(p_rfc text, p_permitir_generico boolean) TO authenticated;
 GRANT ALL ON FUNCTION public._rfc_valido(p_rfc text, p_permitir_generico boolean) TO service_role;
+REVOKE ALL ON FUNCTION public._saldo_factura_calc(p_factura_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._saldo_factura_calc(p_factura_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._seed_demo_limpiar_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._seed_demo_limpiar_financiero() TO service_role;
 REVOKE ALL ON FUNCTION public._sync_user_roles_desde_membership() FROM PUBLIC;
@@ -33150,6 +33394,7 @@ REVOKE ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO authenticated;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO service_role;
 REVOKE ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() TO authenticated;
 GRANT ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() TO service_role;
 REVOKE ALL ON FUNCTION public._validar_cronologia_evento_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authenticated;
@@ -33229,6 +33474,9 @@ GRANT ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) TO serv
 REVOKE ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.asegurar_movimiento_cobro_factura(p_pago_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.asegurar_movimiento_cobro_factura(p_pago_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.asegurar_movimiento_cobro_factura(p_pago_id uuid) TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proformas TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proformas TO authenticated;
 GRANT ALL ON TABLE public.proformas TO service_role;
@@ -33263,6 +33511,8 @@ GRANT ALL ON FUNCTION public.assert_proveedor_factura_viva_para_pago() TO servic
 REVOKE ALL ON FUNCTION public.assert_transicion_embarque(p_actual public.estado_embarque, p_nuevo public.estado_embarque, p_expediente text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assert_transicion_embarque(p_actual public.estado_embarque, p_nuevo public.estado_embarque, p_expediente text) TO authenticated;
 GRANT ALL ON FUNCTION public.assert_transicion_embarque(p_actual public.estado_embarque, p_nuevo public.estado_embarque, p_expediente text) TO service_role;
+REVOKE ALL ON FUNCTION public.auditar_consistencia_cobranza() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.auditar_consistencia_cobranza() TO service_role;
 REVOKE ALL ON FUNCTION public.auditoria_capturar_snapshot(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.auditoria_capturar_snapshot(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.auditoria_capturar_snapshot(p_organization_id uuid) TO service_role;
@@ -33946,8 +34196,14 @@ GRANT ALL ON FUNCTION public.migrar_roles_legacy_dry_run() TO service_role;
 REVOKE ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO authenticated;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO service_role;
+REVOKE ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO authenticated;
+GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO service_role;
 REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.nc_convertida_a_moneda_factura(p_monto numeric, p_moneda_nc text, p_tc_nc numeric, p_moneda_factura text, p_tc_factura numeric) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.nc_convertida_a_moneda_factura(p_monto numeric, p_moneda_nc text, p_tc_nc numeric, p_moneda_factura text, p_tc_factura numeric) TO authenticated;
+GRANT ALL ON FUNCTION public.nc_convertida_a_moneda_factura(p_monto numeric, p_moneda_nc text, p_tc_nc numeric, p_moneda_factura text, p_tc_factura numeric) TO service_role;
 REVOKE ALL ON FUNCTION public.notif_cli_on_embarque_estado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notif_cli_on_embarque_estado() TO authenticated;
 GRANT ALL ON FUNCTION public.notif_cli_on_embarque_estado() TO service_role;
@@ -33985,6 +34241,9 @@ GRANT ALL ON FUNCTION public.org_scope() TO service_role;
 REVOKE ALL ON FUNCTION public.pago_detalle(p_tipo text, p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.pago_detalle(p_tipo text, p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.pago_detalle(p_tipo text, p_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.pago_rep_anulado(p_estado_rep text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.pago_rep_anulado(p_estado_rep text) TO authenticated;
+GRANT ALL ON FUNCTION public.pago_rep_anulado(p_estado_rep text) TO service_role;
 REVOKE ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) TO service_role;
