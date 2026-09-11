@@ -1,5 +1,5 @@
 -- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260907171529_d9496508-7bf2-4cc5-be73-7329c243f562.sql
+-- Fuente vigente (mayor timestamp): 20260911235329_340f35a8-33b7-4664-83b5-1e3c261939ad.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
 -- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
@@ -29,6 +29,9 @@ DECLARE
   v_tipo_contable text;
   v_iva_max numeric(18,4);
   v_c record;
+  v_comprometido numeric(18,4);
+  v_facturado numeric(18,4);
+  v_moneda_cmp text;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -85,10 +88,20 @@ BEGIN
   END IF;
 
   -- Tope de sobrecosto POR CONCEPTO, sumando todas las facturas vivas ligadas
-  -- a ese concepto y normalizando ambos lados a MXN.
+  -- a ese concepto.
+  --
+  -- FP-000256 (v13.823.301): cuando el costo comprometido y TODAS las facturas
+  -- ligadas están en la misma moneda, la comparación se hace en esa moneda sin
+  -- convertir. Antes se convertían ambos lados a MXN con tipos de cambio
+  -- distintos (el del expediente para el costo, el de la factura para lo
+  -- facturado), lo que fabricaba un "sobrecosto" que era puro efecto cambiario
+  -- (60 USD vs 60 USD → 1,039.90 MXN vs 1,168.29 MXN). Sólo cuando hay mezcla
+  -- de monedas se usa la ruta MXN (incluido LC_CXP_SIN_TC si falta T/C).
   FOR v_c IN
     SELECT cc.id,
            cc.concepto,
+           cc.moneda::text AS moneda_costo,
+           cc.monto        AS comprometido_orig,
            public.a_mxn_doc(cc.monto, cc.moneda::text, v_row.fecha_emision,
                             NULL, emb.tipo_cambio_usd) AS comprometido_mxn,
            (
@@ -103,7 +116,26 @@ BEGIN
                 AND pf2.deleted_at IS NULL
                 AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
                 AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
-           ) AS facturado_mxn
+           ) AS facturado_mxn,
+           (
+             SELECT COALESCE(SUM(p2.monto * COALESCE(NULLIF(p2.cantidad,0),1)), 0)
+               FROM public.proveedor_facturas_conceptos p2
+               JOIN public.proveedor_facturas pf2 ON pf2.id = p2.proveedor_factura_id
+              WHERE p2.concepto_costo_id = cc.id
+                AND pf2.deleted_at IS NULL
+                AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
+                AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
+           ) AS facturado_orig,
+           NOT EXISTS (
+             SELECT 1
+               FROM public.proveedor_facturas_conceptos p2
+               JOIN public.proveedor_facturas pf2 ON pf2.id = p2.proveedor_factura_id
+              WHERE p2.concepto_costo_id = cc.id
+                AND pf2.deleted_at IS NULL
+                AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
+                AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
+                AND pf2.moneda::text IS DISTINCT FROM cc.moneda::text
+           ) AS misma_moneda
       FROM public.proveedor_facturas_conceptos pfc
       JOIN public.conceptos_costo cc
         ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
@@ -112,22 +144,31 @@ BEGIN
        AND pfc.concepto_costo_id IS NOT NULL
      GROUP BY cc.id, cc.concepto, cc.monto, cc.moneda, emb.tipo_cambio_usd
   LOOP
-    IF v_c.comprometido_mxn IS NULL THEN
-      RAISE WARNING 'LC_CXP_SIN_TC: el concepto "%" no tiene tipo de cambio para comparar; se omite el control de sobrecosto.', v_c.concepto;
-      CONTINUE;
+    IF v_c.misma_moneda THEN
+      v_comprometido := v_c.comprometido_orig;
+      v_facturado    := v_c.facturado_orig;
+      v_moneda_cmp   := v_c.moneda_costo;
+    ELSE
+      IF v_c.comprometido_mxn IS NULL THEN
+        RAISE WARNING 'LC_CXP_SIN_TC: el concepto "%" no tiene tipo de cambio para comparar; se omite el control de sobrecosto.', v_c.concepto;
+        CONTINUE;
+      END IF;
+      v_comprometido := v_c.comprometido_mxn;
+      v_facturado    := v_c.facturado_mxn;
+      v_moneda_cmp   := 'MXN';
     END IF;
 
-    IF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02
-       AND v_c.comprometido_mxn > 0
-       AND (v_c.facturado_mxn - v_c.comprometido_mxn) > v_c.comprometido_mxn * 0.05 THEN
-      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: el concepto "%" ya tiene facturado % MXN contra % MXN comprometidos (incluyendo otras facturas del mismo costo). Revisa la vinculación antes de aprobar.',
+    IF v_facturado - v_comprometido > 0.02
+       AND v_comprometido > 0
+       AND (v_facturado - v_comprometido) > v_comprometido * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: el concepto "%" ya tiene facturado % % contra % % comprometidos (incluyendo otras facturas del mismo costo). Revisa la vinculación antes de aprobar.',
         v_c.concepto,
-        to_char(v_c.facturado_mxn,    'FM999,999,999,990.00'),
-        to_char(v_c.comprometido_mxn, 'FM999,999,999,990.00');
-    ELSIF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02 THEN
-      RAISE WARNING 'LC_CXP_SOBRECOSTO: el concepto "%" excede lo comprometido en % MXN (<= 5%%, se aprueba con advertencia).',
+        to_char(v_facturado,    'FM999,999,999,990.00'), v_moneda_cmp,
+        to_char(v_comprometido, 'FM999,999,999,990.00'), v_moneda_cmp;
+    ELSIF v_facturado - v_comprometido > 0.02 THEN
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: el concepto "%" excede lo comprometido en % % (<= 5%%, se aprueba con advertencia).',
         v_c.concepto,
-        to_char(v_c.facturado_mxn - v_c.comprometido_mxn, 'FM999,999,999,990.00');
+        to_char(v_facturado - v_comprometido, 'FM999,999,999,990.00'), v_moneda_cmp;
     END IF;
   END LOOP;
 
@@ -138,17 +179,11 @@ BEGIN
           AND concepto_costo_id IS NOT NULL
      )
   THEN
-    -- FP-000221: un gasto que por naturaleza no pertenece a un embarque
-    -- (Administracion / Venta) no puede exigir vínculo operativo. Sólo los
-    -- costos directos de embarque (o la ausencia de categoría) se comparan
-    -- contra el umbral autorizado.
     SELECT pc.tipo_contable::text INTO v_tipo_contable
       FROM public.presupuesto_categorias pc
      WHERE pc.id = v_row.categoria_presupuesto_id;
 
     IF COALESCE(v_tipo_contable, 'CostoDirectoEmbarque') = 'CostoDirectoEmbarque' THEN
-      -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
-      -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
       IF v_row.moneda = 'MXN'::public.moneda THEN
         v_total_mxn := COALESCE(v_row.total,0);
       ELSE
@@ -197,3 +232,7 @@ BEGIN
   END IF;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public._cxp_validar_aprobacion(uuid, text) TO authenticated, service_role;
