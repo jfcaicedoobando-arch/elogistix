@@ -64,10 +64,13 @@ export function TipoCambioCotizacionCard({ value, onChange }: Props) {
             <Input
               id="cot-tc-usd"
               inputMode="decimal"
-              value={value == null ? "" : String(value)}
+              value={texto ?? (value == null ? "" : String(value))}
               placeholder="0.0000"
+              onFocus={(e) => setTexto(e.target.value)}
+              onBlur={() => setTexto(null)}
               onChange={(e) => {
                 const limpio = e.target.value.replace(/[^\d.]/g, "");
+                setTexto(limpio);
                 const n = Number(limpio);
                 onChange(limpio === "" || !Number.isFinite(n) || n <= 0 ? null : n);
               }}
