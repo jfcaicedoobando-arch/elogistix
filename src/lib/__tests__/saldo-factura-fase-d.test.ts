@@ -87,13 +87,13 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
       /WHERE \(m->>'saldo'\)::numeric > 0\.01/,
     );
     // Y expone total, pagado, notas_credito y saldo por moneda.
-    expect(validarSql).toMatch(/'notas_credito', notas_credito/);
-    expect(validarSql).toMatch(/'saldo', GREATEST\(saldo,0\)/);
+    expect(validarSql).toMatch(/'notas_credito',\s*notas_credito/);
+    expect(validarSql).toMatch(/'saldo',\s*GREATEST\(saldo,0\)/);
   });
 
   it("cierre y cobro excluyen Sustituida y Borrador (no solo Cancelada)", () => {
     expect(validarSql).toMatch(
-      /f\.estado NOT IN \('Cancelada', 'Sustituida', 'Borrador'\)/,
+      /f\.estado NOT IN \('Cancelada',?\s*'Sustituida',?\s*'Borrador'\)/,
     );
     expect(faseD).toMatch(
       /count\(\*\) FILTER \(WHERE f\.estado NOT IN \('Cancelada','Sustituida','Borrador'\)\)/,
