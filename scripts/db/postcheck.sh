@@ -73,8 +73,11 @@ fi
 
 # ---------- 3) Guards conductuales ----------
 step "Guards conductuales (run-guards.sh)"
+# v13.823.299: secuencial para evitar deadlocks entre fixtures que llaman
+# handle_new_user_signup (advisory lock global) y los que insertan directamente
+# organization_members. El manifiesto completo sigue en GitHub Actions.
 if PGHOST=127.0.0.1 PGPORT="$PORT" PGUSER=postgres PGPASSWORD=postgres \
-   PGDATABASE=postgres PGSSLMODE=disable bash scripts/ci/run-guards.sh; then
+   PGDATABASE=postgres PGSSLMODE=disable JOBS=1 bash scripts/ci/run-guards.sh; then
   ok "guards"
 else
   fail "guards en rojo"
