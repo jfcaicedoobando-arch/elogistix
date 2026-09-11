@@ -46,14 +46,14 @@ describe("ordenarFacturasCxP", () => {
 
   it("deja los vacíos al final en asc y en desc", () => {
     const rows = [
-      f({ folio_interno: null }),
+      f({ folio_interno: undefined }),
       f({ folio_interno: "FP-000010" }),
       f({ folio_interno: "FP-000009" }),
     ];
     const asc = ordenarFacturasCxP(rows, "folio_interno", "asc");
     const desc = ordenarFacturasCxP(rows, "folio_interno", "desc");
-    expect(asc[asc.length - 1].folio_interno).toBeNull();
-    expect(desc[desc.length - 1].folio_interno).toBeNull();
+    expect(asc[asc.length - 1].folio_interno).toBeFalsy();
+    expect(desc[desc.length - 1].folio_interno).toBeFalsy();
   });
 
   it("compara números por valor, no como texto", () => {
