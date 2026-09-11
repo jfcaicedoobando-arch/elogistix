@@ -226,25 +226,16 @@ END;
 $$;
 
 -- ============================================================================
--- Stub CI para membresías: en producción GoTrue crea auth.users, pero en las
--- suites efímeras la tabla auth.users es un stub vacío. El trigger AFTER INSERT
--- de sincronización de roles intenta escribir en public.user_roles, cuya FK
--- exige que el usuario exista en auth.users. Este trigger temporal (vive sólo
--- dentro de la transacción de cada suite) asegura ese registro sin modificar el
--- fixture de cada test.
+-- Helper CI para sembrar un usuario mínimo en auth.users. En producción GoTrue
+-- crea este registro automáticamente; en las suites efímeras auth.users es un
+-- stub vacío y public.user_roles tiene FK hacia él. Las suites deben llamar a
+-- esta función con cada user_id ANTES de insertar en organization_members o
+-- user_roles. El helper es idempotente y vive sólo dentro de la transacción.
 -- ============================================================================
-CREATE OR REPLACE FUNCTION pg_temp.ensure_auth_user_for_membership()
-RETURNS trigger
-LANGUAGE plpgsql AS $$
-BEGIN
+CREATE OR REPLACE FUNCTION pg_temp.seed_auth_user(p_user_id uuid, p_email text DEFAULT NULL)
+RETURNS void
+LANGUAGE sql AS $$
   INSERT INTO auth.users (id, email, created_at)
-  VALUES (NEW.user_id, NEW.user_id::text || '@test.local', now())
+  VALUES (p_user_id, COALESCE(p_email, p_user_id::text || '@test.local'), now())
   ON CONFLICT (id) DO NOTHING;
-  RETURN NEW;
-END;
 $$;
-
-DROP TRIGGER IF EXISTS trg_ci_ensure_auth_user ON public.organization_members;
-CREATE TRIGGER trg_ci_ensure_auth_user
-AFTER INSERT OR UPDATE OF user_id ON public.organization_members
-FOR EACH ROW EXECUTE FUNCTION pg_temp.ensure_auth_user_for_membership();
