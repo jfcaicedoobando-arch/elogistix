@@ -15,6 +15,7 @@ import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 /** Formato de presentación de los campos de dinero (sin prefijo de moneda). */
 const formatoMonto = (n: number) => formatNumber(n, { decimals: 2 });
@@ -96,16 +97,17 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
           />
         </div>
 
-        <Input
-          value={fila.proveedor}
-          onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
-          className={cn("h-9 text-body", COL_COSTO.proveedor)}
-          placeholder="Proveedor"
-          aria-label="Proveedor"
-          /* El nombre largo se corta en el campo; el valor completo se lee al
-             pasar el cursor en vez de ensanchar la columna. */
-          title={fila.proveedor || undefined}
-        />
+        {/* El nombre largo se corta en el campo; el valor completo se lee
+            en un tooltip accesible en vez de ensanchar la columna. */}
+        <Hint label={fila.proveedor || undefined}>
+          <Input
+            value={fila.proveedor}
+            onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
+            className={cn("h-9 text-body", COL_COSTO.proveedor)}
+            placeholder="Proveedor"
+            aria-label="Proveedor"
+          />
+        </Hint>
 
         <div className={COL_COSTO.unidad}>
           <UnidadMedidaSelect

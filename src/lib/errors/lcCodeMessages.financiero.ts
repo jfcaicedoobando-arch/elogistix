@@ -69,6 +69,10 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_CXP_NO_EXISTE: "La factura de proveedor no existe o fue eliminada.",
   LC_CXP_RECHAZO_CON_PAGOS:
     "Esta factura ya tiene pagos aplicados. Anula o reversa los pagos antes de rechazarla.",
+  LC_CXP_IVA_IMPLAUSIBLE:
+    "El IVA capturado es mayor al 16% del subtotal. Corrige el IVA de la factura antes de aprobarla.",
+  LC_AJUSTE_DESPROPORCIONADO:
+    "El ajuste no puede exceder el total de la factura. Revisa la moneda del costo vinculado.",
 
   LC_CXP_TOTAL_NEGATIVO: "El total de la factura de proveedor no puede ser negativo.",
   LC_CXP_TOTAL_MENOR_PAGADO:

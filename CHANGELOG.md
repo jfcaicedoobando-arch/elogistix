@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.300] - 2026-09-11
+- **fix(errores)**: se añadieron los mensajes amigables faltantes para `LC_CXP_IVA_IMPLAUSIBLE` (IVA mayor al 16% del subtotal al aprobar una factura de proveedor) y `LC_AJUSTE_DESPROPORCIONADO` (ajuste que excede el total de la factura) en `lcCodeMessages.financiero.ts`; el candado de cobertura `lcCodeCoverage` vuelve a verde.
+- **fix(accesibilidad)**: `FilaCostoLocalRow` (wizard de cotización) migra el `title=` nativo del campo Proveedor al tooltip accesible `Hint`, cumpliendo el candado `no-title-nativo`.
+
 ## [13.823.299] - 2026-09-11
 - **fix(ci)**: `scripts/db/local-verify.sh` ahora respeta `supabase/schema/squash/data-only.txt`, igual que `scripts/ci/rls-prepare-db.sh`; esto permite que el replay aplique migraciones posteriores a una limpieza de datos puntual de producción.
 - **test(ci)**: `supabase/tests/rls/_helpers.sql` expone `pg_temp.seed_auth_user` para que las suites RLS siembren usuarios en el stub de `auth.users` sin depender del orden de ejecución de triggers.
