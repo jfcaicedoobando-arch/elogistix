@@ -136,12 +136,12 @@ describe("useCotizacionWizardSteps", () => {
     // editó costos, y vuelve a avanzar. La firma nueva difiere de la inicial → regenerar.
     const initial = makeDeps({
       currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
-      costosInternos: [{ concepto: "Flete", moneda: "USD", cantidad: 1, precio_venta: 100 } as never],
+      costosInternos: [{ concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, precio_venta: 100 } as never],
     });
     const { result, rerender } = renderHook((deps) => useCotizacionWizardSteps(deps), { initialProps: initial.deps });
     const editados = makeDeps({
       currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
-      costosInternos: [{ concepto: "Flete", moneda: "USD", cantidad: 1, precio_venta: 250 } as never],
+      costosInternos: [{ concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, precio_venta: 250 } as never],
     });
     // Reutilizamos los refs originales para verificar setters
     (editados.deps as unknown as { setConceptosUSD: unknown }).setConceptosUSD = initial.refs.setConceptosUSD;
