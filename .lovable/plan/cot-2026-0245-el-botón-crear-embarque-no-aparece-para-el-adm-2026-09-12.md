@@ -4,7 +4,7 @@
 
 La cotización está perfecta: estado **Aceptada**, cliente real (no prospecto), sin embarque ligado, y con venta por **4,823 USD** (Flete Aéreo 3,875 + Cargos Origen 600 + Cargos Destino 348). Nada de eso bloquea el botón.
 
-Lo que bloquea es el **permiso del usuario**. La cuenta `hector@lopezbenavides.com` tiene el rol **`admin_org`** (administrador de la empresa), y la lista de roles autorizados para crear el embarque desde una cotización sólo incluye `super_admin`, `admin` (rol antiguo) y `operador`. Como `admin_org` no está en la lista, la pantalla ni siquiera muestra el botón.
+Lo que bloquea es el **permiso del usuario**. La cuenta `hector@lopezbenavides.com` tiene el rol `**admin_org**` (administrador de la empresa), y la lista de roles autorizados para crear el embarque desde una cotización sólo incluye `super_admin`, `admin` (rol antiguo) y `operador`. Como `admin_org` no está en la lista, la pantalla ni siquiera muestra el botón.
 
 El mismo hueco existe en el backend: la función que crea el embarque borrador también sólo acepta `super_admin`, `admin` y `operador`. Es decir, aunque se mostrara el botón, la operación sería rechazada por permisos. Hay que corregir los dos lados.
 
@@ -27,4 +27,4 @@ Typecheck, ESLint focalizado, pruebas focalizadas de cotización/permisos, `audi
 
 ## Nota (no incluida en este cambio)
 
-Otros roles operativos (`gerente_operaciones`, `coordinador_logistico`) también quedan fuera de este permiso. No los incluyo salvo que me lo pidas explícitamente.
+Otros roles operativos (`gerente_operaciones`, `coordinador_logistico`) también quedan fuera de este permiso. No los incluyo salvo que me lo pidas explícitamente. Si deben de tener permiso.

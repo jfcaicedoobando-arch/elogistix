@@ -1,7 +1,3 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -122,18 +118,12 @@ BEGIN
   END IF;
 
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
 
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
-  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
-  -- creado por conversión directa mostraba "Servicio —".
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -174,8 +164,6 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
-    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
-    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,

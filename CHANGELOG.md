@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.306] - 2026-09-12
+- **fix(cotizaciones)**: el botón "Crear embarque" volvió a aparecer para el administrador de la empresa (`admin_org`) y para operación (`gerente_operaciones`, `coordinador_logistico`); antes sólo lo permitían `super_admin`, el rol legado `admin` y `operador`, por eso en COT-2026-0245 no se veía el botón aun estando Aceptada y con venta.
+- **fix(embarques)**: `crear_embarque_borrador_core` autoriza los mismos roles que la UI (espejo actualizado en `supabase/schema/embarques/`); sin cambios en importes, IVA, tarifas ni datos de la cotización o el embarque.
+- **test**: nuevo caso focalizado `crearEmbarqueRolesVisibilidad.test.ts` (roles autorizados y visibilidad del botón).
+
 ## [13.823.305] - 2026-09-12
 - **fix(embarques)**: el paso de costos del nuevo embarque ya no exige proveedor de catálogo para avanzar (COT-2026-0245: sus 3 costos se guardaron sin proveedor y el wizard bloqueaba con "agrega al menos uno con proveedor, concepto y monto ≥ 0"). El renglón sin proveedor se marca en el selector ("Falta proveedor") y se lista en un aviso informativo; importes, monedas y el nombre heredado no cambian.
 - **feat(cotizaciones)**: el paso 2 ahora bloquea guardar renglones con importes y proveedor vacío, nombrando los conceptos culpables; el renglón se marca inline. Las cotizaciones existentes sin proveedor siguen funcionando.

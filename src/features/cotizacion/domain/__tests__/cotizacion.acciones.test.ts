@@ -29,8 +29,9 @@ describe("accionesCotizacionPermitidas — alineación con las RPC", () => {
     { rol: "gerente_comercial", aceptar: true, rechazar: true, crearEmbarque: false },
     { rol: "vendedor", aceptar: true, rechazar: true, crearEmbarque: false },
     { rol: "ejecutivo_pricing", aceptar: false, rechazar: true, crearEmbarque: false },
-    { rol: "coordinador_logistico", aceptar: false, rechazar: true, crearEmbarque: false },
-    { rol: "gerente_operaciones", aceptar: true, rechazar: true, crearEmbarque: false },
+    // v13.823.306 — operación también crea el borrador (espejo de `crear_embarque_borrador_core`).
+    { rol: "coordinador_logistico", aceptar: false, rechazar: true, crearEmbarque: true },
+    { rol: "gerente_operaciones", aceptar: true, rechazar: true, crearEmbarque: true },
     { rol: "operador", aceptar: true, rechazar: true, crearEmbarque: true },
     { rol: "admin", aceptar: true, rechazar: true, crearEmbarque: true },
   ] as const;
