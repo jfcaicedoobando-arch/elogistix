@@ -43,16 +43,19 @@ function SelectProveedorCosto({
   const nombreCatalogo = proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre;
   const heredado = costo.proveedorNombre?.trim() ?? '';
   const sinCatalogo = !costo.proveedorId && heredado !== '';
+  // v13.823.305 (COT-2026-0245): sin proveedor el renglón ya no bloquea el
+  // avance; se marca para que se asigne en el expediente.
+  const sinProveedor = !costo.proveedorId && heredado === '';
   return (
     <Select value={costo.proveedorId} disabled={bloqueado} onValueChange={onChange}>
       <SelectTrigger
-        className={`text-body ${sinCatalogo ? 'border-warning/60' : ''}`}
-        aria-label={nombreCatalogo || heredado || 'Proveedor'}
+        className={`text-body ${sinCatalogo || sinProveedor ? 'border-warning/60' : ''}`}
+        aria-label={nombreCatalogo || heredado || 'Proveedor · falta asignar'}
       >
         {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
             mostramos como texto para que el operador lo confirme en vez de
             ver el campo vacío. */}
-        <SelectValue placeholder={heredado || "Proveedor"} />
+        <SelectValue placeholder={heredado || "Falta proveedor"} />
       </SelectTrigger>
       <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent>
     </Select>
