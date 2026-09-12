@@ -63,7 +63,6 @@ export function MetaEntranteMontos({ row }: { row: FacturaEntranteRow }) {
   const sugeridos = row.embarque_facturas_entrantes_conceptos?.length ?? 0;
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <Etiqueta>Montos</Etiqueta>
       <MontoCfdi row={row} />
       {row.monto_declarado != null && (
         <Dato>
