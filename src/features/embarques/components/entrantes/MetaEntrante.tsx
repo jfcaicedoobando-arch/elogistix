@@ -13,12 +13,6 @@ const Dato = ({ children }: { children: React.ReactNode }) => (
   <span className="text-body-sm text-muted-foreground">{children}</span>
 );
 
-const Etiqueta = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/80">
-    {children}
-  </span>
-);
-
 /** Col 2 — Proveedor, folio del proveedor y fecha de subida. */
 export function MetaEntranteProveedor({ row }: { row: FacturaEntranteRow }) {
   const espera = row.estado === "por_capturar" ? ` · ${diasEnEspera(row.created_at)} día(s) en espera` : "";
