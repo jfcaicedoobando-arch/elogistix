@@ -131,6 +131,8 @@ export const costosPaso2Schema = z
   .object({
     totalCostos: z.number(),
     renglonesSinConcepto: z.number(),
+    /** v13.823.305: renglones con importes y sin proveedor capturado. */
+    renglonesSinProveedor: z.number().default(0),
   })
   .superRefine((v, ctx) => {
     if (v.totalCostos === 0) {
@@ -146,6 +148,14 @@ export const costosPaso2Schema = z
         code: "custom",
         path: ["renglonesSinConcepto"],
         message: COPY_VALIDACION.renglonesSinConcepto,
+      });
+      return;
+    }
+    if (v.renglonesSinProveedor > 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["renglonesSinProveedor"],
+        message: COPY_VALIDACION.renglonesSinProveedor,
       });
     }
   });

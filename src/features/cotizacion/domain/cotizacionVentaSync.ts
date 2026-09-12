@@ -11,6 +11,8 @@ import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 export interface CostoConImportes {
   concepto: string;
+  /** Texto libre del proveedor del renglón (v13.823.305: requerido con importes). */
+  proveedor?: string | null;
   costo_unitario: number;
   precio_venta?: number | null;
   cantidad?: number;
@@ -27,6 +29,20 @@ export function tieneImportes(fila: CostoConImportes): boolean {
  */
 export function costosSinConcepto<T extends CostoConImportes>(filas: T[]): T[] {
   return filas.filter((f) => tieneImportes(f) && !(f.concepto ?? "").trim());
+}
+
+/**
+ * v13.823.305 (COT-2026-0245): renglones con importes y sin proveedor. Sin
+ * proveedor el costo llega al embarque sin a quién pagarle, así que el paso 2
+ * lo exige de una vez.
+ */
+export function costosSinProveedor<T extends CostoConImportes>(filas: T[]): T[] {
+  return filas.filter((f) => tieneImportes(f) && !(f.proveedor ?? "").trim());
+}
+
+/** ¿Esta fila del paso 2 debe marcarse por proveedor faltante? */
+export function filaSinProveedor(fila: FilaCostoLocal): boolean {
+  return tieneImportes(fila) && !(fila.proveedor ?? "").trim();
 }
 
 /** Índices (base 0) de los renglones inválidos, para resaltarlos en la tabla. */
