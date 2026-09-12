@@ -11,6 +11,8 @@ interface AlertsProps {
   onReintentarCostos?: () => void;
   showTcWarning?: boolean;
   filasMixtasTotales?: number;
+  /** COT-2026-0245: conceptos de costo sin proveedor (informativo, no bloquea). */
+  conceptosSinProveedor?: string[];
 }
 
 export function StepCostosPreciosAlerts({
@@ -20,6 +22,7 @@ export function StepCostosPreciosAlerts({
   onReintentarCostos,
   showTcWarning = false,
   filasMixtasTotales = 0,
+  conceptosSinProveedor = [],
 }: AlertsProps) {
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -43,6 +46,20 @@ export function StepCostosPreciosAlerts({
               <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
               Reintentar
             </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      {conceptosSinProveedor.length > 0 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" aria-hidden />
+          <AlertTitle>
+            {conceptosSinProveedor.length === 1
+              ? "1 costo sin proveedor"
+              : `${conceptosSinProveedor.length} costos sin proveedor`}
+          </AlertTitle>
+          <AlertDescription>
+            Puedes continuar: el proveedor se asigna después en el expediente.
+            Pendientes: {conceptosSinProveedor.join(", ")}.
           </AlertDescription>
         </Alert>
       )}

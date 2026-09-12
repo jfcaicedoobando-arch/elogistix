@@ -15,6 +15,18 @@ describe("validateStepCostos", () => {
     expect(Object.keys(errs)).toHaveLength(0);
   });
 
+  // COT-2026-0245: las cotizaciones guardan el proveedor como texto opcional;
+  // exigir proveedor de catálogo aquí bloqueaba crear el embarque.
+  it("acepta un costo sin proveedor", () => {
+    const errs = validateStepCostos({
+      conceptosVenta: [ventaOk],
+      conceptosCosto: [{ id: 1, proveedorId: "", concepto: "Flete Aéreo", monto: 3588, moneda: "USD" }],
+      tipoCambioUSD: 17.5,
+      tipoCambioEUR: 19,
+    });
+    expect(errs.conceptosCosto).toBeUndefined();
+  });
+
   it("marca TC USD/EUR <= 0", () => {
     const errs = validateStepCostos({
       conceptosVenta: [ventaOk],

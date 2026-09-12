@@ -106,7 +106,7 @@ const STATIC: Record<string, string> = {
   ),
   "4.costos.minOne": formatValidationMessage(
     FIELD_LABELS.costos,
-    "agrega al menos uno con proveedor, concepto y monto ≥ 0",
+    "agrega al menos uno con concepto y monto ≥ 0",
   ),
 };
 

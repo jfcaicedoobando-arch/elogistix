@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.305] - 2026-09-12
+- **fix(embarques)**: el paso de costos del nuevo embarque ya no exige proveedor de catálogo para avanzar (COT-2026-0245: sus 3 costos se guardaron sin proveedor y el wizard bloqueaba con "agrega al menos uno con proveedor, concepto y monto ≥ 0"). El renglón sin proveedor se marca en el selector ("Falta proveedor") y se lista en un aviso informativo; importes, monedas y el nombre heredado no cambian.
+- **feat(cotizaciones)**: el paso 2 ahora bloquea guardar renglones con importes y proveedor vacío, nombrando los conceptos culpables; el renglón se marca inline. Las cotizaciones existentes sin proveedor siguen funcionando.
+- **test**: casos focalizados de costo sin proveedor en `validateStepCostos` y de `costosPaso2Schema` con `renglonesSinProveedor`.
+
 ## [13.823.304] - 2026-09-12
 - **fix(cxp)**: `reemplazar_conceptos_factura_proveedor` recalcula la cabecera (subtotal, IVA, IEPS) sólo con el desglose fiscal del proveedor (`concepto_costo_id IS NULL`); antes sumaba también los renglones de vínculo con `conceptos_costo` y duplicaba el total (FP-000253: 4 renglones por 332 USD + vínculo de 332 USD = 664 USD). Alineado con `_cxp_validar_aprobacion`. Si la factura no tiene desglose fiscal se conserva el cálculo anterior.
 - **fix(datos)**: saneo puntual de las facturas activas sin pagos cuya cabecera equivalía al doble conteo (FP-000253 vuelve a 332 USD); no se tocaron renglones, pagos, monedas ni vínculos.

@@ -55,6 +55,7 @@ export const COPY_VALIDACION = {
     "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).",
   costosInternosRequeridos: "Agrega al menos un costo interno antes de continuar.",
   renglonesSinConcepto: "Hay renglones de costo sin concepto.",
+  renglonesSinProveedor: "Hay renglones de costo sin proveedor.",
   conceptosVentaRequeridos: "Agrega al menos un concepto de venta.",
 
   // ── CxP · captura de facturas de proveedor ──────────────────────────────

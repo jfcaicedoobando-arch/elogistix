@@ -110,6 +110,11 @@ export function StepCostosPrecios(props: Props) {
   const { data: tcInicial } = useTcInicial();
   const tcOrigen = describirOrigenTc(tcInicial);
 
+  // COT-2026-0245: aviso informativo de costos sin proveedor (ya no bloquean).
+  const conceptosSinProveedor = conceptosCosto
+    .filter(c => c.concepto?.trim() && !c.proveedorId && !(c.proveedorNombre?.trim()))
+    .map(c => c.concepto.trim());
+
   const costoCols = showContenedorCol ? COSTO_COLS_CONT : COSTO_COLS_BASE;
   const ventaCols = showContenedorCol ? VENTA_COLS_CONT : VENTA_COLS_BASE;
 
@@ -123,6 +128,7 @@ export function StepCostosPrecios(props: Props) {
           onReintentarCostos={onReintentarCostos}
           showTcWarning={showTcWarning}
           filasMixtasTotales={filasMixtasTotales}
+          conceptosSinProveedor={conceptosSinProveedor}
         />
         <div
           aria-busy={costosBloqueados}

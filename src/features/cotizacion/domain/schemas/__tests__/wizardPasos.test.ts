@@ -110,6 +110,23 @@ describe("wizardPasos · Pasos 2 y 3", () => {
     expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 0 })).toBeNull();
   });
 
+  it("paso 2 exige proveedor en renglones con importes", () => {
+    expect(
+      primerError(costosPaso2Schema, {
+        totalCostos: 3,
+        renglonesSinConcepto: 0,
+        renglonesSinProveedor: 2,
+      }),
+    ).toBe("Hay renglones de costo sin proveedor.");
+    expect(
+      primerError(costosPaso2Schema, {
+        totalCostos: 3,
+        renglonesSinConcepto: 0,
+        renglonesSinProveedor: 0,
+      }),
+    ).toBeNull();
+  });
+
   it("paso 3 exige al menos un concepto de venta", () => {
     expect(primerError(conceptosPaso3Schema, { conceptosValidos: 0 })).toBe(
       "Agrega al menos un concepto de venta.",
