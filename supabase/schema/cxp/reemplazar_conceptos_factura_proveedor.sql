@@ -1,6 +1,8 @@
 -- v13.628.0 — Edición de conceptos en facturas de proveedor capturadas a mano.
 -- v13.646.0 (BUG-02, auditoría 2026-08-18): recalcula la cabecera (subtotal,
 -- IVA, retenciones, total) a partir de los conceptos reemplazados.
+-- v13.823.303: la cabecera se calcula SÓLO con el desglose fiscal del proveedor;
+-- los renglones de vínculo (concepto_costo_id NOT NULL) duplicaban el total.
 -- Espejo canónico; actualizar en el mismo PR que la migración.
 
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
@@ -18,6 +20,7 @@ DECLARE
   v_subtotal numeric := 0;
   v_iva numeric := 0;
   v_ieps numeric := 0;
+  v_fiscales int := 0;
 BEGIN
   SELECT * INTO v_f FROM public.proveedor_facturas
    WHERE id = p_factura_id
@@ -81,14 +84,22 @@ BEGIN
   GET DIAGNOSTICS v_insertados = ROW_COUNT;
 
   -- BUG-02 (auditoría 2026-08-18): la cabecera debe cuadrar con sus renglones.
-  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad,
-  -- igual que `_cxp_validar_aprobacion` y las tablas de conceptos de la app.
+  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad.
+  -- v13.823.303: sólo el desglose fiscal del proveedor (concepto_costo_id IS NULL);
+  -- los renglones de vínculo con conceptos_costo NO son cargos y duplicaban el total.
+  -- Alineado con `_cxp_validar_aprobacion`, que ya suma sólo el desglose fiscal.
+  SELECT COUNT(*) INTO v_fiscales
+    FROM public.proveedor_facturas_conceptos
+   WHERE proveedor_factura_id = p_factura_id
+     AND concepto_costo_id IS NULL;
+
   SELECT COALESCE(SUM(monto * COALESCE(NULLIF(cantidad, 0), 1)), 0),
          COALESCE(SUM(iva), 0),
          COALESCE(SUM(ieps), 0)
     INTO v_subtotal, v_iva, v_ieps
     FROM public.proveedor_facturas_conceptos
-   WHERE proveedor_factura_id = p_factura_id;
+   WHERE proveedor_factura_id = p_factura_id
+     AND (v_fiscales = 0 OR concepto_costo_id IS NULL);
 
   UPDATE public.proveedor_facturas
      SET subtotal = ROUND(v_subtotal, 2),
