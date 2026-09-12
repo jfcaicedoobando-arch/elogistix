@@ -53,7 +53,12 @@ function validarConceptosVenta(ventas: ConceptoVentaValidacion[], errors: StepVa
 }
 
 function validarConceptosCosto(costos: ConceptoCostoValidacion[], errors: StepValidationErrors): void {
-  const validos = costos.filter((c) => c.concepto.trim() && c.proveedorId && c.monto >= 0);
+  // v13.823.305 (COT-2026-0245): el proveedor YA NO es requisito para avanzar.
+  // Las cotizaciones guardan el proveedor como texto opcional, así que exigir
+  // `proveedorId` de catálogo aquí bloqueaba la creación del embarque de toda
+  // cotización costeada sin proveedor. El renglón se marca en pantalla y el
+  // proveedor se asigna en el expediente.
+  const validos = costos.filter((c) => c.concepto.trim() && c.monto >= 0);
   if (validos.length === 0) {
     errors.conceptosCosto = msg("4.costos.minOne");
     return;
