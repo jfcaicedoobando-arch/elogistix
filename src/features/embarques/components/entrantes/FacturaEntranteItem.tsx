@@ -106,7 +106,7 @@ export function FacturaEntranteItem({
           <MetaEntranteNotas row={row} />
         </div>
 
-        <div className="md:col-span-3 md:flex md:justify-end">
+        <div className="min-w-0 md:col-span-3 md:flex md:justify-end">
           <AccionesEntrante
             row={row}
             tienePdf={tienePdf}
