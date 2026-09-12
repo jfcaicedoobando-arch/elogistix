@@ -101,12 +101,12 @@ export function FacturaEntranteItem({
           <MetaEntranteProveedor row={row} />
         </div>
 
-        <div className="md:col-span-3">
+        <div className="md:col-span-2">
           <MetaEntranteMontos row={row} />
           <MetaEntranteNotas row={row} />
         </div>
 
-        <div className="md:col-span-2 md:flex md:justify-end">
+        <div className="md:col-span-3 md:flex md:justify-end">
           <AccionesEntrante
             row={row}
             tienePdf={tienePdf}
@@ -124,7 +124,7 @@ export function FacturaEntranteItem({
         </div>
       </div>
 
-      {rechazada && (
+      {row.rechazo_motivo && (
         <div className="border-t border-destructive/20 bg-destructive/5 px-3 py-2 pl-4">
           <MetaEntranteRechazo row={row} />
         </div>
