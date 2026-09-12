@@ -49,7 +49,7 @@ export function AccionesEntrante({
   onVer, onAdjuntarXml, onEliminar, onReactivar, onCorregir,
 }: AccionesProps) {
   return (
-    <div className="flex shrink-0 flex-wrap gap-2">
+    <div className="flex min-w-0 flex-wrap gap-1.5 md:justify-end">
       {tienePdf && (
         <Button size="sm" variant="outline" onClick={() => onVer(row.archivo_path, row.nombre_archivo)}>
           <FileText className="mr-2 h-4 w-4" /> Ver PDF
