@@ -43,11 +43,15 @@ export const ACEPTAR_COTIZACION: readonly AppRole[] = [
 
 /**
  * Roles que pueden generar el embarque borrador desde una cotización. Espejo
- * EXACTO de `public.crear_embarque_borrador_core`: sólo super admin, admin y
- * operador.
+ * EXACTO de `public.crear_embarque_borrador_core`: super admin, administración
+ * de la empresa (`admin_org` y el rol legado `admin`) y operación
+ * (`gerente_operaciones`, `coordinador_logistico`, `operador`).
  */
 export const CREAR_EMBARQUE_BORRADOR: readonly AppRole[] = [
   "super_admin",
+  "admin_org",
   "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
   "operador",
 ];
