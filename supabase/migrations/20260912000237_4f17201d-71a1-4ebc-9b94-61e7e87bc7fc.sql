@@ -1,10 +1,6 @@
--- v13.628.0 — Edición de conceptos en facturas de proveedor capturadas a mano.
--- v13.646.0 (BUG-02, auditoría 2026-08-18): recalcula la cabecera (subtotal,
--- IVA, retenciones, total) a partir de los conceptos reemplazados.
--- v13.823.303: la cabecera se calcula SÓLO con el desglose fiscal del proveedor;
--- los renglones de vínculo (concepto_costo_id NOT NULL) duplicaban el total.
--- Espejo canónico; actualizar en el mismo PR que la migración.
-
+-- v13.823.303 — reemplazar_conceptos_factura_proveedor: el recálculo de cabecera
+-- sumaba también los renglones de vínculo (concepto_costo_id IS NOT NULL),
+-- duplicando el importe (FP-000253: 332 USD -> 664 USD).
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
   p_factura_id uuid,
   p_conceptos jsonb

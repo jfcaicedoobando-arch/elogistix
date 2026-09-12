@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.304] - 2026-09-12
+- **fix(cxp)**: `reemplazar_conceptos_factura_proveedor` recalcula la cabecera (subtotal, IVA, IEPS) sólo con el desglose fiscal del proveedor (`concepto_costo_id IS NULL`); antes sumaba también los renglones de vínculo con `conceptos_costo` y duplicaba el total (FP-000253: 4 renglones por 332 USD + vínculo de 332 USD = 664 USD). Alineado con `_cxp_validar_aprobacion`. Si la factura no tiene desglose fiscal se conserva el cálculo anterior.
+- **fix(datos)**: saneo puntual de las facturas activas sin pagos cuya cabecera equivalía al doble conteo (FP-000253 vuelve a 332 USD); no se tocaron renglones, pagos, monedas ni vínculos.
+- **test(cxp)**: nuevo guard `supabase/tests/cxp_conceptos_cabecera_sin_duplicar_vinculo.sql` (con desglose fiscal + vínculo, y sin desglose fiscal).
+
 ## [13.823.303] - 2026-09-11
 - **fix(cotizaciones)**: el campo "Tipo de cambio USD/MXN" del paso 3 conserva el texto crudo mientras se teclea; antes al escribir `18.50` el punto se perdía en el re-render (`String(18)`) y quedaba `1850`, inflando el total del encabezado en cotizaciones mixtas USD+MXN.
 
