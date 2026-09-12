@@ -12,7 +12,7 @@ import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalo
 import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { parseCantidad, cantidadFueraDeRango, CANTIDAD_LIMITE_SANIDAD } from "../../utils/parseInputNumero";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
-import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { filaCostoInvalida, filaSinProveedor } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/shared/Hint";
@@ -54,6 +54,9 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
   // B-081: renglón con importes y sin concepto → se descartaría al generar la
   // venta y la cotización saldría en $0.00. Se marca y bloquea el avance.
   const conceptoFaltante = filaCostoInvalida(fila);
+  // v13.823.305 (COT-2026-0245): un costo con importes y sin proveedor bloqueaba
+  // después la creación del embarque; se pide aquí.
+  const proveedorFaltante = filaSinProveedor(fila);
 
   // El campo de notas ya no vive abierto en cada renglón (hacía la tabla
   // altísima): se abre a demanda y queda abierto si la fila ya trae notas.
@@ -103,7 +106,12 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
           <Input
             value={fila.proveedor}
             onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
-            className={cn("h-9 text-body", COL_COSTO.proveedor)}
+            aria-invalid={proveedorFaltante}
+            className={cn(
+              "h-9 text-body",
+              COL_COSTO.proveedor,
+              proveedorFaltante && "border-destructive",
+            )}
             placeholder="Proveedor"
             aria-label="Proveedor"
           />
@@ -182,7 +190,7 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
         </div>
       </div>
 
-      {(fila.concepto_libre || conceptoFaltante || cantidadExcedida) && (
+      {(fila.concepto_libre || conceptoFaltante || proveedorFaltante || cantidadExcedida) && (
         <div className="mt-1 space-y-0.5">
           {fila.concepto_libre && (
             <p
@@ -195,6 +203,11 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
           {conceptoFaltante && (
             <p className="text-label text-destructive" data-testid={`concepto-faltante-aviso-${gi}`}>
               Selecciona el concepto de este renglón; sin nombre no se genera el concepto de venta.
+            </p>
+          )}
+          {proveedorFaltante && !conceptoFaltante && (
+            <p className="text-label text-destructive" data-testid={`proveedor-faltante-aviso-${gi}`}>
+              Captura el proveedor de este renglón; sin proveedor el costo llega al expediente sin a quién pagarle.
             </p>
           )}
           {cantidadExcedida && (
