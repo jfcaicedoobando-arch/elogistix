@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.308] - 2026-09-12
+- **ui(embarques)**: la tarjeta "Facturas de proveedor recibidas" (tab Costos) pasó de renglones apilados a un acomodo en columnas alineadas: archivo y estado, proveedor y folio, montos y acciones, con encabezados de columna en escritorio, ícono de documento, barra roja en documentos rechazados y el motivo de rechazo como franja a todo el ancho. Sin cambios en datos, permisos, montos ni acciones disponibles.
+
 ## [13.823.307] - 2026-09-12
 - **fix(seguridad/cxp)**: la validación interna de aprobación de facturas de proveedor (`_cxp_validar_aprobacion`) volvió a quedar cerrada a usuarios finales (sólo `service_role`); el cambio del 11/09 la había reabierto a `authenticated` y el candado de CI `_ci_check_service_role_only.sql` lo detectó. Espejo SQL sincronizado; sin cambios en importes, IVA, tipo de cambio ni datos.
 
