@@ -4,7 +4,7 @@
  * aceptada con venta positiva. Espejo de `public.crear_embarque_borrador_core`.
  */
 import { describe, it, expect } from "vitest";
-import { CREAR_EMBARQUE_BORRADOR } from "@/lib/access/permissionMatrix";
+import { CREAR_EMBARQUE_BORRADOR, hasRole } from "@/lib/access/permissionMatrix";
 import { visibilidadAcciones } from "@/features/cotizacion/domain/cotizacionDetalleAccionesVisibilidad";
 import type { AppRole } from "@/types/appRole";
 
@@ -18,10 +18,14 @@ const AUTORIZADOS: AppRole[] = [
 ];
 
 const base = {
-  estado: "Aceptada" as const,
+  estado: "Aceptada",
   esProspecto: false,
   tieneEmbarquesVinculados: false,
-  total: 4823,
+  puedeAceptar: false,
+  puedeRechazar: false,
+  puedeAltaCliente: false,
+  tieneOportunidad: false,
+  tieneVenta: true,
 };
 
 describe("CREAR_EMBARQUE_BORRADOR", () => {
@@ -39,11 +43,20 @@ describe("CREAR_EMBARQUE_BORRADOR", () => {
 
   it("muestra el botón para cada rol autorizado con venta positiva", () => {
     for (const rol of AUTORIZADOS) {
-      expect(visibilidadAcciones({ ...base, rol }).mostrarCrearEmbarque).toBe(true);
+      const vis = visibilidadAcciones({
+        ...base,
+        puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
+      });
+      expect(vis.mostrarCrearEmbarque, rol).toBe(true);
     }
   });
 
   it("oculta el botón para un rol sin permiso", () => {
-    expect(visibilidadAcciones({ ...base, rol: "vendedor" }).mostrarCrearEmbarque).toBe(false);
+    const vis = visibilidadAcciones({
+      ...base,
+      puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, "vendedor"),
+    });
+    expect(vis.mostrarCrearEmbarque).toBe(false);
+    expect(vis.mostrarFaltaVenta).toBe(false);
   });
 });
