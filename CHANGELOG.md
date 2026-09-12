@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.307] - 2026-09-12
+- **fix(seguridad/cxp)**: la validación interna de aprobación de facturas de proveedor (`_cxp_validar_aprobacion`) volvió a quedar cerrada a usuarios finales (sólo `service_role`); el cambio del 11/09 la había reabierto a `authenticated` y el candado de CI `_ci_check_service_role_only.sql` lo detectó. Espejo SQL sincronizado; sin cambios en importes, IVA, tipo de cambio ni datos.
+
 ## [13.823.306] - 2026-09-12
 - **fix(cotizaciones)**: el botón "Crear embarque" volvió a aparecer para el administrador de la empresa (`admin_org`) y para operación (`gerente_operaciones`, `coordinador_logistico`); antes sólo lo permitían `super_admin`, el rol legado `admin` y `operador`, por eso en COT-2026-0245 no se veía el botón aun estando Aceptada y con venta.
 - **fix(embarques)**: `crear_embarque_borrador_core` autoriza los mismos roles que la UI (espejo actualizado en `supabase/schema/embarques/`); sin cambios en importes, IVA, tarifas ni datos de la cotización o el embarque.
