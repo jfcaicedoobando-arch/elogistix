@@ -45,7 +45,7 @@ export async function recotizarCotizacion(
   cotizacionId: string,
   motivo: string,
 ): Promise<{ version_anterior: number; version_nueva: number }> {
-  if (!motivo || !motivo.trim()) throw new MotivoRequeridoError();
+  if (!motivo || motivo.trim().length < 5) throw new MotivoRequeridoError();
   const { data, error } = await rpc()("recotizar_cotizacion", {
     p_cotizacion_id: cotizacionId,
     p_motivo: motivo.trim(),
@@ -57,6 +57,12 @@ export async function recotizarCotizacion(
       const match = error.message.match(/HINT:\s*([^\n]+)/i);
       const expediente = (match?.[1] ?? "").trim();
       throw new CotizacionConEmbarqueError(expediente);
+    }
+    // v13.823.346 — la RPC exige estado Aceptada y motivo de 5+ caracteres.
+    if (error.message?.includes("LC_RECOTIZAR_ESTADO_INVALIDO")) {
+      throw new Error(
+        "Sólo una cotización aceptada puede re-cotizarse. Si aún está en captura, edítala directamente.",
+      );
     }
     throw new Error(error.message);
   }

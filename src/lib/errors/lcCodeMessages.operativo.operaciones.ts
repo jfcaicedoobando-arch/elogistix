@@ -58,6 +58,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COTIZACION_ESTADO_INVALIDO:
     "La cotización no está en un estado válido para esta operación.",
   LC_COTIZACION_CON_EMBARQUE: "Esta cotización ya tiene un embarque asociado.",
+  LC_RECOTIZAR_ESTADO_INVALIDO:
+    "Sólo una cotización aceptada puede re-cotizarse. Si aún está en captura, edítala directamente.",
   LC_COTIZACION_CONCEPTO_INVALIDO:
     "Uno de los conceptos de la cotización tiene datos inválidos. Revísalos antes de guardar.",
   LC_COTIZACION_MONEDA_NO_SOPORTADA:
