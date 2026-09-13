@@ -89,6 +89,8 @@ BEGIN
       COALESCE(p.venta_usd, 0) AS venta_usd,
       COALESCE(p.costo_usd, 0) AS costo_usd,
       COALESCE(p.venta_usd, 0) - COALESCE(p.costo_usd, 0) AS profit,
+      COALESCE(t.teu, 0) AS teu,
+      COALESCE(t.contenedores_fisicos, 0) AS contenedores_fisicos,
       COALESCE(NULLIF(b.operador, ''), 'Sin Asignar') AS operador_norm,
       CASE
         WHEN b.estado_real IN ('Arribo','En Aduana') AND b.eta IS NOT NULL THEN
