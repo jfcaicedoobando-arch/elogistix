@@ -54,10 +54,20 @@ export default function PaginationControls({
           Página {page + 1} de {Math.max(totalPages, 1)}
         </span>
         {typeof total === "number" && (
+          // v13.823.336: contadores en español natural. Antes podía leerse
+          // "0 de 1" cuando faltaba el tamaño de página; ahora el rango sólo
+          // aparece si es real y hay más de un registro.
           <span className="text-body text-muted-foreground tabular-nums">
-            · {total === 0 ? "0" : `${desde}–${hasta}`} de {total}
+            · {total === 0
+              ? "Sin resultados"
+              : total === 1
+                ? "1 registro"
+                : desde > 0
+                  ? `${desde}–${hasta} de ${total} registros`
+                  : `${total} registros`}
           </span>
         )}
+
         {onPageSizeChange && pageSize && (
           <div className="flex items-center gap-1.5">
             <span className="text-body text-muted-foreground">|</span>
