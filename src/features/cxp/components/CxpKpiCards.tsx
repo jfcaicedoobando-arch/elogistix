@@ -3,7 +3,7 @@
  */
 import { useMemo } from "react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatCompactNumber } from "@/lib/formatters";
 import { resumirTarjetasCxP } from "@/features/cxp/services/cxpKpiConteos";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
