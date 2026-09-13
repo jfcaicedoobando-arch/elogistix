@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.361] - 2026-09-13
+
+- **fix(cotizaciones)**: al sincronizar conceptos de venta desde costos, el aviso calculaba `subtotal` sumando SÓLO los conceptos USD (`usd.reduce` sobre `total` con IVA) y no derivaba `moneda` ni usaba tipo de cambio: una cotización sólo MXN guardaba subtotal 0 y una mixta guardaba un subtotal incompleto y sin moneda coherente (agrava COT-2026-0237).
+  - `handleSync` ahora reutiliza `derivarSubtotalMoneda` (suma sin IVA, USD+MXN, mezcla con TC CONGELADO de la cotización; sin TC falla cerrado con el mensaje de cotización mixta sin tocar la BD) y persiste `conceptos_venta` + `subtotal` + `moneda` coherentes en el mismo UPDATE con bloqueo optimista.
+  - `fetchCotizacionUpdatedAt` se amplía a `fetchCotizacionSelloSync` (sello + `moneda` + `tipo_cambio_usd` leídos justo antes de escribir; único llamador).
+  - Regresión: `AvisoSyncSubtotalMoneda.test.tsx` (sólo USD, sólo MXN con importe > 0, mixta con TC sellado expresada en una sola moneda, mixta sin TC sin escritura, moneda canónica USD no redenomina venta MXN).
+
 ## [13.823.360] - 2026-09-13
 
 - **fix(cotizaciones)**: el aviso "Sincronizar conceptos de venta desde costos" se renderizaba sin revisar permiso. Su botón llama `useUpdateCotizacion`, que exige SALES (`canWriteCotizaciones`), así que contabilidad/tesorería (que sí ven el P&L en sólo lectura) veían la acción y recibían 42501 al pulsarla.
