@@ -64,6 +64,12 @@ export function MobileFiltersSheet({
     onOpenChange(v);
   };
 
+  /** Limpiar sí persiste: es una acción explícita, no una selección temporal. */
+  const limpiar = () => {
+    aplicadoRef.current = true;
+    onClearAll();
+  };
+
   const aplicar = () => {
     aplicadoRef.current = true;
     onOpenChange(false);
@@ -92,7 +98,7 @@ export function MobileFiltersSheet({
         <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between pb-[max(env(safe-area-inset-bottom),1rem)]">
           <Button
             variant="ghost"
-            onClick={onClearAll}
+            onClick={limpiar}
             disabled={activeCount === 0}
             className="gap-2"
           >
