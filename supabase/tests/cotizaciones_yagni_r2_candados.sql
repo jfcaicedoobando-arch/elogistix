@@ -82,6 +82,8 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM LIKE '%LC_COT_SIN_OPORTUNIDAD%' THEN
       v_bloqueo := true;
+    ELSE
+      RAISE NOTICE 'aceptar_cotizacion_version falló con: %', SQLERRM;
     END IF;
   END;
   IF NOT v_bloqueo THEN
