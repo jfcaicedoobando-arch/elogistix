@@ -34,13 +34,9 @@ export function visibilidadAcciones(params: {
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
-  // v13.823.347 — `crear_embarque_borrador_core` acepta Aceptada o En
-  // operación; la puerta visible ahora coincide con la RPC (antes una
-  // cotización En operación sin embarque no ofrecía ninguna acción y el aviso
-  // apuntaba a un botón inexistente).
-  const esConvertible = esAceptada || estado === "En operación";
-  const sinEmbarqueAun = esConvertible && !tieneEmbarquesVinculados;
-  const puertaEmbarque = sinEmbarqueAun && !esProspecto && puedeCrearEmbarque;
+  const puertaEmbarque = puedeGenerarEmbarque({
+    estado, tieneEmbarquesVinculados, esProspecto, puedeCrearEmbarque,
+  });
   return {
     esEnCaptura: estado === "Borrador" || estado === "Solicitada",
     // v13.823.277 — el bloque sólo aparece si el rol tiene al menos una de las
