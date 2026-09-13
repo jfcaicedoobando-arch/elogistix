@@ -21,6 +21,16 @@ function esTipoCargaLcl(tipoCarga: string | null | undefined): boolean {
   return !!tipoCarga && tipoCarga.trim().toUpperCase() === "LCL";
 }
 
+function tituloPendientes(blFalta: boolean, incompletos: number): string {
+  return [
+    blFalta ? "BL Master sin capturar" : null,
+    incompletos > 0 ? `${incompletos} contenedor(es) sin número o tipo` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+
 /**
  * MR-UI-03: el conteo SIEMPRE proviene de `embarque_contenedores`. Antes se
  * usaba como respaldo el número de embarques agrupados por expediente, así que
