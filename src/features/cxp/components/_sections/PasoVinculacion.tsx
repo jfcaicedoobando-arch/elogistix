@@ -63,6 +63,8 @@ export function PasoVinculacion({
           sinTipoCambio={herencia.sinTipoCambio}
           sinCostoCapturado={Boolean(sinCostoCapturado)}
           marcadosAhora={Object.keys(ctl.vinculos).length}
+          errorCubiertos={herencia.errorCubiertos}
+          onReintentar={herencia.reintentar}
           onQuitarTodos={ctl.limpiarVinculos}
           onReaplicar={herencia.reaplicar}
         />

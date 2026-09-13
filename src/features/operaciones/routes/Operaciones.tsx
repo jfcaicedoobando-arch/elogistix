@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { TrendingUp, AlertTriangle, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
+import { MAX_CONTENEDORES } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { KpiErrorCard } from "@/features/operaciones/components/KpiErrorCard";
@@ -24,7 +24,6 @@ const OperacionesTendenciaChart = lazy(
 
 export default function Operaciones() {
   const {
-    periodo, setPeriodo,
     operadorChart, setOperadorChart,
     isLoading, isError, refetch, operadores, global,
     hoyStr, chartData,
@@ -57,24 +56,27 @@ export default function Operaciones() {
         errorTitle="No pudimos cargar el dashboard de operaciones"
         errorDescription="Revisa tu conexión e intenta de nuevo."
       >
+      {/* R221: se retiró el selector de periodo; no filtraba nada. */}
       <PageHeader
         title="Dashboard de Operaciones"
         description={hoyStr}
-        actions={
-          <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
-            <SelectTrigger className="h-9 w-auto min-w-[140px] gap-2"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="mes">Este mes</SelectItem>
-              <SelectItem value="3meses">Últimos 3 meses</SelectItem>
-              <SelectItem value="anio">Este año</SelectItem>
-            </SelectContent>
-          </Select>
-        }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* v13.823.26 (auditoría 1280x720): grid con ancho mínimo por tarjeta
+          para que el label envuelva antes de truncar ("Contenedore…",
+          "Tarifas pendi…"); 5 columnas sólo cuando hay espacio real (2xl). */}
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
         <KpiCard label="Cargas activas" value={global.totalActivas} icon={Ship} variant="info" iconVariant="chip" loading={isLoading} />
-        <KpiCard label="Contenedores (TEU)" value={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icon={Container} variant="accent" iconVariant="chip" loading={isLoading}>
+        {/* R221: TEU real de `embarque_contenedores` (40'/45' = 2 TEU); antes contaba embarques. */}
+        <KpiCard
+          label="Contenedores (TEU)"
+          value={`${global.totalContenedores} / ${MAX_CONTENEDORES}`}
+          sublabel={`${global.totalContenedoresFisicos} contenedores físicos`}
+          icon={Container}
+          variant="accent"
+          iconVariant="chip"
+          loading={isLoading}
+        >
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
         {/* VB-28: la moneda ya la muestra el valor ("USD …"); no duplicarla en el label. */}

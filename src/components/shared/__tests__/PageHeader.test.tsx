@@ -38,4 +38,29 @@ describe("<PageHeader />", () => {
     const { container } = render(<PageHeader title="X" />);
     expect(container.querySelector("p")).toBeNull();
   });
+
+  it("permite que las acciones envuelvan en lg+ sin truncar el título (v13.823.26)", () => {
+    const { container } = render(
+      <PageHeader
+        title="Cotizaciones (128)"
+        description="128 cotizaciones encontradas"
+        actions={
+          <>
+            <button type="button">Exportar</button>
+            <button type="button">Nueva cotización</button>
+          </>
+        }
+      />,
+    );
+    const h1 = screen.getByRole("heading", { level: 1 });
+    // El título completo (incluido el contador) sigue en el DOM: sólo se recorta
+    // visualmente vía CSS `truncate`, nunca por contenido.
+    expect(h1).toHaveTextContent("Cotizaciones (128)");
+    // El contenedor raíz de título+acciones debe permitir envolver en lg+ para
+    // que las acciones bajen de línea antes de truncar el título.
+    const row = container.querySelector("div.flex.flex-row");
+    expect(row?.className).toContain("lg:flex-wrap");
+    expect(screen.getByRole("button", { name: "Exportar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nueva cotización" })).toBeInTheDocument();
+  });
 });

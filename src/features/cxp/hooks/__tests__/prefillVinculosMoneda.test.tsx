@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { usePrefillVinculosEntrante } from "../usePrefillVinculosEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -52,5 +53,28 @@ describe("usePrefillVinculosEntrante · moneda de la factura", () => {
     );
     await new Promise((r) => setTimeout(r, 20));
     expect(aplicarSugerencias).not.toHaveBeenCalled();
+  });
+});
+
+describe("usePrefillVinculosEntrante · falla cerrado (bug 10)", () => {
+  it("si fetchCostosConFactura lanza, no pre-marca nada y expone errorCubiertos", async () => {
+    const { fetchCostosConFactura } = await import("@/features/embarques/services/costosConFactura");
+    vi.mocked(fetchCostosConFactura).mockRejectedValueOnce(new Error("RLS"));
+    const aplicarSugerencias = vi.fn();
+    const { result } = renderHook(() =>
+      usePrefillVinculosEntrante({
+        entrante, abierto: true, habilitado: true,
+        aplicarSugerencias, facturaMoneda: "USD", tc,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.errorCubiertos).toBe(true));
+    expect(aplicarSugerencias).not.toHaveBeenCalled();
+    expect(result.current.aplicados).toHaveLength(0);
+
+    vi.mocked(fetchCostosConFactura).mockResolvedValueOnce(new Set());
+    act(() => { result.current.reintentar(); });
+    await waitFor(() => expect(result.current.errorCubiertos).toBe(false));
+    await waitFor(() => expect(aplicarSugerencias).toHaveBeenCalledTimes(1));
   });
 });

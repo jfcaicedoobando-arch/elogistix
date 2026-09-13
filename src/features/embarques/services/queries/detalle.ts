@@ -4,6 +4,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { LC_CODE_MESSAGES } from "@/lib/errors/lcCodeMessages";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { EMBARQUE_DETAIL_COLUMNS } from "../columns";
 
 type EmbarqueRow = Tables<"embarques">;
@@ -12,11 +14,16 @@ type ConceptoCostoRow = Tables<"conceptos_costo">;
 type DocumentoEmbarqueRow = Tables<"documentos_embarque">;
 type NotaEmbarqueRow = Tables<"notas_embarque">;
 
+/**
+ * R221: un expediente en la papelera (`deleted_at`) no debe abrirse por enlace
+ * directo. Antes devolvía la ficha completa (ELIMP00293).
+ */
 export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
   const { data, error } = await supabase
     .from("embarques")
     .select(EMBARQUE_DETAIL_COLUMNS)
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
   if (error) throw error;
   return data as EmbarqueRow;
@@ -37,14 +44,19 @@ export async function fetchEmbarqueFull(idOrExpediente: string): Promise<Embarqu
   let id = idOrExpediente;
   // Si no es UUID, asumimos que es expediente (folio human-readable). Resolvemos a id.
   if (!UUID_RE.test(idOrExpediente)) {
-    const { data: row, error: lookupErr } = await supabase
+    // R221: se ignoran los eliminados y, si aún quedan varios folios vivos
+    // (ELIMP00006 duplicado), se avisa en lugar de fallar con error genérico.
+    const { data: rows, error: lookupErr } = await supabase
       .from("embarques")
       .select("id")
       .eq("expediente", idOrExpediente)
-      .maybeSingle();
+      .is("deleted_at", null)
+      .limit(2);
     if (lookupErr) throw lookupErr;
-    if (!row) return null;
-    id = row.id;
+    const vivos = rows ?? [];
+    if (vivos.length === 0) return null;
+    if (vivos.length > 1) throw new ReglaNegocioError(LC_CODE_MESSAGES.LC_EXPEDIENTE_AMBIGUO);
+    id = vivos[0].id;
   }
   const { data, error } = await supabase.rpc("get_embarque_full", { p_embarque_id: id });
   if (error) throw error;

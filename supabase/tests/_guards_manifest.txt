@@ -121,3 +121,4 @@ supabase/tests/crear_embarque_borrador_roles.sql
 supabase/tests/cotizacion_vencida_convertible.sql
 supabase/tests/embarque_confirmado_minimos.sql
 supabase/tests/crear_embarque_borrador_notificaciones_roles.sql
+supabase/tests/dashboards_cancelado_y_teu.sql

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { EmbarqueDetalleTabsBar } from "@/features/embarques/components/_sections/EmbarqueDetalleTabsBar";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AlertaBorrador } from "@/features/embarques/components/_sections/AlertaBorrador";
@@ -52,24 +53,11 @@ export function EmbarqueDetalleTabs({
       */}
       {/* v13.139.18 (F-04 auditoría 3): 11 tabs desbordaban a 2ª línea con
           flex-wrap. Cambiamos a scroll horizontal nativo con scrollbar fino
-          para mantener todas las tabs en una sola fila sin partir el header. */}
-      {/* v13.823.25 (fold 692px): máscara de degradado en el borde derecho para
-          que se vea que la tira de tabs continúa (se desactiva en lg+). */}
-      <div className="w-full overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] lg:[mask-image:none]">
-        <TabsList className="gap-1 inline-flex w-max flex-nowrap" data-testid="embarque-detalle-tabs">
-          <TabsTrigger value="resumen" data-testid="tab-resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
-          <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
-          <TabsTrigger value="documentos" data-testid="tab-documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
-          <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
-          <TabsTrigger value="garantias" data-testid="tab-garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
-          <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
-          <TabsTrigger value="facturacion" data-testid="tab-facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
-          <TabsTrigger value="conciliacion" data-testid="tab-conciliacion" className="whitespace-nowrap">Conciliación</TabsTrigger>
-          <TabsTrigger value="pnl" data-testid="tab-pnl" className="whitespace-nowrap">Utilidad</TabsTrigger>
-          <TabsTrigger value="cierre" data-testid="tab-cierre" className="whitespace-nowrap">Cierre</TabsTrigger>
-          <TabsTrigger value="notas" data-testid="tab-notas" className="whitespace-nowrap">Notas y Actividad</TabsTrigger>
-        </TabsList>
-      </div>
+          para mantener todas las tabs en una sola fila sin partir el header.
+          v13.823.26: la affordance de scroll (degradados + flechas) vive en
+          `EmbarqueDetalleTabsBar` para mantener este archivo enfocado en el
+          contenido de cada pestaña. */}
+      <EmbarqueDetalleTabsBar />
 
       {estadoVisual === "Borrador" && <AlertaBorrador etd={embarque.etd ?? null} />}
 

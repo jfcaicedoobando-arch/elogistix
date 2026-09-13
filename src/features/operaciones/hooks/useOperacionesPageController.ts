@@ -3,19 +3,22 @@ import { formatFechaLarga } from "@/lib/formatters/dates";
 import {
   useOperacionesData,
   MAX_CONTENEDORES,
-  type PeriodoFiltro,
 } from "@/features/operaciones/hooks/useOperacionesData";
 
 /**
  * Controller de la página /operaciones.
- * Centraliza el estado de filtros (periodo, operador del chart) y los
- * derivados visuales (chartData, balance, porcentaje de contenedores,
- * total de alertas, fecha localizada).
+ * Centraliza el estado de filtros (operador del chart) y los derivados
+ * visuales (chartData, balance, porcentaje de contenedores, total de alertas,
+ * fecha localizada).
+ *
+ * R221: se retiró el filtro de periodo. `operaciones_stats()` siempre agrega el
+ * mismo periodo fijo, así que el selector no cambiaba ningún número (era un
+ * no-op que engañaba al usuario). Si se quiere el filtro real hay que pasarlo
+ * al RPC; queda como tarea propia.
  */
 export function useOperacionesPageController() {
-  const [periodo, setPeriodo] = useState<PeriodoFiltro>("mes");
   const [operadorChart, setOperadorChart] = useState<string>("todos");
-  const { isLoading, isError, refetch, operadores, global } = useOperacionesData(periodo);
+  const { isLoading, isError, refetch, operadores, global } = useOperacionesData();
 
   const hoyStr = useMemo(() => {
     return formatFechaLarga(new Date());
@@ -56,8 +59,6 @@ export function useOperacionesPageController() {
   const totalAlertas = global.totalCriticos + global.totalEnPuerto;
 
   return {
-    periodo,
-    setPeriodo,
     operadorChart,
     setOperadorChart,
     isLoading,

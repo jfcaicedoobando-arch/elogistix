@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.328] - 2026-09-13
+
+- **fix(tableros)**: los embarques `Cancelado` ya no se muestran como “Arribo” en los tableros de dirección y operaciones; el estado cancelado se preserva antes de derivarlo por ETD/ETA, así que dejan de generar alertas de demora.
+- **fix(embarques)**: un expediente en la papelera ya no se abre por enlace directo (`get_embarque_full` y la lectura por id filtran `deleted_at`).
+- **fix(embarques)**: cuando dos expedientes vivos comparten folio, el enlace por folio muestra `LC_EXPEDIENTE_AMBIGUO` (“Hay más de un expediente con ese folio…”) en lugar de un error genérico.
+- **fix(operaciones)**: el KPI “Contenedores (TEU)” cuenta TEU reales de `embarque_contenedores` (40'/45' = 2 TEU) y muestra además el total de contenedores físicos; antes contaba embarques.
+- **fix(operaciones UX)**: se retiró el selector de periodo del tablero, que no filtraba ningún número.
+- **fix(cotizaciones)**: el detalle se revalida al volver a la pestaña, así que una pestaña vieja ya no ofrece “Crear embarque” sobre una cotización ya convertida.
+- **fix(CxP)**: el prefill de vínculos de una factura entrante falla cerrado: si no se pueden leer los costos ya cubiertos no premarca nada y ofrece “Reintentar”.
+- Guard de regresión: `dashboards_cancelado_y_teu.sql`.
+
 ## [13.823.327] - 2026-09-13
 
 - **fix(notificaciones)**: al crear un borrador de embarque desde cotización, la notificación interna ahora llega también a `admin_org`, `gerente_operaciones` y `coordinador_logistico` (antes sólo a `admin` y `operador`), alineando destinatarios con los roles autorizados por la RPC. Se conserva la exclusión del autor. Guard de regresión: `crear_embarque_borrador_notificaciones_roles.sql`.

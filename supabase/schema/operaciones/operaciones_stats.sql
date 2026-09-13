@@ -46,6 +46,10 @@ BEGIN
         -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
         -- cuente como Confirmado por derivación ETD/ETA.
         WHEN e.estado = 'Borrador' THEN 'Borrador'
+        -- R221 (ELIMP00353): preservar Cancelado ANTES de derivar por ETD/ETA;
+        -- si no, un cancelado con ETA vencida se volvía 'Arribo' y sobrevivía
+        -- al filtro posterior que pretendía excluirlo.
+        WHEN e.estado = 'Cancelado' THEN 'Cancelado'
         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
@@ -61,6 +65,20 @@ BEGIN
     WHERE e.deleted_at IS NULL                -- FIX C5
       AND (e.organization_id = public.org_scope())
   ),
+  -- R221: los contenedores se cuentan de embarque_contenedores, NO de embarques.
+  -- Conversión a TEU explícita: 40'/45' = 2 TEU, 20' = 1 TEU, sin tipo = 1 TEU.
+  teu_por_embarque AS (
+    SELECT ec.embarque_id,
+           count(*)::int AS contenedores_fisicos,
+           sum(CASE
+                 WHEN ec.tipo_contenedor ~ '4[05]' THEN 2
+                 ELSE 1
+               END)::int AS teu
+    FROM embarque_contenedores ec
+    WHERE ec.deleted_at IS NULL
+      AND ec.organization_id = public.org_scope()
+    GROUP BY ec.embarque_id
+  ),
   profit AS (
     SELECT p.embarque_id, p.venta_usd, p.costo_usd
     FROM profit_por_embarque() p
@@ -71,6 +89,8 @@ BEGIN
       COALESCE(p.venta_usd, 0) AS venta_usd,
       COALESCE(p.costo_usd, 0) AS costo_usd,
       COALESCE(p.venta_usd, 0) - COALESCE(p.costo_usd, 0) AS profit,
+      COALESCE(t.teu, 0) AS teu,
+      COALESCE(t.contenedores_fisicos, 0) AS contenedores_fisicos,
       COALESCE(NULLIF(b.operador, ''), 'Sin Asignar') AS operador_norm,
       CASE
         WHEN b.estado_real IN ('Arribo','En Aduana') AND b.eta IS NOT NULL THEN
@@ -102,6 +122,7 @@ BEGIN
       COALESCE(NULLIF(b.puerto_destino, ''), NULLIF(b.aeropuerto_destino, ''), NULLIF(b.ciudad_destino, ''), '') AS destino_txt
     FROM base b
     LEFT JOIN profit p ON p.embarque_id = b.id
+    LEFT JOIN teu_por_embarque t ON t.embarque_id = b.id
   ),
   meses AS (
     SELECT n,
@@ -114,7 +135,7 @@ BEGIN
     SELECT
       operador_norm AS nombre,
       count(*) FILTER (WHERE es_activo) AS cargas_activas,
-      count(*) FILTER (WHERE es_activo) AS contenedores,
+      COALESCE(sum(teu) FILTER (WHERE es_activo), 0) AS contenedores,
       count(*) FILTER (
         WHERE COALESCE(etd, created_at::date) >= date_trunc('month', v_hoy)::date
           AND COALESCE(etd, created_at::date) <= (date_trunc('month', v_hoy) + interval '1 month - 1 day')::date
@@ -284,7 +305,8 @@ BEGIN
   global AS (
     SELECT jsonb_build_object(
       'totalActivas', count(*) FILTER (WHERE es_activo),
-      'totalContenedores', count(*) FILTER (WHERE es_activo),
+      'totalContenedores', COALESCE(sum(teu) FILTER (WHERE es_activo), 0),
+      'totalContenedoresFisicos', COALESCE(sum(contenedores_fisicos) FILTER (WHERE es_activo), 0),
       'totalEsteMes', count(*) FILTER (
         WHERE COALESCE(etd, created_at::date) >= date_trunc('month', v_hoy)::date
           AND COALESCE(etd, created_at::date) <= (date_trunc('month', v_hoy) + interval '1 month - 1 day')::date

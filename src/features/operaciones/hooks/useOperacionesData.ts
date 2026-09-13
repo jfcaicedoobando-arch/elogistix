@@ -9,7 +9,6 @@ export type {  EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from 
 
 export const MAX_CONTENEDORES = 150;
 
-export type PeriodoFiltro = "mes" | "3meses" | "anio";
 export type NivelRiesgo = "critico" | "en_puerto" | "por_arribar" | "ok";
 
 export interface CargaRiesgo {
@@ -65,7 +64,10 @@ export interface HistoricoMes {
 
 export interface OperacionesGlobal {
   totalActivas: number;
+  /** TEU (40'/45' cuentan 2). */
   totalContenedores: number;
+  /** Piezas físicas de `embarque_contenedores`. */
+  totalContenedoresFisicos: number;
   totalEsteMes: number;
   totalProfit: number;
   totalDemoras: number;
@@ -84,7 +86,7 @@ const EMPTY_DESGLOSE: DesgloseEstados = {
 };
 
 const EMPTY_GLOBAL: OperacionesGlobal = {
-  totalActivas: 0, totalContenedores: 0, totalEsteMes: 0, totalProfit: 0,
+  totalActivas: 0, totalContenedores: 0, totalContenedoresFisicos: 0, totalEsteMes: 0, totalProfit: 0,
   totalDemoras: 0, totalCriticos: 0, totalEnPuerto: 0, totalPorArribar: 0,
   activasHoy: 0, historicoCreadosPorMes: [], llegadasEsteMes: 0, creadasEsteMes: 0,
   cargasEnRiesgo: [],
@@ -117,6 +119,7 @@ function buildGlobal(stats: StatsShape | undefined, operadores: OperadorData[]):
   return {
     totalActivas: n(g.totalActivas),
     totalContenedores: n(g.totalContenedores),
+    totalContenedoresFisicos: n(g.totalContenedoresFisicos),
     totalEsteMes: n(g.totalEsteMes),
     totalProfit: n(g.totalProfit),
     totalDemoras: n(g.totalDemoras),
@@ -165,7 +168,7 @@ function mapOperador(op: ServerOperadorRaw): OperadorData {
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
  */
-export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
+export function useOperacionesData() {
   const { organizationId } = useOrgActiva();
   const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.operaciones.stats(organizationId),
