@@ -165,6 +165,26 @@ BEGIN
        AND p.prosrc ~* '(organization_id|organization_members|current_user_org_id)'
   ), 'puede_aprobar_tarifa_cotizacion debe conservar el ancla tenant en su cuerpo');
 
+  -- TEST 7 (v13.823.354): el helper es tenant-aware por parámetro `_org`.
+  --   · usr_b (vendedor de org_b) autorizado SÓLO al evaluar org_b.
+  --   · la firma expone dos parámetros (_user_id, _org) y no la variante de uno.
+  PERFORM pg_temp.assert(public.puede_aprobar_tarifa_cotizacion(usr_b, org_b),
+    'un vendedor de org_b debe quedar autorizado al evaluar explícitamente org_b');
+  PERFORM pg_temp.assert(NOT public.puede_aprobar_tarifa_cotizacion(usr_b, org_a),
+    'un vendedor de org_b NO debe quedar autorizado al evaluar org_a');
+  PERFORM pg_temp.assert(NOT public.puede_aprobar_tarifa_cotizacion(usr_b, NULL),
+    'sin organización el rol aprobador no aplica para un usuario con membresía');
+  SELECT count(*) INTO n
+    FROM pg_proc p JOIN pg_namespace ns ON ns.oid = p.pronamespace
+   WHERE ns.nspname = 'public' AND p.proname = 'puede_aprobar_tarifa_cotizacion';
+  PERFORM pg_temp.assert(n = 1, 'debe existir una sola firma de puede_aprobar_tarifa_cotizacion');
+  PERFORM pg_temp.assert(EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace ns ON ns.oid = p.pronamespace
+     WHERE ns.nspname = 'public' AND p.proname = 'puede_aprobar_tarifa_cotizacion'
+       AND p.pronargs = 2
+       AND p.prosrc ~* 'has_any_role_in_org'
+  ), 'puede_aprobar_tarifa_cotizacion debe recibir _org y validar con has_any_role_in_org');
+
   RAISE NOTICE 'OK · v13.823.351: rol aprobador, decisión recotizada, duplicar eliminada y aislamiento de tarifas; ancla tenant del rol aprobador';
 END $$;
 
