@@ -253,3 +253,6 @@ $function$;
 
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;
+
+REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) TO authenticated, service_role;
