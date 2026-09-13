@@ -4757,15 +4757,18 @@ DECLARE
   v_ganadora UUID;
   v_tipo_documento TEXT;
   v_subtotal NUMERIC;
+  v_es_prospecto BOOLEAN;
   v_conceptos JSONB;
   v_renglon_valido BOOLEAN;
 BEGIN
+  -- v13.823.57: lock de la fila ANTES de validar; dos aceptaciones simultáneas
+  -- se serializan y la segunda ve el estado ya terminal.
   SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id,
          created_by, oportunidad_id, version_aceptada,
-         tipo_documento, subtotal, conceptos_venta
+         tipo_documento, subtotal, conceptos_venta, es_prospecto
     INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id,
          v_creado_por, v_oportunidad_id, v_version_aceptada,
-         v_tipo_documento, v_subtotal, v_conceptos
+         v_tipo_documento, v_subtotal, v_conceptos, v_es_prospecto
     FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
     FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
@@ -4790,6 +4793,10 @@ BEGIN
   END IF;
   v_requiere := public.cliente_requiere_autorizacion(v_cliente_id, 'cotizacion');
   v_origen := CASE WHEN v_requiere THEN 'autorizacion_cliente' ELSE 'interna_cliente_de_casa' END;
+  -- v13.823.58: reintento idempotente. El primer request pudo aceptar y la
+  -- respuesta perderse en la red; con la fila ya bloqueada y la identidad,
+  -- pertenencia y rol validados, devolvemos el mismo resultado sin reescribir
+  -- nada (ni sello, ni valor_real, ni auditoría, ni notificación).
   IF v_estado_actual IN ('Aceptada','En operación') THEN
     IF v_oportunidad_id IS NOT NULL THEN
       SELECT true, o.cotizacion_ganadora_id
@@ -4823,6 +4830,13 @@ BEGIN
       'origen_aceptacion', v_origen,
       'sin_cambios', true);
   END IF;
+  -- v13.823.355 (YAGNI r2 · P1): aceptar un prospecto sin oportunidad ligada
+  -- dejaba la cotización en un callejón sin salida (sin cliente, sin conversión,
+  -- sin embarque y sin edición). Se exige el vínculo CRM antes de aceptar.
+  IF COALESCE(v_es_prospecto, false) AND v_oportunidad_id IS NULL THEN
+    RAISE EXCEPTION 'LC_COT_SIN_OPORTUNIDAD: liga la cotización a una oportunidad del CRM antes de aceptarla'
+      USING ERRCODE='P0001';
+  END IF;
   IF v_vigencia IS NOT NULL AND v_vigencia < CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_COT_VENCIDA: la cotización venció el %, extienda la vigencia antes de aceptar', v_vigencia USING ERRCODE='P0001';
   END IF;
@@ -4838,7 +4852,8 @@ BEGIN
     END IF;
   END IF;
   -- v13.823.330 · Auditoría YAGNI #5: una cotización transaccional no puede
-  -- aceptarse sin importe. Las informativas (tarifarios) quedan exentas.
+  -- aceptarse sin importe. Las informativas (tarifarios) quedan exentas porque
+  -- no generan operación ni facturación.
   IF COALESCE(v_tipo_documento, 'transaccional') <> 'informativa' THEN
     SELECT EXISTS (
       SELECT 1
@@ -12310,11 +12325,17 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
+  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
+  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
+  -- implícito (o 1:1) deformaría el P&L del embarque.
   SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
     INTO v_monedas
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
+   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
+   -- una cotización mixta se convertía sin tipo de cambio.
    WHERE COALESCE(
            NULLIF(
              CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -12328,6 +12349,8 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
+  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
@@ -12377,11 +12400,14 @@ BEGIN
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
+  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
+  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
+  -- `tipo_embarque` (con respaldo en `tipo_carga`).
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -12400,7 +12426,18 @@ BEGIN
     FROM public.costeo_tarifas t
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
-  IF v_agente_id  IS NOT NULL THEN SELECT nombre INTO v_agente_nombre  FROM public.costeo_agentes WHERE id = v_agente_id; END IF;
+  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
+  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
+  -- tenant al embarque; ahora falla cerrado.
+  IF v_agente_id IS NOT NULL THEN
+    SELECT nombre INTO v_agente_nombre
+      FROM public.costeo_agentes
+     WHERE id = v_agente_id AND organization_id = v_cot.organization_id;
+    IF v_agente_nombre IS NULL THEN
+      RAISE EXCEPTION 'LC_AGENTE_ORG_INVALIDA: el agente % no pertenece a la organización de la cotización', v_agente_id
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
   IF v_naviera_id IS NOT NULL THEN SELECT name   INTO v_naviera_nombre FROM public.navieras       WHERE id = v_naviera_id; END IF;
   INSERT INTO public.embarques (
     cotizacion_id, expediente, cliente_id, cliente_nombre,
@@ -12436,6 +12473,7 @@ BEGIN
     NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
+  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -26394,6 +26432,11 @@ DECLARE
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+  -- v13.823.355 (YAGNI r2 · P1): una cotización eliminada no se revalida ni por
+  -- RPC directa; antes seguía leyendo tarifas y devolviendo severidad.
+  IF v_cot.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COTIZACION_ELIMINADA: la cotización está eliminada' USING ERRCODE='P0001';
+  END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
   SELECT COALESCE((valor#>>'{}')::numeric,5) INTO v_umbral_pct
@@ -26450,6 +26493,9 @@ BEGIN
       IF v_delta_pct > v_max_delta_pct THEN v_max_delta_pct := v_delta_pct; END IF;
     END IF;
   END LOOP;
+  -- Huella económica canónica: identifica cada costo fuente y su importe
+  -- vigente. A diferencia del máximo porcentual, detecta cualquier cambio de
+  -- composición o importe aunque el porcentaje agregado coincida.
   SELECT jsonb_build_object(
     'tarifa_vigente', v_tarifa_vigente,
     'filas', COALESCE(jsonb_agg(jsonb_build_object(
@@ -26473,6 +26519,8 @@ BEGIN
   ELSIF v_max_delta_pct > v_umbral_pct THEN v_severidad := 'bloqueante';
   ELSE v_severidad := 'informativa';
   END IF;
+  -- R201-COT-02: la re-aprobación de ventas consume el bloqueo, pero SÓLO si
+  -- corresponde al mismo delta que ventas autorizó.
   IF v_severidad = 'bloqueante' AND v_cot.estado_revalidacion = 'reaprobada' THEN
     v_snapshot_aprob := v_cot.revalidacion_delta_jsonb->'snapshot_economico';
     IF v_snapshot_aprob IS NOT NULL AND v_snapshot_aprob = v_snapshot THEN
