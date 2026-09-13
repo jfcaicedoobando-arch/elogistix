@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 
 export function CotizacionesBannerOrigen() {
   const location = useLocation();
-  const [visible, setVisible] = useState(
-    () => (location.state as { origen?: string } | null)?.origen === "nuevo-embarque",
-  );
+  const [cerrado, setCerrado] = useState(false);
+  const vieneDeEmbarques =
+    (location.state as { origen?: string } | null)?.origen === "nuevo-embarque";
+  const visible = location.pathname === "/cotizaciones" && vieneDeEmbarques && !cerrado;
 
   if (!visible) return null;
 
@@ -31,7 +32,7 @@ export function CotizacionesBannerOrigen() {
         size="sm"
         className="h-6 w-6 p-0 shrink-0"
         aria-label="Cerrar aviso"
-        onClick={() => setVisible(false)}
+        onClick={() => setCerrado(true)}
       >
         <X className="h-4 w-4" aria-hidden />
       </Button>
