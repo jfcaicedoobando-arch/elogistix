@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.327] - 2026-09-13
+
+- **fix(notificaciones)**: al crear un borrador de embarque desde cotización, la notificación interna ahora llega también a `admin_org`, `gerente_operaciones` y `coordinador_logistico` (antes sólo a `admin` y `operador`), alineando destinatarios con los roles autorizados por la RPC. Se conserva la exclusión del autor. Guard de regresión: `crear_embarque_borrador_notificaciones_roles.sql`.
+
 ## [13.823.326] - 2026-09-13
 
 - **fix(cotizaciones UX)**: “Ver cotizaciones” ya no dispara un aviso global persistente; ahora envía el contexto al aviso local de la lista `/cotizaciones`, que desaparece al entrar a `/cotizaciones/nueva` y no cubre el stepper. Sin cambios al flujo de conversión.
