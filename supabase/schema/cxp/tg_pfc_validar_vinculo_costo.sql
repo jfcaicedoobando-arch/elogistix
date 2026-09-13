@@ -1,0 +1,113 @@
+-- Fuente canónica de public.tg_pfc_validar_vinculo_costo() y su trigger.
+-- v13.823.330 · Auditoría YAGNI #1: el vínculo factura de proveedor ↔ concepto
+-- de costo se validaba sólo en cliente, así que era posible enlazar una factura
+-- MXN contra un costo USD (7 vínculos históricos así en la base) y sobreasignar
+-- un costo por concurrencia.
+--
+-- Reglas (server-side, atómicas, con bloqueo de la fila del costo):
+--   * misma organización, mismo proveedor y MISMA moneda factura ↔ costo;
+--   * el monto acumulado vinculado no puede exceder el costo (tolerancia 5%
+--     por IVA/redondeo del proveedor);
+--   * los renglones fiscales sin `concepto_costo_id` siguen permitidos.
+-- Los vínculos históricos NO se reescriben: sólo se bloquean altas/cambios nuevos.
+
+CREATE OR REPLACE FUNCTION public.tg_pfc_validar_vinculo_costo()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $function$
+DECLARE
+  v_cc_moneda   text;
+  v_cc_monto    numeric;
+  v_cc_prov     uuid;
+  v_cc_org      uuid;
+  v_expediente  text;
+  v_fac_folio   text;
+  v_fac_moneda  text;
+  v_fac_prov    uuid;
+  v_fac_org     uuid;
+  v_asignado    numeric;
+BEGIN
+  IF NEW.concepto_costo_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+     AND NEW.concepto_costo_id IS NOT DISTINCT FROM OLD.concepto_costo_id
+     AND NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
+     AND NEW.monto IS NOT DISTINCT FROM OLD.monto THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT cc.moneda, cc.monto, cc.proveedor_id, cc.organization_id
+    INTO v_cc_moneda, v_cc_monto, v_cc_prov, v_cc_org
+    FROM public.conceptos_costo cc
+   WHERE cc.id = NEW.concepto_costo_id
+     AND cc.deleted_at IS NULL
+   FOR UPDATE;
+
+  IF v_cc_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_COSTO_INEXISTENTE: el concepto de costo no existe o fue eliminado'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  SELECT e.expediente INTO v_expediente
+    FROM public.conceptos_costo cc
+    JOIN public.embarques e ON e.id = cc.embarque_id
+   WHERE cc.id = NEW.concepto_costo_id;
+
+  SELECT pf.folio, pf.moneda, pf.proveedor_id, pf.organization_id
+    INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org
+    FROM public.proveedor_facturas pf
+   WHERE pf.id = NEW.proveedor_factura_id;
+
+  IF v_fac_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_FACTURA_NO_EXISTE: la factura de proveedor no existe'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_fac_org IS DISTINCT FROM v_cc_org THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_ORG: la factura % y el costo del expediente % pertenecen a organizaciones distintas',
+      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_expediente, '(sin expediente)')
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_cc_prov IS NOT NULL AND v_fac_prov IS NOT NULL AND v_cc_prov IS DISTINCT FROM v_fac_prov THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_PROVEEDOR: la factura % es de otro proveedor que el costo del expediente %',
+      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_expediente, '(sin expediente)')
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF upper(btrim(COALESCE(v_fac_moneda, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_cc_moneda, ''))) THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_MONEDA: la factura % está en % y el costo del expediente % en %; no se pueden mezclar monedas sin tipo de cambio explícito',
+      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
+      COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT COALESCE(sum(pfc.monto), 0)
+    INTO v_asignado
+    FROM public.proveedor_facturas_conceptos pfc
+   WHERE pfc.concepto_costo_id = NEW.concepto_costo_id
+     AND (TG_OP = 'INSERT' OR pfc.id <> NEW.id);
+
+  IF COALESCE(v_cc_monto, 0) > 0
+     AND round(v_asignado + COALESCE(NEW.monto, 0), 2) > round(v_cc_monto * 1.05, 2) THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_SOBREASIGNADO: el costo del expediente % es de % % y ya tiene % asignado; la factura % excede el monto restante',
+      COALESCE(v_expediente, '(sin expediente)'), v_cc_monto, COALESCE(v_cc_moneda, ''),
+      v_asignado, COALESCE(v_fac_folio, '(sin folio)')
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trg_pfc_validar_vinculo_costo ON public.proveedor_facturas_conceptos;
+CREATE TRIGGER trg_pfc_validar_vinculo_costo
+BEFORE INSERT OR UPDATE ON public.proveedor_facturas_conceptos
+FOR EACH ROW EXECUTE FUNCTION public.tg_pfc_validar_vinculo_costo();
+
+REVOKE ALL ON FUNCTION public.tg_pfc_validar_vinculo_costo() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.tg_pfc_validar_vinculo_costo() TO authenticated, service_role;
