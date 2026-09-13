@@ -8,7 +8,9 @@
 -- Casos:
 --   1) Costo 60 USD (T/C embarque 17.3317) vs factura 60 USD
 --      (T/C factura 19.4715) -> NO bloquea (antes: 1,039.90 vs 1,168.29 MXN).
---   2) Misma moneda con exceso real >5% (70 USD vs 60 USD) -> LC_CXP_SOBRECOSTO.
+--   2) Misma moneda con exceso real >5% (70 USD vs 60 USD) -> el trigger
+--      `tg_pfc_validar_vinculo_costo` lo bloquea al vincular
+--      (LC_CXP_VINCULO_SOBREASIGNADO): es la barrera primaria.
 --   3) Monedas distintas (costo USD, factura MXN) -> se conserva la ruta MXN.
 --
 -- Ejecución manual:
