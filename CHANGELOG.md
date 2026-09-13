@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.329] - 2026-09-13
+
+- **test(embarques)**: la prueba de `fetchEmbarqueFull` se alineó con la nueva búsqueda por folio (lista de resultados vivos) y cubre el caso de folio duplicado ambiguo.
+
 ## [13.823.328] - 2026-09-13
 
 - **fix(tableros)**: los embarques `Cancelado` ya no se muestran como “Arribo” en los tableros de dirección y operaciones; el estado cancelado se preserva antes de derivarlo por ETD/ETA, así que dejan de generar alertas de demora.
