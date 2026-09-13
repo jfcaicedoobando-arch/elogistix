@@ -23,6 +23,13 @@ BEGIN
   IF v_def !~ 'LC_CXP_VINCULO_MONEDA' THEN
     RAISE EXCEPTION 'el vínculo de costo dejó de validar que la moneda coincida';
   END IF;
+  -- La única conversión admitida (MXN↔USD) exige el TC congelado en la factura.
+  IF v_def !~ 'LC_CXP_VINCULO_TC_REQUERIDO' THEN
+    RAISE EXCEPTION 'el vínculo de costo dejó de exigir el tipo de cambio de la factura al conciliar monedas distintas';
+  END IF;
+  IF v_def !~ 'tipo_cambio_usd' THEN
+    RAISE EXCEPTION 'el vínculo de costo dejó de leer el tipo de cambio congelado de la factura';
+  END IF;
   IF v_def !~ 'LC_CXP_VINCULO_PROVEEDOR' THEN
     RAISE EXCEPTION 'el vínculo de costo dejó de validar el proveedor';
   END IF;
