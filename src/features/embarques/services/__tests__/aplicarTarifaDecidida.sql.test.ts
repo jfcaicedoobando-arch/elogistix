@@ -23,9 +23,11 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const ESPEJO = join(ROOT, "supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql");
+// Migración vigente (org-scoped) que entrega el cuerpo canónico. El historial
+// anterior (20260913001100) queda intacto: se compara contra la última aplicada.
 const MIGRACION = join(
   ROOT,
-  "supabase/migrations/20260913001100_r201_cot_remate_identidad_snapshot_hidratacion.sql",
+  "supabase/migrations/20260913220010_3c52e126-3ec1-4646-a484-ac800462a019.sql",
 );
 
 const espejo = readFileSync(ESPEJO, "utf8");
@@ -66,7 +68,10 @@ describe("R201-COT-01 — refrescar la misma tarifa usa identidad exacta", () =>
   });
 
   it("toma el monto del recargo unido por su id, no por concepto", () => {
-    expect(cuerpo).toContain("LEFT JOIN public.costeo_tarifa_recargos r ON r.id = cc.costeo_tarifa_recargo_id");
+    // El JOIN debe ser por identidad Y acotado a la organización de la cotización.
+    expect(cuerpo).toMatch(
+      /LEFT JOIN public\.costeo_tarifa_recargos r\s+ON r\.id = cc\.costeo_tarifa_recargo_id AND r\.organization_id = v_org/,
+    );
     expect(cuerpo).toContain("v_unit := v_costo.recargo_monto_vigente;");
   });
 
