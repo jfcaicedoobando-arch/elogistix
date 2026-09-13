@@ -10910,7 +10910,7 @@ export type Database = {
         Returns: string
       }
       puede_aprobar_tarifa_cotizacion: {
-        Args: { _user_id?: string }
+        Args: { _org?: string; _user_id?: string }
         Returns: boolean
       }
       puede_escribir_cotizaciones: {
