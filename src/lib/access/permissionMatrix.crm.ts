@@ -76,3 +76,62 @@ export const CRM_ESCRITURA_REGISTROS: readonly AppRole[] = [
  * CUALQUIER registro. Un vendedor conserva su asignación pero no la cambia.
  */
 export const CRM_REASIGNAR_VENDEDOR: readonly AppRole[] = [...CRM_STAFF_REGISTROS];
+
+/** Permisos de CRM ya resueltos contra un rol efectivo y un usuario. */
+export interface PermisosCrmResueltos {
+  canConfigurarCrm: boolean;
+  canTomarLead: boolean;
+  canGestionarTodosLosLeads: boolean;
+  canGestionarLead: (vendedorId: string | null | undefined) => boolean;
+  canCrearLead: boolean;
+  canGestionarLeadsEnLote: boolean;
+  canCrearOportunidad: boolean;
+  canGestionarTodasLasOportunidades: boolean;
+  canGestionarOportunidad: (vendedorId: string | null | undefined) => boolean;
+  canCrearActividad: boolean;
+  canGestionarTodasLasActividades: boolean;
+  canGestionarActividad: (responsableId: string | null | undefined) => boolean;
+  canReasignarVendedorCrm: boolean;
+}
+
+const enLista = (lista: readonly AppRole[], role: AppRole | null | undefined) =>
+  !!role && lista.includes(role);
+
+/**
+ * Resuelve las capacidades del CRM (datos puros, sin React). Extraído de
+ * `usePermissions` sin cambiar el comportamiento: `vendedor` sólo gestiona sus
+ * propios registros (`vendedor_id`/`responsable_id` = usuario actual), el resto
+ * depende exclusivamente de las listas espejo de las policies RLS.
+ */
+export function resolverPermisosCrm(
+  role: AppRole | null | undefined,
+  userId: string | null | undefined,
+): PermisosCrmResueltos {
+  const propio = (ownerId: string | null | undefined) =>
+    !!ownerId && !!userId && ownerId === userId;
+  const esVendedorCrm = role === "vendedor";
+
+  const canGestionarTodosLosLeads = enLista(CRM_GESTION_TODOS_LEADS, role);
+  const canGestionarTodasLasOportunidades = enLista(CRM_STAFF_REGISTROS, role);
+  const canCrearOportunidad = enLista(CRM_ESCRITURA_REGISTROS, role);
+
+  return {
+    canConfigurarCrm: enLista(CRM_CONFIG, role),
+    canTomarLead: enLista(CRM_TOMAR_LEAD, role),
+    canGestionarTodosLosLeads,
+    canGestionarLead: (vendedorId) =>
+      canGestionarTodosLosLeads ||
+      (enLista(CRM_TOMAR_LEAD, role) && propio(vendedorId)),
+    canCrearLead: enLista(CRM_CREAR_LEAD, role),
+    canGestionarLeadsEnLote: canGestionarTodosLosLeads,
+    canCrearOportunidad,
+    canGestionarTodasLasOportunidades,
+    canGestionarOportunidad: (vendedorId) =>
+      canGestionarTodasLasOportunidades || (esVendedorCrm && propio(vendedorId)),
+    canCrearActividad: canCrearOportunidad,
+    canGestionarTodasLasActividades: canGestionarTodasLasOportunidades,
+    canGestionarActividad: (responsableId) =>
+      canGestionarTodasLasOportunidades || (esVendedorCrm && propio(responsableId)),
+    canReasignarVendedorCrm: enLista(CRM_REASIGNAR_VENDEDOR, role),
+  };
+}

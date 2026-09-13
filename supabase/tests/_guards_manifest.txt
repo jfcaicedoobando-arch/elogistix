@@ -117,3 +117,4 @@ supabase/tests/cxp_conceptos_cabecera_sin_duplicar_vinculo.sql
 supabase/tests/comision_pago_liquidacion_idempotente.sql
 supabase/tests/comision_pnl_base_cierre.sql
 supabase/tests/prorrateo_cotizacion_cantidad_multi_contenedor.sql
+supabase/tests/crear_embarque_borrador_roles.sql
