@@ -12425,7 +12425,6 @@ BEGIN
   IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
-
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   IF p_decision='sin_cambios' THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
