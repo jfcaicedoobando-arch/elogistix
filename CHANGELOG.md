@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.316] - 2026-09-13
+
+- **fix(cotización→embarque)**: una cotización ya Aceptada (o En operación) puede convertirse en embarque aunque su vigencia haya expirado; sus condiciones quedaron congeladas al aceptarse. Las cotizaciones no aceptadas siguen bloqueadas al vencer (`LC_COT_VENCIDA`). Se conservan validación de prospecto, empresa, estados e idempotencia.
+- **test**: nueva prueba `supabase/tests/cotizacion_vencida_convertible.sql` (aceptada vencida convertible / no aceptada vencida bloqueada), registrada en el manifiesto de guards.
+
+
 ## [13.823.315] - 2026-09-13
 
 - **fix(base)**: la baseline del esquema ahora refleja el cuerpo canónico vigente de `crear_embarque_borrador_core` (puestos autorizados: super_admin, admin_org, admin, gerente_operaciones, coordinador_logistico y operador). Se conserva la revocación anónima de `current_user_org_id`. Sin cambios de comportamiento.
