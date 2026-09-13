@@ -39,6 +39,8 @@ import { cn } from "@/lib/utils";
 export interface WizardStep {
   num: number;
   title: string;
+  /** Etiqueta corta para pantallas estrechas donde el título completo no cabe. */
+  shortTitle?: string;
 }
 
 export interface WizardDefaultFooterProps {

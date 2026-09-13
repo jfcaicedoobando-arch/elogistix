@@ -16,9 +16,9 @@ import { ejecutarSalidaWizard } from "@/features/cotizacion/components/wizard/sa
 
 import { notifyError } from "@/lib/ui/appFeedback";
 const WIZARD_STEPS = [
-  { num: 1, title: "Datos Generales" },
-  { num: 2, title: "Costos y utilidad" },
-  { num: 3, title: "Cotización del cliente" },
+  { num: 1, title: "Datos Generales", shortTitle: "Generales" },
+  { num: 2, title: "Costos y utilidad", shortTitle: "Costos" },
+  { num: 3, title: "Cotización del cliente", shortTitle: "Cliente" },
   { num: 4, title: "Resumen" },
 ];
 

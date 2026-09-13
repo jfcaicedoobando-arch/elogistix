@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.324] - 2026-09-13
+
+- **fix(cotización wizard UX)**: en el stepper de `/cotizaciones/nueva` se muestran etiquetas cortas en desktop estrecho (p. ej. "Cliente" en lugar de "Cotización del cliente") mientras el título completo sigue accesible vía `aria-label` y tooltip nativo. Se agregó `WizardStep.shortTitle` y regresión `StepIndicator.test.tsx`. Sin cambios de flujo ni dependencias.
+
 ## [13.823.323] - 2026-09-13
 
 - **fix(embarques UX)**: la CTA de la lista /embarques ya no dice “Nuevo embarque” (la creación directa no existe: sólo conversión desde cotización aceptada). Ahora dice “Ver cotizaciones” (encabezado y FAB) y lleva a Cotizaciones con el aviso explicativo vigente. Regresión: `EmbarquesHeaderActions.test.tsx`.
