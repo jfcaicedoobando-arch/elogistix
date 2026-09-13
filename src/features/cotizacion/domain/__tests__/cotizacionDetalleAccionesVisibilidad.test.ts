@@ -34,3 +34,31 @@ describe("visibilidadAcciones — embarque ya vinculado", () => {
     expect(vis.mostrarCrearEmbarque).toBe(true);
   });
 });
+
+/**
+ * v13.823.347 — `crear_embarque_borrador_core` acepta Aceptada o En operación.
+ * Una cotización En operación sin embarque debe poder generarlo (antes el aviso
+ * de la tarjeta apuntaba a un botón que no se renderizaba).
+ */
+describe("visibilidadAcciones — estado En operación sin embarque", () => {
+  const enOperacion = { ...base, estado: "En operación", tieneEmbarquesVinculados: false };
+
+  it("ofrece 'Crear embarque' al rol de operación", () => {
+    expect(visibilidadAcciones(enOperacion).mostrarCrearEmbarque).toBe(true);
+  });
+
+  it("no ofrece 'Crear embarque' a un rol sin permiso", () => {
+    const vis = visibilidadAcciones({ ...enOperacion, puedeCrearEmbarque: false });
+    expect(vis.mostrarCrearEmbarque).toBe(false);
+  });
+
+  it("no ofrece 'Re-cotizar' (la RPC exige Aceptada)", () => {
+    expect(visibilidadAcciones(enOperacion).mostrarRecotizar).toBe(false);
+  });
+
+  it("avisa la falta de venta en vez del botón cuando no hay importes", () => {
+    const vis = visibilidadAcciones({ ...enOperacion, tieneVenta: false });
+    expect(vis.mostrarCrearEmbarque).toBe(false);
+    expect(vis.mostrarFaltaVenta).toBe(true);
+  });
+});
