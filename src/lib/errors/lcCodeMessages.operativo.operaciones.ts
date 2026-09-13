@@ -56,6 +56,11 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "precio mayores a cero antes de aceptarla.",
   // v13.823.355 (YAGNI r2 · P1)
   LC_COTIZACION_ELIMINADA: "La cotización está eliminada y ya no admite cambios.",
+  // v13.823.356 (cobertura LC_* · re-aprobación de tarifa)
+  LC_RECOTIZADA_NO_DIRECTA:
+    "La re-cotización no se registra aquí: usa el botón Re-cotizar para generar una versión nueva.",
+  LC_REVALIDACION_DESACTUALIZADA:
+    "La tarifa cambió después de solicitar la re-aprobación. Revalida la cotización y pide una nueva re-aprobación.",
   LC_AGENTE_ORG_INVALIDA:
     "El agente de la cotización no pertenece a esta empresa. Revisa la tarifa antes de crear el embarque.",
   LC_COT_ESTADO_NO_ENVIABLE:

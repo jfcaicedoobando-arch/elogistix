@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.356] - 2026-09-13
+
+- **fix(ci)**: shard 2 verde sin relajar contratos.
+  - Catálogo LC_*: mensajes en español para `LC_RECOTIZADA_NO_DIRECTA` y `LC_REVALIDACION_DESACTUALIZADA` (faltaban y rompían `lcCodeCoverage.test.ts`).
+  - `aplicarTarifaDecidida.sql.test.ts` compara el espejo canónico contra la migración vigente org-scoped (`20260913220010_*`) en vez de la histórica `20260913001100_*` (sin reescribir historial aplicado), y la aserción del LEFT JOIN de recargos exige explícitamente `ON r.id = cc.costeo_tarifa_recargo_id AND r.organization_id = v_org` (aislamiento por organización).
+
 ## [13.823.355] - 2026-09-13
 
 - **fix(cotizaciones)**: lote YAGNI r2 (8 hallazgos P1).
