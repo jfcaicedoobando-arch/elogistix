@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.348] - 2026-09-13
+
+- **fix(permisos, cotizaciones)**: capacidad específica `canWriteCotizaciones` (espejo de `puede_escribir_cotizaciones()` / `_assert_writer_cotizacion`): contabilidad y tesorería ya no ven "Nueva cotización", duplicar, eliminar ni "Editar/Guardar costos"; conservan la lectura financiera con `canEdit`.
+- **fix(cotizaciones)**: el diálogo de eliminar permanece abierto cuando la eliminación falla (antes se cerraba y ocultaba el error).
+- **fix(cotizaciones)**: la conversión de prospecto abre el formulario con los datos de contacto y avisa cuando la precarga fiscal falla; antes la promesa rechazada dejaba al usuario sin modal ni mensaje.
+- **fix(edge)**: `enviar-cotizacion-email/handlers.ts` importa el helper canónico `enviarEmailPlantilla` (faltaba el import: fallaba el typecheck de Deno) y tipa la fila insertada de `cotizacion_envios`.
+- **fix(edge)**: `_shared/orgSlug.ts` acepta el builder *thenable* de PostgREST (`PromiseLike`), compatible con `SupabaseClient` 2.45.0.
+- **fix(tests)**: el guard estático de la Fase J valida la regla real de `puedeGenerarEmbarque` y `supabase/tests/solicitar_reaprobacion_tarifa_roles.sql` entra al manifiesto bloqueante.
+
 ## [13.823.347] - 2026-09-13
 
 - **fix(db, security)**: `recotizar_cotizacion` y `solicitar_reaprobacion_tarifa` pierden el privilegio de ejecución para `PUBLIC`/`anon` y sólo conservan `EXECUTE` explícito para `authenticated` y `service_role` (H6 de `audit:migrations`).
