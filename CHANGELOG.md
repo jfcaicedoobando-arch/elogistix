@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.355] - 2026-09-13
+
+- **fix(cotizaciones)**: lote YAGNI r2 (8 hallazgos P1).
+  - `subtotal` del encabezado se deriva SIN IVA (`cantidad * precio_unitario` por moneda, respaldo en `subtotal` para renglones legados); antes sumaba `concepto.total` (con IVA) e inflaba lista/KPIs/CRM al reguardar (COT-2026-0012: 2107.72 vs 1817). `total`/IVA quedan sólo para presentación. Regresión: `derivarSubtotalSinIva.test.ts`.
+  - `enviar-cotizacion-email`: nuevos candados en `envioGuards.ts` — prospecto sin `oportunidad_id` ⇒ `LC_COT_SIN_OPORTUNIDAD`; estados terminales no vigentes (Rechazada/Vencida/Archivada) ⇒ `LC_COT_ESTADO_NO_ENVIABLE`, aplicados en `prepare` y `send` (reenvío de Enviada/Aceptada intacto). Botón "Enviar por correo" alineado vía `cotizacionEnviablePorCorreo`. Regresiones: `envioGuards_test.ts`, `handlers_prepare_test.ts`, `envioCotizacion.test.ts`.
+  - `aceptar_cotizacion_version`: un prospecto sin oportunidad ligada ya no puede aceptarse (`LC_COT_SIN_OPORTUNIDAD`), evitando el estado imposible de COT-2026-0016; el banner sin oportunidad deja de ofrecer "Editar y vincular" cuando el estado no es Borrador/Solicitada y sugiere duplicar.
+  - Edición general de cotizaciones gateada con `canWriteCotizaciones` (ventas/operación, espejo de `puede_escribir_cotizaciones`) en `EditarCotizacion` y en las acciones de captura del detalle; contador/tesorero ya no llegan al wizard para fallar con 42501. Sólo la edición de costos conserva el gate financiero.
+  - Export CSV usa el mismo nombre visible que la tabla (`prospecto_empresa` en prospectos) vía `nombreMostradoCotizacion`.
+  - `crear_embarque_borrador_core`: la lectura de `costeo_agentes` se acota a la organización de la cotización (`LC_AGENTE_ORG_INVALIDA`); `revalidar_tarifa_cotizacion` rechaza cotizaciones soft-deleted (`LC_COTIZACION_ELIMINADA`). Guard nuevo: `supabase/tests/cotizaciones_yagni_r2_candados.sql`.
+
 ## [13.823.354] - 2026-09-13
 
 - **fix(seguridad, db)**: `public.puede_aprobar_tarifa_cotizacion` es tenant-aware por parámetro: nueva firma `(_user_id uuid DEFAULT auth.uid(), _org uuid DEFAULT public.current_user_org_id())` validada con `public.has_any_role_in_org(_user_id, ARRAY['admin','vendedor','ejecutivo_pricing'], _org)` (conserva la exención de `super_admin`); un usuario sin ninguna membresía mantiene el criterio de rol global. Se elimina la firma de un solo parámetro para evitar ambigüedad. `resolver_reaprobacion_tarifa` y `recotizar_cotizacion` la consultan con la organización de la cotización, no con la organización activa de la sesión. Linter ORG-SCOPE en verde sin whitelist; regresión ampliada en `test_rls_reg_reaprobacion_y_duplicar.sql` (TEST 7: autorizado en su org, no en la ajena, firma de 2 parámetros y uso de `has_any_role_in_org`).
