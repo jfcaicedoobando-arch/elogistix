@@ -2,6 +2,7 @@
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
 
+
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -19,32 +20,32 @@ DECLARE
   v_actor_id uuid := auth.uid();
   v_actor_email text;
   v_estados_bloqueantes text[] := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Cerrado'];
+  v_emb public.embarques;
+  v_min text[];
+  v_num_cont integer;
 BEGIN
   SELECT email INTO v_actor_email FROM auth.users WHERE id = v_actor_id;
   v_actor_email := COALESCE(v_actor_email, 'usuario:' || COALESCE(v_actor_id::text, 'desconocido'));
   v_resp := public.idempotency_claim(p_request_id, 'avanzar_estado_embarque');
   IF v_resp IS NOT NULL THEN
-    -- Claim en vuelo: otra petición con la misma llave la está ejecutando.
     IF v_resp ? '__idempotency_pending' THEN RETURN v_resp; END IF;
-    -- Respuesta cacheada de una ejecución anterior: se marca como replay para
-    -- que el frontend NO escriba bitácora ni la confunda con un avance real.
     RETURN jsonb_set(COALESCE(v_resp, '{}'::jsonb), '{replay}', 'true'::jsonb, true);
   END IF;
 
   -- BL-16: misma frase que cerrar_embarque — la papelera no avanza.
-  SELECT organization_id, fecha_llegada_real, estado, expediente, tipo
-    INTO v_org_id, v_flr, v_estado_actual, v_expediente, v_tipo
+  SELECT * INTO v_emb
   FROM embarques WHERE id = p_embarque_id AND deleted_at IS NULL
   FOR UPDATE;
-  IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
+  IF v_emb.id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
+  v_org_id := v_emb.organization_id;
+  v_flr := v_emb.fecha_llegada_real;
+  v_estado_actual := v_emb.estado;
+  v_expediente := v_emb.expediente;
+  v_tipo := v_emb.tipo;
   PERFORM public._assert_writer(v_org_id);
 
-  -- QA-R2 D-02: marca que el cambio de estado (incluida la cancelacion) viene
-  -- de esta RPC; el trigger embarques_assert_cancelacion_sin_cxc_cxp exige la
-  -- GUC para cancelar y aplica la misma validacion CxC/CxP en escritura directa.
   PERFORM set_config('app.via_rpc_estado', '1', true);
 
-  -- B-01: no cancelar una operación que todavía conserva CxC o CxP vivas.
   IF p_nuevo_estado = 'Cancelado' THEN
     IF EXISTS (
       SELECT 1 FROM public.facturas f
@@ -68,7 +69,44 @@ BEGIN
 
   PERFORM public.assert_transicion_embarque(v_estado_actual, p_nuevo_estado::public.estado_embarque, v_expediente);
 
-  -- v13.303.42: al confirmar un borrador sin folio, reservar expediente ahora.
+  -- v13.823.321: mínimos operativos para Confirmado. Misma regla canónica que
+  -- `faltantesParaConfirmado` en la UI: si el guard cambia, se cambian ambos.
+  IF p_nuevo_estado = 'Confirmado' THEN
+    v_min := ARRAY[]::text[];
+    SELECT count(*) INTO v_num_cont
+      FROM public.embarque_contenedores ec
+     WHERE ec.embarque_id = p_embarque_id;
+    IF v_num_cont = 0 AND COALESCE(btrim(v_emb.contenedor), '') <> '' THEN
+      v_num_cont := 1;
+    END IF;
+
+    IF COALESCE(btrim(v_emb.shipper), '') = '' THEN v_min := v_min || 'shipper (exportador)'; END IF;
+    IF COALESCE(btrim(v_emb.consignatario), '') = '' THEN v_min := v_min || 'consignatario'; END IF;
+    IF v_emb.etd IS NULL THEN v_min := v_min || 'ETD'; END IF;
+    IF v_emb.eta IS NULL THEN v_min := v_min || 'ETA'; END IF;
+    IF COALESCE(v_emb.peso_kg, 0) <= 0 THEN v_min := v_min || 'peso mayor a 0 kg'; END IF;
+
+    IF v_emb.modo = 'Marítimo' THEN
+      IF COALESCE(v_emb.tipo_servicio::text, '') <> 'LCL' AND v_num_cont = 0 THEN
+        v_min := v_min || 'al menos un contenedor';
+      END IF;
+      IF COALESCE(btrim(v_emb.naviera), '') = '' THEN v_min := v_min || 'naviera'; END IF;
+      IF COALESCE(btrim(v_emb.bl_master), '') = '' AND COALESCE(btrim(v_emb.bl_house), '') = '' THEN
+        v_min := v_min || 'BL master u house';
+      END IF;
+    ELSIF v_emb.modo = 'Aéreo' THEN
+      IF COALESCE(btrim(v_emb.aerolinea), '') = '' THEN v_min := v_min || 'aerolínea'; END IF;
+      IF COALESCE(btrim(v_emb.mawb), '') = '' THEN v_min := v_min || 'MAWB'; END IF;
+    ELSIF v_emb.modo = 'Terrestre' THEN
+      IF COALESCE(btrim(v_emb.transportista), '') = '' THEN v_min := v_min || 'transportista'; END IF;
+    END IF;
+
+    IF array_length(v_min, 1) IS NOT NULL THEN
+      RAISE EXCEPTION 'LC_CONFIRMADO_INCOMPLETO: %', array_to_string(v_min, ', ')
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+
   IF v_estado_actual = 'Borrador'::estado_embarque
      AND p_nuevo_estado = 'Confirmado'
      AND (v_expediente IS NULL OR v_expediente = '') THEN
@@ -113,8 +151,6 @@ BEGIN
     END IF;
   END IF;
 
-  -- BUG-10: guarda optimista — el FOR UPDATE del SELECT inicial bloquea la
-  -- fila, pero se conserva el predicado de estado como segunda línea de defensa.
   UPDATE embarques
      SET estado = p_nuevo_estado::estado_embarque, updated_at = now()
    WHERE id = p_embarque_id
@@ -124,11 +160,6 @@ BEGIN
       USING ERRCODE = '40001';
   END IF;
 
-  -- QA-R2 R-02: al cancelar, liberar las cotizaciones ligadas al embarque.
-  -- La reversión 'En operación' → 'Aceptada' es housekeeping (mismo patrón
-  -- que la papelera: GUC app.liberando_papelera ante guard_estado_cotizacion);
-  -- no se tocan subtotal/moneda/conceptos, así que el guard de cotización
-  -- congelada no aplica.
   IF p_nuevo_estado = 'Cancelado' THEN
     PERFORM set_config('app.liberando_papelera', 'on', true);
     UPDATE public.cotizaciones
@@ -160,6 +191,7 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
+$function$;
 
-;
+REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) TO authenticated, service_role;
