@@ -3,6 +3,8 @@
  * envío) y de `archivar_version_cotizacion`. Finanzas puede LEER el detalle,
  * pero no debe ver "Enviar por correo" ni "Re-cotizar".
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { visibilidadAcciones } from "@/features/cotizacion/domain/cotizacionDetalleAccionesVisibilidad";
@@ -46,5 +48,28 @@ describe("visibilidadAcciones — Re-cotizar por permiso", () => {
 
   it("muestra Re-cotizar a un rol de escritura", () => {
     expect(visibilidadAcciones({ ...base, puedeRecotizar: true }).mostrarRecotizar).toBe(true);
+  });
+});
+
+/**
+ * v13.823.355 (YAGNI r2 · P1) — regresión estática: la edición general de
+ * cotizaciones (wizard y acciones de captura) se gatea con
+ * `canWriteCotizaciones` (ventas/operación, igual que la RLS
+ * `puede_escribir_cotizaciones`). Con `canEdit` (que incluye finanzas)
+ * contador/tesorero entraban al wizard y el guardado fallaba con 42501.
+ */
+describe("gate de edición de cotizaciones", () => {
+  const leer = (ruta: string) => readFileSync(join(process.cwd(), ruta), "utf8");
+
+  it("EditarCotizacion usa canWriteCotizaciones", () => {
+    const src = leer("src/features/cotizacion/routes/EditarCotizacion.tsx");
+    expect(src).toContain("canWriteCotizaciones");
+    expect(src).not.toMatch(/!canEdit\b/);
+  });
+
+  it("el detalle gatea las acciones de captura con canWriteCotizaciones", () => {
+    const src = leer("src/features/cotizacion/components/detalle/CotizacionDetalleContenido.tsx");
+    expect(src).toContain("{canWriteCotizaciones && (");
+    expect(src).toContain("canEdit={canWriteCotizaciones}");
   });
 });

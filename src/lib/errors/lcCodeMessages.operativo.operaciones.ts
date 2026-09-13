@@ -54,7 +54,14 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_IMPORTE_REQUERIDO:
     "La cotización no tiene importe. Captura al menos un concepto con cantidad y " +
     "precio mayores a cero antes de aceptarla.",
+  // v13.823.355 (YAGNI r2 · P1)
+  LC_COTIZACION_ELIMINADA: "La cotización está eliminada y ya no admite cambios.",
+  LC_AGENTE_ORG_INVALIDA:
+    "El agente de la cotización no pertenece a esta empresa. Revisa la tarifa antes de crear el embarque.",
+  LC_COT_ESTADO_NO_ENVIABLE:
+    "La cotización ya no está vigente y no puede enviarse. Re-cotízala o duplícala para enviar una versión nueva.",
   LC_COTIZACION_VENCIDA: "La cotización venció y no puede convertirse en embarque.",
+
   LC_COTIZACION_ESTADO_INVALIDO:
     "La cotización no está en un estado válido para esta operación.",
   LC_COTIZACION_CON_EMBARQUE: "Esta cotización ya tiene un embarque asociado.",

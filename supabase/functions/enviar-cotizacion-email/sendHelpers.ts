@@ -17,6 +17,9 @@ export interface Cotizacion {
   cliente_id?: string | null;
   origen: string; destino: string; incoterm: string; modo: string;
   fecha_vigencia: string | null; estado: string;
+  /** v13.823.355 — necesarios para el candado de envío (prospecto/CRM). */
+  es_prospecto?: boolean | null;
+  oportunidad_id?: string | null;
 }
 
 export interface Ejecutivo { nombre?: string; email?: string; telefono?: string }

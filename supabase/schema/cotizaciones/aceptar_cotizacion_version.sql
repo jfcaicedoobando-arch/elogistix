@@ -22,6 +22,7 @@ DECLARE
   v_ganadora UUID;
   v_tipo_documento TEXT;
   v_subtotal NUMERIC;
+  v_es_prospecto BOOLEAN;
   v_conceptos JSONB;
   v_renglon_valido BOOLEAN;
 BEGIN
@@ -29,10 +30,10 @@ BEGIN
   -- se serializan y la segunda ve el estado ya terminal.
   SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id,
          created_by, oportunidad_id, version_aceptada,
-         tipo_documento, subtotal, conceptos_venta
+         tipo_documento, subtotal, conceptos_venta, es_prospecto
     INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id,
          v_creado_por, v_oportunidad_id, v_version_aceptada,
-         v_tipo_documento, v_subtotal, v_conceptos
+         v_tipo_documento, v_subtotal, v_conceptos, v_es_prospecto
     FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
     FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
@@ -104,6 +105,14 @@ BEGIN
       'version_aceptada', v_version_aceptada,
       'origen_aceptacion', v_origen,
       'sin_cambios', true);
+  END IF;
+
+  -- v13.823.355 (YAGNI r2 · P1): aceptar un prospecto sin oportunidad ligada
+  -- dejaba la cotización en un callejón sin salida (sin cliente, sin conversión,
+  -- sin embarque y sin edición). Se exige el vínculo CRM antes de aceptar.
+  IF COALESCE(v_es_prospecto, false) AND v_oportunidad_id IS NULL THEN
+    RAISE EXCEPTION 'LC_COT_SIN_OPORTUNIDAD: liga la cotización a una oportunidad del CRM antes de aceptarla'
+      USING ERRCODE='P0001';
   END IF;
 
   IF v_vigencia IS NOT NULL AND v_vigencia < CURRENT_DATE THEN

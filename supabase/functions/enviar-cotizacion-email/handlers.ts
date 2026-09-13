@@ -22,6 +22,8 @@ import {
 
 
 import { isEmail } from './emailValidation.ts';
+import { ESTADOS_NO_ENVIABLES, validarCotizacionEnviable } from './envioGuards.ts';
+export { ESTADOS_NO_ENVIABLES, validarCotizacionEnviable };
 import { jsonResponse } from "../_shared/response.ts";
 export { isEmail };
 
@@ -30,12 +32,14 @@ export async function handlePrepare(
   pdfPath: string,
   cors: Record<string, string>,
   userId: string,
-  organizationId: string,
+  cot: Cotizacion,
 ): Promise<Response> {
+  const bloqueo = validarCotizacionEnviable(cot, cors);
+  if (bloqueo) return bloqueo;
   // v13.823.346 — `prepare` sólo validaba membresía: cualquier miembro (incluido
   // `viewer` o finanzas) obtenía una URL firmada de subida y podía envenenar el
   // PDF de la cotización. Se exige el mismo rol de escritura que `send`.
-  const okRol = await authorizeOrgRole(admin, userId, organizationId, ROLES_ESCRITURA_COTIZACIONES);
+  const okRol = await authorizeOrgRole(admin, userId, cot.organization_id, ROLES_ESCRITURA_COTIZACIONES);
   if (!okRol) {
     return jsonResponse({ error: 'Tu rol no puede enviar cotizaciones' }, 403, cors);
   }
@@ -185,6 +189,8 @@ async function validarEnvio(
   parsed: SendBodyParsed,
   cors: Record<string, string>,
 ): Promise<Response | null> {
+  const bloqueo = validarCotizacionEnviable(cot, cors);
+  if (bloqueo) return bloqueo;
   if (parsed.validRecipients.length === 0) {
     return jsonResponse({ error: 'Al menos un destinatario válido es requerido' }, 400, cors);
   }
