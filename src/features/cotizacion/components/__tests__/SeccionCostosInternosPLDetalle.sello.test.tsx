@@ -64,6 +64,7 @@ function renderSeccion() {
       conceptosUSD={[]}
       conceptosMXN={[]}
       cotizacionUpdatedAt={S0}
+      estadoCotizacion="Borrador"
     />,
   );
 }
@@ -75,6 +76,7 @@ function vista(selloDetalle: string = S0) {
       conceptosUSD={[]}
       conceptosMXN={[]}
       cotizacionUpdatedAt={selloDetalle}
+      estadoCotizacion="Borrador"
     />
   );
 }

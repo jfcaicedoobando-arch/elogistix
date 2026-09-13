@@ -132,6 +132,7 @@ export function CotizacionDetalleContenido({
           conceptosUSD={conceptosVentaUSD}
           conceptosMXN={conceptosVentaMXN}
           cotizacionUpdatedAt={cotizacion.updated_at}
+          estadoCotizacion={cotizacion.estado}
         />
       )}
 

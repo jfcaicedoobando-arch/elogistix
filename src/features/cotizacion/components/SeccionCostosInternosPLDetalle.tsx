@@ -16,6 +16,7 @@ import {
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
+import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
 interface Props {
   cotizacionId: string;
@@ -26,6 +27,8 @@ interface Props {
    * editar. Sin él el servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA.
    */
   cotizacionUpdatedAt?: string | null;
+  /** v13.823.362 — El aviso de sincronización respeta estados inmutables. */
+  estadoCotizacion: EstadoCotizacion;
 }
 
 /**
@@ -33,7 +36,7 @@ interface Props {
  * Usado en CotizacionDetalle.
  */
 export default function SeccionCostosInternosPLDetalle({
-  cotizacionId, conceptosUSD, conceptosMXN,
+  cotizacionId, conceptosUSD, conceptosMXN, estadoCotizacion,
 }: Props) {
   // v13.823.348 — `actualizar_cotizacion_costos` exige `_assert_writer_cotizacion`
   // (SALES): finanzas ve el P&L en solo lectura, sin "Editar/Guardar costos".
@@ -133,6 +136,8 @@ export default function SeccionCostosInternosPLDetalle({
         visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
         // v13.823.360 — finanzas lee el aviso sin botón (la RPC exige SALES).
         puedeSincronizar={canEdit}
+        // v13.823.362 — en Aceptada/En operación el trigger rechaza el UPDATE.
+        estadoCotizacion={estadoCotizacion}
       />
 
       {canEdit && filas.length > 0 && (

@@ -14,7 +14,10 @@ import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaS
 import { fromDb } from "@/lib/supabase/cast";
 import { fetchCotizacionSelloSync } from "@/features/cotizacion/services/updatedAt";
 import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
+import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 import type { CostoCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
+
+const ESTADOS_INMUTABLES = new Set<EstadoCotizacion>(["Aceptada", "En operación"]);
 
 interface Props {
   cotizacionId: string;
@@ -28,6 +31,8 @@ interface Props {
    * tesorería; se muestra el aviso como texto de sólo lectura.
    */
   puedeSincronizar: boolean;
+  /** v13.823.362 — En Aceptada/En operación el trigger rechaza el UPDATE. */
+  estadoCotizacion: EstadoCotizacion;
 }
 
 function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
@@ -45,12 +50,15 @@ function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
   };
 }
 
-export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, visible, puedeSincronizar }: Props) {
+export function AvisoSincronizarConceptosVenta({
+  cotizacionId, costos, tasaIva, visible, puedeSincronizar, estadoCotizacion,
+}: Props) {
   const update = useUpdateCotizacion();
   if (!visible) return null;
 
   const filas = costos.map(aFilaLocal);
   const faltantes = costosSinConcepto(filas);
+  const estadoInmutable = ESTADOS_INMUTABLES.has(estadoCotizacion);
 
   const handleSync = async () => {
     if (faltantes.length > 0) {
@@ -106,11 +114,13 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
         <p>
           Los costos tienen precio de venta capturado, pero la cotización quedó con importes en $0.00
           (así se imprimiría el PDF).
-          {puedeSincronizar
-            ? " Puedes regenerar los conceptos de venta desde los costos."
-            : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
+          {estadoInmutable
+            ? " Esta cotización ya fue aceptada o está en operación; sus importes no pueden modificarse aquí. Para reflejar los cambios crea una nueva versión o usa Re-cotizar."
+            : puedeSincronizar
+              ? " Puedes regenerar los conceptos de venta desde los costos."
+              : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
         </p>
-        {puedeSincronizar && (
+        {puedeSincronizar && !estadoInmutable && (
           <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
             <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
           </Button>
