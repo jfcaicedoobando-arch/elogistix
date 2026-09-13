@@ -49,9 +49,15 @@ export function PageHeader({
           dejar una banda vacía bajo el subtítulo.
           v13.823.25 (fold 692px): el corte pasa de `sm` a `md` para que 640–767px
           —donde `useIsMobile()` sigue siendo true— use el layout móvil y no deje
-          un renglón vacío con sólo el botón "…". */}
-      <div className="flex flex-row items-start justify-between gap-3 md:flex-col lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
+          un renglón vacío con sólo el botón "…".
+          v13.823.26 (auditoría Desktop HD 1280px): en lg+ el título tenía un piso
+          de 0 (min-w-0), así que si las acciones no cabían, se comían el ancho del
+          título y truncaban el nombre y el contador. Se le da un piso mínimo al
+          título (`lg:min-w-[240px]`) y se permite que el contenedor envuelva
+          (`lg:flex-wrap`): si no cabe todo en una fila, las acciones bajan de
+          línea completas en vez de recortar el título. */}
+      <div className="flex flex-row items-start justify-between gap-3 md:flex-col lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1 lg:min-w-[240px]">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">
             {icon}
             <span className="truncate">{title}</span>
@@ -63,8 +69,10 @@ export function PageHeader({
         </div>
         {actions ? (
           // <md: acciones en la misma línea del título (menú compacto).
-          // md..lg: fila propia alineada a la derecha. lg+: sin envolver.
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 w-auto md:w-full lg:w-auto lg:flex-nowrap lg:justify-end">
+          // md..lg: fila propia alineada a la derecha. lg+: comparten fila con el
+          // título mientras haya espacio; si no, el contenedor padre (`lg:flex-wrap`)
+          // las manda a su propia línea completa antes de truncar el título.
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 w-auto md:w-full lg:w-auto lg:justify-end">
             {actions}
           </div>
         ) : null}
