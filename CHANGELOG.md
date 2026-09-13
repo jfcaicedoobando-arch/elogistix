@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.363] - 2026-09-13
+
+- **fix(tablas)**: `buildRowAuxClickHandler` interceptaba todo `auxclick` de botón central y abría el `href` de la fila sin comprobar `isInteractiveDescendant`; en la tabla de cotizaciones el clic central sobre el botón "Acciones" abría el detalle en pestaña nueva en vez de respetar el control.
+  - `buildRowAuxClickHandler` y el `onAuxClick` de las tarjetas móviles (`ResponsiveDataTable`) ahora excluyen controles internos igual que click/teclado.
+  - Regresión: `src/components/shared/dataTable/__tests__/rowHandlers.auxClick.test.ts` (fila abre pestaña nueva; botón y `data-no-row-nav` no; botón no central ignorado).
+
 ## [13.823.362] - 2026-09-13
 
 - **fix(cotizaciones)**: el aviso "Sincronizar conceptos de venta desde costos" podía mostrarse en cotizaciones `Aceptada`/`En operación` con costos desincronizados, pero el trigger `cotizaciones_guard_en_operacion` rechaza cualquier cambio a `conceptos_venta`/`subtotal`/`moneda` en esos estados (`LC_COTIZACION_INMUTABLE`). Incluso SALES recibía un error predecible al pulsar el botón.

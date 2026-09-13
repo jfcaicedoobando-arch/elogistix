@@ -9,7 +9,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 
 import { Inbox } from "lucide-react";
 import { useIsMobile } from "@/hooks/shared";
-import { handleRowClick, handleRowKeyDown } from "./rowNav";
+import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
 import type {
   DataTablePagination,
   TableDensity,
@@ -132,6 +132,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
                     onClick={(e) => handleRowClick(e, { href, navigate })}
                     onKeyDown={(e) => handleRowKeyDown(e, { href, navigate })}
                     onAuxClick={(e) => {
+                      if (isInteractiveDescendant(e.target)) return;
                       if (e.button === 1) {
                         e.preventDefault();
                         window.open(href, "_blank", "noopener,noreferrer");

@@ -48,6 +48,7 @@ export function buildRowKeyDownHandler<T>(b: RowBehavior<T>) {
 
 export function buildRowAuxClickHandler<T>(b: RowBehavior<T>) {
   return (e: MouseEvent) => {
+    if (isInteractiveDescendant(e.target)) return;
     if (b.navigable && b.href && e.button === 1) {
       e.preventDefault();
       window.open(b.href, "_blank", "noopener,noreferrer");
