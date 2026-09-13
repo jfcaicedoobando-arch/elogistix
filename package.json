@@ -47,6 +47,7 @@
     "audit:schema-functions": "tsx scripts/audit-schema-functions.ts",
     "audit:replay-mirror": "tsx scripts/audit-replay-mirror.ts",
     "audit:manifest": "tsx scripts/audit-release-manifest.ts",
+    "check:published-version": "tsx scripts/check-published-version.ts",
     "audit:no-env": "bun scripts/audit-no-env.ts",
     "audit:sonner": "bun scripts/audit-sonner-baseline.ts",
     "audit:soft-delete": "bun scripts/audit-soft-delete-reads.ts",
