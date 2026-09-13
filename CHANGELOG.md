@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.335] - 2026-09-13
+
+- **test(cotizaciones)**: la prueba de "cotización ganadora" ya trae un concepto de venta real (1 × 4,000 MXN) en la cotización que se acepta por sistema, en lugar de un importe sin renglones. La regla que exige importe para aceptar queda intacta.
+- **test(compras)**: la prueba de sobrecosto ahora comprueba que la reasignación de 70 USD contra un costo de 60 USD se rechaza al vincular (barrera primaria), y conserva el caso permitido (60 vs 60) y el cruce USD/MXN comparado en pesos. No se desactivó ningún candado.
+
 ## [13.823.334] - 2026-09-13
 
 - **fix(seguridad)**: se cerraron los permisos de la función de estadísticas de operaciones (FIX-H6-08): ya no es ejecutable de forma anónima y sigue disponible para usuarios con sesión, que es la que usa el tablero de Operaciones. No cambia ningún cálculo.
