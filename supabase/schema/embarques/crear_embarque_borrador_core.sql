@@ -217,7 +217,8 @@ BEGIN
     v_cot.carta_garantia, v_cot.dias_libres_destino,
     v_cot.seguro, v_cot.valor_seguro_usd,
     v_agente_id, v_naviera_id, v_agente_nombre, v_naviera_nombre,
-    v_tipo_servicio::tipo_servicio_maritimo
+    v_tipo_servicio::tipo_servicio_maritimo,
+    NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
 
