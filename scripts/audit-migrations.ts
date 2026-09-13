@@ -214,8 +214,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
  *    authenticated, service_role`); el archivo original queda como legacy
  *    auditado e inmutable.
+ * 8. FIX-H6-08 (2026-09-13): `20260913060931_6788e17b-a82f-4e97-b3d9-0355f1d9e7d2.sql`
+ *    re-emitió `public.operaciones_stats()` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260913172027_05620e41-58dd-4463-9102-673c98b4599f.sql` re-aplica los
+ *    permisos de forma idempotente (`REVOKE ALL … FROM PUBLIC, anon,
+ *    authenticated` + `GRANT EXECUTE … TO authenticated, service_role`);
+ *    `authenticated` conserva EXECUTE porque el dashboard de operaciones llama
+ *    la RPC directamente desde el cliente. El archivo original queda como
+ *    legacy auditado e inmutable.
  */
-const BASELINE = "20260913013508";
+const BASELINE = "20260913172027";
 
 
 
