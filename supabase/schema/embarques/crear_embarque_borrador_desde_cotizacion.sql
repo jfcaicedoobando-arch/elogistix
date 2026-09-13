@@ -23,10 +23,15 @@ BEGIN
   END IF;
 
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
-  IF p_decision='sin_cambios' THEN
+  -- v13.823.349 — `mantenida_por_operaciones` NO es una vía para saltarse la
+  -- re-aprobación: sólo vale cuando la revalidación no es bloqueante. Con
+  -- severidad bloqueante hay que resolver por `reaprobada_ventas` (con
+  -- aprobación vigente) o refrescar/sustituir la tarifa.
+  IF p_decision IN ('sin_cambios','mantenida_por_operaciones') THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
     END IF;
+
   ELSIF p_decision='reaprobada_ventas' THEN
     IF COALESCE((v_rev->>'reaprobacion_vigente')::boolean, false) IS NOT TRUE THEN
       RAISE EXCEPTION 'LC_REAPROBACION_NO_VIGENTE: la aprobación de ventas no corresponde al estado económico actual' USING ERRCODE='P0001';
@@ -70,7 +75,10 @@ BEGIN
         v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
     END IF;
 
-    IF p_decision <> 'sin_cambios' AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
+    -- v13.823.349 — sólo las decisiones que realmente resuelven el bloqueo
+    -- cierran la solicitud pendiente; `mantenida_por_operaciones` no.
+    IF p_decision IN ('reaprobada_ventas','refrescada','sustituida')
+       AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
       UPDATE public.cotizaciones
          SET estado_revalidacion='reaprobada', revalidacion_resuelta_en=now(), updated_at=now()
        WHERE id=p_cotizacion_id;

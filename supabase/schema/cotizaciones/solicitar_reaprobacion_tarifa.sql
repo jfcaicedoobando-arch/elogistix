@@ -35,10 +35,25 @@ BEGIN
       USING ERRCODE='42501';
   END IF;
 
+  -- v13.823.349 — la solicitud sólo aplica al flujo operativo y sólo cuando la
+  -- revalidación realmente bloquea. Antes se podía marcar
+  -- `pendiente_reaprobacion` (con notificación y bitácora) sobre un Borrador o
+  -- una cotización sin cambios de tarifa.
+  IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion,
+                          'En operación'::public.estado_cotizacion) THEN
+    RAISE EXCEPTION 'LC_COT_ESTADO_NO_OPERATIVO: sólo una cotización Aceptada o En operación puede pedir re-aprobación de tarifa (estado: %)', v_cot.estado
+      USING ERRCODE='P0001';
+  END IF;
 
   v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
+  IF COALESCE(v_revalidacion->>'severidad','') <> 'bloqueante' THEN
+    RAISE EXCEPTION 'LC_REVALIDACION_SIN_BLOQUEO: la tarifa vigente no requiere re-aprobación (severidad: %)', COALESCE(v_revalidacion->>'severidad','')
+      USING ERRCODE='P0001';
+  END IF;
+
   v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
     || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');
+
 
   UPDATE public.cotizaciones
      SET estado_revalidacion='pendiente_reaprobacion',
