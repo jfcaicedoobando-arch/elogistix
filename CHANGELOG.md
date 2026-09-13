@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.341] - 2026-09-13
+
+- **fix(embarques)**: el panel de filtros ya trata la selección como temporal: cerrarlo con la X, Esc o un clic fuera descarta lo elegido y sólo "Aplicar" (o "Limpiar") lo persiste. Antes elegir Estado=Borrador y cerrar dejaba la lista filtrada.
+- **fix(cotizaciones)**: el encabezado y la columna de IVA del detalle se derivan de la tasa real de cada renglón. Con conceptos a tasa 0% o exentos ya no aparece "+ IVA" ni "IVA (16%)", así que dejan de contradecir la nota al pie.
+- **fix(cotizaciones)**: las notas marcadas como internas (`[interno]`, `#interno`) y los residuos de pruebas quedan fuera del PDF y del correo; en el detalle se muestran aparte y etiquetadas como nota interna.
+- **fix(embarques)**: el detalle ya no cuenta como operativo un contenedor sin número: el título muestra los capturados y una etiqueta "Contenedor pendiente de captura".
+- **fix(cotizaciones)**: el historial de versiones explica que cada versión conserva el estado que tenía al congelarse y aclara el avance posterior (por ejemplo Aceptada → En operación), sin perder trazabilidad.
+
 ## [13.823.340] - 2026-09-13
 
 - **chore(calidad)**: se retiró `GrupoCostosProveedor.tsx` de las listas de excepción de tamaño (architecture-baseline y audit-report), pues ya mide 179 líneas (máximo 200). Corrige el fallo de CI por entrada obsoleta del baseline.
