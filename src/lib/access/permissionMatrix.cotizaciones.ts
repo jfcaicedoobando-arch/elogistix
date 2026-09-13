@@ -55,3 +55,27 @@ export const CREAR_EMBARQUE_BORRADOR: readonly AppRole[] = [
   "coordinador_logistico",
   "operador",
 ];
+
+/**
+ * v13.823.350 — Roles que pueden DUPLICAR una cotización. Espejo EXACTO de
+ * `public.duplicar_cotizacion(uuid)`: `admin`, `operador` y
+ * `ejecutivo_pricing`. Ventas (vendedor, gerente comercial, customer service)
+ * puede crear y editar cotizaciones, pero la RPC rechaza duplicar con 42501.
+ * Al ampliar la RPC hay que ampliar esta lista.
+ */
+export const DUPLICAR_COTIZACION: readonly AppRole[] = [
+  "admin",
+  "operador",
+  "ejecutivo_pricing",
+];
+
+/**
+ * v13.823.350 — Roles que pueden ELIMINAR (soft delete) una cotización. Espejo
+ * EXACTO del guard de `public.soft_delete_record`: `super_admin`, `admin` y
+ * `operador`.
+ */
+export const ELIMINAR_COTIZACION: readonly AppRole[] = [
+  "super_admin",
+  "admin",
+  "operador",
+];

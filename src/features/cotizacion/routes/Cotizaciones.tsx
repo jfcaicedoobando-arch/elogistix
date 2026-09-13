@@ -21,6 +21,7 @@ import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { EstadoSelect, ClienteSelect, SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
+import { usePermissions } from "@/hooks/shared";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
@@ -31,6 +32,7 @@ export default function Cotizaciones() {
   const c = useCotizacionesPageController();
   const navigate = useNavigate();
   const duplicar = useDuplicarCotizacion();
+  const { canDuplicateCotizacion, canDeleteCotizacion } = usePermissions();
   const { data: tcInicial } = useTcInicial();
 
   // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
@@ -40,7 +42,8 @@ export default function Cotizaciones() {
   const columns = useMemo(
     () =>
       buildCotizacionesColumns({
-        canEdit: c.canEdit,
+        canDuplicar: canDuplicateCotizacion,
+        canEliminar: canDeleteCotizacion,
         onEliminar: c.setCotizacionAEliminar,
         onDuplicar: (id: string) =>
           duplicar.mutate(id, {
@@ -52,7 +55,8 @@ export default function Cotizaciones() {
         eurMxn: tcInicial?.eurMxn,
       }),
     [
-      c.canEdit,
+      canDuplicateCotizacion,
+      canDeleteCotizacion,
       c.setCotizacionAEliminar,
       duplicar,
       navigate,
