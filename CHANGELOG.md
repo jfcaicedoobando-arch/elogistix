@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.364] - 2026-09-13
+
+- **fix(cotizaciones)**: el candado de "Exportar PDF" en cotizaciones con conceptos de venta en $0.00 siempre pedía "revisa costos y sincroniza los conceptos", pero en `Aceptada`/`En operación` (p.ej. COT-2026-0129) el trigger `cotizaciones_guard_en_operacion` hace inmutables `conceptos_venta`/`subtotal` y sincronizar falla.
+  - Nuevo helper `mensajeCotizacionSinImportes(estado, tieneEmbarque)` (`src/lib/domain/cotizacionSinImportes.ts`): en estados editables guía a sincronizar; en `Aceptada`/`En operación` o con embarque vinculado guía a Re-cotizar/nueva versión o revisión administrativa; en `Rechazada`/`Vencida`/`Archivada` guía a nueva versión o revisión administrativa.
+  - `CotizacionDetalle.tsx` usa el helper en el candado del PDF.
+  - Regresión: `src/lib/domain/__tests__/cotizacionSinImportes.test.ts` (10 casos por estado + embarque vinculado + estado nulo).
+
 ## [13.823.363] - 2026-09-13
 
 - **fix(tablas)**: `buildRowAuxClickHandler` interceptaba todo `auxclick` de botón central y abría el `href` de la fila sin comprobar `isInteractiveDescendant`; en la tabla de cotizaciones el clic central sobre el botón "Acciones" abría el detalle en pestaña nueva en vez de respetar el control.
