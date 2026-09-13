@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.333] - 2026-09-13
+
+- **fix(cotizaciones)**: el "Número de contenedores" ya sólo se pide en marítimo FCL. En aéreo, terrestre y multimodal desaparece del paso 1 y del resumen, y se guarda en 0 en lugar del 1 inventado que llegaba al embarque.
+- **fix(cotizaciones)**: marítimo FCL avisa "Captura el número de contenedores (mínimo 1)" con error inline y salto a la sección Cierre, en vez de corregir en silencio lo capturado; al elegir FCL arranca en 1.
+- **fix(cotizaciones)**: la sección Ruta de aéreo/terrestre/multimodal ya no muestra "Días libres en destino", "Carta garantía" ni "Días libres de almacenaje" (datos marítimos).
+- **fix(cotizaciones)**: la sección "Cierre" del paso 1 ya no queda pendiente para siempre en aéreo y terrestre.
+
 ## [13.823.332] - 2026-09-13
 
 - **fix(embarques)**: al convertir una cotización, los contenedores hijos sólo se crean en marítimo (LCL: una fila consolidada; FCL: las capturadas). Aéreo y Terrestre ya no nacen con un contenedor vacío, así que sus costos quedan a nivel expediente y no se prorratean contra un contenedor inexistente.
