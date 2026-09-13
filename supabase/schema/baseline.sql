@@ -12310,8 +12310,15 @@ BEGIN
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   WHERE COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-     AND (c->>'total')::numeric <> 0;
+   WHERE COALESCE(
+           NULLIF(
+             CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                  THEN (c->>'total')::numeric ELSE 0 END, 0),
+           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
+                ELSE 0 END
+         ) <> 0;
   IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
@@ -27794,6 +27801,16 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
+
+  IF NOT (v_is_super
+          OR has_role(auth.uid(), 'admin_org'::app_role)
+          OR has_role(auth.uid(), 'admin'::app_role)
+          OR has_role(auth.uid(), 'gerente_operaciones'::app_role)
+          OR has_role(auth.uid(), 'coordinador_logistico'::app_role)
+          OR has_role(auth.uid(), 'operador'::app_role)) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden solicitar la re-aprobación de tarifa'
+      USING ERRCODE='42501';
+  END IF;
   v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
     || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');
@@ -34728,8 +34745,9 @@ REVOKE ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uu
 GRANT ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
 REVOKE ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO service_role;
@@ -34933,8 +34951,9 @@ REVOKE ALL ON FUNCTION public.soft_delete_record(_table text, _id uuid) FROM PUB
 GRANT ALL ON FUNCTION public.soft_delete_record(_table text, _id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.soft_delete_record(_table text, _id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) TO authenticated;
-GRANT ALL ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) FROM anon;
+GRANT EXECUTE ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.sugerir_embarques_para_proveedor(_proveedor_id uuid, _organization_id uuid, _limit integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.sugerir_embarques_para_proveedor(_proveedor_id uuid, _organization_id uuid, _limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.sugerir_embarques_para_proveedor(_proveedor_id uuid, _organization_id uuid, _limit integer) TO service_role;

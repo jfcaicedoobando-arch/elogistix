@@ -37,6 +37,11 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
     // mutation con su mensaje real. Aquí sólo evitamos que el rechazo escale
     // al catch de la revalidación (que mostraría un aviso equivocado) o quede
     // como promesa no manejada.
+    // v13.823.347 — guard de reentrada compartido: Mantener/Refrescar/
+    // Sustituir/Re-aprobada también pasan por aquí, así que dos clics rápidos
+    // ya no lanzan dos decisiones antes del re-render.
+    if (enVueloRef.current) return;
+    enVueloRef.current = true;
     try {
       const embarqueId = await crearMut.mutateAsync({
         cotizacionId,
@@ -48,6 +53,8 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
       navigate(`/embarques/${embarqueId}`);
     } catch {
       /* notificado por useCrearEmbarqueBorradorConDecision */
+    } finally {
+      enVueloRef.current = false;
     }
   };
 
@@ -128,6 +135,8 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
   };
 
   const handleSolicitarReaprobacion = () => {
+    if (enVueloRef.current) return;
+    enVueloRef.current = true;
     reaprobarMut.mutate(
       {
         cotizacionId,
@@ -144,6 +153,9 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
       {
         onSuccess: () => {
           setModalOpen(false);
+        },
+        onSettled: () => {
+          enVueloRef.current = false;
         },
       },
     );

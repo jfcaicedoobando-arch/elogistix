@@ -21,6 +21,21 @@ BEGIN
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
 
+  -- v13.823.347 — misma puerta de rol que `crear_embarque_borrador_core`: sólo
+  -- administración u operación pueden pedir la re-aprobación. Antes cualquier
+  -- miembro (viewer, contador) podía invocarla directo y mover
+  -- `estado_revalidacion`, con bitácora y notificación incluidas.
+  IF NOT (v_is_super
+          OR has_role(auth.uid(), 'admin_org'::app_role)
+          OR has_role(auth.uid(), 'admin'::app_role)
+          OR has_role(auth.uid(), 'gerente_operaciones'::app_role)
+          OR has_role(auth.uid(), 'coordinador_logistico'::app_role)
+          OR has_role(auth.uid(), 'operador'::app_role)) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden solicitar la re-aprobación de tarifa'
+      USING ERRCODE='42501';
+  END IF;
+
+
   v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
     || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');

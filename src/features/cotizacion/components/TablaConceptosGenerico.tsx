@@ -6,6 +6,7 @@ import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/finan
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { etiquetaTasaIva, tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
+import { importeEfectivoConcepto } from "@/lib/domain/cotizacionDetalle";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
 interface Props {
@@ -57,12 +58,12 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                 const lineSubtotal = calcularSubtotal(concepto.cantidad, concepto.precio_unitario);
                 const tasaFila = resolverTasaConcepto(concepto, tasaIva);
                 const lineIva = calcularIVA(lineSubtotal, tasaFila);
-                // B-093: conceptos legacy sin `total` — caer al cálculo de
-                // línea en lugar de renderizar "USDNaN" / $0.00.
-                const totalGuardado = Number(concepto.total);
-                const lineTotal = esMXN || !Number.isFinite(totalGuardado)
+                // B-093 / v13.823.347: conceptos legacy sin `total` (o con
+                // total 0) usan el mismo importe efectivo que el encabezado y
+                // el PDF; antes la fila mostraba "USD 0.00" contra un total >0.
+                const lineTotal = esMXN
                   ? lineSubtotal + lineIva
-                  : totalGuardado;
+                  : importeEfectivoConcepto(concepto, tasaIva);
 
                 // v13.823.345: la nota del renglón pasa por el filtro de notas
                 // internas; si sólo era interna no se renderiza el subrenglón.

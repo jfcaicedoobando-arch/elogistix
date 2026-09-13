@@ -1,7 +1,73 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- v13.823.347 — H6: permisos explícitos de recotizar_cotizacion.
+REVOKE ALL ON FUNCTION public.recotizar_cotizacion(uuid, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.recotizar_cotizacion(uuid, text) TO authenticated, service_role;
 
+-- v13.823.347 — solicitar_reaprobacion_tarifa: puerta de rol de operación.
+CREATE OR REPLACE FUNCTION public.solicitar_reaprobacion_tarifa(p_cotizacion_id uuid, p_delta_jsonb jsonb)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_cot public.cotizaciones%ROWTYPE;
+  v_caller_org uuid := current_user_org_id();
+  v_is_super boolean := has_role(auth.uid(),'super_admin'::app_role);
+  v_operador_id uuid;
+  v_revalidacion jsonb;
+  v_delta_seguro jsonb;
+BEGIN
+  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+  IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
+    RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
+
+  -- v13.823.347 — misma puerta de rol que `crear_embarque_borrador_core`.
+  IF NOT (v_is_super
+          OR has_role(auth.uid(), 'admin_org'::app_role)
+          OR has_role(auth.uid(), 'admin'::app_role)
+          OR has_role(auth.uid(), 'gerente_operaciones'::app_role)
+          OR has_role(auth.uid(), 'coordinador_logistico'::app_role)
+          OR has_role(auth.uid(), 'operador'::app_role)) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden solicitar la re-aprobación de tarifa'
+      USING ERRCODE='42501';
+  END IF;
+
+  v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
+  v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
+    || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');
+
+  UPDATE public.cotizaciones
+     SET estado_revalidacion='pendiente_reaprobacion',
+         revalidacion_solicitada_en=now(), revalidacion_resuelta_en=NULL,
+         revalidacion_delta_jsonb=v_delta_seguro, updated_at=now()
+   WHERE id=p_cotizacion_id;
+
+  BEGIN v_operador_id := v_cot.operador::uuid;
+  EXCEPTION WHEN others THEN v_operador_id := NULL; END;
+  IF v_operador_id IS NOT NULL THEN
+    INSERT INTO public.notificaciones_internas(
+      organization_id,usuario_id,tipo,titulo,mensaje,enlace,entidad_tipo,entidad_id)
+    VALUES (v_cot.organization_id,v_operador_id,'tarifa_reaprobacion_requerida',
+      'Cotización requiere re-aprobación de tarifa',
+      'La cotización '||v_cot.folio||' tiene cambios en la tarifa vigente. Revisa y decide.',
+      '/cotizaciones/'||v_cot.id::text,'cotizacion',v_cot.id);
+  END IF;
+
+  INSERT INTO public.bitacora_actividad(
+    organization_id,usuario_id,usuario_email,modulo,accion,entidad_id,entidad_nombre,detalles)
+  SELECT v_cot.organization_id,auth.uid(),COALESCE((SELECT email FROM auth.users WHERE id=auth.uid()),''),
+    'Cotizaciones','reaprobacion_solicitada',v_cot.id,v_cot.folio,
+    jsonb_build_object('delta',v_delta_seguro);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.solicitar_reaprobacion_tarifa(uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.solicitar_reaprobacion_tarifa(uuid, jsonb) TO authenticated, service_role;
+
+-- v13.823.347 — crear_embarque_borrador_core: el conteo de monedas usa el
+-- importe efectivo (total, o cantidad x precio cuando el total legacy es
+-- nulo/0), para que una cotización mixta no se convierta sin tipo de cambio.
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -110,8 +176,6 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
-
-
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
     IF FOUND THEN
@@ -161,18 +225,13 @@ BEGIN
   END IF;
 
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
 
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
-  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
-  -- creado por conversión directa mostraba "Servicio —".
+  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL).
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -207,8 +266,6 @@ BEGIN
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
     tipo_servicio,
-    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
-    -- al embarque; antes el borrador nacía sin tipo de cambio.
     tipo_cambio_usd
   )
   VALUES (
@@ -216,8 +273,6 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
-    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
-    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
@@ -233,10 +288,6 @@ BEGIN
   RETURNING id INTO v_embarque_id;
 
   -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
-  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
-  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
-  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
-  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -270,7 +321,6 @@ BEGIN
       IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
     END LOOP;
   END IF;
-
 
   PERFORM public._crear_embarque_replicar_conceptos(
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
