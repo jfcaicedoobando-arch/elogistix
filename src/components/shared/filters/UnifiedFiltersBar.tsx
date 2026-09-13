@@ -26,6 +26,12 @@ export interface UnifiedFiltersBarProps {
   chips: ChipItem[];
   activeCount: number;
   onClearAll: () => void;
+  /**
+   * v13.823.341 — la selección dentro del panel es temporal: al abrirlo se
+   * toma una foto y al cerrarlo sin "Aplicar" se restaura.
+   */
+  snapshot?: () => unknown;
+  restore?: (foto: unknown) => void;
   className?: string;
 }
 
@@ -38,6 +44,8 @@ export function UnifiedFiltersBar({
   chips,
   activeCount,
   onClearAll,
+  snapshot,
+  restore,
   className,
 }: UnifiedFiltersBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -70,6 +78,8 @@ export function UnifiedFiltersBar({
             onOpenChange={setSheetOpen}
             activeCount={activeCount}
             onClearAll={onClearAll}
+            snapshot={snapshot}
+            restore={restore}
           >
             {isMobile && primary ? (
               <div className="space-y-3">{primary}</div>
