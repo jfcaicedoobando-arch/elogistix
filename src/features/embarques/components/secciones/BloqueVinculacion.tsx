@@ -55,7 +55,7 @@ export function BloqueVinculacion({
     <>
       <div className="space-y-2">
         <Label className={!cotizacionVinculada ? "text-destructive" : undefined}>
-          Vincular cotización Aceptada (obligatorio)
+          Cotización de origen (obligatorio)
         </Label>
 
         {cotizacionVinculada ? (
