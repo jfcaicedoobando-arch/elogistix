@@ -136,10 +136,9 @@ export function GrupoCostosProveedor({
                 return (
                   <TableRow key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
                     <TableCell
-                      className={cn(
-                        "sticky left-0 z-10 min-w-[200px]",
-                        idx % 2 === 1 ? "bg-muted/20" : "bg-card",
-                      )}
+                      // Fondo opaco: la columna fija no puede dejar ver el
+                      // contenido que pasa por debajo al desplazar.
+                      className="sticky left-0 z-10 min-w-[200px] bg-card"
                     >
                       {f.concepto}
                     </TableCell>
