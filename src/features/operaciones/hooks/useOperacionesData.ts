@@ -165,7 +165,7 @@ function mapOperador(op: ServerOperadorRaw): OperadorData {
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
  */
-export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
+export function useOperacionesData() {
   const { organizationId } = useOrgActiva();
   const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.operaciones.stats(organizationId),
