@@ -1,17 +1,3 @@
--- Fuente canónica de public.tg_pfc_validar_vinculo_costo() y su trigger.
--- v13.823.330 · Auditoría YAGNI #1: el vínculo factura de proveedor ↔ concepto
--- de costo se validaba sólo en cliente, así que era posible enlazar una factura
--- MXN contra un costo USD (7 vínculos históricos así en la base) y sobreasignar
--- un costo por concurrencia.
---
--- Reglas (server-side, atómicas, con bloqueo de la fila del costo):
---   * misma organización y mismo proveedor;
---   * misma moneda factura ↔ costo; la única conversión admitida es MXN↔USD y
---     exige el tipo de cambio congelado en la factura (`tipo_cambio_usd`);
---   * el monto acumulado vinculado no puede exceder el costo (tolerancia 5%
---     por IVA/redondeo del proveedor) cuando comparten moneda;
---   * los renglones fiscales sin `concepto_costo_id` siguen permitidos.
--- Los vínculos históricos NO se reescriben: sólo se bloquean altas/cambios nuevos.
 CREATE OR REPLACE FUNCTION public.tg_pfc_validar_vinculo_costo()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -60,8 +46,7 @@ BEGIN
     JOIN public.embarques e ON e.id = cc.embarque_id
    WHERE cc.id = NEW.concepto_costo_id;
 
-  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor), pf.moneda,
-         pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
+  SELECT pf.folio, pf.moneda, pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
     INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org, v_fac_tc
     FROM public.proveedor_facturas pf
    WHERE pf.id = NEW.proveedor_factura_id;
