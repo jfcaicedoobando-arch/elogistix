@@ -6,7 +6,9 @@
  * dos acciones y la RPC respondía 42501.
  */
 import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { render, renderHook, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { usePermissions } from "@/hooks/shared";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 
@@ -51,7 +53,7 @@ describe("permisos de duplicar/eliminar cotización", () => {
   });
 });
 
-function etiquetasAcciones(canDuplicar: boolean, canEliminar: boolean): string[] {
+async function etiquetasAcciones(canDuplicar: boolean, canEliminar: boolean): Promise<string[]> {
   const cols = buildCotizacionesColumns({
     canDuplicar,
     canEliminar,
@@ -59,9 +61,12 @@ function etiquetasAcciones(canDuplicar: boolean, canEliminar: boolean): string[]
     onDuplicar: () => {},
   });
   const acciones = cols.find((c) => c.id === "actions");
-  if (!acciones) return [];
-  const items = (acciones.meta as { items?: () => { label: string }[] } | undefined)?.items?.();
-  return (items ?? []).map((i) => i.label);
+  if (!acciones?.cell || typeof acciones.cell !== "function") return [];
+  // SAFE-CAST: la celda de acciones sólo consume `row.original`.
+  const ctx = { row: { original: { id: "c1" } } } as unknown as Parameters<typeof acciones.cell>[0];
+  render(<>{acciones.cell(ctx) as ReactNode}</>);
+  await userEvent.click(screen.getByRole("button", { name: "Acciones" }));
+  return screen.getAllByRole("menuitem").map((el) => el.textContent ?? "");
 }
 
 describe("buildCotizacionesColumns — columna de acciones", () => {
@@ -75,15 +80,15 @@ describe("buildCotizacionesColumns — columna de acciones", () => {
     expect(cols.some((c) => c.id === "actions")).toBe(false);
   });
 
-  it("sólo duplicar no muestra Eliminar", () => {
-    expect(etiquetasAcciones(true, false)).toEqual(["Duplicar"]);
+  it("sólo duplicar no muestra Eliminar", async () => {
+    expect(await etiquetasAcciones(true, false)).toEqual(["Duplicar"]);
   });
 
-  it("sólo eliminar no muestra Duplicar", () => {
-    expect(etiquetasAcciones(false, true)).toEqual(["Eliminar"]);
+  it("sólo eliminar no muestra Duplicar", async () => {
+    expect(await etiquetasAcciones(false, true)).toEqual(["Eliminar"]);
   });
 
-  it("ambas capacidades muestran las dos acciones", () => {
-    expect(etiquetasAcciones(true, true)).toEqual(["Duplicar", "Eliminar"]);
+  it("ambas capacidades muestran las dos acciones", async () => {
+    expect(await etiquetasAcciones(true, true)).toEqual(["Duplicar", "Eliminar"]);
   });
 });
