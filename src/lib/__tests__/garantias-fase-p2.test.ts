@@ -26,7 +26,18 @@ function readLatestContaining(marker: string): string {
 }
 
 describe("Fase P.2 — Garantías re-evaluables (v13.301.88)", () => {
-  const sql = readLatestContaining("set_garantia_estado");
+  // v13.823.312: `set_garantia_estado` se redefinió en una migración posterior
+  // (candado de embarque cerrado) que NO instala la máquina de estados; el
+  // marcador debe apuntar a la migración que sí crea las invariantes P.2.
+  const sql = readLatestContaining("transicion_garantia_valida");
+  /** Definición vigente de la RPC (la más reciente que la reemplaza). */
+  const sqlRpcVigente = readLatestContaining(
+    "CREATE OR REPLACE FUNCTION public.set_garantia_estado",
+  );
+  /** ACL vigente de la RPC. */
+  const sqlAclVigente = readLatestContaining(
+    "GRANT EXECUTE ON FUNCTION public.set_garantia_estado",
+  );
 
   it("define la función transicion_garantia_valida con el grafo dirigido", () => {
     expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.transicion_garantia_valida/);
