@@ -41,6 +41,8 @@ DECLARE
   v_agente_nombre text;
   v_naviera_nombre text;
   v_tipo_servicio text;
+  v_monedas       integer;
+  v_es_fcl        boolean;
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id = p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -72,6 +74,33 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
+
+  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
+  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
+  -- implícito (o 1:1) deformaría el P&L del embarque.
+  SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
+    INTO v_monedas
+    FROM jsonb_array_elements(
+           CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
+                THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+   WHERE COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+     AND (c->>'total')::numeric <> 0;
+
+  IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
+    RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
+  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
+  v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
+    AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
+  IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
+    RAISE EXCEPTION 'LC_COT_CONTENEDORES_REQUERIDOS: la cotización % es marítima FCL y no indica cuántos contenedores; captura el número de contenedores (1 o más) antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
+
 
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
