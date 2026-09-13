@@ -74,6 +74,17 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     const kind = clasificarAvanceError(msg);
     if (kind === "block_docs") { setBlockDocsOpen(true); return; }
     if (kind === "block_fecha_llegada") { setBlockFechaLlegadaOpen(true); return; }
+    if (kind === "block_confirmado") {
+      const detalle = faltantesDesdeErrorConfirmado(msg);
+      notifyWarning(undefined, {
+        title: "Aún falta información para confirmar",
+        description: detalle
+          ? `Captura estos datos y vuelve a intentar: ${detalle}.`
+          : "Captura los datos pendientes del embarque y vuelve a intentar.",
+      });
+      return;
+    }
+
     if (kind === "transicion_invalida") {
       notifyError(undefined, {
         title: "Transición de estado no permitida",
