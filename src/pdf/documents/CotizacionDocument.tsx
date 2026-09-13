@@ -66,18 +66,27 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
   ];
 }
 
-function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
-  return [
+/**
+ * v13.823.342 — las columnas de IVA en MXN salen de la tasa real de los
+ * renglones (igual que `TablaConceptosGenerico`). Antes se imprimía siempre la
+ * columna IVA y el título "MXN + IVA" aunque todo estuviera a tasa 0%/exento.
+ */
+function columnasMXN(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
+  const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "MXN") },
     { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => montoTabla(r.cantidad * r.precio_unitario, "MXN") },
+  ];
+  if (!hayIva) return base;
+  return [
+    ...base,
     { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
       render: (r) => {
         const tasa = resolverTasaConcepto(r, tasaIva);
-        return montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN");
+        return tasa > 0 ? montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN") : "—";
       } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
       render: (r) => {
@@ -86,6 +95,13 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
       } },
   ];
 }
+
+/** Porcentaje único de IVA a mostrar en totales; `undefined` si hay tasas mixtas. */
+function pctUnico(filas: ReadonlyArray<ConceptoVentaCotizacion>, tasaIva: number): number | undefined {
+  const tasas = tasasEfectivas(filas, tasaIva);
+  return tasas.length === 1 ? tasas[0] : undefined;
+}
+
 
 export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
