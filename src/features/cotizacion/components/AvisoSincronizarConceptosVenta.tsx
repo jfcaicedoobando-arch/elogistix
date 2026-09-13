@@ -12,7 +12,8 @@ import { useUpdateCotizacion } from "@/features/cotizacion/hooks";
 import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
 import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { fromDb } from "@/lib/supabase/cast";
-import { fetchCotizacionUpdatedAt } from "@/features/cotizacion/services/updatedAt";
+import { fetchCotizacionSelloSync } from "@/features/cotizacion/services/updatedAt";
+import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
 import type { CostoCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
 
 interface Props {
