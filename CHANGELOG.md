@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.314] - 2026-09-13
+
+- **fix(base · cotización→embarque)**: se re-emitió la función interna que crea el borrador de embarque para que la versión viva coincida con el archivo canónico (misma lista de puestos autorizados, validación de empresa, estados Aceptada/En operación, bloqueo de prospectos e idempotencia). Sin cambios de comportamiento.
+- **fix(seguridad)**: la baseline del esquema ya no espera acceso anónimo a `current_user_org_id`; se conservan sesión válida y procesos del sistema.
+- **test**: el guard `supabase/tests/crear_embarque_borrador_roles.sql` quedó registrado en el manifiesto de guards para ejecutarse en CI.
+- **refactor(Power of 10)**: la resolución de permisos del CRM se movió a `permissionMatrix.crm` y `usePermissions.ts` baja de 200 líneas; permisos idénticos.
+
+
 ## [13.823.313] - 2026-09-13
 
 - **fix(permisos · cotización→embarque)**: "Crear embarque" desde una cotización aceptada ahora depende de una sola capability central (`CREAR_EMBARQUE_DESDE_COTIZACION`): administración (super admin, admin de empresa, admin), operación (gerente de operaciones, coordinador logístico) y el rol legado operador. El diálogo de éxito del asistente ya no ofrece el atajo a roles sin permiso. Comercial/KAM, pricing, gerente visor, finanzas, servicio al cliente, sólo lectura, portal de cliente y agente de carga no lo ven.
