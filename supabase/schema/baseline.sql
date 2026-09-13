@@ -12428,7 +12428,8 @@ BEGIN
          '/embarques/' || v_embarque_id::text
   FROM public.organization_members om
   WHERE om.organization_id = v_cot.organization_id
-    AND om.role IN ('admin'::app_role, 'operador'::app_role)
+    AND om.role IN ('admin'::app_role, 'admin_org'::app_role, 'operador'::app_role,
+                    'gerente_operaciones'::app_role, 'coordinador_logistico'::app_role)
     AND om.user_id <> auth.uid();
   RETURN v_embarque_id;
 END;
