@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.322] - 2026-09-13
+
+- **fix(arquitectura)**: `Cotizaciones.tsx` quedó en 191 líneas (≤200): las pestañas de segmento se extrajeron a `SegmentoTabs` en `CotizacionesFilterSelects.tsx`, sin cambios de comportamiento. Cierra el fallo de CI en `audit-report`/`architecture-baseline` por archivo >200 líneas.
+
 ## [13.823.321] - 2026-09-13
 
 - **fix(embarques consistencia)**: la confirmación de un embarque ahora exige los mismos datos que el formulario marca como obligatorios (shipper, consignatario, ETD y ETA) además de los mínimos previos (peso > 0, y por modo: naviera/BL, aerolínea/MAWB, transportista; contenedor salvo LCL). Regla única compartida entre UI y `avanzar_estado_embarque` (`LC_CONFIRMADO_INCOMPLETO: <lista>`), con mensaje completo de faltantes. Se conservan idempotencia, `FOR UPDATE`, validación de tenant y máquina de estados. Nuevas pruebas: `confirmadoGate.test.ts` y guard `supabase/tests/embarque_confirmado_minimos.sql`.
