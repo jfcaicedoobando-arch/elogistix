@@ -41,7 +41,7 @@ export function CotizacionDetalleContenido({
     abrirDialogConvertir, handleConvertir, convertirProspecto, navigate, aceptar,
   } = acciones;
   const { user } = useAuth();
-  const { canAltaCliente, canCrearEmbarqueDesdeCotizacion } = usePermissions();
+  const { canAltaCliente, canCrearEmbarqueDesdeCotizacion, canWriteCotizaciones } = usePermissions();
   const { autorizacion } = useClienteAutorizacion(
     (cotizacion as { cliente_id?: string | null }).cliente_id ?? null,
   );
@@ -85,7 +85,10 @@ export function CotizacionDetalleContenido({
       )}
 
       {cotizacion.es_prospecto && !cotizacion.oportunidad_id && (
-        <CotizacionSinOportunidadBanner cotizacionId={cotizacion.id} canEdit={canEdit} />
+        <CotizacionSinOportunidadBanner
+          cotizacionId={cotizacion.id}
+          canWriteCotizaciones={canWriteCotizaciones}
+        />
       )}
 
       {cotizacion.es_prospecto && (

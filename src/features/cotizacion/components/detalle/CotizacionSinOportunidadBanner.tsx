@@ -13,10 +13,15 @@ import { Button } from "@/components/ui/button";
 
 interface Props {
   cotizacionId: string;
-  canEdit: boolean;
+  /**
+   * v13.823.349 — capacidad de ESCRITURA de cotizaciones (SALES). Antes llegaba
+   * el `canEdit` amplio y finanzas/lectura veían "Editar y vincular" aunque el
+   * formulario y la RPC las rechazan.
+   */
+  canWriteCotizaciones: boolean;
 }
 
-export function CotizacionSinOportunidadBanner({ cotizacionId, canEdit }: Props) {
+export function CotizacionSinOportunidadBanner({ cotizacionId, canWriteCotizaciones }: Props) {
   return (
     <Alert variant="destructive">
       <AlertTriangle className="h-4 w-4" />
@@ -26,7 +31,8 @@ export function CotizacionSinOportunidadBanner({ cotizacionId, canEdit }: Props)
           Esta cotización no está ligada a una oportunidad, por lo que no se puede enviar al
           prospecto. Edítala y vincúlala a un prospecto u oportunidad del CRM.
         </span>
-        {canEdit && (
+        {canWriteCotizaciones && (
+
           <Button size="sm" variant="outline" asChild>
             <Link to={`/cotizaciones/${cotizacionId}/editar`}>
               <Link2 className="mr-2 h-4 w-4" />

@@ -64,8 +64,16 @@ export function aplicarFiltrosCotizaciones<T extends FiltrableQuery>(
   if (f.organizationId) q = q.eq("organization_id", f.organizationId) as T;
 
   if (f.search.trim()) {
-    q = q.or(orIlike(["folio", "cliente_nombre", "descripcion_mercancia"], f.search)) as T;
+    // v13.823.349 — `prospecto_empresa` es la columna que la tabla MUESTRA en el
+    // segmento Prospectos: sin ella, buscar por la empresa visible daba cero.
+    q = q.or(
+      orIlike(
+        ["folio", "cliente_nombre", "prospecto_empresa", "descripcion_mercancia"],
+        f.search,
+      ),
+    ) as T;
   }
+
   if (f.filterEstado !== "todos") q = q.eq("estado", f.filterEstado) as T;
   if (f.filterCliente !== "todos") q = q.eq("cliente_id", f.filterCliente) as T;
 

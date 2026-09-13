@@ -70,7 +70,12 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "La tarifa seleccionada no es válida para esta operación. Vuelve a seleccionar una tarifa compatible de tu organización.",
   LC_REAPROBACION_NO_VIGENTE:
     "La aprobación de ventas ya no corresponde a la tarifa actual. Vuelve a revisar los cambios y solicita una nueva aprobación.",
+  LC_COT_ESTADO_NO_OPERATIVO:
+    "Sólo una cotización aceptada o en operación puede pedir re-aprobación de tarifa.",
+  LC_REVALIDACION_SIN_BLOQUEO:
+    "La tarifa vigente no cambió lo suficiente para pedir re-aprobación. Puedes continuar con la conversión.",
   LC_RESPUESTA_INVALIDA: "La respuesta del cliente no es válida.",
+
 
   // ── Ola 7 · cronología de eventos de embarque ──────────────────────────
   LC_EVENTO_FECHA_FUTURA:
