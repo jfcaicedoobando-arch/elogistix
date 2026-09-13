@@ -4,6 +4,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { LC_CODE_MESSAGES } from "@/lib/errors/lcCodeMessages";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { EMBARQUE_DETAIL_COLUMNS } from "../columns";
 
 type EmbarqueRow = Tables<"embarques">;
