@@ -89,7 +89,7 @@ describe("useServerPagedList", () => {
     expect(result.current.rows).toEqual([]);
   });
 
-
+  it("refetch cuando cambia search o filtros", async () => {
     const fetcher = vi.fn().mockResolvedValue({ rows: [], count: 0 });
     const { result } = renderHook(
       () =>
