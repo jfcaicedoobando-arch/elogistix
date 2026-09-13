@@ -26,7 +26,7 @@ describe("R179-01/PDF-A — semántica fiscal de las columnas del PDF", () => {
   it("MXN con aplica_iva=false y tasa 0.16 heredada: IVA 0 y total 100", () => {
     const cols = columnasMXN(0.16);
     const r = fila({ aplica_iva: false, tasa_iva_aplicada: 0.16 });
-    expect(celda(cols, "iva", r)).toContain("0.00");
+    expect(celda(cols, "iva", r)).toBe("—");
     expect(celda(cols, "total", r)).toContain("100.00");
   });
 

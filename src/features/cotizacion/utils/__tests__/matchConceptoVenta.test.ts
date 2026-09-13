@@ -45,3 +45,15 @@ describe("matchConceptoVenta", () => {
     expect(matchConceptoVenta([concepto("")], "   ")).toBeUndefined();
   });
 });
+
+describe("matchConceptoVenta — ambigüedad (v13.823.345)", () => {
+  it("dos conceptos con el mismo nombre → undefined (no elige el primero)", () => {
+    const conceptos = [concepto("Flete"), concepto("flete  ")];
+    expect(matchConceptoVenta(conceptos, "Flete")).toBeUndefined();
+  });
+
+  it("nombre único entre duplicados de otro nombre sigue emparejando", () => {
+    const conceptos = [concepto("Flete"), concepto("Flete"), concepto("Maniobras")];
+    expect(matchConceptoVenta(conceptos, "Maniobras")?.descripcion).toBe("Maniobras");
+  });
+});
