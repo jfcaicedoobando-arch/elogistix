@@ -50,8 +50,8 @@ function renderYClick(costos: CostoCotizacion[]) {
   fireEvent.click(screen.getByRole("button", { name: /Sincronizar conceptos de venta/i }));
 }
 
-/** buildConceptosFromCostos guarda precio_unitario sin IVA; el subtotal del encabezado es la suma sin IVA. */
-const sinIva = (venta: number) => Math.round((venta / 1.16) * 100) / 100;
+/** `precio_unitario` del concepto ES la venta sin IVA; el encabezado suma esa base. */
+
 
 describe("AvisoSincronizarConceptosVenta — subtotal y moneda coherentes", () => {
   beforeEach(() => {
@@ -64,7 +64,7 @@ describe("AvisoSincronizarConceptosVenta — subtotal y moneda coherentes", () =
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
     const { data } = mutateAsync.mock.calls[0][0];
     expect(data.moneda).toBe("USD");
-    expect(data.subtotal).toBeCloseTo(sinIva(1160), 2);
+    expect(data.subtotal).toBe(1160);
   });
 
   it("sólo MXN: subtotal incluye los conceptos MXN y moneda MXN (antes guardaba 0)", async () => {
@@ -72,7 +72,7 @@ describe("AvisoSincronizarConceptosVenta — subtotal y moneda coherentes", () =
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
     const { data } = mutateAsync.mock.calls[0][0];
     expect(data.moneda).toBe("MXN");
-    expect(data.subtotal).toBeCloseTo(sinIva(23200), 2);
+    expect(data.subtotal).toBe(23200);
     expect(data.subtotal).toBeGreaterThan(0);
   });
 
@@ -82,7 +82,7 @@ describe("AvisoSincronizarConceptosVenta — subtotal y moneda coherentes", () =
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
     const { data } = mutateAsync.mock.calls[0][0];
     expect(data.moneda).toBe("MXN");
-    expect(data.subtotal).toBeCloseTo(sinIva(23200) + sinIva(1160) * 20, 2);
+    expect(data.subtotal).toBe(23200 + 1160 * 20);
   });
 
   it("mixta sin TC: falla cerrado con el mensaje de cotización mixta y NO escribe", async () => {
