@@ -142,7 +142,10 @@ export default function Cotizaciones() {
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
-            data={deferredPaginated}
+            // Al cambiar de segmento/filtro, la consulta anterior sigue en
+            // `deferredPaginated` (placeholder); vaciar `data` hace que el
+            // esqueleto se pinte en vez de filas del segmento equivocado.
+            data={c.isPlaceholderData ? [] : deferredPaginated}
             // R-06: mientras el valor diferido va por detrás de la consulta real
             // seguimos mostrando el esqueleto; si no, la tabla parpadeaba a
             // "No se encontraron cotizaciones" con los KPIs ya en 3.
