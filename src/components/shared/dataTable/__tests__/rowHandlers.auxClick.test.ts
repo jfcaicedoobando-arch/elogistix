@@ -26,10 +26,11 @@ function evento(target: EventTarget | null, button = 1): MouseEvent {
   return { button, target, preventDefault: vi.fn() } as unknown as MouseEvent;
 }
 
-let openSpy: ReturnType<typeof vi.spyOn>;
+let openSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-  openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  openSpy = vi.fn(() => null);
+  vi.stubGlobal("open", openSpy);
 });
 
 afterEach(() => {
