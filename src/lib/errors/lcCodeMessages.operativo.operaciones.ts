@@ -16,6 +16,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_EMBARQUE_NO_ENCONTRADO: "El embarque no existe o fue eliminado.",
   LC_EMBARQUE_ELIMINADO: "El embarque ya fue eliminado.",
   LC_EMBARQUE_BLOQUEADO: "El embarque está bloqueado y no admite cambios.",
+  // v13.823.312 — candados de cierre (A-1/A-2): el embarque cerrado congela
+  // importes, garantías y vínculos financieros hasta que se reabre.
+  LC_EMBARQUE_CERRADO:
+    "El embarque está cerrado: sus importes y vínculos financieros quedaron congelados. Reábrelo para poder hacer correcciones.",
   LC_CIERRE_SOLO_RPC:
     "El cierre del embarque debe hacerse desde el flujo oficial (no editable manualmente).",
   LC_CIERRE_AUTOMATICO_NO_APLICA:
