@@ -88,16 +88,16 @@ describe("Fase P.2 — Garantías re-evaluables (v13.301.88)", () => {
   });
 
   it("expone set_garantia_estado como RPC SECURITY DEFINER con search_path fijo", () => {
-    expect(sql).toMatch(
-      /CREATE OR REPLACE FUNCTION public\.set_garantia_estado\([\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path = public/,
+    expect(sqlRpcVigente).toMatch(
+      /CREATE OR REPLACE FUNCTION public\.set_garantia_estado\([\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path (?:=|TO) '?public'?/,
     );
   });
 
   it("revoca PUBLIC y concede EXECUTE sólo a authenticated y service_role", () => {
-    expect(sql).toMatch(
+    expect(sqlAclVigente).toMatch(
       /REVOKE (ALL |EXECUTE )?ON FUNCTION public\.set_garantia_estado[\s\S]*?FROM PUBLIC/,
     );
-    expect(sql).toMatch(
+    expect(sqlAclVigente).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.set_garantia_estado[\s\S]*?authenticated[\s\S]*?service_role/,
     );
   });

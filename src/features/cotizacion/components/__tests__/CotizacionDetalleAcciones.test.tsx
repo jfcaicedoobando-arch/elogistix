@@ -83,25 +83,29 @@ describe("CotizacionDetalleAcciones — permisos espejo de las RPC", () => {
     });
   }
 
+  // v13.823.306 — `crear_embarque_borrador_core` autoriza administración y
+  // operación (incluye gerente_operaciones y coordinador_logistico); comercial
+  // y finanzas siguen fuera.
   const sinCrearEmbarque = [
     "contador",
     "gerente_comercial",
     "vendedor",
     "ejecutivo_pricing",
-    "coordinador_logistico",
-    "gerente_operaciones",
   ] as const;
+  const conCrearEmbarque = ["operador", "coordinador_logistico", "gerente_operaciones"] as const;
 
   for (const rol of sinCrearEmbarque) {
-    it(`${rol} NO ve Crear embarque en Aceptada (sólo admin/operador/super_admin)`, () => {
+    it(`${rol} NO ve Crear embarque en Aceptada (la RPC lo rechazaría)`, () => {
       renderAcciones({ estado: "Aceptada", total: 1500, rol });
       expect(screen.queryByRole("button", { name: /crear embarque/i })).not.toBeInTheDocument();
     });
   }
 
-  it("operador sí ve Crear embarque en Aceptada", () => {
-    renderAcciones({ estado: "Aceptada", total: 1500, rol: "operador" });
-    expect(screen.getByRole("button", { name: /crear embarque/i })).toBeInTheDocument();
-  });
+  for (const rol of conCrearEmbarque) {
+    it(`${rol} sí ve Crear embarque en Aceptada (la RPC lo autoriza)`, () => {
+      renderAcciones({ estado: "Aceptada", total: 1500, rol });
+      expect(screen.getByRole("button", { name: /crear embarque/i })).toBeInTheDocument();
+    });
+  }
 });
 
