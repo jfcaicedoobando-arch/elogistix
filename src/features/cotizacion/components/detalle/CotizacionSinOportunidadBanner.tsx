@@ -19,19 +19,32 @@ interface Props {
    * formulario y la RPC las rechazan.
    */
   canWriteCotizaciones: boolean;
+  /**
+   * v13.823.355 — sólo Borrador/Solicitada son editables. En cualquier otro
+   * estado el CTA "Editar y vincular" prometía una acción que el wizard
+   * rechaza, dejando al usuario sin salida.
+   */
+  estadoCotizacion?: string | null;
 }
 
-export function CotizacionSinOportunidadBanner({ cotizacionId, canWriteCotizaciones }: Props) {
+/** Estados en los que el wizard sí permite editar y vincular. */
+const ESTADOS_EDITABLES = ["Borrador", "Solicitada"];
+
+export function CotizacionSinOportunidadBanner({
+  cotizacionId, canWriteCotizaciones, estadoCotizacion,
+}: Props) {
+  const editable = ESTADOS_EDITABLES.includes(String(estadoCotizacion ?? "Borrador"));
   return (
     <Alert variant="destructive">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Sin oportunidad en el CRM</AlertTitle>
       <AlertDescription className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <span>
-          Esta cotización no está ligada a una oportunidad, por lo que no se puede enviar al
-          prospecto. Edítala y vincúlala a un prospecto u oportunidad del CRM.
+          {editable
+            ? "Esta cotización no está ligada a una oportunidad, por lo que no se puede enviar al prospecto. Edítala y vincúlala a un prospecto u oportunidad del CRM."
+            : "Esta cotización no está ligada a una oportunidad y su estado ya no permite editarla. Duplícala para capturar el vínculo con el prospecto u oportunidad del CRM."}
         </span>
-        {canWriteCotizaciones && (
+        {canWriteCotizaciones && editable && (
 
           <Button size="sm" variant="outline" asChild>
             <Link to={`/cotizaciones/${cotizacionId}/editar`}>

@@ -51,7 +51,7 @@ export function CotizacionDetalleContenido({
         cotizacionId={cotizacion.id}
         estado={cotizacion.estado}
         updatedAt={cotizacion.updated_at}
-        canEdit={canEdit}
+        canEdit={canWriteCotizaciones}
       />
 
       <ReaprobacionTarifaBanner
@@ -65,7 +65,10 @@ export function CotizacionDetalleContenido({
         <SinDesgloseBanner onCargarCostos={() => navigate(`/cotizaciones/${cotizacion.id}/editar`)} />
       )}
 
-      {canEdit && (
+      {/* v13.823.355 (YAGNI r2 · P1): las acciones de captura (incluido "Editar")
+          son de ventas/operación. Con `canEdit` (que incluye finanzas)
+          contador/tesorero veían "Editar" y el guardado fallaba con 42501. */}
+      {canWriteCotizaciones && (
         <CotizacionDetalleAcciones
           estado={cotizacion.estado}
           esProspecto={cotizacion.es_prospecto}
@@ -89,6 +92,7 @@ export function CotizacionDetalleContenido({
         <CotizacionSinOportunidadBanner
           cotizacionId={cotizacion.id}
           canWriteCotizaciones={canWriteCotizaciones}
+          estadoCotizacion={cotizacion.estado}
         />
       )}
 
