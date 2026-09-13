@@ -32,12 +32,14 @@ export function derivarEstadoContenedor(
   info?: ContenedorInfo,
 ): EstadoContenedorCell {
   const esLcl = esTipoCargaLcl(embarque.tipo_carga);
+  const esMaritimo = embarque.modo === "Marítimo";
   const count = info?.count ?? (embarque.contenedor?.trim() ? 1 : 0);
   const primero = info?.primero || embarque.contenedor || "";
-  // En LCL los contenedores hijos no se exigen: el agente suele consolidar y
-  // nunca nos comparte número/tipo. Forzamos incompletos=0 para no marcar
-  // "Datos pendientes" en la tabla. BL Master sigue siendo obligatorio.
-  const incompletos = esLcl ? 0 : info?.incompletos ?? 0;
+  // v13.823.332 · UX-EMB-01: los contenedores hijos sólo existen en marítimo.
+  // En Aéreo/Terrestre no hay nada que capturar, así que nunca se marca
+  // "Datos pendientes". En LCL el agente consolida y no comparte número/tipo.
+  const incompletos = esMaritimo && !esLcl ? info?.incompletos ?? 0 : 0;
+
   const blFalta =
     embarque.modo === "Marítimo" && (!embarque.bl_master || embarque.bl_master.trim() === "");
   const pendientes = incompletos > 0 || blFalta;
