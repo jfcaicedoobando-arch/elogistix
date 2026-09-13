@@ -29,7 +29,13 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       cell: ({ row }) => (
         <div className="min-w-0">
           <div className="font-medium">{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
-          <div className="text-label text-muted-foreground 2xl:hidden">{row.original.tipo_contenedor_nombre}</div>
+          {/* MR-UI-02: bajo 2xl (1280×720) Contenedor y Vigencia viven aquí
+              para que la tabla no requiera scroll horizontal. */}
+          <div className="text-label text-muted-foreground 2xl:hidden">
+            {row.original.tipo_contenedor_nombre}
+            {" · "}
+            {formatVigencia(row.original.vigente_desde, row.original.vigente_hasta)}
+          </div>
         </div>
       ),
     },
@@ -117,7 +123,13 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => t.vigente_hasta,
       sortingFn: sortByDate((t) => t.vigente_hasta),
       enableSorting: true,
-      meta: { width: COL_W.ruta, className: "text-body-sm" },
+      // MR-UI-02: se muestra desde 2xl; en pantallas menores el resumen de
+      // vigencia aparece bajo la Ruta.
+      meta: {
+        width: COL_W.ruta,
+        className: "text-body-sm hidden 2xl:table-cell",
+        headerClassName: "hidden 2xl:table-cell",
+      },
       cell: ({ row }) => {
         const t = row.original;
         const hint = vigenciaHint(t.vigente_hasta);
