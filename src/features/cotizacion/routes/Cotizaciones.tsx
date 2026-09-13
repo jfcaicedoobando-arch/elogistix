@@ -44,6 +44,7 @@ export default function Cotizaciones() {
       buildCotizacionesColumns({
         canDuplicar: canDuplicateCotizacion,
         canEliminar: canDeleteCotizacion,
+        puedeOrdenarCliente: c.segmento === "clientes",
         onEliminar: c.setCotizacionAEliminar,
         onDuplicar: (id: string) =>
           duplicar.mutate(id, {
@@ -57,6 +58,7 @@ export default function Cotizaciones() {
     [
       canDuplicateCotizacion,
       canDeleteCotizacion,
+      c.segmento,
       c.setCotizacionAEliminar,
       duplicar,
       navigate,

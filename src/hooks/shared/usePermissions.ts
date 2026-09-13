@@ -4,6 +4,7 @@ import {
   ADMIN_CUENTAS_BANCARIAS,
   ALTA_CLIENTES,
   APROBAR_FACTURA_PROVEEDOR,
+  APROBAR_TARIFA_COTIZACION,
   CAPTURAR_FACTURA_PROVEEDOR,
   CAPTURAR_MOVIMIENTO_BANCARIO,
   CERRAR_EMBARQUE,
@@ -84,6 +85,8 @@ export function usePermissions() {
    */
   const canDuplicateCotizacion = has(DUPLICAR_COTIZACION, roleStr);
   const canDeleteCotizacion = has(ELIMINAR_COTIZACION, roleStr);
+  /** Espejo de `public.puede_aprobar_tarifa_cotizacion` (re-aprobar / re-cotizar). */
+  const canApproveTarifaCotizacion = has(APROBAR_TARIFA_COTIZACION, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
@@ -157,6 +160,7 @@ export function usePermissions() {
     canWriteCotizaciones,
     canDuplicateCotizacion,
     canDeleteCotizacion,
+    canApproveTarifaCotizacion,
     canCotizarSinDesglose,
     canOverrideTarifaPricing,
     canEmitirFactura,

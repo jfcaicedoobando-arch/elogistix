@@ -37,8 +37,30 @@ vi.mock("@/integrations/supabase/client", () => {
   return { supabase: { from: (table: string) => makeChain(table) } };
 });
 
-const { fetchCotizacionesPaginadas, fetchTodasCotizacionesParaExportar, EXPORT_BATCH_SIZE } =
-  await import("../paginados");
+const {
+  fetchCotizacionesPaginadas,
+  fetchTodasCotizacionesParaExportar,
+  EXPORT_BATCH_SIZE,
+  resolverColumnaOrdenCotizaciones,
+} = await import("../paginados");
+
+// v13.823.351 — en los segmentos con prospectos la columna Cliente muestra
+// `prospecto_empresa`, así que ordenar por `cliente_nombre` no corresponde al
+// texto visible: el servidor cae al orden por fecha.
+describe("resolverColumnaOrdenCotizaciones", () => {
+  it("ordena por cliente_nombre sólo en el segmento de clientes", () => {
+    expect(resolverColumnaOrdenCotizaciones("cliente", "clientes")).toBe("cliente_nombre");
+  });
+
+  it.each(["prospectos", "todas"] as const)("cae a created_at en el segmento %s", (segmento) => {
+    expect(resolverColumnaOrdenCotizaciones("cliente", segmento)).toBe("created_at");
+  });
+
+  it("no altera las demás columnas", () => {
+    expect(resolverColumnaOrdenCotizaciones("folio", "prospectos")).toBe("folio");
+    expect(resolverColumnaOrdenCotizaciones("subtotal", "todas")).toBe("subtotal");
+  });
+});
 
 const FILTROS = {
   organizationId: "org-1",

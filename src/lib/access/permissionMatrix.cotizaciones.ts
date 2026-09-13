@@ -64,8 +64,30 @@ export const CREAR_EMBARQUE_BORRADOR: readonly AppRole[] = [
  * Al ampliar la RPC hay que ampliar esta lista.
  */
 export const DUPLICAR_COTIZACION: readonly AppRole[] = [
+  // v13.823.351 — `has_role` resuelve la jerarquía: `admin` incluye admin_org y
+  // super_admin; `operador` incluye gerente_operaciones y coordinador_logistico.
+  "super_admin",
+  "admin_org",
   "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
   "operador",
+  "ejecutivo_pricing",
+];
+
+/**
+ * v13.823.351 — Roles APROBADORES del flujo comercial: resolver la
+ * re-aprobación de tarifa (`public.resolver_reaprobacion_tarifa`) y re-cotizar
+ * (`public.recotizar_cotizacion`). Espejo EXACTO de
+ * `public.puede_aprobar_tarifa_cotizacion` (has_role admin / vendedor /
+ * ejecutivo_pricing, con su jerarquía).
+ */
+export const APROBAR_TARIFA_COTIZACION: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+  "vendedor",
   "ejecutivo_pricing",
 ];
 
@@ -75,7 +97,12 @@ export const DUPLICAR_COTIZACION: readonly AppRole[] = [
  * `operador`.
  */
 export const ELIMINAR_COTIZACION: readonly AppRole[] = [
+  // v13.823.351 — jerarquía de `has_role`: `admin` incluye admin_org;
+  // `operador` incluye gerente_operaciones y coordinador_logistico.
   "super_admin",
+  "admin_org",
   "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
   "operador",
 ];

@@ -51,7 +51,10 @@ BEGIN
       'estado_revalidacion',v_cot.estado_revalidacion,'reaprobacion_vigente',FALSE,
       'motivo','sin_tarifa_vinculada');
   END IF;
-  SELECT * INTO v_tarifa_vig_rec FROM public.costeo_tarifas_vigentes_v WHERE id=v_cot.tarifa_id LIMIT 1;
+  -- v13.823.351: la tarifa vigente y sus recargos se leen acotados a la
+  -- organización de la cotización (las FK son sólo por UUID).
+  SELECT * INTO v_tarifa_vig_rec FROM public.costeo_tarifas_vigentes_v
+   WHERE id=v_cot.tarifa_id AND organization_id=v_cot.organization_id LIMIT 1;
   v_tarifa_vigente := FOUND;
   FOR v_costo IN
     SELECT cc.concepto, cc.moneda, cc.costo_unitario AS monto_anterior,
@@ -61,9 +64,11 @@ BEGIN
       AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL)
   LOOP
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
-      SELECT monto INTO v_monto_actual FROM public.costeo_tarifa_recargos WHERE id=v_costo.costeo_tarifa_recargo_id;
+      SELECT monto INTO v_monto_actual FROM public.costeo_tarifa_recargos
+       WHERE id=v_costo.costeo_tarifa_recargo_id AND organization_id=v_cot.organization_id;
     ELSE
-      SELECT flete_base INTO v_monto_actual FROM public.costeo_tarifas WHERE id=v_costo.costeo_tarifa_id;
+      SELECT flete_base INTO v_monto_actual FROM public.costeo_tarifas
+       WHERE id=v_costo.costeo_tarifa_id AND organization_id=v_cot.organization_id;
     END IF;
     IF v_monto_actual IS NULL THEN
       v_cambios := v_cambios || jsonb_build_object(
@@ -101,8 +106,10 @@ BEGIN
     ) ORDER BY cc.id), '[]'::jsonb)
   ) INTO v_snapshot
   FROM public.cotizacion_costos cc
-  LEFT JOIN public.costeo_tarifa_recargos r ON r.id=cc.costeo_tarifa_recargo_id
-  LEFT JOIN public.costeo_tarifas t ON t.id=cc.costeo_tarifa_id
+  LEFT JOIN public.costeo_tarifa_recargos r
+         ON r.id=cc.costeo_tarifa_recargo_id AND r.organization_id=v_cot.organization_id
+  LEFT JOIN public.costeo_tarifas t
+         ON t.id=cc.costeo_tarifa_id AND t.organization_id=v_cot.organization_id
   WHERE cc.cotizacion_id=v_cot.id AND cc.deleted_at IS NULL
     AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL);
   IF NOT v_tarifa_vigente AND v_bloquea_vencida THEN v_severidad := 'bloqueante';
