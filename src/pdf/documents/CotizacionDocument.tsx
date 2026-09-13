@@ -172,18 +172,20 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
             <DataTable
               columns={columnasUSD(tasaIva, hayIvaUsd)}
               rows={usd}
-              renderSubrow={(r) => r.notas ?? null}
+              renderSubrow={subnotaCliente}
             />
           </>
         ) : null}
 
         {mxn.length > 0 ? (
           <>
-            <Text style={styles.h4} minPresenceAhead={70}>Conceptos en MXN + IVA</Text>
+            <Text style={styles.h4} minPresenceAhead={70}>
+              Conceptos en MXN{hayIvaMxn ? " + IVA" : ""}
+            </Text>
             <DataTable
-              columns={columnasMXN(tasaIva)}
+              columns={columnasMXN(tasaIva, hayIvaMxn)}
               rows={mxn}
-              renderSubrow={(r) => r.notas ?? null}
+              renderSubrow={subnotaCliente}
             />
           </>
         ) : null}
