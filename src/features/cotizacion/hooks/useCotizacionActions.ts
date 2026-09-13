@@ -28,7 +28,9 @@ export interface CotizacionExportRow {
 }
 
 /** Nombre visible de la cotización: empresa del prospecto o cliente. */
-export function nombreMostradoCotizacion(c: CotizacionExportRow): string {
+export function nombreMostradoCotizacion(
+  c: Pick<CotizacionExportRow, "cliente_nombre" | "es_prospecto" | "prospecto_empresa">,
+): string {
   if (c.es_prospecto) return c.prospecto_empresa || c.cliente_nombre || "";
   return c.cliente_nombre || c.prospecto_empresa || "";
 }
