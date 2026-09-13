@@ -52,7 +52,7 @@ async function versionPublicada(baseUrl: string, local: string): Promise<string 
 async function main(): Promise<void> {
   const baseUrl = process.argv[2] ?? DEFAULT_URL;
   const local = readAppVersion();
-  const publicada = await versionPublicada(baseUrl);
+  const publicada = await versionPublicada(baseUrl, local);
 
   if (!publicada) {
     console.error(`❌ No se pudo leer la versión publicada en ${baseUrl}.`);
