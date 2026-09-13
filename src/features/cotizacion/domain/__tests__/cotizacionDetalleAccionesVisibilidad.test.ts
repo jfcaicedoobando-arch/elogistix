@@ -15,6 +15,7 @@ const base = {
   tieneOportunidad: false,
   tieneVenta: true,
   puedeCrearEmbarque: true,
+  puedeRecotizar: true,
 };
 
 describe("visibilidadAcciones — embarque ya vinculado", () => {

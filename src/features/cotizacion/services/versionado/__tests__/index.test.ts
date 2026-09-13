@@ -38,9 +38,14 @@ describe("recotizarCotizacion", () => {
     expect(call?.args).toEqual({ p_cotizacion_id: "c1", p_motivo: "Cliente pidió revisión" });
   });
 
+  // v13.823.346 — el mínimo del modal (5 caracteres) ahora se valida antes del RPC.
+  it("rechaza motivo de menos de 5 caracteres sin llamar al RPC", async () => {
+    await expect(recotizarCotizacion("c1", "abc")).rejects.toThrow(/motivo/i);
+  });
+
   it("propaga error de la RPC recotizar_cotizacion", async () => {
     mock.setRpcResult("recotizar_cotizacion", { data: null, error: { message: "boom" } });
-    await expect(recotizarCotizacion("c1", "x")).rejects.toThrow("boom");
+    await expect(recotizarCotizacion("c1", "motivo válido")).rejects.toThrow("boom");
   });
 
   it("traduce LC_COTIZACION_CON_EMBARQUE a CotizacionConEmbarqueError con expediente", async () => {
@@ -51,7 +56,7 @@ describe("recotizarCotizacion", () => {
         code: "P0001",
       },
     });
-    const err = await recotizarCotizacion("c1", "x").catch((e) => e);
+    const err = await recotizarCotizacion("c1", "motivo válido").catch((e) => e);
     expect(err).toBeInstanceOf(CotizacionConEmbarqueError);
     expect((err as CotizacionConEmbarqueError).expediente).toBe("EL00100042");
   });

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
-import { accionesCotizacionPermitidas } from "@/features/cotizacion/domain/cotizacion";
+import { accionesCotizacionPermitidas, puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { visibilidadAcciones } from "@/features/cotizacion/domain/cotizacionDetalleAccionesVisibilidad";
 import {
   AccionesCaptura,
@@ -65,6 +65,7 @@ export function CotizacionDetalleAcciones({
     tieneOportunidad,
     tieneVenta: Number(total) > 0,
     puedeCrearEmbarque: acciones.crearEmbarque,
+    puedeRecotizar: puedeEscribirCotizaciones(rol),
   });
 
   return (

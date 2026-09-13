@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.346] - 2026-09-13
+
+- **fix(tests)**: el título `conserva las notas públicas` se renombró a `conserva las notas públicas del renglón` (duplicado detectado por `audit:tests`/`audit-report` en CI shard 2/3).
+- **fix(cotizaciones)**: "Enviar por correo" y "Re-cotizar" se gatean con la capacidad real de escritura (`puedeEscribirCotizaciones`, espejo de `ROLES_ESCRITURA_COTIZACIONES` y `archivar_version_cotizacion`); finanzas ya no ve botones que terminaban en 403/42501.
+- **fix(security)**: `enviar-cotizacion-email` exige rol de escritura también en `action=prepare`; antes cualquier miembro (incluido `viewer`) obtenía la URL firmada de subida del PDF.
+- **fix(cotizaciones)**: regla única de importe efectivo (`importeEfectivoConcepto`/`tieneImportesEfectivos`): una fila USD legacy sin `total` ya no bloquea "Enviar" ni "Exportar PDF", y el total USD se reconstruye con cantidad × precio + IVA de la fila.
+- **fix(cotizaciones)**: `parseConceptosDetallado` reporta un descarte cuando `conceptos_venta` viene con JSON inválido o no-array, así el detalle muestra `AvisoConceptosDescartados` en lugar de $0 sin explicación.
+- **fix(db)**: `recotizar_cotizacion` exige estado `Aceptada` (`LC_RECOTIZAR_ESTADO_INVALIDO`), motivo de 5+ caracteres y toma la cotización `FOR UPDATE` para evitar carreras; se conserva el HINT del expediente.
+- **fix(ui)**: el KPI de cotizaciones usa label corto + sublabel "Últimos 30 días" para no truncarse a 1280×720.
+
+
 ## [13.823.345] - 2026-09-13
 
 - **fix(proformas)**: el PDF decide el IVA por la tasa efectiva de cada renglón. En pesos ya no se fuerzan las columnas IVA/Total cuando todos los conceptos son exentos o a tasa 0%, y en dólares una fila con `aplica_iva=true` pero tasa 0 imprime em dash en lugar de "0.00". No se tocan los totales fiscales guardados.

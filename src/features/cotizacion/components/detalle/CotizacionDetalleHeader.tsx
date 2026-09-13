@@ -6,6 +6,7 @@ import { useVolver } from "@/hooks/shared/useVolver";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toTitleCase, formatDate } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
+import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
 
 interface Props {
   cotizacion: CotizacionRow;
@@ -24,7 +25,8 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
   // W-01 (QA r2): se evalúa contra los conceptos de venta (USD y MXN) — antes
   // sólo `subtotal`, que era 0 en cotizaciones MXN-only y bloqueaba el envío
   // aunque la cotización sí tuviera importes.
-  const sinImporte = !(cotizacion.conceptos_venta ?? []).some((c) => Number(c?.total) > 0);
+  // v13.823.346 — regla única de importe efectivo (filas USD legacy sin `total`).
+  const sinImporte = !tieneImportesEfectivos(cotizacion.conceptos_venta);
   const metaFecha = cotizacion.fecha_aceptacion
     ? `Aceptada el ${formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}`
     : cotizacion.fecha_rechazo

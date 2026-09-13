@@ -26,7 +26,16 @@ export async function handlePrepare(
   admin: ReturnType<typeof createClient>,
   pdfPath: string,
   cors: Record<string, string>,
+  userId: string,
+  organizationId: string,
 ): Promise<Response> {
+  // v13.823.346 — `prepare` sólo validaba membresía: cualquier miembro (incluido
+  // `viewer` o finanzas) obtenía una URL firmada de subida y podía envenenar el
+  // PDF de la cotización. Se exige el mismo rol de escritura que `send`.
+  const okRol = await authorizeOrgRole(admin, userId, organizationId, ROLES_ESCRITURA_COTIZACIONES);
+  if (!okRol) {
+    return jsonResponse({ error: 'Tu rol no puede enviar cotizaciones' }, 403, cors);
+  }
   const { data: upload, error: upErr } = await admin
     .storage.from(BUCKET_PDF)
     .createSignedUploadUrl(pdfPath);

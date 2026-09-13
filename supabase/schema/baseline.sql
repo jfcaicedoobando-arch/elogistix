@@ -24197,10 +24197,14 @@ DECLARE
   v_new INT;
   v_org UUID;
   v_folio TEXT;
+  v_estado TEXT;
   v_embarque_expediente TEXT;
 BEGIN
-  SELECT version, organization_id, folio INTO v_old, v_org, v_folio
-  FROM cotizaciones WHERE id = p_cotizacion_id;
+  -- FOR UPDATE: serializa dos re-cotizaciones concurrentes sobre el mismo folio.
+  SELECT version, organization_id, folio, estado::text
+    INTO v_old, v_org, v_folio, v_estado
+  FROM cotizaciones WHERE id = p_cotizacion_id
+  FOR UPDATE;
   IF v_old IS NULL THEN
     RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002';
   END IF;
@@ -24210,8 +24214,13 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501';
   END IF;
-  IF coalesce(trim(p_motivo),'') = '' THEN
-    RAISE EXCEPTION 'Motivo requerido' USING ERRCODE='22023';
+  -- Mismo mínimo que el modal de la UI (5 caracteres).
+  IF length(coalesce(trim(p_motivo),'')) < 5 THEN
+    RAISE EXCEPTION 'Motivo requerido (mínimo 5 caracteres)' USING ERRCODE='22023';
+  END IF;
+  IF v_estado <> 'Aceptada' THEN
+    RAISE EXCEPTION 'LC_RECOTIZAR_ESTADO_INVALIDO'
+      USING HINT = v_estado, ERRCODE = 'P0001';
   END IF;
   -- Bug 15 guard: block re-versioning if there is any active shipment linked
   SELECT expediente INTO v_embarque_expediente
