@@ -31,6 +31,12 @@ interface Props {
    * backend la rechaza al final del asistente, así que ni se ofrece.
    */
   estado?: string | null;
+  /**
+   * Capability `CREAR_EMBARQUE_DESDE_COTIZACION` (espejo de
+   * `crear_embarque_borrador_core`). Sin ella el diálogo no ofrece el atajo:
+   * el backend rechazaría la creación con 42501.
+   */
+  puedeCrearEmbarqueRol?: boolean;
 }
 
 const ESTADOS_CONVERTIBLES = ["Aceptada", "En operación"];
@@ -38,9 +44,10 @@ const ESTADOS_CONVERTIBLES = ["Aceptada", "En operación"];
 export function CotizacionSuccessDialog({
   open, onOpenChange, folio,
   onEnviarProforma, onDuplicar, onCrearEmbarque, onIrAlListado, onVerDetalle,
-  onGuardarComoPlantilla, estado,
+  onGuardarComoPlantilla, estado, puedeCrearEmbarqueRol = false,
 }: Props) {
-  const puedeCrearEmbarque = ESTADOS_CONVERTIBLES.includes(String(estado ?? ""));
+  const puedeCrearEmbarque =
+    puedeCrearEmbarqueRol && ESTADOS_CONVERTIBLES.includes(String(estado ?? ""));
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={dialogSize.md}>
