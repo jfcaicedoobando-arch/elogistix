@@ -40,7 +40,6 @@ const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
   "src/features/cotizacion/components/costosLocal/FilaCostoLocalRow.tsx",
   "src/components/ui/date-picker-mx-helpers.ts",
-  "src/features/embarques/components/costos/GrupoCostosProveedor.tsx",
   "src/features/facturacion/hooks/useNotaCreditoDraft.ts",
 ]);
 
