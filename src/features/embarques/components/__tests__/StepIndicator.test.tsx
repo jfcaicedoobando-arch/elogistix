@@ -21,14 +21,15 @@ describe("<StepIndicator />", () => {
     render(<StepIndicator steps={STEPS} currentStep={3} />);
 
     expect(screen.getByText("Cliente")).toBeInTheDocument();
-    expect(screen.getByTitle("Cotización del cliente")).toHaveTextContent("Cliente");
+    expect(screen.queryByTitle("Cotización del cliente")).not.toBeInTheDocument();
+    expect(screen.getByText("Cotización del cliente")).toBeInTheDocument();
   });
 
   it("muestra el título completo cuando no hay etiqueta corta", () => {
     render(<StepIndicator steps={STEPS} currentStep={4} />);
 
     expect(screen.getByText("Resumen")).toBeInTheDocument();
-    expect(screen.getByTitle("Resumen")).toHaveTextContent("Resumen");
+    expect(screen.queryByTitle("Resumen")).not.toBeInTheDocument();
   });
 
   it("usa el título completo en el aria-label de los pasos navegables", () => {
