@@ -32,15 +32,15 @@ describe("derivarEstadoContenedor", () => {
     expect(r.pendientesTitle).toContain("2 contenedor");
   });
 
-  it("legacyCount como fallback cuando no hay info", () => {
-    const r = derivarEstadoContenedor(baseMaritimo, undefined, 5);
-    expect(r.count).toBe(5);
+  it("MR-UI-03: el conteo viene de los contenedores reales, no de embarques", () => {
+    expect(derivarEstadoContenedor(baseMaritimo, { count: 2, primero: "MSCU2609081", incompletos: 0 }).count).toBe(2);
   });
 
-  it("sin info ni legacyCount → count=1 y primero desde embarque", () => {
+  it("sin info → count=1 si el embarque trae contenedor, 0 si no", () => {
     const r = derivarEstadoContenedor(baseMaritimo);
     expect(r.count).toBe(1);
     expect(r.primero).toBe("MSCU1234567");
+    expect(derivarEstadoContenedor({ ...baseMaritimo, contenedor: "" }).count).toBe(0);
   });
 
   it("happy path → todo OK, sin pendientes", () => {
