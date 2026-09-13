@@ -5,6 +5,7 @@ import { DataTable } from "../components/DataTable";
 import {
   columnasUSD,
   columnasMXN,
+  hayIvaEfectivo,
   type GrupoContenedor,
 } from "./proformaConceptosColumns";
 
