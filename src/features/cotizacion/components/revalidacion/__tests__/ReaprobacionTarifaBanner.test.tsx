@@ -59,7 +59,6 @@ describe("ReaprobacionTarifaBanner (B-097)", () => {
     expect(screen.getByRole("button", { name: /Re-cotizar con tarifa vigente/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Rechazar/ })).toBeInTheDocument();
   });
-}
 
   /**
    * v13.823.349 — resolver la re-aprobación es escritura de cotizaciones: los
