@@ -13,13 +13,21 @@ export function buildDocumentTitle(title?: string | null): string {
 }
 
 /** Actualiza `document.title` mientras el componente está montado y lo
- *  restaura al desmontar (evita que una ruta "manche" el título de otra). */
+ *  restaura al desmontar (evita que una ruta "manche" el título de otra).
+ *
+ *  MR-UI-01: la restauración sólo se aplica si el título vigente sigue siendo
+ *  el que este componente puso. Con rutas perezosas (React.lazy) la pantalla
+ *  saliente puede desmontarse DESPUÉS de que la entrante ya fijó su título; sin
+ *  esta guarda, el "Iniciar sesión" viejo sobrescribía el título real. */
 export function useDocumentTitle(title?: string | null): void {
   useEffect(() => {
     const previous = document.title;
-    document.title = buildDocumentTitle(title);
+    const aplicado = buildDocumentTitle(title);
+    document.title = aplicado;
     return () => {
-      document.title = previous;
+      if (document.title === aplicado) {
+        document.title = previous;
+      }
     };
   }, [title]);
 }
