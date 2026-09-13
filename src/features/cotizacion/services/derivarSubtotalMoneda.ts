@@ -40,8 +40,13 @@ export const MSG_COTIZACION_MIXTA =
 function importeSinIva(c: Record<string, unknown>): number {
   const cantidad = Number(c?.cantidad);
   const precio = Number(c?.precio_unitario);
-  if (!Number.isFinite(cantidad) || !Number.isFinite(precio)) return 0;
-  return roundMoney(cantidad * precio);
+  if (Number.isFinite(cantidad) && Number.isFinite(precio) && precio !== 0) {
+    return roundMoney(cantidad * precio);
+  }
+  // Respaldo para renglones legados sin desglose: `subtotal` ya viene sin IVA.
+  const sub = Number(c?.subtotal);
+  if (Number.isFinite(sub) && sub !== 0) return roundMoney(sub);
+  return Number(c?.total) || 0;
 }
 
 export function derivarSubtotalMoneda(
