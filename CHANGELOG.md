@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.353] - 2026-09-13
+
+- **fix(seguridad, db)**: `public.puede_aprobar_tarifa_cotizacion` gana ancla tenant explícita — además del rol aprobador comercial (vía `has_any_role_efectivo`) exige membresía en la organización activa (`organization_members` + `current_user_org_id()`), con `super_admin` exento. Con esto el linter ORG-SCOPE (`test_rls_rpc_org_scope_linter.sql`) vuelve a verde sin ampliar la whitelist ni bajar el guard; regresión nueva en `test_rls_reg_reaprobacion_y_duplicar.sql` (vendedor de otra organización no autorizado + ancla presente en el cuerpo).
+
 ## [13.823.352] - 2026-09-13
 
 - **refactor(cotizaciones)**: la columna de acciones (Duplicar/Eliminar) se extrae a `columnsParts/accionesColumn.tsx` y se limpian líneas en blanco en la ruta de Cotizaciones para volver a cumplir el límite de 200 líneas sin allowlist; comportamiento y pruebas sin cambios.
