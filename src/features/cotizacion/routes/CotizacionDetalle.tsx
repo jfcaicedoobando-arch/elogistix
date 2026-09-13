@@ -18,6 +18,7 @@ import { usePdfExport } from "@/hooks/shared/usePdfExport";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
+import { mensajeCotizacionSinImportes } from "@/lib/domain/cotizacionSinImportes";
 import { cotizacionEnviablePorCorreo } from "@/features/cotizacion/domain/envioCotizacion";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
@@ -89,10 +90,10 @@ export default function CotizacionDetalle() {
               onExportarPdf={() => {
                 // B-081: no generamos PDF en $0.00 (se enviaban cotizaciones vacías).
                 if (!tieneImportesEfectivos(cotizacion.conceptos_venta)) {
-                  notifyError(undefined, {
-                    title: "La cotización no tiene importes",
-                    description: "Los conceptos de venta suman $0.00. Revisa la sección de costos y sincroniza los conceptos de venta antes de descargar el PDF.",
-                  });
+                  notifyError(undefined, mensajeCotizacionSinImportes(
+                    cotizacion.estado,
+                    !!cotizacion.embarque_id,
+                  ));
                   return;
                 }
                 void run(() => handleExportarPdf(cotizacion, tasaIva));
