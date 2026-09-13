@@ -19,13 +19,13 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
-import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
+import { EstadoSelect, ClienteSelect, SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 import { CotizacionesSecondaryFilters } from "@/features/cotizacion/components/CotizacionesSecondaryFilters";
-import { SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
+
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
