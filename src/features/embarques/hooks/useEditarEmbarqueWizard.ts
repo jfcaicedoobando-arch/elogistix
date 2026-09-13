@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useEmbarque,
@@ -19,6 +19,9 @@ import {
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { useHidratacionEditarEmbarque } from "./useHidratacionEditarEmbarque";
 import { ejecutarGuardarEmbarque } from "./useEditarEmbarqueWizard.save";
+import { validateStepRuta, type StepRutaInput, type StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -97,6 +100,24 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   const selectedCliente = clientes.find((c) => c.id === clienteId);
 
+  // P1 — el paso 2 (Ruta) valida ETD, ETA, ruta y contenedores obligatorios
+  // antes de avanzar. Guardar sigue permitido: un borrador incompleto se
+  // conserva, pero no se puede seguir al paso de costos sin esos datos.
+  const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});
+  const validateStep = useCallback((step: number): boolean => {
+    if (step !== 2) return true;
+    const errors = validateStepRuta(methods.getValues() as unknown as StepRutaInput);
+    setValidationErrors((prev) => ({ ...prev, [step]: errors }));
+    if (Object.keys(errors).length > 0) {
+      notifyError(undefined, {
+        step, errors, method: "USE_EDITAR_EMBARQUE_WIZARD",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return false;
+    }
+    return true;
+  }, [methods]);
+
   const handleSave = () => ejecutarGuardarEmbarque({
     id,
     embarque,
@@ -135,6 +156,8 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     isPending: updateEmbarque.isPending,
     navigate,
     conceptosForm,
+    validateStep,
+    validationErrors,
     cotizacionVinculada,
     cotizacionesAceptadas,
   };

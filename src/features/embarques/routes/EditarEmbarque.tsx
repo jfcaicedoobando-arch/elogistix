@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams, Navigate } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
@@ -36,7 +36,7 @@ export default function EditarEmbarque() {
     embarque, isLoading, isError, refetch, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
     handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
-    cotizacionVinculada, cotizacionesAceptadas,
+    validateStep, cotizacionVinculada, cotizacionesAceptadas,
   } = useEditarEmbarqueWizard(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
   // Antes el título del navegador quedaba con el de la pantalla anterior
@@ -57,6 +57,14 @@ export default function EditarEmbarque() {
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     subtotalVenta, totalCosto, utilidadEstimada,
   } = conceptosForm;
+
+  // P2 — protección real de cambios: los conceptos viven fuera de RHF, así que
+  // marcamos "tocado" cuando el usuario los edita. Junto con
+  // `formState.isDirty` cubre el aviso desde el paso 1.
+  const [conceptosTocados, setConceptosTocados] = useState(false);
+  const marcar = useCallback(<A extends unknown[]>(fn: (...args: A) => void) =>
+    (...args: A) => { setConceptosTocados(true); fn(...args); }, []);
+  const hayCambiosSinGuardar = methods.formState.isDirty || conceptosTocados;
 
   if (isLoading) {
     return (
@@ -140,7 +148,8 @@ export default function EditarEmbarque() {
         // (useState fuera de RHF), así que `formState.isDirty` no los detecta.
         // Se conserva la protección conservadora por paso para no perder
         // ediciones; afinar el detector queda como pendiente declarado.
-        isDirty={currentStep > 1}
+        validateStep={validateStep}
+        isDirty={hayCambiosSinGuardar}
       >
         {currentStep === 1 && (
           <StepDatosGenerales
@@ -162,12 +171,12 @@ export default function EditarEmbarque() {
             subtotalVenta={subtotalVenta}
             totalCosto={totalCosto}
             utilidadEstimada={utilidadEstimada}
-            updateConceptoVenta={updateConceptoVenta}
-            addConceptoVenta={addConceptoVenta}
-            removeConceptoVenta={removeConceptoVenta}
-            updateConceptoCosto={updateConceptoCosto}
-            addConceptoCosto={addConceptoCosto}
-            removeConceptoCosto={removeConceptoCosto}
+            updateConceptoVenta={marcar(updateConceptoVenta)}
+            addConceptoVenta={marcar(addConceptoVenta)}
+            removeConceptoVenta={marcar(removeConceptoVenta)}
+            updateConceptoCosto={marcar(updateConceptoCosto)}
+            addConceptoCosto={marcar(addConceptoCosto)}
+            removeConceptoCosto={marcar(removeConceptoCosto)}
             embarqueId={id}
           />
         )}
