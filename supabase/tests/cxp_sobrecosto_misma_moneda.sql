@@ -113,7 +113,7 @@ BEGIN
   -- CASO 3: monedas distintas (costo USD, factura MXN) -> ruta MXN.
   -- 60 USD @17.3317 = 1,039.90 MXN comprometidos; factura por 1,500 MXN.
   UPDATE public.proveedor_facturas
-     SET moneda = 'MXN'::public.moneda, tipo_cambio_usd = NULL, subtotal = 1500, total = 1500
+     SET moneda = 'MXN'::public.moneda, tipo_cambio_usd = 17, subtotal = 1500, total = 1500
    WHERE id = v_pf;
   UPDATE public.proveedor_facturas_conceptos SET monto = 1500
    WHERE proveedor_factura_id = v_pf;
