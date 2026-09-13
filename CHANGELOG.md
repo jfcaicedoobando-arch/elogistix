@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.338] - 2026-09-13
+
+- **datos(compras)**: se guardó el tipo de cambio que el propio proveedor usó en dos facturas en pesos ligadas a costos en dólares (FP-000140 a 17.3792 y FP-000236 a 16.9712). Ningún importe cambió.
+- **datos(compras)**: se soltaron tres ligas de más en FP-000151 (cargos de 665, 320 y 120 dólares) que no cabían en una factura de 1,482.85 pesos; los cargos de 665 y 120 conservan su liga correcta en dólares (FP-000150 y FP-000092).
+- **revisión pendiente**: FP-000151 requiere reabrir el expediente ELIMP00245 para guardar su tipo de cambio, y FP-000104 (ELIMP00323) espera confirmación de si los 179 dólares corresponden a esa factura en pesos.
+
+
 ## [13.823.337] - 2026-09-13
 
 - **datos(cotizaciones)**: se guardó el tipo de cambio oficial del día correspondiente en 9 cotizaciones aceptadas que mezclaban pesos y dólares sin tenerlo (COT-2026-0103, 0105, 0130, 0136, 0168, 0173, 0217, 0230 y 0237). Ningún importe cambió.
