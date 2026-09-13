@@ -27,19 +27,23 @@ function extraerBundles(html: string): string[] {
   return [...rutas];
 }
 
-/** Busca el literal de versión (`13.823.317`) dentro de un bundle servido. */
-function extraerVersion(texto: string): string | null {
-  const m = texto.match(/\d+\.\d+\.\d+/g);
-  return m && m.length > 0 ? m[0] : null;
+/**
+ * Busca la versión de la app dentro de un bundle servido. Se restringe a la
+ * serie de la rama (`13.823.*`) para no confundirla con versiones de librerías
+ * (React, etc.) que también viajan en el bundle.
+ */
+function extraerVersion(texto: string, local: string): string | null {
+  const [mayor, menor] = local.split(".");
+  const re = new RegExp(`${mayor}\\.${menor}\\.\\d+`);
+  return texto.match(re)?.[0] ?? null;
 }
 
-async function versionPublicada(baseUrl: string): Promise<string | null> {
+async function versionPublicada(baseUrl: string, local: string): Promise<string | null> {
   const html = await (await fetch(baseUrl, { cache: "no-store" })).text();
   for (const ruta of extraerBundles(html)) {
     const url = ruta.startsWith("http") ? ruta : new URL(ruta, baseUrl).toString();
     const js = await (await fetch(url, { cache: "no-store" })).text();
-    const encontrada = js.match(/APP_VERSION[^"']*["'](\d+\.\d+\.\d+)["']/)?.[1]
-      ?? extraerVersion(js);
+    const encontrada = extraerVersion(js, local);
     if (encontrada) return encontrada;
   }
   return null;
