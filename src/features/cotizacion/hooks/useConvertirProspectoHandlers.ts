@@ -23,7 +23,22 @@ export function useConvertirProspectoHandlers(cotizacion: CotizacionRow | undefi
   /** Precarga contacto + datos fiscales del lead: el vendedor no recaptura nada. */
   const abrirDialogConvertir = async () => {
     if (!cotizacion) return;
-    const fiscales = await fetchDatosFiscalesProspecto(cotizacion.oportunidad_id ?? null);
+    // v13.823.348 — si la precarga fiscal falla (red/permiso) el modal se abre
+    // igual con los datos de contacto del lead y se avisa que hay que capturar
+    // los datos fiscales a mano; antes la promesa rechazada dejaba al usuario
+    // sin modal y sin mensaje.
+    let fiscales = {};
+    try {
+      fiscales = await fetchDatosFiscalesProspecto(cotizacion.oportunidad_id ?? null);
+    } catch (err) {
+      notifyError(undefined, {
+        error: err,
+        title: "No se pudieron traer los datos fiscales del prospecto",
+        description: "Puedes capturarlos manualmente para completar el alta.",
+        method: "ABRIR_DIALOG_CONVERTIR",
+        errorCode: ERROR_CODES.DB_ERROR,
+      });
+    }
     setClienteForm({
       ...EMPTY_CLIENTE_FORM,
       nombre: cotizacion.prospecto_empresa || '',

@@ -46,7 +46,8 @@ vi.mock("@/features/cotizacion/hooks", () => ({
   useUpdateCotizacion: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-vi.mock("@/hooks/shared", () => ({ usePermissions: () => ({ canEdit: true }) }));
+// v13.823.348 — la edición de costos se gatea con la capacidad específica.
+vi.mock("@/hooks/shared", () => ({ usePermissions: () => ({ canEdit: true, canWriteCotizaciones: true }) }));
 vi.mock("@/features/catalogos/hooks", () => ({ useTasaIVA: () => 0.16 }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifyError, notifySuccess }));
 

@@ -28,7 +28,9 @@ type QueryBuilder = {
 
 type FilterBuilder = {
   eq: (column: string, value: string) => FilterBuilder;
-  maybeSingle: () => Promise<{ data: OrgRow | null }>;
+  // El builder de PostgREST es *thenable*, no una `Promise`: con `Promise` el
+  // `SupabaseClient` real no satisfacía este tipo y `deno check` fallaba.
+  maybeSingle: () => PromiseLike<{ data: OrgRow | null }>;
 };
 
 type AnySupabaseClient = { from: (t: string) => QueryBuilder };

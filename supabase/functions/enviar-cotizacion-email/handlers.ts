@@ -3,6 +3,9 @@ import { captureEdgeException } from '../_shared/sentry.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 import { DESTINATARIO_NO_PERMITIDO, emailsPermitidosCliente } from '../_shared/destinatarioCliente.ts';
 import { authorizeOrgRole, ROLES_ESCRITURA_COTIZACIONES } from '../_shared/auth.ts';
+// Helper canónico de envío (bitácora en `email_send_log` incluida); no se
+// duplica la implementación aquí.
+import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
 
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
@@ -158,10 +161,13 @@ async function persistEnvioAndLog(params: PersistParams): Promise<string | null>
     modulo: 'cotizaciones',
     accion: anyOk ? 'cotizacion_enviada_email' : 'cotizacion_envio_email_fallido',
     entidad_id: cot.id, entidad_nombre: cot.folio,
-    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
+    detalles: { envio_id: (envio as { id?: string } | null)?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
   }).then(() => null, () => null);
 
-  return envio?.id ?? null;
+  // El cliente sin tipos genera `{}` para la fila insertada: se nombra el
+  // campo esperado en vez de castear a `any`.
+  const envioId = (envio as { id?: string } | null)?.id ?? null;
+  return envioId;
 }
 
 
