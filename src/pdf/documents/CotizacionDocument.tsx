@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
@@ -90,6 +91,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
   const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
+  const notasCliente = notasParaCliente(cotizacion.notas);
   const tasaPct = Math.round(tasaIva * 100);
   const nombre = cotizacion.es_prospecto
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
