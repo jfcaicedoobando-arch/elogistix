@@ -1,8 +1,10 @@
 import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { getStepIndicatorCircleClass } from "@/lib/ui/uiMappings";
 
 interface Step {
   title: string;
+  shortTitle?: string;
   num: number;
 }
 
@@ -27,7 +29,10 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
         const isCurrent = currentStep === step.num;
         const canJump = !!onStepClick && step.num < currentStep;
         const circleClass = `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-body-sm font-bold shrink-0 ${getStepIndicatorCircleClass(currentStep, step.num)}`;
-        const labelClass = `text-body-sm sm:text-body hidden md:inline whitespace-nowrap ${isCurrent ? 'font-medium' : 'text-muted-foreground'}`;
+        const labelClass = cn(
+          "text-body-sm sm:text-body hidden md:inline whitespace-nowrap",
+          isCurrent ? "font-medium" : "text-muted-foreground"
+        );
 
         const content = (
           <>
@@ -37,7 +42,16 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
             >
               {isCompleted ? <Check className="h-4 w-4" aria-hidden /> : step.num}
             </span>
-            <span className={labelClass}>{step.title}</span>
+            <span className={labelClass} title={step.title}>
+              {step.shortTitle ? (
+                <>
+                  <span className="inline 2xl:hidden">{step.shortTitle}</span>
+                  <span className="hidden 2xl:inline">{step.title}</span>
+                </>
+              ) : (
+                step.title
+              )}
+            </span>
           </>
         );
 
