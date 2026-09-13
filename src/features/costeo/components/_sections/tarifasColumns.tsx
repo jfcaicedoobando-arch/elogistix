@@ -3,21 +3,20 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByNumber, sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { TarifaEstadoUnificado } from "../TarifaEstadoUnificado";
-import { TarifaRowActions } from "../TarifaRowActions";
-import { TarifaQuickApprovalButtons } from "../TarifaQuickApprovalButtons";
-import { usd, formatVigencia, vigenciaHint } from "../../routes/CosteoTarifas.helpers";
+import { usd, formatVigencia } from "../../routes/CosteoTarifas.helpers";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-import { todayLocalISO } from "@/lib/date/today";
+import {
+  AccionesTarifaCell,
+  EstadoTarifaCell,
+  TotalTarifaCell,
+  VigenciaTarifaCell,
+} from "./tarifasColumns.cells";
 
 export type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
 import type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
 
 export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaRow, unknown>[] {
-  const {
-    mejorPorGrupo, aprobarPending, reactivarPending,
-    onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar,
-  } = deps;
+  const { mejorPorGrupo } = deps;
   return defineColumns<TarifaRow>([
     {
       id: "ruta",
@@ -100,22 +99,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       sortingFn: sortByNumber((t) => t.total_comparable),
       enableSorting: true,
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums" },
-      cell: ({ row }) => {
-        const t = row.original;
-        const ap = t.estado_aprobacion ?? "vigente";
-        const grupoKey = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
-        const mejor = mejorPorGrupo.get(grupoKey);
-        const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente";
-        const delta = mejor != null && !esMejor && t.total_comparable > mejor ? t.total_comparable - mejor : 0;
-        return (
-          <div>
-            <div className={`font-semibold ${esMejor ? "text-success" : ""}`}>{usd(t.total_comparable)}</div>
-            {delta > 0 && (
-              <div className="text-label text-muted-foreground">+{usd(delta)} vs mejor</div>
-            )}
-          </div>
-        );
-      },
+      cell: ({ row }) => <TotalTarifaCell t={row.original} mejorPorGrupo={mejorPorGrupo} />,
     },
     {
       id: "vigencia",
@@ -130,20 +114,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
         className: "text-body-sm hidden 2xl:table-cell",
         headerClassName: "hidden 2xl:table-cell",
       },
-      cell: ({ row }) => {
-        const t = row.original;
-        const hint = vigenciaHint(t.vigente_hasta);
-        const hintCls =
-          hint.tone === "danger" ? "text-destructive"
-            : hint.tone === "warn" ? "text-warning"
-              : "text-muted-foreground";
-        return (
-          <div>
-            <div className="text-foreground">{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
-            <div className={hintCls}>{hint.text}</div>
-          </div>
-        );
-      },
+      cell: ({ row }) => <VigenciaTarifaCell t={row.original} />,
     },
     {
       id: "estado",
@@ -153,17 +124,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       // MR-UI-02: Estado permanece en el flujo horizontal. Sólo Acciones se
       // fija para evitar que esta celda cubra Contenedor, Total o Vigencia.
       meta: { width: COL_W.estado },
-      cell: ({ row }) => {
-        const t = row.original;
-        return (
-          <TarifaEstadoUnificado
-            estado={t.estado}
-            estadoAprobacion={t.estado_aprobacion ?? "vigente"}
-            vigenteHasta={t.vigente_hasta}
-            motivo={t.motivo_rechazo}
-          />
-        );
-      },
+      cell: ({ row }) => <EstadoTarifaCell t={row.original} />,
     },
     {
       id: "acciones",
@@ -171,36 +132,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       // MR-UI-02: sólo Acciones permanece fija y conserva Aprobar/Rechazar
       // visibles y enfocables mientras el resto de columnas se desplaza.
       meta: { width: COL_W.estado, align: "right", stickyRight: true },
-      cell: ({ row }) => {
-        const t = row.original;
-        const ap = t.estado_aprobacion ?? "vigente";
-        // P2 (auditoría v13.823.143 · bug 6): aprobar una tarifa vencida
-        // siempre falla en backend; se oculta la acción.
-        const vencida = t.estado === "vencida" || (t.vigente_hasta ?? "") < todayLocalISO();
-        return (
-          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-            {ap === "borrador" && !vencida && (
-              <TarifaQuickApprovalButtons
-                variant="table"
-                onAprobar={() => onAprobar(t.id)}
-                onRechazar={() => onRechazar(t.id)}
-                disabled={aprobarPending || reactivarPending}
-              />
-            )}
-            <TarifaRowActions
-              estadoAprobacion={ap}
-              vencida={vencida}
-              onEditar={() => onEditar(t.id)}
-              onDuplicar={() => onDuplicar(t.id)}
-              onEliminar={() => onEliminar(t.id)}
-              onAprobar={() => onAprobar(t.id)}
-              onRechazar={() => onRechazar(t.id)}
-              onReactivar={() => onReactivar(t.id)}
-              disabled={aprobarPending || reactivarPending}
-            />
-          </div>
-        );
-      },
+      cell: ({ row }) => <AccionesTarifaCell t={row.original} deps={deps} />,
     },
   ]);
 }
