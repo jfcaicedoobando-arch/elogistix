@@ -12,11 +12,16 @@ type ConceptoCostoRow = Tables<"conceptos_costo">;
 type DocumentoEmbarqueRow = Tables<"documentos_embarque">;
 type NotaEmbarqueRow = Tables<"notas_embarque">;
 
+/**
+ * R221: un expediente en la papelera (`deleted_at`) no debe abrirse por enlace
+ * directo. Antes devolvía la ficha completa (ELIMP00293).
+ */
 export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
   const { data, error } = await supabase
     .from("embarques")
     .select(EMBARQUE_DETAIL_COLUMNS)
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
   if (error) throw error;
   return data as EmbarqueRow;

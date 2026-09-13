@@ -33,6 +33,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   // ── Cotizaciones ───────────────────────────────────────────────────────
   LC_COT_NO_ENCONTRADA: "La cotización no existe o fue eliminada.",
   LC_COT_ELIMINADA: "La cotización ya fue eliminada.",
+  // R221: dos expedientes vivos comparten folio (p. ej. ELIMP00006); el enlace
+  // por folio no puede decidir cuál abrir, así que se manda al listado.
+  LC_EXPEDIENTE_AMBIGUO:
+    "Hay más de un expediente con ese folio. Ábrelo desde el listado de embarques.",
   LC_COT_ESTADO_INVALIDO: "El estado actual de la cotización no permite esta acción.",
   LC_COT_TRANSICION_INVALIDA:
     "La cotización cambió de estado en otra sesión. Recarga para continuar.",
