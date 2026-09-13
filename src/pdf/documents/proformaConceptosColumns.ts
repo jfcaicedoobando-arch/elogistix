@@ -19,9 +19,18 @@ export type ConceptoVenta = Tables<"conceptos_venta"> & {
  * traiga `tasa_iva_aplicada` heredada del default de la columna. No se toca el
  * resolver global para no afectar a sus otros consumidores.
  */
-function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
+export function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
   if (r.aplica_iva === false) return 0;
   return resolverTasaConcepto(r, tasaIva);
+}
+
+/**
+ * ¿Alguna fila causa IVA realmente? Se mira la TASA efectiva, no el flag
+ * `aplica_iva`: una fila con `aplica_iva=true` y `tasa_iva_aplicada=0` no
+ * genera IVA y no debe abrir las columnas IVA/Total del PDF.
+ */
+export function hayIvaEfectivo(items: ConceptoVenta[], tasaIva: number): boolean {
+  return items.some((r) => tasaEfectivaFila(r, tasaIva) > 0);
 }
 
 /** IVA de la fila según su tratamiento fiscal guardado. */
