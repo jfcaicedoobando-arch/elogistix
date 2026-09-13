@@ -37,12 +37,19 @@ export const cotizacionQueries = {
       staleTime: staleTimes.MEDIUM,
     }),
 
-  /** Detalle de una cotización por id. */
+  /**
+   * Detalle de una cotización por id.
+   * v13.823.339 (bug 6) — `refetchOnWindowFocus: true` sólo aquí: una pestaña
+   * dejada abierta puede mostrar "Aceptada" con el botón "Crear embarque"
+   * cuando en la base ya avanzó a "En operación" con `embarque_id` asignado.
+   * El resto de la app conserva `refetchOnWindowFocus: false` (queryClient global).
+   */
   detail: (id: string) =>
     queryOptions<CotizacionRow | null>({
       queryKey: queryKeys.cotizaciones.detail(id),
       queryFn: () => fetchCotizacionById(id),
       staleTime: staleTimes.SHORT,
+      refetchOnWindowFocus: true,
     }),
 
   /** Embarques vinculados a una cotización. */

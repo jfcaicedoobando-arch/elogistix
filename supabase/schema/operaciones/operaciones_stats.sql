@@ -135,7 +135,7 @@ BEGIN
     SELECT
       operador_norm AS nombre,
       count(*) FILTER (WHERE es_activo) AS cargas_activas,
-      count(*) FILTER (WHERE es_activo) AS contenedores,
+      COALESCE(sum(teu) FILTER (WHERE es_activo), 0) AS contenedores,
       count(*) FILTER (
         WHERE COALESCE(etd, created_at::date) >= date_trunc('month', v_hoy)::date
           AND COALESCE(etd, created_at::date) <= (date_trunc('month', v_hoy) + interval '1 month - 1 day')::date
@@ -305,7 +305,8 @@ BEGIN
   global AS (
     SELECT jsonb_build_object(
       'totalActivas', count(*) FILTER (WHERE es_activo),
-      'totalContenedores', count(*) FILTER (WHERE es_activo),
+      'totalContenedores', COALESCE(sum(teu) FILTER (WHERE es_activo), 0),
+      'totalContenedoresFisicos', COALESCE(sum(contenedores_fisicos) FILTER (WHERE es_activo), 0),
       'totalEsteMes', count(*) FILTER (
         WHERE COALESCE(etd, created_at::date) >= date_trunc('month', v_hoy)::date
           AND COALESCE(etd, created_at::date) <= (date_trunc('month', v_hoy) + interval '1 month - 1 day')::date
