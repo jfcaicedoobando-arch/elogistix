@@ -19,13 +19,13 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
-import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
+import { EstadoSelect, ClienteSelect, SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 import { CotizacionesSecondaryFilters } from "@/features/cotizacion/components/CotizacionesSecondaryFilters";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -89,25 +89,12 @@ export default function Cotizaciones() {
       <CotizacionesBannerOrigen />
       <CotizacionesKpis {...c.kpis} segmento={c.segmento} />
 
-      {/* Segmento comercial: separa la prospección CRM de la operación con
-          clientes activos; los KPIs y la tabla siguen al segmento elegido. */}
-      <Tabs
+      <SegmentoTabs
         value={c.segmento}
-        onValueChange={(v) => c.setFilter("segmento", v)}
-        className="w-full"
-      >
-        <TabsList aria-label="Segmento de cotizaciones">
-          <TabsTrigger value="clientes">
-            Clientes ({c.segmentoConteos.clientes})
-          </TabsTrigger>
-          <TabsTrigger value="prospectos">
-            Prospectos ({c.segmentoConteos.prospectos})
-          </TabsTrigger>
-          <TabsTrigger value="todas">
-            Todas ({c.segmentoConteos.todas})
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+        conteos={c.segmentoConteos}
+        onChange={(v) => c.setFilter("segmento", v)}
+      />
+
 
 
       <Card>
