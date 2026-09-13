@@ -222,31 +222,45 @@ BEGIN
   )
   RETURNING id INTO v_embarque_id;
 
-  v_num := GREATEST(1, COALESCE(v_cot.num_contenedores, 1));
-  v_peso_each := COALESCE(v_cot.peso_kg, 0) / v_num;
-  v_vol_each := COALESCE(v_cot.volumen_m3, 0) / v_num;
-  v_piezas_base := COALESCE(v_cot.piezas, 0) / v_num;
-  v_piezas_rest := COALESCE(v_cot.piezas, 0);
-
+  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
+  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
+  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
+  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
+  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
-  FOR i IN 1..v_num LOOP
-    IF i = v_num THEN v_piezas_este := v_piezas_rest;
-    ELSE v_piezas_este := v_piezas_base; END IF;
-    v_piezas_rest := v_piezas_rest - v_piezas_este;
+  IF v_cot.modo = 'Marítimo'::modo_transporte THEN
+    IF v_tipo_servicio = 'LCL' THEN
+      v_num := 1;
+    ELSE
+      v_num := GREATEST(1, COALESCE(v_cot.num_contenedores, 1));
+    END IF;
+    v_peso_each := COALESCE(v_cot.peso_kg, 0) / v_num;
+    v_vol_each := COALESCE(v_cot.volumen_m3, 0) / v_num;
+    v_piezas_base := COALESCE(v_cot.piezas, 0) / v_num;
+    v_piezas_rest := COALESCE(v_cot.piezas, 0);
 
-    INSERT INTO public.embarque_contenedores (
-      embarque_id, numero_contenedor, tipo_contenedor, bl_house,
-      peso_kg, volumen_m3, piezas, orden
-    )
-    VALUES (
-      v_embarque_id, '', COALESCE(v_tipo_cont_code, ''), '',
-      v_peso_each, v_vol_each, v_piezas_este, i
-    )
-    RETURNING id INTO v_cid;
+    FOR i IN 1..v_num LOOP
+      IF i = v_num THEN v_piezas_este := v_piezas_rest;
+      ELSE v_piezas_este := v_piezas_base; END IF;
+      v_piezas_rest := v_piezas_rest - v_piezas_este;
 
-    v_target_ids := array_append(v_target_ids, v_cid);
-    IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
-  END LOOP;
+      INSERT INTO public.embarque_contenedores (
+        embarque_id, numero_contenedor, tipo_contenedor, bl_house,
+        peso_kg, volumen_m3, piezas, orden
+      )
+      VALUES (
+        v_embarque_id, '',
+        CASE WHEN v_tipo_servicio = 'LCL' THEN 'LCL' ELSE COALESCE(v_tipo_cont_code, '') END,
+        '',
+        v_peso_each, v_vol_each, v_piezas_este, i
+      )
+      RETURNING id INTO v_cid;
+
+      v_target_ids := array_append(v_target_ids, v_cid);
+      IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
+    END LOOP;
+  END IF;
+
 
   PERFORM public._crear_embarque_replicar_conceptos(
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
