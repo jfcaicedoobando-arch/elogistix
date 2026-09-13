@@ -8,6 +8,8 @@
 import type { Tables } from '@/integrations/supabase/types';
 
 export interface ConceptoVentaCotizacion {
+  /** Identificador estable cuando el concepto viene de una tabla (opcional en jsonb). */
+  id?: string;
   descripcion: string;
   unidad_medida: string;
   cantidad: number;
