@@ -63,13 +63,30 @@ export function clasificarBloqueoAvance(params: {
  * Clasifica el mensaje de error devuelto por `avanzar_estado_embarque` en
  * una acción UX. Puro para poder testearse aisladamente.
  */
-export type AvanceErrorKind = "block_docs" | "block_fecha_llegada" | "transicion_invalida" | "generic";
+export type AvanceErrorKind =
+  | "block_docs"
+  | "block_fecha_llegada"
+  | "block_confirmado"
+  | "transicion_invalida"
+  | "generic";
 export function clasificarAvanceError(msg: string): AvanceErrorKind {
   if (msg.includes("documentos_faltantes")) return "block_docs";
   if (msg.includes("fecha_llegada_real_requerida")) return "block_fecha_llegada";
+  if (msg.includes("LC_CONFIRMADO_INCOMPLETO")) return "block_confirmado";
   if (msg.includes("LC_TRANSICION_INVALIDA")) return "transicion_invalida";
   return "generic";
 }
+
+/**
+ * Extrae la lista de faltantes que la RPC adjunta a `LC_CONFIRMADO_INCOMPLETO`.
+ * Devuelve null si el mensaje no trae detalle.
+ */
+export function faltantesDesdeErrorConfirmado(msg: string): string | null {
+  const m = /LC_CONFIRMADO_INCOMPLETO:\s*([^\n]+)/.exec(msg);
+  const detalle = m?.[1]?.trim();
+  return detalle ? detalle.replace(/\.$/, "") : null;
+}
+
 
 /**
  * B-027: mínimos operativos para pasar de Borrador a Confirmado.
