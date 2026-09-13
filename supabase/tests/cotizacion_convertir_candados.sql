@@ -40,7 +40,7 @@ BEGIN
   BEGIN
     v_desde := pg_get_functiondef(
       'public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb)'::regprocedure);
-    IF v_desde !~ 'mantenida_por_operaciones..\)' THEN
+    IF v_desde !~ 'mantenida_por_operaciones.\)' THEN
       RAISE EXCEPTION 'mantenida_por_operaciones dejo de validar la severidad bloqueante de la revalidacion';
     END IF;
     IF position('mantenida_por_operaciones' in v_desde) > position('LC_TARIFA_REQUIERE_REVALIDACION' in v_desde) THEN
