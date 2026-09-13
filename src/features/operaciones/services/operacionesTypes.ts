@@ -80,6 +80,7 @@ export interface ServerStats {
   operadores: ServerOperador[];
   global: {
     totalActivas: number; totalContenedores: number; totalEsteMes: number;
+    totalContenedoresFisicos: number;
     totalProfit: number; totalDemoras: number; totalCriticos: number;
     totalEnPuerto: number; totalPorArribar: number; activasHoy: number;
     maxContenedores: number;
