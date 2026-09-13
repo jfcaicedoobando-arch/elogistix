@@ -11,6 +11,7 @@
 DO $$
 DECLARE
   v_def text;
+  v_rol text;
 BEGIN
   v_def := pg_get_functiondef('public.crear_embarque_borrador_core(uuid)'::regprocedure);
 
