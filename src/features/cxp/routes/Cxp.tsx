@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
@@ -86,19 +85,12 @@ export default function Cxp() {
         title="Facturas de proveedor"
         description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => exportarCxpCsv(dataOrdenada)} disabled={data.length === 0}>
-              <Download className="h-4 w-4 mr-2" /> Exportar CSV
-            </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.REPORTES_CARTERA)}>
-              <FileText className="h-4 w-4 mr-2" /> Cartera y antigüedad
-            </Button>
-            {canCapturarFacturaProveedor && (
-              <Button onClick={() => f.setOpenNueva(true)}>
-                <Plus className="h-4 w-4 mr-2" /> Capturar factura
-              </Button>
-            )}
-          </div>
+          <CxpHeaderActions
+            puedeCapturar={canCapturarFacturaProveedor}
+            puedeExportar={data.length > 0}
+            onExportar={() => exportarCxpCsv(dataOrdenada)}
+            onCapturar={() => f.setOpenNueva(true)}
+          />
         }
       />
 
@@ -184,24 +176,7 @@ export default function Cxp() {
                   pageSizeOptions: [50, 100, 200],
                   total: data.length,
                 }}
-                mobileCard={(fact) => (
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="font-semibold text-body truncate font-mono">{fact.folio_interno}</div>
-                      <div className="text-body-sm text-muted-foreground truncate">{toTitleCase(fact.proveedor_nombre)}</div>
-                      <div className="text-label text-muted-foreground">
-                        Vence {fact.fecha_vencimiento ? formatDate(fact.fecha_vencimiento) : "—"}
-                      </div>
-                      <EstadoFacturaCxPCell factura={fact} />
-                    </div>
-                    <MoneyCell
-                      label="Saldo"
-                      value={formatCurrency(fact.saldo, fact.moneda)}
-                      highlight
-                      className="shrink-0 w-28"
-                    />
-                  </div>
-                )}
+                mobileCard={(fact) => <CxpMobileCard factura={fact} />}
               />
             </TooltipProvider>
           )}
