@@ -20,6 +20,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useResolverReaprobacion } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { recotizarCotizacion } from "@/features/cotizacion/services/versionado";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { usePermissions } from "@/hooks/shared";
 
 interface Props {
   cotizacionId: string;
@@ -28,7 +29,13 @@ interface Props {
 }
 
 export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: Props) {
-  const { mutate, isPending } = useResolverReaprobacion();
+  const { mutateAsync, isPending } = useResolverReaprobacion();
+  /**
+   * v13.823.349 — resolver la re-aprobación es ESCRITURA de cotizaciones
+   * (espejo de `puede_escribir_cotizaciones`). Finanzas y lectura conservan el
+   * aviso, pero sin botones que la RPC siempre rechazaría.
+   */
+  const { canWriteCotizaciones } = usePermissions();
   const [recotizando, setRecotizando] = useState(false);
   const navigate = useNavigate();
 
@@ -41,17 +48,14 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
   const tarifaVencida = delta?.tarifa_vigente === false;
 
   async function handleRecotizar() {
+    // v13.823.349 — guard de reentrada: el `finally` liberaba el botón antes de
+    // que `resolver_reaprobacion_tarifa` terminara y de navegar.
+    if (recotizando || isPending) return;
     setRecotizando(true);
     try {
       await recotizarCotizacion(cotizacionId, "Tarifa vigente actualizada por ventas");
-      mutate(
-        { cotizacionId, decision: "recotizada" },
-        {
-          onSuccess: () => {
-            navigate(`/cotizaciones/${cotizacionId}/editar`);
-          },
-        },
-      );
+      await mutateAsync({ cotizacionId, decision: "recotizada" });
+      navigate(`/cotizaciones/${cotizacionId}/editar`);
     } catch (e) {
       notifyError(undefined, {
         title: `No se pudo re-cotizar: ${(e as Error).message}`,
@@ -65,6 +69,15 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
 
   const disabled = isPending || recotizando;
 
+  async function resolver(decision: "reaprobada" | "rechazada") {
+    if (disabled) return;
+    try {
+      await mutateAsync({ cotizacionId, decision });
+    } catch {
+      // `useResolverReaprobacion` ya notifica el error.
+    }
+  }
+
   return (
     <Alert variant="default" className="border-warning bg-warning/10">
       <AlertTriangle className="h-4 w-4 text-warning" />
@@ -76,10 +89,11 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
             : "Operaciones detectó cambios en la tarifa vigente al crear el embarque."}
           {delta?.conceptos ? ` (${delta.conceptos} concepto(s) afectado(s))` : ""}
         </p>
+        {canWriteCotizaciones && (
         <div className="flex gap-2 flex-wrap">
           <Button
             size="sm"
-            onClick={() => mutate({ cotizacionId, decision: "reaprobada" })}
+            onClick={() => resolver("reaprobada")}
             disabled={disabled}
           >
             Re-aprobar manteniendo precio al cliente
@@ -96,12 +110,13 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
           <Button
             size="sm"
             variant="outline"
-            onClick={() => mutate({ cotizacionId, decision: "rechazada" })}
+            onClick={() => resolver("rechazada")}
             disabled={disabled}
           >
             Rechazar
           </Button>
         </div>
+        )}
       </AlertDescription>
     </Alert>
   );

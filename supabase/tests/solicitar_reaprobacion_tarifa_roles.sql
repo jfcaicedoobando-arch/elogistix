@@ -33,6 +33,18 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- v13.823.349: además del rol, la solicitud exige estado operativo
+  -- (Aceptada / En operación) y severidad bloqueante.
+  IF v_def !~ 'LC_COT_ESTADO_NO_OPERATIVO' THEN
+    RAISE EXCEPTION 'solicitar_reaprobacion_tarifa dejo de exigir estado operativo (Aceptada / En operacion)';
+  END IF;
+  IF v_def !~ 'LC_REVALIDACION_SIN_BLOQUEO' THEN
+    RAISE EXCEPTION 'solicitar_reaprobacion_tarifa dejo de exigir severidad bloqueante';
+  END IF;
+  IF position('LC_REVALIDACION_SIN_BLOQUEO' in v_def) > position('notificaciones_internas' in v_def) THEN
+    RAISE EXCEPTION 'el candado de severidad quedo DESPUES de crear la notificacion';
+  END IF;
+
   IF v_def !~ 'current_user_org_id\(\)' THEN
     RAISE EXCEPTION 'solicitar_reaprobacion_tarifa dejó de validar la organización';
   END IF;

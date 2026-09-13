@@ -10,7 +10,7 @@ describe("CotizacionesKpis", () => {
   it("muestra el label corto y el periodo como sublabel", () => {
     render(<CotizacionesKpis total={12} aceptadas={5} rechazadas={2} tasa="41.7" />);
     expect(screen.getByText("Total cotizaciones")).toBeTruthy();
-    expect(screen.getByText("Últimos 30 días")).toBeTruthy();
+    expect(screen.getByText("30 días")).toBeTruthy();
     expect(screen.queryByText(/Total cotizaciones \(30 días\)/)).toBeNull();
   });
 });

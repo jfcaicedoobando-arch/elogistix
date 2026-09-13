@@ -12501,15 +12501,13 @@ BEGIN
   END IF;
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
-  -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
-  -- Una cotización ya Aceptada / En operación congeló sus términos al aceptarse
-  -- y debe poder convertirse a embarque aunque la vigencia haya expirado; el
-  -- resto de estados sigue bloqueado por `enforce_cotizacion_vigente`.
   IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
-  IF p_decision='sin_cambios' THEN
+  -- v13.823.349 — `mantenida_por_operaciones` NO es una vía para saltarse la
+  -- re-aprobación: sólo vale cuando la revalidación no es bloqueante.
+  IF p_decision IN ('sin_cambios','mantenida_por_operaciones') THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
     END IF;
@@ -12531,8 +12529,6 @@ BEGIN
     END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
-  -- v13.823.32: repetir la conversión (el core devuelve el embarque ya
-  -- existente) NO debe pisar el snapshot/decisión histórica de tarifa.
   SELECT tarifa_decision IS NOT NULL INTO v_ya_decidido
     FROM public.embarques WHERE id = v_embarque_id;
   IF NOT COALESCE(v_ya_decidido, false) THEN
@@ -12544,15 +12540,14 @@ BEGIN
            tarifa_revalidada_en=now(),
            tarifa_revalidada_por=auth.uid()
      WHERE id=v_embarque_id;
-    -- R201-COT-01: refrescar o sustituir la tarifa debe reflejarse en el COSTO
-    -- del embarque; antes sólo se guardaba la etiqueta de la decisión y el
-    -- embarque nacía con los importes viejos. El histórico de la cotización y
-    -- el precio de venta aceptado no se tocan.
     IF p_decision IN ('refrescada','sustituida') THEN
       PERFORM public._embarque_aplicar_tarifa_decidida(
         v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
     END IF;
-    IF p_decision <> 'sin_cambios' AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
+    -- v13.823.349 — sólo las decisiones que resuelven el bloqueo cierran la
+    -- solicitud pendiente; `mantenida_por_operaciones` no.
+    IF p_decision IN ('reaprobada_ventas','refrescada','sustituida')
+       AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
       UPDATE public.cotizaciones
          SET estado_revalidacion='reaprobada', revalidacion_resuelta_en=now(), updated_at=now()
        WHERE id=p_cotizacion_id;
@@ -27791,7 +27786,6 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
-  -- v13.823.347 — misma puerta de rol que `crear_embarque_borrador_core`.
   IF NOT (v_is_super
           OR has_role(auth.uid(), 'admin_org'::app_role)
           OR has_role(auth.uid(), 'admin'::app_role)
@@ -27801,7 +27795,17 @@ BEGIN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden solicitar la re-aprobación de tarifa'
       USING ERRCODE='42501';
   END IF;
+  -- v13.823.349 — sólo el flujo operativo y sólo cuando la revalidación bloquea.
+  IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion,
+                          'En operación'::public.estado_cotizacion) THEN
+    RAISE EXCEPTION 'LC_COT_ESTADO_NO_OPERATIVO: sólo una cotización Aceptada o En operación puede pedir re-aprobación de tarifa (estado: %)', v_cot.estado
+      USING ERRCODE='P0001';
+  END IF;
   v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
+  IF COALESCE(v_revalidacion->>'severidad','') <> 'bloqueante' THEN
+    RAISE EXCEPTION 'LC_REVALIDACION_SIN_BLOQUEO: la tarifa vigente no requiere re-aprobación (severidad: %)', COALESCE(v_revalidacion->>'severidad','')
+      USING ERRCODE='P0001';
+  END IF;
   v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
     || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');
   UPDATE public.cotizaciones

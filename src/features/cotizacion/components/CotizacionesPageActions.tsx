@@ -15,6 +15,8 @@ interface CotizacionesPageActionsProps {
   canEdit: boolean;
   /** Total filtrado en servidor: con 0 no hay nada que exportar. */
   totalFiltrado?: number;
+  /** v13.823.349 — evita segundas descargas mientras el CSV se está armando. */
+  exportando?: boolean;
   onExportar: () => void;
   onNueva: () => void;
 }
@@ -22,6 +24,7 @@ interface CotizacionesPageActionsProps {
 export function CotizacionesPageActions({
   canEdit,
   totalFiltrado,
+  exportando = false,
   onExportar,
   onNueva,
 }: CotizacionesPageActionsProps) {
@@ -36,14 +39,14 @@ export function CotizacionesPageActions({
         <Button
           variant="outline"
           onClick={onExportar}
-          disabled={totalFiltrado === 0}
+          disabled={totalFiltrado === 0 || exportando}
           // Un botón deshabilitado no dispara el tooltip de Radix (no recibe
           // eventos de puntero): dejamos la causa como descripción accesible
           // (sin `title` nativo, prohibido por la auditoría de arquitectura).
           aria-describedby={totalFiltrado === 0 ? "exportar-csv-motivo" : undefined}
           className="hidden sm:inline-flex"
         >
-          <Download className="h-4 w-4 mr-2" /> Exportar CSV
+          <Download className="h-4 w-4 mr-2" /> {exportando ? "Exportando…" : "Exportar CSV"}
         </Button>
       </Hint>
       {totalFiltrado === 0 && (
@@ -80,7 +83,7 @@ export function CotizacionesPageActions({
               <Sparkles className="mr-2 h-4 w-4" /> Plantillas
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onExportar} disabled={totalFiltrado === 0}>
+          <DropdownMenuItem onClick={onExportar} disabled={totalFiltrado === 0 || exportando}>
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
           </DropdownMenuItem>
 

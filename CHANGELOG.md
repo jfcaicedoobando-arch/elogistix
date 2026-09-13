@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.349] - 2026-09-13
+
+- **fix(db, integridad)**: `crear_embarque_borrador_desde_cotizacion` ya no acepta la decisión `mantenida_por_operaciones` cuando la revalidación de tarifa es bloqueante (responde `LC_TARIFA_REQUIERE_REVALIDACION`), y sólo `reaprobada_ventas`/`refrescada`/`sustituida` cierran la solicitud `pendiente_reaprobacion`.
+- **fix(db, máquina de estados)**: `solicitar_reaprobacion_tarifa` exige estado operativo (`Aceptada` o `En operación`, `LC_COT_ESTADO_NO_OPERATIVO`) y severidad bloqueante (`LC_REVALIDACION_SIN_BLOQUEO`); antes marcaba `pendiente_reaprobacion` con bitácora y notificación sobre cualquier cotización viva.
+- **fix(permisos, cotizaciones)**: el banner de re-aprobación de tarifa y el banner "Sin oportunidad en el CRM" gatean sus acciones con `canWriteCotizaciones`; viewer, contabilidad y tesorería conservan el aviso en sólo lectura.
+- **fix(cotizaciones)**: "Re-cotizar con tarifa vigente" espera la resolución de la RPC (`mutateAsync`) antes de navegar y bloquea el doble clic.
+- **fix(cotizaciones)**: la búsqueda del listado incluye `prospecto_empresa`; buscar por la empresa visible del segmento Prospectos ya no devuelve cero.
+- **fix(cotizaciones)**: "Exportar CSV" tiene candado in-flight con estado "Exportando…" y avisa con mensaje contextual si la carga falla.
+- **ui(cotizaciones)**: el sublabel del primer KPI se acorta a "30 días" para no truncarse en 1280×720.
+
 ## [13.823.348] - 2026-09-13
 
 - **fix(permisos, cotizaciones)**: capacidad específica `canWriteCotizaciones` (espejo de `puede_escribir_cotizaciones()` / `_assert_writer_cotizacion`): contabilidad y tesorería ya no ven "Nueva cotización", duplicar, eliminar ni "Editar/Guardar costos"; conservan la lectura financiera con `canEdit`.
