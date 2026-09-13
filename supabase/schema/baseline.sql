@@ -33607,7 +33607,6 @@ GRANT ALL ON FUNCTION public.app_logs_health_timeline(p_hours integer, p_buckets
 REVOKE ALL ON FUNCTION public.current_user_org_id() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.current_user_org_id() TO authenticated;
 GRANT ALL ON FUNCTION public.current_user_org_id() TO service_role;
-GRANT ALL ON FUNCTION public.current_user_org_id() TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proveedor_facturas TO authenticated;
 GRANT ALL ON TABLE public.proveedor_facturas TO service_role;
 REVOKE ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text) FROM PUBLIC;
