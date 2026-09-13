@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.823.311] - 2026-09-13
+
+- **fix(comisiones · B-3)**: al registrar el pago de una liquidación, un reintento con exactamente los mismos datos (misma fecha, mismo método y misma referencia) ahora devuelve el pago ya registrado en lugar de mostrar el error "ya tiene un pago registrado"; si algún dato cambia, el aviso sigue igual. No cambian importes, estados, permisos ni la bitácora. Prueba nueva `supabase/tests/comision_pago_liquidacion_idempotente.sql`.
+- **test(comisiones · B-4)**: se descartó el supuesto desfase de la foto financiera de comisiones al cerrar embarques: el cierre recalcula las comisiones **antes** de fijar `pnl_base`/`calculo_snapshot`, y esa foto está acotada al embarque que se cierra. Queda la prueba de regresión `supabase/tests/comision_pnl_base_cierre.sql`; sin cambios de función.
+- **test(cotizaciones→embarques · B-5)**: prueba de caracterización `supabase/tests/prorrateo_cotizacion_cantidad_multi_contenedor.sql` que fija el reparto vigente cuando la cotización trae `cantidad > 1` y el embarque tiene otro número de contenedores (el total se conserva y se divide entre los contenedores). La semántica de `cantidad` queda como decisión de producto pendiente; no se modificó el prorrateo.
+
 ## [13.823.310] - 2026-09-13
+
 
 - Tarifas marítimas: el título de la pestaña ya no queda como "Iniciar sesión"; la tabla cabe en 1280×720 (Contenedor y Vigencia se resumen bajo la Ruta) y desaparece el aviso de scroll horizontal.
 - Embarques: el contador de contenedores usa siempre los contenedores capturados, no el número de embarques del expediente.
