@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.337] - 2026-09-13
+
+- **datos(cotizaciones)**: se guardó el tipo de cambio oficial del día correspondiente en 9 cotizaciones aceptadas que mezclaban pesos y dólares sin tenerlo (COT-2026-0103, 0105, 0130, 0136, 0168, 0173, 0217, 0230 y 0237). Ningún importe cambió.
+- **datos(cotizaciones)**: las cotizaciones marítimas de carga completa que decían "0 contenedores" ya traen la cantidad real de su expediente (ELIMP00329 con 3, ELIMP00379 y otros con 2, el resto con 1). Los consolidados y las vencidas sin expediente quedaron intactos.
+- **revisión pendiente**: se generó la hoja de trabajo de las 7 ligas de facturas en pesos contra costos en dólares para revisarlas una por una; no se modificó ningún importe.
+
 ## [13.823.336] - 2026-09-13
 
 - **fix(embarques)**: al editar un embarque, el paso de ruta ya no deja avanzar sin fecha de salida, fecha de llegada, ruta ni contenedor obligatorio; guardar un borrador incompleto sigue permitido.
