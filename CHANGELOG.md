@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.344] - 2026-09-13
+
+- **fix(cotizaciones)**: la nota del historial de versiones ahora compara contra la versión más reciente (`versiones[0]`) en lugar de la más antigua, ya que la consulta devuelve `version_num` descendente. Corrige el mensaje que podía decir "la última versión se congeló en Borrador" cuando en realidad la más reciente estaba Aceptada.
+
 ## [13.823.343] - 2026-09-13
 
 - **refactor(pdf)**: las columnas y totales del PDF de cotización se extraen a `cotizacionColumnas.tsx` para volver a respetar el límite de 200 líneas por archivo; sin cambios de comportamiento.
