@@ -166,6 +166,12 @@ export function useServerPagedList<
     totalPages,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
+    /**
+     * `true` cuando se muestran las filas de la consulta ANTERIOR mientras
+     * llega la nueva (p. ej. al cambiar de pestaña Clientes → Prospectos).
+     * La UI debe pintar esqueleto para no operar sobre filas de otro segmento.
+     */
+    isPlaceholderData: query.isPlaceholderData,
     error: query.error,
     refetch: query.refetch,
     // Estado de filtros/orden (para armar barra y columnas)
