@@ -65,20 +65,21 @@ export interface ParseConceptosResult {
  */
 export function parseConceptosDetallado(raw: unknown): ParseConceptosResult {
   if (raw == null) return { conceptos: [], descartados: 0 };
+  if (typeof raw === "string" && raw.trim() === "") return { conceptos: [], descartados: 0 };
   let arr: unknown = raw;
   if (typeof raw === "string") {
     try {
       arr = JSON.parse(raw);
     } catch (err) {
       logger.warn("cotizacionDetalle", "conceptos_venta: JSON inválido", err);
-      return { conceptos: [], descartados: 0 };
+      // v13.823.346 — antes se devolvía 0 descartados y el detalle mostraba $0
+      // sin avisar. El payload completo cuenta como una fila descartada.
+      return { conceptos: [], descartados: 1 };
     }
   }
   if (!Array.isArray(arr)) {
-    if (typeof raw !== "string") {
-      logger.warn("cotizacionDetalle", "conceptos_venta con formato inválido", { raw });
-    }
-    return { conceptos: [], descartados: 0 };
+    logger.warn("cotizacionDetalle", "conceptos_venta con formato inválido", { raw });
+    return { conceptos: [], descartados: 1 };
   }
   const conceptos: ConceptoVentaCotizacion[] = [];
   let descartados = 0;
@@ -99,6 +100,29 @@ export function parseConceptos(raw: unknown): ConceptoVentaCotizacion[] {
 }
 
 
+/**
+ * v13.823.346 — Importe efectivo de una fila de venta.
+ *
+ * Regla única para header/PDF/acciones: se usa el `total` guardado cuando es
+ * positivo y, si falta o viene en 0 (filas USD legacy), se reconstruye con
+ * cantidad × precio + IVA de la fila. Antes el header y el candado del PDF
+ * miraban sólo `total`, así que una cotización con importes visibles en el
+ * detalle bloqueaba "Enviar" y "Exportar PDF".
+ */
+export function importeEfectivoConcepto(c: ConceptoVentaCotizacion, tasaIva = 0): number {
+  const total = Number(c?.total);
+  if (Number.isFinite(total) && total > 0) return total;
+  const sub = subtotalLinea(c?.cantidad, c?.precio_unitario);
+  if (!Number.isFinite(sub) || sub <= 0) return 0;
+  return sub + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
+}
+
+/** ¿El payload crudo de `conceptos_venta` tiene al menos un importe real? */
+export function tieneImportesEfectivos(raw: unknown): boolean {
+  return parseConceptos(raw).some((c) => importeEfectivoConcepto(c) > 0);
+}
+
+
 /** Calcula los totales por moneda a partir de los conceptos parseados. */
 export function calcularTotalesConceptos(
   conceptos: ConceptoVentaCotizacion[],
@@ -107,7 +131,7 @@ export function calcularTotalesConceptos(
   if (!Array.isArray(conceptos) || conceptos.length === 0) return EMPTY_TOTALES;
   const conceptosVentaUSD = conceptos.filter(c => c.moneda === "USD");
   const conceptosVentaMXN = conceptos.filter(c => c.moneda === "MXN");
-  const totalUSD = sumarMontos(conceptosVentaUSD.map((c) => c.total));
+  const totalUSD = sumarMontos(conceptosVentaUSD.map((c) => importeEfectivoConcepto(c, tasaIva)));
   // VIS-CE-251-06: el desglose USD se calcula por línea igual que el MXN; el
   // total mostrado sigue siendo la suma de los `total` guardados.
   const subtotalUSD = sumarSubtotales(conceptosVentaUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));

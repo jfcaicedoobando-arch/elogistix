@@ -16,6 +16,8 @@ import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutati
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 import { usePdfExport } from "@/hooks/shared/usePdfExport";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
+import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
@@ -26,6 +28,9 @@ const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generat
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const { effectiveRole } = useAuth();
+  // v13.823.346 — el envío por correo lo autoriza SALES en la edge function;
+  // finanzas (contador/tesorero) veía el botón y recibía 403.
+  const puedeEnviarEmail = puedeEscribirCotizaciones(effectiveRole as AppRole | null);
 
   const {
     cotizacion, isLoading, error, refetch, canEdit, tasaIva, embarquesVinculados,
@@ -82,7 +87,7 @@ export default function CotizacionDetalle() {
               onBack={() => navigate("/cotizaciones")}
               onExportarPdf={() => {
                 // B-081: no generamos PDF en $0.00 (se enviaban cotizaciones vacías).
-                if (totalUSD + totalMXN <= 0) {
+                if (!tieneImportesEfectivos(cotizacion.conceptos_venta)) {
                   notifyError(undefined, {
                     title: "La cotización no tiene importes",
                     description: "Los conceptos de venta suman $0.00. Revisa la sección de costos y sincroniza los conceptos de venta antes de descargar el PDF.",
@@ -92,7 +97,7 @@ export default function CotizacionDetalle() {
                 void run(() => handleExportarPdf(cotizacion, tasaIva));
               }}
               exportandoPdf={isExporting}
-              onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
+              onEnviarEmail={puedeEnviarEmail ? () => setEnviarOpen(true) : undefined}
               yaEnviada={envios.length > 0}
             />
 
