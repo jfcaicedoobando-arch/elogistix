@@ -73,6 +73,8 @@ export function clasificarAvanceError(msg: string): AvanceErrorKind {
 
 /**
  * B-027: mínimos operativos para pasar de Borrador a Confirmado.
+ * v13.823.321: se alinean con los campos marcados con `*` en el wizard
+ * (shipper, consignatario, ETD y ETA) y con el guard de `avanzar_estado_embarque`.
  * Devuelve la lista de faltantes en lenguaje de negocio (vacía = puede avanzar).
  * Función pura, testeable.
  */
@@ -87,10 +89,18 @@ export function faltantesParaConfirmado(
     aerolinea?: string | null;
     mawb?: string | null;
     transportista?: string | null;
+    shipper?: string | null;
+    consignatario?: string | null;
+    etd?: string | null;
+    eta?: string | null;
   },
   numContenedores: number,
 ): string[] {
   const faltantes: string[] = [];
+  if (!embarque.shipper?.trim()) faltantes.push("shipper (exportador)");
+  if (!embarque.consignatario?.trim()) faltantes.push("consignatario");
+  if (!embarque.etd?.trim()) faltantes.push("ETD");
+  if (!embarque.eta?.trim()) faltantes.push("ETA");
   if (!embarque.peso_kg || embarque.peso_kg <= 0) faltantes.push("peso mayor a 0 kg");
   faltantes.push(...faltantesMaritimo(embarque, numContenedores));
   faltantes.push(...faltantesAereo(embarque));
@@ -99,6 +109,7 @@ export function faltantesParaConfirmado(
   }
   return faltantes;
 }
+
 
 function faltantesMaritimo(
   embarque: { modo?: string | null; tipo_servicio?: string | null; naviera?: string | null; bl_master?: string | null; bl_house?: string | null },
