@@ -46,6 +46,10 @@ BEGIN
         -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
         -- cuente como Confirmado por derivación ETD/ETA.
         WHEN e.estado = 'Borrador' THEN 'Borrador'
+        -- R221 (ELIMP00353): preservar Cancelado ANTES de derivar por ETD/ETA;
+        -- si no, un cancelado con ETA vencida se volvía 'Arribo' y sobrevivía
+        -- al filtro posterior que pretendía excluirlo.
+        WHEN e.estado = 'Cancelado' THEN 'Cancelado'
         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
@@ -60,6 +64,20 @@ BEGIN
     FROM embarques e
     WHERE e.deleted_at IS NULL                -- FIX C5
       AND (e.organization_id = public.org_scope())
+  ),
+  -- R221: los contenedores se cuentan de embarque_contenedores, NO de embarques.
+  -- Conversión a TEU explícita: 40'/45' = 2 TEU, 20' = 1 TEU, sin tipo = 1 TEU.
+  teu_por_embarque AS (
+    SELECT ec.embarque_id,
+           count(*)::int AS contenedores_fisicos,
+           sum(CASE
+                 WHEN ec.tipo_contenedor ~ '4[05]' THEN 2
+                 ELSE 1
+               END)::int AS teu
+    FROM embarque_contenedores ec
+    WHERE ec.deleted_at IS NULL
+      AND ec.organization_id = public.org_scope()
+    GROUP BY ec.embarque_id
   ),
   profit AS (
     SELECT p.embarque_id, p.venta_usd, p.costo_usd
