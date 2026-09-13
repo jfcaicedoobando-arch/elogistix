@@ -11,7 +11,9 @@ STABLE
 SET search_path TO 'public'
 AS $function$
   SELECT CASE
-    WHEN NOT EXISTS (SELECT 1 FROM embarques WHERE id = p_embarque_id) THEN NULL
+    -- R221: un embarque en la papelera (deleted_at) NO debe abrirse por deep
+    -- link ni por RPC: se responde NULL igual que si no existiera (ELIMP00293).
+    WHEN NOT EXISTS (SELECT 1 FROM embarques WHERE id = p_embarque_id AND deleted_at IS NULL) THEN NULL
     ELSE jsonb_build_object(
       'embarque', (
         SELECT to_jsonb(s)

@@ -27,6 +27,8 @@ BEGIN
         e.tipo_cambio_eur,
         CASE
           WHEN e.estado = 'Borrador' THEN 'Borrador'
+          -- R221 (ELIMP00353): preservar Cancelado antes de derivar por ETD/ETA.
+          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
             CASE
