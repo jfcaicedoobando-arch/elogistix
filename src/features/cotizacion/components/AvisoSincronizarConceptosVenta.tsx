@@ -66,16 +66,20 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
       notifyError(undefined, { title: "No hay conceptos que sincronizar" });
       return;
     }
-    const subtotalUSD = usd.reduce((s, c) => s + (Number(c.total) || 0), 0);
     try {
       // N-2: bloqueo optimista. Se lee el sello `updated_at` justo antes de
       // escribir; si otra sesión guardó la cotización en medio, el UPDATE no
       // toca nada y se avisa del conflicto en vez de pisar esos cambios.
-      const expectedUpdatedAt = await fetchCotizacionUpdatedAt(cotizacionId);
+      const sello = await fetchCotizacionSelloSync(cotizacionId);
+      // v13.823.360 — subtotal+moneda se derivan con la función canónica:
+      // suma SIN IVA, incluye los conceptos MXN (antes se perdían y una
+      // cotización sólo MXN guardaba subtotal 0) y en mezcla usa el TC
+      // CONGELADO de la cotización; sin TC falla cerrado sin tocar la BD.
+      const { subtotal, moneda } = derivarSubtotalMoneda(conceptos, sello.moneda, sello.tipoCambioUsd);
       await update.mutateAsync({
         id: cotizacionId,
-        data: fromDb({ conceptos_venta: conceptos, subtotal: subtotalUSD }),
-        expectedUpdatedAt,
+        data: fromDb({ conceptos_venta: conceptos, subtotal, moneda }),
+        expectedUpdatedAt: sello.updatedAt,
       });
       notifySuccess(undefined, { title: "Conceptos de venta sincronizados desde los costos" });
     } catch (err: unknown) {
