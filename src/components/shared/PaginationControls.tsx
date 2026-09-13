@@ -34,6 +34,17 @@ interface PaginationControlsProps {
 
 const DEFAULT_OPTIONS = [10, 20, 50];
 
+/**
+ * Contador de resultados en español natural (v13.823.336). Antes podía leerse
+ * "0 de 1" cuando no había tamaño de página: el rango sólo se muestra si existe.
+ */
+function textoResultados(total: number, desde: number, hasta: number): string {
+  if (total === 0) return "Sin resultados";
+  if (total === 1) return "1 registro";
+  if (desde > 0) return `${desde}–${hasta} de ${total} registros`;
+  return `${total} registros`;
+}
+
 export default function PaginationControls({
   page, totalPages, onPageChange,
   pageSize, onPageSizeChange, pageSizeOptions = DEFAULT_OPTIONS,
@@ -58,13 +69,7 @@ export default function PaginationControls({
           // "0 de 1" cuando faltaba el tamaño de página; ahora el rango sólo
           // aparece si es real y hay más de un registro.
           <span className="text-body text-muted-foreground tabular-nums">
-            · {total === 0
-              ? "Sin resultados"
-              : total === 1
-                ? "1 registro"
-                : desde > 0
-                  ? `${desde}–${hasta} de ${total} registros`
-                  : `${total} registros`}
+            · {textoResultados(total, desde, hasta)}
           </span>
         )}
 
