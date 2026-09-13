@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.350] - 2026-09-13
+
+- **fix(permisos, cotizaciones)**: "Duplicar" y "Eliminar" del listado usan capacidades específicas (`canDuplicateCotizacion`, `canDeleteCotizacion`), espejo EXACTO de `public.duplicar_cotizacion` (admin, operador, ejecutivo_pricing) y del guard de `public.soft_delete_record` (super_admin, admin, operador). Ventas (vendedor, gerente comercial, customer service) veía ambas acciones con la capacidad amplia de escritura y las RPC respondían 42501. Sin cambios en el backend.
+
 ## [13.823.349] - 2026-09-13
 
 - **fix(db, integridad)**: `crear_embarque_borrador_desde_cotizacion` ya no acepta la decisión `mantenida_por_operaciones` cuando la revalidación de tarifa es bloqueante (responde `LC_TARIFA_REQUIERE_REVALIDACION`), y sólo `reaprobada_ventas`/`refrescada`/`sustituida` cierran la solicitud `pendiente_reaprobacion`.
