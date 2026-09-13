@@ -178,7 +178,7 @@ export default function Embarques() {
         <FloatingActionButton
           onClick={canCrear ? goNuevo : goNuevoDesdeCotizacion}
           icon={<Plus className="h-6 w-6" />}
-          label="Nuevo embarque"
+          label={canCrear ? "Nuevo embarque" : "Ver cotizaciones"}
         />
       ) : null}
     </PageContainer>
