@@ -1,4 +1,4 @@
--- Fuente canónica de public.recotizar_cotizacion (v13.823.351).
+-- Fuente canónica de public.recotizar_cotizacion (v13.823.354).
 --
 -- Antes sólo exigía pertenencia a la organización: un viewer, contador o
 -- tesorero podía versionar por RPC directa una cotización aceptada. Ahora exige
@@ -39,7 +39,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501';
   END IF;
-  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid(), v_org) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden re-cotizar'
       USING ERRCODE='42501';
   END IF;

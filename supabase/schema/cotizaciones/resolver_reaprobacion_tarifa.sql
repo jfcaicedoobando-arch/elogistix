@@ -1,4 +1,4 @@
--- Fuente canónica de public.resolver_reaprobacion_tarifa (v13.823.351).
+-- Fuente canónica de public.resolver_reaprobacion_tarifa (v13.823.354).
 --
 -- Antes: cualquier miembro autenticado de la organización (viewer, contador,
 -- tesorero, operación) podía aprobar/rechazar/recotizar por RPC directa, y la
@@ -7,7 +7,8 @@
 -- embarque con LC_REAPROBACION_NO_VIGENTE).
 --
 -- Ahora:
---   · Exige el rol aprobador comercial (`puede_aprobar_tarifa_cotizacion`).
+--   · Exige el rol aprobador comercial (`puede_aprobar_tarifa_cotizacion`),
+--     evaluado en la organización de la cotización (ancla tenant explícita).
 --   · Sólo admite `reaprobada` y `rechazada`. `recotizada` deja de ser una
 --     decisión directa: la única transición válida es `recotizar_cotizacion`,
 --     que la escribe cuando la nueva versión ya existe.
@@ -42,7 +43,7 @@ BEGIN
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
 
-  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid(), v_cot.organization_id) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden resolver la re-aprobación de tarifa'
       USING ERRCODE='42501';
   END IF;
