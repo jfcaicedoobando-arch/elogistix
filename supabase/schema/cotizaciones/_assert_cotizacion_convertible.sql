@@ -44,5 +44,12 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_YA_TIENE_EMBARQUE: la cotización % ya generó un embarque', COALESCE(v_folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+
+  -- v13.823.357: mismo candado de venta que aplica la creación del borrador,
+  -- para que el pre-check de la UI y el servidor digan lo mismo.
+  PERFORM public._assert_cotizacion_venta_valida(p_cotizacion_id);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) TO authenticated, service_role;

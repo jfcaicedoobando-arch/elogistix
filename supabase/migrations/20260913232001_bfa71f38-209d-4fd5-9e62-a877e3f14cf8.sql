@@ -1,7 +1,3 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -75,17 +71,11 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
 
-  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
-  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
-  -- implícito (o 1:1) deformaría el P&L del embarque.
   SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
     INTO v_monedas
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
-   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
-   -- una cotización mixta se convertía sin tipo de cambio.
    WHERE COALESCE(
            NULLIF(
              CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -101,8 +91,6 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
-  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
-  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
@@ -110,14 +98,7 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
-  -- v13.823.357 · Auditoría YAGNI P1 #1/#3 y P2 #7: sin venta positiva, con
-  -- precio de venta capturado que no llegó a los conceptos, o con moneda no
-  -- soportada, el embarque nacería en cero o con importes deformados.
   PERFORM public._assert_cotizacion_venta_valida(v_cot.id);
-
-
-
-
 
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
@@ -167,19 +148,12 @@ BEGIN
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
 
-  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
 
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
-  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
-  -- creado por conversión directa mostraba "Servicio —".
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -194,15 +168,10 @@ BEGIN
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT COALESCE(v_agente_id, t.agente_id), COALESCE(v_naviera_id, t.naviera_id)
       INTO v_agente_id, v_naviera_id
-    -- v13.823.351: la tarifa se lee SIEMPRE acotada a la organización de la
-    -- cotización; un id de otro tenant no debe sembrar agente/naviera.
     FROM public.costeo_tarifas t
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
 
-  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
-  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
-  -- tenant al embarque; ahora falla cerrado.
   IF v_agente_id IS NOT NULL THEN
     SELECT nombre INTO v_agente_nombre
       FROM public.costeo_agentes
@@ -228,8 +197,6 @@ BEGIN
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
     tipo_servicio,
-    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
-    -- al embarque; antes el borrador nacía sin tipo de cambio.
     tipo_cambio_usd
   )
   VALUES (
@@ -237,8 +204,6 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
-    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
-    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
@@ -253,11 +218,6 @@ BEGIN
   )
   RETURNING id INTO v_embarque_id;
 
-  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
-  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
-  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
-  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
-  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -292,7 +252,6 @@ BEGIN
     END LOOP;
   END IF;
 
-
   PERFORM public._crear_embarque_replicar_conceptos(
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
@@ -324,3 +283,6 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_core(uuid) TO service_role;
+
+REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) TO authenticated, service_role;

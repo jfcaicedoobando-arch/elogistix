@@ -9,7 +9,10 @@ import { useNavigate } from "react-router-dom";
 
 import { useCrearEmbarqueBorrador, type CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
+import {
+  tieneCostosCargados,
+  CandadoCostosNoVerificableError,
+} from "@/features/cotizacion/services/candadoCostos";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
 
@@ -24,9 +27,25 @@ export function useCrearEmbarqueBorradorHandlers(cotizacion: CotizacionRow | und
   /**
    * Candado: bloquea la creación de embarque(s) si la cotización no tiene costos cargados.
    * Registra el bloqueo en bitácora para auditoría.
+   *
+   * v13.823.357: si la verificación misma falla (red/permisos) NO se continúa;
+   * se avisa que puede reintentarse (fail-closed reintentable).
    */
   const validarCostosOBloquear = async (cotizacionId: string, accion: string): Promise<boolean> => {
-    const ok = await tieneCostosCargados(cotizacionId);
+    let ok: boolean;
+    try {
+      ok = await tieneCostosCargados(cotizacionId);
+    } catch (err: unknown) {
+      if (err instanceof CandadoCostosNoVerificableError) {
+        setShowConfirmarConvertir(false);
+        notifyWarning(undefined, {
+          title: "No pudimos verificar los costos",
+          description: "No se pudo comprobar si la cotización tiene costos cargados. Revisa tu conexión e inténtalo de nuevo.",
+        });
+        return false;
+      }
+      throw err;
+    }
     if (!ok) {
       try {
         registrarActividad.mutate({

@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.357] - 2026-09-13
+
+- **fix(cotizaciones→embarques)**: lote YAGNI (8 hallazgos).
+  - Nuevo candado de base `_assert_cotizacion_venta_valida(uuid)`: exige al menos un concepto de venta con `cantidad > 0` y `precio_unitario > 0` (`LC_COT_SIN_VENTA`), invariancia costo→venta por moneda (`LC_COT_VENTA_NO_REFLEJADA`, caso COT-2026-0237) y moneda soportada MXN/USD (`LC_COT_MONEDA_NO_SOPORTADA`). Informativas exentas. Lo invocan `crear_embarque_borrador_core` y `_assert_cotizacion_convertible` (servidor y pre-check de la UI dicen lo mismo).
+  - `_crear_embarque_replicar_conceptos`: idempotencia POR CONJUNTO (un intento parcial ya completa el conjunto faltante — caso ELIMP00321/COT-2026-0129), rechazo de `cantidad`/`precio` no positivos (`LC_COT_VENTA_IMPORTE_INVALIDO`; antes cantidad 0 → 1 en silencio) y de moneda distinta de MXN/USD (antes caía a MXN).
+  - `candadoCostos.tieneCostosCargados` falla CERRADO: ante error de consulta lanza `CandadoCostosNoVerificableError` en vez de devolver `true`; la UI avisa "no pudimos verificar los costos, inténtalo de nuevo".
+  - `RPC_ERROR_MAP` (conversión) traduce `LC_COTIZACION_ELIMINADA`, `LC_AGENTE_ORG_INVALIDA` y los cuatro códigos nuevos; catálogo `lcCodeMessages.operativo.operaciones` actualizado.
+  - Wizard: `errorConceptosVenta` bloquea el paso 3 y el guardado final con cantidad/precio no positivos o moneda no soportada (antes sólo validaba descripción).
+  - `derivarSubtotalMoneda`: moneda distinta de MXN/USD ya no se suma como dólares (`MSG_MONEDA_NO_SOPORTADA`); sin moneda capturada conserva el default USD.
+  - `mapCostosACostosEmbarque` usa el TOTAL del renglón (`costo_total` o `cantidad × costo_unitario`) vía `montoCostoRenglon`; antes copiaba sólo el unitario. Eliminado `embarquesHelpers.ts` (`construirHijosPayload`/`construirCostosRows`/`parsearVentasJsonb`) y sus dos suites: código muerto sin callers reales cuya lógica vive en la RPC.
+  - Regresiones: `candadoCostos.test.ts`, `candadosVentaSql.test.ts`, `derivarSubtotalMonedaNoSoportada.test.ts`, `errorConceptosVenta.test.ts`, `montoCostoRenglon.test.ts`, `embarquesErroresRpc.test.ts`.
+
 ## [13.823.356] - 2026-09-13
 
 - **fix(ci)**: shard 2 verde sin relajar contratos.

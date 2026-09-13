@@ -37,7 +37,28 @@ async function assertTarifaSinCambios(cotizacionId: string): Promise<ResultadoRe
 }
 
 const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
-  [/LC_COT_ELIMINADA/, "Esta cotización fue eliminada y no puede convertirse en embarque."],
+  [/LC_COT_ELIMINADA|LC_COTIZACION_ELIMINADA/, "Esta cotización fue eliminada y no puede convertirse en embarque."],
+  // v13.823.357 (Auditoría YAGNI P1 #5 y P1 #1/#3, P2 #6/#7).
+  [
+    /LC_AGENTE_ORG_INVALIDA/,
+    "El agente de la cotización no pertenece a tu empresa. Corrige el agente en la cotización antes de crear el embarque.",
+  ],
+  [
+    /LC_COT_SIN_VENTA/,
+    "La cotización no tiene ningún concepto de venta con cantidad y precio mayores a cero. Captura el precio de venta antes de crear el embarque.",
+  ],
+  [
+    /LC_COT_VENTA_NO_REFLEJADA/,
+    "Hay precio de venta capturado en los costos que no llegó a los conceptos de venta. Abre la cotización, vuelve a guardar el paso 3 y reintenta.",
+  ],
+  [
+    /LC_COT_VENTA_IMPORTE_INVALIDO/,
+    "Un concepto de venta tiene cantidad o precio en cero (o negativo). Corrígelo en la cotización antes de crear el embarque.",
+  ],
+  [
+    /LC_COT_MONEDA_NO_SOPORTADA/,
+    "La cotización tiene importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
+  ],
   [/LC_COT_ESTADO_INVALIDO/, "Solo se pueden convertir cotizaciones en estado Aceptada o En operación."],
   [/LC_COT_SIN_CLIENTE/, "Convierte el prospecto a cliente antes de crear el borrador de embarque."],
   [/LC_COT_NO_ENCONTRADA/, "La cotización no existe o fue eliminada."],

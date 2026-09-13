@@ -4,7 +4,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
-import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { costosSinConcepto, errorConceptosVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { conceptosPaso3Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 import { usePaso2Handler } from "./usePaso2Handler";
@@ -52,7 +52,10 @@ export function useCotizacionWizardSteps({
     const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
     const errorPaso3 = primerError(conceptosPaso3Schema, {
       conceptosValidos: conceptosUSDValidos.length + conceptosMXNValidos.length,
-    });
+    })
+      // v13.823.357: mismo contrato que la base (cantidad/precio positivos y
+      // moneda soportada); antes sólo se exigía la descripción.
+      ?? errorConceptosVenta([...conceptosUSDValidos, ...conceptosMXNValidos]);
     if (errorPaso3) {
       notifyError(undefined, { title: errorPaso3 });
       return;
@@ -119,6 +122,15 @@ export function useCotizacionWizardSteps({
         });
         return;
       }
+      // v13.823.357: no finalizar con cantidad/precio no positivos ni moneda no
+      // soportada; la conversión a embarque lo rechazaría después.
+      const errorVenta = errorConceptosVenta(conceptosValidos);
+      if (errorVenta) {
+        notifyError(undefined, { title: "Conceptos de venta incompletos", description: errorVenta });
+        return;
+      }
+
+
 
       await savePasoFinal({
         cotizacionId, isEditMode, estadoActual: estadoInicial,

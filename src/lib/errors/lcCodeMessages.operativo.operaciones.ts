@@ -116,4 +116,14 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Las piezas no pueden ser negativas. Captura cuántos bultos o piezas trae la carga.",
   LC_COT_YA_TIENE_EMBARQUE:
     "Esta cotización ya se convirtió en embarque. Abre el embarque existente en lugar de crear otro.",
+
+  // ── v13.823.357 · Candados de venta al convertir cotización → embarque ──
+  LC_COT_SIN_VENTA:
+    "La cotización no tiene ningún concepto de venta con cantidad y precio mayores a cero. Captura el precio de venta antes de crear el embarque.",
+  LC_COT_VENTA_NO_REFLEJADA:
+    "Hay precio de venta capturado en los costos que no llegó a los conceptos de venta. Abre la cotización, vuelve a guardar el paso 3 y reintenta.",
+  LC_COT_VENTA_IMPORTE_INVALIDO:
+    "Un concepto de venta tiene cantidad o precio en cero (o negativo). Corrígelo en la cotización antes de convertirla.",
+  LC_COT_MONEDA_NO_SOPORTADA:
+    "Hay importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
 };

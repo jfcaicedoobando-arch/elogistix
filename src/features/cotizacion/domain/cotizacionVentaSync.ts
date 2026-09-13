@@ -8,6 +8,7 @@
  * `subtotal = 0` y el PDF imprimía ceros.
  */
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 export interface CostoConImportes {
   concepto: string;
@@ -68,4 +69,33 @@ export function requiereSincronizarVenta(
 ): boolean {
   const hayVentaEnCostos = costos.some((c) => Number(c.precio_venta ?? 0) > 0);
   return hayVentaEnCostos && totalConceptosVenta <= 0;
+}
+
+/** Renglón de venta tal como lo captura el paso 3 del wizard. */
+export interface ConceptoVentaLike {
+  descripcion?: string | null;
+  cantidad?: number | null;
+  precio_unitario?: number | null;
+  moneda?: string | null;
+}
+
+/**
+ * v13.823.357 (Auditoría YAGNI P2 #6/#7 y P1 #1): valida los conceptos de venta
+ * con el MISMO contrato que la base (`_assert_cotizacion_venta_valida`):
+ * cantidad y precio deben ser positivos, la moneda sólo MXN/USD, y debe existir
+ * al menos un renglón con importe. Devuelve el mensaje a mostrar o `null`.
+ */
+export function errorConceptosVenta(conceptos: ConceptoVentaLike[]): string | null {
+  const conImporte = conceptos.filter((c) => (c.descripcion ?? "").trim());
+  if (conImporte.length === 0) return null; // el schema del paso ya cubre "sin conceptos"
+  for (const c of conImporte) {
+    const moneda = String(c.moneda ?? "USD").trim().toUpperCase();
+    if (moneda !== "MXN" && moneda !== "USD") return COPY_VALIDACION.conceptosVentaMonedaNoSoportada;
+  }
+  const invalidos = conImporte.filter(
+    (c) => !(Number(c.cantidad ?? 1) > 0) || !(Number(c.precio_unitario ?? 0) > 0),
+  );
+  if (invalidos.length === conImporte.length) return COPY_VALIDACION.conceptosVentaSinImporte;
+  if (invalidos.length > 0) return COPY_VALIDACION.conceptosVentaImporteInvalido;
+  return null;
 }

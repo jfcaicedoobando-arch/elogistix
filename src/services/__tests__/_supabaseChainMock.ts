@@ -14,7 +14,7 @@
  */
 import { vi } from "vitest";
 
-export interface QueryResult<T = unknown> { data: T; error: unknown }
+export interface QueryResult<T = unknown> { data: T; error: unknown; count?: number | null }
 
 type Resp = QueryResult<unknown>;
 
