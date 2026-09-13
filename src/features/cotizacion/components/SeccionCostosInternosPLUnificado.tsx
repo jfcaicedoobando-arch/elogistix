@@ -2,6 +2,7 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import SeccionCostosInternosPLLocal from "./SeccionCostosInternosPLLocal";
 import SeccionCostosInternosPLDetalle from "./SeccionCostosInternosPLDetalle";
 import type { FilaCostoLocal } from "./costosPLTypes";
+import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
 // Re-export para preservar la API pública (TablaCostosLocal importa este tipo desde aquí)
 export type { FilaCostoLocal } from "./costosPLTypes";
@@ -19,6 +20,8 @@ interface PropsDetalle {
   conceptosMXN: ConceptoVentaCotizacion[];
   /** Sello optimista de la cotización abierta (ver componente de detalle). */
   cotizacionUpdatedAt?: string | null;
+  /** v13.823.362 — El aviso de sincronización respeta estados inmutables. */
+  estadoCotizacion: EstadoCotizacion;
 }
 
 type Props = PropsLocal | PropsDetalle;
