@@ -65,7 +65,7 @@ export function EmbarqueDetalleTabsBar() {
           size="icon"
           aria-label="Desplazar pestañas hacia la izquierda"
           onClick={() => scrollBy(-160)}
-          className="absolute left-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised lg:hidden"
+          className="absolute left-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -73,13 +73,22 @@ export function EmbarqueDetalleTabsBar() {
       <div
         ref={scrollRef}
         className={cn(
-          "w-full overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent]",
+          // v13.823.336: sin scrollbar nativo permanente; la affordance son
+          // las flechas y el degradado, visibles también en escritorio.
+          "w-full overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
           canScrollLeft && "[mask-image:linear-gradient(to_right,transparent_0,black_24px,black_calc(100%-24px),transparent_100%)]",
           !canScrollLeft && canScrollRight && "[mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)]",
-          "lg:[mask-image:none]",
+
         )}
       >
-        <TabsList className="gap-1 inline-flex w-max flex-nowrap" data-testid="embarque-detalle-tabs">
+        <TabsList
+          className={cn(
+            "gap-1 inline-flex w-max flex-nowrap",
+            canScrollLeft && "pl-8",
+            canScrollRight && "pr-8",
+          )}
+          data-testid="embarque-detalle-tabs"
+        >
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.value}
@@ -99,7 +108,7 @@ export function EmbarqueDetalleTabsBar() {
           size="icon"
           aria-label="Desplazar pestañas hacia la derecha"
           onClick={() => scrollBy(160)}
-          className="absolute right-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised lg:hidden"
+          className="absolute right-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

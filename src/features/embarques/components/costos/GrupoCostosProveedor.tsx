@@ -112,10 +112,12 @@ export function GrupoCostosProveedor({
 
       {abierto && (
         <div className="overflow-x-auto">
-          <Table className="w-full text-body">
+          {/* v13.823.336 (HD 1280×720): anchos mínimos + concepto fijo para
+              que Estado y Pago no queden fuera de la vista. */}
+          <Table className="w-full min-w-[900px] text-body">
             <TableHeader className="bg-background border-b">
               <TableRow className="text-body-sm text-muted-foreground">
-                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="sticky left-0 z-10 bg-background min-w-[200px]">Concepto</DetailTableHead>
                 <DetailTableHead className="text-right">Cotizado</DetailTableHead>
                 <DetailTableHead className="text-right">Facturado</DetailTableHead>
                 <DetailTableHead>Ajuste</DetailTableHead>
@@ -133,7 +135,14 @@ export function GrupoCostosProveedor({
                 const pago = peorEstadoPago(f.facturas);
                 return (
                   <TableRow key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
-                    <TableCell>{f.concepto}</TableCell>
+                    <TableCell
+                      className={cn(
+                        "sticky left-0 z-10 min-w-[200px]",
+                        idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                      )}
+                    >
+                      {f.concepto}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">{formatCurrency(f.cotizado, f.moneda)}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {f.real_facturado > 0 ? formatCurrency(f.real_facturado, f.moneda) : <span className="text-muted-foreground">—</span>}
