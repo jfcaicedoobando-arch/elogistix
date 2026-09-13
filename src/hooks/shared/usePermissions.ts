@@ -30,6 +30,7 @@ import {
   TENANT_ADMINS,
   hasRole as has,
   puedeVerCostosCotizacion,
+  resolverPermisosCrm,
 } from "./permissionMatrix";
 
 /**
