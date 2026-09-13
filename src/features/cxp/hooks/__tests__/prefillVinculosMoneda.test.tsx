@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
 import { usePrefillVinculosEntrante } from "../usePrefillVinculosEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -72,7 +73,7 @@ describe("usePrefillVinculosEntrante · falla cerrado (bug 10)", () => {
     expect(result.current.aplicados).toHaveLength(0);
 
     vi.mocked(fetchCostosConFactura).mockResolvedValueOnce(new Set());
-    result.current.reintentar();
+    act(() => { result.current.reintentar(); });
     await waitFor(() => expect(result.current.errorCubiertos).toBe(false));
     await waitFor(() => expect(aplicarSugerencias).toHaveBeenCalledTimes(1));
   });
