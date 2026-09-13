@@ -14,7 +14,10 @@ import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaS
 import { fromDb } from "@/lib/supabase/cast";
 import { fetchCotizacionSelloSync } from "@/features/cotizacion/services/updatedAt";
 import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
+import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 import type { CostoCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
+
+const ESTADOS_INMUTABLES = new Set<EstadoCotizacion>(["Aceptada", "En operación"]);
 
 interface Props {
   cotizacionId: string;
@@ -28,6 +31,8 @@ interface Props {
    * tesorería; se muestra el aviso como texto de sólo lectura.
    */
   puedeSincronizar: boolean;
+  /** v13.823.362 — En Aceptada/En operación el trigger rechaza el UPDATE. */
+  estadoCotizacion: EstadoCotizacion;
 }
 
 function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
