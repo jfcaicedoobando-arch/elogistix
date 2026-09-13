@@ -164,6 +164,7 @@ export function useCotizacionesPageController() {
     isDeleting: actions.isDeleting,
     confirmarEliminar: actions.confirmarEliminar,
     /** YG-03: el CSV trae TODO lo filtrado (iterando por lotes), no la página. */
+    exportando: actions.exportando,
     exportar: () =>
       actions.exportar(() =>
         fetchTodasCotizacionesParaExportar(filtrosActuales, lista.sortKey, lista.sortDir),
