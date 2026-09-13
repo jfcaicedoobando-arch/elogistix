@@ -122,6 +122,29 @@ BEGIN
     END IF;
   END IF;
 
+  -- v13.823.330 · Auditoría YAGNI #5: una cotización transaccional no puede
+  -- aceptarse sin importe. Las informativas (tarifarios) quedan exentas porque
+  -- no generan operación ni facturación.
+  IF COALESCE(v_tipo_documento, 'transaccional') <> 'informativa' THEN
+    SELECT EXISTS (
+      SELECT 1
+        FROM jsonb_array_elements(
+               CASE WHEN jsonb_typeof(COALESCE(v_conceptos, '[]'::jsonb)) = 'array'
+                    THEN v_conceptos ELSE '[]'::jsonb END) c
+       WHERE COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND (c->>'cantidad')::numeric > 0
+         AND (c->>'precio_unitario')::numeric > 0
+    ) INTO v_renglon_valido;
+
+    IF COALESCE(v_subtotal, 0) <= 0 OR NOT COALESCE(v_renglon_valido, false) THEN
+      RAISE EXCEPTION 'LC_COT_IMPORTE_REQUERIDO: la cotización % no tiene importe; captura al menos un concepto con cantidad y precio mayores a cero antes de aceptarla', COALESCE(v_folio, p_cotizacion_id::text)
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
+
+
+
   UPDATE cotizaciones
      SET version_aceptada=v_version, aceptada_en=now(), aceptada_por=auth.uid(),
          estado='Aceptada', updated_at=now()
