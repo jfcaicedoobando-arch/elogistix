@@ -3,6 +3,7 @@ import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { formatCurrency, formatDate, formatFechaDia } from "@/lib/formatters";
 import {
   calcularTotales,
@@ -66,18 +67,27 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
   ];
 }
 
-function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
-  return [
+/**
+ * v13.823.342 — las columnas de IVA en MXN salen de la tasa real de los
+ * renglones (igual que `TablaConceptosGenerico`). Antes se imprimía siempre la
+ * columna IVA y el título "MXN + IVA" aunque todo estuviera a tasa 0%/exento.
+ */
+function columnasMXN(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
+  const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "MXN") },
     { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => montoTabla(r.cantidad * r.precio_unitario, "MXN") },
+  ];
+  if (!hayIva) return base;
+  return [
+    ...base,
     { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
       render: (r) => {
         const tasa = resolverTasaConcepto(r, tasaIva);
-        return montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN");
+        return tasa > 0 ? montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN") : "—";
       } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
       render: (r) => {
@@ -87,16 +97,27 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
   ];
 }
 
-export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
-  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
-  const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
-  const hayIvaUsd = usd.some((c) => c.aplica_iva);
-  const notasCliente = notasParaCliente(cotizacion.notas);
-  const tasaPct = Math.round(tasaIva * 100);
-  const nombre = cotizacion.es_prospecto
-    ? `${cotizacion.prospecto_empresa} (Prospecto)`
-    : cotizacion.cliente_nombre;
+/** Porcentaje único de IVA a mostrar en totales; `undefined` si hay tasas mixtas. */
+function pctUnico(filas: ReadonlyArray<ConceptoVentaCotizacion>, tasaIva: number): number | undefined {
+  const tasas = tasasEfectivas(filas, tasaIva);
+  return tasas.length === 1 ? tasas[0] : undefined;
+}
 
+/**
+ * v13.823.342 — las notas por renglón también pasan por el filtro de notas
+ * internas; antes un "[interno] …" o residuos "QA SMOKE" llegaban al PDF.
+ */
+function subnotaCliente(r: ConceptoVentaCotizacion): string | null {
+  return notasParaCliente(r.notas) || null;
+}
+
+/** Bloques de la caja de totales; la tasa sólo se imprime si hay IVA real. */
+function armarBloques(
+  usd: ConceptoVentaCotizacion[],
+  mxn: ConceptoVentaCotizacion[],
+  totales: ReturnType<typeof calcularTotales>,
+  tasaIva: number,
+): TotalesMoneda[] {
   const bloques: TotalesMoneda[] = [];
   if (usd.length > 0) {
     bloques.push({
@@ -104,7 +125,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
       subtotal: totales.subtotalUSD,
       iva: totales.ivaUSD,
       total: totales.totalUSD,
-      tasaIvaPct: totales.ivaUSD > 0 ? tasaPct : undefined,
+      tasaIvaPct: totales.ivaUSD > 0 ? pctUnico(usd, tasaIva) : undefined,
     });
   }
   if (mxn.length > 0) {
@@ -113,9 +134,25 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
       subtotal: totales.subtotalMXN,
       iva: totales.ivaMXN,
       total: totales.totalMXN,
-      tasaIvaPct: tasaPct,
+      tasaIvaPct: totales.ivaMXN > 0 ? pctUnico(mxn, tasaIva) : undefined,
     });
   }
+  return bloques;
+}
+
+export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
+  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
+  const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
+  const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
+  const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
+  const notasCliente = notasParaCliente(cotizacion.notas);
+  const nombre = cotizacion.es_prospecto
+    ? `${cotizacion.prospecto_empresa} (Prospecto)`
+    : cotizacion.cliente_nombre;
+
+  const bloques = armarBloques(usd, mxn, totales, tasaIva);
+
+
 
   const headerMeta = [
     { label: "Estado", value: cotizacion.estado },
@@ -155,18 +192,20 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
             <DataTable
               columns={columnasUSD(tasaIva, hayIvaUsd)}
               rows={usd}
-              renderSubrow={(r) => r.notas ?? null}
+              renderSubrow={subnotaCliente}
             />
           </>
         ) : null}
 
         {mxn.length > 0 ? (
           <>
-            <Text style={styles.h4} minPresenceAhead={70}>Conceptos en MXN + IVA</Text>
+            <Text style={styles.h4} minPresenceAhead={70}>
+              Conceptos en MXN{hayIvaMxn ? " + IVA" : ""}
+            </Text>
             <DataTable
-              columns={columnasMXN(tasaIva)}
+              columns={columnasMXN(tasaIva, hayIvaMxn)}
               rows={mxn}
-              renderSubrow={(r) => r.notas ?? null}
+              renderSubrow={subnotaCliente}
             />
           </>
         ) : null}

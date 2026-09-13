@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.342] - 2026-09-13
+
+- **fix(cotizaciones)**: el PDF ya deriva el IVA en pesos de la tasa real de cada renglón: con conceptos a tasa 0% o exentos desaparece "+ IVA", la columna de IVA y la tasa en la caja de totales; con IVA se imprime la tasa verdadera (8% o 16%) y el caso mixto queda sin porcentaje.
+- **fix(cotizaciones)**: las notas de cada renglón del PDF pasan por el filtro de notas internas, así que textos "[interno]" o residuos de pruebas ("QA SMOKE") ya no se imprimen para el cliente.
+
+
 ## [13.823.341] - 2026-09-13
 
 - **fix(embarques)**: el panel de filtros ya trata la selección como temporal: cerrarlo con la X, Esc o un clic fuera descarta lo elegido y sólo "Aplicar" (o "Limpiar") lo persiste. Antes elegir Estado=Borrador y cerrar dejaba la lista filtrada.
