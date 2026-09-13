@@ -3,11 +3,14 @@
  * Extraído de `useCotizacionesPageController` en v13.56.4 (auditoría — paso 12)
  * para separar orquestación de UI vs queries/derivaciones.
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 import { exportToCsv } from "@/generators/exportCsv";
 import { todayLocalISO } from "@/lib/date/today";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
+
 
 export interface CotizacionExportRow {
   folio: string;
@@ -28,6 +31,9 @@ export function useCotizacionActions() {
   const deleteCotizacion = useDeleteCotizacion();
 
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const exportandoRef = useRef(false);
+
 
   const irANueva = () => navigate("/cotizaciones/nueva");
   const irAEditar = (id: string) => navigate(`/cotizaciones/${id}/editar`);
@@ -49,33 +55,51 @@ export function useCotizacionActions() {
    * YG-03: recibe un *loader* (no un array ya en memoria) porque el listado es
    * server-side: el CSV debe incluir todo el resultado filtrado, trayéndolo por
    * lotes en el momento de exportar.
+   *
+   * v13.823.349: guard in-flight — dos clics rápidos disparaban dos cargas y
+   * dos descargas, y un fallo de red quedaba como promesa rechazada sin aviso.
    */
   const exportar = async (cargarFilas: () => Promise<CotizacionExportRow[]>) => {
-    const filas = await cargarFilas();
+    if (exportandoRef.current) return;
+    exportandoRef.current = true;
+    setExportando(true);
+    try {
+      const filas = await cargarFilas();
 
-    exportToCsv(
-      `cotizaciones_${todayLocalISO()}.csv`,
-      [
-        { key: "folio", label: "Folio" },
-        { key: "cliente", label: "Cliente" },
-        { key: "modo", label: "Modo" },
-        { key: "ruta", label: "Ruta" },
-        { key: "subtotal", label: "Subtotal" },
-        { key: "moneda", label: "Moneda" },
-        { key: "estado", label: "Estado" },
-        { key: "vigencia", label: "Vigencia" },
-      ],
-      filas.map((c) => ({
-        folio: c.folio,
-        cliente: c.cliente_nombre ?? "",
-        modo: c.modo,
-        ruta: `${c.origen || ""} → ${c.destino || ""}`,
-        subtotal: c.subtotal,
-        moneda: c.moneda,
-        estado: c.estado,
-        vigencia: c.fecha_vigencia || "",
-      })),
-    );
+      exportToCsv(
+        `cotizaciones_${todayLocalISO()}.csv`,
+        [
+          { key: "folio", label: "Folio" },
+          { key: "cliente", label: "Cliente" },
+          { key: "modo", label: "Modo" },
+          { key: "ruta", label: "Ruta" },
+          { key: "subtotal", label: "Subtotal" },
+          { key: "moneda", label: "Moneda" },
+          { key: "estado", label: "Estado" },
+          { key: "vigencia", label: "Vigencia" },
+        ],
+        filas.map((c) => ({
+          folio: c.folio,
+          cliente: c.cliente_nombre ?? "",
+          modo: c.modo,
+          ruta: `${c.origen || ""} → ${c.destino || ""}`,
+          subtotal: c.subtotal,
+          moneda: c.moneda,
+          estado: c.estado,
+          vigencia: c.fecha_vigencia || "",
+        })),
+      );
+    } catch (error) {
+      notifyError(undefined, {
+        title: "No se pudo exportar el CSV",
+        description: getErrorMessage(error),
+        error: error instanceof Error ? error : undefined,
+        method: "COTIZACIONES_EXPORTAR_CSV",
+      });
+    } finally {
+      exportandoRef.current = false;
+      setExportando(false);
+    }
   };
 
   return {
@@ -84,9 +108,11 @@ export function useCotizacionActions() {
     confirmarEliminar,
     isDeleting: deleteCotizacion.isPending,
     exportar,
+    exportando,
     irANueva,
     irAEditar,
     irADetalle,
     prefetchCotizacion,
   };
 }
+
