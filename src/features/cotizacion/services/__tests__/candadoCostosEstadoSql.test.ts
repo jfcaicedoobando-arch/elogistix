@@ -23,10 +23,12 @@ describe("actualizar_cotizacion_costos (SQL canónico)", () => {
   });
 
   it("evalúa el candado antes del replay de idempotencia y del borrado", () => {
-    const estado = sql.indexOf("LC_COT_COSTOS_ESTADO_INVALIDO");
-    const idem = sql.indexOf("idempotency_claim");
-    const del = sql.indexOf("DELETE FROM cotizacion_costos");
-    const autoridad = sql.indexOf("_assert_writer_cotizacion");
+    // Sólo el cuerpo de la función (el encabezado documenta los códigos).
+    const cuerpo = sql.slice(sql.indexOf("AS $function$"));
+    const estado = cuerpo.indexOf("LC_COT_COSTOS_ESTADO_INVALIDO");
+    const idem = cuerpo.indexOf("idempotency_claim");
+    const del = cuerpo.indexOf("DELETE FROM cotizacion_costos");
+    const autoridad = cuerpo.indexOf("_assert_writer_cotizacion");
     expect(autoridad).toBeLessThan(estado);
     expect(estado).toBeLessThan(idem);
     expect(estado).toBeLessThan(del);
