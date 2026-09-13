@@ -17,8 +17,10 @@ import {
   datosGeneralesSchema,
   rutaTerrestreSchema,
   fleteLclManualSchema,
+  contenedoresMaritimoSchema,
   primerError,
 } from "@/features/cotizacion/domain/schemas/wizardPasos";
+
 
 
 
