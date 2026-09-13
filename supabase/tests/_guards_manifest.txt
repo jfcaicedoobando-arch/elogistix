@@ -124,3 +124,4 @@ supabase/tests/crear_embarque_borrador_notificaciones_roles.sql
 supabase/tests/dashboards_cancelado_y_teu.sql
 supabase/tests/cxp_vinculo_costo_moneda.sql
 supabase/tests/cotizacion_convertir_candados.sql
+supabase/tests/crear_embarque_contenedores_por_modo.sql
