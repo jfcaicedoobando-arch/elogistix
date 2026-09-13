@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.317] - 2026-09-13
+
+- **chore(despliegue)**: nuevo `bun run check:published-version` — compara la versión que sirve la web pública contra `APP_VERSION` de la rama para distinguir "falta publicar" de "bundle viejo en caché del navegador". Sólo lee HTTP; no toca datos ni reglas de negocio.
+
 ## [13.823.316] - 2026-09-13
 
 - **fix(cotización→embarque)**: una cotización ya Aceptada (o En operación) puede convertirse en embarque aunque su vigencia haya expirado; sus condiciones quedaron congeladas al aceptarse. Las cotizaciones no aceptadas siguen bloqueadas al vencer (`LC_COT_VENCIDA`). Se conservan validación de prospecto, empresa, estados e idempotencia.
