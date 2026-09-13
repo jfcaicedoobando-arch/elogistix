@@ -19,12 +19,17 @@ interface Props {
  */
 export default function SeccionCierreCotizacion({ form, complete }: Props) {
   const tipoEmbarque = form.watch("tipoEmbarque") as string;
-  const esLcl = tipoEmbarque === "LCL";
-  const defaultOpen = esLcl ? ["notas"] : ["num-embarques", "notas"];
+  const modo = form.watch("modo") as string;
+  // BL-COT-04: el número de contenedores es un dato exclusivo de Marítimo FCL.
+  // Antes se pedía también en aéreo/terrestre/multimodal y se guardaba un 1
+  // inventado que luego llegaba al embarque.
+  const pideContenedores = modo === "Marítimo" && tipoEmbarque === "FCL";
+  const errorContenedores = (form.formState.errors.numContenedores?.message ?? null) as string | null;
+  const defaultOpen = pideContenedores ? ["num-embarques", "notas"] : ["notas"];
   return (
     <div id="seccion-cierre" className="scroll-mt-4">
       <Accordion type="multiple" defaultValue={defaultOpen} className="w-full">
-        {!esLcl && (
+        {pideContenedores && (
           <AccordionItem value="num-embarques">
             <AccordionTrigger className="text-subsection hover:no-underline">
               <span className="flex items-center gap-2">
@@ -45,10 +50,22 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
               <Input
                 id="cot-num-contenedores"
                 type="number" min={1}
-                value={form.watch("numContenedores") as number}
-                onChange={(e) => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
+                value={(form.watch("numContenedores") as number) || ""}
+                aria-invalid={!!errorContenedores}
+                onChange={(e) => {
+                  // Sin coerción silenciosa: lo capturado es lo que se guarda y
+                  // la validación del paso avisa si falta.
+                  const n = parseInt(e.target.value, 10);
+                  form.setValue("numContenedores", Number.isFinite(n) && n > 0 ? n : 0, {
+                    shouldValidate: true, shouldDirty: true,
+                  });
+                  form.clearErrors("numContenedores");
+                }}
                 className="w-32 mt-1"
               />
+              {errorContenedores && (
+                <p className="text-body-sm text-destructive mt-1">{errorContenedores}</p>
+              )}
             </AccordionContent>
           </AccordionItem>
         )}

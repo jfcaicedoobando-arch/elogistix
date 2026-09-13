@@ -38,10 +38,11 @@ export default function PasoResumenCotizacion({
   modo, incoterm, tipo, totalUSD, totalMXN, esEdicion = false,
 }: Props) {
 
+  // BL-COT-04: sólo el marítimo se mide en contenedores.
   const datos = [
     DATO("Cliente", nombreCliente || "—"),
     DATO("Ruta", `${origen || "—"} → ${destino || "—"}`),
-    DATO("Contenedores/BLs", String(numContenedores)),
+    ...(modo === "Marítimo" ? [DATO("Contenedores/BLs", String(numContenedores))] : []),
     DATO("Modo", modo || "—"),
     DATO("Incoterm", incoterm || "—"),
     DATO("Tipo", tipo || "—"),
