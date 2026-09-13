@@ -7,6 +7,8 @@ import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CxpRouteDialogs } from "@/features/cxp/routes/_sections/CxpRouteDialogs";
+import { CxpHeaderActions } from "@/features/cxp/routes/_sections/CxpHeaderActions";
+import { CxpMobileCard } from "@/features/cxp/routes/_sections/CxpMobileCard";
 import { usePermissions, useColumnVisibility, useDocumentTitle } from "@/hooks/shared";
 import {
   useFacturasCxP,
@@ -26,9 +28,6 @@ import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
-import { MoneyCell } from "@/components/shared/MoneyCell";
-import { formatDate, toTitleCase, formatCurrency } from "@/lib/formatters";
 import { ordenarFacturasCxP } from "@/features/cxp/services/proveedorFacturas.orden";
 
 export default function Cxp() {
