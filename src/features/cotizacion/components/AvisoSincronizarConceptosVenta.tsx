@@ -75,7 +75,13 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
       // suma SIN IVA, incluye los conceptos MXN (antes se perdían y una
       // cotización sólo MXN guardaba subtotal 0) y en mezcla usa el TC
       // CONGELADO de la cotización; sin TC falla cerrado sin tocar la BD.
-      const { subtotal, moneda } = derivarSubtotalMoneda(conceptos, sello.moneda, sello.tipoCambioUsd);
+      // SAFE-CAST: ConceptoVentaPrellenado es un objeto plano JSON-serializable;
+      // la firma canónica pide Record<string, unknown> (misma conversión que wizard.ts).
+      const { subtotal, moneda } = derivarSubtotalMoneda(
+        conceptos as unknown as Record<string, unknown>[],
+        sello.moneda,
+        sello.tipoCambioUsd,
+      );
       await update.mutateAsync({
         id: cotizacionId,
         data: fromDb({ conceptos_venta: conceptos, subtotal, moneda }),
