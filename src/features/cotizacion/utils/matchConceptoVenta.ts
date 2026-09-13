@@ -28,5 +28,11 @@ export function matchConceptoVenta<T extends { descripcion: string }>(
 ): T | undefined {
   const objetivo = normalizeConceptoNombre(concepto);
   if (!objetivo) return undefined;
-  return conceptos.find((v) => normalizeConceptoNombre(v.descripcion) === objetivo);
+  const candidatos = conceptos.filter(
+    (v) => normalizeConceptoNombre(v.descripcion) === objetivo,
+  );
+  // v13.823.345: nombre repetido = match ambiguo. Elegir el primero asignaba en
+  // silencio la venta al concepto equivocado; se devuelve `undefined` y la UI
+  // muestra el aviso de sincronización existente.
+  return candidatos.length === 1 ? candidatos[0] : undefined;
 }
