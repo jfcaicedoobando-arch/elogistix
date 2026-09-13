@@ -18,6 +18,8 @@ import {
   clasificarBloqueoAvance,
   clasificarAvanceError,
   faltantesParaConfirmado,
+  faltantesDesdeErrorConfirmado,
+
 } from "./useEmbarqueEstadoActions.helpers";
 import {
   useAutoSyncEstadoEmbarque,
