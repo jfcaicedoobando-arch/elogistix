@@ -27,7 +27,9 @@ DECLARE
   v_fac_moneda  text;
   v_fac_prov    uuid;
   v_fac_org     uuid;
+  v_fac_tc      numeric;
   v_asignado    numeric;
+  v_par_mxn_usd boolean;
 BEGIN
   IF NEW.concepto_costo_id IS NULL THEN
     RETURN NEW;
@@ -57,8 +59,8 @@ BEGIN
     JOIN public.embarques e ON e.id = cc.embarque_id
    WHERE cc.id = NEW.concepto_costo_id;
 
-  SELECT pf.folio, pf.moneda, pf.proveedor_id, pf.organization_id
-    INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org
+  SELECT pf.folio, pf.moneda, pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
+    INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org, v_fac_tc
     FROM public.proveedor_facturas pf
    WHERE pf.id = NEW.proveedor_factura_id;
 
@@ -80,10 +82,26 @@ BEGIN
   END IF;
 
   IF upper(btrim(COALESCE(v_fac_moneda, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_cc_moneda, ''))) THEN
-    RAISE EXCEPTION 'LC_CXP_VINCULO_MONEDA: la factura % está en % y el costo del expediente % en %; no se pueden mezclar monedas sin tipo de cambio explícito',
-      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
-      COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
-      USING ERRCODE = 'P0001';
+    -- Conversión permitida SÓLO entre MXN y USD y SÓLO con el tipo de cambio
+    -- congelado en la factura (`proveedor_facturas.tipo_cambio_usd`). Sin TC no
+    -- se puede auditar el importe convertido: se rechaza.
+    v_par_mxn_usd :=
+      ARRAY[upper(btrim(COALESCE(v_fac_moneda, ''))), upper(btrim(COALESCE(v_cc_moneda, '')))]
+        <@ ARRAY['MXN','USD'];
+
+    IF NOT v_par_mxn_usd THEN
+      RAISE EXCEPTION 'LC_CXP_VINCULO_MONEDA: la factura % está en % y el costo del expediente % en %; sólo se pueden conciliar monedas distintas entre MXN y USD',
+        COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
+        COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    IF COALESCE(v_fac_tc, 0) <= 1 THEN
+      RAISE EXCEPTION 'LC_CXP_VINCULO_TC_REQUERIDO: la factura % está en % y el costo del expediente % en %; captura el tipo de cambio de la factura antes de vincularlos',
+        COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
+        COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
 
   SELECT COALESCE(sum(pfc.monto), 0)
@@ -92,7 +110,10 @@ BEGIN
    WHERE pfc.concepto_costo_id = NEW.concepto_costo_id
      AND (TG_OP = 'INSERT' OR pfc.id <> NEW.id);
 
+  -- El tope sólo aplica cuando factura y costo comparten moneda; convertido con
+  -- TC la comparación directa de importes no es válida.
   IF COALESCE(v_cc_monto, 0) > 0
+     AND upper(btrim(COALESCE(v_fac_moneda, ''))) = upper(btrim(COALESCE(v_cc_moneda, '')))
      AND round(v_asignado + COALESCE(NEW.monto, 0), 2) > round(v_cc_monto * 1.05, 2) THEN
     RAISE EXCEPTION 'LC_CXP_VINCULO_SOBREASIGNADO: el costo del expediente % es de % % y ya tiene % asignado; la factura % excede el monto restante',
       COALESCE(v_expediente, '(sin expediente)'), v_cc_monto, COALESCE(v_cc_moneda, ''),
