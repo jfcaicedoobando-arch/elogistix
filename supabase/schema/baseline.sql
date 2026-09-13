@@ -4871,6 +4871,20 @@ BEGIN
   IF v_creado_por IS NOT NULL AND v_uid IS NOT NULL AND v_creado_por = v_uid AND NOT v_admin THEN
     RAISE EXCEPTION 'LC_SOD_VIOLATION: quien creó la cotización no puede aceptarla' USING ERRCODE='42501';
   END IF;
+  -- v13.823.359 (Addendum P1): candados de convertibilidad evaluados ANTES del
+  -- camino idempotente. Las informativas (tarifarios) quedan exentas: no generan
+  -- operación ni facturación. No se modifican datos históricos: una cotización
+  -- legada inconsistente falla con código estable y requiere vínculo manual.
+  IF COALESCE(v_tipo_documento, 'transaccional') <> 'informativa' THEN
+    IF COALESCE(v_es_prospecto, false) AND v_oportunidad_id IS NULL THEN
+      RAISE EXCEPTION 'LC_COT_SIN_OPORTUNIDAD: liga la cotización % a una oportunidad del CRM antes de aceptarla', COALESCE(v_folio, p_cotizacion_id::text)
+        USING ERRCODE='P0001';
+    END IF;
+    IF v_cliente_id IS NULL THEN
+      RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: la cotización % no tiene cliente; convierte el prospecto en cliente antes de aceptarla', COALESCE(v_folio, p_cotizacion_id::text)
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
   v_requiere := public.cliente_requiere_autorizacion(v_cliente_id, 'cotizacion');
   v_origen := CASE WHEN v_requiere THEN 'autorizacion_cliente' ELSE 'interna_cliente_de_casa' END;
   -- v13.823.58: reintento idempotente. El primer request pudo aceptar y la
@@ -4909,13 +4923,6 @@ BEGIN
       'version_aceptada', v_version_aceptada,
       'origen_aceptacion', v_origen,
       'sin_cambios', true);
-  END IF;
-  -- v13.823.355 (YAGNI r2 · P1): aceptar un prospecto sin oportunidad ligada
-  -- dejaba la cotización en un callejón sin salida (sin cliente, sin conversión,
-  -- sin embarque y sin edición). Se exige el vínculo CRM antes de aceptar.
-  IF COALESCE(v_es_prospecto, false) AND v_oportunidad_id IS NULL THEN
-    RAISE EXCEPTION 'LC_COT_SIN_OPORTUNIDAD: liga la cotización a una oportunidad del CRM antes de aceptarla'
-      USING ERRCODE='P0001';
   END IF;
   IF v_vigencia IS NOT NULL AND v_vigencia < CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_COT_VENCIDA: la cotización venció el %, extienda la vigencia antes de aceptar', v_vigencia USING ERRCODE='P0001';

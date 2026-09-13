@@ -44,7 +44,9 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_VENCIDA: "La cotización venció y ya no puede responderse.",
   LC_COT_SIN_OPORTUNIDAD:
     "Vincula la cotización a una oportunidad del CRM antes de enviarla al prospecto.",
-  LC_COT_SIN_CLIENTE: "La cotización no tiene cliente asociado.",
+  LC_COT_SIN_CLIENTE:
+    "La cotización no tiene cliente asociado. Convierte el prospecto en cliente " +
+    "antes de aceptarla o de crear el embarque.",
   LC_COT_TC_REQUERIDO:
     "La cotización tiene importes en más de una moneda y le falta el tipo de cambio. " +
     "Captúralo en la cotización antes de crear el embarque.",

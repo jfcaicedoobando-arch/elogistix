@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.359] - 2026-09-13
+
+- **fix(cotizaciones)**: `aceptar_cotizacion_version` valida convertibilidad ANTES del camino idempotente. Una cotización transaccional sin `cliente_id` se rechaza con `LC_COT_SIN_CLIENTE` y un prospecto sin `oportunidad_id` con `LC_COT_SIN_OPORTUNIDAD`, también en reintentos (estado ya `Aceptada`/`En operación`). Antes el reintento sólo revisaba la oportunidad cuando no era NULL, así que un prospecto legado sin cliente ni oportunidad (COT-2026-0016) devolvía éxito y luego `crear_embarque_borrador_core` lo rechazaba: callejón sin salida.
+  - Las informativas (tarifarios) siguen exentas; autoridad de rol/organización y SoD se evalúan primero.
+  - No se modifican datos históricos: las cotizaciones legadas inconsistentes fallan con código estable y requieren vínculo manual.
+  - Regresiones: `supabase/tests/cotizacion_aceptar_cliente_candado.sql` (en el manifiesto de guards: códigos, orden de candados y ACL sin anon) y `aceptarCotizacionClienteSql.test.ts`.
+
 ## [13.823.358] - 2026-09-13
 
 - **fix(cotizaciones)**: `actualizar_cotizacion_costos` ahora valida ESTADO además de organización/rol. La base de costos sólo se reemplaza en `Borrador`/`Solicitada` (`LC_COT_COSTOS_ESTADO_INVALIDO`) y nunca cuando la cotización ya tiene embarque vinculado (`LC_COT_COSTOS_CON_EMBARQUE`); para cambiar costos de una cotización cerrada existe `recotizar_cotizacion`. El trigger `cotizaciones_guard_en_operacion` cubría subtotal/moneda/conceptos_venta pero no los costos, así que una llamada autenticada directa podía borrar la base de costos de una Aceptada y desincronizar el P&L.

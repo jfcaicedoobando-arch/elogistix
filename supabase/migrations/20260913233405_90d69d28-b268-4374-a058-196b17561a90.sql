@@ -1,12 +1,3 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.58
--- (reintento idempotente: `sin_cambios` + fallo cerrado ante enlace ganador
--- inconsistente, sobre la autoridad única cotización→oportunidad de v13.823.57).
--- v13.823.359 (Addendum P1): aceptar exige cliente convertido (y oportunidad
--- ligada en prospectos) TAMBIÉN en el camino idempotente, para no devolver éxito
--- sobre cotizaciones legadas Aceptadas sin cliente/oportunidad que después no
--- pueden convertirse en embarque (callejón sin salida tipo COT-2026-0016).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
 CREATE OR REPLACE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
