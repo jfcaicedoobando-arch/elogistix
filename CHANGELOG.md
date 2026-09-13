@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.315] - 2026-09-13
+
+- **fix(base)**: la baseline del esquema ahora refleja el cuerpo canónico vigente de `crear_embarque_borrador_core` (puestos autorizados: super_admin, admin_org, admin, gerente_operaciones, coordinador_logistico y operador). Se conserva la revocación anónima de `current_user_org_id`. Sin cambios de comportamiento.
+
 ## [13.823.314] - 2026-09-13
 
 - **fix(base · cotización→embarque)**: se re-emitió la función interna que crea el borrador de embarque para que la versión viva coincida con el archivo canónico (misma lista de puestos autorizados, validación de empresa, estados Aceptada/En operación, bloqueo de prospectos e idempotencia). Sin cambios de comportamiento.
