@@ -26,6 +26,12 @@ BEGIN
   IF v_core !~ 'tipo_cambio_usd' THEN
     RAISE EXCEPTION 'el embarque dejó de heredar el tipo de cambio de la cotización';
   END IF;
+  -- v13.823.347: el conteo de monedas usa importe efectivo (cae a
+  -- cantidad × precio cuando el renglón legacy trae `total` nulo o 0). Sin ese
+  -- respaldo una cotización mixta USD+MXN se convertía sin tipo de cambio.
+  IF v_core !~ 'precio_unitario' THEN
+    RAISE EXCEPTION 'el conteo de monedas dejó de usar el importe efectivo (cantidad × precio)';
+  END IF;
 
   v_acep := pg_get_functiondef('public.aceptar_cotizacion_version(uuid)'::regprocedure);
 
