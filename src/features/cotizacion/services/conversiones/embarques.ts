@@ -42,6 +42,14 @@ const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
   [/LC_COT_SIN_CLIENTE/, "Convierte el prospecto a cliente antes de crear el borrador de embarque."],
   [/LC_COT_NO_ENCONTRADA/, "La cotización no existe o fue eliminada."],
   [/LC_NO_AUTORIZADO/, "No tienes permisos para crear un borrador desde esta cotización."],
+  [
+    /LC_COT_TC_REQUERIDO/,
+    "La cotización tiene importes en más de una moneda y le falta el tipo de cambio. Captúralo en la cotización antes de crear el embarque.",
+  ],
+  [
+    /LC_COT_CONTENEDORES_REQUERIDOS/,
+    "La cotización es marítima FCL y no indica cuántos contenedores. Captura el número de contenedores (1 o más) antes de crear el embarque.",
+  ],
 ];
 
 async function mapCrearEmbarqueError(error: { message?: string }, cotizacionId: string): Promise<Error> {
