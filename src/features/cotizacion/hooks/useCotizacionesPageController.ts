@@ -122,6 +122,7 @@ export function useCotizacionesPageController() {
   return {
     // datos
     isLoading: lista.isLoading,
+    isPlaceholderData: lista.isPlaceholderData,
     isError: !!lista.error,
     refetch: lista.refetch,
     clientes,

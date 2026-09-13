@@ -53,6 +53,42 @@ describe("useServerPagedList", () => {
     expect(args.range).toEqual({ from: 0, to: 19 });
   });
 
+  it("marca isPlaceholderData mientras llega la consulta del nuevo filtro", async () => {
+    // Regresión: al cambiar de pestaña/filtro, TanStack sirve las filas de la
+    // consulta anterior (placeholderData). La UI debe poder distinguirlo para
+    // pintar esqueleto y no operar sobre filas del segmento equivocado.
+    let resolverNuevaConsulta: ((v: { rows: { id: string }[]; count: number }) => void) | null = null;
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ id: "cliente-1" }], count: 1 })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolverNuevaConsulta = resolve;
+          }),
+      );
+    const { result } = renderHook(
+      () =>
+        useServerPagedList<{ id: string }, Filters>({
+          queryKey: ["test-list"],
+          fetcher,
+          defaultFilters: DEFAULTS,
+        }),
+      { wrapper: buildWrapper() },
+    );
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
+    expect(result.current.isPlaceholderData).toBe(false);
+
+    await act(async () => { result.current.setFilter("estado", "Pagada"); });
+    // Mientras la nueva consulta está pendiente, las filas son de la anterior.
+    await waitFor(() => expect(result.current.isPlaceholderData).toBe(true));
+    expect(result.current.rows).toEqual([{ id: "cliente-1" }]);
+
+    await act(async () => { resolverNuevaConsulta?.({ rows: [], count: 0 }); });
+    await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
+    expect(result.current.rows).toEqual([]);
+  });
+
   it("refetch cuando cambia search o filtros", async () => {
     const fetcher = vi.fn().mockResolvedValue({ rows: [], count: 0 });
     const { result } = renderHook(

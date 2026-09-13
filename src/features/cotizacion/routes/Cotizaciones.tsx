@@ -142,11 +142,17 @@ export default function Cotizaciones() {
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
-            data={deferredPaginated}
+            // Al cambiar de segmento/filtro, la consulta anterior sigue en
+            // `deferredPaginated` (placeholder); vaciar `data` hace que el
+            // esqueleto se pinte en vez de filas del segmento equivocado.
+            data={c.isPlaceholderData ? [] : deferredPaginated}
             // R-06: mientras el valor diferido va por detrás de la consulta real
             // seguimos mostrando el esqueleto; si no, la tabla parpadeaba a
             // "No se encontraron cotizaciones" con los KPIs ya en 3.
-            isLoading={c.isLoading || deferredPaginated !== c.paginated}
+            // `isPlaceholderData`: al cambiar de pestaña/filtro, TanStack sirve
+            // las filas de la consulta anterior; el esqueleto evita operar
+            // sobre filas del segmento equivocado.
+            isLoading={c.isLoading || c.isPlaceholderData || deferredPaginated !== c.paginated}
             emptyMessage="No se encontraron cotizaciones"
             getRowHref={(r) => `/cotizaciones/${r.id}`}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
