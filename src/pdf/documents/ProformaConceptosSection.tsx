@@ -40,7 +40,9 @@ export function SeccionMonedaPdf({
         </Text>
       ) : null}
       {filtrados.map((g) => {
-        const hayIva = moneda === "USD" ? g.items.some((c) => c.aplica_iva) : true;
+        // v13.823.345: ambas monedas miran la TASA efectiva. Antes MXN forzaba
+        // hayIva=true y una proforma 100% exenta imprimía columnas IVA/Total.
+        const hayIva = hayIvaEfectivo(g.items, tasaIva);
         const sub = g.items.reduce(
           (s, i) => s + Number(i.cantidad) * Number(i.precio_unitario),
           0,
