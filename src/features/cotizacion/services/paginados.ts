@@ -105,14 +105,26 @@ export function aplicarFiltrosCotizaciones<T extends FiltrableQuery>(
   return q as T;
 }
 
+/**
+ * v13.823.351 — la columna Cliente muestra `prospecto_empresa` cuando la fila
+ * es de prospecto, pero el orden server-side sólo puede usar una columna. En
+ * los segmentos que incluyen prospectos el orden por `cliente_nombre` no
+ * corresponde al texto visible, así que se cae al orden por fecha (la UI
+ * también deshabilita el encabezado).
+ */
+export function resolverColumnaOrdenCotizaciones(
+  sortKey: string | null | undefined,
+  segmento: string | null | undefined,
+): SortableCotizacionColumn {
+  if (sortKey === "cliente" && segmento !== "clientes") return "created_at";
+  const col = SORT_KEY_TO_COLUMN[sortKey ?? ""] as SortableCotizacionColumn;
+  return SORTABLE_COTIZACION_COLUMNS.includes(col) ? col : "created_at";
+}
+
 export async function fetchCotizacionesPaginadas(
   p: CotizacionesPaginadasParams,
 ): Promise<CotizacionesPaginadasResult> {
-  const sortColumn = SORTABLE_COTIZACION_COLUMNS.includes(
-    SORT_KEY_TO_COLUMN[p.sortKey ?? ""] as SortableCotizacionColumn,
-  )
-    ? SORT_KEY_TO_COLUMN[p.sortKey ?? "fecha"]
-    : "created_at";
+  const sortColumn = resolverColumnaOrdenCotizaciones(p.sortKey, p.segmento);
 
   let query = supabase
     .from("cotizaciones") // SOFT-DELETE-OK: el filtro vive en `aplicarFiltrosCotizaciones`.

@@ -3387,6 +3387,7 @@ CREATE FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_c
     SET search_path TO 'public'
     AS $$
 DECLARE
+  v_org            uuid;
   v_costo          RECORD;
   v_fila           RECORD;
   v_unit           numeric;
@@ -3408,7 +3409,9 @@ BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
     RETURN 0;
   END IF;
-  SELECT c.tarifa_id INTO v_tarifa_origen
+  -- v13.823.351: toda lectura de tarifas/recargos se acota a la organización
+  -- de la cotización; una referencia cruzada debe fallar, no usarse en silencio.
+  SELECT c.tarifa_id, c.organization_id INTO v_tarifa_origen, v_org
     FROM public.cotizaciones c
    WHERE c.id = p_cotizacion_id;
   v_es_sustitucion := p_tarifa_id_aplicada IS NOT NULL
@@ -3417,9 +3420,11 @@ BEGIN
   -- proveedor/moneda sembrados de otra produciría un costo inauditable.
   IF v_es_sustitucion THEN
     SELECT t.agente_id, t.moneda INTO v_ag_nueva, v_mon_nueva
-      FROM public.costeo_tarifas t WHERE t.id = p_tarifa_id_aplicada;
+      FROM public.costeo_tarifas t
+     WHERE t.id = p_tarifa_id_aplicada AND t.organization_id = v_org;
     SELECT t.agente_id, t.moneda INTO v_ag_origen, v_mon_origen
-      FROM public.costeo_tarifas t WHERE t.id = v_tarifa_origen;
+      FROM public.costeo_tarifas t
+     WHERE t.id = v_tarifa_origen AND t.organization_id = v_org;
     IF v_ag_nueva IS NULL THEN
       RAISE EXCEPTION 'La tarifa sustituta no existe o no tiene agente asignado. Revisa y selecciona otra tarifa.'
         USING ERRCODE = 'P0001';
@@ -3441,7 +3446,8 @@ BEGIN
            r.monto AS recargo_monto_vigente, r.moneda AS recargo_moneda_vigente,
            r.id AS recargo_vigente_id
       FROM public.cotizacion_costos cc
-      LEFT JOIN public.costeo_tarifa_recargos r ON r.id = cc.costeo_tarifa_recargo_id
+      LEFT JOIN public.costeo_tarifa_recargos r
+             ON r.id = cc.costeo_tarifa_recargo_id AND r.organization_id = v_org
      WHERE cc.cotizacion_id = p_cotizacion_id
        AND cc.deleted_at IS NULL
        AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL)
@@ -3454,6 +3460,7 @@ BEGIN
           INTO v_equivalentes, v_unit, v_moneda_match
           FROM public.costeo_tarifa_recargos r
          WHERE r.tarifa_id = p_tarifa_id_aplicada
+           AND r.organization_id = v_org
            AND lower(btrim(r.concepto)) = lower(btrim(COALESCE(v_costo.recargo_concepto, v_costo.concepto)))
            AND r.lado IS NOT DISTINCT FROM v_costo.recargo_lado
            AND upper(btrim(r.moneda)) = upper(btrim(v_costo.moneda));
@@ -3486,7 +3493,8 @@ BEGIN
     ELSE
       SELECT t.flete_base, t.moneda INTO v_unit, v_moneda_match
         FROM public.costeo_tarifas t
-       WHERE t.id = COALESCE(p_tarifa_id_aplicada, v_costo.costeo_tarifa_id);
+       WHERE t.id = COALESCE(p_tarifa_id_aplicada, v_costo.costeo_tarifa_id)
+         AND t.organization_id = v_org;
       IF v_unit IS NOT NULL
          AND upper(btrim(COALESCE(v_moneda_match, ''))) IS DISTINCT FROM upper(btrim(v_costo.moneda)) THEN
         RAISE EXCEPTION 'El flete de la tarifa aplicada está en % y el costo aceptado en %: no se puede aplicar sin recotizar.',
@@ -12302,17 +12310,11 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
-  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
-  -- implícito (o 1:1) deformaría el P&L del embarque.
   SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
     INTO v_monedas
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
-   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
-   -- una cotización mixta se convertía sin tipo de cambio.
    WHERE COALESCE(
            NULLIF(
              CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -12326,8 +12328,6 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
-  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
@@ -12377,13 +12377,11 @@ BEGIN
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
-  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL).
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -12397,7 +12395,10 @@ BEGIN
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT COALESCE(v_agente_id, t.agente_id), COALESCE(v_naviera_id, t.naviera_id)
       INTO v_agente_id, v_naviera_id
-    FROM public.costeo_tarifas t WHERE t.id = v_cot.tarifa_id;
+    -- v13.823.351: la tarifa se lee SIEMPRE acotada a la organización de la
+    -- cotización; un id de otro tenant no debe sembrar agente/naviera.
+    FROM public.costeo_tarifas t
+     WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
   IF v_agente_id  IS NOT NULL THEN SELECT nombre INTO v_agente_nombre  FROM public.costeo_agentes WHERE id = v_agente_id; END IF;
   IF v_naviera_id IS NOT NULL THEN SELECT name   INTO v_naviera_nombre FROM public.navieras       WHERE id = v_naviera_id; END IF;
@@ -12435,7 +12436,6 @@ BEGIN
     NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
-  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -15291,12 +15291,18 @@ CREATE FUNCTION public.duplicar_cotizacion(p_id uuid) RETURNS uuid
     AS $$
 DECLARE
   v_org uuid;
+  v_deleted timestamptz;
   v_nueva_id uuid := gen_random_uuid();
   v_folio text;
 BEGIN
-  SELECT organization_id INTO v_org FROM public.cotizaciones WHERE id = p_id;
+  SELECT organization_id, deleted_at INTO v_org, v_deleted
+    FROM public.cotizaciones WHERE id = p_id;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE = 'P0002';
+  END IF;
+  IF v_deleted IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COTIZACION_ELIMINADA: no se puede duplicar una cotización eliminada'
+      USING ERRCODE = 'P0001';
   END IF;
   IF v_org IS DISTINCT FROM public.current_user_org_id() THEN
     RAISE EXCEPTION 'No pertenece a tu organización' USING ERRCODE = '42501';
@@ -15305,33 +15311,62 @@ BEGIN
     RAISE EXCEPTION 'Rol insuficiente para duplicar cotizaciones' USING ERRCODE = '42501';
   END IF;
   v_folio := public.siguiente_folio_cotizacion();
-  INSERT INTO public.cotizaciones AS c
+  INSERT INTO public.cotizaciones (
+    id, folio, organization_id, duplicada_de_id,
+    cliente_id, cliente_nombre, es_prospecto,
+    prospecto_empresa, prospecto_contacto, prospecto_email, prospecto_telefono,
+    oportunidad_id,
+    modo, tipo, incoterm, tipo_movimiento, tipo_documento,
+    descripcion_mercancia, descripcion_adicional, sector_economico, comentario_cliente,
+    peso_kg, volumen_m3, piezas, tipo_peso,
+    tipo_carga, msds_archivo, tipo_embarque, tipo_contenedor, num_contenedores,
+    tipo_unidad, modalidad_equipo,
+    dimensiones_lcl, dimensiones_aereas,
+    origen, destino, punto_intermedio, ruta_texto,
+    tiempo_transito_dias, frecuencia,
+    seguro, valor_seguro_usd, carta_garantia,
+    dias_libres_destino, dias_almacenaje,
+    lcl_tarifa_wm, lcl_minimo_flete, lcl_dias_libres_almacenaje, lcl_consolidador_id,
+    agente_id, naviera_id,
+    tarifa_id, tarifa_override, tarifas_informativas,
+    tipo_cambio_usd, sin_desglose_costos,
+    conceptos_venta, subtotal, moneda, notas, operador,
+    vigencia_dias, estado, version, estado_revalidacion, created_by
+  )
   SELECT
-    v_nueva_id           AS id,
-    v_folio              AS folio,
-    cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia,
-    peso_kg, volumen_m3, piezas, origen, destino,
-    conceptos_venta, subtotal, moneda, vigencia_dias,
-    NULL::date           AS fecha_vigencia,
-    notas,
-    'Borrador'::estado_cotizacion AS estado,
-    NULL::uuid           AS embarque_id,
-    operador,
-    now()                AS created_at,
-    now()                AS updated_at
+    v_nueva_id, v_folio, v_org, p_id,
+    cliente_id, cliente_nombre, es_prospecto,
+    prospecto_empresa, prospecto_contacto, prospecto_email, prospecto_telefono,
+    oportunidad_id,
+    modo, tipo, incoterm, tipo_movimiento, tipo_documento,
+    descripcion_mercancia, descripcion_adicional, sector_economico, comentario_cliente,
+    peso_kg, volumen_m3, piezas, tipo_peso,
+    tipo_carga, msds_archivo, tipo_embarque, tipo_contenedor, num_contenedores,
+    tipo_unidad, modalidad_equipo,
+    dimensiones_lcl, dimensiones_aereas,
+    origen, destino, punto_intermedio, ruta_texto,
+    tiempo_transito_dias, frecuencia,
+    seguro, valor_seguro_usd, carta_garantia,
+    dias_libres_destino, dias_almacenaje,
+    lcl_tarifa_wm, lcl_minimo_flete, lcl_dias_libres_almacenaje, lcl_consolidador_id,
+    agente_id, naviera_id,
+    tarifa_id, tarifa_override, tarifas_informativas,
+    tipo_cambio_usd, sin_desglose_costos,
+    conceptos_venta, subtotal, moneda, notas, operador,
+    vigencia_dias,
+    'Borrador'::estado_cotizacion, 1, 'ninguna', auth.uid()
   FROM public.cotizaciones
   WHERE id = p_id;
-  UPDATE public.cotizaciones
-     SET organization_id = v_org,
-         duplicada_de_id = p_id
-   WHERE id = v_nueva_id;
   INSERT INTO public.cotizacion_costos
-    (cotizacion_id, concepto, moneda, proveedor, cantidad,
-     costo_unitario, precio_venta)
-  SELECT v_nueva_id, concepto, moneda, proveedor, cantidad,
-         costo_unitario, precio_venta
+    (cotizacion_id, organization_id, concepto, moneda, proveedor, unidad_medida,
+     cantidad, costo_unitario, precio_venta, notas,
+     costeo_tarifa_id, costeo_tarifa_recargo_id)
+  SELECT v_nueva_id, v_org, concepto, moneda, proveedor, unidad_medida,
+         cantidad, costo_unitario, precio_venta, notas,
+         costeo_tarifa_id, costeo_tarifa_recargo_id
     FROM public.cotizacion_costos
-   WHERE cotizacion_id = p_id;
+   WHERE cotizacion_id = p_id
+     AND deleted_at IS NULL;
   RETURN v_nueva_id;
 END;
 $$;
@@ -23329,6 +23364,16 @@ BEGIN
   RETURN v_org_id;
 END;
 $$;
+CREATE FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT _user_id IS NOT NULL AND (
+    public.has_role(_user_id, 'admin'::app_role)
+    OR public.has_role(_user_id, 'vendedor'::app_role)
+    OR public.has_role(_user_id, 'ejecutivo_pricing'::app_role)
+  )
+$$;
 CREATE FUNCTION public.puede_escribir_cotizaciones(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -24190,12 +24235,12 @@ DECLARE
   v_org UUID;
   v_folio TEXT;
   v_estado TEXT;
+  v_revalidacion TEXT;
   v_embarque_expediente TEXT;
 BEGIN
-  -- FOR UPDATE: serializa dos re-cotizaciones concurrentes sobre el mismo folio.
-  SELECT version, organization_id, folio, estado::text
-    INTO v_old, v_org, v_folio, v_estado
-  FROM cotizaciones WHERE id = p_cotizacion_id
+  SELECT version, organization_id, folio, estado::text, estado_revalidacion
+    INTO v_old, v_org, v_folio, v_estado, v_revalidacion
+  FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
   FOR UPDATE;
   IF v_old IS NULL THEN
     RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002';
@@ -24206,7 +24251,10 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501';
   END IF;
-  -- Mismo mínimo que el modal de la UI (5 caracteres).
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden re-cotizar'
+      USING ERRCODE='42501';
+  END IF;
   IF length(coalesce(trim(p_motivo),'')) < 5 THEN
     RAISE EXCEPTION 'Motivo requerido (mínimo 5 caracteres)' USING ERRCODE='22023';
   END IF;
@@ -24214,7 +24262,6 @@ BEGIN
     RAISE EXCEPTION 'LC_RECOTIZAR_ESTADO_INVALIDO'
       USING HINT = v_estado, ERRCODE = 'P0001';
   END IF;
-  -- Bug 15 guard: block re-versioning if there is any active shipment linked
   SELECT expediente INTO v_embarque_expediente
   FROM public.embarques
   WHERE cotizacion_id = p_cotizacion_id
@@ -24229,7 +24276,13 @@ BEGIN
   PERFORM archivar_version_cotizacion(p_cotizacion_id, p_motivo);
   v_new := v_old + 1;
   UPDATE cotizaciones
-     SET version = v_new, estado = 'Borrador', updated_at = now()
+     SET version = v_new,
+         estado = 'Borrador',
+         estado_revalidacion = CASE WHEN v_revalidacion = 'pendiente_reaprobacion'
+                                    THEN 'recotizada' ELSE estado_revalidacion END,
+         revalidacion_resuelta_en = CASE WHEN v_revalidacion = 'pendiente_reaprobacion'
+                                    THEN now() ELSE revalidacion_resuelta_en END,
+         updated_at = now()
    WHERE id = p_cotizacion_id;
   INSERT INTO bitacora_actividad (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
   VALUES (
@@ -26113,15 +26166,36 @@ DECLARE
   v_cot        public.cotizaciones%ROWTYPE;
   v_caller_org UUID := current_user_org_id();
   v_is_super   BOOLEAN := has_role(auth.uid(),'super_admin'::app_role);
+  v_rev        JSONB;
+  v_snap_actual JSONB;
+  v_snap_aprob  JSONB;
 BEGIN
-  IF p_decision NOT IN ('reaprobada','rechazada','recotizada') THEN
+  IF p_decision = 'recotizada' THEN
+    RAISE EXCEPTION 'LC_RECOTIZADA_NO_DIRECTA: la re-cotización se registra al versionar la cotización'
+      USING ERRCODE='P0001';
+  END IF;
+  IF p_decision NOT IN ('reaprobada','rechazada') THEN
     RAISE EXCEPTION 'Decisión inválida: %', p_decision USING ERRCODE='P0001'; END IF;
-  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id FOR UPDATE;
+  SELECT * INTO v_cot FROM public.cotizaciones
+   WHERE id=p_cotizacion_id AND deleted_at IS NULL FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden resolver la re-aprobación de tarifa'
+      USING ERRCODE='42501';
+  END IF;
   IF v_cot.estado_revalidacion<>'pendiente_reaprobacion' THEN
     RAISE EXCEPTION 'La cotización no está pendiente de re-aprobación (estado: %)', v_cot.estado_revalidacion USING ERRCODE='P0001'; END IF;
+  IF p_decision='reaprobada' THEN
+    v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
+    v_snap_actual := v_rev->'snapshot_economico';
+    v_snap_aprob  := v_cot.revalidacion_delta_jsonb->'snapshot_economico';
+    IF v_snap_aprob IS NULL OR v_snap_actual IS DISTINCT FROM v_snap_aprob THEN
+      RAISE EXCEPTION 'LC_REVALIDACION_DESACTUALIZADA: la tarifa cambió después de la solicitud; pide una nueva re-aprobación'
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
   UPDATE public.cotizaciones
   SET estado_revalidacion=p_decision, revalidacion_resuelta_en=now(), updated_at=now()
   WHERE id=p_cotizacion_id;
@@ -26320,7 +26394,10 @@ BEGIN
       'estado_revalidacion',v_cot.estado_revalidacion,'reaprobacion_vigente',FALSE,
       'motivo','sin_tarifa_vinculada');
   END IF;
-  SELECT * INTO v_tarifa_vig_rec FROM public.costeo_tarifas_vigentes_v WHERE id=v_cot.tarifa_id LIMIT 1;
+  -- v13.823.351: la tarifa vigente y sus recargos se leen acotados a la
+  -- organización de la cotización (las FK son sólo por UUID).
+  SELECT * INTO v_tarifa_vig_rec FROM public.costeo_tarifas_vigentes_v
+   WHERE id=v_cot.tarifa_id AND organization_id=v_cot.organization_id LIMIT 1;
   v_tarifa_vigente := FOUND;
   FOR v_costo IN
     SELECT cc.concepto, cc.moneda, cc.costo_unitario AS monto_anterior,
@@ -26330,9 +26407,11 @@ BEGIN
       AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL)
   LOOP
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
-      SELECT monto INTO v_monto_actual FROM public.costeo_tarifa_recargos WHERE id=v_costo.costeo_tarifa_recargo_id;
+      SELECT monto INTO v_monto_actual FROM public.costeo_tarifa_recargos
+       WHERE id=v_costo.costeo_tarifa_recargo_id AND organization_id=v_cot.organization_id;
     ELSE
-      SELECT flete_base INTO v_monto_actual FROM public.costeo_tarifas WHERE id=v_costo.costeo_tarifa_id;
+      SELECT flete_base INTO v_monto_actual FROM public.costeo_tarifas
+       WHERE id=v_costo.costeo_tarifa_id AND organization_id=v_cot.organization_id;
     END IF;
     IF v_monto_actual IS NULL THEN
       v_cambios := v_cambios || jsonb_build_object(
@@ -26354,9 +26433,6 @@ BEGIN
       IF v_delta_pct > v_max_delta_pct THEN v_max_delta_pct := v_delta_pct; END IF;
     END IF;
   END LOOP;
-  -- Huella económica canónica: identifica cada costo fuente y su importe
-  -- vigente. A diferencia del máximo porcentual, detecta cualquier cambio de
-  -- composición o importe aunque el porcentaje agregado coincida.
   SELECT jsonb_build_object(
     'tarifa_vigente', v_tarifa_vigente,
     'filas', COALESCE(jsonb_agg(jsonb_build_object(
@@ -26369,8 +26445,10 @@ BEGIN
     ) ORDER BY cc.id), '[]'::jsonb)
   ) INTO v_snapshot
   FROM public.cotizacion_costos cc
-  LEFT JOIN public.costeo_tarifa_recargos r ON r.id=cc.costeo_tarifa_recargo_id
-  LEFT JOIN public.costeo_tarifas t ON t.id=cc.costeo_tarifa_id
+  LEFT JOIN public.costeo_tarifa_recargos r
+         ON r.id=cc.costeo_tarifa_recargo_id AND r.organization_id=v_cot.organization_id
+  LEFT JOIN public.costeo_tarifas t
+         ON t.id=cc.costeo_tarifa_id AND t.organization_id=v_cot.organization_id
   WHERE cc.cotizacion_id=v_cot.id AND cc.deleted_at IS NULL
     AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL);
   IF NOT v_tarifa_vigente AND v_bloquea_vencida THEN v_severidad := 'bloqueante';
@@ -26378,8 +26456,6 @@ BEGIN
   ELSIF v_max_delta_pct > v_umbral_pct THEN v_severidad := 'bloqueante';
   ELSE v_severidad := 'informativa';
   END IF;
-  -- R201-COT-02: la re-aprobación de ventas consume el bloqueo, pero SÓLO si
-  -- corresponde al mismo delta que ventas autorizó.
   IF v_severidad = 'bloqueante' AND v_cot.estado_revalidacion = 'reaprobada' THEN
     v_snapshot_aprob := v_cot.revalidacion_delta_jsonb->'snapshot_economico';
     IF v_snapshot_aprob IS NOT NULL AND v_snapshot_aprob = v_snapshot THEN
@@ -34671,6 +34747,9 @@ GRANT ALL ON FUNCTION public.proveedores_listado(p_organization_id uuid, p_tipo 
 REVOKE ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO service_role;

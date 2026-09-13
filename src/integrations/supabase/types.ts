@@ -10909,6 +10909,10 @@ export type Database = {
         Args: { p_nombre: string; p_owner_user_id: string; p_rfc: string }
         Returns: string
       }
+      puede_aprobar_tarifa_cotizacion: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
       puede_escribir_cotizaciones: {
         Args: { _user_id?: string }
         Returns: boolean

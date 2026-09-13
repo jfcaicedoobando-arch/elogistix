@@ -27,6 +27,12 @@ export interface BuildParams {
    */
   canDuplicar: boolean;
   canEliminar: boolean;
+  /**
+   * v13.823.351 — el orden server-side de Cliente usa `cliente_nombre`, que no
+   * es el texto visible en filas de prospecto: sólo se habilita en el segmento
+   * de clientes.
+   */
+  puedeOrdenarCliente?: boolean;
   onEliminar: (id: string) => void;
   onDuplicar?: (id: string) => void;
   /** TC USD→MXN vigente, usado sólo para ordenar el subtotal multimoneda. */
@@ -56,7 +62,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       // Las cotizaciones de prospecto muestran la empresa capturada (sin alta
       // en el catálogo de clientes) y un badge para no mezclar embudos.
       accessorFn: (r) => (r.es_prospecto ? r.prospecto_empresa : r.cliente_nombre) ?? "",
-      enableSorting: true,
+      enableSorting: params.puedeOrdenarCliente !== false,
       cell: ({ row }) => {
         const r = row.original;
         const nombre = r.es_prospecto

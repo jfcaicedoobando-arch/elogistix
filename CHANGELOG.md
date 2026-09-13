@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.351] - 2026-09-13
+
+- **fix(seguridad, db)**: `public.resolver_reaprobacion_tarifa` y `public.recotizar_cotizacion` exigen el rol aprobador comercial vía la nueva `public.puede_aprobar_tarifa_cotizacion` (admin/admin_org/super_admin, gerente comercial, vendedor, ejecutivo de pricing); antes cualquier miembro autenticado (viewer, contabilidad, tesorería, operación) podía aprobar, rechazar o versionar por RPC directa. `recotizar_cotizacion` además ignora cotizaciones eliminadas (`deleted_at`).
+- **fix(db, invariante)**: la decisión `reaprobada` sólo se acepta si el snapshot económico autorizado sigue vigente (`LC_REVALIDACION_DESACTUALIZADA`), y `recotizada` deja de ser una decisión directa (`LC_RECOTIZADA_NO_DIRECTA`): la escribe `recotizar_cotizacion` cuando la nueva versión ya existe.
+- **fix(db, duplicar)**: `public.duplicar_cotizacion` copia explícitamente todos los campos funcionales (prospecto, tipo de carga/embarque/contenedor, dimensiones, seguro, carta garantía, días libres, tipo de documento, vigencia, oportunidad, tarifa/`tarifa_override`, tipo de cambio, agente y naviera) y los costos con `costeo_tarifa_id`/`costeo_tarifa_recargo_id`; rechaza duplicar una cotización eliminada (`LC_COTIZACION_ELIMINADA`).
+- **fix(multi-tenant, db)**: `revalidar_tarifa_cotizacion`, `crear_embarque_borrador_core` y `_embarque_aplicar_tarifa_decidida` acotan toda lectura de `costeo_tarifas` / `costeo_tarifa_recargos` a la organización de la cotización; una referencia cruzada falla en lugar de usar la tarifa de otro tenant.
+- **fix(permisos, cotizaciones)**: `DUPLICAR_COTIZACION` y `ELIMINAR_COTIZACION` recuperan la jerarquía real de `has_role` (admin_org/super_admin y gerencia/coordinación de operaciones), que quedó fuera en 13.823.350; el banner de re-aprobación gatea con `canApproveTarifaCotizacion`.
+- **fix(cotizaciones)**: "Re-cotizar con tarifa vigente" sólo se muestra en estado `Aceptada` (en `En operación` la RPC siempre lo rechazaba) y ya no marca la decisión por separado.
+- **fix(cotizaciones)**: el orden por Cliente se deshabilita en los segmentos con prospectos (el texto visible es `prospecto_empresa`) y el servidor cae al orden por fecha en ese caso.
+
 ## [13.823.350] - 2026-09-13
 
 - **fix(permisos, cotizaciones)**: "Duplicar" y "Eliminar" del listado usan capacidades específicas (`canDuplicateCotizacion`, `canDeleteCotizacion`), espejo EXACTO de `public.duplicar_cotizacion` (admin, operador, ejecutivo_pricing) y del guard de `public.soft_delete_record` (super_admin, admin, operador). Ventas (vendedor, gerente comercial, customer service) veía ambas acciones con la capacidad amplia de escritura y las RPC respondían 42501. Sin cambios en el backend.

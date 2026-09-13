@@ -57,6 +57,7 @@ export function CotizacionDetalleContenido({
       <ReaprobacionTarifaBanner
         cotizacionId={cotizacion.id}
         estado={(cotizacion as { estado_revalidacion?: string }).estado_revalidacion}
+        estadoCotizacion={cotizacion.estado}
         deltaJsonb={(cotizacion as { revalidacion_delta_jsonb?: unknown }).revalidacion_delta_jsonb}
       />
 

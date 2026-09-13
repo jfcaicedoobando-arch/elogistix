@@ -25,17 +25,23 @@ import { usePermissions } from "@/hooks/shared";
 interface Props {
   cotizacionId: string;
   estado: string | null | undefined;
+  /**
+   * v13.823.351 — estado de la COTIZACIÓN. `recotizar_cotizacion` sólo acepta
+   * `Aceptada`; en `En operación` el CTA fallaba siempre, así que se oculta.
+   */
+  estadoCotizacion?: string | null;
   deltaJsonb?: unknown;
 }
 
-export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: Props) {
+export function ReaprobacionTarifaBanner({ cotizacionId, estado, estadoCotizacion, deltaJsonb }: Props) {
   const { mutateAsync, isPending } = useResolverReaprobacion();
   /**
-   * v13.823.349 — resolver la re-aprobación es ESCRITURA de cotizaciones
-   * (espejo de `puede_escribir_cotizaciones`). Finanzas y lectura conservan el
-   * aviso, pero sin botones que la RPC siempre rechazaría.
+   * v13.823.351 — resolver la re-aprobación y re-cotizar son decisiones del rol
+   * APROBADOR (ventas/administración/pricing): espejo de
+   * `public.puede_aprobar_tarifa_cotizacion`. Operación, finanzas y lectura
+   * conservan el aviso, pero sin botones que la RPC rechazaría con 42501.
    */
-  const { canWriteCotizaciones } = usePermissions();
+  const { canApproveTarifaCotizacion } = usePermissions();
   const [recotizando, setRecotizando] = useState(false);
   const navigate = useNavigate();
 
@@ -53,8 +59,9 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
     if (recotizando || isPending) return;
     setRecotizando(true);
     try {
+      // v13.823.351: `recotizar_cotizacion` ya registra la decisión
+      // `recotizada`; marcarla aparte quedaba a medias si la versión fallaba.
       await recotizarCotizacion(cotizacionId, "Tarifa vigente actualizada por ventas");
-      await mutateAsync({ cotizacionId, decision: "recotizada" });
       navigate(`/cotizaciones/${cotizacionId}/editar`);
     } catch (e) {
       notifyError(undefined, {
@@ -89,7 +96,7 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
             : "Operaciones detectó cambios en la tarifa vigente al crear el embarque."}
           {delta?.conceptos ? ` (${delta.conceptos} concepto(s) afectado(s))` : ""}
         </p>
-        {canWriteCotizaciones && (
+        {canApproveTarifaCotizacion && (
         <div className="flex gap-2 flex-wrap">
           <Button
             size="sm"
@@ -98,15 +105,17 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
           >
             Re-aprobar manteniendo precio al cliente
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleRecotizar}
-            disabled={disabled}
-          >
-            <RefreshCw className="h-3.5 w-3.5 mr-1" />
-            Re-cotizar con tarifa vigente
-          </Button>
+          {estadoCotizacion === "Aceptada" && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleRecotizar}
+              disabled={disabled}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Re-cotizar con tarifa vigente
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"

@@ -1,22 +1,3 @@
--- Fuente canónica de public._embarque_aplicar_tarifa_decidida (R201-COT-01).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
---
--- Aplica al COSTO del embarque los importes de la tarifa realmente decidida
--- (`refrescada` / `sustituida`). No toca `cotizacion_costos` (el histórico de la
--- cotización y el precio de venta aceptado quedan intactos) ni renglones ya
--- liquidados. Es idempotente por construcción: sólo se invoca desde
--- `crear_embarque_borrador_desde_cotizacion` cuando el embarque aún no tenía
--- decisión de tarifa registrada.
---
--- R201-COT-01 (remate): prohibido el fallback silencioso.
---   · Refrescar la MISMA tarifa resuelve cada recargo por su identidad exacta
---     (`cotizacion_costos.costeo_tarifa_recargo_id`), nunca por texto: nombres
---     repetidos ya no se confunden entre sí.
---   · Sustituir por OTRA tarifa exige equivalencia segura (concepto + lado +
---     moneda con exactamente una fila) y coherencia de proveedor/moneda. Si no
---     la hay, la operación se RECHAZA con mensaje claro en lugar de etiquetar
---     "Sustituida" conservando el cargo viejo.
-
 CREATE OR REPLACE FUNCTION public._embarque_aplicar_tarifa_decidida(
   p_embarque_id uuid,
   p_cotizacion_id uuid,

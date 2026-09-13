@@ -50,6 +50,17 @@ describe("permisos de duplicar/eliminar cotización", () => {
     expect(p.canDuplicateCotizacion).toBe(false);
     expect(p.canDeleteCotizacion).toBe(false);
   });
+
+  // v13.823.351 — `has_role('admin')` y `has_role('operador')` incluyen la
+  // jerarquía: admin_org/super_admin y gerencia/coordinación de operaciones.
+  it.each(["super_admin", "admin_org", "admin", "gerente_operaciones", "coordinador_logistico"])(
+    "%s duplica y elimina (la jerarquía de has_role lo autoriza)",
+    (rol) => {
+      const p = permisos(rol);
+      expect(p.canDuplicateCotizacion).toBe(true);
+      expect(p.canDeleteCotizacion).toBe(true);
+    },
+  );
 });
 
 async function etiquetasAcciones(canDuplicar: boolean, canEliminar: boolean): Promise<string[]> {
