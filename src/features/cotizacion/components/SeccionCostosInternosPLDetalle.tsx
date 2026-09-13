@@ -131,6 +131,8 @@ export default function SeccionCostosInternosPLDetalle({
         costos={snapshot?.costos ?? []}
         tasaIva={tasaIva}
         visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
+        // v13.823.360 — finanzas lee el aviso sin botón (la RPC exige SALES).
+        puedeSincronizar={canEdit}
       />
 
       {canEdit && filas.length > 0 && (

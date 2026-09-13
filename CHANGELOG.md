@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.360] - 2026-09-13
+
+- **fix(cotizaciones)**: el aviso "Sincronizar conceptos de venta desde costos" se renderizaba sin revisar permiso. Su botón llama `useUpdateCotizacion`, que exige SALES (`canWriteCotizaciones`), así que contabilidad/tesorería (que sí ven el P&L en sólo lectura) veían la acción y recibían 42501 al pulsarla.
+  - `AvisoSincronizarConceptosVenta` recibe `puedeSincronizar`: sin escritura muestra el aviso como texto informativo ("Un usuario de ventas u operación debe regenerar los conceptos…") y sin botón; con escritura el flujo queda intacto.
+  - Regresión: `AvisoSincronizarConceptosVenta.test.tsx` (matriz de permiso: botón visible sólo con escritura, texto de sólo lectura sin ella, nada cuando `visible=false`).
+
 ## [13.823.359] - 2026-09-13
 
 - **fix(cotizaciones)**: `aceptar_cotizacion_version` valida convertibilidad ANTES del camino idempotente. Una cotización transaccional sin `cliente_id` se rechaza con `LC_COT_SIN_CLIENTE` y un prospecto sin `oportunidad_id` con `LC_COT_SIN_OPORTUNIDAD`, también en reintentos (estado ya `Aceptada`/`En operación`). Antes el reintento sólo revisaba la oportunidad cuando no era NULL, así que un prospecto legado sin cliente ni oportunidad (COT-2026-0016) devolvía éxito y luego `crear_embarque_borrador_core` lo rechazaba: callejón sin salida.
