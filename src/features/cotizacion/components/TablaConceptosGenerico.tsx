@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { etiquetaTasaIva, tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
+import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
 interface Props {
