@@ -6,6 +6,7 @@
 import { Link } from "react-router-dom";
 import { FileText, Link2 as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import {
   chipsArchivosEntrante,
   etiquetaEstadoEntrante,
@@ -82,9 +83,14 @@ export function FacturaEntranteItem({
         <div className="flex min-w-0 flex-col gap-1.5 md:col-span-4">
           <div className="flex items-center gap-2">
             <IconoDocumento rechazada={rechazada} />
-            <span className="truncate text-body-sm font-semibold text-foreground" title={row.nombre_archivo}>
-              {row.nombre_archivo}
-            </span>
+            <Hint label={row.nombre_archivo}>
+              <span
+                className="truncate text-body-sm font-semibold text-foreground"
+                aria-label={row.nombre_archivo}
+              >
+                {row.nombre_archivo}
+              </span>
+            </Hint>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant={varianteEstadoEntrante(row.estado)} size="sm">
