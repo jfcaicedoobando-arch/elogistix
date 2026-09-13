@@ -111,18 +111,13 @@ function subnotaCliente(r: ConceptoVentaCotizacion): string | null {
   return notasParaCliente(r.notas) || null;
 }
 
-
-
-export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
-  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
-  const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
-  const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
-  const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
-  const notasCliente = notasParaCliente(cotizacion.notas);
-  const nombre = cotizacion.es_prospecto
-    ? `${cotizacion.prospecto_empresa} (Prospecto)`
-    : cotizacion.cliente_nombre;
-
+/** Bloques de la caja de totales; la tasa sólo se imprime si hay IVA real. */
+function armarBloques(
+  usd: ConceptoVentaCotizacion[],
+  mxn: ConceptoVentaCotizacion[],
+  totales: ReturnType<typeof calcularTotales>,
+  tasaIva: number,
+): TotalesMoneda[] {
   const bloques: TotalesMoneda[] = [];
   if (usd.length > 0) {
     bloques.push({
@@ -142,6 +137,21 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
       tasaIvaPct: totales.ivaMXN > 0 ? pctUnico(mxn, tasaIva) : undefined,
     });
   }
+  return bloques;
+}
+
+export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
+  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
+  const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
+  const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
+  const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
+  const notasCliente = notasParaCliente(cotizacion.notas);
+  const nombre = cotizacion.es_prospecto
+    ? `${cotizacion.prospecto_empresa} (Prospecto)`
+    : cotizacion.cliente_nombre;
+
+  const bloques = armarBloques(usd, mxn, totales, tasaIva);
+
 
 
   const headerMeta = [
