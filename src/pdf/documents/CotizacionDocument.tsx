@@ -102,6 +102,15 @@ function pctUnico(filas: ReadonlyArray<ConceptoVentaCotizacion>, tasaIva: number
   return tasas.length === 1 ? tasas[0] : undefined;
 }
 
+/**
+ * v13.823.342 — las notas por renglón también pasan por el filtro de notas
+ * internas; antes un "[interno] …" o residuos "QA SMOKE" llegaban al PDF.
+ */
+function subnotaCliente(r: ConceptoVentaCotizacion): string | null {
+  return notasParaCliente(r.notas) || null;
+}
+
+
 
 export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
