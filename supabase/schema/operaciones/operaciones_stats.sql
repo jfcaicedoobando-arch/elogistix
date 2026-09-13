@@ -122,6 +122,7 @@ BEGIN
       COALESCE(NULLIF(b.puerto_destino, ''), NULLIF(b.aeropuerto_destino, ''), NULLIF(b.ciudad_destino, ''), '') AS destino_txt
     FROM base b
     LEFT JOIN profit p ON p.embarque_id = b.id
+    LEFT JOIN teu_por_embarque t ON t.embarque_id = b.id
   ),
   meses AS (
     SELECT n,
