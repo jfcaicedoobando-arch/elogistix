@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 import { getStepIndicatorCircleClass } from "@/lib/ui/uiMappings";
 
 interface Step {
@@ -42,16 +43,18 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
             >
               {isCompleted ? <Check className="h-4 w-4" aria-hidden /> : step.num}
             </span>
-            <span className={labelClass} title={step.title}>
-              {step.shortTitle ? (
-                <>
-                  <span className="inline 2xl:hidden">{step.shortTitle}</span>
-                  <span className="hidden 2xl:inline">{step.title}</span>
-                </>
-              ) : (
-                step.title
-              )}
-            </span>
+            <Hint label={step.title}>
+              <span className={labelClass}>
+                {step.shortTitle ? (
+                  <>
+                    <span className="inline 2xl:hidden">{step.shortTitle}</span>
+                    <span className="hidden 2xl:inline">{step.title}</span>
+                  </>
+                ) : (
+                  step.title
+                )}
+              </span>
+            </Hint>
           </>
         );
 

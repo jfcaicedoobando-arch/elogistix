@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.325] - 2026-09-13
+
+- **fix(a11y)**: en `StepIndicator` se reemplazó el atributo nativo `title=` por el patrón accesible `Hint`, conservando `aria-label` completo y las etiquetas cortas responsive. Se actualizó `StepIndicator.test.tsx` para verificar que el tooltip no depende de `title` nativo.
+
 ## [13.823.324] - 2026-09-13
 
 - **fix(cotización wizard UX)**: en el stepper de `/cotizaciones/nueva` se muestran etiquetas cortas en desktop estrecho (p. ej. "Cliente" en lugar de "Cotización del cliente") mientras el título completo sigue accesible vía `aria-label` y tooltip nativo. Se agregó `WizardStep.shortTitle` y regresión `StepIndicator.test.tsx`. Sin cambios de flujo ni dependencias.
