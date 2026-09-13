@@ -16,6 +16,11 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_EMBARQUE_NO_ENCONTRADO: "El embarque no existe o fue eliminado.",
   LC_EMBARQUE_ELIMINADO: "El embarque ya fue eliminado.",
   LC_EMBARQUE_BLOQUEADO: "El embarque está bloqueado y no admite cambios.",
+  // v13.823.321 — mínimos operativos para confirmar (shipper, consignatario,
+  // ETD/ETA, peso y datos del modo). La lista real llega en el detalle del error.
+  LC_CONFIRMADO_INCOMPLETO:
+    "Aún falta información para confirmar el embarque. Captura los datos pendientes y vuelve a intentar.",
+
   // v13.823.312 — candados de cierre (A-1/A-2): el embarque cerrado congela
   // importes, garantías y vínculos financieros hasta que se reabre.
   LC_EMBARQUE_CERRADO:
