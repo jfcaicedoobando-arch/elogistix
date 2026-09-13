@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.319] - 2026-09-13
+
+- **fix(embarques UX)**: en el paso 1 del wizard de edición, el encabezado de vínculo cambió de "Vincular cotización Aceptada (obligatorio)" a "Cotización de origen (obligatorio)", porque una cotización convertida puede estar en estado "En operación". La validación vigente se conserva.
+
 ## [13.823.318] - 2026-09-13
 
 - **fix(cotizaciones UX)**: al cambiar de pestaña (Clientes → Prospectos) o de filtros, la tabla ya no muestra ~1 s las filas del segmento anterior; ahora pinta esqueleto hasta que llega la respuesta nueva. `useServerPagedList` expone `isPlaceholderData` y `/cotizaciones` vacía las filas mientras el dato es de la consulta previa.
