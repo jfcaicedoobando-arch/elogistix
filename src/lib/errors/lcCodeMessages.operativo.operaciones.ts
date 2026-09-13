@@ -45,6 +45,15 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_SIN_OPORTUNIDAD:
     "Vincula la cotización a una oportunidad del CRM antes de enviarla al prospecto.",
   LC_COT_SIN_CLIENTE: "La cotización no tiene cliente asociado.",
+  LC_COT_TC_REQUERIDO:
+    "La cotización tiene importes en más de una moneda y le falta el tipo de cambio. " +
+    "Captúralo en la cotización antes de crear el embarque.",
+  LC_COT_CONTENEDORES_REQUERIDOS:
+    "La cotización es marítima FCL y no indica cuántos contenedores. " +
+    "Captura el número de contenedores (1 o más) antes de crear el embarque.",
+  LC_COT_IMPORTE_REQUERIDO:
+    "La cotización no tiene importe. Captura al menos un concepto con cantidad y " +
+    "precio mayores a cero antes de aceptarla.",
   LC_COTIZACION_VENCIDA: "La cotización venció y no puede convertirse en embarque.",
   LC_COTIZACION_ESTADO_INVALIDO:
     "La cotización no está en un estado válido para esta operación.",
