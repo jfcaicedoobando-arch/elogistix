@@ -126,4 +126,9 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Un concepto de venta tiene cantidad o precio en cero (o negativo). Corrígelo en la cotización antes de convertirla.",
   LC_COT_MONEDA_NO_SOPORTADA:
     "Hay importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
+  // v13.823.358 · Addendum P1: los costos internos sólo se editan en captura.
+  LC_COT_COSTOS_ESTADO_INVALIDO:
+    "Esta cotización ya no está en captura, así que sus costos no pueden reemplazarse. Usa \"Re-cotizar\" para generar una nueva versión.",
+  LC_COT_COSTOS_CON_EMBARQUE:
+    "Esta cotización ya tiene un embarque vinculado; sus costos no pueden reemplazarse. Ajusta los costos en el embarque.",
 };
