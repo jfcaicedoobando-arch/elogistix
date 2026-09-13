@@ -59,8 +59,6 @@ export function useOperacionesPageController() {
   const totalAlertas = global.totalCriticos + global.totalEnPuerto;
 
   return {
-    periodo,
-    setPeriodo,
     operadorChart,
     setOperadorChart,
     isLoading,
