@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.309] - 2026-09-13
+
+- Tarifas marítimas: el título de la pestaña ya no queda como "Iniciar sesión"; la tabla cabe en 1280×720 (Contenedor y Vigencia se resumen bajo la Ruta) y desaparece el aviso de scroll horizontal.
+- Embarques: el contador de contenedores usa siempre los contenedores capturados, no el número de embarques del expediente.
+- Candados de cierre: no se pueden cambiar garantías ni importes/vínculos financieros de embarques Cerrados (pagos, facturas, facturas de proveedor, comisiones y facturas recibidas); los cambios de estado y traza siguen permitidos.
+- Aprobación de facturas de proveedor serializada (evita doble aprobación simultánea).
+- Aislamiento por organización: `current_user_org_id()` respeta el tenant activo del super admin.
+
 ## [13.823.308] - 2026-09-12
 - **ui(embarques)**: la tarjeta "Facturas de proveedor recibidas" (tab Costos) pasó de renglones apilados a un acomodo en columnas alineadas: archivo y estado, proveedor y folio, montos y acciones, con encabezados de columna en escritorio, ícono de documento, barra roja en documentos rechazados y el motivo de rechazo como franja a todo el ancho. Sin cambios en datos, permisos, montos ni acciones disponibles.
 
