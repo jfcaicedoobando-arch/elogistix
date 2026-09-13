@@ -19,7 +19,14 @@ import { subtotalesDeFila } from "./columnsParts/subtotalesDeFila";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface BuildParams {
-  canEdit: boolean;
+  /**
+   * v13.823.350 — capacidades específicas: `duplicar_cotizacion` sólo acepta
+   * admin/operador/ejecutivo_pricing y `soft_delete_record` sólo
+   * super_admin/admin/operador. Ventas veía las dos acciones y la RPC
+   * respondía 42501.
+   */
+  canDuplicar: boolean;
+  canEliminar: boolean;
   onEliminar: (id: string) => void;
   onDuplicar?: (id: string) => void;
   /** TC USD→MXN vigente, usado sólo para ordenar el subtotal multimoneda. */
@@ -161,11 +168,11 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     },
   ];
 
-  if (params.canEdit) {
+  if (params.canDuplicar || params.canEliminar) {
     cols.push(
       actionsColumn<CotizacionListItem>({
         items: () => [
-          ...(params.onDuplicar
+          ...(params.canDuplicar && params.onDuplicar
             ? [
                 {
                   label: "Duplicar",
@@ -174,12 +181,16 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
                 },
               ]
             : []),
-          {
-            label: "Eliminar",
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: "destructive" as const,
-            onSelect: (row: CotizacionListItem) => params.onEliminar(row.id),
-          },
+          ...(params.canEliminar
+            ? [
+                {
+                  label: "Eliminar",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  variant: "destructive" as const,
+                  onSelect: (row: CotizacionListItem) => params.onEliminar(row.id),
+                },
+              ]
+            : []),
         ],
       }),
     );

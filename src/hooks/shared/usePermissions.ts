@@ -71,8 +71,7 @@ export function usePermissions() {
 
   const canEditSales = has(SALES, roleStr);
   /**
-   * v13.823.348 — ESCRITURA de cotizaciones (crear, duplicar, eliminar,
-   * editar costos). Espejo de `public.puede_escribir_cotizaciones()` y de
+   * v13.823.348 — ESCRITURA de cotizaciones (crear, editar costos, enviar). Espejo de `public.puede_escribir_cotizaciones()` y de
    * `_assert_writer_cotizacion`: finanzas/contabilidad LEEN el detalle
    * (`canEdit`) pero las RPC las rechazan con 42501.
    */

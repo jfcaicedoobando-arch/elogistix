@@ -31,6 +31,7 @@ export default function Cotizaciones() {
   const c = useCotizacionesPageController();
   const navigate = useNavigate();
   const duplicar = useDuplicarCotizacion();
+  const { canDuplicateCotizacion, canDeleteCotizacion } = usePermissions();
   const { data: tcInicial } = useTcInicial();
 
   // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
@@ -40,7 +41,8 @@ export default function Cotizaciones() {
   const columns = useMemo(
     () =>
       buildCotizacionesColumns({
-        canEdit: c.canEdit,
+        canDuplicar: canDuplicateCotizacion,
+        canEliminar: canDeleteCotizacion,
         onEliminar: c.setCotizacionAEliminar,
         onDuplicar: (id: string) =>
           duplicar.mutate(id, {
@@ -52,7 +54,8 @@ export default function Cotizaciones() {
         eurMxn: tcInicial?.eurMxn,
       }),
     [
-      c.canEdit,
+      canDuplicateCotizacion,
+      canDeleteCotizacion,
       c.setCotizacionAEliminar,
       duplicar,
       navigate,
