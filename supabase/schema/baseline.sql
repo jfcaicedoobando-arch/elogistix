@@ -12310,8 +12310,18 @@ BEGIN
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   WHERE COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-     AND (c->>'total')::numeric <> 0;
+   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
+   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
+   -- una cotización mixta se convertía sin tipo de cambio.
+   WHERE COALESCE(
+           NULLIF(
+             CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                  THEN (c->>'total')::numeric ELSE 0 END, 0),
+           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
+                ELSE 0 END
+         ) <> 0;
   IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
@@ -12368,17 +12378,12 @@ BEGIN
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
-  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
-  -- creado por conversión directa mostraba "Servicio —".
+  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL).
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -12410,8 +12415,6 @@ BEGIN
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
     tipo_servicio,
-    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
-    -- al embarque; antes el borrador nacía sin tipo de cambio.
     tipo_cambio_usd
   )
   VALUES (
@@ -12419,8 +12422,6 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
-    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
-    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
@@ -12435,10 +12436,6 @@ BEGIN
   )
   RETURNING id INTO v_embarque_id;
   -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
-  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
-  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
-  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
-  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -27794,6 +27791,16 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
+  -- v13.823.347 — misma puerta de rol que `crear_embarque_borrador_core`.
+  IF NOT (v_is_super
+          OR has_role(auth.uid(), 'admin_org'::app_role)
+          OR has_role(auth.uid(), 'admin'::app_role)
+          OR has_role(auth.uid(), 'gerente_operaciones'::app_role)
+          OR has_role(auth.uid(), 'coordinador_logistico'::app_role)
+          OR has_role(auth.uid(), 'operador'::app_role)) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden solicitar la re-aprobación de tarifa'
+      USING ERRCODE='42501';
+  END IF;
   v_revalidacion := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   v_delta_seguro := COALESCE(p_delta_jsonb, '{}'::jsonb)
     || jsonb_build_object('snapshot_economico', v_revalidacion->'snapshot_economico');
@@ -34728,8 +34735,8 @@ REVOKE ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uu
 GRANT ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
+GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
 REVOKE ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO service_role;

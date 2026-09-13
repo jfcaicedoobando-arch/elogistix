@@ -65,6 +65,7 @@ BEGIN
   RETURN jsonb_build_object('cotizacion_id', p_cotizacion_id, 'version_anterior', v_old, 'version_nueva', v_new);
 END $$;
 
-REVOKE ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
+-- H6: SECURITY DEFINER sin ejecución para PUBLIC/anon; sólo authenticated y
+-- service_role, con privilegio EXECUTE explícito.
+REVOKE ALL ON FUNCTION public.recotizar_cotizacion(uuid, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.recotizar_cotizacion(uuid, text) TO authenticated, service_role;

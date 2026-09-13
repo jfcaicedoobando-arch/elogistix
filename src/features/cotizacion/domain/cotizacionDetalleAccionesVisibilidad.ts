@@ -34,10 +34,9 @@ export function visibilidadAcciones(params: {
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
-  const sinEmbarqueAun = esAceptada && !tieneEmbarquesVinculados;
-  // v13.823.277 — puerta común de "generar el embarque": cotización aceptada de
-  // un cliente real, sin embarque previo y con un rol que la RPC autoriza.
-  const puertaEmbarque = sinEmbarqueAun && !esProspecto && puedeCrearEmbarque;
+  const puertaEmbarque = puedeGenerarEmbarque({
+    estado, tieneEmbarquesVinculados, esProspecto, puedeCrearEmbarque,
+  });
   return {
     esEnCaptura: estado === "Borrador" || estado === "Solicitada",
     // v13.823.277 — el bloque sólo aparece si el rol tiene al menos una de las
@@ -55,6 +54,22 @@ export function visibilidadAcciones(params: {
     // de ofrecer un botón que generaría un embarque en cero. Sólo a quien
     // podría crear el embarque le sirve ese aviso.
     mostrarFaltaVenta: puertaEmbarque && !tieneVenta,
-    mostrarRecotizar: sinEmbarqueAun && puedeRecotizar,
+    // Re-cotizar exige estado Aceptada (espejo de `recotizar_cotizacion`).
+    mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados && puedeRecotizar,
   };
+}
+
+/**
+ * v13.823.347 — `crear_embarque_borrador_core` acepta Aceptada o En operación;
+ * la puerta visible coincide con la RPC (antes una cotización En operación sin
+ * embarque no ofrecía acción y el aviso apuntaba a un botón inexistente).
+ */
+function puedeGenerarEmbarque(p: {
+  estado: string;
+  tieneEmbarquesVinculados: boolean;
+  esProspecto: boolean;
+  puedeCrearEmbarque: boolean;
+}): boolean {
+  const esConvertible = p.estado === "Aceptada" || p.estado === "En operación";
+  return esConvertible && !p.tieneEmbarquesVinculados && !p.esProspecto && p.puedeCrearEmbarque;
 }

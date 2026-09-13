@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.347] - 2026-09-13
+
+- **fix(db, security)**: `recotizar_cotizacion` y `solicitar_reaprobacion_tarifa` pierden el privilegio de ejecución para `PUBLIC`/`anon` y sólo conservan `EXECUTE` explícito para `authenticated` y `service_role` (H6 de `audit:migrations`).
+- **fix(db, security)**: `solicitar_reaprobacion_tarifa` exige la misma puerta de rol que `crear_embarque_borrador_core` (super admin, administración u operación) y responde `LC_NO_AUTORIZADO` (42501); antes cualquier viewer o contador de la organización podía cambiar `estado_revalidacion` y generar bitácora/notificaciones por API. Guard nuevo `supabase/tests/solicitar_reaprobacion_tarifa_roles.sql`.
+- **fix(db)**: el conteo de monedas de `crear_embarque_borrador_core` usa el importe efectivo (cae a cantidad × precio cuando el renglón legacy trae `total` nulo o 0); una cotización mixta USD+MXN ya no se convierte sin tipo de cambio.
+- **fix(cotizaciones)**: la tabla de conceptos calcula el total de las filas en dólares con `importeEfectivoConcepto`; una fila legacy con `total = 0` ya no muestra "USD 0.00" contra un encabezado/PDF con importe.
+- **fix(cotizaciones)**: una cotización `En operación` sin embarque ofrece realmente "Crear embarque" (espejo de la RPC, que acepta Aceptada o En operación); "Re-cotizar" queda limitado a `Aceptada`.
+- **fix(cotizaciones)**: guard de reentrada compartido en el modal de revalidación de tarifa (Mantener/Refrescar/Sustituir/Re-aprobada y "Solicitar re-aprobación"): dos clics rápidos ya no lanzan dos operaciones concurrentes.
+- **fix(tests)**: `handlers_prepare_test.ts` reemplaza los `any` por tipos estructurales del cliente falso (ESLint `no-explicit-any` en CI).
+
+
 ## [13.823.346] - 2026-09-13
 
 - **fix(tests)**: el título `conserva las notas públicas` se renombró a `conserva las notas públicas del renglón` (duplicado detectado por `audit:tests`/`audit-report` en CI shard 2/3).
