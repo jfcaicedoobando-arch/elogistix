@@ -3,6 +3,7 @@ import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { formatCurrency, formatDate, formatFechaDia } from "@/lib/formatters";
 import {
   calcularTotales,
