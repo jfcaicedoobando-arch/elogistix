@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.339] - 2026-09-13
+
+- **datos(compras)**: se guardó el tipo de cambio 17.4453 en la factura FP-000151 (85 dólares facturados en 1,482.85 pesos) del expediente cerrado ELIMP00245, con nota de la corrección en el expediente. El expediente siguió cerrado y no se modificaron importes, pagos ni comisiones.
+- **datos(compras)**: de las 7 ligas en pesos contra costos en dólares sólo queda FP-000104 (ELIMP00323), pendiente de confirmar si los 179 dólares corresponden a esa factura.
+
+
 ## [13.823.338] - 2026-09-13
 
 - **datos(compras)**: se guardó el tipo de cambio que el propio proveedor usó en dos facturas en pesos ligadas a costos en dólares (FP-000140 a 17.3792 y FP-000236 a 16.9712). Ningún importe cambió.
