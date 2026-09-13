@@ -143,7 +143,9 @@ export {
   CRM_STAFF_REGISTROS,
   CRM_ESCRITURA_REGISTROS,
   CRM_REASIGNAR_VENDEDOR,
+  resolverPermisosCrm,
 } from "./permissionMatrix.crm";
+export type { PermisosCrmResueltos } from "./permissionMatrix.crm";
 
 export {
   ADMIN_CUENTAS_BANCARIAS,
