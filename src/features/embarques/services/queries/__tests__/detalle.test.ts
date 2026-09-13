@@ -54,7 +54,7 @@ describe("fetchEmbarqueFull", () => {
   });
 
   it("resolves expediente string via table lookup before calling RPC", async () => {
-    mock.setTableResult("embarques", { data: { id: UUID }, error: null });
+    mock.setTableResult("embarques", { data: [{ id: UUID }], error: null });
     mock.setRpcResult("get_embarque_full", {
       data: { embarque: { id: UUID }, conceptosVenta: null, conceptosCosto: null, documentos: null, notas: null, facturas: null },
       error: null,
@@ -64,10 +64,16 @@ describe("fetchEmbarqueFull", () => {
   });
 
   it("returns null when expediente lookup finds no row", async () => {
-    mock.setTableResult("embarques", { data: null, error: null });
+    mock.setTableResult("embarques", { data: [], error: null });
     const result = await fetchEmbarqueFull("EXP-MISSING");
     expect(result).toBeNull();
   });
+
+  it("avisa cuando el expediente es ambiguo (folio duplicado vivo)", async () => {
+    mock.setTableResult("embarques", { data: [{ id: UUID }, { id: "otra" }], error: null });
+    await expect(fetchEmbarqueFull("ELIMP00006")).rejects.toThrow(/más de un expediente/i);
+  });
+
 
   it("returns null when RPC returns null data", async () => {
     mock.setRpcResult("get_embarque_full", { data: null, error: null });
