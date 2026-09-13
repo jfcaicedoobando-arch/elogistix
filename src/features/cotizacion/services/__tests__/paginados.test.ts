@@ -102,6 +102,24 @@ describe("fetchCotizacionesPaginadas", () => {
     expect(res.rows[0].folio).toBe("COT-2021-0007");
   });
 
+  /**
+   * v13.823.349 — el segmento Prospectos muestra `prospecto_empresa`: buscar por
+   * esa empresa visible devolvía cero porque el filtro no la incluía.
+   */
+  it("busca también por la empresa del prospecto", async () => {
+    estado.respuestas.push({ data: [], count: 0, error: null });
+    await fetchCotizacionesPaginadas({
+      ...FILTROS,
+      segmento: "prospectos",
+      search: "Aceros del Norte",
+      page: 0,
+      pageSize: 50,
+    });
+    const or = String(ops().find((o) => o.op === "or")?.args[0] ?? "");
+    expect(or).toContain("prospecto_empresa.ilike.");
+    expect(or).toContain("Aceros del Norte");
+  });
+
   it("propaga el error de Supabase en vez de devolver una lista vacía", async () => {
     estado.respuestas.push({ data: null, count: null, error: { message: "boom" } });
     await expect(
