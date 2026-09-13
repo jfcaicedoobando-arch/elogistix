@@ -20,11 +20,6 @@
       "espejo": "supabase/schema/facturacion/recalcular_estado_factura.sql",
       "funcion": "recalcular_estado_factura",
       "migracion_vigente": "20260725184833_cefe9d2d-98b6-47f0-ba83-0e49fc225e06.sql"
-    },
-    {
-      "espejo": "supabase/schema/operaciones/operaciones_stats.sql",
-      "funcion": "operaciones_stats",
-      "migracion_vigente": "20260811090000_ola4_n10_dashboards_borrador.sql"
     }
   ]
 }
