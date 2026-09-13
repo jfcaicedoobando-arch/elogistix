@@ -106,6 +106,8 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});
   const validateStep = useCallback((step: number): boolean => {
     if (step !== 2) return true;
+    // SAFE-CAST: los valores del formulario incluyen campos fuera de StepRutaInput;
+    // validateStepRuta sólo lee los campos del paso 2 (ETD, ETA, ruta, contenedores).
     const errors = validateStepRuta(methods.getValues() as unknown as StepRutaInput);
     setValidationErrors((prev) => ({ ...prev, [step]: errors }));
     if (Object.keys(errors).length > 0) {

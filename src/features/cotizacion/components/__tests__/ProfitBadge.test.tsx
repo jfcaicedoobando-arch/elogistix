@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 
-describe("ProfitBadge", () => {
+describe("ProfitBadge (regresión sin venta)", () => {
   it("con venta 0 muestra guion largo y no un porcentaje", () => {
     render(<ProfitBadge porcentaje={0} venta={0} />);
     expect(screen.getByText("—")).toBeInTheDocument();
