@@ -8,14 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { History } from "lucide-react";
+import { Hint } from "@/components/shared/Hint";
 import { formatDate } from "@/lib/formatters";
 import { useVersionesCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 
 interface Props {
   cotizacionId: string;
+  /**
+   * v13.823.341 — estado vigente de la cotización. El historial guarda el
+   * estado que tenía al congelar cada versión (p. ej. "Aceptada"), así que sin
+   * este dato parecía contradecir el encabezado ("En operación").
+   */
+  estadoActual?: string | null;
 }
 
-export function VersionesCotizacionCard({ cotizacionId }: Props) {
+export function VersionesCotizacionCard({ cotizacionId, estadoActual }: Props) {
   const { data: versiones = [], isLoading } = useVersionesCotizacion(cotizacionId);
 
   if (isLoading) {
@@ -36,6 +43,8 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
   if (versiones.length === 0) {
     return null;
   }
+
+  const ultimoEstado = versiones[versiones.length - 1]?.estado_al_snapshot ?? null;
 
   return (
     <Card>
@@ -63,9 +72,11 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
                   v{v.version_num}
                 </Badge>
                 <span className="font-medium truncate">{v.folio}</span>
-                <Badge variant="outline" className="text-label shrink-0">
-                  {v.estado_al_snapshot}
-                </Badge>
+                <Hint label="Estado que tenía la cotización al congelar esta versión">
+                  <Badge variant="outline" className="text-label shrink-0">
+                    {v.estado_al_snapshot}
+                  </Badge>
+                </Hint>
               </div>
               <span className="text-body-sm text-muted-foreground whitespace-nowrap">
                 {formatDate(v.created_at)}
@@ -73,6 +84,13 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
             </li>
           ))}
         </ul>
+        {estadoActual && ultimoEstado && estadoActual !== ultimoEstado && (
+          <p className="text-body-sm text-muted-foreground">
+            La última versión se congeló en <strong>{ultimoEstado}</strong> y la
+            cotización avanzó después a <strong>{estadoActual}</strong>. El
+            historial conserva el estado original de cada versión.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
