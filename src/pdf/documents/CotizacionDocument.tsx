@@ -106,9 +106,9 @@ function pctUnico(filas: ReadonlyArray<ConceptoVentaCotizacion>, tasaIva: number
 export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
-  const hayIvaUsd = usd.some((c) => c.aplica_iva);
+  const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
+  const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
   const notasCliente = notasParaCliente(cotizacion.notas);
-  const tasaPct = Math.round(tasaIva * 100);
   const nombre = cotizacion.es_prospecto
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
     : cotizacion.cliente_nombre;
@@ -120,7 +120,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
       subtotal: totales.subtotalUSD,
       iva: totales.ivaUSD,
       total: totales.totalUSD,
-      tasaIvaPct: totales.ivaUSD > 0 ? tasaPct : undefined,
+      tasaIvaPct: totales.ivaUSD > 0 ? pctUnico(usd, tasaIva) : undefined,
     });
   }
   if (mxn.length > 0) {
@@ -129,9 +129,10 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
       subtotal: totales.subtotalMXN,
       iva: totales.ivaMXN,
       total: totales.totalMXN,
-      tasaIvaPct: tasaPct,
+      tasaIvaPct: totales.ivaMXN > 0 ? pctUnico(mxn, tasaIva) : undefined,
     });
   }
+
 
   const headerMeta = [
     { label: "Estado", value: cotizacion.estado },
