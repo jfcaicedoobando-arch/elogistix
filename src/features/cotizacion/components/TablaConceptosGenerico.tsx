@@ -63,12 +63,17 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                   ? lineSubtotal + lineIva
                   : totalGuardado;
 
+                // v13.823.345: la nota del renglón pasa por el filtro de notas
+                // internas; si sólo era interna no se renderiza el subrenglón.
+                const notaCliente = notasParaCliente(concepto.notas);
                 return (
-                  <DetailTableRow key={concepto.descripcion ?? `concepto-${indice}`}>
+                  // Key estable: `id` cuando existe y, si no, descripción +
+                  // índice (descripciones duplicadas generaban keys repetidas).
+                  <DetailTableRow key={concepto.id ?? `${concepto.descripcion ?? "concepto"}-${indice}`}>
                     <TableCell>
                       {concepto.descripcion ?? "—"}
-                      {concepto.notas && (
-                        <p className="text-body-sm text-muted-foreground mt-0.5">↳ {concepto.notas}</p>
+                      {notaCliente && (
+                        <p className="text-body-sm text-muted-foreground mt-0.5">↳ {notaCliente}</p>
                       )}
                     </TableCell>
                     <TableCell>{concepto.unidad_medida || '—'}</TableCell>
