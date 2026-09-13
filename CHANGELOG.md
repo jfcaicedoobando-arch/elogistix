@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.321] - 2026-09-13
+
+- **fix(embarques consistencia)**: la confirmación de un embarque ahora exige los mismos datos que el formulario marca como obligatorios (shipper, consignatario, ETD y ETA) además de los mínimos previos (peso > 0, y por modo: naviera/BL, aerolínea/MAWB, transportista; contenedor salvo LCL). Regla única compartida entre UI y `avanzar_estado_embarque` (`LC_CONFIRMADO_INCOMPLETO: <lista>`), con mensaje completo de faltantes. Se conservan idempotencia, `FOR UPDATE`, validación de tenant y máquina de estados. Nuevas pruebas: `confirmadoGate.test.ts` y guard `supabase/tests/embarque_confirmado_minimos.sql`.
+
 ## [13.823.320] - 2026-09-13
 
 - **fix(embarques UX/copy)**: en la pestaña Costos, el texto de “Facturas de proveedor recibidas” cambió de “Sube el PDF y el XML de la factura en un mismo documento” a “Adjunta ambos archivos (PDF y XML)”, para reflejar que el modal solicita dos archivos separados. Sin cambios en validaciones ni flujo contable.
