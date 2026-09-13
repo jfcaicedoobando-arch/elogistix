@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.323] - 2026-09-13
+
+- **fix(embarques UX)**: la CTA de la lista /embarques ya no dice “Nuevo embarque” (la creación directa no existe: sólo conversión desde cotización aceptada). Ahora dice “Ver cotizaciones” (encabezado y FAB) y lleva a Cotizaciones con el aviso explicativo vigente. Regresión: `EmbarquesHeaderActions.test.tsx`.
+
 ## [13.823.322] - 2026-09-13
 
 - **fix(arquitectura)**: `Cotizaciones.tsx` quedó en 191 líneas (≤200): las pestañas de segmento se extrajeron a `SegmentoTabs` en `CotizacionesFilterSelects.tsx`, sin cambios de comportamiento. Cierra el fallo de CI en `audit-report`/`architecture-baseline` por archivo >200 líneas.
