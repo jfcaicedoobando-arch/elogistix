@@ -9,6 +9,8 @@ import {
   CERRAR_EMBARQUE,
   CONFIGURAR_AUTORIZACION_CLIENTE,
   CREAR_EMBARQUE_BORRADOR,
+  DUPLICAR_COTIZACION,
+  ELIMINAR_COTIZACION,
   COST_VIEWERS,
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
@@ -75,6 +77,14 @@ export function usePermissions() {
    * (`canEdit`) pero las RPC las rechazan con 42501.
    */
   const canWriteCotizaciones = canEditSales;
+  /**
+   * v13.823.350 — duplicar y eliminar NO son parte de la escritura amplia:
+   * `duplicar_cotizacion` sólo acepta admin/operador/ejecutivo_pricing y
+   * `soft_delete_record` sólo super_admin/admin/operador. Ventas veía ambas
+   * acciones y recibía 42501.
+   */
+  const canDuplicateCotizacion = has(DUPLICAR_COTIZACION, roleStr);
+  const canDeleteCotizacion = has(ELIMINAR_COTIZACION, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
@@ -146,6 +156,8 @@ export function usePermissions() {
     canEditFinance,
     canEditSales,
     canWriteCotizaciones,
+    canDuplicateCotizacion,
+    canDeleteCotizacion,
     canCotizarSinDesglose,
     canOverrideTarifaPricing,
     canEmitirFactura,

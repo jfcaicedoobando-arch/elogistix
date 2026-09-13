@@ -133,6 +133,8 @@ export {
   ALTA_CLIENTES,
   ACEPTAR_COTIZACION,
   CREAR_EMBARQUE_BORRADOR,
+  DUPLICAR_COTIZACION,
+  ELIMINAR_COTIZACION,
 } from "./permissionMatrix.cotizaciones";
 
 export {
