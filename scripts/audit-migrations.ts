@@ -205,8 +205,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    en el mismo archivo. Migración correctiva posterior re-aplica los permisos
  *    (`REVOKE ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO
  *    service_role`); el archivo original queda como legacy auditado.
+ * 7. FIX-H6-07 (2026-09-13): `20260913005047_3264e7eb-6cf0-414a-9af4-28b0945bc7b7.sql`
+ *    (candados de cierre A-1/A-2/A-3 y `current_user_org_id` con org activa)
+ *    re-emitió `current_user_org_id`, `set_garantia_estado` y
+ *    `aprobar_factura_proveedor` (SECURITY DEFINER) sin el bloque REVOKE/GRANT
+ *    en el mismo archivo. La migración correctiva
+ *    `20260913013508_2351dea7-2c87-44b8-a565-b46784dba094.sql` re-aplica los
+ *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
+ *    authenticated, service_role`); el archivo original queda como legacy
+ *    auditado e inmutable.
  */
-const BASELINE = "20260911000201";
+const BASELINE = "20260913013508";
 
 
 
