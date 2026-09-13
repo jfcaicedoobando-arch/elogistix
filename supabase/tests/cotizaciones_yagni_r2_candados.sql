@@ -68,12 +68,12 @@ BEGIN
 
   INSERT INTO public.cotizaciones (
     organization_id, cliente_id, estado, folio, modo, tipo,
-    es_prospecto, prospecto_empresa, oportunidad_id, subtotal, total
+    es_prospecto, prospecto_empresa, oportunidad_id, subtotal
   )
   VALUES (
     v_org, NULL, 'Enviada'::public.estado_cotizacion, 'COT-YR2-0001',
     'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-    true, 'PROSPECTO YAGNI R2', NULL, 1000, 1160
+    true, 'PROSPECTO YAGNI R2', NULL, 1000
   )
   RETURNING id INTO v_cot;
 
