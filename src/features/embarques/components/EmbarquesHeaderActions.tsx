@@ -1,4 +1,4 @@
-import { Plus, Download, MoreHorizontal } from "lucide-react";
+import { Plus, Download, MoreHorizontal, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -29,8 +29,11 @@ export function EmbarquesHeaderActions({
         </Button>
       ) : null}
       {!canEdit && onNuevoDesdeCotizacion ? (
+        // v13.823.323 — la CTA ya no dice "Nuevo embarque": la creación real sólo
+        // existe dentro de una cotización aceptada, así que el botón anuncia su
+        // destino real en vez de prometer un alta que no existe en esta pantalla.
         <Button onClick={onNuevoDesdeCotizacion} className="hidden md:inline-flex">
-          <Plus className="h-4 w-4 mr-2" /> Nuevo embarque
+          <ClipboardList className="h-4 w-4 mr-2" /> Ver cotizaciones
         </Button>
       ) : null}
 
