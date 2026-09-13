@@ -4,6 +4,7 @@ import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable
 import { formatCurrency } from "@/lib/formatters";
 import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks";
+import { etiquetaTasaIva, tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
 interface Props {
@@ -17,17 +18,23 @@ interface Props {
 
 export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total }: Props) {
   const tasaIva = useTasaIVA();
-  const ivaLabel = `IVA (${tasaIva * 100}%)`;
+  // v13.823.341 — la etiqueta y las columnas de IVA salen de las tasas reales
+  // de los renglones, no de la tasa global de la organización. Antes el
+  // encabezado decía "MXN + IVA" y la columna "IVA (16%)" incluso cuando todos
+  // los conceptos estaban a tasa 0% o exentos, contradiciendo el pie de página.
+  const hayIva = tasasEfectivas(conceptos, tasaIva).length > 0 || (iva ?? 0) > 0;
+  const ivaLabel = `IVA (${etiquetaTasaIva(conceptos, tasaIva)})`;
 
   if (conceptos.length === 0) return null;
 
   const esMXN = moneda === "MXN";
+  const mostrarDesgloseIva = esMXN && hayIva;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          Conceptos en {moneda}{esMXN || (iva !== undefined && iva > 0) ? " + IVA" : ""}
+          Conceptos en {moneda}{hayIva ? " + IVA" : ""}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -39,8 +46,8 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                 <DetailTableHead>Unidad</DetailTableHead>
                 <DetailTableHead className="text-right">Cantidad</DetailTableHead>
                 <DetailTableHead className="text-right">{esMXN ? "P. Unitario" : "Precio Unitario"}</DetailTableHead>
-                {esMXN && <DetailTableHead className="text-right">Subtotal</DetailTableHead>}
-                {esMXN && <DetailTableHead className="text-right">{ivaLabel}</DetailTableHead>}
+                {mostrarDesgloseIva && <DetailTableHead className="text-right">Subtotal</DetailTableHead>}
+                {mostrarDesgloseIva && <DetailTableHead className="text-right">{ivaLabel}</DetailTableHead>}
                 <DetailTableHead className="text-right">Total</DetailTableHead>
               </TableRow>
             </TableHeader>
@@ -67,8 +74,8 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                     <TableCell>{concepto.unidad_medida || '—'}</TableCell>
                     <TableCell className="text-right tabular-nums">{concepto.cantidad}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatCurrency(concepto.precio_unitario, moneda)}</TableCell>
-                    {esMXN && <TableCell className="text-right tabular-nums">{formatCurrency(lineSubtotal, moneda)}</TableCell>}
-                    {esMXN && <TableCell className="text-right tabular-nums">{formatCurrency(lineIva, moneda)}</TableCell>}
+                    {mostrarDesgloseIva && <TableCell className="text-right tabular-nums">{formatCurrency(lineSubtotal, moneda)}</TableCell>}
+                    {mostrarDesgloseIva && <TableCell className="text-right tabular-nums">{formatCurrency(lineIva, moneda)}</TableCell>}
                     <TableCell className="text-right tabular-nums font-medium">
                       {formatCurrency(lineTotal, moneda)}
                     </TableCell>
@@ -86,8 +93,11 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
           {subtotal !== undefined && (
             <span className="text-body">Subtotal {moneda}: {formatCurrency(subtotal, moneda)}</span>
           )}
-          {iva !== undefined && (
+          {iva !== undefined && hayIva && (
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
+          )}
+          {iva !== undefined && !hayIva && (
+            <span className="text-body-sm text-muted-foreground">Sin IVA: conceptos a tasa 0% o exentos.</span>
           )}
           <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
