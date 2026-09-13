@@ -19,9 +19,18 @@ export type ConceptoVenta = Tables<"conceptos_venta"> & {
  * traiga `tasa_iva_aplicada` heredada del default de la columna. No se toca el
  * resolver global para no afectar a sus otros consumidores.
  */
-function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
+export function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
   if (r.aplica_iva === false) return 0;
   return resolverTasaConcepto(r, tasaIva);
+}
+
+/**
+ * ¿Alguna fila causa IVA realmente? Se mira la TASA efectiva, no el flag
+ * `aplica_iva`: una fila con `aplica_iva=true` y `tasa_iva_aplicada=0` no
+ * genera IVA y no debe abrir las columnas IVA/Total del PDF.
+ */
+export function hayIvaEfectivo(items: ConceptoVenta[], tasaIva: number): boolean {
+  return items.some((r) => tasaEfectivaFila(r, tasaIva) > 0);
 }
 
 /** IVA de la fila según su tratamiento fiscal guardado. */
@@ -30,49 +39,47 @@ function ivaFila(r: ConceptoVenta, tasaIva: number): number {
   return calcularIVA(importe, tasaEfectivaFila(r, tasaIva));
 }
 
-export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVenta>[] {
-  const base: PdfColumn<ConceptoVenta>[] = [
+function columnasBase(moneda: "USD" | "MXN"): PdfColumn<ConceptoVenta>[] {
+  return [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(Number(r.precio_unitario), "USD") },
+      render: (r) => formatCurrency(Number(r.precio_unitario), moneda) },
     { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), "USD") },
+      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), moneda) },
   ];
-  if (!hayIva) return base;
+}
+
+/** Columnas IVA/Total: la fila sin IVA efectivo imprime em dash y total sin IVA. */
+function columnasIva(moneda: "USD" | "MXN", tasaIva: number): PdfColumn<ConceptoVenta>[] {
   return [
-    ...base,
     { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
-      render: (r) => r.aplica_iva
-        ? formatCurrency(ivaFila(r, tasaIva), "USD")
+      render: (r) => tasaEfectivaFila(r, tasaIva) > 0
+        ? formatCurrency(ivaFila(r, tasaIva), moneda)
         : "—" },
     { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
         const importe = Number(r.cantidad) * Number(r.precio_unitario);
-        const iva = r.aplica_iva ? ivaFila(r, tasaIva) : 0;
-        return formatCurrency(importe + iva, "USD");
+        return formatCurrency(importe + ivaFila(r, tasaIva), moneda);
       } },
   ];
 }
 
-export function columnasMXN(tasaIva: number): PdfColumn<ConceptoVenta>[] {
-  return [
-    { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
-      render: (r) => formatearDescripcionConcepto(r.descripcion) },
-    { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
-    { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(Number(r.precio_unitario), "MXN") },
-    { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), "MXN") },
-    { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(ivaFila(r, tasaIva), "MXN") },
-    { key: "total", title: "Total", cellStyle: styles.cellMoney,
-      render: (r) => {
-        const importe = Number(r.cantidad) * Number(r.precio_unitario);
-        return formatCurrency(importe + ivaFila(r, tasaIva), "MXN");
-      } },
-  ];
+export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVenta>[] {
+  const base = columnasBase("USD");
+  if (!hayIva) return base;
+  return [...base, ...columnasIva("USD", tasaIva)];
+}
+
+/**
+ * v13.823.345: MXN ya no asume IVA. Si ninguna fila del grupo causa IVA
+ * efectivo, se omiten las columnas IVA/Total (el pie ya aclara "sin IVA").
+ */
+export function columnasMXN(tasaIva: number, hayIva = true): PdfColumn<ConceptoVenta>[] {
+  const base = columnasBase("MXN");
+  if (!hayIva) return base;
+  return [...base, ...columnasIva("MXN", tasaIva)];
 }
 
 

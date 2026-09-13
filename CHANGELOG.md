@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.345] - 2026-09-13
+
+- **fix(proformas)**: el PDF decide el IVA por la tasa efectiva de cada renglón. En pesos ya no se fuerzan las columnas IVA/Total cuando todos los conceptos son exentos o a tasa 0%, y en dólares una fila con `aplica_iva=true` pero tasa 0 imprime em dash en lugar de "0.00". No se tocan los totales fiscales guardados.
+- **fix(proformas)**: `NotasSection` filtra las notas internas (`[interno]`, `#interno`, residuos "QA SMOKE"/"QA TEST") antes de imprimirlas; si sólo quedaban internas, el bloque "Notas" no se renderiza.
+- **fix(cotizaciones)**: en el detalle, la nota de cada concepto pasa por `notasParaCliente` y las filas usan una key estable (`id` o descripción + índice) para que descripciones duplicadas no reciclen estado.
+- **fix(cotizaciones)**: en el P&L de detalle un `precio_venta` explícito en 0 se conserva (antes caía al concepto de venta viejo y reaparecía una utilidad fantasma).
+- **fix(cotizaciones)**: `matchConceptoVenta` devuelve `undefined` cuando dos conceptos comparten nombre normalizado, en lugar de asignar en silencio el primero.
+- **chore(db)**: `migration-manifest.json` regenerado con la entrada de la versión vigente (falla de `audit:manifest` en CI).
+
 ## [13.823.344] - 2026-09-13
 
 - **fix(cotizaciones)**: la nota del historial de versiones ahora compara contra la versión más reciente (`versiones[0]`) en lugar de la más antigua, ya que la consulta devuelve `version_num` descendente. Corrige el mensaje que podía decir "la última versión se congeló en Borrador" cuando en realidad la más reciente estaba Aceptada.

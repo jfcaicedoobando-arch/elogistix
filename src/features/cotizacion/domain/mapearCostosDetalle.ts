@@ -25,10 +25,17 @@ export function mapearCostosAFilas(
 ): FilaCostoDetalle[] {
   return costos.map((c) => {
     // Fuente única de venta: el `precio_venta` persistido en el costo. El match
-    // por nombre queda sólo como respaldo para filas legacy sin `precio_venta`.
-    const ventaCosto = (Number(c.precio_venta) || 0) * (Number(c.cantidad) || 0);
+    // por nombre queda sólo como respaldo para filas legacy SIN `precio_venta`.
+    // v13.823.345: un `precio_venta` explícito en 0 se respeta (antes caía al
+    // concepto de venta viejo y reaparecía una utilidad fantasma).
+    const tienePrecioVenta =
+      c.precio_venta !== null &&
+      c.precio_venta !== undefined &&
+      Number.isFinite(Number(c.precio_venta));
     const cv = matchConceptoVenta(c.moneda === "USD" ? conceptosUSD : conceptosMXN, c.concepto);
-    const venta = ventaCosto > 0 ? ventaCosto : (cv ? cv.cantidad * cv.precio_unitario : 0);
+    const venta = tienePrecioVenta
+      ? Number(c.precio_venta) * (Number(c.cantidad) || 0)
+      : (cv ? cv.cantidad * cv.precio_unitario : 0);
     return {
       concepto: c.concepto,
       moneda: c.moneda,

@@ -5,6 +5,7 @@ import { DataTable } from "../components/DataTable";
 import {
   columnasUSD,
   columnasMXN,
+  hayIvaEfectivo,
   type GrupoContenedor,
 } from "./proformaConceptosColumns";
 
@@ -40,12 +41,14 @@ export function SeccionMonedaPdf({
         </Text>
       ) : null}
       {filtrados.map((g) => {
-        const hayIva = moneda === "USD" ? g.items.some((c) => c.aplica_iva) : true;
+        // v13.823.345: ambas monedas miran la TASA efectiva. Antes MXN forzaba
+        // hayIva=true y una proforma 100% exenta imprimía columnas IVA/Total.
+        const hayIva = hayIvaEfectivo(g.items, tasaIva);
         const sub = g.items.reduce(
           (s, i) => s + Number(i.cantidad) * Number(i.precio_unitario),
           0,
         );
-        const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN(tasaIva);
+        const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN(tasaIva, hayIva);
         return (
           // Multi-contenedor: el chip + su tabla + subtotal se mantienen juntos.
           // Caso simple: se permite que una tabla larga se parta por filas
