@@ -59,6 +59,7 @@ describe("CREAR_EMBARQUE_BORRADOR", () => {
       expect(CREAR_EMBARQUE_BORRADOR, rol).not.toContain(rol);
       const vis = visibilidadAcciones({
         ...base,
+        puedeRecotizar: true,
         puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
       });
       expect(vis.mostrarCrearEmbarque, rol).toBe(false);
@@ -69,6 +70,7 @@ describe("CREAR_EMBARQUE_BORRADOR", () => {
     for (const rol of AUTORIZADOS) {
       const vis = visibilidadAcciones({
         ...base,
+        puedeRecotizar: true,
         puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
       });
       expect(vis.mostrarCrearEmbarque, rol).toBe(true);
@@ -78,7 +80,8 @@ describe("CREAR_EMBARQUE_BORRADOR", () => {
   it("oculta el botón para un rol sin permiso", () => {
     const vis = visibilidadAcciones({
       ...base,
-      puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, "vendedor"),
+      puedeRecotizar: true,
+        puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, "vendedor"),
     });
     expect(vis.mostrarCrearEmbarque).toBe(false);
     expect(vis.mostrarFaltaVenta).toBe(false);
