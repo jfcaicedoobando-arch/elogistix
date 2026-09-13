@@ -4,6 +4,8 @@
  * para reducir complejidad y mantener el archivo principal delgado.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { separarNotas } from "@/lib/domain/notasVisibilidad";
 
 interface ProspectoBannerProps {
   empresa: string | null;
@@ -41,12 +43,33 @@ export function ComentarioClienteCard({ texto }: { texto: string }) {
   );
 }
 
+/**
+ * v13.823.341 — separa lo que ve el cliente de lo que es sólo para el equipo.
+ * Las notas internas se muestran etiquetadas aquí y quedan fuera del PDF y del
+ * correo (ver `notasVisibilidad.ts`).
+ */
 export function NotasCard({ texto }: { texto: string }) {
+  const { cliente, internas } = separarNotas(texto);
+  if (!cliente && !internas) return null;
   return (
     <Card>
       <CardHeader><CardTitle>Notas</CardTitle></CardHeader>
-      <CardContent>
-        <p className="text-body whitespace-pre-wrap">{texto}</p>
+      <CardContent className="space-y-3">
+        {cliente && (
+          <div>
+            <p className="text-body-sm text-muted-foreground mb-1">Para el cliente</p>
+            <p className="text-body whitespace-pre-wrap">{cliente}</p>
+          </div>
+        )}
+        {internas && (
+          <div className="rounded-md border border-dashed bg-muted/30 p-3">
+            <Badge variant="outline" className="mb-1 text-label">Nota interna</Badge>
+            <p className="text-body whitespace-pre-wrap">{internas}</p>
+            <p className="text-body-sm text-muted-foreground mt-1">
+              No se incluye en la cotización que recibe el cliente.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

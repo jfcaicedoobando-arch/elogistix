@@ -73,6 +73,19 @@ export default function EmbarquesFiltros(props: Props) {
   const secondaryCount = [filterModo !== "todos", filterOperador !== "todos", !!fechaDesde, !!fechaHasta]
     .filter(Boolean).length;
 
+  // v13.823.341 — la selección dentro del panel de filtros es temporal:
+  // sólo "Aplicar" la persiste; cerrar (X, Esc o clic fuera) la descarta.
+  const snapshot = () => ({
+    modo: filterModo, estado: filterEstado, cliente: filterCliente,
+    operador: filterOperador, desde: fechaDesde, hasta: fechaHasta,
+  });
+  const restore = (foto: unknown) => {
+    const f = foto as ReturnType<typeof snapshot>;
+    onFilterModoChange(f.modo); onFilterEstadoChange(f.estado);
+    onFilterClienteChange(f.cliente); onFilterOperadorChange(f.operador);
+    onFechaDesdeChange(f.desde); onFechaHastaChange(f.hasta);
+  };
+
   const clearAll = () => {
     onFilterModoChange("todos"); onFilterEstadoChange("todos");
     onFilterClienteChange("todos"); onFilterOperadorChange("todos");
@@ -87,6 +100,8 @@ export default function EmbarquesFiltros(props: Props) {
       chips={chips}
       activeCount={secondaryCount}
       onClearAll={clearAll}
+      snapshot={snapshot}
+      restore={restore}
       primary={
         <>
           <Select value={filterEstado} onValueChange={onFilterEstadoChange}>

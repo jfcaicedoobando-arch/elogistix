@@ -138,7 +138,7 @@ export function CotizacionDetalleContenido({
 
       <HistorialEnviosCard envios={envios} />
 
-      <VersionesCotizacionCard cotizacionId={cotizacion.id} />
+      <VersionesCotizacionCard cotizacionId={cotizacion.id} estadoActual={cotizacion.estado} />
 
       <DialogConvertirProspecto
         open={showConvertir}
