@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.362] - 2026-09-13
+
+- **fix(cotizaciones)**: el aviso "Sincronizar conceptos de venta desde costos" podía mostrarse en cotizaciones `Aceptada`/`En operación` con costos desincronizados, pero el trigger `cotizaciones_guard_en_operacion` rechaza cualquier cambio a `conceptos_venta`/`subtotal`/`moneda` en esos estados (`LC_COTIZACION_INMUTABLE`). Incluso SALES recibía un error predecible al pulsar el botón.
+  - `AvisoSincronizarConceptosVenta` recibe `estadoCotizacion`; en `Aceptada`/`En operación` oculta el botón de sincronizar y ofrece sólo guía para crear una nueva versión o usar Re-cotizar.
+  - La cadena de props (`CotizacionDetalleContenido` → `SeccionCostosInternosPLUnificado` → `SeccionCostosInternosPLDetalle`) pasa el estado al aviso.
+  - Regresión: `AvisoSincronizarConceptosVenta.test.tsx` (botón oculto en Aceptada/En operación aunque haya escritura; texto de guía presente).
+
 ## [13.823.361] - 2026-09-13
 
 - **fix(cotizaciones)**: al sincronizar conceptos de venta desde costos, el aviso calculaba `subtotal` sumando SÓLO los conceptos USD (`usd.reduce` sobre `total` con IVA) y no derivaba `moneda` ni usaba tipo de cambio: una cotización sólo MXN guardaba subtotal 0 y una mixta guardaba un subtotal incompleto y sin moneda coherente (agrava COT-2026-0237).
