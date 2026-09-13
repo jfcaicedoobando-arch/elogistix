@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { CotizacionDetalleEmbarques } from "@/features/cotizacion/components/CotizacionDetalleEmbarques";
 
-const embarque = {
+const embarque: { id: string; expediente: string | null; estado: string; created_at: string } = {
   id: "emb-1",
   expediente: "ELABC0001",
   estado: "Borrador",
