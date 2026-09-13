@@ -62,4 +62,17 @@ describe("crearEmbarqueBorradorDesdeCotizacion (Ola 4 · N17)", () => {
       /Solo se pueden convertir/,
     );
   });
+
+  // v13.823.331 — candados de integridad de la RPC traducidos a mensajes claros.
+  it.each([
+    ["LC_COT_TC_REQUERIDO: monedas mezcladas", /tipo de cambio/i],
+    ["LC_COT_CONTENEDORES_REQUERIDOS: falta num_contenedores", /contenedores/i],
+  ])("traduce %s a un mensaje accionable", async (mensajeRpc, esperado) => {
+    mock.setTableResult("cotizaciones", { data: { tipo_documento: "formal" }, error: null });
+    mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", {
+      data: null,
+      error: { message: mensajeRpc },
+    });
+    await expect(crearEmbarqueBorradorDesdeCotizacion("cot-4")).rejects.toThrow(esperado);
+  });
 });
