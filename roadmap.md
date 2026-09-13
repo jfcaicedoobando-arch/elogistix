@@ -73,3 +73,15 @@
 - [x] Cierre: versión, changelog, manifiesto; suites completas en GitHub Actions
 
 - [x] 13.823.279 — guard LC_PROFORMA_REQUIERE_ACEPTACION en convertir_proformas_a_factura + regresión SQL
+
+## Lote HD 13.823.336 (auditoría UI/UX + funcional)
+- [x] 1 P1 — validateStepRuta conectado al wizard de editar embarque (Borrador incompleto sigue guardable)
+- [x] 2 P1 — ProfitBadge/MargenBadge con venta: sin venta muestra "—" y "Sin venta capturada"
+- [ ] 3 P1 — Centralizar conversión y redondeo a 2 decimales (dashboard vs detalle)
+- [x] 4 P1 — CotizacionDetalleEmbarques distingue "sin embarques" de "oculto por permisos"
+- [x] 5 P1 — Estados de facturación con una sola fuente de verdad
+- [x] 6 P2 — Fallback "Borrador <ID corto>" en tarjeta móvil y embarques de cotización
+- [x] 7 P2 — Banner de cotizaciones dinámico sin callejón sin salida
+- [x] 8 P2 — isDirty real desde paso 1 (incluye costos) con confirmación al salir
+- [ ] 9 P2 — Pulido HD: tabs con flechas sin scrollbar (hecho), tabla de costos (hecho), encabezado Cotizaciones, FAB, contadores y español
+- [ ] Cierre: pruebas de regresión, versión, changelog y manifiesto; sin publicar
