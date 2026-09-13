@@ -18,6 +18,7 @@ import { usePdfExport } from "@/hooks/shared/usePdfExport";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
+import { cotizacionEnviablePorCorreo } from "@/features/cotizacion/domain/envioCotizacion";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
@@ -97,7 +98,13 @@ export default function CotizacionDetalle() {
                 void run(() => handleExportarPdf(cotizacion, tasaIva));
               }}
               exportandoPdf={isExporting}
-              onEnviarEmail={puedeEnviarEmail ? () => setEnviarOpen(true) : undefined}
+              // v13.823.355 (YAGNI r2 · P1): el botón se alinea con la función de
+              // correo: prospecto sin oportunidad y estados terminales no envían.
+              onEnviarEmail={
+                puedeEnviarEmail && cotizacionEnviablePorCorreo(cotizacion)
+                  ? () => setEnviarOpen(true)
+                  : undefined
+              }
               yaEnviada={envios.length > 0}
             />
 
