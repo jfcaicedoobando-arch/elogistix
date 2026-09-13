@@ -44,7 +44,7 @@ export function VersionesCotizacionCard({ cotizacionId, estadoActual }: Props) {
     return null;
   }
 
-  const ultimoEstado = versiones[versiones.length - 1]?.estado_al_snapshot ?? null;
+  const ultimoEstado = versiones[0]?.estado_al_snapshot ?? null;
 
   return (
     <Card>
