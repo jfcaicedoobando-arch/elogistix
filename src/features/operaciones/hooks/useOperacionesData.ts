@@ -10,7 +10,6 @@ export type {  EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from 
 export const MAX_CONTENEDORES = 150;
 
 export type NivelRiesgo = "critico" | "en_puerto" | "por_arribar" | "ok";
-export type NivelRiesgo = "critico" | "en_puerto" | "por_arribar" | "ok";
 
 export interface CargaRiesgo {
   id: string;

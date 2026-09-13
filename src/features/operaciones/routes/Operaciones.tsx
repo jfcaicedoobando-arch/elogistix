@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { TrendingUp, AlertTriangle, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
+import { MAX_CONTENEDORES } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { KpiErrorCard } from "@/features/operaciones/components/KpiErrorCard";
@@ -24,7 +24,6 @@ const OperacionesTendenciaChart = lazy(
 
 export default function Operaciones() {
   const {
-    periodo, setPeriodo,
     operadorChart, setOperadorChart,
     isLoading, isError, refetch, operadores, global,
     hoyStr, chartData,
