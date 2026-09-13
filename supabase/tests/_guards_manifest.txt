@@ -127,3 +127,4 @@ supabase/tests/cotizacion_convertir_candados.sql
 supabase/tests/crear_embarque_contenedores_por_modo.sql
 supabase/tests/solicitar_reaprobacion_tarifa_roles.sql
 supabase/tests/cotizaciones_yagni_r2_candados.sql
+supabase/tests/cotizacion_costos_estado_candado.sql

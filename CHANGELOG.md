@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.358] - 2026-09-13
+
+- **fix(cotizaciones)**: `actualizar_cotizacion_costos` ahora valida ESTADO además de organización/rol. La base de costos sólo se reemplaza en `Borrador`/`Solicitada` (`LC_COT_COSTOS_ESTADO_INVALIDO`) y nunca cuando la cotización ya tiene embarque vinculado (`LC_COT_COSTOS_CON_EMBARQUE`); para cambiar costos de una cotización cerrada existe `recotizar_cotizacion`. El trigger `cotizaciones_guard_en_operacion` cubría subtotal/moneda/conceptos_venta pero no los costos, así que una llamada autenticada directa podía borrar la base de costos de una Aceptada y desincronizar el P&L.
+  - Candado evaluado DESPUÉS de la autoridad y ANTES del replay de idempotencia y del `DELETE`, para que un reintento no devuelva respuesta almacenada de una cotización ya cerrada.
+  - Mensajes amigables `LC_COT_COSTOS_ESTADO_INVALIDO` / `LC_COT_COSTOS_CON_EMBARQUE` en el catálogo operativo.
+  - Regresiones: `supabase/tests/cotizacion_costos_estado_candado.sql` (en el manifiesto de guards: códigos, estados permitidos, orden de candados y ACL sin anon) y `candadoCostosEstadoSql.test.ts`.
+
 ## [13.823.357] - 2026-09-13
 
 - **fix(cotizaciones→embarques)**: lote YAGNI (8 hallazgos).

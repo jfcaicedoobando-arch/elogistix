@@ -1,23 +1,3 @@
--- Espejo declarativo de public.actualizar_cotizacion_costos (v13.823.358).
---
--- Reemplaza los costos internos del Paso 2 del wizard de cotización de forma
--- atómica y participa del MISMO bloqueo optimista que la cotización:
---   * toma el lock de la fila de `cotizaciones` ANTES de borrar/insertar,
---   * valida autoridad/organización ANTES de resolver el replay de idempotencia
---     (la clave está ligada a key+organization_id+user_id por PK),
---   * v13.823.358 (Addendum P1): valida ESTADO. La base de costos sólo se
---     reemplaza en Borrador/Solicitada y sin embarque vinculado
---     (`LC_COT_COSTOS_ESTADO_INVALIDO` / `LC_COT_COSTOS_CON_EMBARQUE`); antes
---     una llamada autenticada directa podía borrar los costos de una cotización
---     Aceptada / En operación y dejar el P&L desincronizado. Para cambiar los
---     costos de una cotización cerrada existe `recotizar_cotizacion`.
---   * falla CERRADA: si `p_expected_updated_at` viene NULL o no coincide, no
---     borra ni inserta nada y lanza LC_CONFLICTO_CONCURRENCIA,
---   * al terminar toca la cotización y devuelve el nuevo `updated_at` para que
---     el wizard resincronice su sello.
-
-DROP FUNCTION IF EXISTS public.actualizar_cotizacion_costos(uuid, jsonb, uuid);
-
 CREATE OR REPLACE FUNCTION public.actualizar_cotizacion_costos(
   p_cotizacion_id uuid,
   p_costos jsonb,
