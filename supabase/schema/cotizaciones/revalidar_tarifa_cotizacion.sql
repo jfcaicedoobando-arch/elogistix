@@ -34,6 +34,11 @@ DECLARE
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+  -- v13.823.355 (YAGNI r2 · P1): una cotización eliminada no se revalida ni por
+  -- RPC directa; antes seguía leyendo tarifas y devolviendo severidad.
+  IF v_cot.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COTIZACION_ELIMINADA: la cotización está eliminada' USING ERRCODE='P0001';
+  END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
   SELECT COALESCE((valor#>>'{}')::numeric,5) INTO v_umbral_pct

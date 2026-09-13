@@ -193,7 +193,18 @@ BEGIN
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
 
-  IF v_agente_id  IS NOT NULL THEN SELECT nombre INTO v_agente_nombre  FROM public.costeo_agentes WHERE id = v_agente_id; END IF;
+  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
+  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
+  -- tenant al embarque; ahora falla cerrado.
+  IF v_agente_id IS NOT NULL THEN
+    SELECT nombre INTO v_agente_nombre
+      FROM public.costeo_agentes
+     WHERE id = v_agente_id AND organization_id = v_cot.organization_id;
+    IF v_agente_nombre IS NULL THEN
+      RAISE EXCEPTION 'LC_AGENTE_ORG_INVALIDA: el agente % no pertenece a la organización de la cotización', v_agente_id
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
   IF v_naviera_id IS NOT NULL THEN SELECT name   INTO v_naviera_nombre FROM public.navieras       WHERE id = v_naviera_id; END IF;
 
   INSERT INTO public.embarques (
