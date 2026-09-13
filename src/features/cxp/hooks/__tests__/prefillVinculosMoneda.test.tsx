@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { usePrefillVinculosEntrante } from "../usePrefillVinculosEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
