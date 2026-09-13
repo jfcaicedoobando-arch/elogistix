@@ -58,3 +58,18 @@ export function visibilidadAcciones(params: {
     mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados && puedeRecotizar,
   };
 }
+
+/**
+ * v13.823.347 — `crear_embarque_borrador_core` acepta Aceptada o En operación;
+ * la puerta visible coincide con la RPC (antes una cotización En operación sin
+ * embarque no ofrecía acción y el aviso apuntaba a un botón inexistente).
+ */
+function puedeGenerarEmbarque(p: {
+  estado: string;
+  tieneEmbarquesVinculados: boolean;
+  esProspecto: boolean;
+  puedeCrearEmbarque: boolean;
+}): boolean {
+  const esConvertible = p.estado === "Aceptada" || p.estado === "En operación";
+  return esConvertible && !p.tieneEmbarquesVinculados && !p.esProspecto && p.puedeCrearEmbarque;
+}
