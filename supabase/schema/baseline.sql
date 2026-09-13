@@ -2749,6 +2749,9 @@ DECLARE
   v_tipo_contable text;
   v_iva_max numeric(18,4);
   v_c record;
+  v_comprometido numeric(18,4);
+  v_facturado numeric(18,4);
+  v_moneda_cmp text;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -2798,10 +2801,20 @@ BEGIN
       to_char(v_iva_max,                  'FM999,999,999,990.00');
   END IF;
   -- Tope de sobrecosto POR CONCEPTO, sumando todas las facturas vivas ligadas
-  -- a ese concepto y normalizando ambos lados a MXN.
+  -- a ese concepto.
+  --
+  -- FP-000256 (v13.823.301): cuando el costo comprometido y TODAS las facturas
+  -- ligadas están en la misma moneda, la comparación se hace en esa moneda sin
+  -- convertir. Antes se convertían ambos lados a MXN con tipos de cambio
+  -- distintos (el del expediente para el costo, el de la factura para lo
+  -- facturado), lo que fabricaba un "sobrecosto" que era puro efecto cambiario
+  -- (60 USD vs 60 USD → 1,039.90 MXN vs 1,168.29 MXN). Sólo cuando hay mezcla
+  -- de monedas se usa la ruta MXN (incluido LC_CXP_SIN_TC si falta T/C).
   FOR v_c IN
     SELECT cc.id,
            cc.concepto,
+           cc.moneda::text AS moneda_costo,
+           cc.monto        AS comprometido_orig,
            public.a_mxn_doc(cc.monto, cc.moneda::text, v_row.fecha_emision,
                             NULL, emb.tipo_cambio_usd) AS comprometido_mxn,
            (
@@ -2816,7 +2829,26 @@ BEGIN
                 AND pf2.deleted_at IS NULL
                 AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
                 AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
-           ) AS facturado_mxn
+           ) AS facturado_mxn,
+           (
+             SELECT COALESCE(SUM(p2.monto * COALESCE(NULLIF(p2.cantidad,0),1)), 0)
+               FROM public.proveedor_facturas_conceptos p2
+               JOIN public.proveedor_facturas pf2 ON pf2.id = p2.proveedor_factura_id
+              WHERE p2.concepto_costo_id = cc.id
+                AND pf2.deleted_at IS NULL
+                AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
+                AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
+           ) AS facturado_orig,
+           NOT EXISTS (
+             SELECT 1
+               FROM public.proveedor_facturas_conceptos p2
+               JOIN public.proveedor_facturas pf2 ON pf2.id = p2.proveedor_factura_id
+              WHERE p2.concepto_costo_id = cc.id
+                AND pf2.deleted_at IS NULL
+                AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
+                AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
+                AND pf2.moneda::text IS DISTINCT FROM cc.moneda::text
+           ) AS misma_moneda
       FROM public.proveedor_facturas_conceptos pfc
       JOIN public.conceptos_costo cc
         ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
@@ -2825,21 +2857,30 @@ BEGIN
        AND pfc.concepto_costo_id IS NOT NULL
      GROUP BY cc.id, cc.concepto, cc.monto, cc.moneda, emb.tipo_cambio_usd
   LOOP
-    IF v_c.comprometido_mxn IS NULL THEN
-      RAISE WARNING 'LC_CXP_SIN_TC: el concepto "%" no tiene tipo de cambio para comparar; se omite el control de sobrecosto.', v_c.concepto;
-      CONTINUE;
+    IF v_c.misma_moneda THEN
+      v_comprometido := v_c.comprometido_orig;
+      v_facturado    := v_c.facturado_orig;
+      v_moneda_cmp   := v_c.moneda_costo;
+    ELSE
+      IF v_c.comprometido_mxn IS NULL THEN
+        RAISE WARNING 'LC_CXP_SIN_TC: el concepto "%" no tiene tipo de cambio para comparar; se omite el control de sobrecosto.', v_c.concepto;
+        CONTINUE;
+      END IF;
+      v_comprometido := v_c.comprometido_mxn;
+      v_facturado    := v_c.facturado_mxn;
+      v_moneda_cmp   := 'MXN';
     END IF;
-    IF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02
-       AND v_c.comprometido_mxn > 0
-       AND (v_c.facturado_mxn - v_c.comprometido_mxn) > v_c.comprometido_mxn * 0.05 THEN
-      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: el concepto "%" ya tiene facturado % MXN contra % MXN comprometidos (incluyendo otras facturas del mismo costo). Revisa la vinculación antes de aprobar.',
+    IF v_facturado - v_comprometido > 0.02
+       AND v_comprometido > 0
+       AND (v_facturado - v_comprometido) > v_comprometido * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: el concepto "%" ya tiene facturado % % contra % % comprometidos (incluyendo otras facturas del mismo costo). Revisa la vinculación antes de aprobar.',
         v_c.concepto,
-        to_char(v_c.facturado_mxn,    'FM999,999,999,990.00'),
-        to_char(v_c.comprometido_mxn, 'FM999,999,999,990.00');
-    ELSIF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02 THEN
-      RAISE WARNING 'LC_CXP_SOBRECOSTO: el concepto "%" excede lo comprometido en % MXN (<= 5%%, se aprueba con advertencia).',
+        to_char(v_facturado,    'FM999,999,999,990.00'), v_moneda_cmp,
+        to_char(v_comprometido, 'FM999,999,999,990.00'), v_moneda_cmp;
+    ELSIF v_facturado - v_comprometido > 0.02 THEN
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: el concepto "%" excede lo comprometido en % % (<= 5%%, se aprueba con advertencia).',
         v_c.concepto,
-        to_char(v_c.facturado_mxn - v_c.comprometido_mxn, 'FM999,999,999,990.00');
+        to_char(v_facturado - v_comprometido, 'FM999,999,999,990.00'), v_moneda_cmp;
     END IF;
   END LOOP;
   IF v_row.embarque_id IS NULL
@@ -2849,16 +2890,10 @@ BEGIN
           AND concepto_costo_id IS NOT NULL
      )
   THEN
-    -- FP-000221: un gasto que por naturaleza no pertenece a un embarque
-    -- (Administracion / Venta) no puede exigir vínculo operativo. Sólo los
-    -- costos directos de embarque (o la ausencia de categoría) se comparan
-    -- contra el umbral autorizado.
     SELECT pc.tipo_contable::text INTO v_tipo_contable
       FROM public.presupuesto_categorias pc
      WHERE pc.id = v_row.categoria_presupuesto_id;
     IF COALESCE(v_tipo_contable, 'CostoDirectoEmbarque') = 'CostoDirectoEmbarque' THEN
-      -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
-      -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
       IF v_row.moneda = 'MXN'::public.moneda THEN
         v_total_mxn := COALESCE(v_row.total,0);
       ELSE
@@ -6108,7 +6143,14 @@ CREATE FUNCTION public.current_user_org_id() RETURNS uuid
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-  SELECT public.default_user_org_id();
+  SELECT CASE
+    WHEN public.has_role(auth.uid(), 'super_admin'::app_role)
+      THEN COALESCE(
+             (SELECT s.organization_id FROM public.super_admin_org_activa s
+               WHERE s.user_id = auth.uid()),
+             public.default_user_org_id())
+    ELSE public.default_user_org_id()
+  END;
 $$;
 CREATE TABLE public.proveedor_facturas (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -6169,6 +6211,7 @@ DECLARE
   v_autorizado boolean;
   v_es_admin boolean;
   v_desvinculo jsonb := '{}'::jsonb;
+  v_estado_actual text;
 BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado';
@@ -6186,7 +6229,10 @@ BEGIN
     WHERE ur.user_id = v_uid
       AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin'])
   ) INTO v_es_admin;
-  SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_id AND deleted_at IS NULL;
+  -- A-3: FOR UPDATE serializa dos clics simultáneos sobre la misma factura.
+  SELECT * INTO v_row FROM public.proveedor_facturas
+   WHERE id = p_id AND deleted_at IS NULL
+   FOR UPDATE;
   IF v_row.id IS NULL THEN
     RAISE EXCEPTION 'Factura no encontrada';
   END IF;
@@ -6214,8 +6260,14 @@ BEGIN
   IF p_aprobar THEN
     PERFORM public._cxp_validar_aprobacion(p_id, p_motivo);
   END IF;
+  -- A-3: relectura redundante dentro del bloqueo (defensa ante validaciones
+  -- que pudieran liberar el lock por subtransacciones).
+  SELECT estado_aprobacion::text INTO v_estado_actual
+    FROM public.proveedor_facturas WHERE id = p_id FOR UPDATE;
+  IF v_estado_actual <> 'pendiente' THEN
+    RAISE EXCEPTION 'La factura ya fue %', v_estado_actual;
+  END IF;
   -- RNF-07: marca de sesión requerida por trg_guard_aprobacion_proveedor_factura
-  -- (transaction-local: se limpia sola si la transacción aborta).
   PERFORM set_config('app.aprobando_cxp', '1', true);
   IF p_aprobar THEN
     UPDATE public.proveedor_facturas
@@ -6225,16 +6277,21 @@ BEGIN
         motivo_rechazo = NULL,
         aprobacion_heredada = false,
         justificacion_sin_vinculo = NULLIF(btrim(COALESCE(p_motivo,'')), '')
-    WHERE id = p_id RETURNING * INTO v_row;
+    WHERE id = p_id AND estado_aprobacion = 'pendiente' RETURNING * INTO v_row;
   ELSE
     IF COALESCE(trim(p_motivo),'') = '' THEN
       RAISE EXCEPTION 'Motivo de rechazo requerido';
     END IF;
     UPDATE public.proveedor_facturas
     SET estado_aprobacion = 'rechazada', aprobada_por = v_uid, aprobada_at = now(), motivo_rechazo = p_motivo
-    WHERE id = p_id RETURNING * INTO v_row;
-    -- v13.493.0 — el rechazo rompe el vínculo con el embarque: los conceptos de
-    -- costo vuelven a quedar pendientes de factura y la factura se cancela.
+    WHERE id = p_id AND estado_aprobacion = 'pendiente' RETURNING * INTO v_row;
+  END IF;
+  IF v_row.id IS NULL THEN
+    RAISE EXCEPTION 'La factura ya fue procesada por otra sesión. Recarga la pantalla.'
+      USING ERRCODE = 'serialization_failure';
+  END IF;
+  IF NOT p_aprobar THEN
+    -- v13.493.0 — el rechazo rompe el vínculo con el embarque.
     v_desvinculo := public._cxp_desvincular_por_rechazo(p_id, p_motivo);
     SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_id;
   END IF;
@@ -24133,6 +24190,7 @@ DECLARE
   v_subtotal numeric := 0;
   v_iva numeric := 0;
   v_ieps numeric := 0;
+  v_fiscales int := 0;
 BEGIN
   SELECT * INTO v_f FROM public.proveedor_facturas
    WHERE id = p_factura_id
@@ -24188,14 +24246,21 @@ BEGIN
     FROM jsonb_array_elements(COALESCE(p_conceptos, '[]'::jsonb)) AS x;
   GET DIAGNOSTICS v_insertados = ROW_COUNT;
   -- BUG-02 (auditoría 2026-08-18): la cabecera debe cuadrar con sus renglones.
-  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad,
-  -- igual que `_cxp_validar_aprobacion` y las tablas de conceptos de la app.
+  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad.
+  -- v13.823.303: sólo el desglose fiscal del proveedor (concepto_costo_id IS NULL);
+  -- los renglones de vínculo con conceptos_costo NO son cargos y duplicaban el total.
+  -- Alineado con `_cxp_validar_aprobacion`, que ya suma sólo el desglose fiscal.
+  SELECT COUNT(*) INTO v_fiscales
+    FROM public.proveedor_facturas_conceptos
+   WHERE proveedor_factura_id = p_factura_id
+     AND concepto_costo_id IS NULL;
   SELECT COALESCE(SUM(monto * COALESCE(NULLIF(cantidad, 0), 1)), 0),
          COALESCE(SUM(iva), 0),
          COALESCE(SUM(ieps), 0)
     INTO v_subtotal, v_iva, v_ieps
     FROM public.proveedor_facturas_conceptos
-   WHERE proveedor_factura_id = p_factura_id;
+   WHERE proveedor_factura_id = p_factura_id
+     AND (v_fiscales = 0 OR concepto_costo_id IS NULL);
   UPDATE public.proveedor_facturas
      SET subtotal = ROUND(v_subtotal, 2),
          iva      = ROUND(v_iva, 2),
@@ -27116,6 +27181,7 @@ CREATE FUNCTION public.set_garantia_estado(p_id uuid, p_estado text DEFAULT NULL
 DECLARE
   v_row public.embarque_garantias_contenedor;
   v_org uuid;
+  v_estado_emb text;
 BEGIN
   IF NOT (
     has_role(auth.uid(), 'admin'::app_role)
@@ -27133,6 +27199,14 @@ BEGIN
   v_org := current_user_org_id();
   IF v_row.organization_id <> v_org AND NOT has_role(auth.uid(), 'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_GARANTIA_ORG_MISMATCH' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  -- A-1: un embarque Cerrado ya tiene snapshot y P&L congelados.
+  IF current_setting('app.bypass_cierre', true) <> 'on' THEN
+    v_estado_emb := public._assert_embarque_abierto_locked(v_row.embarque_id);
+    IF v_estado_emb = 'Cerrado' THEN
+      RAISE EXCEPTION 'LC_EMBARQUE_CERRADO: el embarque está cerrado; reábrelo antes de modificar la garantía.'
+        USING ERRCODE = 'check_violation';
+    END IF;
   END IF;
   UPDATE public.embarque_garantias_contenedor
      SET estado             = COALESCE(p_estado, estado),
@@ -28037,6 +28111,56 @@ BEGIN
     RAISE EXCEPTION 'Embarque cerrado: usa reabrir_embarque para modificarlo';
   END IF;
   RETURN COALESCE(NEW, OLD);
+END;
+$$;
+CREATE FUNCTION public.tg_bloquear_financiero_embarque_cerrado() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_row jsonb;
+  v_emb uuid;
+  v_pf uuid;
+  v_estado text;
+  v_prot text[] := ARRAY[
+    'embarque_id','factura_id','proveedor_factura_id','concepto_costo_id',
+    'cliente_id','proveedor_id','monto','monto_mxn','monto_aplicado_factura',
+    'monto_declarado','total','total_detectado','subtotal','subtotal_detectado',
+    'iva','ieps','retenciones','moneda','moneda_detectada','moneda_declarada',
+    'tipo_cambio','tipo_cambio_usd','comision_mxn','pnl_base','deleted_at'
+  ];
+  v_col text;
+BEGIN
+  IF current_setting('app.bypass_cierre', true) = 'on' THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+  v_row := to_jsonb(COALESCE(NEW, OLD));
+  v_emb := NULLIF(v_row->>'embarque_id','')::uuid;
+  IF v_emb IS NULL THEN
+    v_pf := NULLIF(v_row->>'proveedor_factura_id','')::uuid;
+    IF v_pf IS NOT NULL THEN
+      SELECT pf.embarque_id INTO v_emb FROM public.proveedor_facturas pf WHERE pf.id = v_pf;
+    END IF;
+  END IF;
+  IF v_emb IS NULL THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+  v_estado := public._assert_embarque_abierto_locked(v_emb);
+  IF v_estado IS DISTINCT FROM 'Cerrado' THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+  IF TG_OP = 'UPDATE' THEN
+    FOREACH v_col IN ARRAY v_prot LOOP
+      IF (to_jsonb(NEW) ? v_col)
+         AND (to_jsonb(NEW)->v_col) IS DISTINCT FROM (to_jsonb(OLD)->v_col) THEN
+        RAISE EXCEPTION 'LC_EMBARQUE_CERRADO: el embarque está cerrado; reábrelo para modificar % en %.', v_col, TG_TABLE_NAME
+          USING ERRCODE = 'check_violation';
+      END IF;
+    END LOOP;
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'LC_EMBARQUE_CERRADO: el embarque está cerrado; reábrelo antes de registrar o eliminar en %.', TG_TABLE_NAME
+    USING ERRCODE = 'check_violation';
 END;
 $$;
 CREATE FUNCTION public.tg_bloquear_si_embarque_cerrado() RETURNS trigger
@@ -31772,6 +31896,12 @@ CREATE TRIGGER trg_bloquear_rol_plataforma_om BEFORE INSERT OR UPDATE OF role ON
 CREATE TRIGGER trg_calc_fecha_limite_devolucion BEFORE INSERT OR UPDATE OF fecha_deposito, naviera_id ON public.embarque_garantias_contenedor FOR EACH ROW EXECUTE FUNCTION public.calc_fecha_limite_devolucion_garantia();
 CREATE TRIGGER trg_catalogo_claves_sat_updated_at BEFORE UPDATE ON public.catalogo_claves_sat FOR EACH ROW EXECUTE FUNCTION public.tg_catalogo_claves_sat_updated_at();
 CREATE TRIGGER trg_cerrar_entrantes_por_uuid AFTER INSERT OR UPDATE OF uuid_fiscal, deleted_at ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._cerrar_entrantes_por_uuid();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
+CREATE TRIGGER trg_cierre_financiero BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_financiero_embarque_cerrado();
 CREATE TRIGGER trg_cliente_documentos_updated_at BEFORE UPDATE ON public.cliente_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_clientes_email_unico BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
 CREATE TRIGGER trg_clientes_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
@@ -34624,6 +34754,8 @@ GRANT ALL ON FUNCTION public.tg_anticipo_saldo() TO service_role;
 REVOKE ALL ON FUNCTION public.tg_bloquear_embarque_cerrado_self() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_bloquear_embarque_cerrado_self() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_bloquear_embarque_cerrado_self() TO service_role;
+REVOKE ALL ON FUNCTION public.tg_bloquear_financiero_embarque_cerrado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.tg_bloquear_financiero_embarque_cerrado() TO service_role;
 REVOKE ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO service_role;
