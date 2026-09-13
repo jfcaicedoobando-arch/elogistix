@@ -15,7 +15,7 @@ describe("montoCostoRenglon", () => {
     expect(montoCostoRenglon({ concepto: "THC", costo_unitario: 100, cantidad: 3, moneda: "USD" })).toBe(300);
   });
 
-  it("cantidad ausente equivale a 1", () => {
+  it("cantidad ausente se toma como 1 en el monto del renglón", () => {
     expect(montoCostoRenglon({ concepto: "B/L", costo_unitario: 50, moneda: "MXN" })).toBe(50);
   });
 
