@@ -4,8 +4,7 @@
  * factura(s) ligadas y estado de pago.
  */
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,10 +18,10 @@ import {
   ordenarFilasPorAjuste,
   pagoBadgeClass,
   peorEstadoPago,
-  fmtFecha,
 } from "./grupoCostosProveedorHelpers";
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
+import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
 import { Hint } from "@/components/shared/Hint";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
