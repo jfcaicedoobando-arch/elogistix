@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.320] - 2026-09-13
+
+- **fix(embarques UX/copy)**: en la pestaña Costos, el texto de “Facturas de proveedor recibidas” cambió de “Sube el PDF y el XML de la factura en un mismo documento” a “Adjunta ambos archivos (PDF y XML)”, para reflejar que el modal solicita dos archivos separados. Sin cambios en validaciones ni flujo contable.
+
 ## [13.823.319] - 2026-09-13
 
 - **fix(embarques UX)**: en el paso 1 del wizard de edición, el encabezado de vínculo cambió de "Vincular cotización Aceptada (obligatorio)" a "Cotización de origen (obligatorio)", porque una cotización convertida puede estar en estado "En operación". La validación vigente se conserva.
