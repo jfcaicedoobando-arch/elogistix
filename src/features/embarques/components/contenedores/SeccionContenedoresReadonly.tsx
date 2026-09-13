@@ -31,6 +31,18 @@ interface Contenedor {
   piezas?: number | null;
 }
 
+/** v13.823.341 — avisa cuántos renglones aún no tienen número de contenedor. */
+function BadgePendientes({ pendientes }: { pendientes: number }) {
+  if (pendientes <= 0) return null;
+  return (
+    <Badge variant="outline" className="border-warning text-warning font-normal">
+      {pendientes === 1
+        ? "Contenedor pendiente de captura"
+        : `${pendientes} contenedores pendientes de captura`}
+    </Badge>
+  );
+}
+
 function todosIguales<T>(arr: T[]): boolean {
   if (arr.length <= 1) return false;
   const first = String(arr[0]);
@@ -66,13 +78,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
         <div>
           <CardTitle className="flex flex-wrap items-center gap-2">
             <span>Contenedores ({capturados})</span>
-            {pendientes > 0 && (
-              <Badge variant="outline" className="border-warning text-warning font-normal">
-                {pendientes === 1
-                  ? "Contenedor pendiente de captura"
-                  : `${pendientes} contenedores pendientes de captura`}
-              </Badge>
-            )}
+            <BadgePendientes pendientes={pendientes} />
           </CardTitle>
           <p className="text-body-sm text-muted-foreground mt-1">
             Para agregar, editar o eliminar contenedores usa el botón
