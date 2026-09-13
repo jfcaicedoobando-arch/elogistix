@@ -40,15 +40,10 @@ export function derivarEstadoContenedor(
   // "Datos pendientes". En LCL el agente consolida y no comparte número/tipo.
   const incompletos = esMaritimo && !esLcl ? info?.incompletos ?? 0 : 0;
 
-  const blFalta =
-    embarque.modo === "Marítimo" && (!embarque.bl_master || embarque.bl_master.trim() === "");
+  const blFalta = esMaritimo && !embarque.bl_master?.trim();
   const pendientes = incompletos > 0 || blFalta;
-  const pendientesTitle = [
-    blFalta ? "BL Master sin capturar" : null,
-    incompletos > 0 ? `${incompletos} contenedor(es) sin número o tipo` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const pendientesTitle = tituloPendientes(blFalta, incompletos);
   return { count, primero, incompletos, blFalta, pendientes, pendientesTitle, esLcl };
+
 }
 
