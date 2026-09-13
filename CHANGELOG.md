@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.331] - 2026-09-13
+
+- **fix(compras)**: `tg_pfc_validar_vinculo_costo` leía `proveedor_facturas.folio`, columna que no existe, por lo que cualquier vínculo nuevo factura ↔ costo fallaba con error genérico. Ahora usa `folio_interno` (o `folio_proveedor`) en los mensajes.
+- **fix(compras)**: cuando la factura y el costo están en monedas distintas, el vínculo sólo se permite entre MXN y USD y exige el tipo de cambio congelado de la factura (`LC_CXP_VINCULO_TC_REQUERIDO`); el tope de sobreasignación se aplica sólo cuando comparten moneda.
+- **chore(errores)**: mensaje en español para `LC_CXP_VINCULO_TC_REQUERIDO` y traducción de `LC_COT_TC_REQUERIDO` / `LC_COT_CONTENEDORES_REQUERIDOS` al convertir una cotización a embarque.
+
 ## [13.823.330] - 2026-09-13
 
 - **fix(compras)**: vincular una factura de proveedor con un costo del expediente ahora se valida en la base (nuevo trigger `tg_pfc_validar_vinculo_costo`): misma organización, mismo proveedor, **misma moneda** (`LC_CXP_VINCULO_MONEDA`) y sin sobreasignar el costo (`LC_CXP_VINCULO_SOBREASIGNADO`, con bloqueo de la fila para evitar carreras). Los renglones fiscales sin costo vinculado siguen permitidos y los vínculos históricos no se reescriben.
