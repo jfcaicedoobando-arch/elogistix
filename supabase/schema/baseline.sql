@@ -12242,10 +12242,13 @@ BEGIN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: la cotización pertenece a otra organización' USING ERRCODE = '42501';
   END IF;
   v_can_write := v_is_super
+                 OR has_role(auth.uid(), 'admin_org'::app_role)
                  OR has_role(auth.uid(), 'admin'::app_role)
+                 OR has_role(auth.uid(), 'gerente_operaciones'::app_role)
+                 OR has_role(auth.uid(), 'coordinador_logistico'::app_role)
                  OR has_role(auth.uid(), 'operador'::app_role);
   IF NOT v_can_write THEN
-    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo admin u operador pueden crear el borrador' USING ERRCODE = '42501';
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden crear el borrador' USING ERRCODE = '42501';
   END IF;
   IF v_cot.estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
     RAISE EXCEPTION 'LC_COT_ESTADO_INVALIDO: la cotización debe estar Aceptada o En operación (actual: %)', v_cot.estado USING ERRCODE = 'P0001';
