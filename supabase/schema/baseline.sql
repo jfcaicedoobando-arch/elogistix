@@ -426,8 +426,74 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_YA_TIENE_EMBARQUE: la cotización % ya generó un embarque', COALESCE(v_folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+  PERFORM public._assert_cotizacion_venta_valida(p_cotizacion_id);
 END;
 $$;
+CREATE FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_catalog'
+    AS $_$
+DECLARE
+  v_folio      text;
+  v_tipo_doc   text;
+  v_ventas     jsonb;
+  v_positiva   boolean;
+  v_moneda_mala text;
+  v_sin_reflejo text;
+BEGIN
+  IF p_cotizacion_id IS NULL THEN RETURN; END IF;
+  SELECT folio, COALESCE(tipo_documento, 'transaccional'),
+         CASE WHEN jsonb_typeof(COALESCE(conceptos_venta, '[]'::jsonb)) = 'array'
+              THEN COALESCE(conceptos_venta, '[]'::jsonb) ELSE '[]'::jsonb END
+    INTO v_folio, v_tipo_doc, v_ventas
+    FROM public.cotizaciones
+   WHERE id = p_cotizacion_id;
+  IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
+  WITH v AS (
+    SELECT upper(btrim(COALESCE(c->>'moneda', 'MXN'))) AS moneda,
+           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '1') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'cantidad')::numeric ELSE 0 END AS cant,
+           CASE WHEN COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'precio_unitario')::numeric ELSE 0 END AS pu
+      FROM jsonb_array_elements(v_ventas) c
+     WHERE COALESCE(btrim(c->>'descripcion'), '') <> ''
+  )
+  SELECT EXISTS (SELECT 1 FROM v WHERE cant > 0 AND pu > 0),
+         (SELECT string_agg(DISTINCT moneda, ', ') FROM v WHERE moneda NOT IN ('MXN', 'USD'))
+    INTO v_positiva, v_moneda_mala;
+  IF v_moneda_mala IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_MONEDA_NO_SOPORTADA: la cotización % tiene conceptos de venta en una moneda no soportada (%); sólo MXN y USD están habilitados', COALESCE(v_folio, p_cotizacion_id::text), v_moneda_mala
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF NOT COALESCE(v_positiva, false) THEN
+    RAISE EXCEPTION 'LC_COT_SIN_VENTA: la cotización % no tiene ningún concepto de venta con cantidad y precio mayores a cero', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+  SELECT string_agg(DISTINCT c.m, ', ')
+    INTO v_sin_reflejo
+    FROM (
+      SELECT upper(btrim(cc.moneda)) AS m
+        FROM public.cotizacion_costos cc
+       WHERE cc.cotizacion_id = p_cotizacion_id
+         AND cc.deleted_at IS NULL
+         AND COALESCE(cc.precio_venta, 0) > 0
+    ) c
+   WHERE NOT EXISTS (
+     SELECT 1
+       FROM jsonb_array_elements(v_ventas) x
+      WHERE upper(btrim(COALESCE(x->>'moneda', 'MXN'))) = c.m
+        AND COALESCE(btrim(x->>'descripcion'), '') <> ''
+        AND CASE WHEN COALESCE(NULLIF(x->>'cantidad', ''), '1') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 THEN (x->>'cantidad')::numeric ELSE 0 END > 0
+        AND CASE WHEN COALESCE(NULLIF(x->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 THEN (x->>'precio_unitario')::numeric ELSE 0 END > 0
+   );
+  IF v_sin_reflejo IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_VENTA_NO_REFLEJADA: la cotización % tiene precio de venta capturado en % que no llegó a los conceptos de venta; vuelve a guardar el paso 3 antes de convertir', COALESCE(v_folio, p_cotizacion_id::text), v_sin_reflejo
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$_$;
 CREATE FUNCTION public._assert_email_unico_org() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -2065,22 +2131,32 @@ DECLARE
   v_i     integer;
   v_prov_nombre text;
   v_prov_id uuid;
+  v_moneda text;
+  v_tiene_costos boolean;
+  v_tiene_ventas boolean;
 BEGIN
-  -- Idempotencia: si el embarque ya tiene conceptos vivos, no re-sembrar.
-  IF EXISTS (
+  v_tiene_costos := EXISTS (
     SELECT 1 FROM public.conceptos_costo
     WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
-  ) OR EXISTS (
+  );
+  v_tiene_ventas := EXISTS (
     SELECT 1 FROM public.conceptos_venta
     WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
-  ) THEN
+  );
+  IF v_tiene_costos AND v_tiene_ventas THEN
     RETURN;
   END IF;
   v_n := COALESCE(array_length(p_target_ids, 1), 0);
+  IF NOT v_tiene_costos THEN
   FOR v_costo IN
     SELECT * FROM public.cotizacion_costos
     WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL
   LOOP
+    v_moneda := upper(btrim(COALESCE(v_costo.moneda, 'MXN')));
+    IF v_moneda NOT IN ('MXN', 'USD') THEN
+      RAISE EXCEPTION 'LC_COT_MONEDA_NO_SOPORTADA: el costo "%" está en % y sólo MXN y USD están habilitados', v_costo.concepto, v_moneda
+        USING ERRCODE = 'P0001';
+    END IF;
     v_base := ROUND(COALESCE(v_costo.costo_total, v_costo.costo_unitario * v_costo.cantidad, 0), 2);
     v_prov_nombre := COALESCE(btrim(v_costo.proveedor), '');
     v_prov_id := public._resolver_proveedor_por_nombre(p_org, v_prov_nombre);
@@ -2094,13 +2170,9 @@ BEGIN
     IF COALESCE(v_costo.unidad_medida, 'Contenedor') = 'BL' OR v_n = 0 THEN
       INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id, origen, cotizacion_costo_origen_id)
       VALUES (p_embarque_id, NULL, v_costo.concepto, v_base,
-              CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+              CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
               v_prov_nombre, v_prov_id, p_org, 'cotizacion', v_costo.id);
     ELSE
-      -- Prorrateo sin importes negativos (método del resto mayor en centavos):
-      -- el piso se reparte a todos y los primeros `v_resto` contenedores
-      -- reciben un centavo extra. La suma cuadra exacta y ninguna parte queda
-      -- con signo contrario al total (antes 0.02 entre 4 daba 0.01/0.01/0.01/-0.01).
       v_signo := CASE WHEN v_base < 0 THEN -1 ELSE 1 END;
       v_cent  := ROUND(ABS(v_base) * 100)::bigint;
       v_piso  := v_cent / v_n::bigint;
@@ -2111,22 +2183,30 @@ BEGIN
         v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
         INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id, origen, cotizacion_costo_origen_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
-                CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+                CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
                 v_prov_nombre, v_prov_id, p_org, 'cotizacion', v_costo.id);
       END LOOP;
     END IF;
   END LOOP;
-  IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
+  END IF;
+  IF NOT v_tiene_ventas AND jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant := COALESCE(NULLIF((v_venta->>'cantidad')::numeric, 0), 1);
-        v_pu   := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+        v_moneda := upper(btrim(COALESCE(v_venta->>'moneda', 'MXN')));
+        IF v_moneda NOT IN ('MXN', 'USD') THEN
+          RAISE EXCEPTION 'LC_COT_MONEDA_NO_SOPORTADA: el concepto de venta "%" está en % y sólo MXN y USD están habilitados', v_venta->>'descripcion', v_moneda
+            USING ERRCODE = 'P0001';
+        END IF;
+        v_cant := COALESCE(NULLIF(v_venta->>'cantidad', '')::numeric, 1);
+        v_pu   := COALESCE(NULLIF(v_venta->>'precio_unitario', '')::numeric, 0);
         v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
-        -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
-        -- si no hay unitario: se desinfla el `total` (que viene con IVA).
-        IF v_pu = 0 THEN
+        IF v_pu = 0 AND v_cant > 0 THEN
           v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0) / (1 + v_tasa), 2);
           v_pu    := ROUND(v_total / v_cant, 6);
+        END IF;
+        IF v_cant <= 0 OR v_pu <= 0 THEN
+          RAISE EXCEPTION 'LC_COT_VENTA_IMPORTE_INVALIDO: el concepto de venta "%" tiene cantidad o precio menor o igual a cero', v_venta->>'descripcion'
+            USING ERRCODE = 'P0001';
         END IF;
         v_total := ROUND(v_cant * v_pu, 2);
         INSERT INTO public.conceptos_venta (
@@ -2135,7 +2215,7 @@ BEGIN
         )
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
-          CASE WHEN v_venta->>'moneda' = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+          CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
           COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
           v_tasa,
           v_total, p_org
@@ -12325,17 +12405,11 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
-  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
-  -- implícito (o 1:1) deformaría el P&L del embarque.
   SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
     INTO v_monedas
     FROM jsonb_array_elements(
            CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                 THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
-   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
-   -- una cotización mixta se convertía sin tipo de cambio.
    WHERE COALESCE(
            NULLIF(
              CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -12349,14 +12423,13 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
-  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
     RAISE EXCEPTION 'LC_COT_CONTENEDORES_REQUERIDOS: la cotización % es marítima FCL y no indica cuántos contenedores; captura el número de contenedores (1 o más) antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+  PERFORM public._assert_cotizacion_venta_valida(v_cot.id);
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
     IF FOUND THEN
@@ -12400,14 +12473,11 @@ BEGIN
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
-  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`).
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -12421,14 +12491,9 @@ BEGIN
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT COALESCE(v_agente_id, t.agente_id), COALESCE(v_naviera_id, t.naviera_id)
       INTO v_agente_id, v_naviera_id
-    -- v13.823.351: la tarifa se lee SIEMPRE acotada a la organización de la
-    -- cotización; un id de otro tenant no debe sembrar agente/naviera.
     FROM public.costeo_tarifas t
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
-  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
-  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
-  -- tenant al embarque; ahora falla cerrado.
   IF v_agente_id IS NOT NULL THEN
     SELECT nombre INTO v_agente_nombre
       FROM public.costeo_agentes
@@ -12473,7 +12538,6 @@ BEGIN
     NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
-  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -33653,6 +33717,8 @@ GRANT ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() TO servic
 REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_email_unico_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO authenticated;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
