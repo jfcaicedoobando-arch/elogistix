@@ -28149,6 +28149,12 @@ BEGIN
   IF v_estado IS DISTINCT FROM 'Cerrado' THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
+  -- Invariante previo (supabase/tests/cxp_pago_embarque_cerrado.sql): liquidar
+  -- lo ya comprometido es legítimo después del cierre. Sólo se permite el ALTA
+  -- del pago; borrarlo o cambiar sus importes/vínculos sigue bloqueado.
+  IF TG_OP = 'INSERT' AND TG_TABLE_NAME IN ('pagos_factura','pagos_proveedor') THEN
+    RETURN NEW;
+  END IF;
   IF TG_OP = 'UPDATE' THEN
     FOREACH v_col IN ARRAY v_prot LOOP
       IF (to_jsonb(NEW) ? v_col)
