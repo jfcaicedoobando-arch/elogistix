@@ -35,9 +35,33 @@ describe("CREAR_EMBARQUE_BORRADOR", () => {
     }
   });
 
-  it("no autoriza roles fuera de administración/operación", () => {
-    for (const rol of ["vendedor", "contador", "cliente", "viewer"] as AppRole[]) {
-      expect(CREAR_EMBARQUE_BORRADOR).not.toContain(rol);
+  it("incluye explícitamente el handoff Vendedor → Coordinador y su respaldo", () => {
+    expect(CREAR_EMBARQUE_BORRADOR).toContain("coordinador_logistico");
+    expect(CREAR_EMBARQUE_BORRADOR).toContain("gerente_operaciones");
+  });
+
+  it("no autoriza comercial, pricing, finanzas, supervisión de sólo lectura ni portal", () => {
+    const DENEGADOS = [
+      "vendedor",
+      "gerente_comercial",
+      "ejecutivo_pricing",
+      "gerente_visor",
+      "contador",
+      "tesorero",
+      "auxiliar_contable",
+      "ejecutivo_cobranza",
+      "customer_service",
+      "viewer",
+      "cliente",
+      "agente_carga",
+    ] as AppRole[];
+    for (const rol of DENEGADOS) {
+      expect(CREAR_EMBARQUE_BORRADOR, rol).not.toContain(rol);
+      const vis = visibilidadAcciones({
+        ...base,
+        puedeCrearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
+      });
+      expect(vis.mostrarCrearEmbarque, rol).toBe(false);
     }
   });
 

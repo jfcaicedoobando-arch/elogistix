@@ -17,6 +17,8 @@ function setup(overrides: Partial<React.ComponentProps<typeof CotizacionSuccessD
     onVerDetalle: vi.fn(),
     // R215-COT-01: los casos base asumen una cotización ya Aceptada.
     estado: "Aceptada" as string | null,
+    // El atajo "Crear embarque" exige la capability CREAR_EMBARQUE_DESDE_COTIZACION.
+    puedeCrearEmbarqueRol: true,
     ...overrides,
   };
   render(<CotizacionSuccessDialog {...props} />);
@@ -68,5 +70,12 @@ describe("CotizacionSuccessDialog — estado (R215-COT-01)", () => {
     const props = setup({ estado: "Aceptada" });
     fireEvent.click(screen.getByRole("button", { name: /Crear embarque/i }));
     expect(props.onCrearEmbarque).toHaveBeenCalledTimes(1);
+  });
+
+  it("sin la capability de rol no ofrece 'Crear embarque' aunque esté Aceptada", () => {
+    const props = setup({ estado: "Aceptada", puedeCrearEmbarqueRol: false });
+    expect(screen.queryByRole("button", { name: /Crear embarque/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ver cotización y aceptar/i })).toBeInTheDocument();
+    expect(props.onCrearEmbarque).not.toHaveBeenCalled();
   });
 });

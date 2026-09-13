@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.313] - 2026-09-13
+
+- **fix(permisos · cotización→embarque)**: "Crear embarque" desde una cotización aceptada ahora depende de una sola capability central (`CREAR_EMBARQUE_DESDE_COTIZACION`): administración (super admin, admin de empresa, admin), operación (gerente de operaciones, coordinador logístico) y el rol legado operador. El diálogo de éxito del asistente ya no ofrece el atajo a roles sin permiso. Comercial/KAM, pricing, gerente visor, finanzas, servicio al cliente, sólo lectura, portal de cliente y agente de carga no lo ven.
+- **test**: pruebas explícitas de roles permitidos y denegados, del diálogo de éxito y nuevo guard SQL `supabase/tests/crear_embarque_borrador_roles.sql` que verifica que la autorización de la base siga siendo exactamente esa lista (conservando validación de organización, estados Aceptada/En operación, bloqueo de prospectos e idempotencia).
+
 ## [13.823.312] - 2026-09-13
 
 - **fix(seguridad)**: se reafirmaron los permisos de `current_user_org_id`, `set_garantia_estado` y `aprobar_factura_proveedor` (sin acceso público ni anónimo; sólo sesión válida y procesos del sistema) con migración correctiva y baseline H6 documentado.

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
+import { useToast, usePermissions } from "@/hooks/shared";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacion, useUpdateCotizacion } from "@/features/cotizacion/hooks";
 import { useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
@@ -35,6 +35,7 @@ export default function NuevaCotizacion() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { organizationId } = useOrgActiva();
+  const { canCrearEmbarqueDesdeCotizacion } = usePermissions();
   const { data: clientes = [] } = useClientesForSelect();
   const userId = user?.id ?? "";
 
@@ -158,6 +159,7 @@ export default function NuevaCotizacion() {
         /* R215-COT-01: una cotización recién creada nunca está Aceptada, así que
            el diálogo ofrece "Ver cotización y aceptar" en vez de "Crear embarque". */
         estado={null}
+        puedeCrearEmbarqueRol={canCrearEmbarqueDesdeCotizacion}
         onEnviarProforma={() => savedId && closeSuccessAndGoTo(`/cotizaciones/${savedId}?enviarProforma=1`)}
         onCrearEmbarque={() => savedId && closeSuccessAndGoTo(`/embarques/nuevo?fromCotizacion=${savedId}`)}
         onDuplicar={() => savedId && closeSuccessAndGoTo(`/cotizaciones/nueva?duplicar=${savedId}`)}

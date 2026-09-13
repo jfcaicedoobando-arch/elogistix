@@ -8,6 +8,7 @@ import {
   CAPTURAR_MOVIMIENTO_BANCARIO,
   CERRAR_EMBARQUE,
   CONFIGURAR_AUTORIZACION_CLIENTE,
+  CREAR_EMBARQUE_BORRADOR,
   COST_VIEWERS,
   COTIZAR_SIN_DESGLOSE,
   CRM_CONFIG,
@@ -125,6 +126,13 @@ export function usePermissions() {
   const canAltaCliente = has(ALTA_CLIENTES, roleStr);
 
   /**
+   * Handoff Vendedor → Coordinador: crear el borrador de embarque desde una
+   * cotización aceptada. Espejo EXACTO de `crear_embarque_borrador_core`
+   * (administración + operación); comercial, finanzas y lectura NO lo tienen.
+   */
+  const canCrearEmbarqueDesdeCotizacion = has(CREAR_EMBARQUE_BORRADOR, roleStr);
+
+  /**
    * Espejo de las policies de `crm_oportunidades` / `crm_actividades`.
    * `canEditCrm` NO sirve aquí: incluye operaciones y finanzas, que no tienen
    * policy de escritura y terminaban en RLS 42501 al guardar.
@@ -148,6 +156,7 @@ export function usePermissions() {
 
   return {
     canAltaCliente,
+    canCrearEmbarqueDesdeCotizacion,
     canEdit,
     canEditExpediente,
     canEditCrm,
