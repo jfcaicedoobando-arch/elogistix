@@ -96,22 +96,6 @@ export function usePermissions() {
   const isSuperAdmin = (role as AppRole) === "super_admin";
   const isOperador = roleStr === "operador" || roleStr === "coordinador_logistico";
   const canEditCrm = canEdit || canEditSales;
-  // Ola 6 (O6.3): configuración del CRM — espejo de la policy
-  // "Tenant admin crm_etapas_pipeline" (migración 20260821145033).
-  const canConfigurarCrm = has(CRM_CONFIG, roleStr);
-  // Ola 6 (O6.1): tomar leads de la bolsa — espejo de crm_tomar_lead.
-  const canTomarLead = has(CRM_TOMAR_LEAD, roleStr);
-  /**
-   * v13.823.60 — ownership de leads. La base valida el rol EN la organización
-   * del lead y, para vendedor, que `vendedor_id = auth.uid()`; aquí sólo se
-   * refleja para no ofrecer acciones que el servidor rechaza.
-   */
-  const canGestionarTodosLosLeads = has(CRM_GESTION_TODOS_LEADS, roleStr);
-  const canGestionarLead = (vendedorId: string | null | undefined): boolean =>
-    canGestionarTodosLosLeads ||
-    (has(CRM_TOMAR_LEAD, roleStr) && !!vendedorId && !!user?.id && vendedorId === user.id);
-  const canCrearLead = has(CRM_CREAR_LEAD, roleStr);
-  const canGestionarLeadsEnLote = canGestionarTodosLosLeads;
   /**
    * P0 — alta de clientes (manual, CSV y conversión de prospecto). Espejo del
    * rol exigido por `convertir_prospecto_a_cliente_rpc`.
@@ -126,26 +110,12 @@ export function usePermissions() {
   const canCrearEmbarqueDesdeCotizacion = has(CREAR_EMBARQUE_BORRADOR, roleStr);
 
   /**
-   * Espejo de las policies de `crm_oportunidades` / `crm_actividades`.
-   * `canEditCrm` NO sirve aquí: incluye operaciones y finanzas, que no tienen
-   * policy de escritura y terminaban en RLS 42501 al guardar.
+   * Capacidades del CRM (leads, oportunidades y actividades). La resolución
+   * pura vive en `permissionMatrix.crm` (Power of 10: ≤200 líneas) y es espejo
+   * de las policies RLS; el comportamiento es idéntico.
    */
-  const esVendedorCrm = roleStr === "vendedor";
-  const canGestionarTodasLasOportunidades = has(CRM_STAFF_REGISTROS, roleStr);
-  const canCrearOportunidad = has(CRM_ESCRITURA_REGISTROS, roleStr);
-  const propio = (ownerId: string | null | undefined) =>
-    !!ownerId && !!user?.id && ownerId === user.id;
-  const canGestionarOportunidad = (vendedorId: string | null | undefined): boolean =>
-    canGestionarTodasLasOportunidades || (esVendedorCrm && propio(vendedorId));
-  const canGestionarTodasLasActividades = canGestionarTodasLasOportunidades;
-  const canCrearActividad = canCrearOportunidad;
-  // Espejo EXACTO de la policy `Vendedor own crm_actividades`: el UPDATE sólo
-  // pasa con `responsable_id = auth.uid()`. El fallback por `responsable_email`
-  // vive sólo en filtros/listados (`filtroResponsable`).
-  const canGestionarActividad = (responsableId: string | null | undefined): boolean =>
-    canGestionarTodasLasActividades || (esVendedorCrm && propio(responsableId));
+  const crm = resolverPermisosCrm(roleStr, user?.id);
 
-  const canReasignarVendedorCrm = has(CRM_REASIGNAR_VENDEDOR, roleStr);
 
   return {
     canAltaCliente,
