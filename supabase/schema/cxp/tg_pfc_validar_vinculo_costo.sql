@@ -5,9 +5,11 @@
 -- un costo por concurrencia.
 --
 -- Reglas (server-side, atómicas, con bloqueo de la fila del costo):
---   * misma organización, mismo proveedor y MISMA moneda factura ↔ costo;
+--   * misma organización y mismo proveedor;
+--   * misma moneda factura ↔ costo; la única conversión admitida es MXN↔USD y
+--     exige el tipo de cambio congelado en la factura (`tipo_cambio_usd`);
 --   * el monto acumulado vinculado no puede exceder el costo (tolerancia 5%
---     por IVA/redondeo del proveedor);
+--     por IVA/redondeo del proveedor) cuando comparten moneda;
 --   * los renglones fiscales sin `concepto_costo_id` siguen permitidos.
 -- Los vínculos históricos NO se reescriben: sólo se bloquean altas/cambios nuevos.
 
