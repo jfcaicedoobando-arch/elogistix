@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.330] - 2026-09-13
+
+- **fix(compras)**: vincular una factura de proveedor con un costo del expediente ahora se valida en la base (nuevo trigger `tg_pfc_validar_vinculo_costo`): misma organización, mismo proveedor, **misma moneda** (`LC_CXP_VINCULO_MONEDA`) y sin sobreasignar el costo (`LC_CXP_VINCULO_SOBREASIGNADO`, con bloqueo de la fila para evitar carreras). Los renglones fiscales sin costo vinculado siguen permitidos y los vínculos históricos no se reescriben.
+- **fix(cotizaciones)**: convertir a embarque exige tipo de cambio cuando la cotización mezcla monedas (`LC_COT_TC_REQUERIDO`) y número de contenedores en marítimo FCL (`LC_COT_CONTENEDORES_REQUERIDOS`); el embarque nuevo hereda el tipo de cambio sellado en la cotización.
+- **fix(cotizaciones)**: una cotización transaccional ya no puede aceptarse con importe cero (`LC_COT_IMPORTE_REQUERIDO`); las informativas (tarifarios) quedan exentas y la salida idempotente de aceptación no cambia.
+- **chore(errores)**: mensajes en español para los códigos `LC_CXP_VINCULO_*`, `LC_COT_TC_REQUERIDO`, `LC_COT_CONTENEDORES_REQUERIDOS` y `LC_COT_IMPORTE_REQUERIDO`.
+- Guards nuevos: `supabase/tests/cxp_vinculo_costo_moneda.sql` y `supabase/tests/cotizacion_convertir_candados.sql`.
+
 ## [13.823.329] - 2026-09-13
 
 - **test(embarques)**: la prueba de `fetchEmbarqueFull` se alineó con la nueva búsqueda por folio (lista de resultados vivos) y cubre el caso de folio duplicado ambiguo.

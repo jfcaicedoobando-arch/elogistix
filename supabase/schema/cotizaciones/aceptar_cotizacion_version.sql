@@ -20,16 +20,23 @@ DECLARE
   v_version_aceptada INT;
   v_op_existe BOOLEAN;
   v_ganadora UUID;
+  v_tipo_documento TEXT;
+  v_subtotal NUMERIC;
+  v_conceptos JSONB;
+  v_renglon_valido BOOLEAN;
 BEGIN
   -- v13.823.57: lock de la fila ANTES de validar; dos aceptaciones simultáneas
   -- se serializan y la segunda ve el estado ya terminal.
   SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id,
-         created_by, oportunidad_id, version_aceptada
+         created_by, oportunidad_id, version_aceptada,
+         tipo_documento, subtotal, conceptos_venta
     INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id,
-         v_creado_por, v_oportunidad_id, v_version_aceptada
+         v_creado_por, v_oportunidad_id, v_version_aceptada,
+         v_tipo_documento, v_subtotal, v_conceptos
     FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
     FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+
 
   v_admin := public.has_role(v_uid, 'super_admin'::app_role)
     OR EXISTS (
@@ -114,6 +121,29 @@ BEGIN
         USING ERRCODE='P0001', HINT='estados_permitidos=Borrador,Solicitada,Enviada';
     END IF;
   END IF;
+
+  -- v13.823.330 · Auditoría YAGNI #5: una cotización transaccional no puede
+  -- aceptarse sin importe. Las informativas (tarifarios) quedan exentas porque
+  -- no generan operación ni facturación.
+  IF COALESCE(v_tipo_documento, 'transaccional') <> 'informativa' THEN
+    SELECT EXISTS (
+      SELECT 1
+        FROM jsonb_array_elements(
+               CASE WHEN jsonb_typeof(COALESCE(v_conceptos, '[]'::jsonb)) = 'array'
+                    THEN v_conceptos ELSE '[]'::jsonb END) c
+       WHERE COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND (c->>'cantidad')::numeric > 0
+         AND (c->>'precio_unitario')::numeric > 0
+    ) INTO v_renglon_valido;
+
+    IF COALESCE(v_subtotal, 0) <= 0 OR NOT COALESCE(v_renglon_valido, false) THEN
+      RAISE EXCEPTION 'LC_COT_IMPORTE_REQUERIDO: la cotización % no tiene importe; captura al menos un concepto con cantidad y precio mayores a cero antes de aceptarla', COALESCE(v_folio, p_cotizacion_id::text)
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
+
+
 
   UPDATE cotizaciones
      SET version_aceptada=v_version, aceptada_en=now(), aceptada_por=auth.uid(),

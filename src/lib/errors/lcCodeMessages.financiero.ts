@@ -73,6 +73,18 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El IVA capturado es mayor al 16% del subtotal. Corrige el IVA de la factura antes de aprobarla.",
   LC_AJUSTE_DESPROPORCIONADO:
     "El ajuste no puede exceder el total de la factura. Revisa la moneda del costo vinculado.",
+  LC_CXP_VINCULO_MONEDA:
+    "La factura y el costo del expediente están en monedas distintas. " +
+    "Vincula la factura a un costo en la misma moneda o corrige la moneda del costo.",
+  LC_CXP_VINCULO_PROVEEDOR:
+    "El costo del expediente pertenece a otro proveedor. Elige un costo del mismo proveedor de la factura.",
+  LC_CXP_VINCULO_ORG:
+    "La factura y el costo del expediente pertenecen a organizaciones distintas.",
+  LC_CXP_VINCULO_COSTO_INEXISTENTE:
+    "El costo del expediente ya no existe o fue eliminado. Actualiza la pantalla y vuelve a vincular.",
+  LC_CXP_VINCULO_SOBREASIGNADO:
+    "El costo del expediente ya está cubierto por otras facturas y el monto vinculado lo excede. " +
+    "Ajusta el monto o revisa las facturas ya vinculadas a ese costo.",
 
   LC_CXP_TOTAL_NEGATIVO: "El total de la factura de proveedor no puede ser negativo.",
   LC_CXP_TOTAL_MENOR_PAGADO:
