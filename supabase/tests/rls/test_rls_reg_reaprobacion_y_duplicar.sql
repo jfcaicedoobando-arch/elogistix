@@ -37,6 +37,7 @@ DECLARE
   tcont   uuid := gen_random_uuid();
   nav_b   uuid := gen_random_uuid();
   usr_a   uuid := gen_random_uuid();
+  usr_b   uuid := gen_random_uuid();
 BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS Reaprob A'), (org_b, 'RLS Reaprob B');
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
@@ -147,7 +148,24 @@ BEGIN
     SELECT 1 FROM public.cotizacion_costos WHERE cotizacion_id = nueva AND costeo_tarifa_id = tar_b
   ), 'duplicar debe conservar el enlace de tarifa de cada costo');
 
-  RAISE NOTICE 'OK · v13.823.351: rol aprobador, decisión recotizada, duplicar eliminada y aislamiento de tarifas';
+  -- TEST 6 (v13.823.352, linter ORG-SCOPE): ancla tenant de
+  -- `puede_aprobar_tarifa_cotizacion`. Un vendedor que sólo es miembro de
+  -- otra organización no queda autorizado en el contexto de org_a, y el
+  -- cuerpo de la función debe referenciar `organization_members` (misma
+  -- regla que test_rls_rpc_org_scope_linter.sql).
+  PERFORM pg_temp.seed_auth_user(usr_b, 'vendedor-orgb@example.com');
+  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (org_b, usr_b, 'vendedor');
+  PERFORM pg_temp.as_user(usr_a);
+  PERFORM pg_temp.assert(NOT public.puede_aprobar_tarifa_cotizacion(usr_b),
+    'un vendedor de otra organización no debe quedar autorizado en la org activa');
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public' AND p.proname = 'puede_aprobar_tarifa_cotizacion'
+       AND p.prosrc ~* '(organization_id|organization_members|current_user_org_id)'
+  ), 'puede_aprobar_tarifa_cotizacion debe conservar el ancla tenant en su cuerpo');
+
+  RAISE NOTICE 'OK · v13.823.351: rol aprobador, decisión recotizada, duplicar eliminada y aislamiento de tarifas; ancla tenant del rol aprobador';
 END $$;
 
 ROLLBACK;
