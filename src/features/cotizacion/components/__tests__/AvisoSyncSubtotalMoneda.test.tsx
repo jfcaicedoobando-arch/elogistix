@@ -44,7 +44,7 @@ function costo(moneda: "USD" | "MXN", venta: number): CostoCotizacion {
 function renderYClick(costos: CostoCotizacion[]) {
   render(
     <AvisoSincronizarConceptosVenta
-      cotizacionId="cot-1" costos={costos} tasaIva={0.16} visible puedeSincronizar
+      cotizacionId="cot-1" costos={costos} tasaIva={0.16} visible puedeSincronizar estadoCotizacion="Borrador"
     />,
   );
   fireEvent.click(screen.getByRole("button", { name: /Sincronizar conceptos de venta/i }));
