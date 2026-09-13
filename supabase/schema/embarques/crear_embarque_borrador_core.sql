@@ -196,7 +196,10 @@ BEGIN
     carta_garantia, dias_libres_destino,
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
-    tipo_servicio
+    tipo_servicio,
+    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
+    -- al embarque; antes el borrador nacía sin tipo de cambio.
+    tipo_cambio_usd
   )
   VALUES (
     v_cot.id, NULL, v_cot.cliente_id, v_cot.cliente_nombre,
