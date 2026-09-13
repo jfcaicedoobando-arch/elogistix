@@ -50,3 +50,6 @@ BEGIN
   PERFORM public._assert_cotizacion_venta_valida(p_cotizacion_id);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_cotizacion_convertible(uuid, uuid) TO authenticated, service_role;
