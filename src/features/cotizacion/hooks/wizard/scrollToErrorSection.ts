@@ -11,6 +11,7 @@ const REGLAS_SECCION: Array<[readonly string[], string]> = [
   [["cliente", "prospecto", "lead", "oportunidad", "empresa", "contacto"], "seccion-cliente"],
   [["modalidad", "equipo", "punto de carga"], "seccion-operacion"],
   [["tarifa"], "seccion-tarifa"],
+  [["número de contenedores"], "seccion-cierre"],
 ];
 
 export function seccionParaErrorPaso1(mensaje: string): string {
@@ -69,10 +70,12 @@ export type CampoErrorPaso1 =
   | "incoterm"
   | "descripcionMercancia"
   | "origen"
-  | "destino";
+  | "destino"
+  | "numContenedores";
 
 export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   const m = mensaje.toLowerCase();
+  if (m.includes("número de contenedores")) return "numContenedores";
   if (m.includes("modo de transporte")) return "modo";
   if (m.includes("tipo de operación")) return "tipo";
   if (m.includes("incoterm")) return "incoterm";
