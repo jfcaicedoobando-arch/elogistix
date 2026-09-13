@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.352] - 2026-09-13
+
+- **refactor(cotizaciones)**: la columna de acciones (Duplicar/Eliminar) se extrae a `columnsParts/accionesColumn.tsx` y se limpian líneas en blanco en la ruta de Cotizaciones para volver a cumplir el límite de 200 líneas sin allowlist; comportamiento y pruebas sin cambios.
+
 ## [13.823.351] - 2026-09-13
 
 - **fix(seguridad, db)**: `public.resolver_reaprobacion_tarifa` y `public.recotizar_cotizacion` exigen el rol aprobador comercial vía la nueva `public.puede_aprobar_tarifa_cotizacion` (admin/admin_org/super_admin, gerente comercial, vendedor, ejecutivo de pricing); antes cualquier miembro autenticado (viewer, contabilidad, tesorería, operación) podía aprobar, rechazar o versionar por RPC directa. `recotizar_cotizacion` además ignora cotizaciones eliminadas (`deleted_at`).

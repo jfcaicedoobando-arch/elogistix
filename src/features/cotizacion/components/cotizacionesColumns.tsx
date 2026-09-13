@@ -8,10 +8,9 @@ import { type ColumnDef } from "@/components/shared/DataTable";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { formatFechaHora } from "@/lib/formatters";
-import { actionsColumn } from "@/components/shared/dataTable/columnBuilders";
 import { Hint } from "@/components/shared/Hint";
-import { Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buildAccionesColumn } from "./columnsParts/accionesColumn";
 import { normalizarSubtotalesMxn } from "@/features/cotizacion/domain/subtotalesPorMoneda";
 import { SubtotalCotizacionCell } from "./columnsParts/subtotalCell";
 import { FolioCotizacionCell } from "./columnsParts/folioCell";
@@ -174,34 +173,8 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     },
   ];
 
-  if (params.canDuplicar || params.canEliminar) {
-    cols.push(
-      actionsColumn<CotizacionListItem>({
-        items: () => [
-          ...(params.canDuplicar && params.onDuplicar
-            ? [
-                {
-                  label: "Duplicar",
-                  icon: <Copy className="h-4 w-4" />,
-                  onSelect: (row: CotizacionListItem) => params.onDuplicar?.(row.id),
-                },
-              ]
-            : []),
-          ...(params.canEliminar
-            ? [
-                {
-                  label: "Eliminar",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  variant: "destructive" as const,
-                  onSelect: (row: CotizacionListItem) => params.onEliminar(row.id),
-                },
-              ]
-            : []),
-        ],
-      }),
-    );
-  }
-
+  const acciones = buildAccionesColumn(params);
+  if (acciones) cols.push(acciones);
 
   return cols;
 }

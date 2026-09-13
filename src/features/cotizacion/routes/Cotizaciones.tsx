@@ -27,7 +27,6 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 import { CotizacionesSecondaryFilters } from "@/features/cotizacion/components/CotizacionesSecondaryFilters";
 
-
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
   const navigate = useNavigate();
@@ -80,8 +79,6 @@ export default function Cotizaciones() {
       <PageHeader
         title="Cotizaciones"
         description={`${pluralizar(c.total, "cotización", { plural: "cotizaciones" })} ${c.total === 1 ? "encontrada" : "encontradas"}`}
-
-
         actions={
           <CotizacionesPageActions
             canEdit={c.canEdit}
@@ -104,8 +101,6 @@ export default function Cotizaciones() {
         conteos={c.segmentoConteos}
         onChange={(v) => c.setFilter("segmento", v)}
       />
-
-
 
       <Card>
         <CardContent className="p-4">
