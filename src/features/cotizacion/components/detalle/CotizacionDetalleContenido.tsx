@@ -41,7 +41,7 @@ export function CotizacionDetalleContenido({
     abrirDialogConvertir, handleConvertir, convertirProspecto, navigate, aceptar,
   } = acciones;
   const { user } = useAuth();
-  const { canAltaCliente } = usePermissions();
+  const { canAltaCliente, canCrearEmbarqueDesdeCotizacion } = usePermissions();
   const { autorizacion } = useClienteAutorizacion(
     (cotizacion as { cliente_id?: string | null }).cliente_id ?? null,
   );
@@ -133,6 +133,7 @@ export function CotizacionDetalleContenido({
       <CotizacionDetalleEmbarques
         embarques={embarquesVinculados}
         cotizacionEstado={cotizacion.estado}
+        puedeCrearEmbarque={canCrearEmbarqueDesdeCotizacion}
       />
 
       <HistorialEnviosCard envios={envios} />

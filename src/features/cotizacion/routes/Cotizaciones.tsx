@@ -86,7 +86,10 @@ export default function Cotizaciones() {
         }
       />
 
-      <CotizacionesBannerOrigen />
+      <CotizacionesBannerOrigen
+        hayAceptadas={(c.kpis?.aceptadas ?? 0) > 0}
+        onNuevaCotizacion={c.canEdit ? c.irANueva : undefined}
+      />
       <CotizacionesKpis {...c.kpis} segmento={c.segmento} />
 
       <SegmentoTabs
