@@ -6,8 +6,7 @@
  * dos acciones y la RPC respondía 42501.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, renderHook, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { usePermissions } from "@/hooks/shared";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
@@ -65,7 +64,11 @@ async function etiquetasAcciones(canDuplicar: boolean, canEliminar: boolean): Pr
   // SAFE-CAST: la celda de acciones sólo consume `row.original`.
   const ctx = { row: { original: { id: "c1" } } } as unknown as Parameters<typeof acciones.cell>[0];
   render(<>{acciones.cell(ctx) as ReactNode}</>);
-  await userEvent.click(screen.getByRole("button", { name: "Acciones" }));
+  fireEvent.pointerDown(
+    screen.getByRole("button", { name: "Acciones" }),
+    new MouseEvent("pointerdown", { bubbles: true, button: 0 }),
+  );
+  await waitFor(() => expect(screen.getAllByRole("menuitem").length).toBeGreaterThan(0));
   return screen.getAllByRole("menuitem").map((el) => el.textContent ?? "");
 }
 
