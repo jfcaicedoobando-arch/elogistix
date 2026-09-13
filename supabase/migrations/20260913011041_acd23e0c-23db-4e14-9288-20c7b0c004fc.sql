@@ -1,7 +1,3 @@
--- Espejo canónico de public.registrar_pago_liquidacion
--- Fuente vigente (mayor timestamp): 20260913T_b3_idempotencia_registrar_pago_liquidacion
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
-
 CREATE OR REPLACE FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text DEFAULT NULL::text, p_notas text DEFAULT NULL::text)
  RETURNS public.liquidaciones_comision
  LANGUAGE plpgsql

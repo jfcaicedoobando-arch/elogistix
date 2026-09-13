@@ -25262,6 +25262,15 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
   IF v_row.fecha_pago IS NOT NULL OR v_row.estado = 'Pagada' THEN
+    -- B-3 · Idempotencia: un reintento con los MISMOS datos (fecha, método y,
+    -- cuando se envía, referencia) devuelve la fila ya pagada en lugar de
+    -- fallar. No se re-escribe nada ni se duplica la bitácora.
+    IF v_row.fecha_pago IS NOT DISTINCT FROM p_fecha_pago
+       AND COALESCE(btrim(v_row.metodo_pago), '') = COALESCE(btrim(p_metodo_pago), '')
+       AND (p_referencia IS NULL
+            OR COALESCE(btrim(v_row.referencia), '') = COALESCE(btrim(p_referencia), '')) THEN
+      RETURN v_row;
+    END IF;
     RAISE EXCEPTION 'LC_LIQUIDACION_YA_PAGADA: Esta liquidación ya tiene un pago registrado el %.', v_row.fecha_pago
       USING ERRCODE = '42501';
   END IF;
