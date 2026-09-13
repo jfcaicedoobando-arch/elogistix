@@ -8,7 +8,7 @@
  *
  * Cada página inyecta sus propios selects como `children`. Sin lógica.
  */
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,13 @@ export interface MobileFiltersSheetProps {
   onClearAll: () => void;
   /** Trigger button label, default "Filtros". */
   triggerLabel?: string;
+  /**
+   * v13.823.341 — selección temporal: al abrir se toma una foto de los filtros
+   * y si el panel se cierra sin pulsar "Aplicar" (X, Esc o clic fuera) se
+   * restaura. Sólo "Aplicar" persiste la selección.
+   */
+  snapshot?: () => unknown;
+  restore?: (foto: unknown) => void;
   /** Selects / inputs renderizados dentro del Sheet. */
   children: ReactNode;
 }
@@ -36,10 +43,34 @@ export function MobileFiltersSheet({
   activeCount,
   onClearAll,
   triggerLabel = "Filtros",
+  snapshot,
+  restore,
   children,
 }: MobileFiltersSheetProps) {
+  const fotoRef = useRef<unknown>(undefined);
+  const aplicadoRef = useRef(false);
+
+  useEffect(() => {
+    if (open && snapshot) {
+      fotoRef.current = snapshot();
+      aplicadoRef.current = false;
+    }
+  }, [open, snapshot]);
+
+  const handleOpenChange = (v: boolean) => {
+    if (!v && !aplicadoRef.current && restore && fotoRef.current !== undefined) {
+      restore(fotoRef.current);
+    }
+    onOpenChange(v);
+  };
+
+  const aplicar = () => {
+    aplicadoRef.current = true;
+    onOpenChange(false);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" className="shrink-0 gap-2">
           <Filter className="h-4 w-4" />
@@ -67,7 +98,7 @@ export function MobileFiltersSheet({
           >
             <X className="h-4 w-4" /> Limpiar
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Aplicar</Button>
+          <Button onClick={aplicar}>Aplicar</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
