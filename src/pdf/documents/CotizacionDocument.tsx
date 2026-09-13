@@ -174,11 +174,12 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
           nota={hayIvaUsd ? "* Los cargos en destino incluyen IVA" : undefined}
         />
 
-        {cotizacion.notas ? (
+        {/* v13.823.341: sólo las notas dirigidas al cliente llegan al PDF. */}
+        {notasCliente ? (
           <View wrap={false}>
             <Text style={styles.h3}>Notas</Text>
             <View style={styles.notesBox}>
-              <Text>{cotizacion.notas}</Text>
+              <Text>{notasCliente}</Text>
             </View>
           </View>
         ) : null}
