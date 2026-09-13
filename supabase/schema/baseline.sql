@@ -5328,29 +5328,35 @@ DECLARE
   v_org_id uuid;
   v_actual timestamptz;
   v_nuevo timestamptz;
+  v_estado estado_cotizacion;
+  v_embarque_id uuid;
+  v_folio text;
   v_count integer := 0;
   c jsonb;
   v_resp jsonb;
 BEGIN
-  -- 1) Bloquear/leer la cotización y validar autoridad ANTES de cualquier
-  --    replay de idempotencia: la respuesta almacenada de una solicitud previa
-  --    nunca puede devolverse sin pasar por _assert_writer_cotizacion.
-  SELECT organization_id, updated_at
-    INTO v_org_id, v_actual
+  SELECT organization_id, updated_at, estado, embarque_id, folio
+    INTO v_org_id, v_actual, v_estado, v_embarque_id, v_folio
     FROM cotizaciones
    WHERE id = p_cotizacion_id
      AND deleted_at IS NULL
    FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada'; END IF;
   PERFORM public._assert_writer_cotizacion(v_org_id);
-  -- 2) Idempotencia: la clave está estrictamente ligada a (key, organization_id,
-  --    user_id) por PK de idempotency_keys, así que el replay jamás cruza
-  --    usuario ni tenant. Se resuelve después de la autoridad y antes del sello
-  --    para que un reintento legítimo (cuyo sello original ya avanzó por su
-  --    propia escritura) recupere su respuesta almacenada.
+  -- v13.823.358 · Addendum P1: la base de costos sólo se reemplaza mientras la
+  -- cotización sigue en captura. Aceptada / En operación / Enviada / etc. ya
+  -- respaldan un P&L (y posiblemente un embarque): para cambiarlas existe el
+  -- flujo explícito de nueva versión (`recotizar_cotizacion`).
+  IF v_estado NOT IN ('Borrador'::estado_cotizacion, 'Solicitada'::estado_cotizacion) THEN
+    RAISE EXCEPTION 'LC_COT_COSTOS_ESTADO_INVALIDO: la cotización % está en estado % y sus costos ya no pueden reemplazarse; genera una nueva versión (Re-cotizar) para cambiar la base de costos', COALESCE(v_folio, p_cotizacion_id::text), v_estado
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF v_embarque_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_COSTOS_CON_EMBARQUE: la cotización % ya tiene un embarque vinculado; sus costos no pueden reemplazarse', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
   v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  -- 3) Falla cerrada: sin sello no hay candado optimista posible.
   IF p_expected_updated_at IS NULL
      OR v_actual IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
