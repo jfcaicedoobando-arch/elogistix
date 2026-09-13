@@ -8,7 +8,9 @@
 -- Casos:
 --   1) Costo 60 USD (T/C embarque 17.3317) vs factura 60 USD
 --      (T/C factura 19.4715) -> NO bloquea (antes: 1,039.90 vs 1,168.29 MXN).
---   2) Misma moneda con exceso real >5% (70 USD vs 60 USD) -> LC_CXP_SOBRECOSTO.
+--   2) Misma moneda con exceso real >5% (70 USD vs 60 USD) -> el trigger
+--      `tg_pfc_validar_vinculo_costo` lo bloquea al vincular
+--      (LC_CXP_VINCULO_SOBREASIGNADO): es la barrera primaria.
 --   3) Monedas distintas (costo USD, factura MXN) -> se conserva la ruta MXN.
 --
 -- Ejecución manual:
@@ -91,24 +93,28 @@ BEGIN
   RAISE NOTICE '✓ caso 1: sin sobrecosto fantasma por tipo de cambio';
 
   -- CASO 2: misma moneda con exceso real de 10 USD (16.7% > 5%).
-  UPDATE public.proveedor_facturas SET subtotal = 70, total = 70 WHERE id = v_pf;
-  UPDATE public.proveedor_facturas_conceptos SET monto = 70
-   WHERE proveedor_factura_id = v_pf;
-
+  --
+  -- v13.823.330: la barrera PRIMARIA ya no es `_cxp_validar_aprobacion` sino el
+  -- trigger `tg_pfc_validar_vinculo_costo`, que rechaza la reasignación en el
+  -- momento del vínculo (LC_CXP_VINCULO_SOBREASIGNADO) y nunca deja llegar la
+  -- factura sobreasignada a la aprobación. Se afirma ese bloqueo temprano, en la
+  -- moneda del costo (USD). No se desactivan triggers.
   v_msg := NULL;
   BEGIN
-    PERFORM public._cxp_validar_aprobacion(v_pf, NULL);
+    UPDATE public.proveedor_facturas_conceptos SET monto = 70
+     WHERE proveedor_factura_id = v_pf;
     v_state := '00000';
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
   END;
-  IF v_state = '00000' OR COALESCE(v_msg, '') NOT LIKE 'LC_CXP_SOBRECOSTO%' THEN
-    RAISE EXCEPTION 'FAIL caso 2: se esperaba LC_CXP_SOBRECOSTO, vino % / %', v_state, v_msg;
+  IF v_state = '00000' OR COALESCE(v_msg, '') NOT LIKE 'LC_CXP_VINCULO_SOBREASIGNADO%' THEN
+    RAISE EXCEPTION 'FAIL caso 2: se esperaba LC_CXP_VINCULO_SOBREASIGNADO al reasignar 70 USD contra 60 USD, vino % / %',
+      v_state, v_msg;
   END IF;
   IF v_msg NOT LIKE '%USD%' THEN
     RAISE EXCEPTION 'FAIL caso 2: el mensaje debía expresarse en USD: %', v_msg;
   END IF;
-  RAISE NOTICE '✓ caso 2: exceso real >5%% en la misma moneda sigue bloqueado (%)', v_msg;
+  RAISE NOTICE '✓ caso 2: el vínculo sobreasignado se bloquea antes de aprobar (%)', v_msg;
 
   -- CASO 3: monedas distintas (costo USD, factura MXN) -> ruta MXN.
   -- 60 USD @17.3317 = 1,039.90 MXN comprometidos; factura por 1,500 MXN.

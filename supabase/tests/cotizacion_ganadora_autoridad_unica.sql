@@ -182,12 +182,22 @@ BEGIN
     (v_op5, v_org_a, 'Op legacy', v_et_ga_a, v_cli_a, 100, NULL, NULL, NULL),
     (v_op_b, v_org_b, 'Op ajena', v_et_ab_b, NULL, 20, NULL, v_lead_b, NULL);
 
-  INSERT INTO public.cotizaciones (id, organization_id, folio, modo, tipo, cliente_id, oportunidad_id, estado, subtotal, version)
+  -- v_c4 se acepta por RPC (`aceptar_cotizacion_version`), que exige importe
+  -- real (LC_COT_IMPORTE_REQUERIDO): lleva un renglón de venta mínimo válido
+  -- coherente con su subtotal (1 × 4000 = 4000 MXN).
+  INSERT INTO public.cotizaciones (id, organization_id, folio, modo, tipo, cliente_id, oportunidad_id, estado, subtotal, version, conceptos_venta)
   VALUES
-    (v_c1, v_org_a, 'TEST-COT-0001', 'Marítimo', 'Importación', v_cli_a, v_op1, 'Enviada', 1000, 1),
-    (v_c2, v_org_a, 'TEST-COT-0002', 'Marítimo', 'Importación', v_cli_a, v_op1, 'Enviada', 2000, 1),
-    (v_c3, v_org_a, 'TEST-COT-0003', 'Marítimo', 'Importación', v_cli_a, v_op2, 'Enviada', 3000, 1),
-    (v_c4, v_org_a, 'TEST-COT-0004', 'Marítimo', 'Importación', v_cli_a, v_op4, 'Enviada', 4000, 1);
+    (v_c1, v_org_a, 'TEST-COT-0001', 'Marítimo', 'Importación', v_cli_a, v_op1, 'Enviada', 1000, 1, '[]'::jsonb),
+    (v_c2, v_org_a, 'TEST-COT-0002', 'Marítimo', 'Importación', v_cli_a, v_op1, 'Enviada', 2000, 1, '[]'::jsonb),
+    (v_c3, v_org_a, 'TEST-COT-0003', 'Marítimo', 'Importación', v_cli_a, v_op2, 'Enviada', 3000, 1, '[]'::jsonb),
+    (v_c4, v_org_a, 'TEST-COT-0004', 'Marítimo', 'Importación', v_cli_a, v_op4, 'Enviada', 4000, 1,
+     jsonb_build_array(jsonb_build_object(
+       'descripcion', 'Flete Marítimo TEST',
+       'cantidad', 1,
+       'precio_unitario', 4000,
+       'total', 4000,
+       'moneda', 'MXN'
+     )));
 
   -- Embarque real para la propagación de `embarque_ganador_id`.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, estado)
