@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.332] - 2026-09-13
+
+- **fix(embarques)**: al convertir una cotización, los contenedores hijos sólo se crean en marítimo (LCL: una fila consolidada; FCL: las capturadas). Aéreo y Terrestre ya no nacen con un contenedor vacío, así que sus costos quedan a nivel expediente y no se prorratean contra un contenedor inexistente.
+- **fix(embarques)**: la columna "Contenedores" ya no marca "Datos pendientes" en expedientes aéreos o terrestres.
+- **fix(compras)**: las tarjetas "Por pagar MXN/USD" mostraban la divisa dos veces; ahora el valor va sin divisa y el importe exacto queda en el tooltip.
+
+
 ## [13.823.331] - 2026-09-13
 
 - **fix(compras)**: `tg_pfc_validar_vinculo_costo` leía `proveedor_facturas.folio`, columna que no existe, por lo que cualquier vínculo nuevo factura ↔ costo fallaba con error genérico. Ahora usa `folio_interno` (o `folio_proveedor`) en los mensajes.

@@ -69,5 +69,20 @@ describe("derivarEstadoContenedor", () => {
     expect(r.pendientes).toBe(true);
     expect(r.pendientesTitle).toBe("BL Master sin capturar");
   });
+
+  // v13.823.332 · UX-EMB-01
+  it.each(["Aéreo", "Terrestre"] as const)(
+    "%s con hijos vacíos → incompletos=0 y sin datos pendientes",
+    (modo) => {
+      const r = derivarEstadoContenedor(
+        { modo, bl_master: "", contenedor: "" },
+        { count: 1, primero: "", incompletos: 1 },
+      );
+      expect(r.incompletos).toBe(0);
+      expect(r.pendientes).toBe(false);
+      expect(r.pendientesTitle).toBe("");
+    },
+  );
 });
+
 

@@ -3,7 +3,7 @@
  */
 import { useMemo } from "react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatCompactNumber } from "@/lib/formatters";
 import { resumirTarjetasCxP } from "@/features/cxp/services/cxpKpiConteos";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
@@ -28,18 +28,21 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
     // la etiqueta con el conteo. Ahora el valor va en notación compacta con
     // tooltip del importe exacto, y el conteo de facturas baja al sublabel.
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+      {/* UX-CXP-04: la etiqueta ya dice la divisa; el valor iba como
+          "MXN 80.2K MXN". El importe exacto con divisa queda en el tooltip. */}
       <KpiCard
         label="Por pagar MXN"
-        value={formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")}
+        value={formatCompactNumber(kpis.por_pagar_mxn)}
         valueTooltip={formatCurrency(kpis.por_pagar_mxn, "MXN")}
         sublabel={countLabel(porPagarMxn)}
       />
       <KpiCard
         label="Por pagar USD"
-        value={formatCurrencyCompact(kpis.por_pagar_usd, "USD")}
+        value={formatCompactNumber(kpis.por_pagar_usd)}
         valueTooltip={formatCurrency(kpis.por_pagar_usd, "USD")}
         sublabel={countLabel(porPagarUsd)}
       />
+
       <KpiCard
         label="Vencido"
         value={formatCurrencyCompact(kpis.vencido_mxn, "MXN")}

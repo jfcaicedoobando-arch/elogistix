@@ -1,7 +1,3 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
