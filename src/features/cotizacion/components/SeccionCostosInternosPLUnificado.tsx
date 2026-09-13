@@ -41,6 +41,7 @@ export default function SeccionCostosInternosPLUnificado(props: Props) {
       conceptosUSD={props.conceptosUSD}
       conceptosMXN={props.conceptosMXN}
       cotizacionUpdatedAt={props.cotizacionUpdatedAt}
+      estadoCotizacion={props.estadoCotizacion}
     />
   );
 }
