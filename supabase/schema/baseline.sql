@@ -3387,6 +3387,7 @@ CREATE FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_c
     SET search_path TO 'public'
     AS $$
 DECLARE
+  v_org            uuid;
   v_costo          RECORD;
   v_fila           RECORD;
   v_unit           numeric;
@@ -3408,7 +3409,9 @@ BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
     RETURN 0;
   END IF;
-  SELECT c.tarifa_id INTO v_tarifa_origen
+  -- v13.823.351: toda lectura de tarifas/recargos se acota a la organización
+  -- de la cotización; una referencia cruzada debe fallar, no usarse en silencio.
+  SELECT c.tarifa_id, c.organization_id INTO v_tarifa_origen, v_org
     FROM public.cotizaciones c
    WHERE c.id = p_cotizacion_id;
   v_es_sustitucion := p_tarifa_id_aplicada IS NOT NULL
@@ -3417,9 +3420,11 @@ BEGIN
   -- proveedor/moneda sembrados de otra produciría un costo inauditable.
   IF v_es_sustitucion THEN
     SELECT t.agente_id, t.moneda INTO v_ag_nueva, v_mon_nueva
-      FROM public.costeo_tarifas t WHERE t.id = p_tarifa_id_aplicada;
+      FROM public.costeo_tarifas t
+     WHERE t.id = p_tarifa_id_aplicada AND t.organization_id = v_org;
     SELECT t.agente_id, t.moneda INTO v_ag_origen, v_mon_origen
-      FROM public.costeo_tarifas t WHERE t.id = v_tarifa_origen;
+      FROM public.costeo_tarifas t
+     WHERE t.id = v_tarifa_origen AND t.organization_id = v_org;
     IF v_ag_nueva IS NULL THEN
       RAISE EXCEPTION 'La tarifa sustituta no existe o no tiene agente asignado. Revisa y selecciona otra tarifa.'
         USING ERRCODE = 'P0001';
@@ -3441,7 +3446,8 @@ BEGIN
            r.monto AS recargo_monto_vigente, r.moneda AS recargo_moneda_vigente,
            r.id AS recargo_vigente_id
       FROM public.cotizacion_costos cc
-      LEFT JOIN public.costeo_tarifa_recargos r ON r.id = cc.costeo_tarifa_recargo_id
+      LEFT JOIN public.costeo_tarifa_recargos r
+             ON r.id = cc.costeo_tarifa_recargo_id AND r.organization_id = v_org
      WHERE cc.cotizacion_id = p_cotizacion_id
        AND cc.deleted_at IS NULL
        AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL)
@@ -3454,6 +3460,7 @@ BEGIN
           INTO v_equivalentes, v_unit, v_moneda_match
           FROM public.costeo_tarifa_recargos r
          WHERE r.tarifa_id = p_tarifa_id_aplicada
+           AND r.organization_id = v_org
            AND lower(btrim(r.concepto)) = lower(btrim(COALESCE(v_costo.recargo_concepto, v_costo.concepto)))
            AND r.lado IS NOT DISTINCT FROM v_costo.recargo_lado
            AND upper(btrim(r.moneda)) = upper(btrim(v_costo.moneda));
@@ -3486,7 +3493,8 @@ BEGIN
     ELSE
       SELECT t.flete_base, t.moneda INTO v_unit, v_moneda_match
         FROM public.costeo_tarifas t
-       WHERE t.id = COALESCE(p_tarifa_id_aplicada, v_costo.costeo_tarifa_id);
+       WHERE t.id = COALESCE(p_tarifa_id_aplicada, v_costo.costeo_tarifa_id)
+         AND t.organization_id = v_org;
       IF v_unit IS NOT NULL
          AND upper(btrim(COALESCE(v_moneda_match, ''))) IS DISTINCT FROM upper(btrim(v_costo.moneda)) THEN
         RAISE EXCEPTION 'El flete de la tarifa aplicada está en % y el costo aceptado en %: no se puede aplicar sin recotizar.',
