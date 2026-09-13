@@ -38,10 +38,11 @@ export function useCotizacionActions() {
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
       // Toast de éxito/error lo emite `useDeleteCotizacion` para evitar duplicado.
+      setCotizacionAEliminar(null);
     } catch {
-      // Error ya notificado por la mutación; sólo cerramos el diálogo.
+      // v13.823.348 — el diálogo permanece abierto para reintentar; cerrarlo
+      // ocultaba el fallo y obligaba a rebuscar la cotización.
     }
-    setCotizacionAEliminar(null);
   };
 
   /**

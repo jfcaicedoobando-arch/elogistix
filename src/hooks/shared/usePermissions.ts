@@ -68,6 +68,13 @@ export function usePermissions() {
     puedeVerCostosCotizacion(roleStr, !!createdBy && !!user?.id && createdBy === user.id);
 
   const canEditSales = has(SALES, roleStr);
+  /**
+   * v13.823.348 — ESCRITURA de cotizaciones (crear, duplicar, eliminar,
+   * editar costos). Espejo de `public.puede_escribir_cotizaciones()` y de
+   * `_assert_writer_cotizacion`: finanzas/contabilidad LEEN el detalle
+   * (`canEdit`) pero las RPC las rechazan con 42501.
+   */
+  const canWriteCotizaciones = canEditSales;
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
@@ -138,6 +145,7 @@ export function usePermissions() {
     canEditOperations,
     canEditFinance,
     canEditSales,
+    canWriteCotizaciones,
     canCotizarSinDesglose,
     canOverrideTarifaPricing,
     canEmitirFactura,

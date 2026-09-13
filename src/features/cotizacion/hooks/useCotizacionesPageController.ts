@@ -77,7 +77,10 @@ function aFiltrosSql(
 }
 
 export function useCotizacionesPageController() {
-  const { canEdit } = usePermissions();
+  // v13.823.348 — todas las acciones de esta pantalla son de ESCRITURA (nueva,
+  // duplicar, eliminar): se gatean con la capacidad específica, no con el
+  // `canEdit` amplio (que incluye finanzas y sólo autoriza lectura).
+  const { canWriteCotizaciones: canEdit } = usePermissions();
   const { organizationId } = useOrgFilter();
   const { data: clientes = [] } = useClientesForSelect();
   const actions = useCotizacionActions();

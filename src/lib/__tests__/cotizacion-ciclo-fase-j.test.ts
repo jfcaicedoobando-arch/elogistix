@@ -83,13 +83,18 @@ describe("Fase J — ciclo de cotización", () => {
     // v13.823.153 — la regla vive en el módulo de dominio (refactor Power-of-10);
     // el componente sólo consume la bandera.
     const dominio = fs.readFileSync(domainPath, "utf8");
-    // v13.823.277 — la condición se nombró `sinEmbarqueAun` (misma regla:
-    // cotización aceptada y sin embarque vinculado), reutilizada por las demás
-    // banderas del encabezado.
+    // v13.823.347 — la puerta de embarque vive en `puedeGenerarEmbarque`
+    // (Aceptada o En operación, sin embarque, rol autorizado) y "Re-cotizar"
+    // sigue exigiendo Aceptada + sin embarque + permiso de escritura.
     expect(dominio).toMatch(
-      /const\s+sinEmbarqueAun\s*=\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/,
+      /const\s+esConvertible\s*=\s*p\.estado\s*===\s*"Aceptada"\s*\|\|\s*p\.estado\s*===\s*"En operación"/,
     );
-    expect(dominio).toMatch(/mostrarRecotizar\s*:\s*sinEmbarqueAun/);
+    expect(dominio).toMatch(
+      /return\s+esConvertible\s*&&\s*!p\.tieneEmbarquesVinculados\s*&&\s*!p\.esProspecto\s*&&\s*p\.puedeCrearEmbarque/,
+    );
+    expect(dominio).toMatch(
+      /mostrarRecotizar\s*:\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados\s*&&\s*puedeRecotizar/,
+    );
     expect(src).toMatch(/\{mostrarRecotizar\s*&&/);
   });
 });
