@@ -21,6 +21,12 @@ interface Props {
   tasaIva: number;
   /** Se muestra sólo cuando la venta guardada suma 0 pero los costos sí traen venta. */
   visible: boolean;
+  /**
+   * v13.823.360 — espejo UI de `useUpdateCotizacion` (SALES): sin la
+   * capacidad de escritura el botón fallaba con 42501 para contabilidad y
+   * tesorería; se muestra el aviso como texto de sólo lectura.
+   */
+  puedeSincronizar: boolean;
 }
 
 function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
@@ -38,7 +44,7 @@ function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
   };
 }
 
-export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, visible }: Props) {
+export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, visible, puedeSincronizar }: Props) {
   const update = useUpdateCotizacion();
   if (!visible) return null;
 
@@ -88,11 +94,16 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
       <AlertDescription className="space-y-2">
         <p>
           Los costos tienen precio de venta capturado, pero la cotización quedó con importes en $0.00
-          (así se imprimiría el PDF). Puedes regenerar los conceptos de venta desde los costos.
+          (así se imprimiría el PDF).
+          {puedeSincronizar
+            ? " Puedes regenerar los conceptos de venta desde los costos."
+            : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
         </p>
-        <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
-        </Button>
+        {puedeSincronizar && (
+          <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
+          </Button>
+        )}
       </AlertDescription>
     </Alert>
   );
