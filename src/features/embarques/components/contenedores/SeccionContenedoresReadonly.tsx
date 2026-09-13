@@ -46,6 +46,11 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const irAEditar = () => navigate(`/embarques/${embarqueId}/editar?step=2`);
 
   const lista = contenedores as Contenedor[];
+  // v13.823.341 — un renglón sin número no es un contenedor operativo: el
+  // borrador lo crea como marcador. Antes el título decía "Contenedores (1)"
+  // con número vacío y peso/piezas en cero.
+  const capturados = lista.filter((c) => (c.numero_contenedor ?? "").trim().length > 0).length;
+  const pendientes = lista.length - capturados;
   const mostrarBLHouse = lista.some((c) => (c.bl_house ?? "").trim().length > 0);
   const pesos = lista.map((c) => Number(c.peso_kg) || 0);
   const volumenes = lista.map((c) => Number(c.volumen_m3) || 0);
@@ -59,8 +64,15 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
         <div>
-          <CardTitle>
-            Contenedores ({lista.length})
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            <span>Contenedores ({capturados})</span>
+            {pendientes > 0 && (
+              <Badge variant="outline" className="border-warning text-warning font-normal">
+                {pendientes === 1
+                  ? "Contenedor pendiente de captura"
+                  : `${pendientes} contenedores pendientes de captura`}
+              </Badge>
+            )}
           </CardTitle>
           <p className="text-body-sm text-muted-foreground mt-1">
             Para agregar, editar o eliminar contenedores usa el botón
@@ -127,7 +139,9 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                   {lista.map((c) => (
                     <TableRow key={c.id} className="border-b last:border-0 odd:bg-muted/20">
                       <TableCell className="font-medium">
-                        {c.numero_contenedor || <span className="text-muted-foreground">—</span>}
+                        {c.numero_contenedor || (
+                          <span className="text-body-sm text-warning">Pendiente de captura</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {c.tipo_contenedor
