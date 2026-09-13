@@ -26,8 +26,8 @@ describe("validateStepRuta · mensajes en español", () => {
 
   it("no filtra claves técnicas ni texto en inglés a la pantalla", () => {
     for (const mensaje of Object.values(errores)) {
-      expect(mensaje).not.toMatch(/required|missing|invalid|\./i.test(mensaje ?? "") ? /required|missing|invalid/i : /required|missing|invalid/i);
-      expect(mensaje).toMatch(/[áéíóúñ ]/i);
+      expect(mensaje).not.toMatch(/required|missing|invalid|mandatory/i);
+      expect(mensaje).toMatch(/\s/);
     }
   });
 });
