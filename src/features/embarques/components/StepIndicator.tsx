@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 import { getStepIndicatorCircleClass } from "@/lib/ui/uiMappings";
 
 interface Step {
