@@ -22,6 +22,10 @@ export interface DocsInfo { pendientes: number; total: number }
 
 export interface BuildColumnsParams {
   docsMap: Record<string, DocsInfo>;
+  /**
+   * @deprecated MR-UI-03: contaba embarques por expediente, no contenedores.
+   * Se conserva sólo por compatibilidad de firma; ya no se usa.
+   */
   contenedoresPorExpediente?: Record<string, number>;
   /**
    * Map por embarque_id con info real de `embarque_contenedores`
@@ -42,7 +46,7 @@ export interface BuildColumnsParams {
  * origen/destino) permanecen como columnas nativas.
  */
 export function buildEmbarqueColumns({
-  docsMap, contenedoresPorExpediente = {}, contenedoresInfoMap = {},
+  docsMap, contenedoresInfoMap = {},
 }: BuildColumnsParams): ColumnDef<EmbarqueRow, unknown>[] {
   return defineColumns<EmbarqueRow>([
     {
@@ -113,7 +117,6 @@ export function buildEmbarqueColumns({
         <ContenedorCell
           embarque={row.original}
           info={contenedoresInfoMap[row.original.id]}
-          legacyCount={contenedoresPorExpediente[row.original.expediente ?? ""]}
         />
       ),
     },

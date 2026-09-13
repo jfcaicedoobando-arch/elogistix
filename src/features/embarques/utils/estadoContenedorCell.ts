@@ -21,14 +21,18 @@ function esTipoCargaLcl(tipoCarga: string | null | undefined): boolean {
   return !!tipoCarga && tipoCarga.trim().toUpperCase() === "LCL";
 }
 
+/**
+ * MR-UI-03: el conteo SIEMPRE proviene de `embarque_contenedores`. Antes se
+ * usaba como respaldo el número de embarques agrupados por expediente, así que
+ * la etiqueta `+N` y su tooltip mostraban embarques, no contenedores.
+ */
 export function derivarEstadoContenedor(
   embarque: Pick<EmbarqueRow, "modo" | "bl_master" | "contenedor"> &
     Partial<Pick<EmbarqueRow, "tipo_carga">>,
   info?: ContenedorInfo,
-  legacyCount?: number,
 ): EstadoContenedorCell {
   const esLcl = esTipoCargaLcl(embarque.tipo_carga);
-  const count = info?.count ?? legacyCount ?? 1;
+  const count = info?.count ?? (embarque.contenedor?.trim() ? 1 : 0);
   const primero = info?.primero || embarque.contenedor || "";
   // En LCL los contenedores hijos no se exigen: el agente suele consolidar y
   // nunca nos comparte número/tipo. Forzamos incompletos=0 para no marcar

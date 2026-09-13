@@ -12,7 +12,6 @@ export interface ContenedorInfo { count: number; primero: string; incompletos?: 
 interface ContenedorCellProps {
   embarque: EmbarqueRow;
   info?: ContenedorInfo;
-  legacyCount?: number;
 }
 
 /**
@@ -20,8 +19,8 @@ interface ContenedorCellProps {
  * Extraída de `embarqueColumns.tsx` para mantener el archivo padre bajo el
  * límite de 200 líneas (Power of 10).
  */
-export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps) {
-  const { count, primero, pendientes, pendientesTitle, esLcl } = derivarEstadoContenedor(e, info, legacyCount);
+export function ContenedorCell({ embarque: e, info }: ContenedorCellProps) {
+  const { count, primero, pendientes, pendientesTitle, esLcl } = derivarEstadoContenedor(e, info);
   const mostrarLcl = esLcl && !primero;
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap">
@@ -37,7 +36,7 @@ export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCel
         </Hint>
       )}
       {count > 1 && (
-        <Hint label={`${count} contenedores agrupados`}>
+        <Hint label={`${count} contenedores en este embarque`}>
           <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4">+{count - 1}</Badge>
         </Hint>
       )}
