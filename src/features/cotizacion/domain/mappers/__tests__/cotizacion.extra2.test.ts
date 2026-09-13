@@ -58,6 +58,17 @@ describe("cotizacion.extra2 — partesMercancia", () => {
     expect(r.tipo_embarque).toBe("FCL");
   });
 
+  it("[EC-04b] BL-COT-04: fuera del marítimo num_contenedores va en 0", () => {
+    const aereo = buildPaso1Data(vals({ modo: "Aéreo", numContenedores: 3 }), CLIENTES, "op@x");
+    expect(aereo.num_contenedores).toBe(0);
+    const maritimo = buildPaso1Data(
+      vals({ modo: "Marítimo", tipoEmbarque: "FCL", numContenedores: 3 }),
+      CLIENTES,
+      "op@x",
+    );
+    expect(maritimo.num_contenedores).toBe(3);
+  });
+
   it("[EC-05] Terrestre: tipo_unidad se incluye en el payload", () => {
     const r = buildPaso1Data(vals({ modo: "Terrestre", tipoUnidad: "Torton" }), CLIENTES, "op@x");
     expect(r.tipo_unidad).toBe("Torton");

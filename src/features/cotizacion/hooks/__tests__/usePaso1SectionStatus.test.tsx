@@ -347,4 +347,12 @@ describe("usePaso1SectionStatus — cierre", () => {
       statusFor({ modo: "Marítimo", tipoEmbarque: "FCL", numContenedores: 1 }).cierre,
     ).toBe(true);
   });
+
+  // BL-COT-04: aéreo/terrestre/multimodal no se miden en contenedores.
+  it.each(["Aéreo", "Terrestre", "Multimodal"])(
+    "%s: cierre true sin numContenedores",
+    (modo) => {
+      expect(statusFor({ modo, tipoEmbarque: "FCL", numContenedores: 0 }).cierre).toBe(true);
+    },
+  );
 });

@@ -3,6 +3,7 @@ import {
   destinatarioSchema,
   rutaTerrestreSchema,
   fleteLclManualSchema,
+  contenedoresMaritimoSchema,
   costosPaso2Schema,
   conceptosPaso3Schema,
   primerError,
@@ -132,5 +133,39 @@ describe("wizardPasos · Pasos 2 y 3", () => {
       "Agrega al menos un concepto de venta.",
     );
     expect(primerError(conceptosPaso3Schema, { conceptosValidos: 2 })).toBeNull();
+  });
+});
+
+describe("wizardPasos · contenedores (BL-COT-04)", () => {
+  it("Marítimo FCL exige al menos un contenedor", () => {
+    expect(
+      primerError(contenedoresMaritimoSchema, {
+        modo: "Marítimo",
+        tipoEmbarque: "FCL",
+        numContenedores: 0,
+      }),
+    ).toBe("Captura el número de contenedores (mínimo 1).");
+    expect(
+      primerError(contenedoresMaritimoSchema, {
+        modo: "Marítimo",
+        tipoEmbarque: "FCL",
+        numContenedores: 2,
+      }),
+    ).toBeNull();
+  });
+
+  it("LCL y modos no marítimos no piden contenedores", () => {
+    expect(
+      primerError(contenedoresMaritimoSchema, {
+        modo: "Marítimo",
+        tipoEmbarque: "LCL",
+        numContenedores: 0,
+      }),
+    ).toBeNull();
+    for (const modo of ["Aéreo", "Terrestre", "Multimodal"]) {
+      expect(
+        primerError(contenedoresMaritimoSchema, { modo, tipoEmbarque: "FCL", numContenedores: 0 }),
+      ).toBeNull();
+    }
   });
 });
