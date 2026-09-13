@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.318] - 2026-09-13
+
+- **fix(cotizaciones UX)**: al cambiar de pestaña (Clientes → Prospectos) o de filtros, la tabla ya no muestra ~1 s las filas del segmento anterior; ahora pinta esqueleto hasta que llega la respuesta nueva. `useServerPagedList` expone `isPlaceholderData` y `/cotizaciones` vacía las filas mientras el dato es de la consulta previa.
+- **test**: regresión en `useServerPagedList.test.tsx` — durante la consulta del nuevo filtro `isPlaceholderData` es `true` y las filas siguen siendo las anteriores; al resolver, vuelve a `false`.
+
 ## [13.823.317] - 2026-09-13
 
 - **chore(despliegue)**: nuevo `bun run check:published-version` — compara la versión que sirve la web pública contra `APP_VERSION` de la rama para distinguir "falta publicar" de "bundle viejo en caché del navegador". Sólo lee HTTP; no toca datos ni reglas de negocio.
