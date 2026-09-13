@@ -35,7 +35,7 @@ describe("TablaConceptosGenerico — notas", () => {
     expect(screen.queryByText(/QA SMOKE/)).toBeNull();
   });
 
-  it("conserva las notas públicas", () => {
+  it("conserva las notas públicas del renglón", () => {
     render(
       <TablaConceptosGenerico
         moneda="MXN"

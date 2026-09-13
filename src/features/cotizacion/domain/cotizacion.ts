@@ -11,4 +11,4 @@ export {
   filtrarCostosParaContenedor, mapCostosACostosEmbarque, calcularFechaVigencia,
 } from "./cotizacion.conversion";
 
-export { accionesCotizacionPermitidas } from "./cotizacion.acciones";
+export { accionesCotizacionPermitidas, puedeEscribirCotizaciones } from "./cotizacion.acciones";

@@ -90,3 +90,14 @@ export function accionesCotizacionPermitidas(
     crearEmbarque: hasRole(CREAR_EMBARQUE_BORRADOR, rol),
   };
 }
+
+/**
+ * v13.823.346 — Capacidad de ESCRITURA de cotizaciones (espejo de
+ * `public.puede_escribir_cotizaciones()` y de `ROLES_ESCRITURA_COTIZACIONES`
+ * en la edge function de envío). Se usa para gatear "Enviar por correo" y
+ * "Re-cotizar": finanzas puede LEER el detalle (`canEdit`), pero la edge
+ * function y `archivar_version_cotizacion` la rechazan con 403/42501.
+ */
+export function puedeEscribirCotizaciones(rol: AppRole | null | undefined): boolean {
+  return hasRole(SALES, rol);
+}

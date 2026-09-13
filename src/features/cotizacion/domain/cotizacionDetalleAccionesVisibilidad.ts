@@ -21,10 +21,16 @@ export function visibilidadAcciones(params: {
    * comercial y finanzas veían un botón que terminaba en 42501.
    */
   puedeCrearEmbarque: boolean;
+  /**
+   * v13.823.346 — ¿el rol puede escribir cotizaciones? Espejo de
+   * `archivar_version_cotizacion`: sin esto finanzas veía "Re-cotizar" y la RPC
+   * respondía 42501.
+   */
+  puedeRecotizar: boolean;
 }) {
   const {
     estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad, tieneVenta, puedeCrearEmbarque,
+    puedeAltaCliente, tieneOportunidad, tieneVenta, puedeCrearEmbarque, puedeRecotizar,
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
@@ -49,6 +55,6 @@ export function visibilidadAcciones(params: {
     // de ofrecer un botón que generaría un embarque en cero. Sólo a quien
     // podría crear el embarque le sirve ese aviso.
     mostrarFaltaVenta: puertaEmbarque && !tieneVenta,
-    mostrarRecotizar: sinEmbarqueAun,
+    mostrarRecotizar: sinEmbarqueAun && puedeRecotizar,
   };
 }
