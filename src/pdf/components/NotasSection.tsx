@@ -9,6 +9,7 @@
  * - Sin notas no se renderiza nada (ni título vacío ni página extra).
  */
 import { Text, View } from "@react-pdf/renderer";
+import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import { styles } from "../theme/styles";
 import { splitNotas } from "./notasSplit";
 
@@ -17,7 +18,10 @@ interface Props {
 }
 
 export function NotasSection({ notas }: Props) {
-  const texto = (notas ?? "").trim();
+  // v13.823.345: el PDF es superficie de cliente — las notas internas
+  // ([interno], #interno, residuos "QA SMOKE") se filtran aquí. Si sólo había
+  // notas internas, no se renderiza el bloque.
+  const texto = notasParaCliente(notas);
   if (!texto) return null;
 
   const { head, rest } = splitNotas(texto);
