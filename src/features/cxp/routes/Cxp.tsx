@@ -23,7 +23,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CXP_COL_DEFAULTS, CXP_COL_OPTIONS } from "@/features/cxp/routes/_config/cxpColumnConfig";
 
 import type { FacturaCxP } from "@/features/cxp/services";
-import { ROUTES } from "@/constants/routes";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
