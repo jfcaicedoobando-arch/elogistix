@@ -21,6 +21,7 @@ import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { EstadoSelect, ClienteSelect, SegmentoTabs } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
+import { usePermissions } from "@/hooks/shared";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
