@@ -150,41 +150,9 @@ export function GrupoCostosProveedor({
                       <AjusteChip descripcion={ajuste} />
                     </TableCell>
                     <TableCell>
-                      {f.facturas.length === 0 ? (
-                        <span className="text-muted-foreground text-body-sm">Sin factura</span>
-                      ) : (
-                        <TooltipProvider delayDuration={200}>
-                          <div className="flex flex-col gap-1">
-                            {f.facturas.map(fa => (
-                              <Tooltip key={fa.proveedor_factura_id}>
-                                <TooltipTrigger asChild>
-                                  <Link
-                                    to={`/compras/facturas/${fa.proveedor_factura_id}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    aria-label={`Abrir factura ${fa.folio_interno ?? fa.folio_proveedor}`}
-                                    className="w-fit"
-                                  >
-                                    <Badge variant="outline" className="w-fit gap-1 font-normal text-body-sm hover:bg-muted">
-                                      <FileText className="h-3 w-3" />
-                                      {fa.folio_interno ?? fa.folio_proveedor} · {fmtFecha(fa.fecha_emision)}
-                                    </Badge>
-                                  </Link>
-                                </TooltipTrigger>
-                                <TooltipContent className="text-body-sm">
-                                  <div className="font-medium">{fa.folio_interno ?? fa.folio_proveedor}</div>
-                                  <div>Folio proveedor: {fa.folio_proveedor}</div>
-                                  <div>Monto: {formatCurrency(fa.monto, f.moneda)}</div>
-                                  <div>Emisión: {fmtFecha(fa.fecha_emision)}</div>
-                                  {fa.fecha_vencimiento && <div>Vencimiento: {fmtFecha(fa.fecha_vencimiento)}</div>}
-                                  {fa.estatus_pago && <div>Pago: {fa.estatus_pago}</div>}
-                                  {fa.descripcion && <div className="text-muted-foreground max-w-xs">{fa.descripcion}</div>}
-                                </TooltipContent>
-                              </Tooltip>
-                            ))}
-                          </div>
-                        </TooltipProvider>
-                      )}
+                      <GrupoCostosFacturasCell fila={f} />
                     </TableCell>
+
                     <TableCell>
                       <Badge variant="outline" className={`${estatusBadgeClass(f.estatus_renglon)} text-body-sm`}>
                         {estatusLabel(f.estatus_renglon)}
