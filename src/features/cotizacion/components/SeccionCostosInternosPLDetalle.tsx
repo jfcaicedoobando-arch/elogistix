@@ -16,6 +16,7 @@ import {
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
+import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
 interface Props {
   cotizacionId: string;
@@ -26,6 +27,8 @@ interface Props {
    * editar. Sin él el servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA.
    */
   cotizacionUpdatedAt?: string | null;
+  /** v13.823.362 — El aviso de sincronización respeta estados inmutables. */
+  estadoCotizacion: EstadoCotizacion;
 }
 
 /**
