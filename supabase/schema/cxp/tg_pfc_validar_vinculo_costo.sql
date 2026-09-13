@@ -12,7 +12,6 @@
 --     por IVA/redondeo del proveedor) cuando comparten moneda;
 --   * los renglones fiscales sin `concepto_costo_id` siguen permitidos.
 -- Los vínculos históricos NO se reescriben: sólo se bloquean altas/cambios nuevos.
-
 CREATE OR REPLACE FUNCTION public.tg_pfc_validar_vinculo_costo()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -61,7 +60,8 @@ BEGIN
     JOIN public.embarques e ON e.id = cc.embarque_id
    WHERE cc.id = NEW.concepto_costo_id;
 
-  SELECT pf.folio, pf.moneda, pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
+  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor), pf.moneda,
+         pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
     INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org, v_fac_tc
     FROM public.proveedor_facturas pf
    WHERE pf.id = NEW.proveedor_factura_id;
