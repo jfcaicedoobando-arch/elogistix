@@ -1,5 +1,5 @@
 -- Espejo canónico de public.tg_bloquear_financiero_embarque_cerrado (A-2).
--- Fuente vigente: 20260913005047_3264e7eb-6cf0-414a-9af4-28b0945bc7b7.sql
+-- Fuente vigente: 20260913010130_13894cc9-cb70-4425-bbc8-f14e3441cc42.sql
 -- Vigilado por `bun run audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.tg_bloquear_financiero_embarque_cerrado()
@@ -41,6 +41,13 @@ BEGIN
   v_estado := public._assert_embarque_abierto_locked(v_emb);
   IF v_estado IS DISTINCT FROM 'Cerrado' THEN
     RETURN COALESCE(NEW, OLD);
+  END IF;
+
+  -- Invariante previo (supabase/tests/cxp_pago_embarque_cerrado.sql): liquidar
+  -- lo ya comprometido es legítimo después del cierre. Sólo se permite el ALTA
+  -- del pago; borrarlo o cambiar sus importes/vínculos sigue bloqueado.
+  IF TG_OP = 'INSERT' AND TG_TABLE_NAME IN ('pagos_factura','pagos_proveedor') THEN
+    RETURN NEW;
   END IF;
 
   IF TG_OP = 'UPDATE' THEN
