@@ -1,6 +1,7 @@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ESTADOS_COTIZACION } from "@/features/cotizacion/hooks";
 
 type Cliente = { id: string; nombre: string };
@@ -34,5 +35,23 @@ export function ClienteSelect({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+type SegmentoConteos = { clientes: number; prospectos: number; todas: number };
+
+/** Segmento comercial: separa la prospección CRM de la operación con
+ *  clientes activos; los KPIs y la tabla siguen al segmento elegido. */
+export function SegmentoTabs({
+  value, conteos, onChange,
+}: { value: string; conteos: SegmentoConteos; onChange: (v: string) => void }) {
+  return (
+    <Tabs value={value} onValueChange={onChange} className="w-full">
+      <TabsList aria-label="Segmento de cotizaciones">
+        <TabsTrigger value="clientes">Clientes ({conteos.clientes})</TabsTrigger>
+        <TabsTrigger value="prospectos">Prospectos ({conteos.prospectos})</TabsTrigger>
+        <TabsTrigger value="todas">Todas ({conteos.todas})</TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 }
