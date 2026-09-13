@@ -4735,7 +4735,7 @@ $$;
 CREATE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v_version INT; v_org UUID; v_folio TEXT;
   v_estado_actual TEXT; v_vigencia DATE;
@@ -4747,13 +4747,17 @@ DECLARE
   v_version_aceptada INT;
   v_op_existe BOOLEAN;
   v_ganadora UUID;
+  v_tipo_documento TEXT;
+  v_subtotal NUMERIC;
+  v_conceptos JSONB;
+  v_renglon_valido BOOLEAN;
 BEGIN
-  -- v13.823.57: lock de la fila ANTES de validar; dos aceptaciones simultáneas
-  -- se serializan y la segunda ve el estado ya terminal.
   SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id,
-         created_by, oportunidad_id, version_aceptada
+         created_by, oportunidad_id, version_aceptada,
+         tipo_documento, subtotal, conceptos_venta
     INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id,
-         v_creado_por, v_oportunidad_id, v_version_aceptada
+         v_creado_por, v_oportunidad_id, v_version_aceptada,
+         v_tipo_documento, v_subtotal, v_conceptos
     FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
     FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
@@ -4778,10 +4782,6 @@ BEGIN
   END IF;
   v_requiere := public.cliente_requiere_autorizacion(v_cliente_id, 'cotizacion');
   v_origen := CASE WHEN v_requiere THEN 'autorizacion_cliente' ELSE 'interna_cliente_de_casa' END;
-  -- v13.823.58: reintento idempotente. El primer request pudo aceptar y la
-  -- respuesta perderse en la red; con la fila ya bloqueada y la identidad,
-  -- pertenencia y rol validados, devolvemos el mismo resultado sin reescribir
-  -- nada (ni sello, ni valor_real, ni auditoría, ni notificación).
   IF v_estado_actual IN ('Aceptada','En operación') THEN
     IF v_oportunidad_id IS NOT NULL THEN
       SELECT true, o.cotizacion_ganadora_id
@@ -4829,6 +4829,24 @@ BEGIN
         USING ERRCODE='P0001', HINT='estados_permitidos=Borrador,Solicitada,Enviada';
     END IF;
   END IF;
+  -- v13.823.330 · Auditoría YAGNI #5: una cotización transaccional no puede
+  -- aceptarse sin importe. Las informativas (tarifarios) quedan exentas.
+  IF COALESCE(v_tipo_documento, 'transaccional') <> 'informativa' THEN
+    SELECT EXISTS (
+      SELECT 1
+        FROM jsonb_array_elements(
+               CASE WHEN jsonb_typeof(COALESCE(v_conceptos, '[]'::jsonb)) = 'array'
+                    THEN v_conceptos ELSE '[]'::jsonb END) c
+       WHERE COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+         AND (c->>'cantidad')::numeric > 0
+         AND (c->>'precio_unitario')::numeric > 0
+    ) INTO v_renglon_valido;
+    IF COALESCE(v_subtotal, 0) <= 0 OR NOT COALESCE(v_renglon_valido, false) THEN
+      RAISE EXCEPTION 'LC_COT_IMPORTE_REQUERIDO: la cotización % no tiene importe; captura al menos un concepto con cantidad y precio mayores a cero antes de aceptarla', COALESCE(v_folio, p_cotizacion_id::text)
+        USING ERRCODE='P0001';
+    END IF;
+  END IF;
   UPDATE cotizaciones
      SET version_aceptada=v_version, aceptada_en=now(), aceptada_por=auth.uid(),
          estado='Aceptada', updated_at=now()
@@ -4842,7 +4860,7 @@ BEGIN
   RETURN jsonb_build_object('cotizacion_id',p_cotizacion_id,'version_aceptada',v_version,
                             'origen_aceptacion',v_origen,'sin_cambios',false);
 END;
-$$;
+$_$;
 CREATE FUNCTION public.aceptar_proforma_sin_autorizacion(p_proforma_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -12256,6 +12274,8 @@ DECLARE
   v_agente_nombre text;
   v_naviera_nombre text;
   v_tipo_servicio text;
+  v_monedas       integer;
+  v_es_fcl        boolean;
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id = p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -12281,6 +12301,28 @@ BEGIN
   END IF;
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
+  END IF;
+  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
+  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
+  -- implícito (o 1:1) deformaría el P&L del embarque.
+  SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
+    INTO v_monedas
+    FROM jsonb_array_elements(
+           CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
+                THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+   WHERE COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+     AND (c->>'total')::numeric <> 0;
+  IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
+    RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
+  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
+  v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
+    AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
+  IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
+    RAISE EXCEPTION 'LC_COT_CONTENEDORES_REQUERIDOS: la cotización % es marítima FCL y no indica cuántos contenedores; captura el número de contenedores (1 o más) antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
   END IF;
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
@@ -12367,7 +12409,10 @@ BEGIN
     carta_garantia, dias_libres_destino,
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
-    tipo_servicio
+    tipo_servicio,
+    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
+    -- al embarque; antes el borrador nacía sin tipo de cambio.
+    tipo_cambio_usd
   )
   VALUES (
     v_cot.id, NULL, v_cot.cliente_id, v_cot.cliente_nombre,
@@ -12385,31 +12430,45 @@ BEGIN
     v_cot.carta_garantia, v_cot.dias_libres_destino,
     v_cot.seguro, v_cot.valor_seguro_usd,
     v_agente_id, v_naviera_id, v_agente_nombre, v_naviera_nombre,
-    v_tipo_servicio::tipo_servicio_maritimo
+    v_tipo_servicio::tipo_servicio_maritimo,
+    NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
-  v_num := GREATEST(1, COALESCE(v_cot.num_contenedores, 1));
-  v_peso_each := COALESCE(v_cot.peso_kg, 0) / v_num;
-  v_vol_each := COALESCE(v_cot.volumen_m3, 0) / v_num;
-  v_piezas_base := COALESCE(v_cot.piezas, 0) / v_num;
-  v_piezas_rest := COALESCE(v_cot.piezas, 0);
+  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
+  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
+  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
+  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
+  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
-  FOR i IN 1..v_num LOOP
-    IF i = v_num THEN v_piezas_este := v_piezas_rest;
-    ELSE v_piezas_este := v_piezas_base; END IF;
-    v_piezas_rest := v_piezas_rest - v_piezas_este;
-    INSERT INTO public.embarque_contenedores (
-      embarque_id, numero_contenedor, tipo_contenedor, bl_house,
-      peso_kg, volumen_m3, piezas, orden
-    )
-    VALUES (
-      v_embarque_id, '', COALESCE(v_tipo_cont_code, ''), '',
-      v_peso_each, v_vol_each, v_piezas_este, i
-    )
-    RETURNING id INTO v_cid;
-    v_target_ids := array_append(v_target_ids, v_cid);
-    IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
-  END LOOP;
+  IF v_cot.modo = 'Marítimo'::modo_transporte THEN
+    IF v_tipo_servicio = 'LCL' THEN
+      v_num := 1;
+    ELSE
+      v_num := GREATEST(1, COALESCE(v_cot.num_contenedores, 1));
+    END IF;
+    v_peso_each := COALESCE(v_cot.peso_kg, 0) / v_num;
+    v_vol_each := COALESCE(v_cot.volumen_m3, 0) / v_num;
+    v_piezas_base := COALESCE(v_cot.piezas, 0) / v_num;
+    v_piezas_rest := COALESCE(v_cot.piezas, 0);
+    FOR i IN 1..v_num LOOP
+      IF i = v_num THEN v_piezas_este := v_piezas_rest;
+      ELSE v_piezas_este := v_piezas_base; END IF;
+      v_piezas_rest := v_piezas_rest - v_piezas_este;
+      INSERT INTO public.embarque_contenedores (
+        embarque_id, numero_contenedor, tipo_contenedor, bl_house,
+        peso_kg, volumen_m3, piezas, orden
+      )
+      VALUES (
+        v_embarque_id, '',
+        CASE WHEN v_tipo_servicio = 'LCL' THEN 'LCL' ELSE COALESCE(v_tipo_cont_code, '') END,
+        '',
+        v_peso_each, v_vol_each, v_piezas_este, i
+      )
+      RETURNING id INTO v_cid;
+      v_target_ids := array_append(v_target_ids, v_cid);
+      IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
+    END LOOP;
+  END IF;
   PERFORM public._crear_embarque_replicar_conceptos(
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
@@ -28465,6 +28524,104 @@ BEGIN
   END IF;
   RETURN NULL;
 END $$;
+CREATE FUNCTION public.tg_pfc_validar_vinculo_costo() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_cc_moneda   text;
+  v_cc_monto    numeric;
+  v_cc_prov     uuid;
+  v_cc_org      uuid;
+  v_expediente  text;
+  v_fac_folio   text;
+  v_fac_moneda  text;
+  v_fac_prov    uuid;
+  v_fac_org     uuid;
+  v_fac_tc      numeric;
+  v_asignado    numeric;
+  v_par_mxn_usd boolean;
+BEGIN
+  IF NEW.concepto_costo_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND NEW.concepto_costo_id IS NOT DISTINCT FROM OLD.concepto_costo_id
+     AND NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
+     AND NEW.monto IS NOT DISTINCT FROM OLD.monto THEN
+    RETURN NEW;
+  END IF;
+  SELECT cc.moneda, cc.monto, cc.proveedor_id, cc.organization_id
+    INTO v_cc_moneda, v_cc_monto, v_cc_prov, v_cc_org
+    FROM public.conceptos_costo cc
+   WHERE cc.id = NEW.concepto_costo_id
+     AND cc.deleted_at IS NULL
+   FOR UPDATE;
+  IF v_cc_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_COSTO_INEXISTENTE: el concepto de costo no existe o fue eliminado'
+      USING ERRCODE = 'P0002';
+  END IF;
+  SELECT e.expediente INTO v_expediente
+    FROM public.conceptos_costo cc
+    JOIN public.embarques e ON e.id = cc.embarque_id
+   WHERE cc.id = NEW.concepto_costo_id;
+  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor), pf.moneda,
+         pf.proveedor_id, pf.organization_id, pf.tipo_cambio_usd
+    INTO v_fac_folio, v_fac_moneda, v_fac_prov, v_fac_org, v_fac_tc
+    FROM public.proveedor_facturas pf
+   WHERE pf.id = NEW.proveedor_factura_id;
+  IF v_fac_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_FACTURA_NO_EXISTE: la factura de proveedor no existe'
+      USING ERRCODE = 'P0002';
+  END IF;
+  IF v_fac_org IS DISTINCT FROM v_cc_org THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_ORG: la factura % y el costo del expediente % pertenecen a organizaciones distintas',
+      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_expediente, '(sin expediente)')
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_cc_prov IS NOT NULL AND v_fac_prov IS NOT NULL AND v_cc_prov IS DISTINCT FROM v_fac_prov THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_PROVEEDOR: la factura % es de otro proveedor que el costo del expediente %',
+      COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_expediente, '(sin expediente)')
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF upper(btrim(COALESCE(v_fac_moneda, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_cc_moneda, ''))) THEN
+    -- Conversión permitida SÓLO entre MXN y USD y SÓLO con el tipo de cambio
+    -- congelado en la factura (`proveedor_facturas.tipo_cambio_usd`). Sin TC no
+    -- se puede auditar el importe convertido: se rechaza.
+    v_par_mxn_usd :=
+      ARRAY[upper(btrim(COALESCE(v_fac_moneda, ''))), upper(btrim(COALESCE(v_cc_moneda, '')))]
+        <@ ARRAY['MXN','USD'];
+    IF NOT v_par_mxn_usd THEN
+      RAISE EXCEPTION 'LC_CXP_VINCULO_MONEDA: la factura % está en % y el costo del expediente % en %; sólo se pueden conciliar monedas distintas entre MXN y USD',
+        COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
+        COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF COALESCE(v_fac_tc, 0) <= 1 THEN
+      RAISE EXCEPTION 'LC_CXP_VINCULO_TC_REQUERIDO: la factura % está en % y el costo del expediente % en %; captura el tipo de cambio de la factura antes de vincularlos',
+        COALESCE(v_fac_folio, '(sin folio)'), COALESCE(v_fac_moneda, '(sin moneda)'),
+        COALESCE(v_expediente, '(sin expediente)'), COALESCE(v_cc_moneda, '(sin moneda)')
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  SELECT COALESCE(sum(pfc.monto), 0)
+    INTO v_asignado
+    FROM public.proveedor_facturas_conceptos pfc
+   WHERE pfc.concepto_costo_id = NEW.concepto_costo_id
+     AND (TG_OP = 'INSERT' OR pfc.id <> NEW.id);
+  -- El tope sólo aplica cuando factura y costo comparten moneda; convertido con
+  -- TC la comparación directa de importes no es válida.
+  IF COALESCE(v_cc_monto, 0) > 0
+     AND upper(btrim(COALESCE(v_fac_moneda, ''))) = upper(btrim(COALESCE(v_cc_moneda, '')))
+     AND round(v_asignado + COALESCE(NEW.monto, 0), 2) > round(v_cc_monto * 1.05, 2) THEN
+    RAISE EXCEPTION 'LC_CXP_VINCULO_SOBREASIGNADO: el costo del expediente % es de % % y ya tiene % asignado; la factura % excede el monto restante',
+      COALESCE(v_expediente, '(sin expediente)'), v_cc_monto, COALESCE(v_cc_moneda, ''),
+      v_asignado, COALESCE(v_fac_folio, '(sin folio)')
+      USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.tg_proforma_eur_no_soportada() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public', 'pg_temp'
@@ -32178,6 +32335,7 @@ CREATE TRIGGER trg_periodo_proveedor_notas_credito BEFORE INSERT OR UPDATE ON pu
 CREATE TRIGGER trg_pf_normalizar_uuid_fiscal BEFORE INSERT OR UPDATE OF uuid_fiscal ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._normalizar_uuid_fiscal();
 CREATE TRIGGER trg_pfc_promover_por_liquidar AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar_pfc();
 CREATE TRIGGER trg_pfc_recalc_liq AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public.tg_pfc_recalc_liq();
+CREATE TRIGGER trg_pfc_validar_vinculo_costo BEFORE INSERT OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public.tg_pfc_validar_vinculo_costo();
 CREATE TRIGGER trg_presupuesto_categorias_updated_at BEFORE UPDATE ON public.presupuesto_categorias FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_presupuesto_mensual_updated_at BEFORE UPDATE ON public.presupuesto_mensual FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.tg_proforma_eur_no_soportada();
@@ -34413,8 +34571,8 @@ GRANT ALL ON FUNCTION public.obtener_defaults_facturacion_cliente(p_cliente_id u
 GRANT ALL ON FUNCTION public.obtener_top_tarifas(p_ruta_id uuid, p_tipo_contenedor_id uuid, p_fecha date, p_limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.obtener_top_tarifas(p_ruta_id uuid, p_tipo_contenedor_id uuid, p_fecha date, p_limit integer) TO service_role;
 REVOKE ALL ON FUNCTION public.operaciones_stats() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.operaciones_stats() TO authenticated;
 GRANT ALL ON FUNCTION public.operaciones_stats() TO service_role;
+GRANT ALL ON FUNCTION public.operaciones_stats() TO authenticated;
 REVOKE ALL ON FUNCTION public.operadores_distintos() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.operadores_distintos() TO authenticated;
 GRANT ALL ON FUNCTION public.operadores_distintos() TO service_role;
@@ -34839,6 +34997,9 @@ GRANT ALL ON FUNCTION public.tg_pagos_proveedor_requiere_aprobacion() TO service
 REVOKE ALL ON FUNCTION public.tg_pfc_recalc_liq() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_pfc_recalc_liq() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_pfc_recalc_liq() TO service_role;
+REVOKE ALL ON FUNCTION public.tg_pfc_validar_vinculo_costo() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.tg_pfc_validar_vinculo_costo() TO authenticated;
+GRANT ALL ON FUNCTION public.tg_pfc_validar_vinculo_costo() TO service_role;
 GRANT ALL ON FUNCTION public.tg_proforma_eur_no_soportada() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_proforma_eur_no_soportada() TO service_role;
 REVOKE ALL ON FUNCTION public.tg_proveedor_facturas_recalc_liq() FROM PUBLIC;

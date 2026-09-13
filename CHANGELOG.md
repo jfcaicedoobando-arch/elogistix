@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.334] - 2026-09-13
+
+- **fix(seguridad)**: se cerraron los permisos de la función de estadísticas de operaciones (FIX-H6-08): ya no es ejecutable de forma anónima y sigue disponible para usuarios con sesión, que es la que usa el tablero de Operaciones. No cambia ningún cálculo.
+- **chore(base)**: radiografía de esquema (`baseline.sql`) regenerada para reflejar las migraciones del 13 de septiembre; manifiesto de release al día (1336 migraciones).
+
 ## [13.823.333] - 2026-09-13
 
 - **fix(cotizaciones)**: el "Número de contenedores" ya sólo se pide en marítimo FCL. En aéreo, terrestre y multimodal desaparece del paso 1 y del resumen, y se guarda en 0 en lugar del 1 inventado que llegaba al embarque.
