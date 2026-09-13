@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.340] - 2026-09-13
+
+- **chore(calidad)**: se retiró `GrupoCostosProveedor.tsx` de las listas de excepción de tamaño (architecture-baseline y audit-report), pues ya mide 179 líneas (máximo 200). Corrige el fallo de CI por entrada obsoleta del baseline.
+
+
+
 ## [13.823.339] - 2026-09-13
 
 - **datos(compras)**: se guardó el tipo de cambio 17.4453 en la factura FP-000151 (85 dólares facturados en 1,482.85 pesos) del expediente cerrado ELIMP00245, con nota de la corrección en el expediente. El expediente siguió cerrado y no se modificaron importes, pagos ni comisiones.
