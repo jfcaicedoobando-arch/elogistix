@@ -41,7 +41,7 @@ AS $function$
                  e.tarifa_revalidada_por, e.facturado_historico,
                  e.cobro_cliente_status, e.cobro_cliente_actualizado_at,
                  e.agente_id, e.naviera_id, e.sin_comision
-          FROM embarques e WHERE e.id = p_embarque_id
+          FROM embarques e WHERE e.id = p_embarque_id AND e.deleted_at IS NULL
         ) s
       ),
       'conceptosVenta', COALESCE((

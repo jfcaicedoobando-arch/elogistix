@@ -46,6 +46,14 @@ export interface HerenciaSugerencias {
   descartados: ConceptoSugeridoEntrante[];
   /** Sugerencias en otra moneda que no se pudieron convertir por falta de T/C. */
   sinTipoCambio: ConceptoSugeridoEntrante[];
+  /**
+   * v13.823.339 (bug 10) — `true` si no se pudo consultar qué costos ya
+   * tienen factura (RLS/red): falla cerrado, no se pre-marca nada mientras
+   * tanto para no inducir vínculos duplicados.
+   */
+  errorCubiertos: boolean;
+  /** Reintenta la consulta de costos ya cubiertos tras un error. */
+  reintentar: () => void;
   /** Vuelve a marcar los conceptos aplicables (por si el contador los quitó). */
   reaplicar: () => void;
 }
@@ -84,6 +92,8 @@ export function usePrefillVinculosEntrante({
   const [aplicados, setAplicados] = useState<ConceptoSugeridoEntrante[]>([]);
   const [descartados, setDescartados] = useState<ConceptoSugeridoEntrante[]>([]);
   const [sinTipoCambio, setSinTipoCambio] = useState<ConceptoSugeridoEntrante[]>([]);
+  const [errorCubiertos, setErrorCubiertos] = useState(false);
+  const [intento, setIntento] = useState(0);
 
   // Se usa `tc` directo: si su identidad cambia, el efecto sólo se reevalúa y
   // `aplicadoPara` evita volver a pre-marcar el mismo documento.
@@ -116,13 +126,23 @@ export function usePrefillVinculosEntrante({
     let vivo = true;
     aplicadoPara.current = clave;
     void (async () => {
-      let cubiertos = new Set<string>();
+      let cubiertos: Set<string>;
       try {
         cubiertos = await fetchCostosConFactura(entrante.embarqueId);
       } catch {
-        // Si no se puede consultar, se pre-marca todo: el cuadre avisará.
+        // Bug 10 — falla cerrado: si no se puede saber qué ya tiene factura,
+        // no se pre-marca nada (evita vínculos duplicados). Se avisa en
+        // pantalla y se permite reintentar sin cerrar/reabrir el modal.
+        if (!vivo) return;
+        aplicadoPara.current = null;
+        setAplicados([]);
+        setSinTipoCambio([]);
+        setDescartados([]);
+        setErrorCubiertos(true);
+        return;
       }
       if (!vivo) return;
+      setErrorCubiertos(false);
       const libres = sugeridos.filter((s) => !cubiertos.has(s.conceptoCostoId));
       const { convertibles, sinTipoCambio: sinTc } =
         dividirPorTipoCambio(libres, facturaMoneda, tc);
@@ -135,7 +155,7 @@ export function usePrefillVinculosEntrante({
     })();
 
     return () => { vivo = false; };
-  }, [abierto, entrante, habilitado, aplicarSugerencias, aRegistro, facturaMoneda, tc]);
+  }, [abierto, entrante, habilitado, aplicarSugerencias, aRegistro, facturaMoneda, tc, intento]);
 
   useEffect(() => {
     if (!abierto) {
@@ -143,6 +163,7 @@ export function usePrefillVinculosEntrante({
       setAplicados([]);
       setDescartados([]);
       setSinTipoCambio([]);
+      setErrorCubiertos(false);
     }
   }, [abierto]);
 
@@ -151,5 +172,11 @@ export function usePrefillVinculosEntrante({
     aplicarSugerencias(aRegistro(aplicados, entrante.embarqueId));
   }, [entrante, aplicados, aplicarSugerencias, aRegistro]);
 
-  return { aplicados, descartados, sinTipoCambio, reaplicar };
+  const reintentar = useCallback(() => {
+    aplicadoPara.current = null;
+    setErrorCubiertos(false);
+    setIntento((n) => n + 1);
+  }, []);
+
+  return { aplicados, descartados, sinTipoCambio, errorCubiertos, reintentar, reaplicar };
 }
