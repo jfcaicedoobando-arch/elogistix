@@ -50,12 +50,15 @@ function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
   };
 }
 
-export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, visible, puedeSincronizar }: Props) {
+export function AvisoSincronizarConceptosVenta({
+  cotizacionId, costos, tasaIva, visible, puedeSincronizar, estadoCotizacion,
+}: Props) {
   const update = useUpdateCotizacion();
   if (!visible) return null;
 
   const filas = costos.map(aFilaLocal);
   const faltantes = costosSinConcepto(filas);
+  const estadoInmutable = ESTADOS_INMUTABLES.has(estadoCotizacion);
 
   const handleSync = async () => {
     if (faltantes.length > 0) {
@@ -111,11 +114,13 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
         <p>
           Los costos tienen precio de venta capturado, pero la cotización quedó con importes en $0.00
           (así se imprimiría el PDF).
-          {puedeSincronizar
-            ? " Puedes regenerar los conceptos de venta desde los costos."
-            : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
+          {estadoInmutable
+            ? " Esta cotización ya fue aceptada o está en operación; sus importes no pueden modificarse aquí. Para reflejar los cambios crea una nueva versión o usa Re-cotizar."
+            : puedeSincronizar
+              ? " Puedes regenerar los conceptos de venta desde los costos."
+              : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
         </p>
-        {puedeSincronizar && (
+        {puedeSincronizar && !estadoInmutable && (
           <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
             <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
           </Button>
