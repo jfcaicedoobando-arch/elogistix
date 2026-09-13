@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.343] - 2026-09-13
+
+- **refactor(pdf)**: las columnas y totales del PDF de cotización se extraen a `cotizacionColumnas.tsx` para volver a respetar el límite de 200 líneas por archivo; sin cambios de comportamiento.
+
 ## [13.823.342] - 2026-09-13
 
 - **fix(cotizaciones)**: el PDF ya deriva el IVA en pesos de la tasa real de cada renglón: con conceptos a tasa 0% o exentos desaparece "+ IVA", la columna de IVA y la tasa en la caja de totales; con IVA se imprime la tasa verdadera (8% o 16%) y el caso mixto queda sin porcentaje.
