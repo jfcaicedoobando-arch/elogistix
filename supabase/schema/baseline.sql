@@ -23364,25 +23364,28 @@ BEGIN
   RETURN v_org_id;
 END;
 $$;
-CREATE FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
+CREATE FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid DEFAULT auth.uid(), _org uuid DEFAULT public.current_user_org_id()) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
   SELECT _user_id IS NOT NULL
-     AND public.has_any_role_efectivo(
-           _user_id,
-           ARRAY['admin','vendedor','ejecutivo_pricing']::app_role[])
      AND (
-       public.has_role(_user_id, 'super_admin'::app_role)
-       OR NOT EXISTS (
-            SELECT 1 FROM public.organization_members om
-             WHERE om.user_id = _user_id
-          )
-       OR EXISTS (
-            SELECT 1 FROM public.organization_members om
-             WHERE om.user_id = _user_id
-               AND om.organization_id = public.current_user_org_id()
-          )
+       -- Ancla tenant: rol aprobador dentro de la organización indicada.
+       -- `has_any_role_in_org` ya exenta a `super_admin`.
+       public.has_any_role_in_org(
+         _user_id,
+         ARRAY['admin','vendedor','ejecutivo_pricing']::app_role[],
+         _org)
+       OR (
+         -- Usuario sin ninguna membresía: conserva el criterio de rol global,
+         -- igual que el resto de los helpers de rol efectivo.
+         NOT EXISTS (
+           SELECT 1 FROM public.organization_members om WHERE om.user_id = _user_id
+         )
+         AND public.has_any_role_efectivo(
+               _user_id,
+               ARRAY['admin','vendedor','ejecutivo_pricing']::app_role[])
+       )
      )
 $$;
 CREATE FUNCTION public.puede_escribir_cotizaciones(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
@@ -24249,6 +24252,7 @@ DECLARE
   v_revalidacion TEXT;
   v_embarque_expediente TEXT;
 BEGIN
+  -- FOR UPDATE: serializa dos re-cotizaciones concurrentes sobre el mismo folio.
   SELECT version, organization_id, folio, estado::text, estado_revalidacion
     INTO v_old, v_org, v_folio, v_estado, v_revalidacion
   FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
@@ -24262,10 +24266,11 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501';
   END IF;
-  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid(), v_org) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden re-cotizar'
       USING ERRCODE='42501';
   END IF;
+  -- Mismo mínimo que el modal de la UI (5 caracteres).
   IF length(coalesce(trim(p_motivo),'')) < 5 THEN
     RAISE EXCEPTION 'Motivo requerido (mínimo 5 caracteres)' USING ERRCODE='22023';
   END IF;
@@ -24273,6 +24278,7 @@ BEGIN
     RAISE EXCEPTION 'LC_RECOTIZAR_ESTADO_INVALIDO'
       USING HINT = v_estado, ERRCODE = 'P0001';
   END IF;
+  -- Bug 15 guard: block re-versioning if there is any active shipment linked
   SELECT expediente INTO v_embarque_expediente
   FROM public.embarques
   WHERE cotizacion_id = p_cotizacion_id
@@ -26192,7 +26198,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501'; END IF;
-  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid()) THEN
+  IF NOT public.puede_aprobar_tarifa_cotizacion(auth.uid(), v_cot.organization_id) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: sólo ventas o administración pueden resolver la re-aprobación de tarifa'
       USING ERRCODE='42501';
   END IF;
@@ -34758,9 +34764,9 @@ GRANT ALL ON FUNCTION public.proveedores_listado(p_organization_id uuid, p_tipo 
 REVOKE ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p_owner_user_id uuid) TO service_role;
-REVOKE ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid, _org uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid, _org uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(_user_id uuid, _org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO service_role;

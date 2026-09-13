@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.354] - 2026-09-13
+
+- **fix(seguridad, db)**: `public.puede_aprobar_tarifa_cotizacion` es tenant-aware por parámetro: nueva firma `(_user_id uuid DEFAULT auth.uid(), _org uuid DEFAULT public.current_user_org_id())` validada con `public.has_any_role_in_org(_user_id, ARRAY['admin','vendedor','ejecutivo_pricing'], _org)` (conserva la exención de `super_admin`); un usuario sin ninguna membresía mantiene el criterio de rol global. Se elimina la firma de un solo parámetro para evitar ambigüedad. `resolver_reaprobacion_tarifa` y `recotizar_cotizacion` la consultan con la organización de la cotización, no con la organización activa de la sesión. Linter ORG-SCOPE en verde sin whitelist; regresión ampliada en `test_rls_reg_reaprobacion_y_duplicar.sql` (TEST 7: autorizado en su org, no en la ajena, firma de 2 parámetros y uso de `has_any_role_in_org`).
+
+
 ## [13.823.353] - 2026-09-13
 
 - **fix(seguridad, db)**: `public.puede_aprobar_tarifa_cotizacion` gana ancla tenant explícita — además del rol aprobador comercial (vía `has_any_role_efectivo`) exige membresía en la organización activa (`organization_members` + `current_user_org_id()`), con `super_admin` exento. Con esto el linter ORG-SCOPE (`test_rls_rpc_org_scope_linter.sql`) vuelve a verde sin ampliar la whitelist ni bajar el guard; regresión nueva en `test_rls_reg_reaprobacion_y_duplicar.sql` (vendedor de otra organización no autorizado + ancla presente en el cuerpo).

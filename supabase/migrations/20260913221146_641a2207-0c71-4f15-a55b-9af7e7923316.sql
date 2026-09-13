@@ -1,20 +1,39 @@
--- Fuente canónica de public.resolver_reaprobacion_tarifa (v13.823.354).
---
--- Antes: cualquier miembro autenticado de la organización (viewer, contador,
--- tesorero, operación) podía aprobar/rechazar/recotizar por RPC directa, y la
--- decisión `reaprobada` se aceptaba aunque la tarifa hubiera cambiado otra vez
--- después de la solicitud (dejando un estado que luego fallaba al crear el
--- embarque con LC_REAPROBACION_NO_VIGENTE).
---
--- Ahora:
---   · Exige el rol aprobador comercial (`puede_aprobar_tarifa_cotizacion`),
---     evaluado en la organización de la cotización (ancla tenant explícita).
---   · Sólo admite `reaprobada` y `rechazada`. `recotizada` deja de ser una
---     decisión directa: la única transición válida es `recotizar_cotizacion`,
---     que la escribe cuando la nueva versión ya existe.
---   · `reaprobada` exige que el snapshot económico que ventas autorizó siga
---     siendo el vigente (LC_REVALIDACION_DESACTUALIZADA) y congela ese snapshot
---     en `revalidacion_delta_jsonb`.
+-- Tenant-aware: parámetro _org explícito y validación por membresía en esa org.
+DROP FUNCTION IF EXISTS public.puede_aprobar_tarifa_cotizacion(uuid);
+
+CREATE OR REPLACE FUNCTION public.puede_aprobar_tarifa_cotizacion(
+  _user_id uuid DEFAULT auth.uid(),
+  _org uuid DEFAULT public.current_user_org_id()
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+  SELECT _user_id IS NOT NULL
+     AND (
+       -- Ancla tenant: rol aprobador dentro de la organización indicada.
+       -- `has_any_role_in_org` ya exenta a `super_admin`.
+       public.has_any_role_in_org(
+         _user_id,
+         ARRAY['admin','vendedor','ejecutivo_pricing']::app_role[],
+         _org)
+       OR (
+         -- Usuario sin ninguna membresía: conserva el criterio de rol global,
+         -- igual que el resto de los helpers de rol efectivo.
+         NOT EXISTS (
+           SELECT 1 FROM public.organization_members om WHERE om.user_id = _user_id
+         )
+         AND public.has_any_role_efectivo(
+               _user_id,
+               ARRAY['admin','vendedor','ejecutivo_pricing']::app_role[])
+       )
+     )
+$function$;
+
+REVOKE ALL ON FUNCTION public.puede_aprobar_tarifa_cotizacion(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.puede_aprobar_tarifa_cotizacion(uuid, uuid) TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.resolver_reaprobacion_tarifa(p_cotizacion_id uuid, p_decision text)
 RETURNS void

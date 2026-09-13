@@ -1,15 +1,3 @@
--- Fuente canónica de public.recotizar_cotizacion (v13.823.354).
---
--- Antes sólo exigía pertenencia a la organización: un viewer, contador o
--- tesorero podía versionar por RPC directa una cotización aceptada. Ahora exige
--- el rol aprobador comercial (`puede_aprobar_tarifa_cotizacion`), ignora
--- cotizaciones eliminadas y cierra la solicitud de re-aprobación pendiente con
--- la decisión `recotizada` (única transición válida hacia ese estado).
---
--- Se conservan los candados previos: motivo mínimo de 5 caracteres, estado
--- `Aceptada` (LC_RECOTIZAR_ESTADO_INVALIDO) y embarque activo vinculado
--- (LC_COTIZACION_CON_EMBARQUE).
-
 CREATE OR REPLACE FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -68,8 +56,6 @@ BEGIN
   UPDATE cotizaciones
      SET version = v_new,
          estado = 'Borrador',
-         -- v13.823.351: la decisión `recotizada` se escribe aquí, cuando la
-         -- nueva versión ya existe; `resolver_reaprobacion_tarifa` la rechaza.
          estado_revalidacion = CASE WHEN v_revalidacion = 'pendiente_reaprobacion'
                                     THEN 'recotizada' ELSE estado_revalidacion END,
          revalidacion_resuelta_en = CASE WHEN v_revalidacion = 'pendiente_reaprobacion'
