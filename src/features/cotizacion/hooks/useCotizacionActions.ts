@@ -15,6 +15,9 @@ import { getErrorMessage } from "@/lib/errors";
 export interface CotizacionExportRow {
   folio: string;
   cliente_nombre: string | null;
+  /** v13.823.355 — en prospectos el nombre visible es la empresa del prospecto. */
+  es_prospecto?: boolean | null;
+  prospecto_empresa?: string | null;
   modo: string;
   origen?: string | null;
   destino?: string | null;
@@ -22,6 +25,12 @@ export interface CotizacionExportRow {
   moneda: string | null;
   estado: string | null;
   fecha_vigencia?: string | null;
+}
+
+/** Nombre visible de la cotización: empresa del prospecto o cliente. */
+export function nombreMostradoCotizacion(c: CotizacionExportRow): string {
+  if (c.es_prospecto) return c.prospecto_empresa || c.cliente_nombre || "";
+  return c.cliente_nombre || c.prospecto_empresa || "";
 }
 
 export function useCotizacionActions() {
@@ -80,7 +89,9 @@ export function useCotizacionActions() {
         ],
         filas.map((c) => ({
           folio: c.folio,
-          cliente: c.cliente_nombre ?? "",
+          // v13.823.355 (YAGNI r2 · P1): mismo nombre que muestra la tabla; antes
+          // el CSV de Prospectos salía con la columna Cliente vacía.
+          cliente: nombreMostradoCotizacion(c),
           modo: c.modo,
           ruta: `${c.origen || ""} → ${c.destino || ""}`,
           subtotal: c.subtotal,

@@ -32,6 +32,18 @@ export const MSG_COTIZACION_MIXTA =
  * A1/A7 (13.823.159): con venta en cero la moneda se toma del `monedaFallback`
  * canónico del vínculo y, sin él, de los propios renglones.
  */
+/**
+ * Importe sin IVA de un renglón: `cantidad * precio_unitario`. Es la misma
+ * base que usa `subtotalesPorMoneda` para la lista, de modo que el encabezado
+ * y el listado no puedan divergir.
+ */
+function importeSinIva(c: Record<string, unknown>): number {
+  const cantidad = Number(c?.cantidad);
+  const precio = Number(c?.precio_unitario);
+  if (!Number.isFinite(cantidad) || !Number.isFinite(precio)) return 0;
+  return roundMoney(cantidad * precio);
+}
+
 export function derivarSubtotalMoneda(
   conceptosVenta: Record<string, unknown>[],
   monedaFallback?: string | null,
@@ -42,10 +54,17 @@ export function derivarSubtotalMoneda(
   let filasUsd = 0;
   let filasMxn = 0;
   for (const c of conceptosVenta) {
-    const total = Number(c?.total) || 0;
-    if (c?.moneda === "MXN") { mxn += total; filasMxn += 1; }
-    else { usd += total; filasUsd += 1; }
+    // v13.823.355 (YAGNI r2 · P1): el encabezado guarda el subtotal SIN IVA.
+    // Antes se sumaba `concepto.total` (que ya incluye IVA) e inflaba el
+    // subtotal al reguardar una cotización con impuesto: lista, KPIs y CRM
+    // mostraban un importe mayor al real. `total`/IVA quedan sólo para la
+    // presentación (tablas y PDF).
+    const base = importeSinIva(c);
+    if (c?.moneda === "MXN") { mxn += base; filasMxn += 1; }
+    else { usd += base; filasUsd += 1; }
   }
+  usd = roundMoney(usd);
+  mxn = roundMoney(mxn);
   if (usd > 0 && mxn > 0) return mezclaConTipoCambio(usd, mxn, monedaFallback, tipoCambioUsd);
   if (mxn > 0) return { subtotal: mxn, moneda: "MXN" };
   if (usd > 0) return { subtotal: usd, moneda: "USD" };

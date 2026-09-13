@@ -25,7 +25,10 @@ export default function EditarCotizacion() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { canEdit } = usePermissions();
+  // v13.823.355 (YAGNI r2 · P1): la edición general es de ventas/operación
+  // (`puede_escribir_cotizaciones` en RLS). Con `canEdit` (que incluye
+  // finanzas) contador/tesorero entraban al wizard y fallaban con 42501.
+  const { canWriteCotizaciones } = usePermissions();
   const { data: clientes = [] } = useClientesForSelect();
   const { data: cotizacion, isLoading, isError, refetch } = useCotizacion(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
@@ -43,7 +46,7 @@ export default function EditarCotizacion() {
     );
   }
 
-  if (!cotizacion || !canEdit) {
+  if (!cotizacion || !canWriteCotizaciones) {
     return <Navigate to={`/cotizaciones/${id}`} replace />;
   }
 
