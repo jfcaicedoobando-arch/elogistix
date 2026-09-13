@@ -3,6 +3,7 @@
 ## [13.823.340] - 2026-09-13
 
 - **chore(calidad)**: se retiró `GrupoCostosProveedor.tsx` de las listas de excepción de tamaño (architecture-baseline y audit-report), pues ya mide 179 líneas (máximo 200). Corrige el fallo de CI por entrada obsoleta del baseline.
+- **chore(calidad)**: se documentó con el marcador SAFE-CAST el único cast pendiente en `useEditarEmbarqueWizard.ts` y se renombró la prueba de regresión de ProfitBadge que duplicaba el nombre de otra; ambos eran los fallos restantes del mismo reporte de CI.
 
 
 
