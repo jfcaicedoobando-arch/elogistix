@@ -136,6 +136,8 @@ export default function SeccionCostosInternosPLDetalle({
         visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
         // v13.823.360 — finanzas lee el aviso sin botón (la RPC exige SALES).
         puedeSincronizar={canEdit}
+        // v13.823.362 — en Aceptada/En operación el trigger rechaza el UPDATE.
+        estadoCotizacion={estadoCotizacion}
       />
 
       {canEdit && filas.length > 0 && (
