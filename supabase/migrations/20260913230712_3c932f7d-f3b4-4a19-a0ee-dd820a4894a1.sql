@@ -1,15 +1,128 @@
--- Fuente canónica de public._crear_embarque_replicar_conceptos
--- Helper privado (Bloque 3.2 · god-function split) usado por
--- crear_embarque_borrador_core para replicar cotizacion_costos y
--- conceptos_venta en el embarque recién creado.
--- Regenerada 1:1 desde la definición vigente (migración 20260912000100:
--- prorrateo por resto mayor, sin importes negativos).
--- v13.823.357 · Auditoría YAGNI P1 #2 y P2 #6/#7:
---   #2 Idempotencia POR CONJUNTO: si un intento previo dejó sólo costos o sólo
---      ventas, el reintento completa el conjunto faltante.
---   #6 Cantidad/precio no positivos se rechazan (antes cantidad 0 pasaba a 1).
---   #7 Moneda distinta de MXN/USD se rechaza (antes caía a MXN en silencio).
--- Ver supabase/schema/README.md.
+CREATE OR REPLACE FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $$
+DECLARE
+  v_folio      text;
+  v_tipo_doc   text;
+  v_ventas     jsonb;
+  v_positiva   boolean;
+  v_moneda_mala text;
+  v_sin_reflejo text;
+BEGIN
+  IF p_cotizacion_id IS NULL THEN RETURN; END IF;
+
+  SELECT folio, COALESCE(tipo_documento, 'transaccional'),
+         CASE WHEN jsonb_typeof(COALESCE(conceptos_venta, '[]'::jsonb)) = 'array'
+              THEN COALESCE(conceptos_venta, '[]'::jsonb) ELSE '[]'::jsonb END
+    INTO v_folio, v_tipo_doc, v_ventas
+    FROM public.cotizaciones
+   WHERE id = p_cotizacion_id;
+
+  IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
+
+  WITH v AS (
+    SELECT upper(btrim(COALESCE(c->>'moneda', 'MXN'))) AS moneda,
+           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '1') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'cantidad')::numeric ELSE 0 END AS cant,
+           CASE WHEN COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN (c->>'precio_unitario')::numeric ELSE 0 END AS pu
+      FROM jsonb_array_elements(v_ventas) c
+     WHERE COALESCE(btrim(c->>'descripcion'), '') <> ''
+  )
+  SELECT EXISTS (SELECT 1 FROM v WHERE cant > 0 AND pu > 0),
+         (SELECT string_agg(DISTINCT moneda, ', ') FROM v WHERE moneda NOT IN ('MXN', 'USD'))
+    INTO v_positiva, v_moneda_mala;
+
+  IF v_moneda_mala IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_MONEDA_NO_SOPORTADA: la cotización % tiene conceptos de venta en una moneda no soportada (%); sólo MXN y USD están habilitados', COALESCE(v_folio, p_cotizacion_id::text), v_moneda_mala
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF NOT COALESCE(v_positiva, false) THEN
+    RAISE EXCEPTION 'LC_COT_SIN_VENTA: la cotización % no tiene ningún concepto de venta con cantidad y precio mayores a cero', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT string_agg(DISTINCT c.m, ', ')
+    INTO v_sin_reflejo
+    FROM (
+      SELECT upper(btrim(cc.moneda)) AS m
+        FROM public.cotizacion_costos cc
+       WHERE cc.cotizacion_id = p_cotizacion_id
+         AND cc.deleted_at IS NULL
+         AND COALESCE(cc.precio_venta, 0) > 0
+    ) c
+   WHERE NOT EXISTS (
+     SELECT 1
+       FROM jsonb_array_elements(v_ventas) x
+      WHERE upper(btrim(COALESCE(x->>'moneda', 'MXN'))) = c.m
+        AND COALESCE(btrim(x->>'descripcion'), '') <> ''
+        AND CASE WHEN COALESCE(NULLIF(x->>'cantidad', ''), '1') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 THEN (x->>'cantidad')::numeric ELSE 0 END > 0
+        AND CASE WHEN COALESCE(NULLIF(x->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                 THEN (x->>'precio_unitario')::numeric ELSE 0 END > 0
+   );
+
+  IF v_sin_reflejo IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_VENTA_NO_REFLEJADA: la cotización % tiene precio de venta capturado en % que no llegó a los conceptos de venta; vuelve a guardar el paso 3 antes de convertir', COALESCE(v_folio, p_cotizacion_id::text), v_sin_reflejo
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public._assert_cotizacion_venta_valida(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._assert_cotizacion_venta_valida(uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_estado    public.estado_cotizacion;
+  v_org       uuid;
+  v_deleted   timestamptz;
+  v_folio     text;
+  v_existente uuid;
+BEGIN
+  IF p_cotizacion_id IS NULL THEN RETURN; END IF;
+
+  SELECT estado, organization_id, deleted_at, folio
+    INTO v_estado, v_org, v_deleted, v_folio
+    FROM public.cotizaciones
+   WHERE id = p_cotizacion_id
+   FOR UPDATE;
+
+  IF v_estado IS NULL THEN
+    RAISE EXCEPTION 'LC_COT_NO_ENCONTRADA: la cotización no existe' USING ERRCODE = 'P0002';
+  END IF;
+  IF v_deleted IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_ELIMINADA: la cotización está eliminada' USING ERRCODE = 'P0001';
+  END IF;
+  IF p_org IS NOT NULL AND v_org IS DISTINCT FROM p_org THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: la cotización pertenece a otra organización' USING ERRCODE = '42501';
+  END IF;
+  IF v_estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
+    RAISE EXCEPTION 'LC_COT_ESTADO_INVALIDO: la cotización debe estar Aceptada o En operación (actual: %)', v_estado
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT id INTO v_existente
+    FROM public.embarques
+   WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL
+   LIMIT 1;
+  IF v_existente IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_YA_TIENE_EMBARQUE: la cotización % ya generó un embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  PERFORM public._assert_cotizacion_venta_valida(p_cotizacion_id);
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb)
  RETURNS void
@@ -39,8 +152,6 @@ DECLARE
   v_tiene_costos boolean;
   v_tiene_ventas boolean;
 BEGIN
-  -- Idempotencia POR CONJUNTO: un reintento tras una falla parcial completa
-  -- sólo el conjunto que falta (antes cualquiera de los dos abortaba todo).
   v_tiene_costos := EXISTS (
     SELECT 1 FROM public.conceptos_costo
     WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
@@ -82,10 +193,6 @@ BEGIN
               CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
               v_prov_nombre, v_prov_id, p_org, 'cotizacion', v_costo.id);
     ELSE
-      -- Prorrateo sin importes negativos (método del resto mayor en centavos):
-      -- el piso se reparte a todos y los primeros `v_resto` contenedores
-      -- reciben un centavo extra. La suma cuadra exacta y ninguna parte queda
-      -- con signo contrario al total (antes 0.02 entre 4 daba 0.01/0.01/0.01/-0.01).
       v_signo := CASE WHEN v_base < 0 THEN -1 ELSE 1 END;
       v_cent  := ROUND(ABS(v_base) * 100)::bigint;
       v_piso  := v_cent / v_n::bigint;
@@ -111,14 +218,10 @@ BEGIN
           RAISE EXCEPTION 'LC_COT_MONEDA_NO_SOPORTADA: el concepto de venta "%" está en % y sólo MXN y USD están habilitados', v_venta->>'descripcion', v_moneda
             USING ERRCODE = 'P0001';
         END IF;
-        -- Cantidad ausente = 1 (renglón legacy); cantidad 0 o negativa se
-        -- rechaza en lugar de reescribirse a 1 en silencio.
         v_cant := COALESCE(NULLIF(v_venta->>'cantidad', '')::numeric, 1);
         v_pu   := COALESCE(NULLIF(v_venta->>'precio_unitario', '')::numeric, 0);
         v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
 
-        -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
-        -- si no hay unitario: se desinfla el `total` (que viene con IVA).
         IF v_pu = 0 AND v_cant > 0 THEN
           v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0) / (1 + v_tasa), 2);
           v_pu    := ROUND(v_total / v_cant, 6);
@@ -146,8 +249,7 @@ BEGIN
     END LOOP;
   END IF;
 END;
-$function$
-;
+$function$;
 
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;

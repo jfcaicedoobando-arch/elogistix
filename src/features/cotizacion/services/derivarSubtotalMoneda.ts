@@ -49,6 +49,21 @@ function importeSinIva(c: Record<string, unknown>): number {
   return Number(c?.total) || 0;
 }
 
+/**
+ * v13.823.357 (Auditoría YAGNI P2 #7): sólo MXN y USD están soportados. Antes
+ * cualquier moneda distinta de MXN caía a USD en silencio (un renglón en EUR
+ * se sumaba como dólares). Sin moneda capturada se conserva el default USD.
+ */
+export const MSG_MONEDA_NO_SOPORTADA =
+  "Hay conceptos de venta en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).";
+
+function monedaConcepto(c: Record<string, unknown>): "USD" | "MXN" {
+  const m = String(c?.moneda ?? "").trim().toUpperCase();
+  if (m === "MXN") return "MXN";
+  if (m === "USD" || m === "") return "USD";
+  throw new ReglaNegocioError(MSG_MONEDA_NO_SOPORTADA);
+}
+
 export function derivarSubtotalMoneda(
   conceptosVenta: Record<string, unknown>[],
   monedaFallback?: string | null,
@@ -65,7 +80,7 @@ export function derivarSubtotalMoneda(
     // mostraban un importe mayor al real. `total`/IVA quedan sólo para la
     // presentación (tablas y PDF).
     const base = importeSinIva(c);
-    if (c?.moneda === "MXN") { mxn += base; filasMxn += 1; }
+    if (monedaConcepto(c) === "MXN") { mxn += base; filasMxn += 1; }
     else { usd += base; filasUsd += 1; }
   }
   usd = roundMoney(usd);

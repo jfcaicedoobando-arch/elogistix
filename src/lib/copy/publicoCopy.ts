@@ -60,6 +60,12 @@ export const COPY_VALIDACION = {
   renglonesSinConcepto: "Hay renglones de costo sin concepto.",
   renglonesSinProveedor: "Hay renglones de costo sin proveedor.",
   conceptosVentaRequeridos: "Agrega al menos un concepto de venta.",
+  conceptosVentaImporteInvalido:
+    "Hay conceptos de venta con cantidad o precio en cero (o negativos). Captura la cantidad y el precio de cada concepto.",
+  conceptosVentaSinImporte:
+    "Ningún concepto de venta tiene cantidad y precio mayores a cero. Captura el precio de venta antes de continuar.",
+  conceptosVentaMonedaNoSoportada:
+    "Sólo se pueden cotizar importes en pesos (MXN) o dólares (USD).",
 
   // ── CxP · captura de facturas de proveedor ──────────────────────────────
   proveedorRequerido: "Selecciona un proveedor.",

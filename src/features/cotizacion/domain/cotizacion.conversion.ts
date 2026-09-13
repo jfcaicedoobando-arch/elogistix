@@ -9,6 +9,10 @@ export interface CotizacionCostoLike {
   concepto: string;
   unidad_medida?: string | null;
   costo_unitario: number;
+  /** v13.823.357: cantidad del renglón (default 1 cuando no viene). */
+  cantidad?: number | null;
+  /** v13.823.357: total ya calculado en BD; manda sobre cantidad × unitario. */
+  costo_total?: number | null;
   moneda: string;
   proveedor?: string | null;
 }
@@ -42,7 +46,21 @@ export interface ConceptoCostoFromCotizacion {
 /**
  * Mapea filas de `cotizacion_costos` a inserts de `conceptos_costo` para un embarque dado.
  * Pura: no toca BD ni depende de tipos de Supabase en runtime.
+ *
+ * v13.823.357 (Auditoría YAGNI P2 #8): el monto es el TOTAL del renglón, igual
+ * que en la RPC `_crear_embarque_replicar_conceptos`: `costo_total` cuando
+ * existe y, si no, `cantidad × costo_unitario` (cantidad ausente = 1). Antes se
+ * copiaba sólo el costo unitario, así que un renglón de 3 × 100 llegaba al
+ * embarque como 100.
  */
+export function montoCostoRenglon(c: CotizacionCostoLike): number {
+  const total = Number(c.costo_total);
+  if (Number.isFinite(total) && total !== 0) return total;
+  const cantidad = Number(c.cantidad ?? 1);
+  const unitario = Number(c.costo_unitario) || 0;
+  return (Number.isFinite(cantidad) && cantidad > 0 ? cantidad : 1) * unitario;
+}
+
 export function mapCostosACostosEmbarque(
   costos: CotizacionCostoLike[],
   embarqueId: string,
@@ -50,7 +68,7 @@ export function mapCostosACostosEmbarque(
   return costos.map((c) => ({
     embarque_id: embarqueId,
     concepto: c.concepto,
-    monto: c.costo_unitario,
+    monto: montoCostoRenglon(c),
     moneda: c.moneda,
     proveedor_nombre: c.proveedor ?? null,
   }));

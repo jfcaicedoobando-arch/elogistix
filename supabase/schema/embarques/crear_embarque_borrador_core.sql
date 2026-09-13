@@ -110,6 +110,13 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  -- v13.823.357 · Auditoría YAGNI P1 #1/#3 y P2 #7: sin venta positiva, con
+  -- precio de venta capturado que no llegó a los conceptos, o con moneda no
+  -- soportada, el embarque nacería en cero o con importes deformados.
+  PERFORM public._assert_cotizacion_venta_valida(v_cot.id);
+
+
+
 
 
   IF v_cot.embarque_id IS NOT NULL THEN

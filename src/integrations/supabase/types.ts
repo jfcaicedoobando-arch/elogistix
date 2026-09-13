@@ -8555,6 +8555,10 @@ export type Database = {
         Args: { p_cotizacion_id: string; p_org: string }
         Returns: undefined
       }
+      _assert_cotizacion_venta_valida: {
+        Args: { p_cotizacion_id: string }
+        Returns: undefined
+      }
       _assert_embarque_abierto_locked: {
         Args: { p_embarque_id: string }
         Returns: string
