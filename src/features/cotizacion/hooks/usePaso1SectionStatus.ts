@@ -85,7 +85,11 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     // Basta con vincularla O capturar manualmente (consolidador + tarifa W/M).
     tarifa: tarifaOk({ esMaritimo, esLcl, sinFleteVenta, tarifaId, lclFleteManual }),
     condiciones: sinFleteVenta ? true : condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
-    cierre: esLcl ? true : (numContenedores ?? 0) >= 1,
+    // BL-COT-04: el número de contenedores sólo aplica a Marítimo FCL. En LCL
+    // y en aéreo/terrestre/multimodal la sección no pide contenedores, así que
+    // no puede bloquear el avance del paso 1.
+    cierre: esMaritimo && !esLcl ? (numContenedores ?? 0) >= 1 : true,
+
   };
 }
 

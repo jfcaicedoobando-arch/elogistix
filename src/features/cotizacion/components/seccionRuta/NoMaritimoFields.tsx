@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
-import { TransitoField, FclLclFields } from "./TarifaFields";
+import { TransitoField } from "./TarifaFields";
 import SeguroBlock from "./SeguroBlock";
 import type { TarifaCtx } from "./overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
@@ -24,7 +24,6 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
   const { watch, setValue } = ctx;
   const seguro = watch("seguro");
   const validezPropuesta = watch("validezPropuesta");
-  const tipoEmbarque = watch("tipoEmbarque");
 
   const hoy = useMemo(() => {
     const d = new Date();
@@ -77,7 +76,9 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
 
       <SeguroBlock ctx={ctx} seguro={seguro} />
 
-      {tipoEmbarque && <FclLclFields ctx={ctx} tipoEmbarque={tipoEmbarque} tarifaCtx={tarifaCtx} />}
+      {/* BL-COT-04: "Días libres en destino"/"Carta garantía"/"Días de
+          almacenaje" y la carga FCL/LCL son datos marítimos. Este bloque sólo
+          se renderiza en aéreo/terrestre/multimodal, donde no aplican. */}
     </>
   );
 }

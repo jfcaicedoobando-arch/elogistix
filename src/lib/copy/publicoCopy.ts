@@ -45,6 +45,9 @@ export const COPY_VALIDACION = {
   descripcionMercanciaRequerida: "Captura la descripción de la mercancía.",
   origenRequerido: "Captura el origen de la ruta.",
   destinoRequerido: "Captura el destino de la ruta.",
+  /** Marítimo FCL: la cotización se define por contenedor(es). */
+  contenedoresRequeridos: "Captura el número de contenedores (mínimo 1).",
+
   prospectoOportunidadRequerida:
     "Selecciona un lead u oportunidad existente del CRM, o cambia el destinatario a \"Cliente existente\".",
   prospectoEmpresaRequerida: "Ingresa el nombre de la empresa del prospecto.",

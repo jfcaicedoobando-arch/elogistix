@@ -16,6 +16,15 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
   const tipo = watch("tipo");
   const esTerrestre = modo === "Terrestre";
 
+  // BL-COT-04: al salir del marítimo el número de contenedores deja de aplicar;
+  // se limpia para no arrastrar un valor que llegaría al embarque.
+  useEffect(() => {
+    if (!modo || modo === "Marítimo") return;
+    if ((watch("numContenedores") ?? 0) !== 0) {
+      setValue("numContenedores", 0, { shouldValidate: false, shouldDirty: false });
+    }
+  }, [modo, setValue, watch]);
+
   // Mantener consistencia al cambiar modo: terrestre fuerza tipo válido + incoterm N/A.
   useEffect(() => {
     if (!esTerrestre) return;

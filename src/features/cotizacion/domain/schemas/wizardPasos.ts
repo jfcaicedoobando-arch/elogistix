@@ -109,7 +109,11 @@ export const rutaTerrestreSchema = z
     }
   });
 
+// Paso 1 · Contenedores (Marítimo FCL) — vive en su propio módulo.
+export { contenedoresMaritimoSchema } from "./wizardPasosContenedores";
+
 // ── Paso 1 · Flete LCL manual (cuando no hay tarifa vinculada) ───────────────
+
 
 export const fleteLclManualSchema = z
   .object({

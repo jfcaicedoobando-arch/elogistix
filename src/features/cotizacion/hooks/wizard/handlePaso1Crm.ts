@@ -17,8 +17,10 @@ import {
   datosGeneralesSchema,
   rutaTerrestreSchema,
   fleteLclManualSchema,
+  contenedoresMaritimoSchema,
   primerError,
 } from "@/features/cotizacion/domain/schemas/wizardPasos";
+
 
 
 
@@ -95,15 +97,29 @@ export function validateDatosGenerales(v: CotizacionFormValues): string | null {
   });
 }
 
+/**
+ * BL-COT-04: Marítimo FCL exige al menos un contenedor. Antes sólo fallaba al
+ * convertir a embarque (`LC_COT_CONTENEDORES_REQUERIDOS`).
+ */
+export function validateContenedores(v: CotizacionFormValues): string | null {
+  return primerError(contenedoresMaritimoSchema, {
+    modo: v.modo ?? "",
+    tipoEmbarque: v.tipoEmbarque ?? "",
+    numContenedores: v.numContenedores ?? 0,
+  });
+}
+
 export function validatePaso1(v: CotizacionFormValues): string | null {
   return (
     validateCliente(v) ??
     validateDatosGenerales(v) ??
     validateProspecto(v) ??
     validateTerrestre(v) ??
+    validateContenedores(v) ??
     validateMaritimo(v)
   );
 }
+
 
 
 // ── Validación inline (VF-09 / VB-34) ────────────────────────────────────────
