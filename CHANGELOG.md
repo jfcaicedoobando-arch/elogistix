@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.312] - 2026-09-13
+
+- **fix(seguridad)**: se reafirmaron los permisos de `current_user_org_id`, `set_garantia_estado` y `aprobar_factura_proveedor` (sin acceso público ni anónimo; sólo sesión válida y procesos del sistema) con migración correctiva y baseline H6 documentado.
+- **fix(errores)**: nuevo mensaje claro para `LC_EMBARQUE_CERRADO` ("el embarque está cerrado… reábrelo para hacer correcciones") en lugar del código técnico.
+- **refactor(Power of 10)**: `Cxp.tsx` y `tarifasColumns.tsx` bajan de 200 líneas extrayendo `CxpHeaderActions`, `CxpMobileCard` y `tarifasColumns.cells.tsx`; sin cambios visuales.
+- **fix(a11y)**: el nombre del archivo en las facturas de proveedor recibidas usa `Hint` + `aria-label` en vez del tooltip nativo.
+- **fix(tarifas)**: se conserva el aviso de desplazamiento horizontal bajo 2xl en la tabla de tarifas.
+- **test**: pruebas de permisos de "Crear embarque" alineadas con la RPC vigente (operación incluida) y guardrail P.2 de garantías apuntando a la migración que instala la máquina de estados y a la ACL vigente.
+
 ## [13.823.311] - 2026-09-13
 
 - **fix(comisiones · B-3)**: al registrar el pago de una liquidación, un reintento con exactamente los mismos datos (misma fecha, mismo método y misma referencia) ahora devuelve el pago ya registrado en lugar de mostrar el error "ya tiene un pago registrado"; si algún dato cambia, el aviso sigue igual. No cambian importes, estados, permisos ni la bitácora. Prueba nueva `supabase/tests/comision_pago_liquidacion_idempotente.sql`.
