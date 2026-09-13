@@ -172,7 +172,7 @@ export default function Embarques() {
       {!isEmptyState ? (
         <FloatingActionButton
           onClick={canCrear ? goNuevo : goNuevoDesdeCotizacion}
-          icon={<Plus className="h-6 w-6" />}
+          icon={canCrear ? <Plus className="h-6 w-6" /> : <ClipboardList className="h-6 w-6" />}
           label={canCrear ? "Nuevo embarque" : "Ver cotizaciones"}
         />
       ) : null}

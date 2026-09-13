@@ -48,7 +48,7 @@ export default function ResumenPL({
           </span>
         </div>
         <div className="flex justify-center pt-1">
-          <ProfitBadge porcentaje={totales.porcentaje} />
+          <ProfitBadge porcentaje={totales.porcentaje} venta={totales.totalVenta} />
         </div>
       </CardContent>
     </Card>

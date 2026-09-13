@@ -111,7 +111,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                   {formatNumber(totales.profit, { decimals: 2 })}
                 </span>
               </span>
-              <ProfitBadge porcentaje={totales.porcentaje} />
+              <ProfitBadge porcentaje={totales.porcentaje} venta={totales.totalVenta} />
             </span>
             <span className={cn("hidden xl:block", COL_COSTO.proveedor)} />
             <span className={cn("hidden xl:block", COL_COSTO.unidad)} />
@@ -135,7 +135,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             </span>
 
             <div className={cn("flex justify-center", COL_COSTO.margen)}>
-              <ProfitBadge porcentaje={totales.porcentaje} />
+              <ProfitBadge porcentaje={totales.porcentaje} venta={totales.totalVenta} />
             </div>
             <span className={COL_COSTO.acciones} />
           </div>
