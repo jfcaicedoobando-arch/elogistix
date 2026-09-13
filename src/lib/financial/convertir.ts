@@ -55,11 +55,15 @@ export function aMxn(
   if (normalizarMoneda(moneda) === "MXN") {
     return { monto: m, tc: 1, fuente: "moneda-local", completo: true };
   }
+  // v13.823.336 — el equivalente en pesos se redondea SIEMPRE a 2 decimales
+  // aquí, en el canon. Antes cada pantalla decidía cuándo redondear: el tablero
+  // acumulaba montos crudos y el detalle redondeaba por renglón, así que el
+  // mismo embarque se veía con diferencias de centavos entre pantallas.
   const directo = tcConfiable(tipoCambio);
-  if (directo) return { monto: m * directo, tc: directo, fuente: "tc-directo", completo: true };
+  if (directo) return { monto: roundMoney(m * directo), tc: directo, fuente: "tc-directo", completo: true };
 
   const fb = tcConfiable(opts?.fallback);
-  if (fb) return { monto: m * fb, tc: fb, fuente: "tc-fallback", completo: true };
+  if (fb) return { monto: roundMoney(m * fb), tc: fb, fuente: "tc-fallback", completo: true };
 
   return { monto: 0, tc: null, fuente: "sin-tc", completo: false };
 }
