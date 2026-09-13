@@ -49,13 +49,16 @@ export function MobileFiltersSheet({
 }: MobileFiltersSheetProps) {
   const fotoRef = useRef<unknown>(undefined);
   const aplicadoRef = useRef(false);
+  // `snapshot` se recrea en cada render; guardarlo en un ref evita volver a
+  // fotografiar los filtros mientras el panel sigue abierto.
+  const snapshotRef = useRef(snapshot);
+  snapshotRef.current = snapshot;
 
   useEffect(() => {
-    if (open && snapshot) {
-      fotoRef.current = snapshot();
-      aplicadoRef.current = false;
-    }
-  }, [open, snapshot]);
+    if (!open) return;
+    fotoRef.current = snapshotRef.current?.();
+    aplicadoRef.current = false;
+  }, [open]);
 
   const handleOpenChange = (v: boolean) => {
     if (!v && !aplicadoRef.current && restore && fotoRef.current !== undefined) {
