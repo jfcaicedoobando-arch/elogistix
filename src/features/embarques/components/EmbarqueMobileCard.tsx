@@ -6,8 +6,11 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 export interface EmbarqueMobileCardData {
+  /** Id del embarque: permite etiquetar borradores sin folio asignado. */
+  id?: string | null;
   modo: Parameters<typeof calcularEstadoEmbarque>[0];
   tipo: Parameters<typeof calcularEstadoEmbarque>[1];
   etd: Parameters<typeof calcularEstadoEmbarque>[2];
@@ -26,12 +29,13 @@ export interface EmbarqueMobileCardData {
 
 export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCardData }) {
   const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
+  const folio = labelExpediente(e.expediente, e.id);
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 font-semibold text-body">
           <ModoIcon modo={e.modo} size={14} />
-          <span className="truncate">{e.expediente}</span>
+          <span className="truncate">{folio}</span>
         </div>
         <div className="text-body-sm text-muted-foreground truncate mt-0.5">
           {toTitleCase(e.cliente_nombre)}

@@ -95,7 +95,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                       <TableCell className={`text-right text-body tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
-                      <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
+                      <TableCell className="text-right"><ProfitBadge porcentaje={pct} venta={fila.venta} /></TableCell>
                     </DetailTableRow>
                     {(canEdit || fila.notas) && (
                       <TableRow>
@@ -125,7 +125,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                 <TableCell className={`text-right tabular-nums ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>
                   {formatCurrency(totales.profit, moneda)}
                 </TableCell>
-                <TableCell className="text-right"><ProfitBadge porcentaje={totales.porcentaje} /></TableCell>
+                <TableCell className="text-right"><ProfitBadge porcentaje={totales.porcentaje} venta={totales.totalVenta} /></TableCell>
               </TableRow>
             </TableFooter>
           </Table>

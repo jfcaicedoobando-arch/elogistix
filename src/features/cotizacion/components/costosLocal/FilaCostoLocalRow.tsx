@@ -164,7 +164,7 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
         </span>
 
         <div className={cn("flex justify-center", COL_COSTO.margen)}>
-          <ProfitBadge porcentaje={pct} />
+          <ProfitBadge porcentaje={pct} venta={ventaTotal} />
         </div>
 
         <div className={cn("flex items-center justify-end gap-1", COL_COSTO.acciones)}>

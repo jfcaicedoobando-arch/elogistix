@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.336] - 2026-09-13
+
+- **fix(embarques)**: al editar un embarque, el paso de ruta ya no deja avanzar sin fecha de salida, fecha de llegada, ruta ni contenedor obligatorio; guardar un borrador incompleto sigue permitido.
+- **fix(embarques)**: salir del editor con cambios sin guardar avisa desde el primer paso e incluye los cambios de costos y ventas.
+- **fix(cotizaciones)**: cuando no hay venta capturada el margen muestra "—" con la nota "Sin venta capturada" en lugar de un engañoso 0.0%.
+- **fix(finanzas)**: el equivalente en pesos se redondea a dos decimales en un único lugar, así el tablero y el detalle dejan de diferir por centavos.
+- **fix(cotizaciones)**: la tarjeta de embarques distingue "no hay embarques" de "existe uno que tu puesto no puede consultar", y sólo sugiere "Crear embarque" a quien puede hacerlo.
+- **fix(facturación)**: los conceptos ya no dicen "En proforma" cuando el embarque no tiene proformas; las etiquetas quedan como "Listo para proforma" y "Proforma generada".
+- **fix(embarques)**: un embarque sin folio se identifica como "Borrador <id corto>" en tarjetas y listados, con el mismo texto para lectores de pantalla.
+- **fix(cotizaciones)**: si no hay cotizaciones aceptadas, el aviso explica cómo llegar a ese estado y ofrece crear una.
+- **fix(ui)**: pestañas del embarque con flechas visibles en escritorio y sin barra de desplazamiento permanente; la tabla de costos deja fija la columna de concepto para no esconder Estado y Pago; contadores de resultados en español natural.
+
 ## [13.823.335] - 2026-09-13
 
 - **test(cotizaciones)**: la prueba de "cotización ganadora" ya trae un concepto de venta real (1 × 4,000 MXN) en la cotización que se acepta por sistema, en lugar de un importe sin renglones. La regla que exige importe para aceptar queda intacta.

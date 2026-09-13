@@ -4,8 +4,7 @@
  * factura(s) ligadas y estado de pago.
  */
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,10 +18,10 @@ import {
   ordenarFilasPorAjuste,
   pagoBadgeClass,
   peorEstadoPago,
-  fmtFecha,
 } from "./grupoCostosProveedorHelpers";
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
+import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
 import { Hint } from "@/components/shared/Hint";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
@@ -112,10 +111,12 @@ export function GrupoCostosProveedor({
 
       {abierto && (
         <div className="overflow-x-auto">
-          <Table className="w-full text-body">
+          {/* v13.823.336 (HD 1280×720): anchos mínimos + concepto fijo para
+              que Estado y Pago no queden fuera de la vista. */}
+          <Table className="w-full min-w-[900px] text-body">
             <TableHeader className="bg-background border-b">
               <TableRow className="text-body-sm text-muted-foreground">
-                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="sticky left-0 z-10 bg-background min-w-[200px]">Concepto</DetailTableHead>
                 <DetailTableHead className="text-right">Cotizado</DetailTableHead>
                 <DetailTableHead className="text-right">Facturado</DetailTableHead>
                 <DetailTableHead>Ajuste</DetailTableHead>
@@ -133,7 +134,13 @@ export function GrupoCostosProveedor({
                 const pago = peorEstadoPago(f.facturas);
                 return (
                   <TableRow key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
-                    <TableCell>{f.concepto}</TableCell>
+                    <TableCell
+                      // Fondo opaco: la columna fija no puede dejar ver el
+                      // contenido que pasa por debajo al desplazar.
+                      className="sticky left-0 z-10 min-w-[200px] bg-card"
+                    >
+                      {f.concepto}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">{formatCurrency(f.cotizado, f.moneda)}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {f.real_facturado > 0 ? formatCurrency(f.real_facturado, f.moneda) : <span className="text-muted-foreground">—</span>}
@@ -142,41 +149,9 @@ export function GrupoCostosProveedor({
                       <AjusteChip descripcion={ajuste} />
                     </TableCell>
                     <TableCell>
-                      {f.facturas.length === 0 ? (
-                        <span className="text-muted-foreground text-body-sm">Sin factura</span>
-                      ) : (
-                        <TooltipProvider delayDuration={200}>
-                          <div className="flex flex-col gap-1">
-                            {f.facturas.map(fa => (
-                              <Tooltip key={fa.proveedor_factura_id}>
-                                <TooltipTrigger asChild>
-                                  <Link
-                                    to={`/compras/facturas/${fa.proveedor_factura_id}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    aria-label={`Abrir factura ${fa.folio_interno ?? fa.folio_proveedor}`}
-                                    className="w-fit"
-                                  >
-                                    <Badge variant="outline" className="w-fit gap-1 font-normal text-body-sm hover:bg-muted">
-                                      <FileText className="h-3 w-3" />
-                                      {fa.folio_interno ?? fa.folio_proveedor} · {fmtFecha(fa.fecha_emision)}
-                                    </Badge>
-                                  </Link>
-                                </TooltipTrigger>
-                                <TooltipContent className="text-body-sm">
-                                  <div className="font-medium">{fa.folio_interno ?? fa.folio_proveedor}</div>
-                                  <div>Folio proveedor: {fa.folio_proveedor}</div>
-                                  <div>Monto: {formatCurrency(fa.monto, f.moneda)}</div>
-                                  <div>Emisión: {fmtFecha(fa.fecha_emision)}</div>
-                                  {fa.fecha_vencimiento && <div>Vencimiento: {fmtFecha(fa.fecha_vencimiento)}</div>}
-                                  {fa.estatus_pago && <div>Pago: {fa.estatus_pago}</div>}
-                                  {fa.descripcion && <div className="text-muted-foreground max-w-xs">{fa.descripcion}</div>}
-                                </TooltipContent>
-                              </Tooltip>
-                            ))}
-                          </div>
-                        </TooltipProvider>
-                      )}
+                      <GrupoCostosFacturasCell fila={f} />
                     </TableCell>
+
                     <TableCell>
                       <Badge variant="outline" className={`${estatusBadgeClass(f.estatus_renglon)} text-body-sm`}>
                         {estatusLabel(f.estatus_renglon)}

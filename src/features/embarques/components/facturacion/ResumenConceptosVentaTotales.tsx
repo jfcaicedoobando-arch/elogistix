@@ -61,22 +61,22 @@ export function ResumenConceptosVentaTotales({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border-t bg-muted/30">
       <ColumnaTotal
-        titulo="Pendiente"
+        titulo="Listo para proforma"
         count={pendientesCount}
         total={totales.pendiente}
         cardClass="bg-background"
         badgeClass="bg-secondary text-secondary-foreground"
         icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-        emptyText="Sin conceptos pendientes"
+        emptyText="Sin conceptos por proformar"
       />
       <ColumnaTotal
-        titulo="En proforma"
+        titulo="Proforma generada"
         count={enProformaCount}
         total={totales.enProforma}
         cardClass="border-info/30 bg-info/5"
         badgeClass="bg-info/15 [color:hsl(var(--info))] border-info/30"
         icon={<FileText className="h-4 w-4 [color:hsl(var(--info))]" />}
-        emptyText="Sin proformas pendientes"
+        emptyText="Sin proformas generadas"
       />
       <ColumnaTotal
         titulo="Facturado"

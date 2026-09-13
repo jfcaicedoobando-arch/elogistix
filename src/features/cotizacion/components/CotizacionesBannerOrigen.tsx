@@ -7,7 +7,14 @@ import { useLocation } from "react-router-dom";
 import { Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function CotizacionesBannerOrigen() {
+interface Props {
+  /** ¿Hay al menos una cotización Aceptada disponible para convertir? */
+  hayAceptadas?: boolean;
+  /** Abre el alta de cotización (sólo si el puesto puede capturar). */
+  onNuevaCotizacion?: () => void;
+}
+
+export function CotizacionesBannerOrigen({ hayAceptadas = true, onNuevaCotizacion }: Props = {}) {
   const location = useLocation();
   const [cerrado, setCerrado] = useState(false);
   const vieneDeEmbarques =
@@ -22,10 +29,25 @@ export function CotizacionesBannerOrigen() {
       className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-body"
     >
       <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden />
-      <p className="flex-1">
-        Los embarques se crean desde una cotización aceptada. Abre una cotización
-        con estado <strong>Aceptada</strong> y usa la acción <strong>Crear embarque</strong>.
-      </p>
+      <div className="flex-1 space-y-2">
+        {hayAceptadas ? (
+          <p>
+            Los embarques se crean desde una cotización aceptada. Abre una cotización
+            con estado <strong>Aceptada</strong> y usa la acción <strong>Crear embarque</strong>.
+          </p>
+        ) : (
+          <p>
+            Los embarques se crean desde una cotización aceptada y ahora no hay ninguna
+            en ese estado. Captura una cotización, envíala al cliente y márcala como{" "}
+            <strong>Aceptada</strong>; entonces podrás generar el embarque.
+          </p>
+        )}
+        {!hayAceptadas && onNuevaCotizacion && (
+          <Button type="button" size="sm" variant="outline" onClick={onNuevaCotizacion}>
+            Nueva cotización
+          </Button>
+        )}
+      </div>
       <Button
         type="button"
         variant="ghost"

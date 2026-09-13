@@ -40,7 +40,10 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
   const { registerRef } = useFocusSection();
 
   // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
-  const estadosConceptos = useMemo(() => calcularEstadosConceptos(conceptos), [conceptos]);
+  const estadosConceptos = useMemo(
+    () => calcularEstadosConceptos(conceptos, proformas.length > 0),
+    [conceptos, proformas.length],
+  );
 
   // R179-02: criterio único de elegibilidad (espejo del candado del RPC):
   // sólo pendientes sin vínculo a proforma. Antes se usaba

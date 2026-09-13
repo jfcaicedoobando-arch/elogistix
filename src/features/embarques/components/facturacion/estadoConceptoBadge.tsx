@@ -14,16 +14,24 @@ export type EstadoConcepto = "pendiente" | "en_proforma" | "facturado";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
-/** Mapa `conceptoId → estado tri-valor` leído directo de BD. */
+/**
+ * Mapa `conceptoId → estado tri-valor` leído directo de BD.
+ *
+ * v13.823.336 — fuente única de verdad: si el embarque no tiene ninguna
+ * proforma viva, un concepto marcado `en_proforma` (bandera huérfana de una
+ * proforma eliminada) se reporta como `pendiente`. Antes la fila decía
+ * "En proforma" mientras el stepper decía "Sin proformas".
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export function calcularEstadosConceptos(
   conceptos: ConceptoVenta[],
+  hayProformas = true,
 ): Map<string, EstadoConcepto> {
   const mapa = new Map<string, EstadoConcepto>();
   for (const c of conceptos) {
     const ef = c.estado_facturacion;
     if (ef === "facturado") mapa.set(c.id, "facturado");
-    else if (ef === "en_proforma") mapa.set(c.id, "en_proforma");
+    else if (ef === "en_proforma" && hayProformas) mapa.set(c.id, "en_proforma");
     else mapa.set(c.id, "pendiente");
   }
   return mapa;
@@ -44,13 +52,13 @@ export function EstadoConceptoBadge({ estado }: BadgeProps) {
   if (estado === "en_proforma") {
     return (
       <Badge variant="info">
-        <FileText className="h-3 w-3 mr-1" /> En proforma
+        <FileText className="h-3 w-3 mr-1" /> Proforma generada
       </Badge>
     );
   }
   return (
     <Badge variant="neutral">
-      <Clock className="h-3 w-3 mr-1" /> Pendiente
+      <Clock className="h-3 w-3 mr-1" /> Listo para proforma
     </Badge>
   );
 }

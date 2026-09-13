@@ -3,17 +3,21 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { CotizacionDetalleEmbarques } from "@/features/cotizacion/components/CotizacionDetalleEmbarques";
 
-const embarque = {
+const embarque: { id: string; expediente: string | null; estado: string; created_at: string } = {
   id: "emb-1",
   expediente: "ELABC0001",
   estado: "Borrador",
   created_at: "2026-09-01T12:00:00.000Z",
 };
 
-function renderCard(embarques = [embarque], estado = "En operación") {
+function renderCard(embarques = [embarque], estado = "En operación", puedeCrearEmbarque = false) {
   return render(
     <MemoryRouter>
-      <CotizacionDetalleEmbarques embarques={embarques} cotizacionEstado={estado} />
+      <CotizacionDetalleEmbarques
+        embarques={embarques}
+        cotizacionEstado={estado}
+        puedeCrearEmbarque={puedeCrearEmbarque}
+      />
     </MemoryRouter>,
   );
 }
@@ -30,7 +34,23 @@ describe("CotizacionDetalleEmbarques · accesibilidad por teclado", () => {
   it("sin embarques y con estado que los sugiere muestra el aviso, no enlaces", () => {
     renderCard([], "Cerrada");
     expect(screen.queryByRole("link")).toBeNull();
-    expect(screen.getByText(/no hay embarques vinculados/i)).toBeInTheDocument();
+    expect(screen.getByText(/aquí no\s+se muestra ningún embarque/i)).toBeInTheDocument();
+  });
+
+  it("sin permiso explica que el embarque puede existir y no verse", () => {
+    renderCard([], "En operación", false);
+    expect(screen.getByText(/no tenga permiso para consultarlo/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Crear embarque/i)).toBeNull();
+  });
+
+  it("con permiso sí guía a la acción Crear embarque", () => {
+    renderCard([], "En operación", true);
+    expect(screen.getByText(/Crear embarque/i)).toBeInTheDocument();
+  });
+
+  it("usa el fallback de borrador cuando el expediente viene vacío", () => {
+    renderCard([{ ...embarque, expediente: null }]);
+    expect(screen.getByRole("link", { name: /abrir embarque Borrador emb-1/i })).toBeInTheDocument();
   });
 
   it("sin embarques y con estado que no los sugiere no renderiza la tarjeta", () => {
