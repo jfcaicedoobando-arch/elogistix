@@ -25,17 +25,49 @@ import { isEmail } from './emailValidation.ts';
 import { jsonResponse } from "../_shared/response.ts";
 export { isEmail };
 
+/**
+ * v13.823.355 (YAGNI r2 · P1) — candados de ciclo de vida del correo.
+ *
+ * La UI ocultaba el botón, pero la función podía invocarse directamente:
+ * 1) una cotización de prospecto SIN oportunidad ligada no se envía
+ *    (`LC_COT_SIN_OPORTUNIDAD`, el mismo código que emite la base);
+ * 2) los estados terminales no vigentes (Rechazada/Vencida/Archivada) no se
+ *    envían ni se reenvían. Enviada/Aceptada sí (reenvío legítimo).
+ */
+export const ESTADOS_NO_ENVIABLES = ['Rechazada', 'Vencida', 'Archivada'];
+
+export function validarCotizacionEnviable(
+  cot: Cotizacion,
+  cors: Record<string, string>,
+): Response | null {
+  if (cot.es_prospecto && !cot.oportunidad_id) {
+    return jsonResponse({
+      error: 'Liga la cotización a una oportunidad del CRM antes de enviarla al prospecto',
+      code: 'LC_COT_SIN_OPORTUNIDAD',
+    }, 400, cors);
+  }
+  if (ESTADOS_NO_ENVIABLES.includes(String(cot.estado))) {
+    return jsonResponse({
+      error: `La cotización está ${cot.estado} y ya no puede enviarse; re-cotiza o duplícala para enviar una versión vigente`,
+      code: 'LC_COT_ESTADO_NO_ENVIABLE',
+    }, 400, cors);
+  }
+  return null;
+}
+
 export async function handlePrepare(
   admin: ReturnType<typeof createClient>,
   pdfPath: string,
   cors: Record<string, string>,
   userId: string,
-  organizationId: string,
+  cot: Cotizacion,
 ): Promise<Response> {
+  const bloqueo = validarCotizacionEnviable(cot, cors);
+  if (bloqueo) return bloqueo;
   // v13.823.346 — `prepare` sólo validaba membresía: cualquier miembro (incluido
   // `viewer` o finanzas) obtenía una URL firmada de subida y podía envenenar el
   // PDF de la cotización. Se exige el mismo rol de escritura que `send`.
-  const okRol = await authorizeOrgRole(admin, userId, organizationId, ROLES_ESCRITURA_COTIZACIONES);
+  const okRol = await authorizeOrgRole(admin, userId, cot.organization_id, ROLES_ESCRITURA_COTIZACIONES);
   if (!okRol) {
     return jsonResponse({ error: 'Tu rol no puede enviar cotizaciones' }, 403, cors);
   }
@@ -185,6 +217,8 @@ async function validarEnvio(
   parsed: SendBodyParsed,
   cors: Record<string, string>,
 ): Promise<Response | null> {
+  const bloqueo = validarCotizacionEnviable(cot, cors);
+  if (bloqueo) return bloqueo;
   if (parsed.validRecipients.length === 0) {
     return jsonResponse({ error: 'Al menos un destinatario válido es requerido' }, 400, cors);
   }
