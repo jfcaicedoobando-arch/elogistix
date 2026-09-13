@@ -153,6 +153,12 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
         {errors.consignatario && <p className="text-body-sm text-destructive">{errors.consignatario}</p>}
         {consignatario === '__otro__' && <Input aria-label="Nombre del consignatario" placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
       </div>
+      {/* v13.823.321: el borrador se guarda incompleto, pero estos datos se
+          exigen al avanzar a Confirmado (misma regla que la RPC). */}
+      <p className="text-body-sm text-muted-foreground md:col-span-2">
+        Shipper y consignatario son necesarios para avanzar a Confirmado; el borrador puede guardarse sin ellos.
+      </p>
     </>
+
   );
 }
