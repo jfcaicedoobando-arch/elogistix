@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.326] - 2026-09-13
+
+- **fix(cotizaciones UX)**: “Ver cotizaciones” ya no dispara un aviso global persistente; ahora envía el contexto al aviso local de la lista `/cotizaciones`, que desaparece al entrar a `/cotizaciones/nueva` y no cubre el stepper. Sin cambios al flujo de conversión.
+
 ## [13.823.325] - 2026-09-13
 
 - **fix(a11y)**: en `StepIndicator` se reemplazó el atributo nativo `title=` por el patrón accesible `Hint`, conservando `aria-label` completo y las etiquetas cortas responsive. Se actualizó `StepIndicator.test.tsx` para verificar que el tooltip no depende de `title` nativo.

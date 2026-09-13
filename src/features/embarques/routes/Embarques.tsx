@@ -14,7 +14,6 @@ import { EmbarquesSortIndicator } from "@/features/embarques/components/Embarque
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
 import { useEmbarquesPageController } from "@/features/embarques/hooks";
 import { EmbarqueMobileCard } from "@/features/embarques/components/EmbarqueMobileCard";
-import { notifyInfo } from "@/lib/ui/appFeedback";
 import { EmbarquesTablaVacia } from "@/features/embarques/components/EmbarquesTablaVacia";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
@@ -51,11 +50,7 @@ export default function Embarques() {
   // de esconder la puerta de entrada, explicamos el prerrequisito y llevamos a
   // Cotizaciones (navegación proactiva, no un error después del hecho).
   const goNuevoDesdeCotizacion = () => {
-    notifyInfo(undefined, {
-      title: "Los embarques se crean desde una cotización",
-      description: "Abre la cotización aceptada del cliente y usa \"Crear embarque\" para generar el expediente.",
-    });
-    navigate("/cotizaciones");
+    navigate("/cotizaciones", { state: { origen: "nuevo-embarque" } });
   };
   // E-12 (auditoría visual 2026-08-24): mientras la consulta no resuelve, el
   // encabezado no puede afirmar "0 embarques" — se contradecía con el skeleton
