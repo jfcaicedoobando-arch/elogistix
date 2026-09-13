@@ -12416,9 +12416,16 @@ BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
-  PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+  -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
+  -- Una cotización ya Aceptada / En operación congeló sus términos al aceptarse
+  -- y debe poder convertirse a embarque aunque la vigencia haya expirado; el
+  -- resto de estados sigue bloqueado por `enforce_cotizacion_vigente`.
+  IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
+    PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
+  END IF;
+
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   IF p_decision='sin_cambios' THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
