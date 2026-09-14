@@ -33,4 +33,25 @@ describe("calcularAlertasPnl", () => {
     expect(r.alertaMargen).toBe(false);
     expect(r.margenReal).toBe(0);
   });
+
+  // v13.823.366 — Borrador sin importes reales no es desviación financiera.
+  it("Borrador sin venta ni costo real → sin alertas y con bandera de contexto", () => {
+    const r = calcularAlertasPnl({
+      ventaReal: 0, costoReal: 0, ventaPresup: 50000, costoPresup: 40000,
+      deltaCostoPct: -100, estadoEmbarque: "Borrador",
+    });
+    expect(r.sinActividadReal).toBe(true);
+    expect(r.alertaVenta).toBe(false);
+    expect(r.alertaSobrecosto).toBe(false);
+    expect(r.alertaMargen).toBe(false);
+  });
+
+  it("embarque operativo con venta menor a la presupuestada SÍ alerta", () => {
+    const r = calcularAlertasPnl({
+      ventaReal: 30000, costoReal: 20000, ventaPresup: 50000, costoPresup: 40000,
+      deltaCostoPct: -50, estadoEmbarque: "En Tránsito",
+    });
+    expect(r.sinActividadReal).toBe(false);
+    expect(r.alertaVenta).toBe(true);
+  });
 });

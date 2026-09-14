@@ -27,6 +27,17 @@ describe("calcularEstadosConceptos", () => {
     expect(mapa.get("c1")).toBe("pendiente");
   });
 
+  // v13.823.366 — En Borrador el concepto no puede pasar a proforma.
+  it("en Borrador marca los pendientes como pendiente_confirmar", () => {
+    const mapa = calcularEstadosConceptos([concepto("c1", "pendiente")], false, false);
+    expect(mapa.get("c1")).toBe("pendiente_confirmar");
+  });
+
+  it("confirmado vuelve a la semántica pendiente", () => {
+    const mapa = calcularEstadosConceptos([concepto("c1", "pendiente")], false, true);
+    expect(mapa.get("c1")).toBe("pendiente");
+  });
+
   it("nunca degrada un concepto ya facturado", () => {
     const mapa = calcularEstadosConceptos([concepto("c1", "facturado")], false);
     expect(mapa.get("c1")).toBe("facturado");
@@ -38,6 +49,9 @@ describe("EstadoConceptoBadge", () => {
     const { unmount } = render(<EstadoConceptoBadge estado="pendiente" />);
     expect(screen.getByText("Listo para proforma")).toBeInTheDocument();
     unmount();
+    const b = render(<EstadoConceptoBadge estado="pendiente_confirmar" />);
+    expect(screen.getByText("Pendiente de confirmar")).toBeInTheDocument();
+    b.unmount();
     render(<EstadoConceptoBadge estado="en_proforma" />);
     expect(screen.getByText("Proforma generada")).toBeInTheDocument();
   });
