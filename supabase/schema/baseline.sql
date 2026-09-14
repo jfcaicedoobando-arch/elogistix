@@ -16422,7 +16422,9 @@ DECLARE
   v_uid uuid := auth.uid();
   v_uemail text;
   v_now timestamptz := now();
+  v_id uuid;
   v_expediente text;
+  v_label text;
   v_org uuid;
   v_cotizacion_id uuid;
   v_estado text;
@@ -16438,12 +16440,17 @@ DECLARE
   v_remaining int;
   v_motivos jsonb;
 BEGIN
-  SELECT expediente, organization_id, cotizacion_id, estado, cerrado_at
-    INTO v_expediente, v_org, v_cotizacion_id, v_estado, v_cerrado_at
+  -- v13.823.387: la existencia se determina por el registro, NO por el
+  -- expediente. Un embarque en Borrador todavía sin expediente asignado
+  -- devolvía "Embarque no encontrado" y no podía eliminarse nunca.
+  SELECT id, expediente, organization_id, cotizacion_id, estado, cerrado_at
+    INTO v_id, v_expediente, v_org, v_cotizacion_id, v_estado, v_cerrado_at
   FROM public.embarques WHERE id = p_embarque_id;
-  IF v_expediente IS NULL THEN
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
+  v_label := COALESCE(NULLIF(btrim(COALESCE(v_expediente, '')), ''),
+                      'Borrador ' || right(p_embarque_id::text, 6));
   -- FIX C1 · Guard de rol + tenant (S5-01).
   IF NOT (
     public.has_role(v_uid, 'super_admin'::app_role)
@@ -16506,9 +16513,9 @@ BEGIN
       'comisiones_definitivas', v_comisiones,
       'proformas', v_proformas,
       'cerrado', (v_estado = 'Cerrado' OR v_cerrado_at IS NOT NULL),
-      'expediente', v_expediente
+      'expediente', v_label
     );
-    RAISE EXCEPTION 'LC_EMBARQUE_BLOQUEADO: el embarque % tiene dependencias fiscales o está cerrado', v_expediente
+    RAISE EXCEPTION 'LC_EMBARQUE_BLOQUEADO: el embarque % tiene dependencias fiscales o está cerrado', v_label
       USING HINT = v_motivos::text,
             ERRCODE = 'check_violation';
   END IF;
@@ -16547,7 +16554,7 @@ BEGIN
     INSERT INTO public.bitacora_actividad
       (usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, organization_id)
     VALUES
-      (v_uid, v_uemail, 'eliminar_embarque', 'embarques', p_embarque_id, v_expediente,
+      (v_uid, v_uemail, 'eliminar_embarque', 'embarques', p_embarque_id, v_label,
        jsonb_build_object(
          'cotizacion_revertida', (v_cotizacion_id IS NOT NULL AND v_remaining = 0),
          'estado_previo', v_estado
