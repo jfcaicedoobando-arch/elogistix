@@ -115,10 +115,10 @@ BEGIN
       COALESCE(v_err, '<ninguno>');
   END IF;
 
-  -- 5) Caso D: las informativas siguen exentas.
+  -- 5) Caso D (B18, v13.823.379): las informativas ya NO son convertibles.
   -- Una informativa exige vigencia y al menos una tarifa (trigger
   -- validate_cotizacion_informativa); se cumple para que el único candado bajo
-  -- prueba siga siendo el de costos.
+  -- prueba sea el de tipo de documento.
   INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo,
                                    tipo_documento, conceptos_venta,
                                    vigencia_desde, vigencia_hasta, tarifas_informativas)
@@ -136,8 +136,9 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN
     v_err := SQLERRM;
   END;
-  IF v_err IS NOT NULL THEN
-    RAISE EXCEPTION 'REGRESION: una cotización informativa dejó de estar exenta del candado (error: %)', v_err;
+  IF v_err IS NULL OR v_err NOT LIKE '%LC_COT_INFORMATIVA%' THEN
+    RAISE EXCEPTION 'REGRESION: una cotización informativa (tarifario) volvió a ser convertible (error: %)',
+      COALESCE(v_err, '<ninguno>');
   END IF;
 
   RAISE NOTICE 'cotizacion_convertir_sin_costos: PASS';
