@@ -45,6 +45,12 @@ DECLARE
   v_ag_nueva       uuid;
   v_mon_origen     text;
   v_mon_nueva      text;
+  v_ruta_origen    uuid;
+  v_ruta_nueva     uuid;
+  v_cont_origen    uuid;
+  v_cont_nueva     uuid;
+  v_nav_nueva      uuid;
+  v_nav_nombre     text;
   v_actualizados   integer := 0;
 BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
@@ -63,10 +69,12 @@ BEGIN
   -- Coherencia global de la sustituta: mezclar precios de una tarifa con el
   -- proveedor/moneda sembrados de otra produciría un costo inauditable.
   IF v_es_sustitucion THEN
-    SELECT t.agente_id, t.moneda INTO v_ag_nueva, v_mon_nueva
+    SELECT t.agente_id, t.moneda, t.ruta_id, t.tipo_contenedor_id, t.naviera_id
+      INTO v_ag_nueva, v_mon_nueva, v_ruta_nueva, v_cont_nueva, v_nav_nueva
       FROM public.costeo_tarifas t
      WHERE t.id = p_tarifa_id_aplicada AND t.organization_id = v_org;
-    SELECT t.agente_id, t.moneda INTO v_ag_origen, v_mon_origen
+    SELECT t.agente_id, t.moneda, t.ruta_id, t.tipo_contenedor_id
+      INTO v_ag_origen, v_mon_origen, v_ruta_origen, v_cont_origen
       FROM public.costeo_tarifas t
      WHERE t.id = v_tarifa_origen AND t.organization_id = v_org;
 
@@ -81,6 +89,20 @@ BEGIN
     IF v_tarifa_origen IS NOT NULL AND upper(btrim(COALESCE(v_mon_nueva, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_mon_origen, ''))) THEN
       RAISE EXCEPTION 'La tarifa sustituta está en otra moneda (% vs %): no se puede aplicar sin recotizar. Revisa y selecciona una tarifa en la misma moneda.',
         v_mon_nueva, v_mon_origen USING ERRCODE = 'P0001';
+    END IF;
+    -- v13.823.392 · Auditoría cotización→embarque #3: la BD es la cerradura.
+    -- El buscador de tarifas permitía elegir OTRA ruta u OTRO tipo de
+    -- contenedor compatible en agente+moneda: se aplicaban sus precios al
+    -- embarque conservando puerto/naviera originales (cabecera de una tarifa
+    -- con precio de otra). La sustituta debe ser de la MISMA ruta y el MISMO
+    -- tipo de contenedor/servicio que la cotización.
+    IF v_tarifa_origen IS NOT NULL AND v_ruta_nueva IS DISTINCT FROM v_ruta_origen THEN
+      RAISE EXCEPTION 'LC_TARIFA_RUTA_INCOMPATIBLE: la tarifa sustituta es de otra ruta que la cotización; selecciona una tarifa de la misma ruta o recotiza.'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF v_tarifa_origen IS NOT NULL AND v_cont_nueva IS DISTINCT FROM v_cont_origen THEN
+      RAISE EXCEPTION 'LC_TARIFA_TIPO_INCOMPATIBLE: la tarifa sustituta es de otro tipo de contenedor/servicio que la cotización; selecciona una tarifa del mismo tipo o recotiza.'
+        USING ERRCODE = 'P0001';
     END IF;
   END IF;
 
@@ -187,6 +209,20 @@ BEGIN
       v_actualizados := v_actualizados + 1;
     END LOOP;
   END LOOP;
+
+  -- v13.823.392 · #3 (cont.): si la sustitución válida cambia de naviera, la
+  -- cabecera del embarque debe seguir a los precios aplicados, en la MISMA
+  -- transacción. Antes quedaba el precio de una tarifa con la naviera de otra.
+  IF v_es_sustitucion THEN
+    SELECT n.name INTO v_nav_nombre
+      FROM public.navieras n WHERE n.id = v_nav_nueva;
+    UPDATE public.embarques e
+       SET tarifa_id  = p_tarifa_id_aplicada,
+           naviera_id = COALESCE(v_nav_nueva, e.naviera_id),
+           naviera    = COALESCE(v_nav_nombre, e.naviera),
+           updated_at = now()
+     WHERE e.id = p_embarque_id;
+  END IF;
 
   IF v_actualizados > 0 THEN
     PERFORM public._recompute_totales_embarque(p_embarque_id);

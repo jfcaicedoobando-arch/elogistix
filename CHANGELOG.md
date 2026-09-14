@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.392] - 2026-09-15
+
+- **fix(cotizaciones · candado de costos)**: nueva `public.cotizacion_tiene_costos(uuid)` (SECURITY DEFINER, sólo booleano, acotada a la organización activa) y `tieneCostosCargados` la consume. Antes la cuenta directa sobre `cotizacion_costos` quedaba filtrada por RLS para roles que SÍ pueden convertir pero no ven importes (`operador`), produciendo el falso "la cotización no tiene costos cargados". No se amplía la visibilidad de montos. Espejo: `supabase/schema/cotizaciones/cotizacion_tiene_costos.sql`.
+- **fix(conversión · TC multi-moneda)**: `public.crear_embarque_borrador_core` exige `tipo_cambio_usd` evaluando la **unión** de monedas efectivas de `conceptos_venta` y de `cotizacion_costos` vivos (importe cero no cuenta). Antes una venta en USD con costos en MXN generaba embarque multi-moneda sin TC sellado (`LC_COT_TC_REQUERIDO`).
+- **fix(tarifa sustituida · ruta/tipo)**: `public._embarque_aplicar_tarifa_decidida` rechaza sustitutas de otra ruta (`LC_TARIFA_RUTA_INCOMPATIBLE`) u otro tipo de contenedor/servicio (`LC_TARIFA_TIPO_INCOMPATIBLE`) y, cuando la sustitución válida cambia de naviera, actualiza `tarifa_id`, `naviera_id` y `naviera` del embarque en la misma transacción. La UI precarga el buscador con la ruta y tipo de la cotización (`useFiltrosTarifaCotizacion`); la BD es la cerradura.
+- **fix(auditoría de sustitución)**: nueva `public._embarque_delta_tarifa_sustituida(uuid, uuid)`; para `p_decision='sustituida'` el delta persistido en `embarques.tarifa_delta_jsonb` y en bitácora se calcula en servidor contra la tarifa elegida, ya no se confía en `p_delta_jsonb` del navegador. Las demás decisiones conservan el snapshot recibido.
+- **fix(conceptos de venta legacy)**: `public._assert_cotizacion_venta_valida` valida TODAS las líneas con descripción (cantidad, precio unitario, total y tasa de IVA) y responde `LC_COT_VENTA_IMPORTE_INVALIDO` con la descripción de la fila, en vez de abortar más adelante con "invalid input syntax for type numeric" al replicar conceptos.
+- Cobertura: `supabase/tests/lote_cotizacion_embarque_auditoria.sql`, `supabase/tests/tarifa_sustituida_ruta_y_delta.sql`, `candadoCostos.test.ts`.
+
 ## [13.823.391] - 2026-09-14
 
 - **fix(cotizaciones · permisos)**: `public.puede_ver_costos_cotizacion` incluye el rol `coordinador_logistico`. Sin él, la política `Tenant read cotizacion_costos` filtraba todas las filas **sin error** y el candado de UI (`tieneCostosCargados`) concluía "la cotización no tiene costos cargados (paso 2)" al crear el embarque, aunque la cotización sí tuviera el desglose (caso COT-2026-0249). El servidor (`_assert_cotizacion_venta_valida`, SECURITY DEFINER) siempre lo evaluó bien. No se cambia ninguna otra regla de conversión ni el aislamiento por organización. Espejo: `supabase/schema/cotizaciones/puede_ver_costos_cotizacion.sql`. Cobertura: `supabase/tests/costos_cotizacion_coordinador_logistico.sql`.

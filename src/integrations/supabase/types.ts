@@ -8741,6 +8741,10 @@ export type Database = {
         }
         Returns: number
       }
+      _embarque_delta_tarifa_sustituida: {
+        Args: { p_cotizacion_id: string; p_tarifa_id_aplicada: string }
+        Returns: Json
+      }
       _es_rol_interno: { Args: never; Returns: boolean }
       _log_provisioning_step: {
         Args: {
@@ -9674,6 +9678,10 @@ export type Database = {
       costeo_tarifa_estado_actual: {
         Args: { p_estado: string; p_vigente_hasta: string }
         Returns: string
+      }
+      cotizacion_tiene_costos: {
+        Args: { p_cotizacion_id: string }
+        Returns: boolean
       }
       cotizacion_totales_conceptos: {
         Args: { p_conceptos: Json }

@@ -16,6 +16,7 @@ import { AlertTriangle } from "lucide-react";
 import { RevalidarTarifaModal } from "@/features/cotizacion/components/revalidacion/RevalidarTarifaModal";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { useCrearEmbarqueConRevalidacion } from "@/features/cotizacion/hooks/useCrearEmbarqueConRevalidacion";
+import { useFiltrosTarifaCotizacion } from "@/features/cotizacion/hooks/useFiltrosTarifaCotizacion";
 
 interface Props {
   cotizacionId: string;
@@ -40,6 +41,10 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
     handleSolicitarReaprobacion,
     handleCrearConReaprobacion,
   } = useCrearEmbarqueConRevalidacion(cotizacionId);
+
+  // #3: el buscador arranca acotado a la ruta y tipo de contenedor de la
+  // cotización; la base rechaza cualquier sustituta incompatible.
+  const filtrosTarifa = useFiltrosTarifaCotizacion(cotizacionId, buscarOpen);
 
   return (
     <>
@@ -81,6 +86,7 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
         open={buscarOpen}
         onOpenChange={setBuscarOpen}
         selectLabel="Usar esta tarifa para el embarque"
+        initial={filtrosTarifa}
         onElegir={handleTarifaElegida}
       />
     </>
