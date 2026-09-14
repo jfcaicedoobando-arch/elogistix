@@ -66,6 +66,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     (c) => c.estado_facturacion !== "en_proforma",
   ).length;
 
+  // v13.823.366 — Preflight de "Avanzar a Confirmado": el header muestra los
+  // faltantes ANTES del diálogo genérico de confirmación (misma regla que la
+  // RPC `avanzar_estado_embarque` / `LC_CONFIRMADO_INCOMPLETO`).
+  const faltantesConfirmado = embarque && siguienteEstado === "Confirmado"
+    ? faltantesParaConfirmado(embarque, contenedores.length)
+    : [];
+
   const [warnCierreOpen, setWarnCierreOpen] = useState(false);
   const [warnDocsOpen, setWarnDocsOpen] = useState(false);
   const [blockDocsOpen, setBlockDocsOpen] = useState(false);
@@ -178,7 +185,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     handleCancelar,
     tieneDeudaPendiente,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
-    docsFaltantes, docsBloqueantes,
+    docsFaltantes, docsBloqueantes, faltantesConfirmado,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes, siguienteEstado,
