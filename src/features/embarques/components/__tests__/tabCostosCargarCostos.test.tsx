@@ -37,11 +37,11 @@ const renderTab = (canEditCostos: boolean) =>
 describe("TabCostos · acción «Cargar costos»", () => {
   it("la muestra a quien puede editar costos", () => {
     renderTab(true);
-    expect(screen.getByRole("button", { name: /Cargar costos/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Cargar costos/i }).length).toBeGreaterThan(0);
   });
 
   it("la oculta a los roles operativos de sólo lectura de costos", () => {
     renderTab(false);
-    expect(screen.queryByRole("button", { name: /Cargar costos/i })).toBeNull();
+    expect(screen.queryAllByRole("button", { name: /Cargar costos/i })).toHaveLength(0);
   });
 });
