@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { FileText, Link2 as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Hint } from "@/components/shared/Hint";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+
 import {
   chipsArchivosEntrante,
   etiquetaEstadoEntrante,
@@ -37,20 +39,42 @@ interface Props {
   onCorregir?: (row: FacturaEntranteRow) => void;
 }
 
+/**
+ * B1 (v13.823.394): el folio interno es informativo para los roles operativos
+ * (coordinador logístico / gerente de operaciones): ven el dato dentro del
+ * expediente, pero sin enlace a `/compras/facturas/:id`, ruta que les está
+ * negada. Sólo `canViewFinancials` conserva el enlace a CxP.
+ */
 function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
+  const { canViewFinancials } = usePermissions();
   const folio = row.proveedor_facturas?.folio_interno;
   if (!row.proveedor_factura_id) return null;
+  const clases =
+    "inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 font-mono text-body-sm tabular-nums text-primary";
+
+  if (!canViewFinancials) {
+    return (
+      <Hint label="Factura de proveedor ya vinculada a este embarque">
+        <span className={clases} tabIndex={0} aria-label={`Factura vinculada ${folio ?? ""}`}>
+          <LinkIcon className="size-3" />
+          {folio ?? "Vinculada"}
+        </span>
+      </Hint>
+    );
+  }
+
   return (
     <Link
       to={`/compras/facturas/${row.proveedor_factura_id}`}
-      className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 font-mono text-body-sm tabular-nums text-primary hover:bg-primary/10"
+      className={`${clases} hover:bg-primary/10`}
       title="Ver la factura de proveedor en Libre Carga"
     >
-      <LinkIcon className="h-3 w-3" />
+      <LinkIcon className="size-3" />
       {folio ?? "Ver factura"}
     </Link>
   );
 }
+
 
 function IconoDocumento({ rechazada }: { rechazada: boolean }) {
   const tono = rechazada
