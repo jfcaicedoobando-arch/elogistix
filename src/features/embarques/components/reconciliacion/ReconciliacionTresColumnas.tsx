@@ -144,7 +144,8 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
             <Tooltip>
               <TooltipTrigger className="text-body-sm text-muted-foreground ml-2">¿qué significan las columnas?</TooltipTrigger>
               <TooltipContent>
-                Cotizado: versión aceptada. Refrescado: al crear el embarque. Real: costos registrados.
+                Cotizado: versión aceptada. Refrescado: al crear el embarque. Real: importes de facturas
+                de proveedor vigentes vinculadas.
               </TooltipContent>
             </Tooltip>
           </div>
