@@ -206,7 +206,7 @@ BEGIN
       notas, origen
     ) VALUES (
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
-      0, 0, 0, 'USD'::public.moneda, 1,
+      0, 0, 0, 'USD'::public.moneda, NULL,
       v_hoy_mx,
       v_hoy_mx + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
