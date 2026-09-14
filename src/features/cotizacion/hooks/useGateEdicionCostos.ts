@@ -1,6 +1,7 @@
 /**
  * Gate de edición de costos del detalle de cotización (v13.823.366, extraído
- * en v13.823.368 por Power of 10): espejo del guard servidor
+ * en v13.823.368 por Power of 10; reubicado a hooks/ en v13.823.369 para
+ * cumplir la regla arquitectónica): espejo del guard servidor
  * `LC_COT_COSTOS_ESTADO_INVALIDO` (edición sólo en Borrador/Solicitada).
  */
 import { usePermissions } from "@/hooks/shared";

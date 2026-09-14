@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.369] - 2026-09-14
+
+- **chore(cotizaciones)**: correctivo de CI (guard arquitectónico) — `useGateEdicionCostos` estaba en `components/` en lugar de `hooks/`.
+  - Se reubica a `src/features/cotizacion/hooks/useGateEdicionCostos.ts` y se actualiza su import en `SeccionCostosInternosPLDetalle.tsx`; comportamiento idéntico.
+  - Power of 10 intacto: el hook sigue bajo 200 líneas y no se relaja la regla ni el allowlist.
+
 ## [13.823.368] - 2026-09-14
 
 - **chore(cotizaciones)**: correctivo de CI (guard Power of 10) — `SeccionCostosInternosPLDetalle.tsx` rebasaba las 200 líneas tras el gate de edición por estado.
