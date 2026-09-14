@@ -6,7 +6,7 @@
 
 ## [13.823.374] - 2026-09-14
 
-- **fix(embarques/facturación)**: pulido P2 de presentación sin cambiar permisos, datos ni cálculos financieros.
+- **fix(embarques/facturación)**: pulido P2 de presentación sin cambiar permisos ni datos. El total derivado de Conceptos de Venta sí se corrigió (ver 13.823.375): el IVA se calcula por concepto con `resolverTasaConcepto`, respetando `tasa_iva_aplicada: 0` y `aplica_iva: false`.
   - **Contenedores**: si conviven renglones uniformes y marcadores pendientes, las columnas de carga permanecen visibles y los faltantes conservan “Sin capturar”/“—”.
   - **Facturas**: el encabezado separa subtotales vigentes por moneda y excluye canceladas, sin conversiones.
   - **Cierre**: los mensajes reflejan correctamente que pueden cerrar operaciones o administración.
