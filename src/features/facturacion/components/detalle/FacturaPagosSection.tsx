@@ -13,7 +13,11 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
-import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
+import {
+  useNotasCreditoAplicadas,
+  useSaldoFacturaServidor,
+} from "@/features/facturacion/hooks/useSaldoFactura";
+
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
@@ -44,36 +48,37 @@ export function FacturaPagosSection({
 }: Props) {
   const pagosQuery = usePagosFactura(facturaId);
   const notasQuery = useNotasCreditoAplicadas(facturaId);
+  // N9: el importe del saldo lo manda la BD (NC ya convertidas a la moneda de
+  // la factura); la lista de notas sigue alimentando la vista de documentos.
+  const saldoServidorQuery = useSaldoFacturaServidor(facturaId);
   const pagos = pagosQuery.data ?? [];
   const notasAplicadas = notasQuery.data ?? [];
   const isLoading = pagosQuery.isLoading;
   // P1 fail-closed: un error de lectura NO se degrada a "sin pagos"/saldo total.
-  const lecturaFallida = pagosQuery.isError || notasQuery.isError;
+  const lecturaFallida =
+    pagosQuery.isError || notasQuery.isError || !!saldoServidorQuery?.isError;
   const reintentar = () => {
     void pagosQuery.refetch();
     void notasQuery.refetch();
+    void saldoServidorQuery?.refetch();
   };
+
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const [pagoACancelar, setPagoACancelar] = useState<PagoRow | null>(null);
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
-  const repController = useCancelarRepController(
-    pagoACancelar,
-    facturaId,
-    facturaNumero,
+  const repController = useCancelarRepController(pagoACancelar, facturaId, facturaNumero);
+
+  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC
+  // aplicadas). El estado entra al cálculo: las facturas terminales no pueden
+  // mostrar saldo por cobrar.
+  const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
+    totalFactura, pagos, notasAplicadas, estadoFactura, saldoServidorQuery?.data,
   );
 
-  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
-  // Auditoría 2026-08-28 · Hallazgo 4: el estado entra al cálculo (facturas
-  // terminales no pueden mostrar saldo por cobrar).
-  const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
-    totalFactura,
-    pagos,
-    notasAplicadas,
-    estadoFactura,
-  );
+
   const liquidada = sinSaldo && pagos.length > 0;
 
   const inconsistente = esEstadoInconsistente({

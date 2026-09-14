@@ -26,3 +26,10 @@ export {
   esValidableEnSat,
 } from "./domain/validacionSat";
 export type { FacturaValidacionSat } from "./domain/validacionSat";
+
+// R1 (v13.823.390) — Tesorería necesita el saldo servidor de facturas de
+// proveedor (canon `v_proveedor_facturas_saldo`) para la bandeja de pagos
+// programados: se expone por el barrel en vez de un deep import cross-feature.
+export { fetchSaldosProveedorFacturas } from "./services/saldosProveedorFactura";
+export type { SaldoServidorCxP } from "./services/saldosProveedorFactura";
+

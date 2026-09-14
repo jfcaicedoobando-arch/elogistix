@@ -8,7 +8,8 @@
  * filtro funcional equivalente es `fecha_pago IS NULL` (pendientes).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { CAP_LISTA } from "@/constants/queryCaps";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 import {
   calcularFlujoProyectado,
   type CobranzaRow,
@@ -24,22 +25,36 @@ export type {
   FlujoProyectado,
 } from "@/features/tesoreria/domain";
 
+/**
+ * N6 (v13.823.390): antes se pedía UNA página con `.limit(CAP_LISTA)` y el
+ * resultado se sumaba como si fuera el total. Con más liquidaciones pendientes
+ * que el tope, el flujo proyectado subestimaba egresos en silencio. Ahora se
+ * leen TODAS las páginas (`leerTodasLasPaginas` falla visible si se alcanza el
+ * tope duro) porque sobre estas filas se calcula dinero.
+ */
 export async function fetchLiquidacionesPendientes(
   organizationId?: string | null,
 ): Promise<LiquidacionRow[]> {
-  let q = supabase
-    .from("liquidaciones_comision")
-    .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at").is("deleted_at", null)
-    .is("fecha_pago", null)
-    // A-8 (re-fix v15): una liquidación cancelada ya no es una salida de dinero
-    // proyectada; sin este filtro el flujo mostraba pagos que nunca ocurrirán.
-    .neq("estado", "Cancelada")
-    .limit(CAP_LISTA);
-  if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as LiquidacionRow[];
+  return (await leerTodasLasPaginas<LiquidacionRow>(
+    "tesoreria.liquidacionesPendientes",
+    (desde, hasta) => {
+      let q = supabase
+        .from("liquidaciones_comision")
+        .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at")
+        .is("deleted_at", null)
+        .is("fecha_pago", null)
+        // A-8 (re-fix v15): una liquidación cancelada ya no es una salida de
+        // dinero proyectada; sin este filtro el flujo mostraba pagos que nunca
+        // ocurrirán.
+        .neq("estado", "Cancelada");
+      if (organizationId) q = q.eq("organization_id", organizationId);
+      return q.order("id", { ascending: true }).range(desde, hasta);
+      // SAFE-CAST: LiquidacionRow declara sólo las columnas seleccionadas.
+    },
+    { lote: CAP_POSTGREST },
+  )) as LiquidacionRow[];
 }
+
 
 export async function fetchFlujoProyectado(args: {
   cuentas: ResumenCuenta[];

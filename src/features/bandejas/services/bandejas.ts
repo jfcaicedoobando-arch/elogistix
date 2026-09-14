@@ -73,10 +73,32 @@ export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
 
 
 
-export async function fetchCarteraPendiente(): Promise<CarteraPendienteRow[]> {
-  const { data, error } = await supabase.rpc("cartera_pendiente");
-  if (error) throw error;
-  // Ola 4 · N43: la RPC lleva LIMIT 500; sin esto los KPIs mentían en silencio.
-  assertNotTruncated(data, 500, "bandejas.carteraPendiente");
-  return (data ?? []) as CarteraPendienteRow[];
+/** Tope de filas que devuelve la RPC `cartera_pendiente` (LIMIT 500). */
+export const CARTERA_PENDIENTE_LIMITE = 500;
+
+export interface CarteraPendienteResultado {
+  rows: CarteraPendienteRow[];
+  /** Facturas con saldo > 0 que existen en la base (sin tope). */
+  total: number;
+  /** `true` cuando la base tiene más facturas de las que devolvió la RPC. */
+  truncado: boolean;
+}
+
+/**
+ * N10 (v13.823.390): la RPC lleva LIMIT 500 y antes se lanzaba
+ * `assertNotTruncated`, con lo que la pantalla completa quedaba en error y sin
+ * datos. Ahora se acompaña del conteo real (`cartera_pendiente_total`) para
+ * mostrar el listado y AVISAR de forma explícita que está incompleto: nunca se
+ * presenta el subconjunto como si fuera el total.
+ */
+export async function fetchCarteraPendiente(): Promise<CarteraPendienteResultado> {
+  const [lista, conteo] = await Promise.all([
+    supabase.rpc("cartera_pendiente"),
+    supabase.rpc("cartera_pendiente_total"),
+  ]);
+  if (lista.error) throw lista.error;
+  if (conteo.error) throw conteo.error;
+  const rows = (lista.data ?? []) as CarteraPendienteRow[];
+  const total = Number(conteo.data ?? rows.length);
+  return { rows, total, truncado: total > rows.length };
 }

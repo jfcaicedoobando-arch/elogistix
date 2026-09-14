@@ -1,20 +1,131 @@
--- ============================================================
--- Ola 11 · RBD-08: los pagos individuales del cobro en lote se insertaban
--- con pagos_factura.tipo_cambio = 1 duro aunque el lote capturaba TC. En
--- USD/EUR eso subestima monto_cobrado_mxn en calcular_comision_pago (rama
--- v_tc_pago = 1 ⇒ monto extranjero contado como MXN). Ahora se guarda el
--- TC del lote (v_tc) cuando la moneda es extranjera; en MXN se conserva 1.
--- Es seguro porque desde RFE-03 (20260821030200) la RPC exige v_tc > 0
--- para moneda extranjera (LC_COBRO_LOTE_TC_REQUERIDO).
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha), RFE-03 (TC requerido),
--- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
--- canónica (1:1). Sin backfill de históricos en esta migración.
--- ============================================================
--- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
--- membresía en la organización del documento (has_any_role_in_org).
--- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA previa al
--- piloto, sin expansión de jerarquía (has_any_role_in_org_exact);
--- auxiliar_contable queda fuera por decisión conservadora.
+-- N7 (v13.823.390): un REP cancelado/revertido NO consume saldo. El canon
+-- (public._saldo_factura_calc y public.cartera_pendiente) ya excluye
+-- public.pago_rep_anulado(estado_rep), pero el trigger de sobrepago y el cobro
+-- en lote sumaban pagos_factura en bruto: tras cancelar un REP la UI mostraba
+-- saldo y la BD rechazaba el cobro de reemplazo como sobrepago.
+
+CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_pago()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_estado text;
+  v_cancel text;
+  v_total numeric;
+  v_fecha_emision date;
+  v_pagos_otros numeric;
+  v_ncs numeric;
+  v_saldo_disponible_previo numeric;
+  v_saldo_post numeric;
+  v_solo_metadatos boolean := false;
+BEGIN
+  IF NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- FIX-63: un UPDATE que NO toca el dinero (p. ej. sincronizar el estatus del
+  -- REP ante el SAT, adjuntar PDF/XML o marcar el acuse) es mantenimiento
+  -- documental, no un cobro nuevo. Esos updates deben pasar aunque la factura
+  -- esté cancelada o con cancelación en trámite.
+  IF TG_OP = 'UPDATE' THEN
+    v_solo_metadatos := (
+      NEW.factura_id IS NOT DISTINCT FROM OLD.factura_id
+      AND NEW.monto IS NOT DISTINCT FROM OLD.monto
+      AND NEW.monto_aplicado_factura IS NOT DISTINCT FROM OLD.monto_aplicado_factura
+      AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+      AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio
+      AND NEW.ret_isr IS NOT DISTINCT FROM OLD.ret_isr
+      AND NEW.ret_iva IS NOT DISTINCT FROM OLD.ret_iva
+      -- FIX3 (M-4): un cambio de fecha ya no es "sólo metadatos".
+      AND NEW.fecha_pago IS NOT DISTINCT FROM OLD.fecha_pago
+      AND OLD.deleted_at IS NULL
+    );
+    IF v_solo_metadatos THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  -- Ola 1: espejo de LC_LOTE_FECHA_FUTURA (cobro en lote). Un cobro con fecha
+  -- futura ensucia aging, REP y reportes de flujo.
+  -- FIX3 (M-4): aplica también en UPDATE.
+  IF NEW.fecha_pago IS NOT NULL AND NEW.fecha_pago > CURRENT_DATE THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del cobro no puede ser futura'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object('fecha_pago', NEW.fecha_pago)::text;
+  END IF;
+
+  -- FIX-23: bloquear la factura padre para serializar pagos concurrentes.
+  PERFORM 1 FROM public.facturas WHERE id = NEW.factura_id FOR UPDATE;
+
+  SELECT estado::text, COALESCE(total, 0), COALESCE(cancellation_status, 'none'),
+         fecha_emision
+    INTO v_estado, v_total, v_cancel, v_fecha_emision
+  FROM public.facturas
+  WHERE id = NEW.factura_id;
+
+  IF v_estado IN ('Cancelada','Sustituida','Borrador') THEN
+    RAISE EXCEPTION 'LC_PAGO_FACTURA_NO_VIVA: la factura está en estado % y no admite pagos', v_estado
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object('estado_factura', v_estado)::text;
+  END IF;
+
+  IF v_cancel IN ('pending','verifying') THEN
+    RAISE EXCEPTION 'LC_FACTURA_EN_CANCELACION: la factura tiene una cancelación en trámite ante el SAT y no admite cobros'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object('cancellation_status', v_cancel)::text;
+  END IF;
+
+  -- FIX3 (M-4): paridad con el lote CxC — el cobro no puede ser anterior a la
+  -- emisión de la factura. Facturas sin fecha_emision quedan fuera de la regla.
+  IF NEW.fecha_pago IS NOT NULL
+     AND v_fecha_emision IS NOT NULL
+     AND NEW.fecha_pago < v_fecha_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del cobro no puede ser anterior a la emisión de la factura'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object(
+              'fecha_pago', NEW.fecha_pago,
+              'fecha_emision', v_fecha_emision
+            )::text;
+  END IF;
+
+  -- N7 (v13.823.390): un pago cuyo REP quedó CANCELADO ante el SAT está
+  -- ANULADO y NO consume saldo (mismo predicado canónico que
+  -- public._saldo_factura_calc y cartera_pendiente). Sin este filtro, tras
+  -- cancelar un REP la UI mostraba saldo pero la BD rechazaba el cobro de
+  -- reemplazo como sobrepago.
+  SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) INTO v_pagos_otros
+  FROM public.pagos_factura pf
+  WHERE pf.factura_id = NEW.factura_id
+    AND pf.deleted_at IS NULL
+    AND NOT public.pago_rep_anulado(pf.estado_rep)
+    AND pf.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+
+  -- Ola 1: NC convertidas a la moneda de la factura (antes SUM(monto) crudo).
+  v_ncs := public.nc_aplicadas_en_moneda_factura(NEW.factura_id);
+
+  v_saldo_disponible_previo := v_total - v_pagos_otros - v_ncs;
+  v_saldo_post := v_saldo_disponible_previo - COALESCE(NEW.monto_aplicado_factura, 0);
+
+  IF v_saldo_post < -0.005 THEN
+    RAISE EXCEPTION 'LC_PAGO_SOBREPAGO: el pago excede el saldo pendiente'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object(
+              'saldo_disponible', v_saldo_disponible_previo,
+              'monto_intentado', NEW.monto_aplicado_factura,
+              'notas_credito_aplicadas', v_ncs
+            )::text;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+-- FIX-45: ninguna función financiera es ejecutable por anon.
+REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM anon;
+GRANT EXECUTE ON FUNCTION public.assert_factura_viva_para_pago() TO service_role;
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
  RETURNS jsonb

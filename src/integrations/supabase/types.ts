@@ -9355,6 +9355,7 @@ export type Database = {
           ultimo_contacto: string
         }[]
       }
+      cartera_pendiente_total: { Args: never; Returns: number }
       cerrar_cancelacion_factura_facturapi: {
         Args: {
           p_factura_id: string

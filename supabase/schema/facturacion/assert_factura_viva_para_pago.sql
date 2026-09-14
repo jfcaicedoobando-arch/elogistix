@@ -95,10 +95,16 @@ BEGIN
             )::text;
   END IF;
 
+  -- N7 (v13.823.390): un pago cuyo REP quedó CANCELADO ante el SAT está
+  -- ANULADO y NO consume saldo (mismo predicado canónico que
+  -- public._saldo_factura_calc y cartera_pendiente). Sin este filtro, tras
+  -- cancelar un REP la UI mostraba saldo pero la BD rechazaba el cobro de
+  -- reemplazo como sobrepago.
   SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) INTO v_pagos_otros
   FROM public.pagos_factura pf
   WHERE pf.factura_id = NEW.factura_id
     AND pf.deleted_at IS NULL
+    AND NOT public.pago_rep_anulado(pf.estado_rep)
     AND pf.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
 
   -- Ola 1: NC convertidas a la moneda de la factura (antes SUM(monto) crudo).
@@ -124,3 +130,4 @@ $function$;
 -- FIX-45: ninguna función financiera es ejecutable por anon.
 REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM anon;
+GRANT EXECUTE ON FUNCTION public.assert_factura_viva_para_pago() TO service_role;

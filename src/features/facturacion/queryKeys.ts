@@ -62,6 +62,9 @@ export const facturas = {
   cobranza: (filtros?: unknown) => ['facturas', 'cobranza', filtros ?? null] as const,
   series: ['factura_series'] as const,
   notasCredito: (facturaId: string) => ['factura_notas_credito', facturaId] as const,
+  /** N9: saldo canónico calculado por la BD (NC ya convertidas). */
+  saldoServidor: (facturaId: string) => ['facturas', 'saldo-servidor', facturaId] as const,
+
   notasCreditoRecientes: (filtros?: unknown) => ['factura_notas_credito', 'recientes', filtros ?? null] as const,
   envios: (facturaId?: string | null) => ['factura-envios', facturaId] as const,
   historial: (facturaId?: string | null) => ['facturas', 'historial', facturaId] as const,

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
+import { CarteraTruncadoAlert } from "./_sections/CarteraTruncadoAlert";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -43,6 +44,8 @@ export default function Cartera() {
   const { canRegistrarCobro } = usePermissions();
   const {
     data,
+    truncado,
+    totalEnBase,
     paged,
     monedas,
     scoped,
@@ -79,6 +82,7 @@ export default function Cartera() {
           onLimpiar={() => setRowSelection({})}
         />
       )}
+      {truncado && <CarteraTruncadoAlert totalEnBase={totalEnBase} mostradas={data.length} />}
       <CarteraKpis
         totalFacturas={scoped.length}
         saldosNativos={saldosNativos}
