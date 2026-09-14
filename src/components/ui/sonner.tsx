@@ -40,7 +40,9 @@ export function Toaster() {
         swipeThreshold: 80,
         classNames: {
           toast: [
-            "group toast rounded-lg px-4 py-3 gap-3 backdrop-blur-sm shadow-xl",
+            // pr-12: el botón de cerrar flota a la derecha (right-2 + w-8 =
+            // 40px); sin este margen el texto largo queda tapado por la "×".
+            "group toast rounded-lg pl-4 pr-12 py-3 gap-3 backdrop-blur-sm shadow-xl",
             "bg-card text-card-foreground border border-border",
             // Ancho mínimo consistente + rejilla icono | contenido | acciones.
             "!min-w-[360px] !grid !grid-cols-[auto_1fr] !items-start !gap-x-2",
