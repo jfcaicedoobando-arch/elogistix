@@ -20,7 +20,7 @@ const BASELINE_SIN_SCHEMA: Record<string, number> = {
   auditoria: 1,
   catalogos: 3,
   configuracion: 4,
-  cotizacion: 8,
+  cotizacion: 5,
   dashboard: 1,
   embarques: 4,
   operaciones: 1,
