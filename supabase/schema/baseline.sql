@@ -452,6 +452,7 @@ DECLARE
   v_positiva   boolean;
   v_moneda_mala text;
   v_sin_reflejo text;
+  v_mal_formadas text;
 BEGIN
   IF p_cotizacion_id IS NULL THEN RETURN; END IF;
   SELECT folio, COALESCE(tipo_documento, 'transaccional'),
@@ -461,10 +462,6 @@ BEGIN
     FROM public.cotizaciones
    WHERE id = p_cotizacion_id;
   IF NOT FOUND THEN RETURN; END IF;
-  -- B18: las informativas (tarifarios) son documentos de referencia; no pueden
-  -- convertirse en embarque. Este candado vive en el helper canónico que llaman
-  -- crear_embarque_borrador_core y _assert_cotizacion_convertible, así que
-  -- cubre también las llamadas directas a las RPC. No afecta su consulta.
   IF v_tipo_doc = 'informativa' THEN
     RAISE EXCEPTION 'LC_COT_INFORMATIVA: la cotización % es informativa (tarifario) y no puede convertirse en embarque', COALESCE(v_folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
@@ -475,6 +472,28 @@ BEGIN
        AND cc.deleted_at IS NULL
   ) THEN
     RAISE EXCEPTION 'LC_COT_SIN_COSTOS: la cotización % no tiene costos cargados; captura el desglose de costos en la cotización antes de crear el embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- v13.823.392 · Auditoría cotización→embarque #5: se validan TODAS las líneas
+  -- con descripción; antes una línea legacy con cantidad='dos' reventaba después
+  -- con "invalid input syntax for type numeric".
+  SELECT string_agg(DISTINCT c.desc_txt, '; ')
+    INTO v_mal_formadas
+    FROM (
+      SELECT btrim(x->>'descripcion')       AS desc_txt,
+             btrim(COALESCE(x->>'cantidad', ''))            AS cant,
+             btrim(COALESCE(x->>'precio_unitario', ''))     AS pu,
+             btrim(COALESCE(x->>'total', ''))               AS tot,
+             btrim(COALESCE(x->>'tasa_iva_aplicada', ''))   AS tasa
+        FROM jsonb_array_elements(v_ventas) x
+       WHERE COALESCE(btrim(x->>'descripcion'), '') <> ''
+    ) c
+   WHERE (c.cant <> '' AND c.cant !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.pu   <> '' AND c.pu   !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.tot  <> '' AND c.tot  !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.tasa <> '' AND c.tasa !~ '^-?[0-9]+(\.[0-9]+)?$');
+  IF v_mal_formadas IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_VENTA_IMPORTE_INVALIDO: el concepto de venta "%" tiene cantidad, precio, total o tasa de IVA con un valor que no es numérico; corrígelo en la cotización antes de crear el embarque', v_mal_formadas
       USING ERRCODE = 'P0001';
   END IF;
   WITH v AS (
@@ -3569,25 +3588,29 @@ DECLARE
   v_ag_nueva       uuid;
   v_mon_origen     text;
   v_mon_nueva      text;
+  v_ruta_origen    uuid;
+  v_ruta_nueva     uuid;
+  v_cont_origen    uuid;
+  v_cont_nueva     uuid;
+  v_nav_nueva      uuid;
+  v_nav_nombre     text;
   v_actualizados   integer := 0;
 BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
     RETURN 0;
   END IF;
-  -- v13.823.351: toda lectura de tarifas/recargos se acota a la organización
-  -- de la cotización; una referencia cruzada debe fallar, no usarse en silencio.
   SELECT c.tarifa_id, c.organization_id INTO v_tarifa_origen, v_org
     FROM public.cotizaciones c
    WHERE c.id = p_cotizacion_id;
   v_es_sustitucion := p_tarifa_id_aplicada IS NOT NULL
                   AND p_tarifa_id_aplicada IS DISTINCT FROM v_tarifa_origen;
-  -- Coherencia global de la sustituta: mezclar precios de una tarifa con el
-  -- proveedor/moneda sembrados de otra produciría un costo inauditable.
   IF v_es_sustitucion THEN
-    SELECT t.agente_id, t.moneda INTO v_ag_nueva, v_mon_nueva
+    SELECT t.agente_id, t.moneda, t.ruta_id, t.tipo_contenedor_id, t.naviera_id
+      INTO v_ag_nueva, v_mon_nueva, v_ruta_nueva, v_cont_nueva, v_nav_nueva
       FROM public.costeo_tarifas t
      WHERE t.id = p_tarifa_id_aplicada AND t.organization_id = v_org;
-    SELECT t.agente_id, t.moneda INTO v_ag_origen, v_mon_origen
+    SELECT t.agente_id, t.moneda, t.ruta_id, t.tipo_contenedor_id
+      INTO v_ag_origen, v_mon_origen, v_ruta_origen, v_cont_origen
       FROM public.costeo_tarifas t
      WHERE t.id = v_tarifa_origen AND t.organization_id = v_org;
     IF v_ag_nueva IS NULL THEN
@@ -3601,6 +3624,16 @@ BEGIN
     IF v_tarifa_origen IS NOT NULL AND upper(btrim(COALESCE(v_mon_nueva, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_mon_origen, ''))) THEN
       RAISE EXCEPTION 'La tarifa sustituta está en otra moneda (% vs %): no se puede aplicar sin recotizar. Revisa y selecciona una tarifa en la misma moneda.',
         v_mon_nueva, v_mon_origen USING ERRCODE = 'P0001';
+    END IF;
+    -- v13.823.392 · Auditoría cotización→embarque #3: la sustituta debe ser de
+    -- la MISMA ruta y el MISMO tipo de contenedor/servicio que la cotización.
+    IF v_tarifa_origen IS NOT NULL AND v_ruta_nueva IS DISTINCT FROM v_ruta_origen THEN
+      RAISE EXCEPTION 'LC_TARIFA_RUTA_INCOMPATIBLE: la tarifa sustituta es de otra ruta que la cotización; selecciona una tarifa de la misma ruta o recotiza.'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF v_tarifa_origen IS NOT NULL AND v_cont_nueva IS DISTINCT FROM v_cont_origen THEN
+      RAISE EXCEPTION 'LC_TARIFA_TIPO_INCOMPATIBLE: la tarifa sustituta es de otro tipo de contenedor/servicio que la cotización; selecciona una tarifa del mismo tipo o recotiza.'
+        USING ERRCODE = 'P0001';
     END IF;
   END IF;
   FOR v_costo IN
@@ -3620,7 +3653,6 @@ BEGIN
     v_unit := NULL;
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
       IF v_es_sustitucion THEN
-        -- Sustitución: sólo una equivalencia inequívoca es aceptable.
         SELECT count(*), min(r.monto), min(r.moneda)
           INTO v_equivalentes, v_unit, v_moneda_match
           FROM public.costeo_tarifa_recargos r
@@ -3644,7 +3676,6 @@ BEGIN
             COALESCE(v_costo.recargo_concepto, v_costo.concepto) USING ERRCODE = 'P0001';
         END IF;
       ELSE
-        -- Refrescar la misma tarifa: identidad exacta del recargo fuente.
         IF v_costo.recargo_vigente_id IS NULL THEN
           RAISE EXCEPTION 'El cargo "%" de la tarifa ya no existe: no se puede refrescar. Revisa y selecciona una tarifa vigente.',
             v_costo.concepto USING ERRCODE = 'P0001';
@@ -3676,7 +3707,6 @@ BEGIN
        AND c.origen IN ('cotizacion','costeo_tarifa')
        AND c.cotizacion_costo_origen_id = v_costo.id;
     CONTINUE WHEN COALESCE(v_n, 0) = 0;
-    -- Reparto de centavos por resto mayor, sin crear montos negativos.
     v_cent := ROUND(GREATEST(v_base, 0) * 100)::bigint;
     v_piso := v_cent / v_n::bigint;
     v_resto := v_cent - (v_piso * v_n::bigint);
@@ -3697,10 +3727,92 @@ BEGIN
       v_actualizados := v_actualizados + 1;
     END LOOP;
   END LOOP;
+  -- v13.823.392 · #3 (cont.): la cabecera del embarque sigue a los precios
+  -- aplicados en la MISMA transacción cuando la sustitución cambia de naviera.
+  IF v_es_sustitucion THEN
+    SELECT n.name INTO v_nav_nombre
+      FROM public.navieras n WHERE n.id = v_nav_nueva;
+    UPDATE public.embarques e
+       SET tarifa_id  = p_tarifa_id_aplicada,
+           naviera_id = COALESCE(v_nav_nueva, e.naviera_id),
+           naviera    = COALESCE(v_nav_nombre, e.naviera),
+           updated_at = now()
+     WHERE e.id = p_embarque_id;
+  END IF;
   IF v_actualizados > 0 THEN
     PERFORM public._recompute_totales_embarque(p_embarque_id);
   END IF;
   RETURN v_actualizados;
+END;
+$$;
+CREATE FUNCTION public._embarque_delta_tarifa_sustituida(p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_catalog'
+    AS $$
+DECLARE
+  v_org     uuid;
+  v_origen  uuid;
+  v_cambios jsonb;
+BEGIN
+  IF p_cotizacion_id IS NULL OR p_tarifa_id_aplicada IS NULL THEN
+    RETURN jsonb_build_object('origen', 'servidor', 'decision', 'sustituida', 'cambios', '[]'::jsonb);
+  END IF;
+  SELECT c.organization_id, c.tarifa_id INTO v_org, v_origen
+    FROM public.cotizaciones c
+   WHERE c.id = p_cotizacion_id;
+  WITH conceptos AS (
+    SELECT t.id AS tarifa_id, 'Flete base'::text AS concepto,
+           upper(btrim(t.moneda)) AS moneda, COALESCE(t.flete_base, 0) AS monto
+      FROM public.costeo_tarifas t
+     WHERE t.organization_id = v_org
+       AND t.id IN (v_origen, p_tarifa_id_aplicada)
+    UNION ALL
+    SELECT r.tarifa_id, r.concepto || ' (' || r.lado || ')',
+           upper(btrim(r.moneda)), COALESCE(r.monto, 0)
+      FROM public.costeo_tarifa_recargos r
+      JOIN public.costeo_tarifas t ON t.id = r.tarifa_id
+     WHERE t.organization_id = v_org
+       AND r.tarifa_id IN (v_origen, p_tarifa_id_aplicada)
+       AND r.incluido_en_total
+  ),
+  antes AS (
+    SELECT concepto, moneda, sum(monto) AS monto
+      FROM conceptos WHERE tarifa_id = v_origen GROUP BY 1, 2
+  ),
+  ahora AS (
+    SELECT concepto, moneda, sum(monto) AS monto
+      FROM conceptos WHERE tarifa_id = p_tarifa_id_aplicada GROUP BY 1, 2
+  ),
+  union_conceptos AS (
+    SELECT COALESCE(a.concepto, b.concepto) AS concepto,
+           COALESCE(a.moneda, b.moneda)     AS moneda,
+           a.monto AS monto_anterior,
+           b.monto AS monto_actual
+      FROM antes a
+      FULL JOIN ahora b ON b.concepto = a.concepto AND b.moneda = a.moneda
+  )
+  SELECT COALESCE(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+           'concepto',       u.concepto,
+           'moneda',         u.moneda,
+           'monto_anterior', COALESCE(u.monto_anterior, 0),
+           'monto_actual',   u.monto_actual,
+           'delta_abs',      CASE WHEN u.monto_actual IS NULL THEN NULL
+                                  ELSE round(u.monto_actual - COALESCE(u.monto_anterior, 0), 2) END,
+           'delta_pct',      CASE WHEN u.monto_actual IS NULL OR COALESCE(u.monto_anterior, 0) = 0 THEN NULL
+                                  ELSE round((u.monto_actual - u.monto_anterior) / u.monto_anterior * 100, 2) END,
+           'motivo',         CASE WHEN u.monto_actual IS NULL THEN 'eliminado' ELSE NULL END
+         )) ORDER BY u.concepto), '[]'::jsonb)
+    INTO v_cambios
+    FROM union_conceptos u
+   WHERE u.monto_actual IS DISTINCT FROM u.monto_anterior;
+  RETURN jsonb_build_object(
+    'origen', 'servidor',
+    'decision', 'sustituida',
+    'calculado_en', now(),
+    'tarifa_id_original', v_origen,
+    'tarifa_id_aplicada', p_tarifa_id_aplicada,
+    'cambios', COALESCE(v_cambios, '[]'::jsonb)
+  );
 END;
 $$;
 CREATE FUNCTION public._embarques_sembrar_tc_dof() RETURNS trigger
@@ -12208,6 +12320,19 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.cotizacion_tiene_costos(p_cotizacion_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_catalog'
+    AS $$
+  SELECT EXISTS (
+    SELECT 1
+      FROM public.cotizacion_costos cc
+      JOIN public.cotizaciones c ON c.id = cc.cotizacion_id
+     WHERE cc.cotizacion_id = p_cotizacion_id
+       AND cc.deleted_at IS NULL
+       AND c.organization_id = public.current_user_org_id()
+  );
+$$;
 CREATE FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) RETURNS TABLE(subtotal_usd numeric, iva_usd numeric, total_usd numeric, subtotal_mxn numeric, iva_mxn numeric, total_mxn numeric)
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
@@ -12745,20 +12870,34 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
-  SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
+  -- v13.823.392 · Auditoría cotización→embarque #2: UNIÓN de monedas efectivas
+  -- de conceptos_venta y de cotizacion_costos vivos. Antes una venta USD con
+  -- costos MXN se convertía sin tipo de cambio sellado.
+  SELECT count(*)
     INTO v_monedas
-    FROM jsonb_array_elements(
-           CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
-                THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   WHERE COALESCE(
-           NULLIF(
-             CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                  THEN (c->>'total')::numeric ELSE 0 END, 0),
-           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                 AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
-                ELSE 0 END
-         ) <> 0;
+    FROM (
+      SELECT upper(btrim(COALESCE(c->>'moneda', 'MXN'))) AS m
+        FROM jsonb_array_elements(
+               CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
+                    THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+       WHERE COALESCE(
+               NULLIF(
+                 CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                      THEN (c->>'total')::numeric ELSE 0 END, 0),
+               CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                     AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                    THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
+                    ELSE 0 END
+             ) <> 0
+      UNION
+      SELECT upper(btrim(COALESCE(cc.moneda, 'MXN')))
+        FROM public.cotizacion_costos cc
+       WHERE cc.cotizacion_id = v_cot.id
+         AND cc.deleted_at IS NULL
+         AND COALESCE(NULLIF(cc.costo_total, 0),
+                      NULLIF(COALESCE(cc.costo_unitario, 0) * COALESCE(cc.cantidad, 0), 0),
+                      0) <> 0
+    ) u;
   IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
@@ -12936,22 +13075,14 @@ CREATE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id 
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb;
+DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb; v_delta jsonb;
         v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
-  -- C21: FOR UPDATE serializa dos llamadas concurrentes sobre la misma cotización.
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
-  -- C21 (v13.823.380) — Si la cotización YA está vinculada a un embarque vivo,
-  -- esta llamada es un reintento: devolvemos el embarque existente SIN
-  -- revalidar tarifa, sin sellar una decisión tardía y sin reaplicar costos
-  -- (`_embarque_aplicar_tarifa_decidida` toca conceptos_costo pendientes de una
-  -- operación que puede estar Confirmada, En tránsito o Cerrada).
-  -- No es un early return "libre": se repiten los mismos controles de acceso
-  -- que aplica `crear_embarque_borrador_core`.
   SELECT e.id INTO v_existente
     FROM public.embarques e
    WHERE e.deleted_at IS NULL
@@ -12974,13 +13105,10 @@ BEGIN
     END IF;
     RETURN v_existente;
   END IF;
-  -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
   IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
-  -- v13.823.349 — `mantenida_por_operaciones` NO es una vía para saltarse la
-  -- re-aprobación: sólo vale cuando la revalidación no es bloqueante.
   IF p_decision IN ('sin_cambios','mantenida_por_operaciones') THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
@@ -13003,14 +13131,21 @@ BEGIN
     END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
-  -- v13.823.32: repetir la conversión NO debe pisar el snapshot histórico.
   SELECT tarifa_decision IS NOT NULL INTO v_ya_decidido
     FROM public.embarques WHERE id = v_embarque_id;
   IF NOT COALESCE(v_ya_decidido, false) THEN
+    -- v13.823.392 · Auditoría cotización→embarque #4: para 'sustituida' el delta
+    -- económico se calcula EN SERVIDOR contra la tarifa realmente elegida.
+    IF p_decision = 'sustituida' THEN
+      v_delta := public._embarque_delta_tarifa_sustituida(
+        p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
+    ELSE
+      v_delta := p_delta_jsonb;
+    END IF;
     UPDATE public.embarques
        SET tarifa_id_original=v_cot.tarifa_id,
            tarifa_id_aplicada=COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-           tarifa_delta_jsonb=p_delta_jsonb,
+           tarifa_delta_jsonb=v_delta,
            tarifa_decision=p_decision,
            tarifa_revalidada_en=now(),
            tarifa_revalidada_por=auth.uid()
@@ -13032,7 +13167,7 @@ BEGIN
         jsonb_build_object('decision',p_decision,
           'tarifa_id_original',v_cot.tarifa_id,
           'tarifa_id_aplicada',COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-          'delta',p_delta_jsonb);
+          'delta',v_delta);
   END IF;
   RETURN v_embarque_id;
 END;
@@ -34619,6 +34754,8 @@ GRANT ALL ON FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado t
 GRANT ALL ON FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado text) TO service_role;
 REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._embarque_delta_tarifa_sustituida(p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._embarque_delta_tarifa_sustituida(p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._embarques_sembrar_tc_dof() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._embarques_sembrar_tc_dof() TO authenticated;
 GRANT ALL ON FUNCTION public._embarques_sembrar_tc_dof() TO service_role;
@@ -35028,6 +35165,9 @@ GRANT ALL ON FUNCTION public.costeo_tarifas_marcar_reemplazadas() TO service_rol
 REVOKE ALL ON FUNCTION public.costeo_tarifas_match_agente_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.costeo_tarifas_match_agente_org() TO authenticated;
 GRANT ALL ON FUNCTION public.costeo_tarifas_match_agente_org() TO service_role;
+REVOKE ALL ON FUNCTION public.cotizacion_tiene_costos(p_cotizacion_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cotizacion_tiene_costos(p_cotizacion_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cotizacion_tiene_costos(p_cotizacion_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) TO service_role;
