@@ -16,12 +16,14 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
+import { NumericInput } from "@/components/shared/NumericInput";
+import { TraspasoResumen } from "./TraspasoResumen";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import { useTraspasoForm, traspasoSucio } from "@/features/tesoreria/hooks/useTraspasoForm";
 import { etiquetaTc } from "@/features/tesoreria/domain/tcPar";
 
 import type { Tables } from "@/integrations/supabase/types";
-import { formatCurrency } from "@/lib/formatters";
+
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
@@ -128,32 +130,6 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
             currency={origen?.moneda}
           />
         </div>
-        {!mismoMoneda && origen && destino && par && (
-          <div className="space-y-1.5">
-            <Label htmlFor="traspaso-tc">{etiquetaTc(par)} *</Label>
-            <MoneyInput
-              id="traspaso-tc"
-              value={state.tcQuote}
-              onChange={(v) => setField("tcQuote", v)}
-              placeholder={par.quote === "MXN" ? "18.4200" : "1.0800"}
-            />
-            {state.tcQuote > 0 ? (
-              <p className="text-body-sm text-muted-foreground">
-                {`1 ${par.base} = ${state.tcQuote} ${par.quote}. Traspasas ${formatCurrency(state.montoOrigen, origen.moneda)} y se abonan ${formatCurrency(montoDestino, destino.moneda)}.`}
-              </p>
-            ) : (
-              <p className="text-body-sm text-destructive" role="alert">
-                Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
-              </p>
-            )}
-            {fechaTcDof && (
-              <p className="text-body-sm text-muted-foreground">
-                Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
-              </p>
-            )}
-          </div>
-        )}
-
         <div className="space-y-1.5">
           <Label htmlFor="traspaso-comision">Comisión bancaria (opcional)</Label>
           <MoneyInput
@@ -164,6 +140,60 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
           />
         </div>
       </FormDialogSection>
+
+      {!mismoMoneda && origen && destino && par && (
+        <FormDialogSection
+          title="Conversión"
+          description="Las cuentas son de distinta moneda: captura el tipo de cambio del banco (hasta 4 decimales)."
+          cols={1}
+        >
+          <div className="space-y-1.5 md:max-w-xs">
+            <Label htmlFor="traspaso-tc">{etiquetaTc(par)} *</Label>
+            <NumericInput
+              id="traspaso-tc"
+              decimals
+              value={state.tcQuote}
+              onChange={(v) => setField("tcQuote", v)}
+              placeholder={par.quote === "MXN" ? "18.4235" : "1.0800"}
+            />
+            {state.tcQuote > 0 ? (
+              fechaTcDof && (
+                <p className="text-body-sm text-muted-foreground">
+                  Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
+                </p>
+              )
+            ) : (
+              <p className="text-body-sm text-destructive" role="alert">
+                Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
+              </p>
+            )}
+          </div>
+          <TraspasoResumen
+            monedaOrigen={origen.moneda}
+            monedaDestino={destino.moneda}
+            montoOrigen={state.montoOrigen}
+            comision={state.comision}
+            montoDestino={montoDestino}
+            par={par}
+            tcQuote={state.tcQuote}
+          />
+        </FormDialogSection>
+      )}
+
+      {mismoMoneda && origen && destino && state.montoOrigen > 0 && (
+        <FormDialogSection title="Resumen" cols={1}>
+          <TraspasoResumen
+            monedaOrigen={origen.moneda}
+            monedaDestino={destino.moneda}
+            montoOrigen={state.montoOrigen}
+            comision={state.comision}
+            montoDestino={montoDestino}
+            par={null}
+            tcQuote={0}
+          />
+        </FormDialogSection>
+      )}
+
 
       <FormDialogSection title="Detalles" cols={1}>
         <div className="space-y-1.5">
