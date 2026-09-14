@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.375] - 2026-09-14
+
+- **fix(facturación)**: los totales derivados de Conceptos de Venta aplican `resolverTasaConcepto` por igual en MXN y USD; una tasa 0% explícita permanece exenta. La vista agrupada identifica sus importes como Subtotal.
+
 ## [13.823.374] - 2026-09-14
 
 - **fix(embarques/facturación)**: pulido P2 de presentación sin cambiar permisos, datos ni cálculos financieros.
