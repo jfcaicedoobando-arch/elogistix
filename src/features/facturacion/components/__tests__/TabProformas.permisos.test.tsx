@@ -55,7 +55,7 @@ const controller = {
   isConvertible: () => true,
   selectedProformas: [proforma],
   clearSelected: vi.fn(),
-  fusionInfo: { sameCliente: true, clienteNombre: "ACME", organizationId: "o1", diasCredito: 30 },
+  fusionInfo: { sameCliente: true, clienteNombre: "ACME", organizationId: "o1", diasCredito: 30, sameTipo: true, sameDiasCredito: true },
   page: 0,
   totalPages: 1,
   setPage: vi.fn(),

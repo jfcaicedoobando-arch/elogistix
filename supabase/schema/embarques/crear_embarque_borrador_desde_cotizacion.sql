@@ -8,12 +8,46 @@ CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cot
  SET search_path TO 'public'
 AS $function$
 DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb;
+        v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
-  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
+  -- C21: FOR UPDATE serializa dos llamadas concurrentes sobre la misma cotización.
+  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+
+  -- C21 (v13.823.380) — Si la cotización YA está vinculada a un embarque vivo,
+  -- esta llamada es un reintento: devolvemos el embarque existente SIN
+  -- revalidar tarifa, sin sellar una decisión tardía y sin reaplicar costos
+  -- (`_embarque_aplicar_tarifa_decidida` toca conceptos_costo pendientes de una
+  -- operación que puede estar Confirmada, En tránsito o Cerrada).
+  -- No es un early return "libre": se repiten los mismos controles de acceso
+  -- que aplica `crear_embarque_borrador_core`.
+  SELECT e.id INTO v_existente
+    FROM public.embarques e
+   WHERE e.deleted_at IS NULL
+     AND (e.id = v_cot.embarque_id OR e.cotizacion_id = v_cot.id)
+   ORDER BY e.created_at ASC
+   LIMIT 1;
+
+  IF v_existente IS NOT NULL THEN
+    v_caller_org := public.current_user_org_id();
+    v_is_super := public.has_role(auth.uid(), 'super_admin'::app_role);
+    IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
+      RAISE EXCEPTION 'LC_NO_AUTORIZADO: la cotización pertenece a otra organización' USING ERRCODE='42501';
+    END IF;
+    IF NOT (v_is_super
+            OR public.has_role(auth.uid(), 'admin_org'::app_role)
+            OR public.has_role(auth.uid(), 'admin'::app_role)
+            OR public.has_role(auth.uid(), 'gerente_operaciones'::app_role)
+            OR public.has_role(auth.uid(), 'coordinador_logistico'::app_role)
+            OR public.has_role(auth.uid(), 'operador'::app_role)) THEN
+      RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden crear el borrador' USING ERRCODE='42501';
+    END IF;
+    RETURN v_existente;
+  END IF;
+
   -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
   -- Una cotización ya Aceptada / En operación congeló sus términos al aceptarse
   -- y debe poder convertirse a embarque aunque la vigencia haya expirado; el

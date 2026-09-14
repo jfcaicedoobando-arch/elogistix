@@ -13,8 +13,13 @@ import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProform
 
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;
+  // C25 (v13.823.380) — Una proforma FUENTE ya consolidada repuntó sus
+  // conceptos a la proforma consolidada: convertirla emitiría una factura sin
+  // líneas. El servidor también lo rechaza (`LC_PROFORMA_FUENTE_CONSOLIDADA`).
+  if (p.estado_revision === "consolidada") return false;
   return p.estado_cliente === "aceptada";
 }
+
 
 
 export function useTabProformasController(opts?: {
@@ -56,7 +61,10 @@ export function useTabProformasController(opts?: {
   // valida en la RPC `convertir_proformas_a_factura`).
   const fusionInfo = useMemo(() => {
     if (selectedProformas.length === 0) {
-      return { sameCliente: true, clienteNombre: "", organizationId: "", diasCredito: null as number | null };
+      return {
+        sameCliente: true, clienteNombre: "", organizationId: "",
+        diasCredito: null as number | null, sameTipo: true, sameDiasCredito: true,
+      };
     }
     const first = selectedProformas[0];
     return {
@@ -66,8 +74,16 @@ export function useTabProformasController(opts?: {
       // v13.331.9 — `null` deja que la RPC herede el plazo de la ficha del
       // cliente; antes se enviaba 0 y la factura vencía el mismo día.
       diasCredito: first.dias_credito ?? null,
+      // C25 (v13.823.380) — Mezclar una proforma consolidada con individuales
+      // hacía que la rama de conceptos dependiera del primer registro y podía
+      // omitir líneas; y con plazos distintos se elegía uno en silencio.
+      sameTipo: selectedProformas.every((p) => p.es_consolidada === first.es_consolidada),
+      sameDiasCredito: selectedProformas.every(
+        (p) => (p.dias_credito ?? null) === (first.dias_credito ?? null),
+      ),
     };
   }, [selectedProformas]);
+
 
   const csvColumns = [
     { key: "numero", label: "# Proforma" },
