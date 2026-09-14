@@ -120,7 +120,22 @@ BEGIN
         -- rechaza en lugar de reescribirse a 1 en silencio.
         v_cant := COALESCE(NULLIF(v_venta->>'cantidad', '')::numeric, 1);
         v_pu   := COALESCE(NULLIF(v_venta->>'precio_unitario', '')::numeric, 0);
-        v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
+        -- B19: misma regla canónica que el cliente (`resolverTasaConcepto`):
+        --   1) tasa explícita (incluye 0) manda;
+        --   2) sin tasa y aplica_iva = true ⇒ tasa general 0.16 (la misma
+        --      constante que usa la conversión proforma → factura);
+        --   3) aplica_iva = false ⇒ tasa 0 (la columna es NOT NULL).
+        -- Antes una línea legacy con aplica_iva = true y sin tasa se replicaba
+        -- con tasa 0 y el embarque perdía el IVA que mostraba la cotización.
+        v_tasa_json := NULLIF(v_venta->>'tasa_iva_aplicada', '')::numeric;
+        v_aplica := COALESCE((v_venta->>'aplica_iva')::boolean, COALESCE(v_tasa_json, 0) > 0);
+        IF NOT v_aplica THEN
+          v_tasa := 0;
+        ELSIF v_tasa_json IS NOT NULL THEN
+          v_tasa := GREATEST(v_tasa_json, 0);
+        ELSE
+          v_tasa := 0.16;
+        END IF;
 
         -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
         -- si no hay unitario: se desinfla el `total` (que viene con IVA).
