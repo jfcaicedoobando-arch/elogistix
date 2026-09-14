@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CreditCard } from "lucide-react";
 import { useExposicionCreditoCliente } from "@/features/cliente/hooks/useExposicionCreditoCliente";
 import { formatCurrency } from "@/lib/formatters";
+import { getErrorMessage } from "@/lib/errors";
 
 function formatMXN(v: number) {
   return formatCurrency(v, "MXN");
@@ -49,8 +50,32 @@ function buildVista(
 }
 
 export function ClienteCreditoCard({ clienteId }: Props) {
-  const { data, isLoading } = useExposicionCreditoCliente(clienteId);
+  const { data, isLoading, isError, error } = useExposicionCreditoCliente(clienteId);
   const v = buildVista(data, isLoading);
+
+  // B11: si alguna factura en moneda extranjera trae un tipo de cambio inválido,
+  // la base falla en claro. Mostramos ese aviso en lugar de una cifra falsa.
+  if (isError) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" />
+            Condiciones de crédito
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{getErrorMessage(error)}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

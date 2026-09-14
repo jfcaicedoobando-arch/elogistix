@@ -364,10 +364,11 @@ BEGIN
        OR NEW.cantidad          IS DISTINCT FROM OLD.cantidad
        OR NEW.precio_unitario   IS DISTINCT FROM OLD.precio_unitario
        OR NEW.moneda            IS DISTINCT FROM OLD.moneda
+       OR NEW.total             IS DISTINCT FROM OLD.total
        OR NEW.aplica_iva        IS DISTINCT FROM OLD.aplica_iva
        OR NEW.tasa_iva_aplicada IS DISTINCT FROM OLD.tasa_iva_aplicada) THEN
     RAISE EXCEPTION
-      'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma; libéralo de la proforma antes de editarlo'
+      'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma; elimina o recrea la proforma pendiente antes de ajustarlo (si ya se facturó, usa el flujo fiscal correspondiente)'
       USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
@@ -11471,7 +11472,7 @@ BEGIN
       notas, origen
     ) VALUES (
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
-      0, 0, 0, 'USD'::public.moneda, 1,
+      0, 0, 0, 'USD'::public.moneda, NULL,
       v_hoy_mx,
       v_hoy_mx + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
@@ -16686,18 +16687,22 @@ BEGIN
   IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_org) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
   END IF;
+  -- Espejo de la policy RLS `Tenant delete proformas`.
+  IF auth.uid() IS NOT NULL AND NOT public.has_any_role_efectivo(
+       auth.uid(),
+       ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
+             'operador'::public.app_role, 'contador'::public.app_role,
+             'super_admin'::public.app_role]
+     ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_SIN_PERMISO: tu rol no puede eliminar proformas'
+      USING ERRCODE = '42501';
+  END IF;
   IF v_deleted IS NOT NULL THEN
     RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', false);
   END IF;
-  -- RG10: el folio externo suelto ya NO bloquea.
-  -- Ola 4 · N37: tampoco bloquea una factura MUERTA (borrada, cancelada o
-  -- sustituida) — sólo una factura viva ligada o el estado 'facturada'.
-  IF EXISTS (
-       SELECT 1 FROM public.facturas f
-       WHERE f.id IN (v_factura, v_factura2)
-         AND f.deleted_at IS NULL
-         AND f.estado NOT IN ('Cancelada','Sustituida')
-     )
+  -- RG10: el folio externo suelto ya NO bloquea; sólo una factura viva o el
+  -- estado 'facturada'.
+  IF v_factura IS NOT NULL OR v_factura2 IS NOT NULL
      OR lower(COALESCE(v_estado, '')) = 'facturada' THEN
     RAISE EXCEPTION 'LC_PROFORMA_FACTURADA';
   END IF;
@@ -18371,6 +18376,9 @@ DECLARE
   v_limite numeric;
   v_en_uso numeric := 0;
   v_facturas integer := 0;
+  v_malas text[] := ARRAY[]::text[];
+  v_saldo numeric;
+  f record;
 BEGIN
   SELECT c.organization_id, c.dias_credito, c.limite_credito_mxn
     INTO v_org, v_dias, v_limite
@@ -18385,46 +18393,39 @@ BEGIN
     RAISE EXCEPTION 'Cliente no encontrado o sin acceso'
       USING ERRCODE = '42501';
   END IF;
-  WITH facturas_cliente AS (
-    SELECT
-      f.id,
-      f.total,
-      f.moneda,
-      COALESCE(NULLIF(f.tipo_cambio, 0), 1) AS tc
-    FROM public.facturas f
-    WHERE f.cliente_id = p_cliente_id
-      AND f.estado IN ('Emitida','Vencida','Parcialmente pagada','Pagada')
-      AND f.deleted_at IS NULL
-  ),
-  pagos_por_factura AS (
-    SELECT p.factura_id, COALESCE(SUM(p.monto_aplicado_factura), 0) AS pagado
-    FROM public.pagos_factura p
-    WHERE p.deleted_at IS NULL
-      AND p.factura_id IN (SELECT id FROM facturas_cliente)
-    GROUP BY p.factura_id
-  ),
-  nc_por_factura AS (
-    SELECT n.factura_id, COALESCE(SUM(n.monto), 0) AS nc_aplicada
-    FROM public.factura_notas_credito n
-    WHERE n.deleted_at IS NULL
-      AND n.estado = 'Aplicada'
-      AND n.factura_id IN (SELECT id FROM facturas_cliente)
-    GROUP BY n.factura_id
-  )
-  SELECT
-    COALESCE(SUM(
-      GREATEST(
-        0,
-        COALESCE(fc.total, 0)
-        - COALESCE(pf.pagado, 0)
-        - COALESCE(nc.nc_aplicada, 0)
-      ) * CASE WHEN fc.moneda = 'MXN' THEN 1 ELSE fc.tc END
-    ), 0),
-    COUNT(*)
-  INTO v_en_uso, v_facturas
-  FROM facturas_cliente fc
-  LEFT JOIN pagos_por_factura pf ON pf.factura_id = fc.id
-  LEFT JOIN nc_por_factura nc ON nc.factura_id = fc.id;
+  FOR f IN
+    SELECT fa.id, fa.numero, COALESCE(fa.total, 0) AS total,
+           fa.moneda::text AS moneda, fa.tipo_cambio AS tc
+      FROM public.facturas fa
+     WHERE fa.cliente_id = p_cliente_id
+       AND fa.deleted_at IS NULL
+       AND fa.estado IN ('Emitida','Vencida','Parcialmente pagada','Pagada')
+  LOOP
+    v_facturas := v_facturas + 1;
+    SELECT GREATEST(
+             0,
+             f.total
+               - COALESCE((SELECT SUM(p.monto_aplicado_factura)
+                             FROM public.pagos_factura p
+                            WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
+               - public.nc_aplicadas_en_moneda_factura(f.id)
+           )
+      INTO v_saldo;
+    IF f.moneda = 'MXN' THEN
+      v_en_uso := v_en_uso + v_saldo;
+    ELSIF v_saldo > 0 THEN
+      IF f.tc IS NULL OR f.tc < 5 OR f.tc > 40 THEN
+        v_malas := array_append(v_malas, COALESCE(NULLIF(btrim(f.numero), ''), f.id::text));
+      ELSE
+        v_en_uso := v_en_uso + (v_saldo * f.tc);
+      END IF;
+    END IF;
+  END LOOP;
+  IF array_length(v_malas, 1) > 0 THEN
+    RAISE EXCEPTION 'LC_CREDITO_TC_INVALIDO: corrige el tipo de cambio de la(s) factura(s) en moneda extranjera %; sin él no se puede calcular la exposición de crédito.',
+      array_to_string(v_malas, ', ')
+      USING ERRCODE = '22023';
+  END IF;
   cliente_id      := p_cliente_id;
   organization_id := v_org;
   dias_credito    := v_dias;
@@ -28567,6 +28568,35 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_folio text;
+BEGIN
+  IF NEW.monto IS NOT DISTINCT FROM OLD.monto
+     AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+     AND NEW.proveedor_id IS NOT DISTINCT FROM OLD.proveedor_id THEN
+    RETURN NEW;
+  END IF;
+  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor)
+    INTO v_folio
+    FROM public.proveedor_facturas_conceptos pfc
+    JOIN public.proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
+   WHERE pfc.concepto_costo_id = NEW.id
+     AND pf.deleted_at IS NULL
+     AND pf.estado::text <> 'Cancelada'
+   LIMIT 1;
+  IF v_folio IS NOT NULL THEN
+    RAISE EXCEPTION
+      'LC_COSTO_VINCULADO_CXP: el costo está vinculado a la factura de proveedor %; desvincula o corrige esa factura antes de cambiar monto, moneda o proveedor',
+      COALESCE(NULLIF(btrim(v_folio), ''), '(sin folio)')
+      USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.tg_factura_cancelada_comisiones() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -32379,6 +32409,7 @@ CREATE TRIGGER trg_clientes_sync_cp BEFORE INSERT OR UPDATE ON public.clientes F
 CREATE TRIGGER trg_cobranza_seg_updated_at BEFORE UPDATE ON public.cobranza_seguimiento FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_com_dev_updated BEFORE UPDATE ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_concepto_no_proformado BEFORE DELETE OR UPDATE ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_concepto_no_proformado();
+CREATE TRIGGER trg_conceptos_costo_guard_vinculo_cxp BEFORE UPDATE OF monto, moneda, proveedor_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp();
 CREATE TRIGGER trg_conceptos_factura_assert_borrador BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
 CREATE TRIGGER trg_conceptos_factura_calc_ret BEFORE INSERT OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.calc_concepto_retenciones();
 CREATE TRIGGER trg_conceptos_factura_rollup AFTER INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_conceptos_factura_rollup();
@@ -35233,6 +35264,8 @@ GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO service_role;
 GRANT ALL ON FUNCTION public.tg_catalogo_claves_sat_updated_at() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_catalogo_claves_sat_updated_at() TO service_role;
+GRANT ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO authenticated;
+GRANT ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO service_role;
 REVOKE ALL ON FUNCTION public.tg_factura_cancelada_comisiones() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_factura_cancelada_comisiones() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_factura_cancelada_comisiones() TO service_role;

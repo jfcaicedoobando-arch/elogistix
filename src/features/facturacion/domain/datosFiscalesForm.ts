@@ -8,6 +8,29 @@
  */
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import type { DatosTimbradoPatch } from "@/features/facturacion/services";
+import { tcValido } from "@/lib/financial/tcValido";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
+
+/**
+ * B12 — Aviso de tipo de cambio para el borrador en moneda extranjera.
+ * Devuelve `null` cuando el T/C sirve para timbrar; si falta o está fuera de la
+ * banda de plausibilidad (5..40 pesos por divisa, el mismo candado que aplica
+ * la base al timbrar), regresa el texto de la advertencia.
+ */
+export function avisoTipoCambioFactura(
+  moneda: string | null | undefined,
+  tipoCambio: number | null | undefined,
+): string | null {
+  if (moneda === "MXN") return null;
+  if (tcValido(tipoCambio) == null) {
+    return "Falta capturar el tipo de cambio del día. Pulsa “Obtener TC DOF de hoy” o escríbelo manualmente antes de timbrar.";
+  }
+  const fueraDeBanda = validarTcMxn(tipoCambio);
+  if (fueraDeBanda) {
+    return `${fueraDeBanda} Corrígelo antes de timbrar: el sistema rechazará la factura con este valor.`;
+  }
+  return null;
+}
 
 export interface DatosFiscalesEstado {
   usoCfdi: string;

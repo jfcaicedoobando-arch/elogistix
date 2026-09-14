@@ -1,10 +1,104 @@
--- Fuente canónica de public.convertir_proformas_a_factura
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- Base: 20260913000400_r170_02_fecha_negocio_mx.sql (fecha de negocio MX).
--- Última migración: v13.823.376 (B12 — la factura USD nace con tipo_cambio NULL;
--- el trigger _factura_tc_dof_obligatorio resuelve el T/C DOF o falla en claro).
+-- ============================================================================
+-- v13.823.376 · Lote B11–B15 (facturación / proformas)
+-- B11 exposición de crédito fail-closed  · B12 TC USD nace NULL
+-- B13 concepto proformado inmutable en `total` · B14 costo vinculado a CxP
+-- B15 autorización fina para eliminar proforma
+-- NO se normalizan datos históricos: los T/C inválidos existentes se reportan,
+-- nunca se inventan.
+-- ============================================================================
 
+-- ── B11 ─────────────────────────────────────────────────────────────────────
+-- Antes: `COALESCE(NULLIF(tipo_cambio,0),1)` convertía una factura USD sin T/C
+-- a razón de 1 MXN por dólar y subestimaba la cartera. Ahora se alinea con
+-- `credito_en_uso_mxn` (banda 5..40, fail-closed) y devuelve un error
+-- accionable con los folios a corregir.
+CREATE OR REPLACE FUNCTION public.get_exposicion_credito_cliente(p_cliente_id uuid)
+RETURNS TABLE(cliente_id uuid, organization_id uuid, dias_credito integer, limite_mxn numeric, en_uso_mxn numeric, disponible_mxn numeric, excedido boolean, facturas_vivas integer)
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid;
+  v_dias integer;
+  v_limite numeric;
+  v_en_uso numeric := 0;
+  v_facturas integer := 0;
+  v_malas text[] := ARRAY[]::text[];
+  v_saldo numeric;
+  f record;
+BEGIN
+  SELECT c.organization_id, c.dias_credito, c.limite_credito_mxn
+    INTO v_org, v_dias, v_limite
+  FROM public.clientes c
+  WHERE c.id = p_cliente_id
+    AND c.deleted_at IS NULL
+    AND (
+      c.organization_id = public.current_user_org_id()
+      OR public.has_role(auth.uid(), 'super_admin'::app_role)
+    );
+
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'Cliente no encontrado o sin acceso'
+      USING ERRCODE = '42501';
+  END IF;
+
+  FOR f IN
+    SELECT fa.id, fa.numero, COALESCE(fa.total, 0) AS total,
+           fa.moneda::text AS moneda, fa.tipo_cambio AS tc
+      FROM public.facturas fa
+     WHERE fa.cliente_id = p_cliente_id
+       AND fa.deleted_at IS NULL
+       AND fa.estado IN ('Emitida','Vencida','Parcialmente pagada','Pagada')
+  LOOP
+    v_facturas := v_facturas + 1;
+
+    SELECT GREATEST(
+             0,
+             f.total
+               - COALESCE((SELECT SUM(p.monto_aplicado_factura)
+                             FROM public.pagos_factura p
+                            WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
+               - public.nc_aplicadas_en_moneda_factura(f.id)
+           )
+      INTO v_saldo;
+
+    IF f.moneda = 'MXN' THEN
+      v_en_uso := v_en_uso + v_saldo;
+    ELSIF v_saldo > 0 THEN
+      IF f.tc IS NULL OR f.tc < 5 OR f.tc > 40 THEN
+        v_malas := array_append(v_malas, COALESCE(NULLIF(btrim(f.numero), ''), f.id::text));
+      ELSE
+        v_en_uso := v_en_uso + (v_saldo * f.tc);
+      END IF;
+    END IF;
+  END LOOP;
+
+  IF array_length(v_malas, 1) > 0 THEN
+    RAISE EXCEPTION 'LC_CREDITO_TC_INVALIDO: corrige el tipo de cambio de la(s) factura(s) en moneda extranjera %; sin él no se puede calcular la exposición de crédito.',
+      array_to_string(v_malas, ', ')
+      USING ERRCODE = '22023';
+  END IF;
+
+  cliente_id      := p_cliente_id;
+  organization_id := v_org;
+  dias_credito    := v_dias;
+  limite_mxn      := v_limite;
+  en_uso_mxn      := ROUND(v_en_uso, 2);
+  disponible_mxn  := CASE WHEN v_limite IS NULL THEN NULL ELSE ROUND(v_limite - v_en_uso, 2) END;
+  excedido        := CASE WHEN v_limite IS NULL THEN false ELSE v_en_uso > v_limite END;
+  facturas_vivas  := v_facturas;
+  RETURN NEXT;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_exposicion_credito_cliente(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_exposicion_credito_cliente(uuid) TO authenticated, service_role;
+
+-- ── B12 ─────────────────────────────────────────────────────────────────────
+-- La factura USD de conversión nacía con tipo_cambio = 1 (valor falso). Ahora
+-- nace en NULL: el trigger `_factura_tc_dof_obligatorio` resuelve el T/C DOF y,
+-- si no existe, falla en claro. MXN conserva 1.
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas
  LANGUAGE plpgsql
@@ -267,5 +361,154 @@ BEGIN
   END IF;
 
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
+END;
+$function$;
+
+-- ── B13 ─────────────────────────────────────────────────────────────────────
+-- El guard ya protegía descripción, cantidad, precio, moneda y tratamiento de
+-- IVA, pero NO `total`, así que `actualizar_embarque_completo` podía mover el
+-- importe de un concepto ya incluido en una proforma y desalinear la factura de
+-- conversión. Las transiciones de estado (`estado_facturacion`, `proforma_id`)
+-- siguen permitidas para poder crear, eliminar o convertir la proforma.
+CREATE OR REPLACE FUNCTION public._assert_concepto_no_proformado()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF current_setting('app.bypass_cierre', true) = 'on' THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.proforma_id IS NOT NULL THEN
+      RAISE EXCEPTION
+        'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma y no puede eliminarse'
+        USING ERRCODE = 'P0001';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF OLD.proforma_id IS NOT NULL
+     AND (NEW.descripcion       IS DISTINCT FROM OLD.descripcion
+       OR NEW.cantidad          IS DISTINCT FROM OLD.cantidad
+       OR NEW.precio_unitario   IS DISTINCT FROM OLD.precio_unitario
+       OR NEW.moneda            IS DISTINCT FROM OLD.moneda
+       OR NEW.total             IS DISTINCT FROM OLD.total
+       OR NEW.aplica_iva        IS DISTINCT FROM OLD.aplica_iva
+       OR NEW.tasa_iva_aplicada IS DISTINCT FROM OLD.tasa_iva_aplicada) THEN
+    RAISE EXCEPTION
+      'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma; elimina o recrea la proforma pendiente antes de ajustarlo (si ya se facturó, usa el flujo fiscal correspondiente)'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+-- ── B14 ─────────────────────────────────────────────────────────────────────
+-- Un costo con factura de proveedor viva vinculada no puede cambiar de monto,
+-- moneda ni proveedor: primero hay que desvincular o corregir la factura. Los
+-- campos no financieros y las transiciones de liquidación siguen permitidos.
+CREATE OR REPLACE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_folio text;
+BEGIN
+  IF NEW.monto IS NOT DISTINCT FROM OLD.monto
+     AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+     AND NEW.proveedor_id IS NOT DISTINCT FROM OLD.proveedor_id THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor)
+    INTO v_folio
+    FROM public.proveedor_facturas_conceptos pfc
+    JOIN public.proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
+   WHERE pfc.concepto_costo_id = NEW.id
+     AND pf.deleted_at IS NULL
+     AND pf.estado::text <> 'Cancelada'
+   LIMIT 1;
+
+  IF v_folio IS NOT NULL THEN
+    RAISE EXCEPTION
+      'LC_COSTO_VINCULADO_CXP: el costo está vinculado a la factura de proveedor %; desvincula o corrige esa factura antes de cambiar monto, moneda o proveedor',
+      COALESCE(NULLIF(btrim(v_folio), ''), '(sin folio)')
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trg_conceptos_costo_guard_vinculo_cxp ON public.conceptos_costo;
+CREATE TRIGGER trg_conceptos_costo_guard_vinculo_cxp
+BEFORE UPDATE OF monto, moneda, proveedor_id ON public.conceptos_costo
+FOR EACH ROW EXECUTE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp();
+
+-- ── B15 ─────────────────────────────────────────────────────────────────────
+-- `is_org_member` dejaba borrar proformas vivas a cualquier miembro (incluido
+-- sólo lectura) invocando el RPC. Se alinea con la policy canónica
+-- "Tenant delete proformas": admin, admin_org, operador, contador, super_admin.
+CREATE OR REPLACE FUNCTION public.eliminar_proforma_rpc(p_proforma_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid;
+  v_numero text;
+  v_estado text;
+  v_factura uuid;
+  v_factura2 uuid;
+  v_folio_ext text;
+  v_deleted timestamptz;
+  v_embarque uuid;
+BEGIN
+  SELECT organization_id, numero, estado_proforma, factura_id, factura_secundaria_id,
+         folio_factura_externa, deleted_at, embarque_id
+    INTO v_org, v_numero, v_estado, v_factura, v_factura2, v_folio_ext, v_deleted, v_embarque
+  FROM public.proformas WHERE id = p_proforma_id
+  FOR UPDATE;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_PROFORMA_NO_ENCONTRADA';
+  END IF;
+  IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_org) THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA';
+  END IF;
+  -- Espejo de la policy RLS `Tenant delete proformas`.
+  IF auth.uid() IS NOT NULL AND NOT public.has_any_role_efectivo(
+       auth.uid(),
+       ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
+             'operador'::public.app_role, 'contador'::public.app_role,
+             'super_admin'::public.app_role]
+     ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_SIN_PERMISO: tu rol no puede eliminar proformas'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_deleted IS NOT NULL THEN
+    RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', false);
+  END IF;
+  -- RG10: el folio externo suelto ya NO bloquea; sólo una factura viva o el
+  -- estado 'facturada'.
+  IF v_factura IS NOT NULL OR v_factura2 IS NOT NULL
+     OR lower(COALESCE(v_estado, '')) = 'facturada' THEN
+    RAISE EXCEPTION 'LC_PROFORMA_FACTURADA';
+  END IF;
+
+  UPDATE public.conceptos_venta
+     SET estado_facturacion = 'pendiente', proforma_id = NULL
+   WHERE proforma_id = p_proforma_id;
+
+  UPDATE public.proformas
+     SET deleted_at = now(), deleted_by = auth.uid()
+   WHERE id = p_proforma_id;
+
+  RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', true);
 END;
 $function$;

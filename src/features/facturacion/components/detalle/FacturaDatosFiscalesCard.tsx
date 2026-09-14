@@ -18,7 +18,10 @@ import {
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
 import { useAutoSaveDatosFiscales } from "@/features/facturacion/hooks/useAutoSaveDatosFiscales";
-import { inicialesDatosFiscales } from "@/features/facturacion/domain/datosFiscalesForm";
+import {
+  avisoTipoCambioFactura,
+  inicialesDatosFiscales,
+} from "@/features/facturacion/domain/datosFiscalesForm";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 import { AutoSaveIndicator } from "./AutoSaveIndicator";
 import { queryKeys } from "@/lib/query";
@@ -56,6 +59,9 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   // B-03: TC DOF vigente en la fecha de emisión de la factura, no el de hoy.
   const obtenerTC = useBanxicoTipoCambio(factura.moneda, setTipoCambio, factura.fecha_emision);
 
+  // B12: el borrador USD nace sin T/C; también avisamos si quedó fuera de banda.
+  const avisoTC = avisoTipoCambioFactura(factura.moneda, tipoCambio);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -63,12 +69,13 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
         <AutoSaveIndicator estado={estado} ultimoGuardado={ultimoGuardado} />
       </CardHeader>
       <CardContent className="space-y-4">
-        {factura.moneda !== "MXN" && (tipoCambio == null || tipoCambio <= 0) && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body text-destructive">
+        {avisoTC && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body text-destructive"
+          >
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            <span>Falta capturar el tipo de cambio del día. Pulsa
-            <span className="font-semibold"> “Obtener TC DOF de hoy”</span> o
-            escríbelo manualmente antes de timbrar.</span>
+            <span>{avisoTC}</span>
           </div>
         )}
         <DatosFiscalesForm
