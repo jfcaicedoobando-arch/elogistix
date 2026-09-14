@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
+
+// useFiltrosTarifaCotizacion usa TanStack Query: cada render se envuelve en
+// un QueryClient aislado (sin reintentos) para no acoplar la prueba al
+// QueryClient global de la app.
+function renderConQueryClient(ui: ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const revalidarTarifa = vi.fn();
 const mutateAsync = vi.fn();
