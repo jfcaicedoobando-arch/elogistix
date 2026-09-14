@@ -32,22 +32,6 @@ interface Props {
 }
 
 /**
- * v13.823.366 — Gate de edición de costos: espejo del guard servidor
- * `LC_COT_COSTOS_ESTADO_INVALIDO` (sólo Borrador/Solicitada). Se aísla para no
- * subir la complejidad ciclomática del componente.
- */
-function gateEdicionCostos(canWrite: boolean, estado: EstadoCotizacion) {
-  const motivo = canWrite ? motivoBloqueoEdicionCostos(estado) : null;
-  return { canEdit: canWrite && motivo === null, motivo };
-}
-
-/** Aviso breve cuando el estado de la cotización ya no permite editar costos. */
-function AvisoCostosBloqueados({ motivo, visible }: { motivo: string | null; visible: boolean }) {
-  if (!motivo || !visible) return null;
-  return <p className="text-body-sm text-muted-foreground">{motivo}</p>;
-}
-
-/**
  * Modo "detalle": carga/persiste costos desde la BD para una cotización existente.
  * Usado en CotizacionDetalle.
  */
