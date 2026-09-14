@@ -39,13 +39,16 @@ export function TraspasoResumen({
     <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
       <Renglon label="Monto a transferir" value={formatCurrency(r.montoOrigen, monedaOrigen)} />
       {r.comision > 0 && (
-        <Renglon label="Comisión bancaria" value={formatCurrency(r.comision, monedaOrigen)} muted />
+        <>
+          <Renglon label="Comisión bancaria" value={formatCurrency(r.comision, monedaOrigen)} muted />
+          <Renglon
+            label="Cargo total en la cuenta origen"
+            value={formatCurrency(r.totalCargoOrigen, monedaOrigen)}
+            muted
+          />
+        </>
       )}
-      <Renglon
-        label="Cargo total en la cuenta origen"
-        value={formatCurrency(r.totalCargoOrigen, monedaOrigen)}
-        muted
-      />
+
       {conversion && (
         <Renglon
           label="Tipo de cambio aplicado"
