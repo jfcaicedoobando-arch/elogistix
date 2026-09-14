@@ -5,7 +5,9 @@
 --      paso 2 debe estar reflejado en `conceptos_venta` de la misma moneda.
 --   #7 Sólo MXN y USD están soportados; una moneda desconocida ya no se
 --      convierte en silencio a MXN.
--- Las cotizaciones informativas (tarifarios) quedan exentas: no se convierten.
+-- B18 (v13.823.379): las cotizaciones informativas (tarifarios) NO se convierten:
+--   antes salían por RETURN temprano y una llamada directa a la RPC podía crear
+--   el embarque; ahora fallan con LC_COT_INFORMATIVA.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid)

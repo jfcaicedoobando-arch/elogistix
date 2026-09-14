@@ -4,6 +4,8 @@
 -- Defecto 1 (ronda posterior a v13.823.39): la clasificación fiscal del IVA se
 -- delega en public._tipo_iva_desde_tasa para que el 8% de frontera no viaje al
 -- CFDI como 16%.
+-- B16 (v13.823.379): `aplica_iva = false` manda sobre una tasa legacy stale
+-- (p. ej. 0.16): la línea se persiste exenta y con tasa NULL.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
@@ -21,12 +23,13 @@ BEGIN
     SELECT p_factura_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
            pcc.moneda, pcc.total, p_org,
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
-           -- Defecto 1: 8% de frontera conserva su clasificación fiscal.
-           public._tipo_iva_desde_tasa(pcc.aplica_iva, pcc.tasa_iva_aplicada),
-           CASE
-             WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN NULL
-             ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16)
-           END,
+           -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
+           -- importar que arrastre una tasa legacy (p. ej. 0.16).
+           public._tipo_iva_desde_tasa(
+             pcc.aplica_iva,
+             CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END),
+           CASE WHEN pcc.aplica_iva = false THEN NULL
+                ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, pcc.proforma_id
     FROM public.proforma_conceptos_consolidados pcc
     JOIN public.proformas p ON p.id = pcc.proforma_id
@@ -43,11 +46,11 @@ BEGIN
            -- igual que en la rama consolidada (pcc.total ya viene redondeado).
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           public._tipo_iva_desde_tasa(cv.aplica_iva, cv.tasa_iva_aplicada),
-           CASE
-             WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN NULL
-             ELSE COALESCE(cv.tasa_iva_aplicada, 0.16)
-           END,
+           public._tipo_iva_desde_tasa(
+             cv.aplica_iva,
+             CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END),
+           CASE WHEN cv.aplica_iva = false THEN NULL
+                ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, cv.proforma_id
     FROM public.conceptos_venta cv
     JOIN public.proformas p ON p.id = cv.proforma_id
@@ -57,3 +60,6 @@ BEGIN
   END IF;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) TO service_role;
