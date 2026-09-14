@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.387] - 2026-09-14
+
+- **fix(embarques)**: un embarque en **Borrador sin expediente** ya se puede eliminar. `public.eliminar_embarque_completo` determinaba la existencia del registro con el expediente (`IF v_expediente IS NULL THEN RAISE 'Embarque no encontrado'`), por lo que cualquier borrador creado antes de asignar folio devolvía "Embarque no encontrado" desde el menú de acciones. Ahora la existencia se resuelve con `IF NOT FOUND` y las leyendas usan `v_label = COALESCE(NULLIF(btrim(expediente),''), 'Borrador ' || right(id::text, 6))` en el `RAISE LC_EMBARQUE_BLOQUEADO`, en el JSON de motivos (`expediente`) y en `bitacora_actividad.entidad_nombre`. Guard de rol/tenant y candados fiscales sin cambios; privilegios H6 reafirmados (REVOKE PUBLIC/anon + GRANT authenticated/service_role/postgres).
+- Cobertura nueva: `supabase/tests/eliminar_embarque_borrador_sin_expediente.sql` (registrada en `_guards_manifest.txt`): borrador sin expediente se elimina con bitácora legible; embarque con factura viva sigue bloqueado con `LC_EMBARQUE_BLOQUEADO`.
+
+
+
 ## [13.823.386] - 2026-09-14
 
 - **fix(finanzas/tesorería)**: lote de integridad N1–N5 (sin publicar, sin pantallas nuevas, sin relajar RLS/guards).
