@@ -1,13 +1,3 @@
--- Fuente canónica de public._assert_cotizacion_venta_valida
--- v13.823.357 · Auditoría YAGNI (cotizaciones→embarques) P1 #1, #3 y P2 #7:
---   #1 No se convierte una cotización sin ningún renglón de venta positivo.
---   #3 Invariancia costo→venta: un `precio_venta` positivo capturado en el
---      paso 2 debe estar reflejado en `conceptos_venta` de la misma moneda.
---   #7 Sólo MXN y USD están soportados; una moneda desconocida ya no se
---      convierte en silencio a MXN.
--- Las cotizaciones informativas (tarifarios) quedan exentas: no se convierten.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid)
 RETURNS void
 LANGUAGE plpgsql

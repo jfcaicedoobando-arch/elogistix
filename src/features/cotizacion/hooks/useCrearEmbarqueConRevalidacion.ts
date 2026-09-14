@@ -13,6 +13,7 @@ import {
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
 import type { ResultadoRevalidacion, DecisionTarifa } from "@/features/cotizacion/domain/revalidacionTarifa";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { verificarCostosOAvisar } from "@/features/cotizacion/services/candadoCostosAviso";
 import { esErrorDeEsquemaBD } from "@/features/cotizacion/domain/erroresEsquemaBD";
 
 export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
@@ -84,6 +85,8 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
   const handleClick = async () => {
     // Guard #1: evita re-entrada síncrona (doble click rápido).
     if (enVueloRef.current || bloqueadoPorEsquema) return;
+    // v13.823.370 (P1-1) — candado de costos también en esta ruta (fail-closed).
+    if (!(await verificarCostosOAvisar(cotizacionId))) return;
     enVueloRef.current = true;
     setRevalidando(true);
     // Fase 1 — revalidación. Su catch NO debe abarcar la creación del embarque.

@@ -45,6 +45,8 @@ export const MOTIVO_SIN_FACTURAS =
   "Todavía no hay facturas registradas, así que este punto aún no se puede evaluar.";
 export const MOTIVO_SIN_COMISION =
   "Este embarque está marcado como sin comisión (cuenta directa), así que no hay comisión que medir.";
+export const MOTIVO_SIN_REQUISITOS_DOCUMENTALES =
+  "No hay requisitos documentales por validar en este embarque.";
 export const MOTIVO_SIN_COSTOS_COMPROBADOS =
   "Faltan costos con factura de proveedor o venta por facturar: el resultado todavía no es confiable.";
 
@@ -57,6 +59,13 @@ export const MOTIVO_SIN_COSTOS_COMPROBADOS =
 export interface OpcionesNoAplica {
   /** v13.386.0 — El embarque está excluido de comisiones (cliente o override). */
   sinComision?: boolean;
+  /**
+   * v13.823.370 (P2-5) — El embarque no tiene ningún requisito documental
+   * registrado: `faltantes = 0` no significa "documentos requeridos completos",
+   * así que el check no debe pintarse en verde. Sólo afecta la presentación; el
+   * candado de cierre (`puede_cerrar`) no cambia.
+   */
+  sinRequisitosDocumentales?: boolean;
 }
 
 function marcar(
@@ -116,6 +125,10 @@ export function calcularReglasNoAplica(
     checks.some((c) => REGLAS_COMISION.has(c.regla) && pick(c.detalle, "sin_comision") === true);
   if (sinComision) {
     marcar(noAplica, checks, (c) => REGLAS_COMISION.has(c.regla), MOTIVO_SIN_COMISION);
+  }
+
+  if (opciones.sinRequisitosDocumentales === true) {
+    marcar(noAplica, checks, (c) => c.regla === "docs_completos", MOTIVO_SIN_REQUISITOS_DOCUMENTALES);
   }
 
   marcarCxc(noAplica, checks);

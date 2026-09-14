@@ -4,37 +4,35 @@
  * Combina:
  * - Cotizado: costos de la versión aceptada (RPC obtener_costos_cotizacion_version).
  * - Refrescado: cotizado + delta aplicado al crear el embarque (Fase 1, tarifa_delta_jsonb).
- * - Real: conceptos_costo vivos del embarque.
+ * - Real: monto REALMENTE facturado por el proveedor (partidas de facturas de
+ *   proveedor vigentes, excluyendo canceladas). v13.823.370 (P1-2): antes se
+ *   leía `conceptos_costo.monto`, que es el presupuesto clonado al convertir la
+ *   cotización, así que un embarque sin ninguna factura mostraba "Real = 4,500 ·
+ *   +0.0% · Dentro del rango". La fuente es `fetchReconciliacionEmbarque`, la
+ *   misma que usa el tab Costos (no se duplica la regla).
  *
  * Devuelve filas alineadas por (concepto, moneda) listas para la UI.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerEmbarqueInterno } from "./internoEmbarque";
+import { fetchReconciliacionEmbarque } from "./reconciliacionCostos";
 import {
   obtenerCostosCotizacionVersion,
   type CostoVersionado,
 } from "@/features/cotizacion/services/versionado";
 import {
-  construirFilaReconciliacion,
   construirResumen,
   UMBRALES_DEFAULT,
-  type FilaReconciliacion3C,
-  type ResumenReconciliacion3C,
   type UmbralesVarianza,
 } from "@/lib/domain/versionadoCotizacion";
+import {
+  agruparRealesFacturados,
+  buildFilas3C,
+  type DeltaConcepto,
+  type ResultadoReconciliacion3C,
+} from "./reconciliacion3Columnas.helpers";
 
-interface DeltaConcepto {
-  concepto: string;
-  moneda?: string;
-  monto_anterior?: number;
-  monto_actual?: number | null;
-}
-
-interface ConceptoCostoRow {
-  concepto: string;
-  moneda: string;
-  monto: number | string;
-}
+export * from "./reconciliacion3Columnas.helpers";
 
 interface EmbarqueMeta {
   cotizacion_id: string | null;
@@ -44,66 +42,6 @@ interface EmbarqueMeta {
   tipo_cambio_eur: number | string | null;
 }
 
-export interface ResultadoReconciliacion3C {
-  filas: FilaReconciliacion3C[];
-  resumen: ResumenReconciliacion3C;
-  tiene_cotizacion: boolean;
-  version_aceptada: number | null;
-}
-
-function aplicarDelta(cotizado: CostoVersionado, delta: DeltaConcepto[]): number {
-  const d = delta.find(
-    (x) => x.concepto.trim().toLowerCase() === cotizado.concepto.trim().toLowerCase(),
-  );
-  if (!d) return cotizado.costo_total;
-  if (d.monto_actual == null) return cotizado.costo_total; // eliminado en tarifa vigente
-  return Number(d.monto_actual);
-}
-
-export function buildFilas3C(
-  cotizados: CostoVersionado[],
-  delta: DeltaConcepto[],
-  reales: ConceptoCostoRow[],
-  umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
-): FilaReconciliacion3C[] {
-  const realesMap = new Map<string, ConceptoCostoRow>();
-  for (const r of reales) {
-    realesMap.set(`${r.concepto.trim().toLowerCase()}|${r.moneda}`, r);
-  }
-
-  const filas: FilaReconciliacion3C[] = [];
-  const usadosReales = new Set<string>();
-
-  for (const c of cotizados) {
-    const key = `${c.concepto.trim().toLowerCase()}|${c.moneda}`;
-    const real = realesMap.get(key);
-    if (real) usadosReales.add(key);
-    filas.push(
-      construirFilaReconciliacion(
-        {
-          concepto: c.concepto,
-          moneda: c.moneda,
-          cotizado: c.costo_total,
-          refrescado: aplicarDelta(c, delta),
-          real: real ? Number(real.monto) || 0 : 0,
-        },
-        umbrales,
-      ),
-    );
-  }
-
-  // Conceptos reales sin contraparte cotizada (sólo aparecen en la columna real).
-  for (const [key, r] of realesMap.entries()) {
-    if (usadosReales.has(key)) continue;
-    filas.push(
-      construirFilaReconciliacion(
-        { concepto: r.concepto, moneda: r.moneda, cotizado: 0, refrescado: 0, real: Number(r.monto) || 0 },
-        umbrales,
-      ),
-    );
-  }
-  return filas;
-}
 
 export async function obtenerReconciliacion3Columnas(
   embarqueId: string,
@@ -145,14 +83,9 @@ export async function obtenerReconciliacion3Columnas(
     cotizados = await obtenerCostosCotizacionVersion(emb.cotizacion_id, versionAceptada);
   }
 
-  // 2. Reales: conceptos_costo del embarque.
-  const { data: realesRaw, error: realErr } = await supabase
-    .from("conceptos_costo")
-    .select("concepto, moneda, monto")
-    .eq("embarque_id", embarqueId)
-    .is("deleted_at", null);
-  if (realErr) throw new Error(realErr.message);
-  const reales = (realesRaw ?? []) as ConceptoCostoRow[];
+  // 2. Reales: monto facturado por proveedor (facturas vigentes, sin canceladas).
+  // Se reutiliza el servicio del tab Costos para no duplicar la regla.
+  const reales = agruparRealesFacturados(await fetchReconciliacionEmbarque(embarqueId));
 
   // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
   const interno = await obtenerEmbarqueInterno(embarqueId);

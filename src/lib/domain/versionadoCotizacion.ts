@@ -13,7 +13,13 @@
 import { convertirMxn, type TiposCambio } from "@/lib/financial/convertir";
 import { roundMoney } from "@/lib/financial/financialUtils";
 
-export type ClasificacionVarianza = "dentro_rango" | "alerta" | "critica";
+/**
+ * v13.823.370 (P1-2) — `pendiente`: el renglón todavía NO tiene factura de
+ * proveedor vigente, así que la columna "Real" vale 0 por falta de captura y no
+ * por un ahorro. Antes se clasificaba como `dentro_rango` (0%), que se leía
+ * como "conciliado y sano".
+ */
+export type ClasificacionVarianza = "pendiente" | "dentro_rango" | "alerta" | "critica";
 
 export interface UmbralesVarianza {
   /** % a partir del cual una varianza pasa de "dentro_rango" a "alerta". */
@@ -43,6 +49,8 @@ export interface FilaReconciliacion3C {
   delta_refr_vs_real: DeltaPair;
   /** Clasificación de la varianza más severa (cot vs real). */
   clasificacion: ClasificacionVarianza;
+  /** v13.823.370 (P1-2) — sin factura de proveedor vigente ligada. */
+  sin_factura: boolean;
 }
 
 export interface ResumenReconciliacion3C {
@@ -83,6 +91,8 @@ export interface EntradaReconciliacion {
   cotizado: number;
   refrescado: number;
   real: number;
+  /** v13.823.370 (P1-2) — true si el real todavía no está facturado. */
+  sin_factura?: boolean;
 }
 
 export function construirFilaReconciliacion(
@@ -101,7 +111,10 @@ export function construirFilaReconciliacion(
     delta_cot_vs_real: deltaCR,
     delta_cot_vs_refr: deltaCRefr,
     delta_refr_vs_real: deltaRR,
-    clasificacion: clasificarVarianza(deltaCR.pct, umbrales),
+    clasificacion: entrada.sin_factura === true
+      ? "pendiente"
+      : clasificarVarianza(deltaCR.pct, umbrales),
+    sin_factura: entrada.sin_factura === true,
   };
 }
 
@@ -139,12 +152,15 @@ export function construirResumen(
   total_refrescado = roundMoney(total_refrescado);
   total_real = roundMoney(total_real);
   const delta = calcularDelta(total_cotizado, total_real);
+  // v13.823.370 (P1-2) — mientras NINGÚN renglón tenga factura de proveedor, el
+  // total real es 0 por falta de captura: no es una desviación de -100%.
+  const todoPendiente = filas.length > 0 && filas.every((f) => f.sin_factura === true);
   return {
     total_cotizado,
     total_refrescado,
     total_real,
     delta_cot_vs_real: delta,
-    clasificacion: clasificarVarianza(delta.pct, umbrales),
+    clasificacion: todoPendiente ? "pendiente" : clasificarVarianza(delta.pct, umbrales),
     moneda_total: "MXN",
     filas_sin_tipo_cambio,
   };

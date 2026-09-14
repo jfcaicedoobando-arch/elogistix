@@ -148,7 +148,13 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="cierre" className="space-y-6">
-        <TabCierre embarqueId={embarqueId} estatus={embarque.estado ?? ""} modo={embarque.modo} expediente={embarque.expediente ?? ""} />
+        <TabCierre
+          embarqueId={embarqueId}
+          estatus={embarque.estado ?? ""}
+          modo={embarque.modo}
+          expediente={embarque.expediente ?? ""}
+          docsRequeridos={documentos.filter((d) => d.estado !== "No aplica").length}
+        />
       </TabsContent>
 
       <TabsContent value="notas">
