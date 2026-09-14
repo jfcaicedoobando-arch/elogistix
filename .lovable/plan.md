@@ -1,26 +1,17 @@
-# Pulido P2 de P&L y contenedores
-
-## Objetivo
-Corregir cinco señales visuales confusas en Cotizaciones/Embarques sin cambiar cálculos, datos, reglas de negocio ni backend.
+# Plan: Pulido P2 Embarques/Facturación B6–B10
 
 ## Cambios
-1. Mostrar el selector **Global / Por contenedor** únicamente cuando exista al menos un contenedor operativo registrado; si deja de aplicar, conservar la vista Global.
-2. En el resumen de contenedores, tratar filas sin número como marcadores: mostrar sus peso, volumen y piezas como **Sin capturar / —**, excluirlas del resumen uniforme y conservar los ceros de contenedores válidos.
-3. Identificar permanentemente la P&L por contenedor como **Presupuesto** y aclarar que proviene de conceptos cotizados.
-4. Presentar **Generales** como una fila auxiliar de origen del prorrateo, con la leyenda **Ya incluido en los contenedores · no se suma al total**, sin cambiar sus importes ni la fila Total.
-5. Mostrar la nota de tipo de cambio sólo cuando existan conceptos activos no-MXN y listar únicamente las monedas presentes; el comparativo DOF se mostrará sólo cuando USD esté presente.
+- **B6 — Contenedores:** mantener visibles Peso, Volumen y Piezas cuando exista al menos un marcador pendiente; conservar el resumen uniforme sólo cuando todos estén capturados y respetar ceros explícitos válidos.
+- **B7 — Facturas:** agrupar el subtotal vigente por moneda, excluir facturas canceladas del importe emitido y conservar el contador total de documentos.
+- **B8 — Cierre:** alinear únicamente los dos mensajes de permisos con coordinación/gerencia de operaciones y administración, sin tocar autorización.
+- **B9 — CSV:** extraer un helper pequeño compatible con RFC 4180 para escapar comas, comillas y saltos de línea, manteniendo columnas, valores y nombre del archivo.
+- **B10 — Conceptos de venta:** renombrar la columna por fila a “Subtotal” y señalar los importes de las tarjetas como “Total c/ IVA”, sin modificar sus cálculos.
 
-## Pruebas focalizadas
-- Condición del selector por existencia de contenedores operativos.
-- Formato de marcadores y conservación de cero en contenedores válidos.
-- Etiquetas de presupuesto y fila auxiliar de Generales.
-- Nota T/C ausente para MXN-only, USD sin EUR sobrante y compatibilidad con EUR.
-- Ejecutar únicamente pruebas relacionadas, revisión de tipos/lint focalizada y auditorías de versión/manifest; no CI/RLS/E2E completos.
-
-## Entrega
-Actualizar `APP_VERSION` a **13.823.373**, agregar su entrada al `CHANGELOG.md` y regenerar el manifest conservando entradas previas. No publicar.
+## Pruebas y cierre
+- Agregar pruebas focalizadas para el caso mixto de contenedores, subtotales por moneda y canceladas, mensajes de cierre, escape CSV, y conceptos gravados/exentos.
+- Ejecutar sólo Vitest focalizado, typecheck, lint focalizado y auditorías de versión/manifiesto/arquitectura.
+- Actualizar `APP_VERSION`, `CHANGELOG.md`, manifiesto de release y roadmap conforme a la convención; no publicar ni ejecutar CI/RLS completos.
 
 ## Detalles técnicos
-- Reutilizar los conceptos y contenedores ya disponibles en caché para evitar lecturas duplicadas.
-- Extraer helpers puros pequeños donde permitan probar condiciones de render sin exceder 200 líneas.
-- No modificar RPCs, migraciones, RLS, fórmulas financieras ni registros existentes.
+- Reutilizar `formatCurrency`, helpers financieros existentes y patrones de componentes actuales.
+- No agregar dependencias, migraciones, RPCs, RLS, conversiones de moneda ni cambios de datos.
