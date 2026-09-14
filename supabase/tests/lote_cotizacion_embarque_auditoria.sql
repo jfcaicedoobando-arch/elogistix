@@ -11,7 +11,8 @@
 --     LC_COT_TC_REQUERIDO (antes convertía sin TC sellado).
 --   · CASO 4: con tipo de cambio capturado, la misma cotización sí convierte y
 --     el embarque hereda el TC.
---   · CASO 5: una línea de venta válida + una malformada (cantidad='dos') ⇒
+--   · CASO 5: una línea de venta válida + una LEGADA malformada (cantidad='dos',
+--     inyectada saltando triggers sólo en la prueba) ⇒
 --     LC_COT_VENTA_IMPORTE_INVALIDO con la descripción de la fila, y NO se crea
 --     embarque (antes reventaba con "invalid input syntax for type numeric").
 --
