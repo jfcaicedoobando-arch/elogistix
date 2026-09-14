@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.382] - 2026-09-14
+
+- **fix(finanzas/tesorería/CxP/proformas)**: lote D1–D6 (sin publicar, sin tocar datos históricos ni relajar guards/RLS).
+  - **D1 P&L con notas de crédito en otra moneda**: en `pnl_financiero_embarque` las NC de cliente pasan por `nc_convertida_a_moneda_factura` (moneda/TC de la factura) y las de proveedor por `monto_pago_en_moneda_factura` antes de aplicar el factor de atribución multiembarque y la proporción `base_gravable/total`. Antes se restaba `monto` en crudo, contradiciendo `saldo_factura` / `saldo_factura_proveedor`. Sólo lectura.
+  - **D2 Cobro individual CxC atómico**: nueva RPC `registrar_pago_factura_atomico`: el pago y su abono espejo se confirman o revierten juntos; sin cuenta bancaria el cobro se conserva sin movimiento. Un mismo `client_request_id` devuelve el pago existente y asegura/repara el movimiento en lugar de fallar con `23505`. Se conservan triggers, permisos, PPD→REP y bitácora.
+  - **D3 Traspasos con fecha futura**: `registrar_traspaso_bancario` exige fecha presente y no posterior a la fecha de negocio `America/Mexico_City` **antes** de crear movimientos (`LC_TRASPASO_FECHA_REQUERIDA`, `LC_TRASPASO_FECHA_FUTURA`). Se conservan corte, bloqueo y conversión.
+  - **D4 Fechas del pago individual CxP**: `registrar_pago_proveedor_atomico` y `guard_pago_proveedor` aplican el canon de fecha de negocio México en INSERT y UPDATE directos (`LC_PAGO_FECHA_FUTURA`, `LC_PAGO_FECHA_PREVIA_EMISION`); `fecha_pago` ya no cuenta como metadato. Lotes y pagos programados sin cambios.
+  - **D5 Edición CxP transaccional**: nueva RPC `actualizar_pago_proveedor_atomico` que bloquea pago y factura (`FOR UPDATE`), valida rol/tenant/fecha/cuenta/moneda/saldo, actualiza el pago y reemplaza sólo el movimiento derivado del sistema en la misma transacción; las líneas importadas reales se desvinculan, nunca se borran. Concurrencia optimista (`LC_CONFLICTO_CONCURRENCIA`) y bitácora intactas.
+  - **D6 Documentos de proformas fusionadas en el detalle**: `fetchProformaPorId`, `fetchProformasEmbarque` y el historial del embarque mezclan la FK inversa con `factura_id` y `factura_secundaria_id` con el shape completo (PDF/XML), así que la segunda factura en USD de una fusión N→1 ya es visible; sin duplicados ni documentos en papelera.
+
 ## [13.823.381] - 2026-09-14
 
 - **fix(facturación/reportes/CI)**: lote C26–C30 (sin tocar datos históricos ni relajar guards).

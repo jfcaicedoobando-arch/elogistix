@@ -6,15 +6,8 @@
  * una cuenta) y se deja rastro en la bitácora.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
-import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import {
-  crearMovimientoBancarioPago,
-  eliminarMovimientoBancarioPago,
-} from "./pagoProveedorMovimiento";
-import { avisarMovimientoNoCreado } from "./pagoProveedorMovimientoAviso";
 import { detallesPagoEditado } from "./pagoProveedorBitacora";
 import type { PagoProveedor } from "./pagosProveedorTypes";
 
@@ -53,50 +46,35 @@ async function leerPagoActual(id: string) {
 
 export async function actualizarPagoProveedor(
   input: ActualizarPagoProveedorInput,
-  userId: string | null,
+  _userId: string | null,
 ): Promise<void> {
   const actual = await leerPagoActual(input.id);
 
   const tc = input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null;
-  const payload: TablesUpdate<"pagos_proveedor"> = {
-    fecha_pago: input.fecha_pago,
-    monto: input.monto,
-    moneda: input.moneda,
-    tipo_cambio_usd: tc,
-    metodo_pago: input.metodo_pago,
-    referencia: input.referencia ?? "",
-    cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
-    notas: input.notas ?? "",
-    diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
-  };
 
-  let query = supabase
-    .from("pagos_proveedor")
-    .update(payload)
-    .eq("id", input.id);
-  if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
-  const { data: filas, error } = await query.select("id");
-  if (error) throw error;
-  if (!primeraFila(filas)) throw conflictoConcurrenciaError();
-
-  // El movimiento bancario anterior deja de ser válido: se da de baja y, si el
-  // pago sigue saliendo de una cuenta, se genera de nuevo con los datos nuevos.
-  await eliminarMovimientoBancarioPago(input.id, userId);
-  let movimientoCreado = false;
-  if (input.cuenta_bancaria_id) {
-    movimientoCreado = avisarMovimientoNoCreado(await crearMovimientoBancarioPago({
-      pagoId: input.id,
-      organizationId: actual.organization_id,
-      cuentaBancariaId: input.cuenta_bancaria_id,
-      facturaId: input.proveedor_factura_id,
-      fechaPago: input.fecha_pago,
-      monto: input.monto,
-      moneda: input.moneda,
-      tipoCambioUsd: tc,
-      referencia: input.referencia,
-      userId,
-    }));
+  // D5 (v13.823.382): una sola transacción en BD. Antes eran tres llamadas
+  // (actualizar pago → borrar movimiento → crear movimiento) y un fallo dejaba
+  // la factura editada sin salida bancaria, o con la salida vieja.
+  const { data, error } = await supabase.rpc("actualizar_pago_proveedor_atomico", {
+    p_pago_id: input.id,
+    p_fecha_pago: input.fecha_pago,
+    p_monto: input.monto,
+    p_moneda: input.moneda,
+    // SAFE-CAST: el argumento admite NULL en BD (NULLIF sobre COALESCE).
+    p_tipo_cambio_usd: tc as number,
+    p_metodo_pago: input.metodo_pago,
+    p_referencia: input.referencia ?? "",
+    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? undefined,
+    p_notas: input.notas ?? "",
+    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? undefined,
+    p_expected_updated_at: input.expectedUpdatedAt ?? undefined,
+  });
+  if (error) {
+    if (error.message.includes("LC_CONFLICTO_CONCURRENCIA")) throw conflictoConcurrenciaError();
+    throw error;
   }
+  // SAFE-CAST: contrato jsonb de la RPC (movimiento_creado).
+  const movimientoCreado = ((data ?? {}) as { movimiento_creado?: boolean }).movimiento_creado === true;
 
   await registrarActividad({
     modulo: "cxp",

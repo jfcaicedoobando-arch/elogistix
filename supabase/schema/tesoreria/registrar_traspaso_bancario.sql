@@ -2,6 +2,10 @@
 -- Fuente 1:1: supabase/migrations/20260908001000_traspaso_lock_saldo_y_fecha_corte.sql
 -- (Ola 8 · corrección P1: candado FOR UPDATE en cuentas_bancarias antes de
 -- validar el saldo, y rechazo de p_fecha anterior al corte de saldo inicial.)
+-- D3 (v13.823.382): la fecha del traspaso se valida también en servidor
+-- (requerida y no posterior a la fecha de negocio America/Mexico_City). Un
+-- RPC llamado directo insertaba tres movimientos con fecha futura que
+-- saldo_cuenta_bancaria ya sumaba hoy.
 -- Ver supabase/schema/README.md para el flujo obligatorio de este directorio.
 
 CREATE OR REPLACE FUNCTION public.registrar_traspaso_bancario(p_cuenta_origen_id uuid, p_cuenta_destino_id uuid, p_fecha date, p_monto_origen numeric, p_tipo_cambio numeric DEFAULT NULL::numeric, p_comision numeric DEFAULT 0, p_concepto text DEFAULT ''::text, p_referencia text DEFAULT ''::text, p_client_request_id uuid DEFAULT NULL::uuid)
@@ -32,6 +36,16 @@ BEGIN
   END IF;
   IF v_comision < 0 THEN
     RAISE EXCEPTION 'LC_TRASPASO_COMISION_INVALIDA: la comisión no puede ser negativa';
+  END IF;
+  -- D3: fecha obligatoria y nunca futura (canon de fecha de negocio México).
+  -- Se valida ANTES de crear el traspaso y sus movimientos bancarios.
+  IF p_fecha IS NULL THEN
+    RAISE EXCEPTION 'LC_TRASPASO_FECHA_REQUERIDA: captura la fecha del traspaso'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_fecha > GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE) THEN
+    RAISE EXCEPTION 'LC_TRASPASO_FECHA_FUTURA: la fecha del traspaso (%) no puede ser futura', p_fecha
+      USING ERRCODE = '22023';
   END IF;
   SELECT * INTO v_origen FROM public.cuentas_bancarias WHERE id = p_cuenta_origen_id;
   SELECT * INTO v_destino FROM public.cuentas_bancarias WHERE id = p_cuenta_destino_id;

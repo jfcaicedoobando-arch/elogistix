@@ -1,14 +1,3 @@
--- Fuente canónica de public.pnl_financiero_embarque.
--- D1 (v13.823.382): las notas de crédito (cliente y proveedor) se convierten a
--- la moneda de la factura con los cánones existentes
--- (nc_convertida_a_moneda_factura / monto_pago_en_moneda_factura) ANTES de
--- aplicar el factor de atribución multiembarque y la proporción
--- base_gravable/total. Antes se restaba `n.monto` en crudo, así que una NC en
--- USD se restaba como si fueran pesos y el P&L contradecía a saldo_factura.
--- Extraída del baseline en C29 (v13.823.381): atribución por embarque de una
--- factura fusionada multiembarque (ver comentarios en el cuerpo).
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.pnl_financiero_embarque(_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql

@@ -49,14 +49,42 @@ describe("listarPagosFactura", () => {
 });
 
 describe("registrarPagoFactura", () => {
-  it("happy path: inserta sin error y devuelve el id", async () => {
-    mock.setTableResult("pagos_factura", { data: { id: "pago-1" }, error: null });
+  // D2 (v13.823.382): el cobro se registra con una sola RPC atómica.
+  it("happy path: llama la RPC atómica y devuelve el id", async () => {
+    mock.setRpcResult("registrar_pago_factura_atomico", {
+      data: { pago_id: "pago-1", movimiento_bancario: "no_aplica" },
+      error: null,
+    });
     await expect(registrarPagoFactura(validInput)).resolves.toMatchObject({ pagoId: "pago-1" });
-    expect(mock.tableCalls[0]?.ops).toContain("insert");
+    expect(mock.rpcCalls[0]?.fn).toBe("registrar_pago_factura_atomico");
+    // Ya no hay INSERT directo desde el navegador.
+    expect(mock.tableCalls.filter((c) => c.ops.includes("insert"))).toHaveLength(0);
   });
 
-  it("propaga error de supabase en insert", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: { message: "fk violated" } });
+  it("reporta el abono bancario cuando la RPC lo creó", async () => {
+    mock.setRpcResult("registrar_pago_factura_atomico", {
+      data: { pago_id: "pago-2", movimiento_bancario: "creado" },
+      error: null,
+    });
+    await expect(registrarPagoFactura({ ...validInput, cuenta_bancaria_id: "cta-1" }))
+      .resolves.toMatchObject({ pagoId: "pago-2", movimientoBancario: "creado" });
+  });
+
+  it("un reintento con el mismo client_request_id devuelve el cobro existente", async () => {
+    mock.setRpcResult("registrar_pago_factura_atomico", {
+      data: { pago_id: "pago-3", movimiento_bancario: "creado", reintento: true },
+      error: null,
+    });
+    await expect(registrarPagoFactura({ ...validInput, client_request_id: "req-1" }))
+      .resolves.toMatchObject({ pagoId: "pago-3" });
+    expect(mock.rpcCalls[0]?.args).toMatchObject({ p_client_request_id: "req-1" });
+  });
+
+  it("propaga el error de la RPC (el cobro no queda huérfano)", async () => {
+    mock.setRpcResult("registrar_pago_factura_atomico", {
+      data: null,
+      error: { message: "LC_COBRO_MOVIMIENTO_FALLIDO" },
+    });
     await expect(registrarPagoFactura(validInput)).rejects.toThrow();
   });
 });

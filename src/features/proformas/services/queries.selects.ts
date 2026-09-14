@@ -36,6 +36,15 @@ export const PROFORMA_LISTA_SELECT = [
   "factura_vinculada_secundaria:factura_secundaria_id(" + FACTURA_LITE + ")",
 ].join(", ");
 
+/**
+ * D6 (v13.823.382): embed con los datos del documento (folio, estado y ligas
+ * PDF/XML) de una factura vinculada. En una fusión N→1 la factura nace con
+ * `proforma_id = NULL`, así que sin los embeds `factura_vinculada*` el
+ * historial del embarque y el detalle perdían el acceso al PDF/XML — sobre
+ * todo el segundo documento (USD).
+ */
+const FACTURA_DOC = "id, numero, estado, uuid_fiscal, deleted_at, factura_pdf_url, factura_xml_url";
+
 export const PROFORMA_EMBARQUE_SELECT = [
   "id", "numero", "embarque_id", "factura_id", "factura_secundaria_id",
   "estado_proforma", "estado_revision", "estado_aprobacion", "estado_cliente",
@@ -46,4 +55,7 @@ export const PROFORMA_EMBARQUE_SELECT = [
   "fecha_emision", "operador", "dias_credito",
   "total_mxn", "total_usd", "created_at",
   "facturas:factura_id(factura_pdf_url, factura_xml_url)",
+  "facturas_asociadas:facturas!proforma_id(" + FACTURA_DOC + ")",
+  "factura_vinculada:factura_id(" + FACTURA_DOC + ")",
+  "factura_vinculada_secundaria:factura_secundaria_id(" + FACTURA_DOC + ")",
 ].join(", ");

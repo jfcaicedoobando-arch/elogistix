@@ -16,7 +16,9 @@ import type {
 
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
   // M2: boundary de dinero validado (identidad + total/subtotal/iva).
-  return fromDbChecked<ProformaConFactura[]>(
+  // D6: mezcla FK inversa + `factura_id` / `factura_secundaria_id` para que el
+  // historial del embarque encuentre ambos documentos de una fusión N→1.
+  const filas = fromDbChecked<ProformaConFactura[]>(
     await unwrapOr(
       supabase
         .from("proformas")
@@ -31,7 +33,7 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
     ),
     proformaRowsDbSchema,
   );
-
+  return filas.map(mergeFacturasVinculadas);
 }
 
 /**
@@ -51,6 +53,11 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
           "*",
           "facturas:factura_id(factura_pdf_url, factura_xml_url)",
           "facturas_asociadas:facturas!proforma_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at, created_at)",
+          // D6 (v13.823.382): en una fusión N→1 la factura tiene `proforma_id
+          // = NULL`; sin estos embeds el detalle perdía el PDF/XML (y el
+          // segundo documento en USD).
+          "factura_vinculada:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at, created_at)",
+          "factura_vinculada_secundaria:factura_secundaria_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at, created_at)",
           "cliente_full:cliente_id(nombre, rfc, direccion, ciudad, estado, cp, dias_credito)",
           "envios:proforma_envios(created_at, estado, destinatarios)",
           "embarque_full:embarque_id(modo, tipo, incoterm, bl_house, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, descripcion_mercancia, contenedores:embarque_contenedores(numero_contenedor, tipo_contenedor))",

@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
 
 import { CAP_LISTA } from "@/constants/queryCaps";
 
@@ -73,39 +72,31 @@ export interface RegistrarPagoResult {
 export async function registrarPagoFactura(
   input: RegistrarPagoInput,
 ): Promise<RegistrarPagoResult> {
-  const { data: userData } = await supabase.auth.getUser();
-  const created_by = userData.user?.id ?? null;
-  const data = await unwrap(
-    supabase
-      .from("pagos_factura")
-      .insert({
-        factura_id: input.factura_id,
-        fecha_pago: input.fecha_pago,
-        monto: input.monto,
-        moneda: input.moneda,
-        tipo_cambio: input.tipo_cambio,
-        monto_aplicado_factura: input.monto_aplicado_factura,
-        forma_pago: input.forma_pago,
-        referencia: input.referencia ?? "",
-        notas: input.notas ?? "",
-        diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
-        cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
-        client_request_id: input.client_request_id ?? null,
-        created_by,
-      })
-      .select("id")
-      .single(),
+  // D2 (v13.823.382): una sola RPC atómica e idempotente. Antes se insertaba el
+  // pago y DESPUÉS se pedía el abono bancario: si el abono fallaba, el cobro
+  // quedaba guardado sin reflejo en el banco, y un retry de red chocaba (23505)
+  // aunque el cobro ya existiera.
+  const res = await unwrap(
+    supabase.rpc("registrar_pago_factura_atomico", {
+      p_factura_id: input.factura_id,
+      p_fecha_pago: input.fecha_pago,
+      p_monto: input.monto,
+      p_moneda: input.moneda,
+      p_tipo_cambio: input.tipo_cambio,
+      p_monto_aplicado_factura: input.monto_aplicado_factura,
+      p_forma_pago: input.forma_pago,
+      p_referencia: input.referencia ?? "",
+      p_notas: input.notas ?? "",
+      p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
+      p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? undefined,
+      p_client_request_id: input.client_request_id ?? undefined,
+    }),
   );
-  const pagoId = (data as { id?: string } | null)?.id ?? null;
-  // El abono bancario sólo se crea si el usuario indicó la cuenta destino.
-  // Ola v17: lo registra la RPC `asegurar_movimiento_cobro_factura` (punto
-  // único de escritura, idempotente y con la conversión de moneda del lado del
-  // servidor). `ya_existe` no es un fallo: el abono ya está en el banco.
-  let movimientoBancario: RegistrarPagoResult["movimientoBancario"] = "no_aplica";
-  if (pagoId && input.cuenta_bancaria_id) {
-    const res = await crearMovimientoBancarioCobro(pagoId);
-    movimientoBancario = res.ok || res.motivo === "ya_existe" ? "creado" : "fallido";
-  }
+  // SAFE-CAST: contrato jsonb de la RPC (pago_id / movimiento_bancario).
+  const out = (res ?? {}) as { pago_id?: string; movimiento_bancario?: string };
+  const pagoId = out.pago_id ?? null;
+  const movimientoBancario: RegistrarPagoResult["movimientoBancario"] =
+    out.movimiento_bancario === "creado" ? "creado" : "no_aplica";
   // P2-6 (R5): los pagos de cliente no aparecían en la bitácora/actividad
   // (sólo los de proveedor), así que la línea de tiempo quedaba incompleta.
   await registrarActividad({

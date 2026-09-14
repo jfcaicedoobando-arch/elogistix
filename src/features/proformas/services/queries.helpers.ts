@@ -14,10 +14,23 @@ export function mergeProformaDetalle(data: unknown): ProformaDetalleFull {
   // SAFE-CAST: PostgREST embed devuelve `unknown`; validamos forma mínima antes de mapear.
   const raw = data as {
     facturas_asociadas?: RawAsociada[] | null;
+    factura_vinculada?: RawAsociada | null;
+    factura_vinculada_secundaria?: RawAsociada | null;
     envios?: ProformaEnvioLite[] | null;
   } & Record<string, unknown>;
-  const asociadas = (raw.facturas_asociadas ?? [])
-    .filter((f) => !f.deleted_at)
+  // D6 (v13.823.382): además de la FK inversa se aceptan las facturas
+  // vinculadas por `factura_id` / `factura_secundaria_id` (fusión N→1), sin
+  // duplicar por `id` y sin las borradas.
+  const vistas = new Map<string, RawAsociada>();
+  for (const f of [
+    ...(raw.facturas_asociadas ?? []),
+    raw.factura_vinculada ?? null,
+    raw.factura_vinculada_secundaria ?? null,
+  ]) {
+    if (!f || f.deleted_at || vistas.has(f.id)) continue;
+    vistas.set(f.id, f);
+  }
+  const asociadas = Array.from(vistas.values())
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
     .map(({ deleted_at: _d, created_at: _c, ...rest }) => rest);
   const envios = [...(raw.envios ?? [])].sort((a, b) =>
