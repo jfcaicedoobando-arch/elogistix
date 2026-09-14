@@ -1,5 +1,10 @@
 # Roadmap
 
+## Corrección B10 IVA por concepto 13.823.375
+- [x] Aplicar la tasa efectiva de cada concepto en MXN y USD, incluida 0% explícita
+- [x] Mantener visible la distinción Subtotal / Total c/ IVA en vista simple y agrupada
+- [x] Cierre: prueba focalizada, versión, changelog y manifiesto; sin publicar
+
 ## Pulido P2 Embarques/Facturación 13.823.374
 - [x] B6 — Conservar columnas de carga cuando existen marcadores pendientes
 - [x] B7 — Separar subtotales vigentes de facturas por moneda

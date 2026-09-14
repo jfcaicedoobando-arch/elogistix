@@ -23,13 +23,12 @@ export function sumarConceptosVentaPorMoneda(
       cantidad: Number(concepto.cantidad),
       precioUnitario: Number(concepto.precio_unitario),
     }));
-    const iva = sumarMontos(items.map((concepto) => {
-      if (moneda === "USD" && !concepto.aplica_iva) return 0;
-      return calcularIVA(
+    const iva = sumarMontos(items.map((concepto) =>
+      calcularIVA(
         Number(concepto.cantidad) * Number(concepto.precio_unitario),
         resolverTasaConcepto(concepto, tasaIva),
-      );
-    }));
+      ),
+    ));
     return subtotal + iva;
   };
   return { totalUsd: total("USD"), totalMxn: total("MXN") };

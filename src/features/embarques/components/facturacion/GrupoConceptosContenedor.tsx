@@ -43,6 +43,7 @@ export function GrupoConceptosContenedor({
         <div className="flex items-center gap-3 shrink-0">
           {(totales.mxn > 0 || totales.usd > 0) && (
             <span className="text-body-sm text-muted-foreground tabular-nums">
+              Subtotal: {" "}
               {totales.mxn > 0 && <>{formatCurrency(totales.mxn, "MXN")}</>}
               {totales.mxn > 0 && totales.usd > 0 && <> · </>}
               {totales.usd > 0 && <>{formatCurrency(totales.usd, "USD")}</>}
