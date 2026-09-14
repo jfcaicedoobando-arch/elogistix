@@ -116,13 +116,18 @@ BEGIN
   END IF;
 
   -- 5) Caso D: las informativas siguen exentas.
+  -- Una informativa exige vigencia y al menos una tarifa (trigger
+  -- validate_cotizacion_informativa); se cumple para que el único candado bajo
+  -- prueba siga siendo el de costos.
   INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo,
                                    tipo_documento, conceptos_venta,
-                                   vigencia_desde, vigencia_hasta)
+                                   vigencia_desde, vigencia_hasta, tarifas_informativas)
   VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, 'COT-SINCOSTO-0002',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           'informativa', '[]'::jsonb,
-          current_date, current_date + 30)
+          current_date, current_date + 30,
+          jsonb_build_array(jsonb_build_object('concepto', 'Flete referencia',
+                                               'moneda', 'MXN', 'monto', 5000)))
   RETURNING id INTO v_info;
 
   v_err := NULL;
