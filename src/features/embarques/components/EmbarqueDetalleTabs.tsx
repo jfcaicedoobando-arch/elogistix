@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { EmbarqueDetalleTabsBar } from "@/features/embarques/components/_sections/EmbarqueDetalleTabsBar";
 import { Separator } from "@/components/ui/separator";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AlertaBorrador } from "@/features/embarques/components/_sections/AlertaBorrador";
 
 import { TabResumen } from "@/features/embarques/components/TabResumen";
@@ -32,6 +31,7 @@ import type {
   EmbarqueDetalleTabsProps,
   PnlView,
 } from "./_sections/embarqueDetalleTabsTypes";
+import { PnlViewSelector } from "./_sections/PnlViewSelector";
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
@@ -140,18 +140,11 @@ export function EmbarqueDetalleTabs({
 
       {/* P&L unificada (v13.66.15): toggle Global / Por contenedor. */}
       <TabsContent value="pnl" className="space-y-4">
-        {permitePnlContenedor && (
-          <div className="flex items-center justify-end">
-            <ToggleGroup
-              type="single"
-              value={pnlView}
-              onValueChange={(v) => { if (v) setPnlView(v as PnlView); }}
-            >
-              <ToggleGroupItem value="global" aria-label="Vista global">Global</ToggleGroupItem>
-              <ToggleGroupItem value="contenedor" aria-label="Vista por contenedor">Por contenedor</ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-        )}
+        <PnlViewSelector
+          visible={permitePnlContenedor}
+          value={pnlView}
+          onChange={setPnlView}
+        />
         {pnlView === "global" || !permitePnlContenedor
           ? <TabPnl embarqueId={embarqueId} estadoEmbarque={embarque.estado} monedasExtranjeras={monedasExtranjeras} />
           : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente ?? ""} />}

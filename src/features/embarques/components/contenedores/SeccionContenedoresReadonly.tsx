@@ -75,7 +75,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const pesoUniforme = todosIguales(pesos);
   const volumenUniforme = todosIguales(volumenes);
   const piezasUniformes = todosIguales(piezas);
-  const hayResumenUniforme = pesoUniforme || volumenUniforme || piezasUniformes;
+  const hayResumenUniforme = pendientes === 0 && (pesoUniforme || volumenUniforme || piezasUniformes);
 
   return (
     <Card>
