@@ -60,7 +60,7 @@ export function ClienteCreditoCard({ clienteId }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-primary" />
+            <CreditCard className="size-4 text-primary" />
             Condiciones de crédito
           </CardTitle>
         </CardHeader>
@@ -69,7 +69,7 @@ export function ClienteCreditoCard({ clienteId }: Props) {
             role="alert"
             className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
             <span>{getErrorMessage(error)}</span>
           </div>
         </CardContent>
