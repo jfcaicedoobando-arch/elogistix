@@ -85,8 +85,9 @@ export function AvisoSincronizarConceptosVenta({
       // CONGELADO de la cotización; sin TC falla cerrado sin tocar la BD.
       // SAFE-CAST: ConceptoVentaPrellenado es un objeto plano JSON-serializable;
       // la firma canónica pide Record<string, unknown> (misma conversión que wizard.ts).
+      const conceptosJson = conceptos as unknown as Record<string, unknown>[];
       const { subtotal, moneda } = derivarSubtotalMoneda(
-        conceptos as unknown as Record<string, unknown>[],
+        conceptosJson,
         sello.moneda,
         sello.tipoCambioUsd,
       );

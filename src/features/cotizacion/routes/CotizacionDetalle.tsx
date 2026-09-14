@@ -18,7 +18,7 @@ import { usePdfExport } from "@/hooks/shared/usePdfExport";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
-import { mensajeCotizacionSinImportes } from "@/lib/domain/cotizacionSinImportes";
+import { mensajeCotizacionSinImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { cotizacionEnviablePorCorreo } from "@/features/cotizacion/domain/envioCotizacion";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
