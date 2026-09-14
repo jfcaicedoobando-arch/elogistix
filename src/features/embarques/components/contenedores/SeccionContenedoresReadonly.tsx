@@ -1,9 +1,5 @@
-/**
- * Vista solo-lectura de contenedores en el detalle del embarque.
- * Toda edición se realiza desde el wizard "Editar embarque" (paso 2).
- */
 import { useNavigate } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { PackageOpen, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +9,13 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { PackageOpen } from "lucide-react";
-
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import {
   esMarcadorContenedor,
   valorCargaCapturada,
 } from "./contenedorReadonlyPresentacion";
+
 interface Props {
   embarqueId: string;
 }
