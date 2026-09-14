@@ -14,6 +14,7 @@ import type { FilaReconciliacion } from "@/features/embarques/services/reconcili
 import {
   calcularSubtotales,
   estatusBadgeClass,
+  etiquetaConteos,
   estatusLabel,
   ordenarFilasPorAjuste,
   pagoBadgeClass,
