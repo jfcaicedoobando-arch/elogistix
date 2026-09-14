@@ -69,22 +69,15 @@ export function FacturaPagosSection({
   const [pagoACancelar, setPagoACancelar] = useState<PagoRow | null>(null);
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
-  const repController = useCancelarRepController(
-    pagoACancelar,
-    facturaId,
-    facturaNumero,
+  const repController = useCancelarRepController(pagoACancelar, facturaId, facturaNumero);
+
+  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC
+  // aplicadas). El estado entra al cálculo: las facturas terminales no pueden
+  // mostrar saldo por cobrar.
+  const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
+    totalFactura, pagos, notasAplicadas, estadoFactura, saldoServidorQuery?.data,
   );
 
-  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
-  // Auditoría 2026-08-28 · Hallazgo 4: el estado entra al cálculo (facturas
-  // terminales no pueden mostrar saldo por cobrar).
-  const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
-    totalFactura,
-    pagos,
-    notasAplicadas,
-    estadoFactura,
-    saldoServidorQuery?.data,
-  );
 
   const liquidada = sinSaldo && pagos.length > 0;
 
