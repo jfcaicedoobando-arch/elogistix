@@ -38,10 +38,8 @@ interface Props {
 export default function SeccionCostosInternosPLDetalle({
   cotizacionId, conceptosUSD, conceptosMXN, estadoCotizacion,
 }: Props) {
-  // v13.823.348 — `actualizar_cotizacion_costos` exige `_assert_writer_cotizacion`
-  // (SALES): finanzas ve el P&L en solo lectura, sin "Editar/Guardar costos".
-  const { canWriteCotizaciones } = usePermissions();
-  const { canEdit, motivo: motivoBloqueoEstado } = gateEdicionCostos(canWriteCotizaciones, estadoCotizacion);
+  const { canWriteCotizaciones, canEdit, motivoBloqueoEstado } =
+    useGateEdicionCostos(estadoCotizacion);
   const { data: snapshot, isLoading } = useCotizacionCostosSnapshot(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
   const tasaIva = useTasaIVA();
