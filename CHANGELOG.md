@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.383] - 2026-09-14
+
+- **ux(tesorería/traspasos)**: el botón de la pantalla de cuentas ahora dice "Traspaso entre cuentas"; el modal reacomoda importes y conversión en secciones fijas (el tipo de cambio ya no empuja a la comisión), el tipo de cambio usa `NumericInput decimals` (4 decimales) en lugar de `MoneyInput` (2), y se agrega `TraspasoResumen` con monto, comisión, TC aplicado y el abono destino resaltado. Sólo UI: `registrar_traspaso_bancario` y la conversión/redondeo (`tcPar`, `roundMoney`) sin cambios.
+
+
+
 ## [13.823.382] - 2026-09-14
 
 - **fix(finanzas/tesorería/CxP/proformas)**: lote D1–D6 (sin publicar, sin tocar datos históricos ni relajar guards/RLS).
