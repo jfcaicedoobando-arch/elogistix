@@ -35278,6 +35278,7 @@ GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO service_role;
 GRANT ALL ON FUNCTION public.tg_catalogo_claves_sat_updated_at() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_catalogo_claves_sat_updated_at() TO service_role;
+REVOKE ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO service_role;
 REVOKE ALL ON FUNCTION public.tg_factura_cancelada_comisiones() FROM PUBLIC;
