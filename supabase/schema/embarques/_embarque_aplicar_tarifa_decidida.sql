@@ -57,8 +57,6 @@ BEGIN
     RETURN 0;
   END IF;
 
-  -- v13.823.351: toda lectura de tarifas/recargos se acota a la organización
-  -- de la cotización; una referencia cruzada debe fallar, no usarse en silencio.
   SELECT c.tarifa_id, c.organization_id INTO v_tarifa_origen, v_org
     FROM public.cotizaciones c
    WHERE c.id = p_cotizacion_id;
@@ -66,8 +64,6 @@ BEGIN
   v_es_sustitucion := p_tarifa_id_aplicada IS NOT NULL
                   AND p_tarifa_id_aplicada IS DISTINCT FROM v_tarifa_origen;
 
-  -- Coherencia global de la sustituta: mezclar precios de una tarifa con el
-  -- proveedor/moneda sembrados de otra produciría un costo inauditable.
   IF v_es_sustitucion THEN
     SELECT t.agente_id, t.moneda, t.ruta_id, t.tipo_contenedor_id, t.naviera_id
       INTO v_ag_nueva, v_mon_nueva, v_ruta_nueva, v_cont_nueva, v_nav_nueva
@@ -90,12 +86,8 @@ BEGIN
       RAISE EXCEPTION 'La tarifa sustituta está en otra moneda (% vs %): no se puede aplicar sin recotizar. Revisa y selecciona una tarifa en la misma moneda.',
         v_mon_nueva, v_mon_origen USING ERRCODE = 'P0001';
     END IF;
-    -- v13.823.392 · Auditoría cotización→embarque #3: la BD es la cerradura.
-    -- El buscador de tarifas permitía elegir OTRA ruta u OTRO tipo de
-    -- contenedor compatible en agente+moneda: se aplicaban sus precios al
-    -- embarque conservando puerto/naviera originales (cabecera de una tarifa
-    -- con precio de otra). La sustituta debe ser de la MISMA ruta y el MISMO
-    -- tipo de contenedor/servicio que la cotización.
+    -- v13.823.392 · Auditoría cotización→embarque #3: la sustituta debe ser de
+    -- la MISMA ruta y el MISMO tipo de contenedor/servicio que la cotización.
     IF v_tarifa_origen IS NOT NULL AND v_ruta_nueva IS DISTINCT FROM v_ruta_origen THEN
       RAISE EXCEPTION 'LC_TARIFA_RUTA_INCOMPATIBLE: la tarifa sustituta es de otra ruta que la cotización; selecciona una tarifa de la misma ruta o recotiza.'
         USING ERRCODE = 'P0001';
@@ -124,7 +116,6 @@ BEGIN
 
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
       IF v_es_sustitucion THEN
-        -- Sustitución: sólo una equivalencia inequívoca es aceptable.
         SELECT count(*), min(r.monto), min(r.moneda)
           INTO v_equivalentes, v_unit, v_moneda_match
           FROM public.costeo_tarifa_recargos r
@@ -149,7 +140,6 @@ BEGIN
             COALESCE(v_costo.recargo_concepto, v_costo.concepto) USING ERRCODE = 'P0001';
         END IF;
       ELSE
-        -- Refrescar la misma tarifa: identidad exacta del recargo fuente.
         IF v_costo.recargo_vigente_id IS NULL THEN
           RAISE EXCEPTION 'El cargo "%" de la tarifa ya no existe: no se puede refrescar. Revisa y selecciona una tarifa vigente.',
             v_costo.concepto USING ERRCODE = 'P0001';
@@ -187,7 +177,6 @@ BEGIN
 
     CONTINUE WHEN COALESCE(v_n, 0) = 0;
 
-    -- Reparto de centavos por resto mayor, sin crear montos negativos.
     v_cent := ROUND(GREATEST(v_base, 0) * 100)::bigint;
     v_piso := v_cent / v_n::bigint;
     v_resto := v_cent - (v_piso * v_n::bigint);
@@ -210,9 +199,8 @@ BEGIN
     END LOOP;
   END LOOP;
 
-  -- v13.823.392 · #3 (cont.): si la sustitución válida cambia de naviera, la
-  -- cabecera del embarque debe seguir a los precios aplicados, en la MISMA
-  -- transacción. Antes quedaba el precio de una tarifa con la naviera de otra.
+  -- v13.823.392 · #3 (cont.): la cabecera del embarque sigue a los precios
+  -- aplicados en la MISMA transacción cuando la sustitución cambia de naviera.
   IF v_es_sustitucion THEN
     SELECT n.name INTO v_nav_nombre
       FROM public.navieras n WHERE n.id = v_nav_nueva;

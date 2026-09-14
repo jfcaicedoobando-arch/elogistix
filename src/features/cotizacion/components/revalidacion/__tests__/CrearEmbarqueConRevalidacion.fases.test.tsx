@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
+
+// useFiltrosTarifaCotizacion usa TanStack Query: cada render se envuelve en
+// un QueryClient aislado (sin reintentos) para no acoplar la prueba al
+// QueryClient global de la app.
+function renderConQueryClient(ui: ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const revalidarTarifa = vi.fn();
 const mutateAsync = vi.fn();
@@ -61,7 +71,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     revalidarTarifa.mockResolvedValue(SIN_CAMBIOS);
     mutateAsync.mockRejectedValue(new Error("no se pudo crear el embarque"));
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
@@ -73,7 +83,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
   it("si falla la revalidación sí muestra su aviso y no intenta crear", async () => {
     revalidarTarifa.mockRejectedValue(new Error("timeout"));
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
@@ -85,7 +95,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     verificarCostosOAvisar.mockResolvedValue(false);
     revalidarTarifa.mockResolvedValue(SIN_CAMBIOS);
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(verificarCostosOAvisar).toHaveBeenCalledWith("cot-1"));
