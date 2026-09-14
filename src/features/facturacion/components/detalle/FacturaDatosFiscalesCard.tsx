@@ -59,6 +59,9 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   // B-03: TC DOF vigente en la fecha de emisión de la factura, no el de hoy.
   const obtenerTC = useBanxicoTipoCambio(factura.moneda, setTipoCambio, factura.fecha_emision);
 
+  // B12: el borrador USD nace sin T/C; también avisamos si quedó fuera de banda.
+  const avisoTC = avisoTipoCambioFactura(factura.moneda, tipoCambio);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
