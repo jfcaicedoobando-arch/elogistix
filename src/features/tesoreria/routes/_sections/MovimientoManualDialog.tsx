@@ -15,6 +15,7 @@ import {
   validarMovimientoManual,
   type MovimientoManualInput,
 } from "@/features/tesoreria/domain/movimientoManual";
+import { hoyMx } from "@/lib/date/mx";
 import type { CuentaBancaria } from "@/features/tesoreria/services";
 
 interface Props {
@@ -32,9 +33,14 @@ const FORM_ID = "form-movimiento-manual";
 export function MovimientoManualDialog({
   open, onOpenChange, cuentas, manualForm, setManualField, onGuardar, isPending,
 }: Props) {
-  const erroresManual = validarMovimientoManual(manualForm);
+  // N3 (v13.823.386): la fecha no puede ser futura (día de negocio México) ni
+  // anterior al corte de saldo inicial de la cuenta.
+  const cuentaSel = cuentas.find((c) => c.id === manualForm.cuentaBancariaId);
+  const hoyNegocio = hoyMx();
+  const fechaCorte = cuentaSel?.fecha_saldo_inicial ?? null;
+  const erroresManual = validarMovimientoManual(manualForm, { hoyNegocio, fechaCorte });
   const manualEsValido = Object.keys(erroresManual).length === 0;
-  const monedaCuenta = cuentas.find((c) => c.id === manualForm.cuentaBancariaId)?.moneda;
+  const monedaCuenta = cuentaSel?.moneda;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -83,7 +89,14 @@ export function MovimientoManualDialog({
           value={manualForm.fecha ?? ""}
           onChange={(v) => setManualField("fecha", v)}
           className="w-full"
+          min={fechaCorte ?? undefined}
+          max={hoyNegocio}
         />
+        {erroresManual.fecha && manualForm.fecha && (
+          <p id="mov-fecha-error" className="mt-1 text-body-sm text-destructive">
+            {erroresManual.fecha}
+          </p>
+        )}
       </div>
 
       <div>

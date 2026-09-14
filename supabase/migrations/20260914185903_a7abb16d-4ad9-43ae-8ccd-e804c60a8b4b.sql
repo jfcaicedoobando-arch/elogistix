@@ -1,7 +1,8 @@
--- Canónico: proveedor_estado_cuenta
--- Migración vigente: Ola 12 · Sprint 07 (R3BD-05 + R3BD-06), acumulativa
--- sobre el Sprint 06 (R3P-04 + R3P-05).
--- ============================================================
+-- N2 (v13.823.386): proveedor_estado_cuenta ignoraba por completo las notas de
+-- crédito de proveedor aplicadas: una NC viva no reducía lo pagado ni el saldo
+-- del concepto/embarque. Se agrega el CTE nc_por_factura con el MISMO canon de
+-- conversión que los pagos (public.monto_pago_en_moneda_factura) antes de
+-- prorratear hacia conceptos, sin doble conteo y sin tocar el trato de pagos.
 CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -205,3 +206,5 @@ BEGIN
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO authenticated, service_role;

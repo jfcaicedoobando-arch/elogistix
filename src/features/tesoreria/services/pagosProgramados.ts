@@ -9,12 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
-import {
-  sumarPagosEnMonedaFactura,
-  sumarNotasCreditoAplicadas,
-  type PagoCxpParcial,
-  type NotaCreditoCxpParcial,
-} from "@/features/cxp/services";
+import { fetchSaldosProveedorFacturas } from "@/features/cxp/services/saldosProveedorFactura";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface FacturaProgramableRow extends FacturaProgramable {
@@ -32,12 +27,10 @@ interface RowCruda {
   total: number;
   estado: string;
   estado_aprobacion: string;
-  pagos_proveedor: Array<PagoCxpParcial> | null;
-  proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
 }
 
 const SELECT_PROGRAMABLES =
-  "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at), proveedor_notas_credito(monto, estado, deleted_at)";
+  "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion";
 
 /**
  * Ronda YAGNI · defecto 4: antes se pedía una sola página tope de PostgREST con `unwrapOr([])`, así
@@ -58,19 +51,19 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
         .order("id", { ascending: true })
         .range(desde, hasta),
     { lote: CAP_POSTGREST },
-    // SAFE-CAST: el select con join anidado `pagos_proveedor(...)` produce un
-    // shape sintetizado por PostgREST que el tipo generado de Supabase no
-    // captura; RowCruda declara sólo las columnas que consumimos aquí.
+    // SAFE-CAST: RowCruda declara sólo las columnas que consumimos aquí.
   )) as RowCruda[];
+
+  // N1 (v13.823.386): el saldo programable (pagos y notas de crédito
+  // convertidos a la moneda de la factura) lo calcula el servidor con el canon
+  // `monto_pago_en_moneda_factura`. Antes se sumaba `monto` crudo y una nota de
+  // crédito en otra moneda hacía que la bandeja propusiera pagar de más.
+  const saldos = await fetchSaldosProveedorFacturas(rows.map((r) => r.id));
 
   return rows
     .map((r) => {
-      const pagado = sumarPagosEnMonedaFactura(r.pagos_proveedor);
-      // A-2: el saldo programable debe restar las notas de crédito aplicadas,
-      // igual que `saldo_factura_proveedor` y el listado de CxP. Sin esto la
-      // bandeja proponía pagar más de lo que se debe.
-      const nc = sumarNotasCreditoAplicadas(r.proveedor_notas_credito);
-      const saldo = Math.max(0, Number(r.total) - pagado - nc);
+      const saldoServidor = saldos.get(r.id);
+      const saldo = Math.max(0, saldoServidor ? saldoServidor.saldo : Number(r.total));
       return {
         id: r.id,
         proveedor_nombre: r.proveedor_nombre,

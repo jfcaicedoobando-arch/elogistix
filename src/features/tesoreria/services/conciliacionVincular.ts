@@ -40,6 +40,37 @@ async function assertMontosCuadran(movId: string, tipo: "cxc" | "cxp", pagoId: s
   );
 }
 
+/**
+ * N5 (v13.823.386): el sentido bancario debe coincidir con el tipo de pago.
+ * Un cobro de cliente entra a la cuenta (abono) y un pago a proveedor sale
+ * (cargo). Antes sólo se comparaba el importe absoluto, así que un cargo podía
+ * conciliarse como cobro. El trigger de base de datos es la última defensa.
+ */
+async function assertSentidoCorrecto(movId: string, tipo: "cxc" | "cxp") {
+  const { data: mov } = await supabase
+    .from("bbva_movimientos")
+    .select("cargo, abono")
+    .eq("id", movId)
+    .maybeSingle();
+  if (!mov) return;
+  const fila = (Array.isArray(mov) ? mov[0] : mov) as { cargo?: number | null; abono?: number | null } | undefined;
+  if (!fila) return;
+  const cargo = Number(fila.cargo ?? 0);
+  const abono = Number(fila.abono ?? 0);
+  if (tipo === "cxc" && (abono <= 0 || cargo !== 0)) {
+    throw new MovimientoVinculoError(
+      "LC_MOVIMIENTO_SENTIDO_COBRO",
+      "Un cobro de cliente sólo se concilia con un depósito (abono) en la cuenta: este movimiento es un cargo (salida de dinero).",
+    );
+  }
+  if (tipo === "cxp" && (cargo <= 0 || abono !== 0)) {
+    throw new MovimientoVinculoError(
+      "LC_MOVIMIENTO_SENTIDO_PAGO",
+      "Un pago a proveedor sólo se concilia con un retiro (cargo) de la cuenta: este movimiento es un abono (entrada de dinero).",
+    );
+  }
+}
+
 export async function conciliarConPago(
   movId: string,
   tipo: "cxc" | "cxp",
@@ -64,6 +95,7 @@ export async function conciliarConPago(
       "Este pago ya fue conciliado con otro movimiento bancario. Desconcilia ese movimiento antes de reasignar el pago.",
     );
   }
+  await assertSentidoCorrecto(movId, tipo);
   await assertMontosCuadran(movId, tipo, pagoId);
 
   const patch = tipo === "cxc"

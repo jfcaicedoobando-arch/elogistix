@@ -3,7 +3,6 @@
  * Separado de `conciliacion.ts` para respetar el límite de 200 líneas.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -16,6 +15,15 @@ export interface MovimientoManualPayload {
   cargo: number;
   abono: number;
   userId: string | null;
+  /**
+   * N4 (v13.823.386): llave estable generada al ABRIR el diálogo. Antes el
+   * hash se generaba en cada llamada (`crypto.randomUUID()` dentro del
+   * servicio), así que un doble click o un reintento por red lenta creaba dos
+   * movimientos y duplicaba el dinero. Con la llave estable el índice único
+   * (cuenta + hash de movimientos vivos) rechaza el segundo intento y aquí se
+   * trata como éxito.
+   */
+  claveIdempotencia?: string;
 }
 
 /**
@@ -37,25 +45,42 @@ export function validarCargoAbono(cargo: number, abono: number): string | null {
   return null;
 }
 
+/** ¿El error es la violación del índice único de dedupe vivo? (reintento) */
+function esConflictoDedupe(error: { code?: string } | null): boolean {
+  return error?.code === "23505";
+}
+
 export async function registrarMovimientoManual(
   input: MovimientoManualPayload,
 ): Promise<void> {
   const invalido = validarCargoAbono(input.cargo, input.abono);
   if (invalido) throw new Error(invalido);
-  const hashDedupe = `manual-${crypto.randomUUID()}`;
+  const hashDedupe = `manual-${input.claveIdempotencia ?? crypto.randomUUID()}`;
 
-  await run(
-    supabase.from("bbva_movimientos").insert({
-      cuenta_bancaria_id: input.cuentaBancariaId,
-      fecha: input.fecha,
-      concepto: input.concepto,
-      referencia: input.referencia ?? "",
-      cargo: input.cargo,
-      abono: input.abono,
-      hash_dedupe: hashDedupe,
-      importado_por: input.userId,
-    }),
-  );
+  const { error } = await supabase.from("bbva_movimientos").insert({
+    cuenta_bancaria_id: input.cuentaBancariaId,
+    fecha: input.fecha,
+    concepto: input.concepto,
+    referencia: input.referencia ?? "",
+    cargo: input.cargo,
+    abono: input.abono,
+    hash_dedupe: hashDedupe,
+    importado_por: input.userId,
+  });
+  if (error) {
+    if (!esConflictoDedupe(error)) throw error;
+    // N4: el movimiento ya existe (doble click / reintento). Se confirma que
+    // está ahí y se considera éxito sin crear otro ni duplicar la bitácora.
+    const { data: existente } = await supabase
+      .from("bbva_movimientos")
+      .select("id")
+      .eq("cuenta_bancaria_id", input.cuentaBancariaId)
+      .eq("hash_dedupe", hashDedupe)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (existente) return;
+    throw error;
+  }
   await registrarActividad({
     modulo: "tesoreria",
     accion: "crear_movimiento_manual",

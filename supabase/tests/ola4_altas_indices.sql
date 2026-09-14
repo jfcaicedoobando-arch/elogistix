@@ -68,8 +68,9 @@ BEGIN
     'MXN'::public.moneda, CURRENT_DATE
   ) ON CONFLICT (id) DO NOTHING;
 
+  -- N5 (v13.823.386): un cobro de cliente es un ABONO (entrada de dinero).
   INSERT INTO public.bbva_movimientos (
-    id, organization_id, cuenta_bancaria_id, fecha, cargo, hash_dedupe, pago_factura_id
+    id, organization_id, cuenta_bancaria_id, fecha, abono, hash_dedupe, pago_factura_id
   ) VALUES (
     'd1010101-1010-1010-1010-101010101010', v_org, v_cuenta,
     CURRENT_DATE, 100, 'ola4-idx-hash-1', v_pago
@@ -78,7 +79,7 @@ BEGIN
    WHERE id = 'd1010101-1010-1010-1010-101010101010';
 
   INSERT INTO public.bbva_movimientos (
-    id, organization_id, cuenta_bancaria_id, fecha, cargo, hash_dedupe, pago_factura_id
+    id, organization_id, cuenta_bancaria_id, fecha, abono, hash_dedupe, pago_factura_id
   ) VALUES (
     'd1010102-1010-1010-1010-101010101020', v_org, v_cuenta,
     CURRENT_DATE, 100, 'ola4-idx-hash-2', v_pago
