@@ -270,6 +270,8 @@ CREATE FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) RETUR
 DECLARE
   v_pago       public.pagos_proveedor;
   v_cuenta_mon text;
+  v_cuenta_org uuid;
+  v_cuenta_act boolean;
   v_cargo      numeric;
   v_concepto   text;
   v_mov_id     uuid;
@@ -290,11 +292,20 @@ BEGIN
   IF v_pago.cuenta_bancaria_id IS NULL THEN
     RETURN NULL; -- pago sin cuenta bancaria: no hay salida de efectivo que registrar
   END IF;
-  SELECT moneda::text INTO v_cuenta_mon
+  -- N8: defensa en profundidad. La cuenta del movimiento debe existir, estar
+  -- activa y ser de la misma organización del pago.
+  SELECT moneda::text, organization_id, activa
+    INTO v_cuenta_mon, v_cuenta_org, v_cuenta_act
     FROM public.cuentas_bancarias
    WHERE id = v_pago.cuenta_bancaria_id AND deleted_at IS NULL;
   IF v_cuenta_mon IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: la cuenta bancaria del pago no existe o está dada de baja' USING ERRCODE = 'P0001';
+  END IF;
+  IF v_cuenta_org IS DISTINCT FROM v_pago.organization_id THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_CUENTA_OTRA_ORG: la cuenta bancaria del pago pertenece a otra organización' USING ERRCODE = 'P0001';
+  END IF;
+  IF NOT v_cuenta_act THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_CUENTA_INACTIVA: la cuenta bancaria del pago está inactiva' USING ERRCODE = 'P0001';
   END IF;
   -- El movimiento SIEMPRE se registra en la moneda de la cuenta; nunca 1:1
   -- silencioso cross-moneda (clase BL-04).
@@ -6917,6 +6928,10 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
+  -- FIX-63: un UPDATE que NO toca el dinero (p. ej. sincronizar el estatus del
+  -- REP ante el SAT, adjuntar PDF/XML o marcar el acuse) es mantenimiento
+  -- documental, no un cobro nuevo. Esos updates deben pasar aunque la factura
+  -- esté cancelada o con cancelación en trámite.
   IF TG_OP = 'UPDATE' THEN
     v_solo_metadatos := (
       NEW.factura_id IS NOT DISTINCT FROM OLD.factura_id
@@ -6926,6 +6941,7 @@ BEGIN
       AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio
       AND NEW.ret_isr IS NOT DISTINCT FROM OLD.ret_isr
       AND NEW.ret_iva IS NOT DISTINCT FROM OLD.ret_iva
+      -- FIX3 (M-4): un cambio de fecha ya no es "sólo metadatos".
       AND NEW.fecha_pago IS NOT DISTINCT FROM OLD.fecha_pago
       AND OLD.deleted_at IS NULL
     );
@@ -6933,11 +6949,15 @@ BEGIN
       RETURN NEW;
     END IF;
   END IF;
+  -- Ola 1: espejo de LC_LOTE_FECHA_FUTURA (cobro en lote). Un cobro con fecha
+  -- futura ensucia aging, REP y reportes de flujo.
+  -- FIX3 (M-4): aplica también en UPDATE.
   IF NEW.fecha_pago IS NOT NULL AND NEW.fecha_pago > CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del cobro no puede ser futura'
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object('fecha_pago', NEW.fecha_pago)::text;
   END IF;
+  -- FIX-23: bloquear la factura padre para serializar pagos concurrentes.
   PERFORM 1 FROM public.facturas WHERE id = NEW.factura_id FOR UPDATE;
   SELECT estado::text, COALESCE(total, 0), COALESCE(cancellation_status, 'none'),
          fecha_emision
@@ -6954,6 +6974,8 @@ BEGIN
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object('cancellation_status', v_cancel)::text;
   END IF;
+  -- FIX3 (M-4): paridad con el lote CxC — el cobro no puede ser anterior a la
+  -- emisión de la factura. Facturas sin fecha_emision quedan fuera de la regla.
   IF NEW.fecha_pago IS NOT NULL
      AND v_fecha_emision IS NOT NULL
      AND NEW.fecha_pago < v_fecha_emision THEN
@@ -6964,11 +6986,18 @@ BEGIN
               'fecha_emision', v_fecha_emision
             )::text;
   END IF;
+  -- N7 (v13.823.390): un pago cuyo REP quedó CANCELADO ante el SAT está
+  -- ANULADO y NO consume saldo (mismo predicado canónico que
+  -- public._saldo_factura_calc y cartera_pendiente). Sin este filtro, tras
+  -- cancelar un REP la UI mostraba saldo pero la BD rechazaba el cobro de
+  -- reemplazo como sobrepago.
   SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) INTO v_pagos_otros
   FROM public.pagos_factura pf
   WHERE pf.factura_id = NEW.factura_id
     AND pf.deleted_at IS NULL
+    AND NOT public.pago_rep_anulado(pf.estado_rep)
     AND pf.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+  -- Ola 1: NC convertidas a la moneda de la factura (antes SUM(monto) crudo).
   v_ncs := public.nc_aplicadas_en_moneda_factura(NEW.factura_id);
   v_saldo_disponible_previo := v_total - v_pagos_otros - v_ncs;
   v_saldo_post := v_saldo_disponible_previo - COALESCE(NEW.monto_aplicado_factura, 0);
@@ -25908,7 +25937,10 @@ BEGIN
     SELECT
       f.total
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
-                   WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL), 0)
+                   WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+                     -- N7 (v13.823.390): REP cancelado = pago ANULADO, no
+                     -- consume saldo (canon public.pago_rep_anulado).
+                     AND NOT public.pago_rep_anulado(pf.estado_rep)), 0)
       - public.nc_aplicadas_en_moneda_factura(f.id),
       f.fecha_emision
       INTO v_saldo, v_fecha_emision
@@ -26164,6 +26196,8 @@ DECLARE
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;
+  v_cta_org  uuid;
+  v_cta_activa boolean;
 BEGIN
   IF p_client_request_id IS NOT NULL THEN
     SELECT id INTO v_pago_id
@@ -26182,6 +26216,24 @@ BEGIN
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+  -- N8: la cuenta bancaria debe existir, estar activa y ser de la MISMA
+  -- organización que la factura. Se bloquea la fila para que no la den de baja
+  -- entre la validación y el insert.
+  IF p_cuenta_bancaria_id IS NOT NULL THEN
+    SELECT organization_id, activa INTO v_cta_org, v_cta_activa
+      FROM public.cuentas_bancarias
+     WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL
+     FOR UPDATE;
+    IF v_cta_org IS NULL THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_INEXISTENTE: la cuenta bancaria no existe o está dada de baja' USING ERRCODE = 'P0001';
+    END IF;
+    IF v_cta_org <> v_org THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_OTRA_ORG: la cuenta bancaria pertenece a otra organización' USING ERRCODE = 'P0001';
+    END IF;
+    IF NOT v_cta_activa THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_INACTIVA: la cuenta bancaria está inactiva y no admite pagos' USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   -- D4: canon de fecha de negocio México, igual que el lote.
   IF p_fecha_pago IS NULL THEN
