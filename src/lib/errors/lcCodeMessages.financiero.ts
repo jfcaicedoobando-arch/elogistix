@@ -18,7 +18,12 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_UUID_FISCAL_INMUTABLE:
     "La factura ya tiene folio fiscal (UUID) asignado y no puede cambiarse.",
   LC_CONCEPTO_PROFORMADO:
-    "El concepto ya está incluido en una proforma. Libéralo de la proforma antes de editarlo o eliminarlo.",
+    "El concepto ya está incluido en una proforma. Elimina o recrea la proforma pendiente antes de " +
+    "cambiar descripción, cantidad, precio, moneda, total o IVA. Si ya se facturó, usa el flujo " +
+    "fiscal correspondiente (nota de crédito o refacturación).",
+  LC_COSTO_VINCULADO_CXP:
+    "Este costo ya está vinculado a una factura de proveedor vigente: no puede cambiar de monto, " +
+    "moneda ni proveedor. Desvincula o corrige primero esa factura de proveedor.",
   LC_PROFORMA_EMBARQUE_AJENO:
     "Todas las proformas a consolidar deben pertenecer al mismo embarque.",
   // ── Facturas cliente (CxC) ─────────────────────────────────────────────
