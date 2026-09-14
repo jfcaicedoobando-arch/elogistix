@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.384] - 2026-09-14
+
+- **fix(finanzas/comisiones/P&L)**: lote M1–M5 (sin publicar, sin sanear históricos, sin relajar RLS/guards).
+  - **M1 desglose de venta con NC**: `pnl_financiero_embarque.por_concepto` agrega la línea `(nota de crédito)` con `-a_mxn(fnc.monto, …)`, es decir el MISMO CTE `fnc` que ya usa `f_neto` (conversión a la moneda de la factura ANTES del factor multiembarque). El detalle vuelve a cuadrar con `venta.real_mxn` con factura MXN + NC USD y con reparto 100/200 entre embarques.
+  - **M2 desglose de costo con NC de proveedor**: `por_concepto_costo` agrega `(nota de crédito proveedor)` con el monto convertido de `pnc` y la misma proporción `base_gravable/total` de `pf_neto`, sólo para facturas CON conceptos (las que entran por `(factura completa)` ya venían netas). El desglose cuadra con `costo.real_mxn` incluyendo seguros.
+  - **M3 fecha de negocio México**: nueva función `public.fecha_negocio_mx()` (`STABLE`, `search_path` fijo, `REVOKE`/`GRANT` H6) que reemplaza `GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE)` y `CURRENT_DATE` en `registrar_traspaso_bancario`, `guard_pago_proveedor`, `registrar_pago_proveedor_atomico`, `registrar_pago_proveedor_lote`, `registrar_pago_cliente_lote`, `ejecutar_pago_programado` y `registrar_pago_liquidacion`. Se conservan los límites de emisión y de corte bancario.
+  - **M4 recuperación parcial de comisiones**: nueva tabla `comisiones_recuperaciones` (org, liquidación, comisión, monto, `UNIQUE(liquidacion_id, comision_id)`, RLS de lectura por organización, `GRANT` explícitos). `generar_liquidacion_comision` descuenta la PORCIÓN que alcanza (devengo 100 vs deuda 150 ⇒ liquidación 0 y 50 pendientes), la comisión parcial sigue `Por recuperar` y el monto original no se sobrescribe; `cancelar_liquidacion_comision` marca revertidas SÓLO sus porciones (rastro conservado) y respeta que una comisión cancelada regrese a `Por recuperar`.
+  - **M5 concurrencia de comisiones**: `pg_advisory_xact_lock` por (organización, vendedora) antes de leer devengadas y deudas; lock único por transacción (sin ciclos de espera) e idempotencia por `request_id` intacta.
+  - Pruebas enfocadas nuevas: `supabase/tests/m3_fecha_negocio_mx.sql` y `supabase/tests/m4_m5_comision_recuperacion_parcial.sql` (registradas en `_guards_manifest.txt`).
+
 ## [13.823.383] - 2026-09-14
 
 - **ux(tesorería/traspasos)**: el botón de la pantalla de cuentas ahora dice "Traspaso entre cuentas"; el modal reacomoda importes y conversión en secciones fijas (el tipo de cambio ya no empuja a la comisión), el tipo de cambio usa `NumericInput decimals` (4 decimales) en lugar de `MoneyInput` (2), y se agrega `TraspasoResumen` con monto, comisión, TC aplicado y el abono destino resaltado. Sólo UI: `registrar_traspaso_bancario` y la conversión/redondeo (`tcPar`, `roundMoney`) sin cambios.
