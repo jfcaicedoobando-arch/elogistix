@@ -107,3 +107,23 @@ export const CONFIGURAR_AUTORIZACION_CLIENTE: readonly AppRole[] = [
   "admin",
   "gerente_comercial",
 ];
+
+/**
+ * B1 (v13.823.395) — EDITAR costos y pricing del embarque (paso 3 del wizard
+ * de edición y el botón «Cargar costos» del tab Costos).
+ *
+ * Es la mitad de escritura de la visibilidad de sólo lectura que B1 abrió: el
+ * coordinador logístico y el gerente de operaciones VEN costo, conciliación y
+ * folio de la factura vinculada, pero NO capturan ni editan costos ni pricing.
+ * Para el resto de los roles la lista es idéntica a `OPERATIONS`, así que su
+ * comportamiento previo (`canEdit`) se conserva.
+ */
+export const EDITAR_COSTOS_EMBARQUE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+  "operador",
+  "ejecutivo_pricing",
+  "vendedor",
+];
