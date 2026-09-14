@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { FileText, Link2 as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Hint } from "@/components/shared/Hint";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+
 import {
   chipsArchivosEntrante,
   etiquetaEstadoEntrante,
