@@ -5,7 +5,9 @@
 --      paso 2 debe estar reflejado en `conceptos_venta` de la misma moneda.
 --   #7 Sólo MXN y USD están soportados; una moneda desconocida ya no se
 --      convierte en silencio a MXN.
--- Las cotizaciones informativas (tarifarios) quedan exentas: no se convierten.
+-- B18 (v13.823.379): las cotizaciones informativas (tarifarios) NO se convierten:
+--   antes salían por RETURN temprano y una llamada directa a la RPC podía crear
+--   el embarque; ahora fallan con LC_COT_INFORMATIVA.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._assert_cotizacion_venta_valida(p_cotizacion_id uuid)
@@ -31,7 +33,16 @@ BEGIN
     FROM public.cotizaciones
    WHERE id = p_cotizacion_id;
 
-  IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
+  IF NOT FOUND THEN RETURN; END IF;
+
+  -- B18: las informativas (tarifarios) son documentos de referencia; no pueden
+  -- convertirse en embarque. Este candado vive en el helper canónico que llaman
+  -- crear_embarque_borrador_core y _assert_cotizacion_convertible, así que
+  -- cubre también las llamadas directas a las RPC. No afecta su consulta.
+  IF v_tipo_doc = 'informativa' THEN
+    RAISE EXCEPTION 'LC_COT_INFORMATIVA: la cotización % es informativa (tarifario) y no puede convertirse en embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
 
   -- v13.823.370 (P1-1) — Candado de costos canónico y fail-closed. La ruta de
   -- revalidación (CrearEmbarqueConRevalidacion → crear_embarque_borrador_core)

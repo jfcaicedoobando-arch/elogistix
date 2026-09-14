@@ -131,6 +131,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Captura el desglose de costos en la cotización y reintenta.",
   LC_COT_MONEDA_NO_SOPORTADA:
     "Hay importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
+  // B20/B18 · v13.823.379: los tarifarios informativos no generan operación.
+  LC_COT_INFORMATIVA:
+    "Esta cotización es informativa (tarifario) y no puede convertirse en embarque. " +
+    "Genera una cotización para el cliente y conviértela desde ahí.",
   // v13.823.358 · Addendum P1: los costos internos sólo se editan en captura.
   LC_COT_COSTOS_ESTADO_INVALIDO:
     "Esta cotización ya no está en captura, así que sus costos no pueden reemplazarse. Usa \"Re-cotizar\" para generar una nueva versión.",

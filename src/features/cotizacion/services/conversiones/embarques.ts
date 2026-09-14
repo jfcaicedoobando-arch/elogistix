@@ -64,6 +64,11 @@ const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
     /LC_COT_SIN_COSTOS/,
     "La cotización no tiene costos cargados. Captura el desglose de costos en la cotización antes de crear el embarque.",
   ],
+  // B18 (v13.823.379) — candado servidor: los tarifarios informativos no generan operación.
+  [
+    /LC_COT_INFORMATIVA/,
+    "Esta cotización es informativa (tarifario) y no puede convertirse en embarque. Genera una cotización para el cliente y conviértela desde ahí.",
+  ],
   [/LC_COT_ESTADO_INVALIDO/, "Solo se pueden convertir cotizaciones en estado Aceptada o En operación."],
   [/LC_COT_SIN_CLIENTE/, "Convierte el prospecto a cliente antes de crear el borrador de embarque."],
   [/LC_COT_NO_ENCONTRADA/, "La cotización no existe o fue eliminada."],

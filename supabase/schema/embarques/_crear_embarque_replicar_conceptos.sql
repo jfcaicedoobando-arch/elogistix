@@ -9,6 +9,9 @@
 --      ventas, el reintento completa el conjunto faltante.
 --   #6 Cantidad/precio no positivos se rechazan (antes cantidad 0 pasaba a 1).
 --   #7 Moneda distinta de MXN/USD se rechaza (antes caía a MXN en silencio).
+-- B19 (v13.823.379): la tasa de IVA de cada línea sigue la regla canónica del
+--   cliente (`resolverTasaConcepto`): tasa explícita manda, `aplica_iva = true`
+--   sin tasa usa la tasa general 0.16 y `aplica_iva = false` queda en 0.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb)
@@ -25,6 +28,8 @@ DECLARE
   v_total numeric;
   v_pu    numeric;
   v_tasa  numeric;
+  v_tasa_json numeric;
+  v_aplica boolean;
   v_base  numeric;
   v_n     integer;
   v_parte numeric;
@@ -115,7 +120,22 @@ BEGIN
         -- rechaza en lugar de reescribirse a 1 en silencio.
         v_cant := COALESCE(NULLIF(v_venta->>'cantidad', '')::numeric, 1);
         v_pu   := COALESCE(NULLIF(v_venta->>'precio_unitario', '')::numeric, 0);
-        v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
+        -- B19: misma regla canónica que el cliente (`resolverTasaConcepto`):
+        --   1) tasa explícita (incluye 0) manda;
+        --   2) sin tasa y aplica_iva = true ⇒ tasa general 0.16 (la misma
+        --      constante que usa la conversión proforma → factura);
+        --   3) aplica_iva = false ⇒ tasa 0 (la columna es NOT NULL).
+        -- Antes una línea legacy con aplica_iva = true y sin tasa se replicaba
+        -- con tasa 0 y el embarque perdía el IVA que mostraba la cotización.
+        v_tasa_json := NULLIF(v_venta->>'tasa_iva_aplicada', '')::numeric;
+        v_aplica := COALESCE((v_venta->>'aplica_iva')::boolean, COALESCE(v_tasa_json, 0) > 0);
+        IF NOT v_aplica THEN
+          v_tasa := 0;
+        ELSIF v_tasa_json IS NOT NULL THEN
+          v_tasa := GREATEST(v_tasa_json, 0);
+        ELSE
+          v_tasa := 0.16;
+        END IF;
 
         -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
         -- si no hay unitario: se desinfla el `total` (que viene con IVA).
@@ -138,7 +158,7 @@ BEGIN
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-          COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
+          v_aplica,
           v_tasa,
           v_total, p_org
         );

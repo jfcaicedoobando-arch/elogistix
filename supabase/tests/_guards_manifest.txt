@@ -131,3 +131,4 @@ supabase/tests/cotizaciones_yagni_r2_candados.sql
 supabase/tests/cotizacion_costos_estado_candado.sql
 supabase/tests/cotizacion_aceptar_cliente_candado.sql
 supabase/tests/facturacion_b11_b15_candados.sql
+supabase/tests/fiscal_b16_b19_conversiones.sql
