@@ -80,11 +80,20 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         </div>
       </SidebarHeader>
 
+      {/* B20 (v13.823.379): en modo icono el riel mide 3rem; con `px-2` los
+          botones de 36px quedaban recortados al aparecer el scrollbar vertical.
+          Sin padding horizontal y centrados, caben completos en 1280x720 sin
+          scrollbar horizontal. El modo expandido no cambia. */}
       <SidebarContent
         ref={railRef}
-        className="relative px-2 py-4 group-data-[collapsible=icon]:py-1 group-data-[collapsible=icon]:gap-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]"
+        className="relative px-2 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-1 group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]"
       >
-        <div className={cn("px-2 space-y-2 shrink-0", collapsed ? "mb-1" : "mb-2")}>
+        <div
+          className={cn(
+            "space-y-2 shrink-0",
+            collapsed ? "mb-1 px-0 w-full flex flex-col items-center" : "mb-2 px-2",
+          )}
+        >
           <OrgSwitcher collapsed={collapsed} />
           <OrgBadge collapsed={collapsed} />
         </div>
