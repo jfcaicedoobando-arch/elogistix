@@ -16,8 +16,15 @@ BEGIN
   IF v_def !~ '< 5' OR v_def !~ '> 40' THEN
     RAISE EXCEPTION 'B11 FAIL: la exposición de crédito dejó de aplicar la banda de plausibilidad del T/C';
   END IF;
+  -- R3: el mensaje lista a lo más 10 folios y resume el resto.
+  IF v_def !~ 'v_malas\[1:10\]' OR v_def !~ 'y %s más' THEN
+    RAISE EXCEPTION 'B11/R3 FAIL: el error de T/C inválido dejó de acotar la lista de folios';
+  END IF;
 
-  -- B12: la factura USD de conversión nace sin T/C (el DOF lo resuelve).
+  -- B12: el INSERT de la factura USD de conversión no inventa T/C (pasa NULL
+  -- explícito). El trigger BEFORE INSERT trg_factura_tc_dof_obligatorio
+  -- resuelve el T/C DOF o rechaza el INSERT, así que el borrador nunca queda
+  -- persistido sin T/C: el NULL es documental.
   v_def := pg_get_functiondef('public.convertir_proformas_a_factura(uuid[],uuid,text,text,text,integer,text,uuid)'::regprocedure);
   IF v_def !~ '''USD''::public\.moneda, NULL' THEN
     RAISE EXCEPTION 'B12 FAIL: la factura USD de conversión volvió a nacer con un tipo de cambio inventado';
@@ -59,6 +66,14 @@ BEGIN
   IF v_def !~ 'proveedor_facturas_conceptos' THEN
     RAISE EXCEPTION 'B14 FAIL: el guard del costo dejó de consultar el vínculo de CxP';
   END IF;
+  -- R2: la existencia del vínculo se decide por id de factura, no por folio
+  -- (una factura sin folio también debe bloquear).
+  IF v_def !~ 'v_factura_id IS NOT NULL' THEN
+    RAISE EXCEPTION 'B14/R2 FAIL: el guard del costo volvió a decidir por folio y una factura sin folio lo evade';
+  END IF;
+  IF v_def !~ '\(sin folio\)' THEN
+    RAISE EXCEPTION 'B14/R2 FAIL: el guard del costo perdió el texto de respaldo para facturas sin folio';
+  END IF;
   -- Los cambios que no tocan monto/moneda/proveedor deben salir sin bloquear.
   IF v_def !~ 'IS NOT DISTINCT FROM OLD\.monto' THEN
     RAISE EXCEPTION 'B14 FAIL: el guard del costo dejó de permitir los cambios no financieros';
@@ -74,6 +89,10 @@ BEGIN
   END IF;
   IF v_def !~ 'LC_PROFORMA_FACTURADA' THEN
     RAISE EXCEPTION 'B15 FAIL: eliminar_proforma_rpc perdió la validación de factura';
+  END IF;
+  -- R1: sólo bloquea una factura viva; cancelada, sustituida o en papelera no.
+  IF v_def !~ 'deleted_at IS NULL' OR v_def !~ 'Sustituida' THEN
+    RAISE EXCEPTION 'B15/R1 FAIL: eliminar_proforma_rpc volvió a bloquear con facturas canceladas/sustituidas/en papelera';
   END IF;
 
   RAISE NOTICE 'OK facturacion_b11_b15_candados';

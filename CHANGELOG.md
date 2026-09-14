@@ -1,10 +1,18 @@
 # Changelog
 
+## [13.823.377] - 2026-09-14
+
+- **fix(facturación/proformas)**: revisión R1–R4 del lote B11–B15 (sin tocar datos históricos).
+  - **R1 Eliminar proforma**: `eliminar_proforma_rpc` vuelve a bloquear sólo con factura viva (`deleted_at IS NULL` y estado distinto de `Cancelada`/`Sustituida`) o estado `facturada`; una factura cancelada, sustituida o en papelera ya no impide eliminarla. Se conserva el check de rol con `has_any_role_efectivo`.
+  - **R2 Candado CxP**: `tg_conceptos_costo_guard_vinculo_cxp` decide por el id de la factura de proveedor vinculada y ya no por el folio; el folio sólo alimenta el texto (`(sin folio)` como respaldo). Alcance intacto: monto, moneda y proveedor.
+  - **R3 T/C inválido**: `get_exposicion_credito_cliente` acota `LC_CREDITO_TC_INVALIDO` a los primeros 10 folios y agrega “y N más”, sin ocultar registros pendientes ni calcular exposición.
+  - **R4 Documentación B12**: el literal `NULL` del T/C en `convertir_proformas_a_factura` se documenta como documental: `trg_factura_tc_dof_obligatorio` (BEFORE INSERT) resuelve el T/C DOF o rechaza el INSERT, por lo que un borrador nuevo nunca queda persistido sin T/C; la alerta de la tarjeta cubre datos legacy fuera de banda.
+
 ## [13.823.376] - 2026-09-14
 
 - **fix(facturación/proformas)**: lote B11–B15 de candados en la base (sin normalizar datos históricos).
   - **B11 Exposición de crédito**: `get_exposicion_credito_cliente` deja de convertir divisa con T/C = 1; aplica la banda 5..40 igual que `credito_en_uso_mxn` y devuelve `LC_CREDITO_TC_INVALIDO` con los folios a corregir. La tarjeta de crédito del cliente muestra ese aviso en lugar de una cifra falsa.
-  - **B12 T/C del borrador USD**: `convertir_proformas_a_factura` crea la factura en moneda extranjera con `tipo_cambio = NULL` (MXN conserva 1); la tarjeta de timbrado advierte si falta o si el valor está fuera de banda (incluido el viejo 1).
+  - **B12 T/C del borrador USD**: `convertir_proformas_a_factura` ya no inventa `tipo_cambio = 1` para moneda extranjera: pasa `NULL` y `trg_factura_tc_dof_obligatorio` resuelve el T/C DOF o rechaza el alta (MXN conserva 1). La tarjeta de timbrado advierte cuando falta el T/C o está fuera de banda, caso propio de datos legacy. Ver R4 en 13.823.377.
   - **B13 Concepto proformado**: `_assert_concepto_no_proformado` también vigila `total`; el mensaje indica eliminar/recrear la proforma pendiente o usar el flujo fiscal. Las transiciones de estado siguen permitidas.
   - **B14 Costo vinculado a CxP**: nuevo trigger `trg_conceptos_costo_guard_vinculo_cxp` bloquea cambios de monto, moneda y proveedor mientras exista una factura de proveedor viva vinculada (`LC_COSTO_VINCULADO_CXP`); cambios no financieros y de liquidación siguen abiertos.
   - **B15 Eliminar proforma**: `eliminar_proforma_rpc` autoriza con `has_any_role_efectivo` (admin, admin_org, operador, contador, super_admin), espejo de la policy RLS; sólo lectura ya no puede borrar vía RPC.
