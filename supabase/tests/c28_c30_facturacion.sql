@@ -68,9 +68,9 @@ VALUES ('c29c0000-0000-4000-8000-000000000001'::uuid,
         'c29c0000-0000-4000-8000-0000000000a1', 'contador'::public.app_role)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.clientes (id, nombre, organization_id)
+INSERT INTO public.clientes (id, nombre, email, organization_id)
 VALUES ('c29c0000-0000-4000-8000-0000000000c1'::uuid, 'Cliente C29',
-        'c29c0000-0000-4000-8000-000000000001'::uuid);
+        'c29-cliente@test.mx', 'c29c0000-0000-4000-8000-000000000001'::uuid);
 
 INSERT INTO public.embarques (id, cliente_id, cliente_nombre, modo, tipo, organization_id, tipo_cambio_usd)
 VALUES
