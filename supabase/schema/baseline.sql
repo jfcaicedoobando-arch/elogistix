@@ -9962,6 +9962,29 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $$;
+CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT count(*)::bigint
+  FROM public.facturas f
+  WHERE f.deleted_at IS NULL
+    AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+    AND (
+      f.total
+      - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
+                   WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+                     AND NOT public.pago_rep_anulado(pf.estado_rep)), 0)
+      - COALESCE((
+          SELECT SUM(public.nc_convertida_a_moneda_factura(
+                   nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda::text, f.tipo_cambio))
+          FROM public.factura_notas_credito nc
+          WHERE nc.factura_id = f.id
+            AND nc.deleted_at IS NULL
+            AND nc.estado = 'Aplicada'
+        ), 0)
+    ) > 0.005
+$$;
 CREATE FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid DEFAULT NULL::uuid, p_motivo text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
