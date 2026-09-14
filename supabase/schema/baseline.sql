@@ -34853,6 +34853,9 @@ GRANT ALL ON FUNCTION public.capturar_factura_entrante(p_documento_id uuid, p_fa
 REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cartera_pendiente() TO authenticated;
 GRANT ALL ON FUNCTION public.cartera_pendiente() TO service_role;
+REVOKE ALL ON FUNCTION public.cartera_pendiente_total() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cartera_pendiente_total() TO authenticated;
+GRANT ALL ON FUNCTION public.cartera_pendiente_total() TO service_role;
 REVOKE ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) TO service_role;
