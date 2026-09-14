@@ -15,6 +15,8 @@ import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detall
 import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 import { usePdfExport } from "@/hooks/shared/usePdfExport";
+import { useDocumentTitle } from "@/hooks/shared";
+
 import { notifyError } from "@/lib/ui/appFeedback";
 import { puedeEscribirCotizaciones } from "@/features/cotizacion/domain/cotizacion";
 import { tieneImportesEfectivos } from "@/lib/domain/cotizacionDetalle";
@@ -53,6 +55,9 @@ export default function CotizacionDetalle() {
   const { data: envios = [] } = useHistorialEnviosCotizacion(cotizacion?.id);
 
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
+  // B5 — sin esto la pestaña conservaba el título del landing público.
+  useDocumentTitle(cotizacion?.folio ? `Cotización ${cotizacion.folio}` : "Cotización");
+
 
   if (!isLoading && !error && !cotizacion) {
     return (
