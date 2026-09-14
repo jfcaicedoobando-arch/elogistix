@@ -43,7 +43,7 @@ export default function TesoreriaCuentas() {
           <div className="flex items-center gap-2">
             {canCapturarMovimientoBancario && (
               <Button variant="outline" onClick={() => setOpenTraspaso(true)}>
-                <ArrowRightLeft className="h-4 w-4 mr-2" /> Traspaso
+                <ArrowRightLeft className="h-4 w-4 mr-2" /> Traspaso entre cuentas
               </Button>
             )}
             {canAdminCuentasBancarias ? (
