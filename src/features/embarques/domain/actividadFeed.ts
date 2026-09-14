@@ -64,26 +64,33 @@ function esObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 }
 
-export function normalizarActividad(rows: ActividadRow[]): ActividadItem[] {
-  return rows
-    .filter((r) => !!r.fecha)
-    .map((r) => ({
-      id: r.id,
-      categoria: normalizarCategoria(r.categoria),
-      tipo: r.tipo,
-      fecha: r.fecha,
-      usuario: r.usuario?.trim() ?? '',
-      accion: r.accion?.trim() || r.tipo,
-      titulo: r.titulo?.trim() || (r.accion ?? r.tipo),
-      descripcion: r.descripcion?.trim() || undefined,
-      monto: typeof r.monto === 'number' ? r.monto : undefined,
-      moneda: r.moneda ?? undefined,
-      refTipo: r.ref_tipo ?? undefined,
-      refId: r.ref_id ?? undefined,
-      dedupeKey: r.dedupe_key?.trim() || undefined,
-      detalles: esObjeto(r.detalles) ? r.detalles : undefined,
-    }));
+function textoOpcional(valor: string | null): string | undefined {
+  return valor?.trim() || undefined;
 }
+
+function normalizarFila(r: ActividadRow): ActividadItem {
+  return {
+    id: r.id,
+    categoria: normalizarCategoria(r.categoria),
+    tipo: r.tipo,
+    fecha: r.fecha,
+    usuario: r.usuario?.trim() ?? '',
+    accion: textoOpcional(r.accion) ?? r.tipo,
+    titulo: textoOpcional(r.titulo) ?? (r.accion ?? r.tipo),
+    descripcion: textoOpcional(r.descripcion),
+    monto: typeof r.monto === 'number' ? r.monto : undefined,
+    moneda: r.moneda ?? undefined,
+    refTipo: r.ref_tipo ?? undefined,
+    refId: r.ref_id ?? undefined,
+    dedupeKey: textoOpcional(r.dedupe_key),
+    detalles: esObjeto(r.detalles) ? r.detalles : undefined,
+  };
+}
+
+export function normalizarActividad(rows: ActividadRow[]): ActividadItem[] {
+  return rows.filter((r) => !!r.fecha).map(normalizarFila);
+}
+
 
 /** Un `accion` técnico viene del backend en snake_case (p.ej. `cambiar_estado`). */
 function esAccionTecnica(accion: string): boolean {
