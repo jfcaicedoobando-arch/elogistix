@@ -30,6 +30,15 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_CONFIRMADO_INCOMPLETO:
     "Aún falta información para confirmar el embarque. Captura los datos pendientes y vuelve a intentar.",
 
+  // v13.823.388 — un embarque con documentos de cliente vivos no puede volver a
+  // Borrador (caso ELIMP00310: expediente y factura viva con estado Borrador).
+  LC_BORRADOR_CON_CXC:
+    "Este embarque ya tiene facturas de cliente vigentes, así que no puede regresar a Borrador. " +
+    "Cancela o sustituye esas facturas primero.",
+  LC_BORRADOR_CON_PROFORMA:
+    "Este embarque tiene proformas vigentes, así que no puede regresar a Borrador. " +
+    "Cancela esas proformas primero.",
+
   // v13.823.312 — candados de cierre (A-1/A-2): el embarque cerrado congela
   // importes, garantías y vínculos financieros hasta que se reabre.
   LC_EMBARQUE_CERRADO:
