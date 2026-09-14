@@ -24049,6 +24049,7 @@ CREATE FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid DEFAULT auth.ui
     _user_id,
     ARRAY['admin','admin_org','super_admin',
           'gerente_operaciones','gerente_comercial','gerente_visor',
+          'coordinador_logistico',
           'contador','tesorero','auxiliar_contable','ejecutivo_cobranza',
           'vendedor','ejecutivo_pricing']::app_role[]
   );
