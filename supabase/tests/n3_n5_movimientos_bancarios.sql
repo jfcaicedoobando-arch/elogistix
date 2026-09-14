@@ -100,19 +100,22 @@ DECLARE
   v_proveedor uuid := '5e5e5e5e-0000-4000-8000-000000000034';
   v_pf uuid := '5e5e5e5e-0000-4000-8000-000000000035';
   v_pago_cxp uuid := '5e5e5e5e-0000-4000-8000-000000000036';
+  v_categoria uuid := '5e5e5e5e-0000-4000-8000-000000000037';
 BEGIN
-  INSERT INTO public.clientes (id, organization_id, nombre_comercial, razon_social)
-  VALUES (v_cliente, '5e5e5e5e-0000-4000-8000-000000000010', 'Cliente N5', 'Cliente N5 SA de CV');
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES (v_cliente, '5e5e5e5e-0000-4000-8000-000000000010', 'Cliente N5', 'n5-cliente@test.mx');
 
   INSERT INTO public.facturas
-    (id, organization_id, cliente_id, cliente_nombre, folio, fecha_emision, moneda, subtotal, iva, total, estado)
+    (id, organization_id, cliente_id, cliente_nombre, numero, moneda, subtotal, iva, total,
+     estado, fecha_emision, fecha_vencimiento)
   VALUES (v_factura, '5e5e5e5e-0000-4000-8000-000000000010', v_cliente, 'Cliente N5',
-          'N5-1', public.fecha_negocio_mx(), 'MXN', 100, 16, 116, 'Emitida');
+          'N5-1', 'MXN'::public.moneda, 100, 16, 116, 'Emitida'::public.estado_factura,
+          public.fecha_negocio_mx(), public.fecha_negocio_mx() + 20);
 
   INSERT INTO public.pagos_factura
-    (id, organization_id, factura_id, fecha_pago, monto, moneda, forma_pago)
+    (id, organization_id, factura_id, fecha_pago, monto, moneda)
   VALUES (v_pago_cxc, '5e5e5e5e-0000-4000-8000-000000000010', v_factura,
-          public.fecha_negocio_mx(), 116, 'MXN', '03');
+          public.fecha_negocio_mx(), 116, 'MXN'::public.moneda);
 
   -- Un CARGO (salida de dinero) no puede ser el cobro de un cliente.
   BEGIN
@@ -138,16 +141,20 @@ BEGIN
   INSERT INTO public.proveedores (id, organization_id, nombre)
   VALUES (v_proveedor, '5e5e5e5e-0000-4000-8000-000000000010', 'Proveedor N5');
 
+  INSERT INTO public.presupuesto_categorias (id, organization_id, nombre)
+  VALUES (v_categoria, '5e5e5e5e-0000-4000-8000-000000000010', 'Categoría N5');
+
   INSERT INTO public.proveedor_facturas
-    (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor, fecha_emision,
-     moneda, subtotal, total, estado)
+    (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor, folio_interno,
+     categoria_presupuesto_id, fecha_emision, moneda, subtotal, total, estado)
   VALUES (v_pf, '5e5e5e5e-0000-4000-8000-000000000010', v_proveedor, 'Proveedor N5',
-          'PN5-1', public.fecha_negocio_mx(), 'MXN', 100, 100, 'Vigente');
+          'PN5-1', 'FP-N50001', v_categoria, public.fecha_negocio_mx(),
+          'MXN'::public.moneda, 100, 100, 'Vigente'::public.estado_proveedor_factura);
 
   INSERT INTO public.pagos_proveedor
-    (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, metodo_pago)
+    (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
   VALUES (v_pago_cxp, '5e5e5e5e-0000-4000-8000-000000000010', v_pf,
-          public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia');
+          public.fecha_negocio_mx(), 100, 'MXN'::public.moneda);
 
   -- Un ABONO (entrada de dinero) no puede ser el pago de un proveedor.
   BEGIN
