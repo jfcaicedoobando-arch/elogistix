@@ -78,23 +78,39 @@ BEGIN
   -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
   -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
   -- implícito (o 1:1) deformaría el P&L del embarque.
-  SELECT count(DISTINCT upper(btrim(COALESCE(c->>'moneda', 'MXN'))))
+  -- v13.823.392 · Auditoría cotización→embarque #2: el conteo cubría SÓLO las
+  -- monedas efectivas de `conceptos_venta`. Una venta en USD con costos en MXN
+  -- (caso real) generaba un embarque multi-moneda sin TC sellado. Ahora se
+  -- evalúa la UNIÓN de monedas efectivas de ventas y de `cotizacion_costos`
+  -- vivos; las filas con importe cero siguen sin contar.
+  SELECT count(*)
     INTO v_monedas
-    FROM jsonb_array_elements(
-           CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
-                THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-   -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
-   -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
-   -- una cotización mixta se convertía sin tipo de cambio.
-   WHERE COALESCE(
-           NULLIF(
-             CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                  THEN (c->>'total')::numeric ELSE 0 END, 0),
-           CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                 AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
-                THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
-                ELSE 0 END
-         ) <> 0;
+    FROM (
+      SELECT upper(btrim(COALESCE(c->>'moneda', 'MXN'))) AS m
+        FROM jsonb_array_elements(
+               CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
+                    THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+       -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
+       -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
+       -- una cotización mixta se convertía sin tipo de cambio.
+       WHERE COALESCE(
+               NULLIF(
+                 CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                      THEN (c->>'total')::numeric ELSE 0 END, 0),
+               CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                     AND COALESCE(NULLIF(c->>'precio_unitario', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
+                    THEN (c->>'cantidad')::numeric * (c->>'precio_unitario')::numeric
+                    ELSE 0 END
+             ) <> 0
+      UNION
+      SELECT upper(btrim(COALESCE(cc.moneda, 'MXN')))
+        FROM public.cotizacion_costos cc
+       WHERE cc.cotizacion_id = v_cot.id
+         AND cc.deleted_at IS NULL
+         AND COALESCE(NULLIF(cc.costo_total, 0),
+                      NULLIF(COALESCE(cc.costo_unitario, 0) * COALESCE(cc.cantidad, 0), 0),
+                      0) <> 0
+    ) u;
 
   IF COALESCE(v_monedas, 0) > 1 AND COALESCE(v_cot.tipo_cambio_usd, 0) <= 0 THEN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)

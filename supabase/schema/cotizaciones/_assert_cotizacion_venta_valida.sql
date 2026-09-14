@@ -23,6 +23,7 @@ DECLARE
   v_positiva   boolean;
   v_moneda_mala text;
   v_sin_reflejo text;
+  v_mal_formadas text;
 BEGIN
   IF p_cotizacion_id IS NULL THEN RETURN; END IF;
 
@@ -57,6 +58,34 @@ BEGIN
        AND cc.deleted_at IS NULL
   ) THEN
     RAISE EXCEPTION 'LC_COT_SIN_COSTOS: la cotización % no tiene costos cargados; captura el desglose de costos en la cotización antes de crear el embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- v13.823.392 · Auditoría cotización→embarque #5: antes sólo se exigía que
+  -- EXISTIERA una línea positiva. Una segunda línea legacy con cantidad='dos'
+  -- pasaba este candado y reventaba después en
+  -- `_crear_embarque_replicar_conceptos` con "invalid input syntax for type
+  -- numeric" (error genérico de PostgreSQL, no una regla de negocio). Ahora se
+  -- validan TODAS las líneas con descripción y se responde con la descripción
+  -- de la fila culpable, sin crear embarque parcial.
+  SELECT string_agg(DISTINCT c.desc_txt, '; ')
+    INTO v_mal_formadas
+    FROM (
+      SELECT btrim(x->>'descripcion')       AS desc_txt,
+             btrim(COALESCE(x->>'cantidad', ''))            AS cant,
+             btrim(COALESCE(x->>'precio_unitario', ''))     AS pu,
+             btrim(COALESCE(x->>'total', ''))               AS tot,
+             btrim(COALESCE(x->>'tasa_iva_aplicada', ''))   AS tasa
+        FROM jsonb_array_elements(v_ventas) x
+       WHERE COALESCE(btrim(x->>'descripcion'), '') <> ''
+    ) c
+   WHERE (c.cant <> '' AND c.cant !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.pu   <> '' AND c.pu   !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.tot  <> '' AND c.tot  !~ '^-?[0-9]+(\.[0-9]+)?$')
+      OR (c.tasa <> '' AND c.tasa !~ '^-?[0-9]+(\.[0-9]+)?$');
+
+  IF v_mal_formadas IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_COT_VENTA_IMPORTE_INVALIDO: el concepto de venta "%" tiene cantidad, precio, total o tasa de IVA con un valor que no es numérico; corrígelo en la cotización antes de crear el embarque', v_mal_formadas
       USING ERRCODE = 'P0001';
   END IF;
 

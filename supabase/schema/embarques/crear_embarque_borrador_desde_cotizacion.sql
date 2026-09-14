@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cot
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb;
+DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb; v_delta jsonb;
         v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
@@ -91,10 +91,22 @@ BEGIN
     FROM public.embarques WHERE id = v_embarque_id;
 
   IF NOT COALESCE(v_ya_decidido, false) THEN
+    -- v13.823.392 · Auditoría cotización→embarque #4: para 'sustituida' el
+    -- delta económico se calcula EN SERVIDOR contra la tarifa realmente
+    -- elegida; el `p_delta_jsonb` del navegador (comparación vieja contra la
+    -- tarifa original) ya no se guarda como dato autoritativo. Las demás
+    -- decisiones conservan el snapshot recibido.
+    IF p_decision = 'sustituida' THEN
+      v_delta := public._embarque_delta_tarifa_sustituida(
+        p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
+    ELSE
+      v_delta := p_delta_jsonb;
+    END IF;
+
     UPDATE public.embarques
        SET tarifa_id_original=v_cot.tarifa_id,
            tarifa_id_aplicada=COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-           tarifa_delta_jsonb=p_delta_jsonb,
+           tarifa_delta_jsonb=v_delta,
            tarifa_decision=p_decision,
            tarifa_revalidada_en=now(),
            tarifa_revalidada_por=auth.uid()
@@ -125,7 +137,7 @@ BEGIN
         jsonb_build_object('decision',p_decision,
           'tarifa_id_original',v_cot.tarifa_id,
           'tarifa_id_aplicada',COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-          'delta',p_delta_jsonb);
+          'delta',v_delta);
   END IF;
 
   RETURN v_embarque_id;
