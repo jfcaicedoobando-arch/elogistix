@@ -16,13 +16,12 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
-import { NumericInput } from "@/components/shared/NumericInput";
-import { TraspasoResumen } from "./TraspasoResumen";
+import { TraspasoConversion } from "./TraspasoConversion";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import { useTraspasoForm, traspasoSucio } from "@/features/tesoreria/hooks/useTraspasoForm";
-import { etiquetaTc } from "@/features/tesoreria/domain/tcPar";
 
 import type { Tables } from "@/integrations/supabase/types";
+
 
 
 type Cuenta = Tables<"cuentas_bancarias">;
