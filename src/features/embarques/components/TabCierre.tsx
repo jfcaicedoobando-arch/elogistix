@@ -36,10 +36,15 @@ interface Props {
   modo?: string;
   /** v13.385.0 — Expediente, usado por los enlaces del checklist. */
   expediente?: string;
+  /**
+   * v13.823.370 (P2-5) — Cuántos requisitos documentales existen (excluye
+   * "No aplica"). Con 0 el check documental se muestra neutral en vez de verde.
+   */
+  docsRequeridos?: number;
 }
 
 // eslint-disable-next-line complexity
-export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
+export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequeridos }: Props) {
   const { data: validacion, isLoading } = useValidacionCierre(embarqueId);
   const { data: log = [] } = useCierreLog(embarqueId);
   const cerrarMut = useCerrarEmbarque(embarqueId);
@@ -83,7 +88,7 @@ export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
         </Alert>
       ) : null}
 
-      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} sinComision={comisionEstado?.efectivo ?? false} />
+      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} sinComision={comisionEstado?.efectivo ?? false} sinRequisitosDocumentales={docsRequeridos === 0} />
 
       <div className="flex flex-wrap items-center gap-2">
         {!esCerrado && canCerrarEmbarque && (() => {

@@ -102,9 +102,11 @@ export function GrupoCostosProveedor({
                 </TooltipContent>
               </Tooltip>
             ))}
-            <span className="text-muted-foreground">
-              {conteos.conAjuste} con ajuste{conteos.sinFactura > 0 ? `, ${conteos.sinFactura} sin factura` : ""}
-            </span>
+            {etiquetaConteos(conteos.conAjuste, conteos.sinFactura) && (
+              <span className="text-muted-foreground">
+                {etiquetaConteos(conteos.conAjuste, conteos.sinFactura)}
+              </span>
+            )}
           </div>
         </TooltipProvider>
       </button>

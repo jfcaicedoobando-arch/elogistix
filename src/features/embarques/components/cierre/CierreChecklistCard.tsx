@@ -29,12 +29,17 @@ interface Props {
   informativo?: boolean;
   /** v13.386.0 — El embarque no genera comisión: los checks de comisión salen en gris. */
   sinComision?: boolean;
+  /** v13.823.370 (P2-5) — Sin requisitos documentales registrados: el check documental no es evaluable. */
+  sinRequisitosDocumentales?: boolean;
   /** @deprecated — los labels están en `cierreCheckMeta`. */
   etiquetas?: Record<string, string>;
 }
 
-export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente, informativo = false, sinComision = false }: Props) {
-  const noAplica = calcularReglasNoAplica(checks, { sinComision });
+export function CierreChecklistCard({
+  isLoading, checks, embarqueId, expediente,
+  informativo = false, sinComision = false, sinRequisitosDocumentales = false,
+}: Props) {
+  const noAplica = calcularReglasNoAplica(checks, { sinComision, sinRequisitosDocumentales });
   return (
     <Card>
       <CardHeader>

@@ -59,6 +59,11 @@ const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
     /LC_COT_MONEDA_NO_SOPORTADA/,
     "La cotización tiene importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
   ],
+  // v13.823.370 (P1-1) — candado de costos en `_assert_cotizacion_venta_valida`.
+  [
+    /LC_COT_SIN_COSTOS/,
+    "La cotización no tiene costos cargados. Captura el desglose de costos en la cotización antes de crear el embarque.",
+  ],
   [/LC_COT_ESTADO_INVALIDO/, "Solo se pueden convertir cotizaciones en estado Aceptada o En operación."],
   [/LC_COT_SIN_CLIENTE/, "Convierte el prospecto a cliente antes de crear el borrador de embarque."],
   [/LC_COT_NO_ENCONTRADA/, "La cotización no existe o fue eliminada."],
