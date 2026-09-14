@@ -90,9 +90,13 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
       });
     }
 
-    // Heading con expediente real.
+    // v13.823.370 (P2-6) — La política vigente NO reserva expediente al
+    // convertir: el embarque nace Borrador y el folio EL(IMP|EXP|GEN) se
+    // asigna al confirmar. `labelExpediente` muestra "Borrador <id-corto>".
     await expect(
-      page.getByRole("heading", { name: /EL(IMP|EXP|GEN)\d+/i }).first(),
+      page.getByRole("heading", { name: /Borrador\s+[0-9a-f]{8}/i }).first(),
     ).toBeVisible({ timeout: 15_000 });
+    // La URL apunta al UUID recién creado.
+    expect(page.url()).toContain(`/embarques/${nuevoEmbarqueId}`);
   });
 });
