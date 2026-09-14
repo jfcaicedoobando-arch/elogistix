@@ -53,6 +53,24 @@ function todosIguales<T>(arr: T[]): boolean {
   return arr.every((v) => String(v) === first);
 }
 
+interface CargaCellProps {
+  contenedor: Contenedor;
+  campo: "peso_kg" | "volumen_m3" | "piezas";
+  vacio: string;
+  decimals?: number;
+}
+
+function CargaCell({ contenedor, campo, vacio, decimals }: CargaCellProps) {
+  const valor = valorCargaCapturada(contenedor, campo);
+  return (
+    <TableCell className="text-right tabular-nums">
+      {valor === null
+        ? <span className="text-muted-foreground">{vacio}</span>
+        : formatNumber(valor, decimals === undefined ? undefined : { decimals })}
+    </TableCell>
+  );
+}
+
 export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [], isLoading, error } =
@@ -162,27 +180,9 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                       {mostrarBLHouse && (
                         <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
                       )}
-                      {!pesoUniforme && (
-                        <TableCell className="text-right tabular-nums">
-                          {valorCargaCapturada(c, "peso_kg") === null
-                            ? <span className="text-muted-foreground">Sin capturar</span>
-                            : formatNumber(Number(c.peso_kg))}
-                        </TableCell>
-                      )}
-                      {!volumenUniforme && (
-                        <TableCell className="text-right tabular-nums">
-                          {valorCargaCapturada(c, "volumen_m3") === null
-                            ? <span className="text-muted-foreground">—</span>
-                            : formatNumber(Number(c.volumen_m3))}
-                        </TableCell>
-                      )}
-                      {!piezasUniformes && (
-                        <TableCell className="text-right tabular-nums">
-                          {valorCargaCapturada(c, "piezas") === null
-                            ? <span className="text-muted-foreground">—</span>
-                            : c.piezas}
-                        </TableCell>
-                      )}
+                      {!pesoUniforme && <CargaCell contenedor={c} campo="peso_kg" vacio="Sin capturar" />}
+                      {!volumenUniforme && <CargaCell contenedor={c} campo="volumen_m3" vacio="—" decimals={2} />}
+                      {!piezasUniformes && <CargaCell contenedor={c} campo="piezas" vacio="—" />}
                     </TableRow>
                   ))}
                 </TableBody>

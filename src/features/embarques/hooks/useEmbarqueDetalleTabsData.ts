@@ -22,7 +22,6 @@ import {
   useEmbarqueDetalleData,
   useEmbarqueFinancials,
   useEmbarqueDocumentosActions,
-import { useContenedoresEmbarque } from "./useContenedoresEmbarque";
 } from "@/features/embarques/hooks";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 
@@ -32,7 +31,6 @@ export function useEmbarqueDetalleTabsData(
 ) {
   const {
     conceptosVenta, conceptosCosto, documentos, notas, facturas,
-  const { data: contenedores } = useContenedoresEmbarque(embarqueId);
     tipoCambioUSD, tipoCambioEUR,
   } = useEmbarqueDetalleData(embarqueId);
 
