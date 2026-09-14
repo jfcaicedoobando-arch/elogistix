@@ -131,3 +131,7 @@ BEGIN
   RETURN v_resp;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid) TO authenticated;
