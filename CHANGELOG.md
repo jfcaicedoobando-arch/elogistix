@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.374] - 2026-09-14
+
+- **fix(embarques/facturación)**: pulido P2 de presentación sin cambiar permisos, datos ni cálculos financieros.
+  - **Contenedores**: si conviven renglones uniformes y marcadores pendientes, las columnas de carga permanecen visibles y los faltantes conservan “Sin capturar”/“—”.
+  - **Facturas**: el encabezado separa subtotales vigentes por moneda y excluye canceladas, sin conversiones.
+  - **Cierre**: los mensajes reflejan correctamente que pueden cerrar operaciones o administración.
+  - **Reconciliación CSV**: conceptos con comas, comillas o saltos de línea se exportan conforme a RFC 4180.
+  - **Conceptos de venta**: las filas se identifican como Subtotal y las tarjetas como Total c/ IVA.
+
 ## [13.823.373] - 2026-09-14
 
 - **fix(cotizaciones/embarques)**: pulido P2 de contexto visual en P&L y resumen de contenedores, sin cambios de cálculos ni datos.

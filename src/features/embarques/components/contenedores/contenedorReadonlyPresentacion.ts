@@ -21,3 +21,16 @@ export function valorCargaCapturada(
 export function mostrarColumnaCarga(uniforme: boolean, pendientes: number): boolean {
   return pendientes > 0 || !uniforme;
 }
+
+export function valoresUniformes<T>(valores: T[]): boolean {
+  if (valores.length <= 1) return false;
+  const primero = String(valores[0]);
+  return valores.every((valor) => String(valor) === primero);
+}
+
+export function mostrarResumenUniforme(
+  pendientes: number,
+  uniformes: readonly boolean[],
+): boolean {
+  return pendientes === 0 && uniformes.some(Boolean);
+}

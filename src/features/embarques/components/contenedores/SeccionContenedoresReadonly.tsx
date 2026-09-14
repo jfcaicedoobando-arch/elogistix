@@ -14,7 +14,9 @@ import { DetailTableHead } from "@/components/shared/DetailTable";
 import {
   esMarcadorContenedor,
   mostrarColumnaCarga,
+  mostrarResumenUniforme,
   valorCargaCapturada,
+  valoresUniformes,
 } from "./contenedorReadonlyPresentacion";
 
 interface Props {
@@ -39,19 +41,6 @@ function BadgePendientes({ pendientes }: { pendientes: number }) {
         : `${pendientes} contenedores pendientes de captura`}
     </Badge>
   );
-}
-
-function todosIguales<T>(arr: T[]): boolean {
-  if (arr.length <= 1) return false;
-  const first = String(arr[0]);
-  return arr.every((v) => String(v) === first);
-}
-
-function debeMostrarResumenUniforme(
-  pendientes: number,
-  uniformes: readonly boolean[],
-): boolean {
-  return pendientes === 0 && uniformes.some(Boolean);
 }
 
 interface CargaCellProps {
@@ -91,13 +80,13 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const pesos = operativos.map((c) => Number(c.peso_kg) || 0);
   const volumenes = operativos.map((c) => Number(c.volumen_m3) || 0);
   const piezas = operativos.map((c) => c.piezas ?? 0);
-  const pesoUniforme = todosIguales(pesos);
-  const volumenUniforme = todosIguales(volumenes);
-  const piezasUniformes = todosIguales(piezas);
+  const pesoUniforme = valoresUniformes(pesos);
+  const volumenUniforme = valoresUniformes(volumenes);
+  const piezasUniformes = valoresUniformes(piezas);
   const mostrarPeso = mostrarColumnaCarga(pesoUniforme, pendientes);
   const mostrarVolumen = mostrarColumnaCarga(volumenUniforme, pendientes);
   const mostrarPiezas = mostrarColumnaCarga(piezasUniformes, pendientes);
-  const hayResumenUniforme = debeMostrarResumenUniforme(
+  const hayResumenUniforme = mostrarResumenUniforme(
     pendientes,
     [pesoUniforme, volumenUniforme, piezasUniformes],
   );

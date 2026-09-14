@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildFilas3C } from "@/features/embarques/services/reconciliacion3Columnas";
+import { generarCsvReconciliacion3C } from "../reconciliacion3Columnas.helpers";
 
 describe("buildFilas3C", () => {
   const cotizados = [
@@ -41,5 +42,19 @@ describe("buildFilas3C", () => {
     expect(flete.real).toBe(1300);
     // sin duplicar la fila para "flete"
     expect(filas.filter((f) => f.concepto.toLowerCase() === "flete")).toHaveLength(1);
+  });
+});
+
+describe("generarCsvReconciliacion3C", () => {
+  it("escapa comas, comillas y saltos de línea sin desplazar columnas", () => {
+    const fila = {
+      concepto: 'Flete, manejo "especial"\nurgente', moneda: "USD",
+      cotizado: 100, refrescado: 110, real: 120,
+      delta_cot_vs_real: { monto: 20, pct: 20 },
+      delta_refr_vs_real: { monto: 10, pct: 9.09 },
+      clasificacion: "alerta" as const,
+    };
+    const csv = generarCsvReconciliacion3C([fila]);
+    expect(csv).toContain('"Flete, manejo ""especial""\nurgente",USD,100,110,120,20.00,alerta');
   });
 });
