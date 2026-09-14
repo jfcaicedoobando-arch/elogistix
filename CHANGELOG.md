@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.367] - 2026-09-14
+
+- **fix(embarques)**: seguimiento del P1 #5 — en un embarque Borrador sin actividad real el tab Utilidad ya no presenta pérdidas ficticias.
+  - Los 4 KPI quedan neutrales (sólo presupuesto como contexto, sin Δ ni variantes warning/destructive).
+  - No se renderizan las comparativas "Presupuestado vs. Real" ni el desglose que leía Real = 0 como Δ −100%; el contexto visible es el card "Sin actividad real todavía".
+  - Comportamiento intacto para embarques no Borrador o con actividad real.
+  - Regresión de render: `TabPnl.sin-actividad.test.tsx`.
+
 ## [13.823.366] - 2026-09-13
 
 - **fix(cotizaciones)**: el detalle ofrecía "Editar costos"/"Guardar Costos" en cotizaciones `Aceptada`/`En operación`, pero el guard servidor `actualizar_cotizacion_costos` las rechaza (`LC_COT_COSTOS_ESTADO_INVALIDO`).
