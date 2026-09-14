@@ -77,10 +77,12 @@ BEGIN
   RETURNING id INTO v_emb2;
 
   INSERT INTO public.facturas
-    (organization_id, cliente_id, embarque_id, numero, estado, moneda, subtotal, iva, total, fecha)
+    (organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+     fecha_emision, fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado)
   VALUES
-    (v_org, v_cli, v_emb2, 'TDB-0001', 'Emitida'::public.estado_factura, 'MXN'::public.moneda,
-     100, 16, 116, CURRENT_DATE);
+    (v_org, v_cli, 'CLIENTE DEL BORRADOR', v_emb2, 'TDB-0001',
+     CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 100, 16, 116, 'Emitida');
+
 
   BEGIN
     PERFORM public.eliminar_embarque_completo(v_emb2);
