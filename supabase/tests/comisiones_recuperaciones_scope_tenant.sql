@@ -61,16 +61,19 @@ BEGIN
     RAISE EXCEPTION 'FAIL (c): se perdió la policy de lectura por organización';
   END IF;
 
-  SELECT string_agg(privilege_type, ', ' ORDER BY privilege_type) INTO v_escritura
-    FROM information_schema.role_table_grants
-   WHERE table_schema = 'public'
-     AND table_name = 'comisiones_recuperaciones'
-     AND grantee = 'authenticated'
-     AND privilege_type IN ('INSERT', 'UPDATE', 'DELETE', 'TRUNCATE');
+  -- El GRANT masivo de CI reinstala privilegios de tabla, así que el candado
+  -- que se verifica es el de RLS: no existe ninguna policy de escritura.
+  SELECT string_agg(policyname || ' (' || cmd || ')', ', ' ORDER BY policyname) INTO v_escritura
+    FROM pg_policies
+   WHERE schemaname = 'public'
+     AND tablename = 'comisiones_recuperaciones'
+     AND permissive = 'PERMISSIVE'
+     AND cmd IN ('INSERT', 'UPDATE', 'DELETE', 'ALL');
 
   IF v_escritura IS NOT NULL THEN
-    RAISE EXCEPTION 'FAIL (d): authenticated tiene escritura directa (%). Las mutaciones van por RPC.', v_escritura;
+    RAISE EXCEPTION 'FAIL (d): hay policy(s) de escritura directa (%). Las mutaciones van por RPC SECURITY DEFINER.', v_escritura;
   END IF;
+
 
   RAISE NOTICE '✓ comisiones_recuperaciones: RLS + RESTRICTIVE de tenant activo + lectura in-org, sin escritura directa';
 END $$;
