@@ -3,15 +3,17 @@
 -- 'En operación' -> 'Aceptada' que ejecuta eliminar_embarque_completo al borrar
 -- el último embarque de la cotización no es una aceptación y bloqueaba el
 -- borrado de borradores creados por error (LC_SOD_VIOLATION, ERRCODE 23514).
-CREATE OR REPLACE FUNCTION public._cotizaciones_bloquear_auto_aceptacion()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
+CREATE OR REPLACE FUNCTION public._cotizaciones_bloquear_auto_aceptacion() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
 DECLARE
   v_uid uuid := auth.uid();
 BEGIN
+  -- SoD: quien elaboró la cotización no puede aceptarla. Sólo aplica a la
+  -- aceptación real (estados previos a la aceptación). El regreso automático
+  -- 'En operación' -> 'Aceptada' que hace eliminar_embarque_completo NO es una
+  -- aceptación y no debe bloquearse.
   IF NEW.estado = 'Aceptada'::estado_cotizacion
      AND COALESCE(OLD.estado, 'Borrador'::estado_cotizacion) IN (
        'Borrador'::estado_cotizacion,
@@ -33,7 +35,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$function$;
+$$;
 
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() TO service_role;
