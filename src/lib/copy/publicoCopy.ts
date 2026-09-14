@@ -47,6 +47,8 @@ export const COPY_VALIDACION = {
   destinoRequerido: "Captura el destino de la ruta.",
   /** Marítimo FCL: la cotización se define por contenedor(es). */
   contenedoresRequeridos: "Captura el número de contenedores (mínimo 1).",
+  /** Q1 (v13.823.396): Marítimo FCL sin tipo de contenedor llegaba al embarque vacío. */
+  tipoContenedorRequerido: "Selecciona el tipo de contenedor (Paso 1 → Mercancía).",
 
   prospectoOportunidadRequerida:
     "Selecciona un lead u oportunidad existente del CRM, o cambia el destinatario a \"Cliente existente\".",
@@ -57,8 +59,17 @@ export const COPY_VALIDACION = {
   fleteLclRequerido:
     "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).",
   costosInternosRequeridos: "Agrega al menos un costo interno antes de continuar.",
+  /** Q7 (v13.823.396): había renglones, pero todos vacíos (sin importes). */
+  costosInternosSinImporte:
+    "Agrega al menos un costo válido (concepto, proveedor e importes) antes de continuar.",
   renglonesSinConcepto: "Hay renglones de costo sin concepto.",
   renglonesSinProveedor: "Hay renglones de costo sin proveedor.",
+  /** Q2 (v13.823.396): la tarifa se aplicó con otra cantidad de contenedores. */
+  costosTarifaDesactualizados:
+    "Los costos automáticos de la tarifa no corresponden al número de contenedores actual. Recalcula los costos desde la tarifa antes de continuar.",
+  /** Q6 (v13.823.396): cambiaron las entradas del flete LCL manual del Paso 1. */
+  costosFleteLclDesactualizado:
+    "El flete LCL automático no corresponde a los datos del Paso 1. Recalcula el flete LCL antes de continuar.",
   conceptosVentaRequeridos: "Agrega al menos un concepto de venta.",
   conceptosVentaImporteInvalido:
     "Hay conceptos de venta con cantidad o precio en cero (o negativos). Captura la cantidad y el precio de cada concepto.",

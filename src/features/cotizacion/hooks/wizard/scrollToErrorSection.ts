@@ -5,6 +5,9 @@
  * Los ids provienen de `PasoDatosGenerales.tsx` (`seccion-cliente`, etc.).
  */
 const REGLAS_SECCION: Array<[readonly string[], string]> = [
+  // Q1 (v13.823.396): el tipo de contenedor vive en la sección Mercancía y se
+  // evalúa antes que las reglas de "tipo de operación"/"tarifa".
+  [["tipo de contenedor"], "seccion-mercancia"],
   [["modo de transporte", "tipo de operación", "incoterm"], "seccion-operacion"],
   [["descripción de la mercancía"], "seccion-mercancia"],
   [["origen", "destino"], "seccion-ruta"],
@@ -71,10 +74,13 @@ export type CampoErrorPaso1 =
   | "descripcionMercancia"
   | "origen"
   | "destino"
-  | "numContenedores";
+  | "numContenedores"
+  | "tipoContenedor";
 
 export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   const m = mensaje.toLowerCase();
+  // Q1: se evalúa antes de "tipo de operación" para no capturar el mensaje ajeno.
+  if (m.includes("tipo de contenedor")) return "tipoContenedor";
   if (m.includes("número de contenedores")) return "numContenedores";
   if (m.includes("modo de transporte")) return "modo";
   if (m.includes("tipo de operación")) return "tipo";

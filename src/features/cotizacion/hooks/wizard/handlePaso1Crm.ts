@@ -100,12 +100,16 @@ export function validateDatosGenerales(v: CotizacionFormValues): string | null {
 /**
  * BL-COT-04: Marítimo FCL exige al menos un contenedor. Antes sólo fallaba al
  * convertir a embarque (`LC_COT_CONTENEDORES_REQUERIDOS`).
+ *
+ * Q1 (v13.823.396): también exige el TIPO de contenedor; antes "Siguiente" lo
+ * dejaba pasar y el embarque nacía con el hijo FCL sin tipo.
  */
 export function validateContenedores(v: CotizacionFormValues): string | null {
   return primerError(contenedoresMaritimoSchema, {
     modo: v.modo ?? "",
     tipoEmbarque: v.tipoEmbarque ?? "",
     numContenedores: v.numContenedores ?? 0,
+    tipoContenedor: v.tipoContenedor ?? "",
   });
 }
 

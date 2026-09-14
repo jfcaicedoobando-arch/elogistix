@@ -18,7 +18,7 @@ import { usePaso2Handler } from "./usePaso2Handler";
 export function useCotizacionWizardSteps({
   form, navigate, isEditMode, estadoInicial,
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
-  msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
+  msdsFile, costosInternos, costosDesajuste, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
   tasaIva, tipoCambioUsd, buildPaso1Data, mutations, onFinalized,
 }: Deps) {
@@ -40,7 +40,8 @@ export function useCotizacionWizardSteps({
   const lastCostosHash = useRef<string | null>(costosPreLlenados ? firmaCostos(costosInternos) : null);
 
   const handlePaso2 = usePaso2Handler({
-    cotizacionId, costosInternos, costosPreLlenados, setCostosPreLlenados,
+    cotizacionId, costosInternos, costosDesajuste: costosDesajuste ?? null,
+    costosPreLlenados, setCostosPreLlenados,
     setConceptosUSD, setConceptosMXN, setCurrentStep, tasaIva,
     updateCotizacion, upsertCostos, lastCostosHash,
   });

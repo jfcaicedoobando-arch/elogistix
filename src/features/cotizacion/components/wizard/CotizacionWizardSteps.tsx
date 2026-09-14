@@ -67,6 +67,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
           tipo="local"
           filas={w.costosInternos}
           setFilas={w.setCostosInternos}
+          onDesajusteChange={w.setCostosDesajuste}
         />
       )}
 

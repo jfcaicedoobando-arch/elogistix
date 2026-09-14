@@ -15,6 +15,9 @@ import {
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
 import { esBorradorSinImportes, monedaDeImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
+import { useInvalidarTarifaAutomatica } from "./useInvalidarTarifaAutomatica";
+import { useCambiarTipoEmbarque } from "./useCambiarTipoEmbarque";
+import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
 import { useCotizacionUpdateGuard } from "@/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard";
 
@@ -99,6 +102,9 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
   const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
+  // Q2/Q6 (v13.823.396): el Paso 2 reporta aquí si sus costos automáticos
+  // quedaron desactualizados respecto al Paso 1; bloquea "Siguiente".
+  const [costosDesajuste, setCostosDesajuste] = useState<DesajusteCostos | null>(null);
   // 13.823.281: TC USD/MXN de la cotización. Vive fuera del form porque sólo
   // afecta el subtotal del encabezado en cotizaciones mixtas (no es un dato de
   // los datos generales ni participa en el autosave del paso 1).
@@ -121,29 +127,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const esAereo = modo === "Aéreo";
   const clienteSeleccionado = clientes.find(c => c.id === clienteId);
 
-  const handleCambiarTipoEmbarque = useCallback((nuevoTipo: "FCL" | "LCL") => {
-    // 12.35.0: setValue con shouldValidate/shouldDirty + trigger() para que el wizard
-    // recalcule errors y avance step (mem://core RHF rule).
-    const opts = { shouldValidate: true, shouldDirty: true } as const;
-    form.setValue("tipoEmbarque", nuevoTipo, opts);
-    form.setValue("tipoContenedor", "", opts);
-    form.setValue("tipoPeso", "Peso Normal", opts);
-    form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }], opts);
-    form.setValue("tipoCarga", "Carga General", opts);
-    // BL-COT-04: FCL se mide en contenedores; arranca en 1 (antes quedaba en 0
-    // y el paso se bloqueaba sin decir por qué).
-    if (nuevoTipo === "FCL" && (form.getValues("numContenedores") ?? 0) < 1) {
-      form.setValue("numContenedores", 1, opts);
-    }
-    // v13.299.1: al pasar a LCL se elimina la tarifa marítima vinculada
-    // (LCL captura flete manual). Evita estado huérfano heredado de FCL.
-    if (nuevoTipo === "LCL") {
-      form.setValue("tarifaId", null, opts);
-      form.setValue("tarifaOverride", {}, opts);
-    }
-    void form.trigger(["tipoEmbarque", "tipoContenedor", "tipoPeso", "dimensionesLCL", "tipoCarga", "tarifaId"]);
-    setMsdsFile(null);
-  }, [form]);
+  const handleCambiarTipoEmbarque = useCambiarTipoEmbarque({ form, setCostosInternos, setMsdsFile });
+
+  // Q3/Q5 (v13.823.396): rompe el vínculo de tarifa cuando el tipo de
+  // contenedor o el Incoterm la vuelven inaplicable.
+  useInvalidarTarifaAutomatica({ form, setCostosInternos });
 
   const buildPaso1Data = useCallback(() => {
     // A1/A7 (v13.823.153): sólo un borrador sin importes REALES puede adoptar la
@@ -164,7 +152,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     form, toast, navigate, isEditMode, estadoInicial: initialData?.estado ?? null,
     cotizacionId, setCotizacionId,
     currentStep, setCurrentStep,
-    msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
+    msdsFile, costosInternos, costosDesajuste, costosPreLlenados, setCostosPreLlenados,
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
     totalUSD, tasaIva, tipoCambioUsd, buildPaso1Data,
     mutations: mutationsGuardadas, onFinalized,
@@ -179,6 +167,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     currentStep, setCurrentStep, cotizacionId, setCotizacionId,
 
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
+    costosDesajuste, setCostosDesajuste,
     msdsFile, setMsdsFile,
     esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,

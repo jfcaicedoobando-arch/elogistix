@@ -12844,6 +12844,8 @@ DECLARE
   v_tipo_servicio text;
   v_monedas       integer;
   v_es_fcl        boolean;
+  v_tipo_cont_id  uuid;
+  v_tarifa_tipo_cont uuid;
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id = p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -12870,9 +12872,14 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.392 · Auditoría cotización→embarque #2: UNIÓN de monedas efectivas
-  -- de conceptos_venta y de cotizacion_costos vivos. Antes una venta USD con
-  -- costos MXN se convertía sin tipo de cambio sellado.
+  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
+  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
+  -- implícito (o 1:1) deformaría el P&L del embarque.
+  -- v13.823.392 · Auditoría cotización→embarque #2: el conteo cubría SÓLO las
+  -- monedas efectivas de `conceptos_venta`. Una venta en USD con costos en MXN
+  -- (caso real) generaba un embarque multi-moneda sin TC sellado. Ahora se
+  -- evalúa la UNIÓN de monedas efectivas de ventas y de `cotizacion_costos`
+  -- vivos; las filas con importe cero siguen sin contar.
   SELECT count(*)
     INTO v_monedas
     FROM (
@@ -12880,6 +12887,9 @@ BEGIN
         FROM jsonb_array_elements(
                CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                     THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
+       -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
+       -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
+       -- una cotización mixta se convertía sin tipo de cambio.
        WHERE COALESCE(
                NULLIF(
                  CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -12902,12 +12912,48 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
+  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
     RAISE EXCEPTION 'LC_COT_CONTENEDORES_REQUERIDOS: la cotización % es marítima FCL y no indica cuántos contenedores; captura el número de contenedores (1 o más) antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
+  -- v13.823.396 · Q1: FCL exige TIPO de contenedor. El Paso 1 dejaba avanzar sin
+  -- seleccionarlo y el hijo FCL nacía con `tipo_contenedor` vacío. No se acepta
+  -- ni se inventa '' (cadena vacía).
+  IF v_es_fcl AND NULLIF(btrim(COALESCE(v_cot.tipo_contenedor, '')), '') IS NULL THEN
+    RAISE EXCEPTION 'LC_COT_TIPO_CONTENEDOR_REQUERIDO: la cotización % es marítima FCL y no indica el tipo de contenedor; selecciónalo en el Paso 1 antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- v13.823.396 · Q3: falla cerrada si el tipo de contenedor quedó desalineado
+  -- de la tarifa todavía vinculada (un 40' valuado con costos y recargos de una
+  -- tarifa 20'). Se normaliza el valor legado (code/nombre) o el UUID directo.
+  IF v_es_fcl AND v_cot.tarifa_id IS NOT NULL THEN
+    SELECT t.tipo_contenedor_id INTO v_tarifa_tipo_cont
+      FROM public.costeo_tarifas t
+     WHERE t.id = v_cot.tarifa_id
+       AND t.organization_id = v_cot.organization_id;
+    IF v_cot.tipo_contenedor ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+      v_tipo_cont_id := v_cot.tipo_contenedor::uuid;
+    ELSE
+      SELECT tc.id INTO v_tipo_cont_id
+        FROM public.tipos_contenedor tc
+       WHERE lower(btrim(tc.code)) = lower(btrim(v_cot.tipo_contenedor))
+          OR lower(btrim(tc.name)) = lower(btrim(v_cot.tipo_contenedor))
+       LIMIT 1;
+    END IF;
+    IF v_tarifa_tipo_cont IS NOT NULL
+       AND v_tipo_cont_id IS NOT NULL
+       AND v_tipo_cont_id <> v_tarifa_tipo_cont THEN
+      RAISE EXCEPTION 'LC_COT_TIPO_CONTENEDOR_INCOMPATIBLE: la cotización % tiene tipo de contenedor distinto al de su tarifa vinculada; elige una tarifa del tipo correcto antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  -- v13.823.357 · Auditoría YAGNI P1 #1/#3 y P2 #7: sin venta positiva, con
+  -- precio de venta capturado que no llegó a los conceptos, o con moneda no
+  -- soportada, el embarque nacería en cero o con importes deformados.
   PERFORM public._assert_cotizacion_venta_valida(v_cot.id);
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
@@ -12952,11 +12998,18 @@ BEGIN
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
+  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
+  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
+  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
+  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
+  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
+  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
+  -- creado por conversión directa mostraba "Servicio —".
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -12970,9 +13023,14 @@ BEGIN
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT COALESCE(v_agente_id, t.agente_id), COALESCE(v_naviera_id, t.naviera_id)
       INTO v_agente_id, v_naviera_id
+    -- v13.823.351: la tarifa se lee SIEMPRE acotada a la organización de la
+    -- cotización; un id de otro tenant no debe sembrar agente/naviera.
     FROM public.costeo_tarifas t
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
+  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
+  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
+  -- tenant al embarque; ahora falla cerrado.
   IF v_agente_id IS NOT NULL THEN
     SELECT nombre INTO v_agente_nombre
       FROM public.costeo_agentes
@@ -12997,6 +13055,8 @@ BEGIN
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
     tipo_servicio,
+    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
+    -- al embarque; antes el borrador nacía sin tipo de cambio.
     tipo_cambio_usd
   )
   VALUES (
@@ -13004,6 +13064,8 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
+    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
+    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
@@ -13017,6 +13079,11 @@ BEGIN
     NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
+  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
+  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
+  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
+  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
+  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
