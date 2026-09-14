@@ -143,3 +143,4 @@ supabase/tests/borrador_con_factura_viva.sql
 supabase/tests/eliminar_borrador_cotizacion_sod.sql
 supabase/tests/n7_rep_cancelado_no_consume_saldo.sql
 supabase/tests/n8_pago_proveedor_cuenta_valida.sql
+supabase/tests/costos_cotizacion_coordinador_logistico.sql

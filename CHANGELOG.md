@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.391] - 2026-09-14
+
+- **fix(cotizaciones · permisos)**: `public.puede_ver_costos_cotizacion` incluye el rol `coordinador_logistico`. Sin él, la política `Tenant read cotizacion_costos` filtraba todas las filas **sin error** y el candado de UI (`tieneCostosCargados`) concluía "la cotización no tiene costos cargados (paso 2)" al crear el embarque, aunque la cotización sí tuviera el desglose (caso COT-2026-0249). El servidor (`_assert_cotizacion_venta_valida`, SECURITY DEFINER) siempre lo evaluó bien. No se cambia ninguna otra regla de conversión ni el aislamiento por organización. Espejo: `supabase/schema/cotizaciones/puede_ver_costos_cotizacion.sql`. Cobertura: `supabase/tests/costos_cotizacion_coordinador_logistico.sql`.
+
+
+
 ## [13.823.390] - 2026-09-15
 
 - **fix(arquitectura)**: `src/features/tesoreria/services/pagosProgramados.ts` consume el lector de saldos CxP por el barrel público `@/features/cxp` (se exportan `fetchSaldosProveedorFacturas` y `SaldoServidorCxP`); se elimina el deep import cross-feature sin relajar la regla ni tocar el baseline.
