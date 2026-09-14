@@ -1,15 +1,4 @@
--- Fuente canónica de public.registrar_pago_proveedor_lote (dominio cxp).
--- Última migración que la define: 20260825000200 (BL-03, guard de vida por
--- renglón; ACUMULATIVA sobre 20260825000100 BL-02 idempotencia, que a su vez
--- re-emite el cuerpo final de Ola 12 vía 20260824060000).
--- Regla: cualquier cambio a esta función debe actualizar este archivo
--- en el mismo PR (ver supabase/schema/README.md).
--- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
--- membresía en la organización del documento (has_any_role_in_org).
--- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA previa al
--- piloto, sin expansión de jerarquía (has_any_role_in_org_exact);
--- auxiliar_contable queda fuera por decisión conservadora.
-
+-- Lote financiero M1-M5 (v13.823.384) · parte 2/4
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb)
  RETURNS uuid
  LANGUAGE plpgsql

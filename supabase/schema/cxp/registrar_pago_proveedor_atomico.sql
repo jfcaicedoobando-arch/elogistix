@@ -23,7 +23,7 @@ AS $$
 DECLARE
   v_org      uuid;
   v_emision  date;
-  v_hoy_mx   date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
+  v_hoy_mx   date := public.fecha_negocio_mx();
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;

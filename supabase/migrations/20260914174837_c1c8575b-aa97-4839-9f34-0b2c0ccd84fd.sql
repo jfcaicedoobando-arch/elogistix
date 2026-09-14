@@ -1,21 +1,4 @@
--- ============================================================
--- Ola 11 · RBD-08: los pagos individuales del cobro en lote se insertaban
--- con pagos_factura.tipo_cambio = 1 duro aunque el lote capturaba TC. En
--- USD/EUR eso subestima monto_cobrado_mxn en calcular_comision_pago (rama
--- v_tc_pago = 1 ⇒ monto extranjero contado como MXN). Ahora se guarda el
--- TC del lote (v_tc) cuando la moneda es extranjera; en MXN se conserva 1.
--- Es seguro porque desde RFE-03 (20260821030200) la RPC exige v_tc > 0
--- para moneda extranjera (LC_COBRO_LOTE_TC_REQUERIDO).
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha), RFE-03 (TC requerido),
--- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
--- canónica (1:1). Sin backfill de históricos en esta migración.
--- ============================================================
--- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
--- membresía en la organización del documento (has_any_role_in_org).
--- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA previa al
--- piloto, sin expansión de jerarquía (has_any_role_in_org_exact);
--- auxiliar_contable queda fuera por decisión conservadora.
-
+-- Lote financiero M1-M5 (v13.823.384) · parte 3/4
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql

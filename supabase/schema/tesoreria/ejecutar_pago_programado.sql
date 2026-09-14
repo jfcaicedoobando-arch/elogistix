@@ -67,9 +67,9 @@ BEGIN
 
   IF p_fecha IS NULL
      OR (v_factura.fecha_emision IS NOT NULL AND p_fecha < v_factura.fecha_emision)
-     OR p_fecha > CURRENT_DATE THEN
+     OR p_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: la fecha del pago (%) debe estar entre la emisión (%) y hoy (%).',
-      p_fecha, v_factura.fecha_emision, CURRENT_DATE USING ERRCODE = 'P0001';
+      p_fecha, v_factura.fecha_emision, public.fecha_negocio_mx() USING ERRCODE = 'P0001';
   END IF;
 
   SELECT * INTO v_cuenta

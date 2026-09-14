@@ -60,7 +60,7 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  IF p_fecha_pago IS NULL OR p_fecha_pago > CURRENT_DATE THEN
+  IF p_fecha_pago IS NULL OR p_fecha_pago > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_FECHA_FUTURA: La fecha del pago no puede ser futura.'
       USING ERRCODE = '42501';
   END IF;
