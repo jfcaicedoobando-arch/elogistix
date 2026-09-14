@@ -61,7 +61,7 @@ BEGIN
   -- ── CASO 1 · factura viva bloquea el regreso a Borrador.
   BEGIN
     PERFORM public.avanzar_estado_embarque(
-      v_emb, 'Borrador', 'borrador-cxc@test.mx', 'otro', 'regreso a borrador');
+      v_emb, 'Borrador', 'borrador-cxc@test.mx', 'Otro', 'regreso a borrador');
   EXCEPTION WHEN OTHERS THEN
     v_fallo := true;
     IF SQLERRM !~ 'LC_BORRADOR_CON_CXC' THEN
@@ -80,7 +80,7 @@ BEGIN
   RETURNING id INTO v_emb2;
 
   PERFORM public.avanzar_estado_embarque(
-    v_emb2, 'Borrador', 'borrador-cxc@test.mx', 'otro', 'regreso a borrador');
+    v_emb2, 'Borrador', 'borrador-cxc@test.mx', 'Otro', 'regreso a borrador');
   SELECT estado INTO v_estado FROM public.embarques WHERE id = v_emb2;
   IF v_estado <> 'Borrador'::public.estado_embarque THEN
     RAISE EXCEPTION 'CASO 2 FALLÓ: el embarque sin documentos no regresó a Borrador (quedó %)', v_estado;
@@ -91,7 +91,7 @@ BEGIN
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = v_fac;
 
   PERFORM public.avanzar_estado_embarque(
-    v_emb, 'Borrador', 'borrador-cxc@test.mx', 'otro', 'regreso a borrador');
+    v_emb, 'Borrador', 'borrador-cxc@test.mx', 'Otro', 'regreso a borrador');
   SELECT estado INTO v_estado FROM public.embarques WHERE id = v_emb;
   IF v_estado <> 'Borrador'::public.estado_embarque THEN
     RAISE EXCEPTION 'CASO 3 FALLÓ: con la factura cancelada el embarque no regresó a Borrador (quedó %)', v_estado;
