@@ -16,11 +16,10 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { useDocumentTitle } from "@/hooks/shared";
 
-const steps = [
-  { title: 'Datos Generales', num: 1 },
-  { title: 'Datos de Ruta', num: 2 },
-  { title: 'Costos y Pricing', num: 3 },
-];
+import {
+  pasosEditarEmbarque,
+  resolverPasoEditarEmbarque,
+} from "@/features/embarques/domain/pasosEditarEmbarque";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -30,7 +29,7 @@ export default function EditarEmbarque() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   // P2-3 (R5): roles de sólo lectura no deben poder entrar por deep-link al wizard.
-  const { canEdit } = usePermissions();
+  const { canEdit, canEditCostosEmbarque } = usePermissions();
   const volver = useVolver("/embarques");
   const {
     embarque, isLoading, isError, refetch, methods, currentStep, setCurrentStep,
@@ -44,11 +43,16 @@ export default function EditarEmbarque() {
   // no elevar la complejidad del componente; el expediente va en el breadcrumb.
   useDocumentTitle("Editar embarque");
 
+  // B1 (v13.823.395): el paso 3 edita costos y pricing. Coordinador logístico y
+  // gerente de operaciones sólo LEEN costos, así que para ellos el wizard
+  // termina en el paso 2; un deep-link a `?step=3` cae al paso 1.
+  const steps = pasosEditarEmbarque(canEditCostosEmbarque);
+  const totalSteps = steps.length;
+
   useEffect(() => {
-    const raw = searchParams.get("step");
-    const n = raw ? Number(raw) : NaN;
-    if (Number.isInteger(n) && n >= 1 && n <= 3) setCurrentStep(n);
-  }, [searchParams, setCurrentStep]);
+    const paso = resolverPasoEditarEmbarque(searchParams.get("step"), totalSteps);
+    if (paso !== null) setCurrentStep(paso);
+  }, [searchParams, setCurrentStep, totalSteps]);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const {
@@ -139,7 +143,7 @@ export default function EditarEmbarque() {
         steps={steps}
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
-        totalSteps={3}
+        totalSteps={totalSteps}
         isPending={isPending}
         saveLabel="Guardar Cambios"
         onBack={() => navigate(`/embarques/${id}`)}
@@ -163,7 +167,7 @@ export default function EditarEmbarque() {
           />
         )}
         {currentStep === 2 && <StepDatosRuta />}
-        {currentStep === 3 && (
+        {currentStep === 3 && canEditCostosEmbarque && (
           <StepCostosPrecios
             conceptosVenta={conceptosVenta}
             conceptosCosto={conceptosCosto}

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.395] - 2026-09-14
+
+- **fix(pruebas · enlace financiero a CxP)**: `GrupoCostosProveedorLink.test.tsx` no simulaba `usePermissions`, así que desde B1 recibía `canViewFinancials: false` y el `Link` a `/compras/facturas/:id` (correctamente) dejaba de renderizarse. La prueba ahora mockea el hook con `canViewFinancials: true` para cubrir el camino financiero; el caso operativo sin enlace sigue en `facturaVinculadaEnlace.test.tsx`. No cambia el comportamiento de producción.
+- **fix(embarques · editar costos, brecha B1)**: nueva capacidad estrecha `EDITAR_COSTOS_EMBARQUE` (`canEditCostosEmbarque`), falsa sólo para `coordinador_logistico` y `gerente_operaciones` e idéntica a `OPERATIONS` para el resto. `TabCostos` ya no recibe el `canEdit` genérico: «Cargar costos» se renderiza sólo con la capacidad específica.
+- **fix(embarques · wizard de edición)**: `EditarEmbarque` calcula sus pasos con `pasosEditarEmbarque`/`resolverPasoEditarEmbarque`; para esos dos roles el paso 3 «Costos y Pricing» no existe (no se puede seleccionar ni renderiza controles editables) y un deep-link `?step=3` cae al paso 1. Los pasos 1–2 siguen editables como antes.
+- Sin cambios en RLS, en `TabFacturasEntrantes` (carga/adjunto de documentos operativos) ni en la ruta general de Compras.
+- Cobertura: `editarCostosEmbarque.test.ts`, `pasosEditarEmbarque.test.ts`, `tabCostosCargarCostos.test.tsx`, `GrupoCostosProveedorLink.test.tsx`.
+
 ## [13.823.394] - 2026-09-14
 
 - **fix(embarques · visibilidad operativa de costos y facturas, B1)**: en un expediente con facturas de costo, `coordinador_logistico` y `gerente_operaciones` veían el real en 0 / "Sin factura" porque la única policy permisiva de `proveedor_facturas_conceptos` era de finanzas y RLS filtraba los vínculos sin error. Nueva policy `SELECT` "Lectura operativa expediente proveedor_facturas_conceptos" acotada a la organización activa y a vínculos cuyo concepto de costo pertenece a un embarque vivo de esa organización; no se concede alta, edición, borrado, aprobación ni pago, ni se abren listados de CxP.

@@ -32,11 +32,15 @@ import type {
   PnlView,
 } from "./_sections/embarqueDetalleTabsTypes";
 import { PnlViewSelector } from "./_sections/PnlViewSelector";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
 }: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
+  // B1 (v13.823.395): «Cargar costos» exige la capacidad estrecha, no el
+  // `canEdit` genérico que también cubre documentos y tracking.
+  const { canEditCostosEmbarque } = usePermissions();
   // v13.309.24 · Ítem 3.5: data-fetching movido a este hook (antes vivía en la ruta).
   // v13.309.50 · PR-S2-B: `EmbarqueProp` ahora es alias de `EmbarqueRow`, ya no
   // se requiere el el cast doble histórico.
@@ -106,7 +110,7 @@ export function EmbarqueDetalleTabs({
           utilidad={financials.utilidad}
           margen={financials.margen}
           embarqueId={embarqueId}
-          canEdit={canEdit}
+          canEditCostos={canEditCostosEmbarque}
         />
         <Separator />
         <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
