@@ -9,6 +9,7 @@
 - **fix(tracking · alerta de fechas, B6)**: en `FasesEmbarqueStepper`, "revisar bitácora" es un enlace accesible al mismo embarque con `?tab=notas` (Notas y Actividad), sin navegación imperativa.
 - Cobertura: `reconciliacion3Columnas.test.ts`, `actividadFeed.test.ts`, `FasesEmbarqueStepper.test.tsx`, `cotizacionDetalleTitulo.test.ts`.
 
+## [13.823.392] - 2026-09-15
 
 - **fix(cotizaciones · candado de costos)**: nueva `public.cotizacion_tiene_costos(uuid)` (SECURITY DEFINER, sólo booleano, acotada a la organización activa) y `tieneCostosCargados` la consume. Antes la cuenta directa sobre `cotizacion_costos` quedaba filtrada por RLS para roles que SÍ pueden convertir pero no ven importes (`operador`), produciendo el falso "la cotización no tiene costos cargados". No se amplía la visibilidad de montos. Espejo: `supabase/schema/cotizaciones/cotizacion_tiene_costos.sql`.
 - **fix(conversión · TC multi-moneda)**: `public.crear_embarque_borrador_core` exige `tipo_cambio_usd` evaluando la **unión** de monedas efectivas de `conceptos_venta` y de `cotizacion_costos` vivos (importe cero no cuenta). Antes una venta en USD con costos en MXN generaba embarque multi-moneda sin TC sellado (`LC_COT_TC_REQUERIDO`).
