@@ -18,7 +18,12 @@ interface Props {
   utilidad: number;
   margen: number;
   embarqueId?: string;
-  canEdit?: boolean;
+  /**
+   * B1 (v13.823.395): capacidad ESTRECHA de editar costos/pricing. No es el
+   * `canEdit` genérico: coordinador logístico y gerente de operaciones ven los
+   * costos pero no capturan ni editan.
+   */
+  canEditCostos?: boolean;
 }
 
 const kpiColors = [
@@ -28,7 +33,7 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
+export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
   const { data: filasReconc = [] } = useReconciliacionEmbarque(embarqueId);
@@ -53,7 +58,7 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
     { label: 'Margen', value: formatPercent(margen), color: claseTonoMargen(margen, { umbrales: UMBRAL_MARGEN_OPERATIVO }) },
   ];
 
-  const irACargarCostos = canEdit && embarqueId
+  const irACargarCostos = canEditCostos && embarqueId
     ? { label: "Cargar costos", onClick: () => navigate(`/embarques/${embarqueId}/editar?step=3`) }
     : undefined;
 
