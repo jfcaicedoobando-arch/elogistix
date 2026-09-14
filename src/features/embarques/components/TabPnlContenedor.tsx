@@ -13,6 +13,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedo
 import { useEmbarqueDetalleData } from "@/features/embarques/hooks/useEmbarqueDetalleData";
 import { calcularPnlPorContenedor } from "@/features/embarques/services/pnlPorContenedor";
 import { TablaPorMoneda } from "./_sections/TablaPnlPorMoneda";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   embarqueId: string;
@@ -60,11 +61,17 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
   return (
     <div className="space-y-6">
       <Card className="border-info/30 bg-info/5">
-        <CardContent className="pt-4 text-body-sm text-muted-foreground">
-          Modelo CargoWise: 1 embarque = 1 expediente. El sub-expediente
-          (ej. <span className="font-mono">{expediente}-01</span>) es sólo
-          referencia operativa del contenedor. Los conceptos sin contenedor
-          asignado se prorratean en partes iguales (÷N).
+        <CardContent className="space-y-2 pt-4 text-body-sm text-muted-foreground">
+          <Badge variant="outline" className="border-info text-info">Presupuesto</Badge>
+          <p>
+            Los importes provienen de conceptos cotizados; no representan facturación ni cobros reales.
+          </p>
+          <p>
+            Modelo CargoWise: 1 embarque = 1 expediente. El sub-expediente
+            (ej. <span className="font-mono">{expediente}-01</span>) es sólo
+            referencia operativa del contenedor. Los conceptos sin contenedor
+            asignado se prorratean en partes iguales (÷N).
+          </p>
         </CardContent>
       </Card>
 

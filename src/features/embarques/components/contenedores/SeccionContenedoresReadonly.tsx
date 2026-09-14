@@ -17,6 +17,10 @@ import { PackageOpen } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import {
+  esMarcadorContenedor,
+  valorCargaCapturada,
+} from "./contenedorReadonlyPresentacion";
 interface Props {
   embarqueId: string;
 }
@@ -64,9 +68,10 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const capturados = lista.filter((c) => (c.numero_contenedor ?? "").trim().length > 0).length;
   const pendientes = lista.length - capturados;
   const mostrarBLHouse = lista.some((c) => (c.bl_house ?? "").trim().length > 0);
-  const pesos = lista.map((c) => Number(c.peso_kg) || 0);
-  const volumenes = lista.map((c) => Number(c.volumen_m3) || 0);
-  const piezas = lista.map((c) => c.piezas ?? 0);
+  const operativos = lista.filter((c) => !esMarcadorContenedor(c));
+  const pesos = operativos.map((c) => Number(c.peso_kg) || 0);
+  const volumenes = operativos.map((c) => Number(c.volumen_m3) || 0);
+  const piezas = operativos.map((c) => c.piezas ?? 0);
   const pesoUniforme = todosIguales(pesos);
   const volumenUniforme = todosIguales(volumenes);
   const piezasUniformes = todosIguales(piezas);
@@ -158,13 +163,25 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                         <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
                       )}
                       {!pesoUniforme && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.peso_kg))}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {valorCargaCapturada(c, "peso_kg") === null
+                            ? <span className="text-muted-foreground">Sin capturar</span>
+                            : formatNumber(Number(c.peso_kg))}
+                        </TableCell>
                       )}
                       {!volumenUniforme && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.volumen_m3))}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {valorCargaCapturada(c, "volumen_m3") === null
+                            ? <span className="text-muted-foreground">—</span>
+                            : formatNumber(Number(c.volumen_m3))}
+                        </TableCell>
                       )}
                       {!piezasUniformes && (
-                        <TableCell className="text-right tabular-nums">{c.piezas}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {valorCargaCapturada(c, "piezas") === null
+                            ? <span className="text-muted-foreground">—</span>
+                            : c.piezas}
+                        </TableCell>
                       )}
                     </TableRow>
                   ))}

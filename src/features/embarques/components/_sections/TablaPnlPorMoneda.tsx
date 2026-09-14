@@ -34,7 +34,17 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
         meta: { sticky: true, className: "font-mono text-body-sm" },
         cell: ({ row }) => {
           const f = row.original;
-          if (f.esTotal || f.esGenerales) return f.subexpediente;
+          if (f.esGenerales) {
+            return (
+              <div className="space-y-1 font-sans">
+                <span className="font-medium">Origen del prorrateo</span>
+                <span className="block text-label text-muted-foreground">
+                  Ya incluido en los contenedores · no se suma al total
+                </span>
+              </div>
+            );
+          }
+          if (f.esTotal) return f.subexpediente;
           return <Badge variant="outline" className="font-mono">{f.subexpediente}</Badge>;
         },
       },
@@ -93,6 +103,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           P&amp;L por contenedor
+          <Badge variant="secondary">Presupuesto</Badge>
           <Badge variant="outline" className="font-mono">{moneda}</Badge>
         </CardTitle>
       </CardHeader>
@@ -117,7 +128,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
           data={filas}
           rowKey={(f) => `${f.contenedorId ?? "g"}-${f.subexpediente}`}
           rowClassName={(f) =>
-            f.esTotal ? "font-semibold bg-muted/40" : f.esGenerales ? "bg-warning/5 text-muted-foreground" : ""
+            f.esTotal ? "font-semibold bg-muted/40" : f.esGenerales ? "bg-muted/20 text-muted-foreground" : ""
           }
           skeletonRows={3}
           emptyMessage="Sin filas."

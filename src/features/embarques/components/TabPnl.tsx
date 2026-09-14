@@ -21,10 +21,11 @@ interface Props {
   embarqueId: string;
   /** v13.823.366 — En Borrador sin importes reales no se pintan alertas. */
   estadoEmbarque?: string | null;
+  monedasExtranjeras?: string[];
 }
 
 // eslint-disable-next-line complexity
-export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
+export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: Props) {
   const { data, isLoading, error, refetch } = usePnlFinanciero(embarqueId);
   const { registerRef } = useFocusSection();
 
@@ -181,6 +182,7 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
         embarqueId={embarqueId}
         tcUsd={data.tipo_cambio_usd}
         tcEur={data.tipo_cambio_eur}
+        monedas={monedasExtranjeras}
       />
     </div>
   );
