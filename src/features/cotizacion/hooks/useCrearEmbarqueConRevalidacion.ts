@@ -12,11 +12,8 @@ import {
 } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
 import type { ResultadoRevalidacion, DecisionTarifa } from "@/features/cotizacion/domain/revalidacionTarifa";
-import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
-import {
-  tieneCostosCargados,
-  CandadoCostosNoVerificableError,
-} from "@/features/cotizacion/services/candadoCostos";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { verificarCostosOAvisar } from "@/features/cotizacion/services/candadoCostosAviso";
 import { esErrorDeEsquemaBD } from "@/features/cotizacion/domain/erroresEsquemaBD";
 
 export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
@@ -85,40 +82,11 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
     }
   };
 
-  /**
-   * v13.823.370 (P1-1) — Candado de costos en la ruta real de producción. Esta
-   * ruta (CrearEmbarqueConRevalidacion) no pasaba por `tieneCostosCargados`, que
-   * sólo vivía en `useCrearEmbarqueBorradorHandlers`, así que una cotización
-   * Aceptada con venta pero sin desglose de costos llegaba a revalidar. Es
-   * fail-closed: si la verificación misma falla, no se procede.
-   * El servidor lo refuerza (LC_COT_SIN_COSTOS) para llamadas directas a la RPC.
-   */
-  const costosVerificados = async (): Promise<boolean> => {
-    try {
-      if (await tieneCostosCargados(cotizacionId)) return true;
-      notifyWarning(undefined, {
-        title: "La cotización no tiene costos cargados",
-        description:
-          "Captura el desglose de costos en la cotización (paso 2) antes de crear el embarque.",
-      });
-      return false;
-    } catch (err) {
-      if (err instanceof CandadoCostosNoVerificableError) {
-        notifyWarning(undefined, {
-          title: "No pudimos verificar los costos",
-          description:
-            "No se pudo comprobar si la cotización tiene costos cargados. Revisa tu conexión e inténtalo de nuevo.",
-        });
-        return false;
-      }
-      throw err;
-    }
-  };
-
   const handleClick = async () => {
     // Guard #1: evita re-entrada síncrona (doble click rápido).
     if (enVueloRef.current || bloqueadoPorEsquema) return;
-    if (!(await costosVerificados())) return;
+    // v13.823.370 (P1-1) — candado de costos también en esta ruta (fail-closed).
+    if (!(await verificarCostosOAvisar(cotizacionId))) return;
     enVueloRef.current = true;
     setRevalidando(true);
     // Fase 1 — revalidación. Su catch NO debe abarcar la creación del embarque.
