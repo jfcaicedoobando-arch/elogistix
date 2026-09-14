@@ -2,9 +2,9 @@
 -- lote_cotizacion_embarque_auditoria.sql · v13.823.392
 --
 -- Regresiones del lote de auditoría cotización → embarque:
---   · CASO 1: `cotizacion_tiene_costos` responde true para un OPERADOR de la
---     misma organización (antes la RLS de importes le devolvía 0 filas y la
---     pantalla avisaba en falso "no tiene costos cargados").
+--   · CASO 1: `cotizacion_tiene_costos` responde true para un COORDINADOR
+--     LOGÍSTICO de la misma organización (antes la RLS de importes le devolvía
+--     0 filas y la pantalla avisaba en falso "no tiene costos cargados").
 --   · CASO 2: la misma función responde false para una cotización de OTRA
 --     organización (candado multi-tenant vivo).
 --   · CASO 3: venta en USD + costo en MXN sin tipo de cambio ⇒
@@ -41,12 +41,12 @@ BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST LOTE COT EMB AJENA', 'TLC000000XX1', 'basico', true) RETURNING id INTO v_org2;
 
-  INSERT INTO auth.users (id, email) VALUES (v_uid, 'operador-lote@test.mx')
+  INSERT INTO auth.users (id, email) VALUES (v_uid, 'coordinador-lote@test.mx')
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
-  VALUES (v_org, v_uid, 'operador'::public.app_role) ON CONFLICT DO NOTHING;
+  VALUES (v_org, v_uid, 'coordinador_logistico'::public.app_role) ON CONFLICT DO NOTHING;
   INSERT INTO public.user_roles (user_id, role)
-  VALUES (v_uid, 'operador'::public.app_role) ON CONFLICT DO NOTHING;
+  VALUES (v_uid, 'coordinador_logistico'::public.app_role) ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes (organization_id, nombre, rfc, email)
   VALUES (v_org, 'CLIENTE LOTE', '', 'cli-lote@test.mx') RETURNING id INTO v_cli;
@@ -83,9 +83,9 @@ BEGIN
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
   IF NOT public.cotizacion_tiene_costos(v_cot) THEN
-    RAISE EXCEPTION 'CASO 1 FALLÓ: el operador no detecta los costos de su cotización';
+    RAISE EXCEPTION 'CASO 1 FALLÓ: la coordinadora logística no detecta los costos de su cotización';
   END IF;
-  RAISE NOTICE 'CASO 1 OK: el operador detecta que la cotización tiene costos';
+  RAISE NOTICE 'CASO 1 OK: la coordinadora logística detecta que la cotización tiene costos';
 
   IF public.cotizacion_tiene_costos(v_cot2) THEN
     RAISE EXCEPTION 'REGRESION P0: detectó costos de una cotización de otra organización';
