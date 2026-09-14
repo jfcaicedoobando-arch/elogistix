@@ -123,27 +123,12 @@ export function TabProformas({ isInRange, estadoInicial }: {
               <strong>{seleccionados}</strong> proforma{seleccionados === 1 ? "" : "s"} seleccionada{seleccionados === 1 ? "" : "s"}
               {c.fusionInfo.clienteNombre && <> · {c.fusionInfo.clienteNombre}</>}
             </div>
-            {!c.fusionInfo.sameCliente && (
+            {avisoFusion && (
               <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-body-sm">
-                  Sólo puedes fusionar proformas del mismo cliente.
-                </AlertDescription>
+                <AlertDescription className="text-body-sm">{avisoFusion}</AlertDescription>
               </Alert>
             )}
-            {c.fusionInfo.sameCliente && !c.fusionInfo.sameTipo && (
-              <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-body-sm">
-                  No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.
-                </AlertDescription>
-              </Alert>
-            )}
-            {c.fusionInfo.sameCliente && c.fusionInfo.sameTipo && !c.fusionInfo.sameDiasCredito && (
-              <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-body-sm">
-                  Las proformas tienen plazos de crédito distintos. Iguala el plazo antes de fusionarlas.
-                </AlertDescription>
-              </Alert>
-            )}
+
 
             <Button variant="ghost" size="sm" onClick={c.clearSelected}>
               <X className="h-4 w-4 mr-1" /> Limpiar
