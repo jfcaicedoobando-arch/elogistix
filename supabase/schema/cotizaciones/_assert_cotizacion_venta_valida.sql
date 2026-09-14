@@ -33,7 +33,16 @@ BEGIN
     FROM public.cotizaciones
    WHERE id = p_cotizacion_id;
 
-  IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
+  IF NOT FOUND THEN RETURN; END IF;
+
+  -- B18: las informativas (tarifarios) son documentos de referencia; no pueden
+  -- convertirse en embarque. Este candado vive en el helper canónico que llaman
+  -- crear_embarque_borrador_core y _assert_cotizacion_convertible, así que
+  -- cubre también las llamadas directas a las RPC. No afecta su consulta.
+  IF v_tipo_doc = 'informativa' THEN
+    RAISE EXCEPTION 'LC_COT_INFORMATIVA: la cotización % es informativa (tarifario) y no puede convertirse en embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
 
   -- v13.823.370 (P1-1) — Candado de costos canónico y fail-closed. La ruta de
   -- revalidación (CrearEmbarqueConRevalidacion → crear_embarque_borrador_core)
