@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   esMarcadorContenedor,
+  mostrarColumnaCarga,
+  mostrarResumenUniforme,
   valorCargaCapturada,
+  valoresUniformes,
 } from "../contenedorReadonlyPresentacion";
 
 describe("presentación de carga del contenedor", () => {
@@ -17,5 +20,13 @@ describe("presentación de carga del contenedor", () => {
     const capturado = { numero_contenedor: "MSCU1234567", peso_kg: 0 };
     expect(esMarcadorContenedor(capturado)).toBe(false);
     expect(valorCargaCapturada(capturado, "peso_kg")).toBe(0);
+  });
+
+  it("muestra carga por fila con dos capturados uniformes y un marcador", () => {
+    const pesos = [1200, 1200];
+    const pesoUniforme = valoresUniformes(pesos);
+    expect(pesoUniforme).toBe(true);
+    expect(mostrarColumnaCarga(pesoUniforme, 1)).toBe(true);
+    expect(mostrarResumenUniforme(1, [pesoUniforme])).toBe(false);
   });
 });

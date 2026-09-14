@@ -9,6 +9,7 @@ import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
 import { MenuMasAccionesEmbarque } from "./header/MenuMasAccionesEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { CIERRE_RESTRINGIDO_COPY } from "./cierre/cierrePermisoCopy";
 
 /** Identidad y permisos del embarque (auditoría 2026-08-18, punto 7). */
 export interface AccionesEmbarqueContexto {
@@ -125,7 +126,7 @@ export function EmbarqueDetalleHeaderActions({
               <Lock className="h-3 w-3" /> Cierre restringido
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>Requiere finanzas o admin para cerrar el embarque</TooltipContent>
+          <TooltipContent>{CIERRE_RESTRINGIDO_COPY}</TooltipContent>
         </Tooltip>
       )}
 

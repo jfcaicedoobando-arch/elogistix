@@ -4,6 +4,7 @@
  * líneas por archivo (Power of 10).
  */
 import type { CostoVersionado } from "@/features/cotizacion/services/versionado";
+import { toCsv } from "@/lib/csv/serializeCsv";
 import {
   construirFilaReconciliacion,
   UMBRALES_DEFAULT,
@@ -35,6 +36,21 @@ export interface ResultadoReconciliacion3C {
   resumen: ResumenReconciliacion3C;
   tiene_cotizacion: boolean;
   version_aceptada: number | null;
+}
+
+export function generarCsvReconciliacion3C(filas: FilaReconciliacion3C[]): string {
+  return toCsv(
+    ["Concepto", "Moneda", "Cotizado", "Refrescado", "Real", "Δ Cot vs Real (%)", "Clasificación"],
+    filas.map((f) => [
+      f.concepto,
+      f.moneda,
+      String(f.cotizado),
+      String(f.refrescado),
+      String(f.real),
+      f.delta_cot_vs_real.pct.toFixed(2),
+      f.clasificacion,
+    ]),
+  );
 }
 
 function aplicarDelta(cotizado: CostoVersionado, delta: DeltaConcepto[]): number {

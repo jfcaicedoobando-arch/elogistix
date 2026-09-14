@@ -8,6 +8,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { subtotalesVigentesFacturas } from "./historialFacturas.helpers";
 
 interface Factura {
   id: string;
@@ -71,7 +72,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
     },
   ]);
 
-  const totalEmitido = facturas.reduce((acc, f) => acc + Number(f.total), 0);
+  const subtotales = subtotalesVigentesFacturas(facturas);
 
   return (
     <Card>
@@ -80,9 +81,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
         {facturas.length > 0 && (
           <span className="text-body-sm text-muted-foreground tabular-nums">
             {facturas.length} factura{facturas.length === 1 ? "" : "s"}
-            {totalEmitido > 0 && facturas[0]?.moneda && (
-              <> · {formatCurrency(totalEmitido, facturas[0].moneda)}</>
-            )}
+            {subtotales.length > 0 && <> · Vigentes: {subtotales.join(" · ")}</>}
           </span>
         )}
       </CardHeader>

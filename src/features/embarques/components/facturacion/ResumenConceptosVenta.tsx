@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
 import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
@@ -16,6 +15,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
+import { sumarConceptosVentaPorMoneda } from "./resumenConceptosVenta.helpers";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -67,26 +67,10 @@ export function ResumenConceptosVenta({
   }, [conceptos, contenedoresActivos, multiContenedor]);
 
   const totales = useMemo(() => {
-    const getter = (c: ConceptoVenta) => ({ cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario) });
-    const sumByCurrency = (items: ConceptoVenta[]) => {
-      const usd = items.filter(c => c.moneda === "USD");
-      const mxn = items.filter(c => c.moneda === "MXN");
-      const subUsd = sumarSubtotales(usd, getter);
-      const ivaUsd = sumarMontos(
-        usd.map((c) => (c.aplica_iva
-          ? calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))
-          : 0)),
-      );
-      const subMxn = sumarSubtotales(mxn, getter);
-      const ivaMxn = sumarMontos(
-        mxn.map((c) => calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
-      );
-      return { totalUsd: subUsd + ivaUsd, totalMxn: subMxn + ivaMxn };
-    };
     return {
-      pendiente: sumByCurrency(conceptosPendientes),
-      enProforma: sumByCurrency(conceptosEnProforma),
-      facturado: sumByCurrency(conceptosFacturados),
+      pendiente: sumarConceptosVentaPorMoneda(conceptosPendientes, tasaIva),
+      enProforma: sumarConceptosVentaPorMoneda(conceptosEnProforma, tasaIva),
+      facturado: sumarConceptosVentaPorMoneda(conceptosFacturados, tasaIva),
     };
   }, [conceptosPendientes, conceptosEnProforma, conceptosFacturados, tasaIva]);
 
@@ -170,7 +154,7 @@ export function ResumenConceptosVenta({
                   },
                   { id: "cant", header: "Cantidad", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => row.original.cantidad },
                   { id: "pu", header: "P. Unitario", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
-                  { id: "total", header: "Total", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
+                  { id: "total", header: "Subtotal", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
                     cell: ({ row }) => formatCurrency(Number(row.original.cantidad) * Number(row.original.precio_unitario), row.original.moneda) },
                   { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
                   {

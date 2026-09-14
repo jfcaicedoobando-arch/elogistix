@@ -13,7 +13,10 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import {
   esMarcadorContenedor,
+  mostrarColumnaCarga,
+  mostrarResumenUniforme,
   valorCargaCapturada,
+  valoresUniformes,
 } from "./contenedorReadonlyPresentacion";
 
 interface Props {
@@ -38,19 +41,6 @@ function BadgePendientes({ pendientes }: { pendientes: number }) {
         : `${pendientes} contenedores pendientes de captura`}
     </Badge>
   );
-}
-
-function todosIguales<T>(arr: T[]): boolean {
-  if (arr.length <= 1) return false;
-  const first = String(arr[0]);
-  return arr.every((v) => String(v) === first);
-}
-
-function debeMostrarResumenUniforme(
-  pendientes: number,
-  uniformes: readonly boolean[],
-): boolean {
-  return pendientes === 0 && uniformes.some(Boolean);
 }
 
 interface CargaCellProps {
@@ -90,10 +80,13 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const pesos = operativos.map((c) => Number(c.peso_kg) || 0);
   const volumenes = operativos.map((c) => Number(c.volumen_m3) || 0);
   const piezas = operativos.map((c) => c.piezas ?? 0);
-  const pesoUniforme = todosIguales(pesos);
-  const volumenUniforme = todosIguales(volumenes);
-  const piezasUniformes = todosIguales(piezas);
-  const hayResumenUniforme = debeMostrarResumenUniforme(
+  const pesoUniforme = valoresUniformes(pesos);
+  const volumenUniforme = valoresUniformes(volumenes);
+  const piezasUniformes = valoresUniformes(piezas);
+  const mostrarPeso = mostrarColumnaCarga(pesoUniforme, pendientes);
+  const mostrarVolumen = mostrarColumnaCarga(volumenUniforme, pendientes);
+  const mostrarPiezas = mostrarColumnaCarga(piezasUniformes, pendientes);
+  const hayResumenUniforme = mostrarResumenUniforme(
     pendientes,
     [pesoUniforme, volumenUniforme, piezasUniformes],
   );
@@ -162,9 +155,9 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                     <DetailTableHead className="w-auto">Número</DetailTableHead>
                     <DetailTableHead className="w-[140px]">Tipo</DetailTableHead>
                     {mostrarBLHouse && <DetailTableHead className="w-[180px]">BL House</DetailTableHead>}
-                    {!pesoUniforme && <DetailTableHead className="text-right w-[120px]">Peso (kg)</DetailTableHead>}
-                    {!volumenUniforme && <DetailTableHead className="text-right w-[120px]">Volumen (m³)</DetailTableHead>}
-                    {!piezasUniformes && <DetailTableHead className="text-right w-[100px]">Piezas</DetailTableHead>}
+                    {mostrarPeso && <DetailTableHead className="text-right w-[120px]">Peso (kg)</DetailTableHead>}
+                    {mostrarVolumen && <DetailTableHead className="text-right w-[120px]">Volumen (m³)</DetailTableHead>}
+                    {mostrarPiezas && <DetailTableHead className="text-right w-[100px]">Piezas</DetailTableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -183,9 +176,9 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                       {mostrarBLHouse && (
                         <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
                       )}
-                      {!pesoUniforme && <CargaCell contenedor={c} campo="peso_kg" vacio="Sin capturar" />}
-                      {!volumenUniforme && <CargaCell contenedor={c} campo="volumen_m3" vacio="—" decimals={2} />}
-                      {!piezasUniformes && <CargaCell contenedor={c} campo="piezas" vacio="—" />}
+                      {mostrarPeso && <CargaCell contenedor={c} campo="peso_kg" vacio="Sin capturar" />}
+                      {mostrarVolumen && <CargaCell contenedor={c} campo="volumen_m3" vacio="—" decimals={2} />}
+                      {mostrarPiezas && <CargaCell contenedor={c} campo="piezas" vacio="—" />}
                     </TableRow>
                   ))}
                 </TableBody>

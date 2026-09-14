@@ -1,5 +1,13 @@
 # Roadmap
 
+## Pulido P2 Embarques/Facturación 13.823.374
+- [x] B6 — Conservar columnas de carga cuando existen marcadores pendientes
+- [x] B7 — Separar subtotales vigentes de facturas por moneda
+- [x] B8 — Alinear mensajes de permiso de cierre con operaciones y administración
+- [x] B9 — Escapar CSV de reconciliación conforme a RFC 4180
+- [x] B10 — Distinguir Subtotal de Total c/ IVA
+- [x] Cierre: pruebas focalizadas, versión, changelog y manifiesto; sin publicar
+
 ## Pulido P2 Cotizaciones/Embarques 13.823.373
 - [x] B1 — Ofrecer P&L por contenedor sólo con contenedores operativos
 - [x] B2 — No presentar ceros desconocidos en renglones marcador FCL
