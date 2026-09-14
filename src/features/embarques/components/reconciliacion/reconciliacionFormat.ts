@@ -17,6 +17,8 @@ export function etiquetaClasificacion(c: ClasificacionVarianza): string {
       return "Crítica";
     case "alerta":
       return "Alerta";
+    case "pendiente":
+      return "Sin factura";
     default:
       return "Dentro del rango";
   }
@@ -28,6 +30,8 @@ export function colorPorClasificacion(c: ClasificacionVarianza): string {
       return "bg-destructive/10 text-destructive";
     case "alerta":
       return "bg-warning/10 text-warning";
+    case "pendiente":
+      return "bg-muted text-muted-foreground";
     default:
       return "bg-muted text-muted-foreground";
   }
