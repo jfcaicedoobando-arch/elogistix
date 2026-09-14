@@ -14,7 +14,7 @@ import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import { esEmbarqueArribado, esEtaVencida } from "@/features/embarques/domain/embarqueFases";
 import type { EmbarqueTracking } from "@/features/embarques/types/tracking";
-import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { computeFreshness, type Freshness } from "@/features/embarques/domain/trackingFreshness";
 
 
 type EmbarqueTrackingProps = EmbarqueTracking;
@@ -24,57 +24,6 @@ interface Props {
   embarque?: EmbarqueTrackingProps | null;
 }
 
-
-interface Freshness {
-  label: string;
-  critical: boolean;
-  etaProxima: boolean;
-  dias: number;
-}
-
-/**
- * v13.823.370 (P2-3) — Un Borrador recién convertido no tiene eventos porque la
- * operación todavía no empieza: acusarlo con "Requiere actualización" es ruido.
- * La advertencia se conserva para embarques ya confirmados/en tránsito.
- */
-function computeFreshness(
-  eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>,
-  eta: string | null | undefined,
-  arribado: boolean,
-  estado?: string | null,
-): Freshness {
-  if (eventos.length === 0) {
-    const esBorrador = (estado ?? "").trim().toLowerCase() === "borrador";
-    if (esBorrador) {
-      return {
-        label: "Pendiente de iniciar seguimiento",
-        critical: false,
-        etaProxima: false,
-        dias: 0,
-      };
-    }
-    return { label: "Sin eventos registrados", critical: !arribado, etaProxima: false, dias: 0 };
-  }
-  const ultimo = eventos[0];
-  const dias = diffDiasCalendario(ultimo.fecha, new Date());
-  const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
-
-  if (arribado) {
-    return {
-      label: `Arribado — ${ultimo.tipo}${ubicacion}`,
-      critical: false,
-      etaProxima: false,
-      dias,
-    };
-  }
-
-  const diasParaEta = eta != null ? diffDiasCalendario(new Date(), eta) : null;
-  const etaProxima = diasParaEta != null && diasParaEta >= 0 && diasParaEta <= 2;
-  const label = dias === 0
-    ? `Último evento hoy — ${ultimo.tipo}`
-    : `Último evento hace ${dias} día${dias === 1 ? "" : "s"} — ${ultimo.tipo}${ubicacion}`;
-  return { label, critical: dias >= 7 || etaProxima, etaProxima, dias };
-}
 
 function EtaVencidaBanner({ eta }: { eta: string }) {
   return (
