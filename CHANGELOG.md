@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.371] - 2026-09-14
+
+- **fix(embarques)**: remates de aceptación del bloque 13.823.370 (mismo alcance).
+  - **Tooltip de conciliación**: en `ReconciliacionTresColumnas.tsx` la columna Real ya no se describe como "costos registrados" sino como "importes de facturas de proveedor vigentes vinculadas", coherente con la nueva fuente. Sin rediseño de la tabla.
+  - **Regresión de BD del candado de costos**: nueva suite `supabase/tests/cotizacion_convertir_sin_costos.sql` (registrada en `_guards_manifest.txt`), aislada y con ROLLBACK. Prueba el contrato canónico del servidor sobre `_assert_cotizacion_venta_valida` (el helper que invocan `crear_embarque_borrador_core` y `_assert_cotizacion_convertible`): cotización transaccional aceptable sin `cotizacion_costos` → `LC_COT_SIN_COSTOS`; con un costo vigente no se dispara; costo con soft-delete vuelve a bloquear; informativa exenta. Además verifica estáticamente que ambas rutas de servidor sigan delegando en el helper (la wrapper no puede saltarse la guarda).
+  - La guarda no se relaja en ningún punto.
+
 ## [13.823.370] - 2026-09-14
 
 - **fix(cotizaciones/embarques)**: bloque de 6 correcciones verificadas sobre el flujo Cotización → Embarque.
