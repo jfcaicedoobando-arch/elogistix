@@ -11,8 +11,9 @@
 --   b) Existe al menos una policy RESTRICTIVE cuya condición invoca
 --      public.rls_tenant_scope_ok.
 --   c) Sigue existiendo la policy permisiva de lectura por organización.
---   d) `authenticated` no tiene INSERT/UPDATE/DELETE directos: las
---      mutaciones viven en las RPC SECURITY DEFINER auditadas.
+--   d) No existe policy permisiva de escritura: las mutaciones viven en las
+--      RPC SECURITY DEFINER auditadas.
+
 --
 -- Ejecución manual:
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/comisiones_recuperaciones_scope_tenant.sql
