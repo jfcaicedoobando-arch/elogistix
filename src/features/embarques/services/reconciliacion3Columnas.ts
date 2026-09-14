@@ -21,13 +21,27 @@ import {
   type CostoVersionado,
 } from "@/features/cotizacion/services/versionado";
 import {
-  construirFilaReconciliacion,
   construirResumen,
   UMBRALES_DEFAULT,
-  type FilaReconciliacion3C,
-  type ResumenReconciliacion3C,
   type UmbralesVarianza,
 } from "@/lib/domain/versionadoCotizacion";
+import {
+  agruparRealesFacturados,
+  buildFilas3C,
+  type DeltaConcepto,
+  type ResultadoReconciliacion3C,
+} from "./reconciliacion3Columnas.helpers";
+
+export * from "./reconciliacion3Columnas.helpers";
+
+interface EmbarqueMeta {
+  cotizacion_id: string | null;
+  organization_id: string;
+  version_aceptada: number | null;
+  tipo_cambio_usd: number | string | null;
+  tipo_cambio_eur: number | string | null;
+}
+
 
 export async function obtenerReconciliacion3Columnas(
   embarqueId: string,

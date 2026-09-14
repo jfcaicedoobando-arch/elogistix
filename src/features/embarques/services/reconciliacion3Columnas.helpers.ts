@@ -8,6 +8,7 @@ import {
   construirFilaReconciliacion,
   UMBRALES_DEFAULT,
   type FilaReconciliacion3C,
+  type ResumenReconciliacion3C,
   type UmbralesVarianza,
 } from "@/lib/domain/versionadoCotizacion";
 
@@ -27,14 +28,6 @@ export interface RealPorConcepto {
   moneda: string;
   monto: number | string;
   tiene_factura?: boolean;
-}
-
-interface EmbarqueMeta {
-  cotizacion_id: string | null;
-  organization_id: string;
-  version_aceptada: number | null;
-  tipo_cambio_usd: number | string | null;
-  tipo_cambio_eur: number | string | null;
 }
 
 export interface ResultadoReconciliacion3C {
