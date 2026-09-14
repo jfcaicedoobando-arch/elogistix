@@ -50,9 +50,9 @@ describe("generarCsvReconciliacion3C", () => {
     const fila = {
       concepto: 'Flete, manejo "especial"\nurgente', moneda: "USD",
       cotizado: 100, refrescado: 110, real: 120,
-      delta_cot_vs_refr: { monto: 10, pct: 10 },
-      delta_cot_vs_real: { monto: 20, pct: 20 },
-      delta_refr_vs_real: { monto: 10, pct: 9.09 },
+      delta_cot_vs_refr: { abs: 10, pct: 10 },
+      delta_cot_vs_real: { abs: 20, pct: 20 },
+      delta_refr_vs_real: { abs: 10, pct: 9.09 },
       clasificacion: "alerta" as const,
       sin_factura: false,
     };
