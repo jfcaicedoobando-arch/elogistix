@@ -26,3 +26,5 @@ El servidor sí lo evalúa bien (con permisos elevados), así que el problema es
 - Test focal de `candadoCostos.test.ts` actualizado al mock de `rpc`.
 - Versionado: bump `APP_VERSION` + `CHANGELOG.md` + `bun run db:release-manifest:update`.
 - Validación local: typecheck y vitest focal. CI/RLS completos quedan a GitHub Actions.
+
+El usuario valeria es quien creo la cotizacion, los Coordinador Logísticos si deben de poder ver los costos de lo que estan operando. 
