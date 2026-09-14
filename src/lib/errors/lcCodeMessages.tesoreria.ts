@@ -32,6 +32,11 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   // ── Tesorería · cuentas bancarias / ejecución de pago (Q-15.2) ─────────
   LC_CUENTA_NO_EXISTE: "La cuenta bancaria no existe o fue eliminada.",
   LC_CUENTA_ORG_MISMATCH: "La cuenta bancaria pertenece a otra organización.",
+  LC_PAGO_CUENTA_INEXISTENTE: "La cuenta bancaria del pago no existe o fue eliminada.",
+  LC_PAGO_CUENTA_OTRA_ORG: "La cuenta bancaria del pago pertenece a otra organización.",
+  LC_PAGO_CUENTA_INACTIVA: "La cuenta bancaria del pago está inactiva. Elige una cuenta activa.",
+  LC_MOVIMIENTO_CUENTA_INACTIVA: "La cuenta bancaria está inactiva. Elige una cuenta activa.",
+  LC_MOVIMIENTO_CUENTA_OTRA_ORG: "La cuenta bancaria pertenece a otra organización.",
   LC_PAGO_MONEDA_CUENTA_MISMATCH:
     "La moneda de la cuenta bancaria no coincide con la de la factura.",
   LC_CUENTA_SALDO_INSUFICIENTE:
