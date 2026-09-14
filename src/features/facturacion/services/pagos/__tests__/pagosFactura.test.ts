@@ -63,7 +63,7 @@ describe("services/pagos-factura", () => {
     expect(args.p_diferencia_cambiaria_mxn).toBe(0);
     expect(args.p_referencia).toBe("");
     expect(args.p_notas).toBe("");
-    expect(args.p_cuenta_bancaria_id).toBeNull();
+    expect(args.p_cuenta_bancaria_id).toBeUndefined();
   });
 
   it("registrarPagoFactura usa diferencia_cambiaria_mxn dado", async () => {

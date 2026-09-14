@@ -60,13 +60,14 @@ export async function actualizarPagoProveedor(
     p_fecha_pago: input.fecha_pago,
     p_monto: input.monto,
     p_moneda: input.moneda,
-    p_tipo_cambio_usd: tc,
+    // SAFE-CAST: el argumento admite NULL en BD (NULLIF sobre COALESCE).
+    p_tipo_cambio_usd: tc as number,
     p_metodo_pago: input.metodo_pago,
     p_referencia: input.referencia ?? "",
-    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
+    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? undefined,
     p_notas: input.notas ?? "",
-    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
-    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? undefined,
+    p_expected_updated_at: input.expectedUpdatedAt ?? undefined,
   });
   if (error) {
     if (error.message.includes("LC_CONFLICTO_CONCURRENCIA")) throw conflictoConcurrenciaError();

@@ -88,8 +88,8 @@ export async function registrarPagoFactura(
       p_referencia: input.referencia ?? "",
       p_notas: input.notas ?? "",
       p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
-      p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
-      p_client_request_id: input.client_request_id ?? null,
+      p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? undefined,
+      p_client_request_id: input.client_request_id ?? undefined,
     }),
   );
   // SAFE-CAST: contrato jsonb de la RPC (pago_id / movimiento_bancario).
