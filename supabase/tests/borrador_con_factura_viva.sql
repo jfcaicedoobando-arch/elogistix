@@ -44,7 +44,7 @@ BEGIN
   RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo, estado)
-  VALUES (v_org, v_cli, 'TBCIMP00001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELIMP99001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, 'Confirmado'::public.estado_embarque)
   RETURNING id INTO v_emb;
 
@@ -75,7 +75,7 @@ BEGIN
 
   -- ── CASO 2 · sin documentos el regreso funciona igual que antes.
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo, estado)
-  VALUES (v_org, v_cli, 'TBCIMP00002', 'Marítimo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELIMP99002', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, 'Confirmado'::public.estado_embarque)
   RETURNING id INTO v_emb2;
 
