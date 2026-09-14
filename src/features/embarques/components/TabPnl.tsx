@@ -4,10 +4,8 @@
  * v13.56.2 — auditoría (paso 5): descompuesto de 289 → ~115 líneas.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import { AlertCircle } from "lucide-react";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarques/domain/pnlAlertas";
@@ -17,6 +15,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
 import { PnlTipoCambioNota } from "./pnl/PnlTipoCambioNota";
+import { PnlAvisosCards } from "./pnl/PnlAvisosCards";
 
 interface Props {
   embarqueId: string;
