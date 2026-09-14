@@ -9710,8 +9710,18 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_PAGADA_NO_CANCELABLE: La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación.'
       USING ERRCODE = '42501';
   END IF;
+  -- M4 (v13.823.384): se revierten SÓLO las porciones recuperadas por ESTA
+  -- liquidación. No se borran: quedan marcadas, así el rastro de auditoría se
+  -- conserva y la deuda pendiente vuelve a su monto anterior por sí sola.
+  UPDATE public.comisiones_recuperaciones
+     SET revertida_at = now(),
+         revertida_por = v_uid
+   WHERE liquidacion_id = p_liquidacion_id
+     AND revertida_at IS NULL;
   -- YG-03: cada comisión regresa a su estado previo. El fallback cubre filas
-  -- legacy sin `estado_previo_liquidacion` capturado.
+  -- legacy sin `estado_previo_liquidacion` capturado. Las comisiones con
+  -- recuperación PARCIAL nunca se ligaron a la liquidación, así que siguen
+  -- "Por recuperar" sin tocarse.
   UPDATE public.comisiones_devengadas
      SET estado = COALESCE(
            estado_previo_liquidacion,
@@ -16295,9 +16305,9 @@ BEGIN
   END IF;
   IF p_fecha IS NULL
      OR (v_factura.fecha_emision IS NOT NULL AND p_fecha < v_factura.fecha_emision)
-     OR p_fecha > CURRENT_DATE THEN
+     OR p_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: la fecha del pago (%) debe estar entre la emisión (%) y hoy (%).',
-      p_fecha, v_factura.fecha_emision, CURRENT_DATE USING ERRCODE = 'P0001';
+      p_fecha, v_factura.fecha_emision, public.fecha_negocio_mx() USING ERRCODE = 'P0001';
   END IF;
   SELECT * INTO v_cuenta
     FROM public.cuentas_bancarias
@@ -18132,6 +18142,12 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.fecha_negocio_mx() RETURNS date
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT (now() AT TIME ZONE 'America/Mexico_City')::date;
+$$;
 CREATE FUNCTION public.fn_admin_org_activity() RETURNS TABLE(id uuid, nombre text, embarques bigint, cotizaciones bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -18289,6 +18305,8 @@ DECLARE
   v_cached jsonb;
   v_disponible numeric(14,2);
   v_aplicado numeric(14,2) := 0;
+  v_pendiente numeric(14,2);
+  v_porcion numeric(14,2);
   v_rec record;
 BEGIN
   IF NOT has_any_role_efectivo(auth.uid(),
@@ -18311,6 +18329,11 @@ BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_SIN_ORG: tu usuario no tiene organización asignada' USING ERRCODE = '42501';
   END IF;
+  -- M5: candado transaccional único por (org, vendedora). Es un solo lock por
+  -- transacción y siempre sobre la misma llave, así que no hay ciclos de espera
+  -- (imposible el deadlock entre dos liquidaciones de la misma vendedora).
+  PERFORM pg_advisory_xact_lock(
+    hashtextextended('comisiones:' || v_org::text || ':' || COALESCE(p_vendedora_id::text, '-'), 0));
   SELECT COALESCE(SUM(comision_mxn), 0) INTO v_total
     FROM public.comisiones_devengadas
    WHERE organization_id = v_org
@@ -18320,27 +18343,8 @@ BEGIN
   IF v_total <= 0 THEN
     RAISE EXCEPTION 'Sin comisiones devengadas para liquidar';
   END IF;
-  -- Auditoría 2026-08-28 · Hallazgo 1: las comisiones "Por recuperar" (ya
-  -- pagadas y cuyo respaldo se canceló/acreditó después) quedaban huérfanas.
-  -- Se descuentan de esta liquidación, de la más antigua a la más reciente y
-  -- sólo hasta donde alcance el devengo del periodo; el remanente sigue
-  -- pendiente para la siguiente liquidación.
-  v_disponible := v_total;
-  FOR v_rec IN
-    SELECT id, comision_mxn
-      FROM public.comisiones_devengadas
-     WHERE organization_id = v_org
-       AND vendedora_id = p_vendedora_id
-       AND estado = 'Por recuperar'
-     ORDER BY created_at ASC
-  LOOP
-    EXIT WHEN v_disponible <= 0;
-    CONTINUE WHEN v_rec.comision_mxn > v_disponible;
-    v_disponible := v_disponible - v_rec.comision_mxn;
-    v_aplicado := v_aplicado + v_rec.comision_mxn;
-  END LOOP;
   INSERT INTO public.liquidaciones_comision (organization_id, vendedora_id, periodo, total_mxn, creada_por)
-  VALUES (v_org, p_vendedora_id, p_periodo, ROUND(v_total - v_aplicado, 2), auth.uid())
+  VALUES (v_org, p_vendedora_id, p_periodo, v_total, auth.uid())
   RETURNING id INTO v_liq_id;
   -- YG-03: se conserva el estado previo para poder restaurarlo si la
   -- liquidación se cancela (una comisión "Por recuperar" no debe volver a
@@ -18354,19 +18358,39 @@ BEGIN
      AND vendedora_id = p_vendedora_id
      AND estado = 'Devengada'
      AND to_char(created_at AT TIME ZONE 'America/Mexico_City', 'YYYY-MM') = p_periodo;
-  IF v_aplicado > 0 THEN
-    v_disponible := v_total;
-    FOR v_rec IN
-      SELECT id, comision_mxn
-        FROM public.comisiones_devengadas
-       WHERE organization_id = v_org
-         AND vendedora_id = p_vendedora_id
-         AND estado = 'Por recuperar'
-       ORDER BY created_at ASC
-    LOOP
-      EXIT WHEN v_disponible <= 0;
-      CONTINUE WHEN v_rec.comision_mxn > v_disponible;
-      v_disponible := v_disponible - v_rec.comision_mxn;
+  -- Auditoría 2026-08-28 · Hallazgo 1 + M4: las comisiones "Por recuperar" (ya
+  -- pagadas y cuyo respaldo se canceló/acreditó después) se descuentan de esta
+  -- liquidación, de la más antigua a la más reciente y hasta donde alcance el
+  -- devengo del periodo. Lo que no alcance sigue pendiente para la siguiente.
+  v_disponible := v_total;
+  FOR v_rec IN
+    SELECT id, comision_mxn
+      FROM public.comisiones_devengadas
+     WHERE organization_id = v_org
+       AND vendedora_id = p_vendedora_id
+       AND estado = 'Por recuperar'
+     ORDER BY created_at ASC
+     FOR UPDATE
+  LOOP
+    EXIT WHEN v_disponible <= 0;
+    -- Lo YA recuperado (porciones vivas) nunca se vuelve a descontar: es el
+    -- candado contra la doble recuperación. El monto original no se toca.
+    SELECT ROUND(v_rec.comision_mxn
+                 - COALESCE(SUM(r.monto_mxn), 0), 2)
+      INTO v_pendiente
+      FROM public.comisiones_recuperaciones r
+     WHERE r.comision_id = v_rec.id
+       AND r.revertida_at IS NULL;
+    CONTINUE WHEN v_pendiente IS NULL OR v_pendiente <= 0;
+    v_porcion := LEAST(v_pendiente, v_disponible);
+    INSERT INTO public.comisiones_recuperaciones
+      (organization_id, liquidacion_id, comision_id, monto_mxn, created_by)
+    VALUES (v_org, v_liq_id, v_rec.id, v_porcion, auth.uid());
+    v_disponible := ROUND(v_disponible - v_porcion, 2);
+    v_aplicado := ROUND(v_aplicado + v_porcion, 2);
+    IF v_pendiente - v_porcion <= 0 THEN
+      -- Deuda liquidada por completo: la comisión se cierra ligada a ESTA
+      -- liquidación (su estado previo permite restaurarla si se cancela).
       UPDATE public.comisiones_devengadas
          SET estado = 'Cancelada',
              estado_previo_liquidacion = 'Por recuperar',
@@ -18375,7 +18399,21 @@ BEGIN
                     || 'Recuperada al descontarse de la liquidación del periodo ' || p_periodo,
              updated_at = now()
        WHERE id = v_rec.id;
-    END LOOP;
+    ELSE
+      -- Recuperación PARCIAL: la comisión sigue "Por recuperar" con el resto.
+      UPDATE public.comisiones_devengadas
+         SET nota = COALESCE(nota || ' · ', '')
+                    || 'Recuperación parcial de ' || v_porcion::text
+                    || ' en la liquidación del periodo ' || p_periodo,
+             updated_at = now()
+       WHERE id = v_rec.id;
+    END IF;
+  END LOOP;
+  IF v_aplicado > 0 THEN
+    UPDATE public.liquidaciones_comision
+       SET total_mxn = ROUND(v_total - v_aplicado, 2),
+           updated_at = now()
+     WHERE id = v_liq_id;
   END IF;
   PERFORM public.idempotency_store(p_request_id,
     jsonb_build_object('liquidacion_id', v_liq_id,
@@ -19378,7 +19416,7 @@ DECLARE
   v_fact_estado public.estado_proveedor_factura;
   v_fact_deleted timestamptz;
   v_fact_emision date;
-  v_hoy_mx date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
+  v_hoy_mx date := public.fecha_negocio_mx();
   v_ncs         numeric;
   v_pagos       numeric;
   v_saldo       numeric;
@@ -19443,7 +19481,7 @@ BEGIN
     IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
       NEW.monto_en_moneda_factura := public.convertir_monto_dof(
         NEW.monto, NEW.moneda::text, v_fact_moneda::text,
-        COALESCE(NEW.fecha_pago, CURRENT_DATE));
+        COALESCE(NEW.fecha_pago, v_hoy_mx));
     ELSE
       RAISE;
     END IF;
@@ -21871,17 +21909,6 @@ BEGIN
   -- (`factura_embarques` + `conceptos_factura.embarque_id`). Antes se filtraba
   -- por `facturas.embarque_id`, así que el total completo caía en el embarque
   -- del header y los demás quedaban en cero.
-  --
-  -- Regla de atribución (sólo lectura; no cambia importes guardados):
-  --   * Si la factura tiene líneas etiquetadas con embarque, el factor de este
-  --     embarque = (líneas de este embarque) / (líneas etiquetadas). La suma de
-  --     los factores de todos los embarques es 1, así que el total no se
-  --     duplica ni se infla entre P&L.
-  --   * Si NO tiene líneas etiquetadas (facturas legacy), se usa el embarque
-  --     del header con factor 1 (comportamiento anterior).
-  -- Los importes de nivel factura (nota de crédito y saldo) se reparten con el
-  -- MISMO factor: es una asignación proporcional explícita a los importes de
-  -- las líneas, no un dato fiscal nuevo.
   f_cand AS (
     SELECT fa.id, coalesce(fa.subtotal,0)::numeric AS subtotal, fa.moneda::text AS moneda,
            fa.estado::text AS estado, fa.total::numeric AS total,
@@ -22038,6 +22065,16 @@ BEGIN
           JOIN f ON f.id = fc.factura_id
           WHERE fc.deleted_at IS NULL
             AND (fc.embarque_id = _embarque_id OR fc.embarque_id IS NULL)
+          UNION ALL
+          -- M1 (v13.823.384): la nota de crédito ya restada en `f_neto` se
+          -- muestra como AJUSTE NEGATIVO visible, con el MISMO canon `fnc`
+          -- (conversión a la moneda de la factura ANTES del factor
+          -- multiembarque). Sin esta línea el desglose no reconciliaba con
+          -- venta.real_mxn en cuanto había una NC aplicada.
+          SELECT '(nota de crédito)'::text,
+                 0::numeric,
+                 -public.a_mxn(fnc.monto, fnc.moneda, f.tc_doc, f.tc_doc)
+          FROM fnc JOIN f ON f.id = fnc.factura_id
         ) u GROUP BY concepto
       ) x
     ),
@@ -22056,6 +22093,20 @@ BEGIN
                  public.a_mxn(coalesce(pfc.monto, 0), pf.moneda, pf.tc_doc, pf.tc_doc)
           FROM public.proveedor_facturas_conceptos pfc
           JOIN pf ON pf.id = pfc.proveedor_factura_id
+          UNION ALL
+          -- M2 (v13.823.384): ajuste negativo por nota de crédito de proveedor,
+          -- con el monto YA convertido (`pnc`) y la MISMA proporción
+          -- base_gravable/total que usa `pf_neto`. Sólo aplica a facturas con
+          -- conceptos: las que no los tienen ya entran por `(factura completa)`,
+          -- que parte de `pf_neto` (neto de NC) y restarlo otra vez duplicaría.
+          SELECT '(nota de crédito proveedor)'::text,
+                 0::numeric,
+                 -public.a_mxn(
+                    pnc.monto * CASE WHEN pf.total > 0 THEN pf.base_gravable / pf.total ELSE 1 END,
+                    pf.moneda, pf.tc_doc, pf.tc_doc)
+          FROM pnc JOIN pf ON pf.id = pnc.proveedor_factura_id
+          WHERE EXISTS (SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+                          WHERE pfc.proveedor_factura_id = pf.id)
           UNION ALL
           SELECT '(factura completa)'::text,
                  0::numeric,
@@ -25602,7 +25653,7 @@ DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
   v_cliente_id uuid := (p_payload->>'cliente_id')::uuid;
-  v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
+  v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, public.fecha_negocio_mx());
   v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
   v_tc numeric := NULLIF(p_payload->>'tipo_cambio_usd','')::numeric;
   -- Ola 5 · RG4-5: importe real recibido del cliente (nuevo en el payload).
@@ -25662,7 +25713,7 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
   -- Ola 11 · RFE-02/RNF-03: misma regla que el cobro individual (FE-03).
-  IF v_fecha > CURRENT_DATE THEN
+  IF v_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_FECHA_FUTURA: La fecha del cobro no puede ser futura.'
       USING ERRCODE = '42501';
   END IF;
@@ -25925,7 +25976,7 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_YA_PAGADA: Esta liquidación ya tiene un pago registrado el %.', v_row.fecha_pago
       USING ERRCODE = '42501';
   END IF;
-  IF p_fecha_pago IS NULL OR p_fecha_pago > CURRENT_DATE THEN
+  IF p_fecha_pago IS NULL OR p_fecha_pago > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_FECHA_FUTURA: La fecha del pago no puede ser futura.'
       USING ERRCODE = '42501';
   END IF;
@@ -25965,7 +26016,7 @@ CREATE FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fec
 DECLARE
   v_org      uuid;
   v_emision  date;
-  v_hoy_mx   date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
+  v_hoy_mx   date := public.fecha_negocio_mx();
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;
@@ -26032,7 +26083,7 @@ DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
   v_proveedor_id uuid := (p_payload->>'proveedor_id')::uuid;
-  v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
+  v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, public.fecha_negocio_mx());
   v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
   v_tc numeric := NULLIF(p_payload->>'tipo_cambio_usd','')::numeric;
   -- Ola 11 · RNF-05: importe real de la transferencia (nuevo en el payload).
@@ -26093,7 +26144,7 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
   -- Ola 11 · RFE-02/RNF-03: misma regla que el pago individual.
-  IF v_fecha > CURRENT_DATE THEN
+  IF v_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_LOTE_FECHA_FUTURA: La fecha del pago no puede ser futura.'
       USING ERRCODE = '42501';
   END IF;
@@ -26273,7 +26324,7 @@ BEGIN
     RAISE EXCEPTION 'LC_TRASPASO_FECHA_REQUERIDA: captura la fecha del traspaso'
       USING ERRCODE = '22023';
   END IF;
-  IF p_fecha > GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE) THEN
+  IF p_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_TRASPASO_FECHA_FUTURA: la fecha del traspaso (%) no puede ser futura', p_fecha
       USING ERRCODE = '22023';
   END IF;
@@ -30489,6 +30540,19 @@ CREATE TABLE public.comisiones_recalculo_pendiente (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
+CREATE TABLE public.comisiones_recuperaciones (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    liquidacion_id uuid NOT NULL,
+    comision_id uuid NOT NULL,
+    monto_mxn numeric(14,2) NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by uuid,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    revertida_at timestamp with time zone,
+    revertida_por uuid,
+    CONSTRAINT comisiones_recuperaciones_monto_mxn_check CHECK ((monto_mxn > (0)::numeric))
+);
 CREATE TABLE public.conceptos_costo (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
@@ -32099,6 +32163,10 @@ ALTER TABLE ONLY public.comisiones_excepciones
     ADD CONSTRAINT comisiones_excepciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.comisiones_recalculo_pendiente
     ADD CONSTRAINT comisiones_recalculo_pendiente_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.comisiones_recuperaciones
+    ADD CONSTRAINT comisiones_recuperaciones_liq_comision_key UNIQUE (liquidacion_id, comision_id);
+ALTER TABLE ONLY public.comisiones_recuperaciones
+    ADD CONSTRAINT comisiones_recuperaciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.conceptos_costo
     ADD CONSTRAINT conceptos_costo_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.conceptos_factura
@@ -32483,6 +32551,8 @@ CREATE INDEX idx_com_dev_liquidacion ON public.comisiones_devengadas USING btree
 CREATE INDEX idx_com_dev_org_created ON public.comisiones_devengadas USING btree (organization_id, created_at);
 CREATE INDEX idx_com_dev_vendedora ON public.comisiones_devengadas USING btree (vendedora_id);
 CREATE INDEX idx_comisiones_devengadas_deleted_at ON public.comisiones_devengadas USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+CREATE INDEX idx_comisiones_recuperaciones_comision ON public.comisiones_recuperaciones USING btree (comision_id) WHERE (revertida_at IS NULL);
+CREATE INDEX idx_comisiones_recuperaciones_liq ON public.comisiones_recuperaciones USING btree (liquidacion_id);
 CREATE INDEX idx_conceptos_costo_contenedor ON public.conceptos_costo USING btree (contenedor_id) WHERE (contenedor_id IS NOT NULL);
 CREATE INDEX idx_conceptos_costo_cotizacion_origen ON public.conceptos_costo USING btree (embarque_id, cotizacion_costo_origen_id) WHERE ((deleted_at IS NULL) AND (cotizacion_costo_origen_id IS NOT NULL));
 CREATE INDEX idx_conceptos_costo_deleted_at ON public.conceptos_costo USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
@@ -32823,6 +32893,7 @@ CREATE TRIGGER trg_clientes_propaga_nombre AFTER UPDATE OF nombre ON public.clie
 CREATE TRIGGER trg_clientes_sync_cp BEFORE INSERT OR UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.clientes_sync_cp();
 CREATE TRIGGER trg_cobranza_seg_updated_at BEFORE UPDATE ON public.cobranza_seguimiento FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_com_dev_updated BEFORE UPDATE ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_comisiones_recuperaciones_updated_at BEFORE UPDATE ON public.comisiones_recuperaciones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_concepto_no_proformado BEFORE DELETE OR UPDATE ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_concepto_no_proformado();
 CREATE TRIGGER trg_conceptos_costo_guard_vinculo_cxp BEFORE UPDATE OF monto, moneda, proveedor_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp();
 CREATE TRIGGER trg_conceptos_factura_assert_borrador BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
@@ -33192,6 +33263,12 @@ ALTER TABLE ONLY public.comisiones_excepciones
     ADD CONSTRAINT comisiones_excepciones_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.comisiones_recalculo_pendiente
     ADD CONSTRAINT comisiones_recalculo_pendiente_pago_factura_id_fkey FOREIGN KEY (pago_factura_id) REFERENCES public.pagos_factura(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.comisiones_recuperaciones
+    ADD CONSTRAINT comisiones_recuperaciones_comision_id_fkey FOREIGN KEY (comision_id) REFERENCES public.comisiones_devengadas(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.comisiones_recuperaciones
+    ADD CONSTRAINT comisiones_recuperaciones_liquidacion_id_fkey FOREIGN KEY (liquidacion_id) REFERENCES public.liquidaciones_comision(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.comisiones_recuperaciones
+    ADD CONSTRAINT comisiones_recuperaciones_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.conceptos_costo
     ADD CONSTRAINT conceptos_costo_contenedor_id_fkey FOREIGN KEY (contenedor_id) REFERENCES public.embarque_contenedores(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.conceptos_costo
@@ -33701,6 +33778,7 @@ CREATE POLICY "Scope tenant activo super admin" ON public.cliente_documentos AS 
 CREATE POLICY "Scope tenant activo super admin" ON public.clientes AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.cobranza_seguimiento AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.comisiones_devengadas AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
+CREATE POLICY "Scope tenant activo super admin" ON public.comisiones_recuperaciones AS RESTRICTIVE USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.conceptos_costo AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.conceptos_factura AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.conceptos_venta AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -33990,6 +34068,7 @@ CREATE POLICY comisiones_excepciones_tenant_restrictive ON public.comisiones_exc
 CREATE POLICY comisiones_recalculo_admin_full ON public.comisiones_recalculo_pendiente TO authenticated USING (((( SELECT (comisiones_recalculo_pendiente.organization_id = public.current_user_org_id())) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)))) WITH CHECK (((( SELECT (comisiones_recalculo_pendiente.organization_id = public.current_user_org_id())) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) AND (public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 ALTER TABLE public.comisiones_recalculo_pendiente ENABLE ROW LEVEL SECURITY;
 CREATE POLICY comisiones_recalculo_tenant_restrictive ON public.comisiones_recalculo_pendiente AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
+ALTER TABLE public.comisiones_recuperaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conceptos_costo ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conceptos_factura ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conceptos_venta ENABLE ROW LEVEL SECURITY;
@@ -34155,6 +34234,7 @@ CREATE POLICY rcl_select_admin_org ON public.role_change_log FOR SELECT TO authe
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = role_change_log.organization_id) AND ((om.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text])))))));
 CREATE POLICY rcl_select_propio ON public.role_change_log FOR SELECT TO authenticated USING ((user_id = ( SELECT auth.uid() AS uid)));
 CREATE POLICY rcl_select_super_admin ON public.role_change_log FOR SELECT TO authenticated USING (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role));
+CREATE POLICY recuperaciones_select_org ON public.comisiones_recuperaciones FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
 ALTER TABLE public.refacturaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.role_change_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.seguros_embarque ENABLE ROW LEVEL SECURITY;
@@ -35024,6 +35104,9 @@ GRANT ALL ON FUNCTION public.facturas_listado(p_organization_id uuid, p_search t
 GRANT ALL ON FUNCTION public.facturas_listado(p_organization_id uuid, p_search text, p_estado text, p_fecha_desde date, p_fecha_hasta date, p_offset integer, p_limit integer) TO service_role;
 GRANT ALL ON FUNCTION public.facturas_set_fecha_vencimiento() TO authenticated;
 GRANT ALL ON FUNCTION public.facturas_set_fecha_vencimiento() TO service_role;
+REVOKE ALL ON FUNCTION public.fecha_negocio_mx() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.fecha_negocio_mx() TO authenticated;
+GRANT ALL ON FUNCTION public.fecha_negocio_mx() TO service_role;
 REVOKE ALL ON FUNCTION public.fn_admin_org_activity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.fn_admin_org_activity() TO authenticated;
 GRANT ALL ON FUNCTION public.fn_admin_org_activity() TO service_role;
@@ -35835,6 +35918,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.comisiones_excepciones TO auth
 GRANT ALL ON TABLE public.comisiones_excepciones TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.comisiones_recalculo_pendiente TO authenticated;
 GRANT ALL ON TABLE public.comisiones_recalculo_pendiente TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.comisiones_recuperaciones TO authenticated;
+GRANT ALL ON TABLE public.comisiones_recuperaciones TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.conceptos_costo TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.conceptos_costo TO authenticated;
 GRANT ALL ON TABLE public.conceptos_costo TO service_role;
