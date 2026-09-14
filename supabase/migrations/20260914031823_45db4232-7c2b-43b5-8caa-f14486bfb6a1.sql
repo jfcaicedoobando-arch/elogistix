@@ -512,3 +512,20 @@ BEGIN
   RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', true);
 END;
 $function$;
+
+-- H6: REVOKE/GRANT explícitos para toda función SECURITY DEFINER de esta
+-- migración. Ninguna debe quedar ejecutable por PUBLIC/anon.
+REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO service_role;
+
+REVOKE ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() FROM anon;
+GRANT EXECUTE ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO service_role;
+
+REVOKE ALL ON FUNCTION public.eliminar_proforma_rpc(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.eliminar_proforma_rpc(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.eliminar_proforma_rpc(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.eliminar_proforma_rpc(uuid) TO service_role;

@@ -200,3 +200,8 @@ REVOKE ALL ON FUNCTION public.get_exposicion_credito_cliente(uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_exposicion_credito_cliente(uuid) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_exposicion_credito_cliente(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_exposicion_credito_cliente(uuid) TO service_role;
+-- H6: REVOKE/GRANT explícitos para la redefinición SECURITY DEFINER.
+REVOKE ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() FROM anon;
+GRANT EXECUTE ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() TO service_role;

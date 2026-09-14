@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.378] - 2026-09-14
+
+- **fix(ci/rls)**: cierre de permisos del lote B11–B15 (sin tocar datos históricos).
+  - `audit:migrations` H6: `REVOKE ALL ... FROM PUBLIC/anon` + `GRANT EXECUTE ... TO authenticated/service_role` explícitos para `convertir_proformas_a_factura`, `tg_conceptos_costo_guard_vinculo_cxp` y `eliminar_proforma_rpc` en las migraciones del lote, más migración aditiva que aplica los mismos permisos en runtime. Ninguna queda ejecutable por `anon`/`PUBLIC` (`fix45_anon_execute_whitelist` vuelve a verde).
+  - Ratchet de iconos: los dos usos nuevos de `ClienteCreditoCard` pasan de `h-4 w-4` a `size-4`; conteo de vuelta a 931 sin subir umbrales.
+
 ## [13.823.377] - 2026-09-14
 
 - **fix(facturación/proformas)**: revisión R1–R4 del lote B11–B15 (sin tocar datos históricos).
