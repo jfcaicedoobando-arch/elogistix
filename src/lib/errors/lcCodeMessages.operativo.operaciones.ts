@@ -65,6 +65,12 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_SIN_CLIENTE:
     "La cotización no tiene cliente asociado. Convierte el prospecto en cliente " +
     "antes de aceptarla o de crear el embarque.",
+  LC_TARIFA_RUTA_INCOMPATIBLE:
+    "La tarifa que elegiste es de otra ruta que la cotización. " +
+    "Selecciona una tarifa de la misma ruta o recotiza.",
+  LC_TARIFA_TIPO_INCOMPATIBLE:
+    "La tarifa que elegiste es de otro tipo de contenedor o servicio que la cotización. " +
+    "Selecciona una tarifa del mismo tipo o recotiza.",
   LC_COT_TC_REQUERIDO:
     "La cotización tiene importes en más de una moneda y le falta el tipo de cambio. " +
     "Captúralo en la cotización antes de crear el embarque.",
