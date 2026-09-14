@@ -16,7 +16,7 @@ DECLARE
   v_cxc_saldo numeric := 0; v_cxc_por_moneda jsonb := '[]'::jsonb;
   v_cxc_pagadas_sin_pago int := 0;
   v_cxp_saldo numeric := 0; v_cxp_por_moneda jsonb := '[]'::jsonb;
-  v_docs_faltantes int;
+  v_docs_faltantes int; v_docs_total int;
   v_utilidad_mxn numeric; v_venta_mxn numeric; v_margen_min numeric; v_margen_pct numeric;
   v_pnl jsonb; v_com_count int; v_sin_comision boolean := false;
   v_cont_incompletos int := 0; v_cont_ids uuid[] := ARRAY[]::uuid[];
@@ -66,10 +66,16 @@ BEGIN
   SELECT COUNT(*) INTO v_docs_faltantes FROM documentos_embarque de
    WHERE de.embarque_id=p_embarque_id AND de.deleted_at IS NULL
      AND (de.archivo IS NULL OR de.archivo='') AND de.estado<>'No aplica';
+  -- v13.823.370 (P2-5) — `total` sólo informa a la UI cuántos requisitos
+  -- documentales existen: con 0 requisitos el check no es evaluable y no debe
+  -- pintarse en verde. NO cambia `ok` ni `puede_cerrar`.
+  SELECT COUNT(*) INTO v_docs_total FROM documentos_embarque de
+   WHERE de.embarque_id=p_embarque_id AND de.deleted_at IS NULL
+     AND de.estado<>'No aplica';
   v_ok := (v_docs_faltantes=0); v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','docs_completos','ok',v_ok,
-    'detalle', jsonb_build_object('faltantes', v_docs_faltantes)));
+    'detalle', jsonb_build_object('faltantes', v_docs_faltantes, 'total', v_docs_total)));
   SELECT COUNT(*) INTO v_costos_sin_factura FROM conceptos_costo cc
    WHERE cc.embarque_id=p_embarque_id AND cc.deleted_at IS NULL
      AND NOT EXISTS (
