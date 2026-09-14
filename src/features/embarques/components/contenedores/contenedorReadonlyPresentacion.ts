@@ -17,3 +17,7 @@ export function valorCargaCapturada(
   const valor = Number(contenedor[campo]);
   return Number.isFinite(valor) ? valor : null;
 }
+
+export function mostrarColumnaCarga(uniforme: boolean, pendientes: number): boolean {
+  return pendientes > 0 || !uniforme;
+}

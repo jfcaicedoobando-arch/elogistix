@@ -39,7 +39,10 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
     <div className={`rounded-md border p-3 ${cardClass}`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-body font-semibold">{titulo}</span>
+        <div>
+          <div className="text-body font-semibold">{titulo}</div>
+          <div className="text-2xs text-muted-foreground">Total c/ IVA</div>
+        </div>
         <Badge className={`ml-auto ${badgeClass}`}>{count}</Badge>
       </div>
       <div className="text-body space-y-0.5">

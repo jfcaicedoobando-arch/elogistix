@@ -21,6 +21,7 @@ import { useSinComisionEmbarque } from "@/features/embarques/hooks/useSinComisio
 import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
 import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
 import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDialogs";
+import { CIERRE_PERMISO_COPY } from "./cierre/cierrePermisoCopy";
 
 // v13.89.2 — Etiquetas y mapeos ahora viven en `utils/cierreCheckMeta.ts`.
 
@@ -123,7 +124,7 @@ export function TabCierre({ embarqueId, estatus, modo, expediente, docsRequerido
         })()}
         {!esCerrado && !canCerrarEmbarque && (
           <p className="text-body-sm text-muted-foreground">
-            El cierre del embarque es responsabilidad del <strong>coordinador logístico</strong>.
+            {CIERRE_PERMISO_COPY}
           </p>
         )}
         {esCerrado && puedeReabrir && (

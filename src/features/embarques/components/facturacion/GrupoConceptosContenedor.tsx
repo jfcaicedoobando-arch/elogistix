@@ -74,7 +74,7 @@ export function GrupoConceptosContenedor({
           },
           { id: "cant", header: "Cant.", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => row.original.cantidad },
           { id: "pu", header: "P. Unit.", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
-          { id: "total", header: "Total", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
+          { id: "total", header: "Subtotal", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
             cell: ({ row }) => formatCurrency(Number(row.original.cantidad) * Number(row.original.precio_unitario), row.original.moneda) },
           { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
           {

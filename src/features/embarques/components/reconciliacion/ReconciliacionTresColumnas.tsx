@@ -21,6 +21,7 @@ import { fmt, pct, colorPorClasificacion, etiquetaClasificacion } from "./reconc
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { generarCsvReconciliacion3C } from "@/features/embarques/services/reconciliacion3Columnas.helpers";
 
 interface Props {
   embarqueId: string;
@@ -117,14 +118,9 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
   }
 
   const exportCsv = () => {
-    const header = "Concepto,Moneda,Cotizado,Refrescado,Real,Δ Cot vs Real (%),Clasificación";
-    const lines = data.filas.map((f) =>
-      [f.concepto, f.moneda, f.cotizado, f.refrescado, f.real,
-        f.delta_cot_vs_real.pct.toFixed(2), f.clasificacion].join(","),
-    );
     downloadCsvWithFeedback({
       filename: `reconciliacion-${embarqueId}.csv`,
-      csv: [header, ...lines].join("\n"),
+      csv: generarCsvReconciliacion3C(data.filas),
       rowCount: data.filas.length,
       emptyWarning: { description: "No hay filas de reconciliación para exportar." },
     });
