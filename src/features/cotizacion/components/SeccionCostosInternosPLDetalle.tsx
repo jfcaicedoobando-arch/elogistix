@@ -6,6 +6,7 @@ import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { usePermissions } from "@/hooks/shared";
 import { useCotizacionCostosSnapshot, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";
 import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";
