@@ -197,8 +197,9 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
             diferencia restante viene de facturas sin conceptos capturados. */}
         El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
         proveedor no tiene conceptos capturados, su importe aparece como "(factura completa)".
-      </p>
-
+          </p>
+        </>
+      )}
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />
