@@ -117,10 +117,12 @@ BEGIN
 
   -- 5) Caso D: las informativas siguen exentas.
   INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo,
-                                   tipo_documento, conceptos_venta)
+                                   tipo_documento, conceptos_venta,
+                                   vigencia_desde, vigencia_hasta)
   VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, 'COT-SINCOSTO-0002',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-          'informativa', '[]'::jsonb)
+          'informativa', '[]'::jsonb,
+          current_date, current_date + 30)
   RETURNING id INTO v_info;
 
   v_err := NULL;
