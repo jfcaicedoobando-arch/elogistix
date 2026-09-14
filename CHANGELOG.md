@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.379] - 2026-09-14
+
+- **fix(fiscal/operaciones)**: lote B16–B20 (sólo conversiones y UI futuras; sin tocar datos históricos).
+  - **B16 Proforma → factura**: `_convertir_proformas_insertar_conceptos` respeta `aplica_iva = false` aunque persista una tasa legacy (0.16): la línea se clasifica `exento` y su `tasa_iva_aplicada` viaja en `NULL`. Aplica a las dos ramas (consolidada y por `conceptos_venta`).
+  - **B17 Doble clic en "Crear embarque"**: `useCrearEmbarqueConRevalidacion` toma el guard de reentrada ANTES del `await` del candado de costos y lo libera si el candado bloquea; dos clics rápidos ya no disparan dos revalidaciones/RPCs.
+  - **B18 Cotización informativa**: `_assert_cotizacion_venta_valida` deja de retornar temprano para `tipo_documento = 'informativa'` y lanza `LC_COT_INFORMATIVA`; el candado corre en `crear_embarque_borrador_core` y en el pre-check de convertibilidad, así que una RPC directa tampoco convierte un tarifario. Su consulta y visualización no cambian.
+  - **B19 Replicación de IVA legacy**: `_crear_embarque_replicar_conceptos` usa la tasa canónica de la organización (0.16) cuando la línea JSON declara `aplica_iva = true` sin `tasa_iva_aplicada`; con `aplica_iva = false` conserva tasa 0. Embarques históricos intactos.
+  - **B20 Riel colapsado 1280×720**: `SidebarContent` pierde el `px-2` sólo en modo icono y centra su contenido; los botones conservan sus 36 px reales sin recorte ni scroll horizontal, con el scroll vertical y las pistas rail-scroll intactas.
+
 ## [13.823.378] - 2026-09-14
 
 - **fix(ci/rls)**: cierre de permisos del lote B11–B15 (sin tocar datos históricos).
