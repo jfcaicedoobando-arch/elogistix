@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.388] - 2026-09-14
+
+- **fix(embarques)**: un embarque ya no puede regresar a **Borrador** si tiene documentos de cliente vivos. `public.avanzar_estado_embarque` valida antes de `assert_transicion_embarque`: `facturas` vivas (`deleted_at IS NULL AND estado <> 'Cancelada'`, vinculadas por `embarque_id` o por `factura_embarques.activa`) ⇒ `LC_BORRADOR_CON_CXC`; `proformas` vivas (`estado_proforma NOT IN ('cancelada','facturada')`) ⇒ `LC_BORRADOR_CON_PROFORMA`. Caso real: ELIMP00310 quedó en Borrador con expediente asignado y la factura F1004 (4,984 USD, `origen = conversion_proforma`) viva. Resto del cuerpo sin cambios; privilegios H6 reafirmados (REVOKE PUBLIC/anon + GRANT authenticated/service_role). Espejo: `supabase/schema/embarques/avanzar_estado_embarque.sql`.
+- Mensajes canónicos nuevos `LC_BORRADOR_CON_CXC` y `LC_BORRADOR_CON_PROFORMA` en `src/lib/errors/lcCodeMessages.operativo.operaciones.ts`; textos técnicos intactos en SQL.
+- Cobertura nueva: `supabase/tests/borrador_con_factura_viva.sql` (registrada en `_guards_manifest.txt`): Confirmado con factura viva se bloquea; sin documentos el regreso sigue permitido; con la factura cancelada el regreso se libera.
+- Datos: los 2 embarques que ya estaban en Borrador con factura viva (`ELIMP00310` y uno sin expediente) se llevaron a `Confirmado` con renglón en `bitacora_actividad`; facturas e importes intactos.
+
 ## [13.823.387] - 2026-09-14
 
 - **fix(embarques)**: un embarque en **Borrador sin expediente** ya se puede eliminar. `public.eliminar_embarque_completo` determinaba la existencia del registro con el expediente (`IF v_expediente IS NULL THEN RAISE 'Embarque no encontrado'`), por lo que cualquier borrador creado antes de asignar folio devolvía "Embarque no encontrado" desde el menú de acciones. Ahora la existencia se resuelve con `IF NOT FOUND` y las leyendas usan `v_label = COALESCE(NULLIF(btrim(expediente),''), 'Borrador ' || right(id::text, 6))` en el `RAISE LC_EMBARQUE_BLOQUEADO`, en el JSON de motivos (`expediente`) y en `bitacora_actividad.entidad_nombre`. Guard de rol/tenant y candados fiscales sin cambios; privilegios H6 reafirmados (REVOKE PUBLIC/anon + GRANT authenticated/service_role/postgres).
