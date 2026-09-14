@@ -2,10 +2,16 @@
  * La columna "Factura(s)" del tab Costos debe mostrar el folio interno de
  * Libre Carga (FP-XXXXXX) y llevar a la factura de proveedor al hacer clic.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { GrupoCostosProveedor } from "../GrupoCostosProveedor";
+
+// B1 (v13.823.395): el enlace a CxP sólo se renderiza con `canViewFinancials`.
+// Estas dos pruebas cubren el camino FINANCIERO, así que se simula el permiso.
+vi.mock("@/hooks/shared/usePermissions", () => ({
+  usePermissions: () => ({ canViewFinancials: true }),
+}));
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 
 function fila(folioInterno: string | null): FilaReconciliacion {
