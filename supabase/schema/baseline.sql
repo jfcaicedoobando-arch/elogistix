@@ -2056,8 +2056,17 @@ CREATE FUNCTION public._cotizaciones_bloquear_auto_aceptacion() RETURNS trigger
 DECLARE
   v_uid uuid := auth.uid();
 BEGIN
+  -- SoD: quien elaboró la cotización no puede aceptarla. Sólo aplica a la
+  -- aceptación real (estados previos a la aceptación). El regreso automático
+  -- 'En operación' -> 'Aceptada' que hace eliminar_embarque_completo NO es una
+  -- aceptación y no debe bloquearse.
   IF NEW.estado = 'Aceptada'::estado_cotizacion
-     AND COALESCE(OLD.estado, 'Borrador'::estado_cotizacion) <> 'Aceptada'::estado_cotizacion
+     AND COALESCE(OLD.estado, 'Borrador'::estado_cotizacion) IN (
+       'Borrador'::estado_cotizacion,
+       'Solicitada'::estado_cotizacion,
+       'Enviada'::estado_cotizacion,
+       'Vencida'::estado_cotizacion
+     )
      AND v_uid IS NOT NULL
      AND NEW.created_by IS NOT NULL
      AND NEW.created_by = v_uid
