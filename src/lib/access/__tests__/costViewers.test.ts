@@ -29,8 +29,9 @@ describe("COST_VIEWERS (C9)", () => {
     }
   });
 
-  it("es exactamente FINANCE_VIEWERS", () => {
-    expect(COST_VIEWERS).toEqual(FINANCE_VIEWERS);
+  it("es FINANCE_VIEWERS más el coordinador logístico (B1)", () => {
+    expect(COST_VIEWERS).toEqual([...FINANCE_VIEWERS, "coordinador_logistico"]);
+    expect(hasRole(FINANCE_VIEWERS, "coordinador_logistico")).toBe(false);
   });
 });
 
@@ -46,10 +47,11 @@ describe("puedeVerCostosCotizacion (C9)", () => {
     }
   });
 
-  it("los roles operativos siguen sin ver costos", () => {
+  it("el coordinador logístico ve costos de lo que opera (B1), el rol legacy no", () => {
+    expect(puedeVerCostosCotizacion("coordinador_logistico", true)).toBe(true);
     expect(puedeVerCostosCotizacion("operador", true)).toBe(false);
-    expect(puedeVerCostosCotizacion("coordinador_logistico", true)).toBe(false);
   });
+
 
   it("sin rol no ve costos", () => {
     expect(puedeVerCostosCotizacion(null, true)).toBe(false);
