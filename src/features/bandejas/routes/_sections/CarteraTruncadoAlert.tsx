@@ -14,7 +14,7 @@ interface Props {
 export function CarteraTruncadoAlert({ totalEnBase, mostradas }: Props) {
   return (
     <Alert variant="destructive">
-      <AlertTriangle className="h-4 w-4" />
+      <AlertTriangle className="size-4" />
       <AlertDescription>
         Vista incompleta: hay {totalEnBase} facturas con saldo y aquí se muestran las {mostradas}{" "}
         más próximas a vencer. Los totales de abajo NO son la cartera completa; filtra por moneda
