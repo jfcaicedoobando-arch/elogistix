@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.377] - 2026-09-14
+
+- **fix(facturación/proformas)**: revisión R1–R4 del lote B11–B15 (sin tocar datos históricos).
+  - **R1 Eliminar proforma**: `eliminar_proforma_rpc` vuelve a bloquear sólo con factura viva (`deleted_at IS NULL` y estado distinto de `Cancelada`/`Sustituida`) o estado `facturada`; una factura cancelada, sustituida o en papelera ya no impide eliminarla. Se conserva el check de rol con `has_any_role_efectivo`.
+  - **R2 Candado CxP**: `tg_conceptos_costo_guard_vinculo_cxp` decide por el id de la factura de proveedor vinculada y ya no por el folio; el folio sólo alimenta el texto (`(sin folio)` como respaldo). Alcance intacto: monto, moneda y proveedor.
+  - **R3 T/C inválido**: `get_exposicion_credito_cliente` acota `LC_CREDITO_TC_INVALIDO` a los primeros 10 folios y agrega “y N más”, sin ocultar registros pendientes ni calcular exposición.
+  - **R4 Documentación B12**: el literal `NULL` del T/C en `convertir_proformas_a_factura` se documenta como documental: `trg_factura_tc_dof_obligatorio` (BEFORE INSERT) resuelve el T/C DOF o rechaza el INSERT, por lo que un borrador nuevo nunca queda persistido sin T/C; la alerta de la tarjeta cubre datos legacy fuera de banda.
+
 ## [13.823.376] - 2026-09-14
 
 - **fix(facturación/proformas)**: lote B11–B15 de candados en la base (sin normalizar datos históricos).
