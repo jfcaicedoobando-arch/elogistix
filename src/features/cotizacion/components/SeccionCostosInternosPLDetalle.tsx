@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
-import { usePermissions } from "@/hooks/shared";
 import { useCotizacionCostosSnapshot, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
@@ -15,7 +14,7 @@ import {
 } from "@/features/cotizacion/domain/mapearCostosDetalle";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import { motivoBloqueoEdicionCostos } from "@/features/cotizacion/domain/estadosEditables";
+import { useGateEdicionCostos, AvisoCostosBloqueados } from "./edicionCostosGate";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
 import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
