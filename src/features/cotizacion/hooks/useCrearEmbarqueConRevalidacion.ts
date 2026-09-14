@@ -85,9 +85,18 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
   const handleClick = async () => {
     // Guard #1: evita re-entrada síncrona (doble click rápido).
     if (enVueloRef.current || bloqueadoPorEsquema) return;
-    // v13.823.370 (P1-1) — candado de costos también en esta ruta (fail-closed).
-    if (!(await verificarCostosOAvisar(cotizacionId))) return;
+    // B17 (v13.823.379): el guard se toma ANTES del await del candado de costos.
+    // Antes dos clics rápidos pasaban ambos la consulta y lanzaban dos
+    // revalidaciones/RPCs. Si el candado bloquea, se libera aquí mismo.
     enVueloRef.current = true;
+    // v13.823.370 (P1-1) — candado de costos también en esta ruta (fail-closed).
+    let costosOk = false;
+    try {
+      costosOk = await verificarCostosOAvisar(cotizacionId);
+    } finally {
+      if (!costosOk) enVueloRef.current = false;
+    }
+    if (!costosOk) return;
     setRevalidando(true);
     // Fase 1 — revalidación. Su catch NO debe abarcar la creación del embarque.
     let r: ResultadoRevalidacion | null = null;
