@@ -18,7 +18,10 @@ import {
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
 import { useAutoSaveDatosFiscales } from "@/features/facturacion/hooks/useAutoSaveDatosFiscales";
-import { inicialesDatosFiscales } from "@/features/facturacion/domain/datosFiscalesForm";
+import {
+  avisoTipoCambioFactura,
+  inicialesDatosFiscales,
+} from "@/features/facturacion/domain/datosFiscalesForm";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 import { AutoSaveIndicator } from "./AutoSaveIndicator";
 import { queryKeys } from "@/lib/query";
