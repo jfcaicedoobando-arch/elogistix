@@ -146,3 +146,4 @@ supabase/tests/n8_pago_proveedor_cuenta_valida.sql
 supabase/tests/costos_cotizacion_coordinador_logistico.sql
 supabase/tests/lote_cotizacion_embarque_auditoria.sql
 supabase/tests/tarifa_sustituida_ruta_y_delta.sql
+supabase/tests/pfc_lectura_operativa_embarque.sql
