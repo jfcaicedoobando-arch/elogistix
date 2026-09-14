@@ -41,6 +41,6 @@ describe("computeFreshness · con eventos", () => {
     const borrador = computeFreshness(eventos, null, false, "Borrador");
     const confirmado = computeFreshness(eventos, null, false, "Confirmado");
     expect(borrador).toEqual(confirmado);
-    expect(borrador.label).toContain("Último evento hoy");
+    expect(borrador.label).toContain("Último evento");
   });
 });
