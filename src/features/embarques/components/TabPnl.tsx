@@ -70,23 +70,38 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
         data-focus="utilidad"
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
+        {/* v13.823.367 — Sin actividad real (Borrador recién creado) los KPI se
+            muestran neutrales: sólo presupuesto como contexto, sin Δ ni tonos
+            de alerta; pintar Δ −100% sería una pérdida ficticia. */}
         <KpiCard
           label="Venta real"
           value={fmtPnl(ventaReal)}
-          delta={`Presup. ${fmtPnl(ventaPresup)} · Δ ${fmtPnl(dVenta.abs)}`}
-          variant={ventaReal >= ventaPresup ? "success" : "warning"}
+          delta={
+            sinActividadReal
+              ? `Presup. ${fmtPnl(ventaPresup)}`
+              : `Presup. ${fmtPnl(ventaPresup)} · Δ ${fmtPnl(dVenta.abs)}`
+          }
+          variant={sinActividadReal ? "default" : ventaReal >= ventaPresup ? "success" : "warning"}
         />
         <KpiCard
           label="Costo real"
           value={fmtPnl(costoReal)}
-          delta={`Presup. ${fmtPnl(costoPresup)} · Δ ${fmtPnl(dCosto.abs)}`}
+          delta={
+            sinActividadReal
+              ? `Presup. ${fmtPnl(costoPresup)}`
+              : `Presup. ${fmtPnl(costoPresup)} · Δ ${fmtPnl(dCosto.abs)}`
+          }
           variant={alertaSobrecosto ? "destructive" : "default"}
         />
         <KpiCard
           label="Utilidad real"
           value={fmtPnl(utilidadReal)}
-          delta={`Presup. ${fmtPnl(utilidadPresup)} · Δ ${fmtPnl(dUtilidad.abs)}`}
-          variant={utilidadReal >= utilidadPresup ? "success" : "destructive"}
+          delta={
+            sinActividadReal
+              ? `Presup. ${fmtPnl(utilidadPresup)}`
+              : `Presup. ${fmtPnl(utilidadPresup)} · Δ ${fmtPnl(dUtilidad.abs)}`
+          }
+          variant={sinActividadReal ? "default" : utilidadReal >= utilidadPresup ? "success" : "destructive"}
         />
         <KpiCard
           label="Margen real"
@@ -95,11 +110,13 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
           delta={`Presup. ${pctPnl(margenPresup)}`}
 
           variant={
-            utilidadReal < 0 || margenReal < 0
-              ? "destructive"
-              : margenReal < PNL_UMBRAL_MARGEN_MIN_PCT
-                ? "warning"
-                : "success"
+            sinActividadReal
+              ? "default"
+              : utilidadReal < 0 || margenReal < 0
+                ? "destructive"
+                : margenReal < PNL_UMBRAL_MARGEN_MIN_PCT
+                  ? "warning"
+                  : "success"
           }
         />
       </div>
@@ -159,24 +176,30 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
         </Card>
       </div>
 
-      <PnlComparativaTable
-        titulo="Ingresos por concepto (Presupuestado vs. Real)"
-        rows={data.por_concepto}
-        invertirAlerta={false}
-      />
-      <PnlComparativaTable
-        titulo="Costos por concepto (Presupuestado vs. Real)"
-        rows={data.por_concepto_costo}
-        invertirAlerta
-      />
-      <p className="text-body-sm text-muted-foreground">
+      {/* v13.823.367 — Sin actividad real no se pintan comparativas
+          Presupuestado vs. Real: con Real = 0 toda fila leería Δ −100%,
+          una desviación ficticia. El card de contexto ya lo explica. */}
+      {!sinActividadReal && (
+        <>
+          <PnlComparativaTable
+            titulo="Ingresos por concepto (Presupuestado vs. Real)"
+            rows={data.por_concepto}
+            invertirAlerta={false}
+          />
+          <PnlComparativaTable
+            titulo="Costos por concepto (Presupuestado vs. Real)"
+            rows={data.por_concepto_costo}
+            invertirAlerta
+          />
+          <p className="text-body-sm text-muted-foreground">
         {/* v13.552.0: el KPI "Costo real" ya usa la base gravable (sin IVA) y
             descuenta notas de crédito prorrateadas, igual que el desglose. La
             diferencia restante viene de facturas sin conceptos capturados. */}
         El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
         proveedor no tiene conceptos capturados, su importe aparece como "(factura completa)".
-      </p>
-
+          </p>
+        </>
+      )}
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />
