@@ -3,7 +3,7 @@
 ## [13.823.389] - 2026-09-14
 
 - **fix(cotizaciones/embarques)**: eliminar un embarque **Borrador** creado desde una cotización ya no falla con `LC_SOD_VIOLATION` (23514). `eliminar_embarque_completo` regresa la cotización a `Aceptada` cuando no queda ningún embarque vivo, y el trigger `public._cotizaciones_bloquear_auto_aceptacion()` interpretaba ese regreso `En operación → Aceptada` como auto-aceptación cuando quien borraba era el mismo `created_by`. El guard se acota a la aceptación real (`OLD.estado IN ('Borrador','Solicitada','Enviada','Vencida')`); se conservan `created_by = auth.uid()`, la exención admin/admin_org/super_admin y `ERRCODE = check_violation`. `aceptar_cotizacion_version` sin cambios. Privilegios H6 reafirmados. Espejo: `supabase/schema/cotizaciones/_cotizaciones_bloquear_auto_aceptacion.sql`.
-- Cobertura nueva: `supabase/tests/eliminar_borrador_cotizacion_sod.sql` (registrada en `_guards_manifest.txt`): el creador (rol `operador`) elimina su borrador y la cotización vuelve a `Aceptada`; `Enviada → Aceptada` por el mismo creador sigue fallando con `LC_SOD_VIOLATION`.
+- Cobertura nueva: `supabase/tests/eliminar_borrador_cotizacion_sod.sql` (registrada en `_guards_manifest.txt`): el creador (rol `coordinador_logistico`) elimina su borrador y la cotización vuelve a `Aceptada`; `Enviada → Aceptada` por el mismo creador sigue fallando con `LC_SOD_VIOLATION`.
 
 ## [13.823.388] - 2026-09-14
 

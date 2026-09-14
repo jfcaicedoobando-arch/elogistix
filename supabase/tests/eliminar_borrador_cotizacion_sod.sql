@@ -36,11 +36,11 @@ BEGIN
 
   INSERT INTO auth.users (id, email) VALUES (v_uid, 'sod-borrador@test.mx')
   ON CONFLICT (id) DO NOTHING;
-  -- Rol operador: puede eliminar embarques pero NO está exento del SoD.
+  -- Rol coordinador_logistico: puede eliminar embarques pero NO está exento del SoD.
   INSERT INTO public.organization_members (organization_id, user_id, role)
-  VALUES (v_org, v_uid, 'operador'::public.app_role) ON CONFLICT DO NOTHING;
+  VALUES (v_org, v_uid, 'coordinador_logistico'::public.app_role) ON CONFLICT DO NOTHING;
   INSERT INTO public.user_roles (user_id, role)
-  VALUES (v_uid, 'operador'::public.app_role) ON CONFLICT DO NOTHING;
+  VALUES (v_uid, 'coordinador_logistico'::public.app_role) ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes (organization_id, nombre, rfc, email)
   VALUES (v_org, 'CLIENTE SOD BORRADOR', '', 'cli-sod-borrador@test.mx')
