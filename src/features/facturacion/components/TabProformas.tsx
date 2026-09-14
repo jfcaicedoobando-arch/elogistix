@@ -19,9 +19,26 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
 import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
 
-
+/**
+ * C25 (v13.823.380) — Motivo por el que la fusión seleccionada no procede.
+ * Vive fuera del componente para no engordar su complejidad; el servidor
+ * rechaza las mismas condiciones (`LC_PROFORMA_*`).
+ */
+function avisoFusionSeleccion(info: {
+  sameCliente: boolean; sameTipo: boolean; sameDiasCredito: boolean;
+}): string | null {
+  if (!info.sameCliente) return "Sólo puedes fusionar proformas del mismo cliente.";
+  if (!info.sameTipo) {
+    return "No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.";
+  }
+  if (!info.sameDiasCredito) {
+    return "Las proformas tienen plazos de crédito distintos. Iguala el plazo antes de fusionarlas.";
+  }
+  return null;
+}
 
 export function TabProformas({ isInRange, estadoInicial }: {
+
   isInRange?: (fecha: string | null | undefined) => boolean;
   estadoInicial?: FiltroEstadoProforma;
 }) {
