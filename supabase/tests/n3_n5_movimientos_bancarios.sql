@@ -138,8 +138,9 @@ BEGIN
   VALUES ('5e5e5e5e-0000-4000-8000-000000000010', '5e5e5e5e-0000-4000-8000-000000000021',
           public.fecha_negocio_mx(), 'Cobro N5', 'R5', 0, 116, 'n5-abono-como-cobro', v_pago_cxc);
 
-  INSERT INTO public.proveedores (id, organization_id, nombre)
-  VALUES (v_proveedor, '5e5e5e5e-0000-4000-8000-000000000010', 'Proveedor N5');
+  INSERT INTO public.proveedores (id, organization_id, nombre, categoria, tipo)
+  VALUES (v_proveedor, '5e5e5e5e-0000-4000-8000-000000000010', 'Proveedor N5',
+          'Logistico'::public.categoria_proveedor, 'Naviera'::public.tipo_proveedor);
 
   INSERT INTO public.presupuesto_categorias (id, organization_id, nombre)
   VALUES (v_categoria, '5e5e5e5e-0000-4000-8000-000000000010', 'Categoría N5');
