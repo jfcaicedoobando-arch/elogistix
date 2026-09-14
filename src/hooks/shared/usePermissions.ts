@@ -14,6 +14,7 @@ import {
   ELIMINAR_COTIZACION,
   COST_VIEWERS,
   COTIZAR_SIN_DESGLOSE,
+  EDITAR_COSTOS_EMBARQUE,
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
   EXPEDIENTE_ESCRITURA,
@@ -90,6 +91,12 @@ export function usePermissions() {
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
+  /**
+   * B1 (v13.823.395) — editar costos/pricing del embarque. Falso para
+   * coordinador logístico y gerente de operaciones: ellos sólo LEEN costo,
+   * conciliación y folio de facturas vinculadas.
+   */
+  const canEditCostosEmbarque = has(EDITAR_COSTOS_EMBARQUE, roleStr);
 
   // Bloque Q
   const canEmitirFactura = has(EMITIR_FACTURA_CLIENTE, roleStr);
@@ -163,6 +170,7 @@ export function usePermissions() {
     canApproveTarifaCotizacion,
     canCotizarSinDesglose,
     canOverrideTarifaPricing,
+    canEditCostosEmbarque,
     canEmitirFactura,
     canCapturarFacturaProveedor,
     canSubirFacturaEntranteEmbarque,
