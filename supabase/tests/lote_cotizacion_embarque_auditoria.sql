@@ -11,7 +11,8 @@
 --     LC_COT_TC_REQUERIDO (antes convertía sin TC sellado).
 --   · CASO 4: con tipo de cambio capturado, la misma cotización sí convierte y
 --     el embarque hereda el TC.
---   · CASO 5: una línea de venta válida + una malformada (cantidad='dos') ⇒
+--   · CASO 5: una línea de venta válida + una LEGADA malformada (cantidad='dos',
+--     inyectada saltando triggers sólo en la prueba) ⇒
 --     LC_COT_VENTA_IMPORTE_INVALIDO con la descripción de la fila, y NO se crea
 --     embarque (antes reventaba con "invalid input syntax for type numeric").
 --
@@ -114,7 +115,12 @@ BEGIN
   END IF;
   RAISE NOTICE 'CASO 4 OK: con TC capturado convierte y el embarque lo hereda';
 
-  -- ---------------- CASO 5 (línea de venta malformada) -----------------------
+  -- ---------------- CASO 5 (línea de venta malformada LEGACY) -----------------
+  -- El trigger `trg_cotizacion_subtotal_server` (correctamente) rechaza escribir
+  -- hoy una cantidad no numérica, así que la cotización se crea VÁLIDA y luego
+  -- se inyecta el JSON malformado saltando triggers sólo dentro de esta
+  -- transacción de prueba (`session_replication_role = replica`, restaurado
+  -- enseguida). Así reproducimos una fila legada ya persistida en base.
   INSERT INTO public.cotizaciones
     (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
      conceptos_venta)
@@ -124,9 +130,19 @@ BEGIN
           jsonb_build_array(
             jsonb_build_object('descripcion', 'Flete válido', 'cantidad', '1',
                                'precio_unitario', '1000', 'moneda', 'MXN', 'total', '1000'),
-            jsonb_build_object('descripcion', 'Maniobra legacy', 'cantidad', 'dos',
-                               'precio_unitario', '500', 'moneda', 'MXN')))
+            jsonb_build_object('descripcion', 'Maniobra legacy', 'cantidad', '2',
+                               'precio_unitario', '500', 'moneda', 'MXN', 'total', '1000')))
   RETURNING id INTO v_cot2;
+
+  PERFORM set_config('session_replication_role', 'replica', true);
+  UPDATE public.cotizaciones
+     SET conceptos_venta = jsonb_build_array(
+           jsonb_build_object('descripcion', 'Flete válido', 'cantidad', '1',
+                              'precio_unitario', '1000', 'moneda', 'MXN', 'total', '1000'),
+           jsonb_build_object('descripcion', 'Maniobra legacy', 'cantidad', 'dos',
+                              'precio_unitario', '500', 'moneda', 'MXN'))
+   WHERE id = v_cot2;
+  PERFORM set_config('session_replication_role', 'origin', true);
 
   INSERT INTO public.cotizacion_costos
     (cotizacion_id, organization_id, concepto, moneda, cantidad, costo_unitario, precio_venta)
