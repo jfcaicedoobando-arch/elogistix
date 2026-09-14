@@ -67,6 +67,39 @@ BEGIN
     END IF;
   END IF;
 
+  -- v13.823.388: un embarque con documentos de cliente vivos no puede regresar
+  -- a 'Borrador' (caso ELIMP00310: expediente y factura F1004 vivos con estado
+  -- 'Borrador'). Se revisan facturas vinculadas por embarque_id y por
+  -- factura_embarques activa, más proformas vivas.
+  IF p_nuevo_estado = 'Borrador' AND v_estado_actual <> 'Borrador'::public.estado_embarque THEN
+    IF EXISTS (
+      SELECT 1 FROM public.facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.estado <> 'Cancelada'
+        AND (
+          f.embarque_id = p_embarque_id
+          OR EXISTS (
+            SELECT 1 FROM public.factura_embarques fe
+            WHERE fe.factura_id = f.id
+              AND fe.embarque_id = p_embarque_id
+              AND fe.activa
+          )
+        )
+    ) THEN
+      RAISE EXCEPTION 'LC_BORRADOR_CON_CXC: el embarque tiene facturas de cliente vivas; cancélalas o sustitúyelas antes de regresarlo a Borrador'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.proformas p
+      WHERE p.embarque_id = p_embarque_id
+        AND p.deleted_at IS NULL
+        AND p.estado_proforma NOT IN ('cancelada', 'facturada')
+    ) THEN
+      RAISE EXCEPTION 'LC_BORRADOR_CON_PROFORMA: el embarque tiene proformas vivas; cancélalas antes de regresarlo a Borrador'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+
   PERFORM public.assert_transicion_embarque(v_estado_actual, p_nuevo_estado::public.estado_embarque, v_expediente);
 
   -- v13.823.321: mínimos operativos para Confirmado. Misma regla canónica que
