@@ -81,10 +81,9 @@ export function TrackingNavieraActions(props: Props) {
   // v13.823.366 — Terrestre no tiene consulta web de transportista: antes caía
   // por accidente en el copy aéreo ("Captura la aerolínea y el MAWB").
   const info = resolverTrackingCarrier(props);
-  const esMaritimo = info?.esMaritimo ?? false;
-  const carrier = info?.carrier ?? null;
-  const referencia = info?.referencia ?? null;
-  const refLabel = info?.refLabel ?? "BL Master";
+  // Sin transportista aplicable (Terrestre): el seguimiento es manual.
+  if (!info) return null;
+  const { esMaritimo, carrier, referencia, refLabel } = info;
   const trackingUrl = resolveTrackingUrl(navieras, props.naviera, referencia, esMaritimo);
 
   const handleCopy = async () => {
@@ -108,9 +107,6 @@ export function TrackingNavieraActions(props: Props) {
     if (!trackingUrl) return;
     window.open(trackingUrl, "_blank", "noopener,noreferrer");
   };
-
-  // Sin transportista aplicable (Terrestre): el tracking se captura manualmente.
-  if (!info) return null;
 
   if (!carrier && !referencia) {
     const captura = info.capturaFaltante;

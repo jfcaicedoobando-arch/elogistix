@@ -33,6 +33,22 @@ interface Props {
 }
 
 /**
+ * v13.823.366 — Gate de edición de costos: espejo del guard servidor
+ * `LC_COT_COSTOS_ESTADO_INVALIDO` (sólo Borrador/Solicitada). Se aísla para no
+ * subir la complejidad ciclomática del componente.
+ */
+function gateEdicionCostos(canWrite: boolean, estado: EstadoCotizacion) {
+  const motivo = canWrite ? motivoBloqueoEdicionCostos(estado) : null;
+  return { canEdit: canWrite && motivo === null, motivo };
+}
+
+/** Aviso breve cuando el estado de la cotización ya no permite editar costos. */
+function AvisoCostosBloqueados({ motivo, visible }: { motivo: string | null; visible: boolean }) {
+  if (!motivo || !visible) return null;
+  return <p className="text-body-sm text-muted-foreground">{motivo}</p>;
+}
+
+/**
  * Modo "detalle": carga/persiste costos desde la BD para una cotización existente.
  * Usado en CotizacionDetalle.
  */
@@ -42,10 +58,7 @@ export default function SeccionCostosInternosPLDetalle({
   // v13.823.348 — `actualizar_cotizacion_costos` exige `_assert_writer_cotizacion`
   // (SALES): finanzas ve el P&L en solo lectura, sin "Editar/Guardar costos".
   const { canWriteCotizaciones } = usePermissions();
-  // v13.823.366 — Espejo del guard servidor `LC_COT_COSTOS_ESTADO_INVALIDO`:
-  // los costos sólo se editan en Borrador/Solicitada.
-  const motivoBloqueoEstado = motivoBloqueoEdicionCostos(estadoCotizacion);
-  const canEdit = canWriteCotizaciones && motivoBloqueoEstado === null;
+  const { canEdit, motivo: motivoBloqueoEstado } = gateEdicionCostos(canWriteCotizaciones, estadoCotizacion);
   const { data: snapshot, isLoading } = useCotizacionCostosSnapshot(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
   const tasaIva = useTasaIVA();
@@ -145,9 +158,7 @@ export default function SeccionCostosInternosPLDetalle({
         estadoCotizacion={estadoCotizacion}
       />
 
-      {canWriteCotizaciones && motivoBloqueoEstado !== null && filas.length > 0 && (
-        <p className="text-body-sm text-muted-foreground">{motivoBloqueoEstado}</p>
-      )}
+      <AvisoCostosBloqueados motivo={motivoBloqueoEstado} visible={filas.length > 0} />
 
       {canEdit && filas.length > 0 && (
         <div className="flex justify-end">
