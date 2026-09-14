@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import {
   esEmbarqueArribado,
   esEtaVencida,
@@ -57,5 +58,26 @@ describe("helpers temporales del embarque", () => {
     expect(esEtaVencida({ estado: "Cerrado", eta: "2020-01-01", fecha_llegada_real: null })).toBe(false);
     expect(esEtaVencida({ estado: "En Tránsito", eta: "2020-01-01", fecha_llegada_real: null })).toBe(true);
     expect(esEtaVencida({ estado: "En Tránsito", eta: "2999-01-01", fecha_llegada_real: null })).toBe(false);
+  });
+});
+
+describe("aviso de fechas fuera de orden (B6)", () => {
+  it("ofrece un enlace accesible a Notas y Actividad del mismo embarque", () => {
+    const fueraDeOrden: EmbarqueFasesInput = {
+      ...BASE,
+      estado: "Entregado",
+      etd: "2026-03-05",
+      eta: "2026-01-10",
+      fecha_creacion: "2026-02-01T00:00:00.000Z",
+      fecha_llegada_real: "2026-01-02T00:00:00.000Z",
+      updated_at: "2026-01-03T00:00:00.000Z",
+    };
+    render(
+      <MemoryRouter initialEntries={["/embarques/emb-1"]}>
+        <FasesEmbarqueStepper embarque={fueraDeOrden} variant="completa" />
+      </MemoryRouter>,
+    );
+    const link = screen.getByRole("link", { name: "revisar bitácora" });
+    expect(link).toHaveAttribute("href", "/embarques/emb-1?tab=notas");
   });
 });

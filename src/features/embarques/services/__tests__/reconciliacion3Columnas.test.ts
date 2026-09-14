@@ -60,3 +60,53 @@ describe("generarCsvReconciliacion3C", () => {
     expect(csv).toContain('"Flete, manejo ""especial""\nurgente",USD,100,110,120,20.00,alerta');
   });
 });
+
+describe("buildFilas3C — regresiones B2/B3", () => {
+  const flete = (moneda: string, total: number, id: string) => ({
+    id, cotizacion_id: "c1", version: 1, concepto: "Flete", proveedor: "X",
+    moneda, cantidad: 1, costo_unitario: total, costo_total: total,
+    precio_venta: total, precio_total: total,
+  });
+
+  it("B2: el delta con moneda sólo toca la fila de esa moneda", () => {
+    const filas = buildFilas3C(
+      [flete("USD", 1000, "1"), flete("MXN", 20000, "2")],
+      [{ concepto: "Flete", moneda: "USD", monto_anterior: 1000, monto_actual: 1100 }],
+      [],
+    );
+    expect(filas.find((f) => f.moneda === "USD")!.refrescado).toBe(1100);
+    expect(filas.find((f) => f.moneda === "MXN")!.refrescado).toBe(20000);
+  });
+
+  it("B2: un delta legacy sin moneda no se duplica cuando el concepto está en USD y MXN", () => {
+    const filas = buildFilas3C(
+      [flete("USD", 1000, "1"), flete("MXN", 20000, "2")],
+      [{ concepto: "Flete", monto_actual: 1100 }],
+      [],
+    );
+    expect(filas.find((f) => f.moneda === "USD")!.refrescado).toBe(1000);
+    expect(filas.find((f) => f.moneda === "MXN")!.refrescado).toBe(20000);
+  });
+
+  it("B2: un delta legacy sin moneda sí aplica cuando el concepto es único", () => {
+    const filas = buildFilas3C([flete("USD", 1000, "1")], [{ concepto: "Flete", monto_actual: 1100 }], []);
+    expect(filas[0].refrescado).toBe(1100);
+  });
+
+  it("B3: dos cotizados Maniobras MXN se agrupan y el real no se duplica", () => {
+    const cot = (total: number, id: string) => ({
+      id, cotizacion_id: "c1", version: 1, concepto: "Maniobras", proveedor: "X",
+      moneda: "MXN", cantidad: 1, costo_unitario: total, costo_total: total,
+      precio_venta: total, precio_total: total,
+    });
+    const filas = buildFilas3C(
+      [cot(1000, "1"), cot(500, "2")],
+      [],
+      [{ concepto: "Maniobras", moneda: "MXN", monto: 1000, tiene_factura: true }],
+    );
+    expect(filas).toHaveLength(1);
+    expect(filas[0].cotizado).toBe(1500);
+    expect(filas[0].real).toBe(1000);
+    expect(filas.reduce((s, f) => s + f.real, 0)).not.toBe(2000);
+  });
+});
