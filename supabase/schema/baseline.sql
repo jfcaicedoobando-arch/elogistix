@@ -16675,6 +16675,7 @@ DECLARE
   v_folio_ext text;
   v_deleted timestamptz;
   v_embarque uuid;
+  v_factura_viva boolean;
 BEGIN
   SELECT organization_id, numero, estado_proforma, factura_id, factura_secundaria_id,
          folio_factura_externa, deleted_at, embarque_id
@@ -16700,10 +16701,15 @@ BEGIN
   IF v_deleted IS NOT NULL THEN
     RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', false);
   END IF;
-  -- RG10: el folio externo suelto ya NO bloquea; sólo una factura viva o el
-  -- estado 'facturada'.
-  IF v_factura IS NOT NULL OR v_factura2 IS NOT NULL
-     OR lower(COALESCE(v_estado, '')) = 'facturada' THEN
+  -- RG10 + R1: el folio externo suelto NO bloquea; una factura cancelada,
+  -- sustituida o en papelera tampoco. Sólo factura viva o estado 'facturada'.
+  SELECT EXISTS (
+    SELECT 1 FROM public.facturas fa
+     WHERE fa.id IN (v_factura, v_factura2)
+       AND fa.deleted_at IS NULL
+       AND fa.estado::text NOT IN ('Cancelada', 'Sustituida')
+  ) INTO v_factura_viva;
+  IF v_factura_viva OR lower(COALESCE(v_estado, '')) = 'facturada' THEN
     RAISE EXCEPTION 'LC_PROFORMA_FACTURADA';
   END IF;
   UPDATE public.conceptos_venta
@@ -18378,6 +18384,8 @@ DECLARE
   v_facturas integer := 0;
   v_malas text[] := ARRAY[]::text[];
   v_saldo numeric;
+  v_total_malas integer;
+  v_lista text;
   f record;
 BEGIN
   SELECT c.organization_id, c.dias_credito, c.limite_credito_mxn
@@ -18421,9 +18429,14 @@ BEGIN
       END IF;
     END IF;
   END LOOP;
-  IF array_length(v_malas, 1) > 0 THEN
+  v_total_malas := COALESCE(array_length(v_malas, 1), 0);
+  IF v_total_malas > 0 THEN
+    v_lista := array_to_string(v_malas[1:10], ', ');
+    IF v_total_malas > 10 THEN
+      v_lista := v_lista || format(' y %s más', v_total_malas - 10);
+    END IF;
     RAISE EXCEPTION 'LC_CREDITO_TC_INVALIDO: corrige el tipo de cambio de la(s) factura(s) en moneda extranjera %; sin él no se puede calcular la exposición de crédito.',
-      array_to_string(v_malas, ', ')
+      v_lista
       USING ERRCODE = '22023';
   END IF;
   cliente_id      := p_cliente_id;
@@ -28573,6 +28586,7 @@ CREATE FUNCTION public.tg_conceptos_costo_guard_vinculo_cxp() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 DECLARE
+  v_factura_id uuid;
   v_folio text;
 BEGIN
   IF NEW.monto IS NOT DISTINCT FROM OLD.monto
@@ -28580,15 +28594,15 @@ BEGIN
      AND NEW.proveedor_id IS NOT DISTINCT FROM OLD.proveedor_id THEN
     RETURN NEW;
   END IF;
-  SELECT COALESCE(pf.folio_interno, pf.folio_proveedor)
-    INTO v_folio
+  SELECT pf.id, COALESCE(pf.folio_interno, pf.folio_proveedor)
+    INTO v_factura_id, v_folio
     FROM public.proveedor_facturas_conceptos pfc
     JOIN public.proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
    WHERE pfc.concepto_costo_id = NEW.id
      AND pf.deleted_at IS NULL
      AND pf.estado::text <> 'Cancelada'
    LIMIT 1;
-  IF v_folio IS NOT NULL THEN
+  IF v_factura_id IS NOT NULL THEN
     RAISE EXCEPTION
       'LC_COSTO_VINCULADO_CXP: el costo está vinculado a la factura de proveedor %; desvincula o corrige esa factura antes de cambiar monto, moneda o proveedor',
       COALESCE(NULLIF(btrim(v_folio), ''), '(sin folio)')

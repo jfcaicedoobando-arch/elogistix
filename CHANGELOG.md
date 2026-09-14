@@ -12,7 +12,7 @@
 
 - **fix(facturación/proformas)**: lote B11–B15 de candados en la base (sin normalizar datos históricos).
   - **B11 Exposición de crédito**: `get_exposicion_credito_cliente` deja de convertir divisa con T/C = 1; aplica la banda 5..40 igual que `credito_en_uso_mxn` y devuelve `LC_CREDITO_TC_INVALIDO` con los folios a corregir. La tarjeta de crédito del cliente muestra ese aviso en lugar de una cifra falsa.
-  - **B12 T/C del borrador USD**: `convertir_proformas_a_factura` crea la factura en moneda extranjera con `tipo_cambio = NULL` (MXN conserva 1); la tarjeta de timbrado advierte si falta o si el valor está fuera de banda (incluido el viejo 1).
+  - **B12 T/C del borrador USD**: `convertir_proformas_a_factura` ya no inventa `tipo_cambio = 1` para moneda extranjera: pasa `NULL` y `trg_factura_tc_dof_obligatorio` resuelve el T/C DOF o rechaza el alta (MXN conserva 1). La tarjeta de timbrado advierte cuando falta el T/C o está fuera de banda, caso propio de datos legacy. Ver R4 en 13.823.377.
   - **B13 Concepto proformado**: `_assert_concepto_no_proformado` también vigila `total`; el mensaje indica eliminar/recrear la proforma pendiente o usar el flujo fiscal. Las transiciones de estado siguen permitidas.
   - **B14 Costo vinculado a CxP**: nuevo trigger `trg_conceptos_costo_guard_vinculo_cxp` bloquea cambios de monto, moneda y proveedor mientras exista una factura de proveedor viva vinculada (`LC_COSTO_VINCULADO_CXP`); cambios no financieros y de liquidación siguen abiertos.
   - **B15 Eliminar proforma**: `eliminar_proforma_rpc` autoriza con `has_any_role_efectivo` (admin, admin_org, operador, contador, super_admin), espejo de la policy RLS; sólo lectura ya no puede borrar vía RPC.
