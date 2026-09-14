@@ -1,7 +1,3 @@
--- Espejo canónico de public.actualizar_embarque_completo
--- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
-
 CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -111,7 +107,6 @@ BEGIN
             NULLIF(tasa_iva_aplicada, 0),
             0.16)
         END
-
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
         AND estado_facturacion IN ('pendiente', 'en_proforma');
@@ -134,7 +129,6 @@ BEGIN
           WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
           ELSE COALESCE(NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0), 0.16)
         END,
-
         v_org_id
       )
       RETURNING id INTO v_new_id;

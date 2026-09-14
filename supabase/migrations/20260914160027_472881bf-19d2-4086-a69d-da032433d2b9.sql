@@ -1,15 +1,3 @@
--- Fuente canónica de public.convertir_proformas_a_factura
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- Base: 20260913000400_r170_02_fecha_negocio_mx.sql (fecha de negocio MX).
--- Última migración: v13.823.381 (C30 — cada proforma origen queda enlazada a la
--- factura resultante: `factura_id` a la principal y `factura_secundaria_id` a la
--- segunda cuando se generan MXN + USD; una única factura USD queda primaria.)
--- Previa: v13.823.376 (B12 — el INSERT de la factura USD ya no
--- inventa tipo_cambio = 1: pasa NULL explícito. El trigger BEFORE INSERT
--- _factura_tc_dof_obligatorio resuelve el T/C DOF o rechaza el INSERT, por lo
--- que el borrador nunca queda persistido sin T/C; el NULL es documental.)
-
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas
  LANGUAGE plpgsql
@@ -130,8 +118,6 @@ BEGIN
     END IF;
   END IF;
 
-
-
   SELECT * INTO v_first FROM public.proformas
     WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
 
@@ -149,7 +135,6 @@ BEGIN
 
   -- Cascada de plazo de crédito: parámetro → proforma → ficha del cliente → 0.
   v_dias := COALESCE(NULLIF(p_dias_credito, 0), v_first.dias_credito, v_cliente.dias_credito, p_dias_credito, 0);
-
 
   SELECT array_agg(DISTINCT embarque_id) INTO v_embarque_ids
   FROM public.proformas

@@ -5574,9 +5574,15 @@ BEGIN
         -- C22 (v13.823.380): una línea exenta jamás conserva tasa > 0, ni
         -- cuando el payload omite la tasa ni cuando arrastra una legacy (0.16).
         -- La columna es NOT NULL, así que la convención es 0, no NULL.
+        -- C28 (v13.823.381): reactivar el IVA de una línea antes exenta dejaba
+        -- tasa 0 (línea gravada sin IVA). Orden: tasa positiva enviada →
+        -- tasa positiva previa → fallback canónico 0.16.
         tasa_iva_aplicada = CASE
           WHEN COALESCE((cv->>'aplica_iva')::boolean, aplica_iva) = false THEN 0
-          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
+          ELSE COALESCE(
+            NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0),
+            NULLIF(tasa_iva_aplicada, 0),
+            0.16)
         END
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
@@ -5598,7 +5604,7 @@ BEGIN
         -- fallback canónico vigente (0.16).
         CASE
           WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
-          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16)
+          ELSE COALESCE(NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0), 0.16)
         END,
         v_org_id
       )
@@ -11344,6 +11350,7 @@ DECLARE
   v_factura_mxn_id uuid; v_factura_usd_id uuid;
   v_numero_tmp text; v_embarque_ids uuid[];
   v_dias int;
+  -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
   v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   v_cached := public.idempotency_claim(p_request_id, 'convertir_proformas_a_factura');
@@ -11391,7 +11398,11 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_YA_FACTURADA: una o más proformas ya fueron facturadas' USING ERRCODE='P0002';
   END IF;
-  -- v13.823.279 — Candado de aceptación del cliente.
+  -- v13.823.279 — Candado de aceptación: la UI ya oculta la acción para
+  -- proformas pendientes o rechazadas, pero la RPC podía llamarse directo y
+  -- facturar sin la respuesta del cliente. Para clientes de casa, la RPC
+  -- `aceptar_proforma_sin_autorizacion` deja `estado_cliente = 'aceptada'`,
+  -- así que ese flujo sigue funcionando igual.
   IF EXISTS (
     SELECT 1 FROM public.proformas
     WHERE id = ANY(p_proforma_ids)
@@ -11439,6 +11450,7 @@ BEGIN
   IF v_cliente IS NULL THEN RAISE EXCEPTION 'Cliente no encontrado'; END IF;
   SELECT * INTO v_serie FROM public.factura_series WHERE id = p_serie_id AND organization_id = v_org;
   IF v_serie IS NULL THEN RAISE EXCEPTION 'Serie no encontrada'; END IF;
+  -- Cascada de plazo de crédito: parámetro → proforma → ficha del cliente → 0.
   v_dias := COALESCE(NULLIF(p_dias_credito, 0), v_first.dias_credito, v_cliente.dias_credito, p_dias_credito, 0);
   SELECT array_agg(DISTINCT embarque_id) INTO v_embarque_ids
   FROM public.proformas
@@ -11482,6 +11494,8 @@ BEGIN
     PERFORM public._convertir_proformas_insertar_conceptos(
       v_factura_mxn_id, p_proforma_ids, v_org, v_first.es_consolidada, 'MXN'::public.moneda
     );
+    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
+    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
       COALESCE(SUM(total), 0),
       COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
@@ -11535,6 +11549,8 @@ BEGIN
     PERFORM public._convertir_proformas_insertar_conceptos(
       v_factura_usd_id, p_proforma_ids, v_org, v_first.es_consolidada, 'USD'::public.moneda
     );
+    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
+    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
       COALESCE(SUM(total), 0),
       COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
@@ -11565,9 +11581,22 @@ BEGIN
     );
   END IF;
   IF array_length(v_factura_ids, 1) > 0 THEN
+    -- C30 (v13.823.381): en una fusión de VARIAS proformas las facturas nacen
+    -- con `proforma_id = NULL` (una factura, N proformas), así que cada fuente
+    -- perdía el enlace al PDF/folio. Se enlaza desde la proforma:
+    --   factura_id            → borrador principal (MXN si existe, si no el USD)
+    --   factura_secundaria_id → segundo borrador cuando hay MXN + USD
+    -- El flujo de una sola proforma no cambia: apunta a la(s) misma(s) factura(s).
     UPDATE public.proformas
-    SET estado_proforma = 'facturada', fecha_facturacion = v_hoy_mx
-    WHERE id = ANY(p_proforma_ids) AND estado_proforma <> 'facturada';
+    SET estado_proforma = 'facturada',
+        fecha_facturacion = v_hoy_mx,
+        factura_id = COALESCE(v_factura_mxn_id, v_factura_usd_id),
+        factura_secundaria_id = CASE
+          WHEN v_factura_mxn_id IS NOT NULL AND v_factura_usd_id IS NOT NULL THEN v_factura_usd_id
+          ELSE NULL
+        END,
+        updated_at = now()
+    WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL;
   END IF;
   IF p_request_id IS NOT NULL THEN
     PERFORM public.idempotency_store(p_request_id, jsonb_build_object('factura_ids', to_jsonb(v_factura_ids)));
@@ -21742,16 +21771,59 @@ BEGIN
     FROM public.seguros_embarque
     WHERE embarque_id = _embarque_id AND deleted_at IS NULL
   ),
+  -- C29 (v13.823.381): una factura fusionada puede cubrir VARIOS embarques
+  -- (`factura_embarques` + `conceptos_factura.embarque_id`). Antes se filtraba
+  -- por `facturas.embarque_id`, así que el total completo caía en el embarque
+  -- del header y los demás quedaban en cero.
+  --
+  -- Regla de atribución (sólo lectura; no cambia importes guardados):
+  --   * Si la factura tiene líneas etiquetadas con embarque, el factor de este
+  --     embarque = (líneas de este embarque) / (líneas etiquetadas). La suma de
+  --     los factores de todos los embarques es 1, así que el total no se
+  --     duplica ni se infla entre P&L.
+  --   * Si NO tiene líneas etiquetadas (facturas legacy), se usa el embarque
+  --     del header con factor 1 (comportamiento anterior).
+  -- Los importes de nivel factura (nota de crédito y saldo) se reparten con el
+  -- MISMO factor: es una asignación proporcional explícita a los importes de
+  -- las líneas, no un dato fiscal nuevo.
+  f_cand AS (
+    SELECT fa.id, coalesce(fa.subtotal,0)::numeric AS subtotal, fa.moneda::text AS moneda,
+           fa.estado::text AS estado, fa.total::numeric AS total,
+           (SELECT t.tc FROM public.tc_para_documento(fa.fecha_emision, fa.moneda::text, fa.tipo_cambio, CASE WHEN UPPER(fa.moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc,
+           coalesce((SELECT sum(coalesce(cf.total,0)) FROM public.conceptos_factura cf
+                      WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
+                        AND cf.embarque_id IS NOT NULL), 0)::numeric AS lineas_etiquetadas,
+           coalesce((SELECT sum(coalesce(cf.total,0)) FROM public.conceptos_factura cf
+                      WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
+                        AND cf.embarque_id = _embarque_id), 0)::numeric AS lineas_embarque,
+           (fa.embarque_id = _embarque_id) AS es_header
+    FROM public.facturas fa
+    WHERE fa.deleted_at IS NULL
+      AND fa.estado::text NOT IN ('Borrador','Cancelada','Sustituida')
+      AND (
+        fa.embarque_id = _embarque_id
+        OR EXISTS (SELECT 1 FROM public.conceptos_factura cf
+                     WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
+                       AND cf.embarque_id = _embarque_id)
+      )
+  ),
   f AS (
-    SELECT id, coalesce(subtotal,0)::numeric AS subtotal, moneda::text AS moneda,
-           estado::text AS estado, total::numeric AS total,
-           (SELECT t.tc FROM public.tc_para_documento(fecha_emision, moneda::text, tipo_cambio, CASE WHEN UPPER(moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc
-    FROM public.facturas
-    WHERE embarque_id = _embarque_id AND deleted_at IS NULL
-      AND estado::text NOT IN ('Borrador','Cancelada','Sustituida')
+    SELECT id, moneda, estado, total, tc_doc,
+           factor,
+           round(subtotal * factor, 2) AS subtotal
+    FROM (
+      SELECT c.*,
+             CASE
+               WHEN c.lineas_etiquetadas > 0 THEN c.lineas_embarque / c.lineas_etiquetadas
+               WHEN c.es_header THEN 1::numeric
+               ELSE 0::numeric
+             END AS factor
+      FROM f_cand c
+    ) z
+    WHERE z.factor > 0
   ),
   fnc AS (
-    SELECT n.factura_id, coalesce(n.monto,0)::numeric AS monto, n.moneda::text AS moneda
+    SELECT n.factura_id, coalesce(n.monto,0)::numeric * f.factor AS monto, n.moneda::text AS moneda
     FROM public.factura_notas_credito n
     JOIN f ON f.id = n.factura_id
     WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
@@ -21762,7 +21834,8 @@ BEGIN
     FROM f
   ),
   f_saldo AS (
-    SELECT f.id, f.moneda, f.estado, f.tc_doc, public.saldo_factura(f.id) AS saldo FROM f
+    SELECT f.id, f.moneda, f.estado, f.tc_doc,
+           public.saldo_factura(f.id) * f.factor AS saldo FROM f
   ),
   pf AS (
     SELECT id, proveedor_id, coalesce(proveedor_nombre,'(sin proveedor)') AS proveedor_nombre,
@@ -21845,12 +21918,17 @@ BEGIN
                  public.a_mxn(monto, moneda, tc_doc, tc_doc) AS presup,
                  0::numeric AS real FROM cv
           UNION ALL
+          -- C29: sólo las líneas de ESTE embarque a valor pleno; las líneas sin
+          -- embarque asignado se reparten con el factor de atribución.
           SELECT lower(trim(coalesce(NULLIF(fc.descripcion,''), '(sin concepto)'))),
                  0::numeric,
-                 public.a_mxn(coalesce(fc.total,0), f.moneda, f.tc_doc, f.tc_doc)
+                 public.a_mxn(
+                   coalesce(fc.total,0) * CASE WHEN fc.embarque_id = _embarque_id THEN 1::numeric ELSE f.factor END,
+                   f.moneda, f.tc_doc, f.tc_doc)
           FROM public.conceptos_factura fc
           JOIN f ON f.id = fc.factura_id
           WHERE fc.deleted_at IS NULL
+            AND (fc.embarque_id = _embarque_id OR fc.embarque_id IS NULL)
         ) u GROUP BY concepto
       ) x
     ),

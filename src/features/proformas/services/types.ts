@@ -15,7 +15,16 @@ export type ProformaConFactura = ProformaRow & {
    * del embarque no la necesita).
    */
   facturas_asociadas?: ProformaFacturaAsociadaLite[];
+  /**
+   * C30 (v13.823.381): factura(s) vinculadas por `proformas.factura_id` y
+   * `factura_secundaria_id`. En una fusión de varias proformas la factura
+   * queda con `proforma_id = NULL`, así que la FK inversa no la encuentra.
+   * `mergeFacturasVinculadas` las mezcla en `facturas_asociadas` sin duplicar.
+   */
+  factura_vinculada?: ProformaFacturaAsociadaLite | null;
+  factura_vinculada_secundaria?: ProformaFacturaAsociadaLite | null;
 };
+
 
 /** Forma mínima de una factura asociada para la etiqueta de la lista (ver arriba). */
 export type ProformaFacturaAsociadaLite = {

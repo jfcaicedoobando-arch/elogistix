@@ -132,3 +132,4 @@ supabase/tests/cotizacion_aceptar_cliente_candado.sql
 supabase/tests/facturacion_b11_b15_candados.sql
 supabase/tests/fiscal_b16_b19_conversiones.sql
 supabase/tests/c21_c25_candados.sql
+supabase/tests/c28_c30_facturacion.sql

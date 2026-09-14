@@ -4,7 +4,8 @@ import { fromDb, fromDbChecked } from "@/lib/supabase/cast";
 import { proformaRowsDbSchema } from "@/features/cotizacion/services/readSchemas";
 
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
-import { mergeProformaDetalle } from "./queries.helpers";
+import { mergeProformaDetalle, mergeFacturasVinculadas } from "./queries.helpers";
+import { PROFORMA_LISTA_SELECT, PROFORMA_EMBARQUE_SELECT } from "./queries.selects";
 import type {
   ConceptoVentaRow,
   ProformaConFactura,
@@ -12,44 +13,6 @@ import type {
   ProformaDetalleFull,
   ProformaPendienteConEmbarque,
 } from "./types";
-
-/**
- * O8 (auditoría 2026-07-29): selects explícitos por caso de uso.
- * PROFORMA_LISTA_SELECT cubre la bandeja unificada `/proformas`
- * (TabProformas + filtros + CSV). PROFORMA_EMBARQUE_SELECT cubre el tab de
- * facturación del embarque. Si una pantalla necesita otra columna,
- * añadirla aquí con su consumidor en el comentario — no volver a `*`.
- */
-const PROFORMA_LISTA_SELECT = [
-  "id", "numero", "expediente", "embarque_id", "cliente_id", "cliente_nombre", "operador",
-  // C25: `es_consolidada` y `estado_revision` los usa `useTabProformasController`
-  // para no permitir seleccionar una proforma fuente ya consolidada ni mezclar
-  // consolidadas con individuales en una fusión.
-  "es_consolidada", "estado_revision",
-  "dias_credito", "organization_id",
-
-  "subtotal_usd", "iva_usd", "total_usd", "subtotal_mxn", "iva_mxn", "total_mxn",
-  "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",
-  "fecha_facturacion", "factura_id", "created_at",
-  "facturas:factura_id(factura_pdf_url, factura_xml_url)",
-  // R170-01: facturas reales (FK inversa), sólo para distinguir en la lista
-  // una conversión a factura BORRADOR de una emisión fiscal real (ver
-  // `etiquetaCicloProforma.ts`). Se filtran las borradas (`deleted_at`) en
-  // cliente, igual que hace `fetchProformaPorId`.
-  "facturas_asociadas:facturas!proforma_id(id, estado, uuid_fiscal, deleted_at)",
-].join(", ");
-
-const PROFORMA_EMBARQUE_SELECT = [
-  "id", "numero", "embarque_id", "factura_id",
-  "estado_proforma", "estado_revision", "estado_aprobacion", "estado_cliente",
-  "motivo_rechazo", "rechazada_at", "consolidada_en",
-  // R170-03: HistorialProformas (tab facturación del embarque) muestra fecha,
-  // operador y días de crédito por fila; sin estas columnas el select nunca
-  // las trae y la tabla las pinta como '-'/'—'.
-  "fecha_emision", "operador", "dias_credito",
-  "total_mxn", "total_usd", "created_at",
-  "facturas:factura_id(factura_pdf_url, factura_xml_url)",
-].join(", ");
 
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
   // M2: boundary de dinero validado (identidad + total/subtotal/iva).
@@ -123,10 +86,9 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
   );
   // R170-01: descartar facturas asociadas en papelera; no deben contar para
   // decidir si la conversión ya tiene una factura viva.
-  return rows.map((p) => ({
-    ...p,
-    facturas_asociadas: (p.facturas_asociadas ?? []).filter((f) => !f.deleted_at),
-  }));
+  // C30: sumar las facturas vinculadas por `factura_id` / `factura_secundaria_id`
+  // (fusión de varias proformas) sin duplicar las que ya llegaron por la FK inversa.
+  return rows.map(mergeFacturasVinculadas);
 }
 
 

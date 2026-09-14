@@ -37,7 +37,9 @@ BEGIN
   IF v_def !~ 'WHEN COALESCE\(\(cv->>''aplica_iva''\)::boolean, false\) = false THEN 0' THEN
     RAISE EXCEPTION 'C22 FAIL: falta la normalización de tasa en el alta de conceptos de venta';
   END IF;
-  IF v_def !~ 'ELSE COALESCE\(\(cv->>''tasa_iva_aplicada''\)::numeric, 0\.16\)' THEN
+  -- C28 (v13.823.381): el alta usa NULLIF(...,0) para que una tasa 0 explícita
+  -- en una línea gravada caiga en el fallback canónico.
+  IF v_def !~ 'ELSE COALESCE\(NULLIF\(\(cv->>''tasa_iva_aplicada''\)::numeric, 0\), 0\.16\)' THEN
     RAISE EXCEPTION 'C22 FAIL: el alta gravada perdió el fallback canónico de tasa';
   END IF;
 

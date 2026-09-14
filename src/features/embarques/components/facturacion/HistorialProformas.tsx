@@ -30,20 +30,26 @@ interface Props {
    * factura BORRADOR de una realmente emitida (el estado de la proforma pasa a
    * `facturada` en cuanto se convierte).
    */
-  facturas?: { estado: string; proforma_id?: string | null }[];
+  facturas?: { id?: string; estado: string; proforma_id?: string | null }[];
 }
 
 function renderEstado(
   p: ProformaConFactura,
   proformas: ProformaConFactura[],
-  facturas: { estado: string; proforma_id?: string | null }[],
+  facturas: { id?: string; estado: string; proforma_id?: string | null }[],
 ) {
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
   const unificado = getEstadoUnificado(p);
   if (unificado === "facturada") {
     // B9 (v13.823.153): distingue borrador, "por timbrar" y emisión real.
-    const propias = facturas.filter(f => f.proforma_id === p.id);
+    // C30 (v13.823.381): en una fusión de varias proformas la factura queda con
+    // `proforma_id = NULL`; el vínculo vive en la proforma (`factura_id` /
+    // `factura_secundaria_id`). Se acepta cualquiera de los dos caminos.
+    const propias = facturas.filter(
+      f => f.proforma_id === p.id
+        || (!!f.id && (f.id === p.factura_id || f.id === p.factura_secundaria_id)),
+    );
     const etiqueta = propias.length > 0 ? etiquetaProformaConvertida(propias) : "Convertida";
     const emitida = etiqueta === "Facturada";
     return <Badge variant={emitida ? "success" : "info"} className="w-fit">{etiqueta}</Badge>;
