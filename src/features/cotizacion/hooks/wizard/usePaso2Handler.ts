@@ -14,6 +14,7 @@ import type { WizardStepsDeps as Deps } from "./wizardStepsTypes";
 interface Paso2Deps {
   cotizacionId: Deps["cotizacionId"];
   costosInternos: Deps["costosInternos"];
+  costosDesajuste: Deps["costosDesajuste"];
   costosPreLlenados: Deps["costosPreLlenados"];
   setCostosPreLlenados: Deps["setCostosPreLlenados"];
   setConceptosUSD: Deps["setConceptosUSD"];
@@ -26,13 +27,13 @@ interface Paso2Deps {
 }
 
 export function usePaso2Handler({
-  cotizacionId, costosInternos, costosPreLlenados, setCostosPreLlenados,
+  cotizacionId, costosInternos, costosDesajuste, costosPreLlenados, setCostosPreLlenados,
   setConceptosUSD, setConceptosMXN, setCurrentStep, tasaIva,
   updateCotizacion, upsertCostos, lastCostosHash,
 }: Paso2Deps) {
   return useCallback(async () => {
     // Race-fix + B-081: reglas de validez del paso 2 (EC-4) en `validarPaso2`.
-    if (!validarPaso2(costosInternos)) return;
+    if (!validarPaso2(costosInternos, costosDesajuste ?? null)) return;
 
     // Falla cerrada: sin sello local no se intenta guardar ni se avanza.
     const selloPaso2 = updateCotizacion.selloActual?.() ?? null;
@@ -84,5 +85,5 @@ export function usePaso2Handler({
         context: { cotizacionId, paso: 2 },
       });
     }
-  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, updateCotizacion, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, lastCostosHash]);
+  }, [costosInternos, costosDesajuste, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, updateCotizacion, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, lastCostosHash]);
 }

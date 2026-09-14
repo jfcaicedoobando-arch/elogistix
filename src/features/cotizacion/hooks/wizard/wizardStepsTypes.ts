@@ -13,6 +13,7 @@ import type {
 } from "@/features/cotizacion/hooks/useCotizaciones";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
 
 /**
  * Firma estable de las filas de costos internos usadas para decidir cuándo
@@ -71,6 +72,12 @@ export interface WizardStepsDeps {
   setCurrentStep: (step: number | ((p: number) => number)) => void;
   msdsFile: File | null;
   costosInternos: FilaCostoLocal[];
+  /**
+   * Q2/Q6 (v13.823.396): desajuste vigente entre los costos auto-generados y el
+   * Paso 1 (cantidad de contenedores o entradas del flete LCL). Bloquea avanzar
+   * hasta que el usuario recalcule explícitamente.
+   */
+  costosDesajuste?: DesajusteCostos | null;
   costosPreLlenados: boolean;
   setCostosPreLlenados: (v: boolean) => void;
   conceptosUSD: ConceptoVentaCotizacion[];

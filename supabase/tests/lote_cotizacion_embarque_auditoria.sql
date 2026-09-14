@@ -56,20 +56,26 @@ BEGIN
 
   INSERT INTO public.cotizaciones
     (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
-     conceptos_venta)
+     tipo_contenedor, conceptos_venta)
   VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, v_uid,
           'USD'::public.moneda, 'COT-LOTE-0001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          -- v13.823.396 · Q1: `tipo_carga` cae por omisión en FCL, así que la
+          -- conversión ahora exige tipo de contenedor. Los casos de esta suite
+          -- son de TC y de venta, no de contenedores.
+          '40HC',
           jsonb_build_array(jsonb_build_object(
             'descripcion', 'Flete marítimo', 'cantidad', '1',
             'precio_unitario', '1300', 'moneda', 'USD', 'total', '1300')))
   RETURNING id INTO v_cot;
 
   INSERT INTO public.cotizaciones
-    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo)
+    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
+     tipo_contenedor)
   VALUES (v_org2, v_cli2, 'Aceptada'::public.estado_cotizacion, v_uid,
           'MXN'::public.moneda, 'COT-LOTE-0002',
-          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          '40HC')
   RETURNING id INTO v_cot2;
 
   -- Costo en MXN (sin precio de venta, para no exigir reflejo en conceptos_venta).
@@ -123,10 +129,11 @@ BEGIN
   -- enseguida). Así reproducimos una fila legada ya persistida en base.
   INSERT INTO public.cotizaciones
     (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
-     conceptos_venta)
+     tipo_contenedor, conceptos_venta)
   VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, v_uid,
           'MXN'::public.moneda, 'COT-LOTE-0003',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          '40HC',
           jsonb_build_array(
             jsonb_build_object('descripcion', 'Flete válido', 'cantidad', '1',
                                'precio_unitario', '1000', 'moneda', 'MXN', 'total', '1000'),

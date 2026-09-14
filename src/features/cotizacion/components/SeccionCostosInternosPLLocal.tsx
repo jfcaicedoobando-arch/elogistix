@@ -1,103 +1,32 @@
-import { useMemo, useEffect, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useMemo } from "react";
 import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import TablaCostosLocal from "./TablaCostosLocal";
+import AvisoCostosDesactualizados from "./AvisoCostosDesactualizados";
 
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
-import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
-import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
-import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
-import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
-import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
-import { buildCostosLCLManual } from "@/features/cotizacion/components/seccionRuta/buildCostosLCLManual";
-import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
-import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
+import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
 
 
 interface Props {
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
+  /** Q2/Q6 (v13.823.396): informa al wizard si los costos automáticos están al día. */
+  onDesajusteChange?: (d: DesajusteCostos | null) => void;
 }
 
 /**
  * Modo "local": gestiona costos en memoria durante el wizard de NuevaCotizacion.
- * Si en Paso 1 hay tarifa vinculada (`tarifaId`), precarga flete + recargos
- * automáticamente al montar (sólo si la lista está vacía).
+ * La precarga desde tarifa / flete LCL manual y la detección de costos
+ * automáticos desactualizados viven en `useCostosAutoSync`.
  */
-export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props) {
-  const { watch } = useFormContext<CotizacionFormValues>();
-  const tarifaId = watch("tarifaId");
-  const numContenedores = watch("numContenedores") ?? 1;
-  const tipoEmbarque = watch("tipoEmbarque");
-  const lclFleteManual = watch("lclFleteManual");
-  const dimensionesLCL = watch("dimensionesLCL");
-  const pesoKg = watch("pesoKg");
-  const { data: tarifa } = useTarifaVinculada(tarifaId);
-  const { data: proveedores = [] } = useProveedoresLite();
-  const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
+export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesajusteChange }: Props) {
+  const { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular } =
+    useCostosAutoSync({ filas, setFilas, onDesajusteChange });
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
-
-  const precargadaRef = useRef<string | null>(null);
-  const precargadaLclRef = useRef<boolean>(false);
-  const [lclAutoCargado, setLclAutoCargado] = useState(false);
-
-  // Detecta desajuste tarifa (FCL) ↔ cotización (LCL): la tabla `costeo_tarifas`
-  // está modelada para contenedor; una tarifa con `tipo_contenedor_nombre` en una
-  // cotización LCL genera unidades inconsistentes si no se convierte a m³.
-  const tarifaEsFcl = !!tarifa?.tipo_contenedor_nombre;
-  const cotizacionEsLcl = tipoEmbarque === "LCL";
-  const mostrarAvisoLclFcl = tarifaEsFcl && cotizacionEsLcl;
-
-  useEffect(() => {
-    if (!tarifaId) return;
-    if (precargadaRef.current === tarifaId) return;
-    if (filas.length > 0) { precargadaRef.current = tarifaId; return; }
-    let cancelado = false;
-    (async () => {
-      const row = await fetchTarifaVinculada(tarifaId);
-      if (cancelado || !row) return;
-      const recargos = await fetchRecargosDeTarifa(row.id);
-      if (cancelado) return;
-      const nuevas = buildCostosDesdeTarifa({
-        tarifa: row,
-        recargos,
-        markup,
-        cantidad: Math.max(1, numContenedores || 1),
-        tipoEmbarque,
-      });
-      setFilas(prev => (prev.length > 0 ? prev : nuevas));
-      precargadaRef.current = tarifaId;
-    })();
-    return () => { cancelado = true; };
-  }, [tarifaId, filas.length, setFilas, markup, numContenedores, tipoEmbarque]);
-
-  // Precarga LCL manual: si el paso 1 capturó `lclFleteManual` con tarifa W/M
-  // válida y no hay filas todavía, inyectamos una fila de flete USD para que
-  // el ejecutivo no re-teclee. Se ejecuta una sola vez (guard con ref).
-  useEffect(() => {
-    if (tipoEmbarque !== "LCL") return;
-    if (tarifaId) return; // FCL/tarifa vinculada ya se encarga.
-    if (precargadaLclRef.current) return;
-    if (filas.length > 0) { precargadaLclRef.current = true; return; }
-    const consolidador = proveedores.find(p => p.id === lclFleteManual?.consolidadorId);
-    const nuevas = buildCostosLCLManual({
-      lclFleteManual,
-      dimensiones: dimensionesLCL,
-      pesoKg,
-      consolidadorNombre: consolidador?.nombre ?? null,
-      markup, // B-075: mismo markup configurable que la rama FCL.
-    });
-    if (nuevas.length === 0) return;
-    setFilas(prev => (prev.length > 0 ? prev : nuevas));
-    precargadaLclRef.current = true;
-    setLclAutoCargado(true);
-  }, [tipoEmbarque, tarifaId, filas.length, lclFleteManual, dimensionesLCL, pesoKg, proveedores, markup, setFilas]);
-
-
-
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
@@ -129,9 +58,16 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
   return (
     <div className="space-y-6">
+      {desajuste && (
+        <AvisoCostosDesactualizados
+          desajuste={desajuste}
+          recalculando={recalculando}
+          onRecalcular={recalcular}
+        />
+      )}
       {mostrarAvisoLclFcl && (
         <Alert variant="warning">
-          <AlertTriangle className="h-4 w-4" />
+          <AlertTriangle className="size-4" />
           <AlertDescription>
             La tarifa vinculada está capturada para contenedor (<strong>{tarifa?.tipo_contenedor_nombre}</strong>), pero esta cotización es <strong>LCL</strong>.
             Los costos se precargan en <strong>m³</strong>; revisa cantidades y unidades antes de continuar.
@@ -140,7 +76,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       )}
       {tarifa && (
         <Alert variant="info">
-          <Link2 className="h-4 w-4" />
+          <Link2 className="size-4" />
           <AlertDescription>
             Costos precargados desde tarifa <strong>{tarifa.naviera_nombre}</strong> ({tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}).
             Puedes editar, agregar o eliminar conceptos.
@@ -149,7 +85,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       )}
       {lclAutoCargado && !tarifa && (
         <Alert variant="info">
-          <Link2 className="h-4 w-4" />
+          <Link2 className="size-4" />
           <AlertDescription>
             Flete LCL precargado desde el Paso 1 (captura manual). Puedes editar, agregar o eliminar conceptos.
           </AlertDescription>
@@ -158,12 +94,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
-        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-accent" />}
+        title="Costos en USD" icon={<DollarSign className="size-4 text-accent" />}
         totales={totalesUSD} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       <TablaCostosLocal
         filas={filas} filasMoneda={filasMXN} moneda="MXN"
-        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-accent" />}
+        title="Costos en MXN" icon={<Banknote className="size-4 text-accent" />}
         totales={totalesMXN} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       {/* La utilidad consolidada vive en la barra fija inferior del wizard
@@ -174,6 +110,3 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
     </div>
   );
 }
-
-
-

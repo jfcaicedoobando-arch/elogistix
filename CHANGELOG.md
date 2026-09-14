@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.823.396] - 2026-09-14
+
+Lote Q1–Q7 · auditoría del flujo Cotización marítima → Costos → Embarque. Las filas de costo capturadas a mano se conservan SIEMPRE; sólo se reemplazan las auto-generadas por el wizard.
+
+- **fix(Q1 · tipo de contenedor FCL)**: `validateContenedores` ya pasa `tipoContenedor` y `contenedoresMaritimoSchema` lo exige en Marítimo FCL (error inline + foco/scroll a «Mercancía»). Guard de servidor nuevo en `crear_embarque_borrador_core`: `LC_COT_TIPO_CONTENEDOR_REQUERIDO`; no se acepta ni se inventa `''`.
+- **fix(Q2 · cantidad de contenedores)**: `desajusteCantidadTarifa` detecta que las filas de tarifa quedaron valuadas para la cantidad anterior (1→2 y 2→1). El Paso 2 muestra «Recalcular costos desde tarifa» y bloquea el avance mientras el dato esté desactualizado.
+- **fix(Q3 · tipo desalineado de la tarifa)**: `useInvalidarTarifaAutomatica` invalida la tarifa vinculada al cambiar manualmente el tipo de contenedor y elimina sólo sus filas automáticas. Guard de servidor `LC_COT_TIPO_CONTENEDOR_INCOMPATIBLE`, normalizando el valor legado (code/name de `tipos_contenedor`) o el UUID directo y leyendo la tarifa acotada a la organización.
+- **fix(Q4 · FCL ↔ LCL)**: `useCambiarTipoEmbarque` borra las filas automáticas del servicio anterior en ambos sentidos; el nuevo servicio genera únicamente su propio costo automático.
+- **fix(Q5 · incoterm sin flete de venta)**: al pasar a CIF/CFR/CIP/CPT/DAP/DDP se limpia la tarifa vinculada y sus filas automáticas de flete/recargos; los costos locales manuales de destino se conservan. Volver a FOB pide tarifa nueva.
+- **fix(Q6 · flete LCL manual)**: `fleteLclDesactualizado` compara la firma de la fila automática contra lo que hoy produciría el Paso 1 (W/M, costo, venta, mínimo y consolidador). El aviso «Recalcular flete LCL» reemplaza sólo esa fila y bloquea el avance mientras esté obsoleta.
+- **fix(Q7 · fila vacía de costos)**: `validarPaso2` exige al menos un renglón con importes reales y concepto/proveedor válidos (`renglonesConImporte`); las filas vacías pueden coexistir con una válida.
+- Migración: `crear_embarque_borrador_core` (espejo `supabase/schema/embarques/crear_embarque_borrador_core.sql`), sin cambios de permisos (tail H6 intacto). Guard SQL nuevo `supabase/tests/cotizacion_tipo_contenedor_fcl_candados.sql` (registrado en `_guards_manifest.txt`).
+- Mensajes amigables `LC_COT_TIPO_CONTENEDOR_REQUERIDO` y `LC_COT_TIPO_CONTENEDOR_INCOMPATIBLE`.
+- Cobertura: `costosAutoGenerados.test.ts`, `contenedoresMaritimoSchema.test.ts`, `paso2Costos.candados.test.ts` (27 pruebas).
+
 ## [13.823.395] - 2026-09-14
 
 - **fix(pruebas · enlace financiero a CxP)**: `GrupoCostosProveedorLink.test.tsx` no simulaba `usePermissions`, así que desde B1 recibía `canViewFinancials: false` y el `Link` a `/compras/facturas/:id` (correctamente) dejaba de renderizarse. La prueba ahora mockea el hook con `canViewFinancials: true` para cubrir el camino financiero; el caso operativo sin enlace sigue en `facturaVinculadaEnlace.test.tsx`. No cambia el comportamiento de producción.

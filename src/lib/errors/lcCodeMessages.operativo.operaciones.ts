@@ -77,6 +77,13 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_CONTENEDORES_REQUERIDOS:
     "La cotización es marítima FCL y no indica cuántos contenedores. " +
     "Captura el número de contenedores (1 o más) antes de crear el embarque.",
+  // v13.823.396 · Q1/Q3: coherencia del tipo de contenedor FCL
+  LC_COT_TIPO_CONTENEDOR_REQUERIDO:
+    "La cotización es marítima FCL y no indica el tipo de contenedor. " +
+    "Selecciónalo en el Paso 1 (Mercancía) antes de crear el embarque.",
+  LC_COT_TIPO_CONTENEDOR_INCOMPATIBLE:
+    "El tipo de contenedor de la cotización no coincide con el de su tarifa vinculada. " +
+    "Elige una tarifa del tipo correcto antes de crear el embarque.",
   LC_COT_IMPORTE_REQUERIDO:
     "La cotización no tiene importe. Captura al menos un concepto con cantidad y " +
     "precio mayores a cero antes de aceptarla.",
