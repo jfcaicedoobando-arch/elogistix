@@ -53,5 +53,5 @@ export function useEmbarqueDetalleTabsData(
     onRechazar: docs.handleRechazarDoc,
   };
 
-  return { conceptosCosto, documentos, notas, facturas, financials, docHandlers };
+  return { conceptosVenta, conceptosCosto, documentos, notas, facturas, financials, docHandlers };
 }

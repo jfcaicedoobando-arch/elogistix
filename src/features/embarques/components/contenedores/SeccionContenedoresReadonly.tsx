@@ -1,9 +1,5 @@
-/**
- * Vista solo-lectura de contenedores en el detalle del embarque.
- * Toda edición se realiza desde el wizard "Editar embarque" (paso 2).
- */
 import { useNavigate } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { PackageOpen, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +9,16 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { PackageOpen } from "lucide-react";
-
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import {
+  esMarcadorContenedor,
+  valorCargaCapturada,
+} from "./contenedorReadonlyPresentacion";
+
 interface Props {
   embarqueId: string;
 }
-
 interface Contenedor {
   id: string;
   numero_contenedor?: string | null;
@@ -30,7 +28,6 @@ interface Contenedor {
   volumen_m3?: number | string | null;
   piezas?: number | null;
 }
-
 /** v13.823.341 — avisa cuántos renglones aún no tienen número de contenedor. */
 function BadgePendientes({ pendientes }: { pendientes: number }) {
   if (pendientes <= 0) return null;
@@ -49,6 +46,31 @@ function todosIguales<T>(arr: T[]): boolean {
   return arr.every((v) => String(v) === first);
 }
 
+function debeMostrarResumenUniforme(
+  pendientes: number,
+  uniformes: readonly boolean[],
+): boolean {
+  return pendientes === 0 && uniformes.some(Boolean);
+}
+
+interface CargaCellProps {
+  contenedor: Contenedor;
+  campo: "peso_kg" | "volumen_m3" | "piezas";
+  vacio: string;
+  decimals?: number;
+}
+
+function CargaCell({ contenedor, campo, vacio, decimals }: CargaCellProps) {
+  const valor = valorCargaCapturada(contenedor, campo);
+  return (
+    <TableCell className="text-right tabular-nums">
+      {valor === null
+        ? <span className="text-muted-foreground">{vacio}</span>
+        : formatNumber(valor, decimals === undefined ? undefined : { decimals })}
+    </TableCell>
+  );
+}
+
 export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [], isLoading, error } =
@@ -64,13 +86,17 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const capturados = lista.filter((c) => (c.numero_contenedor ?? "").trim().length > 0).length;
   const pendientes = lista.length - capturados;
   const mostrarBLHouse = lista.some((c) => (c.bl_house ?? "").trim().length > 0);
-  const pesos = lista.map((c) => Number(c.peso_kg) || 0);
-  const volumenes = lista.map((c) => Number(c.volumen_m3) || 0);
-  const piezas = lista.map((c) => c.piezas ?? 0);
+  const operativos = lista.filter((c) => !esMarcadorContenedor(c));
+  const pesos = operativos.map((c) => Number(c.peso_kg) || 0);
+  const volumenes = operativos.map((c) => Number(c.volumen_m3) || 0);
+  const piezas = operativos.map((c) => c.piezas ?? 0);
   const pesoUniforme = todosIguales(pesos);
   const volumenUniforme = todosIguales(volumenes);
   const piezasUniformes = todosIguales(piezas);
-  const hayResumenUniforme = pesoUniforme || volumenUniforme || piezasUniformes;
+  const hayResumenUniforme = debeMostrarResumenUniforme(
+    pendientes,
+    [pesoUniforme, volumenUniforme, piezasUniformes],
+  );
 
   return (
     <Card>
@@ -157,15 +183,9 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                       {mostrarBLHouse && (
                         <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
                       )}
-                      {!pesoUniforme && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.peso_kg))}</TableCell>
-                      )}
-                      {!volumenUniforme && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.volumen_m3))}</TableCell>
-                      )}
-                      {!piezasUniformes && (
-                        <TableCell className="text-right tabular-nums">{c.piezas}</TableCell>
-                      )}
+                      {!pesoUniforme && <CargaCell contenedor={c} campo="peso_kg" vacio="Sin capturar" />}
+                      {!volumenUniforme && <CargaCell contenedor={c} campo="volumen_m3" vacio="—" decimals={2} />}
+                      {!piezasUniformes && <CargaCell contenedor={c} campo="piezas" vacio="—" />}
                     </TableRow>
                   ))}
                 </TableBody>

@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.373] - 2026-09-14
+
+- **fix(cotizaciones/embarques)**: pulido P2 de contexto visual en P&L y resumen de contenedores, sin cambios de cálculos ni datos.
+  - **P&L por contenedor**: el selector sólo aparece cuando existe al menos un contenedor operativo; embarques Terrestres, Aéreos o Marítimos sin contenedores permanecen en la vista Global.
+  - **Marcadores FCL**: los renglones sin número muestran peso, volumen y piezas como datos sin capturar; sus ceros ya no alimentan el resumen uniforme, mientras que un cero de un contenedor válido se conserva.
+  - **Contexto presupuestado**: la vista por contenedor se identifica como Presupuesto y aclara que sus importes provienen de conceptos cotizados.
+  - **Generales**: la fila se presenta como origen auxiliar del prorrateo y advierte que ya está incluida en los contenedores y no se suma nuevamente al total.
+  - **Tipos de cambio**: la trazabilidad sólo aparece cuando hay conceptos activos no-MXN y muestra únicamente las monedas presentes; un embarque sólo-MXN no presenta USD, EUR ni comparativo DOF.
+
 ## [13.823.372] - 2026-09-14
 
 - **fix(ci)**: integración de CI/RLS de 13.823.371, sin cambios funcionales.

@@ -18,6 +18,7 @@ interface Props {
   /** T/C que el P&L está usando (viene de la RPC). */
   tcUsd: number;
   tcEur: number;
+  monedas: string[];
 }
 
 const tc = (valor: number) => (valor > 0 ? valor.toFixed(4) : "—");
@@ -64,20 +65,31 @@ function ComparativoDof({ ctx, puedeAlinear }: { ctx: EmbarqueTcContexto; puedeA
   );
 }
 
-export function PnlTipoCambioNota({ embarqueId, tcUsd, tcEur }: Props) {
+function PnlTipoCambioContenido({ embarqueId, tcUsd, tcEur, monedas }: Props) {
   const { data: ctx } = useEmbarqueTcContexto(embarqueId);
   const { canEdit } = usePermissions();
 
   const dofUsd = ctx?.dof?.usdMxn ?? 0;
-  const puedeAlinear = Boolean(ctx?.editable && ctx?.fueraDeDof && canEdit && dofUsd > 0);
+  const incluyeUsd = monedas.includes("USD");
+  const puedeAlinear = Boolean(incluyeUsd && ctx?.editable && ctx?.fueraDeDof && canEdit && dofUsd > 0);
+  const valores = monedas.map((moneda) => {
+    if (moneda === "USD") return `USD ${tc(tcUsd)}`;
+    if (moneda === "EUR") return `EUR ${tc(tcEur)}`;
+    return moneda;
+  });
 
   return (
     <div className="space-y-2">
       <p className="text-body-sm text-muted-foreground">
-        Tipos de cambio del embarque: USD {tc(tcUsd)} · EUR {tc(tcEur)}
+        Tipos de cambio del embarque: {valores.join(" · ")}
         {ctx ? ` · congelados al capturarlo el ${formatFechaEs(ctx.fechaReferencia)}` : ""}
       </p>
-      {ctx && dofUsd > 0 && <ComparativoDof ctx={ctx} puedeAlinear={puedeAlinear} />}
+      {incluyeUsd && ctx && dofUsd > 0 && <ComparativoDof ctx={ctx} puedeAlinear={puedeAlinear} />}
     </div>
   );
+}
+
+export function PnlTipoCambioNota(props: Props) {
+  if (props.monedas.length === 0) return null;
+  return <PnlTipoCambioContenido {...props} />;
 }

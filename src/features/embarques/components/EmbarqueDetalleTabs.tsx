@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { EmbarqueDetalleTabsBar } from "@/features/embarques/components/_sections/EmbarqueDetalleTabsBar";
 import { Separator } from "@/components/ui/separator";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AlertaBorrador } from "@/features/embarques/components/_sections/AlertaBorrador";
 
 import { TabResumen } from "@/features/embarques/components/TabResumen";
@@ -22,11 +21,17 @@ import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
 import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
+import {
+  monedasExtranjerasActivas,
+  tieneContenedorOperativo,
+} from "@/features/embarques/domain/pnlPresentacion";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import type {
   EmbarqueDetalleTabsProps,
   PnlView,
 } from "./_sections/embarqueDetalleTabsTypes";
+import { PnlViewSelector } from "./_sections/PnlViewSelector";
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
@@ -35,8 +40,11 @@ export function EmbarqueDetalleTabs({
   // v13.309.24 · Ítem 3.5: data-fetching movido a este hook (antes vivía en la ruta).
   // v13.309.50 · PR-S2-B: `EmbarqueProp` ahora es alias de `EmbarqueRow`, ya no
   // se requiere el el cast doble histórico.
-  const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
+  const { conceptosVenta, conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
     useEmbarqueDetalleTabsData(embarqueId, embarque);
+  const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId);
+  const permitePnlContenedor = tieneContenedorOperativo(contenedores);
+  const monedasExtranjeras = monedasExtranjerasActivas(conceptosVenta, conceptosCosto);
   // `created_by_email` no es legible en la tabla `embarques`: viene de la vista
   // interna (staff), no de la fila de detalle.
   const { data: interno } = useEmbarqueInterno(embarqueId);
@@ -132,18 +140,13 @@ export function EmbarqueDetalleTabs({
 
       {/* P&L unificada (v13.66.15): toggle Global / Por contenedor. */}
       <TabsContent value="pnl" className="space-y-4">
-        <div className="flex items-center justify-end">
-          <ToggleGroup
-            type="single"
-            value={pnlView}
-            onValueChange={(v) => { if (v) setPnlView(v as PnlView); }}
-          >
-            <ToggleGroupItem value="global" aria-label="Vista global">Global</ToggleGroupItem>
-            <ToggleGroupItem value="contenedor" aria-label="Vista por contenedor">Por contenedor</ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-        {pnlView === "global"
-          ? <TabPnl embarqueId={embarqueId} estadoEmbarque={embarque.estado} />
+        <PnlViewSelector
+          visible={permitePnlContenedor}
+          value={pnlView}
+          onChange={setPnlView}
+        />
+        {pnlView === "global" || !permitePnlContenedor
+          ? <TabPnl embarqueId={embarqueId} estadoEmbarque={embarque.estado} monedasExtranjeras={monedasExtranjeras} />
           : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente ?? ""} />}
       </TabsContent>
 
