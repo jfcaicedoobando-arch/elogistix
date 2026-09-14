@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.372] - 2026-09-14
+
+- **fix(ci)**: integración de CI/RLS de 13.823.371, sin cambios funcionales.
+  - **Vitest shard 3**: `CrearEmbarqueConRevalidacion.fases.test.tsx` mockea `verificarCostosOAvisar` (resuelve `true`) y `notifyWarning`; las dos pruebas de fases vuelven a aislar revalidación vs. creación y se añade una tercera que cubre el candado fail-closed (no revalida ni crea).
+  - **Vitest shard 2**: `LC_COT_SIN_COSTOS` registrado en `lcCodeMessages.operativo.operaciones.ts` con mensaje amigable accionable; ya no depende sólo del `RPC_ERROR_MAP` local.
+  - **rls-tests**: `supabase/schema/baseline.sql` regenerado con `db:baseline:update` para reflejar el nuevo `_assert_cotizacion_venta_valida`. Sin ediciones manuales ni relajación de la comparación.
+
 ## [13.823.371] - 2026-09-14
 
 - **fix(embarques)**: remates de aceptación del bloque 13.823.370 (mismo alcance).

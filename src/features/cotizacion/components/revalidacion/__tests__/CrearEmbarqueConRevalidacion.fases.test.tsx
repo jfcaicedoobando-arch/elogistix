@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 const revalidarTarifa = vi.fn();
 const mutateAsync = vi.fn();
 const notifyError = vi.fn();
+const verificarCostosOAvisar = vi.fn();
 
 vi.mock("@/features/cotizacion/services/revalidacion", () => ({
   revalidarTarifa: (...a: unknown[]) => revalidarTarifa(...a),
@@ -20,6 +21,13 @@ vi.mock("@/features/cotizacion/hooks/useRevalidacionTarifa", () => ({
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifySuccess: vi.fn(),
+  notifyWarning: vi.fn(),
+}));
+
+// El candado de costos tiene su propia suite; aquí sólo interesa separar
+// revalidación de creación, así que se deja pasar.
+vi.mock("@/features/cotizacion/services/candadoCostosAviso", () => ({
+  verificarCostosOAvisar: (...a: unknown[]) => verificarCostosOAvisar(...a),
 }));
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
@@ -45,6 +53,8 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     revalidarTarifa.mockReset();
     mutateAsync.mockReset();
     notifyError.mockReset();
+    verificarCostosOAvisar.mockReset();
+    verificarCostosOAvisar.mockResolvedValue(true);
   });
 
   it("si la revalidación funciona y falla la creación, NO muestra el aviso de revalidación", async () => {
@@ -69,5 +79,19 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
     expect(notifyError.mock.calls[0][1].title).toMatch(/No se pudo revalidar la tarifa/i);
     expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("si el candado de costos no aprueba (fail-closed), no revalida ni crea", async () => {
+    verificarCostosOAvisar.mockResolvedValue(false);
+    revalidarTarifa.mockResolvedValue(SIN_CAMBIOS);
+
+    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
+
+    await waitFor(() => expect(verificarCostosOAvisar).toHaveBeenCalledWith("cot-1"));
+    expect(revalidarTarifa).not.toHaveBeenCalled();
+    expect(mutateAsync).not.toHaveBeenCalled();
+    // El aviso lo emite el propio candado: aquí no debe haber toast de error.
+    expect(notifyError).not.toHaveBeenCalled();
   });
 });

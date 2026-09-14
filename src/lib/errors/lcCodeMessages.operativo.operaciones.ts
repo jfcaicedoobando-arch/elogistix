@@ -126,6 +126,9 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Hay precio de venta capturado en los costos que no llegó a los conceptos de venta. Abre la cotización, vuelve a guardar el paso 3 y reintenta.",
   LC_COT_VENTA_IMPORTE_INVALIDO:
     "Un concepto de venta tiene cantidad o precio en cero (o negativo). Corrígelo en la cotización antes de convertirla.",
+  LC_COT_SIN_COSTOS:
+    "La cotización no tiene costos cargados, así que no puede convertirse en embarque. " +
+    "Captura el desglose de costos en la cotización y reintenta.",
   LC_COT_MONEDA_NO_SOPORTADA:
     "Hay importes en una moneda no soportada. Sólo se manejan pesos (MXN) y dólares (USD).",
   // v13.823.358 · Addendum P1: los costos internos sólo se editan en captura.
