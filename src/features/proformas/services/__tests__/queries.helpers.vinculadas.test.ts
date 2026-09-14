@@ -20,7 +20,7 @@ describe("mergeFacturasVinculadas", () => {
   });
 
   it("fusión con factura única: toma la vinculada aunque la FK inversa venga vacía", () => {
-    const r = mergeFacturasVinculadas({ facturas_asociadas: [], factura_vinculada: f("A") });
+    const r = mergeFacturasVinculadas({ facturas_asociadas: [] as ReturnType<typeof f>[], factura_vinculada: f("A") });
     expect(r.facturas_asociadas.map((x) => x.id)).toEqual(["A"]);
   });
 
