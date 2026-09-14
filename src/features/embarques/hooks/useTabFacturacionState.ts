@@ -41,8 +41,10 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
 
   // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
   const estadosConceptos = useMemo(
-    () => calcularEstadosConceptos(conceptos, proformas.length > 0),
-    [conceptos, proformas.length],
+    // v13.823.366 — En Borrador no hay disponibilidad real: los conceptos se
+    // presentan como "Pendiente de confirmar" (sin tocar BD).
+    () => calcularEstadosConceptos(conceptos, proformas.length > 0, !embarqueBorrador),
+    [conceptos, proformas.length, embarqueBorrador],
   );
 
   // R179-02: criterio único de elegibilidad (espejo del candado del RPC):

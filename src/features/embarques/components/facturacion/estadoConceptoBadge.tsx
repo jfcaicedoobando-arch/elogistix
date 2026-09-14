@@ -10,7 +10,12 @@ import { CheckCircle2, Clock, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Tables } from "@/types/db";
 
-export type EstadoConcepto = "pendiente" | "en_proforma" | "facturado";
+/**
+ * v13.823.366 — `pendiente_confirmar`: el embarque sigue en Borrador, así que
+ * el concepto todavía no puede pasar a proforma. Es señal de presentación: en
+ * BD `estado_facturacion` sigue siendo `pendiente`.
+ */
+export type EstadoConcepto = "pendiente" | "pendiente_confirmar" | "en_proforma" | "facturado";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -26,13 +31,15 @@ type ConceptoVenta = Tables<"conceptos_venta">;
 export function calcularEstadosConceptos(
   conceptos: ConceptoVenta[],
   hayProformas = true,
+  /** `false` si el embarque sigue en Borrador (no puede generar proformas). */
+  embarqueConfirmado = true,
 ): Map<string, EstadoConcepto> {
   const mapa = new Map<string, EstadoConcepto>();
   for (const c of conceptos) {
     const ef = c.estado_facturacion;
     if (ef === "facturado") mapa.set(c.id, "facturado");
     else if (ef === "en_proforma" && hayProformas) mapa.set(c.id, "en_proforma");
-    else mapa.set(c.id, "pendiente");
+    else mapa.set(c.id, embarqueConfirmado ? "pendiente" : "pendiente_confirmar");
   }
   return mapa;
 }
@@ -53,6 +60,13 @@ export function EstadoConceptoBadge({ estado }: BadgeProps) {
     return (
       <Badge variant="info">
         <FileText className="h-3 w-3 mr-1" /> Proforma generada
+      </Badge>
+    );
+  }
+  if (estado === "pendiente_confirmar") {
+    return (
+      <Badge variant="outline">
+        <Clock className="h-3 w-3 mr-1" /> Pendiente de confirmar
       </Badge>
     );
   }
