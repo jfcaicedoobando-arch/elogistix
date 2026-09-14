@@ -39,9 +39,8 @@ BEGIN
   IF v_def !~ 'NEW\.total\s+IS DISTINCT FROM OLD\.total' THEN
     RAISE EXCEPTION 'B13 FAIL: el guard de concepto proformado dejó de vigilar el total';
   END IF;
-  IF v_def !~ 'estado_facturacion' AND v_def ~ 'proforma_id IS NOT NULL' THEN
-    NULL; -- las transiciones de estado siguen permitidas (no se validan aquí).
-  END IF;
+
+
 
   -- B14: un costo vinculado a una factura de proveedor viva no cambia de
   -- monto, moneda ni proveedor.
