@@ -33,6 +33,22 @@ BEGIN
 
   IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
 
+  -- v13.823.370 (P1-1) — Candado de costos canónico y fail-closed. La ruta de
+  -- revalidación (CrearEmbarqueConRevalidacion → crear_embarque_borrador_core)
+  -- no pasaba por el candado de UI, así que una cotización Aceptada con venta
+  -- pero SIN desglose de costos podía crear el borrador. Al vivir aquí queda
+  -- cubierta TODA decisión de tarifa (sin_cambios, mantenida_por_operaciones,
+  -- refrescada, sustituida, reaprobada_ventas) y también las llamadas directas
+  -- a la RPC. Las informativas ya salieron arriba.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.cotizacion_costos cc
+     WHERE cc.cotizacion_id = p_cotizacion_id
+       AND cc.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_COT_SIN_COSTOS: la cotización % no tiene costos cargados; captura el desglose de costos en la cotización antes de crear el embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
+
   WITH v AS (
     SELECT upper(btrim(COALESCE(c->>'moneda', 'MXN'))) AS moneda,
            CASE WHEN COALESCE(NULLIF(c->>'cantidad', ''), '1') ~ '^-?[0-9]+(\.[0-9]+)?$'

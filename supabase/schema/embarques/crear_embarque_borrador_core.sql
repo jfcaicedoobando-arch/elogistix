@@ -136,24 +136,6 @@ BEGIN
     RETURN v_orphan_id;
   END IF;
 
-  -- v13.823.370 (P1-1) — Candado de costos canónico y fail-closed: la ruta de
-  -- revalidación (CrearEmbarqueConRevalidacion) no pasaba por el candado de UI,
-  -- así que una cotización con venta pero SIN desglose de costos podía crear el
-  -- borrador. Se valida aquí para cubrir TODAS las decisiones de tarifa
-  -- (sin_cambios, mantenida_por_operaciones, refrescada, sustituida,
-  -- reaprobada_ventas), incluidas las llamadas directas a la RPC. Va después de
-  -- los cortos de idempotencia para no romper la reconversión de un embarque ya
-  -- creado. Las cotizaciones informativas quedan exentas (no se convierten).
-  IF COALESCE(v_cot.tipo_documento, 'transaccional') <> 'informativa'
-     AND NOT EXISTS (
-       SELECT 1 FROM public.cotizacion_costos cc
-        WHERE cc.cotizacion_id = v_cot.id
-          AND cc.deleted_at IS NULL
-     ) THEN
-    RAISE EXCEPTION 'LC_COT_SIN_COSTOS: la cotización % no tiene costos cargados; captura el desglose de costos en la cotización antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
-      USING ERRCODE = 'P0001';
-  END IF;
-
   v_origen_code := COALESCE(
     NULLIF(substring(v_cot.origen  FROM '\(([^)]+)\)'), ''),
     NULLIF(trim(v_cot.origen),  ''),
