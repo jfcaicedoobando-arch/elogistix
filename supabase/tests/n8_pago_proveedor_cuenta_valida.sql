@@ -31,6 +31,7 @@ DECLARE
   v_res jsonb;
   v_msg text;
   v_pagos int;
+  v_categoria_presupuesto uuid;
 BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST N8 CUENTA A', 'TN8A00000XX0', 'basico', true) RETURNING id INTO v_org;
@@ -40,13 +41,18 @@ BEGIN
   INSERT INTO public.proveedores (organization_id, nombre, rfc, categoria, tipo)
   VALUES (v_org, 'PROVEEDOR N8', 'XAXX010101000', 'Logistico', 'Transportista') RETURNING id INTO v_prov;
 
+  INSERT INTO public.presupuesto_categorias (organization_id, nombre)
+  VALUES (v_org, 'N8 categoría de prueba')
+  RETURNING id INTO v_categoria_presupuesto;
+
+
   INSERT INTO public.proveedor_facturas
     (organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
-     subtotal, iva, total, moneda, tipo_cambio_usd, fecha_emision,
-     estado, estado_aprobacion)
+     categoria_presupuesto_id, subtotal, iva, total, moneda, tipo_cambio_usd,
+     fecha_emision, estado, estado_aprobacion)
   VALUES
-    (v_org, v_prov, 'PROVEEDOR N8', 'F-N8-0001', 1000, 0, 1000,
-     'MXN'::public.moneda, 0, CURRENT_DATE,
+    (v_org, v_prov, 'PROVEEDOR N8', 'F-N8-0001', v_categoria_presupuesto,
+     1000, 0, 1000, 'MXN'::public.moneda, 0, CURRENT_DATE,
      'Vigente'::public.estado_proveedor_factura, 'aprobada')
   RETURNING id INTO v_pf;
 
