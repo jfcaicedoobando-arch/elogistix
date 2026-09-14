@@ -175,7 +175,7 @@ BEGIN
 
   -- CASO 4 · sin aprobación ni pago
   BEGIN
-    PERFORM public.aprobar_factura_proveedor(v_pf, NULL);
+    PERFORM public.aprobar_factura_proveedor(v_pf, true, NULL);
     RAISE EXCEPTION 'CASO 4 FALLÓ: el coordinador pudo APROBAR la factura';
   EXCEPTION
     WHEN insufficient_privilege THEN NULL;
