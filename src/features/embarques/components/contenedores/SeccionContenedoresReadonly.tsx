@@ -19,7 +19,6 @@ import {
 interface Props {
   embarqueId: string;
 }
-
 interface Contenedor {
   id: string;
   numero_contenedor?: string | null;
@@ -29,7 +28,6 @@ interface Contenedor {
   volumen_m3?: number | string | null;
   piezas?: number | null;
 }
-
 /** v13.823.341 — avisa cuántos renglones aún no tienen número de contenedor. */
 function BadgePendientes({ pendientes }: { pendientes: number }) {
   if (pendientes <= 0) return null;
