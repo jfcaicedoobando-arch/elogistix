@@ -141,58 +141,21 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         </div>
       </FormDialogSection>
 
-      {!mismoMoneda && origen && destino && par && (
-        <FormDialogSection
-          title="Conversión"
-          description="Las cuentas son de distinta moneda: captura el tipo de cambio del banco (hasta 4 decimales)."
-          cols={1}
-        >
-          <div className="space-y-1.5 md:max-w-xs">
-            <Label htmlFor="traspaso-tc">{etiquetaTc(par)} *</Label>
-            <NumericInput
-              id="traspaso-tc"
-              decimals
-              value={state.tcQuote}
-              onChange={(v) => setField("tcQuote", v)}
-              placeholder={par.quote === "MXN" ? "18.4235" : "1.0800"}
-            />
-            {state.tcQuote > 0 ? (
-              fechaTcDof && (
-                <p className="text-body-sm text-muted-foreground">
-                  Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
-                </p>
-              )
-            ) : (
-              <p className="text-body-sm text-destructive" role="alert">
-                Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
-              </p>
-            )}
-          </div>
-          <TraspasoResumen
-            monedaOrigen={origen.moneda}
-            monedaDestino={destino.moneda}
-            montoOrigen={state.montoOrigen}
-            comision={state.comision}
-            montoDestino={montoDestino}
-            par={par}
-            tcQuote={state.tcQuote}
-          />
-        </FormDialogSection>
+      {origen && destino && (
+        <TraspasoConversion
+          monedaOrigen={origen.moneda}
+          monedaDestino={destino.moneda}
+          mismoMoneda={!!mismoMoneda}
+          par={par}
+          tcQuote={state.tcQuote}
+          onTcQuoteChange={(v) => setField("tcQuote", v)}
+          montoOrigen={state.montoOrigen}
+          comision={state.comision}
+          montoDestino={montoDestino}
+          fechaTcDof={fechaTcDof}
+        />
       )}
 
-      {mismoMoneda && origen && destino && state.montoOrigen > 0 && (
-        <FormDialogSection title="Resumen" cols={1}>
-          <TraspasoResumen
-            monedaOrigen={origen.moneda}
-            monedaDestino={destino.moneda}
-            montoOrigen={state.montoOrigen}
-            comision={state.comision}
-            montoDestino={montoDestino}
-            par={null}
-            tcQuote={0}
-          />
-        </FormDialogSection>
-      )}
 
 
       <FormDialogSection title="Detalles" cols={1}>
