@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.368] - 2026-09-14
+
+- **chore(cotizaciones)**: correctivo de CI (guard Power of 10) — `SeccionCostosInternosPLDetalle.tsx` rebasaba las 200 líneas tras el gate de edición por estado.
+  - El gate y el aviso (`useGateEdicionCostos` + `AvisoCostosBloqueados`) se extraen a módulos focalizados (`useGateEdicionCostos.ts` / `edicionCostosGate.tsx`); el archivo queda en 195 líneas.
+  - Misma causa en `TabPnl.tsx` (216 líneas tras el arreglo PnL de 13.823.367): las tarjetas "Sin actividad real todavía" y "Alertas financieras" se extraen a `pnl/PnlAvisosCards.tsx`; queda en 187 líneas. El arreglo PnL se mantiene intacto.
+  - Comportamiento idéntico en ambos casos, sin cambios en allowlist ni lógica.
+
 ## [13.823.367] - 2026-09-14
 
 - **fix(embarques)**: seguimiento del P1 #5 — en un embarque Borrador sin actividad real el tab Utilidad ya no presenta pérdidas ficticias.
