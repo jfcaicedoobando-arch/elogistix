@@ -91,7 +91,7 @@ INSERT INTO public.facturas (
   'c29c0000-0000-4000-8000-0000000000e1'::uuid,
   'c29c0000-0000-4000-8000-000000000001'::uuid,
   300, 0, 300, 'MXN'::public.moneda, 1, CURRENT_DATE, CURRENT_DATE + 30,
-  'Emitida'::public.estado_factura
+  'Borrador'::public.estado_factura
 );
 
 INSERT INTO public.conceptos_factura (
@@ -103,6 +103,10 @@ INSERT INTO public.conceptos_factura (
   ('c29c0000-0000-4000-8000-0000000000f1'::uuid, 'flete emb 2', 1, 200,
    'MXN'::public.moneda, 200, 'c29c0000-0000-4000-8000-000000000001'::uuid,
    'c29c0000-0000-4000-8000-0000000000e2'::uuid);
+
+-- Los conceptos sólo se editan en Borrador; el P&L sólo cuenta facturas vivas.
+UPDATE public.facturas SET estado = 'Emitida'::public.estado_factura
+WHERE id = 'c29c0000-0000-4000-8000-0000000000f1'::uuid;
 
 DO $pnl$
 DECLARE
