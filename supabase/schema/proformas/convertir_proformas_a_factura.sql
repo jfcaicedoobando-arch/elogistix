@@ -4,7 +4,6 @@
 -- Base: 20260913000400_r170_02_fecha_negocio_mx.sql (fecha de negocio MX).
 -- Última migración: v13.823.376 (B12 — la factura USD nace con tipo_cambio NULL;
 -- el trigger _factura_tc_dof_obligatorio resuelve el T/C DOF o falla en claro).
--- (reaplica el guard LC_PROFORMA_REQUIERE_ACEPTACION, v13.823.279/280).
 
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas
