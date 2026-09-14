@@ -37,5 +37,8 @@ BEGIN
 END;
 $$;
 
+-- R2 (v13.823.390): ACL mínima canónica H6 para una función de trigger:
+-- nadie público ni anónimo; sólo service_role la ejecuta.
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() TO service_role;
+REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM anon;
+GRANT EXECUTE ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() TO service_role;
