@@ -449,14 +449,15 @@ BEGIN
     INTO v_folio, v_tipo_doc, v_ventas
     FROM public.cotizaciones
    WHERE id = p_cotizacion_id;
-  IF NOT FOUND OR v_tipo_doc = 'informativa' THEN RETURN; END IF;
-  -- v13.823.370 (P1-1) — Candado de costos canónico y fail-closed. La ruta de
-  -- revalidación (CrearEmbarqueConRevalidacion → crear_embarque_borrador_core)
-  -- no pasaba por el candado de UI, así que una cotización Aceptada con venta
-  -- pero SIN desglose de costos podía crear el borrador. Al vivir aquí queda
-  -- cubierta TODA decisión de tarifa (sin_cambios, mantenida_por_operaciones,
-  -- refrescada, sustituida, reaprobada_ventas) y también las llamadas directas
-  -- a la RPC. Las informativas ya salieron arriba.
+  IF NOT FOUND THEN RETURN; END IF;
+  -- B18: las informativas (tarifarios) son documentos de referencia; no pueden
+  -- convertirse en embarque. Este candado vive en el helper canónico que llaman
+  -- crear_embarque_borrador_core y _assert_cotizacion_convertible, así que
+  -- cubre también las llamadas directas a las RPC. No afecta su consulta.
+  IF v_tipo_doc = 'informativa' THEN
+    RAISE EXCEPTION 'LC_COT_INFORMATIVA: la cotización % es informativa (tarifario) y no puede convertirse en embarque', COALESCE(v_folio, p_cotizacion_id::text)
+      USING ERRCODE = 'P0001';
+  END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.cotizacion_costos cc
      WHERE cc.cotizacion_id = p_cotizacion_id
@@ -1964,12 +1965,13 @@ BEGIN
     SELECT p_factura_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
            pcc.moneda, pcc.total, p_org,
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
-           -- Defecto 1: 8% de frontera conserva su clasificación fiscal.
-           public._tipo_iva_desde_tasa(pcc.aplica_iva, pcc.tasa_iva_aplicada),
-           CASE
-             WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN NULL
-             ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16)
-           END,
+           -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
+           -- importar que arrastre una tasa legacy (p. ej. 0.16).
+           public._tipo_iva_desde_tasa(
+             pcc.aplica_iva,
+             CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END),
+           CASE WHEN pcc.aplica_iva = false THEN NULL
+                ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, pcc.proforma_id
     FROM public.proforma_conceptos_consolidados pcc
     JOIN public.proformas p ON p.id = pcc.proforma_id
@@ -1982,15 +1984,13 @@ BEGIN
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
     )
     SELECT p_factura_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
-           -- BUG-17: el total del renglón se guarda redondeado a 2 decimales,
-           -- igual que en la rama consolidada (pcc.total ya viene redondeado).
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           public._tipo_iva_desde_tasa(cv.aplica_iva, cv.tasa_iva_aplicada),
-           CASE
-             WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN NULL
-             ELSE COALESCE(cv.tasa_iva_aplicada, 0.16)
-           END,
+           public._tipo_iva_desde_tasa(
+             cv.aplica_iva,
+             CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END),
+           CASE WHEN cv.aplica_iva = false THEN NULL
+                ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, cv.proforma_id
     FROM public.conceptos_venta cv
     JOIN public.proformas p ON p.id = cv.proforma_id
@@ -2137,6 +2137,8 @@ DECLARE
   v_total numeric;
   v_pu    numeric;
   v_tasa  numeric;
+  v_tasa_json numeric;
+  v_aplica boolean;
   v_base  numeric;
   v_n     integer;
   v_parte numeric;
@@ -2215,7 +2217,24 @@ BEGIN
         END IF;
         v_cant := COALESCE(NULLIF(v_venta->>'cantidad', '')::numeric, 1);
         v_pu   := COALESCE(NULLIF(v_venta->>'precio_unitario', '')::numeric, 0);
-        v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
+        -- B19: misma regla canónica que el cliente (`resolverTasaConcepto`):
+        --   1) tasa explícita (incluye 0) manda;
+        --   2) sin tasa y aplica_iva = true ⇒ tasa general 0.16 (la misma
+        --      constante que usa la conversión proforma → factura);
+        --   3) aplica_iva = false ⇒ tasa 0 (la columna es NOT NULL).
+        -- Antes una línea legacy con aplica_iva = true y sin tasa se replicaba
+        -- con tasa 0 y el embarque perdía el IVA que mostraba la cotización.
+        v_tasa_json := NULLIF(v_venta->>'tasa_iva_aplicada', '')::numeric;
+        v_aplica := COALESCE((v_venta->>'aplica_iva')::boolean, COALESCE(v_tasa_json, 0) > 0);
+        IF NOT v_aplica THEN
+          v_tasa := 0;
+        ELSIF v_tasa_json IS NOT NULL THEN
+          v_tasa := GREATEST(v_tasa_json, 0);
+        ELSE
+          v_tasa := 0.16;
+        END IF;
+        -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
+        -- si no hay unitario: se desinfla el `total` (que viene con IVA).
         IF v_pu = 0 AND v_cant > 0 THEN
           v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0) / (1 + v_tasa), 2);
           v_pu    := ROUND(v_total / v_cant, 6);
@@ -2232,7 +2251,7 @@ BEGIN
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-          COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
+          v_aplica,
           v_tasa,
           v_total, p_org
         );
