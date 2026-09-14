@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.823.389] - 2026-09-14
+
+- **fix(cotizaciones/embarques)**: eliminar un embarque **Borrador** creado desde una cotización ya no falla con `LC_SOD_VIOLATION` (23514). `eliminar_embarque_completo` regresa la cotización a `Aceptada` cuando no queda ningún embarque vivo, y el trigger `public._cotizaciones_bloquear_auto_aceptacion()` interpretaba ese regreso `En operación → Aceptada` como auto-aceptación cuando quien borraba era el mismo `created_by`. El guard se acota a la aceptación real (`OLD.estado IN ('Borrador','Solicitada','Enviada','Vencida')`); se conservan `created_by = auth.uid()`, la exención admin/admin_org/super_admin y `ERRCODE = check_violation`. `aceptar_cotizacion_version` sin cambios. Privilegios H6 reafirmados. Espejo: `supabase/schema/cotizaciones/_cotizaciones_bloquear_auto_aceptacion.sql`.
+- Cobertura nueva: `supabase/tests/eliminar_borrador_cotizacion_sod.sql` (registrada en `_guards_manifest.txt`): el creador (rol `operador`) elimina su borrador y la cotización vuelve a `Aceptada`; `Enviada → Aceptada` por el mismo creador sigue fallando con `LC_SOD_VIOLATION`.
+
 ## [13.823.388] - 2026-09-14
+
 
 - **fix(embarques)**: un embarque ya no puede regresar a **Borrador** si tiene documentos de cliente vivos. `public.avanzar_estado_embarque` valida antes de `assert_transicion_embarque`: `facturas` vivas (`deleted_at IS NULL AND estado <> 'Cancelada'`, vinculadas por `embarque_id` o por `factura_embarques.activa`) ⇒ `LC_BORRADOR_CON_CXC`; `proformas` vivas (`estado_proforma NOT IN ('cancelada','facturada')`) ⇒ `LC_BORRADOR_CON_PROFORMA`. Caso real: ELIMP00310 quedó en Borrador con expediente asignado y la factura F1004 (4,984 USD, `origen = conversion_proforma`) viva. Resto del cuerpo sin cambios; privilegios H6 reafirmados (REVOKE PUBLIC/anon + GRANT authenticated/service_role). Espejo: `supabase/schema/embarques/avanzar_estado_embarque.sql`.
 - Mensajes canónicos nuevos `LC_BORRADOR_CON_CXC` y `LC_BORRADOR_CON_PROFORMA` en `src/lib/errors/lcCodeMessages.operativo.operaciones.ts`; textos técnicos intactos en SQL.
