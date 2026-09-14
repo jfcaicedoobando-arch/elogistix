@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExternalLink, Copy, Check, AlertCircle, Lightbulb } from "lucide-react";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
+import { resolverTrackingCarrier } from "@/features/embarques/domain/trackingCarrier";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
@@ -54,23 +55,6 @@ interface Props {
  * - Botón para abrir la URL de tracking de la naviera (catálogo en tabla `navieras`).
  * - Botón para copiar el BL Master / MAWB al portapapeles.
  */
-interface CarrierInfo {
-  esMaritimo: boolean;
-  carrier: string | null;
-  referencia: string | null;
-  refLabel: "BL Master" | "MAWB";
-}
-
-function getCarrierInfo(props: Props): CarrierInfo {
-  const esMaritimo = props.modo === "Marítimo";
-  return {
-    esMaritimo,
-    carrier: esMaritimo ? props.naviera : props.aerolinea,
-    referencia: esMaritimo ? props.blMaster : props.mawb,
-    refLabel: esMaritimo ? "BL Master" : "MAWB",
-  };
-}
-
 function getTrackingTooltip(referencia: string | null, esMaritimo: boolean, refLabel: string): string {
   if (!referencia) return `Falta el ${refLabel}`;
   if (!esMaritimo) return "El tracking aéreo se consulta directamente en la web de la aerolínea";
@@ -94,7 +78,13 @@ export function TrackingNavieraActions(props: Props) {
   const { data: navieras = [] } = useNavieras();
   const [copied, setCopied] = useState(false);
 
-  const { esMaritimo, carrier, referencia, refLabel } = getCarrierInfo(props);
+  // v13.823.366 — Terrestre no tiene consulta web de transportista: antes caía
+  // por accidente en el copy aéreo ("Captura la aerolínea y el MAWB").
+  const info = resolverTrackingCarrier(props);
+  const esMaritimo = info?.esMaritimo ?? false;
+  const carrier = info?.carrier ?? null;
+  const referencia = info?.referencia ?? null;
+  const refLabel = info?.refLabel ?? "BL Master";
   const trackingUrl = resolveTrackingUrl(navieras, props.naviera, referencia, esMaritimo);
 
   const handleCopy = async () => {
@@ -119,8 +109,11 @@ export function TrackingNavieraActions(props: Props) {
     window.open(trackingUrl, "_blank", "noopener,noreferrer");
   };
 
+  // Sin transportista aplicable (Terrestre): el tracking se captura manualmente.
+  if (!info) return null;
+
   if (!carrier && !referencia) {
-    const captura = esMaritimo ? "naviera y el BL Master" : "aerolínea y el MAWB";
+    const captura = info.capturaFaltante;
     return (
       <Alert variant="warning">
         <AlertCircle className="h-4 w-4" />

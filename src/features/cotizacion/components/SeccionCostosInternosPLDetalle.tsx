@@ -15,6 +15,7 @@ import {
 } from "@/features/cotizacion/domain/mapearCostosDetalle";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { motivoBloqueoEdicionCostos } from "@/features/cotizacion/domain/estadosEditables";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
 import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
@@ -40,7 +41,11 @@ export default function SeccionCostosInternosPLDetalle({
 }: Props) {
   // v13.823.348 — `actualizar_cotizacion_costos` exige `_assert_writer_cotizacion`
   // (SALES): finanzas ve el P&L en solo lectura, sin "Editar/Guardar costos".
-  const { canWriteCotizaciones: canEdit } = usePermissions();
+  const { canWriteCotizaciones } = usePermissions();
+  // v13.823.366 — Espejo del guard servidor `LC_COT_COSTOS_ESTADO_INVALIDO`:
+  // los costos sólo se editan en Borrador/Solicitada.
+  const motivoBloqueoEstado = motivoBloqueoEdicionCostos(estadoCotizacion);
+  const canEdit = canWriteCotizaciones && motivoBloqueoEstado === null;
   const { data: snapshot, isLoading } = useCotizacionCostosSnapshot(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
   const tasaIva = useTasaIVA();
@@ -135,10 +140,14 @@ export default function SeccionCostosInternosPLDetalle({
         tasaIva={tasaIva}
         visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
         // v13.823.360 — finanzas lee el aviso sin botón (la RPC exige SALES).
-        puedeSincronizar={canEdit}
+        puedeSincronizar={canWriteCotizaciones}
         // v13.823.362 — en Aceptada/En operación el trigger rechaza el UPDATE.
         estadoCotizacion={estadoCotizacion}
       />
+
+      {canWriteCotizaciones && motivoBloqueoEstado !== null && filas.length > 0 && (
+        <p className="text-body-sm text-muted-foreground">{motivoBloqueoEstado}</p>
+      )}
 
       {canEdit && filas.length > 0 && (
         <div className="flex justify-end">
