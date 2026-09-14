@@ -120,41 +120,14 @@ export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
         />
       </div>
 
-      {sinActividadReal && (
-        <Card className="border-border bg-muted/40">
-          <CardHeader className="pb-2 flex flex-row items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            <CardTitle>Sin actividad real todavía</CardTitle>
-          </CardHeader>
-          <CardContent className="text-body-sm text-muted-foreground">
-            El embarque está en Borrador y aún no tiene facturas de venta ni costos reales.
-            Las cifras mostradas son el presupuesto; las desviaciones aparecerán cuando
-            empiece la operación.
-          </CardContent>
-        </Card>
-      )}
-
-      {(alertaSobrecosto || alertaVenta || alertaMargen) && (
-        <Card className="border-warning/40 bg-warning/5">
-          <CardHeader className="pb-2 flex flex-row items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-warning" />
-            <CardTitle>Alertas financieras</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            {alertaSobrecosto && <Badge variant="destructive">Sobrecosto {pctPnl(dCosto.pct)}</Badge>}
-            {alertaVenta && (
-              <Badge variant="outline" className="border-warning text-warning">
-                Venta facturada menor a presupuestada
-              </Badge>
-            )}
-            {alertaMargen && (
-              <Badge variant="outline" className="border-warning text-warning">
-                Margen real {pctPnl(margenReal)} &lt; 15%
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <PnlAvisosCards
+        sinActividadReal={sinActividadReal}
+        alertaSobrecosto={alertaSobrecosto}
+        alertaVenta={alertaVenta}
+        alertaMargen={alertaMargen}
+        dCostoPct={dCosto.pct}
+        margenReal={margenReal}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card>
