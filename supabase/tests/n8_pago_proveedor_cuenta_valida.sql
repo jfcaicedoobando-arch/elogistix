@@ -37,8 +37,8 @@ BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST N8 CUENTA B', 'TN8B00000XX0', 'basico', true) RETURNING id INTO v_org2;
 
-  INSERT INTO public.proveedores (organization_id, nombre, rfc, categoria)
-  VALUES (v_org, 'PROVEEDOR N8', 'XAXX010101000', 'Logistico') RETURNING id INTO v_prov;
+  INSERT INTO public.proveedores (organization_id, nombre, rfc, categoria, tipo)
+  VALUES (v_org, 'PROVEEDOR N8', 'XAXX010101000', 'Logistico', 'Transportista') RETURNING id INTO v_prov;
 
   INSERT INTO public.proveedor_facturas
     (organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
