@@ -71,6 +71,18 @@ export function estatusLabel(estatus: FilaReconciliacion["estatus_renglon"]): st
   }
 }
 
+/**
+ * v13.823.370 (P2-4) — Resumen de conteos del grupo. Antes se imprimía siempre
+ * "N con ajuste", así que un grupo sin ajustes mostraba el imposible
+ * "MXN 0 con ajuste, 1 sin factura". Ahora se omite toda categoría en cero.
+ */
+export function etiquetaConteos(conAjuste: number, sinFactura: number): string | null {
+  const partes: string[] = [];
+  if (conAjuste > 0) partes.push(`${conAjuste} con ajuste`);
+  if (sinFactura > 0) partes.push(`${sinFactura} sin factura`);
+  return partes.length > 0 ? partes.join(", ") : null;
+}
+
 export function pagoBadgeClass(estado: string | null): string {
   const v = (estado ?? "").toLowerCase();
   if (v === "pagada") return "bg-success/15 text-success border-success/30";

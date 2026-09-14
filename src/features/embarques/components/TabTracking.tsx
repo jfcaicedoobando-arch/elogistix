@@ -32,12 +32,27 @@ interface Freshness {
   dias: number;
 }
 
+/**
+ * v13.823.370 (P2-3) — Un Borrador recién convertido no tiene eventos porque la
+ * operación todavía no empieza: acusarlo con "Requiere actualización" es ruido.
+ * La advertencia se conserva para embarques ya confirmados/en tránsito.
+ */
 function computeFreshness(
   eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>,
   eta: string | null | undefined,
   arribado: boolean,
+  estado?: string | null,
 ): Freshness {
   if (eventos.length === 0) {
+    const esBorrador = (estado ?? "").trim().toLowerCase() === "borrador";
+    if (esBorrador) {
+      return {
+        label: "Pendiente de iniciar seguimiento",
+        critical: false,
+        etaProxima: false,
+        dias: 0,
+      };
+    }
     return { label: "Sin eventos registrados", critical: !arribado, etaProxima: false, dias: 0 };
   }
   const ultimo = eventos[0];
@@ -101,7 +116,10 @@ export function TabTracking({ embarqueId, embarque }: Props) {
   const [formAbierto, setFormAbierto] = useState(false);
 
   const arribado = esEmbarqueArribado(embarque);
-  const freshness = useMemo(() => computeFreshness(eventos, embarque?.eta, arribado), [eventos, embarque?.eta, arribado]);
+  const freshness = useMemo(
+    () => computeFreshness(eventos, embarque?.eta, arribado, embarque?.estado),
+    [eventos, embarque?.eta, arribado, embarque?.estado],
+  );
   const etaVencida = esEtaVencida(embarque);
   const showEtaBanner = etaVencida && embarque?.eta;
 
