@@ -68,10 +68,9 @@ export function TabProformas({ isInRange, estadoInicial }: {
   const seleccionados = canEmitirFactura ? c.selectedProformas.length : 0;
   // C25 (v13.823.380) — además del mismo cliente, la fusión exige proformas del
   // mismo tipo (consolidada vs individual) y con el mismo plazo de crédito.
-  const puedeFusionar = seleccionados > 0
-    && c.fusionInfo.sameCliente
-    && c.fusionInfo.sameTipo
-    && c.fusionInfo.sameDiasCredito;
+  const avisoFusion = seleccionados > 0 ? avisoFusionSeleccion(c.fusionInfo) : null;
+  const puedeFusionar = seleccionados > 0 && avisoFusion === null;
+
 
 
   return (
