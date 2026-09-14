@@ -31,7 +31,9 @@ describe("proformas queries", () => {
   it("fetchProformasEmbarque devuelve filas y filtra por embarque_id", async () => {
     mock.setTableResult("proformas", { data: [{ id: "1" }], error: null });
     const res = await fetchProformasEmbarque("emb-1");
-    expect(res).toEqual([{ id: "1" }]);
+    // D6: la fila pasa por `mergeFacturasVinculadas`, que siempre normaliza
+    // `facturas_asociadas` (aquí vacío porque la proforma no tiene factura).
+    expect(res).toEqual([{ id: "1", facturas_asociadas: [] }]);
     const call = mock.tableCalls[0];
     const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
     expect(eqArgs).toContainEqual(["eq", ["embarque_id", "emb-1"]]);

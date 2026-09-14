@@ -1,4 +1,6 @@
 -- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
+-- D4 (v13.823.382): valida la fecha del pago (requerida, no futura y no
+-- anterior a la emisión) antes de insertar; el guard la revalida en BD.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_atomico(
@@ -20,6 +22,8 @@ SET search_path = public
 AS $$
 DECLARE
   v_org      uuid;
+  v_emision  date;
+  v_hoy_mx   date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;
@@ -37,11 +41,24 @@ BEGIN
     END IF;
   END IF;
 
-  SELECT organization_id INTO v_org
+  SELECT organization_id, fecha_emision INTO v_org, v_emision
     FROM public.proveedor_facturas
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+
+  -- D4: canon de fecha de negocio México, igual que el lote.
+  IF p_fecha_pago IS NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago' USING ERRCODE = '22023';
+  END IF;
+  IF p_fecha_pago > v_hoy_mx THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del pago (%) no puede ser futura', p_fecha_pago
+      USING ERRCODE = '22023';
+  END IF;
+  IF v_emision IS NOT NULL AND p_fecha_pago < v_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del pago (%) es anterior a la emisión de la factura (%)',
+      p_fecha_pago, v_emision USING ERRCODE = '22023';
   END IF;
 
   BEGIN

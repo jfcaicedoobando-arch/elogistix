@@ -54,39 +54,26 @@ describe("services/pagos-factura", () => {
     await expect(listarPagosFactura("f1")).rejects.toThrow();
   });
 
-  it("registrarPagoFactura inserta con created_by", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: null });
+  // D2 (v13.823.382): el alta pasa por la RPC atómica; los defaults se
+  // normalizan en los argumentos de la llamada.
+  it("registrarPagoFactura manda los importes y defaults a la RPC", async () => {
+    mock.setRpcResult("registrar_pago_factura_atomico", { data: { pago_id: "p1" }, error: null });
     await registrarPagoFactura(INPUT as never);
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("insert")]?.[0] as Record<string, unknown>;
-    expect(payload.created_by).toBe("user-1");
-    expect(payload.diferencia_cambiaria_mxn).toBe(0);
+    const args = mock.rpcCalls[0].args as Record<string, unknown>;
+    expect(args.p_diferencia_cambiaria_mxn).toBe(0);
+    expect(args.p_referencia).toBe("");
+    expect(args.p_notas).toBe("");
+    expect(args.p_cuenta_bancaria_id).toBeNull();
   });
 
   it("registrarPagoFactura usa diferencia_cambiaria_mxn dado", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: null });
+    mock.setRpcResult("registrar_pago_factura_atomico", { data: { pago_id: "p1" }, error: null });
     await registrarPagoFactura({ ...INPUT, diferencia_cambiaria_mxn: 25 } as never);
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("insert")]?.[0] as Record<string, unknown>;
-    expect(payload.diferencia_cambiaria_mxn).toBe(25);
-  });
-
-  it("registrarPagoFactura normaliza referencia/notas a string vacío", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: null });
-    await registrarPagoFactura(INPUT as never);
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("insert")]?.[0] as Record<string, unknown>;
-    expect(payload.referencia).toBe("");
-    expect(payload.notas).toBe("");
-  });
-
-  it("registrarPagoFactura usa null created_by sin user", async () => {
-    mock.getUser.mockResolvedValue({ data: { user: null } });
-    mock.setTableResult("pagos_factura", { data: null, error: null });
-    await registrarPagoFactura(INPUT as never);
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("insert")]?.[0] as Record<string, unknown>;
-    expect(payload.created_by).toBeNull();
+    expect((mock.rpcCalls[0].args as Record<string, unknown>).p_diferencia_cambiaria_mxn).toBe(25);
   });
 
   it("registrarPagoFactura propaga error", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: { message: "x" } });
+    mock.setRpcResult("registrar_pago_factura_atomico", { data: null, error: { message: "x" } });
     await expect(registrarPagoFactura(INPUT as never)).rejects.toThrow();
   });
 

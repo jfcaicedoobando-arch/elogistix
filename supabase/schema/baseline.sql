@@ -5755,6 +5755,81 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.actualizar_pago_proveedor_atomico(p_pago_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio_usd numeric, p_metodo_pago text, p_referencia text DEFAULT ''::text, p_cuenta_bancaria_id uuid DEFAULT NULL::uuid, p_notas text DEFAULT ''::text, p_diferencia_cambiaria_mxn numeric DEFAULT NULL::numeric, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_pago public.pagos_proveedor;
+  v_org uuid;
+  v_mov_id uuid;
+BEGIN
+  -- D5: todo en UNA transacción (pago + movimiento espejo). Antes eran tres
+  -- llamadas del navegador y un fallo dejaba la factura editada sin salida
+  -- bancaria (o con la salida vieja).
+  SELECT * INTO v_pago FROM public.pagos_proveedor
+   WHERE id = p_pago_id AND deleted_at IS NULL
+   FOR UPDATE;
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_NO_ENCONTRADO: el pago ya no existe o fue eliminado'
+      USING ERRCODE = 'P0002';
+  END IF;
+  v_org := public.org_scope();
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_SIN_ORG: no hay organización activa para validar el pago'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_pago.organization_id IS DISTINCT FROM v_org THEN
+    RAISE EXCEPTION 'LC_ORG_MISMATCH: el pago pertenece a otra organización'
+      USING ERRCODE = '42501';
+  END IF;
+  IF NOT public.has_any_role(auth.uid(),
+        ARRAY['tesorero','contador','admin','admin_org','super_admin']::app_role[]) THEN
+    RAISE EXCEPTION 'LC_PAGO_SIN_PERMISO: se requiere permiso de tesorería para editar el pago'
+      USING ERRCODE = '42501';
+  END IF;
+  -- Bloqueo de la factura: el guard recalcula el saldo con ella tomada.
+  PERFORM 1 FROM public.proveedor_facturas
+   WHERE id = v_pago.proveedor_factura_id FOR UPDATE;
+  IF p_expected_updated_at IS NOT NULL
+     AND v_pago.updated_at IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario editó este pago; recarga antes de guardar'
+      USING ERRCODE = '40001';
+  END IF;
+  UPDATE public.pagos_proveedor SET
+    fecha_pago = p_fecha_pago,
+    monto = p_monto,
+    moneda = p_moneda::moneda,
+    tipo_cambio_usd = NULLIF(COALESCE(p_tipo_cambio_usd, 0), 0),
+    metodo_pago = p_metodo_pago,
+    referencia = COALESCE(p_referencia, ''),
+    cuenta_bancaria_id = p_cuenta_bancaria_id,
+    notas = COALESCE(p_notas, ''),
+    diferencia_cambiaria_mxn = p_diferencia_cambiaria_mxn
+  WHERE id = p_pago_id;
+  -- Reemplazo del movimiento: sólo la línea DERIVADA del sistema se da de baja.
+  -- Una línea importada del estado de cuenta jamás se borra: se desvincula.
+  UPDATE public.bbva_movimientos
+     SET pago_proveedor_id = NULL
+   WHERE pago_proveedor_id = p_pago_id
+     AND deleted_at IS NULL
+     AND COALESCE(origen::text, '') <> 'sistema';
+  UPDATE public.bbva_movimientos
+     SET deleted_at = now(), deleted_by = auth.uid()
+   WHERE deleted_at IS NULL
+     AND COALESCE(origen::text, '') = 'sistema'
+     AND (pago_proveedor_id = p_pago_id OR hash_dedupe = 'pago-' || p_pago_id::text);
+  IF p_cuenta_bancaria_id IS NOT NULL THEN
+    v_mov_id := public._asegurar_movimiento_pago_proveedor(p_pago_id);
+    IF v_mov_id IS NULL THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_NO_CREADO: no se pudo regenerar la salida bancaria del pago'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  RETURN jsonb_build_object('pago_id', p_pago_id, 'movimiento_id', v_mov_id,
+                            'movimiento_creado', v_mov_id IS NOT NULL);
+END;
+$$;
 CREATE FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa jsonb, p_recargos jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -19302,6 +19377,8 @@ DECLARE
   v_fact_total  numeric;
   v_fact_estado public.estado_proveedor_factura;
   v_fact_deleted timestamptz;
+  v_fact_emision date;
+  v_hoy_mx date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
   v_ncs         numeric;
   v_pagos       numeric;
   v_saldo       numeric;
@@ -19316,14 +19393,26 @@ BEGIN
       AND NEW.monto IS NOT DISTINCT FROM OLD.monto
       AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
       AND NEW.tipo_cambio_usd IS NOT DISTINCT FROM OLD.tipo_cambio_usd
+      -- D4: la fecha NO es metadato; cambiarla vuelve a pasar por las
+      -- validaciones de abajo.
+      AND NEW.fecha_pago IS NOT DISTINCT FROM OLD.fecha_pago
       AND OLD.deleted_at IS NULL
     );
     IF v_solo_metadatos THEN
       RETURN NEW;
     END IF;
   END IF;
-  SELECT moneda, tipo_cambio_usd, COALESCE(total,0), estado, deleted_at
-    INTO v_fact_moneda, v_fact_tc, v_fact_total, v_fact_estado, v_fact_deleted
+  -- D4: fecha requerida y nunca futura (fecha de negocio México).
+  IF NEW.fecha_pago IS NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago'
+      USING ERRCODE = '22023';
+  END IF;
+  IF NEW.fecha_pago > v_hoy_mx THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del pago (%) no puede ser futura', NEW.fecha_pago
+      USING ERRCODE = '22023';
+  END IF;
+  SELECT moneda, tipo_cambio_usd, COALESCE(total,0), estado, deleted_at, fecha_emision
+    INTO v_fact_moneda, v_fact_tc, v_fact_total, v_fact_estado, v_fact_deleted, v_fact_emision
     FROM public.proveedor_facturas
     WHERE id = NEW.proveedor_factura_id
     FOR UPDATE;
@@ -19336,6 +19425,13 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
       CASE WHEN v_fact_deleted IS NOT NULL THEN 'en la papelera' ELSE 'Cancelada' END
       USING ERRCODE = '23514';
+  END IF;
+  -- D4: nunca antes de la emisión de la factura (mismo canon que el lote y
+  -- que programar_pago_proveedor).
+  IF v_fact_emision IS NOT NULL AND NEW.fecha_pago < v_fact_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del pago (%) es anterior a la emisión de la factura (%)',
+      NEW.fecha_pago, v_fact_emision
+      USING ERRCODE = '22023';
   END IF;
   -- F3: los pagos directos siguen exigiendo captura MXN<->USD. Cuando el pago
   -- nace de una APLICACIÓN DE ANTICIPO, la RPC ya valuó con paridad DOF del
@@ -21789,6 +21885,7 @@ BEGIN
   f_cand AS (
     SELECT fa.id, coalesce(fa.subtotal,0)::numeric AS subtotal, fa.moneda::text AS moneda,
            fa.estado::text AS estado, fa.total::numeric AS total,
+           fa.tipo_cambio::numeric AS tc_factura,
            (SELECT t.tc FROM public.tc_para_documento(fa.fecha_emision, fa.moneda::text, fa.tipo_cambio, CASE WHEN UPPER(fa.moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc,
            coalesce((SELECT sum(coalesce(cf.total,0)) FROM public.conceptos_factura cf
                       WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
@@ -21808,7 +21905,7 @@ BEGIN
       )
   ),
   f AS (
-    SELECT id, moneda, estado, total, tc_doc,
+    SELECT id, moneda, estado, total, tc_doc, tc_factura,
            factor,
            round(subtotal * factor, 2) AS subtotal
     FROM (
@@ -21823,7 +21920,13 @@ BEGIN
     WHERE z.factor > 0
   ),
   fnc AS (
-    SELECT n.factura_id, coalesce(n.monto,0)::numeric * f.factor AS monto, n.moneda::text AS moneda
+    -- D1: primero a la moneda de la factura (mismo canon que saldo_factura),
+    -- después el factor de atribución multiembarque.
+    SELECT n.factura_id,
+           public.nc_convertida_a_moneda_factura(
+             coalesce(n.monto,0)::numeric, n.moneda::text, n.tipo_cambio,
+             f.moneda, f.tc_factura) * f.factor AS monto,
+           f.moneda AS moneda
     FROM public.factura_notas_credito n
     JOIN f ON f.id = n.factura_id
     WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
@@ -21853,7 +21956,13 @@ BEGIN
       AND estado::text NOT IN ('Borrador','Cancelada')
   ),
   pnc AS (
-    SELECT n.proveedor_factura_id, coalesce(n.monto,0)::numeric AS monto, n.moneda::text AS moneda
+    -- D1: mismo canon que saldo_factura_proveedor / la vista de saldos. Si la
+    -- NC no se puede convertir (falta T/C) devuelve NULL y `sum` la excluye:
+    -- preferimos un costo mayor a dar por acreditada una NC no valuable.
+    SELECT n.proveedor_factura_id,
+           public.monto_pago_en_moneda_factura(
+             coalesce(n.monto,0)::numeric, n.moneda::text, n.tipo_cambio, pf.moneda) AS monto,
+           pf.moneda AS moneda
     FROM public.proveedor_notas_credito n JOIN pf ON pf.id = n.proveedor_factura_id
     WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
   ),
@@ -25700,6 +25809,74 @@ BEGIN
   RETURN v_resp;
 END;
 $$;
+CREATE FUNCTION public.registrar_pago_factura_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_referencia text DEFAULT ''::text, p_notas text DEFAULT ''::text, p_diferencia_cambiaria_mxn numeric DEFAULT 0, p_cuenta_bancaria_id uuid DEFAULT NULL::uuid, p_client_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid;
+  v_pago_id uuid;
+  v_res jsonb;
+  v_mov text := 'no_aplica';
+  v_mov_id uuid;
+  v_reintento boolean := false;
+BEGIN
+  -- D2: idempotencia por client_request_id. Un reintento de red devuelve el
+  -- cobro existente y REPARA su movimiento bancario; nunca 23505.
+  IF p_client_request_id IS NOT NULL THEN
+    SELECT id INTO v_pago_id FROM public.pagos_factura
+     WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
+    IF v_pago_id IS NOT NULL THEN
+      v_reintento := true;
+    END IF;
+  END IF;
+  IF v_pago_id IS NULL THEN
+    SELECT organization_id INTO v_org FROM public.facturas
+     WHERE id = p_factura_id AND deleted_at IS NULL;
+    IF v_org IS NULL THEN
+      RAISE EXCEPTION 'LC_FACTURA_NO_ENCONTRADA: la factura no existe o fue eliminada'
+        USING ERRCODE = 'P0002';
+    END IF;
+    BEGIN
+      INSERT INTO public.pagos_factura (
+        organization_id, factura_id, fecha_pago, monto, moneda, tipo_cambio,
+        monto_aplicado_factura, forma_pago, referencia, notas,
+        diferencia_cambiaria_mxn, cuenta_bancaria_id, client_request_id, created_by
+      ) VALUES (
+        v_org, p_factura_id, p_fecha_pago, p_monto, p_moneda::moneda,
+        COALESCE(p_tipo_cambio, 1), p_monto_aplicado_factura, p_forma_pago,
+        COALESCE(p_referencia, ''), COALESCE(p_notas, ''),
+        COALESCE(p_diferencia_cambiaria_mxn, 0), p_cuenta_bancaria_id,
+        p_client_request_id, auth.uid()
+      ) RETURNING id INTO v_pago_id;
+    EXCEPTION WHEN unique_violation THEN
+      SELECT id INTO v_pago_id FROM public.pagos_factura
+       WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
+      IF v_pago_id IS NULL THEN RAISE; END IF;
+      v_reintento := true;
+    END;
+  END IF;
+  -- El abono bancario vive en la MISMA transacción que el cobro: si no se
+  -- puede registrar, el cobro tampoco se persiste (antes quedaba huérfano).
+  SELECT cuenta_bancaria_id INTO p_cuenta_bancaria_id
+    FROM public.pagos_factura WHERE id = v_pago_id;
+  IF p_cuenta_bancaria_id IS NOT NULL THEN
+    v_res := public.asegurar_movimiento_cobro_factura(v_pago_id);
+    v_mov_id := NULLIF(v_res->>'movimiento_id', '')::uuid;
+    IF (v_res->>'creado')::boolean IS TRUE OR v_res->>'motivo' = 'ya_existe' THEN
+      v_mov := 'creado';
+    ELSIF v_res->>'motivo' = 'pago_anulado' THEN
+      v_mov := 'no_aplica';
+    ELSE
+      RAISE EXCEPTION 'LC_COBRO_MOVIMIENTO_FALLIDO: no se pudo registrar el abono bancario del cobro (%)',
+        COALESCE(v_res->>'motivo', 'motivo desconocido') USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  RETURN jsonb_build_object(
+    'pago_id', v_pago_id, 'movimiento_bancario', v_mov,
+    'movimiento_id', v_mov_id, 'reintento', v_reintento);
+END;
+$$;
 CREATE FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text DEFAULT NULL::text, p_notas text DEFAULT NULL::text) RETURNS public.liquidaciones_comision
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -25787,6 +25964,8 @@ CREATE FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fec
     AS $$
 DECLARE
   v_org      uuid;
+  v_emision  date;
+  v_hoy_mx   date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;
@@ -25803,11 +25982,23 @@ BEGIN
       RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', true);
     END IF;
   END IF;
-  SELECT organization_id INTO v_org
+  SELECT organization_id, fecha_emision INTO v_org, v_emision
     FROM public.proveedor_facturas
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+  -- D4: canon de fecha de negocio México, igual que el lote.
+  IF p_fecha_pago IS NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago' USING ERRCODE = '22023';
+  END IF;
+  IF p_fecha_pago > v_hoy_mx THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del pago (%) no puede ser futura', p_fecha_pago
+      USING ERRCODE = '22023';
+  END IF;
+  IF v_emision IS NOT NULL AND p_fecha_pago < v_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del pago (%) es anterior a la emisión de la factura (%)',
+      p_fecha_pago, v_emision USING ERRCODE = '22023';
   END IF;
   BEGIN
     INSERT INTO public.pagos_proveedor (
@@ -26075,6 +26266,16 @@ BEGIN
   END IF;
   IF v_comision < 0 THEN
     RAISE EXCEPTION 'LC_TRASPASO_COMISION_INVALIDA: la comisión no puede ser negativa';
+  END IF;
+  -- D3: fecha obligatoria y nunca futura (canon de fecha de negocio México).
+  -- Se valida ANTES de crear el traspaso y sus movimientos bancarios.
+  IF p_fecha IS NULL THEN
+    RAISE EXCEPTION 'LC_TRASPASO_FECHA_REQUERIDA: captura la fecha del traspaso'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_fecha > GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE) THEN
+    RAISE EXCEPTION 'LC_TRASPASO_FECHA_FUTURA: la fecha del traspaso (%) no puede ser futura', p_fecha
+      USING ERRCODE = '22023';
   END IF;
   SELECT * INTO v_origen FROM public.cuentas_bancarias WHERE id = p_cuenta_origen_id;
   SELECT * INTO v_destino FROM public.cuentas_bancarias WHERE id = p_cuenta_destino_id;
@@ -34277,6 +34478,9 @@ GRANT ALL ON FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_
 REVOKE ALL ON FUNCTION public.actualizar_estado_cliente_proforma(p_proforma_id uuid, p_respuesta text, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_estado_cliente_proforma(p_proforma_id uuid, p_respuesta text, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_estado_cliente_proforma(p_proforma_id uuid, p_respuesta text, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.actualizar_pago_proveedor_atomico(p_pago_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio_usd numeric, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_diferencia_cambiaria_mxn numeric, p_expected_updated_at timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.actualizar_pago_proveedor_atomico(p_pago_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio_usd numeric, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_diferencia_cambiaria_mxn numeric, p_expected_updated_at timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public.actualizar_pago_proveedor_atomico(p_pago_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio_usd numeric, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_diferencia_cambiaria_mxn numeric, p_expected_updated_at timestamp with time zone) TO service_role;
 REVOKE ALL ON FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa jsonb, p_recargos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa jsonb, p_recargos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa jsonb, p_recargos jsonb) TO service_role;
@@ -35259,6 +35463,9 @@ GRANT ALL ON FUNCTION public.registrar_comision_pendiente(p_organization_id uuid
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.registrar_pago_factura_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_referencia text, p_notas text, p_diferencia_cambiaria_mxn numeric, p_cuenta_bancaria_id uuid, p_client_request_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.registrar_pago_factura_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_referencia text, p_notas text, p_diferencia_cambiaria_mxn numeric, p_cuenta_bancaria_id uuid, p_client_request_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.registrar_pago_factura_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_referencia text, p_notas text, p_diferencia_cambiaria_mxn numeric, p_cuenta_bancaria_id uuid, p_client_request_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) TO authenticated;
 GRANT ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) TO service_role;

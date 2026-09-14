@@ -8830,6 +8830,22 @@ export type Database = {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json
       }
+      actualizar_pago_proveedor_atomico: {
+        Args: {
+          p_cuenta_bancaria_id?: string
+          p_diferencia_cambiaria_mxn?: number
+          p_expected_updated_at?: string
+          p_fecha_pago: string
+          p_metodo_pago: string
+          p_moneda: string
+          p_monto: number
+          p_notas?: string
+          p_pago_id: string
+          p_referencia?: string
+          p_tipo_cambio_usd: number
+        }
+        Returns: Json
+      }
       actualizar_tarifa_con_recargos_rpc: {
         Args: { p_id: string; p_recargos: Json; p_tarifa: Json }
         Returns: undefined
@@ -11111,6 +11127,23 @@ export type Database = {
         Returns: undefined
       }
       registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
+      registrar_pago_factura_atomico: {
+        Args: {
+          p_client_request_id?: string
+          p_cuenta_bancaria_id?: string
+          p_diferencia_cambiaria_mxn?: number
+          p_factura_id: string
+          p_fecha_pago: string
+          p_forma_pago: string
+          p_moneda: string
+          p_monto: number
+          p_monto_aplicado_factura: number
+          p_notas?: string
+          p_referencia?: string
+          p_tipo_cambio: number
+        }
+        Returns: Json
+      }
       registrar_pago_liquidacion: {
         Args: {
           p_fecha_pago: string
