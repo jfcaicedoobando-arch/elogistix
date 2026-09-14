@@ -1,5 +1,12 @@
 # Roadmap
 
+## Pulido P2 Cotizaciones/Embarques 13.823.373
+- [ ] B1 — Ofrecer P&L por contenedor sólo con contenedores operativos
+- [ ] B2 — No presentar ceros desconocidos en renglones marcador FCL
+- [ ] B3/B4 — Identificar presupuesto y aclarar que Generales ya está prorrateado
+- [ ] B5 — Mostrar trazabilidad T/C sólo para monedas no-MXN presentes
+- [ ] Cierre: pruebas focalizadas, versión, changelog y manifiesto; sin publicar
+
 ## Integridad proformas 13.823.276
 - [x] Restringir overrides de IVA a p_concepto_ids y rechazar ajenos (LC_OVERRIDE_FUERA_DE_SELECCION)
 - [x] Prueba SQL de regresión (override ajeno rechazado, válido aplicado, atómico)
