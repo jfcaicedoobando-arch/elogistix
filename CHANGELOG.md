@@ -5,6 +5,8 @@
 - **fix(seguridad/RLS)**: `public.comisiones_recuperaciones` (tabla nueva del lote M4) no tenía la policy `RESTRICTIVE` de tenant activo exigida por `scripts/db/integrity-guard.sql` (hallazgo `tabla_negocio_sin_scope_tenant` en el workflow `rls-tests` #1121). Se agrega `"Scope tenant activo super admin"` con el patrón canónico Ola 16 (`NOT has_role(super_admin) OR public.rls_tenant_scope_ok(organization_id)` en `USING` y `WITH CHECK`), de modo que un `super_admin` sólo ve/afecta la organización activa. Se conserva la policy permisiva `recuperaciones_select_org` y `authenticated` sigue con `SELECT` únicamente: las mutaciones permanecen en las RPC `SECURITY DEFINER` auditadas.
   - Espejo/canon: `supabase/schema/acl/comisiones_recuperaciones_rls_tenant_activo.sql`.
   - Cobertura nueva: `supabase/tests/comisiones_recuperaciones_scope_tenant.sql` (RLS activo, RESTRICTIVE con `rls_tenant_scope_ok`, lectura in-org intacta, sin policy de escritura), registrada en `_guards_manifest.txt`.
+- **fix(seguridad/H6)**: segundo hallazgo de CI #4062 — la migración `20260914175016_…` reemitía `public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid)` (cambio M3 de fecha de negocio MX) sin reafirmar sus privilegios. Se añaden al final de esa migración, y en una migración de refuerzo aplicada, `REVOKE ALL … FROM PUBLIC, anon` y `GRANT EXECUTE … TO authenticated` — exactamente los roles que ya tenía antes de reemitirse (sin expandir acceso). Espejo actualizado: `supabase/schema/tesoreria/ejecutar_pago_programado.sql`. El cambio M3 de fecha se conserva íntegro.
+
 
 
 
