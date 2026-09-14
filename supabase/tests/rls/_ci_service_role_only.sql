@@ -149,6 +149,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.reversar_movimiento_cobro_rep_cancelado(uuid)'),
   -- v13.823.296: auditoría informativa de cobranza; sólo la corre el cron.
   ('public.auditar_consistencia_cobranza()'),
-  -- v13.823.309 (A-2): trigger que bloquea cambios financieros en embarques
-  -- Cerrados; sólo lo invoca el propio trigger, nunca el cliente.
-  ('public.tg_bloquear_financiero_embarque_cerrado()');
+   -- v13.823.309 (A-2): trigger que bloquea cambios financieros en embarques
+   -- Cerrados; sólo lo invoca el propio trigger, nunca el cliente.
+   ('public.tg_bloquear_financiero_embarque_cerrado()'),
+   -- v13.823.392: helper interno que calcula el delta autoritativo de una tarifa
+   -- sustituida en el flujo cotización→embarque. Sólo lo usan RPCs DEFINER.
+   ('public._embarque_delta_tarifa_sustituida(uuid, uuid)');
