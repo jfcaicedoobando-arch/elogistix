@@ -5571,7 +5571,13 @@ BEGIN
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
         total = COALESCE((cv->>'total')::numeric, total),
         aplica_iva = COALESCE((cv->>'aplica_iva')::boolean, aplica_iva),
-        tasa_iva_aplicada = COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
+        -- C22 (v13.823.380): una línea exenta jamás conserva tasa > 0, ni
+        -- cuando el payload omite la tasa ni cuando arrastra una legacy (0.16).
+        -- La columna es NOT NULL, así que la convención es 0, no NULL.
+        tasa_iva_aplicada = CASE
+          WHEN COALESCE((cv->>'aplica_iva')::boolean, aplica_iva) = false THEN 0
+          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
+        END
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
         AND estado_facturacion IN ('pendiente', 'en_proforma');
@@ -5588,7 +5594,12 @@ BEGIN
         COALESCE((cv->>'total')::numeric, 0),
         NULLIF(cv->>'contenedor_id','')::uuid,
         COALESCE((cv->>'aplica_iva')::boolean, false),
-        COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+        -- C22: alta coherente — exento => 0; gravado => tasa explícita o el
+        -- fallback canónico vigente (0.16).
+        CASE
+          WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
+          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16)
+        END,
         v_org_id
       )
       RETURNING id INTO v_new_id;
@@ -11328,12 +11339,11 @@ DECLARE
   v_serie public.factura_series;
   v_subtotal_usd numeric := 0; v_iva_usd numeric := 0; v_total_usd numeric := 0;
   v_subtotal_mxn numeric := 0; v_iva_mxn numeric := 0; v_total_mxn numeric := 0;
-  v_distinct_cli int; v_distinct_org int;
+  v_distinct_cli int; v_distinct_org int; v_distinct_tipo int; v_distinct_dias int;
   v_factura_ids uuid[] := ARRAY[]::uuid[];
   v_factura_mxn_id uuid; v_factura_usd_id uuid;
   v_numero_tmp text; v_embarque_ids uuid[];
   v_dias int;
-  -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
   v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   v_cached := public.idempotency_claim(p_request_id, 'convertir_proformas_a_factura');
@@ -11381,11 +11391,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_YA_FACTURADA: una o más proformas ya fueron facturadas' USING ERRCODE='P0002';
   END IF;
-  -- v13.823.279 — Candado de aceptación: la UI ya oculta la acción para
-  -- proformas pendientes o rechazadas, pero la RPC podía llamarse directo y
-  -- facturar sin la respuesta del cliente. Para clientes de casa, la RPC
-  -- `aceptar_proforma_sin_autorizacion` deja `estado_cliente = 'aceptada'`,
-  -- así que ese flujo sigue funcionando igual.
+  -- v13.823.279 — Candado de aceptación del cliente.
   IF EXISTS (
     SELECT 1 FROM public.proformas
     WHERE id = ANY(p_proforma_ids)
@@ -11393,6 +11399,35 @@ BEGIN
       AND coalesce(estado_cliente, 'pendiente') <> 'aceptada'
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_REQUIERE_ACEPTACION: una o más proformas no están aceptadas por el cliente (pendiente o rechazada)' USING ERRCODE='P0002';
+  END IF;
+  -- C25 (v13.823.380) — Una proforma FUENTE ya consolidada repuntó sus
+  -- conceptos a la proforma consolidada: facturarla emitiría una factura sin
+  -- líneas y la marcaría facturada.
+  IF EXISTS (
+    SELECT 1 FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL
+      AND estado_revision = 'consolidada'
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_FUENTE_CONSOLIDADA: una o más proformas ya fueron consolidadas; factura la proforma consolidada, no sus fuentes' USING ERRCODE='P0002';
+  END IF;
+  -- C25 — La rama de conceptos (consolidados vs conceptos_venta) se elegía con
+  -- `v_first.es_consolidada` para TODO el lote: mezclar tipos podía omitir
+  -- líneas y marcar todas las proformas como facturadas.
+  SELECT count(DISTINCT es_consolidada) INTO v_distinct_tipo
+  FROM public.proformas
+  WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+  IF COALESCE(v_distinct_tipo, 1) > 1 THEN
+    RAISE EXCEPTION 'LC_PROFORMA_MEZCLA_CONSOLIDADA: no puedes fusionar proformas consolidadas con proformas individuales; convierte cada tipo por separado' USING ERRCODE='P0001';
+  END IF;
+  -- C25 — Condiciones de pago: sin plazo explícito, una fusión con plazos
+  -- distintos elegía en silencio el de la proforma más antigua.
+  IF array_length(p_proforma_ids, 1) > 1 AND COALESCE(NULLIF(p_dias_credito, 0), NULL) IS NULL THEN
+    SELECT count(DISTINCT COALESCE(dias_credito, -1)) INTO v_distinct_dias
+    FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+    IF COALESCE(v_distinct_dias, 1) > 1 THEN
+      RAISE EXCEPTION 'LC_PROFORMA_DIAS_CREDITO_DISTINTOS: las proformas tienen plazos de crédito distintos; iguala el plazo o indica el plazo de la factura' USING ERRCODE='P0001';
+    END IF;
   END IF;
   SELECT * INTO v_first FROM public.proformas
     WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;
@@ -11404,7 +11439,6 @@ BEGIN
   IF v_cliente IS NULL THEN RAISE EXCEPTION 'Cliente no encontrado'; END IF;
   SELECT * INTO v_serie FROM public.factura_series WHERE id = p_serie_id AND organization_id = v_org;
   IF v_serie IS NULL THEN RAISE EXCEPTION 'Serie no encontrada'; END IF;
-  -- Cascada de plazo de crédito: parámetro → proforma → ficha del cliente → 0.
   v_dias := COALESCE(NULLIF(p_dias_credito, 0), v_first.dias_credito, v_cliente.dias_credito, p_dias_credito, 0);
   SELECT array_agg(DISTINCT embarque_id) INTO v_embarque_ids
   FROM public.proformas
@@ -11448,8 +11482,6 @@ BEGIN
     PERFORM public._convertir_proformas_insertar_conceptos(
       v_factura_mxn_id, p_proforma_ids, v_org, v_first.es_consolidada, 'MXN'::public.moneda
     );
-    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
-    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
       COALESCE(SUM(total), 0),
       COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
@@ -11503,8 +11535,6 @@ BEGIN
     PERFORM public._convertir_proformas_insertar_conceptos(
       v_factura_usd_id, p_proforma_ids, v_org, v_first.es_consolidada, 'USD'::public.moneda
     );
-    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
-    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
       COALESCE(SUM(total), 0),
       COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
@@ -12645,12 +12675,44 @@ CREATE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id 
     SET search_path TO 'public'
     AS $$
 DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb;
+        v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
-  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
+  -- C21: FOR UPDATE serializa dos llamadas concurrentes sobre la misma cotización.
+  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
+  -- C21 (v13.823.380) — Si la cotización YA está vinculada a un embarque vivo,
+  -- esta llamada es un reintento: devolvemos el embarque existente SIN
+  -- revalidar tarifa, sin sellar una decisión tardía y sin reaplicar costos
+  -- (`_embarque_aplicar_tarifa_decidida` toca conceptos_costo pendientes de una
+  -- operación que puede estar Confirmada, En tránsito o Cerrada).
+  -- No es un early return "libre": se repiten los mismos controles de acceso
+  -- que aplica `crear_embarque_borrador_core`.
+  SELECT e.id INTO v_existente
+    FROM public.embarques e
+   WHERE e.deleted_at IS NULL
+     AND (e.id = v_cot.embarque_id OR e.cotizacion_id = v_cot.id)
+   ORDER BY e.created_at ASC
+   LIMIT 1;
+  IF v_existente IS NOT NULL THEN
+    v_caller_org := public.current_user_org_id();
+    v_is_super := public.has_role(auth.uid(), 'super_admin'::app_role);
+    IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
+      RAISE EXCEPTION 'LC_NO_AUTORIZADO: la cotización pertenece a otra organización' USING ERRCODE='42501';
+    END IF;
+    IF NOT (v_is_super
+            OR public.has_role(auth.uid(), 'admin_org'::app_role)
+            OR public.has_role(auth.uid(), 'admin'::app_role)
+            OR public.has_role(auth.uid(), 'gerente_operaciones'::app_role)
+            OR public.has_role(auth.uid(), 'coordinador_logistico'::app_role)
+            OR public.has_role(auth.uid(), 'operador'::app_role)) THEN
+      RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo administración u operación pueden crear el borrador' USING ERRCODE='42501';
+    END IF;
+    RETURN v_existente;
+  END IF;
+  -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
   IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
@@ -12679,6 +12741,7 @@ BEGIN
     END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
+  -- v13.823.32: repetir la conversión NO debe pisar el snapshot histórico.
   SELECT tarifa_decision IS NOT NULL INTO v_ya_decidido
     FROM public.embarques WHERE id = v_embarque_id;
   IF NOT COALESCE(v_ya_decidido, false) THEN
@@ -12694,8 +12757,6 @@ BEGIN
       PERFORM public._embarque_aplicar_tarifa_decidida(
         v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
     END IF;
-    -- v13.823.349 — sólo las decisiones que resuelven el bloqueo cierran la
-    -- solicitud pendiente; `mantenida_por_operaciones` no.
     IF p_decision IN ('reaprobada_ventas','refrescada','sustituida')
        AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
       UPDATE public.cotizaciones
@@ -27774,6 +27835,9 @@ DECLARE
   v_input record;
   v_ids_conservados uuid[];
   v_orden integer := 0;
+  v_ajenos integer;
+  v_dups integer;
+  v_bloqueados text;
 BEGIN
   SELECT organization_id INTO v_org_id
   FROM public.embarques
@@ -27785,6 +27849,45 @@ BEGIN
   SELECT COALESCE(array_agg((elem->>'id')::uuid), ARRAY[]::uuid[]) INTO v_ids_conservados
   FROM jsonb_array_elements(p_contenedores) AS elem
   WHERE elem ? 'id' AND elem->>'id' IS NOT NULL AND elem->>'id' <> '';
+  -- C23 (v13.823.380): un id repetido o que no sea hijo VIVO de este embarque
+  -- hacía que el borrado lógico barriera todos los contenedores activos y el
+  -- UPDATE posterior no afectara ninguna fila, sin error. Se valida ANTES de
+  -- cualquier mutación.
+  SELECT count(*) INTO v_dups
+  FROM (SELECT t.id FROM unnest(v_ids_conservados) AS t(id) GROUP BY t.id HAVING count(*) > 1) d;
+  IF v_dups > 0 THEN
+    RAISE EXCEPTION 'LC_CONTENEDOR_ID_DUPLICADO: la lista de contenedores repite el mismo registro; revisa la captura'
+      USING ERRCODE='P0001';
+  END IF;
+  SELECT count(*) INTO v_ajenos
+  FROM unnest(v_ids_conservados) AS t(id)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.embarque_contenedores c
+     WHERE c.id = t.id AND c.embarque_id = p_embarque_id AND c.deleted_at IS NULL
+  );
+  IF v_ajenos > 0 THEN
+    RAISE EXCEPTION 'LC_CONTENEDOR_ID_INVALIDO: uno o más contenedores de la lista no pertenecen a este embarque o ya fueron eliminados; recarga el embarque e intenta de nuevo'
+      USING ERRCODE='P0001';
+  END IF;
+  -- C24 (v13.823.380): quitar un contenedor con costos o ventas vivos dejaba
+  -- conceptos apuntando a un contenedor eliminado. Se bloquea toda la
+  -- operación (atómica) y se nombra el contenedor a resolver primero.
+  SELECT string_agg(DISTINCT COALESCE(NULLIF(btrim(c.numero_contenedor), ''), 'sin número'), ', ')
+    INTO v_bloqueados
+  FROM public.embarque_contenedores c
+  WHERE c.embarque_id = p_embarque_id
+    AND c.deleted_at IS NULL
+    AND NOT (c.id = ANY(v_ids_conservados))
+    AND (
+      EXISTS (SELECT 1 FROM public.conceptos_costo cc
+               WHERE cc.contenedor_id = c.id AND cc.deleted_at IS NULL)
+      OR EXISTS (SELECT 1 FROM public.conceptos_venta cv
+                  WHERE cv.contenedor_id = c.id AND cv.deleted_at IS NULL)
+    );
+  IF v_bloqueados IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_CONTENEDOR_CON_CONCEPTOS: el contenedor % tiene costos o ventas activos; reasigna o elimina esos conceptos antes de quitarlo', v_bloqueados
+      USING ERRCODE='P0001';
+  END IF;
   UPDATE public.embarque_contenedores
   SET deleted_at = now()
   WHERE embarque_id = p_embarque_id

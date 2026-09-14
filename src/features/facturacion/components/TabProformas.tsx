@@ -19,9 +19,26 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
 import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
 
-
+/**
+ * C25 (v13.823.380) — Motivo por el que la fusión seleccionada no procede.
+ * Vive fuera del componente para no engordar su complejidad; el servidor
+ * rechaza las mismas condiciones (`LC_PROFORMA_*`).
+ */
+function avisoFusionSeleccion(info: {
+  sameCliente: boolean; sameTipo: boolean; sameDiasCredito: boolean;
+}): string | null {
+  if (!info.sameCliente) return "Sólo puedes fusionar proformas del mismo cliente.";
+  if (!info.sameTipo) {
+    return "No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.";
+  }
+  if (!info.sameDiasCredito) {
+    return "Las proformas tienen plazos de crédito distintos. Iguala el plazo antes de fusionarlas.";
+  }
+  return null;
+}
 
 export function TabProformas({ isInRange, estadoInicial }: {
+
   isInRange?: (fecha: string | null | undefined) => boolean;
   estadoInicial?: FiltroEstadoProforma;
 }) {
@@ -49,7 +66,12 @@ export function TabProformas({ isInRange, estadoInicial }: {
   );
 
   const seleccionados = canEmitirFactura ? c.selectedProformas.length : 0;
-  const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente;
+  // C25 (v13.823.380) — además del mismo cliente, la fusión exige proformas del
+  // mismo tipo (consolidada vs individual) y con el mismo plazo de crédito.
+  const avisoFusion = seleccionados > 0 ? avisoFusionSeleccion(c.fusionInfo) : null;
+  const puedeFusionar = seleccionados > 0 && avisoFusion === null;
+
+
 
   return (
     <CargaGuard
@@ -117,13 +139,13 @@ export function TabProformas({ isInRange, estadoInicial }: {
               <strong>{seleccionados}</strong> proforma{seleccionados === 1 ? "" : "s"} seleccionada{seleccionados === 1 ? "" : "s"}
               {c.fusionInfo.clienteNombre && <> · {c.fusionInfo.clienteNombre}</>}
             </div>
-            {!c.fusionInfo.sameCliente && (
+            {avisoFusion && (
               <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-body-sm">
-                  Sólo puedes fusionar proformas del mismo cliente.
-                </AlertDescription>
+                <AlertDescription className="text-body-sm">{avisoFusion}</AlertDescription>
               </Alert>
             )}
+
+
             <Button variant="ghost" size="sm" onClick={c.clearSelected}>
               <X className="h-4 w-4 mr-1" /> Limpiar
             </Button>

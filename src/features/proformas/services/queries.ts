@@ -22,7 +22,12 @@ import type {
  */
 const PROFORMA_LISTA_SELECT = [
   "id", "numero", "expediente", "embarque_id", "cliente_id", "cliente_nombre", "operador",
+  // C25: `es_consolidada` y `estado_revision` los usa `useTabProformasController`
+  // para no permitir seleccionar una proforma fuente ya consolidada ni mezclar
+  // consolidadas con individuales en una fusión.
+  "es_consolidada", "estado_revision",
   "dias_credito", "organization_id",
+
   "subtotal_usd", "iva_usd", "total_usd", "subtotal_mxn", "iva_mxn", "total_mxn",
   "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",
   "fecha_facturacion", "factura_id", "created_at",

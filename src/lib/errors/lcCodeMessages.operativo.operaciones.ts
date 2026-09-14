@@ -16,6 +16,15 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_EMBARQUE_NO_ENCONTRADO: "El embarque no existe o fue eliminado.",
   LC_EMBARQUE_ELIMINADO: "El embarque ya fue eliminado.",
   LC_EMBARQUE_BLOQUEADO: "El embarque está bloqueado y no admite cambios.",
+
+  // C23/C24 (v13.823.380) — sincronización de contenedores.
+  LC_CONTENEDOR_ID_INVALIDO:
+    "Uno o más contenedores de la lista no pertenecen a este embarque o ya fueron eliminados. Recarga el embarque e intenta de nuevo.",
+  LC_CONTENEDOR_ID_DUPLICADO:
+    "La lista de contenedores repite el mismo registro. Revisa la captura antes de guardar.",
+  LC_CONTENEDOR_CON_CONCEPTOS:
+    "Ese contenedor tiene costos o ventas activos. Reasigna o elimina esos conceptos antes de quitarlo del embarque.",
+
   // v13.823.321 — mínimos operativos para confirmar (shipper, consignatario,
   // ETD/ETA, peso y datos del modo). La lista real llega en el detalle del error.
   LC_CONFIRMADO_INCOMPLETO:

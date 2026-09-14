@@ -98,7 +98,14 @@ BEGIN
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
         total = COALESCE((cv->>'total')::numeric, total),
         aplica_iva = COALESCE((cv->>'aplica_iva')::boolean, aplica_iva),
-        tasa_iva_aplicada = COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
+        -- C22 (v13.823.380): una línea exenta jamás conserva tasa > 0, ni
+        -- cuando el payload omite la tasa ni cuando arrastra una legacy (0.16).
+        -- La columna es NOT NULL, así que la convención es 0, no NULL.
+        tasa_iva_aplicada = CASE
+          WHEN COALESCE((cv->>'aplica_iva')::boolean, aplica_iva) = false THEN 0
+          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
+        END
+
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
         AND estado_facturacion IN ('pendiente', 'en_proforma');
@@ -115,7 +122,13 @@ BEGIN
         COALESCE((cv->>'total')::numeric, 0),
         NULLIF(cv->>'contenedor_id','')::uuid,
         COALESCE((cv->>'aplica_iva')::boolean, false),
-        COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+        -- C22: alta coherente — exento => 0; gravado => tasa explícita o el
+        -- fallback canónico vigente (0.16).
+        CASE
+          WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
+          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16)
+        END,
+
         v_org_id
       )
       RETURNING id INTO v_new_id;

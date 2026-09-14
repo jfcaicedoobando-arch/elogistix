@@ -142,4 +142,13 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Un ajuste de IVA apunta a un concepto que no está en esta proforma. Recarga la pantalla y vuelve a seleccionar los conceptos.",
   LC_PROFORMA_REQUIERE_ACEPTACION:
     "Sólo se pueden facturar proformas aceptadas por el cliente. Registra la aceptación antes de convertirla a factura.",
+
+  // C25 (v13.823.380) — candados de fusión de proformas.
+  LC_PROFORMA_FUENTE_CONSOLIDADA:
+    "Esta proforma ya se consolidó en otra: sus conceptos se pasaron a la proforma consolidada. Factura la consolidada, no sus fuentes.",
+  LC_PROFORMA_MEZCLA_CONSOLIDADA:
+    "No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.",
+  LC_PROFORMA_DIAS_CREDITO_DISTINTOS:
+    "Las proformas seleccionadas tienen plazos de crédito distintos. Iguala el plazo o indica el plazo de la factura antes de fusionarlas.",
 };
+

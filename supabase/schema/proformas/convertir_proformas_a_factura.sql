@@ -19,7 +19,7 @@ DECLARE
   v_serie public.factura_series;
   v_subtotal_usd numeric := 0; v_iva_usd numeric := 0; v_total_usd numeric := 0;
   v_subtotal_mxn numeric := 0; v_iva_mxn numeric := 0; v_total_mxn numeric := 0;
-  v_distinct_cli int; v_distinct_org int;
+  v_distinct_cli int; v_distinct_org int; v_distinct_tipo int; v_distinct_dias int;
   v_factura_ids uuid[] := ARRAY[]::uuid[];
   v_factura_mxn_id uuid; v_factura_usd_id uuid;
   v_numero_tmp text; v_embarque_ids uuid[];
@@ -94,6 +94,40 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_PROFORMA_REQUIERE_ACEPTACION: una o más proformas no están aceptadas por el cliente (pendiente o rechazada)' USING ERRCODE='P0002';
   END IF;
+
+  -- C25 (v13.823.380) — Una proforma FUENTE ya consolidada repuntó sus
+  -- conceptos a la proforma consolidada: facturarla emitiría una factura sin
+  -- líneas y la marcaría facturada.
+  IF EXISTS (
+    SELECT 1 FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL
+      AND estado_revision = 'consolidada'
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_FUENTE_CONSOLIDADA: una o más proformas ya fueron consolidadas; factura la proforma consolidada, no sus fuentes' USING ERRCODE='P0002';
+  END IF;
+
+  -- C25 — La rama de conceptos (consolidados vs conceptos_venta) se elegía con
+  -- `v_first.es_consolidada` para TODO el lote: mezclar tipos podía omitir
+  -- líneas y marcar todas las proformas como facturadas.
+  SELECT count(DISTINCT es_consolidada) INTO v_distinct_tipo
+  FROM public.proformas
+  WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+  IF COALESCE(v_distinct_tipo, 1) > 1 THEN
+    RAISE EXCEPTION 'LC_PROFORMA_MEZCLA_CONSOLIDADA: no puedes fusionar proformas consolidadas con proformas individuales; convierte cada tipo por separado' USING ERRCODE='P0001';
+  END IF;
+
+  -- C25 — Condiciones de pago: sin plazo explícito, una fusión con plazos
+  -- distintos elegía en silencio el de la proforma más antigua.
+  IF array_length(p_proforma_ids, 1) > 1 AND COALESCE(NULLIF(p_dias_credito, 0), NULL) IS NULL THEN
+    SELECT count(DISTINCT COALESCE(dias_credito, -1)) INTO v_distinct_dias
+    FROM public.proformas
+    WHERE id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+    IF COALESCE(v_distinct_dias, 1) > 1 THEN
+      RAISE EXCEPTION 'LC_PROFORMA_DIAS_CREDITO_DISTINTOS: las proformas tienen plazos de crédito distintos; iguala el plazo o indica el plazo de la factura' USING ERRCODE='P0001';
+    END IF;
+  END IF;
+
+
 
   SELECT * INTO v_first FROM public.proformas
     WHERE id = ANY(p_proforma_ids) ORDER BY created_at ASC LIMIT 1;

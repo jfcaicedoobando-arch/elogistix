@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.380] - 2026-09-14
+
+- **fix(operaciones/facturación)**: lote C21–C25, candados preventivos (sin tocar ni sanear datos históricos).
+  - **C21 Conversión repetida cotización → embarque**: `crear_embarque_borrador_desde_cotizacion` detecta la cotización ya vinculada a un embarque vivo y devuelve ese embarque sin revalidar tarifa, sin sellar una decisión tardía y sin llamar `_embarque_aplicar_tarifa_decidida` (que tocaba `conceptos_costo` pendientes de operaciones Confirmadas/En tránsito/Cerradas). Conserva `FOR UPDATE` sobre la cotización y repite los controles de organización y rol del core (`LC_NO_AUTORIZADO`).
+  - **C22 IVA de origen en embarques**: `actualizar_embarque_completo` normaliza `tasa_iva_aplicada` en alta y edición de `conceptos_venta`: `aplica_iva = false` ⇒ tasa 0 (la columna es NOT NULL); `aplica_iva = true` respeta la tasa explícita y sólo cae al fallback canónico (0.16) cuando falta. Filas históricas intactas.
+  - **C23 Sincronización de contenedores**: `sincronizar_contenedores_embarque` valida, ANTES de mutar, que cada id del payload sea hijo vivo del embarque objetivo y no venga repetido (`LC_CONTENEDOR_ID_INVALIDO`, `LC_CONTENEDOR_ID_DUPLICADO`); un id ajeno o soft-deleted ya no barre todos los contenedores activos con un `UPDATE` posterior de cero filas.
+  - **C24 Contenedores vs conceptos**: la misma RPC bloquea el borrado lógico de un contenedor con `conceptos_costo` o `conceptos_venta` vivos (`LC_CONTENEDOR_CON_CONCEPTOS`, con el número del contenedor a resolver). La operación es atómica: nada se modifica al rechazar.
+  - **C25 Fusión de proformas**: `convertir_proformas_a_factura` rechaza —antes de crear factura o marcar estados— proformas fuente ya consolidadas (`LC_PROFORMA_FUENTE_CONSOLIDADA`), lotes que mezclan consolidadas con individuales (`LC_PROFORMA_MEZCLA_CONSOLIDADA`) y fusiones multi-proforma con plazos de crédito distintos sin plazo explícito (`LC_PROFORMA_DIAS_CREDITO_DISTINTOS`). En UI, `isConvertible` deja de permitir seleccionar una fuente consolidada y `TabProformas` explica y deshabilita la conversión al mezclar tipos o plazos; las fusiones homogéneas siguen igual.
+
+
 ## [13.823.379] - 2026-09-14
 
 - **fix(fiscal/operaciones)**: lote B16–B20 (sólo conversiones y UI futuras; sin tocar datos históricos).
