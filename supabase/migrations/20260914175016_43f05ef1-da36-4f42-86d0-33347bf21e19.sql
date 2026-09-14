@@ -482,3 +482,7 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) TO authenticated, service_role;
+-- H6: reafirmación de privilegios canónicos de la RPC reemitida por M3.
+-- Mismos roles que antes de reemitirse (sólo `authenticated`): no se expande acceso.
+REVOKE ALL ON FUNCTION public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ejecutar_pago_programado(uuid, uuid, date, numeric, text, text, uuid) TO authenticated;
