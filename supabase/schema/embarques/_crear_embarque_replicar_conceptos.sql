@@ -158,7 +158,7 @@ BEGIN
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-          COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
+          v_aplica,
           v_tasa,
           v_total, p_org
         );
