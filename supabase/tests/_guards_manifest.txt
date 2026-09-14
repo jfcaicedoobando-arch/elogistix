@@ -138,3 +138,4 @@ supabase/tests/m3_fecha_negocio_mx.sql
 supabase/tests/m4_m5_comision_recuperacion_parcial.sql
 supabase/tests/comisiones_recuperaciones_scope_tenant.sql
 supabase/tests/n3_n5_movimientos_bancarios.sql
+supabase/tests/eliminar_embarque_borrador_sin_expediente.sql
