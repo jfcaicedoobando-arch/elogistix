@@ -18,24 +18,11 @@ import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
 import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
+import {
+  avisoFusionSeleccion,
+  puedeFusionarSeleccion,
+} from "@/features/facturacion/domain/avisoFusionProformas";
 
-/**
- * C25 (v13.823.380) — Motivo por el que la fusión seleccionada no procede.
- * Vive fuera del componente para no engordar su complejidad; el servidor
- * rechaza las mismas condiciones (`LC_PROFORMA_*`).
- */
-function avisoFusionSeleccion(info: {
-  sameCliente: boolean; sameTipo: boolean; sameDiasCredito: boolean;
-}): string | null {
-  if (!info.sameCliente) return "Sólo puedes fusionar proformas del mismo cliente.";
-  if (!info.sameTipo) {
-    return "No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.";
-  }
-  if (!info.sameDiasCredito) {
-    return "Las proformas tienen plazos de crédito distintos. Iguala el plazo antes de fusionarlas.";
-  }
-  return null;
-}
 
 export function TabProformas({ isInRange, estadoInicial }: {
 
@@ -69,7 +56,8 @@ export function TabProformas({ isInRange, estadoInicial }: {
   // C25 (v13.823.380) — además del mismo cliente, la fusión exige proformas del
   // mismo tipo (consolidada vs individual) y con el mismo plazo de crédito.
   const avisoFusion = seleccionados > 0 ? avisoFusionSeleccion(c.fusionInfo) : null;
-  const puedeFusionar = seleccionados > 0 && avisoFusion === null;
+  const puedeFusionar = puedeFusionarSeleccion(seleccionados, c.fusionInfo);
+
 
 
 

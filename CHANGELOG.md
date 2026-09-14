@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.381] - 2026-09-14
+
+- **fix(facturación/reportes/CI)**: lote C26–C30 (sin tocar datos históricos ni relajar guards).
+  - **C26 Power of 10**: la lógica de aviso y validación de fusión de proformas sale de `TabProformas.tsx` a `src/features/facturacion/domain/avisoFusionProformas.ts` (`avisoFusionSeleccion`, `puedeFusionarSeleccion`) con prueba unitaria; misma UX y componente ≤ 200 líneas, sin allowlist.
+  - **C27 Power of 10**: los selects de listado de proformas se mueven a `src/features/proformas/services/queries.selects.ts`; `queries.ts` conserva contratos y tipos y baja de 200 líneas, sin allowlist.
+  - **C28 IVA al reactivar una línea**: en `actualizar_embarque_completo`, una línea exenta que vuelve a marcarse con IVA sin tasa positiva explícita toma el fallback canónico 0.16 (antes conservaba 0, dejando una línea gravada sin IVA). Se respeta la tasa positiva enviada o la previa; con IVA efectivo `false` la tasa sigue en 0. Filas históricas intactas.
+  - **C29 P&L de factura multiembarque**: `pnl_financiero_embarque` atribuye los ingresos por `conceptos_factura.embarque_id` en lugar de `facturas.embarque_id`, así que una factura fusionada ya no cae completa en el primer embarque. Los importes de nivel factura (saldo y notas de crédito) se reparten con un factor proporcional explícito = líneas del embarque / líneas etiquetadas; las facturas legacy sin líneas etiquetadas conservan el embarque del header con factor 1. Sólo lectura: no cambia importes ni enlaces guardados.
+  - **C30 Trazabilidad de proformas fusionadas**: al terminar la conversión, cada proforma origen queda enlazada a su factura (`factura_id` al borrador principal, `factura_secundaria_id` al segundo cuando se generan MXN + USD; una única factura USD queda primaria). El listado/historial mezcla la FK inversa con los vínculos de la proforma (`mergeFacturasVinculadas`) sin duplicar documentos; el flujo de una sola proforma no cambia.
+
 ## [13.823.380] - 2026-09-14
 
 - **fix(operaciones/facturación)**: lote C21–C25, candados preventivos (sin tocar ni sanear datos históricos).
