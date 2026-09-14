@@ -132,7 +132,7 @@ BEGIN
         -- fallback canónico vigente (0.16).
         CASE
           WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
-          ELSE COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16)
+          ELSE COALESCE(NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0), 0.16)
         END,
 
         v_org_id
