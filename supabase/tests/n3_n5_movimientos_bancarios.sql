@@ -147,10 +147,11 @@ BEGIN
 
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor, folio_interno,
-     categoria_presupuesto_id, fecha_emision, moneda, subtotal, total, estado)
+     categoria_presupuesto_id, fecha_emision, moneda, subtotal, total, estado, estado_aprobacion)
   VALUES (v_pf, '5e5e5e5e-0000-4000-8000-000000000010', v_proveedor, 'Proveedor N5',
           'PN5-1', 'FP-N50001', v_categoria, public.fecha_negocio_mx(),
-          'MXN'::public.moneda, 100, 100, 'Vigente'::public.estado_proveedor_factura);
+          'MXN'::public.moneda, 100, 100, 'Vigente'::public.estado_proveedor_factura,
+          'aprobada'::public.estado_aprobacion_factura_proveedor);
 
   INSERT INTO public.pagos_proveedor
     (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
