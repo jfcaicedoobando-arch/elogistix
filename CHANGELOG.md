@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.370] - 2026-09-14
+
+- **fix(cotizaciones/embarques)**: bloque de 6 correcciones verificadas sobre el flujo Cotización → Embarque.
+  - **P1-1 candado de costos (fail-closed en la ruta real)**: `crear_embarque_borrador_core` ahora exige costos vigentes en `cotizacion_costos` (`LC_COT_SIN_COSTOS`) para todas las decisiones de revalidación, y la ruta de UI `useCrearEmbarqueConRevalidacion` valida antes de revalidar mediante `verificarCostosOAvisar` (nuevo `candadoCostosAviso.ts`, reutiliza `tieneCostosCargados`). Sin costos no se revalida ni se crea el borrador.
+  - **P1-2 conciliación a 3 columnas**: la columna "Real" y sus totales usan sólo el monto realmente facturado por proveedor (`fetchReconciliacionEmbarque`, excluye canceladas) en lugar del presupuesto clonado (`conceptos_costo.monto`). Nueva clasificación `pendiente` con `sin_factura`: sin factura muestra Real 0 y estado neutral, nunca "Dentro del rango".
+  - **P2-3 tracking**: un Borrador sin eventos muestra "Pendiente de iniciar seguimiento" (sin badge de advertencia); la advertencia se conserva para embarques confirmados/en tránsito. `computeFreshness` se extrae a `domain/trackingFreshness.ts`.
+  - **P2-4 resumen de costos**: `etiquetaConteos` omite las categorías en cero ("1 sin factura" en lugar de "0 con ajuste, 1 sin factura").
+  - **P2-5 checklist documental**: sin requisitos documentales registrados el check deja de pintarse en verde y muestra "No hay requisitos documentales por validar" (`MOTIVO_SIN_REQUISITOS_DOCUMENTALES`). Sólo UX: el candado de cierre (`puede_cerrar`) no cambia.
+  - **P2-6 E2E**: `11-cotizacion-a-embarque.spec.ts` afirma el heading "Borrador <id-corto>" y la URL del nuevo UUID, conforme a la política vigente de no reservar expediente hasta confirmar.
+  - Power of 10: `reconciliacion3Columnas.helpers.ts`, `trackingFreshness.ts` y `candadoCostosAviso.ts` mantienen todos los archivos tocados bajo 200 líneas sin allowlist.
+
 ## [13.823.369] - 2026-09-14
 
 - **chore(cotizaciones)**: correctivo de CI (guard arquitectónico) — `useGateEdicionCostos` estaba en `components/` en lugar de `hooks/`.
