@@ -1295,6 +1295,67 @@ export type Database = {
           },
         ]
       }
+      comisiones_recuperaciones: {
+        Row: {
+          comision_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          liquidacion_id: string
+          monto_mxn: number
+          organization_id: string
+          revertida_at: string | null
+          revertida_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          comision_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          liquidacion_id: string
+          monto_mxn: number
+          organization_id: string
+          revertida_at?: string | null
+          revertida_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comision_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          liquidacion_id?: string
+          monto_mxn?: number
+          organization_id?: string
+          revertida_at?: string | null
+          revertida_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comisiones_recuperaciones_comision_id_fkey"
+            columns: ["comision_id"]
+            isOneToOne: false
+            referencedRelation: "comisiones_devengadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_recuperaciones_liquidacion_id_fkey"
+            columns: ["liquidacion_id"]
+            isOneToOne: false
+            referencedRelation: "liquidaciones_comision"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_recuperaciones_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conceptos_costo: {
         Row: {
           client_request_id: string | null
@@ -10332,6 +10393,7 @@ export type Database = {
           total_count: number
         }[]
       }
+      fecha_negocio_mx: { Args: never; Returns: string }
       fn_admin_org_activity: {
         Args: never
         Returns: {

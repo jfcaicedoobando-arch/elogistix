@@ -43,7 +43,7 @@ BEGIN
     RAISE EXCEPTION 'LC_TRASPASO_FECHA_REQUERIDA: captura la fecha del traspaso'
       USING ERRCODE = '22023';
   END IF;
-  IF p_fecha > GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE) THEN
+  IF p_fecha > public.fecha_negocio_mx() THEN
     RAISE EXCEPTION 'LC_TRASPASO_FECHA_FUTURA: la fecha del traspaso (%) no puede ser futura', p_fecha
       USING ERRCODE = '22023';
   END IF;

@@ -21,7 +21,7 @@ DECLARE
   v_fact_estado public.estado_proveedor_factura;
   v_fact_deleted timestamptz;
   v_fact_emision date;
-  v_hoy_mx date := GREATEST((now() AT TIME ZONE 'America/Mexico_City')::date, CURRENT_DATE);
+  v_hoy_mx date := public.fecha_negocio_mx();
   v_ncs         numeric;
   v_pagos       numeric;
   v_saldo       numeric;
@@ -93,7 +93,7 @@ BEGIN
     IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
       NEW.monto_en_moneda_factura := public.convertir_monto_dof(
         NEW.monto, NEW.moneda::text, v_fact_moneda::text,
-        COALESCE(NEW.fecha_pago, CURRENT_DATE));
+        COALESCE(NEW.fecha_pago, v_hoy_mx));
     ELSE
       RAISE;
     END IF;

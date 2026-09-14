@@ -52,8 +52,19 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  -- M4 (v13.823.384): se revierten SÓLO las porciones recuperadas por ESTA
+  -- liquidación. No se borran: quedan marcadas, así el rastro de auditoría se
+  -- conserva y la deuda pendiente vuelve a su monto anterior por sí sola.
+  UPDATE public.comisiones_recuperaciones
+     SET revertida_at = now(),
+         revertida_por = v_uid
+   WHERE liquidacion_id = p_liquidacion_id
+     AND revertida_at IS NULL;
+
   -- YG-03: cada comisión regresa a su estado previo. El fallback cubre filas
-  -- legacy sin `estado_previo_liquidacion` capturado.
+  -- legacy sin `estado_previo_liquidacion` capturado. Las comisiones con
+  -- recuperación PARCIAL nunca se ligaron a la liquidación, así que siguen
+  -- "Por recuperar" sin tocarse.
   UPDATE public.comisiones_devengadas
      SET estado = COALESCE(
            estado_previo_liquidacion,

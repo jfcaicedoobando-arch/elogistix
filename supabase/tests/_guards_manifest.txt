@@ -134,3 +134,5 @@ supabase/tests/fiscal_b16_b19_conversiones.sql
 supabase/tests/c21_c25_candados.sql
 supabase/tests/c28_c30_facturacion.sql
 supabase/tests/d1_d5_financiero.sql
+supabase/tests/m3_fecha_negocio_mx.sql
+supabase/tests/m4_m5_comision_recuperacion_parcial.sql
