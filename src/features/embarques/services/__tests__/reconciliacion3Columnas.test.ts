@@ -50,9 +50,11 @@ describe("generarCsvReconciliacion3C", () => {
     const fila = {
       concepto: 'Flete, manejo "especial"\nurgente', moneda: "USD",
       cotizado: 100, refrescado: 110, real: 120,
+      delta_cot_vs_refr: { monto: 10, pct: 10 },
       delta_cot_vs_real: { monto: 20, pct: 20 },
       delta_refr_vs_real: { monto: 10, pct: 9.09 },
       clasificacion: "alerta" as const,
+      sin_factura: false,
     };
     const csv = generarCsvReconciliacion3C([fila]);
     expect(csv).toContain('"Flete, manejo ""especial""\nurgente",USD,100,110,120,20.00,alerta');
