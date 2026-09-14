@@ -35,7 +35,10 @@ export interface ActividadItem {
   moneda?: string;
   refTipo?: string;
   refId?: string;
+  /** Clave del hecho de negocio: mismo hecho registrado por varias fuentes. */
+  dedupeKey?: string;
   detalles?: Record<string, unknown>;
+
 }
 
 export interface ActividadGrupo {
