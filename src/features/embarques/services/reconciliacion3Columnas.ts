@@ -4,12 +4,18 @@
  * Combina:
  * - Cotizado: costos de la versión aceptada (RPC obtener_costos_cotizacion_version).
  * - Refrescado: cotizado + delta aplicado al crear el embarque (Fase 1, tarifa_delta_jsonb).
- * - Real: conceptos_costo vivos del embarque.
+ * - Real: monto REALMENTE facturado por el proveedor (partidas de facturas de
+ *   proveedor vigentes, excluyendo canceladas). v13.823.370 (P1-2): antes se
+ *   leía `conceptos_costo.monto`, que es el presupuesto clonado al convertir la
+ *   cotización, así que un embarque sin ninguna factura mostraba "Real = 4,500 ·
+ *   +0.0% · Dentro del rango". La fuente es `fetchReconciliacionEmbarque`, la
+ *   misma que usa el tab Costos (no se duplica la regla).
  *
  * Devuelve filas alineadas por (concepto, moneda) listas para la UI.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerEmbarqueInterno } from "./internoEmbarque";
+import { fetchReconciliacionEmbarque } from "./reconciliacionCostos";
 import {
   obtenerCostosCotizacionVersion,
   type CostoVersionado,
@@ -30,10 +36,15 @@ interface DeltaConcepto {
   monto_actual?: number | null;
 }
 
-interface ConceptoCostoRow {
+/**
+ * Real agregado por (concepto, moneda). `tiene_factura` es fail-closed: si no
+ * se informa, el renglón se considera SIN factura y se clasifica `pendiente`.
+ */
+export interface RealPorConcepto {
   concepto: string;
   moneda: string;
   monto: number | string;
+  tiene_factura?: boolean;
 }
 
 interface EmbarqueMeta {
@@ -63,10 +74,10 @@ function aplicarDelta(cotizado: CostoVersionado, delta: DeltaConcepto[]): number
 export function buildFilas3C(
   cotizados: CostoVersionado[],
   delta: DeltaConcepto[],
-  reales: ConceptoCostoRow[],
+  reales: RealPorConcepto[],
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
 ): FilaReconciliacion3C[] {
-  const realesMap = new Map<string, ConceptoCostoRow>();
+  const realesMap = new Map<string, RealPorConcepto>();
   for (const r of reales) {
     realesMap.set(`${r.concepto.trim().toLowerCase()}|${r.moneda}`, r);
   }
@@ -86,6 +97,7 @@ export function buildFilas3C(
           cotizado: c.costo_total,
           refrescado: aplicarDelta(c, delta),
           real: real ? Number(real.monto) || 0 : 0,
+          sin_factura: real?.tiene_factura !== true,
         },
         umbrales,
       ),
@@ -97,12 +109,43 @@ export function buildFilas3C(
     if (usadosReales.has(key)) continue;
     filas.push(
       construirFilaReconciliacion(
-        { concepto: r.concepto, moneda: r.moneda, cotizado: 0, refrescado: 0, real: Number(r.monto) || 0 },
+        {
+          concepto: r.concepto,
+          moneda: r.moneda,
+          cotizado: 0,
+          refrescado: 0,
+          real: Number(r.monto) || 0,
+          sin_factura: r.tiene_factura !== true,
+        },
         umbrales,
       ),
     );
   }
   return filas;
+}
+
+/**
+ * Agrupa las filas de conciliación (una por concepto de costo) en el eje
+ * (concepto, moneda) que usa la tabla de 3 columnas, sumando SÓLO el monto
+ * facturado por proveedor.
+ */
+export function agruparRealesFacturados(
+  filas: ReadonlyArray<{
+    concepto: string;
+    moneda: string;
+    real_facturado: number;
+    facturas: ReadonlyArray<unknown>;
+  }>,
+): RealPorConcepto[] {
+  const map = new Map<string, RealPorConcepto>();
+  for (const f of filas) {
+    const key = `${f.concepto.trim().toLowerCase()}|${f.moneda}`;
+    const cur = map.get(key) ?? { concepto: f.concepto, moneda: f.moneda, monto: 0, tiene_factura: false };
+    cur.monto = (Number(cur.monto) || 0) + (Number(f.real_facturado) || 0);
+    cur.tiene_factura = cur.tiene_factura === true || f.facturas.length > 0;
+    map.set(key, cur);
+  }
+  return Array.from(map.values());
 }
 
 export async function obtenerReconciliacion3Columnas(
@@ -145,14 +188,9 @@ export async function obtenerReconciliacion3Columnas(
     cotizados = await obtenerCostosCotizacionVersion(emb.cotizacion_id, versionAceptada);
   }
 
-  // 2. Reales: conceptos_costo del embarque.
-  const { data: realesRaw, error: realErr } = await supabase
-    .from("conceptos_costo")
-    .select("concepto, moneda, monto")
-    .eq("embarque_id", embarqueId)
-    .is("deleted_at", null);
-  if (realErr) throw new Error(realErr.message);
-  const reales = (realesRaw ?? []) as ConceptoCostoRow[];
+  // 2. Reales: monto facturado por proveedor (facturas vigentes, sin canceladas).
+  // Se reutiliza el servicio del tab Costos para no duplicar la regla.
+  const reales = agruparRealesFacturados(await fetchReconciliacionEmbarque(embarqueId));
 
   // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
   const interno = await obtenerEmbarqueInterno(embarqueId);
