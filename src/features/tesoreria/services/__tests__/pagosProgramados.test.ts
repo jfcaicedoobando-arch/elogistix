@@ -19,55 +19,50 @@ function fila(over: Record<string, unknown> = {}) {
     total: 1000,
     estado: "Vigente",
     estado_aprobacion: "aprobada",
-    pagos_proveedor: [],
-    proveedor_notas_credito: [],
     ...over,
   };
 }
 
-describe("fetchPagosProgramables (A-2 · notas de crédito)", () => {
+/** N1 (v13.823.386): el saldo programable viene de la vista canónica del
+ *  servidor, que convierte pagos y notas de crédito a la moneda de la factura. */
+function saldoVista(saldo: number, over: Record<string, unknown> = {}) {
+  return {
+    data: [
+      {
+        proveedor_factura_id: "pf-1",
+        pagado: 0,
+        notas_credito_aplicadas: 1000 - saldo,
+        saldo,
+        ...over,
+      },
+    ],
+    error: null,
+  };
+}
+
+describe("fetchPagosProgramables (N1 · saldo canónico del servidor)", () => {
   beforeEach(() => mock.resetResults());
 
-  it("resta las notas de crédito aplicadas del saldo programable", async () => {
-    mock.setTableResult("proveedor_facturas", {
-      data: [
-        fila({
-          proveedor_notas_credito: [{ monto: 400, estado: "Aplicada", deleted_at: null }],
-        }),
-      ],
-      error: null,
-    });
+  it("usa el saldo del servidor (factura MXN con nota de crédito en USD)", async () => {
+    mock.setTableResult("proveedor_facturas", { data: [fila()], error: null });
+    // NC de 20 USD con TC 20 = 400 MXN: el servidor ya entregó el saldo en MXN.
+    mock.setTableResult("v_proveedor_facturas_saldo", saldoVista(600));
 
     const rows = await fetchPagosProgramables();
     expect(rows[0].saldo).toBe(600);
   });
 
-  it("ignora notas de crédito no aplicadas o eliminadas", async () => {
-    mock.setTableResult("proveedor_facturas", {
-      data: [
-        fila({
-          proveedor_notas_credito: [
-            { monto: 400, estado: "Borrador", deleted_at: null },
-            { monto: 300, estado: "Aplicada", deleted_at: "2026-08-01" },
-          ],
-        }),
-      ],
-      error: null,
-    });
+  it("consulta la vista de saldo en lugar de convertir en el navegador", async () => {
+    mock.setTableResult("proveedor_facturas", { data: [fila()], error: null });
+    mock.setTableResult("v_proveedor_facturas_saldo", saldoVista(1000));
 
-    const rows = await fetchPagosProgramables();
-    expect(rows[0].saldo).toBe(1000);
+    await fetchPagosProgramables();
+    expect(mock.tableCalls.some((c) => c.table === "v_proveedor_facturas_saldo")).toBe(true);
   });
 
-  it("una NC que cubre el total saca la factura de la bandeja", async () => {
-    mock.setTableResult("proveedor_facturas", {
-      data: [
-        fila({
-          proveedor_notas_credito: [{ monto: 1000, estado: "Aplicada", deleted_at: null }],
-        }),
-      ],
-      error: null,
-    });
+  it("una nota de crédito que cubre el total saca la factura de la bandeja", async () => {
+    mock.setTableResult("proveedor_facturas", { data: [fila()], error: null });
+    mock.setTableResult("v_proveedor_facturas_saldo", saldoVista(0));
 
     expect(await fetchPagosProgramables()).toHaveLength(0);
   });

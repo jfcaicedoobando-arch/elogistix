@@ -15,6 +15,7 @@ import {
   type Joined,
 } from "./proveedorFacturas.helpers";
 import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
+import { fetchSaldosProveedorFacturas } from "./saldosProveedorFactura";
 
 export type {
   ProveedorFacturaRow,
@@ -108,7 +109,11 @@ async function leerTodosLosLotes(filtros: FetchCxPFiltros): Promise<Joined[]> {
 }
 
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
-  const rows = (await leerTodosLosLotes(filtros)).map(mapJoinedRow);
+  const crudas = await leerTodosLosLotes(filtros);
+  // N1: el saldo (pagos + notas de crédito convertidas a la moneda de la
+  // factura) lo calcula el servidor; aquí sólo se mapea.
+  const saldos = await fetchSaldosProveedorFacturas(crudas.map((r) => r.id));
+  const rows = crudas.map((r) => mapJoinedRow(r, saldos.get(r.id)));
   // Los filtros derivados (estatus/origen) se aplican sobre el conjunto
   // completo, no sobre el primer lote.
   return aplicarFiltrosCliente(rows, filtros);
@@ -131,7 +136,9 @@ export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | nu
   if (error) throw error;
   if (!data) return null;
   // SAFE-CAST: mismo shape `Joined` validado por el select de arriba.
-  return mapJoinedRow(data as unknown as Joined);
+  const fila = data as unknown as Joined;
+  const saldos = await fetchSaldosProveedorFacturas([fila.id]);
+  return mapJoinedRow(fila, saldos.get(fila.id));
 }
 
 export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";

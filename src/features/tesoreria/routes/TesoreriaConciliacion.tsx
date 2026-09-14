@@ -57,6 +57,10 @@ export default function TesoreriaConciliacion() {
   const [manualForm, setManualForm] = useState<Partial<MovimientoManualInput>>({
     tipo: "cargo",
   });
+  // N4 (v13.823.386): llave estable por apertura del diálogo. Doble click o
+  // reintento por red lenta reutilizan la misma llave y no duplican el
+  // movimiento bancario.
+  const [claveManual, setClaveManual] = useState<string>("");
 
   const { data: movs = [], isLoading, isError: movsError, refetch: refetchMovs } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
   const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
@@ -70,6 +74,7 @@ export default function TesoreriaConciliacion() {
 
   const abrirModalManual = () => {
     setManualForm({ cuentaBancariaId: cuentaId || undefined, fecha: undefined, concepto: "", referencia: "", tipo: "cargo", monto: undefined });
+    setClaveManual(crypto.randomUUID());
     setManualOpen(true);
   };
 
@@ -85,6 +90,7 @@ export default function TesoreriaConciliacion() {
       referencia,
       cargo: tipo === "cargo" ? monto : 0,
       abono: tipo === "abono" ? monto : 0,
+      claveIdempotencia: claveManual,
     });
     setManualOpen(false);
   };

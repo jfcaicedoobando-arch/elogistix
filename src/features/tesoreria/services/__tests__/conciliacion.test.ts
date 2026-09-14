@@ -101,7 +101,8 @@ describe("conciliacion service", () => {
 
   describe("conciliarConPago", () => {
     it("escribe pago_factura_id (no pago_proveedor_id) cuando tipo=cxc", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1" }], error: null });
+      // N5: un cobro sólo se concilia con un abono (entrada de dinero).
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1", cargo: 0, abono: 100 }], error: null });
       await conciliarConPago("m1", "cxc", "p1", "u1");
       const { assertUpdatePayload, assertEq, findTableCall } = await import(
         "@/test/helpers/assertMutation"
@@ -117,7 +118,8 @@ describe("conciliacion service", () => {
     });
 
     it("escribe pago_proveedor_id (no pago_factura_id) cuando tipo=cxp", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m2" }], error: null });
+      // N5: un pago a proveedor sólo se concilia con un cargo (salida).
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m2", cargo: 100, abono: 0 }], error: null });
       await conciliarConPago("m2", "cxp", "p2", "u1");
       const { assertUpdatePayload, findTableCall } = await import(
         "@/test/helpers/assertMutation"
@@ -126,6 +128,21 @@ describe("conciliacion service", () => {
         pago_proveedor_id: "p2",
         pago_factura_id: null,
         estado_conciliacion: "Conciliado",
+      });
+    });
+
+    // N5 (v13.823.386): el sentido bancario debe coincidir con el tipo de pago.
+    it("rechaza conciliar un cargo como cobro de cliente (cxc)", async () => {
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m3", cargo: 100, abono: 0 }], error: null });
+      await expect(conciliarConPago("m3", "cxc", "p3", "u1")).rejects.toMatchObject({
+        code: "LC_MOVIMIENTO_SENTIDO_COBRO",
+      });
+    });
+
+    it("rechaza conciliar un abono como pago a proveedor (cxp)", async () => {
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m4", cargo: 0, abono: 100 }], error: null });
+      await expect(conciliarConPago("m4", "cxp", "p4", "u1")).rejects.toMatchObject({
+        code: "LC_MOVIMIENTO_SENTIDO_PAGO",
       });
     });
 

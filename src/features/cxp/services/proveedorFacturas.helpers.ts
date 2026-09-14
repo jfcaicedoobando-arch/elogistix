@@ -11,6 +11,7 @@ import type {
   NotaCreditoCxpParcial,
   PagoCxpParcial,
 } from "@/features/cxp/services/proveedorFacturas.types";
+import type { SaldoServidorCxP } from "@/features/cxp/services/saldosProveedorFactura";
 
 export { PROVEEDOR_FACTURAS_SELECT } from "@/features/cxp/services/proveedorFacturas.types";
 export type { Joined, PagoCxpParcial, NotaCreditoCxpParcial } from "@/features/cxp/services/proveedorFacturas.types";
@@ -105,11 +106,29 @@ function computeFlags(
   };
 }
 
-export function mapJoinedRow(f: Joined): FacturaCxP {
+/**
+ * N1 (v13.823.386): si el servidor ya dio el saldo canónico
+ * (`v_proveedor_facturas_saldo`, que convierte pagos y notas de crédito a la
+ * moneda de la factura) se usa ése. El cálculo local queda sólo como respaldo
+ * cuando no hay saldo servidor (misma moneda), para no inventar conversiones.
+ */
+function resolverSaldo(f: Joined, servidor?: SaldoServidorCxP) {
+  const total = Number(f.total);
+  if (servidor) {
+    return {
+      total,
+      pagado: servidor.pagado,
+      nc: servidor.notas_credito,
+      saldo: Math.max(0, servidor.saldo),
+    };
+  }
   const pagado = sumarPagosEnMonedaFactura(f.pagos_proveedor);
   const nc = sumarNotasCreditoAplicadas(f.proveedor_notas_credito);
-  const total = Number(f.total);
-  const saldo = Math.max(0, total - pagado - nc);
+  return { total, pagado, nc, saldo: Math.max(0, total - pagado - nc) };
+}
+
+export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP): FacturaCxP {
+  const { total, pagado, nc, saldo } = resolverSaldo(f, saldoServidor);
   const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
   const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
   return {

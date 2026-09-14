@@ -16,6 +16,19 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "El importe del movimiento bancario no coincide con el del pago. Registra un pago por el importe real del movimiento o corrige el movimiento antes de conciliar.",
 
 
+  // N3 (v13.823.386): candados de fecha del movimiento capturado a mano.
+  LC_MOVIMIENTO_MANUAL_FECHA_REQUERIDA:
+    "Captura la fecha del movimiento bancario.",
+  LC_MOVIMIENTO_MANUAL_FECHA_FUTURA:
+    "La fecha del movimiento no puede ser futura: usa la fecha real en la que ocurrió en el banco.",
+  LC_MOVIMIENTO_MANUAL_FECHA_ANTES_CORTE:
+    "La fecha del movimiento es anterior al corte de saldo inicial de la cuenta. Ajusta la fecha o el saldo inicial de la cuenta.",
+  // N5 (v13.823.386): sentido bancario al conciliar.
+  LC_MOVIMIENTO_SENTIDO_COBRO:
+    "Un cobro de cliente sólo se concilia con un depósito (abono) en la cuenta. Este movimiento es un cargo (salida de dinero).",
+  LC_MOVIMIENTO_SENTIDO_PAGO:
+    "Un pago a proveedor sólo se concilia con un retiro (cargo) de la cuenta. Este movimiento es un abono (entrada de dinero).",
+
   // ── Tesorería · cuentas bancarias / ejecución de pago (Q-15.2) ─────────
   LC_CUENTA_NO_EXISTE: "La cuenta bancaria no existe o fue eliminada.",
   LC_CUENTA_ORG_MISMATCH: "La cuenta bancaria pertenece a otra organización.",

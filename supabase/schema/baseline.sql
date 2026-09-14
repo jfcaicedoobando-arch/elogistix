@@ -1683,6 +1683,36 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+CREATE FUNCTION public._bbva_guard_movimiento_manual() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_corte date;
+BEGIN
+  IF COALESCE(NEW.hash_dedupe, '') NOT LIKE 'manual-%' THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.fecha IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_MANUAL_FECHA_REQUERIDA: captura la fecha del movimiento bancario'
+      USING ERRCODE = '22023';
+  END IF;
+  IF NEW.fecha > public.fecha_negocio_mx() THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_MANUAL_FECHA_FUTURA: la fecha del movimiento (%) no puede ser futura', NEW.fecha
+      USING ERRCODE = '22023';
+  END IF;
+  IF NEW.cuenta_bancaria_id IS NOT NULL THEN
+    SELECT cb.fecha_saldo_inicial INTO v_corte
+    FROM public.cuentas_bancarias cb
+    WHERE cb.id = NEW.cuenta_bancaria_id;
+    IF v_corte IS NOT NULL AND NEW.fecha < v_corte THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MANUAL_FECHA_ANTES_CORTE: la fecha del movimiento (%) es anterior al corte de saldo inicial de la cuenta (%)', NEW.fecha, v_corte
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._bbva_guard_update() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -7021,6 +7051,11 @@ BEGIN
         v_pago_moneda, v_cuenta_moneda
         USING ERRCODE = 'P0001';
     END IF;
+    -- N5: un cobro de cliente entra a la cuenta (abono), nunca sale.
+    IF COALESCE(NEW.abono, 0) <= 0 OR COALESCE(NEW.cargo, 0) <> 0 THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_COBRO: un cobro de cliente sólo puede vincularse a un depósito (abono) en la cuenta, no a un cargo'
+        USING ERRCODE = 'P0001';
+    END IF;
     -- N11: cobro ⇒ abono en la cuenta.
     v_mov := GREATEST(COALESCE(NEW.abono,0), COALESCE(NEW.cargo,0));
     IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
@@ -7047,6 +7082,11 @@ BEGIN
         v_pago_moneda, v_cuenta_moneda
         USING ERRCODE = 'P0001';
     END IF;
+    -- N5: un pago a proveedor sale de la cuenta (cargo), nunca entra.
+    IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un pago a proveedor sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
+        USING ERRCODE = 'P0001';
+    END IF;
     v_mov := GREATEST(COALESCE(NEW.cargo,0), COALESCE(NEW.abono,0));
     IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
@@ -7071,6 +7111,11 @@ BEGIN
         v_pago_moneda, v_cuenta_moneda
         USING ERRCODE = 'P0001';
     END IF;
+    -- N5: el lote de pago a proveedores también es salida de dinero.
+    IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un pago en lote a proveedores sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   IF NEW.pago_factura_lote_id IS NOT NULL THEN
     SELECT organization_id, moneda::text INTO v_pago_org, v_pago_moneda
@@ -7089,6 +7134,11 @@ BEGIN
         v_pago_moneda, v_cuenta_moneda
         USING ERRCODE = 'P0001';
     END IF;
+    -- N5: el lote de cobro a clientes entra a la cuenta.
+    IF COALESCE(NEW.abono, 0) <= 0 OR COALESCE(NEW.cargo, 0) <> 0 THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_COBRO: un cobro en lote a clientes sólo puede vincularse a un depósito (abono) en la cuenta, no a un cargo'
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   IF NEW.anticipo_proveedor_id IS NOT NULL THEN
     SELECT organization_id, moneda::text INTO v_pago_org, v_pago_moneda
@@ -7105,6 +7155,11 @@ BEGIN
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del anticipo (%) no coincide con la cuenta bancaria (%)',
         v_pago_moneda, v_cuenta_moneda
+        USING ERRCODE = 'P0001';
+    END IF;
+    -- N5: el anticipo a proveedor es salida de dinero.
+    IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un anticipo a proveedor sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -22954,10 +23009,27 @@ BEGIN
       AND pp.deleted_at IS NULL
     GROUP BY pp.proveedor_factura_id
   ),
+  nc_por_factura AS (
+    -- N2 (v13.823.386): las notas de crédito vivas y 'Aplicada' también
+    -- liquidan la factura. Se convierten a la moneda de la factura con el
+    -- MISMO canon que los pagos (monto_pago_en_moneda_factura); sin TC quedan
+    -- fuera (SUM ignora NULL) para no inventar una conversión 1:1.
+    SELECT nc.proveedor_factura_id,
+           SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, pf.moneda::text)) AS nc_aplicada
+    FROM public.proveedor_notas_credito nc
+    JOIN public.proveedor_facturas pf ON pf.id = nc.proveedor_factura_id
+    WHERE pf.proveedor_id = p_proveedor_id
+      AND pf.organization_id = v_oid
+      AND pf.deleted_at IS NULL
+      AND pf.estado <> 'Cancelada'
+      AND nc.deleted_at IS NULL
+      AND nc.estado = 'Aplicada'
+    GROUP BY nc.proveedor_factura_id
+  ),
   pag AS (
     SELECT pfc.concepto_costo_id,
            SUM(
-             COALESCE(ppf.pagado, 0)
+             (COALESCE(ppf.pagado, 0) + COALESCE(ncf.nc_aplicada, 0))
              * CASE
                  WHEN COALESCE(pf.subtotal, 0) > 0
                    THEN LEAST(COALESCE(pfc.monto, 0) / pf.subtotal, 1)
@@ -22969,6 +23041,7 @@ BEGIN
     FROM public.proveedor_facturas_conceptos pfc
     JOIN public.proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
     LEFT JOIN pagos_por_factura ppf ON ppf.proveedor_factura_id = pf.id
+    LEFT JOIN nc_por_factura ncf ON ncf.proveedor_factura_id = pf.id
     WHERE pf.proveedor_id = p_proveedor_id
       AND pf.organization_id = v_oid
       AND pf.deleted_at IS NULL
@@ -32854,6 +32927,7 @@ CREATE TRIGGER set_updated_at_proveedor_documentos BEFORE UPDATE ON public.prove
 CREATE TRIGGER trg_agentes_propaga_nombre AFTER UPDATE OF nombre ON public.costeo_agentes FOR EACH ROW EXECUTE FUNCTION public.trg_agentes_propaga_nombre();
 CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.anticipos_aplicaciones FOR EACH ROW EXECUTE FUNCTION public.tg_anticipo_saldo();
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_bbva_guard_movimiento_manual BEFORE INSERT OR UPDATE OF fecha ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_guard_movimiento_manual();
 CREATE TRIGGER trg_bbva_guard_update BEFORE UPDATE ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_guard_update();
 CREATE TRIGGER trg_bbva_set_origen BEFORE INSERT ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_set_origen();
 CREATE TRIGGER trg_bitacora_facturas_estado AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._bitacora_facturas_estado();
@@ -34325,6 +34399,9 @@ GRANT ALL ON FUNCTION public._audit_embarques_umbrales(p_organization_id uuid) T
 REVOKE ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._bbva_guard_movimiento_manual() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._bbva_guard_movimiento_manual() TO authenticated;
+GRANT ALL ON FUNCTION public._bbva_guard_movimiento_manual() TO service_role;
 REVOKE ALL ON FUNCTION public._bbva_guard_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bbva_guard_update() TO service_role;
 GRANT ALL ON FUNCTION public._bbva_set_origen() TO authenticated;
