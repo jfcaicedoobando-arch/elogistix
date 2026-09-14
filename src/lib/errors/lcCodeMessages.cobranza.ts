@@ -30,5 +30,9 @@ export const LC_CODE_MESSAGES_COBRANZA: Record<string, string> = {
     "Una factura aparece más de una vez en el mismo cobro en lote.",
   LC_MOVIMIENTO_LOTE_COBRO_INEXISTENTE:
     "No se encontró el movimiento bancario del cobro en lote.",
+  // D2 (v13.823.382): cobro individual atómico.
+  LC_COBRO_MOVIMIENTO_FALLIDO:
+    "No se pudo registrar el movimiento bancario del cobro, así que el cobro tampoco se guardó. Revisa la cuenta bancaria seleccionada y vuelve a intentarlo.",
+  LC_MOVIMIENTO_NO_CREADO:
+    "El cobro se registró, pero no se pudo crear su movimiento bancario. Verifica la cuenta bancaria y vuelve a guardar para generarlo.",
 };
-

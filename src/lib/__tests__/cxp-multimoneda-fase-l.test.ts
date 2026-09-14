@@ -102,8 +102,16 @@ describe("Fase L — Multi-moneda CxP", () => {
     const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.guard_pago_proveedor");
     const idx = sql.lastIndexOf("CREATE OR REPLACE FUNCTION public.guard_pago_proveedor");
     expect(idx).toBeGreaterThan(-1);
-    const chunk = sql.slice(idx, idx + 4000);
+    // El cuerpo completo: recortarlo a N caracteres dejaba fuera el bloque de
+    // saldo cuando el guard creció (D4 · v13.823.382).
+    const fin = sql.indexOf("\n$$;", idx);
+    const chunk = sql.slice(idx, fin > idx ? fin : undefined);
+    // D1/D4 (v13.823.382): las notas de crédito se convierten con el canon
+    // `monto_pago_en_moneda_factura` (antes se sumaban en crudo).
+    expect(chunk).toMatch(/monto_pago_en_moneda_factura\(/);
+    // Los pagos previos siguen sumándose ya convertidos a la moneda de la factura.
     expect(chunk).toMatch(/SUM\(monto_en_moneda_factura\)/);
+    expect(chunk).not.toMatch(/SUM\(\s*nc\.monto\s*\)/);
     expect(chunk).toMatch(/NEW\.monto_en_moneda_factura/);
     expect(chunk).toMatch(/LC_PAGO_EXCEDE_SALDO/);
     expect(chunk).toMatch(/FOR UPDATE/);

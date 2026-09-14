@@ -50,7 +50,7 @@ describe("mergeProformaDetalle · facturas vinculadas (D6)", () => {
     ]);
   });
 
-  it("no duplica cuando la misma factura llega por los dos caminos", () => {
+  it("el detalle no duplica la factura cuando llega por FK inversa y por factura_id", () => {
     const r = mergeProformaDetalle({
       id: "p1",
       facturas_asociadas: [doc("A", "MXN")],
