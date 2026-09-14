@@ -53,6 +53,13 @@ function todosIguales<T>(arr: T[]): boolean {
   return arr.every((v) => String(v) === first);
 }
 
+function debeMostrarResumenUniforme(
+  pendientes: number,
+  uniformes: readonly boolean[],
+): boolean {
+  return pendientes === 0 && uniformes.some(Boolean);
+}
+
 interface CargaCellProps {
   contenedor: Contenedor;
   campo: "peso_kg" | "volumen_m3" | "piezas";
@@ -93,7 +100,10 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const pesoUniforme = todosIguales(pesos);
   const volumenUniforme = todosIguales(volumenes);
   const piezasUniformes = todosIguales(piezas);
-  const hayResumenUniforme = pendientes === 0 && (pesoUniforme || volumenUniforme || piezasUniformes);
+  const hayResumenUniforme = debeMostrarResumenUniforme(
+    pendientes,
+    [pesoUniforme, volumenUniforme, piezasUniformes],
+  );
 
   return (
     <Card>
