@@ -53,12 +53,57 @@ export function generarCsvReconciliacion3C(filas: FilaReconciliacion3C[]): strin
   );
 }
 
-function aplicarDelta(cotizado: CostoVersionado, delta: DeltaConcepto[]): number {
-  const d = delta.find(
-    (x) => x.concepto.trim().toLowerCase() === cotizado.concepto.trim().toLowerCase(),
+const norm = (v: string | null | undefined): string => (v ?? "").trim().toLowerCase();
+
+interface EjeCotizado {
+  concepto: string;
+  moneda: string;
+  cotizado: number;
+}
+
+/**
+ * B3 — agrupa los costos cotizados en el eje (concepto, moneda). Sin esto, dos
+ * costos "Maniobras/MXN" generaban dos filas y cada una repetía el mismo real,
+ * duplicando el total facturado.
+ */
+function agruparCotizados(cotizados: CostoVersionado[]): Map<string, EjeCotizado> {
+  const map = new Map<string, EjeCotizado>();
+  for (const c of cotizados) {
+    const key = `${norm(c.concepto)}|${norm(c.moneda)}`;
+    const cur = map.get(key) ?? { concepto: c.concepto, moneda: c.moneda, cotizado: 0 };
+    cur.cotizado += Number(c.costo_total) || 0;
+    map.set(key, cur);
+  }
+  return map;
+}
+
+/**
+ * B2 — el delta se cruza por concepto Y moneda. Los deltas legacy (sin moneda)
+ * sólo se aplican cuando el concepto cotizado existe en una única moneda: con
+ * "Flete" en USD y MXN no hay forma de saber a cuál pertenece y se conserva el
+ * cotizado en lugar de duplicar el ajuste en ambas monedas.
+ */
+function resolverDelta(
+  eje: EjeCotizado,
+  delta: DeltaConcepto[],
+  monedasPorConcepto: Map<string, Set<string>>,
+): DeltaConcepto | undefined {
+  const conMoneda = delta.find(
+    (d) => norm(d.concepto) === norm(eje.concepto) && !!d.moneda && norm(d.moneda) === norm(eje.moneda),
   );
-  if (!d) return cotizado.costo_total;
-  if (d.monto_actual == null) return cotizado.costo_total; // eliminado en tarifa vigente
+  if (conMoneda) return conMoneda;
+  const monedas = monedasPorConcepto.get(norm(eje.concepto));
+  if (!monedas || monedas.size !== 1) return undefined;
+  return delta.find((d) => norm(d.concepto) === norm(eje.concepto) && !d.moneda);
+}
+
+function calcularRefrescado(
+  eje: EjeCotizado,
+  delta: DeltaConcepto[],
+  monedasPorConcepto: Map<string, Set<string>>,
+): number {
+  const d = resolverDelta(eje, delta, monedasPorConcepto);
+  if (!d || d.monto_actual == null) return eje.cotizado; // sin delta o eliminado en tarifa vigente
   return Number(d.monto_actual);
 }
 
@@ -70,23 +115,30 @@ export function buildFilas3C(
 ): FilaReconciliacion3C[] {
   const realesMap = new Map<string, RealPorConcepto>();
   for (const r of reales) {
-    realesMap.set(`${r.concepto.trim().toLowerCase()}|${r.moneda}`, r);
+    realesMap.set(`${norm(r.concepto)}|${norm(r.moneda)}`, r);
+  }
+
+  const ejes = agruparCotizados(cotizados);
+  const monedasPorConcepto = new Map<string, Set<string>>();
+  for (const eje of ejes.values()) {
+    const set = monedasPorConcepto.get(norm(eje.concepto)) ?? new Set<string>();
+    set.add(norm(eje.moneda));
+    monedasPorConcepto.set(norm(eje.concepto), set);
   }
 
   const filas: FilaReconciliacion3C[] = [];
   const usadosReales = new Set<string>();
 
-  for (const c of cotizados) {
-    const key = `${c.concepto.trim().toLowerCase()}|${c.moneda}`;
+  for (const [key, eje] of ejes.entries()) {
     const real = realesMap.get(key);
     if (real) usadosReales.add(key);
     filas.push(
       construirFilaReconciliacion(
         {
-          concepto: c.concepto,
-          moneda: c.moneda,
-          cotizado: c.costo_total,
-          refrescado: aplicarDelta(c, delta),
+          concepto: eje.concepto,
+          moneda: eje.moneda,
+          cotizado: eje.cotizado,
+          refrescado: calcularRefrescado(eje, delta, monedasPorConcepto),
           real: real ? Number(real.monto) || 0 : 0,
           sin_factura: real?.tiene_factura !== true,
         },
@@ -114,6 +166,7 @@ export function buildFilas3C(
   }
   return filas;
 }
+
 
 /**
  * Agrupa las filas de conciliación (una por concepto de costo) en el eje

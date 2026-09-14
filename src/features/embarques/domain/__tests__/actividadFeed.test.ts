@@ -86,3 +86,28 @@ describe('actividadFeed', () => {
     expect(contarPorCategoria(items)).toEqual({ finanzas: 2, riesgo: 1 });
   });
 });
+
+describe('actividadFeed — dedupe_key (B4)', () => {
+  it('colapsa técnico + humano con la misma key y conserva el más detallado', () => {
+    const items = normalizarActividad([
+      row({ id: 'bit-1', tipo: 'bitacora', accion: 'cambiar_estado', titulo: 'cambiar_estado', dedupe_key: 'estado:1' }),
+      row({
+        id: 'ev-1', tipo: 'evento', accion: 'Cambio de estado',
+        titulo: 'Avanzó a En Tránsito', descripcion: 'De Reservado a En Tránsito',
+        dedupe_key: 'estado:1',
+      }),
+      row({ id: 'nota-1', tipo: 'nota', accion: 'Cambio de estado', titulo: 'Cambio de estado', dedupe_key: 'estado:1' }),
+    ]);
+    const out = deduplicarActividad(items);
+    expect(out).toHaveLength(1);
+    expect(out[0].id).toBe('ev-1');
+  });
+
+  it('dos keys distintas del mismo minuto siguen siendo dos hechos', () => {
+    const items = normalizarActividad([
+      row({ id: 'a', titulo: 'Factura capturada', dedupe_key: 'factura:1' }),
+      row({ id: 'b', titulo: 'Cambio de estado', dedupe_key: 'estado:1' }),
+    ]);
+    expect(deduplicarActividad(items)).toHaveLength(2);
+  });
+});

@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.393] - 2026-09-14
+
+- **fix(reconciliación 3C · delta multi-moneda, B2)**: `aplicarDelta` cruzaba sólo por concepto, así que un delta de "Flete/USD" también reescribía el "Flete/MXN". Ahora el match es por concepto **y** moneda normalizados; los deltas legacy sin `moneda` se aplican únicamente cuando ese concepto cotizado existe en una sola moneda (con ambigüedad USD/MXN se conserva el cotizado).
+- **fix(reconciliación 3C · real duplicado, B3)**: `buildFilas3C` agrupaba los reales por concepto+moneda pero iteraba los cotizados sin agrupar, de modo que dos costos "Maniobras/MXN" mostraban cada uno el mismo real y duplicaban el total. Los cotizados se agrupan por concepto+moneda antes del cruce (cotizado/refrescado se suman una vez por eje) y se conservan las filas de reales sin contraparte.
+- **fix(feed de actividad · duplicados, B4)**: `normalizarActividad` descartaba `dedupe_key`; el feed repetía el mismo hecho hasta tres veces (`cambiar_estado`, "Avanzó…", "Cambio de estado"). La clave se conserva en `ActividadItem` y `deduplicarActividad` colapsa por ella eligiendo el evento humano más detallado; las filas sin clave mantienen la heurística previa.
+- **fix(cotizaciones · título de pestaña, B5)**: `CotizacionDetalle` fija el título con `useDocumentTitle` de forma incondicional ("Cotización" y "Cotización COT-…" al cargar); antes quedaba el título del landing público.
+- **fix(tracking · alerta de fechas, B6)**: en `FasesEmbarqueStepper`, "revisar bitácora" es un enlace accesible al mismo embarque con `?tab=notas` (Notas y Actividad), sin navegación imperativa.
+- Cobertura: `reconciliacion3Columnas.test.ts`, `actividadFeed.test.ts`, `FasesEmbarqueStepper.test.tsx`, `cotizacionDetalleTitulo.test.ts`.
+
 ## [13.823.392] - 2026-09-15
 
 - **fix(cotizaciones · candado de costos)**: nueva `public.cotizacion_tiene_costos(uuid)` (SECURITY DEFINER, sólo booleano, acotada a la organización activa) y `tieneCostosCargados` la consume. Antes la cuenta directa sobre `cotizacion_costos` quedaba filtrada por RLS para roles que SÍ pueden convertir pero no ven importes (`operador`), produciendo el falso "la cotización no tiene costos cargados". No se amplía la visibilidad de montos. Espejo: `supabase/schema/cotizaciones/cotizacion_tiene_costos.sql`.
