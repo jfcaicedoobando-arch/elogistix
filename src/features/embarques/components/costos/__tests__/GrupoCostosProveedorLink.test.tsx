@@ -10,7 +10,7 @@ import { GrupoCostosProveedor } from "../GrupoCostosProveedor";
 // B1 (v13.823.395): el enlace a CxP sólo se renderiza con `canViewFinancials`.
 // Estas dos pruebas cubren el camino FINANCIERO, así que se simula el permiso.
 vi.mock("@/hooks/shared/usePermissions", () => ({
-  usePermissions: () => ({ canViewFinancials: true }),
+  usePermissions: () => ({ canViewFinancials: true, canViewCosts: true }),
 }));
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 
