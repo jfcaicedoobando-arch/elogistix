@@ -16,22 +16,23 @@ import { tieneCostosCargados, CandadoCostosNoVerificableError } from "../candado
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
   mock.resetResults();
 });
 
 describe("tieneCostosCargados (candado de costos)", () => {
   it("devuelve true cuando hay filas de costo", async () => {
-    mock.setTableResult("cotizacion_costos", { data: null, error: null, count: 3 });
+    mock.setRpcResult("cotizacion_tiene_costos", { data: true, error: null });
     await expect(tieneCostosCargados("cot-1")).resolves.toBe(true);
   });
 
   it("devuelve false cuando no hay filas de costo", async () => {
-    mock.setTableResult("cotizacion_costos", { data: null, error: null, count: 0 });
+    mock.setRpcResult("cotizacion_tiene_costos", { data: false, error: null });
     await expect(tieneCostosCargados("cot-2")).resolves.toBe(false);
   });
 
   it("falla cerrado (error reintentable) cuando la consulta falla", async () => {
-    mock.setTableResult("cotizacion_costos", { data: null, error: { message: "network down" }, count: null });
+    mock.setRpcResult("cotizacion_tiene_costos", { data: null, error: { message: "network down" } });
     await expect(tieneCostosCargados("cot-3")).rejects.toBeInstanceOf(CandadoCostosNoVerificableError);
   });
 });
