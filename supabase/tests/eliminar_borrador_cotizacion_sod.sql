@@ -47,9 +47,10 @@ BEGIN
   RETURNING id INTO v_cli;
 
   INSERT INTO public.cotizaciones
-    (organization_id, cliente_id, estado, created_by, moneda)
+    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo)
   VALUES (v_org, v_cli, 'En operación'::public.estado_cotizacion, v_uid,
-          'MXN'::public.moneda)
+          'MXN'::public.moneda, 'COT-SOD-0001',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_cot;
 
   INSERT INTO public.embarques
@@ -79,9 +80,10 @@ BEGIN
 
   -- ── CASO 2 · el SoD real sigue bloqueando la auto-aceptación.
   INSERT INTO public.cotizaciones
-    (organization_id, cliente_id, estado, created_by, moneda)
+    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo)
   VALUES (v_org, v_cli, 'Enviada'::public.estado_cotizacion, v_uid,
-          'MXN'::public.moneda)
+          'MXN'::public.moneda, 'COT-SOD-0002',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_cot2;
 
   BEGIN
