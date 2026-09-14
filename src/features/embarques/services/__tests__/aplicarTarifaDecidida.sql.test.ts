@@ -23,11 +23,11 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const ESPEJO = join(ROOT, "supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql");
-// Migración vigente (org-scoped) que entrega el cuerpo canónico. El historial
-// anterior (20260913001100) queda intacto: se compara contra la última aplicada.
+// Migración vigente (guardas ruta/tipo/naviera) que entrega el cuerpo canónico.
+// El historial anterior (20260913220010) queda intacto: se compara contra la última aplicada.
 const MIGRACION = join(
   ROOT,
-  "supabase/migrations/20260913220010_3c52e126-3ec1-4646-a484-ac800462a019.sql",
+  "supabase/migrations/20260914220512_d8954432-812f-4f69-9de1-f86dbd62ebae.sql",
 );
 
 const espejo = readFileSync(ESPEJO, "utf8");
