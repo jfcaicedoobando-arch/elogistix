@@ -9,7 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
-import { fetchSaldosProveedorFacturas } from "@/features/cxp/services/saldosProveedorFactura";
+import { fetchSaldosProveedorFacturas } from "@/features/cxp";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface FacturaProgramableRow extends FacturaProgramable {

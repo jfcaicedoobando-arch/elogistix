@@ -70,18 +70,35 @@ export function esPagoAnulado(pago: PagoAplicadoLike): boolean {
   return (pago.estado_rep ?? "").trim().toLowerCase() === "cancelado";
 }
 
+/**
+ * N9 (v13.823.390) — `saldoServidor` es el saldo canónico calculado por la BD
+ * (`public.saldo_factura`), que ya convierte las notas de crédito a la moneda
+ * de la factura. Cuando llega, MANDA: el cliente no vuelve a sumar `nc.monto`
+ * en crudo (una factura MXN con NC en USD mostraba un saldo equivocado y podía
+ * inducir un pago que la BD luego rechaza). La conversión NO se duplica en
+ * TypeScript: las NC convertidas se derivan de la identidad del canon
+ * (total − pagos vigentes − saldo).
+ */
 export function calcularSaldoFactura(
   total: number,
   pagos: readonly PagoAplicadoLike[] = [],
   notasCredito: readonly NotaCreditoAplicadaLike[] = [],
   estadoFactura?: string | null,
+  saldoServidor?: number | null,
 ): SaldoFactura {
   const totalFactura = num(total);
   const pagado = sumarMontos(
     pagos.filter((p) => !esPagoAnulado(p)).map((p) => num(p.monto_aplicado_factura)),
   );
-  const nc = sumarMontos(notasCredito.map((n) => num(n.monto)));
-  const bruto = sumarMontos([totalFactura, -pagado, -nc]);
+  const usaServidor = typeof saldoServidor === "number" && Number.isFinite(saldoServidor);
+  const ncLocal = sumarMontos(notasCredito.map((n) => num(n.monto)));
+  const ncServidor = usaServidor
+    ? Math.max(0, sumarMontos([totalFactura, -pagado, -(saldoServidor as number)]))
+    : ncLocal;
+  const nc = usaServidor ? ncServidor : ncLocal;
+  const bruto = usaServidor
+    ? (saldoServidor as number)
+    : sumarMontos([totalFactura, -pagado, -nc]);
   const saldo = esEstadoSinSaldo(estadoFactura) || bruto <= 0 ? 0 : bruto;
 
   return {
@@ -92,4 +109,5 @@ export function calcularSaldoFactura(
     liquidada: saldo < 0.01,
   };
 }
+
 

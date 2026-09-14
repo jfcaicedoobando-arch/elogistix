@@ -37,6 +37,8 @@ vi.mock("@/features/facturacion/hooks/useTimbrarRep", () => ({
 }));
 vi.mock("@/features/facturacion/hooks/useSaldoFactura", () => ({
   useNotasCreditoAplicadas: () => ncMock(),
+  // N9: el saldo canónico viene del servidor; aquí no interesa su valor.
+  useSaldoFacturaServidor: () => ({ data: undefined, isError: false, refetch: vi.fn() }),
 }));
 vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: () => ({ mutate: vi.fn() }),

@@ -9,6 +9,8 @@ CREATE OR REPLACE FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id 
 DECLARE
   v_pago       public.pagos_proveedor;
   v_cuenta_mon text;
+  v_cuenta_org uuid;
+  v_cuenta_act boolean;
   v_cargo      numeric;
   v_concepto   text;
   v_mov_id     uuid;
@@ -29,11 +31,20 @@ BEGIN
   IF v_pago.cuenta_bancaria_id IS NULL THEN
     RETURN NULL; -- pago sin cuenta bancaria: no hay salida de efectivo que registrar
   END IF;
-  SELECT moneda::text INTO v_cuenta_mon
+  -- N8: defensa en profundidad. La cuenta del movimiento debe existir, estar
+  -- activa y ser de la misma organización del pago.
+  SELECT moneda::text, organization_id, activa
+    INTO v_cuenta_mon, v_cuenta_org, v_cuenta_act
     FROM public.cuentas_bancarias
    WHERE id = v_pago.cuenta_bancaria_id AND deleted_at IS NULL;
   IF v_cuenta_mon IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: la cuenta bancaria del pago no existe o está dada de baja' USING ERRCODE = 'P0001';
+  END IF;
+  IF v_cuenta_org IS DISTINCT FROM v_pago.organization_id THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_CUENTA_OTRA_ORG: la cuenta bancaria del pago pertenece a otra organización' USING ERRCODE = 'P0001';
+  END IF;
+  IF NOT v_cuenta_act THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_CUENTA_INACTIVA: la cuenta bancaria del pago está inactiva' USING ERRCODE = 'P0001';
   END IF;
   -- El movimiento SIEMPRE se registra en la moneda de la cuenta; nunca 1:1
   -- silencioso cross-moneda (clase BL-04).
@@ -82,3 +93,7 @@ BEGIN
   RETURN v_mov_id;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public._asegurar_movimiento_pago_proveedor(uuid) TO authenticated, service_role;

@@ -12,7 +12,11 @@ import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePagosFactura } from "@/features/facturacion/hooks";
-import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
+import {
+  useNotasCreditoAplicadas,
+  useSaldoFacturaServidor,
+} from "@/features/facturacion/hooks/useSaldoFactura";
+
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { useRegistrarPagoInit } from "@/features/facturacion/hooks/useRegistrarPagoInit";
@@ -55,14 +59,26 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: cuentas = [] } = useCuentasBancarias();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);
+  // N9: el saldo cobrable lo calcula la BD (notas de crédito ya convertidas a
+  // la moneda de la factura); así el diálogo no propone un importe que el
+  // servidor rechazaría por sobrepago.
+  const { data: saldoServidor } = useSaldoFacturaServidor(factura?.id);
   const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
 
   // A1: canon `saldoFactura` (pagos + NC). Se pasa el ESTADO para que las
   // terminales (Pagada/Cancelada/…) den saldo 0 (adeudo fantasma legacy).
   const { saldo, pagado: totalPagado } = useMemo(
-    () => calcularSaldoFactura(factura?.total ?? 0, pagosPrevios, notasAplicadas, factura?.estado),
-    [factura, pagosPrevios, notasAplicadas],
+    () =>
+      calcularSaldoFactura(
+        factura?.total ?? 0,
+        pagosPrevios,
+        notasAplicadas,
+        factura?.estado,
+        saldoServidor,
+      ),
+    [factura, pagosPrevios, notasAplicadas, saldoServidor],
   );
+
 
   const [values, setValues] = useState<PagoFormValues>({
     fecha: today(), monto: "", moneda: "MXN",

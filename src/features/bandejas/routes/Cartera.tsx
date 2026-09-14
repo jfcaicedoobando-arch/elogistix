@@ -13,7 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Inbox } from "lucide-react";
+import { Inbox, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -43,6 +44,8 @@ export default function Cartera() {
   const { canRegistrarCobro } = usePermissions();
   const {
     data,
+    truncado,
+    totalEnBase,
     paged,
     monedas,
     scoped,
@@ -78,6 +81,16 @@ export default function Cartera() {
           onCobroLote={() => setLoteOpen(true)}
           onLimpiar={() => setRowSelection({})}
         />
+      )}
+      {truncado && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Vista incompleta: hay {totalEnBase} facturas con saldo y aquí se muestran las{" "}
+            {data.length} más próximas a vencer. Los totales de abajo NO son la cartera
+            completa; filtra por moneda o urgencia para revisar el resto.
+          </AlertDescription>
+        </Alert>
       )}
       <CarteraKpis
         totalFacturas={scoped.length}

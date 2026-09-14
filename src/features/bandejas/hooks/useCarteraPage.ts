@@ -14,7 +14,12 @@ export interface CarteraFilters extends Record<string, string> {
 export const DEFAULT_FILTERS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
 export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
-  const { data = [], isLoading, isError, refetch } = useCarteraPendiente();
+  const { data: resultado, isLoading, isError, refetch } = useCarteraPendiente();
+  const data = useMemo(() => resultado?.rows ?? [], [resultado]);
+  // N10: la RPC devuelve hasta 500 facturas; la pantalla debe poder avisar
+  // cuando hay más en la base en vez de presentar el corte como total.
+  const truncado = resultado?.truncado ?? false;
+  const totalEnBase = resultado?.total ?? data.length;
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
 
@@ -65,6 +70,8 @@ export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
 
   return {
     data,
+    truncado,
+    totalEnBase,
     isLoading,
     // P1-1: la pantalla debe poder distinguir "sin cartera" de "no cargó".
     isError,

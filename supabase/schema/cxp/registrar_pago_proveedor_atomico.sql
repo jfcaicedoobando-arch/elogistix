@@ -27,6 +27,8 @@ DECLARE
   v_pago_id  uuid;
   v_mov_id   uuid;
   v_reintento boolean := false;
+  v_cta_org  uuid;
+  v_cta_activa boolean;
 BEGIN
   IF p_client_request_id IS NOT NULL THEN
     SELECT id INTO v_pago_id
@@ -46,6 +48,25 @@ BEGIN
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+
+  -- N8: la cuenta bancaria debe existir, estar activa y ser de la MISMA
+  -- organización que la factura. Se bloquea la fila para que no la den de baja
+  -- entre la validación y el insert.
+  IF p_cuenta_bancaria_id IS NOT NULL THEN
+    SELECT organization_id, activa INTO v_cta_org, v_cta_activa
+      FROM public.cuentas_bancarias
+     WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL
+     FOR UPDATE;
+    IF v_cta_org IS NULL THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_INEXISTENTE: la cuenta bancaria no existe o está dada de baja' USING ERRCODE = 'P0001';
+    END IF;
+    IF v_cta_org <> v_org THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_OTRA_ORG: la cuenta bancaria pertenece a otra organización' USING ERRCODE = 'P0001';
+    END IF;
+    IF NOT v_cta_activa THEN
+      RAISE EXCEPTION 'LC_PAGO_CUENTA_INACTIVA: la cuenta bancaria está inactiva y no admite pagos' USING ERRCODE = 'P0001';
+    END IF;
   END IF;
 
   -- D4: canon de fecha de negocio México, igual que el lote.
@@ -87,3 +108,7 @@ BEGIN
   RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', v_reintento);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_atomico(uuid, date, numeric, text, text, text, uuid, text, numeric, numeric, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_atomico(uuid, date, numeric, text, text, text, uuid, text, numeric, numeric, uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_atomico(uuid, date, numeric, text, text, text, uuid, text, numeric, numeric, uuid) TO authenticated, service_role;
