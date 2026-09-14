@@ -14,7 +14,8 @@ import {
 } from "@/features/cotizacion/domain/mapearCostosDetalle";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import { useGateEdicionCostos, AvisoCostosBloqueados } from "./edicionCostosGate";
+import { useGateEdicionCostos } from "./useGateEdicionCostos";
+import { AvisoCostosBloqueados } from "./edicionCostosGate";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
 import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
