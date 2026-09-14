@@ -15,6 +15,7 @@ import {
 } from "@/features/cotizacion/domain/mapearCostosDetalle";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { motivoBloqueoEdicionCostos } from "@/features/cotizacion/domain/estadosEditables";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
 import type { EstadoCotizacion } from "@/features/cotizacion/services/mutations/estado";
 
@@ -32,6 +33,22 @@ interface Props {
 }
 
 /**
+ * v13.823.366 — Gate de edición de costos: espejo del guard servidor
+ * `LC_COT_COSTOS_ESTADO_INVALIDO` (sólo Borrador/Solicitada). Se aísla para no
+ * subir la complejidad ciclomática del componente.
+ */
+function gateEdicionCostos(canWrite: boolean, estado: EstadoCotizacion) {
+  const motivo = canWrite ? motivoBloqueoEdicionCostos(estado) : null;
+  return { canEdit: canWrite && motivo === null, motivo };
+}
+
+/** Aviso breve cuando el estado de la cotización ya no permite editar costos. */
+function AvisoCostosBloqueados({ motivo, visible }: { motivo: string | null; visible: boolean }) {
+  if (!motivo || !visible) return null;
+  return <p className="text-body-sm text-muted-foreground">{motivo}</p>;
+}
+
+/**
  * Modo "detalle": carga/persiste costos desde la BD para una cotización existente.
  * Usado en CotizacionDetalle.
  */
@@ -40,7 +57,8 @@ export default function SeccionCostosInternosPLDetalle({
 }: Props) {
   // v13.823.348 — `actualizar_cotizacion_costos` exige `_assert_writer_cotizacion`
   // (SALES): finanzas ve el P&L en solo lectura, sin "Editar/Guardar costos".
-  const { canWriteCotizaciones: canEdit } = usePermissions();
+  const { canWriteCotizaciones } = usePermissions();
+  const { canEdit, motivo: motivoBloqueoEstado } = gateEdicionCostos(canWriteCotizaciones, estadoCotizacion);
   const { data: snapshot, isLoading } = useCotizacionCostosSnapshot(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
   const tasaIva = useTasaIVA();
@@ -135,10 +153,12 @@ export default function SeccionCostosInternosPLDetalle({
         tasaIva={tasaIva}
         visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
         // v13.823.360 — finanzas lee el aviso sin botón (la RPC exige SALES).
-        puedeSincronizar={canEdit}
+        puedeSincronizar={canWriteCotizaciones}
         // v13.823.362 — en Aceptada/En operación el trigger rechaza el UPDATE.
         estadoCotizacion={estadoCotizacion}
       />
+
+      <AvisoCostosBloqueados motivo={motivoBloqueoEstado} visible={filas.length > 0} />
 
       {canEdit && filas.length > 0 && (
         <div className="flex justify-end">

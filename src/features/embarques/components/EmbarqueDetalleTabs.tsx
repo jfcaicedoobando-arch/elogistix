@@ -143,7 +143,7 @@ export function EmbarqueDetalleTabs({
           </ToggleGroup>
         </div>
         {pnlView === "global"
-          ? <TabPnl embarqueId={embarqueId} />
+          ? <TabPnl embarqueId={embarqueId} estadoEmbarque={embarque.estado} />
           : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente ?? ""} />}
       </TabsContent>
 

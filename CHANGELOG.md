@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.823.366] - 2026-09-13
+
+- **fix(cotizaciones)**: el detalle ofrecía "Editar costos"/"Guardar Costos" en cotizaciones `Aceptada`/`En operación`, pero el guard servidor `actualizar_cotizacion_costos` las rechaza (`LC_COT_COSTOS_ESTADO_INVALIDO`).
+  - Nuevo `motivoBloqueoEdicionCostos(estado)` (`src/features/cotizacion/domain/estadosEditables.ts`): edición sólo en `Borrador`/`Solicitada`; en `Aceptada`/`En operación` la UI muestra guía breve hacia Re-cotizar.
+  - Regresión: `motivoBloqueoEdicionCostos.test.ts`.
+- **fix(embarques)**: en un embarque **Terrestre** el tab Tracking pedía "aerolínea y MAWB" porque cualquier modo ≠ Marítimo se trataba como Aéreo.
+  - Nuevo `resolverTrackingCarrier` (`src/features/embarques/domain/trackingCarrier.ts`): Marítimo y **Multimodal** → naviera + BL Master; Aéreo → aerolínea + MAWB; Terrestre → sin tracking de transportista (se conserva "Registrar evento").
+  - Regresión: `trackingCarrier.test.ts` (4 modos).
+- **fix(embarques)**: "Avanzar a Confirmado" abría el diálogo genérico aunque faltaran shipper, consignatario, ETD, ETA o transportista.
+  - `useEmbarqueEstadoActions` expone `faltantesConfirmado`; `AvanzarEstadoButton` muestra la lista de faltantes con CTA "Editar datos" (mismo patrón que documentos) en vez de la confirmación genérica. Se conserva el guard servidor `LC_CONFIRMADO_INCOMPLETO`.
+- **fix(facturación)**: en un embarque en `Borrador` cada concepto decía "Listo para proforma" aunque la generación estuviera bloqueada.
+  - `calcularEstadosConceptos` recibe `embarqueConfirmado`; nuevo estado de presentación `pendiente_confirmar` → badge "Pendiente de confirmar" (sin tocar `estado_facturacion` en BD).
+- **fix(embarques)**: el tab Utilidad de un embarque en `Borrador` sin facturas pintaba "Venta facturada menor a presupuestada" y Δ -100% como alerta.
+  - `calcularAlertasPnl` recibe `estadoEmbarque` y devuelve `sinActividadReal`; el tab muestra contexto "Sin actividad real todavía" y suprime alertas ficticias. Las alertas reales se conservan en embarques operativos.
+
 ## [13.823.365] - 2026-09-13
 
 - **chore(ci)**: correctivo del shard 2/3 tras f082480.

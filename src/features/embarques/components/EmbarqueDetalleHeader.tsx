@@ -55,7 +55,7 @@ export function EmbarqueDetalleHeader({
     handleReabrir, reabrirEmbarque,
     handleCancelar, tieneDeudaPendiente,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
-    docsFaltantes, docsBloqueantes,
+    docsFaltantes, docsBloqueantes, faltantesConfirmado,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes,
@@ -124,6 +124,7 @@ export function EmbarqueDetalleHeader({
               reabriendoEstado: reabrirEmbarque.isPending,
               docsFaltantes,
               bloqueadoPorDocs,
+              faltantesConfirmado,
               cancelandoEmbarque: avanzarEstado.isPending,
               tieneDeudaPendiente,
             }}

@@ -28,6 +28,8 @@ export interface AccionesEmbarqueEstado {
   reabriendoEstado: boolean;
   docsFaltantes: string[];
   bloqueadoPorDocs: boolean;
+  /** v13.823.366 — Faltantes para pasar a Confirmado (preflight). */
+  faltantesConfirmado: string[];
   cancelandoEmbarque: boolean;
   tieneDeudaPendiente: boolean;
 }
@@ -82,6 +84,7 @@ export function EmbarqueDetalleHeaderActions({
   const {
     avanzandoEstado, trackingPending, tieneLinkActivo, puedeReabrir, reabriendoEstado,
     docsFaltantes, bloqueadoPorDocs, cancelandoEmbarque, tieneDeudaPendiente,
+    faltantesConfirmado,
   } = estado;
   const { cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo } = cierre;
   const {
@@ -103,7 +106,7 @@ export function EmbarqueDetalleHeaderActions({
 
   const accionPrincipal = AccionPrincipalEmbarque({
     canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
-    bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
+    bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist, faltantesConfirmado,
     onAvanzarEstado, onIrACierre, onIrADocumentos, goEditar,
   });
 

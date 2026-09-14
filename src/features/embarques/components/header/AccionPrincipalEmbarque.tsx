@@ -11,6 +11,8 @@ export interface AccionPrincipalArgs {
   bloqueadoPorDocs: boolean;
   docsFaltantes: string[];
   cierreBloqueadoPorChecklist: boolean;
+  /** v13.823.366 — Faltantes para confirmar (preflight antes del diálogo). */
+  faltantesConfirmado: string[];
   onAvanzarEstado: () => void;
   onIrACierre: () => void;
   onIrADocumentos: () => void;
@@ -32,6 +34,8 @@ export function AccionPrincipalEmbarque(a: AccionPrincipalArgs) {
         bloqueadoPorDocs={a.bloqueadoPorDocs}
         docsFaltantes={a.docsFaltantes}
         cierreBloqueadoPorChecklist={a.cierreBloqueadoPorChecklist}
+        faltantesConfirmado={a.faltantesConfirmado}
+        onIrAEditar={a.goEditar}
         onAvanzarEstado={a.onAvanzarEstado}
         onIrACierre={a.onIrACierre}
         onIrADocumentos={a.onIrADocumentos}

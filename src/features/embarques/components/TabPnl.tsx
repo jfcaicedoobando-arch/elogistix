@@ -20,10 +20,12 @@ import { PnlTipoCambioNota } from "./pnl/PnlTipoCambioNota";
 
 interface Props {
   embarqueId: string;
+  /** v13.823.366 — En Borrador sin importes reales no se pintan alertas. */
+  estadoEmbarque?: string | null;
 }
 
 // eslint-disable-next-line complexity
-export function TabPnl({ embarqueId }: Props) {
+export function TabPnl({ embarqueId, estadoEmbarque }: Props) {
   const { data, isLoading, error, refetch } = usePnlFinanciero(embarqueId);
   const { registerRef } = useFocusSection();
 
@@ -55,8 +57,10 @@ export function TabPnl({ embarqueId }: Props) {
 
   const dVenta = deltaPnl(ventaReal, ventaPresup);
   const dCosto = deltaPnl(costoReal, costoPresup);
-  const { utilidadReal, margenReal, alertaSobrecosto, alertaVenta, alertaMargen } =
-    calcularAlertasPnl({ ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct });
+  const { utilidadReal, margenReal, alertaSobrecosto, alertaVenta, alertaMargen, sinActividadReal } =
+    calcularAlertasPnl({
+      ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct, estadoEmbarque,
+    });
   const dUtilidad = deltaPnl(utilidadReal, utilidadPresup);
 
   return (
@@ -99,6 +103,20 @@ export function TabPnl({ embarqueId }: Props) {
           }
         />
       </div>
+
+      {sinActividadReal && (
+        <Card className="border-border bg-muted/40">
+          <CardHeader className="pb-2 flex flex-row items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>Sin actividad real todavía</CardTitle>
+          </CardHeader>
+          <CardContent className="text-body-sm text-muted-foreground">
+            El embarque está en Borrador y aún no tiene facturas de venta ni costos reales.
+            Las cifras mostradas son el presupuesto; las desviaciones aparecerán cuando
+            empiece la operación.
+          </CardContent>
+        </Card>
+      )}
 
       {(alertaSobrecosto || alertaVenta || alertaMargen) && (
         <Card className="border-warning/40 bg-warning/5">

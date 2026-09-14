@@ -42,3 +42,19 @@ export function motivoBloqueoEdicionCotizacion(cotizacion: {
   }
   return null;
 }
+
+/**
+ * P1 UX (v13.823.366) — Motivo por el que NO se pueden editar los costos
+ * internos desde el detalle, o `null` si sí se pueden. Espejo exacto del guard
+ * servidor de `actualizar_cotizacion_costos`
+ * (`LC_COT_COSTOS_ESTADO_INVALIDO`): la base de costos sólo se reemplaza en
+ * Borrador/Solicitada. Antes la UI ofrecía "Editar costos" y "Guardar Costos"
+ * en Aceptada y el guard rechazaba el guardado.
+ */
+export function motivoBloqueoEdicionCostos(estado: string | null | undefined): string | null {
+  if (esEstadoEditableEnWizard(estado)) return null;
+  if (estado === "Aceptada" || estado === "En operación") {
+    return "Los costos de una cotización aceptada ya no se editan: respaldan la operación. Usa Re-cotizar para generar una nueva versión.";
+  }
+  return `Una cotización en estado "${estado ?? "desconocido"}" ya no permite editar costos. Genera una nueva versión (Re-cotizar) si necesitas cambiarlos.`;
+}

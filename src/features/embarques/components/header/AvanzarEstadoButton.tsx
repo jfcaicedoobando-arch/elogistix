@@ -16,6 +16,9 @@ interface Props {
   bloqueadoPorDocs: boolean;
   docsFaltantes: string[];
   cierreBloqueadoPorChecklist: boolean;
+  /** v13.823.366 — Faltantes para pasar a Confirmado (preflight). */
+  faltantesConfirmado?: string[];
+  onIrAEditar?: () => void;
   onAvanzarEstado: () => void;
   onIrACierre: () => void;
   onIrADocumentos: () => void;
@@ -24,6 +27,7 @@ interface Props {
 export function AvanzarEstadoButton({
   estadoVisual, siguienteEstado, avanzandoEstado,
   bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
+  faltantesConfirmado = [], onIrAEditar,
   onAvanzarEstado, onIrACierre, onIrADocumentos,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -62,6 +66,38 @@ export function AvanzarEstadoButton({
               <p>Para pasar a <strong>{siguienteLabel}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
               <ul className="list-disc list-inside text-body">
                 {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
+              </ul>
+            </div>
+          }
+        />
+      </>
+    );
+  }
+
+  // v13.823.366 — Preflight: si faltan datos mínimos (shipper, consignatario,
+  // ETD, ETA, transportista…), no abrimos el diálogo genérico de confirmación:
+  // el servidor lo rechazaría de todos modos. Mismo patrón que el de documentos.
+  if (faltantesConfirmado.length > 0) {
+    return (
+      <>
+        <Button size="sm" disabled={avanzandoEstado} onClick={() => setDialogOpen(true)}>
+          <ChevronRight className="h-4 w-4 mr-1" />
+          Avanzar a {siguienteLabel}
+        </Button>
+        <ConfirmActionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title="Falta información para confirmar"
+          titleIcon={<FileWarning className="h-5 w-5 text-destructive" aria-hidden />}
+          titleDestructive
+          confirmLabel="Editar datos"
+          cancelLabel="Cerrar"
+          onConfirm={() => { setDialogOpen(false); onIrAEditar?.(); }}
+          description={
+            <div className="space-y-2">
+              <p>Para pasar a <strong>{siguienteLabel}</strong> hay que capturar primero:</p>
+              <ul className="list-disc list-inside text-body">
+                {faltantesConfirmado.map((f) => <li key={f}>{f}</li>)}
               </ul>
             </div>
           }
