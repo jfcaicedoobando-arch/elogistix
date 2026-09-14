@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.365] - 2026-09-13
+
+- **chore(ci)**: correctivo del shard 2/3 tras f082480.
+  - `fromdb-zod-adoption.test.ts`: baseline `cotizacion` baja de 8 a 5 (valor real tras migrar call sites; el ratchet sólo decrece).
+  - `mensajeCotizacionSinImportes` se mueve de `src/lib/domain/` a `src/features/cotizacion/domain/cotizacionSinImportes.ts` (punto 6: módulo de una sola feature) y su regresión a `src/features/cotizacion/domain/__tests__/cotizacionSinImportes.test.ts`.
+  - `AvisoSincronizarConceptosVenta.tsx`: el cast se extrae a `conceptosJson` para que el marcador `SAFE-CAST:` quede en el bloque de comentarios contiguo (guard de arquitectura).
+
 ## [13.823.364] - 2026-09-13
 
 - **fix(cotizaciones)**: el candado de "Exportar PDF" en cotizaciones con conceptos de venta en $0.00 siempre pedía "revisa costos y sincroniza los conceptos", pero en `Aceptada`/`En operación` (p.ej. COT-2026-0129) el trigger `cotizaciones_guard_en_operacion` hace inmutables `conceptos_venta`/`subtotal` y sincronizar falla.
