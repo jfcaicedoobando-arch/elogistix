@@ -80,16 +80,44 @@ export function normalizarActividad(rows: ActividadRow[]): ActividadItem[] {
       moneda: r.moneda ?? undefined,
       refTipo: r.ref_tipo ?? undefined,
       refId: r.ref_id ?? undefined,
+      dedupeKey: r.dedupe_key?.trim() || undefined,
       detalles: esObjeto(r.detalles) ? r.detalles : undefined,
     }));
+}
+
+/** Un `accion` técnico viene del backend en snake_case (p.ej. `cambiar_estado`). */
+function esAccionTecnica(accion: string): boolean {
+  return /^[a-z0-9]+(_[a-z0-9]+)+$/.test(accion);
+}
+
+/** Qué tan útil es la fila para una persona: gana el evento humano más detallado. */
+function utilidad(item: ActividadItem): number {
+  return (
+    (esAccionTecnica(item.accion) ? 0 : 1000) +
+    (item.descripcion ? 100 + Math.min(item.descripcion.length, 100) : 0) +
+    Math.min(item.titulo.length, 100) +
+    (item.detalles ? 50 : 0)
+  );
 }
 
 /**
  * Elimina duplicados de un mismo hecho registrado en varias fuentes
  * (por ejemplo un cambio de estado guardado en nota, evento y bitácora).
- * La bitácora tiene prioridad porque conserva el detalle de cambios.
+ * Con `dedupe_key` el colapso es exacto: se conserva el evento humano más
+ * detallado del mismo hecho. Sin key se mantiene la heurística anterior
+ * (bitácora prioritaria) para no colapsar hechos distintos del mismo minuto.
  */
 export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
+  const ganadorPorKey = new Map<string, string>();
+  for (const item of items) {
+    if (!item.dedupeKey) continue;
+    const actualId = ganadorPorKey.get(item.dedupeKey);
+    const actual = actualId ? items.find((i) => i.id === actualId) : undefined;
+    if (!actual || utilidad(item) > utilidad(actual)) {
+      ganadorPorKey.set(item.dedupeKey, item.id);
+    }
+  }
+
   const conClave = items.filter((i) => i.id.startsWith('bit-'));
   const clavesBitacora = new Set(
     conClave.map((i) => `${i.fecha.slice(0, 16)}`),
@@ -97,6 +125,11 @@ export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
   const vistos = new Set<string>();
   const out: ActividadItem[] = [];
   for (const item of items) {
+    if (item.dedupeKey) {
+      if (ganadorPorKey.get(item.dedupeKey) !== item.id) continue;
+      out.push(item);
+      continue;
+    }
     const esCambioEstadoAjeno =
       !item.id.startsWith('bit-') &&
       (item.accion === 'Cambio de estado' || item.titulo.startsWith('Estado cambiado a')) &&
@@ -109,6 +142,7 @@ export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
   }
   return out;
 }
+
 
 export function ordenarActividad(items: ActividadItem[]): ActividadItem[] {
   return [...items].sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0));
