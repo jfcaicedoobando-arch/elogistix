@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.394] - 2026-09-14
+
+- **fix(embarques · visibilidad operativa de costos y facturas, B1)**: en un expediente con facturas de costo, `coordinador_logistico` y `gerente_operaciones` veían el real en 0 / "Sin factura" porque la única policy permisiva de `proveedor_facturas_conceptos` era de finanzas y RLS filtraba los vínculos sin error. Nueva policy `SELECT` "Lectura operativa expediente proveedor_facturas_conceptos" acotada a la organización activa y a vínculos cuyo concepto de costo pertenece a un embarque vivo de esa organización; no se concede alta, edición, borrado, aprobación ni pago, ni se abren listados de CxP.
+- **fix(permisos · matriz UI)**: `coordinador_logistico` se agrega a `COST_VIEWERS` (`canViewCosts`) y **no** a `FINANCE_VIEWERS`/`canViewFinancials`; los controles financieros de escritura siguen ocultos.
+- **fix(UX · folio de factura vinculada)**: en `FacturaEntranteItem` y `GrupoCostosFacturasCell`, quien no tiene `canViewFinancials` ve el folio como etiqueta informativa accesible (con tooltip) en lugar de un enlace a `/compras/facturas/:id`, ruta que le está negada; los roles financieros conservan el enlace.
+- Cobertura: `supabase/tests/pfc_lectura_operativa_embarque.sql` (lectura propia permitida, cross-org negada, sin escritura, sin aprobación ni pago) y `facturaVinculadaEnlace.test.tsx` (camino operativo sin enlace / financiero con enlace).
+
+
+
 ## [13.823.393] - 2026-09-14
 
 - **fix(reconciliación 3C · delta multi-moneda, B2)**: `aplicarDelta` cruzaba sólo por concepto, así que un delta de "Flete/USD" también reescribía el "Flete/MXN". Ahora el match es por concepto **y** moneda normalizados; los deltas legacy sin `moneda` se aplican únicamente cuando ese concepto cotizado existe en una sola moneda (con ambigüedad USD/MXN se conserva el cotizado).
