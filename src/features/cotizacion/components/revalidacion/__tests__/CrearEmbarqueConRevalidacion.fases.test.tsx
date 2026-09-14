@@ -71,7 +71,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     revalidarTarifa.mockResolvedValue(SIN_CAMBIOS);
     mutateAsync.mockRejectedValue(new Error("no se pudo crear el embarque"));
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
@@ -83,7 +83,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
   it("si falla la revalidación sí muestra su aviso y no intenta crear", async () => {
     revalidarTarifa.mockRejectedValue(new Error("timeout"));
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
@@ -95,7 +95,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     verificarCostosOAvisar.mockResolvedValue(false);
     revalidarTarifa.mockResolvedValue(SIN_CAMBIOS);
 
-    render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
+    renderConQueryClient(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
     fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(verificarCostosOAvisar).toHaveBeenCalledWith("cot-1"));
