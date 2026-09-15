@@ -124,6 +124,8 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
           name="etd"
           render={({ field }) => (
             <DatePickerMx
+              id="emb-etd"
+              name="etd"
               value={field.value ?? ""}
               onChange={field.onChange}
               className={`w-full ${errors.etd ? "border-destructive" : ""}`}
@@ -151,6 +153,8 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
           name="eta"
           render={({ field }) => (
             <DatePickerMx
+              id="emb-eta"
+              name="eta"
               value={field.value ?? ""}
               onChange={field.onChange}
               className={`w-full ${errors.eta ? "border-destructive" : ""}`}

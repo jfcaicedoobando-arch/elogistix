@@ -29,7 +29,7 @@ export interface EmbarqueMobileCardData {
 
 export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCardData }) {
   const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
-  const folio = labelExpediente(e.expediente, e.id);
+  const folio = labelExpediente(e.expediente, e.id, e.estado);
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1">

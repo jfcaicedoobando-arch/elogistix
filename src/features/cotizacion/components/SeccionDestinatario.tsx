@@ -130,7 +130,7 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
               clearErrors("clienteId");
             }}
           >
-            <SelectTrigger aria-invalid={!!errors.clienteId}>
+            <SelectTrigger aria-label="Cliente" aria-invalid={!!errors.clienteId}>
 
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>

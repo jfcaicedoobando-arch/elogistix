@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.823.401] - 2026-09-15
+
+Lote YAGNI P1/P2: expediente canónico en estados activos, comparaciones de moneda sin conversión 1:1, conteos = filas, estados de carga y nombres accesibles. Una migración (`avanzar_estado_embarque` + backfill de expediente).
+
+- **fix(EMB-NEW-02 · expediente canónico)**: `avanzar_estado_embarque` genera el expediente al salir de Borrador/Cotización/Cancelado hacia cualquier estado activo (antes sólo en Borrador→Confirmado) y la migración hace backfill de los embarques activos sin folio. `labelExpediente` recibe el estado: un embarque activo sin folio muestra «Sin folio (id)» y nunca «Borrador <id>». Espejo en `supabase/schema/embarques/avanzar_estado_embarque.sql`.
+- **fix(MNY-NEW-03 · conciliación cross-moneda)**: los conceptos vinculados a facturas de proveedor se convierten con la moneda y el T/C de la factura; si falta el T/C, el vínculo se excluye del real facturado y del estatus con motivo «Moneda distinta … sin tipo de cambio», y la tarjeta de costos lo avisa. Nunca 1:1 silencioso.
+- **fix(MNY-NEW-04 · movimiento bancario fail-closed)**: `cargoEnMonedaCuenta` devuelve `null` cuando pago y cuenta difieren de moneda sin T/C y `crearMovimientoBancarioPago` corta con mensaje que pide capturarlo; misma moneda sigue igual.
+- **fix(COT-NEW-01 · conteos = filas)**: los agregados y KPIs de Cotizaciones aplican el mismo filtro de vigencia que el listado (excluyen Vencida/Archivada salvo que se pidan inactivas), así que el número del tab coincide con las filas.
+- **fix(EMB-NEW-05 · costos en carga)**: `TabCostos` propaga `isLoading` y la tarjeta muestra «Cargando costos…»; «Sin costos directos» sólo aparece cuando la consulta terminó.
+- **fix(EMB-NEW-06 · detalle completo)**: el detalle de cada paso del flujo de facturación envuelve en dos líneas (con `title`) en vez de truncar «2 sin…».
+- **fix(A11Y-NEW-07/08/09 · nombres accesibles)**: ETD/ETA del paso 2 quedan ligados a su etiqueta, los campos de peso/volumen/piezas por contenedor llevan `id`/`name`/`aria-label`, los selectores del paso 1 de cotización (modo, operación, modalidad, incoterm, cliente) exponen nombre accesible y las fechas Desde/Hasta del estado de cuenta también.
+- Cobertura focalizada: `cargoEnMonedaCuenta.test.ts`, `reconciliacionMoneda.test.ts`, `labelExpediente.test.ts`, `agregadosVigencia.test.ts`, `conceptosCostoCargando.test.tsx`, `flujoFacturacionDetalle.test.tsx`, `fechasAccesibles.test.tsx`, `datosGeneralesAccesible.test.tsx`, `estadoCuentaToolbarA11y.test.tsx`.
+
+
 ## [13.823.400] - 2026-09-15
 
 Auditoría posterior a `c8bdc7b`: higiene de pruebas (CI-01), legibilidad en Desktop HD (VIZ-01…VIZ-05) y ventana de vencimientos (MNY-09). Sin migraciones, RLS ni dependencias nuevas.

@@ -32,8 +32,8 @@ describe("buildFilasReconciliacion", () => {
 
   it("agrupa varias facturas vinculadas al mismo concepto", () => {
     const vinc = [
-      { monto: 600, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", deleted_at: null } },
-      { monto: 400, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", deleted_at: null } },
+      { monto: 600, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", moneda: "USD", deleted_at: null } },
+      { monto: 400, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", moneda: "USD", deleted_at: null } },
     ];
     const filas = buildFilasReconciliacion(conceptos, vinc);
     expect(filas[0].real_facturado).toBe(1000);
@@ -44,8 +44,8 @@ describe("buildFilasReconciliacion", () => {
 
   it("propaga el folio interno de Libre Carga y tolera su ausencia", () => {
     const vinc = [
-      { monto: 600, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_interno: "FP-000256", folio_proveedor: "034G545923", deleted_at: null } },
-      { monto: 400, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", deleted_at: null } },
+      { monto: 600, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f1", folio_interno: "FP-000256", folio_proveedor: "034G545923", moneda: "USD", deleted_at: null } },
+      { monto: 400, concepto_costo_id: "cc-1", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", moneda: "USD", deleted_at: null } },
     ];
     const filas = buildFilasReconciliacion(conceptos, vinc);
     expect(filas[0].facturas[0].folio_interno).toBe("FP-000256");

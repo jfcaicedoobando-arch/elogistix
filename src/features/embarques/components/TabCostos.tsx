@@ -47,7 +47,7 @@ export function TabCostos({
 }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
-  const { data: filasReconc = [] } = useReconciliacionEmbarque(embarqueId);
+  const { data: filasReconc = [], isLoading: cargandoCostos } = useReconciliacionEmbarque(embarqueId);
 
   const showContenedorCol = contenedores.length >= 2;
   const contenedorLabelById = useMemo(() => {
@@ -100,6 +100,7 @@ export function TabCostos({
 
       <ConceptosCostoCard
         filas={filasReconc}
+        isLoading={cargandoCostos}
         conceptosCosto={conceptosCosto}
         showContenedorCol={showContenedorCol}
         renderContenedor={renderContenedor}

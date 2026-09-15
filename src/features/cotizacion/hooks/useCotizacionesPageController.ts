@@ -113,10 +113,12 @@ export function useCotizacionesPageController() {
 
   const segmento = normalizarSegmento(lista.filters.segmento);
 
-  const agregadosQueryKey = ["cotizaciones", "agregados", organizationId, segmento];
+  // COT-NEW-01: los conteos comparten el filtro de vigencia con la tabla.
+  const incluirInactivas = lista.filters.incluirInactivas === "si";
+  const agregadosQueryKey = ["cotizaciones", "agregados", organizationId, segmento, incluirInactivas];
   const { data: agregados } = useQuery({
     queryKey: agregadosQueryKey,
-    queryFn: () => fetchCotizacionAgregados(organizationId, segmento),
+    queryFn: () => fetchCotizacionAgregados(organizationId, segmento, incluirInactivas),
     staleTime: staleTimes.MEDIUM,
   });
 

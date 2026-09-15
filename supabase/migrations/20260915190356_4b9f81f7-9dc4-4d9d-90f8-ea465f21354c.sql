@@ -1,7 +1,4 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
+-- EMB-NEW-02: todo embarque que sale de Borrador debe tener expediente canónico.
 
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
@@ -230,3 +227,45 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) TO authenticated, service_role;
+
+-- Backfill EMB-NEW-02: embarques activos legacy sin expediente. No se borra
+-- ninguna fila; sólo se les asigna el folio canónico de su organización
+-- reutilizando la secuencia `folio_secuencias` (misma forma EL<PREFIJO><#####>).
+DO $backfill$
+DECLARE
+  r record;
+  v_prefijo text;
+  v_consec bigint;
+  v_exp text;
+BEGIN
+  FOR r IN
+    SELECT id, organization_id, tipo
+      FROM public.embarques
+     WHERE deleted_at IS NULL
+       AND COALESCE(btrim(expediente), '') = ''
+       AND estado::text NOT IN ('Borrador', 'Cotización', 'Cancelado')
+     ORDER BY created_at
+  LOOP
+    v_prefijo := CASE COALESCE(r.tipo::text, '')
+      WHEN 'Importación' THEN 'IMP'
+      WHEN 'Exportación' THEN 'EXP'
+      WHEN 'Nacional' THEN 'NAC'
+      ELSE 'GEN' END;
+    LOOP
+      INSERT INTO public.folio_secuencias (organization_id, tipo, ultimo_numero)
+      VALUES (r.organization_id, 'embarque', 1)
+      ON CONFLICT (organization_id, tipo)
+      DO UPDATE SET ultimo_numero = public.folio_secuencias.ultimo_numero + 1,
+                    updated_at = now()
+      RETURNING ultimo_numero INTO v_consec;
+      v_exp := 'EL' || v_prefijo || lpad(v_consec::text, 5, '0');
+      EXIT WHEN NOT EXISTS (
+        SELECT 1 FROM public.embarques e
+         WHERE e.organization_id = r.organization_id
+           AND e.expediente = v_exp
+      );
+    END LOOP;
+    UPDATE public.embarques SET expediente = v_exp, updated_at = now() WHERE id = r.id;
+  END LOOP;
+END
+$backfill$;

@@ -73,7 +73,7 @@ export function EmbarqueDetalleHeader({
       <DetailHeader
         backTo={volver}
         backLabel="Volver a Embarques"
-        title={labelExpediente(embarque.expediente, embarque.id)}
+        title={labelExpediente(embarque.expediente, embarque.id, embarque.estado)}
         badge={
           <>
             <EmbarqueStatusChip
@@ -113,7 +113,7 @@ export function EmbarqueDetalleHeader({
         trailing={
           <EmbarqueDetalleHeaderActions
             contexto={{
-              expediente: labelExpediente(embarque.expediente, embarque.id),
+              expediente: labelExpediente(embarque.expediente, embarque.id, embarque.estado),
               estadoVisual, siguienteEstado, canEdit, embarqueId,
             }}
             estado={{

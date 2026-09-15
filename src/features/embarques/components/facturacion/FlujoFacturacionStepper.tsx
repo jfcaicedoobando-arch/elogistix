@@ -89,7 +89,9 @@ function Paso({ numero, titulo, detalle, estado, icon: Icon }: PasoProps) {
           <span className="font-mono">{numero}.</span>
           <span className={cn("font-semibold", styles.title)}>{titulo}</span>
         </div>
-        <div className={cn("text-body-sm truncate", styles.detail)}>{detalle}</div>
+        {/* EMB-NEW-06: el detalle envuelve en dos líneas; antes `truncate`
+            cortaba "6 generadas · 2 sin emitir" en HD. */}
+        <div className={cn("text-body-sm break-words", styles.detail)} title={detalle}>{detalle}</div>
       </div>
     </div>
   );

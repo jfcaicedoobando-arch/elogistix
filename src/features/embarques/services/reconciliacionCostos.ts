@@ -32,7 +32,8 @@ export async function fetchReconciliacionEmbarque(
   const pfc = await fetchInChunks(ids, async (lote) => {
     const { data, error } = await supabase
       .from("proveedor_facturas_conceptos")
-      .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_interno, folio_proveedor, fecha_emision, fecha_vencimiento, estado, deleted_at)")
+      // MNY-NEW-03: moneda y TC de la factura para convertir antes de comparar.
+      .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_interno, folio_proveedor, fecha_emision, fecha_vencimiento, estado, moneda, tipo_cambio_usd, deleted_at)")
       .in("concepto_costo_id", lote);
     if (error) throw error;
     // SAFE-CAST: shape modelado por PFCRow a partir del select con embed.
