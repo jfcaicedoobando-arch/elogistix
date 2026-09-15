@@ -34,6 +34,20 @@ describe("filtrarProgramables — ventana de 30 días", () => {
     expect(res).toHaveLength(0);
   });
 
+  /** MNY-09: la ventana es "hoy y los próximos 30 días", no incluye vencidas. */
+  it("incluye hoy (día 0) y excluye el día -1 ya vencido", () => {
+    expect(filtrarProgramables([row(isoEnDias(0), "hoy")], "treinta_dias")).toHaveLength(1);
+    expect(filtrarProgramables([row(isoEnDias(-1), "ayer")], "treinta_dias")).toHaveLength(0);
+  });
+
+  it("de -1, 0, 30 y 31 días sólo deja 0 y 30", () => {
+    const res = filtrarProgramables(
+      [row(isoEnDias(-1), "a"), row(isoEnDias(0), "b"), row(isoEnDias(30), "c"), row(isoEnDias(31), "d")],
+      "treinta_dias",
+    );
+    expect(res.map((r) => r.id)).toEqual(["b", "c"]);
+  });
+
   it("no filtra cuando el modo es 'todas'", () => {
     const res = filtrarProgramables([row(isoEnDias(90), "c"), row(null, "d")], "todas");
     expect(res).toHaveLength(2);
