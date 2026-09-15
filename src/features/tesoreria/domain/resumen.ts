@@ -94,6 +94,8 @@ export function calcularResumenTesoreria(args: {
     cartera_vencida_count: vencidasCobranza.count,
     cxp_vencidas_count: vencidasCxp.count,
     cxp_vencidas_total_mxn: vencidasCxp.total_mxn,
+    cartera_vencida_excluido_por_moneda: vencidasCobranza.excluido_por_moneda,
+    cxp_vencidas_excluido_por_moneda: vencidasCxp.excluido_por_moneda,
   };
 }
 

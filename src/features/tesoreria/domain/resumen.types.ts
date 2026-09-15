@@ -76,6 +76,9 @@ export interface ResumenTesoreria {
   cartera_vencida_count: number;
   cxp_vencidas_count: number;
   cxp_vencidas_total_mxn: number;
+  /** FIN-NEW-02: vencidas en divisa que quedaron fuera del total por falta de TC. */
+  cartera_vencida_excluido_por_moneda: Record<string, number>;
+  cxp_vencidas_excluido_por_moneda: Record<string, number>;
 }
 
 export interface CobranzaRow {

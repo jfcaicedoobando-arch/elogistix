@@ -62,23 +62,45 @@ export function calcularFlujo(
   return flujo;
 }
 
+export interface VencidasResumen {
+  /** Total conservador: sólo lo que se pudo convertir a MXN. */
+  total_mxn: number;
+  count: number;
+  /**
+   * FIN-NEW-02 — facturas vencidas contadas pero EXCLUIDAS del total por falta
+   * de TC confiable. Antes sólo se devolvía `{total_mxn, count}` y Tesorería
+   * podía mostrar "Total vencido MXN 0 (1 factura)" sin explicar por qué.
+   */
+  excluidas_count: number;
+  /** Monto nominal excluido por moneda (p. ej. `{ EUR: 1200 }`). */
+  excluido_por_moneda: Record<string, number>;
+}
+
 export function sumarVencidas<T extends { saldo: number; moneda: string }>(
   rows: T[],
   estatusOf: (r: T) => string | undefined,
   tasas: TasasCambio,
-): { total_mxn: number; count: number } {
+): VencidasResumen {
   let total_mxn = 0;
   let count = 0;
+  let excluidas_count = 0;
+  const excluido_por_moneda: Record<string, number> = {};
   for (const f of rows) {
     // Canon único de "vencida" + canon único de conversión (`aMxn`): antes esto
     // multiplicaba `saldo * tc` a mano y no marcaba los saldos sin TC confiable.
     if (!esCxcVencida({ saldo: f.saldo, estatus: estatusOf(f) })) continue;
     count += 1;
     const conv = aMxn(f.saldo, f.moneda, tcDeMoneda(f.moneda, tasas));
-    if (conv.completo) total_mxn += conv.monto;
+    if (conv.completo) {
+      total_mxn += conv.monto;
+      continue;
+    }
+    excluidas_count += 1;
+    const clave = (f.moneda ?? "MXN").toUpperCase();
+    excluido_por_moneda[clave] = (excluido_por_moneda[clave] ?? 0) + Number(f.saldo ?? 0);
   }
 
-  return { total_mxn, count };
+  return { total_mxn, count, excluidas_count, excluido_por_moneda };
 }
 
 interface TopAccessors<T> {
