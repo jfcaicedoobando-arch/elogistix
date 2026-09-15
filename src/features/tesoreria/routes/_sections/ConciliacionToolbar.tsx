@@ -9,6 +9,7 @@ import type { ChangeEvent, RefObject } from "react";
 import { Upload, Sparkles, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -89,15 +90,16 @@ export function ConciliacionToolbar({
                 habilitado junto a los demás botones atenuados. Sin cuenta
                 seleccionada usa la misma variante atenuada; la regla de
                 habilitación no cambia. */}
-            <Button
-              variant={!cuentaId || importando ? "outline" : "default"}
-              onClick={() => fileRef.current?.click()}
-              disabled={!cuentaId || importando}
-              title={!cuentaId ? "Selecciona una cuenta bancaria para importar movimientos." : undefined}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {importando ? "Importando…" : "Importar XLSX/CSV"}
-            </Button>
+            <Hint label={!cuentaId ? "Selecciona una cuenta bancaria para importar movimientos." : undefined}>
+              <Button
+                variant={!cuentaId || importando ? "outline" : "default"}
+                onClick={() => fileRef.current?.click()}
+                disabled={!cuentaId || importando}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {importando ? "Importando…" : "Importar XLSX/CSV"}
+              </Button>
+            </Hint>
           </>
         ) : (
           <span className="text-body-sm text-muted-foreground">

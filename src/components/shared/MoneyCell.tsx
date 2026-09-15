@@ -6,7 +6,8 @@
  *
  * Convenciones:
  *  - `min-w-0` + `truncate` para no romper el grid.
- *  - `title` con `fullValue` (o `value` si no se pasa) para exponer el monto completo.
+ *  - `Hint` con `fullValue` (o `value` si no se pasa) para exponer el monto
+ *    completo truncado (tooltip accesible; sin `title` nativo — CI-02).
  *  - `tabular-nums` para alinear dígitos.
  *  - `text-body sm:text-base` — jerarquía adaptativa; `highlight` sube a `accent`.
  *
@@ -49,9 +50,8 @@ export function MoneyCell({
           className={cn(
             "text-body sm:text-base font-semibold tabular-nums truncate",
             highlight ? "text-accent" : "text-foreground",
-            valueClassName,
+          valueClassName,
           )}
-          title={fullValue ?? value}
         >
           {value}
         </p>

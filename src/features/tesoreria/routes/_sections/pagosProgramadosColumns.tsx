@@ -3,7 +3,6 @@
  * Extraído de `TesoreriaPagosProgramados` para bajar su tamaño/complejidad.
  */
 import { CalendarClock, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
 import { defineColumns } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
@@ -38,7 +37,12 @@ export function filtrarProgramables(data: FacturaProgramableRow[], filtro: Filtr
   return rows as FacturaProgramable[];
 }
 
-export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgramable) => void) {
+export function buildPagosProgramadosColumns(
+  abrirDialogoPago: (f: FacturaProgramable) => void,
+  // CI-02: la navegación a la factura de Compras llega como callback (sin
+  // <Link> inline en la celda, patrón de tablas del proyecto).
+  onProgramarPago: (f: FacturaProgramable) => void,
+) {
   return defineColumns<FacturaProgramable>([
     {
       id: "proveedor",
@@ -101,10 +105,8 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
             <Wallet className="size-3.5 mr-1.5" /> Ejecutar pago
           </Button>
         ) : (
-          <Button size="sm" variant="ghost" asChild>
-            <Link to={`/compras/facturas/${row.original.id}`}>
-              <CalendarClock className="size-3.5 mr-1.5" /> Programar pago
-            </Link>
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onProgramarPago(row.original); }}>
+            <CalendarClock className="size-3.5 mr-1.5" /> Programar pago
           </Button>
         ),
     },
