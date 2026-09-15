@@ -21,9 +21,18 @@ interface MoneyCellProps {
   fullValue?: string;
   highlight?: boolean;
   className?: string;
+  /** Clases extra para el importe (p.ej. `whitespace-nowrap` cuando el chip crece). */
+  valueClassName?: string;
 }
 
-export function MoneyCell({ label, value, fullValue, highlight, className }: MoneyCellProps) {
+export function MoneyCell({
+  label,
+  value,
+  fullValue,
+  highlight,
+  className,
+  valueClassName,
+}: MoneyCellProps) {
   return (
     <div
       className={cn(
