@@ -6,7 +6,7 @@
  * a qué facturas se aplicó, cuánto se aplicó y cuánto queda pendiente.
  */
 
-export type TipoPagoDetalle = "cobro" | "pago" | "anticipo" | "lote";
+export type TipoPagoDetalle = "cobro" | "pago" | "anticipo" | "lote" | "lote_cobro";
 
 export interface PagoDetalleEncabezado {
   id: string;
@@ -83,12 +83,15 @@ export const TIPO_PAGO_DETALLE_LABELS: Record<TipoPagoDetalle, string> = {
   cobro: "Cobro de cliente",
   pago: "Pago a proveedor",
   lote: "Pago en lote a proveedor",
+  lote_cobro: "Cobro en lote de cliente",
   anticipo: "Anticipo a proveedor",
 };
 
 /** Columnas de `bbva_movimientos` que amarran el movimiento con un pago. */
 export interface VinculosMovimiento {
   pago_factura_id?: string | null;
+  /** MNY-01: depósito de cliente que cubre varias facturas (cobro en lote). */
+  pago_factura_lote_id?: string | null;
   pago_proveedor_id?: string | null;
   pago_proveedor_lote_id?: string | null;
   anticipo_proveedor_id?: string | null;
@@ -102,6 +105,8 @@ export interface VinculosMovimiento {
 export function refPagoDeMovimiento(mov: VinculosMovimiento | null | undefined): RefPago | null {
   if (!mov) return null;
   if (mov.pago_proveedor_lote_id) return { tipo: "lote", id: mov.pago_proveedor_lote_id };
+  // MNY-01: antes se ignoraba y un depósito de varias facturas no abría detalle.
+  if (mov.pago_factura_lote_id) return { tipo: "lote_cobro", id: mov.pago_factura_lote_id };
   if (mov.pago_factura_id) return { tipo: "cobro", id: mov.pago_factura_id };
   if (mov.pago_proveedor_id) return { tipo: "pago", id: mov.pago_proveedor_id };
   if (mov.anticipo_proveedor_id) return { tipo: "anticipo", id: mov.anticipo_proveedor_id };
