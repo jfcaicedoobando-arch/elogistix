@@ -8515,9 +8515,11 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
-  IF v_estado_actual = 'Borrador'::estado_embarque
-     AND p_nuevo_estado = 'Confirmado'
-     AND (v_expediente IS NULL OR v_expediente = '') THEN
+  -- EMB-NEW-02: el expediente ya no depende de la transición exacta
+  -- Borrador→Confirmado. Cualquier estado operativo (no Borrador/Cotización/
+  -- Cancelado) exige folio canónico: así no quedan embarques activos sin folio.
+  IF (v_expediente IS NULL OR v_expediente = '')
+     AND p_nuevo_estado NOT IN ('Borrador', 'Cotización', 'Cancelado') THEN
     v_expediente := public.generar_expediente(coalesce(v_tipo::text, ''));
     UPDATE embarques SET expediente = v_expediente WHERE id = p_embarque_id;
   END IF;
