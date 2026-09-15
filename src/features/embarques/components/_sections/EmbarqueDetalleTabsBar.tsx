@@ -48,16 +48,30 @@ export function EmbarqueDetalleTabsBar() {
     updateScrollState();
     el.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
+    // TABS-UX-02: el ancho también cambia al colapsar el sidebar o al cargar
+    // la tipografía, sin que dispare `resize` en window.
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateScrollState) : null;
+    ro?.observe(el);
     return () => {
       el.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
+      ro?.disconnect();
     };
   }, []);
 
   const scrollBy = (delta: number) => scrollRef.current?.scrollBy({ left: delta, behavior: "smooth" });
 
   return (
-    <div className="relative">
+    // TABS-UX-01: el espacio de las flechas se reserva FUERA del área
+    // desplazable; antes el `pl-8` viajaba con el contenido y la flecha
+    // izquierda tapaba el texto de la primera pestaña visible.
+    <div
+      className={cn(
+        "relative",
+        canScrollLeft && "pl-8",
+        canScrollRight && "pr-8",
+      )}
+    >
       {canScrollLeft && (
         <Button
           type="button"
@@ -67,7 +81,7 @@ export function EmbarqueDetalleTabsBar() {
           onClick={() => scrollBy(-160)}
           className="absolute left-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
         </Button>
       )}
       <div
@@ -76,16 +90,15 @@ export function EmbarqueDetalleTabsBar() {
           // v13.823.336: sin scrollbar nativo permanente; la affordance son
           // las flechas y el degradado, visibles también en escritorio.
           "w-full overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-          canScrollLeft && "[mask-image:linear-gradient(to_right,transparent_0,black_24px,black_calc(100%-24px),transparent_100%)]",
-          !canScrollLeft && canScrollRight && "[mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)]",
+          // TABS-UX-02: `calc` requiere espacios (escritos con `_` en Tailwind).
+          canScrollLeft && "[mask-image:linear-gradient(to_right,transparent_0,black_24px,black_calc(100%_-_24px),transparent_100%)]",
+          !canScrollLeft && canScrollRight && "[mask-image:linear-gradient(to_right,black_0,black_calc(100%_-_24px),transparent_100%)]",
 
         )}
       >
         <TabsList
           className={cn(
             "gap-1 inline-flex w-max flex-nowrap",
-            canScrollLeft && "pl-8",
-            canScrollRight && "pr-8",
           )}
           data-testid="embarque-detalle-tabs"
         >
@@ -110,7 +123,7 @@ export function EmbarqueDetalleTabsBar() {
           onClick={() => scrollBy(160)}
           className="absolute right-0 top-1/2 z-10 h-7 w-7 -translate-y-1/2 rounded-full shadow-raised"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </Button>
       )}
     </div>
