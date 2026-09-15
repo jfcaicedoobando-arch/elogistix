@@ -28,11 +28,6 @@ export interface Candidato {
 /** Monedas soportadas por el enum `moneda` de la base (alias central). */
 export type MonedaSoportada = Moneda;
 
-function normalizaMoneda(v: unknown): MonedaSoportada {
-  const m = String(v ?? "MXN").toUpperCase();
-  return m === "USD" || m === "EUR" ? m : "MXN";
-}
-
 /**
  * Moneda de la cuenta bancaria del movimiento.
  * EC-04 — si la lectura falla ya NO se asume "MXN": eso permitía auto-conciliar
@@ -171,7 +166,7 @@ export async function sugerirCandidatos(
   if (monto <= 0) return [];
   // FIN-NEW-03: sin moneda confirmada no hay sugerencias (fail-closed).
   const moneda: MonedaSoportada | null = monedaCuenta
-    ? normalizaMoneda(monedaCuenta)
+    ? monedaConocida(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
   if (!moneda) return [];
 
