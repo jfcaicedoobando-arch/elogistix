@@ -2,18 +2,17 @@
 
 ## [13.823.398] - 2026-09-15
 
-Lote YAGNI de pulido (FIN-01, REC-01/02, FAC-01, COT-DEL-01, COT-UX-01, TABS-UX-01/02, DOC-UX-01). Sin migraciones, RLS ni dependencias nuevas.
+Lote YAGNI de pulido (FIN-01, REC-01/02, FAC-01, COT-UX-01, TABS-UX-01/02, DOC-UX-01). Sin migraciones, RLS ni dependencias nuevas.
 
 - **fix(FIN-01 · tipo de cambio faltante)**: `TabCostos` muestra una alerta inline cuando `financials.montosSinTipoCambio > 0`; se conserva la exclusión fail-closed del canon (no se inventa T/C ni se mezclan monedas).
 - **fix(REC-01 · pendiente sin -100%)**: `pctOPendiente` presenta «—» en el Δ de filas `sin_factura` y en el resumen con `clasificacion = 'pendiente'`; importes Real = 0 y badge «Sin factura» intactos. Filas con factura no cambian.
 - **fix(FAC-01 · «Por timbrar»)**: `sumarFacturasPorMoneda` normaliza estado/moneda (trim + case-insensitive) y excluye Borrador y «Por timbrar» de conteo e importes vigentes; se mantiene el contador de canceladas.
-- **fix(COT-DEL-01 · borrado no confirmado)**: `deleteCotizacion` verifica la fila viva antes y su baja después de `soft_delete_record`; sin confirmación lanza error y NO registra actividad. Sigue siendo soft delete.
 - **fix(COT-UX-01 · atajo dentro de input)**: `isEditingContext` incluye INPUT/SELECT y `role="textbox"`; Ctrl/Cmd+Enter y Ctrl/Cmd+S sin cambios.
 - **fix(TABS-UX-01 · flecha sobre la pestaña)**: el espacio de las flechas se reserva fuera del área desplazable, así el texto de la primera pestaña visible ya no queda tapado.
 - **fix(TABS-UX-02 · máscara CSS)**: `calc(100%_-_24px)` válido y `ResizeObserver` (con cleanup) para recalcular `canScroll` sin `window.resize`.
 - **fix(DOC-UX-01 · eliminar documento)**: `onConfirm` espera la mutación, recibe `isPending` y el diálogo cierra sólo al terminar con éxito.
 - **fix(REC-02 · moneda al agrupar reales)**: `agruparRealesFacturados` normaliza la moneda en la clave y conserva la etiqueta original para mostrar.
-- Cobertura focalizada: `tabCostosSinTipoCambio.test.tsx`, `reconciliacion/__tests__/reconciliacionPendiente.test.ts`, `mutations/__tests__/delete.test.ts`, `services/__tests__/agruparRealesFacturados.moneda.test.ts`, más regresiones en `sumarFacturas.test.ts` y `useCotizacionKeyboardShortcuts.test.tsx`.
+- Cobertura focalizada: `tabCostosSinTipoCambio.test.tsx`, `reconciliacion/__tests__/reconciliacionPendiente.test.ts`, `services/__tests__/agruparRealesFacturados.moneda.test.ts`, más regresiones en `sumarFacturas.test.ts` y `useCotizacionKeyboardShortcuts.test.tsx`.
 
 ## [13.823.397] - 2026-09-15
 
