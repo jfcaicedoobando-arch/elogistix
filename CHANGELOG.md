@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.823.399] - 2026-09-15
+
+Auditoría YAGNI de Tesorería (MNY-01…MNY-08). Una migración (`pago_detalle`); sin cambios de RLS, policies ni dependencias.
+
+- **fix(MNY-01 · detalle de cobros en lote)**: `pago_detalle` acepta el tipo `lote_cobro` y resuelve `pagos_factura_lote` (encabezado, movimiento por `bbva_movimientos.pago_factura_lote_id` y facturas aplicadas por `pagos_factura.lote_id`). `BBVA_MOVIMIENTO_COLUMNS` selecciona `pago_factura_lote_id` y `refPagoDeMovimiento` lo resuelve conservando la precedencia (lote de proveedor > lote de cobro > individuales > anticipo). Espejo en `supabase/schema/tesoreria/pago_detalle.sql`.
+- **fix(MNY-02 · desconciliar limpia todo)**: `desconciliarMovimiento` pone en `null` también `pago_factura_lote_id`, `pago_proveedor_lote_id` y `anticipo_proveedor_id`; un movimiento que vuelve a Pendiente ya no conserva vínculos huérfanos.
+- **fix(MNY-03 · error ≠ lista vacía)**: `listarCuentas` propaga el error (`unwrap`) en vez de devolver `[]`; la pantalla muestra reintento y la lista vacía sólo es real.
+- **fix(MNY-04 · acción coherente)**: sin `fecha_programada_pago` la bandeja ofrece «Programar pago» (a la factura en Compras) en vez de «Ejecutar pago», que fallaba siempre con `LC_PAGO_SIN_PROGRAMACION`. Se conserva la intención B-030 de no ocultar pendientes.
+- **fix(MNY-05 · facturas rechazadas)**: `fetchPagosProgramables` excluye `estado_aprobacion = 'rechazada'`; una factura rechazada no entra al flujo de pago.
+- **fix(MNY-06 · saldo fail-closed)**: si `v_proveedor_facturas_saldo` no confirma la factura, la fila queda fuera de la bandeja en vez de proponer el total original (podía proponer pagar de más tras pagos/NC).
+- **fix(MNY-07 · REP cancelado en KPIs)**: `totalesLibroPagos` excluye los cobros con `estado_rep = 'Cancelado'` de `cobradoMxn`/`netoMxn` (canon de saldo de factura); la fila y el filtro «Cancelado» se conservan y el texto de ayuda lo explica.
+- **fix(MNY-08 · monedas realmente excluidas)**: `sumarSaldosCuentas` devuelve `monedasExcluidas` y `TesoreriaTcAvisos` lista sólo esas (USD con T/C ya no aparece junto a EUR sin T/C); los nominales por moneda siguen visibles.
+- Cobertura focalizada: `pagoDetalleLoteCobro.test.ts`, `libroPagosRepCancelado.test.ts`, `resumenMonedasExcluidas.test.ts`, `pagosProgramadosCandados.test.ts`, `conciliacionDesconciliar.test.ts`, `_sections/__tests__/pagosProgramadosColumns.test.tsx` y regresión de error en `cuentas.test.ts`.
+
 ## [13.823.398] - 2026-09-15
 
 Lote YAGNI de pulido (FIN-01, REC-01/02, FAC-01, COT-UX-01, TABS-UX-01/02, DOC-UX-01). Sin migraciones, RLS ni dependencias nuevas.
