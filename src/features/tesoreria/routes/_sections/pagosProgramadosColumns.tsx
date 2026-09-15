@@ -2,7 +2,8 @@
  * Definición de columnas + filtro de la bandeja de pagos programados.
  * Extraído de `TesoreriaPagosProgramados` para bajar su tamaño/complejidad.
  */
-import { Wallet } from "lucide-react";
+import { CalendarClock, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
 import { defineColumns } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
@@ -86,11 +87,21 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
       id: "acciones",
       header: "",
       meta: { width: COL_W.monto, align: "right" },
-      cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
-          <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
-        </Button>
-      ),
+      // MNY-04: `ejecutar_pago_programado` exige fecha programada
+      // (LC_PAGO_SIN_PROGRAMACION). Sin ella el botón fallaba siempre; ahora la
+      // acción es programar la fecha en la factura de Compras.
+      cell: ({ row }) =>
+        row.original.fecha_programada_pago ? (
+          <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
+            <Wallet className="size-3.5 mr-1.5" /> Ejecutar pago
+          </Button>
+        ) : (
+          <Button size="sm" variant="ghost" asChild>
+            <Link to={`/compras/facturas/${row.original.id}`}>
+              <CalendarClock className="size-3.5 mr-1.5" /> Programar pago
+            </Link>
+          </Button>
+        ),
     },
   ]);
 }
