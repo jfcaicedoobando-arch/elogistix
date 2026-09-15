@@ -61,9 +61,15 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
   const saldos = await fetchSaldosProveedorFacturas(rows.map((r) => r.id));
 
   return rows
+    // MNY-05: una factura rechazada no puede entrar al flujo de pago; la RPC la
+    // bloquea y la bandeja no debe ofrecer "Ejecutar pago" sobre ella.
+    .filter((r) => (r.estado_aprobacion ?? "").toLowerCase() !== "rechazada")
+    // MNY-06: fail-closed. Si la vista canónica de saldos no trae la factura,
+    // no se asume el total original (propondría pagar de más tras pagos/NC):
+    // la fila queda fuera de la bandeja ejecutable.
+    .filter((r) => saldos.has(r.id))
     .map((r) => {
-      const saldoServidor = saldos.get(r.id);
-      const saldo = Math.max(0, saldoServidor ? saldoServidor.saldo : Number(r.total));
+      const saldo = Math.max(0, saldos.get(r.id)!.saldo);
       return {
         id: r.id,
         proveedor_nombre: r.proveedor_nombre,
