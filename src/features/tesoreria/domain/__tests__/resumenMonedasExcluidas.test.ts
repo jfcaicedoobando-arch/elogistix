@@ -14,7 +14,7 @@ const cuentas = [
 
 describe("sumarSaldosCuentas · monedas excluidas (MNY-08)", () => {
   it("con TC de USD y sin TC de EUR, sólo excluye EUR", () => {
-    const r = sumarSaldosCuentas(cuentas, { usd: 20, eur: null });
+    const r = sumarSaldosCuentas(cuentas, { usdMxn: 20, eurMxn: null });
     expect(r.monedasExcluidas).toEqual(["EUR"]);
     expect(r.incompleto).toBe(true);
     expect(r.total).toBe(3000);
@@ -22,7 +22,7 @@ describe("sumarSaldosCuentas · monedas excluidas (MNY-08)", () => {
   });
 
   it("con todos los tipos de cambio no excluye nada", () => {
-    const r = sumarSaldosCuentas(cuentas, { usd: 20, eur: 22 });
+    const r = sumarSaldosCuentas(cuentas, { usdMxn: 20, eurMxn: 22 });
     expect(r.monedasExcluidas).toEqual([]);
     expect(r.incompleto).toBe(false);
   });
