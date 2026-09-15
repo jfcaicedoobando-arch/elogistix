@@ -24,9 +24,11 @@ describe("desconciliarMovimiento (MNY-02)", () => {
 
     await desconciliarMovimiento("m1");
 
-    const call = mock.tableCalls.find((c) => c.table === "bbva_movimientos");
     // SAFE-CAST: el mock guarda el payload del update tal como se envió.
-    const payload = (call?.payload ?? {}) as Record<string, unknown>;
+    const payload = (mock.getMutationPayload("bbva_movimientos", "update") ?? {}) as Record<
+      string,
+      unknown
+    >;
     expect(payload).toMatchObject({
       pago_factura_id: null,
       pago_factura_lote_id: null,
