@@ -49,7 +49,9 @@ export function MoneyCell({
           className={cn(
             "text-body sm:text-base font-semibold tabular-nums truncate",
             highlight ? "text-accent" : "text-foreground",
+            valueClassName,
           )}
+          title={fullValue ?? value}
         >
           {value}
         </p>
