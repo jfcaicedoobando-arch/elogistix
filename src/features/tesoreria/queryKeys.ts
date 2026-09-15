@@ -29,7 +29,15 @@ export const tesoreria = {
     ["tesoreria", "resumen", organizationId] as const,
   flujoProyectado: (dias = 90) =>
     ["tesoreria", "flujo-proyectado", dias] as const,
-  flujoProyectadoPorOrg: (dias: number, organizationId: string | null) =>
-    ["tesoreria", "flujo-proyectado", dias, organizationId ?? "none"] as const,
+  /**
+   * MNY-NEW-05: `claveTc` distingue el juego de tasas (USD/EUR/fecha) usado en
+   * el cálculo, para que la llegada del TC no reutilice un flujo sin divisas.
+   */
+  flujoProyectadoPorOrg: (
+    dias: number,
+    organizationId: string | null,
+    claveTc: string | null = null,
+  ) =>
+    ["tesoreria", "flujo-proyectado", dias, organizationId ?? "none", claveTc ?? "tc-pendiente"] as const,
   pagosProgramables: ["tesoreria", "pagos-programables"] as const,
 } as const;
