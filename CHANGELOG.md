@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.823.397] - 2026-09-15
+
+- **fix(proformas · roles operativos)**: un Coordinador Logístico no veía «Generar proforma» en la pestaña de Facturación del embarque (caso ELIMP00405) aunque la base de datos sí autoriza la operación: las policies `Tenant write/update/delete proformas` y `_assert_writer` (usado por `crear_proforma_atomica`) resuelven vía `roles_jerarquia('operador')`, que agrupa `coordinador_logistico` y `gerente_operaciones`. `PROFORMAS_ESCRITURA` los omitía. Se añaden ambos roles al espejo de UI. Sin migración ni cambios de RLS.
+- No amplía finanzas: `coordinador_logistico`/`gerente_operaciones` siguen fuera de `FINANCE_VIEWERS`, sin acceso a Compras ni edición de costos del embarque (candado B1 intacto).
+- Cobertura: `src/lib/access/__tests__/proformasEscrituraOperativos.test.ts` (roles con y sin escritura + B1) y actualización del invariante en `roleRouteMatrix.failClosed.test.ts`.
+
 ## [13.823.396] - 2026-09-14
+
 
 Lote Q1–Q7 · auditoría del flujo Cotización marítima → Costos → Embarque. Las filas de costo capturadas a mano se conservan SIEMPRE; sólo se reemplazan las auto-generadas por el wizard.
 
