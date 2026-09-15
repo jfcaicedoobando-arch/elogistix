@@ -9,6 +9,7 @@ import type { ChangeEvent, RefObject } from "react";
 import { Upload, Sparkles, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";

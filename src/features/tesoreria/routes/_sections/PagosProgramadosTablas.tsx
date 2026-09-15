@@ -13,6 +13,7 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import EmptyState from "@/components/empty/EmptyState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { MoneyCell } from "@/components/shared/MoneyCell";
+import { Hint } from "@/components/shared/Hint";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
