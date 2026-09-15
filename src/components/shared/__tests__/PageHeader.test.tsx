@@ -63,4 +63,17 @@ describe("<PageHeader />", () => {
     expect(screen.getByRole("button", { name: "Exportar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nueva cotización" })).toBeInTheDocument();
   });
+
+  it("envuelve en cualquier ancho y no trunca el título (VIZ-03 · 640–767px)", () => {
+    const { container } = render(
+      <PageHeader title="Antigüedad de saldos" actions={<button type="button">Exportar</button>} />,
+    );
+    const row = container.querySelector("div.flex.flex-row");
+    // La fila envuelve desde el ancho base: las acciones bajan de línea antes de
+    // que el título se recorte.
+    expect(row?.className).toContain("flex-wrap");
+    const titulo = screen.getByRole("heading", { level: 1 }).querySelector("span");
+    expect(titulo?.className).not.toContain("truncate");
+    expect(titulo?.className).toContain("break-words");
+  });
 });
