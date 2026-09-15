@@ -152,6 +152,15 @@ export interface TotalesLibroPagos {
   conteo: number;
 }
 
+/**
+ * MNY-07: un cobro con REP cancelado ya no representa dinero cobrado vigente
+ * (mismo canon que el saldo/estado de la factura). La fila se conserva en la
+ * lista y en el filtro "Cancelado", pero no suma en los KPIs.
+ */
+export function repCancelado(pago: PagoLibro): boolean {
+  return pago.tipo === "cobro" && normalizarTextoPago(pago.estado_rep ?? "") === "cancelado";
+}
+
 /** Totales en MXN de los pagos visibles (para los KPIs y el pie). */
 export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPagos {
   let cobradoMxn = 0;
@@ -160,6 +169,7 @@ export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPago
     // Ola 4 · N20: los ajustes no mueven dinero y los anticipos aplicados ya se
     // contaron cuando entró el anticipo; sumarlos infla el flujo de caja.
     if (p.es_ajuste || p.es_anticipo_aplicado) continue;
+    if (repCancelado(p)) continue;
     if (esEntrada(p)) cobradoMxn += p.monto_mxn;
     else pagadoMxn += p.monto_mxn;
   }

@@ -14,9 +14,15 @@ export async function desconciliarMovimiento(movId: string) {
   await run(
     supabase
       .from("bbva_movimientos")
+      // MNY-02: hay que limpiar TODOS los vínculos bancarios. Antes sólo se
+      // borraban los dos individuales, así que un movimiento que volvía a
+      // Pendiente seguía apuntando al lote o al anticipo anterior.
       .update({
         pago_factura_id: null,
+        pago_factura_lote_id: null,
         pago_proveedor_id: null,
+        pago_proveedor_lote_id: null,
+        anticipo_proveedor_id: null,
         estado_conciliacion: "Pendiente",
         conciliado_por: null,
         conciliado_at: null,

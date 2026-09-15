@@ -60,3 +60,18 @@ describe("cuentas service", () => {
     await expect(eliminarCuenta("1", "u1")).rejects.toThrow(/movimientos bancarios registrados/);
   });
 });
+
+/** MNY-03 — un error de consulta no debe verse como "no hay cuentas". */
+describe("listarCuentas · error propagado (MNY-03)", () => {
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+  });
+
+  it("propaga el error en lugar de devolver lista vacía", async () => {
+    mock.setTableResult("cuentas_bancarias", {
+      data: null,
+      error: { message: "permission denied for table cuentas_bancarias" },
+    });
+    await expect(listarCuentas()).rejects.toThrow(/permission denied/);
+  });
+});

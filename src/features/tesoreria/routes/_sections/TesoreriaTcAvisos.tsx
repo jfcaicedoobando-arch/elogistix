@@ -23,6 +23,8 @@ interface Props {
   saldoIncompleto: boolean;
   /** Saldos por moneda, para listar lo excluido. */
   saldosPorMoneda: Record<string, number>;
+  /** MNY-08: monedas realmente sin conversión (las únicas que se listan). */
+  monedasExcluidas: string[];
 }
 
 function etiquetaTc(tipoCambioUsd: number | null, tipoCambioFecha: string | null, tcEstimado: boolean) {
@@ -51,10 +53,11 @@ export function TesoreriaTcAvisos({
   tcEstimado,
   saldoIncompleto,
   saldosPorMoneda,
+  monedasExcluidas,
 }: Props) {
-  const excluidas = Object.entries(saldosPorMoneda)
-    .filter(([moneda]) => moneda !== "MXN")
-    .map(([moneda, monto]) => formatCurrency(monto, moneda))
+  // MNY-08: si USD sí tiene TC y EUR no, el aviso sólo debe mencionar EUR.
+  const excluidas = monedasExcluidas
+    .map((moneda) => formatCurrency(saldosPorMoneda[moneda] ?? 0, moneda))
     .join(", ");
 
   return (

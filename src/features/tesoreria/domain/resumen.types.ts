@@ -62,6 +62,9 @@ export interface ResumenTesoreria {
   /** Q-06: saldo nominal (sin convertir) agrupado por moneda, para mostrar
    *  el desglose cuando no hay TC disponible. */
   saldos_por_moneda: Record<string, number>;
+  /** MNY-08: monedas que realmente quedaron fuera de `saldo_bancos_mxn` por
+   *  falta de TC (no toda divisa distinta de MXN). */
+  saldos_monedas_excluidas: string[];
   /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
   tipo_cambio_usd?: number | null;
   /** P1-7: TC EUR→MXN vigente usado para convertir (si lo hubo). */

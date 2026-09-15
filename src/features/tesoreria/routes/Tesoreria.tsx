@@ -92,6 +92,7 @@ export default function Tesoreria() {
               tcEstimado={tcEstimado}
               saldoIncompleto={data.saldo_bancos_incompleto === true}
               saldosPorMoneda={data.saldos_por_moneda}
+              monedasExcluidas={data.saldos_monedas_excluidas ?? []}
             />
 
 
