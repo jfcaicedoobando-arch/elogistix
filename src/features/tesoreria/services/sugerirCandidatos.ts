@@ -169,9 +169,12 @@ export async function sugerirCandidatos(
   const cargo = Number(mov.cargo);
   const monto = cargo > 0 ? cargo : Number(mov.abono);
   if (monto <= 0) return [];
-  const moneda: MonedaSoportada = monedaCuenta
+  // FIN-NEW-03: sin moneda confirmada no hay sugerencias (fail-closed).
+  const moneda: MonedaSoportada | null = monedaCuenta
     ? normalizaMoneda(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
+  if (!moneda) return [];
+
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const ventana: Ventana = {
