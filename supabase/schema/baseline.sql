@@ -21996,7 +21996,7 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_PARAMS: falta el identificador del pago';
   END IF;
   v_tipo := lower(coalesce(p_tipo, ''));
-  IF v_tipo NOT IN ('cobro','pago','anticipo','lote') THEN
+  IF v_tipo NOT IN ('cobro','pago','anticipo','lote','lote_cobro') THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_TIPO: tipo de pago no soportado (%)', p_tipo;
   END IF;
   v_org := current_user_org_id();
@@ -22077,6 +22077,32 @@ BEGIN
     LEFT JOIN public.proveedores pr ON pr.id = l.proveedor_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
     WHERE l.id = p_id AND l.deleted_at IS NULL;
+  ELSIF v_tipo = 'lote_cobro' THEN
+    -- MNY-01: un depósito que cubre varias facturas de cliente se registra en
+    -- `pagos_factura_lote` y el movimiento bancario guarda `pago_factura_lote_id`.
+    -- Sin esta rama, el detalle del movimiento conciliado quedaba inaccesible.
+    SELECT l.organization_id,
+           jsonb_build_object(
+             'id', l.id, 'tipo', 'lote_cobro', 'fecha', l.fecha_pago,
+             'contraparte', c.nombre, 'contraparte_id', l.cliente_id,
+             'moneda', l.moneda::text, 'monto', COALESCE(l.monto_total,0),
+             'tipo_cambio', COALESCE(l.tipo_cambio_usd,1),
+             'monto_mxn', CASE WHEN l.moneda::text='MXN' THEN COALESCE(l.monto_total,0)
+                               ELSE COALESCE(l.monto_total,0)*COALESCE(l.tipo_cambio_usd,1) END,
+             'metodo_pago', l.forma_pago, 'referencia', l.referencia,
+             'cuenta_bancaria_id', l.cuenta_bancaria_id,
+             'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
+             'notas', l.notas, 'embarque_id', NULL::uuid,
+             'diferencia_cambiaria_mxn', 0::numeric,
+             'estado_rep', NULL::text, 'folio_rep', NULL::text,
+             'es_ajuste', false, 'lote_id', l.id,
+             'created_by', l.created_by, 'created_at', l.created_at
+           )
+      INTO v_org_pago, v_pago
+    FROM public.pagos_factura_lote l
+    LEFT JOIN public.clientes c ON c.id = l.cliente_id
+    LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
+    WHERE l.id = p_id AND l.deleted_at IS NULL;
   ELSE
     SELECT ap.organization_id,
            jsonb_build_object(
@@ -22127,11 +22153,12 @@ BEGIN
       OR (v_tipo = 'pago'  AND (m.pago_proveedor_id = p_id
                                 OR (v_lote IS NOT NULL AND m.pago_proveedor_lote_id = v_lote)))
       OR (v_tipo = 'lote'  AND m.pago_proveedor_lote_id = p_id)
+      OR (v_tipo = 'lote_cobro' AND m.pago_factura_lote_id = p_id)
       OR (v_tipo = 'anticipo' AND m.anticipo_proveedor_id = p_id)
     )
   ORDER BY m.fecha DESC
   LIMIT 1;
-  IF v_tipo = 'cobro' THEN
+  IF v_tipo IN ('cobro','lote_cobro') THEN
     SELECT COALESCE(jsonb_agg(x), '[]'::jsonb) INTO v_aplic
     FROM (
       SELECT jsonb_build_object(
@@ -22140,6 +22167,7 @@ BEGIN
                'embarque_id', pf.embarque_id,
                'moneda', f.moneda::text,
                'monto_aplicado', COALESCE(pf.monto_aplicado_factura, pf.monto, 0),
+               'pago_id', pf.id,
                'total', COALESCE(f.total,0),
                'pagado', COALESCE((SELECT SUM(COALESCE(p2.monto_aplicado_factura, p2.monto, 0))
                                    FROM public.pagos_factura p2
@@ -22147,7 +22175,9 @@ BEGIN
              ) AS x
       FROM public.pagos_factura pf
       JOIN public.facturas f ON f.id = pf.factura_id
-      WHERE pf.id = p_id AND pf.deleted_at IS NULL
+      WHERE pf.deleted_at IS NULL
+        AND ((v_tipo = 'cobro' AND pf.id = p_id)
+             OR (v_tipo = 'lote_cobro' AND pf.lote_id = p_id))
     ) s;
   ELSIF v_tipo IN ('pago','lote') THEN
     SELECT COALESCE(jsonb_agg(x ORDER BY folio), '[]'::jsonb) INTO v_aplic
