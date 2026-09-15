@@ -49,13 +49,13 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
     <WizardSection title="Datos generales" columns={3} complete={complete}>
       <FormField label="Modo de transporte" required error={errors.modo?.message}>
         <Select value={modo} onValueChange={v => { setValue("modo", v, { shouldValidate: true, shouldDirty: true }); clearErrors("modo"); }}>
-          <SelectTrigger aria-label="Modo de transporte" aria-invalid={!!errors.modo}><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Modo de transporte" aria-invalid={!!errors.modo}><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
           <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
         </Select>
       </FormField>
       <FormField label="Tipo de operación" required error={errors.tipo?.message}>
         <Select value={tipo} onValueChange={v => { setValue("tipo", v, { shouldValidate: true, shouldDirty: true }); clearErrors("tipo"); }}>
-          <SelectTrigger aria-label="Tipo de operación" aria-invalid={!!errors.tipo}><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Tipo de operación" aria-invalid={!!errors.tipo}><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
           <SelectContent>
             {tiposDisponibles.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
@@ -82,7 +82,7 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
       ) : (
         <FormField label="Incoterm" required error={errors.incoterm?.message}>
           <Select value={watch("incoterm")} onValueChange={v => { setValue("incoterm", v); clearErrors("incoterm"); }}>
-            <SelectTrigger aria-label="Incoterm" aria-invalid={!!errors.incoterm}><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Incoterm" aria-invalid={!!errors.incoterm}><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
             <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
           </Select>
         </FormField>
