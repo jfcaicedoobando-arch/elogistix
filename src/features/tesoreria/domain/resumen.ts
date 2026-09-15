@@ -71,8 +71,12 @@ export function calcularResumenTesoreria(args: {
     dias: (f) => f.dias_vencido,
   });
 
-  const { total: saldo_bancos_mxn, incompleto: saldo_bancos_incompleto, porMoneda: saldos_por_moneda } =
-    sumarSaldosCuentas(args.cuentas, tasas);
+  const {
+    total: saldo_bancos_mxn,
+    incompleto: saldo_bancos_incompleto,
+    porMoneda: saldos_por_moneda,
+    monedasExcluidas: saldos_monedas_excluidas,
+  } = sumarSaldosCuentas(args.cuentas, tasas);
 
   return {
     cuentas: args.cuentas,
@@ -82,6 +86,7 @@ export function calcularResumenTesoreria(args: {
     saldo_bancos_mxn,
     saldo_bancos_incompleto,
     saldos_por_moneda,
+    saldos_monedas_excluidas,
     tipo_cambio_usd: args.tipoCambioUsd ?? null,
     tipo_cambio_eur: args.tipoCambioEur ?? null,
     tipo_cambio_fecha: args.tipoCambioFecha ?? null,
@@ -102,18 +107,29 @@ export function calcularResumenTesoreria(args: {
 export function sumarSaldosCuentas(
   cuentas: ResumenCuenta[],
   tasas: TasasCambio,
-): { total: number; incompleto: boolean; porMoneda: Record<string, number> } {
+): {
+  total: number;
+  incompleto: boolean;
+  porMoneda: Record<string, number>;
+  monedasExcluidas: string[];
+} {
   let total = 0;
   let incompleto = false;
   const porMoneda: Record<string, number> = {};
+  // MNY-08: sólo las monedas que realmente no se pudieron convertir; antes el
+  // aviso listaba toda divisa distinta de MXN aunque sí tuviera TC.
+  const excluidas = new Set<string>();
   for (const c of cuentas) {
     const moneda = (c.moneda ?? "MXN").toUpperCase();
     porMoneda[moneda] = (porMoneda[moneda] ?? 0) + c.saldo;
     const conv = aMxn(c.saldo, moneda, tcDeMoneda(moneda, tasas));
     if (conv.completo) total += conv.monto;
-    else incompleto = true;
+    else {
+      incompleto = true;
+      excluidas.add(moneda);
+    }
   }
-  return { total, incompleto, porMoneda };
+  return { total, incompleto, porMoneda, monedasExcluidas: [...excluidas].sort() };
 }
 
 import { calcularFlujo, sumarVencidas, agruparTop, tcDeMoneda } from "./resumenHelpers";
