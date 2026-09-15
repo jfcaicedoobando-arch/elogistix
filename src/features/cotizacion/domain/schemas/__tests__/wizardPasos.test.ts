@@ -117,7 +117,7 @@ describe("wizardPasos · Pasos 2 y 3", () => {
       }),
     ).toBeNull();
     expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 0 })).toBe(
-      "Agrega al menos un costo interno con importes.",
+      "Agrega al menos un costo válido (concepto, proveedor e importes) antes de continuar.",
     );
   });
 
@@ -166,7 +166,7 @@ describe("wizardPasos · contenedores (BL-COT-04)", () => {
         numContenedores: 2,
         tipoContenedor: "",
       }),
-    ).toBe("Selecciona el tipo de contenedor.");
+    ).toBe("Selecciona el tipo de contenedor (Paso 1 → Mercancía).");
     expect(
       primerError(contenedoresMaritimoSchema, {
         modo: "Marítimo",
