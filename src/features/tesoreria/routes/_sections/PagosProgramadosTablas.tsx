@@ -29,8 +29,16 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1 space-y-1">
-        <div className="font-semibold text-body truncate">{r.proveedor_nombre ?? "—"}</div>
-        <div className="text-body-sm text-muted-foreground truncate font-mono">{r.folio_proveedor ?? "—"}</div>
+        {/* VIZ-02: title de respaldo para nombres y folios largos truncados. */}
+        <div className="font-semibold text-body truncate" title={r.proveedor_nombre ?? undefined}>
+          {r.proveedor_nombre ?? "—"}
+        </div>
+        <div
+          className="text-body-sm text-muted-foreground truncate font-mono"
+          title={r.folio_proveedor ?? undefined}
+        >
+          {r.folio_proveedor ?? "—"}
+        </div>
         <div className="flex items-center gap-1.5 text-label text-muted-foreground">
           <span>{fecha ? formatDate(fecha) : "—"}</span>
           {r.fecha_programada_pago && <ToneBadge tone="info" size="sm">Prog.</ToneBadge>}
@@ -39,7 +47,16 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
           <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
         </Button>
       </div>
-      <MoneyCell label="Saldo" value={formatCurrency(r.saldo, r.moneda)} highlight className="shrink-0 w-28" />
+      {/* VIZ-02: el ancho fijo w-28 recortaba "MXN 1,160.00" a "MXN 1,1…".
+          Ahora el chip crece con el importe (mínimo 7rem, máximo 45% de la
+          card) y el monto no envuelve. */}
+      <MoneyCell
+        label="Saldo"
+        value={formatCurrency(r.saldo, r.moneda)}
+        highlight
+        className="shrink-0 w-auto min-w-28 max-w-[45%]"
+        valueClassName="whitespace-nowrap"
+      />
     </div>
   );
 }

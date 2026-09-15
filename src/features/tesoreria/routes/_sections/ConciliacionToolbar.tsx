@@ -85,7 +85,16 @@ export function ConciliacionToolbar({
             </Button>
 
             <input ref={fileRef} type="file" accept=".xlsx,.csv" onChange={onFile} className="hidden" />
-            <Button onClick={() => fileRef.current?.click()} disabled={!cuentaId || importando}>
+            {/* VIZ-04: deshabilitado conservaba el azul primario y parecía
+                habilitado junto a los demás botones atenuados. Sin cuenta
+                seleccionada usa la misma variante atenuada; la regla de
+                habilitación no cambia. */}
+            <Button
+              variant={!cuentaId || importando ? "outline" : "default"}
+              onClick={() => fileRef.current?.click()}
+              disabled={!cuentaId || importando}
+              title={!cuentaId ? "Selecciona una cuenta bancaria para importar movimientos." : undefined}
+            >
               <Upload className="h-4 w-4 mr-2" />
               {importando ? "Importando…" : "Importar XLSX/CSV"}
             </Button>

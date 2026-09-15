@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.400] - 2026-09-15
+
+Auditoría posterior a `c8bdc7b`: higiene de pruebas (CI-01), legibilidad en Desktop HD (VIZ-01…VIZ-05) y ventana de vencimientos (MNY-09). Sin migraciones, RLS ni dependencias nuevas.
+
+- **fix(CI-01 · higiene de pruebas)**: se renombra el `describe` duplicado de `agruparRealesFacturados.moneda.test.ts` a «agruparRealesFacturados · normaliza moneda»; `audit:tests` reporta 0 violaciones (sin allowlist ni guard desactivado).
+- **fix(VIZ-01 · flujo de caja responsive)**: `GraficoFlujoProyectado` deja de forzar un `min-width` inline de 672px; a 665 CSS px la tarjeta ya no desborda `main` y el enlace «Ver 90 días» queda visible. Se conserva la reducción de ticks en pantallas angostas.
+- **fix(VIZ-02 · saldo completo en pagos programados)**: el chip Saldo crece con el importe (`min-w-28 max-w-[45%]`, sin envolver) y `MoneyCell` expone `title` del importe; nombre y folio del proveedor llevan `title` de respaldo.
+- **fix(VIZ-03 · PageHeader sin truncado)**: la fila de título+acciones envuelve desde el ancho base y el `h1` usa `break-words` en vez de `truncate`; a 640–767 px ya no aparecen «Coti…», «Cuentas bancar…» ni «Antigüedad de sal…». El layout de escritorio ancho no cambia.
+- **fix(VIZ-04 · botón deshabilitado consistente)**: «Importar XLSX/CSV» usa variante atenuada mientras está deshabilitado (con `title` del requisito), igual que «Conciliar exactos» y «Movimiento manual»; la regla de habilitación es la misma.
+- **fix(MNY-09 · ventana de 30 días)**: `filtrarProgramables(..., "treinta_dias")` agrega límite inferior normalizado a medianoche: incluye hoy y los próximos 30 días y excluye vencidas. Regresión para −1, 0, 30 y 31 días.
+- **fix(VIZ-05 · FAB no tapa la primera fila)**: el espaciador del `FloatingActionButton` reserva la altura real del botón más margen y safe-area (`calc(env(safe-area-inset-bottom)+7rem)`), así que folio y monto quedan legibles en Cotizaciones y Embarques.
+
 ## [13.823.399] - 2026-09-15
 
 Auditoría YAGNI de Tesorería (MNY-01…MNY-08). Una migración (`pago_detalle`); sin cambios de RLS, policies ni dependencias.

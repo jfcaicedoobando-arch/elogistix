@@ -4,7 +4,7 @@
 import { describe, it, expect } from "vitest";
 import { agruparRealesFacturados } from "@/features/embarques/services/reconciliacion3Columnas.helpers";
 
-describe("agruparRealesFacturados", () => {
+describe("agruparRealesFacturados · normaliza moneda", () => {
   it("junta USD, usd y ' USD ' en un solo renglón", () => {
     const r = agruparRealesFacturados([
       { concepto: "Flete", moneda: "USD", real_facturado: 100, facturas: [{}] },
