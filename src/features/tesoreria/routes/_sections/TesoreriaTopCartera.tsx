@@ -22,13 +22,21 @@ interface Props {
   tono: "cobrar" | "pagar";
   totalVencido: number;
   countVencido: number;
+  /**
+   * FIN-NEW-02 — saldos vencidos en divisa que quedaron FUERA de `totalVencido`
+   * por falta de tipo de cambio confiable, por moneda. Se muestran junto al pie
+   * para que "Total vencido MXN 0 (1 factura)" nunca aparezca sin explicación.
+   */
+  excluidoPorMoneda?: Record<string, number>;
   verTodoLabel: string;
   verTodoTo: string;
 }
 
 export function TesoreriaTopCartera({
   titulo, items, vacio, tono, totalVencido, countVencido, verTodoLabel, verTodoTo,
+  excluidoPorMoneda,
 }: Props) {
+  const excluidas = Object.entries(excluidoPorMoneda ?? {}).filter(([, monto]) => monto > 0);
   const montoClass = tono === "cobrar" ? "text-destructive" : "text-warning";
   return (
     <Card className="flex flex-col">
@@ -60,6 +68,12 @@ export function TesoreriaTopCartera({
               {formatCurrency(totalVencido, "MXN")}
             </span>{" "}
             ({countVencido} {countVencido === 1 ? "factura" : "facturas"})
+            {excluidas.length > 0 && (
+              <span className="ml-1 text-warning">
+                · sin T.C.:{" "}
+                {excluidas.map(([moneda, monto]) => formatCurrency(monto, moneda)).join(" · ")}
+              </span>
+            )}
           </span>
           <Link to={verTodoTo} className="inline-flex items-center gap-1 text-accent hover:underline">
             {verTodoLabel} <ArrowRight className="h-3 w-3" />

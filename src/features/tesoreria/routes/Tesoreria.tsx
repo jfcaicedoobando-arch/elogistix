@@ -138,6 +138,7 @@ export default function Tesoreria() {
                 tono="cobrar"
                 totalVencido={data.cartera_vencida_total_mxn}
                 countVencido={data.cartera_vencida_count}
+                excluidoPorMoneda={data.cartera_vencida_excluido_por_moneda}
                 verTodoLabel="Ver cobranza"
                 verTodoTo={ROUTES.CARTERA}
               />
@@ -148,6 +149,7 @@ export default function Tesoreria() {
                 tono="pagar"
                 totalVencido={data.cxp_vencidas_total_mxn}
                 countVencido={data.cxp_vencidas_count}
+                excluidoPorMoneda={data.cxp_vencidas_excluido_por_moneda}
                 verTodoLabel="Ver antigüedad CxP"
                 verTodoTo={ROUTES.COMPRAS_AGING}
               />
