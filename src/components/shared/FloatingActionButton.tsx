@@ -32,8 +32,14 @@ export function FloatingActionButton({
   return (
     <>
       {/* v13.823.25: reserva de espacio para que el FAB no tape el último
-          renglón de la lista en móvil. */}
-      <div aria-hidden className="md:hidden h-20" />
+          renglón de la lista en móvil.
+          VIZ-05: 5rem no alcanzaba en Desktop HD (DPR 2) — el FAB (56px) más su
+          margen inferior y la safe-area de iOS se montaban sobre folio/monto de
+          la última fila. Se reserva la altura real del botón + margen + safe-area. */}
+      <div
+        aria-hidden
+        className="md:hidden h-[calc(env(safe-area-inset-bottom,0px)+7rem)]"
+      />
 
       <button
         type="button"
