@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import { clasificar } from "../proveedorFacturas.helpers";
 
 const vigenteAprobada = (dias: number) =>
-  clasificar(1000, 0, dias, "Aprobada", "aprobada");
+  clasificar(1000, 0, dias, "Vigente", "aprobada");
 
 describe("clasificar · ventana Por vencer de 7 días", () => {
   it("a -5 días es Por vencer", () => {

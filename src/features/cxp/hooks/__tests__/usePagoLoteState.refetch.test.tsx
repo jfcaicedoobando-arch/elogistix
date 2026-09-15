@@ -42,7 +42,6 @@ describe("usePagoLoteState · inicialización una vez por apertura", () => {
     const { result, rerender } = renderHook((p: { facturas: unknown[] }) =>
       usePagoLoteState(args(p.facturas)), { initialProps: { facturas: lista } });
 
-    const requestInicial = result.current.requestId;
     act(() => result.current.setMonto("f1", 250));
     expect(result.current.renglones.find((r) => r.factura_id === "f1")?.monto).toBe(250);
 
@@ -50,6 +49,7 @@ describe("usePagoLoteState · inicialización una vez por apertura", () => {
     rerender({ facturas: [factura("f1", 1000), factura("f2", 500)] });
 
     expect(result.current.renglones.find((r) => r.factura_id === "f1")?.monto).toBe(250);
-    expect(result.current.requestId).toBe(requestInicial);
+    // El total sugerido tampoco se reescribe con el saldo recalculado.
+    expect(result.current.total).toBe("1500");
   });
 });
