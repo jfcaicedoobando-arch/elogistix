@@ -4,6 +4,7 @@
  * Todos resueltos con `count: "exact", head: true` (sin traer filas).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
 import type { SegmentoCotizacion } from "./cotizacionListTypes";
 
 interface CountableQuery {
@@ -11,6 +12,7 @@ interface CountableQuery {
   eq(col: string, val: unknown): CountableQuery;
   gte(col: string, val: unknown): CountableQuery;
   in(col: string, vals: readonly string[]): CountableQuery;
+  not(col: string, op: string, val: string): CountableQuery;
   or(expr: string): CountableQuery;
 }
 
@@ -46,6 +48,15 @@ function applySegmento(q: CountableQuery, segmento: SegmentoCotizacion): Countab
   return q;
 }
 
+/**
+ * COT-NEW-01: los conteos deben usar EXACTAMENTE el mismo filtro de estado que
+ * `fetchCotizacionesPaginadas`; si no, el tab dice (10) y la tabla muestra 9.
+ */
+function applyVigencia(q: CountableQuery, incluirInactivas: boolean): CountableQuery {
+  if (incluirInactivas) return q;
+  return q.not("estado", "in", `(${ESTADOS_INACTIVOS.join(",")})`);
+}
+
 export interface CotizacionKpis30d {
   total: number;
   aceptadas: number;
@@ -68,9 +79,11 @@ export interface CotizacionAgregados {
 async function fetchKpis30d(
   organizationId: string | null,
   segmento: SegmentoCotizacion,
+  incluirInactivas: boolean,
 ): Promise<CotizacionKpis30d> {
   const hace30Dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const conSegmentoY30d = (q: CountableQuery) => applySegmento(q, segmento).gte("created_at", hace30Dias);
+  const conSegmentoY30d = (q: CountableQuery) =>
+    applyVigencia(applySegmento(q, segmento), incluirInactivas).gte("created_at", hace30Dias);
   const [total, aceptadas, rechazadas] = await Promise.all([
     count(organizationId, conSegmentoY30d),
     count(organizationId, (q) => conSegmentoY30d(q).in("estado", ["Aceptada", "En operación"])),
@@ -80,10 +93,13 @@ async function fetchKpis30d(
   return { total, aceptadas, rechazadas, tasa };
 }
 
-async function fetchSegmentoConteos(organizationId: string | null): Promise<CotizacionSegmentoConteos> {
+async function fetchSegmentoConteos(
+  organizationId: string | null,
+  incluirInactivas: boolean,
+): Promise<CotizacionSegmentoConteos> {
   const [clientes, prospectos] = await Promise.all([
-    count(organizationId, (q) => applySegmento(q, "clientes")),
-    count(organizationId, (q) => applySegmento(q, "prospectos")),
+    count(organizationId, (q) => applyVigencia(applySegmento(q, "clientes"), incluirInactivas)),
+    count(organizationId, (q) => applyVigencia(applySegmento(q, "prospectos"), incluirInactivas)),
   ]);
   return { clientes, prospectos, todas: clientes + prospectos };
 }
@@ -96,10 +112,11 @@ async function fetchTotalAceptadasSinEmbarque(organizationId: string | null): Pr
 export async function fetchCotizacionAgregados(
   organizationId: string | null,
   segmento: SegmentoCotizacion,
+  incluirInactivas = false,
 ): Promise<CotizacionAgregados> {
   const [kpis, segmentoConteos, totalAceptadasSinEmbarque] = await Promise.all([
-    fetchKpis30d(organizationId, segmento),
-    fetchSegmentoConteos(organizationId),
+    fetchKpis30d(organizationId, segmento, incluirInactivas),
+    fetchSegmentoConteos(organizationId, incluirInactivas),
     fetchTotalAceptadasSinEmbarque(organizationId),
   ]);
   return { kpis, segmentoConteos, totalAceptadasSinEmbarque };

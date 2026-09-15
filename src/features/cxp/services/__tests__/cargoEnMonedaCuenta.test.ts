@@ -15,8 +15,13 @@ describe("cargoEnMonedaCuenta", () => {
     expect(cargoEnMonedaCuenta(1700, "MXN", "USD", 17)).toBe(100);
   });
 
-  it("deja el monto tal cual sin TC o sin moneda de cuenta", () => {
-    expect(cargoEnMonedaCuenta(500, "USD", "MXN", null)).toBe(500);
+  it("MNY-NEW-04: nunca registra 1:1 sin tipo de cambio (fail-closed)", () => {
+    expect(cargoEnMonedaCuenta(500, "USD", "MXN", null)).toBeNull();
+    expect(cargoEnMonedaCuenta(500, "USD", "MXN", 0)).toBeNull();
+    expect(cargoEnMonedaCuenta(500, "EUR", "MXN", 17)).toBeNull();
+  });
+
+  it("sin moneda de cuenta conserva el monto del pago", () => {
     expect(cargoEnMonedaCuenta(500, "USD", null, 17)).toBe(500);
   });
 });

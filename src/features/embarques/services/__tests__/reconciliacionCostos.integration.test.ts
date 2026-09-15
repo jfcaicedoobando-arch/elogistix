@@ -22,16 +22,16 @@ describe("B.3.3 flujo Factura proveedor → Conciliación", () => {
     ];
     const vinculos = [
       // Flete: dos parciales que suman exactamente el cotizado.
-      { monto: 1500, concepto_costo_id: "cc-flete", proveedor_facturas: { id: "f1", folio_proveedor: "NX-100", deleted_at: null } },
-      { monto: 500, concepto_costo_id: "cc-flete", proveedor_facturas: { id: "f2", folio_proveedor: "NX-101", deleted_at: null } },
+      { monto: 1500, concepto_costo_id: "cc-flete", proveedor_facturas: { id: "f1", folio_proveedor: "NX-100", moneda: "USD", deleted_at: null } },
+      { monto: 500, concepto_costo_id: "cc-flete", proveedor_facturas: { id: "f2", folio_proveedor: "NX-101", moneda: "USD", deleted_at: null } },
       // THC: una factura por encima del cotizado (over).
-      { monto: 360, concepto_costo_id: "cc-thc", proveedor_facturas: { id: "f3", folio_proveedor: "NX-102", deleted_at: null } },
+      { monto: 360, concepto_costo_id: "cc-thc", proveedor_facturas: { id: "f3", folio_proveedor: "NX-102", moneda: "USD", deleted_at: null } },
       // Maniobras: una factura, pero soft-deleted → no cuenta.
-      { monto: 5000, concepto_costo_id: "cc-maniobras", proveedor_facturas: { id: "f4", folio_proveedor: "AY-1", deleted_at: "2026-05-01" } },
+      { monto: 5000, concepto_costo_id: "cc-maniobras", proveedor_facturas: { id: "f4", folio_proveedor: "AY-1", moneda: "USD", deleted_at: "2026-05-01" } },
       // Vínculo huérfano (factura purgada) → ignorado.
       { monto: 999, concepto_costo_id: "cc-flete", proveedor_facturas: null },
       // Vínculo sin concepto_costo_id → ignorado.
-      { monto: 999, concepto_costo_id: null, proveedor_facturas: { id: "f5", folio_proveedor: "X", deleted_at: null } },
+      { monto: 999, concepto_costo_id: null, proveedor_facturas: { id: "f5", folio_proveedor: "X", moneda: "USD", deleted_at: null } },
     ];
 
     const filas = buildFilasReconciliacion(conceptos, vinculos);
@@ -67,7 +67,7 @@ describe("B.3.3 flujo Factura proveedor → Conciliación", () => {
       { id: "cc-extra", concepto: "Extra no cotizado", proveedor_nombre: "Z", moneda: "USD", monto: 0, estado_liquidacion: "Pendiente" },
     ];
     const vinculos = [
-      { monto: 250, concepto_costo_id: "cc-extra", proveedor_facturas: { id: "f", folio_proveedor: "Z-1", deleted_at: null } },
+      { monto: 250, concepto_costo_id: "cc-extra", proveedor_facturas: { id: "f", folio_proveedor: "Z-1", moneda: "USD", deleted_at: null } },
     ];
     const filas = buildFilasReconciliacion(conceptos, vinculos);
     expect(filas[0].desviacion_pct).toBe(100);
@@ -92,8 +92,8 @@ describe("B.3.3 flujo Factura proveedor → Conciliación", () => {
       { id: "b", concepto: "", proveedor_nombre: "", moneda: "USD", monto: 1200, estado_liquidacion: "" },
     ];
     const vinculos = [
-      { monto: 1000, concepto_costo_id: "a", proveedor_facturas: { id: "fa", folio_proveedor: "A", deleted_at: null } },
-      { monto: 1080, concepto_costo_id: "b", proveedor_facturas: { id: "fb", folio_proveedor: "B", deleted_at: null } },
+      { monto: 1000, concepto_costo_id: "a", proveedor_facturas: { id: "fa", folio_proveedor: "A", moneda: "USD", deleted_at: null } },
+      { monto: 1080, concepto_costo_id: "b", proveedor_facturas: { id: "fb", folio_proveedor: "B", moneda: "USD", deleted_at: null } },
     ];
     const filas = buildFilasReconciliacion(conceptos, vinculos);
     expect(filas[0].desviacion_pct).toBe(calcularDesviacionPct(800, 1000));

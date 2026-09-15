@@ -145,8 +145,11 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label size="sm">Peso (kg)</Label>
+          <Label size="sm" htmlFor={`${uid}-peso`}>Peso (kg)</Label>
           <NumericInput
+            id={`${uid}-peso`}
+            name={`contenedor-${index + 1}-peso-kg`}
+            aria-label={`Peso en kg del contenedor ${index + 1}`}
             value={value.peso_kg}
             onChange={(n: number) => onChange({ peso_kg: n })}
             decimals
@@ -155,8 +158,11 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label size="sm">Volumen (m³)</Label>
+          <Label size="sm" htmlFor={`${uid}-volumen`}>Volumen (m³)</Label>
           <NumericInput
+            id={`${uid}-volumen`}
+            name={`contenedor-${index + 1}-volumen-m3`}
+            aria-label={`Volumen en metros cúbicos del contenedor ${index + 1}`}
             value={value.volumen_m3}
             onChange={(n: number) => onChange({ volumen_m3: n })}
             decimals
@@ -165,8 +171,11 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label size="sm">Piezas</Label>
+          <Label size="sm" htmlFor={`${uid}-piezas`}>Piezas</Label>
           <NumericInput
+            id={`${uid}-piezas`}
+            name={`contenedor-${index + 1}-piezas`}
+            aria-label={`Piezas del contenedor ${index + 1}`}
             value={value.piezas}
             onChange={(n: number) => onChange({ piezas: n })}
             disabled={disabled}

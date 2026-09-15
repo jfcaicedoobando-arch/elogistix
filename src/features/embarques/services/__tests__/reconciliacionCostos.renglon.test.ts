@@ -84,9 +84,9 @@ describe("buildFilasReconciliacion (Fase 3)", () => {
     ];
     const vinc = [
       // cc-1 conciliado exacto
-      { monto: 1000, concepto_costo_id: "cc-1", descripcion: "Flete mar", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", fecha_emision: "2026-06-01", deleted_at: null } },
+      { monto: 1000, concepto_costo_id: "cc-1", descripcion: "Flete mar", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", fecha_emision: "2026-06-01", moneda: "USD", deleted_at: null } },
       // cc-2 parcial (50% del cotizado)
-      { monto: 100, concepto_costo_id: "cc-2", descripcion: "THC dest", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", fecha_emision: "2026-06-02", deleted_at: null } },
+      { monto: 100, concepto_costo_id: "cc-2", descripcion: "THC dest", proveedor_facturas: { id: "f2", folio_proveedor: "A-2", fecha_emision: "2026-06-02", moneda: "USD", deleted_at: null } },
       // cc-3 no tiene vínculos → sin_match
     ];
     const filas = buildFilasReconciliacion(conceptos, vinc);
@@ -107,7 +107,7 @@ describe("buildFilasReconciliacion · facturas canceladas (v13.505.0)", () => {
       { id: "cc-1", concepto: "Flete", proveedor_nombre: "X", moneda: "USD", monto: 1000, estado_liquidacion: "Pendiente" },
     ];
     const vinc = [
-      { monto: 1000, concepto_costo_id: "cc-1", descripcion: "Flete mar", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", fecha_emision: "2026-06-01", estado: "Cancelada", deleted_at: null } },
+      { monto: 1000, concepto_costo_id: "cc-1", descripcion: "Flete mar", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", fecha_emision: "2026-06-01", estado: "Cancelada", moneda: "USD", deleted_at: null } },
     ];
     const filas = buildFilasReconciliacion(conceptos, vinc);
     expect(filas[0].facturas).toHaveLength(0);

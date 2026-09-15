@@ -34,7 +34,7 @@ const pfc = (conceptoId: string, monto: number, estado: string) => ({
     fecha_emision: "2026-01-10",
     fecha_vencimiento: "2026-02-10",
     estado,
-    deleted_at: null,
+    moneda: "MXN", deleted_at: null,
   },
 });
 

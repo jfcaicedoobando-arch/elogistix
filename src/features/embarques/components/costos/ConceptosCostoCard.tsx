@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { FileText, X } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
@@ -19,6 +20,11 @@ const FOCUS_KEYS = ["cxp", "costo-no-liquidado", "costo-sin-factura"];
 
 interface Props {
   filas: FilaReconciliacion[];
+  /**
+   * EMB-NEW-05: mientras la consulta no termina se muestra "Cargando costos…".
+   * Sin esto la tarjeta afirmaba "Sin costos directos" antes de tener datos.
+   */
+  isLoading?: boolean;
   /** Costos crudos para resolver contenedor_id, estado_liquidacion base, etc. */
   conceptosCosto: ConceptoCostoRow[];
   showContenedorCol?: boolean;
@@ -28,6 +34,7 @@ interface Props {
 
 export function ConceptosCostoCard({
   filas,
+  isLoading = false,
   conceptosCosto,
   showContenedorCol,
   renderContenedor,
@@ -84,6 +91,9 @@ export function ConceptosCostoCard({
     return Array.from(map.values());
   }, [filasFiltradas]);
 
+  // MNY-NEW-03: vínculos no comparables (moneda distinta sin T.C.).
+  const excluidos = filasFiltradas.reduce((s, f) => s + (f.vinculos_excluidos ?? 0), 0);
+
   const emptyTitle = costoFocus ? "Sin coincidencias con el filtro" : "Sin costos directos del embarque";
   const emptyDescription = costoFocus
     ? "El filtro del checklist no encuentra costos pendientes; verifica si ya fueron atendidos."
@@ -107,7 +117,14 @@ export function ConceptosCostoCard({
         )}
       </CardHeader>
       <CardContent className="p-3 space-y-3">
-        {grupos.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2 p-4" data-testid="costos-cargando">
+            <p className="text-body-sm text-muted-foreground">Cargando costos…</p>
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-5/6" />
+            <Skeleton className="h-6 w-2/3" />
+          </div>
+        ) : grupos.length === 0 ? (
           <div className="p-6">
             <EmptyState
               icon={FileText}
@@ -118,6 +135,12 @@ export function ConceptosCostoCard({
           </div>
         ) : (
           <>
+            {excluidos > 0 && (
+              <p className="text-body-sm text-warning" data-testid="costos-moneda-excluida">
+                {excluidos} factura(s) de proveedor no se comparan aquí: están en otra
+                moneda y les falta el tipo de cambio.
+              </p>
+            )}
             {totales.length > 0 && <ResumenAjusteBar totales={totales} />}
 
             {grupos.map(g => (

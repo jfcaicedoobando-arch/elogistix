@@ -52,20 +52,28 @@ export function cargoEnMxn(
  * cuenta. Antes se convertía todo a MXN, así que un pago de 23,650 USD desde
  * una cuenta en USD entraba como 406,938.45 y descuadraba el saldo.
  * Sólo se convierte cuando pago y cuenta difieren de verdad.
+ *
+ * MNY-NEW-04 — fail-closed real: si pago y cuenta son de distinta divisa y no
+ * hay tipo de cambio, devuelve `null`. Antes devolvía el monto tal cual (1:1
+ * silencioso), lo que metía dólares como pesos y descuadraba el banco.
  */
 export function cargoEnMonedaCuenta(
   monto: number,
   monedaPago: string,
   monedaCuenta: string | null,
   tipoCambioUsd: number | null,
-): number {
+): number | null {
   if (!monedaCuenta || monedaCuenta === monedaPago) return monto;
   const tc = tipoCambioUsd && tipoCambioUsd > 0 ? tipoCambioUsd : null;
-  if (!tc) return monto;
+  if (!tc) return null;
   if (monedaPago === "USD" && monedaCuenta === "MXN") return monto * tc;
   if (monedaPago === "MXN" && monedaCuenta === "USD") return monto / tc;
-  return monto;
+  return null;
 }
+
+/** Mensaje único para el rechazo por falta de tipo de cambio (MNY-NEW-04). */
+export const ERROR_TC_REQUERIDO =
+  "El pago y la cuenta bancaria están en monedas distintas: captura el tipo de cambio del pago para registrar el movimiento bancario.";
 
 /**
  * EC-02 — Fail-closed: un error de lectura se propaga en lugar de devolver
@@ -116,13 +124,16 @@ export async function crearMovimientoBancarioPago(
     // EC-02: sin la moneda de la cuenta no se registra nada (fail-closed).
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
+  const cargo = cargoEnMonedaCuenta(input.monto, input.moneda, monedaCuenta, input.tipoCambioUsd);
+  // MNY-NEW-04: sin tipo de cambio no se inventa una equivalencia 1:1.
+  if (cargo === null) return { ok: false, error: ERROR_TC_REQUERIDO };
   const payload: TablesInsert<"bbva_movimientos"> = {
     organization_id: input.organizationId,
     cuenta_bancaria_id: input.cuentaBancariaId,
     fecha: input.fechaPago,
     concepto,
     referencia: input.referencia ?? "",
-    cargo: cargoEnMonedaCuenta(input.monto, input.moneda, monedaCuenta, input.tipoCambioUsd),
+    cargo,
 
     abono: 0,
     hash_dedupe: `pago-${input.pagoId}`,

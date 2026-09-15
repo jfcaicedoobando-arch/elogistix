@@ -12,7 +12,15 @@ export interface FacturaVinculada {
   fecha_vencimiento: string | null;
   estatus_pago: string | null;
   descripcion: string | null;
+  /** Monto YA convertido a la moneda del concepto de costo. 0 si `excluida`. */
   monto: number;
+  /** MNY-NEW-03: monto tal como viene en la factura del proveedor. */
+  monto_original?: number;
+  /** Moneda de la factura del proveedor. */
+  moneda?: string | null;
+  /** true = no comparable (moneda distinta sin tipo de cambio); no suma. */
+  excluida?: boolean;
+  motivo_exclusion?: string | null;
 }
 
 export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente";
@@ -33,6 +41,8 @@ export interface FilaReconciliacion {
   estado_liquidacion: string;
   estatus_renglon: EstatusRenglon;
   facturas: FacturaVinculada[];
+  /** MNY-NEW-03: vínculos no comparables por moneda/TC faltante. */
+  vinculos_excluidos?: number;
 }
 
 export interface ResumenReconciliacion {
@@ -70,6 +80,8 @@ export interface PFCRow {
     fecha_emision?: string | null;
     fecha_vencimiento?: string | null;
     estado?: string | null;
+    moneda?: string | null;
+    tipo_cambio_usd?: number | string | null;
     deleted_at: string | null;
   } | null;
 }
@@ -106,32 +118,79 @@ export function clasificarRenglon(
   return "conciliado";
 }
 
+/**
+ * MNY-NEW-03 — convierte el monto vinculado (que está en la moneda de la
+ * factura del proveedor) a la moneda del concepto de costo. Devuelve `null`
+ * cuando no se puede convertir con certeza: nunca 1:1 silencioso.
+ */
+export function convertirMontoVinculo(
+  monto: number,
+  monedaFactura: string | null,
+  monedaConcepto: string,
+  tipoCambioUsd: number | null,
+): number | null {
+  const origen = (monedaFactura ?? "").trim().toUpperCase();
+  const destino = (monedaConcepto ?? "").trim().toUpperCase();
+  if (!origen || !destino) return null;
+  if (origen === destino) return monto;
+  const tc = tipoCambioUsd && tipoCambioUsd > 0 ? tipoCambioUsd : null;
+  if (!tc) return null;
+  if (origen === "USD" && destino === "MXN") return monto * tc;
+  if (origen === "MXN" && destino === "USD") return monto / tc;
+  return null;
+}
+
+function aVinculo(v: PFCRow, monedaConcepto: string): FacturaVinculada | null {
+  const pf = v.proveedor_facturas;
+  if (!pf) return null;
+  const original = Number(v.monto) || 0;
+  const monedaFactura = pf.moneda ?? null;
+  const convertido = convertirMontoVinculo(
+    original,
+    monedaFactura,
+    monedaConcepto,
+    pf.tipo_cambio_usd == null ? null : Number(pf.tipo_cambio_usd),
+  );
+  return {
+    proveedor_factura_id: pf.id,
+    folio_interno: pf.folio_interno ?? null,
+    folio_proveedor: pf.folio_proveedor,
+    fecha_emision: pf.fecha_emision ?? null,
+    fecha_vencimiento: pf.fecha_vencimiento ?? null,
+    estatus_pago: pf.estado ?? null,
+    descripcion: v.descripcion ?? null,
+    monto: convertido ?? 0,
+    monto_original: original,
+    moneda: monedaFactura,
+    excluida: convertido === null,
+    motivo_exclusion:
+      convertido === null
+        ? `Moneda distinta (${monedaFactura ?? "sin moneda"} vs ${monedaConcepto}) sin tipo de cambio`
+        : null,
+  };
+}
+
 export function buildFilasReconciliacion(
   conceptos: CCRow[],
   vinculos: PFCRow[],
 ): FilaReconciliacion[] {
-  const porConcepto = new Map<string, FacturaVinculada[]>();
+  const porConcepto = new Map<string, PFCRow[]>();
   for (const v of vinculos) {
     if (!v.concepto_costo_id || !v.proveedor_facturas || v.proveedor_facturas.deleted_at) continue;
     // v13.505.0 — una factura Cancelada (p. ej. cancelada ante el SAT) no
     // cuenta como facturada: el concepto vuelve a quedar "sin factura".
     if ((v.proveedor_facturas.estado ?? "").toLowerCase() === "cancelada") continue;
     const arr = porConcepto.get(v.concepto_costo_id) ?? [];
-    arr.push({
-      proveedor_factura_id: v.proveedor_facturas.id,
-      folio_interno: v.proveedor_facturas.folio_interno ?? null,
-      folio_proveedor: v.proveedor_facturas.folio_proveedor,
-      fecha_emision: v.proveedor_facturas.fecha_emision ?? null,
-      fecha_vencimiento: v.proveedor_facturas.fecha_vencimiento ?? null,
-      estatus_pago: v.proveedor_facturas.estado ?? null,
-      descripcion: v.descripcion ?? null,
-      monto: Number(v.monto) || 0,
-    });
+    arr.push(v);
     porConcepto.set(v.concepto_costo_id, arr);
   }
   return conceptos.map((c) => {
-    const facs = porConcepto.get(c.id) ?? [];
-    const real = facs.reduce((s, f) => s + f.monto, 0);
+    const facs = (porConcepto.get(c.id) ?? [])
+      .map((v) => aVinculo(v, c.moneda))
+      .filter((f): f is FacturaVinculada => f !== null);
+    const comparables = facs.filter((f) => !f.excluida);
+    const excluidas = facs.length - comparables.length;
+    const real = comparables.reduce((s, f) => s + f.monto, 0);
     const cotizado = Number(c.monto) || 0;
     const diferencia = real - cotizado;
     return {
@@ -144,8 +203,9 @@ export function buildFilasReconciliacion(
       diferencia,
       desviacion_pct: calcularDesviacionPct(cotizado, real),
       estado_liquidacion: c.estado_liquidacion,
-      estatus_renglon: clasificarRenglon(cotizado, real, facs.length > 0),
+      estatus_renglon: clasificarRenglon(cotizado, real, comparables.length > 0),
       facturas: facs,
+      vinculos_excluidos: excluidas,
     };
   });
 }

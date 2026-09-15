@@ -58,6 +58,9 @@ export function EstadoCuentaToolbar({
         <div>
           <p className="text-body-sm text-muted-foreground mb-1">Desde</p>
           <DatePickerMx
+            id="ec-desde"
+            name="desde"
+            aria-label="Desde (fecha inicial del estado de cuenta)"
             value={rango.desde}
             onChange={(iso) => onRangoChange({ ...rango, desde: iso })}
             max={rango.hasta}
@@ -66,6 +69,9 @@ export function EstadoCuentaToolbar({
         <div>
           <p className="text-body-sm text-muted-foreground mb-1">Hasta</p>
           <DatePickerMx
+            id="ec-hasta"
+            name="hasta"
+            aria-label="Hasta (fecha final del estado de cuenta)"
             value={rango.hasta}
             onChange={(iso) => onRangoChange({ ...rango, hasta: iso })}
             min={rango.desde}
