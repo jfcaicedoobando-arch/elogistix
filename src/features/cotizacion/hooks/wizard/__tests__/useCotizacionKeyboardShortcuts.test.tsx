@@ -97,4 +97,27 @@ describe("useCotizacionKeyboardShortcuts", () => {
     dispatch("Enter");
     expect(onNext).not.toHaveBeenCalled();
   });
+
+  // COT-UX-01: Ctrl/Cmd+← dentro de un input mueve el cursor, no navega.
+  it("no dispara ArrowLeft si el foco está en un input", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() =>
+      useCotizacionKeyboardShortcuts({ currentStep: 2, onNext, onSave, onBack, onFlushDraft }),
+    );
+    dispatch("ArrowLeft", "ctrl", input);
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  it("Ctrl+Enter sigue funcionando dentro de un input", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() =>
+      useCotizacionKeyboardShortcuts({ currentStep: 2, onNext, onSave, onBack, onFlushDraft }),
+    );
+    dispatch("Enter", "ctrl", input);
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
 });

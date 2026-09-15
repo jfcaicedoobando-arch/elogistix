@@ -183,7 +183,10 @@ export function agruparRealesFacturados(
 ): RealPorConcepto[] {
   const map = new Map<string, RealPorConcepto>();
   for (const f of filas) {
-    const key = `${f.concepto.trim().toLowerCase()}|${f.moneda}`;
+    // REC-02: la moneda se normaliza igual que el concepto; "USD", "usd" y
+    // " USD " deben caer en el mismo renglón. La etiqueta original se conserva
+    // para mostrar.
+    const key = `${norm(f.concepto)}|${norm(f.moneda)}`;
     const cur = map.get(key) ?? { concepto: f.concepto, moneda: f.moneda, monto: 0, tiene_factura: false };
     cur.monto = (Number(cur.monto) || 0) + (Number(f.real_facturado) || 0);
     cur.tiene_factura = cur.tiene_factura === true || f.facturas.length > 0;

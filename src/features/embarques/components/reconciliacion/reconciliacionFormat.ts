@@ -10,6 +10,13 @@ export const fmt = (n: number, moneda: string): string =>
 
 export const pct = (n: number): string => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 
+/**
+ * REC-01: un renglón sin factura de proveedor tiene Real = 0 por falta de
+ * captura, no por un ahorro del 100%. En ese caso NO se muestra porcentaje.
+ */
+export const pctOPendiente = (n: number, pendiente: boolean): string =>
+  pendiente ? "—" : pct(n);
+
 /** VIS-CE-251-09: etiqueta legible del enum `ClasificacionVarianza` (el enum no cambia). */
 export function etiquetaClasificacion(c: ClasificacionVarianza): string {
   switch (c) {

@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
 import { claseTonoMargen, UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
@@ -24,6 +26,12 @@ interface Props {
    * costos pero no capturan ni editan.
    */
   canEditCostos?: boolean;
+  /**
+   * FIN-01: conceptos en moneda extranjera excluidos de los KPIs por falta de
+   * tipo de cambio confiable en el embarque. Se avisa en pantalla; NUNCA se
+   * inventa un tipo de cambio ni se mezclan monedas.
+   */
+  montosSinTipoCambio?: number;
 }
 
 const kpiColors = [
@@ -33,7 +41,10 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos }: Props) {
+export function TabCostos({
+  conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos,
+  montosSinTipoCambio = 0,
+}: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
   const { data: filasReconc = [] } = useReconciliacionEmbarque(embarqueId);
@@ -64,6 +75,18 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
 
   return (
     <div className="space-y-6">
+      {montosSinTipoCambio > 0 && (
+        <Alert variant="warning" data-testid="aviso-sin-tipo-cambio">
+          <TriangleAlert className="size-4" />
+          <AlertTitle>Totales incompletos por falta de tipo de cambio</AlertTitle>
+          <AlertDescription>
+            {montosSinTipoCambio} concepto(s) en moneda extranjera (USD/EUR) quedaron
+            fuera de estos totales porque el embarque no tiene un tipo de cambio
+            válido. Captura el tipo de cambio en los datos del embarque para
+            incluirlos.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map((kpi, i) => (
           <Card key={kpi.label} className={kpiColors[i]}>

@@ -20,10 +20,17 @@ interface Params {
   onFlushDraft?: () => void;
 }
 
+/**
+ * COT-UX-01: dentro de un INPUT, Ctrl/Cmd+← se usa para mover el cursor; si
+ * navegamos al paso anterior el usuario pierde el foco y lo escrito.
+ */
+const TAGS_EDICION = new Set(["TEXTAREA", "INPUT", "SELECT"]);
+
 function isEditingContext(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  if (target.tagName === "TEXTAREA") return true;
+  if (TAGS_EDICION.has(target.tagName)) return true;
   if (target.isContentEditable) return true;
+  if (target.getAttribute("role") === "textbox") return true;
   return false;
 }
 

@@ -22,7 +22,7 @@ interface Props {
   togglingNoAplicaDocId?: string | null;
   onUpload: (docId: string, file: File) => void;
   onDownload: (archivo: string, docId: string) => void;
-  onDelete?: (doc: DocumentoEmbarqueRow) => void;
+  onDelete?: (doc: DocumentoEmbarqueRow) => Promise<void> | void;
   onToggleNoAplica?: (doc: DocumentoEmbarqueRow) => void;
   rechazandoDocId?: string | null;
   onRechazar?: (doc: DocumentoEmbarqueRow, motivo: string) => Promise<void> | void;
@@ -114,8 +114,11 @@ export function TabDocumentos({
         title="¿Eliminar documento?"
         variant="destructive"
         confirmLabel="Eliminar"
-        onConfirm={() => {
-          if (docToDelete && onDelete) onDelete(docToDelete);
+        isPending={!!docToDelete && deletingDocId === docToDelete.id}
+        onConfirm={async () => {
+          // DOC-UX-01: esperar la mutación antes de cerrar; si falla, el
+          // diálogo sigue abierto y el usuario ve el error del hook.
+          if (docToDelete && onDelete) await onDelete(docToDelete);
           setDocToDelete(null);
         }}
         description={

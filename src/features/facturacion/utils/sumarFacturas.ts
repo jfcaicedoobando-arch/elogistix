@@ -30,6 +30,9 @@ export interface SumarOpts {
   fallbackUsdMxn?: number | null;
 }
 
+/** Estados previos a la emisión: espejo de `etiquetaCicloProforma.ts`. */
+const ESTADOS_PREPARACION = new Set(["borrador", "por timbrar"]);
+
 export function sumarFacturasPorMoneda(
   facturas: FacturaSumable[],
   opts: SumarOpts = {},
@@ -43,21 +46,26 @@ export function sumarFacturasPorMoneda(
   let facturasSinTc = 0;
 
   for (const f of facturas) {
-    if (f.estado === "Cancelada") {
+    // FAC-01: estado y moneda se normalizan (trim + minúsculas) para no
+    // depender de la capitalización con que venga el dato.
+    const estado = (f.estado ?? "").trim().toLowerCase();
+    const moneda = (f.moneda ?? "").trim().toUpperCase();
+    if (estado === "cancelada") {
       conteoCanceladas += 1;
       continue;
     }
-    // Los borradores no son ingreso facturado; se ignoran sin contarse.
-    if (f.estado === "Borrador") continue;
+    // FAC-01: Borrador y "Por timbrar" son preparación (aún no timbradas);
+    // no son ingreso vigente y no se cuentan ni suman.
+    if (ESTADOS_PREPARACION.has(estado)) continue;
     const monto = Number(f.total) || 0;
-    if (f.moneda === "USD") {
+    if (moneda === "USD") {
       totalUsd += monto;
       const tc = Number(f.tipo_cambio) || 0;
       // tc <= 1 se considera inválido para USD: 1 USD nunca es 1 MXN.
       if (tc > 1) mxnEquivalente += monto * tc;
       else if (fallback > 0) mxnEquivalente += monto * fallback;
       else facturasSinTc += 1;
-    } else if (f.moneda === "MXN") {
+    } else if (moneda === "MXN") {
       totalMxn += monto;
       mxnEquivalente += monto;
     }
