@@ -22,12 +22,17 @@ export function filtrarProgramables(data: FacturaProgramableRow[], filtro: Filtr
   if (filtro === "treinta_dias") {
     // P2-6.8: se normaliza a medianoche para que la bandeja y el KPI de
     // Tesorería usen exactamente la misma ventana (día 30 incluido).
-    const limite = new Date();
-    limite.setHours(0, 0, 0, 0);
+    // MNY-09: la ventana es "hoy y los próximos 30 días"; sin límite inferior
+    // también entraban facturas ya vencidas, que no son "vencen en 30 días".
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const limite = new Date(hoy);
     limite.setDate(limite.getDate() + 30);
     rows = rows.filter((r) => {
       const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
-      return f && new Date(`${f}T00:00:00`) <= limite;
+      if (!f) return false;
+      const fecha = new Date(`${f}T00:00:00`);
+      return fecha >= hoy && fecha <= limite;
     });
   }
   return rows as FacturaProgramable[];
