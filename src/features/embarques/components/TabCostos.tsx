@@ -24,6 +24,12 @@ interface Props {
    * costos pero no capturan ni editan.
    */
   canEditCostos?: boolean;
+  /**
+   * FIN-01: conceptos en moneda extranjera excluidos de los KPIs por falta de
+   * tipo de cambio confiable en el embarque. Se avisa en pantalla; NUNCA se
+   * inventa un tipo de cambio ni se mezclan monedas.
+   */
+  montosSinTipoCambio?: number;
 }
 
 const kpiColors = [
