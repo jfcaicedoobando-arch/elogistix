@@ -5,6 +5,7 @@
 import type { ValidarPagoInput, FacturaPagoInfo } from "./pagoProveedorValidaciones";
 import { tieneMasDeDosDecimales, TC_MAX } from "./pagoProveedorValidaciones";
 import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
+import { cruceMonedasNoSoportado } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
 
 const TC_MIN = 0.01;
 
@@ -27,8 +28,14 @@ export function validarFechas(a: ValidarPagoInput): string | null {
 }
 
 export function validarTipoCambio(a: ValidarPagoInput, factura: FacturaPagoInfo): string | null {
+  // MNY-NEW-09: cruce entre dos divisas extranjeras (USD↔EUR). El T/C capturado
+  // son pesos por divisa, no existe conversión canónica para ese par y antes el
+  // formulario mostraba equivalencias 1:1. Se bloquea con mensaje explícito.
+  if (cruceMonedasNoSoportado(factura.moneda, a.moneda)) {
+    return `No se puede pagar en ${a.moneda} una factura en ${factura.moneda}: usa MXN o la misma divisa de la factura`;
+  }
   if (a.bloqueadoPorTc) {
-    return `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`;
+    return `Captura un tipo de cambio válido para pagar en ${a.moneda} una factura ${factura.moneda}`;
   }
   if (a.tcNum !== null && (a.tcNum < TC_MIN || a.tcNum > TC_MAX)) {
     return `El tipo de cambio debe estar entre ${TC_MIN} y ${TC_MAX}`;
