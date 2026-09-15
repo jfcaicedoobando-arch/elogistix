@@ -30,11 +30,12 @@ export function montoOriginalEnMonedaFactura(
 ): number {
   if (!pago || !monedaFactura) return 0;
   if (pago.moneda === monedaFactura) return pago.monto;
+  if (cruceMonedasNoSoportado(monedaFactura, pago.moneda)) return 0;
+  const tc = pago.tipo_cambio_usd && pago.tipo_cambio_usd > 0 ? pago.tipo_cambio_usd : null;
+  if (!tc) return 0;
   // Pago en MXN de una factura extranjera: se revierte con su propio TC.
-  if (pago.moneda === "MXN" && pago.tipo_cambio_usd && pago.tipo_cambio_usd > 0) {
-    return pago.monto / pago.tipo_cambio_usd;
-  }
-  return pago.monto;
+  if (pago.moneda === "MXN") return pago.monto / tc;
+  return pago.monto * tc;
 }
 
 /**
@@ -92,7 +93,31 @@ export function valoresInicialesCreacion(
   };
 }
 
-/** Monto capturado, expresado en la moneda de la factura. */
+/**
+ * MNY-NEW-09 — ¿el par de monedas es un cruce entre dos divisas extranjeras
+ * (USD↔EUR)? No hay conversión canónica para ese cruce (el T/C capturado son
+ * pesos por divisa), así que el formulario lo bloquea con mensaje explícito en
+ * vez de asumir paridad 1:1.
+ */
+export function cruceMonedasNoSoportado(
+  monedaFactura: string | null | undefined,
+  monedaPago: string | null | undefined,
+): boolean {
+  if (!monedaFactura || !monedaPago) return false;
+  return (
+    monedaFactura !== "MXN" && monedaPago !== "MXN" && monedaFactura !== monedaPago
+  );
+}
+
+/**
+ * Monto capturado, expresado en la moneda de la factura.
+ *
+ * MNY-NEW-09: una sola conversión para vista previa, validación y envío.
+ *  - misma moneda → tal cual.
+ *  - pago en MXN de factura en divisa → monto / T.C. (pesos por divisa).
+ *  - pago en divisa de factura en MXN → monto × T.C.
+ *  - sin T.C. o cruce USD↔EUR → 0 (no se simula 1:1; el pago queda bloqueado).
+ */
 export function montoEnMonedaDeFactura(a: {
   monedaFactura: Moneda | null;
   monedaPago: Moneda;
@@ -101,8 +126,10 @@ export function montoEnMonedaDeFactura(a: {
 }): number {
   if (!a.monedaFactura) return 0;
   if (a.monedaPago === a.monedaFactura) return a.monto;
-  if (a.monedaPago === "MXN" && a.tcNum) return a.monto / a.tcNum;
-  return a.monto; // otros cruces: se valida en la RPC
+  if (cruceMonedasNoSoportado(a.monedaFactura, a.monedaPago)) return 0;
+  if (!a.tcNum) return 0;
+  if (a.monedaPago === "MXN") return a.monto / a.tcNum;
+  return a.monto * a.tcNum;
 }
 
 /**

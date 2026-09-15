@@ -1,13 +1,3 @@
--- Fuente canónica de public.asegurar_movimiento_cobro_factura (Ola v17).
---
--- PUNTO ÚNICO DE ESCRITURA del movimiento bancario espejo de un cobro de
--- cliente. Antes el abono se insertaba directo desde el navegador con un
--- "consulta y luego inserta" no atómico y el fallo se descartaba en silencio
--- (cobro guardado, saldo del banco sin subir).
---
--- Idempotente por (cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL.
--- Fail-closed en moneda: sin tipo de cambio no se abona nada.
-
 CREATE OR REPLACE FUNCTION public.asegurar_movimiento_cobro_factura(p_pago_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql

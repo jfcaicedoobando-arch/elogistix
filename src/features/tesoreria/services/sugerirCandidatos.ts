@@ -28,25 +28,33 @@ export interface Candidato {
 /** Monedas soportadas por el enum `moneda` de la base (alias central). */
 export type MonedaSoportada = Moneda;
 
-function normalizaMoneda(v: unknown): MonedaSoportada {
-  const m = String(v ?? "MXN").toUpperCase();
-  return m === "USD" || m === "EUR" ? m : "MXN";
-}
-
 /**
  * Moneda de la cuenta bancaria del movimiento.
  * EC-04 — si la lectura falla ya NO se asume "MXN": eso permitía auto-conciliar
  * un movimiento en USD contra un pago en pesos por el mismo número.
+ *
+ * FIN-NEW-03 — tampoco se asume MXN cuando el movimiento no trae cuenta o la
+ * cuenta no existe/no tiene una moneda del enum: devuelve `null` ("moneda
+ * desconocida") y el sugeridor falla cerrado en vez de proponer pagos en pesos
+ * por coincidencia nominal.
  */
-export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<MonedaSoportada> {
-  if (!cuentaBancariaId) return "MXN";
+export async function monedaDeCuenta(
+  cuentaBancariaId: string | null,
+): Promise<MonedaSoportada | null> {
+  if (!cuentaBancariaId) return null;
   const { data, error } = await supabase
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaBancariaId)
     .maybeSingle();
   if (error) throw error;
-  return normalizaMoneda(data?.moneda);
+  return monedaConocida(data?.moneda);
+}
+
+/** Moneda del enum `moneda`, o `null` si no es reconocible. */
+function monedaConocida(v: unknown): MonedaSoportada | null {
+  const m = String(v ?? "").toUpperCase();
+  return m === "MXN" || m === "USD" || m === "EUR" ? (m as MonedaSoportada) : null;
 }
 
 /**
@@ -156,9 +164,12 @@ export async function sugerirCandidatos(
   const cargo = Number(mov.cargo);
   const monto = cargo > 0 ? cargo : Number(mov.abono);
   if (monto <= 0) return [];
-  const moneda: MonedaSoportada = monedaCuenta
-    ? normalizaMoneda(monedaCuenta)
+  // FIN-NEW-03: sin moneda confirmada no hay sugerencias (fail-closed).
+  const moneda: MonedaSoportada | null = monedaCuenta
+    ? monedaConocida(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
+  if (!moneda) return [];
+
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const ventana: Ventana = {

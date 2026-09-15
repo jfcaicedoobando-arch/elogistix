@@ -14,6 +14,9 @@ import { sugerirDiferenciaCambiaria } from "@/features/cxp/services/pagoDiferenc
 
 export interface TcDofSugerido {
   usdMxn: number;
+  /** MNY-NEW-09: paridad aplicable al par de la operación (USD o EUR contra MXN). */
+  aplicable: number | null;
+  monedaAplicable: string;
   fecha: string;
   exacto: boolean;
 }
@@ -28,6 +31,8 @@ interface Args {
   setDiffMxn: (v: string) => void;
   esUsdPagadoEnMxn: boolean;
   montoEnMonedaFactura: number;
+  /** Divisa del par contra MXN: define si se precarga el DOF USD o el EUR. */
+  monedaDelPar: string | null;
   tcFactura: number | null;
   tcNum: number | null;
   pagoEditarId: string | null;
@@ -36,7 +41,16 @@ interface Args {
 export function usePagoTcDof(a: Args) {
   const { open, fecha, showTc, setTc, setDiffMxn } = a;
   const consulta = useTcDofPorFecha(open && showTc ? fecha : null, open && showTc);
-  const dof = consulta.data ?? null;
+  const bruto = consulta.data ?? null;
+  // MNY-NEW-09: antes se precargaba SIEMPRE `usdMxn`, incluso en pagos EUR.
+  const monedaAplicable = (a.monedaDelPar ?? "USD").toUpperCase();
+  const dof: TcDofSugerido | null = bruto
+    ? {
+        ...bruto,
+        monedaAplicable,
+        aplicable: monedaAplicable === "EUR" ? bruto.eurMxn ?? null : bruto.usdMxn ?? null,
+      }
+    : null;
 
   const tcTocado = useRef(false);
   const diffTocado = useRef(false);
@@ -63,17 +77,18 @@ export function usePagoTcDof(a: Args) {
     [setDiffMxn],
   );
 
+  const tcAplicable = dof?.aplicable ?? null;
   const aplicarTcDof = useCallback(() => {
-    if (!dof) return;
+    if (tcAplicable == null) return;
     tcTocado.current = true;
-    setTc(String(dof.usdMxn));
-  }, [dof, setTc]);
+    setTc(String(tcAplicable));
+  }, [tcAplicable, setTc]);
 
   // Precarga del TC con el DOF de la fecha de pago (sólo si no se editó a mano).
   useEffect(() => {
-    if (!open || !showTc || tcTocado.current || !dof) return;
-    setTc(String(dof.usdMxn));
-  }, [open, showTc, dof, setTc]);
+    if (!open || !showTc || tcTocado.current || tcAplicable == null) return;
+    setTc(String(tcAplicable));
+  }, [open, showTc, tcAplicable, setTc]);
 
   // Sugerencia de diferencia cambiaria (factura extranjera pagada en MXN).
   useEffect(() => {
@@ -89,7 +104,7 @@ export function usePagoTcDof(a: Args) {
   ]);
 
   return {
-    tcDof: dof as TcDofSugerido | null,
+    tcDof: dof,
     cargandoTcDof: consulta.isLoading,
     setTcManual,
     setDiffManual,

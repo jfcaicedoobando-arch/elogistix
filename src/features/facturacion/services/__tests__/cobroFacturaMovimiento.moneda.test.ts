@@ -40,6 +40,16 @@ describe("crearMovimientoBancarioCobro · punto único de escritura", () => {
     expect(res.motivo).toContain("LC_PAGO_TC_REQUERIDO");
   });
 
+  it("propaga LC_PAGO_CRUCE_NO_SOPORTADO en cruce USD↔EUR (MNY-NEW-06)", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "LC_PAGO_CRUCE_NO_SOPORTADO: no se puede abonar un cobro en USD a una cuenta en EUR" },
+    });
+    const res = await crearMovimientoBancarioCobro("pago-1");
+    expect(res.ok).toBe(false);
+    expect(res.motivo).toContain("LC_PAGO_CRUCE_NO_SOPORTADO");
+  });
+
   it("no reporta creación cuando el cobro no trae cuenta bancaria", async () => {
     rpc.mockResolvedValue({ data: { creado: false, motivo: "sin_cuenta_bancaria" }, error: null });
     const res = await crearMovimientoBancarioCobro("pago-1");

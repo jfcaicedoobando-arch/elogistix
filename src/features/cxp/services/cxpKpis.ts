@@ -11,11 +11,29 @@ import { esVencidoPorDias, estaPorVencer } from "@/lib/domain/vencimiento";
 export interface KPIsCxP {
   por_pagar_mxn: number;
   por_pagar_usd: number;
+  /** MNY-NEW-07: cubeta EUR propia; antes el euro se sumaba dentro de `_mxn`. */
+  por_pagar_eur: number;
   vencido_mxn: number;
   vencido_usd: number;
+  vencido_eur: number;
   por_vencer_7d_mxn: number;
   por_vencer_7d_usd: number;
+  por_vencer_7d_eur: number;
   facturas_vencidas: number;
+}
+
+type Cubeta = "mxn" | "usd" | "eur";
+
+/**
+ * MNY-NEW-07 — cubeta explícita por moneda. Cualquier divisa distinta de
+ * USD/EUR sí cae en MXN (el enum `moneda` de la base sólo tiene esas tres),
+ * pero el euro nunca se presenta como pesos.
+ */
+function cubetaDe(moneda: string | null | undefined): Cubeta {
+  const m = (moneda ?? "MXN").toUpperCase();
+  if (m === "USD") return "usd";
+  if (m === "EUR") return "eur";
+  return "mxn";
 }
 
 function diasVencido(fechaVenc: string | null): number {
@@ -25,9 +43,9 @@ function diasVencido(fechaVenc: string | null): number {
 
 export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
   const k: KPIsCxP = {
-    por_pagar_mxn: 0, por_pagar_usd: 0,
-    vencido_mxn: 0, vencido_usd: 0,
-    por_vencer_7d_mxn: 0, por_vencer_7d_usd: 0,
+    por_pagar_mxn: 0, por_pagar_usd: 0, por_pagar_eur: 0,
+    vencido_mxn: 0, vencido_usd: 0, vencido_eur: 0,
+    por_vencer_7d_mxn: 0, por_vencer_7d_usd: 0, por_vencer_7d_eur: 0,
     facturas_vencidas: 0,
   };
   for (const f of filas) {
@@ -35,19 +53,19 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
     // hasta que sean reaprobadas. Criterio compartido con el widget "Top 10
     // próximas a pagar" (Q-15.6): ver `esFacturaPorPagar`.
     if (!esFacturaPorPagar(f)) continue;
-    const usd = f.moneda === "USD";
-    if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
+    const cubeta = cubetaDe(f.moneda);
+    k[`por_pagar_${cubeta}`] += f.saldo;
     // B-020 (v13.320.39): KPI Vencido considera días vencidos reales,
     // no el estatus derivado (una factura "Por aprobar" vencida sigue siendo deuda).
     if (esVencidoPorDias(f.dias_vencido)) {
       k.facturas_vencidas++;
-      if (usd) k.vencido_usd += f.saldo; else k.vencido_mxn += f.saldo;
+      k[`vencido_${cubeta}`] += f.saldo;
     }
     // Ventana "Por vencer" = canon único `DIAS_POR_VENCER_CXC` (7 días). Antes
     // CxP usaba 5 días mientras la tarjeta rotulaba "7 d" y CxC sí sumaba 7.
     if ((f.dias_vencido ?? 0) === 0 && f.fecha_vencimiento) {
       if (estaPorVencer(diasVencido(f.fecha_vencimiento))) {
-        if (usd) k.por_vencer_7d_usd += f.saldo; else k.por_vencer_7d_mxn += f.saldo;
+        k[`por_vencer_7d_${cubeta}`] += f.saldo;
       }
     }
   }

@@ -134,20 +134,22 @@ export default function Tesoreria() {
               <TesoreriaTopCartera
                 titulo="Top 5 deudores (vencidos)"
                 items={data.top_deudores}
-                vacio="Sin facturas vencidas."
+                vacio="Sin clientes con facturas vencidas."
                 tono="cobrar"
                 totalVencido={data.cartera_vencida_total_mxn}
                 countVencido={data.cartera_vencida_count}
+                excluidoPorMoneda={data.cartera_vencida_excluido_por_moneda}
                 verTodoLabel="Ver cobranza"
                 verTodoTo={ROUTES.CARTERA}
               />
               <TesoreriaTopCartera
                 titulo="Top 5 proveedores por pagar"
                 items={data.top_acreedores}
-                vacio="Sin facturas vencidas."
+                vacio="Sin proveedores con facturas vencidas."
                 tono="pagar"
                 totalVencido={data.cxp_vencidas_total_mxn}
                 countVencido={data.cxp_vencidas_count}
+                excluidoPorMoneda={data.cxp_vencidas_excluido_por_moneda}
                 verTodoLabel="Ver antigüedad CxP"
                 verTodoTo={ROUTES.COMPRAS_AGING}
               />

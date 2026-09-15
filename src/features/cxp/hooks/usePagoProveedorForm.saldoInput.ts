@@ -1,5 +1,6 @@
 /** Proyección de la factura CxP a los campos que necesita `saldoDisponiblePago`. */
 import type { FacturaCxP } from "@/features/cxp/services";
+import { cruceMonedasNoSoportado } from "./usePagoProveedorForm.editar";
 
 export function facturaSaldoInput(f: FacturaCxP) {
   return {
@@ -27,6 +28,15 @@ export function banderasMonedaPago(args: {
   const monedaFacturaExtranjera = !!factura && factura.moneda !== "MXN";
   const esUsdPagadoEnMxn = monedaFacturaExtranjera && moneda === "MXN";
   const showTc = moneda !== "MXN" || esUsdPagadoEnMxn;
-  const bloqueadoPorTc = esUsdPagadoEnMxn && !tcNum;
-  return { montoNum, monedaFacturaExtranjera, esUsdPagadoEnMxn, showTc, bloqueadoPorTc };
+  // MNY-NEW-09: cruce USD↔EUR sin conversión canónica → se bloquea explícito.
+  const cruceNoSoportado = cruceMonedasNoSoportado(factura?.moneda ?? null, moneda);
+  const bloqueadoPorTc = (esUsdPagadoEnMxn || (monedaFacturaExtranjera === false && moneda !== "MXN")) && !tcNum;
+  return {
+    montoNum, monedaFacturaExtranjera, esUsdPagadoEnMxn,
+    showTc: showTc && !cruceNoSoportado,
+    bloqueadoPorTc: bloqueadoPorTc && !cruceNoSoportado,
+    cruceNoSoportado,
+    /** Divisa del par contra MXN (para pedir el T/C correcto: USD o EUR). */
+    monedaDelPar: moneda !== "MXN" ? moneda : factura?.moneda ?? null,
+  };
 }

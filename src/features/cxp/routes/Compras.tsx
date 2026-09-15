@@ -120,7 +120,7 @@ export default function Compras() {
           // VF-05: "$0" pelado no indicaba moneda; se formatea con el canon.
           value={vencidoTotal > 0 ? formatCurrencyCompact(vencidoTotal, "MXN") : formatCurrency(0, "MXN")}
           sub={vencidoTotal > 0
-            ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`
+            ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}${kpis.vencido_eur > 0 ? ` · ${formatCurrencyCompact(kpis.vencido_eur, "EUR")}` : ""}`
             : "al corriente"}
           valueTooltip={vencidoTotal > 0 ? formatCurrency(vencidoTotal, "MXN") : undefined}
           to={ROUTES.COMPRAS_AGING}

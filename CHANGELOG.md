@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.823.402] - 2026-09-15
+
+Lote YAGNI P1/P2 de moneda y tesorería: se elimina todo cruce 1:1 silencioso (banco, formulario de pago y flujo proyectado), el euro deja de presentarse como pesos, el aging usa un solo canon y el pago en lote ya no pierde importes editados. Una migración (`asegurar_movimiento_cobro_factura`).
+
+- **fix(MNY-NEW-05 · carrera de T.C. en flujo proyectado)**: la consulta se habilita sólo con una respuesta estable del T.C. y su clave de caché distingue USD/EUR/fecha (`claveTasasFlujo`), así que el flujo no se cachea 60 s sin divisas y se recalcula al cambiar el T.C.
+- **fix(MNY-NEW-06 · espejo bancario CxC)**: `asegurar_movimiento_cobro_factura` levanta `LC_PAGO_CRUCE_NO_SOPORTADO` cuando el cobro y la cuenta son divisas extranjeras distintas (USD↔EUR); antes insertaba el abono nominal 1:1. MXN↔divisa conserva las dos conversiones canónicas. Espejo en `supabase/schema/tesoreria/asegurar_movimiento_cobro_factura.sql`.
+- **fix(MNY-NEW-09 · equivalencias del formulario CxP)**: `montoEnMonedaDeFactura` es el único canon (MXN→divisa multiplica, divisa→MXN divide, sin T.C. devuelve 0) y `cruceMonedasNoSoportado` bloquea USD↔EUR con mensaje explícito en la validación; el DOF precarga `eurMxn` en pares EUR/MXN y el campo rotula la paridad aplicable.
+- **fix(CXP-NEW-11 · aging coherente)**: `clasificar()` usa el canon `estaPorVencer` (7 días) igual que el KPI «Por vencer 7d»; una factura a 6-7 días ya no se ve «Vigente» en la fila.
+- **fix(MNY-NEW-07 · KPIs CxP con EUR)**: cubetas `por_pagar_eur`/`vencido_eur`/`por_vencer_7d_eur` explícitas y visibles en las tarjetas; el euro nunca se suma como MXN.
+- **fix(FIN-NEW-02 · vencidas extranjeras)**: `sumarVencidas` devuelve el monto excluido por moneda y la tarjeta de Tesorería marca «sin T.C.: EUR …» junto al total conservador.
+- **fix(FIN-NEW-03 · sugeridor de conciliación)**: sin cuenta o moneda confirmada no se sugieren pagos MXN por coincidencia nominal (falla cerrado).
+- **fix(FIN-NEW-05 · copy de Top proveedores/clientes)**: los vacíos dicen «Sin proveedores/clientes con facturas vencidas» en vez de sugerir que no hay deuda.
+- **fix(CXP-NEW-12 · pago en lote)**: la inicialización ocurre una sola vez por apertura (`inicializadoRef`); un refetch en segundo plano ya no borra importes editados ni regenera la llave de idempotencia.
+
 ## [13.823.401] - 2026-09-15
 
 Lote YAGNI P1/P2: expediente canónico en estados activos, comparaciones de moneda sin conversión 1:1, conteos = filas, estados de carga y nombres accesibles. Una migración (`avanzar_estado_embarque` + backfill de expediente).

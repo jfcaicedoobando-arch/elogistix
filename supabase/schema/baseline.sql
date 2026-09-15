@@ -6835,7 +6835,6 @@ BEGIN
   IF public.pago_rep_anulado(v_pago.estado_rep) THEN
     RETURN jsonb_build_object('creado', false, 'motivo', 'pago_anulado');
   END IF;
-  -- Ya existe un movimiento vivo ligado a este cobro.
   SELECT id INTO v_mov_id FROM public.bbva_movimientos
    WHERE deleted_at IS NULL
      AND (pago_factura_id = p_pago_id OR hash_dedupe = 'cobro-' || p_pago_id::text)
@@ -6851,16 +6850,24 @@ BEGIN
     RAISE EXCEPTION 'LC_CUENTA_NO_ENCONTRADA: la cuenta bancaria del cobro no existe en esta organización'
       USING ERRCODE = '22023';
   END IF;
-  -- Fail-closed: sin TC no se inventa conversión.
   IF v_moneda_cuenta <> v_pago.moneda::text AND COALESCE(v_pago.tipo_cambio, 0) <= 0 THEN
     RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: captura el tipo de cambio del cobro para abonarlo en una cuenta en %', v_moneda_cuenta
+      USING ERRCODE = '22023';
+  END IF;
+  -- MNY-NEW-06: el tipo de cambio capturado son PESOS POR DIVISA, así que un
+  -- cruce entre dos divisas extranjeras distintas (USD<->EUR) no tiene
+  -- conversión canónica. Antes caía en `ELSE v_pago.monto` e insertaba un abono
+  -- nominal 1:1. Ahora falla cerrado.
+  IF v_pago.moneda::text <> 'MXN'
+     AND v_moneda_cuenta <> 'MXN'
+     AND v_moneda_cuenta <> v_pago.moneda::text THEN
+    RAISE EXCEPTION 'LC_PAGO_CRUCE_NO_SOPORTADO: no se puede abonar un cobro en % a una cuenta en %; usa una cuenta en MXN o en la misma divisa', v_pago.moneda::text, v_moneda_cuenta
       USING ERRCODE = '22023';
   END IF;
   v_abono := CASE
     WHEN v_moneda_cuenta = v_pago.moneda::text THEN v_pago.monto
     WHEN v_pago.moneda::text <> 'MXN' AND v_moneda_cuenta = 'MXN' THEN v_pago.monto * v_pago.tipo_cambio
-    WHEN v_pago.moneda::text = 'MXN' AND v_moneda_cuenta <> 'MXN' THEN v_pago.monto / v_pago.tipo_cambio
-    ELSE v_pago.monto
+    ELSE v_pago.monto / v_pago.tipo_cambio
   END;
   SELECT 'Cobro factura ' || COALESCE(f.numero, 's/folio') || ' — ' || COALESCE(f.cliente_nombre, 'cliente')
     INTO v_concepto

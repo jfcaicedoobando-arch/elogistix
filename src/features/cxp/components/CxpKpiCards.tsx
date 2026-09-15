@@ -16,6 +16,14 @@ function countLabelCorto(count: number): string {
   return `${count} fact.`;
 }
 
+/**
+ * MNY-NEW-07: el euro se muestra aparte y sólo cuando existe. Nunca se suma a
+ * la cubeta MXN (antes cualquier moneda distinta de USD se presentaba en pesos).
+ */
+function sufijoEur(monto: number): string {
+  return monto > 0 ? ` · ${formatCurrency(monto, "EUR")}` : "";
+}
+
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
   // Los conteos salen del MISMO canon que los importes (`resumirTarjetasCxP`
   // usa `esFacturaPorPagar` + la ventana canónica de 7 días).
@@ -40,14 +48,14 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Por pagar USD"
         value={formatCompactNumber(kpis.por_pagar_usd)}
         valueTooltip={formatCurrency(kpis.por_pagar_usd, "USD")}
-        sublabel={countLabel(porPagarUsd)}
+        sublabel={`${countLabel(porPagarUsd)}${sufijoEur(kpis.por_pagar_eur)}`}
       />
 
       <KpiCard
         label="Vencido"
         value={formatCurrencyCompact(kpis.vencido_mxn, "MXN")}
         valueTooltip={formatCurrency(kpis.vencido_mxn, "MXN")}
-        sublabel={`${formatCurrency(kpis.vencido_usd, "USD")} · ${countLabelCorto(vencidasN)}`}
+        sublabel={`${formatCurrency(kpis.vencido_usd, "USD")}${sufijoEur(kpis.vencido_eur)} · ${countLabelCorto(vencidasN)}`}
         variant="destructive"
       />
       {/* El cálculo de `por_vencer_7d_*` usa una ventana de 7 días: la etiqueta
@@ -56,7 +64,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Por vencer 7d"
         value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
         valueTooltip={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabelCorto(porVencerN)}`}
+        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")}${sufijoEur(kpis.por_vencer_7d_eur)} · ${countLabelCorto(porVencerN)}`}
         variant="warning"
       />
       <KpiCard
