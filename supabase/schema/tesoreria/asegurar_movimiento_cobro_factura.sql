@@ -60,11 +60,21 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  -- MNY-NEW-06: el tipo de cambio capturado son PESOS POR DIVISA, así que un
+  -- cruce entre dos divisas extranjeras distintas (USD<->EUR) no tiene
+  -- conversión canónica. Antes caía en `ELSE v_pago.monto` e insertaba un abono
+  -- nominal 1:1. Ahora falla cerrado.
+  IF v_pago.moneda::text <> 'MXN'
+     AND v_moneda_cuenta <> 'MXN'
+     AND v_moneda_cuenta <> v_pago.moneda::text THEN
+    RAISE EXCEPTION 'LC_PAGO_CRUCE_NO_SOPORTADO: no se puede abonar un cobro en % a una cuenta en %; usa una cuenta en MXN o en la misma divisa', v_pago.moneda::text, v_moneda_cuenta
+      USING ERRCODE = '22023';
+  END IF;
+
   v_abono := CASE
     WHEN v_moneda_cuenta = v_pago.moneda::text THEN v_pago.monto
     WHEN v_pago.moneda::text <> 'MXN' AND v_moneda_cuenta = 'MXN' THEN v_pago.monto * v_pago.tipo_cambio
-    WHEN v_pago.moneda::text = 'MXN' AND v_moneda_cuenta <> 'MXN' THEN v_pago.monto / v_pago.tipo_cambio
-    ELSE v_pago.monto
+    ELSE v_pago.monto / v_pago.tipo_cambio
   END;
 
   SELECT 'Cobro factura ' || COALESCE(f.numero, 's/folio') || ' — ' || COALESCE(f.cliente_nombre, 'cliente')
