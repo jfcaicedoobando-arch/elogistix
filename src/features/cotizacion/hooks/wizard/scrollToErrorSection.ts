@@ -77,24 +77,32 @@ export type CampoErrorPaso1 =
   | "numContenedores"
   | "tipoContenedor";
 
+/**
+ * Tabla declarativa de reglas (patrón → campo). Mismo criterio y orden que
+ * `REGLAS_SECCION`: "tipo de contenedor" se evalúa antes que "tipo de
+ * operación" para no capturar el mensaje ajeno.
+ */
+const REGLAS_CAMPO: Array<[readonly string[], CampoErrorPaso1]> = [
+  [["tipo de contenedor"], "tipoContenedor"],
+  [["número de contenedores"], "numContenedores"],
+  [["modo de transporte"], "modo"],
+  [["tipo de operación"], "tipo"],
+  [["incoterm"], "incoterm"],
+  [["descripción de la mercancía"], "descripcionMercancia"],
+  [["origen de la ruta"], "origen"],
+  [["destino de la ruta"], "destino"],
+  [["lead", "oportunidad"], "oportunidadId"],
+  [["empresa del prospecto"], "prospectoEmpresa"],
+  [["contacto del prospecto"], "prospectoContacto"],
+  [["selecciona un cliente"], "clienteId"],
+  [["modalidad de equipo"], "modalidadEquipo"],
+  [["punto de carga"], "puntoIntermedio"],
+  [["tarifa"], "tarifaId"],
+];
+
 export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   const m = mensaje.toLowerCase();
-  // Q1: se evalúa antes de "tipo de operación" para no capturar el mensaje ajeno.
-  if (m.includes("tipo de contenedor")) return "tipoContenedor";
-  if (m.includes("número de contenedores")) return "numContenedores";
-  if (m.includes("modo de transporte")) return "modo";
-  if (m.includes("tipo de operación")) return "tipo";
-  if (m.includes("incoterm")) return "incoterm";
-  if (m.includes("descripción de la mercancía")) return "descripcionMercancia";
-  if (m.includes("origen de la ruta")) return "origen";
-  if (m.includes("destino de la ruta")) return "destino";
-  if (m.includes("lead") || m.includes("oportunidad")) return "oportunidadId";
-  if (m.includes("empresa del prospecto")) return "prospectoEmpresa";
-  if (m.includes("contacto del prospecto")) return "prospectoContacto";
-  if (m.includes("selecciona un cliente")) return "clienteId";
-  if (m.includes("modalidad de equipo")) return "modalidadEquipo";
-  if (m.includes("punto de carga")) return "puntoIntermedio";
-  if (m.includes("tarifa")) return "tarifaId";
-  return null;
+  const match = REGLAS_CAMPO.find(([patrones]) => patrones.some((p) => m.includes(p)));
+  return match?.[1] ?? null;
 }
 
