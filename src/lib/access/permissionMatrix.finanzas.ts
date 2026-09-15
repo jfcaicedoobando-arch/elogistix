@@ -18,14 +18,25 @@ export const EMITIR_FACTURA_CLIENTE: readonly AppRole[] = [
  * respuesta manual). Espejo de las policies RLS `Tenant write/update/delete
  * proformas`. El vendedor tiene acceso de SÓLO LECTURA a `/proformas`
  * (`PROFORMAS_READ_ROLES` en `roleRouteMatrix.ts`), por lo que NO aparece aquí.
+ *
+ * v13.823.397 — se añaden `coordinador_logistico` y `gerente_operaciones`: las
+ * policies de `proformas` usan `has_any_role_efectivo(..., ARRAY['admin',
+ * 'admin_org','operador','contador','super_admin'])` y `roles_jerarquia`
+ * agrupa ambos roles dentro de `operador`, igual que `_assert_writer` usado por
+ * `crear_proforma_atomica`. La UI los excluía y ocultaba «Generar proforma»
+ * pese a que la base sí autorizaba la operación. NO amplía finanzas: sigue sin
+ * `canViewFinancials`, Compras ni edición de costos del embarque (B1).
  */
 export const PROFORMAS_ESCRITURA: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
   "operador",
+  "coordinador_logistico",
+  "gerente_operaciones",
   "contador",
 ];
+
 
 export const CAPTURAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
   "super_admin",
