@@ -48,7 +48,16 @@ describe("roleRouteMatrix · VF-20 proformas sólo lectura vendedor", () => {
   it("la escritura de proformas sigue excluyendo al vendedor", () => {
     expect(PROFORMAS_ESCRITURA).not.toContain("vendedor");
     expect(PROFORMAS_ESCRITURA).toEqual(
-      expect.arrayContaining(["super_admin", "admin_org", "admin", "operador", "contador"]),
+      expect.arrayContaining([
+        "super_admin",
+        "admin_org",
+        "admin",
+        "operador",
+        "coordinador_logistico",
+        "gerente_operaciones",
+        "contador",
+      ]),
     );
   });
 });
+
