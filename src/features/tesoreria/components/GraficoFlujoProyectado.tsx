@@ -36,14 +36,18 @@ export default function GraficoFlujoProyectado({ semanas }: Props) {
   // En móvil se muestra ~1 de cada 2 etiquetas del eje X para que no se
   // amontonen, y el contenedor crece a un ancho mínimo con scroll horizontal
   // en vez de comprimir la gráfica hasta cortar ejes/leyenda.
+  // VIZ-01 (Desktop HD 1280×720 · DPR 2 → 665 CSS px): el ancho mínimo inline
+  // (672px) obligaba a la tarjeta a crecer más que `main`, y el encabezado con
+  // el enlace "Ver 90 días" quedaba fuera de la vista sin scroll utilizable.
+  // La gráfica ahora se adapta al ancho disponible y sólo baja la densidad de
+  // ticks en pantallas angostas.
   const tickInterval = isMobile ? Math.ceil(data.length / 6) : 0;
-  const minWidth = isMobile ? Math.max(data.length * 48, 480) : undefined;
 
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-2xs text-muted-foreground mb-1">MXN</p>
-      <div className="overflow-x-auto [scrollbar-width:thin]">
-        <div style={minWidth ? { minWidth } : undefined}>
+      <div className="min-w-0">
+        <div className="min-w-0">
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
