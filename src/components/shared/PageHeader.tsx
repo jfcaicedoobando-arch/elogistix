@@ -56,11 +56,16 @@ export function PageHeader({
           título (`lg:min-w-[240px]`) y se permite que el contenedor envuelva
           (`lg:flex-wrap`): si no cabe todo en una fila, las acciones bajan de
           línea completas en vez de recortar el título. */}
-      <div className="flex flex-row items-start justify-between gap-3 md:flex-col lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1 lg:min-w-[240px]">
+      {/* VIZ-03 (auditoría Desktop HD · 640–767 CSS px): en ese rango el título y
+          las acciones compartían fila sin permiso de envolver, así que el h1 se
+          recortaba ("Coti…", "Cuentas bancar…", "Antigüedad de sal…"). Ahora la
+          fila envuelve en cualquier ancho y el título puede ocupar dos líneas en
+          vez de truncarse; el layout de escritorio ancho no cambia. */}
+      <div className="flex flex-row flex-wrap items-start justify-between gap-3 md:flex-col lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1 sm:min-w-[200px] lg:min-w-[240px]">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">
             {icon}
-            <span className="truncate">{title}</span>
+            <span className="min-w-0 break-words">{title}</span>
           </h1>
           {description ? (
             <p className="mt-1 text-body text-muted-foreground line-clamp-2">{description}</p>
