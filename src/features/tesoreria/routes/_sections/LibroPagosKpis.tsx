@@ -30,6 +30,8 @@ export function LibroPagosKpis({ totales, isLoading }: Props) {
       </div>
       <p className="text-body-sm text-muted-foreground">
         Los equivalentes en pesos usan el tipo de cambio guardado en cada pago, no el del día de hoy.
+        Los cobros con complemento de pago cancelado se conservan como histórico, pero no suman en
+        estos totales.
       </p>
     </div>
   );

@@ -69,7 +69,7 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
     // la fila queda fuera de la bandeja ejecutable.
     .filter((r) => saldos.has(r.id))
     .map((r) => {
-      const saldo = Math.max(0, saldos.get(r.id)!.saldo);
+      const saldo = Math.max(0, saldos.get(r.id)?.saldo ?? 0);
       return {
         id: r.id,
         proveedor_nombre: r.proveedor_nombre,
