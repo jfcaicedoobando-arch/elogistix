@@ -5,7 +5,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { supabase } from "@/integrations/supabase/client";
-import { logClientError } from "@/services/observability/logClientError";
+import { logClientError, __resetLogClientErrorThrottle } from "@/services/observability/logClientError";
 import { APP_VERSION } from "@/constants/appVersion";
 
 const invoke = supabase.functions.invoke as ReturnType<typeof vi.fn>;
@@ -13,6 +13,7 @@ const invoke = supabase.functions.invoke as ReturnType<typeof vi.fn>;
 beforeEach(() => {
   invoke.mockReset();
   invoke.mockResolvedValue({ data: null, error: null });
+  __resetLogClientErrorThrottle();
 });
 
 describe("logClientError", () => {
@@ -44,5 +45,17 @@ describe("logClientError", () => {
     expect(invoke).toHaveBeenCalledWith("client-error-log", expect.objectContaining({
       body: expect.objectContaining({ message: "x" }),
     }));
+  });
+
+  it("no reenvía el mismo mensaje dentro de la ventana de dedupe", () => {
+    logClientError({ message: "repetido" });
+    logClientError({ message: "repetido" });
+    logClientError({ message: "repetido" });
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("limita el total de reportes por sesión", () => {
+    for (let i = 0; i < 25; i += 1) logClientError({ message: `err-${i}` });
+    expect(invoke).toHaveBeenCalledTimes(10);
   });
 });
