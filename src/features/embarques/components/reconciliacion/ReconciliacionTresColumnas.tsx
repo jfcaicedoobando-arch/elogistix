@@ -17,7 +17,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
 import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
 import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
-import { fmt, pct, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
+import { fmt, pctOPendiente, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -74,14 +74,14 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
         header: "Δ vs Cot.",
         accessorFn: (f) => f.delta_cot_vs_real.pct,
         meta: { align: "right", className: "tabular-nums" },
-        cell: ({ row }) => pct(row.original.delta_cot_vs_real.pct),
+        cell: ({ row }) => pctOPendiente(row.original.delta_cot_vs_real.pct, row.original.sin_factura),
       },
       {
         id: "delta_refr",
         header: "Δ vs Refr.",
         accessorFn: (f) => f.delta_refr_vs_real.pct,
         meta: { align: "right", className: "tabular-nums" },
-        cell: ({ row }) => pct(row.original.delta_refr_vs_real.pct),
+        cell: ({ row }) => pctOPendiente(row.original.delta_refr_vs_real.pct, row.original.sin_factura),
       },
       {
         id: "estado",
