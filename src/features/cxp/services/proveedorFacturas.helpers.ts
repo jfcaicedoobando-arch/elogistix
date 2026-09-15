@@ -5,6 +5,7 @@
  */
 import type { FacturaCxP, EstatusCxP, FetchCxPFiltros } from "./proveedorFacturas";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { estaPorVencer } from "@/lib/domain/vencimiento";
 import type {
   EstadoProveedorFactura,
   Joined,
@@ -69,7 +70,7 @@ export function clasificar(
   if (aprobacion === "pendiente") return "Por aprobar";
   if (estado === "Pagada" || saldo <= 0.01) return "Pagada";
   if (dias > 0) return "Vencida";
-  if (dias >= -5) return "Por vencer";
+  if (estaPorVencer(dias)) return "Por vencer";
   if (pagado > 0.01) return "Parcial";
   return "Vigente";
 }
