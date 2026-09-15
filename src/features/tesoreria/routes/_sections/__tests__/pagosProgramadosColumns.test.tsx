@@ -25,7 +25,7 @@ function factura(over: Partial<FacturaProgramable> = {}): FacturaProgramable {
 function renderAcciones(f: FacturaProgramable) {
   const columnas = buildPagosProgramadosColumns(vi.fn());
   // SAFE-CAST: sólo se ejercita la celda de acciones con su fila.
-  const columna = columnas.find((c) => c.id === "acciones") as {
+  const columna = columnas.find((c) => c.id === "acciones") as unknown as {
     cell: (ctx: { row: { original: FacturaProgramable } }) => React.ReactNode;
   };
   return render(<MemoryRouter>{columna.cell({ row: { original: f } })}</MemoryRouter>);
