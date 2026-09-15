@@ -29,16 +29,18 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1 space-y-1">
-        {/* VIZ-02: title de respaldo para nombres y folios largos truncados. */}
-        <div className="font-semibold text-body truncate" title={r.proveedor_nombre ?? undefined}>
-          {r.proveedor_nombre ?? "—"}
-        </div>
-        <div
-          className="text-body-sm text-muted-foreground truncate font-mono"
-          title={r.folio_proveedor ?? undefined}
-        >
-          {r.folio_proveedor ?? "—"}
-        </div>
+        {/* VIZ-02/CI-02: Hint accesible (sin `title` nativo) para nombres y
+            folios largos truncados. */}
+        <Hint label={r.proveedor_nombre ?? undefined}>
+          <div className="font-semibold text-body truncate">
+            {r.proveedor_nombre ?? "—"}
+          </div>
+        </Hint>
+        <Hint label={r.folio_proveedor ?? undefined}>
+          <div className="text-body-sm text-muted-foreground truncate font-mono">
+            {r.folio_proveedor ?? "—"}
+          </div>
+        </Hint>
         <div className="flex items-center gap-1.5 text-label text-muted-foreground">
           <span>{fecha ? formatDate(fecha) : "—"}</span>
           {r.fecha_programada_pago && <ToneBadge tone="info" size="sm">Prog.</ToneBadge>}
