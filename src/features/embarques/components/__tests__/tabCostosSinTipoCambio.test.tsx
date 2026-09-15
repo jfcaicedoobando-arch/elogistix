@@ -48,7 +48,7 @@ describe("TabCostos · aviso de tipo de cambio faltante", () => {
     expect(k.totalVenta).toBe(1000);
     expect(k.montosSinTipoCambio).toBe(1);
     expect(screen.getByTestId("aviso-sin-tipo-cambio")).toBeInTheDocument();
-    expect(screen.getByText(/falta de tipo de cambio|tipo de cambio/i)).toBeInTheDocument();
+    expect(screen.getByText(/Totales incompletos por falta de tipo de cambio/i)).toBeInTheDocument();
   });
 
   it("no muestra aviso con tipo de cambio válido", () => {
