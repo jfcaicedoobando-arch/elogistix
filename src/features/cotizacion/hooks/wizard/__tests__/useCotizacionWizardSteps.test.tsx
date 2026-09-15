@@ -106,7 +106,17 @@ describe("useCotizacionWizardSteps", () => {
   it("handleSiguiente paso 2: con costos prellena conceptos USD/MXN y avanza", async () => {
     const { deps, refs } = makeDeps({
       currentStep: 2, cotizacionId: "cot-1",
-      costosInternos: [{ id: "x", monto: 100, moneda: "USD" } as never],
+      // Q7 (v13.823.396): el dominio exige una fila con importes reales,
+      // concepto y proveedor; {id, monto, moneda} ya no es un costo válido.
+      costosInternos: [{
+        id: "x",
+        concepto: "Flete",
+        proveedor: "Maersk",
+        moneda: "USD",
+        cantidad: 1,
+        costo_unitario: 100,
+        precio_venta: 115,
+      } as never],
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
