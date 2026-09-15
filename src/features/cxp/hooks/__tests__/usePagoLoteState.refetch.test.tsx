@@ -19,7 +19,10 @@ vi.mock("@/features/cxp/hooks/usePagoProveedorLote", () => ({
 const { usePagoLoteState } = await import("../usePagoLoteState");
 
 const factura = (id: string, saldo: number) =>
-  ({ id, folio: id, saldo, fecha_vencimiento: "2026-06-30" }) as never;
+  ({
+    factura_id: id, folio_proveedor: id, saldo,
+    fecha_vencimiento: "2026-06-30", fecha_emision: "2026-06-01",
+  }) as never;
 
 function args(facturas: unknown[]) {
   return {
