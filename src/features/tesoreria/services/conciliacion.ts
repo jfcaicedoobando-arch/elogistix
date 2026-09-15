@@ -120,7 +120,9 @@ export interface FiltrosMovimientos {
 
 // v13.56.1 — Columnas explícitas (evita SELECT * en tabla financiera grande).
 const BBVA_MOVIMIENTO_COLUMNS =
-  "id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe, estado_conciliacion, pago_factura_id, pago_proveedor_id, pago_proveedor_lote_id, anticipo_proveedor_id, motivo_ignorar, conciliado_por, conciliado_at, importado_por, importado_en";
+  // MNY-01: `pago_factura_lote_id` es necesario para abrir el detalle de un
+  // depósito de cliente que cubre varias facturas (cobro en lote).
+  "id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe, estado_conciliacion, pago_factura_id, pago_factura_lote_id, pago_proveedor_id, pago_proveedor_lote_id, anticipo_proveedor_id, motivo_ignorar, conciliado_por, conciliado_at, importado_por, importado_en";
 
 // FIX C3 (S6-05): bbva_movimientos es append-only; es la primera tabla que
 // supera 1000 filas en una org activa.

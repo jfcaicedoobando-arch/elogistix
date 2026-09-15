@@ -25,7 +25,10 @@ export async function listarCuentas(activas = true): Promise<CuentaBancaria[]> {
   // FIX BL-10: las cuentas eliminadas nunca se listan aquí; `activas` es filtro adicional.
   let q = supabase.from("cuentas_bancarias").select(CUENTA_BANCARIA_COLUMNS).is("deleted_at", null).order("alias", { ascending: true });
   if (activas) q = q.eq("activa", true);
-  return unwrapOr(q, [] as CuentaBancaria[]) as Promise<CuentaBancaria[]>;
+  // MNY-03: antes `unwrapOr(q, [])` convertía un error (o RLS) en "sin cuentas"
+  // y la pantalla ofrecía dar de alta una cuenta que sí existe. El error se
+  // propaga para que la vista muestre reintento; la lista vacía sólo es real.
+  return unwrap(q) as Promise<CuentaBancaria[]>;
 }
 
 export async function crearCuenta(payload: TablesInsert<"cuentas_bancarias">): Promise<CuentaBancaria> {
