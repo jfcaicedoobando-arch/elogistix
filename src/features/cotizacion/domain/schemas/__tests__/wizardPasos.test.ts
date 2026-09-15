@@ -108,7 +108,17 @@ describe("wizardPasos · Pasos 2 y 3", () => {
     expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 1 })).toBe(
       "Hay renglones de costo sin concepto.",
     );
-    expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 0 })).toBeNull();
+    // Q7 (v13.823.396): el caso válido exige al menos un renglón con importes.
+    expect(
+      primerError(costosPaso2Schema, {
+        totalCostos: 3,
+        renglonesSinConcepto: 0,
+        renglonesConImporte: 1,
+      }),
+    ).toBeNull();
+    expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 0 })).toBe(
+      "Agrega al menos un costo válido (concepto, proveedor e importes) antes de continuar.",
+    );
   });
 
   it("paso 2 exige proveedor en renglones con importes", () => {
@@ -124,6 +134,7 @@ describe("wizardPasos · Pasos 2 y 3", () => {
         totalCostos: 3,
         renglonesSinConcepto: 0,
         renglonesSinProveedor: 0,
+        renglonesConImporte: 1,
       }),
     ).toBeNull();
   });
@@ -145,11 +156,23 @@ describe("wizardPasos · contenedores (BL-COT-04)", () => {
         numContenedores: 0,
       }),
     ).toBe("Captura el número de contenedores (mínimo 1).");
+  });
+
+  it("Marítimo FCL exige tipo de contenedor (Q1)", () => {
     expect(
       primerError(contenedoresMaritimoSchema, {
         modo: "Marítimo",
         tipoEmbarque: "FCL",
         numContenedores: 2,
+        tipoContenedor: "",
+      }),
+    ).toBe("Selecciona el tipo de contenedor (Paso 1 → Mercancía).");
+    expect(
+      primerError(contenedoresMaritimoSchema, {
+        modo: "Marítimo",
+        tipoEmbarque: "FCL",
+        numContenedores: 2,
+        tipoContenedor: "40HC",
       }),
     ).toBeNull();
   });
