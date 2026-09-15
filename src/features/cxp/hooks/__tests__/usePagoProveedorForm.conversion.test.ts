@@ -11,7 +11,7 @@ import {
 } from "../usePagoProveedorForm.editar";
 
 describe("montoEnMonedaDeFactura", () => {
-  it("misma moneda: monto tal cual", () => {
+  it("misma moneda del pago y la factura: monto tal cual", () => {
     expect(
       montoEnMonedaDeFactura({ monedaFactura: "USD", monedaPago: "USD", monto: 100, tcNum: 18 }),
     ).toBe(100);
