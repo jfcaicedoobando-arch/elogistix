@@ -2,7 +2,7 @@
  * Estado, validación y envío del pago en lote a proveedor.
  * Extraído v13.450.2 para mantener el diálogo bajo el límite de complejidad.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoProveedorLote } from "@/features/cxp/hooks/usePagoProveedorLote";
@@ -60,9 +60,18 @@ export function usePagoLoteState(a: Args) {
   // distinguible y los reintentos del MISMO submit deduplique en servidor.
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
 
-  // Al abrir: importe sugerido = saldo total, reparto FIFO por vencimiento.
+  // CXP-NEW-12 (espejo de `usePagoClienteLoteState`): inicializar UNA sola vez
+  // por apertura. Antes cualquier refetch en segundo plano de `a.facturas` o del
+  // saldo re-ejecutaba este efecto, borraba los importes ya capturados y
+  // regeneraba el `requestId`, rompiendo la idempotencia del reintento.
+  const inicializadoRef = useRef(false);
   useEffect(() => {
-    if (!a.open) return;
+    if (!a.open) {
+      inicializadoRef.current = false;
+      return;
+    }
+    if (inicializadoRef.current) return;
+    inicializadoRef.current = true;
     setFecha(todayLocalISO());
     setTotal(String(saldoTotal));
     setMetodo(defaultMetodo(a.proveedorOrigen));
