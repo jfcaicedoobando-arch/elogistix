@@ -109,6 +109,7 @@ export function EmbarqueDetalleTabs({
           totalCosto={financials.totalCosto}
           utilidad={financials.utilidad}
           margen={financials.margen}
+          montosSinTipoCambio={financials.montosSinTipoCambio}
           embarqueId={embarqueId}
           canEditCostos={canEditCostosEmbarque}
         />
