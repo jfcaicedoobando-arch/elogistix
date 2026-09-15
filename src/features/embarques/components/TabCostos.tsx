@@ -39,7 +39,10 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos }: Props) {
+export function TabCostos({
+  conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos,
+  montosSinTipoCambio = 0,
+}: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
   const { data: filasReconc = [] } = useReconciliacionEmbarque(embarqueId);
