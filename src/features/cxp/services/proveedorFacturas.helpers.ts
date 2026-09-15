@@ -50,7 +50,11 @@ export function diasVencido(fechaVenc: string | null): number {
 /**
  * Deriva el estatus primario aplicando la regla de prioridad de `EstatusCxP`.
  * Ver JSDoc en `proveedorFacturas.ts` para el orden completo.
- * Ventana "Por vencer" = 5 días (definida con producto v13.304.1).
+ *
+ * CXP-NEW-11: la ventana "Por vencer" es el canon único `DIAS_POR_VENCER_CXC`
+ * (7 días) de `lib/domain/vencimiento`. Antes esta fila usaba 5 días mientras
+ * el KPI rotulado "Por vencer 7d" sumaba 7: una factura a 6 días se veía
+ * "Vigente" en la tabla y "Por vencer" en la tarjeta.
  */
 export function clasificar(
   saldo: number,
