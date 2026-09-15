@@ -47,7 +47,16 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
           <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
         </Button>
       </div>
-      <MoneyCell label="Saldo" value={formatCurrency(r.saldo, r.moneda)} highlight className="shrink-0 w-28" />
+      {/* VIZ-02: el ancho fijo w-28 recortaba "MXN 1,160.00" a "MXN 1,1…".
+          Ahora el chip crece con el importe (mínimo 7rem, máximo 45% de la
+          card) y el monto no envuelve. */}
+      <MoneyCell
+        label="Saldo"
+        value={formatCurrency(r.saldo, r.moneda)}
+        highlight
+        className="shrink-0 w-auto min-w-28 max-w-[45%]"
+        valueClassName="whitespace-nowrap"
+      />
     </div>
   );
 }
