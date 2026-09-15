@@ -96,4 +96,32 @@ describe("sumarFacturasPorMoneda", () => {
     expect(r.conteo).toBe(1);
     expect(r.conteoCanceladas).toBe(1);
   });
+
+  // FAC-01: "Por timbrar" es preparación, no ingreso vigente.
+  it("ignora 'Por timbrar' en conteo e importes", () => {
+    const r = sumarFacturasPorMoneda([
+      { total: 100, moneda: "MXN", estado: "Emitida" },
+      { total: 700, moneda: "MXN", estado: "Por timbrar" },
+      { total: 300, moneda: "USD", estado: "Por timbrar", tipo_cambio: 20 },
+    ]);
+    expect(r.totalMxn).toBe(100);
+    expect(r.totalUsd).toBe(0);
+    expect(r.mxnEquivalente).toBe(100);
+    expect(r.conteo).toBe(1);
+  });
+
+  it("normaliza estado y moneda sin importar mayúsculas ni espacios", () => {
+    const r = sumarFacturasPorMoneda([
+      { total: 100, moneda: " mxn ", estado: "emitida" },
+      { total: 10, moneda: "usd", estado: "PAGADA", tipo_cambio: 20 },
+      { total: 999, moneda: "MXN", estado: " cancelada " },
+      { total: 500, moneda: "MXN", estado: "por timbrar" },
+      { total: 400, moneda: "MXN", estado: "BORRADOR" },
+    ]);
+    expect(r.totalMxn).toBe(100);
+    expect(r.totalUsd).toBe(10);
+    expect(r.mxnEquivalente).toBe(300);
+    expect(r.conteo).toBe(2);
+    expect(r.conteoCanceladas).toBe(1);
+  });
 });
