@@ -57,7 +57,9 @@ export function usePagoProveedorForm(
   );
 
   const tcNum = tcValido(tc);
-  const { montoNum, esUsdPagadoEnMxn, showTc, bloqueadoPorTc } = banderasMonedaPago({
+  const {
+    montoNum, esUsdPagadoEnMxn, showTc, bloqueadoPorTc, cruceNoSoportado, monedaDelPar,
+  } = banderasMonedaPago({
     factura, moneda, monto, tcNum,
   });
 
@@ -90,7 +92,7 @@ export function usePagoProveedorForm(
   } = usePagoTcDof({
     open, fecha, showTc, tc, setTc, diffMxn, setDiffMxn, esUsdPagadoEnMxn,
     montoEnMonedaFactura, tcFactura: tcValido(factura?.tipo_cambio_usd), tcNum,
-    pagoEditarId,
+    pagoEditarId, monedaDelPar,
   });
 
   // Al editar, el importe del pago original vuelve al saldo disponible.
@@ -139,7 +141,7 @@ export function usePagoProveedorForm(
     tc, setTc: setTcManual, metodo, setMetodo, referencia, setReferencia,
     notas, setNotas, diffMxn, setDiffMxn: setDiffManual,
     metodosDisponibles, montoNum, saldoRestante, saldoDisponible,
-    esUsdPagadoEnMxn, showTc, excede,
+    esUsdPagadoEnMxn, showTc, excede, cruceNoSoportado, monedaDelPar,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
     cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,

@@ -16,7 +16,14 @@ import {
 interface Props {
   tc: string;
   setTc: (v: string) => void;
-  tcDof?: { usdMxn: number; fecha: string; exacto: boolean } | null;
+  tcDof?: {
+    usdMxn: number;
+    /** Paridad del par real de la operación (USD o EUR contra MXN). */
+    aplicable?: number | null;
+    monedaAplicable?: string;
+    fecha: string;
+    exacto: boolean;
+  } | null;
   cargandoTcDof?: boolean;
   aplicarTcDof?: () => void;
   /** Moneda extranjera del pago o de la factura, para rotular el par. */
@@ -24,7 +31,9 @@ interface Props {
 }
 
 export function TcPagoField({ tc, setTc, tcDof, cargandoTcDof, aplicarTcDof, moneda }: Props) {
-  const coincide = !!tcDof && Number(tc) === tcDof.usdMxn;
+  // MNY-NEW-09: se muestra y compara la paridad del par real, no siempre USD.
+  const tcSugerido = tcDof ? tcDof.aplicable ?? tcDof.usdMxn : null;
+  const coincide = tcSugerido != null && Number(tc) === tcSugerido;
   const etiqueta = etiquetaTcContraMxn(moneda);
   const ayuda = ayudaTcContraMxn(moneda);
 
@@ -49,10 +58,12 @@ export function TcPagoField({ tc, setTc, tcDof, cargandoTcDof, aplicarTcDof, mon
       {tcDof && (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-label text-muted-foreground">
-            DOF del {formatDate(tcDof.fecha)}: {tcDof.usdMxn}
+            DOF del {formatDate(tcDof.fecha)}
+            {tcDof.monedaAplicable ? ` (${tcDof.monedaAplicable}/MXN)` : ""}:{" "}
+            {tcSugerido ?? "sin publicar"}
             {tcDof.exacto ? "" : " (último publicado)"}
           </p>
-          {!coincide && aplicarTcDof && (
+          {!coincide && tcSugerido != null && aplicarTcDof && (
             <Button type="button" variant="link" size="sm" className="h-auto p-0 text-label" onClick={aplicarTcDof}>
               Usar DOF
             </Button>
