@@ -12,6 +12,8 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types/form";
 import { useCrmProspectoOportunidad } from "@/features/crm/hooks/useCrmProspectoOportunidad";
 import { mapModoCrmACotizacion } from "@/features/crm/domain/modoCotizacion";
+import { INCOTERMS } from "@/constants/wizardConstants";
+import { FRECUENCIAS_COTIZACION } from "@/features/cotizacion/domain/frecuencias";
 
 interface Deps {
   form: UseFormReturn<CotizacionFormValues>;
@@ -38,7 +40,29 @@ const CAMPOS_PRECARGA = [
   "modo",
   "origen",
   "destino",
+  "incoterm",
+  "frecuencia",
 ] as const;
+
+/**
+ * CRM-P2.6: el perfil ICP del lead (incoterm y frecuencia) ya estaba capturado
+ * en el CRM pero no llegaba al cotizador. Se precarga SÓLO si el valor existe y
+ * es compatible con el catálogo del cotizador: nunca se inventa ni se traduce
+ * (el ICP admite frecuencias que el cotizador no tiene, p. ej. "Trimestral").
+ */
+function aplicarIcp(
+  form: UseFormReturn<CotizacionFormValues>,
+  match: { icpIncoterm?: string | null; icpFrecuencia?: string | null },
+): void {
+  const incoterm = (match.icpIncoterm ?? "").trim().toUpperCase();
+  const incotermValido = INCOTERMS.find((i) => i === incoterm);
+  if (incotermValido) {
+    form.setValue("incoterm", incotermValido, { shouldDirty: true, shouldValidate: true });
+  }
+  const frecuencia = (match.icpFrecuencia ?? "").trim().toLowerCase();
+  const frecuenciaValida = FRECUENCIAS_COTIZACION.find((f) => f.toLowerCase() === frecuencia);
+  if (frecuenciaValida) form.setValue("frecuencia", frecuenciaValida, { shouldDirty: true });
+}
 
 export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }: Deps) {
   const aplicado = useRef(false);
@@ -77,6 +101,7 @@ export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }:
     if (modo) form.setValue("modo", modo, opts);
     if (match.origen) form.setValue("origen", match.origen, { shouldDirty: true });
     if (match.destino) form.setValue("destino", match.destino, { shouldDirty: true });
+    aplicarIcp(form, match);
     form.trigger(["oportunidadId", "prospectoEmpresa"]);
     aplicado.current = true;
   }, [enabled, match, form, isDirty]);

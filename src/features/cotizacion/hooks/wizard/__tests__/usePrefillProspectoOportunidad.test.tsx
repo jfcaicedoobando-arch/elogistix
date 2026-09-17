@@ -130,4 +130,34 @@ describe("usePrefillProspectoOportunidad", () => {
     expect(result.current.getValues("esProspecto")).toBe(COTIZACION_FORM_DEFAULTS.esProspecto);
   });
 
+  it("CRM-P1.3: variante del CRM (\"Marítimo FCL\") se normaliza al modo del cotizador", async () => {
+    match.data = { ...MATCH_COMPLETO, modo: "Marítimo FCL" };
+    const { result } = renderPrefill();
+    await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe("op-1"));
+    expect(result.current.getValues("modo")).toBe("Marítimo");
+  });
+
+  it("CRM-P2.6: precarga el ICP capturado (incoterm y frecuencia compatibles)", async () => {
+    match.data = { ...MATCH_COMPLETO, icpIncoterm: "FOB", icpFrecuencia: "Mensual" };
+    const { result } = renderPrefill();
+    await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe("op-1"));
+    expect(result.current.getValues("incoterm")).toBe("FOB");
+    expect(result.current.getValues("frecuencia")).toBe("Mensual");
+  });
+
+  it("CRM-P2.6: no inventa ICP — vacío o incompatible deja los defaults", async () => {
+    match.data = { ...MATCH_COMPLETO, icpIncoterm: "", icpFrecuencia: "Trimestral" };
+    const { result } = renderPrefill();
+    await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe("op-1"));
+    expect(result.current.getValues("incoterm")).toBe(COTIZACION_FORM_DEFAULTS.incoterm);
+    expect(result.current.getValues("frecuencia")).toBe(COTIZACION_FORM_DEFAULTS.frecuencia);
+  });
+
+  it("CRM-P2.5: conserva el destino puerta a puerta tal como lo capturó el CRM", async () => {
+    const destino = "Puerto de Manzanillo → Parque Industrial Apodaca";
+    match.data = { ...MATCH_COMPLETO, destino };
+    const { result } = renderPrefill();
+    await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe("op-1"));
+    expect(result.current.getValues("destino")).toBe(destino);
+  });
 });

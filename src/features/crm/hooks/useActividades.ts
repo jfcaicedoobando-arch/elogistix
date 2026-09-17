@@ -49,6 +49,13 @@ export interface ActividadFiltros {
   entidadId?: string;
   page?: number;
   pageSize?: number;
+  /**
+   * CRM-P2.7: el timeline muestra `created_at`, así que debe ordenar por
+   * `created_at`. Antes heredaba el orden por `fecha_programada` de la agenda y
+   * la cronología salía revuelta (sobre todo notas sin fecha programada).
+   */
+  sortKey?: "fecha_programada" | "created_at" | "tipo" | "asunto";
+  sortDir?: "asc" | "desc";
 }
 
 export function useActividades(f: ActividadFiltros = {}) {
@@ -62,12 +69,14 @@ export function useActividades(f: ActividadFiltros = {}) {
     entidadId,
     page = 0,
     pageSize = 25,
+    sortKey = "fecha_programada",
+    sortDir = "asc",
   } = f;
   return useQuery({
-    queryKey: queryKeys.crm.actividades.list({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, uid: user?.id }),
+    queryKey: queryKeys.crm.actividades.list({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, sortKey, sortDir, uid: user?.id }),
     placeholderData: keepPreviousData,
     queryFn: () =>
-      listActividades({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, userId: user?.id, userEmail: user?.email }),
+      listActividades({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, sortKey, sortDir, userId: user?.id, userEmail: user?.email }),
   });
 }
 

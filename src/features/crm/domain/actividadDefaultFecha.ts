@@ -1,15 +1,17 @@
 /**
- * Hallazgo #13.2 (auditoría CRM) — fecha/hora default de una actividad rápida.
+ * Hallazgo #13.2 / CRM-P1.1 — fecha/hora default de una actividad rápida.
  *
  * Antes se calculaba "hoy 17:00" con el reloj del navegador: si el diálogo se
  * abría después de las 17:00 (o en fin de semana) la tarea nacía vencida.
- * Ahora usamos el calendario de negocio de CDMX (`src/lib/date/mx.ts`) y, si
- * ya pasó la hora límite del día (o es fin de semana), empujamos al siguiente
- * día hábil a las 9:00.
+ * Un arreglo intermedio dejó "hoy 17:00" antes del corte, pero los formularios
+ * prometen "mañana 9:00" / "próximo día hábil 9:00": a la 1:18 p.m. la tarea
+ * aparecía para las 17:00 del MISMO día.
+ *
+ * Regla única (calendario CDMX, `src/lib/date/mx.ts`): SIEMPRE el siguiente
+ * día hábil a las 9:00, sin importar la hora de captura.
  */
-import { hoyMx, horaMx, isoUtcDay, parseLocalMx } from "@/lib/date/mx";
+import { hoyMx, isoUtcDay, parseLocalMx } from "@/lib/date/mx";
 
-const HORA_LIMITE_HOY = 17;
 const HORA_DEFAULT_SIGUIENTE_DIA = 9;
 
 function esFinDeSemana(fechaIso: string): boolean {
@@ -26,15 +28,11 @@ function siguienteDiaHabil(fechaIso: string): string {
 }
 
 /**
- * Devuelve un valor `datetime-local` (`YYYY-MM-DDTHH:mm`) con el default de
- * la actividad rápida: hoy 17:00 hora CDMX, o el siguiente día hábil 9:00 si
- * ya son las 17:00 o más tarde, o si hoy es fin de semana.
+ * Devuelve un valor `datetime-local` (`YYYY-MM-DDTHH:mm`) con el default de la
+ * actividad rápida: siguiente día hábil a las 9:00 hora CDMX (mañana en día
+ * hábil; lunes si hoy es viernes o fin de semana).
  */
 export function actividadDefaultFechaMx(base: Date = new Date()): string {
-  const hoy = hoyMx(base);
-  const hora = horaMx(base);
-  const requiereSiguienteDia = hora >= HORA_LIMITE_HOY || esFinDeSemana(hoy);
-  const fecha = requiereSiguienteDia ? siguienteDiaHabil(hoy) : hoy;
-  const horaDefault = requiereSiguienteDia ? HORA_DEFAULT_SIGUIENTE_DIA : HORA_LIMITE_HOY;
-  return `${fecha}T${String(horaDefault).padStart(2, "0")}:00`;
+  const fecha = siguienteDiaHabil(hoyMx(base));
+  return `${fecha}T${String(HORA_DEFAULT_SIGUIENTE_DIA).padStart(2, "0")}:00`;
 }
