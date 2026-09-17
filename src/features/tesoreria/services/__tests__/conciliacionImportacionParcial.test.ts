@@ -19,6 +19,7 @@ beforeEach(() => {
   mock.resetResults();
 });
 
+/** 501 filas → dos lotes de inserción (CHUNK = 500). */
 function filas(n: number): MovimientoParseado[] {
   return Array.from({ length: n }, (_, i) => ({
     fecha: "2026-06-10",
@@ -31,27 +32,34 @@ function filas(n: number): MovimientoParseado[] {
   })) as unknown as MovimientoParseado[];
 }
 
-describe("importarMovimientos · fallo en un lote posterior", () => {
-  it("lanza ImportacionParcialError con el conteo de guardados y faltantes", async () => {
-    // Primer lote inserta bien; el segundo falla.
-    let llamada = 0;
-    mock.setTableResultFactory?.("bbva_movimientos", () => {
-      llamada += 1;
-      return { data: [], error: null };
+describe("importarMovimientos · fallo en el segundo lote", () => {
+  it("lanza ImportacionParcialError con guardados y faltantes", async () => {
+    // 1) dedupe lote 1, 2) dedupe lote 2 → nada existente
+    mock.setTableResultOnce("bbva_movimientos", { data: [], error: null });
+    mock.setTableResultOnce("bbva_movimientos", { data: [], error: null });
+    // 3) insert lote 1 OK (500 ids)
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: Array.from({ length: 500 }, (_, i) => ({ id: `i${i}` })),
+      error: null,
     });
-    mock.setTableResult("bbva_movimientos", { data: [], error: null });
+    // 4) insert lote 2 falla
+    mock.setTableResultOnce("bbva_movimientos", { data: null, error: { message: "boom insert" } });
 
-    // Sin fábrica disponible en el mock, se valida el contrato del error.
-    const err = new ImportacionParcialError(500, 300);
-    expect(err.code).toBe("LC_IMPORTACION_PARCIAL");
-    expect(err.guardados).toBe(500);
-    expect(err.faltantes).toBe(300);
-    expect(err.message).toMatch(/500/);
-    expect(err.message).toMatch(/300/);
-    expect(llamada).toBeGreaterThanOrEqual(0);
+    const err = await importarMovimientos("c1", filas(501), null).catch((e) => e);
+    expect(err).toBeInstanceOf(ImportacionParcialError);
+    expect((err as ImportacionParcialError).guardados).toBe(500);
+    expect((err as ImportacionParcialError).faltantes).toBe(1);
+    expect((err as ImportacionParcialError).code).toBe("LC_IMPORTACION_PARCIAL");
+  });
 
-    // La ruta feliz sigue funcionando (sin error de lote).
+  it("la ruta feliz devuelve el conteo completo", async () => {
+    mock.setTableResultOnce("bbva_movimientos", { data: [], error: null });
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: [{ id: "i1" }, { id: "i2" }, { id: "i3" }],
+      error: null,
+    });
     const res = await importarMovimientos("c1", filas(3), null);
-    expect(res.nuevos + res.duplicados).toBe(3);
+    expect(res.nuevos).toBe(3);
+    expect(res.duplicados).toBe(0);
   });
 });
