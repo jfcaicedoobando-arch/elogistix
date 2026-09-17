@@ -27,7 +27,8 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
 }
 
 export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
-  const esCobro = pago.tipo === "cobro";
+  // MNY-P2.1: un cobro en lote también es dinero recibido del cliente.
+  const esCobro = esDineroRecibido(pago.tipo);
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -43,10 +44,20 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
           {formatCurrency(pago.monto, pago.moneda)}
         </p>
         {pago.moneda !== "MXN" ? (
-          <p className="text-body-sm text-muted-foreground">
-            Equivale a {formatCurrency(pago.monto_mxn, "MXN")} (TC {pago.tipo_cambio.toFixed(4)})
-          </p>
+          // MNY-P2.3: sin T/C registrado no se muestra "TC 1.0000" ni un
+          // equivalente en pesos inventado.
+          pago.tipo_cambio && pago.monto_mxn != null ? (
+            <p className="text-body-sm text-muted-foreground">
+              Equivale a {formatCurrency(pago.monto_mxn, "MXN")} (TC {pago.tipo_cambio.toFixed(4)})
+            </p>
+          ) : (
+            <p className="text-body-sm text-warning">
+              Sin T/C registrado: no se puede calcular el equivalente en pesos.
+            </p>
+          )
         ) : null}
+      </div>
+
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Dato label="Fecha">{formatDate(pago.fecha)}</Dato>
