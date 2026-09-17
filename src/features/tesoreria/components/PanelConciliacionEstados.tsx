@@ -63,6 +63,8 @@ export function EstadoIgnorado({
 
 interface ListaCandidatosProps {
   candidatos: readonly Candidato[];
+  /** MNY-P2.6: `true` = la búsqueda quedó recortada, puede haber más pagos. */
+  truncado?: boolean;
   isLoading: boolean;
   isPending: boolean;
   onConciliar: (tipo: "cxc" | "cxp", pagoId: string) => void;
@@ -71,6 +73,7 @@ interface ListaCandidatosProps {
 
 export function ListaCandidatos({
   candidatos,
+  truncado = false,
   isLoading,
   isPending,
   onConciliar,
