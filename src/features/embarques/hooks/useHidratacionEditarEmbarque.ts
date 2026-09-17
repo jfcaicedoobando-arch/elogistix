@@ -7,23 +7,9 @@ import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
 import { resolverProveedorIdPorNombre, type ProveedorCatalogo } from "@/features/embarques/domain/resolverProveedor";
+import { mapConceptoVentaDbAFila, type ConceptoVentaDbLike } from "@/features/embarques/domain/hidratarConceptoVenta";
 
-interface ConceptoVentaDb {
-  id: string;
-  descripcion: string;
-  cantidad: number;
-  precio_unitario: number | string;
-  moneda: string;
-  contenedor_id: string | null;
-  estado_facturacion?: string | null;
-  aplica_iva?: boolean | null;
-  tasa_iva_aplicada?: number | string | null;
-  /**
-   * SAT 01 — `conceptos_venta.tipo_iva`. La query ya lo selecciona; `null` =
-   * fila legacy y se sigue resolviendo por `aplica_iva`/`tasa_iva_aplicada`.
-   */
-  tipo_iva?: string | null;
-}
+type ConceptoVentaDb = ConceptoVentaDbLike;
 interface ConceptoCostoDb {
   id: string;
   proveedor_id: string | null;
