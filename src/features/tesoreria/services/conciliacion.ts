@@ -87,6 +87,19 @@ export async function importarMovimientos(
     hash_dedupe: m.hash_dedupe,
     importado_por: userId,
   }));
+  // MNY P1.1: un cobro con cuenta bancaria ya creó su movimiento espejo
+  // (`cobro-<pago_id>`). Si el estado de cuenta trae esa MISMA operación con
+  // otro hash, antes se insertaba aparte y el saldo la contaba dos veces. La
+  // RPC hace que la línea real del banco SUSTITUYA al espejo cuando la
+  // coincidencia es inequívoca (misma cuenta, mismo importe, ±3 días y un solo
+  // candidato); nunca fusiona coincidencias ambiguas. Tras absorberlo, el hash
+  // del archivo ya existe y la deduplicación de abajo lo reconoce, así que
+  // re-importar el mismo archivo sigue siendo idempotente.
+  await supabase.rpc("absorber_espejos_importacion", {
+    p_cuenta_bancaria_id: cuentaBancariaId,
+    // SAFE-CAST: la RPC recibe jsonb con las columnas del estado de cuenta.
+    p_filas: payload as unknown as never,
+  });
   // Ola 11 · RNF-11: el UNIQUE pasó a índice parcial (sólo vivos,
   // uq_bbva_movimientos_hash_dedupe_vivo) y un índice parcial no sirve de
   // árbitro para ON CONFLICT vía PostgREST. Se deduplica contra los hashes

@@ -752,6 +752,29 @@ BEGIN
   RETURN NEW;
 END;
 $_$;
+CREATE FUNCTION public._assert_pago_factura_mismo_payload(p_pago_id uuid, p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_cuenta_bancaria_id uuid) RETURNS void
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_p public.pagos_factura%ROWTYPE;
+BEGIN
+  SELECT * INTO v_p FROM public.pagos_factura WHERE id = p_pago_id;
+  IF NOT FOUND THEN RETURN; END IF;
+  IF v_p.factura_id IS DISTINCT FROM p_factura_id
+     OR v_p.fecha_pago IS DISTINCT FROM p_fecha_pago
+     OR round(COALESCE(v_p.monto, 0), 4) IS DISTINCT FROM round(COALESCE(p_monto, 0), 4)
+     OR v_p.moneda::text IS DISTINCT FROM upper(btrim(COALESCE(p_moneda, '')))
+     OR round(COALESCE(v_p.tipo_cambio, 1), 6) IS DISTINCT FROM round(COALESCE(p_tipo_cambio, 1), 6)
+     OR round(COALESCE(v_p.monto_aplicado_factura, 0), 4) IS DISTINCT FROM round(COALESCE(p_monto_aplicado_factura, 0), 4)
+     OR COALESCE(v_p.forma_pago, '') IS DISTINCT FROM COALESCE(p_forma_pago, '')
+     OR v_p.cuenta_bancaria_id IS DISTINCT FROM p_cuenta_bancaria_id
+  THEN
+    RAISE EXCEPTION 'LC_PAGO_REINTENTO_DISTINTO: ese intento ya se guardó con datos distintos (cobro %). Revisa el cobro registrado antes de volver a capturarlo; no se guardó la edición ni se duplicó el cobro.', p_pago_id
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$$;
 CREATE FUNCTION public._assert_pago_pue_exhibicion_unica() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -4056,8 +4079,7 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public._lock_cuenta_bancaria(p_cuenta_id uuid) RETURNS TABLE(org_id uuid, moneda_txt text, esta_activa boolean)
-    LANGUAGE plpgsql
-    SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 BEGIN
@@ -5032,6 +5054,67 @@ BEGIN
                        'cliente_destino_id', p_cliente_destino_id, 'motivo', COALESCE(p_motivo, ''))
   );
   RETURN v_id;
+END;
+$$;
+CREATE FUNCTION public.absorber_espejos_importacion(p_cuenta_bancaria_id uuid, p_filas jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid;
+  v_fila jsonb;
+  v_cand uuid;
+  v_cuantos int;
+  v_absorbidos int := 0;
+BEGIN
+  SELECT organization_id INTO v_org
+    FROM public.cuentas_bancarias
+   WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CUENTA_NO_ENCONTRADA: la cuenta bancaria no existe o está dada de baja'
+      USING ERRCODE = '22023';
+  END IF;
+  PERFORM public._assert_writer(v_org);
+  FOR v_fila IN SELECT * FROM jsonb_array_elements(COALESCE(p_filas, '[]'::jsonb))
+  LOOP
+    -- Idempotencia: si la línea del archivo ya está guardada, no se toca nada.
+    PERFORM 1 FROM public.bbva_movimientos
+      WHERE cuenta_bancaria_id = p_cuenta_bancaria_id
+        AND hash_dedupe = v_fila->>'hash_dedupe'
+        AND deleted_at IS NULL;
+    CONTINUE WHEN FOUND;
+    -- Candidato: espejo de COBRO de cliente (hash 'cobro-<pago_id>'), mismo
+    -- importe exacto al centavo y fecha dentro de ±3 días. Los espejos de pago
+    -- a proveedor, anticipos y devoluciones NO se absorben (su hash forma parte
+    -- de los candados de sentido).
+    SELECT count(*), min(id) INTO v_cuantos, v_cand
+      FROM public.bbva_movimientos m
+     WHERE m.cuenta_bancaria_id = p_cuenta_bancaria_id
+       AND m.deleted_at IS NULL
+       AND m.hash_dedupe LIKE 'cobro-%'
+       AND m.pago_factura_id IS NOT NULL
+       AND round(COALESCE(m.cargo, 0), 2) = round(COALESCE((v_fila->>'cargo')::numeric, 0), 2)
+       AND round(COALESCE(m.abono, 0), 2) = round(COALESCE((v_fila->>'abono')::numeric, 0), 2)
+       AND abs(m.fecha - (v_fila->>'fecha')::date) <= 3;
+    -- Nunca se fusionan coincidencias ambiguas.
+    CONTINUE WHEN COALESCE(v_cuantos, 0) <> 1;
+    UPDATE public.bbva_movimientos
+       SET hash_dedupe = v_fila->>'hash_dedupe',
+           fecha = (v_fila->>'fecha')::date,
+           concepto = COALESCE(NULLIF(v_fila->>'concepto', ''), concepto),
+           referencia = COALESCE(NULLIF(v_fila->>'referencia', ''), referencia),
+           saldo = COALESCE((v_fila->>'saldo')::numeric, saldo)
+     WHERE id = v_cand;
+    v_absorbidos := v_absorbidos + 1;
+    PERFORM public.registrar_bitacora(
+      'tesoreria', 'absorber_espejo_cobro_importacion', v_cand,
+      COALESCE(v_fila->>'concepto', ''),
+      jsonb_build_object('hash_dedupe', v_fila->>'hash_dedupe',
+                         'cuenta_bancaria_id', p_cuenta_bancaria_id),
+      v_org, auth.uid()
+    );
+  END LOOP;
+  RETURN jsonb_build_object('absorbidos', v_absorbidos);
 END;
 $$;
 CREATE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) RETURNS jsonb
@@ -7192,7 +7275,7 @@ DECLARE
   v_ant_estado text;
   v_ant_devuelto numeric;
   v_es_devolucion boolean := false;
-  c_tol constant numeric := 1.00; -- tolerancia en la moneda del movimiento
+  v_tol numeric := 0; -- MNY P1.3: tolerancia según la MONEDA del movimiento
 BEGIN
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
@@ -7234,10 +7317,11 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
     -- N11: cobro ⇒ abono en la cuenta.
+    v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
     v_mov := GREATEST(COALESCE(NEW.abono,0), COALESCE(NEW.cargo,0));
-    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
-        v_mov, v_pago_monto, c_tol
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > v_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia % %)',
+        v_mov, v_pago_monto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -7264,10 +7348,11 @@ BEGIN
       RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un pago a proveedor sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
         USING ERRCODE = 'P0001';
     END IF;
+    v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
     v_mov := GREATEST(COALESCE(NEW.cargo,0), COALESCE(NEW.abono,0));
-    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
-        v_mov, v_pago_monto, c_tol
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > v_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia % %)',
+        v_mov, v_pago_monto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -7349,9 +7434,10 @@ BEGIN
         RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_DEVOLUCION: la devolución de un anticipo sólo puede vincularse a un depósito (abono) en la cuenta, no a un cargo'
           USING ERRCODE = 'P0001';
       END IF;
-      IF abs(COALESCE(NEW.abono, 0) - v_ant_devuelto) > c_tol THEN
-        RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el depósito por % no coincide con el monto devuelto del anticipo % (tolerancia %)',
-          COALESCE(NEW.abono, 0), v_ant_devuelto, c_tol
+      v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
+      IF abs(COALESCE(NEW.abono, 0) - v_ant_devuelto) > v_tol THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el depósito por % no coincide con el monto devuelto del anticipo % (tolerancia % %)',
+          COALESCE(NEW.abono, 0), v_ant_devuelto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
           USING ERRCODE = 'P0001';
       END IF;
     ELSE
@@ -26377,6 +26463,9 @@ BEGIN
      WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
     IF v_pago_id IS NOT NULL THEN
       v_reintento := true;
+      PERFORM public._assert_pago_factura_mismo_payload(
+        v_pago_id, p_factura_id, p_fecha_pago, p_monto, p_moneda, p_tipo_cambio,
+        p_monto_aplicado_factura, p_forma_pago, p_cuenta_bancaria_id);
     END IF;
   END IF;
   IF v_pago_id IS NULL THEN
@@ -26403,6 +26492,9 @@ BEGIN
        WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
       IF v_pago_id IS NULL THEN RAISE; END IF;
       v_reintento := true;
+      PERFORM public._assert_pago_factura_mismo_payload(
+        v_pago_id, p_factura_id, p_fecha_pago, p_monto, p_moneda, p_tipo_cambio,
+        p_monto_aplicado_factura, p_forma_pago, p_cuenta_bancaria_id);
     END;
   END IF;
   -- El abono bancario vive en la MISMA transacción que el cobro: si no se
@@ -26533,14 +26625,12 @@ BEGIN
       RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', true);
     END IF;
   END IF;
-
   SELECT organization_id, fecha_emision INTO v_org, v_emision
     FROM public.proveedor_facturas
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
   END IF;
-
   -- N8: la cuenta bancaria debe existir, estar activa y ser de la MISMA
   -- organización que la factura. El candado se toma vía
   -- `_lock_cuenta_bancaria` (SECURITY DEFINER): con `FOR UPDATE` directo, un
@@ -26559,7 +26649,6 @@ BEGIN
       RAISE EXCEPTION 'LC_PAGO_CUENTA_INACTIVA: la cuenta bancaria está inactiva y no admite pagos' USING ERRCODE = 'P0001';
     END IF;
   END IF;
-
   -- D4: canon de fecha de negocio México, igual que el lote.
   IF p_fecha_pago IS NULL THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago' USING ERRCODE = '22023';
@@ -26572,7 +26661,6 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del pago (%) es anterior a la emisión de la factura (%)',
       p_fecha_pago, v_emision USING ERRCODE = '22023';
   END IF;
-
   BEGIN
     INSERT INTO public.pagos_proveedor (
       organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
@@ -26593,9 +26681,7 @@ BEGIN
     IF v_pago_id IS NULL THEN RAISE; END IF;
     v_reintento := true;
   END;
-
   v_mov_id := public._asegurar_movimiento_pago_proveedor(v_pago_id);
-
   RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', v_reintento);
 END;
 $$;
@@ -29991,6 +30077,17 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
+$$;
+CREATE FUNCTION public.tolerancia_conciliacion_moneda(p_moneda text) RETURNS numeric
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT CASE upper(btrim(COALESCE(p_moneda, '')))
+           WHEN 'MXN' THEN 1.00
+           WHEN 'USD' THEN 0.05
+           WHEN 'EUR' THEN 0.05
+           ELSE 0        -- moneda desconocida ⇒ coincidencia exacta
+         END::numeric
 $$;
 CREATE FUNCTION public.touch_auditoria_revisiones() RETURNS trigger
     LANGUAGE plpgsql
@@ -34834,6 +34931,9 @@ REVOKE ALL ON FUNCTION public._assert_nc_prov_no_excede_saldo() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_nc_prov_no_excede_saldo() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_padre_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_padre_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._assert_pago_factura_mismo_payload(p_pago_id uuid, p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_cuenta_bancaria_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_pago_factura_mismo_payload(p_pago_id uuid, p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_cuenta_bancaria_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._assert_pago_factura_mismo_payload(p_pago_id uuid, p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_tipo_cambio numeric, p_monto_aplicado_factura numeric, p_forma_pago text, p_cuenta_bancaria_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_pago_pue_exhibicion_unica() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_pago_pue_exhibicion_unica() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_periodo_abierto() FROM PUBLIC;
@@ -35085,6 +35185,9 @@ GRANT ALL ON FUNCTION public.a_mxn_doc(_monto numeric, _moneda text, _fecha date
 REVOKE ALL ON FUNCTION public.abrir_caso_refacturacion(p_factura_id uuid, p_cliente_destino_id uuid, p_ruta_fiscal text, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.abrir_caso_refacturacion(p_factura_id uuid, p_cliente_destino_id uuid, p_ruta_fiscal text, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.abrir_caso_refacturacion(p_factura_id uuid, p_cliente_destino_id uuid, p_ruta_fiscal text, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.absorber_espejos_importacion(p_cuenta_bancaria_id uuid, p_filas jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.absorber_espejos_importacion(p_cuenta_bancaria_id uuid, p_filas jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.absorber_espejos_importacion(p_cuenta_bancaria_id uuid, p_filas jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid) TO service_role;
@@ -36363,6 +36466,9 @@ GRANT ALL ON FUNCTION public.tg_recalcular_estado_factura_proveedor() TO service
 REVOKE ALL ON FUNCTION public.tg_reverse_ajustes_factura_proveedor() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tg_reverse_ajustes_factura_proveedor() TO authenticated;
 GRANT ALL ON FUNCTION public.tg_reverse_ajustes_factura_proveedor() TO service_role;
+REVOKE ALL ON FUNCTION public.tolerancia_conciliacion_moneda(p_moneda text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.tolerancia_conciliacion_moneda(p_moneda text) TO authenticated;
+GRANT ALL ON FUNCTION public.tolerancia_conciliacion_moneda(p_moneda text) TO service_role;
 GRANT ALL ON FUNCTION public.touch_auditoria_revisiones() TO authenticated;
 GRANT ALL ON FUNCTION public.touch_auditoria_revisiones() TO service_role;
 REVOKE ALL ON FUNCTION public.transicion_embarque_valida(p_actual public.estado_embarque, p_nuevo public.estado_embarque) FROM PUBLIC;
