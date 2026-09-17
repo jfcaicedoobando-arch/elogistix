@@ -137,6 +137,11 @@ export function MovimientoManualDialog({
           aria-invalid={!!erroresManual.concepto}
           aria-describedby={erroresManual.concepto ? "mov-concepto-error" : undefined}
         />
+        {erroresManual.concepto && (
+          <p id="mov-concepto-error" className="mt-1 text-body-sm text-destructive">
+            {erroresManual.concepto}
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="mov-referencia">Referencia</Label>
