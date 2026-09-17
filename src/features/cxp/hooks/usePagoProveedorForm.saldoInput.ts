@@ -31,12 +31,20 @@ export function banderasMonedaPago(args: {
   // MNY-NEW-09: cruce USD↔EUR sin conversión canónica → se bloquea explícito.
   const cruceNoSoportado = cruceMonedasNoSoportado(factura?.moneda ?? null, moneda);
   const bloqueadoPorTc = (esUsdPagadoEnMxn || (monedaFacturaExtranjera === false && moneda !== "MXN")) && !tcNum;
+  // MNY: la diferencia cambiaria sólo se calcula y persiste en la base para el
+  // par USD/MXN (`guard_pago_proveedor`). Para EUR el campo se oculta en vez de
+  // aceptar un valor que el servidor descartaría (quedaba en NULL).
+  const soportaDiferenciaCambiaria =
+    (moneda === "MXN" && factura?.moneda === "USD") ||
+    (moneda === "USD" && factura?.moneda === "MXN");
   return {
     montoNum, monedaFacturaExtranjera, esUsdPagadoEnMxn,
     showTc: showTc && !cruceNoSoportado,
     bloqueadoPorTc: bloqueadoPorTc && !cruceNoSoportado,
     cruceNoSoportado,
+    soportaDiferenciaCambiaria: soportaDiferenciaCambiaria && !cruceNoSoportado,
     /** Divisa del par contra MXN (para pedir el T/C correcto: USD o EUR). */
     monedaDelPar: moneda !== "MXN" ? moneda : factura?.moneda ?? null,
   };
 }
+

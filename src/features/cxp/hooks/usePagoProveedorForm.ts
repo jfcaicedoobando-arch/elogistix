@@ -45,11 +45,14 @@ export function usePagoProveedorForm(
   const { data: cuentas = [] } = useCuentasBancarias(true);
 
 
+  // MNY: en efectivo NO se usa cuenta bancaria (no hay salida de banco).
+  const requiereCuenta = metodo !== "Efectivo";
+
   const { cuentasDeMoneda, cuentaSeleccionada } = useCuentaPagoSeleccionada({
-    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId,
+    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId, requiereCuenta,
   });
 
-  const requiereCuenta = metodo !== "Efectivo";
+
 
   const metodosDisponibles = useMemo(
     () => metodosFor(factura?.proveedor_origen ?? null),
