@@ -8633,6 +8633,20 @@ export type Database = {
         Args: { p_embarque: Json }
         Returns: undefined
       }
+      _assert_pago_factura_mismo_payload: {
+        Args: {
+          p_cuenta_bancaria_id: string
+          p_factura_id: string
+          p_fecha_pago: string
+          p_forma_pago: string
+          p_moneda: string
+          p_monto: number
+          p_monto_aplicado_factura: number
+          p_pago_id: string
+          p_tipo_cambio: number
+        }
+        Returns: undefined
+      }
       _assert_receptor_fiscal_valido: {
         Args: { p_cliente_id: string }
         Returns: undefined
@@ -8836,6 +8850,10 @@ export type Database = {
           p_ruta_fiscal?: string
         }
         Returns: string
+      }
+      absorber_espejos_importacion: {
+        Args: { p_cuenta_bancaria_id: string; p_filas: Json }
+        Returns: Json
       }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
@@ -11576,6 +11594,10 @@ export type Database = {
           origen: string
           tc: number
         }[]
+      }
+      tolerancia_conciliacion_moneda: {
+        Args: { p_moneda: string }
+        Returns: number
       }
       transicion_embarque_valida: {
         Args: {
