@@ -79,6 +79,34 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
   );
 }
 
+/**
+ * MNY-P2.2: estado vacío del movimiento bancario. Se extrae para bajar la
+ * complejidad de `BloqueMovimiento` (Power of 10) sin cambiar comportamiento.
+ */
+function MovimientoAusente({ metodoPago }: { metodoPago: string | null }) {
+  // El efectivo no genera movimiento del banco por diseño; avisar "falta
+  // conciliar" era una alerta falsa.
+  if (!esperaMovimientoBancario(metodoPago)) {
+    return (
+      <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
+        Pago en efectivo: no genera movimiento en la cuenta bancaria, así que no
+        requiere conciliación.
+      </p>
+    );
+  }
+  return (
+    <Alert variant="warning">
+      <TriangleAlert className="h-4 w-4" />
+      <AlertDescription className="space-y-1">
+        <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
+        <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
+          Ir a Conciliación bancaria
+        </Link>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 export function BloqueMovimiento({
   movimiento,
   cuentaId,
@@ -95,32 +123,13 @@ export function BloqueMovimiento({
   metodoPago?: string | null;
 }) {
   if (!movimiento) {
-    // MNY-P2.2: el efectivo no genera movimiento del banco por diseño; avisar
-    // "falta conciliar" era una alerta falsa.
-    const seEsperaMovimiento = esperaMovimientoBancario(metodoPago);
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
-        {seEsperaMovimiento ? (
-          <Alert variant="warning">
-            <TriangleAlert className="h-4 w-4" />
-            <AlertDescription className="space-y-1">
-              <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
-              <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
-                Ir a Conciliación bancaria
-              </Link>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
-            Pago en efectivo: no genera movimiento en la cuenta bancaria, así que no
-            requiere conciliación.
-          </p>
-        )}
+        <MovimientoAusente metodoPago={metodoPago} />
       </section>
     );
   }
-
 
   const esCargo = movimiento.cargo > 0;
   const monto = esCargo ? movimiento.cargo : movimiento.abono;
