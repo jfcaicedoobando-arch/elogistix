@@ -106,26 +106,13 @@ export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar, tc }: 
                 destacado
               />
             )}
-            {res.sinTipoCambio ? (
-              <p className="text-xs text-warning">
-                El anticipo está en {anticipo.moneda} y la factura en {m}: sin tipo de cambio
-                oficial de la fecha de aplicación no se puede estimar el saldo restante.
-              </p>
-            ) : res.estimado ? (
-              <p className="text-xs text-muted-foreground">
-                El anticipo está en {anticipo.moneda} y la factura en {m}: el equivalente mostrado
-                ({formatCurrency(res.montoEnMonedaFactura ?? 0, m)}) usa el tipo de cambio oficial
-                de la fecha de aplicación, igual que el servidor.
-              </p>
-            ) : null}
-            {!res.estimado && res.excedente > 0 && (
-              <p className="text-xs text-warning">
-                El monto excede el saldo por pagar en {formatCurrency(res.excedente, m)}.
-              </p>
-            )}
-            {!res.estimado && res.excedente === 0 && res.quedaCubierta && montoAplicar > 0 && (
-              <p className="text-xs text-muted-foreground">La factura queda totalmente cubierta.</p>
-            )}
+            <NotasAplicacion
+              res={res}
+              moneda={m}
+              monedaAnticipo={anticipo.moneda}
+              montoAplicar={montoAplicar}
+            />
+
           </>
         ) : (
           <p className="text-sm text-muted-foreground">Selecciona un anticipo para ver el desglose.</p>
