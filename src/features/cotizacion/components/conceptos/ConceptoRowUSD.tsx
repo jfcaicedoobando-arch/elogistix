@@ -3,16 +3,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Trash2, StickyNote } from "lucide-react";
 
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
-import { TASAS_IVA_MX, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { resolverTasaConcepto } from "@/lib/financial/financialUtils";
 
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 import { CONCEPTO_GRID_USD } from "./columnasConcepto";
+import { TratamientoIvaFila } from "./TratamientoIvaFila";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 import { cn } from "@/lib/utils";
@@ -88,18 +88,11 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
         <div className="min-w-0">
           {i === 0 && <Label size="sm">IVA</Label>}
           {puedeIva ? (
-            <Select
-              value={String(tasaFila)}
-              onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
-            >
-              {/* Sólo el porcentaje: la etiqueta larga se cortaba en la columna. */}
-              <SelectTrigger className="h-10" aria-label="Tasa de IVA">{Math.round(tasaFila * 100)}%</SelectTrigger>
-              <SelectContent>
-                {TASAS_IVA_MX.map(opt => (
-                  <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <TratamientoIvaFila
+              tipoIva={c.tipo_iva}
+              tasa={tasaFila}
+              onTasaChange={(tasa) => actualizar(i, "tasa_iva_aplicada", tasa)}
+            />
           ) : (
             <span className="text-body-sm text-muted-foreground flex items-center h-10">—</span>
           )}

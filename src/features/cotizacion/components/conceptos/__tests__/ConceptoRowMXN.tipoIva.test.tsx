@@ -8,6 +8,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ConceptoRowMXN } from "@/features/cotizacion/components/conceptos/ConceptoRowMXN";
+import { ConceptoRowUSD } from "@/features/cotizacion/components/conceptos/ConceptoRowUSD";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
 const productoNoObjeto = {
@@ -58,5 +59,50 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
     expect(actualizar).toHaveBeenCalledWith(0, "tasa_iva_aplicada", 0);
     // Nunca se marca como exento: son tratamientos fiscales distintos.
     expect(actualizar).not.toHaveBeenCalledWith(0, "tipo_iva", "exento");
+  });
+
+  it.each([
+    ["no_objeto", "No objeto · SAT 01"],
+    ["exento", "Exento"],
+  ])("muestra %s sin selector ni intento de cambiar la tasa", (tipoIva, etiqueta) => {
+    const actualizar = vi.fn();
+    render(
+      <ConceptoRowMXN
+        concepto={{ ...concepto, descripcion: "Servicio fiscal", tipo_iva: tipoIva, aplica_iva: false, tasa_iva_aplicada: 0, total: 100 }}
+        index={0}
+        total={1}
+        actualizar={actualizar}
+        eliminar={vi.fn()}
+        tasaIva={0.16}
+      />,
+    );
+
+    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue(etiqueta);
+    expect(screen.queryByLabelText("Tasa de IVA")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Tratamiento de IVA"));
+    expect(actualizar).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConceptoRowUSD — tratamiento fiscal bloqueado", () => {
+  it.each([
+    ["no_objeto", "No objeto · SAT 01"],
+    ["exento", "Exento"],
+  ])("muestra %s sin selector ni intento de cambiar la tasa", (tipoIva, etiqueta) => {
+    const actualizar = vi.fn();
+    render(
+      <ConceptoRowUSD
+        concepto={{ ...concepto, descripcion: "Servicio fiscal", moneda: "USD", tipo_iva: tipoIva, aplica_iva: false, tasa_iva_aplicada: 0, total: 100 }}
+        index={0}
+        total={1}
+        actualizar={actualizar}
+        eliminar={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue(etiqueta);
+    expect(screen.queryByLabelText("Tasa de IVA")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Tratamiento de IVA"));
+    expect(actualizar).not.toHaveBeenCalled();
   });
 });

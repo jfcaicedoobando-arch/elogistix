@@ -10,7 +10,7 @@
 
 /** USD: Concepto · Unidad · Cant. · Venta unit. · IVA · Venta total · acciones. */
 export const CONCEPTO_GRID_USD =
-  "grid gap-2 items-end grid-cols-[minmax(0,1fr)_112px_56px_96px_84px_124px_72px]";
+  "grid gap-2 items-end grid-cols-[minmax(0,1fr)_112px_56px_96px_132px_124px_72px]";
 
 /**
  * MXN: mismas columnas que USD + Subtotal e IVA calculados (sólo desde `xl`).
@@ -18,8 +18,8 @@ export const CONCEPTO_GRID_USD =
  * tasa IVA, subtotal*, IVA*, venta total, acciones (* con `SOLO_XL`).
  */
 export const CONCEPTO_GRID_MXN =
-  "grid gap-2 items-end grid-cols-[minmax(0,1fr)_112px_56px_96px_84px_124px_72px] " +
-  "xl:grid-cols-[minmax(0,1fr)_112px_56px_96px_84px_112px_104px_124px_72px]";
+  "grid gap-2 items-end grid-cols-[minmax(0,1fr)_112px_56px_96px_132px_124px_72px] " +
+  "xl:grid-cols-[minmax(0,1fr)_112px_56px_96px_132px_112px_104px_124px_72px]";
 
 /** Columna calculada: se lee en el pie de la sección en pantallas medianas. */
 export const CONCEPTO_SOLO_XL = "hidden xl:block min-w-0";
