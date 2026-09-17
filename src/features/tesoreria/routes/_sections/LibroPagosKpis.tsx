@@ -32,6 +32,10 @@ export function LibroPagosKpis({ totales, isLoading }: Props) {
         Los equivalentes en pesos usan el tipo de cambio guardado en cada pago, no el del día de hoy.
         Los cobros con complemento de pago cancelado se conservan como histórico, pero no suman en
         estos totales.
+        {/* MNY-P2.3: los pagos sin T/C registrado no se valúan con una tasa inventada. */}
+        {totales.sinTcCount > 0
+          ? ` ${totales.sinTcCount} pago(s) en moneda extranjera no tienen tipo de cambio registrado y quedan fuera de los totales en pesos.`
+          : ""}
       </p>
     </div>
   );

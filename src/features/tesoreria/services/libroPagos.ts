@@ -13,6 +13,12 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** MNY-P2.3: sin T/C registrado no se fabrica 1; el dato queda desconocido. */
+function numOrNull(v: unknown): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) && n !== 0 ? n : null;
+}
+
 function str(v: unknown): string | null {
   return typeof v === "string" && v !== "" ? v : null;
 }
@@ -32,8 +38,8 @@ function mapPago(row: Record<string, unknown>): PagoLibro {
     documento_folio: str(row.documento_folio),
     moneda: String(row.moneda ?? "MXN"),
     monto: num(row.monto),
-    tipo_cambio: num(row.tipo_cambio) || 1,
-    monto_mxn: num(row.monto_mxn),
+    tipo_cambio: numOrNull(row.tipo_cambio),
+    monto_mxn: row.monto_mxn == null ? null : num(row.monto_mxn),
     metodo_pago: str(row.metodo_pago),
     referencia: str(row.referencia),
     cuenta_bancaria_id: str(row.cuenta_bancaria_id),
