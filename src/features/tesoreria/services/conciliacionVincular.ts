@@ -12,8 +12,8 @@ import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import {
   importeMovimiento,
   montosCuadran,
-  TOLERANCIA_CONCILIACION,
 } from "@/features/tesoreria/domain/conciliacionMonto";
+import { toleranciaMonto } from "@/features/tesoreria/domain/tolerancia";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
 /**
