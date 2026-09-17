@@ -1,11 +1,12 @@
 -- Espejo canónico de public.registrar_traspaso_bancario (tesorería).
--- Fuente 1:1: supabase/migrations/20260908001000_traspaso_lock_saldo_y_fecha_corte.sql
--- (Ola 8 · corrección P1: candado FOR UPDATE en cuentas_bancarias antes de
--- validar el saldo, y rechazo de p_fecha anterior al corte de saldo inicial.)
+-- Fuente 1:1: supabase/migrations/20260917180259_88babe6d-6192-45f7-a8a4-bbcaa0c1493d.sql
+-- (Ola 8 · corrección P1: candado en cuentas_bancarias antes de validar el
+-- saldo, y rechazo de p_fecha anterior al corte de saldo inicial.)
 -- D3 (v13.823.382): la fecha del traspaso se valida también en servidor
--- (requerida y no posterior a la fecha de negocio America/Mexico_City). Un
--- RPC llamado directo insertaba tres movimientos con fecha futura que
--- saldo_cuenta_bancaria ya sumaba hoy.
+-- (requerida y no posterior a la fecha de negocio America/Mexico_City).
+-- MNY (20260917180259): el candado se toma vía `_lock_cuenta_bancaria`
+-- (SECURITY DEFINER); con FOR UPDATE directo un rol de sólo lectura sobre
+-- cuentas (contador) no bloqueaba nada y la protección quedaba inerte.
 -- Ver supabase/schema/README.md para el flujo obligatorio de este directorio.
 
 CREATE OR REPLACE FUNCTION public.registrar_traspaso_bancario(p_cuenta_origen_id uuid, p_cuenta_destino_id uuid, p_fecha date, p_monto_origen numeric, p_tipo_cambio numeric DEFAULT NULL::numeric, p_comision numeric DEFAULT 0, p_concepto text DEFAULT ''::text, p_referencia text DEFAULT ''::text, p_client_request_id uuid DEFAULT NULL::uuid)
@@ -26,6 +27,7 @@ DECLARE
   v_id uuid;
   v_saldo_origen numeric;
   v_fecha_min_corte date;
+  v_cta_lock uuid;
   v_concepto text := COALESCE(NULLIF(TRIM(p_concepto), ''), 'Traspaso entre cuentas propias');
 BEGIN
   IF p_cuenta_origen_id = p_cuenta_destino_id THEN
@@ -72,10 +74,16 @@ BEGIN
   -- traspasos concurrentes desde la misma cuenta origen no lean el mismo
   -- saldo disponible. El orden fijo evita deadlocks cuando dos traspasos
   -- cruzan origen/destino entre sí.
-  PERFORM id FROM public.cuentas_bancarias
-    WHERE id IN (p_cuenta_origen_id, p_cuenta_destino_id)
-    ORDER BY id
-    FOR UPDATE;
+  -- MNY: el candado pasa por `_lock_cuenta_bancaria` (SECURITY DEFINER).
+  -- Con `FOR UPDATE` directo, un rol con sólo lectura sobre cuentas
+  -- (contador) no bloqueaba nada y la protección quedaba inerte.
+  FOR v_cta_lock IN
+    SELECT id FROM public.cuentas_bancarias
+     WHERE id IN (p_cuenta_origen_id, p_cuenta_destino_id)
+     ORDER BY id
+  LOOP
+    PERFORM public._lock_cuenta_bancaria(v_cta_lock);
+  END LOOP;
   IF v_origen.moneda = v_destino.moneda THEN
     v_tc := 1;
     v_monto_destino := ROUND(p_monto_origen, 2);
@@ -142,8 +150,7 @@ BEGIN
   END IF;
   RETURN v_id;
 END;
-$function$
-;
+$function$;
 
 REVOKE ALL ON FUNCTION public.registrar_traspaso_bancario(uuid, uuid, date, numeric, numeric, numeric, text, text, uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_traspaso_bancario(uuid, uuid, date, numeric, numeric, numeric, text, text, uuid) FROM anon;
