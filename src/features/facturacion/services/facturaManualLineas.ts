@@ -47,7 +47,7 @@ export function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: numb
   if (t === "gravado_16") return tasaGlobal;
   if (t === "gravado_8") return TASA_IVA_FRONTERA;
   if (t === "tasa_0") return 0;
-  return null; // exento
+  return null; // exento y no objeto de impuesto (SAT 01)
 }
 
 /**
