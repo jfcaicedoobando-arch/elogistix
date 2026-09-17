@@ -67,15 +67,16 @@ export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
   expectedUpdatedAt?: string | null;
-}): Promise<string | undefined> {
+}): Promise<ResultadoMutacionOportunidad> {
   const updatedAt = await actualizarOportunidadFilas(input.id, input.patch, input.expectedUpdatedAt);
-  await registrarActividad({
+  // La fila YA se escribió: la bitácora no puede convertir el éxito en error.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "editar_oportunidad",
     entidadId: input.id,
     detalles: { campos: Object.keys(input.patch) },
   });
-  return updatedAt;
+  return { updatedAt, avisoActividad };
 }
 
 export async function moverEtapaOportunidad(input: {
