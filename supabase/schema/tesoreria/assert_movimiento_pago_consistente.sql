@@ -26,7 +26,6 @@ DECLARE
   v_ant_devuelto numeric;
   v_es_devolucion boolean := false;
   c_tol constant numeric := 1.00; -- tolerancia en la moneda del movimiento
-
 BEGIN
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
@@ -182,7 +181,6 @@ BEGIN
     FROM public.anticipos_proveedor
     WHERE id = NEW.anticipo_proveedor_id;
 
-
     IF v_pago_org IS NULL THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_ANTICIPO_INEXISTENTE: el anticipo % no existe', NEW.anticipo_proveedor_id
         USING ERRCODE = 'P0001';
@@ -228,7 +226,6 @@ BEGIN
           USING ERRCODE = 'P0001';
       END IF;
     END IF;
-
   END IF;
 
   RETURN NEW;
