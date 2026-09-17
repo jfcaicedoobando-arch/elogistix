@@ -26,6 +26,9 @@ export interface PagoProveedorFormBodyProps {
   saldoRestante: number;
   excede: boolean;
   esUsdPagadoEnMxn: boolean;
+  /** MNY: el par de monedas soporta diferencia cambiaria (sólo USD/MXN). */
+  soportaDiferenciaCambiaria: boolean;
+
   diffMxn: string;
   setDiffMxn: (v: string) => void;
   referencia: string;
