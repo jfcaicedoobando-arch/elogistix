@@ -77,6 +77,8 @@ export interface FacturapiPayload {
 
   items: Array<{
     quantity: number;
+    /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
+    taxability?: "01" | "02";
     product: {
       description: string;
       product_key: string;
@@ -164,6 +166,8 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
       return {
         quantity: c.cantidad,
+        // Sólo se envía cuando cambia el default de Facturapi ("02").
+        ...(noObjeto ? { taxability: "01" as const } : {}),
         product: {
           // v13.208.0 — prefijo con Expediente + BLs (queda en el XML SAT).
           description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
