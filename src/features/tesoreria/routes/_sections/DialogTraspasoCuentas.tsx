@@ -38,7 +38,8 @@ const FORM_ID = "form-traspaso-cuentas";
 
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const {
-    state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error, fechaTcDof, tcEsManual,
+    state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error,
+    fechaTcDof, tcEsManual, fechaInicial,
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
