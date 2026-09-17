@@ -144,12 +144,15 @@ export function usePagoProveedorForm(
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
-    tc, setTc: setTcManual, metodo, setMetodo, referencia, setReferencia,
-    notas, setNotas, diffMxn, setDiffMxn: setDiffManual,
+    tc, setTc: setTcUi, metodo, setMetodo, referencia, setReferencia,
+    notas, setNotas, diffMxn, setDiffMxn: setDiffUi,
     metodosDisponibles, montoNum, saldoRestante, saldoDisponible,
     esUsdPagadoEnMxn, showTc, excede, cruceNoSoportado, monedaDelPar,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
-    cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
+    cuentas, cuentasDeMoneda, cuentaId, setCuentaId: setCuentaIdUi, requiereCuenta,
+    /** MNY: campos con precarga automática que el usuario ya tocó a mano. */
+    tocados,
+
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,
     impacto, cargandoSaldoProveedor,
     tcDof, cargandoTcDof, aplicarTcDof,

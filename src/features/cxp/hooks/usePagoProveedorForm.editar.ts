@@ -139,20 +139,28 @@ export function pagoProveedorEditadoSucio(
 /**
  * MNY: ¿hay captura del usuario al REGISTRAR un pago nuevo?
  *
- * El monto viene prellenado con el saldo y el T/C con el DOF del día, así que
- * comparar todo contra el baseline marcaba "cambios sin guardar" sólo por
- * abrir. Se comparan únicamente los campos que el usuario pudo escribir.
+ * El monto viene prellenado con el saldo, el T/C con el DOF del día, la
+ * diferencia cambiaria se sugiere y la cuenta se preselecciona; por eso esos
+ * campos sólo cuentan cuando el usuario los tocó (`tocados`). La fecha y los
+ * demás campos se comparan directamente contra el baseline de apertura.
  */
 export function pagoProveedorCreadoSucio(
   actual: Record<string, unknown>,
   iniciales: Record<string, string> | null,
+  tocados: { tc?: boolean; diffMxn?: boolean; cuentaId?: boolean } = {},
 ): boolean {
   if (!iniciales) return false;
   if (String(actual.referencia ?? "").trim() !== "") return true;
   if (String(actual.notas ?? "").trim() !== "") return true;
   if (actual.metodo !== iniciales.metodo) return true;
   if (actual.moneda !== iniciales.moneda) return true;
+  if (actual.fecha !== iniciales.fecha) return true;
+  // Campos con precarga automática: sólo avisan si hubo captura real.
+  if (tocados.tc && String(actual.tc ?? "") !== iniciales.tc) return true;
+  if (tocados.diffMxn && String(actual.diffMxn ?? "") !== iniciales.diffMxn) return true;
+  if (tocados.cuentaId && String(actual.cuentaId ?? "") !== iniciales.cuentaId) return true;
   // Al cambiar la moneda el propio formulario reescribe el monto (prefill), por
   // eso el monto sólo se compara mientras la moneda siga siendo la original.
   return actual.monto !== iniciales.monto;
 }
+
