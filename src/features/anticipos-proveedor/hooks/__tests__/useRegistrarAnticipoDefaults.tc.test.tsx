@@ -25,7 +25,9 @@ function montar(fecha: string, valorActual: number | undefined, setValue = vi.fn
         moneda: "USD",
         fechaAnticipo: p.fecha,
         cuentaBancariaId: undefined,
+        requiereCuenta: true,
         tipoCambioUsd: p.tc,
+        onProveedorFijo: () => {},
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setValue: setValue as any,
       } as never),
