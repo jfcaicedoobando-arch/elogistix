@@ -7,7 +7,7 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
-  ignorarMovimiento, sugerirCandidatos, fetchConciliacionResumen, registrarMovimientoManual,
+  ignorarMovimiento, sugerirCandidatosDetalle, fetchConciliacionResumen, registrarMovimientoManual,
   eliminarMovimientoManual,
   type FiltrosMovimientos, type MovimientoBBVA, type MovimientoManualPayload,
 } from "@/features/tesoreria/services";
