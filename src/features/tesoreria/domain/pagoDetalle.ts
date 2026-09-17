@@ -16,8 +16,11 @@ export interface PagoDetalleEncabezado {
   contraparte_id: string | null;
   moneda: string;
   monto: number;
-  tipo_cambio: number;
-  monto_mxn: number;
+  /** MNY-P2.3: `null` = sin T/C registrado (no se asume 1). */
+  tipo_cambio: number | null;
+  /** MNY-P2.3: `null` = equivalente en pesos desconocido. */
+  monto_mxn: number | null;
+
   metodo_pago: string | null;
   referencia: string | null;
   cuenta_bancaria_id: string | null;
