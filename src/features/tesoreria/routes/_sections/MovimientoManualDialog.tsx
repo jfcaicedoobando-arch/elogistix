@@ -32,6 +32,16 @@ interface Props {
 
 const FORM_ID = "form-movimiento-manual";
 
+/** MNY P2.5: mensaje inline de un campo requerido (también si está vacío). */
+function ErrorCampo({ id, mensaje }: { id: string; mensaje?: string }) {
+  if (!mensaje) return null;
+  return (
+    <p id={id} className="mt-1 text-body-sm text-destructive">
+      {mensaje}
+    </p>
+  );
+}
+
 export function MovimientoManualDialog({
   open, onOpenChange, cuentas, manualForm, setManualField, onGuardar, isPending,
 }: Props) {
@@ -91,11 +101,7 @@ export function MovimientoManualDialog({
             ))}
           </SelectContent>
         </Select>
-        {erroresManual.cuentaBancariaId && (
-          <p id="mov-cuenta-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.cuentaBancariaId}
-          </p>
-        )}
+        <ErrorCampo id="mov-cuenta-error" mensaje={erroresManual.cuentaBancariaId} />
       </div>
       <div>
         <Label htmlFor="mov-fecha">Fecha *</Label>
@@ -108,11 +114,7 @@ export function MovimientoManualDialog({
           max={hoyNegocio}
         />
         {/* MNY P2.5: el error de fecha también se muestra si está vacía. */}
-        {erroresManual.fecha && (
-          <p id="mov-fecha-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.fecha}
-          </p>
-        )}
+        <ErrorCampo id="mov-fecha-error" mensaje={erroresManual.fecha} />
       </div>
 
       <div>
@@ -137,11 +139,7 @@ export function MovimientoManualDialog({
           aria-invalid={!!erroresManual.concepto}
           aria-describedby={erroresManual.concepto ? "mov-concepto-error" : undefined}
         />
-        {erroresManual.concepto && (
-          <p id="mov-concepto-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.concepto}
-          </p>
-        )}
+        <ErrorCampo id="mov-concepto-error" mensaje={erroresManual.concepto} />
       </div>
       <div>
         <Label htmlFor="mov-referencia">Referencia</Label>
@@ -161,11 +159,7 @@ export function MovimientoManualDialog({
           aria-invalid={!!erroresManual.monto}
           aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
         />
-        {erroresManual.monto && (
-          <p id="mov-importe-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.monto}
-          </p>
-        )}
+        <ErrorCampo id="mov-importe-error" mensaje={erroresManual.monto} />
     </div>
     </FormDialogShell>
 
