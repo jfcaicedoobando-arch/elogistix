@@ -27,6 +27,19 @@ export const MSG_IVA_MULTITASA =
   "el complemento de pago no puede declararlas en un solo grupo. Emite el REP desde una factura " +
   "con tasa homogénea o reemite la factura separando las tasas.";
 
+/**
+ * El complemento de pago 2.0 declara `ObjetoImpDR` por documento relacionado y
+ * el arreglo `ImpuestosDR` sólo aplica cuando ObjetoImpDR = 02. La API de
+ * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`), así
+ * que un renglón "no objeto" (SAT 01) NO se puede representar: declararlo como
+ * `Exento` sería un dato fiscal falso. Se bloquea el timbrado.
+ */
+export const MSG_REP_NO_OBJETO =
+  "LC_REP_NO_OBJETO: La factura relacionada tiene conceptos 'No objeto de impuesto' (SAT 01) y el " +
+  "complemento de pago no permite declararlos sin convertirlos en 'Exento', lo que sería incorrecto. " +
+  "Registra el pago sin REP o reemite la factura con método PUE (pago en una sola exhibición), " +
+  "que no requiere complemento de pago.";
+
 /** Tasas del catálogo SAT c_TasaOCuota admitidas para traslado de IVA. */
 const TASAS_SAT: readonly number[] = [0, 0.08, 0.16];
 
