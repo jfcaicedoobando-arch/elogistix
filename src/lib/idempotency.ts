@@ -38,6 +38,41 @@ export interface StableRequestId {
 /**
  * Mantiene un requestId estable entre reintentos. Llamar `reset()` tras éxito.
  */
+/**
+ * MNY P1.4 — llave ligada al contenido de la operación.
+ *
+ * Una llave de idempotencia sólo debe reproducir la respuesta guardada si el
+ * payload es EL MISMO. Si el usuario cambia destino, monto o fecha y reintenta,
+ * reutilizar la llave hacía que el servidor devolviera la operación anterior
+ * (éxito falso). `get(scope)` conserva la llave mientras el `scope` no cambie y
+ * genera una nueva en cuanto el payload difiere.
+ */
+export interface PayloadRequestId {
+  get: (scope: string) => string;
+  reset: () => void;
+}
+
+/** Serializa las partes relevantes del payload en un `scope` comparable. */
+export function scopeDePayload(
+  partes: ReadonlyArray<string | number | boolean | null | undefined>,
+): string {
+  return partes.map((p) => (p === null || p === undefined ? "" : String(p))).join("|");
+}
+
+export function usePayloadRequestId(): PayloadRequestId {
+  const ref = useRef<{ scope: string; id: string } | null>(null);
+  const get = useCallback((scope: string) => {
+    if (!ref.current || ref.current.scope !== scope) {
+      ref.current = { scope, id: newRequestId() };
+    }
+    return ref.current.id;
+  }, []);
+  const reset = useCallback(() => {
+    ref.current = null;
+  }, []);
+  return { get, reset };
+}
+
 export function useStableRequestId(): StableRequestId {
   const ref = useRef<string | null>(null);
   const get = useCallback(() => {
