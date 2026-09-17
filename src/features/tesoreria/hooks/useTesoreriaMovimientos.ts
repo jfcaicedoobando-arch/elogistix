@@ -3,7 +3,6 @@
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
