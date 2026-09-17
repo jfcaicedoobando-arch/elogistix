@@ -21,7 +21,7 @@ export interface ConceptoNC {
   unidad?: string | null;
   tasa_iva?: number | null;
   /** Ola 4 · N19: mismo contrato que el timbrado de facturas. */
-  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  tipo_iva?: "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null;
 }
 
 export interface NotaCreditoContext {
@@ -80,6 +80,8 @@ export interface FacturapiNcPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
+      /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
+      taxability?: "01" | "02";
       taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
     };
   }>;
@@ -140,9 +142,13 @@ export function ncTotalEsCero(ctx: NotaCreditoContext): boolean {
   return !(totalNcSinImpuestos(ctx) > 0);
 }
 
-/** Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0. */
+/**
+ * Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0.
+ * "no_objeto" (ObjetoImp 01) no lleva traslado alguno de IVA.
+ */
 export function buildTaxesNc(c: ConceptoNC) {
   const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+  if (tipo === "no_objeto") return [];
   if (tipo === "exento") return [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }];
   const rate = tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16);
   return [{ type: "IVA" as const, rate, factor: "Tasa" as const }];
@@ -174,6 +180,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
         unit_key: c.clave_unidad ?? "E48",
         unit_name: c.unidad ?? "Unidad de servicio",
         tax_included: false,
+        // ObjetoImp SAT 01; se omite para el resto (Facturapi asume "02").
+        ...(c.tipo_iva === "no_objeto" ? { taxability: "01" as const } : {}),
         taxes: buildTaxesNc(c),
       },
     })),

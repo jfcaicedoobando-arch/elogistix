@@ -118,3 +118,13 @@ Deno.test("el guard de total $0 corre antes del claim y del PAC", async () => {
   const iPac = src.indexOf("await createNcInvoice(");
   assertEquals(iGuard > -1 && iClaim > iGuard && iPac > iGuard, true);
 });
+
+Deno.test("buildNcPayload manda taxability 01 sin traslado de IVA en no_objeto", () => {
+  const ctx = baseCtx();
+  const p = buildNcPayload({
+    ...ctx,
+    conceptos: [{ ...ctx.conceptos[0], tipo_iva: "no_objeto", tasa_iva: null }],
+  });
+  assertEquals(p.items[0].product.taxability, "01");
+  assertEquals(p.items[0].product.taxes.length, 0);
+});

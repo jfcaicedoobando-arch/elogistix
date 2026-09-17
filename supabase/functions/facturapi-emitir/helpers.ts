@@ -77,8 +77,6 @@ export interface FacturapiPayload {
 
   items: Array<{
     quantity: number;
-    /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
-    taxability?: "01" | "02";
     product: {
       description: string;
       product_key: string;
@@ -86,6 +84,8 @@ export interface FacturapiPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
+      /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
+      taxability?: "01" | "02";
       taxes: Array<{
         type: "IVA" | "ISR";
         rate: number;
@@ -148,7 +148,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
       // ObjetoImp SAT: 01 = "No objeto de impuesto" (sin traslado de IVA, ni
       // tasa 0 ni factor Exento); 02 = sí objeto. Facturapi lo recibe como
-      // `taxability` del item.
+      // `taxability` dentro de `product` (LineItem.product).
       const noObjeto = tipo === "no_objeto";
       const taxes: Tax[] = noObjeto
         ? []
@@ -166,8 +166,6 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
       return {
         quantity: c.cantidad,
-        // Sólo se envía cuando cambia el default de Facturapi ("02").
-        ...(noObjeto ? { taxability: "01" as const } : {}),
         product: {
           // v13.208.0 — prefijo con Expediente + BLs (queda en el XML SAT).
           description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
@@ -176,6 +174,8 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
           unit_key: c.clave_unidad ?? "E48",
           unit_name: c.unidad ?? "Unidad de servicio",
           tax_included: false,
+          // Sólo se envía cuando cambia el default de Facturapi ("02").
+          ...(noObjeto ? { taxability: "01" as const } : {}),
           taxes,
         },
       };
