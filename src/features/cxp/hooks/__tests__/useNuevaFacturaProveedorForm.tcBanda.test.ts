@@ -27,7 +27,7 @@ const base: FacturaFormValues = {
 const ctx = { total: 1160 };
 
 describe("facturaFormErrorsFromZod · banda de T/C (MNY)", () => {
-  it("acepta un T/C dentro de la banda", () => {
+  it("acepta el T/C de una factura de proveedor dentro de la banda", () => {
     expect(facturaFormErrorsFromZod(base, ctx).tc).toBeUndefined();
   });
 
