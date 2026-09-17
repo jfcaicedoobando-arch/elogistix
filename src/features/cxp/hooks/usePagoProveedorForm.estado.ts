@@ -54,6 +54,11 @@ export function usePagoProveedorCampos(
   const initializedForRef = useRef<string | null>(null);
   const initKey = factura ? `${factura.id}:${pagoEditarId ?? "nuevo"}` : null;
 
+  // MNY: baseline "sin cambios" con el que abrió el formulario. Antes el
+  // diálogo marcaba cambios sólo porque el monto viene prellenado con el saldo,
+  // y abrir/cerrar ya pedía confirmar "descartar cambios".
+  const [valoresIniciales, setValoresIniciales] = useState<Record<string, string> | null>(null);
+
   useEffect(() => {
     if (!factura || !open || !initKey) {
       initializedForRef.current = null;
@@ -74,11 +79,13 @@ export function usePagoProveedorCampos(
     setNotas(v.notas);
     setDiffMxn(v.diffMxn);
     if (pago) setCuentaId(v.cuentaId);
+    setValoresIniciales({ ...v });
   }, [factura, open, hoy, pagoEditarId, initKey]);
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
     metodo, setMetodo, referencia, setReferencia, notas, setNotas,
-    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId,
+    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId, valoresIniciales,
   };
 }
+
