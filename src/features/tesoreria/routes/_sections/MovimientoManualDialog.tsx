@@ -134,6 +134,8 @@ export function MovimientoManualDialog({
           id="mov-concepto"
           value={manualForm.concepto ?? ""}
           onChange={(e) => setManualField("concepto", e.target.value)}
+          aria-invalid={!!erroresManual.concepto}
+          aria-describedby={erroresManual.concepto ? "mov-concepto-error" : undefined}
         />
       </div>
       <div>
