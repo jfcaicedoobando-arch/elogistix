@@ -49,7 +49,10 @@ function esMxn(moneda: string): boolean {
  */
 export function fuenteTcPago(p: Pick<PagoLibro, "moneda" | "tipo_cambio">): string {
   if (esMxn(p.moneda)) return "Moneda nacional";
-  return p.tipo_cambio > 0 ? "TC registrado del pago (DOF de la fecha de pago)" : "Sin TC registrado";
+  // MNY-P2.3: un pago legacy sin T/C se reporta como desconocido, no como 1.
+  return p.tipo_cambio && p.tipo_cambio > 0
+    ? "TC registrado del pago (DOF de la fecha de pago)"
+    : "Sin TC registrado";
 }
 
 export function filasLibroPagosExport(
@@ -64,9 +67,13 @@ export function filasLibroPagosExport(
     referencia: p.referencia ?? "—",
     cuenta: p.cuenta_alias ?? "—",
     monto: formatCurrency(p.monto, p.moneda),
-    tipoCambio: esMxn(p.moneda) ? "1.0000" : (p.tipo_cambio || 0).toFixed(4),
+    tipoCambio: esMxn(p.moneda)
+      ? "1.0000"
+      : p.tipo_cambio && p.tipo_cambio > 0
+        ? p.tipo_cambio.toFixed(4)
+        : "Sin T/C",
     fuenteTc: fuenteTcPago(p),
-    montoMxn: formatCurrency(p.monto_mxn, "MXN"),
+    montoMxn: p.monto_mxn == null ? "Sin T/C" : formatCurrency(p.monto_mxn, "MXN"),
     estado: p.conciliado ? "Conciliado" : "Pendiente",
   }));
 }

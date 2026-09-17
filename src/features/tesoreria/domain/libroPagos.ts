@@ -20,8 +20,10 @@ export interface PagoLibro {
   documento_folio: string | null;
   moneda: string;
   monto: number;
-  tipo_cambio: number;
-  monto_mxn: number;
+  /** MNY-P2.3: `null` = pago legacy sin T/C registrado (no se asume 1). */
+  tipo_cambio: number | null;
+  /** MNY-P2.3: `null` = equivalente en pesos desconocido. */
+  monto_mxn: number | null;
   metodo_pago: string | null;
   referencia: string | null;
   cuenta_bancaria_id: string | null;
@@ -150,6 +152,8 @@ export interface TotalesLibroPagos {
   pagadoMxn: number;
   netoMxn: number;
   conteo: number;
+  /** MNY-P2.3: pagos sin T/C registrado, excluidos de los totales en pesos. */
+  sinTcCount: number;
 }
 
 /**
@@ -165,11 +169,18 @@ export function repCancelado(pago: PagoLibro): boolean {
 export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPagos {
   let cobradoMxn = 0;
   let pagadoMxn = 0;
+  let sinTcCount = 0;
   for (const p of pagos) {
     // Ola 4 · N20: los ajustes no mueven dinero y los anticipos aplicados ya se
     // contaron cuando entró el anticipo; sumarlos infla el flujo de caja.
     if (p.es_ajuste || p.es_anticipo_aplicado) continue;
     if (repCancelado(p)) continue;
+    // MNY-P2.3: sin T/C registrado no se inventa el equivalente en pesos; la
+    // fila se cuenta aparte en vez de sumar un importe falso.
+    if (p.monto_mxn == null) {
+      sinTcCount += 1;
+      continue;
+    }
     if (esEntrada(p)) cobradoMxn += p.monto_mxn;
     else pagadoMxn += p.monto_mxn;
   }
@@ -178,6 +189,7 @@ export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPago
     pagadoMxn,
     netoMxn: cobradoMxn - pagadoMxn,
     conteo: pagos.length,
+    sinTcCount,
   };
 }
 

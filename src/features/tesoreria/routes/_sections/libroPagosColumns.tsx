@@ -154,11 +154,14 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
     {
       id: "monto_mxn",
       header: "Equiv. MXN",
-      accessorFn: (p) => p.monto_mxn,
+      accessorFn: (p) => p.monto_mxn ?? 0,
       meta: { align: "right" },
+      // MNY-P2.3: sin T/C registrado no se muestra un equivalente inventado.
       cell: ({ row }) => (
         <span className="tabular-nums text-body-sm text-muted-foreground">
-          {formatCurrency(row.original.monto_mxn, "MXN")}
+          {row.original.monto_mxn == null
+            ? "Sin T/C"
+            : formatCurrency(row.original.monto_mxn, "MXN")}
         </span>
       ),
     },
