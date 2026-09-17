@@ -21,7 +21,7 @@ export interface ConceptoNC {
   unidad?: string | null;
   tasa_iva?: number | null;
   /** Ola 4 · N19: mismo contrato que el timbrado de facturas. */
-  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  tipo_iva?: "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null;
 }
 
 export interface NotaCreditoContext {
