@@ -63,8 +63,11 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   });
 
   useEffect(() => {
-    if (open) { setSaldoFacturaTope(0); setMonedaFacturaTope("MXN"); setFechaTope(todayLocalISO()); }
-    if (open) reset({ facturaId: "", saldoFactura: 0, monedaFactura: "MXN", monto: 0, fechaAplicacion: todayLocalISO() });
+    if (!open) return;
+    setSaldoFacturaTope(0);
+    setMonedaFacturaTope("MXN");
+    setFechaTope(todayLocalISO());
+    reset({ facturaId: "", saldoFactura: 0, monedaFactura: "MXN", monto: 0, fechaAplicacion: todayLocalISO() });
   }, [open, reset]);
 
   const handleOpenChange = (o: boolean) => {
