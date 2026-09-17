@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { hoyMx } from "@/lib/date/mx";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { useAplicarAnticipoDesdeFactura } from "@/features/anticipos-proveedor/hooks/useAplicarAnticipoDesdeFactura";
@@ -76,6 +77,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
           factura={importes}
           anticipo={f.anticipo}
           montoAplicar={Number.isFinite(f.montoNum) ? f.montoNum : 0}
+          tc={f.tcDof}
         />
       </FormDialogSection>
 
@@ -106,6 +108,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
             name="fechaAplicacion"
             value={f.fecha}
             onChange={f.setFecha}
+            max={hoyMx()}
             className="w-full"
           />
         </div>
@@ -121,6 +124,12 @@ export function AplicarAnticipoDesdeFacturaDialog({
             value={f.monto}
             onChange={(e) => f.setMonto(e.target.value)}
           />
+          {f.excedeTope && (
+            <p className="text-xs text-destructive">
+              El monto excede el máximo aplicable ({formatCurrency(f.tope.tope ?? 0, f.anticipo?.moneda ?? importes.moneda)});
+              ajústalo antes de aplicar.
+            </p>
+          )}
           {f.anticipo && f.tope.requiereConversion && (
             <p className="text-xs text-muted-foreground">
               {f.tope.sinTipoCambio
