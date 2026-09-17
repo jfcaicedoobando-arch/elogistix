@@ -78,13 +78,24 @@ export function MovimientoManualDialog({
           value={manualForm.cuentaBancariaId ?? ""}
           onValueChange={(v) => setManualField("cuentaBancariaId", v)}
         >
-          <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
+          <SelectTrigger
+            id="mov-cuenta"
+            aria-invalid={!!erroresManual.cuentaBancariaId}
+            aria-describedby={erroresManual.cuentaBancariaId ? "mov-cuenta-error" : undefined}
+          >
+            <SelectValue placeholder="Selecciona cuenta…" />
+          </SelectTrigger>
           <SelectContent>
             {cuentas.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {erroresManual.cuentaBancariaId && (
+          <p id="mov-cuenta-error" className="mt-1 text-body-sm text-destructive">
+            {erroresManual.cuentaBancariaId}
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="mov-fecha">Fecha *</Label>
