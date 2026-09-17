@@ -61,11 +61,14 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
     expect(actualizar).not.toHaveBeenCalledWith(0, "tipo_iva", "exento");
   });
 
-  it("muestra SAT 01 sin selector ni intento de cambiar la tasa", () => {
+  it.each([
+    ["no_objeto", "No objeto · SAT 01"],
+    ["exento", "Exento"],
+  ])("muestra %s sin selector ni intento de cambiar la tasa", (tipoIva, etiqueta) => {
     const actualizar = vi.fn();
     render(
       <ConceptoRowMXN
-        concepto={{ ...concepto, descripcion: "Servicio no objeto", tipo_iva: "no_objeto", aplica_iva: false, tasa_iva_aplicada: 0, total: 100 }}
+        concepto={{ ...concepto, descripcion: "Servicio fiscal", tipo_iva: tipoIva, aplica_iva: false, tasa_iva_aplicada: 0, total: 100 }}
         index={0}
         total={1}
         actualizar={actualizar}
@@ -74,7 +77,7 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue("No objeto · SAT 01");
+    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue(etiqueta);
     expect(screen.queryByLabelText("Tasa de IVA")).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Tratamiento de IVA"));
     expect(actualizar).not.toHaveBeenCalled();
