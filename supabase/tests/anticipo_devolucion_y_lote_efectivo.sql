@@ -172,7 +172,7 @@ BEGIN
   SELECT count(*), COALESCE(sum(monto), 0)
     INTO v_pagos, v_suma
     FROM public.pagos_proveedor
-   WHERE pago_proveedor_lote_id = v_lote AND deleted_at IS NULL;
+   WHERE lote_id = v_lote AND deleted_at IS NULL;
 
   IF v_pagos <> v_esperado THEN
     RAISE EXCEPTION 'TEST FAIL: P1.2 - se esperaban % pagos en el lote, hay %', v_esperado, v_pagos;
@@ -185,13 +185,13 @@ BEGIN
   -- Confirma que los pagos cubren ambas facturas.
   IF NOT EXISTS (
     SELECT 1 FROM public.pagos_proveedor
-     WHERE pago_proveedor_lote_id = v_lote
-       AND factura_id = 'eb000000-0000-0000-0000-00000000000b' AND monto = 300
+     WHERE lote_id = v_lote
+       AND proveedor_factura_id = 'eb000000-0000-0000-0000-00000000000b' AND monto = 300
        AND deleted_at IS NULL
   ) OR NOT EXISTS (
     SELECT 1 FROM public.pagos_proveedor
-     WHERE pago_proveedor_lote_id = v_lote
-       AND factura_id = 'eb000000-0000-0000-0000-00000000000c' AND monto = 200
+     WHERE lote_id = v_lote
+       AND proveedor_factura_id = 'eb000000-0000-0000-0000-00000000000c' AND monto = 200
        AND deleted_at IS NULL
   ) THEN
     RAISE EXCEPTION 'TEST FAIL: P1.2 - los pagos no corresponden a las dos facturas esperadas';
