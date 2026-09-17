@@ -52,14 +52,18 @@ BEGIN
     public.fecha_negocio_mx() - 10, 400, 'MXN'::public.moneda, 'disponible', 400
   ) ON CONFLICT (id) DO NOTHING;
 
-  -- Factura MXN abierta para el pago en lote.
+  -- Facturas MXN abiertas para el pago en lote (mínimo 2 renglones).
   INSERT INTO public.proveedor_facturas (
     id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
     categoria_presupuesto_id, moneda, subtotal, iva, total,
     estado, estado_aprobacion, fecha_emision
   ) VALUES (
     'eb000000-0000-0000-0000-00000000000b', v_org, v_prov, 'Test Prov E', 'MNY-P12-01',
-    v_cat, 'MXN'::public.moneda, 500, 0, 500, 'Vigente', 'aprobada',
+    v_cat, 'MXN'::public.moneda, 300, 0, 300, 'Vigente', 'aprobada',
+    public.fecha_negocio_mx() - 5
+  ), (
+    'eb000000-0000-0000-0000-00000000000c', v_org, v_prov, 'Test Prov E', 'MNY-P12-02',
+    v_cat, 'MXN'::public.moneda, 200, 0, 200, 'Vigente', 'aprobada',
     public.fecha_negocio_mx() - 5
   ) ON CONFLICT (id) DO NOTHING;
 
