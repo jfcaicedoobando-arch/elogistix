@@ -41,8 +41,9 @@ export function filtrarProgramables(data: FacturaProgramableRow[], filtro: Filtr
 export function buildPagosProgramadosColumns(
   abrirDialogoPago: (f: FacturaProgramable) => void,
   // CI-02: la navegación a la factura de Compras llega como callback (sin
-  // <Link> inline en la celda, patrón de tablas del proyecto).
-  onProgramarPago: (f: FacturaProgramable) => void,
+  // <Link> inline en la celda, patrón de tablas del proyecto). Sirve para
+  // programar la fecha y para revisar la aprobación.
+  onAbrirFactura: (f: FacturaProgramable) => void,
 ) {
   return defineColumns<FacturaProgramable>([
     {
@@ -109,7 +110,7 @@ export function buildPagosProgramadosColumns(
           const rechazada = (f.estado_aprobacion ?? "").trim().toLowerCase() === "rechazada";
           return (
             <div className="flex items-center justify-end gap-2">
-              <ToneBadge tone={rechazada ? "danger" : "warning"} size="sm">
+              <ToneBadge tone={rechazada ? "destructive" : "warning"} size="sm">
                 {rechazada ? "Rechazada" : "Por aprobar"}
               </ToneBadge>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAbrirFactura(f); }}>
