@@ -18,7 +18,7 @@ describe("propagarConversionProspectoCRM", () => {
   it("no-op cuando oportunidadId es null", async () => {
     await expect(
       propagarConversionProspectoCRM({ oportunidadId: null, clienteId: "c-1", clienteNombre: "Acme" }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ avisoActividad: null });
     expect(mock.rpcCalls).toHaveLength(0);
     expect(mock.tableCalls).toHaveLength(0);
   });

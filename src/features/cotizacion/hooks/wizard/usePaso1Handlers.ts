@@ -10,7 +10,8 @@ import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
+import { avisoBitacoraFallida } from "@/features/crm/services/bitacoraNoBloqueante";
 import { validatePaso1, vincularCrmTrasCrear, campoParaPathSchemaPaso1 } from "./handlePaso1Crm";
 import { scrollAndFocusSection, seccionParaErrorPaso1, campoParaErrorPaso1 } from "./scrollToErrorSection";
 
@@ -89,6 +90,13 @@ export function usePaso1Handlers({
         updateCotizacion.resincronizarSello?.(res.updatedAt);
         setVinculoCrmError(null);
         setVinculoCrmConfirmado(true);
+        // El vínculo persistió; sólo la bitácora quedó pendiente.
+        if (res.avisoActividad) {
+          notifyWarning(undefined, {
+            title: "Cotización vinculada al CRM",
+            description: avisoBitacoraFallida(res.avisoActividad),
+          });
+        }
         return true;
       } catch (e: unknown) {
         const msg = getErrorMessage(e);

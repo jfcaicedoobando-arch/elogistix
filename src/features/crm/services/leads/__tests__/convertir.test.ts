@@ -47,7 +47,7 @@ describe("convertirLead", () => {
     });
 
     const r = await convertirLead(baseParams, user);
-    expect(r).toEqual({ clienteId: "cli-new", oportunidadId: "op-1" });
+    expect(r).toEqual({ clienteId: "cli-new", oportunidadId: "op-1", avisoActividad: null });
 
     const call = mock.rpcCalls.find((c) => c.fn === "convertir_lead_rpc");
     expect(call?.args).toMatchObject({
@@ -77,7 +77,7 @@ describe("convertirLead", () => {
       error: null,
     });
     const r = await convertirLead(baseParams, user);
-    expect(r).toEqual({ clienteId: null, oportunidadId: "op-prev" });
+    expect(r).toEqual({ clienteId: null, oportunidadId: "op-prev", avisoActividad: null });
   });
 
   it("convertirLead propaga el error de convertir_lead_rpc", async () => {

@@ -51,7 +51,7 @@ describe("actualizarOportunidad — bloqueo optimista", () => {
       patch: { nombre: "Nuevo" },
       expectedUpdatedAt: "2024-01-01T00:00:00Z",
     });
-    expect(nuevo).toBe("2024-02-02T00:00:00Z");
+    expect(nuevo.updatedAt).toBe("2024-02-02T00:00:00Z");
   });
 });
 

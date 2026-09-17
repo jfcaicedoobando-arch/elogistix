@@ -61,6 +61,42 @@ export function resolverLimpiezaCierre(
   return patch;
 }
 
+/**
+ * Undo: al REGRESAR a una etapa cerrada hay que reponer la fotografía previa
+ * (cierre real de "ganada", motivo de "perdida"). Antes el Undo sólo devolvía
+ * la etapa y dejaba la oportunidad ganada sin fecha/valor de cierre o la
+ * perdida sin motivo (dato que la BD valida).
+ */
+export function resolverRestauracionCierre(
+  etapaOrigen: (CrmEtapaRow & { tipo?: string }) | undefined,
+  op: CrmOportunidadRow | undefined,
+): { fecha_cierre_real?: string | null; valor_real?: number | null; motivo_perdida_id?: string | null } {
+  if (etapaOrigen?.tipo === "ganada") {
+    return {
+      fecha_cierre_real: op?.fecha_cierre_real ?? null,
+      valor_real: op?.valor_real ?? null,
+    };
+  }
+  if (etapaOrigen?.tipo === "perdida") {
+    return { motivo_perdida_id: op?.motivo_perdida_id ?? null };
+  }
+  return {};
+}
+
+/**
+ * ¿Hay fotografía suficiente para deshacer hacia una etapa cerrada? Si el
+ * dato obligatorio no existe, mejor NO ofrecer Undo que dejar una fila
+ * inválida (o un error de la BD al deshacer).
+ */
+export function puedeRestaurarCierre(
+  etapaOrigen: (CrmEtapaRow & { tipo?: string }) | undefined,
+  op: CrmOportunidadRow | undefined,
+): boolean {
+  if (etapaOrigen?.tipo === "ganada") return Boolean(op?.fecha_cierre_real);
+  if (etapaOrigen?.tipo === "perdida") return Boolean(op?.motivo_perdida_id);
+  return true;
+}
+
 /** Avisa (sin bloquear) si la etapa de origen deja criterios pendientes. */
 export async function avisarCriteriosPendientes(
   oportunidadId: string,

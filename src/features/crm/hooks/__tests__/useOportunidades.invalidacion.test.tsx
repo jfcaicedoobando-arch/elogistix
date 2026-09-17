@@ -58,8 +58,8 @@ const keys = (spy: ReturnType<typeof spyClient>) =>
 
 describe("invalidación de dashboard en oportunidades", () => {
   beforeEach(() => {
-    actualizarOportunidad.mockReset().mockResolvedValue({ id: "op-1" });
-    eliminarOportunidad.mockReset().mockResolvedValue(undefined);
+    actualizarOportunidad.mockReset().mockResolvedValue({ updatedAt: "2026-01-01T00:00:00Z", avisoActividad: null });
+    eliminarOportunidad.mockReset().mockResolvedValue({ updatedAt: "2026-01-01T00:00:00Z", avisoActividad: null });
     vi.mocked(notifySuccess).mockReset();
   });
 

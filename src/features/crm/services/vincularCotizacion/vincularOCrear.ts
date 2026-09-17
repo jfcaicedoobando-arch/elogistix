@@ -7,7 +7,7 @@
  * cotización para resincronizar el bloqueo optimista del wizard.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 
 export interface VincularInput {
   cotizacionId: string;
@@ -20,6 +20,8 @@ export interface VincularResult {
   leadId: string | null;
   /** Sello de la cotización tras el vínculo (evita conflictos falsos). */
   updatedAt: string | null;
+  /** Aviso si el vínculo quedó pero no se pudo escribir en la bitácora. */
+  avisoActividad: string | null;
 }
 
 /**
@@ -50,8 +52,11 @@ export async function vincularOCrearOportunidadParaCotizacion(
     updated_at?: string | null;
   };
 
+  // El vínculo YA persistió en la RPC: la bitácora es un efecto secundario y
+  // su fallo viaja como aviso (antes rechazaba y el wizard pedía reintentar).
+  let avisoActividad: string | null = null;
   if (payload.oportunidad_id && payload.ya_ligada !== true) {
-    await registrarActividad({
+    avisoActividad = await registrarActividadNoBloqueante({
       modulo: "crm",
       accion: "vincular_cotizacion_oportunidad",
       entidadId: payload.oportunidad_id,
@@ -63,5 +68,6 @@ export async function vincularOCrearOportunidadParaCotizacion(
     oportunidadId: payload.oportunidad_id ?? null,
     leadId: payload.lead_id ?? null,
     updatedAt: payload.updated_at ?? null,
+    avisoActividad,
   };
 }

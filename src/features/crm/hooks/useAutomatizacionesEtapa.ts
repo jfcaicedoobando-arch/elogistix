@@ -8,6 +8,7 @@ import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 import { moverEtapaOportunidad } from "@/features/crm/services/oportunidades";
 import { runAutomatizaciones } from "@/features/crm/services/automatizacionesEtapa";
+import { avisoBitacoraFallida } from "@/features/crm/services/bitacoraNoBloqueante";
 import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
@@ -32,7 +33,16 @@ export function useMoverEtapaConAutomatizacion() {
       /** Hallazgo 14: sello leído antes de mover; bloqueo optimista. */
       expectedUpdatedAt?: string | null;
     }) => {
-      const updatedAt = await moverEtapaOportunidad(params);
+      // La etapa cambia primero; la bitácora ya NO puede abortar el flujo, así
+      // que las automatizaciones siempre corren aunque el registro falle.
+      const { updatedAt, avisoActividad } = await moverEtapaOportunidad(params);
+      if (avisoActividad) {
+        notifyWarning(undefined, {
+          title: "Etapa actualizada",
+          description: avisoBitacoraFallida(avisoActividad),
+          method: "MOVE_ETAPA_BITACORA",
+        });
+      }
       let automatizacionesOk = true;
       try {
         await runAutomatizaciones(params.etapa_id, params.id, user?.id ?? null, user?.email ?? "");

@@ -5,10 +5,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap } from "@/lib/supabase/response";
 import type { TablesUpdate } from "@/integrations/supabase/types";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 import type { OportunidadInput } from "@/features/crm/types/oportunidades";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
+
+/**
+ * Resultado de una mutación de oportunidad: sello resultante + aviso opcional
+ * si sólo falló la bitácora (la escritura principal sí quedó guardada).
+ */
+export interface ResultadoMutacionOportunidad {
+  updatedAt: string | undefined;
+  avisoActividad: string | null;
+}
 
 export async function crearOportunidad(
   input: OportunidadInput,
@@ -21,17 +30,12 @@ export async function crearOportunidad(
   // v13.823.32: la oportunidad YA existe. Si el registro automático de
   // actividad/bitácora falla, no la perdemos ni anunciamos fracaso: se
   // devuelve un aviso accionable para la UI.
-  let avisoActividad: string | null = null;
-  try {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "crear_oportunidad",
-      entidadId: creada.id,
-      entidadNombre: input.nombre ?? "",
-    });
-  } catch (err) {
-    avisoActividad = err instanceof Error ? err.message : "Error desconocido";
-  }
+  const avisoActividad = await registrarActividadNoBloqueante({
+    modulo: "crm",
+    accion: "crear_oportunidad",
+    entidadId: creada.id,
+    entidadNombre: input.nombre ?? "",
+  });
   return { id: creada.id, avisoActividad };
 }
 
@@ -72,15 +76,16 @@ export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
   expectedUpdatedAt?: string | null;
-}): Promise<string | undefined> {
+}): Promise<ResultadoMutacionOportunidad> {
   const updatedAt = await actualizarOportunidadFilas(input.id, input.patch, input.expectedUpdatedAt);
-  await registrarActividad({
+  // La fila YA se escribió: la bitácora no puede convertir el éxito en error.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "editar_oportunidad",
     entidadId: input.id,
     detalles: { campos: Object.keys(input.patch) },
   });
-  return updatedAt;
+  return { updatedAt, avisoActividad };
 }
 
 export async function moverEtapaOportunidad(input: {
@@ -93,7 +98,7 @@ export async function moverEtapaOportunidad(input: {
   // Ola 4 · N49: limpieza al salir de "perdida".
   motivo_perdida_id?: string | null;
   expectedUpdatedAt?: string | null;
-}): Promise<string | undefined> {
+}): Promise<ResultadoMutacionOportunidad> {
   const patch: {
     etapa_id: string;
     probabilidad?: number;
@@ -109,23 +114,29 @@ export async function moverEtapaOportunidad(input: {
   if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
   if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
   const updatedAt = await actualizarOportunidadFilas(input.id, patch, input.expectedUpdatedAt);
-  await registrarActividad({
+  // La etapa YA cambió: si la bitácora falla se devuelve aviso, nunca error —
+  // así el caller sigue con las automatizaciones y el refresco del pipeline.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "mover_etapa_oportunidad",
     entidadId: input.id,
     detalles: { etapa_id: input.etapa_id, valor_real: input.valor_real ?? null },
   });
-  return updatedAt;
+  return { updatedAt, avisoActividad };
 }
 
-export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
-  await actualizarOportunidadFilas(id, {
+export async function eliminarOportunidad(
+  id: string,
+  userId: string | null,
+): Promise<ResultadoMutacionOportunidad> {
+  const updatedAt = await actualizarOportunidadFilas(id, {
     deleted_at: new Date().toISOString(),
     deleted_by: userId,
   });
-  await registrarActividad({
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "eliminar_oportunidad",
     entidadId: id,
   });
+  return { updatedAt, avisoActividad };
 }

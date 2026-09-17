@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { convertirLead, type ConvertirLeadParams } from "@/features/crm/services/leads";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { avisoBitacoraFallida } from "@/features/crm/services/bitacoraNoBloqueante";
 import { getErrorMessage } from "@/lib/errors";
 
 /**
@@ -17,7 +18,7 @@ export function useConvertirLead() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: ({ silencioso: _s, ...params }: ConvertirLeadVars) => convertirLead(params, user),
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
@@ -32,6 +33,13 @@ export function useConvertirLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
 
       if (!variables.silencioso) notifySuccess(undefined, { title: "Lead convertido en oportunidad" });
+      // La RPC es atómica: si sólo falló la bitácora, la conversión SÍ quedó.
+      if (data.avisoActividad) {
+        notifyWarning(undefined, {
+          title: "Lead convertido en oportunidad",
+          description: avisoBitacoraFallida(data.avisoActividad),
+        });
+      }
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo convertir lead", description: getErrorMessage(error), error, method: "CONVERT_LEAD" });
