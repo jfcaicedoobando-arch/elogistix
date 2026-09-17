@@ -14,8 +14,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { MoneyInput } from "@/components/shared/MoneyInput";
+import { TraspasoImportes } from "./TraspasoImportes";
 import { TraspasoConversion } from "./TraspasoConversion";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import {
