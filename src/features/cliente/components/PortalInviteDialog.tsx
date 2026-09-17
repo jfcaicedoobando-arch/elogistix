@@ -63,10 +63,10 @@ export default function PortalInviteDialog({
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        Se creará una cuenta con rol de cliente y se le enviará un correo
-        para establecer su contraseña. Tendrá acceso solo a sus propios
-        embarques, cotizaciones y facturas. Puede agregar varios usuarios al
-        mismo cliente.
+        Se creará una cuenta con rol de cliente y se le enviará un correo. Al abrir
+        el enlace, el cliente crea su contraseña y entra directo al portal. Tendrá
+        acceso solo a sus propios embarques, cotizaciones y facturas. Puede agregar
+        varios usuarios al mismo cliente.
       </p>
     </FormDialogShell>
   );
