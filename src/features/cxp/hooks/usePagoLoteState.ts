@@ -60,6 +60,11 @@ export function usePagoLoteState(a: Args) {
   // regenera al abrir el diálogo para que cada intento de submit sea
   // distinguible y los reintentos del MISMO submit deduplique en servidor.
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  // MNY P1.4: la llave enviada a la RPC se liga al contenido del lote. Un
+  // reintento del MISMO payload reenvía la misma llave (deduplica); si el
+  // usuario corrige importes, fecha, cuenta o método, la llave se renueva para
+  // que el servidor no responda con el lote anterior.
+  const reqId = usePayloadRequestId();
 
   // CXP-NEW-12 (espejo de `usePagoClienteLoteState`): inicializar UNA sola vez
   // por apertura. Antes cualquier refetch en segundo plano de `a.facturas` o del
