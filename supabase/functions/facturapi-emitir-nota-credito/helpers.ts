@@ -178,6 +178,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
         unit_key: c.clave_unidad ?? "E48",
         unit_name: c.unidad ?? "Unidad de servicio",
         tax_included: false,
+        // ObjetoImp SAT 01; se omite para el resto (Facturapi asume "02").
+        ...(c.tipo_iva === "no_objeto" ? { taxability: "01" as const } : {}),
         taxes: buildTaxesNc(c),
       },
     })),
