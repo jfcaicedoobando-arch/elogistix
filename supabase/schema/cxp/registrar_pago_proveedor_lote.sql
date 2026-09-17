@@ -35,8 +35,8 @@ DECLARE
       THEN NULL
     ELSE NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid
   END;
-
   v_notas text := COALESCE(p_payload->>'notas','');
+
   -- BL-02 · idempotencia (espejo RNF-01 de registrar_pago_cliente_lote):
   -- llave opcional del cliente para deduplicar dobles submits/reintentos.
   v_request_id uuid := NULLIF(p_payload->>'request_id','')::uuid;
