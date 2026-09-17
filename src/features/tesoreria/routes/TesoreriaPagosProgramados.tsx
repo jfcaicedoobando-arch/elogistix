@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -87,11 +87,16 @@ export default function TesoreriaPagosProgramados() {
     [programables],
   );
 
-  // CI-02: "Programar pago" navega a la factura de Compras vía callback.
+  // CI-02: "Programar pago" / "Revisar aprobación" navegan a la factura de
+  // Compras vía callback.
   const navigate = useNavigate();
-  const columns = useMemo(
-    () => buildPagosProgramadosColumns(abrirDialogoPago, (f) => navigate(`/compras/facturas/${f.id}`)),
+  const abrirFactura = useCallback(
+    (f: FacturaProgramable) => navigate(`/compras/facturas/${f.id}`),
     [navigate],
+  );
+  const columns = useMemo(
+    () => buildPagosProgramadosColumns(abrirDialogoPago, abrirFactura),
+    [abrirFactura],
   );
 
   // R-05: la bandeja debe ofrecer reintento si la consulta falla o se cuelga.
@@ -130,7 +135,7 @@ export default function TesoreriaPagosProgramados() {
         </Select>
       </div>
 
-      <PagosProgramadosTablas semanas={semanas} sinFecha={sinFecha} columns={columns} onEjecutarPago={abrirDialogoPago} />
+      <PagosProgramadosTablas semanas={semanas} sinFecha={sinFecha} columns={columns} onEjecutarPago={abrirDialogoPago} onAbrirFactura={abrirFactura} />
 
       <EjecutarPagoDialog
         facturaPago={facturaPago}

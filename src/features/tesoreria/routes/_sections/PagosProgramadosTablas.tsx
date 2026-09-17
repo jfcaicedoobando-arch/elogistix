@@ -16,16 +16,56 @@ import { MoneyCell } from "@/components/shared/MoneyCell";
 import { Hint } from "@/components/shared/Hint";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
+import { CalendarClock, ShieldCheck, Wallet } from "lucide-react";
+import { puedeEjecutarPago } from "@/features/tesoreria/domain/pagosProgramados";
 
 interface Props {
   semanas: SemanaPagosProgramados[];
   sinFecha: FacturaProgramable[];
   columns: ColumnDef<FacturaProgramable, unknown>[];
   onEjecutarPago: (f: FacturaProgramable) => void;
+  /** MNY-P2.5: navegar a la factura de Compras (aprobar o programar fecha). */
+  onAbrirFactura: (f: FacturaProgramable) => void;
 }
 
-function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEjecutarPago: (f: FacturaProgramable) => void }) {
+interface AccionesProps {
+  r: FacturaProgramable;
+  onEjecutarPago: (f: FacturaProgramable) => void;
+  onAbrirFactura: (f: FacturaProgramable) => void;
+}
+
+/**
+ * MNY-P2.5: la tarjeta móvil aplica exactamente la misma regla que la tabla de
+ * escritorio: una factura sin aprobar (o rechazada) no ofrece "Ejecutar pago"
+ * porque el trigger `pagos_proveedor_requiere_aprobacion` lo rechaza, y sin
+ * fecha programada la RPC responde LC_PAGO_SIN_PROGRAMACION.
+ */
+function AccionesFactura({ r, onEjecutarPago, onAbrirFactura }: AccionesProps) {
+  if (!puedeEjecutarPago(r)) {
+    const rechazada = (r.estado_aprobacion ?? "").trim().toLowerCase() === "rechazada";
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <ToneBadge tone={rechazada ? "destructive" : "warning"} size="sm">
+          {rechazada ? "Rechazada" : "Por aprobar"}
+        </ToneBadge>
+        <Button size="sm" variant="ghost" onClick={() => onAbrirFactura(r)}>
+          <ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Revisar aprobación
+        </Button>
+      </div>
+    );
+  }
+  return r.fecha_programada_pago ? (
+    <Button size="sm" variant="outline" onClick={() => onEjecutarPago(r)}>
+      <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
+    </Button>
+  ) : (
+    <Button size="sm" variant="ghost" onClick={() => onAbrirFactura(r)}>
+      <CalendarClock className="h-3.5 w-3.5 mr-1.5" /> Programar pago
+    </Button>
+  );
+}
+
+function MobileCardFactura({ r, onEjecutarPago, onAbrirFactura }: AccionesProps) {
   const fecha = r.fecha_programada_pago ?? r.fecha_vencimiento;
   return (
     <div className="flex items-start justify-between gap-2">
@@ -46,9 +86,7 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
           <span>{fecha ? formatDate(fecha) : "—"}</span>
           {r.fecha_programada_pago && <ToneBadge tone="info" size="sm">Prog.</ToneBadge>}
         </div>
-        <Button size="sm" variant="outline" onClick={() => onEjecutarPago(r)}>
-          <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
-        </Button>
+        <AccionesFactura r={r} onEjecutarPago={onEjecutarPago} onAbrirFactura={onAbrirFactura} />
       </div>
       {/* VIZ-02: el ancho fijo w-28 recortaba "MXN 1,160.00" a "MXN 1,1…".
           Ahora el chip crece con el importe (mínimo 7rem, máximo 45% de la
@@ -64,7 +102,7 @@ function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEje
   );
 }
 
-export function PagosProgramadosTablas({ semanas, sinFecha, columns, onEjecutarPago }: Props) {
+export function PagosProgramadosTablas({ semanas, sinFecha, columns, onEjecutarPago, onAbrirFactura }: Props) {
   if (semanas.length === 0 && sinFecha.length === 0) {
     return (
       <Card>
@@ -94,7 +132,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns, onEjecutarP
                 rowKey={(r) => r.id}
                 density={TABLE_DENSITY.embebida}
                 hoverable={false}
-                mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} />}
+                mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} onAbrirFactura={onAbrirFactura} />}
                 footer={() => (
                   // VT-30: el footer se renderiza dentro de <TableFooter>; un <div>
                   // suelto era HTML inválido y el fondo solo cubría ~40% del
@@ -125,7 +163,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns, onEjecutarP
           </SectionHeading>
           <Card>
             <CardContent className="p-0">
-              <ResponsiveDataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density={TABLE_DENSITY.embebida} hoverable={false} mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} />} />
+              <ResponsiveDataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density={TABLE_DENSITY.embebida} hoverable={false} mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} onAbrirFactura={onAbrirFactura} />} />
             </CardContent>
           </Card>
         </section>
