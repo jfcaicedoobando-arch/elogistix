@@ -28,7 +28,9 @@ export function RegistrarAnticipoPagoFields({
   cuentaBancariaId,
   cuentasDeMoneda,
 }: Props) {
-  const sinCuentas = cuentasDeMoneda.length === 0;
+  // MNY P1.1: con Efectivo el selector no se muestra y el aviso de "no hay
+  // cuentas" no aplica: la falta de cuenta es válida, no un problema a resolver.
+  const sinCuentas = requiereCuenta && cuentasDeMoneda.length === 0;
   const mostrarAviso = requiereCuenta && Boolean(cuentaBancariaId);
 
   return (
@@ -53,6 +55,15 @@ export function RegistrarAnticipoPagoFields({
           <p className="text-xs text-destructive">{errors.metodoPago.message}</p>
         )}
       </div>
+      {!requiereCuenta ? (
+        <div className="space-y-1.5">
+          <Label>Cuenta bancaria</Label>
+          <p className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+            En efectivo no se usa cuenta bancaria: no se registra ninguna salida de dinero en
+            tesorería.
+          </p>
+        </div>
+      ) : (
       <div className="space-y-1.5">
         <Label htmlFor="ant-cuenta">
           Cuenta bancaria {requiereCuenta && <span className="text-destructive">*</span>}
@@ -89,6 +100,7 @@ export function RegistrarAnticipoPagoFields({
           </p>
         )}
       </div>
+      )}
     </>
   );
 }

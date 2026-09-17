@@ -26,6 +26,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useDevolverAnticipoForm } from "@/features/anticipos-proveedor/hooks/useDevolverAnticipoForm";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { formatCurrency } from "@/lib/formatters";
+import { hoyMx } from "@/lib/date/mx";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
 interface Props {
@@ -88,6 +89,7 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
               value={f.fecha}
               onChange={f.setFecha}
               min={anticipo.fecha_anticipo ?? undefined}
+              max={hoyMx()}
               aria-label="Fecha de la devolución"
             />
           </div>
