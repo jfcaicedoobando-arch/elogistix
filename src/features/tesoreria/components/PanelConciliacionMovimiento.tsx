@@ -27,7 +27,9 @@ interface Props {
 
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
-  const { data: candidatos = [], isLoading } = useSugerirCandidatos(movimiento);
+  const { data: sugerencias, isLoading } = useSugerirCandidatos(movimiento);
+  const candidatos = sugerencias?.candidatos ?? [];
+  const truncado = sugerencias?.truncado ?? false;
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
   const desconciliar = useDesconciliar();
