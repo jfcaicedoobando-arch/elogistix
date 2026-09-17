@@ -1,5 +1,5 @@
 /** Dialog "Aplicar anticipo a factura" (QW6). FormDialogShell + RHF + Zod. */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { buildSchema } from "../domain/aplicarAnticipoSchema";
+import { calcularTopeAplicable } from "../domain/topeAplicacionAnticipo";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks";
 
 type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
@@ -30,9 +32,26 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const aplicar = useAplicarAnticipo();
   const saldoDisponible = anticipo?.disponible ?? 0;
   const monedaAnticipo = anticipo?.moneda ?? "MXN";
+  const [fechaTope, setFechaTope] = useState(todayLocalISO());
+  const [saldoFacturaTope, setSaldoFacturaTope] = useState(0);
+  const [monedaFacturaTope, setMonedaFacturaTope] = useState("MXN");
+  // MNY P1.3: el tope se calcula con el DOF de la FECHA DE APLICACIÓN, igual
+  // que la valuación del servidor. Sin paridad no se adivina un 1:1.
+  const { data: tcDof } = useTcDofPorFecha(fechaTope);
+  const tope = useMemo(
+    () =>
+      calcularTopeAplicable({
+        disponible: saldoDisponible,
+        monedaAnticipo,
+        saldoFactura: saldoFacturaTope,
+        monedaFactura: monedaFacturaTope,
+        tc: tcDof ?? null,
+      }),
+    [saldoDisponible, monedaAnticipo, saldoFacturaTope, monedaFacturaTope, tcDof],
+  );
   const schema = useMemo(
-    () => buildSchema(saldoDisponible, monedaAnticipo),
-    [saldoDisponible, monedaAnticipo],
+    () => buildSchema(saldoDisponible, monedaAnticipo, tope.tope),
+    [saldoDisponible, monedaAnticipo, tope.tope],
   );
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
@@ -44,7 +63,11 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   });
 
   useEffect(() => {
-    if (open) reset({ facturaId: "", saldoFactura: 0, monedaFactura: "MXN", monto: 0, fechaAplicacion: todayLocalISO() });
+    if (!open) return;
+    setSaldoFacturaTope(0);
+    setMonedaFacturaTope("MXN");
+    setFechaTope(todayLocalISO());
+    reset({ facturaId: "", saldoFactura: 0, monedaFactura: "MXN", monto: 0, fechaAplicacion: todayLocalISO() });
   }, [open, reset]);
 
   const handleOpenChange = (o: boolean) => {
@@ -54,6 +77,10 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
 
   const facturaId = watch("facturaId");
   const monedaFactura = watch("monedaFactura");
+  const fechaAplicacion = watch("fechaAplicacion");
+  useEffect(() => {
+    if (fechaAplicacion) setFechaTope(fechaAplicacion);
+  }, [fechaAplicacion]);
   const monedaDifiere = Boolean(anticipo) && monedaFactura && anticipo!.moneda !== monedaFactura;
 
   // B-061: handler de inválidos — el JSON crudo de zod ya no se traga.
@@ -112,6 +139,8 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
                   field.onChange(id);
                   setValue("saldoFactura", saldo);
                   setValue("monedaFactura", moneda);
+                  setSaldoFacturaTope(saldo);
+                  setMonedaFacturaTope(moneda);
                 }}
               />
             )}
@@ -136,8 +165,10 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
         </div>
         {monedaDifiere && (
           <p className="text-xs text-muted-foreground md:col-span-2">
-            El anticipo está en {anticipo.moneda} y la factura en {monedaFactura}. La conversión de moneda la realiza
-            el servidor al aplicar (RPC <code>aplicar_anticipo_a_factura</code>).
+            Capturas el monto en {anticipo.moneda} y la factura está en {monedaFactura}.{" "}
+            {tope.sinTipoCambio
+              ? `No hay tipo de cambio oficial para el ${fechaTope}: captúralo antes de aplicar.`
+              : `Con el tipo de cambio oficial del ${fechaTope} puedes aplicar hasta ${formatCurrency(tope.tope ?? 0, anticipo.moneda)}.`}
           </p>
         )}
       </FormDialogSection>

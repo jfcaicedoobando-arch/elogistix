@@ -15802,6 +15802,8 @@ DECLARE
   v_email text;
   v_autorizado boolean;
   v_cuenta_org uuid;
+  v_hoy_mx date := public.fecha_negocio_mx();
+  v_cierre date;
 BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado';
@@ -15854,6 +15856,18 @@ BEGIN
   IF p_fecha < v_row.fecha_anticipo THEN
     RAISE EXCEPTION 'LC_ANTICIPO_FECHA_INVALIDA: La devolución no puede ser anterior a la fecha del anticipo (%).',
       v_row.fecha_anticipo;
+  END IF;
+  -- MNY P1.2: fecha de negocio México, nunca futura, y periodo contable abierto.
+  IF p_fecha > v_hoy_mx THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_FECHA_FUTURA: la fecha de la devolución (%) no puede ser futura', p_fecha
+      USING ERRCODE = '22023';
+  END IF;
+  IF current_setting('app.bypass_cierre_periodo', true) IS DISTINCT FROM '1' THEN
+    v_cierre := public.cierre_periodo_fecha(v_row.organization_id);
+    IF v_cierre IS NOT NULL AND p_fecha <= v_cierre THEN
+      RAISE EXCEPTION 'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
+        v_cierre, p_fecha USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   SELECT cb.organization_id INTO v_cuenta_org
     FROM public.cuentas_bancarias cb
@@ -19837,21 +19851,20 @@ BEGIN
       NEW.fecha_pago, v_fact_emision
       USING ERRCODE = '22023';
   END IF;
-  -- F3: los pagos directos siguen exigiendo captura MXN<->USD. Cuando el pago
-  -- nace de una APLICACIÓN DE ANTICIPO, la RPC ya valuó con paridad DOF del
-  -- día (soporta EUR y cruces); el guard respeta esa valuación.
-  BEGIN
+  -- MNY P1.3: una APLICACIÓN DE ANTICIPO se valúa con la paridad DOF del día
+  -- de la aplicación (contrato documentado en docs/flujo-anticipos-proveedor.md).
+  -- Antes se derivaba con el TC histórico de la factura y el importe aplicado no
+  -- coincidía con lo que la RPC calculaba y bitacoreaba. Los pagos DIRECTOS
+  -- siguen exigiendo captura MXN<->USD (ruta histórica intacta).
+  IF COALESCE(NEW.es_anticipo_aplicado, false)
+     AND NEW.moneda IS DISTINCT FROM v_fact_moneda THEN
+    NEW.monto_en_moneda_factura := public.convertir_monto_dof(
+      NEW.monto, NEW.moneda::text, v_fact_moneda::text,
+      COALESCE(NEW.fecha_pago, v_hoy_mx));
+  ELSE
     NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
       NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
-  EXCEPTION WHEN OTHERS THEN
-    IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
-      NEW.monto_en_moneda_factura := public.convertir_monto_dof(
-        NEW.monto, NEW.moneda::text, v_fact_moneda::text,
-        COALESCE(NEW.fecha_pago, v_hoy_mx));
-    ELSE
-      RAISE;
-    END IF;
-  END;
+  END IF;
   IF NEW.moneda = 'MXN'::public.moneda
      AND v_fact_moneda = 'USD'::public.moneda
      AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
@@ -25895,14 +25908,20 @@ DECLARE
   v_email text;
   v_autorizado boolean;
   v_metodo text := COALESCE(NULLIF(TRIM(p_metodo_pago), ''), 'Transferencia');
+  v_cuenta_id uuid;
   v_cuenta public.cuentas_bancarias;
   v_proveedor_nombre text;
   v_emb_org uuid;
   v_cached jsonb;
+  v_hoy_mx date := public.fecha_negocio_mx();
+  v_cierre date;
 BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado';
   END IF;
+  -- MNY P1.1: Efectivo NUNCA genera salida bancaria. Si el cliente manda una
+  -- cuenta vieja (selector no limpiado), se ignora de forma autoritativa.
+  v_cuenta_id := CASE WHEN v_metodo = 'Efectivo' THEN NULL ELSE p_cuenta_bancaria_id END;
   -- O2.5: reclamo atómico de la llave (patrón bl05/bl08). Doble submit del
   -- diálogo ya no crea dos anticipos ni dos cargos bancarios conciliados.
   v_cached := public.idempotency_claim(p_request_id, 'registrar_anticipo_proveedor');
@@ -25937,6 +25956,22 @@ BEGIN
   IF v_org IS DISTINCT FROM public.current_user_org_id() AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_ANTICIPO_PROVEEDOR_OTRA_ORG: El proveedor pertenece a otra organización.';
   END IF;
+  -- MNY P1.2: fecha de negocio México, nunca futura, y periodo contable abierto.
+  IF p_fecha_anticipo IS NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_FECHA_REQUERIDA: Indica la fecha del anticipo.'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_fecha_anticipo > v_hoy_mx THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_FECHA_FUTURA: la fecha del anticipo (%) no puede ser futura', p_fecha_anticipo
+      USING ERRCODE = '22023';
+  END IF;
+  IF current_setting('app.bypass_cierre_periodo', true) IS DISTINCT FROM '1' THEN
+    v_cierre := public.cierre_periodo_fecha(v_org);
+    IF v_cierre IS NOT NULL AND p_fecha_anticipo <= v_cierre THEN
+      RAISE EXCEPTION 'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
+        v_cierre, p_fecha_anticipo USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
   IF p_embarque_id IS NOT NULL THEN
     SELECT organization_id INTO v_emb_org FROM public.embarques WHERE id = p_embarque_id;
     IF v_emb_org IS NULL OR v_emb_org <> v_org THEN
@@ -25944,12 +25979,12 @@ BEGIN
     END IF;
   END IF;
   -- Sin cuenta bancaria el anticipo no genera movimiento conciliable.
-  IF p_cuenta_bancaria_id IS NULL AND v_metodo <> 'Efectivo' THEN
+  IF v_cuenta_id IS NULL AND v_metodo <> 'Efectivo' THEN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_REQUERIDA: Selecciona la cuenta bancaria de donde sale el anticipo (sólo Efectivo puede omitirla).';
   END IF;
-  IF p_cuenta_bancaria_id IS NOT NULL THEN
+  IF v_cuenta_id IS NOT NULL THEN
     SELECT * INTO v_cuenta FROM public.cuentas_bancarias
-    WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL;
+    WHERE id = v_cuenta_id AND deleted_at IS NULL;
     IF v_cuenta.id IS NULL THEN
       RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_INVALIDA: La cuenta bancaria no existe o está dada de baja.';
     END IF;
@@ -25966,17 +26001,17 @@ BEGIN
      estado, saldo_disponible, created_by, embarque_id)
   VALUES
     (v_org, p_proveedor_id, p_fecha_anticipo, p_monto, p_moneda, p_tipo_cambio_usd,
-     v_metodo, p_referencia, p_cuenta_bancaria_id, p_notas,
+     v_metodo, p_referencia, v_cuenta_id, p_notas,
      'disponible', p_monto, v_uid, p_embarque_id)
   RETURNING * INTO v_row;
   -- Cargo bancario conciliado (el saldo de la cuenta baja de inmediato).
-  IF p_cuenta_bancaria_id IS NOT NULL THEN
+  IF v_cuenta_id IS NOT NULL THEN
     INSERT INTO public.bbva_movimientos
       (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
        cargo, abono, hash_dedupe, estado_conciliacion,
        anticipo_proveedor_id, conciliado_por, conciliado_at, importado_por)
     VALUES
-      (v_org, p_cuenta_bancaria_id, p_fecha_anticipo,
+      (v_org, v_cuenta_id, p_fecha_anticipo,
        'Anticipo — ' || COALESCE(v_proveedor_nombre, 'proveedor'),
        COALESCE(p_referencia, ''),
        p_monto, 0, 'anticipo-' || v_row.id::text, 'Conciliado',
@@ -25989,7 +26024,7 @@ BEGIN
     VALUES (v_org, v_uid, COALESCE(v_email,''), 'registrar_anticipo_proveedor', 'cxp',
             v_row.id, 'Anticipo ' || v_row.id::text,
             jsonb_build_object('proveedor_id', p_proveedor_id, 'monto', p_monto, 'moneda', p_moneda,
-                               'cuenta_bancaria_id', p_cuenta_bancaria_id, 'metodo_pago', v_metodo,
+                               'cuenta_bancaria_id', v_cuenta_id, 'metodo_pago', v_metodo,
                                'embarque_id', p_embarque_id));
   EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'bitacora insert failed en registrar_anticipo_proveedor: % %', SQLSTATE, SQLERRM;

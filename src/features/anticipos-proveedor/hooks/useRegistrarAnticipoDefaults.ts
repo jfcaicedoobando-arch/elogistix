@@ -24,6 +24,8 @@ interface Params {
   open: boolean;
   moneda: MonedaAnticipo;
   cuentaBancariaId: string | undefined;
+  /** false cuando el método es Efectivo: no debe haber cuenta ni cargo bancario. */
+  requiereCuenta: boolean;
   tipoCambioUsd: number | undefined;
   proveedorIdInicial?: string;
   setValue: UseFormSetValue<RegistrarAnticipoFormValues>;
@@ -42,6 +44,7 @@ export function useRegistrarAnticipoDefaults({
   open,
   moneda,
   cuentaBancariaId,
+  requiereCuenta,
   tipoCambioUsd,
   proveedorIdInicial,
   setValue,
@@ -74,9 +77,9 @@ export function useRegistrarAnticipoDefaults({
   // Preselecciona/limpia la cuenta bancaria según la moneda del anticipo.
   useEffect(() => {
     if (!open) return;
-    const siguiente = resolverCuentaBancaria(cuentaBancariaId, cuentasCompatibles);
+    const siguiente = resolverCuentaBancaria(cuentaBancariaId, cuentasCompatibles, requiereCuenta);
     if (siguiente !== null) setValue("cuentaBancariaId", siguiente, SET_OPTS);
-  }, [open, cuentaBancariaId, cuentasCompatibles, setValue]);
+  }, [open, cuentaBancariaId, cuentasCompatibles, requiereCuenta, setValue]);
 
   const tcHint = tc
     ? tc.fuente === "DOF"

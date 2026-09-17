@@ -63,11 +63,17 @@ export function cuentasDeMoneda<T extends CuentaMonedaInput>(
  * - `""` limpia la selección cuando la cuenta elegida ya no coincide con la moneda.
  * - id de la primera cuenta compatible cuando no hay nada seleccionado.
  * - `null` significa "no cambiar nada".
+ * - con `requiereCuenta = false` (Efectivo) siempre queda vacía.
  */
 export function resolverCuentaBancaria(
   cuentaActual: string | undefined,
   compatibles: readonly CuentaMonedaInput[],
+  requiereCuenta = true,
 ): string | null {
+  // MNY P1.1: en Efectivo no sale dinero de ninguna cuenta. Nunca se
+  // preselecciona una y se limpia la que quedó del método anterior, para que la
+  // RPC no reciba una cuenta vieja y genere un cargo bancario inexistente.
+  if (!requiereCuenta) return cuentaActual ? "" : null;
   if (cuentaActual) {
     return compatibles.some((c) => c.id === cuentaActual) ? null : "";
   }

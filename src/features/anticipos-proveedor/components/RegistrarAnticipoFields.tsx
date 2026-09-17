@@ -3,6 +3,7 @@ import { Controller, type Control, type FieldErrors, type UseFormRegister } from
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { hoyMx } from "@/lib/date/mx";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -69,7 +70,14 @@ export function RegistrarAnticipoFields({
             control={control}
             name="fechaAnticipo"
             render={({ field }) => (
-              <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+              <DatePickerMx
+                id="ant-fecha"
+                name="fechaAnticipo"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                max={hoyMx()}
+                className="w-full"
+              />
             )}
           />
           {errors.fechaAnticipo && <p className="text-xs text-destructive">{errors.fechaAnticipo.message}</p>}
