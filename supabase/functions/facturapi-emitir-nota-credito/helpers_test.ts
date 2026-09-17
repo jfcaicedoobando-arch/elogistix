@@ -128,3 +128,13 @@ Deno.test("buildNcPayload manda taxability 01 sin traslado de IVA en no_objeto",
   assertEquals(p.items[0].product.taxability, "01");
   assertEquals(p.items[0].product.taxes.length, 0);
 });
+
+Deno.test("el payload serializado de NC jamás lleva taxability a nivel renglón (sólo en product)", () => {
+  const ctx = baseCtx();
+  const serializado = JSON.parse(JSON.stringify(buildNcPayload({
+    ...ctx,
+    conceptos: [{ ...ctx.conceptos[0], tipo_iva: "no_objeto", tasa_iva: null }],
+  })));
+  assertEquals("taxability" in serializado.items[0], false);
+  assertEquals(serializado.items[0].product.taxability, "01");
+});

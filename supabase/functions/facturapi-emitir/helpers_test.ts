@@ -144,3 +144,13 @@ Deno.test("gravado_16 sigue enviando taxability por default (sin campo)", () => 
   assertEquals(p.items[0].product.taxes[0].factor, "Tasa");
   assertEquals(p.items[0].product.taxes[0].rate, 0.16);
 });
+
+Deno.test("el payload serializado jamás lleva taxability a nivel renglón (sólo en product)", () => {
+  const ctx: FacturaContext = {
+    ...baseCtx,
+    conceptos: [{ ...baseCtx.conceptos[0], tipo_iva: "no_objeto", tasa_iva: null }],
+  };
+  const serializado = JSON.parse(JSON.stringify(buildFacturapiPayload(ctx)));
+  assertEquals("taxability" in serializado.items[0], false);
+  assertEquals(serializado.items[0].product.taxability, "01");
+});
