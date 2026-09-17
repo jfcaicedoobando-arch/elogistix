@@ -1,6 +1,10 @@
 -- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
 -- D4 (v13.823.382): valida la fecha del pago (requerida, no futura y no
 -- anterior a la emisión) antes de insertar; el guard la revalida en BD.
+-- MNY (20260917180259): el candado de la cuenta bancaria pasa por
+-- `_lock_cuenta_bancaria` (SECURITY DEFINER) para que un `contador` pueda
+-- registrar pagos; antes el FOR UPDATE directo no veía la fila y la RPC
+-- respondía LC_PAGO_CUENTA_INEXISTENTE sobre cuentas existentes y activas.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_atomico(
@@ -51,13 +55,13 @@ BEGIN
   END IF;
 
   -- N8: la cuenta bancaria debe existir, estar activa y ser de la MISMA
-  -- organización que la factura. Se bloquea la fila para que no la den de baja
-  -- entre la validación y el insert.
+  -- organización que la factura. El candado se toma vía
+  -- `_lock_cuenta_bancaria` (SECURITY DEFINER): con `FOR UPDATE` directo, un
+  -- rol de sólo lectura sobre cuentas (contador) no veía la fila y el pago
+  -- fallaba con LC_PAGO_CUENTA_INEXISTENTE.
   IF p_cuenta_bancaria_id IS NOT NULL THEN
-    SELECT organization_id, activa INTO v_cta_org, v_cta_activa
-      FROM public.cuentas_bancarias
-     WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL
-     FOR UPDATE;
+    SELECT c.org_id, c.esta_activa INTO v_cta_org, v_cta_activa
+      FROM public._lock_cuenta_bancaria(p_cuenta_bancaria_id) c;
     IF v_cta_org IS NULL THEN
       RAISE EXCEPTION 'LC_PAGO_CUENTA_INEXISTENTE: la cuenta bancaria no existe o está dada de baja' USING ERRCODE = 'P0001';
     END IF;

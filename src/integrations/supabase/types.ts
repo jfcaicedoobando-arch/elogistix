@@ -8746,6 +8746,14 @@ export type Database = {
         Returns: Json
       }
       _es_rol_interno: { Args: never; Returns: boolean }
+      _lock_cuenta_bancaria: {
+        Args: { p_cuenta_id: string }
+        Returns: {
+          esta_activa: boolean
+          moneda_txt: string
+          org_id: string
+        }[]
+      }
       _log_provisioning_step: {
         Args: {
           p_accion: string
