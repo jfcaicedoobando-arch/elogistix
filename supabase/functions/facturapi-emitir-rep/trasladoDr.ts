@@ -45,7 +45,9 @@ function anclarTasa(valor: number): number {
 
 function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaDr } {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
-  if (tipo === "exento") return { tasa: 0, factor: "Exento" };
+  // `no_objeto` (SAT ObjetoImp 01) no traslada IVA. Se agrupa con `exento`
+  // para que el respaldo por tasa nula NUNCA le invente un traslado del 16%.
+  if (tipo === "exento" || tipo === "no_objeto") return { tasa: 0, factor: "Exento" };
   const raw = c?.tasa_iva_aplicada;
   if (raw === null || raw === undefined || raw === "") {
     if (tipo === "gravado_8") return { tasa: 0.08, factor: "Tasa" };

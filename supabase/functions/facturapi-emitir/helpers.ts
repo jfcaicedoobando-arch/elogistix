@@ -19,7 +19,7 @@ export interface ConceptoInterno {
   clave_unidad?: string | null;
   unidad?: string | null;
   tasa_iva?: number | null; // 0.16, 0, etc.
-  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  tipo_iva?: "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null;
   /** Ola 3 — retención ISR normalizada (0.10 = 10%). */
   tasa_ret_isr?: number | null;
   /** Ola 3 — retención IVA normalizada (0.04, 0.106667). */
@@ -144,9 +144,19 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     items: ctx.conceptos.map((c) => {
       const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
       type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
-      const taxes: Tax[] = tipo === "exento"
-        ? [{ type: "IVA", rate: 0, factor: "Exento" }]
-        : [{ type: "IVA", rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" }];
+      // ObjetoImp SAT: 01 = "No objeto de impuesto" (sin traslado de IVA, ni
+      // tasa 0 ni factor Exento); 02 = sí objeto. Facturapi lo recibe como
+      // `taxability` del item.
+      const noObjeto = tipo === "no_objeto";
+      const taxes: Tax[] = noObjeto
+        ? []
+        : tipo === "exento"
+          ? [{ type: "IVA", rate: 0, factor: "Exento" }]
+          : [{
+              type: "IVA",
+              rate: tipo === "tasa_0" ? 0 : (tipo === "gravado_8" ? 0.08 : (c.tasa_iva ?? 0.16)),
+              factor: "Tasa",
+            }];
       // Ola 3 — retenciones por concepto (withholding: true).
       const retIsr = Number(c.tasa_ret_isr ?? 0);
       const retIva = Number(c.tasa_ret_iva ?? 0);
