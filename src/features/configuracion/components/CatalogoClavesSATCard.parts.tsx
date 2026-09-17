@@ -10,7 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
-import { UNIDADES_SAT, type Draft, type TipoIva } from "./CatalogoClavesSATCard.constants";
+import {
+  UNIDADES_SAT, TIPO_IVA_OPCIONES_CATALOGO, type Draft, type TipoIva,
+} from "./CatalogoClavesSATCard.constants";
 
 interface EditRowProps {
   draft: Draft;
@@ -29,12 +31,11 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
       <TableCell><Input aria-label="Clave SAT" value={draft.clave_sat} onChange={(e) => p({ clave_sat: e.target.value })} placeholder="78101800" /></TableCell>
       <TableCell>
         <Select value={draft.tipo_iva} onValueChange={(v) => p({ tipo_iva: v as TipoIva })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Tratamiento de IVA"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="gravado_16">IVA 16%</SelectItem>
-            <SelectItem value="gravado_8">IVA 8% (frontera)</SelectItem>
-            <SelectItem value="tasa_0">IVA 0%</SelectItem>
-            <SelectItem value="exento">Exento</SelectItem>
+            {TIPO_IVA_OPCIONES_CATALOGO.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </TableCell>

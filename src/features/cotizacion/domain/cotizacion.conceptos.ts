@@ -4,6 +4,7 @@
  */
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularTotalConIVA, subtotalLinea } from "@/lib/financial/financialUtils";
+import { esNoObjetoIva } from "@/lib/financial/tipoIvaSat";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 export interface ConceptoVentaPrellenado {
@@ -16,6 +17,11 @@ export interface ConceptoVentaPrellenado {
   total: number;
   /** Clave SAT heredada del catálogo maestro cuando el paso 2 usó el combobox. */
   clave_sat?: string;
+  /**
+   * Tratamiento fiscal explícito heredado del catálogo. Se propaga sin pérdida
+   * para que `no_objeto` (SAT 01) no se confunda con exento ni con tasa 0.
+   */
+  tipo_iva?: string;
   /** Tasa IVA específica del producto (0.16, 0, exento). Prevalece sobre `tasaIva`. */
   tasa_iva_aplicada?: number;
   /**
@@ -44,9 +50,10 @@ export function buildConceptosFromCostos(
     .map(c => {
       const tasaProducto = c.tasa_iva_aplicada;
       const desdeCatalogo = tasaProducto !== undefined;
-      const tieneIva = desdeCatalogo
+      const noObjeto = esNoObjetoIva(c.tipo_iva);
+      const tieneIva = !noObjeto && (desdeCatalogo
         ? tasaProducto! > 0
-        : (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
+        : (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto));
       const tasaAplicar = desdeCatalogo ? (tasaProducto as number) : tasaIva;
       // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
       const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
@@ -60,6 +67,9 @@ export function buildConceptosFromCostos(
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
         notas: c.notas,
+        // El tratamiento fiscal viaja explícito: `no_objeto` (SAT 01) no se
+        // puede reconstruir después a partir de la tasa 0.
+        tipo_iva: c.tipo_iva,
         // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
         // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
         tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,
@@ -72,7 +82,7 @@ export function buildConceptosFromCostos(
       const tasaProducto = c.tasa_iva_aplicada;
       const desdeCatalogo = tasaProducto !== undefined;
       // En MXN el default histórico es IVA general; sólo se apaga si el catálogo lo marca exento/tasa 0.
-      const tieneIva = desdeCatalogo ? tasaProducto! > 0 : true;
+      const tieneIva = !esNoObjetoIva(c.tipo_iva) && (desdeCatalogo ? tasaProducto! > 0 : true);
       const tasaAplicar = desdeCatalogo ? (tasaProducto as number) : tasaIva;
       // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
       const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
@@ -86,6 +96,7 @@ export function buildConceptosFromCostos(
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
         notas: c.notas,
+        tipo_iva: c.tipo_iva,
         // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
         // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
         tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,

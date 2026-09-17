@@ -14,6 +14,7 @@ import {
   sumarMontos,
   sumarSubtotales,
 } from "@/lib/financial/financialUtils";
+import { esNoObjetoIva } from "@/lib/financial/tipoIvaSat";
 
 export type Moneda = "USD" | "MXN";
 
@@ -24,6 +25,8 @@ export interface ConceptoVentaLite {
   moneda: string;
   aplica_iva?: boolean | null;
   tasa_iva_aplicada?: number | null;
+  /** Tratamiento fiscal explícito; "no_objeto" (SAT 01) nunca causa IVA. */
+  tipo_iva?: string | null;
 }
 
 export interface TotalesProforma {
@@ -48,6 +51,8 @@ function tasaLineaProforma(
   tasaIva: number,
   ivaOverridesUSD: Record<string, boolean>,
 ): number {
+  // "No objeto de impuesto" (SAT 01) no admite traslado de IVA ni override.
+  if (esNoObjetoIva(c.tipo_iva)) return 0;
   if (c.moneda === "USD" && c.id in ivaOverridesUSD) {
     if (!ivaOverridesUSD[c.id]) return 0;
     return c.tasa_iva_aplicada != null && Number.isFinite(Number(c.tasa_iva_aplicada))

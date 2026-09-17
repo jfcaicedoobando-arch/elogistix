@@ -2,10 +2,19 @@
  * Constantes, tipos y helpers puros del Catálogo de productos y servicios.
  * Separado del `.parts.tsx` para respetar `react-refresh/only-export-components`
  * (los `.tsx` deben exportar únicamente componentes).
+ *
+ * El tratamiento fiscal (incluido "No objeto de impuesto (SAT 01)") vive en
+ * `@/lib/financial/tipoIvaSat`: aquí sólo se reexporta lo que consume la tabla.
  */
-import { TASA_IVA } from "@/lib/financial/financialUtils";
+import {
+  TIPO_IVA_LABEL_SAT,
+  TIPO_IVA_LABEL_CORTO,
+  TIPO_IVA_OPCIONES,
+  tasaDefaultCatalogo,
+  type TipoIvaSat,
+} from "@/lib/financial/tipoIvaSat";
 
-export type TipoIva = "gravado_16" | "tasa_0" | "exento";
+export type TipoIva = TipoIvaSat;
 
 export interface Row {
   id: string;
@@ -43,20 +52,21 @@ export const UNIDADES_SAT: Array<{ value: string; label: string }> = [
   { value: "ACT", label: "ACT — Actividad" },
 ];
 
-export const TIPO_IVA_LABEL: Record<TipoIva, string> = {
-  gravado_16: "IVA 16%",
-  tasa_0: "IVA 0%",
-  exento: "Exento",
-};
+/** Opciones del selector de tratamiento fiscal (alta y edición). */
+export const TIPO_IVA_OPCIONES_CATALOGO = TIPO_IVA_OPCIONES;
+
+export const TIPO_IVA_LABEL: Record<TipoIva, string> = TIPO_IVA_LABEL_SAT;
+
+export const TIPO_IVA_BADGE: Record<TipoIva, string> = TIPO_IVA_LABEL_CORTO;
 
 export const TIPO_IVA_VARIANT: Record<TipoIva, "default" | "secondary" | "outline"> = {
   gravado_16: "default",
+  gravado_8: "default",
   tasa_0: "secondary",
   exento: "outline",
+  no_objeto: "outline",
 };
 
 export function tasaFromTipo(tipo: TipoIva): number | null {
-  if (tipo === "gravado_16") return TASA_IVA;
-  if (tipo === "tasa_0") return 0;
-  return null;
+  return tasaDefaultCatalogo(tipo);
 }

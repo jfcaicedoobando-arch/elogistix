@@ -12,7 +12,7 @@ function tasaDeTipo(tipo: TipoIvaConcepto, tasaIva: number): number {
   if (tipo === "gravado_16") return tasaIva;
   if (tipo === "gravado_8") return TASA_IVA_FRONTERA;
   if (tipo === "tasa_0") return 0;
-  return 0; // exento no aporta IVA
+  return 0; // exento y no objeto de impuesto (SAT 01) no aportan IVA
 }
 
 export interface TotalesConceptos {

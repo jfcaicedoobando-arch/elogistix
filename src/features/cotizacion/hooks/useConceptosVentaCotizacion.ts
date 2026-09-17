@@ -3,6 +3,7 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCot
 
 import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
+import { esNoObjetoIva } from "@/lib/financial/tipoIvaSat";
 
 // ── Factories ──
 const emptyUSD = (): ConceptoVentaCotizacion => ({
@@ -39,9 +40,13 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
       // Mantener consistencia entre tasa y flag booleano.
       if (campo === "tasa_iva_aplicada" && typeof valor === "number") {
         copia[index].aplica_iva = valor > 0;
+        // Si el usuario grava a mano una línea marcada "no objeto", el
+        // tratamiento fiscal explícito deja de aplicar.
+        if (valor > 0 && esNoObjetoIva(copia[index].tipo_iva)) copia[index].tipo_iva = undefined;
       }
       if (campo === "aplica_iva" && typeof valor === "boolean") {
         copia[index].tasa_iva_aplicada = valor ? tasaIva : 0;
+        if (valor && esNoObjetoIva(copia[index].tipo_iva)) copia[index].tipo_iva = undefined;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
       const tasaFila = resolverTasaConcepto(copia[index], tasaIva);

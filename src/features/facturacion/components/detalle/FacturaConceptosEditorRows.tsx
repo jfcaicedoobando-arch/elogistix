@@ -26,6 +26,7 @@ const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
   gravado_8: "IVA 8% (frontera)",
   tasa_0: "Tasa 0%",
   exento: "Exento",
+  no_objeto: "No objeto de impuesto (SAT 01)",
 };
 
 const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
@@ -33,6 +34,7 @@ const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   gravado_8: "8%",
   tasa_0: "0%",
   exento: "Exento",
+  no_objeto: "No objeto",
 };
 
 function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
@@ -140,6 +142,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
             <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
             <SelectItem value="tasa_0">{TIPO_IVA_LABEL.tasa_0}</SelectItem>
             <SelectItem value="exento">{TIPO_IVA_LABEL.exento}</SelectItem>
+            <SelectItem value="no_objeto">{TIPO_IVA_LABEL.no_objeto}</SelectItem>
           </SelectContent>
         </Select>
       </div>

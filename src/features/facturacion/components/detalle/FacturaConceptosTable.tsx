@@ -63,7 +63,12 @@ function parseConceptos(snapshot: unknown): ConceptoSnapshot[] {
 
 /** Infiere el régimen IVA de un concepto — borrador o snapshot Facturapi. */
 function inferirTipoIva(c: ConceptoSnapshot): TipoIvaConcepto | null {
-  if (c.tipo_iva === "gravado_16" || c.tipo_iva === "tasa_0" || c.tipo_iva === "exento") {
+  // El tipo explícito manda (incluye `no_objeto`, SAT ObjetoImp 01, que NO se
+  // puede reconstruir desde los impuestos del snapshot).
+  if (
+    c.tipo_iva === "gravado_16" || c.tipo_iva === "gravado_8" ||
+    c.tipo_iva === "tasa_0" || c.tipo_iva === "exento" || c.tipo_iva === "no_objeto"
+  ) {
     return c.tipo_iva;
   }
   const taxes = c.product?.taxes ?? c.taxes;

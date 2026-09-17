@@ -19,7 +19,7 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
-  EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT,
+  EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_BADGE, TIPO_IVA_VARIANT,
   type Draft, type Row,
 } from "./CatalogoClavesSATCard.constants";
 
@@ -103,7 +103,11 @@ export function CatalogoClavesSATCard() {
                 <DetailTableRow key={r.id}>
                   <TableCell className="font-medium">{r.patron}</TableCell>
                   <TableCell className="font-mono text-xs">{r.clave_sat}</TableCell>
-                  <TableCell><Badge variant={TIPO_IVA_VARIANT[r.tipo_iva]}>{TIPO_IVA_LABEL[r.tipo_iva]}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant={TIPO_IVA_VARIANT[r.tipo_iva]} aria-label={TIPO_IVA_LABEL[r.tipo_iva]}>
+                      {TIPO_IVA_BADGE[r.tipo_iva]}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{r.clave_unidad_sat}</TableCell>
                   <TableCell>{r.activo ? "Sí" : "No"}</TableCell>
                   <TableCell className="text-right">

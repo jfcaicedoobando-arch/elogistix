@@ -13,6 +13,8 @@ import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalo
 export interface FiscalCatalogo {
   aplicaIva: boolean;
   tasaIva: number;
+  /** Tratamiento fiscal explícito del catálogo (incluye `no_objeto`). */
+  tipoIva: string;
 }
 
 interface Props {
@@ -34,7 +36,7 @@ export function ConceptoCatalogoSelect({ value, onChange, onSelectFiscal, disabl
         onChange(p.nombre);
         if (onSelectFiscal) {
           const tasa = tasaDesdeTipoIva(p.tipo_iva);
-          onSelectFiscal({ aplicaIva: tasa > 0, tasaIva: tasa });
+          onSelectFiscal({ aplicaIva: tasa > 0, tasaIva: tasa, tipoIva: p.tipo_iva });
         }
       }}
     />

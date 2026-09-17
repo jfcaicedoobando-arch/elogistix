@@ -118,6 +118,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                       <SelectItem value="gravado_8">IVA 8% (frontera)</SelectItem>
                       <SelectItem value="tasa_0">Tasa 0%</SelectItem>
                       <SelectItem value="exento">Exento</SelectItem>
+                      <SelectItem value="no_objeto">No objeto de impuesto (SAT 01)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
