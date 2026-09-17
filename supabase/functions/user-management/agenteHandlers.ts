@@ -150,8 +150,9 @@ async function executeInvitePath(
   if (input.mode === "password") {
     return await createOrResetUserWithPassword(adminClient, input.email, input.password!);
   }
-  const baseRedirect = resolveRedirectTo(originHeader);
-  const redirectTo = baseRedirect.replace(/\/portal\/login$/, "/login");
+  // Mismo destino que el portal cliente: el invitado crea su contraseña antes
+  // de entrar (`/reset-password?origen=invitacion`).
+  const redirectTo = resolveRedirectTo(originHeader);
   return await inviteOrLinkUser(adminClient, input.email, redirectTo);
 }
 
