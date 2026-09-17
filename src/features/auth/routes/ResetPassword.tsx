@@ -162,11 +162,7 @@ export default function ResetPassword() {
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {esInvitacion
-                  ? "Define la contraseña con la que entrarás a tu portal de Libre Carga."
-                  : "Ingresa tu nueva contraseña para tu cuenta de Libre Carga."}
-              </p>
+              <p className="text-sm text-muted-foreground">{copy.intro}</p>
               {alertMessage && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
