@@ -19,6 +19,15 @@ vi.mock('@/features/tesoreria/services', () => ({
 }));
 vi.mock('@/features/facturacion/hooks', () => ({ useCobranza: mockCobranza }));
 vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: mockCxp }));
+// MNY-NEW-05: el flujo espera también las tasas de cambio antes de consultar.
+vi.mock('@/features/catalogos/hooks/useExchangeRates', () => ({
+  useExchangeRates: () => ({
+    data: { usdMxn: 18, eurMxn: 20, fechaAplicada: '2026-01-01' },
+    isSuccess: true,
+    isError: false,
+  }),
+}));
+
 
 import { useFlujoProyectado } from '../useFlujoProyectado';
 
