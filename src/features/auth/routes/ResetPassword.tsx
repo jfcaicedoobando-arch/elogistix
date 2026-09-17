@@ -80,16 +80,20 @@ export default function ResetPassword() {
     };
   }, []);
 
+  const destinoFinal = esInvitacion ? resolveLandingRoute(role ?? null) : "/login";
+
   const onSubmit = async (v: ResetValues) => {
     setError(null);
     try {
       await updateUserPassword(v.password);
       setDone(true);
-      setTimeout(() => navigate("/login", { replace: true }), 2500);
+      setTimeout(() => navigate(destinoFinal, { replace: true }), 2500);
     } catch (err) {
       setError(translateAuthError(err instanceof Error ? err.message : null));
     }
   };
+
+  const tituloPantalla = esInvitacion ? "Crea tu contraseña" : "Restablecer contraseña";
 
   const firstFieldError = errors.password?.message ?? errors.password2?.message ?? null;
   const alertMessage = error ?? firstFieldError;
