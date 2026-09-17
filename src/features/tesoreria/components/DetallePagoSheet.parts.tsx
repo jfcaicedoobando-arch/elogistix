@@ -5,17 +5,30 @@
  * datos del pago, movimiento bancario conciliado y facturas aplicadas.
  */
 import { Link } from "react-router-dom";
-import { Landmark, TriangleAlert } from "lucide-react";
+import { Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido, esperaMovimientoBancario,
+  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido,
   type MovimientoConciliado, type PagoDetalleEncabezado,
 } from "@/features/tesoreria/domain/pagoDetalle";
+import { MovimientoAusente } from "@/features/tesoreria/components/DetallePagoSheet.movimiento";
 
+/**
+ * El banco guarda el importe en la moneda de la cuenta; sólo la conocemos con
+ * certeza cuando el movimiento y el pago comparten cuenta bancaria.
+ */
+function monedaDelMovimiento(
+  movimiento: MovimientoConciliado,
+  cuentaBancariaPagoId: string | null,
+  monedaCuentaPago: string | null,
+): string {
+  const mismaCuenta =
+    !!movimiento.cuenta_bancaria_id && movimiento.cuenta_bancaria_id === cuentaBancariaPagoId;
+  return mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
+}
 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -77,48 +90,6 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
       {pago.notas ? <Dato label="Notas">{pago.notas}</Dato> : null}
     </section>
   );
-}
-
-/**
- * MNY-P2.2: estado vacío del movimiento bancario. Se extrae para bajar la
- * complejidad de `BloqueMovimiento` (Power of 10) sin cambiar comportamiento.
- */
-function MovimientoAusente({ metodoPago }: { metodoPago: string | null }) {
-  // El efectivo no genera movimiento del banco por diseño; avisar "falta
-  // conciliar" era una alerta falsa.
-  if (!esperaMovimientoBancario(metodoPago)) {
-    return (
-      <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
-        Pago en efectivo: no genera movimiento en la cuenta bancaria, así que no
-        requiere conciliación.
-      </p>
-    );
-  }
-  return (
-    <Alert variant="warning">
-      <TriangleAlert className="h-4 w-4" />
-      <AlertDescription className="space-y-1">
-        <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
-        <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
-          Ir a Conciliación bancaria
-        </Link>
-      </AlertDescription>
-    </Alert>
-  );
-}
-
-/**
- * El banco guarda el importe en la moneda de la cuenta; sólo la conocemos con
- * certeza cuando el movimiento y el pago comparten cuenta bancaria.
- */
-function monedaDelMovimiento(
-  movimiento: MovimientoConciliado,
-  cuentaBancariaPagoId: string | null,
-  monedaCuentaPago: string | null,
-): string {
-  const mismaCuenta =
-    !!movimiento.cuenta_bancaria_id && movimiento.cuenta_bancaria_id === cuentaBancariaPagoId;
-  return mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
 }
 
 export function BloqueMovimiento({

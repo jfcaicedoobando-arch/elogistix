@@ -457,9 +457,9 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.libro_pagos(p_desde date, p_hasta date, p_org uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.libro_pagos(p_desde date, p_hasta date, p_org uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.libro_pagos(p_desde date, p_hasta date, p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.libro_pagos(date, date, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.libro_pagos(date, date, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.libro_pagos(date, date, uuid) TO service_role;
 
 -- 3) aplicar_anticipo_a_factura: la bitácora registra el importe realmente
 --    persistido en el pago (monto_en_moneda_factura), no un recálculo aparte.

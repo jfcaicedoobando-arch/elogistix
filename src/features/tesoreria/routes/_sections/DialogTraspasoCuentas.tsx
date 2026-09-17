@@ -14,8 +14,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { MoneyInput } from "@/components/shared/MoneyInput";
+import { TraspasoImportes } from "./TraspasoImportes";
 import { TraspasoConversion } from "./TraspasoConversion";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import {
@@ -126,30 +125,15 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         />
       </FormDialogSection>
 
-      <FormDialogSection title="Importes y fecha">
-        <div className="space-y-1.5">
-          <Label htmlFor="traspaso-fecha">Fecha</Label>
-          <DatePickerMx id="traspaso-fecha" value={state.fecha} onChange={(v) => setField("fecha", v)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="traspaso-monto">Monto a transferir</Label>
-          <MoneyInput
-            id="traspaso-monto"
-            value={state.montoOrigen}
-            onChange={(v) => setField("montoOrigen", v)}
-            currency={origen?.moneda}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="traspaso-comision">Comisión bancaria (opcional)</Label>
-          <MoneyInput
-            id="traspaso-comision"
-            value={state.comision}
-            onChange={(v) => setField("comision", v)}
-            currency={origen?.moneda}
-          />
-        </div>
-      </FormDialogSection>
+      <TraspasoImportes
+        fecha={state.fecha}
+        montoOrigen={state.montoOrigen}
+        comision={state.comision}
+        monedaOrigen={origen?.moneda}
+        onFechaChange={(v) => setField("fecha", v)}
+        onMontoChange={(v) => setField("montoOrigen", v)}
+        onComisionChange={(v) => setField("comision", v)}
+      />
 
       {origen && destino && (
         <TraspasoConversion

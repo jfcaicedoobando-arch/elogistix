@@ -38,18 +38,27 @@ describe("registrarMovimientoManual · idempotencia (N4)", () => {
   });
 
   it("trata el conflicto de duplicado como éxito si el movimiento ya existe igual", async () => {
-    // MNY: el movimiento guardado tiene el MISMO contenido → reintento legítimo.
-    mock.setTableResult("bbva_movimientos", {
-      data: [{ id: "m1", fecha: payload.fecha, concepto: payload.concepto, cargo: 100, abono: 0 }],
+    // MNY: dos consultas a la misma tabla — primero el INSERT en conflicto y
+    // luego el SELECT `.maybeSingle()`, que devuelve UN objeto (no un arreglo).
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: null,
       error: { code: "23505", message: "duplicate key" },
+    });
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: { id: "m1", fecha: payload.fecha, concepto: payload.concepto, cargo: 100, abono: 0 },
+      error: null,
     });
     await expect(registrarMovimientoManual(payload)).resolves.toBeUndefined();
   });
 
   it("MNY: avisa conflicto si la llave ya se usó con otro contenido", async () => {
-    mock.setTableResult("bbva_movimientos", {
-      data: [{ id: "m1", fecha: "2026-09-01", concepto: "Otro concepto", cargo: 250, abono: 0 }],
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: null,
       error: { code: "23505", message: "duplicate key" },
+    });
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: { id: "m1", fecha: "2026-09-01", concepto: "Otro concepto", cargo: 250, abono: 0 },
+      error: null,
     });
     await expect(registrarMovimientoManual(payload)).rejects.toThrow(/datos distintos/i);
   });

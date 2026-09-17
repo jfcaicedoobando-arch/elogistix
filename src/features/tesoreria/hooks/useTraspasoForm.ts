@@ -1,84 +1,26 @@
 /**
- * Estado y validación del formulario de traspaso entre cuentas propias.
- * Extraído para mantener el modal bajo 200 líneas (Power of 10).
+ * Estado del formulario de traspaso entre cuentas propias.
+ * La validación y los ayudantes puros viven en
+ * `@/features/tesoreria/domain/traspasoForm` (Power of 10: ≤200 líneas).
  */
 import { useEffect, useMemo, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
-import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
-
-import { hoyMx } from "@/lib/date/mx";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
-import { multiplicadorOrigenDestino, parTc, type MonedaTc } from "@/features/tesoreria/domain/tcPar";
+import { multiplicadorOrigenDestino, parTc } from "@/features/tesoreria/domain/tcPar";
+import {
+  ESTADO_INICIAL, hoyIso, sugerirTcQuote, validarTraspaso,
+} from "@/features/tesoreria/domain/traspasoForm";
 
 type Cuenta = Tables<"cuentas_bancarias">;
-type ParTcLocal = { base: MonedaTc; quote: MonedaTc } | null;
 
-// BL-14: "hoy" siempre en zona de negocio CDMX, no en la TZ del navegador.
-const hoyIso = () => hoyMx();
-
-export interface TraspasoFormState {
-  origenId: string;
-  destinoId: string;
-  fecha: string;
-  montoOrigen: number;
-  /**
-   * Cotización en convención mexicana: unidades de `quote` por 1 `base` del
-   * par (p. ej. 18.42 MXN por 1 USD). NO es el multiplicador origen→destino.
-   */
-  tcQuote: number;
-  comision: number;
-  concepto: string;
-  referencia: string;
-}
-
-const ESTADO_INICIAL: TraspasoFormState = {
-  origenId: "",
-  destinoId: "",
-  fecha: hoyIso(),
-  montoOrigen: 0,
-  // UIA-02: 0 = "sin capturar". Antes el default 1 posteaba conversiones
-  // 1:1 silenciosas entre monedas distintas.
-  tcQuote: 0,
-  comision: 0,
-  concepto: "",
-  referencia: "",
-};
-
-/**
- * M-14: si el par incluye MXN, el T/C implícito en pesos por divisa debe caer
- * en banda (5–40). Atrapa dedazos tipo 1.84 o 184 pesos por dólar.
- */
-function validarTcPar(par: ParTcLocal, tcQuote: number): string | null {
-  if (!par || !parInvolucraMxn(par.base, par.quote) || tcQuote <= 0) return null;
-  const mxnPorDivisa = par.quote === "MXN" ? tcQuote : 1 / tcQuote;
-  return validarTcMxn(roundMoney(mxnPorDivisa));
-}
-
-/** Validación pura del traspaso. Extraída del `useMemo` (complejidad ≤16). */
-function validarTraspaso(
-  state: TraspasoFormState,
-  origen: Cuenta | undefined,
-  destino: Cuenta | undefined,
-  mismoMoneda: boolean,
-  par: ParTcLocal,
-): string | null {
-  if (!state.origenId || !state.destinoId) return "Selecciona ambas cuentas.";
-  if (state.origenId === state.destinoId) return "La cuenta origen y destino deben ser distintas.";
-  if (!state.montoOrigen || state.montoOrigen <= 0) return "El monto debe ser mayor a cero.";
-  if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
-  // FE-07: fecha del traspaso obligatoria y nunca futura.
-  if (!state.fecha) return "Captura la fecha del traspaso.";
-  if (state.fecha > hoyIso()) return "La fecha del traspaso no puede ser futura.";
-  if (mismoMoneda) return null;
-  if (!state.tcQuote || state.tcQuote <= 0) {
-    return "Captura el tipo de cambio para cuentas de distinta moneda.";
-  }
-  return validarTcPar(par, state.tcQuote);
-}
+export type { TraspasoFormState } from "@/features/tesoreria/domain/traspasoForm";
+export {
+  sugerirTcQuote, traspasoSucio, conceptoTraspaso, partesTraspaso,
+} from "@/features/tesoreria/domain/traspasoForm";
 
 export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
-  const [state, setState] = useState<TraspasoFormState>({ ...ESTADO_INICIAL, fecha: hoyIso() });
+  const [state, setState] = useState({ ...ESTADO_INICIAL, fecha: hoyIso() });
   /**
    * MNY: ¿el T/C actual lo escribió el usuario? Sólo así se conserva al
    * cambiar la fecha. Antes la sugerencia se aplicaba una única vez y, al
@@ -92,7 +34,10 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     setTcEsManual(false);
   }, [open]);
 
-  const setField = <K extends keyof TraspasoFormState>(key: K, value: TraspasoFormState[K]) => {
+  const setField = <K extends keyof typeof ESTADO_INICIAL>(
+    key: K,
+    value: (typeof ESTADO_INICIAL)[K],
+  ) => {
     if (key === "tcQuote") setTcEsManual(true);
     setState((prev) => ({ ...prev, [key]: value }));
   };
@@ -115,7 +60,6 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     // siga siendo automático.
     setState((prev) => (prev.tcQuote === tcSugerido ? prev : { ...prev, tcQuote: tcSugerido }));
   }, [requiereTc, tcSugerido, tcEsManual]);
-
 
   // Multiplicador que consume la RPC: monto_destino = monto_origen * factor.
   const factorOrigenDestino = useMemo(() => {
@@ -149,52 +93,5 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     tcSugerido,
     tcEsManual,
     fechaTcDof: tcDof?.fecha ?? null,
-
   };
-}
-
-/**
- * Convierte el TC DOF (base MXN) a la cotización del par en convención
- * mexicana: unidades de `quote` por 1 `base`.
- */
-export function sugerirTcQuote(
-  tc: { usdMxn: number; eurMxn: number | null } | null | undefined,
-  par: ParTcLocal,
-): number | null {
-  if (!tc || !par) return null;
-  const aMxn = (m: MonedaTc): number | null =>
-    m === "MXN" ? 1 : m === "USD" ? tc.usdMxn : tc.eurMxn;
-  const base = aMxn(par.base);
-  const quote = aMxn(par.quote);
-  if (!base || !quote || base <= 0 || quote <= 0) return null;
-  return Math.round((base / quote) * 10000) / 10000;
-}
-
-/** YG-04: ¿el traspaso tiene captura que se perdería al cerrar el diálogo? */
-export function traspasoSucio(state: TraspasoFormState): boolean {
-  const señales = [
-    !!state.origenId, !!state.destinoId, state.montoOrigen > 0,
-    state.comision > 0, state.concepto.trim() !== "", state.referencia.trim() !== "",
-  ];
-  return señales.some(Boolean);
-}
-
-/**
- * MNY: contenido normalizado del traspaso, usado como `scope` de la llave de
- * idempotencia. Reintentar el mismo traspaso reusa la llave; cambiar cuentas,
- * fecha, importes o concepto genera otra para que el backend no confirme el
- * traspaso anterior.
- */
-export function conceptoTraspaso(state: TraspasoFormState): string {
-  return state.concepto.trim() || "Traspaso entre cuentas propias";
-}
-
-export function partesTraspaso(
-  state: TraspasoFormState,
-  tipoCambio: number,
-): Array<string | number> {
-  return [
-    state.origenId, state.destinoId, state.fecha, state.montoOrigen,
-    tipoCambio, state.comision, conceptoTraspaso(state), state.referencia.trim(),
-  ];
 }
