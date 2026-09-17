@@ -68,6 +68,7 @@ export function RegistrarAnticipoDialog({
     open,
     moneda,
     cuentaBancariaId,
+    requiereCuenta,
     tipoCambioUsd,
     proveedorIdInicial,
     setValue,
@@ -98,7 +99,8 @@ export function RegistrarAnticipoDialog({
       fechaAnticipo: values.fechaAnticipo,
       tipoCambioUsd: values.moneda === "MXN" ? null : Number(values.tipoCambioUsd),
       metodoPago: values.metodoPago,
-      cuentaBancariaId: values.cuentaBancariaId || null,
+      // MNY P1.1: Efectivo no genera salida bancaria; jamás se manda cuenta.
+      cuentaBancariaId: requiereCuenta ? values.cuentaBancariaId || null : null,
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
       embarqueId: values.embarqueId ?? null,
@@ -128,7 +130,11 @@ export function RegistrarAnticipoDialog({
       onOpenChange={handleOpenChange}
       icon={HandCoins}
       title="Registrar anticipo a proveedor"
-      description="El anticipo genera el cargo en la cuenta bancaria y queda disponible para aplicarse a facturas del mismo proveedor."
+      description={
+        requiereCuenta
+          ? "El anticipo genera el cargo en la cuenta bancaria y queda disponible para aplicarse a facturas del mismo proveedor."
+          : "El anticipo pagado en efectivo no genera movimiento bancario y queda disponible para aplicarse a facturas del mismo proveedor."
+      }
       size="lg"
       footer={footer}
     >
