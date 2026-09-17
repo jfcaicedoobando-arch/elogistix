@@ -48,6 +48,28 @@ export interface ImportarResultado {
   duplicados: number;
 }
 
+/**
+ * MNY: la importación inserta por trozos. Si un trozo posterior falla, los
+ * anteriores YA quedaron guardados: el error informa cuántos se guardaron y
+ * cuántos faltan, para que el usuario pueda volver a cargar el mismo archivo
+ * (los guardados se detectan como duplicados y no se repiten).
+ */
+export class ImportacionParcialError extends Error {
+  readonly code = "LC_IMPORTACION_PARCIAL" as const;
+  constructor(
+    readonly guardados: number,
+    readonly faltantes: number,
+    readonly causa?: unknown,
+  ) {
+    super(
+      `Importación incompleta: se guardaron ${guardados} movimientos y faltaron ${faltantes}. ` +
+        "Vuelve a cargar el mismo archivo: los ya guardados se reconocen como duplicados y no se repiten.",
+    );
+    this.name = "ImportacionParcialError";
+  }
+}
+
+
 export async function importarMovimientos(
   cuentaBancariaId: string,
   movimientos: MovimientoParseado[],
