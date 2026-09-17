@@ -49,9 +49,10 @@ export function buildConceptosFromCostos(
     .map(c => {
       const tasaProducto = c.tasa_iva_aplicada;
       const desdeCatalogo = tasaProducto !== undefined;
-      const tieneIva = desdeCatalogo
+      const noObjeto = esNoObjetoIva(c.tipo_iva);
+      const tieneIva = !noObjeto && (desdeCatalogo
         ? tasaProducto! > 0
-        : (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
+        : (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto));
       const tasaAplicar = desdeCatalogo ? (tasaProducto as number) : tasaIva;
       // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
       const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
@@ -65,6 +66,9 @@ export function buildConceptosFromCostos(
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
         notas: c.notas,
+        // El tratamiento fiscal viaja explícito: `no_objeto` (SAT 01) no se
+        // puede reconstruir después a partir de la tasa 0.
+        tipo_iva: c.tipo_iva,
         // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
         // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
         tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,
