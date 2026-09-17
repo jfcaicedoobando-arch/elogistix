@@ -9,7 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
-import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso } from "../domain/tolerancia";
+import { TOLERANCIA_DIAS, rangoFechasIso, toleranciaMonto } from "../domain/tolerancia";
 import {
   candidatosCxc, candidatosCxp, LIMITE_SUGERENCIAS, type Ventana,
 } from "./sugerirCandidatos.consultas";
