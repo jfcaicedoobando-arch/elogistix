@@ -146,12 +146,8 @@ export default function ResetPassword() {
           ) : done ? (
             <div className="space-y-3 py-4 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
-              <p className="text-sm font-medium text-foreground">
-                {esInvitacion ? "Tu contraseña quedó lista" : "Contraseña actualizada"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {esInvitacion ? "Te llevaremos a tu portal…" : "Te llevaremos al inicio de sesión…"}
-              </p>
+              <p className="text-sm font-medium text-foreground">{copy.exito}</p>
+              <p className="text-xs text-muted-foreground">{copy.exitoDetalle}</p>
             </div>
           ) : !validSession ? (
             <div className="space-y-3 py-4 text-center">
