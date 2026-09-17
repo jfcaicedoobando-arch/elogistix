@@ -46,9 +46,18 @@ describe("sugerirCandidatos — moneda", () => {
     expect(mock.tableCalls.find((c) => c.table === "cuentas_bancarias")).toBeUndefined();
   });
 
-  it("monedaDeCuenta cae a MXN sin cuenta o con valor desconocido", async () => {
-    expect(await monedaDeCuenta(null)).toBe("MXN");
+  it("FIN-NEW-03: monedaDeCuenta devuelve null sin cuenta o con valor desconocido", async () => {
+    expect(await monedaDeCuenta(null)).toBeNull();
     mock.setTableResult("cuentas_bancarias", { data: { moneda: "GBP" }, error: null });
-    expect(await monedaDeCuenta("cta-x")).toBe("MXN");
+    expect(await monedaDeCuenta("cta-x")).toBeNull();
+  });
+
+  it("FIN-NEW-03: no sugiere nada cuando la cuenta no tiene moneda reconocible", async () => {
+    mock.setTableResult("cuentas_bancarias", { data: { moneda: "GBP" }, error: null });
+    const res = await sugerirCandidatos(
+      mov({ cargo: 1000, abono: 0, fecha: "2026-06-10", cuenta_bancaria_id: "cta-x" }),
+    );
+    expect(res).toEqual([]);
+    expect(mock.tableCalls.some((c) => c.table === "pagos_proveedor")).toBe(false);
   });
 });

@@ -94,7 +94,7 @@ describe("conciliacion service", () => {
 
     it("busca en pagos_proveedor para cargos", async () => {
       mock.setTableResult("pagos_proveedor", { data: [], error: null });
-      await sugerirCandidatos(makeMov({ cargo: 100, abono: 0, fecha: "2024-01-01" }));
+      await sugerirCandidatos(makeMov({ cargo: 100, abono: 0, fecha: "2024-01-01" }), "MXN");
       expect(mock.tableCalls.some(c => c.table === "pagos_proveedor")).toBe(true);
     });
   });
