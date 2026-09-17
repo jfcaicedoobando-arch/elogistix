@@ -89,22 +89,32 @@ export function DialogPagoLoteDatos(p: Props) {
           </Select>
           <p className="text-body-sm text-muted-foreground">Catálogo interno</p>
         </div>
-        <div className="space-y-1.5">
-          <Label>Cuenta bancaria</Label>
-          <Select value={p.cuentaId} onValueChange={p.onCuentaId}>
-            <SelectTrigger aria-label="Cuenta bancaria">
-              <SelectValue placeholder={`Cuentas en ${p.moneda}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {p.cuentasMoneda.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{etiqueta(c)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-body-sm text-muted-foreground">
-            {p.requiereCuenta ? "Requerida" : "Opcional"}
-          </p>
-        </div>
+        {p.requiereCuenta ? (
+          <div className="space-y-1.5">
+            <Label>Cuenta bancaria</Label>
+            <Select value={p.cuentaId} onValueChange={p.onCuentaId}>
+              <SelectTrigger aria-label="Cuenta bancaria">
+                <SelectValue placeholder={`Cuentas en ${p.moneda}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {p.cuentasMoneda.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{etiqueta(c)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-body-sm text-muted-foreground">Requerida</p>
+          </div>
+        ) : (
+          // MNY P1.2: en Efectivo no hay cuenta ni salida bancaria.
+          <div className="space-y-1.5">
+            <Label>Cuenta bancaria</Label>
+            <p className="text-body-sm text-muted-foreground">
+              En efectivo no se usa cuenta bancaria: no se registra ninguna salida de dinero
+              en tesorería.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="lote-ref">Referencia bancaria</Label>
           <Input
