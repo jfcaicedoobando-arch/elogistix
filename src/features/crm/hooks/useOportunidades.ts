@@ -18,7 +18,8 @@ import {
   type CrmOportunidadRow,
   type OportunidadInput as ServiceOportunidadInput,
 } from "@/features/crm/services/oportunidades";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { avisoBitacoraFallida } from "@/features/crm/services/bitacoraNoBloqueante";
 import { getErrorMessage } from "@/lib/errors";
 import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 
@@ -98,7 +99,17 @@ export function useActualizarOportunidad() {
   };
   return useMutation({
     mutationFn: actualizarOportunidad,
-    onSuccess: (_d, vars) => refrescar(vars.id),
+    onSuccess: (data, vars) => {
+      refrescar(vars.id);
+      // La fila sí se guardó: si sólo falló la bitácora se avisa, no se
+      // reporta un error que haría dudar del cambio ya aplicado.
+      if (data.avisoActividad) {
+        notifyWarning(undefined, {
+          title: "Oportunidad actualizada",
+          description: avisoBitacoraFallida(data.avisoActividad),
+        });
+      }
+    },
     onError: (error: Error, vars) => {
       // Hallazgo 14: en conflicto de concurrencia (LC_CONFLICTO_CONCURRENCIA)
       // refrescamos igual las queries para que la UI muestre la versión
@@ -114,7 +125,7 @@ export function useEliminarOportunidad() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (id: string) => eliminarOportunidad(id, user?.id ?? null),
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
@@ -123,6 +134,12 @@ export function useEliminarOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
       // v13.823.84: el éxito se notifica en el call-site
       // (`useOportunidadDetalleActions`) para evitar un doble toast.
+      if (data.avisoActividad) {
+        notifyWarning(undefined, {
+          title: "Oportunidad eliminada",
+          description: avisoBitacoraFallida(data.avisoActividad),
+        });
+      }
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo eliminar oportunidad", description: getErrorMessage(error), error, method: "DELETE_OPORTUNIDAD" });
