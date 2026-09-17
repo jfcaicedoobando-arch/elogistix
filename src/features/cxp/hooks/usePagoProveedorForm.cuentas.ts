@@ -17,8 +17,16 @@ export function useCuentaPagoSeleccionada<T extends CuentaLike>(args: {
   cuentaId: string;
   setCuentaId: (id: string) => void;
   pagoEditarId: string | null;
+  /**
+   * MNY: `false` cuando el método es Efectivo. Sin esta bandera se
+   * auto-seleccionaba una cuenta y la RPC derivaba una salida bancaria por un
+   * pago hecho en efectivo (bajaba el saldo del banco indebidamente).
+   */
+  requiereCuenta: boolean;
 }) {
-  const { cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId } = args;
+  const {
+    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId, requiereCuenta,
+  } = args;
 
   const cuentasDeMoneda = useMemo(
     () => cuentas.filter((c) => c.moneda === moneda),
@@ -26,9 +34,14 @@ export function useCuentaPagoSeleccionada<T extends CuentaLike>(args: {
   );
 
   useEffect(() => {
-    if (!open || cuentaId || cuentas.length === 0 || pagoEditarId) return;
+    if (!open || !requiereCuenta || cuentaId || cuentas.length === 0 || pagoEditarId) return;
     setCuentaId((cuentasDeMoneda[0] ?? cuentas[0]).id);
-  }, [open, cuentaId, cuentas, cuentasDeMoneda, pagoEditarId, setCuentaId]);
+  }, [open, cuentaId, cuentas, cuentasDeMoneda, pagoEditarId, setCuentaId, requiereCuenta]);
+
+  // Efectivo: se limpia la cuenta para que el pago se envíe sin cuenta bancaria.
+  useEffect(() => {
+    if (!requiereCuenta && cuentaId) setCuentaId("");
+  }, [requiereCuenta, cuentaId, setCuentaId]);
 
   useEffect(() => {
     if (!open) setCuentaId("");
@@ -41,6 +54,7 @@ export function useCuentaPagoSeleccionada<T extends CuentaLike>(args: {
 
   return { cuentasDeMoneda, cuentaSeleccionada };
 }
+
 
 /**
  * Prefill del monto: al saldar en MXN una factura extranjera usa el TC;
