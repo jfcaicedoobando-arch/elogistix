@@ -5,7 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { subtotalesPorMoneda } from "../totalesAplicaciones";
 
-describe("subtotalesPorMoneda", () => {
+describe("subtotalesPorMoneda · anticipos aplicados a factura de proveedor", () => {
   it("una sola moneda: un subtotal", () => {
     expect(
       subtotalesPorMoneda([
