@@ -2,7 +2,7 @@
  * Hooks de movimientos bancarios e conciliación.
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -40,6 +40,7 @@ export function useConciliacionResumen(cuentaBancariaId: string | null) {
 
 export function useImportarMovimientos() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   return useMutationWithFeedback({
     mutationFn: ({ cuentaId, movimientos }: { cuentaId: string; movimientos: MovimientoParseado[] }) =>
       importarMovimientos(cuentaId, movimientos, user?.id ?? null),
@@ -49,8 +50,14 @@ export function useImportarMovimientos() {
     onSuccess: (_data, vars) => {
       notifySuccess(undefined, { title: `${vars.movimientos.length} movimientos importados` });
     },
+    // MNY: una importación puede fallar a medias y dejar filas guardadas; hay
+    // que refrescar la pantalla para que el usuario vea lo que sí entró.
+    onError: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+    },
   });
 }
+
 
 export function useSugerirCandidatos(mov: MovimientoBBVA | null) {
   return useQuery({
