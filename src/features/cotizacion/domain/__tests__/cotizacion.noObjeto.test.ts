@@ -5,11 +5,10 @@ import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const fila = (over: Partial<FilaCostoLocal>): FilaCostoLocal =>
   ({
-    id: 1,
     concepto: "Maniobras",
     unidad_medida: "E48",
     cantidad: 1,
-    costo: 0,
+    costo_unitario: 0,
     precio_venta: 1000,
     moneda: "MXN",
     proveedor: "",
@@ -43,7 +42,7 @@ describe("Cotización → conceptos con IVA no objeto (SAT 01)", () => {
     const { mxn } = buildConceptosFromCostos(
       [
         fila({ tasa_iva_aplicada: 0.16 }),
-        fila({ id: 2, tasa_iva_aplicada: 0, tipo_iva: "exento" }),
+        fila({ concepto: "Flete", tasa_iva_aplicada: 0, tipo_iva: "exento" }),
       ],
       0.16,
     );
