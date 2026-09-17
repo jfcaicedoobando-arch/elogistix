@@ -46,16 +46,29 @@ export type FilaResultado =
   /** Fila con datos ilegibles: NO debe importarse en silencio. */
   | { tipo: "ilegible"; descarte: FilaDescartada };
 
+/**
+ * MNY P1.3: normalización de signo coherente con las columnas del estado de
+ * cuenta BBVA (cargo y abono son columnas separadas, el resto del flujo las
+ * trata como magnitudes positivas):
+ *  - columna CARGO: el signo negativo o los paréntesis son la convención del
+ *    banco para un retiro ⇒ se guarda la magnitud.
+ *  - columna ABONO negativa: no tiene lectura válida (un depósito negativo
+ *    sería un retiro en la columna equivocada) ⇒ fila ilegible.
+ *  - cargo y abono con importe a la vez ⇒ fila ilegible (nunca se colapsa).
+ */
 function parseMontosRow(row: unknown[], idx: ColIdx):
   | { cargo: number; abono: number; saldo: number | null }
   | null {
   const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
   const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
   if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) return null;
+  if (abonoRaw < 0) return null;
+  const cargo = Math.abs(cargoRaw);
+  if (cargo > 0 && abonoRaw > 0) return null;
   const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
   const saldoNum = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
   const saldo = saldoNum == null || Number.isNaN(saldoNum) ? null : saldoNum;
-  return { cargo: cargoRaw, abono: abonoRaw, saldo };
+  return { cargo, abono: abonoRaw, saldo };
 }
 
 export async function clasificarFila(
