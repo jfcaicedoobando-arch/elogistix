@@ -302,81 +302,98 @@ GRANT EXECUTE ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, te
 -- definición viva con pg_get_functiondef y se inserta la columna en los
 -- INSERT/UPDATE de conceptos_venta. Idempotente: si la función ya menciona
 -- tipo_iva no se toca. Si un ancla no aparece, FALLA fuerte (nunca silencioso).
+-- La función se localiza por IDENTIDAD EXACTA (nombre + firma), no por nombre:
+-- con sobrecargas, `LIMIT 1` podía parchar una función arbitraria. Si hay más
+-- de una candidata para la misma firma, o ninguna, la migración FALLA.
 DO $seccion6$
 DECLARE
   v_def text;
   v_new text;
   v_oid oid;
+  v_cnt integer;
   v_anchor text;
   v_repl text;
   v_fn text;
-  v_pares text[][] := ARRAY[
+  v_args text;
+  -- Firmas exactas (pg_get_function_identity_arguments) de los RPC parchados.
+  c_args_crear   text := 'p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb';
+  c_args_actual  text := 'p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone';
+  c_args_replica text := 'p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb';
+  c_args_duplica text := 'p_embarque_origen_id uuid, p_copias jsonb, p_request_id uuid';
+  v_pares text[][];
+  i integer;
+BEGIN
+  v_pares := ARRAY[
     -- crear_embarque_completo: alta simple.
     ARRAY[
-      'crear_embarque_completo',
+      'crear_embarque_completo', c_args_crear,
       E'aplica_iva, tasa_iva_aplicada, organization_id)',
       E'aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id)'
     ],
     ARRAY[
-      'crear_embarque_completo',
+      'crear_embarque_completo', c_args_crear,
       E'COALESCE((cv->>\'tasa_iva_aplicada\')::numeric, 0.16),\n            v_org_id);',
       E'COALESCE((cv->>\'tasa_iva_aplicada\')::numeric, 0.16),\n            NULLIF(cv->>\'tipo_iva\', \'\'),\n            v_org_id);'
     ],
     -- actualizar_embarque_completo: alta dentro del merge.
     ARRAY[
-      'actualizar_embarque_completo',
+      'actualizar_embarque_completo', c_args_actual,
       E'        aplica_iva, tasa_iva_aplicada, organization_id\n      ) VALUES (',
       E'        aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id\n      ) VALUES ('
     ],
     ARRAY[
-      'actualizar_embarque_completo',
+      'actualizar_embarque_completo', c_args_actual,
       E'        END,\n        v_org_id\n      )\n      RETURNING id INTO v_new_id;',
       E'        END,\n        NULLIF(cv->>\'tipo_iva\', \'\'),\n        v_org_id\n      )\n      RETURNING id INTO v_new_id;'
     ],
     -- actualizar_embarque_completo: edición del renglón existente. El payload
     -- que omite la llave conserva el valor guardado (fila legacy intacta).
     ARRAY[
-      'actualizar_embarque_completo',
+      'actualizar_embarque_completo', c_args_actual,
       E'        END\n      WHERE id = (cv->>\'id\')::uuid',
       E'        END,\n        tipo_iva = CASE\n          WHEN cv ? \'tipo_iva\' THEN NULLIF(cv->>\'tipo_iva\', \'\')\n          ELSE tipo_iva\n        END\n      WHERE id = (cv->>\'id\')::uuid'
     ],
     -- Replicado cotización → embarque.
     ARRAY[
-      '_crear_embarque_replicar_conceptos',
+      '_crear_embarque_replicar_conceptos', c_args_replica,
       E'          aplica_iva, tasa_iva_aplicada, total, organization_id\n        )',
       E'          aplica_iva, tasa_iva_aplicada, tipo_iva, total, organization_id\n        )'
     ],
     ARRAY[
-      '_crear_embarque_replicar_conceptos',
+      '_crear_embarque_replicar_conceptos', c_args_replica,
       E'          v_aplica,\n          v_tasa,\n          v_total, p_org\n        );',
       E'          v_aplica,\n          v_tasa,\n          NULLIF(v_venta->>\'tipo_iva\', \'\'),\n          v_total, p_org\n        );'
     ],
     -- Duplicado de embarque: el tratamiento se copia del origen.
     ARRAY[
-      'duplicar_embarque_completo',
+      'duplicar_embarque_completo', c_args_duplica,
       E'      organization_id, contenedor_id, aplica_iva\n    )',
       E'      organization_id, contenedor_id, aplica_iva, tipo_iva\n    )'
     ],
     ARRAY[
-      'duplicar_embarque_completo',
+      'duplicar_embarque_completo', c_args_duplica,
       E'      aplica_iva\n    FROM conceptos_venta',
       E'      aplica_iva, tipo_iva\n    FROM conceptos_venta'
     ]
   ];
-  i integer;
-BEGIN
+
   FOR i IN 1 .. array_length(v_pares, 1) LOOP
     v_fn := v_pares[i][1];
-    v_anchor := v_pares[i][2];
-    v_repl := v_pares[i][3];
+    v_args := v_pares[i][2];
+    v_anchor := v_pares[i][3];
+    v_repl := v_pares[i][4];
 
-    SELECT p.oid INTO v_oid
+    SELECT count(*), min(p.oid) INTO v_cnt, v_oid
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
-     WHERE n.nspname = 'public' AND p.proname = v_fn
-     LIMIT 1;
-    IF v_oid IS NULL THEN
-      RAISE EXCEPTION 'No existe public.%(): revisa la migración antes de aplicarla', v_fn;
+     WHERE n.nspname = 'public'
+       AND p.proname = v_fn
+       AND pg_get_function_identity_arguments(p.oid) = v_args;
+    IF v_cnt = 0 THEN
+      RAISE EXCEPTION 'No existe public.%(%): revisa la firma antes de aplicar la migración', v_fn, v_args;
+    END IF;
+    IF v_cnt > 1 THEN
+      RAISE EXCEPTION 'Hay % funciones public.%(%) con la misma firma: parche ambiguo', v_cnt, v_fn, v_args;
     END IF;
 
     v_def := pg_get_functiondef(v_oid);
@@ -384,10 +401,30 @@ BEGIN
       CONTINUE; -- ya parchada (idempotencia)
     END IF;
     IF position(v_anchor in v_def) = 0 THEN
-      RAISE EXCEPTION 'Ancla no encontrada en public.%(): el cuerpo cambió, actualiza esta sección', v_fn;
+      RAISE EXCEPTION 'Ancla no encontrada en public.%(%): el cuerpo cambió, actualiza esta sección', v_fn, v_args;
     END IF;
     v_new := replace(v_def, v_anchor, v_repl);
     EXECUTE v_new;
+  END LOOP;
+
+  -- Verificación final: las cuatro rutas que escriben conceptos_venta deben
+  -- mencionar tipo_iva. Si alguna quedó sin parchar, la migración aborta.
+  FOR i IN 1 .. 4 LOOP
+    SELECT CASE i
+             WHEN 1 THEN 'crear_embarque_completo'
+             WHEN 2 THEN 'actualizar_embarque_completo'
+             WHEN 3 THEN '_crear_embarque_replicar_conceptos'
+             ELSE 'duplicar_embarque_completo'
+           END INTO v_fn;
+    SELECT count(*) INTO v_cnt
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public'
+       AND p.proname = v_fn
+       AND pg_get_functiondef(p.oid) LIKE '%tipo_iva%';
+    IF v_cnt = 0 THEN
+      RAISE EXCEPTION 'public.%() no conserva tipo_iva en conceptos_venta tras el parche', v_fn;
+    END IF;
   END LOOP;
 END
 $seccion6$;
