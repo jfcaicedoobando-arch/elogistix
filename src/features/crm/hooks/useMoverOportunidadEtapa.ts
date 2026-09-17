@@ -16,6 +16,8 @@ import {
   resolverProbabilidad,
   resolverCierreGanada,
   resolverLimpiezaCierre,
+  resolverRestauracionCierre,
+  puedeRestaurarCierre,
   avisarCriteriosPendientes,
   puedeOfrecerUndo,
 } from "./moverOportunidadEtapaHelpers";
@@ -56,7 +58,8 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob, etapaDestino);
-      const puedeDeshacer = puedeOfrecerUndo(etapaDestino);
+      // El Undo repone la fotografía de cierre; si no la hay, no se ofrece.
+      const puedeDeshacer = puedeOfrecerUndo(etapaDestino) && puedeRestaurarCierre(etapaOrigen, op);
 
       // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
       // deja criterios de salida pendientes.
@@ -90,6 +93,8 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
               etapa_id: etapaPrev,
               probabilidad: probPrev,
               ...resolverLimpiezaCierre(etapaOrigen, etapaDestino),
+              // …y repone el cierre real / motivo que tenía antes del cambio.
+              ...resolverRestauracionCierre(etapaOrigen, op),
               expectedUpdatedAt: selloTrasMover,
             });
           });
