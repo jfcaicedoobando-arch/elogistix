@@ -12,7 +12,7 @@ import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 import { CONCEPTO_GRID_MXN, CONCEPTO_SOLO_XL } from "./columnasConcepto";
-import { esTratamientoIvaBloqueado, TratamientoIvaFila } from "./TratamientoIvaFila";
+import { TratamientoIvaFila } from "./TratamientoIvaFila";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
   });
   const subtotal = c.cantidad * c.precio_unitario;
   const tasaFila = resolverTasaConcepto(c, tasaIva);
-  const tratamientoBloqueado = esTratamientoIvaBloqueado(c.tipo_iva);
+  const tratamientoBloqueado = c.tipo_iva === "no_objeto" || c.tipo_iva === "exento";
   const iva = calcularIVA(subtotal, tasaFila);
   // Notas a demanda (mismo patrón que el paso 2): la lista deja de ser altísima.
   const [notasAbiertas, setNotasAbiertas] = useState(false);

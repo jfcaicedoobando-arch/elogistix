@@ -22,7 +22,3 @@ export function TratamientoIvaFila({ tipoIva }: TratamientoIvaFilaProps) {
     />
   );
 }
-
-export function esTratamientoIvaBloqueado(tipoIva?: string | null): boolean {
-  return tipoIva === "no_objeto" || tipoIva === "exento";
-}

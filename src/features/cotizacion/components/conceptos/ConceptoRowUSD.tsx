@@ -13,7 +13,7 @@ import { TASAS_IVA_MX, resolverTasaConcepto } from "@/lib/financial/financialUti
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 import { CONCEPTO_GRID_USD } from "./columnasConcepto";
-import { esTratamientoIvaBloqueado, TratamientoIvaFila } from "./TratamientoIvaFila";
+import { TratamientoIvaFila } from "./TratamientoIvaFila";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
   const tasaFila = resolverTasaConcepto(c, 0);
   const aplicaIva = tasaFila > 0;
   const puedeIva = !!c.descripcion; // el catálogo determina si es gravado; usuario puede overridear
-  const tratamientoBloqueado = esTratamientoIvaBloqueado(c.tipo_iva);
+  const tratamientoBloqueado = c.tipo_iva === "no_objeto" || c.tipo_iva === "exento";
   // Las notas se abren a demanda (igual que en el paso 2): antes cada renglón
   // llevaba un cuadro de notas abierto y la lista quedaba altísima.
   const [notasAbiertas, setNotasAbiertas] = useState(false);
