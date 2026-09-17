@@ -20,7 +20,7 @@ import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbar
 import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
-import { MSG_IVA_MULTITASA, resolverTrasladoDr } from "./trasladoDr.ts";
+import { MSG_IVA_MULTITASA, MSG_REP_NO_OBJETO, resolverTrasladoDr } from "./trasladoDr.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 
@@ -118,6 +118,15 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       .update({ estado_rep: "Error", rep_error: MSG_IVA_MULTITASA })
       .eq("id", pago.id);
     return json({ error: "iva_multitasa", message: MSG_IVA_MULTITASA }, 422);
+  }
+  // "No objeto de impuesto" (SAT 01) no es representable en el complemento de
+  // pago vía Facturapi (`related_documents` no expone ObjetoImpDR): se bloquea
+  // ANTES del claim en vez de declararlo como Exento (dato fiscal falso).
+  if (traslado === "no_objeto") {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_REP_NO_OBJETO })
+      .eq("id", pago.id);
+    return json({ error: "rep_no_objeto", message: MSG_REP_NO_OBJETO }, 422);
   }
   const tasaIvaDr = traslado === "sin_conceptos" ? tasaIvaFactura : traslado.tasa;
   const factorIvaFactura = traslado === "sin_conceptos" ? factorIvaFallback : traslado.factor;
