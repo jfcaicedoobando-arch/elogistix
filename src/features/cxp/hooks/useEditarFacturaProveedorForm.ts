@@ -25,7 +25,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/types";
 
-
 type RowLite = FacturaParaEdicion;
 
 function numOrEmpty(v: unknown): string {
@@ -149,7 +148,6 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     });
   };
 
-
   // Proveedor NO editable: callback no-op para satisfacer el contrato del form reutilizado.
   const handleProveedorNoop = () => { /* read-only en edit */ };
 
@@ -199,5 +197,4 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     isErrorRow,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
-
 }
