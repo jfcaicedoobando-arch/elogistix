@@ -1,0 +1,62 @@
+/**
+ * IVA "No objeto de impuesto" (SAT 01) — renglón MXN de cotización.
+ *
+ * El renglón MXN comparte `ConceptoDescripcionSelector` con el de USD, así que
+ * al elegir un producto del catálogo debe copiar el tratamiento fiscal
+ * explícito (`tipo_iva`) sin inferirlo de la tasa 0.
+ */
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ConceptoRowMXN } from "@/features/cotizacion/components/conceptos/ConceptoRowMXN";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
+
+const productoNoObjeto = {
+  id: "sat-01",
+  nombre: "Servicio no objeto",
+  clave_unidad_sat: "E48",
+  tipo_iva: "no_objeto",
+};
+
+vi.mock("@/features/cotizacion/components/conceptos/ProductoServicioSelect", () => ({
+  ProductoServicioSelect: ({ onSelect }: { onSelect: (p: typeof productoNoObjeto) => void }) => (
+    <button type="button" data-testid="mock-sat-select" onClick={() => onSelect(productoNoObjeto)}>
+      pick
+    </button>
+  ),
+}));
+
+vi.mock("@/features/cotizacion/components/conceptos/UnidadMedidaSelect", () => ({
+  UnidadMedidaSelect: () => <div data-testid="unidad" />,
+}));
+
+const concepto: ConceptoVentaCotizacion = {
+  descripcion: "",
+  cantidad: 1,
+  precio_unitario: 100,
+  unidad_medida: "E48",
+  aplica_iva: true,
+  total: 116,
+} as ConceptoVentaCotizacion;
+
+describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
+  it("copia tipo_iva no_objeto y no lo convierte en exento", () => {
+    const actualizar = vi.fn();
+    render(
+      <ConceptoRowMXN
+        concepto={concepto}
+        index={0}
+        total={1}
+        actualizar={actualizar}
+        eliminar={vi.fn()}
+        tasaIva={0.16}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("mock-sat-select"));
+
+    expect(actualizar).toHaveBeenCalledWith(0, "tipo_iva", "no_objeto");
+    expect(actualizar).toHaveBeenCalledWith(0, "aplica_iva", false);
+    expect(actualizar).toHaveBeenCalledWith(0, "tasa_iva_aplicada", 0);
+    // Nunca se marca como exento: son tratamientos fiscales distintos.
+    expect(actualizar).not.toHaveBeenCalledWith(0, "tipo_iva", "exento");
+  });
+});
