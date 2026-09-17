@@ -92,7 +92,9 @@ function Paso({ numero, titulo, detalle, estado, icon: Icon }: PasoProps) {
         </div>
         {/* EMB-NEW-06: el detalle envuelve en dos líneas; antes `truncate`
             cortaba "6 generadas · 2 sin emitir" en HD. */}
-        <div className={cn("text-body-sm break-words", styles.detail)} title={detalle}>{detalle}</div>
+        <Hint label={detalle}>
+          <div className={cn("text-body-sm break-words", styles.detail)}>{detalle}</div>
+        </Hint>
       </div>
     </div>
   );
