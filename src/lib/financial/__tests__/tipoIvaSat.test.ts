@@ -42,8 +42,8 @@ describe("tipoIvaSat — No objeto de impuesto (SAT 01)", () => {
   });
 
   it("el tipo explícito manda sobre el legacy", () => {
-    expect(tipoIvaEfectivo("no_objeto", { aplica_iva: true, tasa_iva_aplicada: 0.16 })).toBe("no_objeto");
-    expect(tipoIvaEfectivo(undefined, { aplica_iva: true, tasa_iva_aplicada: 0.08 })).toBe("gravado_8");
+    expect(tipoIvaEfectivo({ tipo_iva: "no_objeto", aplica_iva: true, tasa_iva_aplicada: 0.16 })).toBe("no_objeto");
+    expect(tipoIvaEfectivo({ aplica_iva: true, tasa_iva_aplicada: 0.08 })).toBe("gravado_8");
   });
 
   it("no altera gravado 16/8 ni tasa 0", () => {
