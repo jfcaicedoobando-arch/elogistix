@@ -132,7 +132,7 @@ describe("consolidar_proformas · tratamiento fiscal explícito", () => {
 
   it("ObjetoImp 01 sobrevive de la consolidada a la factura", () => {
     const fn = cuerpo(migracion, "_convertir_proformas_insertar_conceptos");
-    const consolidada = fn.slice(0, fn.indexOf("ELSE"));
+    const consolidada = fn.slice(0, fn.indexOf("\n  ELSE"));
     expect(consolidada).toContain("pcc.tipo_iva IS NOT NULL THEN pcc.tipo_iva");
     expect(consolidada).toContain("pcc.tipo_iva = 'no_objeto' THEN NULL");
     expect(objetoImpDeTipoIva("no_objeto")).toBe("01");
