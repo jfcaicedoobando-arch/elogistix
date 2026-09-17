@@ -1,3 +1,6 @@
+-- MNY-P2.3 — sin T/C registrado ya no se inventa 1: `tipo_cambio` y
+-- `monto_mxn` viajan como NULL (desconocido). Los pagos en pesos no cambian.
+--
 -- MNY-01 (v13.823.399) — `pago_detalle` acepta el tipo 'lote_cobro'.
 --
 -- `registrar_pago_cliente_lote` conecta el depósito con `bbva_movimientos
@@ -45,9 +48,10 @@ BEGIN
              'id', pf.id, 'tipo', 'cobro', 'fecha', pf.fecha_pago,
              'contraparte', c.nombre, 'contraparte_id', f.cliente_id,
              'moneda', pf.moneda::text, 'monto', COALESCE(pf.monto,0),
-             'tipo_cambio', COALESCE(pf.tipo_cambio,1),
+             'tipo_cambio', NULLIF(pf.tipo_cambio,0),
              'monto_mxn', CASE WHEN pf.moneda::text='MXN' THEN COALESCE(pf.monto,0)
-                               ELSE COALESCE(pf.monto,0)*COALESCE(pf.tipo_cambio,1) END,
+                               WHEN COALESCE(pf.tipo_cambio,0) > 0 THEN COALESCE(pf.monto,0)*pf.tipo_cambio
+                               ELSE NULL END,
              'metodo_pago', pf.forma_pago, 'referencia', pf.referencia,
              'cuenta_bancaria_id', pf.cuenta_bancaria_id,
              'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
@@ -71,9 +75,10 @@ BEGIN
              'id', pp.id, 'tipo', 'pago', 'fecha', pp.fecha_pago,
              'contraparte', pr.nombre, 'contraparte_id', pfa.proveedor_id,
              'moneda', pp.moneda::text, 'monto', COALESCE(pp.monto,0),
-             'tipo_cambio', COALESCE(pp.tipo_cambio_usd,1),
+             'tipo_cambio', NULLIF(pp.tipo_cambio_usd,0),
              'monto_mxn', CASE WHEN pp.moneda::text='MXN' THEN COALESCE(pp.monto,0)
-                               ELSE COALESCE(pp.monto,0)*COALESCE(pp.tipo_cambio_usd,1) END,
+                               WHEN COALESCE(pp.tipo_cambio_usd,0) > 0 THEN COALESCE(pp.monto,0)*pp.tipo_cambio_usd
+                               ELSE NULL END,
              'metodo_pago', pp.metodo_pago, 'referencia', pp.referencia,
              'cuenta_bancaria_id', pp.cuenta_bancaria_id,
              'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
@@ -97,9 +102,10 @@ BEGIN
              'id', l.id, 'tipo', 'lote', 'fecha', l.fecha_pago,
              'contraparte', pr.nombre, 'contraparte_id', l.proveedor_id,
              'moneda', l.moneda::text, 'monto', COALESCE(l.monto_total,0),
-             'tipo_cambio', COALESCE(l.tipo_cambio_usd,1),
+             'tipo_cambio', NULLIF(l.tipo_cambio_usd,0),
              'monto_mxn', CASE WHEN l.moneda::text='MXN' THEN COALESCE(l.monto_total,0)
-                               ELSE COALESCE(l.monto_total,0)*COALESCE(l.tipo_cambio_usd,1) END,
+                               WHEN COALESCE(l.tipo_cambio_usd,0) > 0 THEN COALESCE(l.monto_total,0)*l.tipo_cambio_usd
+                               ELSE NULL END,
              'metodo_pago', l.metodo_pago, 'referencia', l.referencia,
              'cuenta_bancaria_id', l.cuenta_bancaria_id,
              'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
@@ -124,9 +130,10 @@ BEGIN
              'id', l.id, 'tipo', 'lote_cobro', 'fecha', l.fecha_pago,
              'contraparte', c.nombre, 'contraparte_id', l.cliente_id,
              'moneda', l.moneda::text, 'monto', COALESCE(l.monto_total,0),
-             'tipo_cambio', COALESCE(l.tipo_cambio_usd,1),
+             'tipo_cambio', NULLIF(l.tipo_cambio_usd,0),
              'monto_mxn', CASE WHEN l.moneda::text='MXN' THEN COALESCE(l.monto_total,0)
-                               ELSE COALESCE(l.monto_total,0)*COALESCE(l.tipo_cambio_usd,1) END,
+                               WHEN COALESCE(l.tipo_cambio_usd,0) > 0 THEN COALESCE(l.monto_total,0)*l.tipo_cambio_usd
+                               ELSE NULL END,
              'metodo_pago', l.forma_pago, 'referencia', l.referencia,
              'cuenta_bancaria_id', l.cuenta_bancaria_id,
              'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
@@ -148,9 +155,10 @@ BEGIN
              'id', ap.id, 'tipo', 'anticipo', 'fecha', ap.fecha_anticipo,
              'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
              'moneda', ap.moneda::text, 'monto', COALESCE(ap.monto,0),
-             'tipo_cambio', COALESCE(ap.tipo_cambio_usd,1),
+             'tipo_cambio', NULLIF(ap.tipo_cambio_usd,0),
              'monto_mxn', CASE WHEN ap.moneda::text='MXN' THEN COALESCE(ap.monto,0)
-                               ELSE COALESCE(ap.monto,0)*COALESCE(ap.tipo_cambio_usd,1) END,
+                               WHEN COALESCE(ap.tipo_cambio_usd,0) > 0 THEN COALESCE(ap.monto,0)*ap.tipo_cambio_usd
+                               ELSE NULL END,
              'metodo_pago', ap.metodo_pago, 'referencia', ap.referencia,
              'cuenta_bancaria_id', ap.cuenta_bancaria_id,
              'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
