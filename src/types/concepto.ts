@@ -23,6 +23,12 @@ export interface ConceptoVentaLocal {
   /** Tasa explícita de la línea (0 / 0.08 / 0.16). Ver `aplicaIva`. */
   tasaIva?: number | null;
   /**
+   * Tratamiento fiscal explícito heredado del catálogo (`gravado_16`,
+   * `gravado_8`, `tasa_0`, `exento`, `no_objeto`). `null`/`undefined` = legacy:
+   * se resuelve por `aplicaIva`/`tasaIva`. NUNCA se infiere `no_objeto`.
+   */
+  tipoIva?: string | null;
+  /**
    * `conceptos_venta.estado_facturacion` tal como viene de BD. La RPC de
    * guardado ignora los renglones ya facturados, así que la UI lo usa para
    * bloquear la fila en vez de fingir un guardado exitoso.

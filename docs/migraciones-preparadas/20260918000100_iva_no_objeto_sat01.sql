@@ -293,4 +293,103 @@ $function$;
 REVOKE ALL ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid) TO authenticated, service_role;
 
+
+-- 6) Ventas de embarques: el tratamiento fiscal se guarda y se copia ----------
+-- La pantalla "Ventas de embarques" (conceptos_venta capturados fuera del
+-- flujo de cotización) ya envía `tipo_iva` en el payload de los RPC. Aquí se
+-- parcha el cuerpo vigente de los RPC para que lo persistan, sin reescribirlos
+-- completos (son funciones largas y ajenas a este cambio): se toma la
+-- definición viva con pg_get_functiondef y se inserta la columna en los
+-- INSERT/UPDATE de conceptos_venta. Idempotente: si la función ya menciona
+-- tipo_iva no se toca. Si un ancla no aparece, FALLA fuerte (nunca silencioso).
+DO $seccion6$
+DECLARE
+  v_def text;
+  v_new text;
+  v_oid oid;
+  v_anchor text;
+  v_repl text;
+  v_fn text;
+  v_pares text[][] := ARRAY[
+    -- crear_embarque_completo: alta simple.
+    ARRAY[
+      'crear_embarque_completo',
+      E'aplica_iva, tasa_iva_aplicada, organization_id)',
+      E'aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id)'
+    ],
+    ARRAY[
+      'crear_embarque_completo',
+      E'COALESCE((cv->>\'tasa_iva_aplicada\')::numeric, 0.16),\n            v_org_id);',
+      E'COALESCE((cv->>\'tasa_iva_aplicada\')::numeric, 0.16),\n            NULLIF(cv->>\'tipo_iva\', \'\'),\n            v_org_id);'
+    ],
+    -- actualizar_embarque_completo: alta dentro del merge.
+    ARRAY[
+      'actualizar_embarque_completo',
+      E'        aplica_iva, tasa_iva_aplicada, organization_id\n      ) VALUES (',
+      E'        aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id\n      ) VALUES ('
+    ],
+    ARRAY[
+      'actualizar_embarque_completo',
+      E'        END,\n        v_org_id\n      )\n      RETURNING id INTO v_new_id;',
+      E'        END,\n        NULLIF(cv->>\'tipo_iva\', \'\'),\n        v_org_id\n      )\n      RETURNING id INTO v_new_id;'
+    ],
+    -- actualizar_embarque_completo: edición del renglón existente. El payload
+    -- que omite la llave conserva el valor guardado (fila legacy intacta).
+    ARRAY[
+      'actualizar_embarque_completo',
+      E'        END\n      WHERE id = (cv->>\'id\')::uuid',
+      E'        END,\n        tipo_iva = CASE\n          WHEN cv ? \'tipo_iva\' THEN NULLIF(cv->>\'tipo_iva\', \'\')\n          ELSE tipo_iva\n        END\n      WHERE id = (cv->>\'id\')::uuid'
+    ],
+    -- Replicado cotización → embarque.
+    ARRAY[
+      '_crear_embarque_replicar_conceptos',
+      E'          aplica_iva, tasa_iva_aplicada, total, organization_id\n        )',
+      E'          aplica_iva, tasa_iva_aplicada, tipo_iva, total, organization_id\n        )'
+    ],
+    ARRAY[
+      '_crear_embarque_replicar_conceptos',
+      E'          v_aplica,\n          v_tasa,\n          v_total, p_org\n        );',
+      E'          v_aplica,\n          v_tasa,\n          NULLIF(v_venta->>\'tipo_iva\', \'\'),\n          v_total, p_org\n        );'
+    ],
+    -- Duplicado de embarque: el tratamiento se copia del origen.
+    ARRAY[
+      'duplicar_embarque_completo',
+      E'      organization_id, contenedor_id, aplica_iva\n    )',
+      E'      organization_id, contenedor_id, aplica_iva, tipo_iva\n    )'
+    ],
+    ARRAY[
+      'duplicar_embarque_completo',
+      E'      aplica_iva\n    FROM conceptos_venta',
+      E'      aplica_iva, tipo_iva\n    FROM conceptos_venta'
+    ]
+  ];
+  i integer;
+BEGIN
+  FOR i IN 1 .. array_length(v_pares, 1) LOOP
+    v_fn := v_pares[i][1];
+    v_anchor := v_pares[i][2];
+    v_repl := v_pares[i][3];
+
+    SELECT p.oid INTO v_oid
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public' AND p.proname = v_fn
+     LIMIT 1;
+    IF v_oid IS NULL THEN
+      RAISE EXCEPTION 'No existe public.%(): revisa la migración antes de aplicarla', v_fn;
+    END IF;
+
+    v_def := pg_get_functiondef(v_oid);
+    IF position(v_repl in v_def) > 0 THEN
+      CONTINUE; -- ya parchada (idempotencia)
+    END IF;
+    IF position(v_anchor in v_def) = 0 THEN
+      RAISE EXCEPTION 'Ancla no encontrada en public.%(): el cuerpo cambió, actualiza esta sección', v_fn;
+    END IF;
+    v_new := replace(v_def, v_anchor, v_repl);
+    EXECUTE v_new;
+  END LOOP;
+END
+$seccion6$;
+
 COMMIT;

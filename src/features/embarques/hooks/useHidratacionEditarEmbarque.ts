@@ -18,6 +18,12 @@ interface ConceptoVentaDb {
   estado_facturacion?: string | null;
   aplica_iva?: boolean | null;
   tasa_iva_aplicada?: number | string | null;
+  /**
+   * SAT 01 — `conceptos_venta.tipo_iva`. Es opcional a propósito: mientras la
+   * migración preparada no se aplique, la columna no existe y la query no la
+   * selecciona, así que llega `undefined` y la fila queda legacy.
+   */
+  tipo_iva?: string | null;
 }
 interface ConceptoCostoDb {
   id: string;
@@ -49,7 +55,7 @@ interface Params<TForm extends FieldValues> {
   conceptosCostoDb: ConceptoCostoDb[];
   /** Catálogo de proveedores para resolver el nombre heredado → id. */
   proveedoresDb?: ReadonlyArray<ProveedorCatalogo>;
-  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null; estadoFacturacion?: string | null; aplicaIva?: boolean | null; tasaIva?: number | null }>) => void;
+  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null; estadoFacturacion?: string | null; aplicaIva?: boolean | null; tasaIva?: number | null; tipoIva?: string | null }>) => void;
   inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null; estadoLiquidacion?: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
@@ -85,6 +91,9 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       // se sobrescriben al cambiar moneda o recargar.
       aplicaIva: v.aplica_iva ?? null,
       tasaIva: v.tasa_iva_aplicada == null ? null : Number(v.tasa_iva_aplicada),
+      // SAT 01 — se preserva tal cual; `undefined` (columna aún inexistente)
+      // se guarda como null y la fila sigue siendo legacy.
+      tipoIva: v.tipo_iva ?? null,
     })));
     setHidratoVentaRef.current(true);
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);

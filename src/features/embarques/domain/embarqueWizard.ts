@@ -22,6 +22,8 @@ export interface ConceptoVentaWizard {
    */
   aplicaIva?: boolean | null;
   tasaIva?: number | null;
+  /** SAT 01 — tratamiento explícito del catálogo (`no_objeto`, `exento`, …). */
+  tipoIva?: string | null;
 }
 
 export interface ConceptoCostoWizard {
@@ -99,6 +101,8 @@ export function mapConceptosVentaFromCotizacion(
       // R201-COT-08: el tratamiento fiscal viaja tal cual; `null` = no definido.
       aplicaIva: typeof v.aplica_iva === "boolean" ? v.aplica_iva : null,
       tasaIva: numeroONull(v.tasa_iva_aplicada),
+      // SAT 01: se preserva el tratamiento explícito de la cotización.
+      tipoIva: typeof v.tipo_iva === "string" && v.tipo_iva !== "" ? v.tipo_iva : null,
     }));
 }
 

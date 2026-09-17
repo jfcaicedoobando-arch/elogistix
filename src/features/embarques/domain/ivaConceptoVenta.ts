@@ -9,10 +9,14 @@ import { etiquetaTasaIva } from "@/lib/financial/etiquetaTasaIva";
 export interface FilaIvaLike {
   aplica_iva?: boolean | null;
   tasa_iva_aplicada?: number | string | null;
+  /** SAT 01 — tratamiento explícito del catálogo; manda sobre flag y tasa. */
+  tipo_iva?: string | null;
 }
 
 /** true = la fila causa IVA según su propio tratamiento fiscal guardado. */
 export function ivaDeFila(c: FilaIvaLike): boolean {
+  // "No objeto de impuesto" (SAT 01) y "Exento" no causan IVA trasladado.
+  if (c.tipo_iva === "no_objeto" || c.tipo_iva === "exento") return false;
   if (c.aplica_iva === false) return false;
   const tasa = c.tasa_iva_aplicada;
   if (tasa != null && Number.isFinite(Number(tasa))) return Number(tasa) > 0;
