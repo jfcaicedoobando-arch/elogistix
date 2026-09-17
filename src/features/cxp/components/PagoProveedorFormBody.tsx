@@ -17,6 +17,7 @@ import { formatNumber } from "@/lib/formatters";
 import { PagoImpactoPreview } from "./PagoImpactoPreview";
 import { TcPagoField } from "./TcPagoField";
 import { PagoProveedorCuentaField } from "./PagoProveedorCuentaField";
+import { PagoProveedorDiferenciaField } from "./PagoProveedorDiferenciaField";
 import type {
   Moneda,
   PagoProveedorFormBodyProps as Props,
