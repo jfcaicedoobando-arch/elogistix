@@ -223,8 +223,18 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `authenticated` conserva EXECUTE porque el dashboard de operaciones llama
  *    la RPC directamente desde el cliente. El archivo original queda como
  *    legacy auditado e inmutable.
+ * 9. FIX-H6-09 (2026-09-17): `20260917035459_e11af4b8-9852-47ac-bc41-1774c5c117b8.sql`
+ *    (lote MNY anticipos P1) re-emitió `registrar_anticipo_proveedor`,
+ *    `devolver_anticipo_proveedor` y `guard_pago_proveedor` (SECURITY DEFINER)
+ *    sin el bloque REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260917043135_d925da3a-937d-4021-a9e7-6d36408ada45.sql` re-aplica los
+ *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
+ *    authenticated, service_role` para las dos RPC; `REVOKE ALL … FROM PUBLIC,
+ *    anon, authenticated` + `GRANT EXECUTE … TO service_role` para la función
+ *    de trigger, igual que su espejo canónico). El archivo original queda como
+ *    legacy auditado e inmutable.
  */
-const BASELINE = "20260913172027";
+const BASELINE = "20260917043135";
 
 
 

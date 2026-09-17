@@ -100,7 +100,7 @@ BEGIN
     id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
     cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
   ) VALUES (
-    mov_a, org_a, cuenta_a, CURRENT_DATE, 'Depósito test', 'REF-001',
+    mov_a, org_a, cuenta_a, public.fecha_negocio_mx(), 'Depósito test', 'REF-001',
     0, 1000, 'hash-test-001', 'Pendiente', '', now()
   );
 
@@ -118,10 +118,10 @@ BEGIN
     categoria_presupuesto_id
   ) VALUES
     (pf_a, org_a, prov_a, 'ProvFC A', emb_a, 'PV-A-001',
-      CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente', '',
+      public.fecha_negocio_mx(), 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente', '',
       (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
     (pf_b, org_b, prov_b, 'ProvFC B', emb_b, 'PV-B-001',
-      CURRENT_DATE, 30, 'MXN', 1, 2000, 320, 0, 2320, 'Vigente', '',
+      public.fecha_negocio_mx(), 30, 'MXN', 1, 2000, 320, 0, 2320, 'Vigente', '',
       (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
   PERFORM pg_temp.as_user(user_a);
@@ -163,7 +163,7 @@ BEGIN
     uuid_fiscal, timbrado_en
   ) VALUES (
     fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
-    CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida',
+    public.fecha_negocio_mx(), public.fecha_negocio_mx() + 15, 'MXN', 1000, 160, 1160, 'Emitida',
     gen_random_uuid()::text, now()
   );
 
@@ -171,7 +171,7 @@ BEGIN
     id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
     monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn
   ) VALUES (
-    pago_fac_a, fac_a, org_a, CURRENT_DATE, 500, 'MXN', 1,
+    pago_fac_a, fac_a, org_a, public.fecha_negocio_mx(), 500, 'MXN', 1,
     500, 'Transferencia', 'REF-PF-A', '', 0
   );
 
@@ -188,7 +188,7 @@ BEGIN
     tipo_cambio, estado, fecha_emision, uuid_fiscal
   ) VALUES (
     nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
-    1, 'Aplicada', CURRENT_DATE, '22222222-2222-2222-2222-222222222222'
+    1, 'Aplicada', public.fecha_negocio_mx(), '22222222-2222-2222-2222-222222222222'
   );
 
   PERFORM pg_temp.as_user(user_b);
@@ -213,7 +213,7 @@ BEGIN
     id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas
   ) VALUES (
-    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', NULL,
+    pago_prov_a, org_a, pf_a, public.fecha_negocio_mx(), 500, 'MXN', NULL,
     'Transferencia', 'REF-PP-A', ''
   );
 
@@ -291,7 +291,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas, categoria_presupuesto_id)
-       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L, %L)',
+       VALUES (%L, %L, %L, %L, %L, public.fecha_negocio_mx(), 30, %L, 0, 100, 16, 0, 116, %L, %L, %L)',
       org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', '',
       (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)
     ),
@@ -314,7 +314,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.bbva_movimientos(organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en)
-       VALUES (%L, %L, CURRENT_DATE, %L, %L, 0, 1000, %L, %L, %L, now())',
+       VALUES (%L, %L, public.fecha_negocio_mx(), %L, %L, 0, 1000, %L, %L, %L, now())',
       org_a, cuenta_a, 'HACK', 'REF-HACK', 'hash-hack-001', 'Pendiente', ''
     ),
     'bbva_movimientos acepta INSERT con organization_id ajeno'
@@ -323,7 +323,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
-       VALUES (%L, %L, CURRENT_DATE, 1, %L, 1, 1, %L, %L, %L, 0)',
+       VALUES (%L, %L, public.fecha_negocio_mx(), 1, %L, 1, 1, %L, %L, %L, 0)',
       fac_a, org_a, 'MXN', 'Transferencia', 'REF-HACK', ''
     ),
     'pagos_factura acepta INSERT con organization_id ajeno'
@@ -332,7 +332,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.pagos_proveedor(organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, metodo_pago, referencia, notas)
-       VALUES (%L, %L, CURRENT_DATE, 1, %L, 0, %L, %L, %L)',
+       VALUES (%L, %L, public.fecha_negocio_mx(), 1, %L, 0, %L, %L, %L)',
       org_a, pf_a, 'MXN', 'Transferencia', 'REF-HACK', ''
     ),
     'pagos_proveedor acepta INSERT con organization_id ajeno'
@@ -341,7 +341,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, motivo, descripcion, monto, moneda, tipo_cambio, estado, fecha_emision)
-       VALUES (%L, %L, %L, %L, %L, 1, %L, 1, %L, CURRENT_DATE)',
+       VALUES (%L, %L, %L, %L, %L, 1, %L, 1, %L, public.fecha_negocio_mx())',
       org_a, fac_a, 'NC-HACK', 'Descuento', 'HACK', 'MXN', 'Borrador'
     ),
     'factura_notas_credito acepta INSERT con organization_id ajeno'
