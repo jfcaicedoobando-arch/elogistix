@@ -12,9 +12,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  TIPO_PAGO_DETALLE_LABELS,
+  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido, esperaMovimientoBancario,
   type MovimientoConciliado, type PagoDetalleEncabezado,
 } from "@/features/tesoreria/domain/pagoDetalle";
+
 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
