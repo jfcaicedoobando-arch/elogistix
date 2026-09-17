@@ -6,7 +6,7 @@
  * convertir aunque el cliente ya existiera.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 
 /**
  * Llamado tras `convertirProspectoACliente`. Propaga el cliente al CRM:
@@ -18,8 +18,8 @@ export async function propagarConversionProspectoCRM(input: {
   oportunidadId: string | null;
   clienteId: string;
   clienteNombre: string;
-}): Promise<void> {
-  if (!input.oportunidadId) return;
+}): Promise<{ avisoActividad: string | null }> {
+  if (!input.oportunidadId) return { avisoActividad: null };
 
   const { error } = await supabase.rpc("crm_propagar_conversion_cliente", {
     p_oportunidad_id: input.oportunidadId,
@@ -28,11 +28,13 @@ export async function propagarConversionProspectoCRM(input: {
   });
   if (error) throw error;
 
-  await registrarActividad({
+  // La RPC ya confirmó cliente/oportunidad/lead: la bitácora es secundaria.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "propagar_conversion_prospecto",
     entidadId: input.oportunidadId,
     entidadNombre: input.clienteNombre,
     detalles: { cliente_id: input.clienteId },
   });
+  return { avisoActividad };
 }

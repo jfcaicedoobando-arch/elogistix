@@ -7,7 +7,7 @@
  * cotización para resincronizar el bloqueo optimista del wizard.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 
 export interface VincularInput {
   cotizacionId: string;
@@ -20,6 +20,8 @@ export interface VincularResult {
   leadId: string | null;
   /** Sello de la cotización tras el vínculo (evita conflictos falsos). */
   updatedAt: string | null;
+  /** Aviso si el vínculo quedó pero no se pudo escribir en la bitácora. */
+  avisoActividad: string | null;
 }
 
 /**

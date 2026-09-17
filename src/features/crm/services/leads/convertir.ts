@@ -4,7 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { type CrmLeadRow } from "@/features/crm/domain/leads/constants";
 import { type AuthLite } from "@/features/crm/domain/leads/leadPayload";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 import type { Moneda } from "@/types/db";
 
 export interface ConvertirLeadParams {
@@ -24,7 +24,7 @@ export interface ConvertirLeadParams {
 export async function convertirLead(
   params: ConvertirLeadParams,
   _user: AuthLite | null,
-): Promise<{ clienteId: string | null; oportunidadId: string }> {
+): Promise<{ clienteId: string | null; oportunidadId: string; avisoActividad: string | null }> {
   // Ola 6 · M4: cliente + oportunidad + marcado del lead en UNA transacción
   // idempotente. Antes, un fallo intermedio dejaba cliente/oportunidad huérfanos.
   // SAFE-CAST: la RPC acepta NULL en p_cliente_id / p_fecha_estimada_cierre, pero los
@@ -45,7 +45,9 @@ export async function convertirLead(
   const payload = (data ?? {}) as { cliente_id?: string | null; oportunidad_id?: string };
   if (!payload.oportunidad_id) throw new Error("No se pudo convertir el lead");
 
-  await registrarActividad({
+  // La RPC es transaccional y ya creó la oportunidad: un fallo de bitácora
+  // viaja como aviso, nunca como fracaso de la conversión.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "Convirtió lead a oportunidad",
     entidadId: params.lead.id,
@@ -53,5 +55,9 @@ export async function convertirLead(
     detalles: { oportunidadId: payload.oportunidad_id, clienteId: payload.cliente_id ?? null },
   });
 
-  return { clienteId: payload.cliente_id ?? null, oportunidadId: payload.oportunidad_id };
+  return {
+    clienteId: payload.cliente_id ?? null,
+    oportunidadId: payload.oportunidad_id,
+    avisoActividad,
+  };
 }
