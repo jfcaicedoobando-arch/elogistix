@@ -17,7 +17,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
-function buildSchema(saldoDisponible: number, monedaAnticipo: string) {
+/** Exportado para prueba focalizada del mensaje de límite por moneda. */
+export function buildSchema(saldoDisponible: number, monedaAnticipo: string) {
   return z.object({
     facturaId: z.string().uuid({ message: "Selecciona una factura" }),
     saldoFactura: z.number(),
