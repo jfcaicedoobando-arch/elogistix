@@ -68,7 +68,11 @@ export function TraspasoConversion({
           placeholder={par.quote === "MXN" ? "18.4235" : "1.0800"}
         />
         {tcQuote > 0 ? (
-          fechaTcDof ? (
+          tcEsManual ? (
+            <p className="text-body-sm text-muted-foreground">
+              Tipo de cambio capturado a mano: no cambia si mueves la fecha del traspaso.
+            </p>
+          ) : fechaTcDof ? (
             <p className="text-body-sm text-muted-foreground">
               Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
             </p>
@@ -78,6 +82,7 @@ export function TraspasoConversion({
             Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
           </p>
         )}
+
       </div>
       {resumen}
     </FormDialogSection>
