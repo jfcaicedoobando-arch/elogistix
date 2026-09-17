@@ -37,16 +37,3 @@ export function MovimientoAusente({ metodoPago }: { metodoPago: string | null })
   );
 }
 
-/**
- * El banco guarda el importe en la moneda de la cuenta; sólo la conocemos con
- * certeza cuando el movimiento y el pago comparten cuenta bancaria.
- */
-export function monedaDelMovimiento(
-  movimiento: MovimientoConciliado,
-  cuentaBancariaPagoId: string | null,
-  monedaCuentaPago: string | null,
-): string {
-  const mismaCuenta =
-    !!movimiento.cuenta_bancaria_id && movimiento.cuenta_bancaria_id === cuentaBancariaPagoId;
-  return mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
-}
