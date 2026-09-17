@@ -39,14 +39,35 @@ export interface RegistrarTraspasoResult {
   duplicado: boolean;
 }
 
-/** Recupera el traspaso ya registrado con la misma clave de idempotencia. */
-async function buscarTraspasoPorClave(clave: string): Promise<string | null> {
+/** Mensaje único cuando la llave ya se usó con OTRO contenido. */
+export const MSG_TRASPASO_LLAVE_REUSADA =
+  "Ese intento ya se guardó con datos distintos. Revisa el traspaso registrado antes de volver a intentarlo: no se creó un traspaso nuevo.";
+
+/**
+ * MNY: recupera el traspaso ya registrado con la misma clave y CONFIRMA que su
+ * contenido es el mismo que se intenta guardar. Devolver la fila sin comparar
+ * hacía que un reintento editado se viera como éxito aunque los cambios nunca
+ * se guardaron (y las patas bancarias siguieran siendo las viejas).
+ */
+async function buscarTraspasoPorClave(
+  clave: string,
+  input: RegistrarTraspasoInput,
+): Promise<string | null> {
   const { data } = await supabase
     .from("traspasos_bancarios")
-    .select("id")
+    .select("id, cuenta_origen_id, cuenta_destino_id, fecha, monto_origen, tipo_cambio, comision")
     .eq("client_request_id", clave)
     .maybeSingle();
-  return data?.id ?? null;
+  if (!data) return null;
+  const mismoContenido =
+    data.cuenta_origen_id === input.cuentaOrigenId &&
+    data.cuenta_destino_id === input.cuentaDestinoId &&
+    data.fecha === input.fecha &&
+    Number(data.monto_origen) === Number(input.montoOrigen) &&
+    Number(data.tipo_cambio) === Number(input.tipoCambio) &&
+    Number(data.comision) === Number(input.comision ?? 0);
+  if (!mismoContenido) throw new Error(MSG_TRASPASO_LLAVE_REUSADA);
+  return data.id;
 }
 
 export async function registrarTraspaso(
@@ -72,7 +93,7 @@ export async function registrarTraspaso(
     const esDuplicadoDeIntento =
       error.code === "23505" && !!input.clientRequestId;
     if (esDuplicadoDeIntento) {
-      const existente = await buscarTraspasoPorClave(input.clientRequestId!);
+      const existente = await buscarTraspasoPorClave(input.clientRequestId!, input);
       if (existente) return { id: existente, duplicado: true };
     }
     throw error;

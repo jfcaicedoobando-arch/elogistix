@@ -5,7 +5,7 @@
  * y se re-lee vía `useFacturaProveedor` para evitar mostrar saldo/estado stale
  * cuando el usuario acaba de aprobar/pagar en otra pestaña.
  */
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
@@ -23,6 +23,7 @@ import { pagoProveedorCreadoSucio } from "@/features/cxp/hooks/usePagoProveedorF
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 
 interface Props {
   open: boolean;
@@ -48,16 +49,14 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   );
   const factura = facturaFresca ?? facturaInput;
 
-  // BL-14: UUID por apertura del dialog; los reintentos del MISMO submit
-  // comparten el id y el UNIQUE parcial de `pagos_proveedor` absorbe el
-  // duplicado (retry de red / doble submit tras timeout).
-  const clientRequestIdRef = useRef<string | null>(null);
+  // BL-14 + MNY: la llave se liga al CONTENIDO del submit. Reintentar el mismo
+  // pago reusa la llave y el UNIQUE parcial de `pagos_proveedor` absorbe el
+  // duplicado; si el usuario edita monto/fecha/cuenta y reintenta, la llave
+  // cambia y la RPC no puede devolver el pago anterior como si fuera el nuevo.
+  const clientRequestId = usePayloadRequestId();
   useEffect(() => {
-    if (open && facturaId && !clientRequestIdRef.current) {
-      clientRequestIdRef.current = crypto.randomUUID();
-    }
-    if (!open) clientRequestIdRef.current = null;
-  }, [open, facturaId]);
+    if (!open) clientRequestId.reset();
+  }, [open, clientRequestId]);
 
   const registrar = useRegistrarPagoProveedor();
   const f = usePagoProveedorForm(factura, open);
@@ -93,8 +92,16 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         cuenta_bancaria_id: f.cuentaBancariaIdEnvio,
         diferencia_cambiaria_mxn: f.diferenciaCambiariaEnvio,
 
-        client_request_id: clientRequestIdRef.current,
+        client_request_id: clientRequestId.get(
+          scopeDePayload([
+            factura.id, f.fecha, f.montoNum, f.moneda,
+            Number(f.tc) > 0 ? Number(f.tc) : null,
+            f.metodo, f.referencia, f.notas,
+            f.cuentaBancariaIdEnvio, f.diferenciaCambiariaEnvio,
+          ]),
+        ),
       });
+      clientRequestId.reset();
       notifySuccess(undefined, { title: "Pago registrado" });
       onOpenChange(false);
     } catch (e) {

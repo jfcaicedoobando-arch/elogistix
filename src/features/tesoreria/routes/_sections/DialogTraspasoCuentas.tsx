@@ -4,7 +4,7 @@
  * La operación genera atómicamente el cargo (origen), abono (destino) y
  * comisión opcional en `bbva_movimientos`, todos auto-conciliados.
  */
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { ArrowRightLeft } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,11 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { TraspasoConversion } from "./TraspasoConversion";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
-import { useTraspasoForm, traspasoSucio } from "@/features/tesoreria/hooks/useTraspasoForm";
+import {
+  useTraspasoForm, traspasoSucio, partesTraspaso, conceptoTraspaso,
+} from "@/features/tesoreria/hooks/useTraspasoForm";
 
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -40,13 +43,14 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
-  // OLA A (A.1): un UUID por apertura del diálogo. Todos los reintentos del
-  // MISMO submit comparten la clave y el UNIQUE parcial de BD absorbe el
-  // duplicado (doble clic o retry de red tras timeout).
-  const clientRequestIdRef = useRef<string | null>(null);
+  // OLA A (A.1) + MNY: la clave se liga al CONTENIDO del traspaso. Reintentar
+  // el mismo traspaso comparte la clave y el UNIQUE parcial de BD absorbe el
+  // duplicado (doble clic / retry tras timeout); si el usuario cambia cuentas,
+  // fecha o importes, la clave cambia y no se confirma el traspaso anterior.
+  const clientRequestId = usePayloadRequestId();
   useEffect(() => {
-    clientRequestIdRef.current = open ? crypto.randomUUID() : null;
-  }, [open]);
+    if (!open) clientRequestId.reset();
+  }, [open, clientRequestId]);
 
   // BL-04: la RPC recibe el multiplicador origen→destino. El usuario captura
   // la cotización a la mexicana (pesos por dólar) y aquí se deriva el factor.
@@ -67,12 +71,19 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         montoOrigen: state.montoOrigen,
         tipoCambio: tipoCambioFinal,
         comision: state.comision,
-        concepto: state.concepto.trim() || "Traspaso entre cuentas propias",
+        concepto: conceptoTraspaso(state),
         referencia: state.referencia.trim(),
-        clientRequestId: clientRequestIdRef.current,
+        clientRequestId: clientRequestId.get(
+          scopeDePayload(partesTraspaso(state, tipoCambioFinal)),
+        ),
       },
 
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => {
+          clientRequestId.reset();
+          onOpenChange(false);
+        },
+      },
     );
   };
 
