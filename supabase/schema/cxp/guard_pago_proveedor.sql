@@ -83,21 +83,20 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  -- F3: los pagos directos siguen exigiendo captura MXN<->USD. Cuando el pago
-  -- nace de una APLICACIÓN DE ANTICIPO, la RPC ya valuó con paridad DOF del
-  -- día (soporta EUR y cruces); el guard respeta esa valuación.
-  BEGIN
+  -- MNY P1.3: una APLICACIÓN DE ANTICIPO se valúa con la paridad DOF del día
+  -- de la aplicación (contrato documentado en docs/flujo-anticipos-proveedor.md).
+  -- Antes se derivaba con el TC histórico de la factura y el importe aplicado no
+  -- coincidía con lo que la RPC calculaba y bitacoreaba. Los pagos DIRECTOS
+  -- siguen exigiendo captura MXN<->USD (ruta histórica intacta).
+  IF COALESCE(NEW.es_anticipo_aplicado, false)
+     AND NEW.moneda IS DISTINCT FROM v_fact_moneda THEN
+    NEW.monto_en_moneda_factura := public.convertir_monto_dof(
+      NEW.monto, NEW.moneda::text, v_fact_moneda::text,
+      COALESCE(NEW.fecha_pago, v_hoy_mx));
+  ELSE
     NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
       NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
-  EXCEPTION WHEN OTHERS THEN
-    IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
-      NEW.monto_en_moneda_factura := public.convertir_monto_dof(
-        NEW.monto, NEW.moneda::text, v_fact_moneda::text,
-        COALESCE(NEW.fecha_pago, v_hoy_mx));
-    ELSE
-      RAISE;
-    END IF;
-  END;
+  END IF;
 
   IF NEW.moneda = 'MXN'::public.moneda
      AND v_fact_moneda = 'USD'::public.moneda

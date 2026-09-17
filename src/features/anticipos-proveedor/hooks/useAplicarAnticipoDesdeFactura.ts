@@ -106,7 +106,13 @@ export function useAplicarAnticipoDesdeFactura({
       fecha,
     });
     if (!check.ok) {
-      notifyError(undefined, check.error);
+      if (check.error) {
+        notifyError(undefined, {
+          title: check.error.title,
+          description: check.error.description,
+          method: check.error.method,
+        });
+      }
       return;
     }
     await aplicar.mutateAsync({
