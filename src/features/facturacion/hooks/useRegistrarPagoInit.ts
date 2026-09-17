@@ -4,7 +4,7 @@
  *
  * Extraído de `DialogRegistrarPago.tsx` (límite Power-of-10 de 200 líneas).
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import type { PagoFormValues } from "@/features/facturacion/components/PagoFormFields";
 
@@ -18,17 +18,20 @@ export function useRegistrarPagoInit(
   // de queries) re-ejecutaban el efecto y borraban lo capturado por el usuario.
   const initializedForRef = useRef<string | null>(null);
   const clientRequestIdRef = useRef<string | null>(null);
+  // Baseline de "sin cambios": los valores con los que se abrió el formulario.
+  const [baseline, setBaseline] = useState<PagoFormValues | null>(null);
 
   useEffect(() => {
     if (!open || !factura) {
       initializedForRef.current = null;
       clientRequestIdRef.current = null;
+      setBaseline(null);
       return;
     }
     if (initializedForRef.current === factura.id) return;
     initializedForRef.current = factura.id;
     clientRequestIdRef.current = crypto.randomUUID();
-    setValues({
+    const iniciales: PagoFormValues = {
       fecha: todayLocalISO(),
       // EC-12: redondeo hacia ARRIBA al centavo. Con `toFixed` (al más cercano)
       // el prefill podía quedar 1 centavo por debajo del saldo y dejar un
@@ -36,8 +39,10 @@ export function useRegistrarPagoInit(
       monto: saldo > 0 ? (Math.ceil((saldo - 1e-9) * 100) / 100).toFixed(2) : "",
       moneda: factura.moneda,
       formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
-    });
+    };
+    setValues(iniciales);
+    setBaseline(iniciales);
   }, [open, factura, saldo, setValues]);
 
-  return clientRequestIdRef;
+  return { clientRequestIdRef, baseline };
 }

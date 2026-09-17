@@ -11,12 +11,18 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+const registrarActividad = vi.fn().mockResolvedValue(undefined);
+vi.mock("@/services/bitacora/registrar", () => ({
+  registrarActividad: (...a: unknown[]) => registrarActividad(...a),
+}));
+
 import { importarMovimientos, ImportacionParcialError } from "../conciliacion";
 import type { MovimientoParseado } from "../../domain/import/bbva";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
   mock.resetResults();
+  registrarActividad.mockClear();
 });
 
 /** 501 filas → dos lotes de inserción (CHUNK = 500). */
@@ -61,5 +67,28 @@ describe("importarMovimientos · fallo en el segundo lote", () => {
     const res = await importarMovimientos("c1", filas(3), null);
     expect(res.nuevos).toBe(3);
     expect(res.duplicados).toBe(0);
+  });
+});
+
+describe("importarMovimientos · bitácora con duplicados y fallo parcial", () => {
+  it("no atribuye a duplicados las filas que quedaron pendientes", async () => {
+    // 502 filas: 1 ya existía (duplicado real) → 501 nuevas en 2 lotes.
+    mock.setTableResultOnce("bbva_movimientos", { data: [{ hash_dedupe: "h0" }], error: null });
+    mock.setTableResultOnce("bbva_movimientos", { data: [], error: null });
+    mock.setTableResultOnce("bbva_movimientos", {
+      data: Array.from({ length: 500 }, (_, i) => ({ id: `i${i}` })),
+      error: null,
+    });
+    mock.setTableResultOnce("bbva_movimientos", { data: null, error: { message: "boom insert" } });
+
+    const err = await importarMovimientos("c1", filas(502), null).catch((e) => e);
+    expect(err).toBeInstanceOf(ImportacionParcialError);
+    expect((err as ImportacionParcialError).guardados).toBe(500);
+    expect((err as ImportacionParcialError).faltantes).toBe(1);
+
+    expect(registrarActividad).toHaveBeenCalledTimes(1);
+    expect(registrarActividad.mock.calls[0][0]).toMatchObject({
+      detalles: { total: 502, nuevos: 500, duplicados: 1, faltantes: 1 },
+    });
   });
 });

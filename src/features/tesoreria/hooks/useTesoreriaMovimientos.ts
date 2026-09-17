@@ -3,7 +3,6 @@
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
@@ -45,11 +44,10 @@ export function useImportarMovimientos() {
     mutationFn: ({ cuentaId, movimientos }: { cuentaId: string; movimientos: MovimientoParseado[] }) =>
       importarMovimientos(cuentaId, movimientos, user?.id ?? null),
     invalidate: queryKeys.tesoreria.all,
-    errorTitle: "Error al importar movimientos",
-    errorMethod: "IMPORT_MOVIMIENTOS",
-    onSuccess: (_data, vars) => {
-      notifySuccess(undefined, { title: `${vars.movimientos.length} movimientos importados` });
-    },
+    // MNY: `silent` — el aviso (éxito y error, con el detalle de guardados y
+    // faltantes) lo da `useImportarEstadoCuenta`. Antes salían dos toasts
+    // iguales por el mismo fallo de importación.
+    silent: true,
     // MNY: una importación puede fallar a medias y dejar filas guardadas; hay
     // que refrescar la pantalla para que el usuario vea lo que sí entró.
     onError: () => {

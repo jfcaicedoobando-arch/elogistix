@@ -16,21 +16,7 @@ import { useAplicarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnti
 import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
-
-function buildSchema(saldoDisponible: number) {
-  return z.object({
-    facturaId: z.string().uuid({ message: "Selecciona una factura" }),
-    saldoFactura: z.number(),
-    monedaFactura: z.string(),
-    monto: z.coerce.number()
-      .positive({ message: "El monto debe ser mayor a cero" })
-      .max(saldoDisponible, { message: `No puede exceder el saldo disponible del anticipo (${formatCurrency(saldoDisponible, "MXN")})` }),
-    fechaAplicacion: z.string().min(1, "La fecha es requerida"),
-  }).refine((v) => v.monto <= v.saldoFactura + 0.01, {
-    message: "El monto no puede exceder el saldo de la factura",
-    path: ["monto"],
-  });
-}
+import { buildSchema } from "../domain/aplicarAnticipoSchema";
 
 type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
@@ -43,7 +29,11 @@ interface Props {
 export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const aplicar = useAplicarAnticipo();
   const saldoDisponible = anticipo?.disponible ?? 0;
-  const schema = useMemo(() => buildSchema(saldoDisponible), [saldoDisponible]);
+  const monedaAnticipo = anticipo?.moneda ?? "MXN";
+  const schema = useMemo(
+    () => buildSchema(saldoDisponible, monedaAnticipo),
+    [saldoDisponible, monedaAnticipo],
+  );
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -140,7 +130,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
           {errors.fechaAplicacion && <p className="text-xs text-destructive">{errors.fechaAplicacion.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="apl-monto">Monto a aplicar</Label>
+          <Label htmlFor="apl-monto">Monto a aplicar ({anticipo.moneda})</Label>
           <Input id="apl-monto" type="number" step="0.01" min="0" {...register("monto")} />
           {errors.monto && <p className="text-xs text-destructive">{errors.monto.message}</p>}
         </div>
