@@ -13,8 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import {
   validarMovimientoManual,
+  movimientoManualSucio,
   type MovimientoManualInput,
 } from "@/features/tesoreria/domain/movimientoManual";
+
 import { hoyMx } from "@/lib/date/mx";
 import type { CuentaBancaria } from "@/features/tesoreria/services";
 
