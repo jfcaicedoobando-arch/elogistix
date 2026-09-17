@@ -27,6 +27,7 @@ import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useFiltroUrl } from "@/hooks/shared/useFiltroUrl";
 import { useImportarEstadoCuenta } from "@/features/tesoreria/hooks/useImportarEstadoCuenta";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 
 const ESTADOS_MOVIMIENTO = ["Pendiente", "Conciliado", "Ignorado", "todos"] as const;
 
