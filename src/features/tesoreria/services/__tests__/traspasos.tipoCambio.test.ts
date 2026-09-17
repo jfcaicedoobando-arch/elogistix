@@ -13,7 +13,20 @@ vi.mock("@/integrations/supabase/client", () => ({
       select: () => ({
         eq: () => ({
           maybeSingle: () =>
-            Promise.resolve({ data: { id: "tr-existente" }, error: null }),
+            // MNY: el traspaso guardado con esa clave tiene el MISMO contenido
+            // que el payload base, así que sí es un reintento legítimo.
+            Promise.resolve({
+              data: {
+                id: "tr-existente",
+                cuenta_origen_id: "o-1",
+                cuenta_destino_id: "d-1",
+                fecha: "2026-08-12",
+                monto_origen: 1000,
+                tipo_cambio: 1,
+                comision: 0,
+              },
+              error: null,
+            }),
         }),
       }),
     }),
