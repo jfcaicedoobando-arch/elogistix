@@ -94,11 +94,17 @@ export function sugerirTcQuote(
   return Math.round((base / quote) * 10000) / 10000;
 }
 
-/** YG-04: ¿el traspaso tiene captura que se perdería al cerrar el diálogo? */
-export function traspasoSucio(state: TraspasoFormState): boolean {
+/**
+ * YG-04: ¿el traspaso tiene captura que se perdería al cerrar el diálogo?
+ *
+ * MNY P2.4: la fecha cuenta como captura sólo si cambió respecto a la que traía
+ * el diálogo al abrirse (el default "hoy" no lo marca sucio).
+ */
+export function traspasoSucio(state: TraspasoFormState, fechaInicial?: string): boolean {
   const señales = [
     !!state.origenId, !!state.destinoId, state.montoOrigen > 0,
     state.comision > 0, state.concepto.trim() !== "", state.referencia.trim() !== "",
+    !!fechaInicial && state.fecha !== fechaInicial,
   ];
   return señales.some(Boolean);
 }

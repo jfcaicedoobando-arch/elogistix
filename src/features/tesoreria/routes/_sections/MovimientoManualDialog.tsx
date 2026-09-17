@@ -32,6 +32,16 @@ interface Props {
 
 const FORM_ID = "form-movimiento-manual";
 
+/** MNY P2.5: mensaje inline de un campo requerido (también si está vacío). */
+function ErrorCampo({ id, mensaje }: { id: string; mensaje?: string }) {
+  if (!mensaje) return null;
+  return (
+    <p id={id} className="mt-1 text-body-sm text-destructive">
+      {mensaje}
+    </p>
+  );
+}
+
 export function MovimientoManualDialog({
   open, onOpenChange, cuentas, manualForm, setManualField, onGuardar, isPending,
 }: Props) {
@@ -78,13 +88,20 @@ export function MovimientoManualDialog({
           value={manualForm.cuentaBancariaId ?? ""}
           onValueChange={(v) => setManualField("cuentaBancariaId", v)}
         >
-          <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
+          <SelectTrigger
+            id="mov-cuenta"
+            aria-invalid={!!erroresManual.cuentaBancariaId}
+            aria-describedby={erroresManual.cuentaBancariaId ? "mov-cuenta-error" : undefined}
+          >
+            <SelectValue placeholder="Selecciona cuenta…" />
+          </SelectTrigger>
           <SelectContent>
             {cuentas.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <ErrorCampo id="mov-cuenta-error" mensaje={erroresManual.cuentaBancariaId} />
       </div>
       <div>
         <Label htmlFor="mov-fecha">Fecha *</Label>
@@ -96,11 +113,8 @@ export function MovimientoManualDialog({
           min={fechaCorte ?? undefined}
           max={hoyNegocio}
         />
-        {erroresManual.fecha && manualForm.fecha && (
-          <p id="mov-fecha-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.fecha}
-          </p>
-        )}
+        {/* MNY P2.5: el error de fecha también se muestra si está vacía. */}
+        <ErrorCampo id="mov-fecha-error" mensaje={erroresManual.fecha} />
       </div>
 
       <div>
@@ -122,7 +136,10 @@ export function MovimientoManualDialog({
           id="mov-concepto"
           value={manualForm.concepto ?? ""}
           onChange={(e) => setManualField("concepto", e.target.value)}
+          aria-invalid={!!erroresManual.concepto}
+          aria-describedby={erroresManual.concepto ? "mov-concepto-error" : undefined}
         />
+        <ErrorCampo id="mov-concepto-error" mensaje={erroresManual.concepto} />
       </div>
       <div>
         <Label htmlFor="mov-referencia">Referencia</Label>
@@ -142,11 +159,7 @@ export function MovimientoManualDialog({
           aria-invalid={!!erroresManual.monto}
           aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
         />
-        {erroresManual.monto && (
-          <p id="mov-importe-error" className="mt-1 text-body-sm text-destructive">
-            {erroresManual.monto}
-          </p>
-        )}
+        <ErrorCampo id="mov-importe-error" mensaje={erroresManual.monto} />
     </div>
     </FormDialogShell>
 

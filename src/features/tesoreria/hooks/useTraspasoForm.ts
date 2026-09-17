@@ -21,6 +21,8 @@ export {
 
 export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const [state, setState] = useState({ ...ESTADO_INICIAL, fecha: hoyIso() });
+  /** MNY P2.4: fecha con la que abrió el diálogo (para detectar cambios). */
+  const [fechaInicial, setFechaInicial] = useState(hoyIso);
   /**
    * MNY: ¿el T/C actual lo escribió el usuario? Sólo así se conserva al
    * cambiar la fecha. Antes la sugerencia se aplicaba una única vez y, al
@@ -30,16 +32,29 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
 
   useEffect(() => {
     if (!open) return;
-    setState({ ...ESTADO_INICIAL, fecha: hoyIso() });
+    const hoy = hoyIso();
+    setState({ ...ESTADO_INICIAL, fecha: hoy });
+    setFechaInicial(hoy);
     setTcEsManual(false);
   }, [open]);
 
+  /**
+   * MNY P1.1: al cambiar una cuenta puede cambiar el par de monedas, así que la
+   * tasa escrita a mano para el par anterior se invalida (nunca se recicla
+   * 18.00 USD/MXN como EUR/MXN). El efecto de sugerencia carga la del par nuevo.
+   */
   const setField = <K extends keyof typeof ESTADO_INICIAL>(
     key: K,
     value: (typeof ESTADO_INICIAL)[K],
   ) => {
     if (key === "tcQuote") setTcEsManual(true);
-    setState((prev) => ({ ...prev, [key]: value }));
+    const cambiaCuenta = key === "origenId" || key === "destinoId";
+    if (cambiaCuenta) setTcEsManual(false);
+    setState((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(cambiaCuenta && prev[key] !== value ? { tcQuote: 0 } : {}),
+    }));
   };
 
   const origen = useMemo(() => cuentas.find((c) => c.id === state.origenId), [cuentas, state.origenId]);
@@ -92,6 +107,7 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     error,
     tcSugerido,
     tcEsManual,
+    fechaInicial,
     fechaTcDof: tcDof?.fecha ?? null,
   };
 }

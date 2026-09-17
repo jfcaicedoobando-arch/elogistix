@@ -9,7 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
-import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso } from "../domain/tolerancia";
+import { TOLERANCIA_DIAS, rangoFechasIso, toleranciaMonto } from "../domain/tolerancia";
 import {
   candidatosCxc, candidatosCxp, LIMITE_SUGERENCIAS, type Ventana,
 } from "./sugerirCandidatos.consultas";
@@ -67,11 +67,13 @@ export async function sugerirCandidatosDetalle(
   if (!moneda) return { candidatos: [], truncado: false };
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
+  // MNY P1.2: la ventana de importe usa la tolerancia de la moneda de la cuenta.
+  const tol = toleranciaMonto(moneda);
   const ventana: Ventana = {
     desdeIso,
     hastaIso,
-    min: monto - TOLERANCIA_MONTO_MXN,
-    max: monto + TOLERANCIA_MONTO_MXN,
+    min: monto - tol,
+    max: monto + tol,
     moneda,
     monto,
     fechaMov: mov.fecha,
