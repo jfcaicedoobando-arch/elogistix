@@ -121,24 +121,22 @@ export default function Compras() {
         <KpiCard
           label="Por pagar"
           value={`${formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")} · ${formatCurrencyCompact(kpis.por_pagar_usd, "USD")}`}
-          sub={porPagar7d > 0 ? `${formatCurrencyCompact(porPagar7d, "MXN")} vencen en 7 d` : `${metrics.facturasConSaldo} facturas con saldo`}
+          sub={hayPorVencer7d ? `${listar(importes7d)} vencen en 7 d` : `${metrics.facturasConSaldo} facturas con saldo`}
           valueTooltip={`${formatCurrency(kpis.por_pagar_mxn, "MXN")} · ${formatCurrency(kpis.por_pagar_usd, "USD")}`}
           to={ROUTES.COMPRAS_POR_PAGAR}
           icon={<Landmark className="h-4 w-4" />}
-          tone={porPagar7d > 0 ? "warn" : "default"}
+          tone={hayPorVencer7d ? "warn" : "default"}
           hint="Saldo aprobado pendiente de pago. El sublabel adelanta lo que vence en 7 días si hay urgencia."
         />
         <KpiCard
           label="Vencido"
           // VF-05: "$0" pelado no indicaba moneda; se formatea con el canon.
-          value={vencidoTotal > 0 ? formatCurrencyCompact(vencidoTotal, "MXN") : formatCurrency(0, "MXN")}
-          sub={vencidoTotal > 0
-            ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}${kpis.vencido_eur > 0 ? ` · ${formatCurrencyCompact(kpis.vencido_eur, "EUR")}` : ""}`
-            : "al corriente"}
-          valueTooltip={vencidoTotal > 0 ? formatCurrency(vencidoTotal, "MXN") : undefined}
+          value={hayVencido ? listar(importesVencidos) : formatCurrency(0, "MXN")}
+          sub={hayVencido ? `${kpis.facturas_vencidas} facturas vencidas` : "al corriente"}
+          valueTooltip={hayVencido ? listar(importesVencidos, false) : undefined}
           to={ROUTES.COMPRAS_AGING}
           icon={<AlertTriangle className="h-4 w-4" />}
-          tone={vencidoTotal > 0 ? "danger" : "success"}
+          tone={hayVencido ? "danger" : "success"}
           hint="Saldo total ya vencido (todas las cubetas de aging combinadas). Click para ver el desglose por proveedor."
         />
       </div>
