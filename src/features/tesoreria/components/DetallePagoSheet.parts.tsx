@@ -5,16 +5,18 @@
  * datos del pago, movimiento bancario conciliado y facturas aplicadas.
  */
 import { Link } from "react-router-dom";
-import { Landmark, TriangleAlert } from "lucide-react";
+import { Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido, esperaMovimientoBancario,
+  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido,
   type MovimientoConciliado, type PagoDetalleEncabezado,
 } from "@/features/tesoreria/domain/pagoDetalle";
+import {
+  MovimientoAusente, monedaDelMovimiento,
+} from "@/features/tesoreria/components/DetallePagoSheet.movimiento";
 
 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
