@@ -5,6 +5,8 @@
  * y para la vista previa hay que "devolverlo" al saldo de la factura.
  */
 import type { Database } from "@/integrations/supabase/types";
+import { cruceMonedasNoSoportado } from "@/features/cxp/domain/monedaPago";
+
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -93,21 +95,9 @@ export function valoresInicialesCreacion(
   };
 }
 
-/**
- * MNY-NEW-09 — ¿el par de monedas es un cruce entre dos divisas extranjeras
- * (USD↔EUR)? No hay conversión canónica para ese cruce (el T/C capturado son
- * pesos por divisa), así que el formulario lo bloquea con mensaje explícito en
- * vez de asumir paridad 1:1.
- */
-export function cruceMonedasNoSoportado(
-  monedaFactura: string | null | undefined,
-  monedaPago: string | null | undefined,
-): boolean {
-  if (!monedaFactura || !monedaPago) return false;
-  return (
-    monedaFactura !== "MXN" && monedaPago !== "MXN" && monedaFactura !== monedaPago
-  );
-}
+/** Re-export para consumidores del formulario (el canon vive en dominio). */
+export { cruceMonedasNoSoportado };
+
 
 /**
  * Monto capturado, expresado en la moneda de la factura.

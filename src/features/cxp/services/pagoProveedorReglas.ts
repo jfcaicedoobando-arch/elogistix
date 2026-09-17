@@ -5,7 +5,7 @@
 import type { ValidarPagoInput, FacturaPagoInfo } from "./pagoProveedorValidaciones";
 import { tieneMasDeDosDecimales, TC_MAX } from "./pagoProveedorValidaciones";
 import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
-import { cruceMonedasNoSoportado } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
+import { cruceMonedasNoSoportado } from "@/features/cxp/domain/monedaPago";
 
 const TC_MIN = 0.01;
 
