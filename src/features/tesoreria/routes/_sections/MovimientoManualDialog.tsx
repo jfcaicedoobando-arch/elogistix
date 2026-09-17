@@ -54,6 +54,8 @@ export function MovimientoManualDialog({
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
+      isDirty={movimientoManualSucio(manualForm)}
+
       icon={Landmark}
       title="Registrar movimiento manual"
       description="Captura fuera del importador (ajustes, comisiones, depósitos manuales)."
