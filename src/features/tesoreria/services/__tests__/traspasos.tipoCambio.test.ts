@@ -91,6 +91,13 @@ describe("registrarTraspaso — tipo de cambio", () => {
     expect(res).toEqual({ id: "tr-existente", duplicado: true });
   });
 
+  it("MNY: avisa conflicto si la clave ya se usó con otro contenido", async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: "23505" } });
+    await expect(
+      registrarTraspaso({ ...base, montoOrigen: 5000, tipoCambio: 1, clientRequestId: "k-1" }),
+    ).rejects.toThrow(/datos distintos/i);
+  });
+
   it("propaga 23505 cuando no hay clave de idempotencia", async () => {
     rpc.mockResolvedValue({ data: null, error: { code: "23505" } });
     await expect(registrarTraspaso({ ...base, tipoCambio: 1 })).rejects.toEqual({
