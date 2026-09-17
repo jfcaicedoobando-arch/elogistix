@@ -22043,18 +22043,15 @@ BEGIN
   IF p_id IS NULL THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_PARAMS: falta el identificador del pago';
   END IF;
-
   v_tipo := lower(coalesce(p_tipo, ''));
   IF v_tipo NOT IN ('cobro','pago','anticipo','lote','lote_cobro') THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_TIPO: tipo de pago no soportado (%)', p_tipo;
   END IF;
-
   v_org := current_user_org_id();
   v_super := has_role(auth.uid(), 'super_admin');
   IF v_org IS NULL AND NOT v_super THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_SIN_ORG: no se pudo determinar tu organización';
   END IF;
-
   IF v_tipo = 'cobro' THEN
     SELECT pf.organization_id,
            jsonb_build_object(
@@ -22081,7 +22078,6 @@ BEGIN
     LEFT JOIN public.clientes c ON c.id = f.cliente_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = pf.cuenta_bancaria_id
     WHERE pf.id = p_id AND pf.deleted_at IS NULL;
-
   ELSIF v_tipo = 'pago' THEN
     SELECT pp.organization_id, pp.lote_id,
            jsonb_build_object(
@@ -22107,7 +22103,6 @@ BEGIN
     LEFT JOIN public.proveedores pr ON pr.id = pfa.proveedor_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = pp.cuenta_bancaria_id
     WHERE pp.id = p_id AND pp.deleted_at IS NULL;
-
   ELSIF v_tipo = 'lote' THEN
     v_lote := p_id;
     SELECT l.organization_id,
@@ -22133,7 +22128,6 @@ BEGIN
     LEFT JOIN public.proveedores pr ON pr.id = l.proveedor_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
     WHERE l.id = p_id AND l.deleted_at IS NULL;
-
   ELSIF v_tipo = 'lote_cobro' THEN
     SELECT l.organization_id,
            jsonb_build_object(
@@ -22158,7 +22152,6 @@ BEGIN
     LEFT JOIN public.clientes c ON c.id = l.cliente_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
     WHERE l.id = p_id AND l.deleted_at IS NULL;
-
   ELSE
     SELECT ap.organization_id,
            jsonb_build_object(
@@ -22186,15 +22179,12 @@ BEGIN
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = ap.cuenta_bancaria_id
     WHERE ap.id = p_id AND ap.deleted_at IS NULL;
   END IF;
-
   IF v_pago IS NULL THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_NO_ENCONTRADO: el pago no existe o fue eliminado';
   END IF;
-
   IF NOT v_super AND v_org_pago IS DISTINCT FROM v_org THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_SIN_ACCESO: el pago pertenece a otra organización';
   END IF;
-
   SELECT jsonb_build_object(
            'id', m.id, 'fecha', m.fecha, 'concepto', m.concepto,
            'referencia', m.referencia, 'cargo', COALESCE(m.cargo,0), 'abono', COALESCE(m.abono,0),
@@ -22218,7 +22208,6 @@ BEGIN
     )
   ORDER BY m.fecha DESC
   LIMIT 1;
-
   IF v_tipo IN ('cobro','lote_cobro') THEN
     SELECT COALESCE(jsonb_agg(x), '[]'::jsonb) INTO v_aplic
     FROM (
@@ -22240,7 +22229,6 @@ BEGIN
         AND ((v_tipo = 'cobro' AND pf.id = p_id)
              OR (v_tipo = 'lote_cobro' AND pf.lote_id = p_id))
     ) s;
-
   ELSIF v_tipo IN ('pago','lote') THEN
     SELECT COALESCE(jsonb_agg(x ORDER BY folio), '[]'::jsonb) INTO v_aplic
     FROM (
@@ -22263,7 +22251,6 @@ BEGIN
       WHERE pp.deleted_at IS NULL
         AND ((v_lote IS NOT NULL AND pp.lote_id = v_lote) OR (v_lote IS NULL AND pp.id = p_id))
     ) s;
-
   ELSE
     SELECT COALESCE(jsonb_agg(x ORDER BY folio), '[]'::jsonb) INTO v_aplic
     FROM (
@@ -22286,7 +22273,6 @@ BEGIN
       WHERE aa.anticipo_id = p_id AND aa.deleted_at IS NULL
     ) s;
   END IF;
-
   RETURN jsonb_build_object(
     'tipo', v_tipo,
     'pago', v_pago,
