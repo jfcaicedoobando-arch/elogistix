@@ -54,7 +54,19 @@ export function banderasMonedaPago(args: {
     cruceNoSoportado,
     soportaDiferenciaCambiaria: soportaDiferenciaCambiaria && !cruceNoSoportado,
     /** Divisa del par contra MXN (para pedir el T/C correcto: USD o EUR). */
-    monedaDelPar: moneda !== "MXN" ? moneda : factura?.moneda ?? null,
+    monedaDelPar: monedaDelParContraMxn(factura?.moneda, moneda),
+  };
+}
+
+/** Divisa del par contra MXN (para pedir el T/C correcto: USD o EUR). */
+function monedaDelParContraMxn(
+  monedaFactura: string | null | undefined,
+  monedaPago: string,
+): string | null {
+  if (monedaPago !== "MXN") return monedaPago;
+  return monedaFactura ?? null;
+}
+
   };
 }
 
