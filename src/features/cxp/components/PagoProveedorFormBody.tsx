@@ -121,32 +121,14 @@ export function PagoProveedorFormBody(p: Props) {
       </FormSection>
 
 
-      {p.soportaDiferenciaCambiaria && (
-        <FormSection title="Diferencia cambiaria">
-          <div className="space-y-1">
-            <Label htmlFor="pago-prov-diff-mxn">Diferencia cambiaria MXN (opcional)</Label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-muted-foreground">$</span>
-              <Input id="pago-prov-diff-mxn" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                className="pl-7 text-right tabular-nums"
-                value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
-            </div>
-            <p className="text-body-sm text-muted-foreground">
-              Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
-            </p>
-          </div>
-        </FormSection>
-      )}
+      <PagoProveedorDiferenciaField
+        soportaDiferenciaCambiaria={p.soportaDiferenciaCambiaria}
+        esUsdPagadoEnMxn={p.esUsdPagadoEnMxn}
+        diffMxn={p.diffMxn}
+        setDiffMxn={p.setDiffMxn}
+        factura={p.factura}
+      />
 
-      {/* MNY: el cálculo de diferencia cambiaria del sistema sólo existe para
-          el par USD/MXN; para otras divisas se dice en pantalla en vez de
-          aceptar un dato que después se perdería. */}
-      {p.esUsdPagadoEnMxn && !p.soportaDiferenciaCambiaria && p.factura && (
-        <p className="text-body-sm text-muted-foreground">
-          La diferencia cambiaria automática sólo está disponible para pagos entre USD y MXN;
-          este pago en {p.factura.moneda} no la registra.
-        </p>
-      )}
 
 
       <FormSection title="Referencia y notas">
