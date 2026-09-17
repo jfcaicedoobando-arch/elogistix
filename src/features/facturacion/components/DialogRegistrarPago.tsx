@@ -55,7 +55,6 @@ const today = () => todayLocalISO();
 /** id del formulario del cuerpo, usado por el botón submit del footer. */
 const FORM_ID = "form-registrar-pago";
 
-
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: cuentas = [] } = useCuentasBancarias();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
@@ -91,7 +90,6 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates(
     /^\d{4}-\d{2}-\d{2}$/.test(values.fecha) ? values.fecha : undefined,
   );
-
 
   const { clientRequestIdRef, baseline } = useRegistrarPagoInit(open, factura, saldo, setValues);
 
