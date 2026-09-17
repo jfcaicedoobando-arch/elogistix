@@ -98,7 +98,7 @@ export async function clasificarFila(
       tipo: "ilegible",
       descarte: {
         fila: numFila,
-        motivo: "importe no numérico",
+        motivo: "importe ilegible: no numérico, depósito negativo o cargo y abono en la misma fila",
         valor: [row[idx.cargo], row[idx.abono]]
           .map((v) => String(v ?? ""))
           .join(" / "),
