@@ -17,14 +17,16 @@ import {
   type ProductoCatalogo,
 } from "@/features/cotizacion/services/productosCatalogoService";
 import { queryKeys } from "@/lib/query";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { tasaParaTotales } from "@/lib/financial/tipoIvaSat";
 
 export type { ProductoCatalogo };
 
+/**
+ * Tasa numérica del producto para cálculos. Exento y "no objeto" devuelven 0;
+ * el tratamiento exacto viaja aparte en `tipo_iva` (no se infiere de la tasa).
+ */
 export function tasaDesdeTipoIva(tipo: ProductoCatalogo["tipo_iva"]): number {
-  if (tipo === "gravado_16") return TASA_IVA;
-  if (tipo === "tasa_0") return 0;
-  return 0; // exento — no genera IVA; el flag aplica_iva se apaga.
+  return tasaParaTotales(tipo);
 }
 
 export function useProductosCatalogo(organizationId: string | null | undefined) {

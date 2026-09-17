@@ -26,6 +26,7 @@ import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizaci
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import type { AppRole } from "@/types/appRole";
+import { TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
 
 /**
  * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
@@ -169,7 +170,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                           <div className="font-medium">{p.nombre}</div>
                           <div className="text-label text-muted-foreground">
                             SAT {p.clave_sat} · {p.clave_unidad_sat} ·{" "}
-                            {p.tipo_iva === "gravado_16" ? "IVA 16%" : p.tipo_iva === "tasa_0" ? "IVA 0%" : "Exento"}
+                            {TIPO_IVA_LABEL_CORTO[p.tipo_iva]}
                           </div>
                         </div>
                       </CommandItem>

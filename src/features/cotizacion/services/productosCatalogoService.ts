@@ -4,15 +4,16 @@
  * Encapsula el acceso a `catalogo_claves_sat` para que los hooks/contexts
  * no importen el cliente Supabase directo (regla arquitectónica).
  */
-import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { tasaDefaultCatalogo, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
 
 export interface ProductoCatalogo {
   id: string;
   nombre: string;
   clave_sat: string;
-  tipo_iva: "gravado_16" | "tasa_0" | "exento";
+  /** Tratamiento fiscal del producto, incluido `no_objeto` (SAT ObjetoImp 01). */
+  tipo_iva: TipoIvaSat;
   tasa_iva_default: number | null;
   clave_unidad_sat: string;
   nombre_unidad: string | null;
@@ -60,7 +61,9 @@ export async function crearProductoCatalogo(
       patron: input.nombre,
       clave_sat: input.clave_sat,
       tipo_iva: input.tipo_iva,
-      tasa_iva_default: input.tipo_iva === "gravado_16" ? TASA_IVA : 0,
+      // NULL cuando el renglón no causa IVA trasladado (exento / no objeto);
+      // el tratamiento explícito queda guardado en `tipo_iva`.
+      tasa_iva_default: tasaDefaultCatalogo(input.tipo_iva),
       clave_unidad_sat: input.clave_unidad_sat,
       activo: true,
     })

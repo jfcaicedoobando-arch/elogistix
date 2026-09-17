@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { crearProductoCatalogo, type ProductoCatalogo } from "@/features/cotizacion/services/productosCatalogoService";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { TIPO_IVA_OPCIONES } from "@/lib/financial/tipoIvaSat";
 
 interface Props {
   organizationId: string;
@@ -69,11 +70,11 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
       <div className="space-y-1">
         <Label className="text-label">IVA</Label>
         <Select value={tipoIva} onValueChange={(v) => setTipoIva(v as ProductoCatalogo["tipo_iva"])}>
-          <SelectTrigger className="h-8 text-body"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-body" aria-label="Tratamiento de IVA"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="gravado_16">Gravado 16%</SelectItem>
-            <SelectItem value="tasa_0">Tasa 0%</SelectItem>
-            <SelectItem value="exento">Exento</SelectItem>
+            {TIPO_IVA_OPCIONES.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
