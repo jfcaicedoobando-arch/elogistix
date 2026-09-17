@@ -108,6 +108,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
         ) : (
           <ListaCandidatos
             candidatos={candidatos}
+            truncado={truncado}
             isLoading={isLoading}
             isPending={conciliar.isPending}
             onConciliar={onConciliar}
