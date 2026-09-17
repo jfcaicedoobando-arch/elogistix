@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap } from "@/lib/supabase/response";
 import type { TablesUpdate } from "@/integrations/supabase/types";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividadNoBloqueante } from "@/features/crm/services/bitacoraNoBloqueante";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 import type { OportunidadInput } from "@/features/crm/types/oportunidades";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
@@ -21,17 +21,12 @@ export async function crearOportunidad(
   // v13.823.32: la oportunidad YA existe. Si el registro automático de
   // actividad/bitácora falla, no la perdemos ni anunciamos fracaso: se
   // devuelve un aviso accionable para la UI.
-  let avisoActividad: string | null = null;
-  try {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "crear_oportunidad",
-      entidadId: creada.id,
-      entidadNombre: input.nombre ?? "",
-    });
-  } catch (err) {
-    avisoActividad = err instanceof Error ? err.message : "Error desconocido";
-  }
+  const avisoActividad = await registrarActividadNoBloqueante({
+    modulo: "crm",
+    accion: "crear_oportunidad",
+    entidadId: creada.id,
+    entidadNombre: input.nombre ?? "",
+  });
   return { id: creada.id, avisoActividad };
 }
 
