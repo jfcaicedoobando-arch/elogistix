@@ -6,7 +6,12 @@ import AvisoCostosDesactualizados from "./AvisoCostosDesactualizados";
 
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
 import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
-import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+import { marcarEditadaAMano, type DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+
+/** Campos cuya edición manual desvincula la fila de su origen automático. */
+const CAMPOS_DESVINCULAN = new Set<keyof FilaCostoLocal>([
+  "concepto", "moneda", "proveedor", "cantidad", "costo_unitario", "precio_venta", "unidad_medida",
+]);
 
 
 interface Props {
@@ -31,7 +36,11 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
       const copy = [...prev];
-      copy[globalIdx] = { ...copy[globalIdx], [field]: value };
+      const editada = { ...copy[globalIdx], [field]: value };
+      // Q2/Q6: editar a mano una fila auto-generada la desvincula del Paso 1;
+      // así el aviso de "costos desactualizados" no bloquea el avance ni el
+      // recálculo pisa lo que el usuario acaba de capturar.
+      copy[globalIdx] = CAMPOS_DESVINCULAN.has(field) ? marcarEditadaAMano(editada) : editada;
       return copy;
     });
   };
