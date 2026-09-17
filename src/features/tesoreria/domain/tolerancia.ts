@@ -4,6 +4,8 @@
  */
 export {
   TOLERANCIA_MONTO_MXN,
+  TOLERANCIA_MONTO_POR_MONEDA,
+  toleranciaMonto,
   TOLERANCIA_DIAS,
   dentroDeTolerancia,
   deltaDiasIso,
