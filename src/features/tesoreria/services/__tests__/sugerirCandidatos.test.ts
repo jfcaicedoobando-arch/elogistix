@@ -22,14 +22,14 @@ beforeEach(() => {
 
 describe("sugerirCandidatos (helpers)", () => {
   it("devuelve [] cuando cargo y abono son 0", async () => {
-    const res = await sugerirCandidatos(mov({ cargo: 0, abono: 0, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 0, abono: 0, fecha: "2026-06-10" }), "MXN");
     expect(res).toEqual([]);
     expect(mock.tableCalls).toHaveLength(0);
   });
 
   it("cargo bancario consulta pagos_proveedor con tolerancia ±1 monto y ±5 días", async () => {
     mock.setTableResult("pagos_proveedor", { data: [], error: null });
-    await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "MXN");
     const call = mock.tableCalls.find((c) => c.table === "pagos_proveedor");
     expect(call).toBeDefined();
     const argMap = new Map(call!.ops.map((op, i) => [op + ":" + JSON.stringify(call!.opArgs[i]), true]));
@@ -64,7 +64,7 @@ describe("sugerirCandidatos (helpers)", () => {
       ],
       error: null,
     });
-    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "MXN");
     expect(res).toHaveLength(1);
     expect(res[0]).toMatchObject({
       tipo: "cxp",
@@ -77,7 +77,7 @@ describe("sugerirCandidatos (helpers)", () => {
 
   it("abono bancario consulta pagos_factura (no proveedor)", async () => {
     mock.setTableResult("pagos_factura", { data: [], error: null });
-    await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }));
+    await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }), "USD");
     const calls = mock.tableCalls.map((c) => c.table);
     expect(calls).toContain("pagos_factura");
     expect(calls).not.toContain("pagos_proveedor");
@@ -97,7 +97,7 @@ describe("sugerirCandidatos (helpers)", () => {
       ],
       error: null,
     });
-    const res = await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }), "USD");
     expect(res[0]).toMatchObject({
       tipo: "cxc",
       contraparte: "—",
@@ -116,7 +116,19 @@ describe("sugerirCandidatos (helpers)", () => {
       ],
       error: null,
     });
-    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "MXN");
     expect(res.map((r) => r.pago_id)).toEqual(["p2", "p3", "p1"]);
+  });
+
+  it("FIN-NEW-03: sin moneda confirmada no propone candidatos ni consulta pagos", async () => {
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    expect(res).toEqual([]);
+    expect(mock.tableCalls.some((c) => c.table === "pagos_proveedor")).toBe(false);
+  });
+
+  it("FIN-NEW-03: moneda desconocida por parámetro tampoco propone candidatos", async () => {
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "GBP");
+    expect(res).toEqual([]);
+    expect(mock.tableCalls.some((c) => c.table === "pagos_proveedor")).toBe(false);
   });
 });

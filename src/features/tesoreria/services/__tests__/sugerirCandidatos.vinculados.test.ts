@@ -43,7 +43,7 @@ describe("sugerirCandidatos · pagos ya vinculados (Ola 4 · N15)", () => {
       data: [{ pago_factura_id: null, pago_proveedor_id: "p1" }],
       error: null,
     });
-    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "MXN");
     expect(res).toEqual([]);
     const call = mock.tableCalls.find((c) => c.table === "bbva_movimientos");
     expect(call?.ops).toContain("is");
@@ -67,14 +67,14 @@ describe("sugerirCandidatos · pagos ya vinculados (Ola 4 · N15)", () => {
     // El filtro .is("deleted_at", null) del servicio ya excluye a los movimientos
     // en papelera; el mock simula que la consulta no devuelve ningún vínculo vivo.
     mock.setTableResult("bbva_movimientos", { data: [], error: null });
-    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }), "MXN");
     expect(res).toHaveLength(1);
     expect(res[0].pago_id).toBe("p1");
   });
 
   it("no consulta bbva_movimientos cuando no hay candidatos por monto/fecha", async () => {
     mock.setTableResult("pagos_factura", { data: [], error: null });
-    await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }));
+    await sugerirCandidatos(mov({ cargo: 0, abono: 500, fecha: "2026-06-10" }), "MXN");
     expect(mock.tableCalls.some((c) => c.table === "bbva_movimientos")).toBe(false);
   });
 });
