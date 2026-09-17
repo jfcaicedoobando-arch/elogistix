@@ -32,7 +32,11 @@ export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
       .select(LIQUIDACION_COLUMNS).is("deleted_at", null)
       .order("periodo", { ascending: false })
       .order("created_at", { ascending: false })
+      // SAFE-CAST: el builder de PostgREST ya devuelve { data, error }; el cast
+      // sólo adapta su tipo al contrato de `leerTodasLasPaginas` (columnas
+      // explícitas de la misma tabla, sin cambio de forma en runtime).
       .range(desde, hasta) as unknown as PromiseLike<{
+
         data: LiquidacionRow[] | null;
         error: { message: string } | null;
       }>,
