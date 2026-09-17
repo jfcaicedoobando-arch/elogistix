@@ -89,6 +89,13 @@ export function usePaso1Handlers({
         updateCotizacion.resincronizarSello?.(res.updatedAt);
         setVinculoCrmError(null);
         setVinculoCrmConfirmado(true);
+        // El vínculo persistió; sólo la bitácora quedó pendiente.
+        if (res.avisoActividad) {
+          notifyWarning(undefined, {
+            title: "Cotización vinculada al CRM",
+            description: avisoBitacoraFallida(res.avisoActividad),
+          });
+        }
         return true;
       } catch (e: unknown) {
         const msg = getErrorMessage(e);
