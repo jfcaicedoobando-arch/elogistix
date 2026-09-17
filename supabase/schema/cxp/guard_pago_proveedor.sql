@@ -1,6 +1,6 @@
 -- Fuente canónica de public.guard_pago_proveedor (dominio cxp).
--- Última migración que la define: 20260825000700 (BL-15, diferencia
--- cambiaria también en el cruce pago USD → factura MXN).
+-- Última migración que la define: 20260917035459 (MNY P1.3, la aplicación de
+-- anticipo entre monedas se valúa con la paridad DOF del día de aplicación).
 -- D4 (v13.823.382): la fecha del pago se valida aquí (requerida, no futura y
 -- no anterior a la emisión de la factura) y NO cuenta como "sólo metadato",
 -- así que un UPDATE directo tampoco puede moverla fuera de rango.
@@ -8,12 +8,10 @@
 -- Regla: cualquier cambio a esta función debe actualizar este archivo
 -- en el mismo PR (ver supabase/schema/README.md).
 
-CREATE OR REPLACE FUNCTION public.guard_pago_proveedor()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $function$
+CREATE OR REPLACE FUNCTION public.guard_pago_proveedor() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
 DECLARE
   v_fact_moneda public.moneda;
   v_fact_tc     numeric;
@@ -30,7 +28,6 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
-
   IF TG_OP = 'UPDATE' THEN
     v_solo_metadatos := (
       NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
@@ -46,7 +43,6 @@ BEGIN
       RETURN NEW;
     END IF;
   END IF;
-
   -- D4: fecha requerida y nunca futura (fecha de negocio México).
   IF NEW.fecha_pago IS NULL THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago'
@@ -56,25 +52,21 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del pago (%) no puede ser futura', NEW.fecha_pago
       USING ERRCODE = '22023';
   END IF;
-
   SELECT moneda, tipo_cambio_usd, COALESCE(total,0), estado, deleted_at, fecha_emision
     INTO v_fact_moneda, v_fact_tc, v_fact_total, v_fact_estado, v_fact_deleted, v_fact_emision
     FROM public.proveedor_facturas
     WHERE id = NEW.proveedor_factura_id
     FOR UPDATE;
-
   IF v_fact_moneda IS NULL THEN
     RAISE EXCEPTION 'LC_FACTURA_PROV_NO_ENCONTRADA: factura % no existe', NEW.proveedor_factura_id
       USING ERRCODE = 'P0002';
   END IF;
-
   IF v_fact_estado = 'Cancelada'::public.estado_proveedor_factura
      OR v_fact_deleted IS NOT NULL THEN
     RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
       CASE WHEN v_fact_deleted IS NOT NULL THEN 'en la papelera' ELSE 'Cancelada' END
       USING ERRCODE = '23514';
   END IF;
-
   -- D4: nunca antes de la emisión de la factura (mismo canon que el lote y
   -- que programar_pago_proveedor).
   IF v_fact_emision IS NOT NULL AND NEW.fecha_pago < v_fact_emision THEN
@@ -82,7 +74,6 @@ BEGIN
       NEW.fecha_pago, v_fact_emision
       USING ERRCODE = '22023';
   END IF;
-
   -- MNY P1.3: una APLICACIÓN DE ANTICIPO se valúa con la paridad DOF del día
   -- de la aplicación (contrato documentado en docs/flujo-anticipos-proveedor.md).
   -- Antes se derivaba con el TC histórico de la factura y el importe aplicado no
@@ -97,7 +88,6 @@ BEGIN
     NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
       NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
   END IF;
-
   IF NEW.moneda = 'MXN'::public.moneda
      AND v_fact_moneda = 'USD'::public.moneda
      AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
@@ -113,7 +103,6 @@ BEGIN
   ELSE
     NEW.diferencia_cambiaria_mxn := NULL;
   END IF;
-
   -- F4: misma conversión canónica que la vista v_proveedor_facturas_saldo.
   SELECT COALESCE(SUM(
            public.monto_pago_en_moneda_factura(
@@ -123,25 +112,21 @@ BEGIN
    WHERE nc.proveedor_factura_id = NEW.proveedor_factura_id
      AND nc.deleted_at IS NULL
      AND nc.estado::text = 'Aplicada';
-
   SELECT COALESCE(SUM(monto_en_moneda_factura),0) INTO v_pagos
     FROM public.pagos_proveedor
    WHERE proveedor_factura_id = NEW.proveedor_factura_id
      AND deleted_at IS NULL
      AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
-
   v_saldo := v_fact_total - v_ncs - v_pagos;
-
   IF COALESCE(NEW.monto_en_moneda_factura,0) > v_saldo + 0.005 THEN
     RAISE EXCEPTION
       'LC_PAGO_EXCEDE_SALDO: pago % excede el saldo disponible % de la factura de proveedor',
       round(COALESCE(NEW.monto_en_moneda_factura,0),2), round(v_saldo,2)
       USING ERRCODE = '23514';
   END IF;
-
   RETURN NEW;
 END;
-$function$;
+$$;
 
 -- Grants anclados (H6, migración 20260723223436):
 REVOKE ALL ON FUNCTION public.guard_pago_proveedor() FROM PUBLIC;
