@@ -20,16 +20,21 @@ function sumaPorMoneda(rows: AnticipoProveedorRow[], campo: (r: AnticipoProveedo
 
 export function AnticiposKpis({ anticipos }: Props) {
   const { vigentes, disponible, anticipado, aplicado } = useMemo(() => {
-    const vig = anticipos.filter((a) => a.estado !== "cancelado");
+    // MNY P1.3: un anticipo devuelto ya no es dinero adelantado vigente; lo
+    // devuelto tampoco cuenta como aplicado a facturas (lo aplicado real vive
+    // en `aplicado`, ya neto de la devolución).
+    const noCancelados = anticipos.filter((a) => a.estado !== "cancelado");
+    const vig = noCancelados.filter((a) => a.estado !== "devuelto");
     return {
       vigentes: vig,
       disponible: sumaPorMoneda(vig, (a) => a.disponible),
       anticipado: sumaPorMoneda(vig, (a) => Number(a.monto)),
-      aplicado: sumaPorMoneda(vig, (a) => a.aplicado),
+      aplicado: sumaPorMoneda(noCancelados, (a) => a.aplicado),
     };
   }, [anticipos]);
 
   const pendientes = vigentes.filter((a) => a.disponible > 0).length;
+
 
   return (
     <KpiStrip desktopCols={4} className="mb-6">
