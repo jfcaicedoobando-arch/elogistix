@@ -18,7 +18,9 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { TraspasoConversion } from "./TraspasoConversion";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
-import { useTraspasoForm, traspasoSucio } from "@/features/tesoreria/hooks/useTraspasoForm";
+import {
+  useTraspasoForm, traspasoSucio, partesTraspaso, conceptoTraspaso,
+} from "@/features/tesoreria/hooks/useTraspasoForm";
 
 import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
@@ -69,15 +71,10 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         montoOrigen: state.montoOrigen,
         tipoCambio: tipoCambioFinal,
         comision: state.comision,
-        concepto: state.concepto.trim() || "Traspaso entre cuentas propias",
+        concepto: conceptoTraspaso(state),
         referencia: state.referencia.trim(),
         clientRequestId: clientRequestId.get(
-          scopeDePayload([
-            state.origenId, state.destinoId, state.fecha, state.montoOrigen,
-            tipoCambioFinal, state.comision,
-            state.concepto.trim() || "Traspaso entre cuentas propias",
-            state.referencia.trim(),
-          ]),
+          scopeDePayload(partesTraspaso(state, tipoCambioFinal)),
         ),
       },
 

@@ -178,3 +178,23 @@ export function traspasoSucio(state: TraspasoFormState): boolean {
   ];
   return señales.some(Boolean);
 }
+
+/**
+ * MNY: contenido normalizado del traspaso, usado como `scope` de la llave de
+ * idempotencia. Reintentar el mismo traspaso reusa la llave; cambiar cuentas,
+ * fecha, importes o concepto genera otra para que el backend no confirme el
+ * traspaso anterior.
+ */
+export function conceptoTraspaso(state: TraspasoFormState): string {
+  return state.concepto.trim() || "Traspaso entre cuentas propias";
+}
+
+export function partesTraspaso(
+  state: TraspasoFormState,
+  tipoCambio: number,
+): Array<string | number> {
+  return [
+    state.origenId, state.destinoId, state.fecha, state.montoOrigen,
+    tipoCambio, state.comision, conceptoTraspaso(state), state.referencia.trim(),
+  ];
+}
