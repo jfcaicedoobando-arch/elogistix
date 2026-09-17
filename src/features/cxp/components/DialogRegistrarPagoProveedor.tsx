@@ -87,9 +87,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         referencia: f.referencia,
         notas: f.notas,
         // R6-N1: la cuenta permite generar el movimiento bancario vinculado.
-        cuenta_bancaria_id: f.cuentaId || null,
-        diferencia_cambiaria_mxn:
-          f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
+        // MNY: en efectivo va `null` para que la base no derive salida de banco.
+        cuenta_bancaria_id: f.cuentaBancariaIdEnvio,
+        diferencia_cambiaria_mxn: f.diferenciaCambiariaEnvio,
+
         client_request_id: clientRequestIdRef.current,
       });
       notifySuccess(undefined, { title: "Pago registrado" });
@@ -102,9 +103,13 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   const submitDisabled = registrar.isPending || validarPago() !== null;
   const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
 
-  // YG-04: hay datos capturados que se perderían si se cierra el modal.
-  const isDirty =
-    f.montoNum > 0 || f.referencia.trim() !== "" || f.notas.trim() !== "" || !!f.cuentaId;
+  // YG-04 / MNY: hay captura real del usuario que se perdería al cerrar. El
+  // monto y el T/C vienen prellenados, así que no cuentan como captura.
+  const isDirty = pagoProveedorCreadoSucio(
+    { referencia: f.referencia, notas: f.notas, metodo: f.metodo, moneda: f.moneda, monto: f.monto },
+    f.valoresIniciales,
+  );
+
 
 
   const footer = (
