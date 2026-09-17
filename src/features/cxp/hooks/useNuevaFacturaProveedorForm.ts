@@ -49,6 +49,12 @@ export function useNuevaFacturaProveedorForm(
       if (k === "emision" || k === "diasCredito") {
         next.vencimiento = addDays(next.emision, Number(next.diasCredito) || 0);
       }
+      // MNY P1.1: el T/C pertenece al par anterior (USD/MXN vs EUR/MXN). Al
+      // cambiar la moneda se invalida de inmediato: la consulta al DOF es
+      // asíncrona y guardar antes usaba la tasa vieja. Con `tc` vacío la
+      // validación bloquea el guardado hasta tener la tasa del nuevo par o una
+      // captura manual. En MXN nunca se conserva una tasa extranjera oculta.
+      if (k === "moneda") next.tc = "";
       return next;
     });
     if (k === "tc") {
