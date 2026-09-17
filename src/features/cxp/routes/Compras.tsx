@@ -61,8 +61,21 @@ export default function Compras() {
     [cxp],
   );
 
-  const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd;
-  const porPagar7d = kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd;
+  // MNY-NEW-07 (fix): el euro tiene cubeta propia; si no se toma en cuenta aquí
+  // una factura EUR vencida se muestra como "al corriente". Nunca se suma EUR
+  // como si fueran pesos: cada moneda se lista por separado.
+  const importesVencidos: Array<[number, string]> = [
+    [kpis.vencido_mxn, "MXN"], [kpis.vencido_usd, "USD"], [kpis.vencido_eur, "EUR"],
+  ];
+  const importes7d: Array<[number, string]> = [
+    [kpis.por_vencer_7d_mxn, "MXN"], [kpis.por_vencer_7d_usd, "USD"], [kpis.por_vencer_7d_eur, "EUR"],
+  ];
+  const listar = (xs: Array<[number, string]>, compacto = true) =>
+    xs.filter(([m]) => m > 0.01)
+      .map(([m, cur]) => (compacto ? formatCurrencyCompact(m, cur) : formatCurrency(m, cur)))
+      .join(" · ");
+  const hayVencido = importesVencidos.some(([m]) => m > 0.01);
+  const hayPorVencer7d = importes7d.some(([m]) => m > 0.01);
 
   return (
     <PageContainer>
