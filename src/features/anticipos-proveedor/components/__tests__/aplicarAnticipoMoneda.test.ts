@@ -7,7 +7,7 @@ import { buildSchema } from "../AplicarAnticipoDialog";
 
 function mensajeDeMonto(moneda: string) {
   const res = buildSchema(1000, moneda).safeParse({
-    facturaId: "11111111-1111-1111-1111-111111111111",
+    facturaId: "11111111-1111-4111-8111-111111111111",
     saldoFactura: 5000,
     monedaFactura: moneda,
     monto: 1500,
@@ -31,7 +31,7 @@ describe("AplicarAnticipoDialog · límite del anticipo por moneda", () => {
 
   it("acepta un monto dentro del disponible", () => {
     const res = buildSchema(1000, "EUR").safeParse({
-      facturaId: "11111111-1111-1111-1111-111111111111",
+      facturaId: "11111111-1111-4111-8111-111111111111",
       saldoFactura: 5000, monedaFactura: "EUR", monto: 900,
       fechaAplicacion: "2026-06-10",
     });
