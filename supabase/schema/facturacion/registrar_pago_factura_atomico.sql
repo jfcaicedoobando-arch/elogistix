@@ -1,7 +1,5 @@
--- Fuente canónica de public.registrar_pago_factura_atomico(...).
--- D2 (v13.823.382): cobro individual CxC atómico e idempotente. El cobro y su
--- abono bancario espejo se confirman o se revierten juntos; un reintento con el
--- mismo client_request_id devuelve el cobro existente y repara el movimiento.
+-- Fuente canónica de public.registrar_pago_factura_atomico(...) y su comparador de payload.
+-- 1:1 con supabase/migrations/20260917182140_3783eacb-667c-4501-b6f6-b175b44e3bd8.sql.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_factura_atomico(
@@ -37,6 +35,9 @@ BEGIN
      WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
     IF v_pago_id IS NOT NULL THEN
       v_reintento := true;
+      PERFORM public._assert_pago_factura_mismo_payload(
+        v_pago_id, p_factura_id, p_fecha_pago, p_monto, p_moneda, p_tipo_cambio,
+        p_monto_aplicado_factura, p_forma_pago, p_cuenta_bancaria_id);
     END IF;
   END IF;
 
@@ -64,6 +65,9 @@ BEGIN
        WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
       IF v_pago_id IS NULL THEN RAISE; END IF;
       v_reintento := true;
+      PERFORM public._assert_pago_factura_mismo_payload(
+        v_pago_id, p_factura_id, p_fecha_pago, p_monto, p_moneda, p_tipo_cambio,
+        p_monto_aplicado_factura, p_forma_pago, p_cuenta_bancaria_id);
     END;
   END IF;
 
@@ -90,6 +94,46 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.registrar_pago_factura_atomico(uuid, date, numeric, text, numeric, numeric, text, text, text, numeric, uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.registrar_pago_factura_atomico(uuid, date, numeric, text, numeric, numeric, text, text, text, numeric, uuid, uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.registrar_pago_factura_atomico(uuid, date, numeric, text, numeric, numeric, text, text, text, numeric, uuid, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.registrar_pago_factura_atomico(uuid, date, numeric, text, numeric, numeric, text, text, text, numeric, uuid, uuid) TO authenticated, service_role;
+
+-- Comparador del payload de un reintento de cobro individual.
+CREATE OR REPLACE FUNCTION public._assert_pago_factura_mismo_payload(
+  p_pago_id uuid,
+  p_factura_id uuid,
+  p_fecha_pago date,
+  p_monto numeric,
+  p_moneda text,
+  p_tipo_cambio numeric,
+  p_monto_aplicado_factura numeric,
+  p_forma_pago text,
+  p_cuenta_bancaria_id uuid
+)
+RETURNS void
+LANGUAGE plpgsql
+STABLE
+SET search_path = public
+AS $$
+DECLARE
+  v_p public.pagos_factura%ROWTYPE;
+BEGIN
+  SELECT * INTO v_p FROM public.pagos_factura WHERE id = p_pago_id;
+  IF NOT FOUND THEN RETURN; END IF;
+
+  IF v_p.factura_id IS DISTINCT FROM p_factura_id
+     OR v_p.fecha_pago IS DISTINCT FROM p_fecha_pago
+     OR round(COALESCE(v_p.monto, 0), 4) IS DISTINCT FROM round(COALESCE(p_monto, 0), 4)
+     OR v_p.moneda::text IS DISTINCT FROM upper(btrim(COALESCE(p_moneda, '')))
+     OR round(COALESCE(v_p.tipo_cambio, 1), 6) IS DISTINCT FROM round(COALESCE(p_tipo_cambio, 1), 6)
+     OR round(COALESCE(v_p.monto_aplicado_factura, 0), 4) IS DISTINCT FROM round(COALESCE(p_monto_aplicado_factura, 0), 4)
+     OR COALESCE(v_p.forma_pago, '') IS DISTINCT FROM COALESCE(p_forma_pago, '')
+     OR v_p.cuenta_bancaria_id IS DISTINCT FROM p_cuenta_bancaria_id
+  THEN
+    RAISE EXCEPTION 'LC_PAGO_REINTENTO_DISTINTO: ese intento ya se guardó con datos distintos (cobro %). Revisa el cobro registrado antes de volver a capturarlo; no se guardó la edición ni se duplicó el cobro.', p_pago_id
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public._assert_pago_factura_mismo_payload(uuid, uuid, date, numeric, text, numeric, numeric, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_pago_factura_mismo_payload(uuid, uuid, date, numeric, text, numeric, numeric, text, uuid) TO authenticated, service_role;

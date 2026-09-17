@@ -1,14 +1,7 @@
--- Fuente canónica de public.assert_movimiento_pago_consistente() (N5 · v13.823.386).
--- 1:1 con supabase/migrations/20260914190057_51646384-f9a6-4ce8-9bca-b065da917dc7.sql.
+-- Fuente canónica de public.assert_movimiento_pago_consistente().
+-- 1:1 con supabase/migrations/20260917182140_3783eacb-667c-4501-b6f6-b175b44e3bd8.sql.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
--- N5 (v13.823.386): el trigger de consistencia comparaba sólo el importe
--- absoluto, así que un cargo podía conciliarse como cobro de cliente y un
--- abono como pago a proveedor. Se exige el sentido bancario:
---   cobro de cliente (pago_factura_id / pago_factura_lote_id) ⇒ abono > 0, cargo = 0
---   salida de dinero (pago_proveedor_id / lote / anticipo)     ⇒ cargo > 0, abono = 0
--- Los traspasos conservan su tratamiento (un cargo en origen y un abono en
--- destino, sin vínculo de pago).
 CREATE OR REPLACE FUNCTION public.assert_movimiento_pago_consistente()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -25,7 +18,7 @@ DECLARE
   v_ant_estado text;
   v_ant_devuelto numeric;
   v_es_devolucion boolean := false;
-  c_tol constant numeric := 1.00; -- tolerancia en la moneda del movimiento
+  v_tol numeric := 0; -- MNY P1.3: tolerancia según la MONEDA del movimiento
 BEGIN
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
@@ -75,10 +68,11 @@ BEGIN
     END IF;
 
     -- N11: cobro ⇒ abono en la cuenta.
+    v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
     v_mov := GREATEST(COALESCE(NEW.abono,0), COALESCE(NEW.cargo,0));
-    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
-        v_mov, v_pago_monto, c_tol
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > v_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia % %)',
+        v_mov, v_pago_monto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -111,10 +105,11 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
+    v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
     v_mov := GREATEST(COALESCE(NEW.cargo,0), COALESCE(NEW.abono,0));
-    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
-        v_mov, v_pago_monto, c_tol
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > v_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia % %)',
+        v_mov, v_pago_monto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -214,9 +209,10 @@ BEGIN
           USING ERRCODE = 'P0001';
       END IF;
 
-      IF abs(COALESCE(NEW.abono, 0) - v_ant_devuelto) > c_tol THEN
-        RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el depósito por % no coincide con el monto devuelto del anticipo % (tolerancia %)',
-          COALESCE(NEW.abono, 0), v_ant_devuelto, c_tol
+      v_tol := public.tolerancia_conciliacion_moneda(COALESCE(v_cuenta_moneda, v_pago_moneda));
+      IF abs(COALESCE(NEW.abono, 0) - v_ant_devuelto) > v_tol THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el depósito por % no coincide con el monto devuelto del anticipo % (tolerancia % %)',
+          COALESCE(NEW.abono, 0), v_ant_devuelto, v_tol, COALESCE(v_cuenta_moneda, v_pago_moneda, 'moneda desconocida')
           USING ERRCODE = 'P0001';
       END IF;
     ELSE
@@ -233,4 +229,3 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.assert_movimiento_pago_consistente() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.assert_movimiento_pago_consistente() TO authenticated, service_role;
