@@ -5,8 +5,9 @@
  */
 import { useState } from "react";
 import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
-import { sugerirCandidatos } from "@/features/tesoreria/services/sugerirCandidatos";
+import { sugerirCandidatosDetalle } from "@/features/tesoreria/services/sugerirCandidatos";
 import { encontrarCandidatosExactos, seleccionarMatchUnico } from "@/features/tesoreria/domain/conciliacionMatcher";
+
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
 interface ConciliarPagoInput {
