@@ -122,12 +122,21 @@ export async function importarMovimientos(
   const nuevosPayload = payload.filter((p) => !vistos.has(p.hash_dedupe as string));
   let nuevos = 0;
   for (const trozo of trocear(nuevosPayload)) {
-    const data = await unwrapOr(
-      supabase.from("bbva_movimientos").insert(trozo).select("id"),
-      [] as { id: string }[],
-    );
-    nuevos += data.length;
+    const { data, error } = await supabase
+      .from("bbva_movimientos")
+      .insert(trozo)
+      .select("id");
+    if (error) {
+      // MNY: éxito parcial explícito. Se deja constancia en bitácora de lo que
+      // sí quedó guardado antes de propagar el error con los conteos.
+      await bitacoraImportarMovimientos(
+        cuentaBancariaId, movimientos.length, nuevos, movimientos.length - nuevos,
+      );
+      throw new ImportacionParcialError(nuevos, nuevosPayload.length - nuevos, error);
+    }
+    nuevos += (data ?? []).length;
   }
+
   const duplicados = movimientos.length - nuevos;
   await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);
   return { total: movimientos.length, nuevos, duplicados };
