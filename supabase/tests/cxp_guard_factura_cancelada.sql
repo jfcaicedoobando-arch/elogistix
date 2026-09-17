@@ -77,11 +77,11 @@ DECLARE
 BEGIN
   BEGIN
     INSERT INTO public.pagos_proveedor
-      (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+      (organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
     VALUES
       ('11111111-1111-1111-1111-111111111111',
        '33333333-3333-3333-3333-3333333333c1',
-       1000, 'MXN'::public.moneda, NULL);
+       public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, NULL);
     RAISE EXCEPTION 'CASO1_FALLO: se aceptó un pago sobre factura Cancelada';
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE;
@@ -99,11 +99,11 @@ DECLARE
 BEGIN
   BEGIN
     INSERT INTO public.pagos_proveedor
-      (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+      (organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
     VALUES
       ('11111111-1111-1111-1111-111111111111',
        '33333333-3333-3333-3333-3333333333c2',
-       1000, 'MXN'::public.moneda, NULL);
+       public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, NULL);
     RAISE EXCEPTION 'CASO2_FALLO: se aceptó un pago sobre factura en papelera';
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE;
@@ -120,12 +120,12 @@ DECLARE
   v_mmf numeric;
 BEGIN
   INSERT INTO public.pagos_proveedor
-    (id, organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+    (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
   VALUES
     ('44444444-4444-4444-4444-4444444444c3',
      '11111111-1111-1111-1111-111111111111',
      '33333333-3333-3333-3333-3333333333c3',
-     1000, 'MXN'::public.moneda, NULL);
+     public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, NULL);
 
   SELECT monto_en_moneda_factura INTO v_mmf
     FROM public.pagos_proveedor WHERE id = '44444444-4444-4444-4444-4444444444c3';

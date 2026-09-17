@@ -84,7 +84,7 @@ BEGIN
   ----------------------------------------------------------------------------
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
-  VALUES (v_org, v_pf, current_date, 1000, 'USD'::public.moneda);
+  VALUES (v_org, v_pf, public.fecha_negocio_mx(), 1000, 'USD'::public.moneda);
 
   SELECT estado_liquidacion::text INTO v_liq FROM public.conceptos_costo WHERE id = v_cc;
   IF v_liq <> 'Pagado' THEN
