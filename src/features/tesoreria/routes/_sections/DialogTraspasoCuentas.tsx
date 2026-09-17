@@ -58,7 +58,8 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
 
   // YG-04: hay datos capturados que se perderían al cerrar el modal.
-  const isDirty = traspasoSucio(state);
+  // MNY P2.4: incluye la fecha si el usuario la movió respecto a la de apertura.
+  const isDirty = traspasoSucio(state, fechaInicial);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
