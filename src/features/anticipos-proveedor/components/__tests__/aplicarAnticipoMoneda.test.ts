@@ -19,14 +19,16 @@ function mensajeDeMonto(moneda: string) {
 
 describe("AplicarAnticipoDialog · límite del anticipo por moneda", () => {
   it.each([
-    ["MXN", "$"],
+    ["MXN", "MXN"],
     ["USD", "USD"],
     ["EUR", "EUR"],
   ])("el mensaje del anticipo en %s no menciona otra moneda", (moneda, marca) => {
     const msg = mensajeDeMonto(moneda);
     expect(msg).toContain("saldo disponible del anticipo");
     expect(msg).toContain(marca);
-    if (moneda !== "MXN") expect(msg).not.toContain("MXN");
+    for (const otra of ["MXN", "USD", "EUR"].filter((m) => m !== moneda)) {
+      expect(msg).not.toContain(otra);
+    }
   });
 
   it("acepta un monto dentro del disponible", () => {
