@@ -25,6 +25,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { derivarEstadoPago } from "./registrarPagoDerivados";
+import { pagoClienteSucio } from "./registrarPagoDirty";
 import type { Moneda } from "@/types/db";
 
 interface Factura {
@@ -92,7 +93,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   );
 
 
-  const clientRequestIdRef = useRegistrarPagoInit(open, factura, saldo, setValues);
+  const { clientRequestIdRef, baseline } = useRegistrarPagoInit(open, factura, saldo, setValues);
 
   if (!factura) return null;
 
@@ -145,10 +146,10 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     <ResumenSaldo total={factura.total} pagado={totalPagado} saldo={saldo} moneda={factura.moneda} />
   );
 
-  // YG-04: hay datos capturados que se perderían al cerrar el modal.
-  const isDirty =
-    values.referencia.trim() !== "" || values.notas.trim() !== "" ||
-    montoNum !== Number(saldo.toFixed(2));
+  // YG-04: hay datos capturados que se perderían al cerrar el modal. Se compara
+  // contra el baseline de apertura para no perder cambios de fecha, moneda,
+  // forma de pago o cuenta bancaria.
+  const isDirty = pagoClienteSucio(values, baseline);
 
   const ocupado = isPending || timbrandoRep;
   const footer = (
