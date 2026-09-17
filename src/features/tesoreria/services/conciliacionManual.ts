@@ -50,6 +50,10 @@ function esConflictoDedupe(error: { code?: string } | null): boolean {
   return error?.code === "23505";
 }
 
+/** Mensaje único cuando la llave manual ya se usó con OTRO contenido. */
+export const MSG_MANUAL_LLAVE_REUSADA =
+  "Ese movimiento ya se había guardado con datos distintos. Revísalo en la lista antes de volver a capturarlo: los cambios de este intento no se guardaron.";
+
 export async function registrarMovimientoManual(
   input: MovimientoManualPayload,
 ): Promise<void> {
@@ -73,12 +77,23 @@ export async function registrarMovimientoManual(
     // está ahí y se considera éxito sin crear otro ni duplicar la bitácora.
     const { data: existente } = await supabase
       .from("bbva_movimientos")
-      .select("id")
+      .select("id, fecha, concepto, cargo, abono")
       .eq("cuenta_bancaria_id", input.cuentaBancariaId)
       .eq("hash_dedupe", hashDedupe)
       .is("deleted_at", null)
       .maybeSingle();
-    if (existente) return;
+    if (existente) {
+      // MNY: sólo es "el mismo movimiento" si el contenido coincide. Antes se
+      // cerraba el diálogo como éxito aunque el reintento traía otra fecha,
+      // concepto o importe que nunca se guardaron.
+      const mismoContenido =
+        existente.fecha === input.fecha &&
+        existente.concepto === input.concepto &&
+        Number(existente.cargo) === Number(input.cargo) &&
+        Number(existente.abono) === Number(input.abono);
+      if (!mismoContenido) throw new Error(MSG_MANUAL_LLAVE_REUSADA);
+      return;
+    }
     throw error;
   }
   await registrarActividad({
