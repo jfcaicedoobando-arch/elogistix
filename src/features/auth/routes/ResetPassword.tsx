@@ -101,14 +101,14 @@ export default function ResetPassword() {
   return (
     <>
       <Seo
-        title="Restablecer contraseña · Libre Carga"
+        title={`${tituloPantalla} · Libre Carga`}
         description="Define una nueva contraseña para tu cuenta de Libre Carga, la plataforma de agentes de carga en México. Acceso seguro a embarques, cotizaciones y clientes."
         canonical="https://librecarga.com/reset-password"
         ogTitle="Restablecer contraseña · Libre Carga"
         ogDescription="Crea una nueva contraseña para recuperar el acceso seguro a tu cuenta de Libre Carga."
         ogUrl="https://librecarga.com/reset-password"
       />
-      <AuthCard title="Restablecer contraseña" maxWidth="sm">
+      <AuthCard title={tituloPantalla} maxWidth="sm">
           {!ready ? (
             <SkeletonGroup loadingLabel="Verificando enlace" className="space-y-4 py-2">
               <Skeleton className="h-4 w-3/4" />
