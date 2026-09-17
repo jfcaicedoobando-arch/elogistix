@@ -13,6 +13,31 @@ import { diffDiasCalendario } from "@/lib/date/dateOnly";
 export const TOLERANCIA_MONTO_MXN = 1;
 export const TOLERANCIA_DIAS = 5;
 
+/**
+ * MNY P1.2: la tolerancia se expresa en la MONEDA del importe comparado, no
+ * siempre en pesos. Un peso de diferencia es redondeo bancario; un dólar o un
+ * euro son ~18–20 pesos y podían dejar pasar un pago distinto.
+ *
+ * Los importes se comparan en su moneda original (movimiento y pago siempre
+ * comparten la moneda de la cuenta bancaria), así que la tolerancia por divisa
+ * se fija en centavos: es más estricta que el candado de base (1.00 en la
+ * moneda del movimiento), que sigue siendo la última línea de defensa.
+ */
+export const TOLERANCIA_MONTO_POR_MONEDA: Record<string, number> = {
+  MXN: 1,
+  USD: 0.05,
+  EUR: 0.05,
+};
+
+/**
+ * Tolerancia aplicable a una moneda. Moneda desconocida ⇒ 0 (coincidencia
+ * exacta): falla cerrado en vez de asumir la tolerancia del peso.
+ */
+export function toleranciaMonto(moneda?: string | null): number {
+  const m = String(moneda ?? "").trim().toUpperCase();
+  return TOLERANCIA_MONTO_POR_MONEDA[m] ?? 0;
+}
+
 /** True si la diferencia absoluta de monto está dentro de la tolerancia (inclusivo).
  *  Diferencia y tolerancia se redondean a centavos para evitar el clásico float
  *  drift (`100.01 - 100 === 0.0100000…0005`). */
