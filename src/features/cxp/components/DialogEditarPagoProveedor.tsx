@@ -56,9 +56,9 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
         metodo_pago: f.metodo,
         referencia: f.referencia,
         notas: f.notas,
-        cuenta_bancaria_id: f.cuentaId || null,
-        diferencia_cambiaria_mxn:
-          f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
+        cuenta_bancaria_id: f.cuentaBancariaIdEnvio,
+        diferencia_cambiaria_mxn: f.diferenciaCambiariaEnvio,
+
         expectedUpdatedAt: pago.updated_at ?? null,
       });
       notifySuccess(undefined, { title: "Pago actualizado" });
