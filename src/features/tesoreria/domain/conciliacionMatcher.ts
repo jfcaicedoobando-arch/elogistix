@@ -1,6 +1,6 @@
 import type { MovimientoBBVA } from "../services/conciliacion";
 import type { Candidato } from "../services/sugerirCandidatos";
-import { dentroDeTolerancia, deltaDiasIso } from "./tolerancia";
+import { dentroDeTolerancia, deltaDiasIso, toleranciaMonto } from "./tolerancia";
 
 /**
  * Filtra candidatos que cumplen estrictamente con la tolerancia de monto y fecha.
