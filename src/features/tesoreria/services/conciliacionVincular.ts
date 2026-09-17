@@ -33,10 +33,12 @@ async function assertMontosCuadran(movId: string, tipo: "cxc" | "cxp", pagoId: s
   if (!mov || !pago) return;
   const montoMov = importeMovimiento(mov);
   const montoPago = Number(pago.monto ?? 0);
-  if (montosCuadran(montoMov, montoPago)) return;
+  // MNY P1.2: la tolerancia se toma de la moneda del pago (= la de la cuenta).
+  if (montosCuadran(montoMov, montoPago, pago.moneda)) return;
+  const tol = toleranciaMonto(pago.moneda);
   throw new MovimientoVinculoError(
     "LC_MOVIMIENTO_MONTO_MISMATCH",
-    `El movimiento por ${formatCurrency(montoMov, pago.moneda)} no coincide con el pago por ${formatCurrency(montoPago, pago.moneda)} (tolerancia ${TOLERANCIA_CONCILIACION}). Registra un pago por el importe real o corrige el movimiento.`,
+    `El movimiento por ${formatCurrency(montoMov, pago.moneda)} no coincide con el pago por ${formatCurrency(montoPago, pago.moneda)} (tolerancia ${formatCurrency(tol, pago.moneda)}). Registra un pago por el importe real o corrige el movimiento.`,
   );
 }
 
