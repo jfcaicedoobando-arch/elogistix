@@ -3,7 +3,7 @@
  * límite y el mensaje de error deben usar esa moneda (antes siempre MXN).
  */
 import { describe, it, expect } from "vitest";
-import { buildSchema } from "../AplicarAnticipoDialog";
+import { buildSchema } from "../../domain/aplicarAnticipoSchema";
 
 function mensajeDeMonto(moneda: string) {
   const res = buildSchema(1000, moneda).safeParse({

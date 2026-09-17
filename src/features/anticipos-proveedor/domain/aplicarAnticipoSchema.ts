@@ -4,7 +4,7 @@
  * (un archivo de componentes no exporta funciones).
  */
 import { z } from "zod";
-import { formatCurrency } from "@/lib/utils/financialUtils";
+import { formatCurrency } from "@/lib/formatters";
 
 export function buildSchema(saldoDisponible: number, monedaAnticipo: string) {
   return z.object({
