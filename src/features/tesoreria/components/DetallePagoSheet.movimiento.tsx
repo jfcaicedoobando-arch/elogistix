@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  esperaMovimientoBancario, type MovimientoConciliado,
+  esperaMovimientoBancario,
 } from "@/features/tesoreria/domain/pagoDetalle";
 
 /**
