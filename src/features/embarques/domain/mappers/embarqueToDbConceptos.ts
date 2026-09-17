@@ -27,6 +27,10 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       // significa "conserva el valor guardado" (no se resuelven históricos).
       ...(v.aplicaIva == null ? {} : { aplica_iva: v.aplicaIva }),
       ...(v.tasaIva == null ? {} : { tasa_iva_aplicada: v.tasaIva }),
+      // SAT 01 — El tratamiento explícito del catálogo viaja al RPC junto con
+      // el flag y la tasa. `undefined`/`null` = fila legacy: la BD conserva su
+      // valor y sigue resolviendo por `aplica_iva`/`tasa_iva_aplicada`.
+      ...(v.tipoIva == null || v.tipoIva === "" ? {} : { tipo_iva: v.tipoIva }),
     }));
 }
 

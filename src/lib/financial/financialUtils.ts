@@ -151,9 +151,12 @@ export function convertirAUSD(
  * en las sumas.
  */
 export function resolverTasaConcepto(
-  concepto: { tasa_iva_aplicada?: number | null; aplica_iva?: boolean | null },
+  concepto: { tasa_iva_aplicada?: number | null; aplica_iva?: boolean | null; tipo_iva?: string | null },
   fallbackTasaGlobal: number,
 ): number {
+  // SAT 01 — "No objeto de impuesto" no causa IVA trasladado, jamás toma el
+  // fallback global. Literal en vez de import para no ciclar con tipoIvaSat.ts.
+  if (concepto.tipo_iva === "no_objeto" || concepto.tipo_iva === "exento") return 0;
   const tasa = concepto.tasa_iva_aplicada;
   if (tasa != null && Number.isFinite(tasa)) return Number(tasa);
   return concepto.aplica_iva ? fallbackTasaGlobal : 0;

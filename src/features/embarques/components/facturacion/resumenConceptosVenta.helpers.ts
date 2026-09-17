@@ -11,6 +11,8 @@ interface ConceptoTotalizable {
   moneda: string;
   aplica_iva?: boolean | null;
   tasa_iva_aplicada?: number | null;
+  /** SAT 01 — "No objeto"/"Exento" nunca toman la tasa global del resumen. */
+  tipo_iva?: string | null;
 }
 
 export function sumarConceptosVentaPorMoneda(

@@ -49,6 +49,9 @@ export function FilaVentaPrecio({
           // estado local y de ahí al payload/persistencia.
           update(venta.id, 'aplicaIva', f.aplicaIva);
           update(venta.id, 'tasaIva', f.tasaIva);
+          // SAT 01: el tratamiento explícito también se conserva, para no
+          // degradar "No objeto de impuesto" a exento aguas abajo.
+          update(venta.id, 'tipoIva', f.tipoIva);
         }}
       />
       <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
