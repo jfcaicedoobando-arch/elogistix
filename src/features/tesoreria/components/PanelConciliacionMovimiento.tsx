@@ -25,6 +25,11 @@ interface Props {
   moneda?: string;
 }
 
+/** MNY-P2.6: valores por omisión de las sugerencias (lista + señal `truncado`). */
+function desempacarSugerencias(s: SugerenciasResultado | undefined) {
+  return { candidatos: s?.candidatos ?? [], truncado: s?.truncado ?? false };
+}
+
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
   const { data: sugerencias, isLoading } = useSugerirCandidatos(movimiento);
