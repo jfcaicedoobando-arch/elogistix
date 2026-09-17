@@ -12,6 +12,7 @@ import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 import { CONCEPTO_GRID_MXN, CONCEPTO_SOLO_XL } from "./columnasConcepto";
+import { esTratamientoIvaBloqueado, TratamientoIvaFila } from "./TratamientoIvaFila";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
   });
   const subtotal = c.cantidad * c.precio_unitario;
   const tasaFila = resolverTasaConcepto(c, tasaIva);
+  const tratamientoBloqueado = esTratamientoIvaBloqueado(c.tipo_iva);
   const iva = calcularIVA(subtotal, tasaFila);
   // Notas a demanda (mismo patrón que el paso 2): la lista deja de ser altísima.
   const [notasAbiertas, setNotasAbiertas] = useState(false);
@@ -89,20 +91,22 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
         </div>
         <div className="min-w-0">
           {i === 0 && <Label size="sm">Tasa IVA</Label>}
-          <Select
-            value={String(tasaFila)}
-            onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
-          >
-            {/* Sólo el porcentaje: la etiqueta larga ("16% — Tasa general") se
-                cortaba a "16% —…" en la columna. La descripción sigue visible
-                al abrir la lista. */}
-            <SelectTrigger className="h-10" aria-label="Tasa de IVA">{Math.round(tasaFila * 100)}%</SelectTrigger>
-            <SelectContent>
-              {TASAS_IVA_MX.map(opt => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {tratamientoBloqueado ? (
+            <TratamientoIvaFila tipoIva={c.tipo_iva} />
+          ) : (
+            <Select
+              value={String(tasaFila)}
+              onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
+            >
+              {/* Sólo el porcentaje: la descripción completa se muestra al abrir. */}
+              <SelectTrigger className="h-10" aria-label="Tasa de IVA">{Math.round(tasaFila * 100)}%</SelectTrigger>
+              <SelectContent>
+                {TASAS_IVA_MX.map(opt => (
+                  <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className={CONCEPTO_SOLO_XL}>
           {i === 0 && <Label size="sm">Subtotal</Label>}
