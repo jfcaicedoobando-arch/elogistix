@@ -4,6 +4,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+
 
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -17,17 +19,30 @@ export type LiquidacionRow = Tables<"liquidaciones_comision">;
 const LIQUIDACION_COLUMNS =
   "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, estado, cancelada_at, motivo_cancelacion, creada_por, created_at, updated_at";
 
+/**
+ * MNY: historial COMPLETO. Antes se pedía un solo `.limit(CAP_LISTA)` y con más
+ * de 500 liquidaciones las antiguas desaparecían sin aviso; ahora se leen todas
+ * las páginas (fail-visible si se alcanza el tope duro), igual que otros
+ * listados financieros.
+ */
 export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
-  return unwrapOr(
+  return leerTodasLasPaginas<LiquidacionRow>("comisiones.fetchLiquidaciones", (desde, hasta) =>
     supabase
       .from("liquidaciones_comision")
       .select(LIQUIDACION_COLUMNS).is("deleted_at", null)
       .order("periodo", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(CAP_LISTA),
-    [],
-  ) as Promise<LiquidacionRow[]>;
+      // SAFE-CAST: el builder de PostgREST ya devuelve { data, error }; el cast
+      // sólo adapta su tipo al contrato de `leerTodasLasPaginas` (columnas
+      // explícitas de la misma tabla, sin cambio de forma en runtime).
+      .range(desde, hasta) as unknown as PromiseLike<{
+
+        data: LiquidacionRow[] | null;
+        error: { message: string } | null;
+      }>,
+  );
 }
+
 
 export interface GenerarLiquidacionParams {
   vendedora_id: string;

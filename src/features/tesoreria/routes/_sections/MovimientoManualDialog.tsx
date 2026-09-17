@@ -13,8 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import {
   validarMovimientoManual,
+  movimientoManualSucio,
   type MovimientoManualInput,
 } from "@/features/tesoreria/domain/movimientoManual";
+
 import { hoyMx } from "@/lib/date/mx";
 import type { CuentaBancaria } from "@/features/tesoreria/services";
 
@@ -52,6 +54,8 @@ export function MovimientoManualDialog({
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
+      isDirty={movimientoManualSucio(manualForm)}
+
       icon={Landmark}
       title="Registrar movimiento manual"
       description="Captura fuera del importador (ajustes, comisiones, depósitos manuales)."

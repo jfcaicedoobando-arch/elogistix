@@ -17,6 +17,7 @@ import { formatNumber } from "@/lib/formatters";
 import { PagoImpactoPreview } from "./PagoImpactoPreview";
 import { TcPagoField } from "./TcPagoField";
 import { PagoProveedorCuentaField } from "./PagoProveedorCuentaField";
+import { PagoProveedorDiferenciaField } from "./PagoProveedorDiferenciaField";
 import type {
   Moneda,
   PagoProveedorFormBodyProps as Props,
@@ -121,22 +122,15 @@ export function PagoProveedorFormBody(p: Props) {
       </FormSection>
 
 
-      {p.esUsdPagadoEnMxn && (
-        <FormSection title="Diferencia cambiaria">
-          <div className="space-y-1">
-            <Label htmlFor="pago-prov-diff-mxn">Diferencia cambiaria MXN (opcional)</Label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-muted-foreground">$</span>
-              <Input id="pago-prov-diff-mxn" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                className="pl-7 text-right tabular-nums"
-                value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
-            </div>
-            <p className="text-body-sm text-muted-foreground">
-              Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
-            </p>
-          </div>
-        </FormSection>
-      )}
+      <PagoProveedorDiferenciaField
+        soportaDiferenciaCambiaria={p.soportaDiferenciaCambiaria}
+        esUsdPagadoEnMxn={p.esUsdPagadoEnMxn}
+        diffMxn={p.diffMxn}
+        setDiffMxn={p.setDiffMxn}
+        factura={p.factura}
+      />
+
+
 
       <FormSection title="Referencia y notas">
         <div className="space-y-1">

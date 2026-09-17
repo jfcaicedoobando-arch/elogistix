@@ -71,3 +71,17 @@ export function esMovimientoManualValido(
 ): boolean {
   return Object.keys(validarMovimientoManual(input, limites)).length === 0;
 }
+
+/**
+ * MNY: ¿hay captura que se perdería al cerrar el diálogo? La cuenta y el tipo
+ * vienen preseleccionados al abrir, así que no cuentan como captura del
+ * usuario; sí cuentan fecha, concepto, referencia e importe.
+ */
+export function movimientoManualSucio(input: Partial<MovimientoManualInput>): boolean {
+  return (
+    !!input.fecha ||
+    !!input.concepto?.trim() ||
+    !!input.referencia?.trim() ||
+    (input.monto ?? 0) > 0
+  );
+}

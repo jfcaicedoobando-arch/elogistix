@@ -9,24 +9,16 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
-import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso, deltaDiasIso } from "../domain/tolerancia";
-import type { Moneda } from "@/types/db";
-import { CAP_LISTA } from "@/constants/queryCaps";
+import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso } from "../domain/tolerancia";
+import {
+  candidatosCxc, candidatosCxp, LIMITE_SUGERENCIAS, type Ventana,
+} from "./sugerirCandidatos.consultas";
+import type {
+  Candidato, MonedaSoportada, SugerenciasResultado,
+} from "./sugerirCandidatos.tipos";
 
-export interface Candidato {
-  tipo: "cxc" | "cxp";
-  pago_id: string;
-  fecha: string;
-  referencia: string;
-  monto: number;
-  moneda: string;
-  contraparte: string; // cliente o proveedor
-  delta_dias: number;
-  delta_monto: number;
-}
-
-/** Monedas soportadas por el enum `moneda` de la base (alias central). */
-export type MonedaSoportada = Moneda;
+export type { Candidato, MonedaSoportada, SugerenciasResultado };
+export { LIMITE_SUGERENCIAS };
 
 /**
  * Moneda de la cuenta bancaria del movimiento.
@@ -58,118 +50,21 @@ function monedaConocida(v: unknown): MonedaSoportada | null {
 }
 
 /**
- * N15 (Ola 4): pagos que YA están ligados a un movimiento bancario vivo.
- * Sin este filtro, dos movimientos del mismo monto recibían el mismo "match
- * único" y la auto-conciliación masiva intentaba ligar ambos al mismo pago.
- * La unicidad real la garantiza el índice uq_bbva_movimientos_pago_*; esto
- * evita ofrecer candidatos imposibles (y toasts de error en la auto-masiva).
+ * Sugerencias con metadatos. La auto-conciliación usa esta variante porque
+ * necesita saber si la lista quedó recortada (ambigüedad no comprobada).
  */
-async function pagosYaVinculados(pagoIds: string[], tipo: "cxc" | "cxp"): Promise<Set<string>> {
-  if (pagoIds.length === 0) return new Set();
-  const columna = tipo === "cxc" ? "pago_factura_id" : "pago_proveedor_id";
-  const { data } = await supabase
-    .from("bbva_movimientos")
-    .select("pago_factura_id, pago_proveedor_id")
-    .in(columna, pagoIds)
-    .is("deleted_at", null)
-    .limit(CAP_LISTA);
-  const set = new Set<string>();
-  // SAFE-CAST: supabase-js tipa ambas columnas como string | null.
-  for (const row of (data ?? []) as Array<Record<string, string | null>>) {
-    const id = row[columna];
-    if (id) set.add(id);
-  }
-  return set;
-}
-interface Ventana {
-  desdeIso: string;
-  hastaIso: string;
-  min: number;
-  max: number;
-  moneda: MonedaSoportada;
-  monto: number;
-  fechaMov: string;
-}
-
-/** Cargo bancario → pago a proveedor (egreso). */
-async function candidatosCxp(v: Ventana): Promise<Candidato[]> {
-  const { data } = await supabase
-    .from("pagos_proveedor")
-    .select("id, fecha_pago, monto, moneda, referencia, proveedor_facturas(proveedor_nombre)")
-    .gte("fecha_pago", v.desdeIso)
-    .lte("fecha_pago", v.hastaIso)
-    .gte("monto", v.min)
-    .lte("monto", v.max)
-    .eq("moneda", v.moneda)
-    .is("deleted_at", null)
-    .limit(20);
-  // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
-  const vinculados = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxp");
-  const out: Candidato[] = [];
-  for (const p of data ?? []) {
-    if (vinculados.has(p.id)) continue;
-    const pf = (p as { proveedor_facturas?: { proveedor_nombre?: string } | null }).proveedor_facturas;
-    out.push({
-      tipo: "cxp",
-      pago_id: p.id,
-      fecha: p.fecha_pago,
-      referencia: p.referencia ?? "",
-      monto: Number(p.monto),
-      moneda: p.moneda,
-      contraparte: pf?.proveedor_nombre ?? "—",
-      delta_dias: deltaDiasIso(p.fecha_pago, v.fechaMov),
-      delta_monto: Math.abs(Number(p.monto) - v.monto),
-    });
-  }
-  return out;
-}
-
-/** Abono bancario → pago de cliente (ingreso). */
-async function candidatosCxc(v: Ventana): Promise<Candidato[]> {
-  const { data } = await supabase
-    .from("pagos_factura")
-    .select("id, fecha_pago, monto, moneda, referencia, facturas(cliente_nombre)")
-    .gte("fecha_pago", v.desdeIso)
-    .lte("fecha_pago", v.hastaIso)
-    .gte("monto", v.min)
-    .lte("monto", v.max)
-    .eq("moneda", v.moneda)
-    .is("deleted_at", null)
-    .limit(20);
-  // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
-  const vinculados = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxc");
-  const out: Candidato[] = [];
-  for (const p of data ?? []) {
-    if (vinculados.has(p.id)) continue;
-    const fac = (p as { facturas?: { cliente_nombre?: string } | null }).facturas;
-    out.push({
-      tipo: "cxc",
-      pago_id: p.id,
-      fecha: p.fecha_pago,
-      referencia: p.referencia ?? "",
-      monto: Number(p.monto),
-      moneda: p.moneda,
-      contraparte: fac?.cliente_nombre ?? "—",
-      delta_dias: deltaDiasIso(p.fecha_pago, v.fechaMov),
-      delta_monto: Math.abs(Number(p.monto) - v.monto),
-    });
-  }
-  return out;
-}
-
-export async function sugerirCandidatos(
+export async function sugerirCandidatosDetalle(
   mov: MovimientoBBVA,
   monedaCuenta?: string,
-): Promise<Candidato[]> {
+): Promise<SugerenciasResultado> {
   const cargo = Number(mov.cargo);
   const monto = cargo > 0 ? cargo : Number(mov.abono);
-  if (monto <= 0) return [];
+  if (monto <= 0) return { candidatos: [], truncado: false };
   // FIN-NEW-03: sin moneda confirmada no hay sugerencias (fail-closed).
   const moneda: MonedaSoportada | null = monedaCuenta
     ? monedaConocida(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
-  if (!moneda) return [];
-
+  if (!moneda) return { candidatos: [], truncado: false };
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const ventana: Ventana = {
@@ -182,7 +77,16 @@ export async function sugerirCandidatos(
     fechaMov: mov.fecha,
   };
 
-  const candidatos = cargo > 0 ? await candidatosCxp(ventana) : await candidatosCxc(ventana);
+  const { candidatos, truncado } =
+    cargo > 0 ? await candidatosCxp(ventana) : await candidatosCxc(ventana);
   candidatos.sort((a, b) => (a.delta_monto - b.delta_monto) || (a.delta_dias - b.delta_dias));
+  return { candidatos: candidatos.slice(0, LIMITE_SUGERENCIAS), truncado };
+}
+
+export async function sugerirCandidatos(
+  mov: MovimientoBBVA,
+  monedaCuenta?: string,
+): Promise<Candidato[]> {
+  const { candidatos } = await sugerirCandidatosDetalle(mov, monedaCuenta);
   return candidatos;
 }

@@ -48,6 +48,28 @@ export interface ImportarResultado {
   duplicados: number;
 }
 
+/**
+ * MNY: la importación inserta por trozos. Si un trozo posterior falla, los
+ * anteriores YA quedaron guardados: el error informa cuántos se guardaron y
+ * cuántos faltan, para que el usuario pueda volver a cargar el mismo archivo
+ * (los guardados se detectan como duplicados y no se repiten).
+ */
+export class ImportacionParcialError extends Error {
+  readonly code = "LC_IMPORTACION_PARCIAL" as const;
+  constructor(
+    readonly guardados: number,
+    readonly faltantes: number,
+    readonly causa?: unknown,
+  ) {
+    super(
+      `Importación incompleta: se guardaron ${guardados} movimientos y faltaron ${faltantes}. ` +
+        "Vuelve a cargar el mismo archivo: los ya guardados se reconocen como duplicados y no se repiten.",
+    );
+    this.name = "ImportacionParcialError";
+  }
+}
+
+
 export async function importarMovimientos(
   cuentaBancariaId: string,
   movimientos: MovimientoParseado[],
@@ -100,12 +122,21 @@ export async function importarMovimientos(
   const nuevosPayload = payload.filter((p) => !vistos.has(p.hash_dedupe as string));
   let nuevos = 0;
   for (const trozo of trocear(nuevosPayload)) {
-    const data = await unwrapOr(
-      supabase.from("bbva_movimientos").insert(trozo).select("id"),
-      [] as { id: string }[],
-    );
-    nuevos += data.length;
+    const { data, error } = await supabase
+      .from("bbva_movimientos")
+      .insert(trozo)
+      .select("id");
+    if (error) {
+      // MNY: éxito parcial explícito. Se deja constancia en bitácora de lo que
+      // sí quedó guardado antes de propagar el error con los conteos.
+      await bitacoraImportarMovimientos(
+        cuentaBancariaId, movimientos.length, nuevos, movimientos.length - nuevos,
+      );
+      throw new ImportacionParcialError(nuevos, nuevosPayload.length - nuevos, error);
+    }
+    nuevos += (data ?? []).length;
   }
+
   const duplicados = movimientos.length - nuevos;
   await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);
   return { total: movimientos.length, nuevos, duplicados };

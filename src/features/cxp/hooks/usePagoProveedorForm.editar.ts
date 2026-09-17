@@ -135,3 +135,24 @@ export function pagoProveedorEditadoSucio(
   const campos = ["fecha", "monto", "moneda", "tc", "metodo", "referencia", "notas", "cuentaId", "diffMxn"];
   return campos.some((k) => actual[k] !== inicial[k]);
 }
+
+/**
+ * MNY: ¿hay captura del usuario al REGISTRAR un pago nuevo?
+ *
+ * El monto viene prellenado con el saldo y el T/C con el DOF del día, así que
+ * comparar todo contra el baseline marcaba "cambios sin guardar" sólo por
+ * abrir. Se comparan únicamente los campos que el usuario pudo escribir.
+ */
+export function pagoProveedorCreadoSucio(
+  actual: Record<string, unknown>,
+  iniciales: Record<string, string> | null,
+): boolean {
+  if (!iniciales) return false;
+  if (String(actual.referencia ?? "").trim() !== "") return true;
+  if (String(actual.notas ?? "").trim() !== "") return true;
+  if (actual.metodo !== iniciales.metodo) return true;
+  if (actual.moneda !== iniciales.moneda) return true;
+  // Al cambiar la moneda el propio formulario reescribe el monto (prefill), por
+  // eso el monto sólo se compara mientras la moneda siga siendo la original.
+  return actual.monto !== iniciales.monto;
+}

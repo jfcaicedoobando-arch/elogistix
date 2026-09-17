@@ -38,18 +38,22 @@ export function usePagoProveedorForm(
   const {
     fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
     metodo, setMetodo, referencia, setReferencia, notas, setNotas,
-    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId,
+    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId, valoresIniciales,
   } = usePagoProveedorCampos(factura, open, today, pagoEditar);
+
 
   // R6-N1: cuenta bancaria de donde sale el pago (genera el movimiento bancario).
   const { data: cuentas = [] } = useCuentasBancarias(true);
 
 
+  // MNY: en efectivo NO se usa cuenta bancaria (no hay salida de banco).
+  const requiereCuenta = metodo !== "Efectivo";
+
   const { cuentasDeMoneda, cuentaSeleccionada } = useCuentaPagoSeleccionada({
-    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId,
+    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId, requiereCuenta,
   });
 
-  const requiereCuenta = metodo !== "Efectivo";
+
 
   const metodosDisponibles = useMemo(
     () => metodosFor(factura?.proveedor_origen ?? null),
@@ -59,9 +63,11 @@ export function usePagoProveedorForm(
   const tcNum = tcValido(tc);
   const {
     montoNum, esUsdPagadoEnMxn, showTc, bloqueadoPorTc, cruceNoSoportado, monedaDelPar,
+    soportaDiferenciaCambiaria,
   } = banderasMonedaPago({
     factura, moneda, monto, tcNum,
   });
+
 
   // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
   // recalcular el prefill del monto para saldar exactamente en MXN.
@@ -147,7 +153,19 @@ export function usePagoProveedorForm(
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,
     impacto, cargandoSaldoProveedor,
     tcDof, cargandoTcDof, aplicarTcDof,
+    soportaDiferenciaCambiaria,
+    /** MNY: valores con los que abrió el formulario (baseline de "sin cambios"). */
+    valoresIniciales,
+    /**
+     * MNY: cuenta que se envía a la RPC. En efectivo es `null` para que la base
+     * no derive un cargo bancario.
+     */
+    cuentaBancariaIdEnvio: requiereCuenta ? cuentaId || null : null,
+    /** MNY: diferencia cambiaria sólo cuando el par USD/MXN la soporta. */
+    diferenciaCambiariaEnvio:
+      soportaDiferenciaCambiaria && diffMxn !== "" ? Number(diffMxn) : null,
   };
+
 
 }
 

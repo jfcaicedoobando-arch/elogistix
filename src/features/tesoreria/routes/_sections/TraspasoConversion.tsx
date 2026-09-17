@@ -22,12 +22,15 @@ interface Props {
   comision: number;
   montoDestino: number;
   fechaTcDof: string | null;
+  /** MNY: el T/C se capturó a mano (no se re-sugiere al cambiar la fecha). */
+  tcEsManual?: boolean;
 }
 
 export function TraspasoConversion({
   monedaOrigen, monedaDestino, mismoMoneda, par, tcQuote, onTcQuoteChange,
-  montoOrigen, comision, montoDestino, fechaTcDof,
+  montoOrigen, comision, montoDestino, fechaTcDof, tcEsManual = false,
 }: Props) {
+
   const resumen = (
     <TraspasoResumen
       monedaOrigen={monedaOrigen}
@@ -65,7 +68,11 @@ export function TraspasoConversion({
           placeholder={par.quote === "MXN" ? "18.4235" : "1.0800"}
         />
         {tcQuote > 0 ? (
-          fechaTcDof ? (
+          tcEsManual ? (
+            <p className="text-body-sm text-muted-foreground">
+              Tipo de cambio capturado a mano: no cambia si mueves la fecha del traspaso.
+            </p>
+          ) : fechaTcDof ? (
             <p className="text-body-sm text-muted-foreground">
               Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
             </p>
@@ -75,6 +82,7 @@ export function TraspasoConversion({
             Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
           </p>
         )}
+
       </div>
       {resumen}
     </FormDialogSection>
