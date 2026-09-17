@@ -140,9 +140,13 @@ export function ncTotalEsCero(ctx: NotaCreditoContext): boolean {
   return !(totalNcSinImpuestos(ctx) > 0);
 }
 
-/** Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0. */
+/**
+ * Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0.
+ * "no_objeto" (ObjetoImp 01) no lleva traslado alguno de IVA.
+ */
 export function buildTaxesNc(c: ConceptoNC) {
   const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+  if (tipo === "no_objeto") return [];
   if (tipo === "exento") return [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }];
   const rate = tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16);
   return [{ type: "IVA" as const, rate, factor: "Tasa" as const }];
