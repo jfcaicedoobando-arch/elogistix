@@ -74,26 +74,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
   // Conceptos venta — hidratar UNA sola vez; después el estado local manda.
   useEffect(() => {
     if (!p.initialized || p.hidratoVenta || p.conceptosVentaDb.length === 0) return;
-    inicializarVentaRef.current(p.conceptosVentaDb.map((v, i) => ({
-      id: i + 1,
-      dbId: v.id, // v13.207.0 — preservamos UUID para merge en RPC
-      concepto: v.descripcion,
-      cantidad: v.cantidad,
-      precioUnitario: Number(v.precio_unitario),
-      moneda: v.moneda,
-      contenedorId: v.contenedor_id ?? null,
-      // Ola 5 — el estado viaja a la fila para bloquear la edición fantasma
-      // de conceptos ya facturados (la RPC los descarta en silencio).
-      estadoFacturacion: v.estado_facturacion ?? null,
-      // R179-01 — Se preservan los valores fiscales guardados (flags `false`
-      // y tasas explícitas 0/0.08/0.16). Nunca se re-resuelven por nombre ni
-      // se sobrescriben al cambiar moneda o recargar.
-      aplicaIva: v.aplica_iva ?? null,
-      tasaIva: v.tasa_iva_aplicada == null ? null : Number(v.tasa_iva_aplicada),
-      // SAT 01 — se preserva tal cual; `undefined` (columna aún inexistente)
-      // se guarda como null y la fila sigue siendo legacy.
-      tipoIva: v.tipo_iva ?? null,
-    })));
+    inicializarVentaRef.current(p.conceptosVentaDb.map(mapConceptoVentaDbAFila));
     setHidratoVentaRef.current(true);
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
 
