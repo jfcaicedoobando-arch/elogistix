@@ -57,9 +57,8 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
           )
         ) : null}
       </div>
-
-      </div>
       <div className="grid grid-cols-2 gap-3">
+
         <Dato label="Fecha">{formatDate(pago.fecha)}</Dato>
         <Dato label={esCobro ? "Cliente" : "Proveedor"}>{pago.contraparte ?? "—"}</Dato>
         <Dato label="Método">{pago.metodo_pago ?? "—"}</Dato>
