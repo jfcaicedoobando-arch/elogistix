@@ -26,6 +26,7 @@ const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
   gravado_8: "IVA 8% (frontera)",
   tasa_0: "Tasa 0%",
   exento: "Exento",
+  no_objeto: "No objeto de impuesto (SAT 01)",
 };
 
 const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
@@ -33,6 +34,7 @@ const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   gravado_8: "8%",
   tasa_0: "0%",
   exento: "Exento",
+  no_objeto: "No objeto",
 };
 
 function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
