@@ -121,7 +121,7 @@ describe("sugerirCandidatos (helpers)", () => {
   });
 
   it("FIN-NEW-03: sin moneda confirmada no propone candidatos ni consulta pagos", async () => {
-    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10", cuenta_bancaria_id: null }));
+    const res = await sugerirCandidatos(mov({ cargo: 1000, abono: 0, fecha: "2026-06-10" }));
     expect(res).toEqual([]);
     expect(mock.tableCalls.some((c) => c.table === "pagos_proveedor")).toBe(false);
   });
