@@ -56,11 +56,16 @@ function anclarTasa(valor: number): number {
   return mejor;
 }
 
+/** `true` si el renglón trae el tratamiento explícito "no objeto" (SAT 01). */
+export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
+  return String(c?.tipo_iva ?? "").trim().toLowerCase() === "no_objeto";
+}
+
 function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaDr } {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
-  // `no_objeto` (SAT ObjetoImp 01) no traslada IVA. Se agrupa con `exento`
-  // para que el respaldo por tasa nula NUNCA le invente un traslado del 16%.
-  if (tipo === "exento" || tipo === "no_objeto") return { tasa: 0, factor: "Exento" };
+  // `exento` sí es representable en el REP (factor Exento). `no_objeto` NO:
+  // se detecta antes y bloquea el timbrado (nunca se traduce a Exento).
+  if (tipo === "exento") return { tasa: 0, factor: "Exento" };
   const raw = c?.tasa_iva_aplicada;
   if (raw === null || raw === undefined || raw === "") {
     if (tipo === "gravado_8") return { tasa: 0.08, factor: "Tasa" };
@@ -74,15 +79,18 @@ function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaD
 
 /**
  * Traslado a declarar en el REP.
+ * - `"no_objeto"` ⇒ la factura tiene conceptos SAT 01, no representables en el
+ *   complemento de pago (el llamador responde 422 ANTES del claim).
  * - `null` ⇒ la factura mezcla tasas con IVA (el llamador responde 422).
- * - Sin renglones ⇒ se devuelve `null` para que el llamador use el respaldo
- *   histórico (facturas antiguas sin conceptos capturados).
+ * - `"sin_conceptos"` ⇒ facturas antiguas sin renglones capturados: el llamador
+ *   usa el respaldo histórico.
  */
 export function resolverTrasladoDr(
   conceptos: ConceptoTraslado[] | null | undefined,
-): TrasladoDr | null | "sin_conceptos" {
+): TrasladoDr | null | "sin_conceptos" | "no_objeto" {
   const lista = conceptos ?? [];
   if (lista.length === 0) return "sin_conceptos";
+  if (lista.some(esConceptoNoObjeto)) return "no_objeto";
 
   const grupos = new Set<string>();
   let exentos = 0;
