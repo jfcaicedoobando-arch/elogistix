@@ -10,6 +10,15 @@ import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidad
 import type { OportunidadInput } from "@/features/crm/types/oportunidades";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
+/**
+ * Resultado de una mutación de oportunidad: sello resultante + aviso opcional
+ * si sólo falló la bitácora (la escritura principal sí quedó guardada).
+ */
+export interface ResultadoMutacionOportunidad {
+  updatedAt: string | undefined;
+  avisoActividad: string | null;
+}
+
 export async function crearOportunidad(
   input: OportunidadInput,
   user: { id?: string; email?: string } | null,
