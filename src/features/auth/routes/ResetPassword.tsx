@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { resolveLandingRoute } from "@/features/auth/services";
 import { subscribeToAuthChanges, getCurrentSession, updateUserPassword } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +36,33 @@ const resetSchema = z
 
 type ResetValues = z.infer<typeof resetSchema>;
 
+/**
+ * Copy de la pantalla. `invitacion` = el usuario llegó por el enlace de
+ * invitación al portal y todavía no tiene contraseña.
+ */
+function copyPantalla(esInvitacion: boolean) {
+  return esInvitacion
+    ? {
+        titulo: "Crea tu contraseña",
+        intro: "Define la contraseña con la que entrarás a tu portal de Libre Carga.",
+        exito: "Tu contraseña quedó lista",
+        exitoDetalle: "Te llevaremos a tu portal…",
+      }
+    : {
+        titulo: "Restablecer contraseña",
+        intro: "Ingresa tu nueva contraseña para tu cuenta de Libre Carga.",
+        exito: "Contraseña actualizada",
+        exitoDetalle: "Te llevaremos al inicio de sesión…",
+      };
+}
+
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { role } = useAuth();
+  // El enlace de invitación al portal (cliente/agente) llega aquí: la cuenta
+  // existe pero aún no tiene contraseña, así que el copy y el destino cambian.
+  const esInvitacion = searchParams.get("origen") === "invitacion";
   const [ready, setReady] = useState(false);
   const [validSession, setValidSession] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
@@ -73,16 +100,21 @@ export default function ResetPassword() {
     };
   }, []);
 
+  const destinoFinal = esInvitacion ? resolveLandingRoute(role ?? null) : "/login";
+
   const onSubmit = async (v: ResetValues) => {
     setError(null);
     try {
       await updateUserPassword(v.password);
       setDone(true);
-      setTimeout(() => navigate("/login", { replace: true }), 2500);
+      setTimeout(() => navigate(destinoFinal, { replace: true }), 2500);
     } catch (err) {
       setError(translateAuthError(err instanceof Error ? err.message : null));
     }
   };
+
+  const copy = copyPantalla(esInvitacion);
+  const tituloPantalla = copy.titulo;
 
   const firstFieldError = errors.password?.message ?? errors.password2?.message ?? null;
   const alertMessage = error ?? firstFieldError;
@@ -90,14 +122,14 @@ export default function ResetPassword() {
   return (
     <>
       <Seo
-        title="Restablecer contraseña · Libre Carga"
+        title={`${tituloPantalla} · Libre Carga`}
         description="Define una nueva contraseña para tu cuenta de Libre Carga, la plataforma de agentes de carga en México. Acceso seguro a embarques, cotizaciones y clientes."
         canonical="https://librecarga.com/reset-password"
         ogTitle="Restablecer contraseña · Libre Carga"
         ogDescription="Crea una nueva contraseña para recuperar el acceso seguro a tu cuenta de Libre Carga."
         ogUrl="https://librecarga.com/reset-password"
       />
-      <AuthCard title="Restablecer contraseña" maxWidth="sm">
+      <AuthCard title={tituloPantalla} maxWidth="sm">
           {!ready ? (
             <SkeletonGroup loadingLabel="Verificando enlace" className="space-y-4 py-2">
               <Skeleton className="h-4 w-3/4" />
@@ -114,8 +146,8 @@ export default function ResetPassword() {
           ) : done ? (
             <div className="space-y-3 py-4 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
-              <p className="text-sm font-medium text-foreground">Contraseña actualizada</p>
-              <p className="text-xs text-muted-foreground">Te llevaremos al inicio de sesión…</p>
+              <p className="text-sm font-medium text-foreground">{copy.exito}</p>
+              <p className="text-xs text-muted-foreground">{copy.exitoDetalle}</p>
             </div>
           ) : !validSession ? (
             <div className="space-y-3 py-4 text-center">
@@ -130,9 +162,7 @@ export default function ResetPassword() {
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Ingresa tu nueva contraseña para tu cuenta de Libre Carga.
-              </p>
+              <p className="text-sm text-muted-foreground">{copy.intro}</p>
               {alertMessage && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />

@@ -39,15 +39,32 @@ Deno.test("validateCreatePayload: acepta payload válido", () => {
 });
 
 Deno.test("resolveRedirectTo: usa fallback para origen no permitido", () => {
-  assertEquals(resolveRedirectTo("https://evil.com"), "https://elogistix.lovable.app/portal/login");
+  assertEquals(resolveRedirectTo("https://evil.com"), "https://librecarga.com/reset-password?origen=invitacion");
+});
+
+Deno.test("resolveRedirectTo: conserva origen permitido y apunta a crear contraseña", () => {
+  assertEquals(
+    resolveRedirectTo("https://librecarga.com"),
+    "https://librecarga.com/reset-password?origen=invitacion",
+  );
+  assertEquals(
+    resolveRedirectTo("https://elogistix.lovable.app"),
+    "https://elogistix.lovable.app/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: permite localhost", () => {
-  assertEquals(resolveRedirectTo("http://localhost:8080"), "http://localhost:8080/portal/login");
+  assertEquals(
+    resolveRedirectTo("http://localhost:8080"),
+    "http://localhost:8080/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: permite localhost sin puerto", () => {
-  assertEquals(resolveRedirectTo("http://localhost"), "http://localhost/portal/login");
+  assertEquals(
+    resolveRedirectTo("http://localhost"),
+    "http://localhost/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: permite preview oficial allow-listado", () => {

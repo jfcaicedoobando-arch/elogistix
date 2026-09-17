@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.403] - 2026-09-17
+
+Invitación al portal: el enlace del correo ahora aterriza en el paso de crear contraseña en lugar de un login donde el invitado no podía entrar.
+
+- **fix(portal · invitación sin contraseña)**: `resolveRedirectTo` devuelve `/reset-password?origen=invitacion` con lista blanca de orígenes y respaldo `https://librecarga.com`; el flujo de agentes usa el mismo destino.
+- **fix(ResetPassword · copy y destino)**: con `origen=invitacion` la pantalla dice «Crea tu contraseña» y al guardar envía al portal del rol (`resolveLandingRoute`) en vez de `/login`.
+- **chore(copy)**: diálogo de invitación y plantilla de correo alineados al paso real («Aceptar invitación y crear contraseña»).
+
+
 ## [13.823.402] - 2026-09-15
 
 Lote YAGNI P1/P2 de moneda y tesorería: se elimina todo cruce 1:1 silencioso (banco, formulario de pago y flujo proyectado), el euro deja de presentarse como pesos, el aging usa un solo canon y el pago en lote ya no pierde importes editados. Una migración (`asegurar_movimiento_cobro_factura`).

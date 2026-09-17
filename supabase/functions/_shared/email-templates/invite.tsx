@@ -35,10 +35,11 @@ export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailP
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          . Usa el botón para aceptarla y crear tu cuenta.
+          . Usa el botón para aceptarla: el siguiente paso es crear tu contraseña y
+          con ella entrarás directo a tu portal.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Aceptar invitación
+          Aceptar invitación y crear contraseña
         </Button>
         <Text style={footer}>
           Si no esperabas esta invitación, puedes ignorar este mensaje.
