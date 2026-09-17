@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
 import { fetchAnticiposDisponibles } from "@/features/anticipos-proveedor/services/anticiposProveedorService";
-import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
+import { toRow, type AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
 export interface SaldoAFavorPorMoneda {
   moneda: string;
@@ -22,15 +22,9 @@ export function useAnticiposDisponibles(proveedorId?: string | null) {
     staleTime: 30_000,
   });
 
-  const data: AnticipoProveedorRow[] = useMemo(
-    () =>
-      (q.data ?? []).map((a) => ({
-        ...a,
-        aplicado: Number(a.monto) - Number(a.saldo_disponible),
-        disponible: Number(a.saldo_disponible),
-      })),
-    [q.data],
-  );
+  // MNY P1.3: misma regla que la bandeja — lo devuelto no es "aplicado".
+  const data: AnticipoProveedorRow[] = useMemo(() => (q.data ?? []).map(toRow), [q.data]);
+
 
   const porMoneda: SaldoAFavorPorMoneda[] = useMemo(() => {
     const acc = new Map<string, number>();

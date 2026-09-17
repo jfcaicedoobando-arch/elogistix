@@ -4,7 +4,11 @@
  * y el saldo estimado después de aplicar.
  */
 import { formatCurrency } from "@/lib/formatters";
-import { calcularSaldoDespuesDeAplicar } from "@/features/anticipos-proveedor/domain/saldoDespuesDeAplicar";
+import {
+  calcularSaldoDespuesDeAplicar,
+  type SaldoDespuesResultado,
+} from "@/features/anticipos-proveedor/domain/saldoDespuesDeAplicar";
+import type { TcDofMxn } from "@/features/anticipos-proveedor/domain/topeAplicacionAnticipo";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
@@ -24,6 +28,8 @@ interface Props {
   factura: ImportesFactura;
   anticipo: AnticipoProveedorRow | null;
   montoAplicar: number;
+  /** Paridades DOF de la fecha de aplicación (MNY P2.4: sin ellas no se estima). */
+  tc?: TcDofMxn | null;
 }
 
 function Renglon(
@@ -47,13 +53,54 @@ function Renglon(
   );
 }
 
-export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar }: Props) {
+/** Notas del cruce de monedas y del excedente (extraído por complejidad). */
+function NotasAplicacion(
+  { res, moneda, monedaAnticipo, montoAplicar }:
+  {
+    res: SaldoDespuesResultado;
+    moneda: string;
+    monedaAnticipo: string;
+    montoAplicar: number;
+  },
+) {
+  if (res.sinTipoCambio) {
+    return (
+      <p className="text-xs text-warning">
+        El anticipo está en {monedaAnticipo} y la factura en {moneda}: sin tipo de cambio oficial
+        de la fecha de aplicación no se puede estimar el saldo restante.
+      </p>
+    );
+  }
+  if (res.excedente > 0) {
+    return (
+      <p className="text-xs text-warning">
+        El monto excede el saldo por pagar en {formatCurrency(res.excedente, moneda)}.
+      </p>
+    );
+  }
+  if (res.estimado) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        El anticipo está en {monedaAnticipo} y la factura en {moneda}: el equivalente mostrado
+        ({formatCurrency(res.montoEnMonedaFactura ?? 0, moneda)}) usa el tipo de cambio oficial de
+        la fecha de aplicación, igual que el servidor.
+      </p>
+    );
+  }
+  if (res.quedaCubierta && montoAplicar > 0) {
+    return <p className="text-xs text-muted-foreground">La factura queda totalmente cubierta.</p>;
+  }
+  return null;
+}
+
+export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar, tc }: Props) {
   const m = factura.moneda;
   const res = calcularSaldoDespuesDeAplicar({
     saldoFactura: factura.saldo,
     montoAplicar,
     monedaFactura: m,
     monedaAnticipo: anticipo?.moneda ?? m,
+    tc,
   });
 
   return (
@@ -89,26 +136,26 @@ export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar }: Prop
             <Renglon label="Ya aplicado a otras facturas" valor={anticipo.aplicado} moneda={anticipo.moneda} negativo />
             <Renglon label="Disponible" valor={anticipo.disponible} moneda={anticipo.moneda} destacado />
             <Renglon label="Se va a aplicar" valor={montoAplicar > 0 ? montoAplicar : 0} moneda={anticipo.moneda} />
-            <Renglon
-              label={res.estimado ? "Saldo estimado después" : "Saldo después de aplicar"}
-              valor={res.saldoRestante}
+            {res.saldoRestante === null ? (
+              <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2 mt-1 text-sm font-semibold text-foreground">
+                <span>Saldo después de aplicar</span>
+                <span className="tabular-nums">—</span>
+              </div>
+            ) : (
+              <Renglon
+                label={res.estimado ? "Saldo estimado después" : "Saldo después de aplicar"}
+                valor={res.saldoRestante}
+                moneda={m}
+                destacado
+              />
+            )}
+            <NotasAplicacion
+              res={res}
               moneda={m}
-              destacado
+              monedaAnticipo={anticipo.moneda}
+              montoAplicar={montoAplicar}
             />
-            {res.estimado && (
-              <p className="text-xs text-muted-foreground">
-                El anticipo está en {anticipo.moneda} y la factura en {m}: el saldo mostrado es
-                referencial, el servidor convierte al tipo de cambio oficial al aplicar.
-              </p>
-            )}
-            {!res.estimado && res.excedente > 0 && (
-              <p className="text-xs text-warning">
-                El monto excede el saldo por pagar en {formatCurrency(res.excedente, m)}.
-              </p>
-            )}
-            {!res.estimado && res.excedente === 0 && res.quedaCubierta && montoAplicar > 0 && (
-              <p className="text-xs text-muted-foreground">La factura queda totalmente cubierta.</p>
-            )}
+
           </>
         ) : (
           <p className="text-sm text-muted-foreground">Selecciona un anticipo para ver el desglose.</p>

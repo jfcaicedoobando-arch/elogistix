@@ -4,32 +4,27 @@ import { HandCoins, Wallet, CheckCircle2 } from "lucide-react";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
+import { calcularKpisAnticipos } from "../../domain/kpisAnticipos";
 import type { AnticipoProveedorRow } from "../../hooks/useAnticiposProveedor";
 
 interface Props {
   anticipos: AnticipoProveedorRow[];
 }
 
-function sumaPorMoneda(rows: AnticipoProveedorRow[], campo: (r: AnticipoProveedorRow) => number) {
-  const acc = new Map<string, number>();
-  for (const r of rows) acc.set(r.moneda, (acc.get(r.moneda) ?? 0) + campo(r));
-  return [...acc.entries()]
-    .filter(([, v]) => Math.abs(v) > 0.005)
-    .map(([moneda, v]) => formatCurrency(v, moneda));
-}
+const enTextos = (pares: Array<[string, number]>) =>
+  pares.map(([moneda, v]) => formatCurrency(v, moneda));
 
 export function AnticiposKpis({ anticipos }: Props) {
-  const { vigentes, disponible, anticipado, aplicado } = useMemo(() => {
-    const vig = anticipos.filter((a) => a.estado !== "cancelado");
+  const { pendientes, disponible, anticipado, aplicado } = useMemo(() => {
+    const k = calcularKpisAnticipos(anticipos);
     return {
-      vigentes: vig,
-      disponible: sumaPorMoneda(vig, (a) => a.disponible),
-      anticipado: sumaPorMoneda(vig, (a) => Number(a.monto)),
-      aplicado: sumaPorMoneda(vig, (a) => a.aplicado),
+      pendientes: k.pendientes,
+      disponible: enTextos(k.disponible),
+      anticipado: enTextos(k.anticipado),
+      aplicado: enTextos(k.aplicado),
     };
   }, [anticipos]);
 
-  const pendientes = vigentes.filter((a) => a.disponible > 0).length;
 
   return (
     <KpiStrip desktopCols={4} className="mb-6">

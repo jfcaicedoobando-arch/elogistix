@@ -139,7 +139,10 @@ export default function AnticiposProveedor() {
 
       <Card>
         <CardContent className="p-0">
-          {data.length === 0 ? (
+          {/* MNY P2.9: un fallo de carga sin caché no debe verse como "no hay
+              anticipos": la tabla muestra el error con reintento. */}
+          {data.length === 0 && !isError ? (
+
             <EmptyState
               icon={Inbox}
               title="No hay anticipos"

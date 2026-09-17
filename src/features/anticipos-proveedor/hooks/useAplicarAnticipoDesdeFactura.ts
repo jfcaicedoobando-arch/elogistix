@@ -5,7 +5,7 @@
  * Power of 10): el componente sólo pinta; aquí viven la selección de anticipo,
  * el tope convertido al DOF de la fecha de aplicación y el envío a la RPC.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { parseMonto } from "@/lib/format/parseMonto";
@@ -63,26 +63,39 @@ export function useAplicarAnticipoDesdeFactura({
     [anticipo, monedaFactura, saldoFactura, tcDof],
   );
 
-  // Al abrir (o cambiar de anticipo) sugiere el máximo aplicable convertido.
+  // MNY P2.6: la sugerencia se escribe UNA vez por anticipo seleccionado. Antes
+  // el efecto dependía de `tope.tope`, así que la respuesta tardía del DOF o un
+  // cambio de fecha borraba el monto que el usuario ya había capturado.
+  const sugeridoRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      sugeridoRef.current = null;
+      return;
+    }
     if (!anticipoId && anticiposOrdenados.length > 0) {
       setAnticipoId(anticiposOrdenados[0].id);
       return;
     }
-    if (anticipo) {
-      const sugerido = tope.tope ?? 0;
-      setMonto(sugerido > 0 ? sugerido.toFixed(2) : "0");
-    }
+    if (!anticipo || sugeridoRef.current === anticipo.id) return;
+    // Sin paridad todavía no se sugiere nada (y no se toca lo capturado).
+    if (tope.tope === null) return;
+    sugeridoRef.current = anticipo.id;
+    setMonto(tope.tope > 0 ? tope.tope.toFixed(2) : "0");
   }, [open, anticipoId, anticipo, anticiposOrdenados, tope.tope]);
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) { setAnticipoId(""); setMonto("0"); setFecha(todayLocalISO()); }
+    if (!o) {
+      sugeridoRef.current = null;
+      setAnticipoId(""); setMonto("0"); setFecha(todayLocalISO());
+    }
     onOpenChange(o);
   };
 
   // Ola 9 · B5: parseo centralizado de montos tecleados.
   const montoNum = parseMonto(monto, NaN);
+  /** MNY P2.6: aviso visible en vez de borrar la captura del usuario. */
+  const excedeTope =
+    tope.tope !== null && Number.isFinite(montoNum) && montoNum > tope.tope + 0.005;
 
   const desajuste = useMemo(
     () =>
@@ -123,7 +136,8 @@ export function useAplicarAnticipoDesdeFactura({
 
   return {
     anticipoId, setAnticipoId, monto, setMonto, fecha, setFecha,
-    anticipo, anticiposOrdenados, montoNum, tope, desajuste,
+    anticipo, anticiposOrdenados, montoNum, tope, tcDof: tcDof ?? null,
+    excedeTope, desajuste,
     isPending: aplicar.isPending, handleOpenChange, onSubmit,
   };
 }

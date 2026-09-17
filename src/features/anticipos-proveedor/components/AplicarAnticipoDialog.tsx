@@ -15,6 +15,7 @@ import { SelectorFacturaAbierta } from "@/features/anticipos-proveedor/component
 import { useAplicarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
+import { hoyMx } from "@/lib/date/mx";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { buildSchema } from "../domain/aplicarAnticipoSchema";
 import { calcularTopeAplicable } from "../domain/topeAplicacionAnticipo";
@@ -153,7 +154,14 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
             control={control}
             name="fechaAplicacion"
             render={({ field }) => (
-              <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+              <DatePickerMx
+                id="apl-fecha"
+                name="fechaAplicacion"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                max={hoyMx()}
+                className="w-full"
+              />
             )}
           />
           {errors.fechaAplicacion && <p className="text-xs text-destructive">{errors.fechaAplicacion.message}</p>}
