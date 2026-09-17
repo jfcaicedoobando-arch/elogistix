@@ -57,10 +57,14 @@ export function useImportarMovimientos() {
 }
 
 
+/**
+ * MNY-P2.6 — la ruta manual conserva `truncado`: el panel debe poder avisar
+ * que la búsqueda quedó recortada en vez de dar la lista por completa.
+ */
 export function useSugerirCandidatos(mov: MovimientoBBVA | null) {
   return useQuery({
     queryKey: queryKeys.tesoreria.candidatos(mov?.id ?? null),
-    queryFn: () => sugerirCandidatos(mov!),
+    queryFn: () => sugerirCandidatosDetalle(mov!),
     enabled: !!mov,
     staleTime: 30_000,
   });
