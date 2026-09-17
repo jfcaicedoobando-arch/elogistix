@@ -12,9 +12,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  TIPO_PAGO_DETALLE_LABELS,
+  TIPO_PAGO_DETALLE_LABELS, esDineroRecibido, esperaMovimientoBancario,
   type MovimientoConciliado, type PagoDetalleEncabezado,
 } from "@/features/tesoreria/domain/pagoDetalle";
+
 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -26,7 +27,8 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
 }
 
 export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
-  const esCobro = pago.tipo === "cobro";
+  // MNY-P2.1: un cobro en lote también es dinero recibido del cliente.
+  const esCobro = esDineroRecibido(pago.tipo);
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -42,12 +44,21 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
           {formatCurrency(pago.monto, pago.moneda)}
         </p>
         {pago.moneda !== "MXN" ? (
-          <p className="text-body-sm text-muted-foreground">
-            Equivale a {formatCurrency(pago.monto_mxn, "MXN")} (TC {pago.tipo_cambio.toFixed(4)})
-          </p>
+          // MNY-P2.3: sin T/C registrado no se muestra "TC 1.0000" ni un
+          // equivalente en pesos inventado.
+          pago.tipo_cambio && pago.monto_mxn != null ? (
+            <p className="text-body-sm text-muted-foreground">
+              Equivale a {formatCurrency(pago.monto_mxn, "MXN")} (TC {pago.tipo_cambio.toFixed(4)})
+            </p>
+          ) : (
+            <p className="text-body-sm text-warning">
+              Sin T/C registrado: no se puede calcular el equivalente en pesos.
+            </p>
+          )
         ) : null}
       </div>
       <div className="grid grid-cols-2 gap-3">
+
         <Dato label="Fecha">{formatDate(pago.fecha)}</Dato>
         <Dato label={esCobro ? "Cliente" : "Proveedor"}>{pago.contraparte ?? "—"}</Dato>
         <Dato label="Método">{pago.metodo_pago ?? "—"}</Dato>
@@ -73,30 +84,43 @@ export function BloqueMovimiento({
   cuentaId,
   monedaCuentaPago = null,
   cuentaBancariaPagoId = null,
+  metodoPago = null,
 }: {
   movimiento: MovimientoConciliado | null;
   cuentaId: string | null;
   /** Moneda del pago: sólo se usa si el movimiento es de la misma cuenta bancaria. */
   monedaCuentaPago?: string | null;
   cuentaBancariaPagoId?: string | null;
+  /** MNY-P2.2: en efectivo no se espera movimiento bancario. */
+  metodoPago?: string | null;
 }) {
   if (!movimiento) {
+    // MNY-P2.2: el efectivo no genera movimiento del banco por diseño; avisar
+    // "falta conciliar" era una alerta falsa.
+    const seEsperaMovimiento = esperaMovimientoBancario(metodoPago);
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
-        <Alert variant="warning">
-          <TriangleAlert className="h-4 w-4" />
-          <AlertDescription className="space-y-1">
-            <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
-            <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
-              Ir a Conciliación bancaria
-            </Link>
-          </AlertDescription>
-        </Alert>
-
+        {seEsperaMovimiento ? (
+          <Alert variant="warning">
+            <TriangleAlert className="h-4 w-4" />
+            <AlertDescription className="space-y-1">
+              <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
+              <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
+                Ir a Conciliación bancaria
+              </Link>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
+            Pago en efectivo: no genera movimiento en la cuenta bancaria, así que no
+            requiere conciliación.
+          </p>
+        )}
       </section>
     );
   }
+
 
   const esCargo = movimiento.cargo > 0;
   const monto = esCargo ? movimiento.cargo : movimiento.abono;

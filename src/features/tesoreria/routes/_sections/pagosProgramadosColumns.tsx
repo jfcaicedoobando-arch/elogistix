@@ -2,15 +2,16 @@
  * Definición de columnas + filtro de la bandeja de pagos programados.
  * Extraído de `TesoreriaPagosProgramados` para bajar su tamaño/complejidad.
  */
-import { CalendarClock, Wallet } from "lucide-react";
+import { CalendarClock, ShieldCheck, Wallet } from "lucide-react";
 import { defineColumns } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import type { FacturaProgramableRow } from "@/features/tesoreria/services/pagosProgramados";
-import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { puedeEjecutarPago, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+
 
 export type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
 
@@ -99,16 +100,35 @@ export function buildPagosProgramadosColumns(
       // MNY-04: `ejecutar_pago_programado` exige fecha programada
       // (LC_PAGO_SIN_PROGRAMACION). Sin ella el botón fallaba siempre; ahora la
       // acción es programar la fecha en la factura de Compras.
-      cell: ({ row }) =>
-        row.original.fecha_programada_pago ? (
-          <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
+      // MNY-P2.5: además, el trigger `pagos_proveedor_requiere_aprobacion`
+      // rechaza pagar una factura sin aprobar. La factura sigue visible en la
+      // bandeja, pero la acción es ir a aprobarla.
+      cell: ({ row }) => {
+        const f = row.original;
+        if (!puedeEjecutarPago(f)) {
+          const rechazada = (f.estado_aprobacion ?? "").trim().toLowerCase() === "rechazada";
+          return (
+            <div className="flex items-center justify-end gap-2">
+              <ToneBadge tone={rechazada ? "danger" : "warning"} size="sm">
+                {rechazada ? "Rechazada" : "Por aprobar"}
+              </ToneBadge>
+              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAbrirFactura(f); }}>
+                <ShieldCheck className="size-3.5 mr-1.5" /> Revisar aprobación
+              </Button>
+            </div>
+          );
+        }
+        return f.fecha_programada_pago ? (
+          <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(f)}>
             <Wallet className="size-3.5 mr-1.5" /> Ejecutar pago
           </Button>
         ) : (
-          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onProgramarPago(row.original); }}>
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAbrirFactura(f); }}>
             <CalendarClock className="size-3.5 mr-1.5" /> Programar pago
           </Button>
-        ),
+        );
+      },
     },
   ]);
 }
+

@@ -16,8 +16,11 @@ export interface PagoDetalleEncabezado {
   contraparte_id: string | null;
   moneda: string;
   monto: number;
-  tipo_cambio: number;
-  monto_mxn: number;
+  /** MNY-P2.3: `null` = sin T/C registrado (no se asume 1). */
+  tipo_cambio: number | null;
+  /** MNY-P2.3: `null` = equivalente en pesos desconocido. */
+  monto_mxn: number | null;
+
   metodo_pago: string | null;
   referencia: string | null;
   cuenta_bancaria_id: string | null;
@@ -147,10 +150,28 @@ export interface FilaLibroRef {
 
 /**
  * Traduce una fila del libro maestro a la referencia del detalle.
- * Un pago que pertenece a un lote se abre como lote, para que el panel
- * muestre todas las facturas que cubrió esa transferencia.
+ * Un pago (o cobro) que pertenece a un lote se abre como lote, para que el
+ * panel muestre todas las facturas que cubrió esa transferencia.
  */
 export function refPagoDeLibro(fila: FilaLibroRef): RefPago {
   if (fila.tipo === "pago" && fila.lote_id) return { tipo: "lote", id: fila.lote_id };
+  // MNY-P2.1: el cobro de cliente en lote abría el pago individual (una sola
+  // factura); ahora se promueve al lote de cobros.
+  if (fila.tipo === "cobro" && fila.lote_id) return { tipo: "lote_cobro", id: fila.lote_id };
   return { tipo: fila.tipo, id: fila.id };
 }
+
+/** Los tipos que representan dinero recibido del cliente (no un egreso). */
+export function esDineroRecibido(tipo: TipoPagoDetalle): boolean {
+  return tipo === "cobro" || tipo === "lote_cobro";
+}
+
+/**
+ * MNY-P2.2: un pago en efectivo no genera movimiento bancario por diseño, así
+ * que la ausencia de movimiento NO es un pendiente de conciliación.
+ */
+export function esperaMovimientoBancario(metodoPago: string | null): boolean {
+  const m = (metodoPago ?? "").trim().toLowerCase();
+  return m !== "efectivo";
+}
+

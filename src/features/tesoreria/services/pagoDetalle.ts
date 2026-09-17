@@ -22,9 +22,23 @@ function str(v: unknown): string | null {
   return typeof v === "string" && v !== "" ? v : null;
 }
 
+/**
+ * MNY-P2.1: `lote_cobro` es un tipo propio (depósito de cliente que cubre
+ * varias facturas). Antes caía al default `pago` y el detalle se etiquetaba
+ * como pago al proveedor, en rojo y con una sola factura.
+ */
 function tipo(v: unknown): TipoPagoDetalle {
-  return v === "cobro" || v === "pago" || v === "anticipo" || v === "lote" ? v : "pago";
+  return v === "cobro" || v === "pago" || v === "anticipo" || v === "lote" || v === "lote_cobro"
+    ? v
+    : "pago";
 }
+
+/** MNY-P2.3: sin T/C registrado no se fabrica 1; el dato queda desconocido. */
+function numOrNull(v: unknown): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) && n !== 0 ? n : null;
+}
+
 
 function mapPago(row: Record<string, unknown>): PagoDetalleEncabezado {
   return {
@@ -35,9 +49,10 @@ function mapPago(row: Record<string, unknown>): PagoDetalleEncabezado {
     contraparte_id: str(row.contraparte_id),
     moneda: String(row.moneda ?? "MXN"),
     monto: num(row.monto),
-    tipo_cambio: num(row.tipo_cambio) || 1,
-    monto_mxn: num(row.monto_mxn),
+    tipo_cambio: numOrNull(row.tipo_cambio),
+    monto_mxn: row.monto_mxn == null ? null : num(row.monto_mxn),
     metodo_pago: str(row.metodo_pago),
+
     referencia: str(row.referencia),
     cuenta_bancaria_id: str(row.cuenta_bancaria_id),
     cuenta_alias: str(row.cuenta_alias),
