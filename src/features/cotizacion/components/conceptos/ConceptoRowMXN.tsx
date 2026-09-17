@@ -2,13 +2,12 @@ import { memo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Trash2, StickyNote } from "lucide-react";
 
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
-import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 import { CONCEPTO_GRID_MXN, CONCEPTO_SOLO_XL } from "./columnasConcepto";
@@ -49,7 +48,6 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
   });
   const subtotal = c.cantidad * c.precio_unitario;
   const tasaFila = resolverTasaConcepto(c, tasaIva);
-  const tratamientoBloqueado = c.tipo_iva === "no_objeto" || c.tipo_iva === "exento";
   const iva = calcularIVA(subtotal, tasaFila);
   // Notas a demanda (mismo patrón que el paso 2): la lista deja de ser altísima.
   const [notasAbiertas, setNotasAbiertas] = useState(false);
@@ -91,22 +89,11 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
         </div>
         <div className="min-w-0">
           {i === 0 && <Label size="sm">Tasa IVA</Label>}
-          {tratamientoBloqueado ? (
-            <TratamientoIvaFila tipoIva={c.tipo_iva} />
-          ) : (
-            <Select
-              value={String(tasaFila)}
-              onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
-            >
-              {/* Sólo el porcentaje: la descripción completa se muestra al abrir. */}
-              <SelectTrigger className="h-10" aria-label="Tasa de IVA">{Math.round(tasaFila * 100)}%</SelectTrigger>
-              <SelectContent>
-                {TASAS_IVA_MX.map(opt => (
-                  <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <TratamientoIvaFila
+            tipoIva={c.tipo_iva}
+            tasa={tasaFila}
+            onTasaChange={(tasa) => actualizar(i, "tasa_iva_aplicada", tasa)}
+          />
         </div>
         <div className={CONCEPTO_SOLO_XL}>
           {i === 0 && <Label size="sm">Subtotal</Label>}
