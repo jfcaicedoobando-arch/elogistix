@@ -80,6 +80,8 @@ export interface FacturapiNcPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
+      /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
+      taxability?: "01" | "02";
       taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
     };
   }>;
