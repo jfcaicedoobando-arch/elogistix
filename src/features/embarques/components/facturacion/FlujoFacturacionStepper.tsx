@@ -3,6 +3,7 @@
  * Conceptos → Proformas → Facturas. Sólo presentacional.
  */
 import { Check, FileSpreadsheet, Receipt, ScrollText } from "lucide-react";
+import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
 
 interface Props {
