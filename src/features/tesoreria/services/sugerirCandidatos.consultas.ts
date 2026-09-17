@@ -51,11 +51,32 @@ async function pagosYaVinculados(pagoIds: string[], tipo: "cxc" | "cxp"): Promis
   return set;
 }
 
+/**
+ * MNY: un pago que forma parte de un lote CxP ya está representado por el
+ * movimiento bancario del lote (`pago_proveedor_lote_id`). Sugerirlo como pago
+ * individual permitiría que el mismo egreso quedara conciliado dos veces.
+ */
+async function lotesYaVinculados(loteIds: string[]): Promise<Set<string>> {
+  if (loteIds.length === 0) return new Set();
+  const { data, error } = await supabase
+    .from("bbva_movimientos")
+    .select("pago_proveedor_lote_id")
+    .in("pago_proveedor_lote_id", loteIds)
+    .is("deleted_at", null)
+    .limit(CAP_LISTA);
+  if (error) throw error;
+  const set = new Set<string>();
+  for (const row of (data ?? []) as Array<{ pago_proveedor_lote_id: string | null }>) {
+    if (row.pago_proveedor_lote_id) set.add(row.pago_proveedor_lote_id);
+  }
+  return set;
+}
+
 /** Cargo bancario → pago a proveedor (egreso). */
 export async function candidatosCxp(v: Ventana): Promise<SugerenciasResultado> {
   const { data, error } = await supabase
     .from("pagos_proveedor")
-    .select("id, fecha_pago, monto, moneda, referencia, proveedor_facturas(proveedor_nombre)")
+    .select("id, fecha_pago, monto, moneda, referencia, lote_id, proveedor_facturas(proveedor_nombre)")
     .gte("fecha_pago", v.desdeIso)
     .lte("fecha_pago", v.hastaIso)
     .gte("monto", v.min)
@@ -68,9 +89,19 @@ export async function candidatosCxp(v: Ventana): Promise<SugerenciasResultado> {
   const filas = data ?? [];
   const truncado = filas.length > LIMITE_SUGERENCIAS;
   const vinculados = await pagosYaVinculados(filas.map((p) => p.id), "cxp");
+  const loteIds = Array.from(
+    new Set(
+      (filas as Array<{ lote_id?: string | null }>)
+        .map((p) => p.lote_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+  const lotesVivos = await lotesYaVinculados(loteIds);
   const out: Candidato[] = [];
   for (const p of filas) {
     if (vinculados.has(p.id)) continue;
+    const loteDelPago = (p as { lote_id?: string | null }).lote_id;
+    if (loteDelPago && lotesVivos.has(loteDelPago)) continue;
     const pf = (p as { proveedor_facturas?: { proveedor_nombre?: string } | null }).proveedor_facturas;
     out.push({
       tipo: "cxp",
