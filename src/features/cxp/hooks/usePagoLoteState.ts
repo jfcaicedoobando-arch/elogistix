@@ -141,7 +141,13 @@ export function usePagoLoteState(a: Args) {
         // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
         // la RPC; la validación exacta también vive en la función.
         importe_recibido: totalNum,
-        request_id: requestId,
+        request_id: reqId.get(
+          scopeDePayload([
+            requestId, a.proveedorId, fecha, a.moneda, metodo, referencia,
+            requiereCuenta ? cuentaId || null : null, tcAplicable, notas, totalNum,
+            renglones.map((r) => `${r.factura_id}:${r.monto}`).join(","),
+          ]),
+        ),
         renglones,
       });
     } catch {
