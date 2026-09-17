@@ -11,12 +11,18 @@ import {
 export interface AnticipoProveedorRow extends AnticipoConProveedor {
   aplicado: number;
   disponible: number;
+  /** Monto que el proveedor regresó (MNY P1.3: nunca es "aplicado"). */
+  devuelto: number;
 }
 
 function toRow(a: AnticipoConProveedor): AnticipoProveedorRow {
-  const aplicado = Number(a.monto) - Number(a.saldo_disponible);
-  return { ...a, aplicado, disponible: Number(a.saldo_disponible) };
+  // MNY P1.3: `monto - saldo_disponible` incluía el monto devuelto y lo
+  // reportaba como aplicado a facturas. La devolución se descuenta aparte.
+  const devuelto = Number(a.monto_devuelto ?? 0);
+  const aplicado = Math.max(0, Number(a.monto) - Number(a.saldo_disponible) - devuelto);
+  return { ...a, aplicado, disponible: Number(a.saldo_disponible), devuelto };
 }
+
 
 export function useAnticiposProveedor(filtros: AnticiposFiltro = {}) {
   const key = useMemo(
