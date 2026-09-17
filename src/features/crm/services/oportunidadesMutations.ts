@@ -105,23 +105,29 @@ export async function moverEtapaOportunidad(input: {
   if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
   if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
   const updatedAt = await actualizarOportunidadFilas(input.id, patch, input.expectedUpdatedAt);
-  await registrarActividad({
+  // La etapa YA cambió: si la bitácora falla se devuelve aviso, nunca error —
+  // así el caller sigue con las automatizaciones y el refresco del pipeline.
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "mover_etapa_oportunidad",
     entidadId: input.id,
     detalles: { etapa_id: input.etapa_id, valor_real: input.valor_real ?? null },
   });
-  return updatedAt;
+  return { updatedAt, avisoActividad };
 }
 
-export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
-  await actualizarOportunidadFilas(id, {
+export async function eliminarOportunidad(
+  id: string,
+  userId: string | null,
+): Promise<ResultadoMutacionOportunidad> {
+  const updatedAt = await actualizarOportunidadFilas(id, {
     deleted_at: new Date().toISOString(),
     deleted_by: userId,
   });
-  await registrarActividad({
+  const avisoActividad = await registrarActividadNoBloqueante({
     modulo: "crm",
     accion: "eliminar_oportunidad",
     entidadId: id,
   });
+  return { updatedAt, avisoActividad };
 }
