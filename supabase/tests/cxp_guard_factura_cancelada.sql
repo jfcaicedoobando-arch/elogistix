@@ -52,7 +52,7 @@ BEGIN
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion, deleted_at)
+     fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion, deleted_at)
   VALUES
     ('33333333-3333-3333-3333-3333333333c2', v_org, v_prov, 'Test Prov', 'GUARD-CANC-02',
      v_cat, public.fecha_negocio_mx(), 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Vigente', 'aprobada', now());
