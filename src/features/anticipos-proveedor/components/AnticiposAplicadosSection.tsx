@@ -3,6 +3,7 @@ import { useAplicacionesPorFactura } from "../hooks/useAplicacionesPorFactura";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { subtotalesPorMoneda } from "../domain/totalesAplicaciones";
 
 import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -16,10 +17,8 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
   if (isLoading) return <ListSkeleton rows={2} />;
   if (aplicaciones.length === 0) return null;
 
-  const monedaTotal = aplicaciones[0].moneda_aplicada;
-  const total = aplicaciones
-    .filter((a) => a.moneda_aplicada === monedaTotal)
-    .reduce((acc, a) => acc + Number(a.monto_aplicado), 0);
+  // No se suman monedas distintas: un subtotal por cada moneda aplicada.
+  const subtotales = subtotalesPorMoneda(aplicaciones);
 
   return (
     <Card>
@@ -52,13 +51,15 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
               ))}
             </TableBody>
             <TableFooter className="bg-muted/40 font-medium">
-              <TableRow>
-                <TableCell>Total aplicado</TableCell>
-                <TableCell className="text-right whitespace-nowrap tabular-nums">
-                  {formatCurrency(total, monedaTotal)}
-                </TableCell>
-                <TableCell className="text-center">{monedaTotal}</TableCell>
-              </TableRow>
+              {subtotales.map((s) => (
+                <TableRow key={s.moneda}>
+                  <TableCell>Total aplicado en {s.moneda}</TableCell>
+                  <TableCell className="text-right whitespace-nowrap tabular-nums">
+                    {formatCurrency(s.total, s.moneda)}
+                  </TableCell>
+                  <TableCell className="text-center">{s.moneda}</TableCell>
+                </TableRow>
+              ))}
             </TableFooter>
           </Table>
         </div>
