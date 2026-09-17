@@ -76,6 +76,23 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
 }
 
 
+/**
+ * MNY: la RPC deduplica por `p_client_request_id` sin comparar contenido. Si la
+ * llave ya correspondía a OTRO pago, cerrar el diálogo como éxito ocultaría que
+ * este pago nunca se guardó.
+ */
+function assertPagoCorresponde(
+  pago: { proveedor_factura_id: string; fecha_pago: string; monto: number; moneda: string },
+  input: RegistrarPagoProveedorInput,
+): void {
+  const coincide =
+    pago.proveedor_factura_id === input.proveedor_factura_id &&
+    pago.fecha_pago === input.fecha_pago &&
+    Number(pago.monto) === Number(input.monto) &&
+    pago.moneda === input.moneda;
+  if (!coincide) throw new Error(MSG_PAGO_LLAVE_REUSADA);
+}
+
 /** Mensaje único cuando la llave de idempotencia ya se usó con otro pago. */
 export const MSG_PAGO_LLAVE_REUSADA =
   "Ese intento ya se guardó con datos distintos. Revisa los pagos de la factura antes de reintentar: este pago no se registró.";
@@ -127,17 +144,7 @@ export async function registrarPagoProveedor(
     .eq("id", resultado.pago_id)
     .single();
   if (errPago) throw errPago;
-  // MNY: la RPC deduplica por `p_client_request_id` sin comparar contenido. Si
-  // la llave ya correspondía a OTRO pago, cerrar el diálogo como éxito ocultaría
-  // que este pago nunca se guardó.
-  const coincide =
-    pago.proveedor_factura_id === input.proveedor_factura_id &&
-    pago.fecha_pago === input.fecha_pago &&
-    Number(pago.monto) === Number(input.monto) &&
-    pago.moneda === input.moneda;
-  if (!coincide) {
-    throw new Error(MSG_PAGO_LLAVE_REUSADA);
-  }
+  assertPagoCorresponde(pago, input);
 
   await registrarActividad({
     modulo: "cxp",
