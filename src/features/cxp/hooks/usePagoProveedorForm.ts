@@ -62,9 +62,11 @@ export function usePagoProveedorForm(
   const tcNum = tcValido(tc);
   const {
     montoNum, esUsdPagadoEnMxn, showTc, bloqueadoPorTc, cruceNoSoportado, monedaDelPar,
+    soportaDiferenciaCambiaria,
   } = banderasMonedaPago({
     factura, moneda, monto, tcNum,
   });
+
 
   // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
   // recalcular el prefill del monto para saldar exactamente en MXN.
