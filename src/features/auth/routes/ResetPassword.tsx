@@ -38,6 +38,11 @@ type ResetValues = z.infer<typeof resetSchema>;
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { role } = useAuth();
+  // El enlace de invitación al portal (cliente/agente) llega aquí: la cuenta
+  // existe pero aún no tiene contraseña, así que el copy y el destino cambian.
+  const esInvitacion = searchParams.get("origen") === "invitacion";
   const [ready, setReady] = useState(false);
   const [validSession, setValidSession] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
