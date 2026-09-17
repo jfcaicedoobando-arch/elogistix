@@ -1,6 +1,6 @@
 /** Mutaciones del feature Anticipos a Proveedor — usan `useMutationWithFeedback`. */
-import { useRef } from "react";
 import { useMutationWithFeedback } from "@/hooks/shared";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
 import { queryKeys } from "@/lib/query";
 import {
