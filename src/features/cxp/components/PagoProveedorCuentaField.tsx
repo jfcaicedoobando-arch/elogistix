@@ -17,11 +17,22 @@ type Props = Pick<
 
 export function PagoProveedorCuentaField(p: Props) {
   const cuenta = p.cuentas.find((c) => c.id === p.cuentaId);
+  // MNY: en efectivo no hay cuenta bancaria posible: se dice explícitamente que
+  // no habrá salida de banco, en vez de mostrar un selector con una cuenta
+  // preseleccionada que generaba un cargo indebido.
+  if (!p.requiereCuenta) {
+    return (
+      <div className="space-y-1">
+        <Label>Cuenta bancaria</Label>
+        <p className="text-body-sm text-muted-foreground">
+          Pago en efectivo: no se registra salida de ninguna cuenta bancaria.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-1">
-      <Label htmlFor="cuenta-bancaria">
-        Cuenta bancaria{p.requiereCuenta ? " *" : " (opcional)"}
-      </Label>
+      <Label htmlFor="cuenta-bancaria">Cuenta bancaria *</Label>
       <Select value={p.cuentaId} onValueChange={p.setCuentaId}>
         <SelectTrigger id="cuenta-bancaria">
           <SelectValue placeholder="Selecciona la cuenta de donde sale el pago" />
@@ -34,7 +45,8 @@ export function PagoProveedorCuentaField(p: Props) {
           ))}
         </SelectContent>
       </Select>
-      {p.requiereCuenta && !p.cuentaId && (
+      {!p.cuentaId && (
+
         <p className="text-body-sm text-destructive">
           Selecciona la cuenta bancaria de donde sale el pago.
         </p>
