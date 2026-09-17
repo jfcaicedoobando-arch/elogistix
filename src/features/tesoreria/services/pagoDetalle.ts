@@ -51,8 +51,8 @@ function mapPago(row: Record<string, unknown>): PagoDetalleEncabezado {
     monto: num(row.monto),
     tipo_cambio: numOrNull(row.tipo_cambio),
     monto_mxn: row.monto_mxn == null ? null : num(row.monto_mxn),
-
     metodo_pago: str(row.metodo_pago),
+
     referencia: str(row.referencia),
     cuenta_bancaria_id: str(row.cuenta_bancaria_id),
     cuenta_alias: str(row.cuenta_alias),
