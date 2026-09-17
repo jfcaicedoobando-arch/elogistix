@@ -110,6 +110,9 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   LC_ANTICIPO_FECHA_REQUERIDA: "Indica la fecha de la devolución.",
   LC_ANTICIPO_FECHA_INVALIDA:
     "La devolución no puede ser anterior a la fecha del anticipo.",
+  // MNY P1.2 · fecha autoritativa (día de negocio en México).
+  LC_ANTICIPO_FECHA_FUTURA:
+    "La fecha del anticipo no puede ser futura (día en México).",
   // Conceptos de facturas de proveedor (edición manual, v13.629.x).
   LC_CONCEPTOS_FISCALES:
     "Los conceptos vienen del XML del proveedor y no se pueden editar. Vuelve a cargar el XML si necesitas corregirlos.",
