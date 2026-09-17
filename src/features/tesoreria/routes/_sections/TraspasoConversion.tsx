@@ -22,12 +22,15 @@ interface Props {
   comision: number;
   montoDestino: number;
   fechaTcDof: string | null;
+  /** MNY: el T/C se capturó a mano (no se re-sugiere al cambiar la fecha). */
+  tcEsManual?: boolean;
 }
 
 export function TraspasoConversion({
   monedaOrigen, monedaDestino, mismoMoneda, par, tcQuote, onTcQuoteChange,
-  montoOrigen, comision, montoDestino, fechaTcDof,
+  montoOrigen, comision, montoDestino, fechaTcDof, tcEsManual = false,
 }: Props) {
+
   const resumen = (
     <TraspasoResumen
       monedaOrigen={monedaOrigen}
