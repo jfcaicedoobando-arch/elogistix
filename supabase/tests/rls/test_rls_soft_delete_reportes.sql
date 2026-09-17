@@ -42,9 +42,9 @@ DECLARE
   v_count   int;
   v_exp     text;
   v_num     numeric;
-  v_hoy     date := CURRENT_DATE;
-  v_anio    int  := EXTRACT(year FROM CURRENT_DATE)::int;
-  v_mes     int  := EXTRACT(month FROM CURRENT_DATE)::int;
+  v_hoy     date := public.fecha_negocio_mx();
+  v_anio    int  := EXTRACT(year FROM v_hoy)::int;
+  v_mes     int  := EXTRACT(month FROM v_hoy)::int;
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN

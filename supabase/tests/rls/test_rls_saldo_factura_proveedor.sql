@@ -61,8 +61,8 @@ BEGIN
     (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', cat_b, 'USD', 10000, 0, 10000, 'Cancelada', 'aprobada');
 
   INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
-    (org_b, fac_b, 86000, 'MXN', 17.20);
+    (organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd) VALUES
+    (org_b, fac_b, public.fecha_negocio_mx(), 86000, 'MXN', 17.20);
 
 
   -- ── T1 · cross-tenant → NULL ─────────────────────────────────────────────
