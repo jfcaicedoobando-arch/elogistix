@@ -14,6 +14,7 @@ import type { FacturaFormValues } from "@/features/cxp/types";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { ivaExcedeTasaMaxima } from "@/features/cxp/utils/ivaPlausible";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
 
 export interface FacturaFormValidationContext {
   total: number;
@@ -140,6 +141,14 @@ function validarTipoCambio(values: Valores, refCtx: RefCtx): void {
       path: ["tc"],
       message: COPY_VALIDACION.tipoCambioMaximo,
     });
+    return;
+  }
+  // MNY: guard canónico de plausibilidad (banda 5–40 MXN por divisa). Aplica
+  // sólo a pares con MXN, que es el caso de una factura en divisa valuada en
+  // pesos. Atrapa dedazos como 1.85 o 185 que distorsionan el equivalente MXN.
+  if (values.moneda !== "MXN") {
+    const fuera = validarTcMxn(Number(values.tc));
+    if (fuera) refCtx.addIssue({ code: "custom", path: ["tc"], message: fuera });
   }
 }
 

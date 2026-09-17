@@ -1,6 +1,7 @@
 /** Esquema y catálogos del formulario "Registrar anticipo a proveedor". */
 import { z } from "zod";
 import { TC_MAX } from "@/features/cxp/services";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
 
 /** EC-08: tope razonable para el monto de un anticipo capturado por UI. */
 const MONTO_MAX = 1_000_000_000;
@@ -62,6 +63,13 @@ export const registrarAnticipoSchema = z
         path: ["tipoCambioUsd"],
         message: "Captura el tipo de cambio para convertir a pesos",
       });
+    } else if (v.moneda !== "MXN") {
+      // MNY: mismo guard canónico que pagos a proveedor (banda 5–40 MXN por
+      // divisa); sin él un 185 capturado a mano inflaba el equivalente en pesos.
+      const fuera = validarTcMxn(Number(v.tipoCambioUsd));
+      if (fuera) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["tipoCambioUsd"], message: fuera });
+      }
     }
     if (v.metodoPago !== "Efectivo" && !v.cuentaBancariaId) {
       ctx.addIssue({

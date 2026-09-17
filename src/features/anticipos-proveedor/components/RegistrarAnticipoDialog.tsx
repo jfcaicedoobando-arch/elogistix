@@ -11,7 +11,7 @@ import { useRegistrarAnticipoDefaults } from "@/features/anticipos-proveedor/hoo
 import { equivalenteMxnAnticipo } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
 import { todayLocalISO } from "@/lib/date/today";
 import { RegistrarAnticipoFields } from "./RegistrarAnticipoFields";
-import { useStableRequestId } from "@/lib/idempotency";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import { registrarAnticipoSchema, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 
 interface Props {
@@ -26,9 +26,12 @@ export function RegistrarAnticipoDialog({
   open, onOpenChange, proveedorIdInicial, proveedorNombreInicial,
 }: Props) {
   const registrar = useRegistrarAnticipo();
-  // Ola 2 · O2.5 — misma llave mientras se reintenta: el servidor deduplica
-  // el anticipo y su cargo bancario en vez de crearlos dos veces.
-  const requestId = useStableRequestId();
+  // Ola 2 · O2.5 — misma llave mientras se reintenta el MISMO payload: el
+  // servidor deduplica el anticipo y su cargo bancario en vez de crearlos dos
+  // veces. MNY: si el usuario cambia proveedor, monto, moneda, fecha, cuenta,
+  // método, referencia o notas, la llave se rota para que el backend no
+  // reproduzca el anticipo anterior como éxito falso.
+  const requestId = usePayloadRequestId();
   const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
@@ -106,7 +109,20 @@ export function RegistrarAnticipoDialog({
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
       embarqueId: values.embarqueId ?? null,
-      requestId: requestId.get(),
+      requestId: requestId.get(
+        scopeDePayload([
+          values.proveedorId,
+          values.monto,
+          values.moneda,
+          values.fechaAnticipo,
+          values.moneda === "MXN" ? null : Number(values.tipoCambioUsd),
+          values.metodoPago,
+          requiereCuenta ? values.cuentaBancariaId || null : null,
+          values.referencia ?? "",
+          values.notas ?? "",
+          values.embarqueId ?? null,
+        ]),
+      ),
     });
     requestId.reset();
     handleOpenChange(false);
