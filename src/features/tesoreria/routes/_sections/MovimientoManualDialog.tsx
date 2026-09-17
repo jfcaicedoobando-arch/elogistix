@@ -107,7 +107,8 @@ export function MovimientoManualDialog({
           min={fechaCorte ?? undefined}
           max={hoyNegocio}
         />
-        {erroresManual.fecha && manualForm.fecha && (
+        {/* MNY P2.5: el error de fecha también se muestra si está vacía. */}
+        {erroresManual.fecha && (
           <p id="mov-fecha-error" className="mt-1 text-body-sm text-destructive">
             {erroresManual.fecha}
           </p>
