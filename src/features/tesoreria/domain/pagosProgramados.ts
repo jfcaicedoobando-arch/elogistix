@@ -17,7 +17,19 @@ export interface FacturaProgramable {
   moneda: string;
   total: number;
   saldo: number;
+  /**
+   * MNY-P2.5: el trigger `pagos_proveedor_requiere_aprobacion` rechaza pagar
+   * una factura no aprobada; la bandeja necesita el dato para no ofrecer una
+   * acción que siempre falla.
+   */
+  estado_aprobacion?: string | null;
 }
+
+/** MNY-P2.5: sólo una factura aprobada puede ejecutarse como pago. */
+export function puedeEjecutarPago(f: FacturaProgramable): boolean {
+  return (f.estado_aprobacion ?? "").trim().toLowerCase() === "aprobada";
+}
+
 
 export interface SemanaPagosProgramados {
   semanaKey: string;
