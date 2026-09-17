@@ -67,7 +67,4 @@ function monedaDelParContraMxn(
   return monedaFactura ?? null;
 }
 
-  };
-}
-
 
