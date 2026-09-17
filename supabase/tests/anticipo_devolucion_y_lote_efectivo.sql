@@ -59,7 +59,7 @@ BEGIN
     estado, estado_aprobacion, fecha_emision
   ) VALUES (
     'eb000000-0000-0000-0000-00000000000b', v_org, v_prov, 'Test Prov E', 'MNY-P12-01',
-    v_cat, 'MXN'::public.moneda, 500, 0, 500, 'Aprobada', 'aprobada',
+    v_cat, 'MXN'::public.moneda, 500, 0, 500, 'Vigente', 'aprobada',
     public.fecha_negocio_mx() - 5
   ) ON CONFLICT (id) DO NOTHING;
 
