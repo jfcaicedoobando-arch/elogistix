@@ -182,19 +182,22 @@ async function candidatosCxc(v: Ventana): Promise<SugerenciasResultado> {
 }
 
 
-export async function sugerirCandidatos(
+/**
+ * Sugerencias con metadatos. La auto-conciliación usa esta variante porque
+ * necesita saber si la lista quedó recortada (ambigüedad no comprobada).
+ */
+export async function sugerirCandidatosDetalle(
   mov: MovimientoBBVA,
   monedaCuenta?: string,
-): Promise<Candidato[]> {
+): Promise<SugerenciasResultado> {
   const cargo = Number(mov.cargo);
   const monto = cargo > 0 ? cargo : Number(mov.abono);
-  if (monto <= 0) return [];
+  if (monto <= 0) return { candidatos: [], truncado: false };
   // FIN-NEW-03: sin moneda confirmada no hay sugerencias (fail-closed).
   const moneda: MonedaSoportada | null = monedaCuenta
     ? monedaConocida(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
-  if (!moneda) return [];
-
+  if (!moneda) return { candidatos: [], truncado: false };
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const ventana: Ventana = {
@@ -207,7 +210,17 @@ export async function sugerirCandidatos(
     fechaMov: mov.fecha,
   };
 
-  const candidatos = cargo > 0 ? await candidatosCxp(ventana) : await candidatosCxc(ventana);
+  const { candidatos, truncado } =
+    cargo > 0 ? await candidatosCxp(ventana) : await candidatosCxc(ventana);
   candidatos.sort((a, b) => (a.delta_monto - b.delta_monto) || (a.delta_dias - b.delta_dias));
+  return { candidatos: candidatos.slice(0, LIMITE_SUGERENCIAS), truncado };
+}
+
+export async function sugerirCandidatos(
+  mov: MovimientoBBVA,
+  monedaCuenta?: string,
+): Promise<Candidato[]> {
+  const { candidatos } = await sugerirCandidatosDetalle(mov, monedaCuenta);
   return candidatos;
 }
+
