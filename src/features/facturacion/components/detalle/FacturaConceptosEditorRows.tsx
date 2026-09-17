@@ -142,6 +142,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
             <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
             <SelectItem value="tasa_0">{TIPO_IVA_LABEL.tasa_0}</SelectItem>
             <SelectItem value="exento">{TIPO_IVA_LABEL.exento}</SelectItem>
+            <SelectItem value="no_objeto">{TIPO_IVA_LABEL.no_objeto}</SelectItem>
           </SelectContent>
         </Select>
       </div>
