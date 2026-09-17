@@ -39,6 +39,22 @@ export function esCostoAutoGenerado(fila: FilaConNota): boolean {
   return esCostoAutoTarifa(fila) || esCostoAutoFleteLcl(fila);
 }
 
+/** Prefijo que marca una fila automática que el usuario ya ajustó a mano. */
+export const NOTA_EDITADA_A_MANO = "Editado a mano";
+
+/**
+ * El Paso 2 anuncia "Puedes editar, agregar o eliminar conceptos". Si el
+ * usuario cambia importes/proveedor/cantidad de una fila auto-generada, esa
+ * fila deja de ser automática: se le quita la marca para que el detector de
+ * desajuste (Q2/Q6) no la compare contra el Paso 1 ni la reemplace al
+ * recalcular. Sin la marca no hay bloqueo del botón "Siguiente" ni pérdida de
+ * lo capturado.
+ */
+export function marcarEditadaAMano<T extends { notas?: string }>(fila: T): T {
+  if (!esCostoAutoGenerado(fila as FilaConNota)) return fila;
+  return { ...fila, notas: `${NOTA_EDITADA_A_MANO} — ${(fila.notas ?? "").trim()}` };
+}
+
 /** Filas sin las auto-generadas desde tarifa (conserva manuales y LCL). */
 export function sinCostosAutoTarifa<T extends FilaConNota>(filas: T[]): T[] {
   return filas.filter((f) => !esCostoAutoTarifa(f));
