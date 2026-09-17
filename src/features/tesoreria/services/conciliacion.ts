@@ -120,6 +120,8 @@ export async function importarMovimientos(
     for (const e of existentes) vistos.add(e.hash_dedupe);
   }
   const nuevosPayload = payload.filter((p) => !vistos.has(p.hash_dedupe as string));
+  // Duplicados REALES: los que ya existían vivos en la cuenta.
+  const duplicadosExistentes = payload.length - nuevosPayload.length;
   let nuevos = 0;
   for (const trozo of trocear(nuevosPayload)) {
     const { data, error } = await supabase
@@ -129,17 +131,19 @@ export async function importarMovimientos(
     if (error) {
       // MNY: éxito parcial explícito. Se deja constancia en bitácora de lo que
       // sí quedó guardado antes de propagar el error con los conteos.
+      const faltantes = nuevosPayload.length - nuevos;
       await bitacoraImportarMovimientos(
-        cuentaBancariaId, movimientos.length, nuevos, movimientos.length - nuevos,
+        cuentaBancariaId, movimientos.length, nuevos, duplicadosExistentes, faltantes,
       );
-      throw new ImportacionParcialError(nuevos, nuevosPayload.length - nuevos, error);
+      throw new ImportacionParcialError(nuevos, faltantes, error);
     }
     nuevos += (data ?? []).length;
   }
 
-  const duplicados = movimientos.length - nuevos;
-  await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);
-  return { total: movimientos.length, nuevos, duplicados };
+  await bitacoraImportarMovimientos(
+    cuentaBancariaId, movimientos.length, nuevos, duplicadosExistentes, 0,
+  );
+  return { total: movimientos.length, nuevos, duplicados: duplicadosExistentes };
 }
 
 export interface FiltrosMovimientos {

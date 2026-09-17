@@ -9,12 +9,17 @@ export async function bitacoraImportarMovimientos(
   total: number,
   nuevos: number,
   duplicados: number,
+  /**
+   * MNY: filas que NO se guardaron por un fallo a media importación. Antes se
+   * sumaban a `duplicados` y la bitácora reportaba duplicados inexistentes.
+   */
+  faltantes = 0,
 ): Promise<void> {
   await registrarActividad({
     modulo: "tesoreria",
     accion: "Importó movimientos bancarios",
     entidadId: cuentaBancariaId,
-    detalles: { total, nuevos, duplicados },
+    detalles: { total, nuevos, duplicados, faltantes },
   });
 }
 
