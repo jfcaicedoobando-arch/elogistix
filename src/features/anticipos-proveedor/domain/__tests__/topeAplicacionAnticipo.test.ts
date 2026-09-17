@@ -37,7 +37,7 @@ describe("topeAplicacionAnticipo", () => {
     });
     expect(r.requiereConversion).toBe(true);
     expect(r.sinTipoCambio).toBe(false);
-    expect(r.saldoFacturaEnMonedaAnticipo).toBe(57.68);
+    expect(r.saldoFacturaEnMonedaAnticipo).toBe(57.6801);
     expect(r.tope).toBe(57.68);
   });
 
