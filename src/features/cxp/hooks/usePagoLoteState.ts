@@ -113,6 +113,13 @@ export function usePagoLoteState(a: Args) {
     );
   };
 
+  // MNY P1.2: al pasar a Efectivo se limpia la cuenta seleccionada; nunca se
+  // envía una cuenta obsoleta que generaría un cargo bancario inexistente.
+  const cambiarMetodo = (v: string) => {
+    setMetodo(v);
+    if (v === "Efectivo") setCuentaId("");
+  };
+
   const submit = async () => {
     if (error) return;
     try {
@@ -122,7 +129,7 @@ export function usePagoLoteState(a: Args) {
         moneda: a.moneda,
         metodo_pago: metodo,
         referencia,
-        cuenta_bancaria_id: cuentaId || null,
+        cuenta_bancaria_id: requiereCuenta ? cuentaId || null : null,
         tipo_cambio_usd: tcAplicable,
         notas,
         // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
@@ -142,10 +149,11 @@ export function usePagoLoteState(a: Args) {
   };
 
   return {
-    fecha, setFecha, total, metodo, setMetodo, referencia, setReferencia,
+    fecha, setFecha, total, metodo, setMetodo: cambiarMetodo, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
     saldoTotal, tcDof, tcAplicable, tcBloqueado, cuentasMoneda, requiereCuenta,
     error, sinAsignar, totalRepartido, recalcular, setMonto, submit,
+
     guardando: registrar.isPending,
   };
 }
