@@ -14,10 +14,21 @@ import {
   TIPO_PAGO_DETALLE_LABELS, esDineroRecibido,
   type MovimientoConciliado, type PagoDetalleEncabezado,
 } from "@/features/tesoreria/domain/pagoDetalle";
-import {
-  MovimientoAusente, monedaDelMovimiento,
-} from "@/features/tesoreria/components/DetallePagoSheet.movimiento";
+import { MovimientoAusente } from "@/features/tesoreria/components/DetallePagoSheet.movimiento";
 
+/**
+ * El banco guarda el importe en la moneda de la cuenta; sólo la conocemos con
+ * certeza cuando el movimiento y el pago comparten cuenta bancaria.
+ */
+function monedaDelMovimiento(
+  movimiento: MovimientoConciliado,
+  cuentaBancariaPagoId: string | null,
+  monedaCuentaPago: string | null,
+): string {
+  const mismaCuenta =
+    !!movimiento.cuenta_bancaria_id && movimiento.cuenta_bancaria_id === cuentaBancariaPagoId;
+  return mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
+}
 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
