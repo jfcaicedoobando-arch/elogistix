@@ -178,7 +178,7 @@ export async function listarMovimientos(f: FiltrosMovimientos): Promise<Movimien
   return assertNotTruncated(filas, LIMITE_MOVIMIENTOS, "tesoreria.listarMovimientos");
 }
 
-export { sugerirCandidatos,  } from "./sugerirCandidatos";
+export { sugerirCandidatos, sugerirCandidatosDetalle } from "./sugerirCandidatos";
 
 export { MovimientoVinculoError } from "./conciliacionErrors";
 

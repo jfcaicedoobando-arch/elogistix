@@ -63,6 +63,8 @@ export function EstadoIgnorado({
 
 interface ListaCandidatosProps {
   candidatos: readonly Candidato[];
+  /** MNY-P2.6: `true` = la búsqueda quedó recortada, puede haber más pagos. */
+  truncado?: boolean;
   isLoading: boolean;
   isPending: boolean;
   onConciliar: (tipo: "cxc" | "cxp", pagoId: string) => void;
@@ -71,6 +73,7 @@ interface ListaCandidatosProps {
 
 export function ListaCandidatos({
   candidatos,
+  truncado = false,
   isLoading,
   isPending,
   onConciliar,
@@ -85,7 +88,14 @@ export function ListaCandidatos({
         {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : null}
         {!isLoading && candidatos.length === 0 ? (
           <p className="text-body-sm text-muted-foreground">
-            Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento.
+            {truncado
+              ? "La búsqueda se detuvo antes de revisar todos los pagos: puede haber coincidencias que no se alcanzaron a leer. Acota la fecha o busca el pago desde CxC/CxP."
+              : "Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento."}
+          </p>
+        ) : null}
+        {!isLoading && truncado && candidatos.length > 0 ? (
+          <p className="text-body-sm text-muted-foreground mb-2">
+            Lista recortada: pueden existir más coincidencias además de las mostradas.
           </p>
         ) : null}
         {!isLoading && candidatos.length > 0 ? (

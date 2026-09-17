@@ -10,6 +10,7 @@ import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDescon
 import { esMovimientoManual } from "@/features/tesoreria/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
+import type { SugerenciasResultado } from "@/features/tesoreria/services/sugerirCandidatos";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
@@ -25,9 +26,15 @@ interface Props {
   moneda?: string;
 }
 
+/** MNY-P2.6: valores por omisión de las sugerencias (lista + señal `truncado`). */
+function desempacarSugerencias(s: SugerenciasResultado | undefined) {
+  return { candidatos: s?.candidatos ?? [], truncado: s?.truncado ?? false };
+}
+
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
-  const { data: candidatos = [], isLoading } = useSugerirCandidatos(movimiento);
+  const { data: sugerencias, isLoading } = useSugerirCandidatos(movimiento);
+  const { candidatos, truncado } = desempacarSugerencias(sugerencias);
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
   const desconciliar = useDesconciliar();
@@ -106,6 +113,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
         ) : (
           <ListaCandidatos
             candidatos={candidatos}
+            truncado={truncado}
             isLoading={isLoading}
             isPending={conciliar.isPending}
             onConciliar={onConciliar}
