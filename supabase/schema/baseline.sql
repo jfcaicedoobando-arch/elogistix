@@ -35708,7 +35708,6 @@ GRANT ALL ON FUNCTION public.guard_nc_cliente_moneda_convertible() TO service_ro
 GRANT ALL ON FUNCTION public.guard_nc_cliente_transicion() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_nc_cliente_transicion() TO service_role;
 REVOKE ALL ON FUNCTION public.guard_pago_proveedor() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.guard_pago_proveedor() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_pago_proveedor() TO service_role;
 REVOKE ALL ON FUNCTION public.guard_proveedor_factura_total() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_proveedor_factura_total() TO authenticated;
