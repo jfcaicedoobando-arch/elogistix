@@ -7,7 +7,7 @@ import { render, screen } from "@testing-library/react";
 import { FlujoFacturacionStepper } from "../facturacion/FlujoFacturacionStepper";
 
 describe("FlujoFacturacionStepper · detalle completo", () => {
-  it("muestra el texto íntegro y sin truncate", () => {
+  it("muestra el texto íntegro, sin truncate y sin atributo title nativo", () => {
     render(
       <FlujoFacturacionStepper
         conceptosCount={10}
@@ -22,5 +22,6 @@ describe("FlujoFacturacionStepper · detalle completo", () => {
     const detalle = screen.getByText("6 generadas · 2 sin emitir");
     expect(detalle).toBeInTheDocument();
     expect(detalle.className).not.toContain("truncate");
+    expect(detalle).not.toHaveAttribute("title");
   });
 });
