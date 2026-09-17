@@ -154,7 +154,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
           ? [{ type: "IVA", rate: 0, factor: "Exento" }]
           : [{
               type: "IVA",
-              rate: tipo === "tasa_0" ? 0 : (tipo === "gravado_8" ? 0.08 : (c.tasa_iva ?? 0.16)),
+              rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? (tipo === "gravado_8" ? 0.08 : 0.16)),
               factor: "Tasa",
             }];
       // Ola 3 — retenciones por concepto (withholding: true).
