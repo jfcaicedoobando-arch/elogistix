@@ -23,12 +23,24 @@ export interface ConceptoRow {
   embarque_expediente?: string | null;
 }
 
+const IVA_CELL_LABEL: Record<TipoIvaConcepto, string> = {
+  gravado_16: "16%",
+  gravado_8: "8%",
+  tasa_0: "0%",
+  exento: "Exento",
+  no_objeto: "No objeto",
+};
+
 export function IvaCell({ tipo }: { tipo: TipoIvaConcepto | null }) {
   if (!tipo) return <span className="text-muted-foreground">—</span>;
-  const label = tipo === "gravado_16" ? "16%" : tipo === "tasa_0" ? "0%" : "Exento";
+  const gravado = tipo === "gravado_16" || tipo === "gravado_8";
   const variant: "default" | "secondary" | "outline" =
-    tipo === "gravado_16" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
-  return <Badge variant={variant}>{label}</Badge>;
+    gravado ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
+  return (
+    <Badge variant={variant} aria-label={tipo === "no_objeto" ? "No objeto de impuesto (SAT 01)" : undefined}>
+      {IVA_CELL_LABEL[tipo]}
+    </Badge>
+  );
 }
 
 interface ViewProps {
