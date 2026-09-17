@@ -58,8 +58,6 @@ export default function AnticiposProveedor() {
       }),
     [canEditFinance],
   );
-
-
   if (isLoading) return <PageSkeleton />;
 
   return (
@@ -142,7 +140,6 @@ export default function AnticiposProveedor() {
           {/* MNY P2.9: un fallo de carga sin caché no debe verse como "no hay
               anticipos": la tabla muestra el error con reintento. */}
           {data.length === 0 && !isError ? (
-
             <EmptyState
               icon={Inbox}
               title="No hay anticipos"
@@ -194,7 +191,6 @@ export default function AnticiposProveedor() {
         onOpenChange={(o) => !o && setAnticipoParaVincular(null)}
         anticipo={anticipoParaVincular}
       />
-
     </PageContainer>
   );
 }
