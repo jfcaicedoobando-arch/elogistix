@@ -107,6 +107,7 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     error,
     tcSugerido,
     tcEsManual,
+    fechaInicial,
     fechaTcDof: tcDof?.fecha ?? null,
   };
 }
