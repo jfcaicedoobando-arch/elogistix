@@ -123,7 +123,7 @@ Deno.test("buildFacturapiPayload manda taxability 01 y sin IVA cuando tipo_iva=n
     conceptos: [{ ...baseCtx.conceptos[0], tipo_iva: "no_objeto", tasa_iva: null }],
   };
   const p = buildFacturapiPayload(ctx);
-  assertEquals(p.items[0].taxability, "01");
+  assertEquals(p.items[0].product.taxability, "01");
   assertEquals(p.items[0].product.taxes.length, 0);
 });
 
