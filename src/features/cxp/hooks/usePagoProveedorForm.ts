@@ -38,8 +38,9 @@ export function usePagoProveedorForm(
   const {
     fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
     metodo, setMetodo, referencia, setReferencia, notas, setNotas,
-    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId,
+    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId, valoresIniciales,
   } = usePagoProveedorCampos(factura, open, today, pagoEditar);
+
 
   // R6-N1: cuenta bancaria de donde sale el pago (genera el movimiento bancario).
   const { data: cuentas = [] } = useCuentasBancarias(true);
@@ -152,7 +153,19 @@ export function usePagoProveedorForm(
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,
     impacto, cargandoSaldoProveedor,
     tcDof, cargandoTcDof, aplicarTcDof,
+    soportaDiferenciaCambiaria,
+    /** MNY: valores con los que abrió el formulario (baseline de "sin cambios"). */
+    valoresIniciales,
+    /**
+     * MNY: cuenta que se envía a la RPC. En efectivo es `null` para que la base
+     * no derive un cargo bancario.
+     */
+    cuentaBancariaIdEnvio: requiereCuenta ? cuentaId || null : null,
+    /** MNY: diferencia cambiaria sólo cuando el par USD/MXN la soporta. */
+    diferenciaCambiariaEnvio:
+      soportaDiferenciaCambiaria && diffMxn !== "" ? Number(diffMxn) : null,
   };
+
 
 }
 
