@@ -159,8 +159,17 @@ describe("buildPaso1Data — moneda del encabezado (VF 13.823.198)", () => {
     expect(monedaDeImportes(conUSD, [])).toBe("USD");
     expect(monedaDeImportes(conUSD, conMXN)).toBeUndefined();
     expect(monedaDeImportes([], [])).toBeUndefined();
+    // CRM-P1.2: un costo interno SIN precio de venta no define la moneda del
+    // encabezado comercial (antes un costo USD volvía USD una oportunidad MXN).
     expect(
       monedaDeImportes([], [], [{ moneda: "MXN", cantidad: 1, costo_unitario: 10 }]),
+    ).toBeUndefined();
+    expect(
+      monedaDeImportes([], [], [{ moneda: "USD", cantidad: 1, costo_unitario: 1200 }]),
+    ).toBeUndefined();
+    // Con precio de VENTA capturado sí cuenta: es un importe comercial.
+    expect(
+      monedaDeImportes([], [], [{ moneda: "MXN", precio_venta: 500 }]),
     ).toBe("MXN");
   });
 });

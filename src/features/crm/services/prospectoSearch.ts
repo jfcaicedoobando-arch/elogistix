@@ -33,6 +33,9 @@ export interface ProspectoMatch {
   destino?: string | null;
   /** Bug 1: moneda registrada en la oportunidad (la RPC exige que coincida). */
   moneda?: string | null;
+  /** CRM-P2.6: perfil ICP capturado en el lead (sólo valores reales). */
+  icpIncoterm?: string | null;
+  icpFrecuencia?: string | null;
 }
 
 type LeadEmbed = {
@@ -41,6 +44,8 @@ type LeadEmbed = {
   contacto: string | null;
   email: string | null;
   telefono: string | null;
+  incoterm: string | null;
+  frecuencia: string | null;
 };
 
 type OpHit = {
@@ -57,7 +62,7 @@ type OpHit = {
 };
 
 const OP_SELECT =
-  "id, nombre, lead_id, cliente_nombre, moneda, modo, origen, destino, etapa:crm_etapas_pipeline!etapa_id!inner(nombre, tipo, activa), lead:crm_leads!lead_id!inner(estado, empresa, contacto, email, telefono)";
+  "id, nombre, lead_id, cliente_nombre, moneda, modo, origen, destino, etapa:crm_etapas_pipeline!etapa_id!inner(nombre, tipo, activa), lead:crm_leads!lead_id!inner(estado, empresa, contacto, email, telefono, incoterm, frecuencia)";
 
 /** Consulta base de oportunidades elegibles (sin el filtro de texto). */
 function opsQueryBase() {
@@ -93,6 +98,8 @@ function mapOportunidad(o: OpHit): ProspectoMatch {
     modo: o.modo,
     origen: o.origen,
     destino: o.destino,
+    icpIncoterm: lead?.incoterm ?? null,
+    icpFrecuencia: lead?.frecuencia ?? null,
   };
 }
 

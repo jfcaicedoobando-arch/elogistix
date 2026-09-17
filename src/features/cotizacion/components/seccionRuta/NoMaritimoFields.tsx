@@ -13,6 +13,7 @@ import { TransitoField } from "./TarifaFields";
 import SeguroBlock from "./SeguroBlock";
 import type { TarifaCtx } from "./overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import { FRECUENCIAS_COTIZACION } from "@/features/cotizacion/domain/frecuencias";
 
 interface Props {
   ctx: UseFormReturn<CotizacionFormValues>;
@@ -39,11 +40,9 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
         <Select value={watch("frecuencia")} onValueChange={v => setValue("frecuencia", v)}>
           <SelectTrigger><SelectValue placeholder="Seleccionar frecuencia" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="Diaria">Diaria</SelectItem>
-            <SelectItem value="Semanal">Semanal</SelectItem>
-            <SelectItem value="Quincenal">Quincenal</SelectItem>
-            <SelectItem value="Mensual">Mensual</SelectItem>
-            <SelectItem value="Bajo demanda">Bajo demanda</SelectItem>
+            {FRECUENCIAS_COTIZACION.map((f) => (
+              <SelectItem key={f} value={f}>{f}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </FormField>

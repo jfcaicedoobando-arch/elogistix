@@ -73,12 +73,17 @@ export function monedaDeImportes(
   conceptosMXN: ConceptoImporteLike[],
   costosInternos: (CostoImporteLike & { moneda?: string | null })[] = [],
 ): "USD" | "MXN" | undefined {
+  // CRM-P1.2: sólo los importes COMERCIALES definen la moneda del encabezado.
+  // Un costo interno (tarifa del proveedor) en USD no debe convertir en USD el
+  // encabezado de una oportunidad en MXN: eso rompía el vínculo CRM por
+  // "monedas distintas" y dejaba borradores huérfanos. El costo conserva su
+  // propia moneda; aquí sólo cuenta el precio de venta capturado.
   const hayUSD =
     conceptosUSD.some(conceptoTieneContenido) ||
-    costosInternos.some((c) => c.moneda === "USD" && costoTieneContenido(c));
+    costosInternos.some((c) => c.moneda === "USD" && num(c.precio_venta) !== 0);
   const hayMXN =
     conceptosMXN.some(conceptoTieneContenido) ||
-    costosInternos.some((c) => c.moneda === "MXN" && costoTieneContenido(c));
+    costosInternos.some((c) => c.moneda === "MXN" && num(c.precio_venta) !== 0);
   if (hayUSD && !hayMXN) return "USD";
   if (hayMXN && !hayUSD) return "MXN";
   return undefined;

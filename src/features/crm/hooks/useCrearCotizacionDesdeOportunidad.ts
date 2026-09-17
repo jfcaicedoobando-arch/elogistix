@@ -26,7 +26,15 @@ export function useCrearCotizacionDesdeOportunidad() {
   return useMutation({
     mutationFn: async (input: UseCrearCotizacionDesdeOpInput) => {
       const folio = await generarFolioCotizacion();
-      const modo = mapModoCrmACotizacion(input.oportunidad.modo) ?? "Marítimo";
+      // CRM-P1.3: nunca asumir "Marítimo". Si el CRM trae un valor que no es
+      // un modo reconocible (p. ej. "FCL"), se pide selección explícita en el
+      // cotizador en vez de clasificar mal la operación.
+      const modo = mapModoCrmACotizacion(input.oportunidad.modo);
+      if (!modo) {
+        throw new Error(
+          `El modo de transporte de la oportunidad ("${input.oportunidad.modo || "sin capturar"}") no corresponde a Marítimo, Aéreo, Terrestre ni Multimodal. Corrígelo en la oportunidad o crea la cotización eligiendo el modo.`,
+        );
+      }
       const cot = await insertCotizacionDesdeOportunidad({
         folio,
         modo,

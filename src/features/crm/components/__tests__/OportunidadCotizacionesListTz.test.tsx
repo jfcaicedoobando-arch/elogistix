@@ -16,7 +16,7 @@ vi.mock("@/features/crm/hooks", () => ({
 // 2026-09-05 03:30 UTC = 2026-09-04 21:30 en CDMX.
 const AHORA = new Date("2026-09-05T03:30:00Z");
 
-function renderLista(createdAt: string) {
+function renderLista(fechaEnvio: string | null, createdAt = "2026-01-01T00:00:00Z") {
   mocks.cotizaciones.mockReturnValue({
     data: [
       {
@@ -26,6 +26,7 @@ function renderLista(createdAt: string) {
         total: 1000,
         moneda: "MXN",
         created_at: createdAt,
+        fecha_envio: fechaEnvio,
       },
     ],
     isLoading: false,
@@ -54,6 +55,20 @@ describe("OportunidadCotizacionesList · días sin respuesta (CDMX)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(AHORA);
     renderLista("2026-08-30T18:00:00Z");
+    expect(screen.queryByText(/Sin respuesta/)).toBeNull();
+  });
+  it("CRM-P2.4: un borrador antiguo enviado hoy no muestra la etiqueta", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    // Creada hace meses, pero enviada el mismo día de negocio CDMX.
+    renderLista("2026-09-04T20:00:00Z", "2026-05-01T18:00:00Z");
+    expect(screen.queryByText(/Sin respuesta/)).toBeNull();
+  });
+
+  it("CRM-P2.4: sin fecha de envío no se inventan días", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    renderLista(null, "2026-05-01T18:00:00Z");
     expect(screen.queryByText(/Sin respuesta/)).toBeNull();
   });
 });

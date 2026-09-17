@@ -51,9 +51,12 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
             </TableHeader>
             <TableBody>
               {data.map((c) => {
+                // CRM-P2.4: los días sin respuesta se cuentan desde el ENVÍO
+                // real, no desde la creación del borrador. Sin `fecha_envio` no
+                // se puede afirmar cuántos días lleva esperando: no hay badge.
                 const diasEnviada =
-                  c.estado === "Enviada"
-                    ? (diffDiasMx(c.created_at, new Date()) ?? 0)
+                  c.estado === "Enviada" && c.fecha_envio
+                    ? (diffDiasMx(c.fecha_envio, new Date()) ?? 0)
                     : 0;
                 return (
                   <TableRow

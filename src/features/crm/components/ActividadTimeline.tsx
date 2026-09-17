@@ -31,7 +31,12 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
   // Espejo de las policies de `crm_actividades`: sin capacidad no se muestra
   // el alta ni el botón de completar (antes terminaban en RLS 42501).
   const { canCrearActividad, canGestionarActividad } = usePermissions();
-  const { data, isError, refetch } = useActividades({ entidadTipo, entidadId, estado: "todas", pageSize: 100 });
+  const { data, isError, refetch } = useActividades({
+    entidadTipo, entidadId, estado: "todas", pageSize: 100,
+    // CRM-P2.7: la tarjeta muestra la fecha de creación; el orden debe ser el
+    // mismo (más recientes arriba) para que la cronología sea coherente.
+    sortKey: "created_at", sortDir: "desc",
+  });
   const crear = useCrearActividad();
   const completar = useCompletarActividad();
   const [tipo, setTipo] = useState<CrmActividadTipo>("nota");
