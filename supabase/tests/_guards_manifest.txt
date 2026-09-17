@@ -151,3 +151,4 @@ supabase/tests/pfc_lectura_operativa_embarque.sql
 supabase/tests/anticipos_efectivo_fechas_y_cruce_dof.sql
 supabase/tests/anticipo_devolucion_y_lote_efectivo.sql
 supabase/tests/pago_proveedor_contador_lock_cuenta.sql
+supabase/tests/tolerancia_conciliacion_por_moneda.sql
