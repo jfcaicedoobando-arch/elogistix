@@ -16,6 +16,21 @@ export function facturaSaldoInput(f: FacturaCxP) {
   };
 }
 
+/**
+ * MNY: la diferencia cambiaria sólo se calcula y persiste en la base para el
+ * par USD/MXN (`guard_pago_proveedor`). Para EUR el campo se oculta en vez de
+ * aceptar un valor que el servidor descartaría (quedaba en NULL).
+ */
+export function soportaDiferenciaCambiariaPar(
+  monedaFactura: string | null | undefined,
+  monedaPago: string,
+): boolean {
+  return (
+    (monedaPago === "MXN" && monedaFactura === "USD") ||
+    (monedaPago === "USD" && monedaFactura === "MXN")
+  );
+}
+
 /** Banderas derivadas de la moneda del pago vs la de la factura. */
 export function banderasMonedaPago(args: {
   factura: FacturaCxP | null;
@@ -31,12 +46,7 @@ export function banderasMonedaPago(args: {
   // MNY-NEW-09: cruce USD↔EUR sin conversión canónica → se bloquea explícito.
   const cruceNoSoportado = cruceMonedasNoSoportado(factura?.moneda ?? null, moneda);
   const bloqueadoPorTc = (esUsdPagadoEnMxn || (monedaFacturaExtranjera === false && moneda !== "MXN")) && !tcNum;
-  // MNY: la diferencia cambiaria sólo se calcula y persiste en la base para el
-  // par USD/MXN (`guard_pago_proveedor`). Para EUR el campo se oculta en vez de
-  // aceptar un valor que el servidor descartaría (quedaba en NULL).
-  const soportaDiferenciaCambiaria =
-    (moneda === "MXN" && factura?.moneda === "USD") ||
-    (moneda === "USD" && factura?.moneda === "MXN");
+  const soportaDiferenciaCambiaria = soportaDiferenciaCambiariaPar(factura?.moneda, moneda);
   return {
     montoNum, monedaFacturaExtranjera, esUsdPagadoEnMxn,
     showTc: showTc && !cruceNoSoportado,
@@ -47,4 +57,5 @@ export function banderasMonedaPago(args: {
     monedaDelPar: moneda !== "MXN" ? moneda : factura?.moneda ?? null,
   };
 }
+
 
