@@ -24,6 +24,8 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useAplicarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { parseMonto } from "@/lib/format/parseMonto";
+import { calcularTopeAplicable } from "@/features/anticipos-proveedor/domain/topeAplicacionAnticipo";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks";
 import {
   AplicarAnticipoResumen,
   type ImportesFactura,
@@ -65,7 +67,23 @@ export function AplicarAnticipoDesdeFacturaDialog({
     [anticiposOrdenados, anticipoId],
   );
 
-  // Al abrir (o cambiar de anticipo) sugiere el menor entre saldo a favor y saldo de factura.
+  // MNY P1.3: el monto se captura en la moneda del ANTICIPO. El tope se calcula
+  // convirtiendo el saldo de la factura con el DOF de la fecha de aplicación
+  // (misma paridad que usa el servidor); sin paridad no se sugiere ni se acepta.
+  const { data: tcDof } = useTcDofPorFecha(fecha);
+  const tope = useMemo(
+    () =>
+      calcularTopeAplicable({
+        disponible: anticipo?.disponible ?? 0,
+        monedaAnticipo: anticipo?.moneda ?? importes.moneda,
+        saldoFactura,
+        monedaFactura: importes.moneda,
+        tc: tcDof ?? null,
+      }),
+    [anticipo, importes.moneda, saldoFactura, tcDof],
+  );
+
+  // Al abrir (o cambiar de anticipo) sugiere el máximo aplicable convertido.
   useEffect(() => {
     if (!open) return;
     if (!anticipoId && anticiposOrdenados.length > 0) {
@@ -73,10 +91,10 @@ export function AplicarAnticipoDesdeFacturaDialog({
       return;
     }
     if (anticipo) {
-      const sugerido = Math.min(anticipo.disponible, saldoFactura);
+      const sugerido = tope.tope ?? 0;
       setMonto(sugerido > 0 ? sugerido.toFixed(2) : "0");
     }
-  }, [open, anticipoId, anticipo, anticiposOrdenados, saldoFactura]);
+  }, [open, anticipoId, anticipo, anticiposOrdenados, tope.tope]);
 
   const handleOpenChange = (o: boolean) => {
     if (!o) { setAnticipoId(""); setMonto("0"); setFecha(todayLocalISO()); }
@@ -113,6 +131,22 @@ export function AplicarAnticipoDesdeFacturaDialog({
         title: "Excede el saldo a favor",
         description: `El anticipo sólo tiene ${formatCurrency(anticipo.disponible, anticipo.moneda)} disponibles.`,
         method: "ANTICIPO_APLICAR_FACTURA_TOPE",
+      });
+      return;
+    }
+    if (tope.tope === null) {
+      notifyError(undefined, {
+        title: "Falta el tipo de cambio",
+        description: `No hay tipo de cambio oficial del ${fecha} para convertir el saldo de la factura (${importes.moneda}) a ${anticipo.moneda}. Captúralo en Catálogos → Tipos de cambio.`,
+        method: "ANTICIPO_APLICAR_FACTURA_SIN_TC",
+      });
+      return;
+    }
+    if (montoNum > tope.tope + 0.01) {
+      notifyError(undefined, {
+        title: "Excede el saldo de la factura",
+        description: `Con el tipo de cambio del ${fecha} puedes aplicar hasta ${formatCurrency(tope.tope, anticipo.moneda)}.`,
+        method: "ANTICIPO_APLICAR_FACTURA_SALDO",
       });
       return;
     }
@@ -172,7 +206,9 @@ export function AplicarAnticipoDesdeFacturaDialog({
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="apl-monto-f">Monto a aplicar (sobre el saldo por pagar)</Label>
+          <Label htmlFor="apl-monto-f">
+            Monto a aplicar en {anticipo?.moneda ?? importes.moneda} (moneda del anticipo)
+          </Label>
           <Input
             id="apl-monto-f"
             type="number"
@@ -181,6 +217,13 @@ export function AplicarAnticipoDesdeFacturaDialog({
             value={monto}
             onChange={(e) => setMonto(e.target.value)}
           />
+          {anticipo && tope.requiereConversion && (
+            <p className="text-xs text-muted-foreground">
+              {tope.sinTipoCambio
+                ? `Sin tipo de cambio oficial del ${fecha} no se puede convertir el saldo de la factura (${importes.moneda}).`
+                : `Máximo aplicable con el tipo de cambio del ${fecha}: ${formatCurrency(tope.tope ?? 0, anticipo.moneda)}.`}
+            </p>
+          )}
         </div>
         {desajuste.hayDesajuste && (
           <div className="md:col-span-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
