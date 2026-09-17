@@ -193,11 +193,36 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
-    -- N5: el anticipo a proveedor es salida de dinero.
-    IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un anticipo a proveedor sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
-        USING ERRCODE = 'P0001';
+    -- MNY P1.1 (lote anticipos): la DEVOLUCIÓN de un anticipo sí es un abono
+    -- (el proveedor regresa el dinero). Se acepta sólo como devolución genuina:
+    -- anticipo en estado `devuelto`, hash de devolución esperado y abono igual
+    -- al monto_devuelto. El anticipo ORIGINAL sigue exigiendo cargo.
+    v_es_devolucion := NEW.hash_dedupe = 'devolucion-' || NEW.anticipo_proveedor_id::text;
+
+    IF v_es_devolucion THEN
+      IF v_ant_estado IS DISTINCT FROM 'devuelto' THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_ANTICIPO_DEVOLUCION_INVALIDA: el anticipo % no está devuelto; un abono sólo procede como devolución registrada', NEW.anticipo_proveedor_id
+          USING ERRCODE = 'P0001';
+      END IF;
+
+      IF COALESCE(NEW.abono, 0) <= 0 OR COALESCE(NEW.cargo, 0) <> 0 THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_DEVOLUCION: la devolución de un anticipo sólo puede vincularse a un depósito (abono) en la cuenta, no a un cargo'
+          USING ERRCODE = 'P0001';
+      END IF;
+
+      IF abs(COALESCE(NEW.abono, 0) - v_ant_devuelto) > c_tol THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el depósito por % no coincide con el monto devuelto del anticipo % (tolerancia %)',
+          COALESCE(NEW.abono, 0), v_ant_devuelto, c_tol
+          USING ERRCODE = 'P0001';
+      END IF;
+    ELSE
+      -- N5: el anticipo a proveedor es salida de dinero.
+      IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_SENTIDO_PAGO: un anticipo a proveedor sólo puede vincularse a un retiro (cargo) de la cuenta, no a un abono'
+          USING ERRCODE = 'P0001';
+      END IF;
     END IF;
+
   END IF;
 
   RETURN NEW;
