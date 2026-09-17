@@ -4055,6 +4055,23 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._lock_cuenta_bancaria(p_cuenta_id uuid) RETURNS TABLE(org_id uuid, moneda_txt text, esta_activa boolean)
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF p_cuenta_id IS NULL THEN
+    RETURN;
+  END IF;
+  RETURN QUERY
+    SELECT cb.organization_id, cb.moneda::text, cb.activa
+      FROM public.cuentas_bancarias cb
+     WHERE cb.id = p_cuenta_id
+       AND cb.deleted_at IS NULL
+     FOR UPDATE;
+END;
+$$;
 CREATE FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb DEFAULT '{}'::jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -26516,20 +26533,22 @@ BEGIN
       RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', true);
     END IF;
   END IF;
+
   SELECT organization_id, fecha_emision INTO v_org, v_emision
     FROM public.proveedor_facturas
    WHERE id = p_factura_id AND deleted_at IS NULL;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
   END IF;
+
   -- N8: la cuenta bancaria debe existir, estar activa y ser de la MISMA
-  -- organización que la factura. Se bloquea la fila para que no la den de baja
-  -- entre la validación y el insert.
+  -- organización que la factura. El candado se toma vía
+  -- `_lock_cuenta_bancaria` (SECURITY DEFINER): con `FOR UPDATE` directo, un
+  -- rol de sólo lectura sobre cuentas (contador) no veía la fila y el pago
+  -- fallaba con LC_PAGO_CUENTA_INEXISTENTE.
   IF p_cuenta_bancaria_id IS NOT NULL THEN
-    SELECT organization_id, activa INTO v_cta_org, v_cta_activa
-      FROM public.cuentas_bancarias
-     WHERE id = p_cuenta_bancaria_id AND deleted_at IS NULL
-     FOR UPDATE;
+    SELECT c.org_id, c.esta_activa INTO v_cta_org, v_cta_activa
+      FROM public._lock_cuenta_bancaria(p_cuenta_bancaria_id) c;
     IF v_cta_org IS NULL THEN
       RAISE EXCEPTION 'LC_PAGO_CUENTA_INEXISTENTE: la cuenta bancaria no existe o está dada de baja' USING ERRCODE = 'P0001';
     END IF;
@@ -26540,6 +26559,7 @@ BEGIN
       RAISE EXCEPTION 'LC_PAGO_CUENTA_INACTIVA: la cuenta bancaria está inactiva y no admite pagos' USING ERRCODE = 'P0001';
     END IF;
   END IF;
+
   -- D4: canon de fecha de negocio México, igual que el lote.
   IF p_fecha_pago IS NULL THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: captura la fecha del pago' USING ERRCODE = '22023';
@@ -26552,6 +26572,7 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del pago (%) es anterior a la emisión de la factura (%)',
       p_fecha_pago, v_emision USING ERRCODE = '22023';
   END IF;
+
   BEGIN
     INSERT INTO public.pagos_proveedor (
       organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
@@ -26572,7 +26593,9 @@ BEGIN
     IF v_pago_id IS NULL THEN RAISE; END IF;
     v_reintento := true;
   END;
+
   v_mov_id := public._asegurar_movimiento_pago_proveedor(v_pago_id);
+
   RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', v_reintento);
 END;
 $$;
@@ -26815,6 +26838,7 @@ DECLARE
   v_id uuid;
   v_saldo_origen numeric;
   v_fecha_min_corte date;
+  v_cta_lock uuid;
   v_concepto text := COALESCE(NULLIF(TRIM(p_concepto), ''), 'Traspaso entre cuentas propias');
 BEGIN
   IF p_cuenta_origen_id = p_cuenta_destino_id THEN
@@ -26861,10 +26885,16 @@ BEGIN
   -- traspasos concurrentes desde la misma cuenta origen no lean el mismo
   -- saldo disponible. El orden fijo evita deadlocks cuando dos traspasos
   -- cruzan origen/destino entre sí.
-  PERFORM id FROM public.cuentas_bancarias
-    WHERE id IN (p_cuenta_origen_id, p_cuenta_destino_id)
-    ORDER BY id
-    FOR UPDATE;
+  -- MNY: el candado pasa por `_lock_cuenta_bancaria` (SECURITY DEFINER).
+  -- Con `FOR UPDATE` directo, un rol con sólo lectura sobre cuentas
+  -- (contador) no bloqueaba nada y la protección quedaba inerte.
+  FOR v_cta_lock IN
+    SELECT id FROM public.cuentas_bancarias
+     WHERE id IN (p_cuenta_origen_id, p_cuenta_destino_id)
+     ORDER BY id
+  LOOP
+    PERFORM public._lock_cuenta_bancaria(v_cta_lock);
+  END LOOP;
   IF v_origen.moneda = v_destino.moneda THEN
     v_tc := 1;
     v_monto_destino := ROUND(p_monto_origen, 2);
@@ -34960,6 +34990,9 @@ GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
 REVOKE ALL ON FUNCTION public._liquidacion_guard_estado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._liquidacion_guard_estado() TO service_role;
+REVOKE ALL ON FUNCTION public._lock_cuenta_bancaria(p_cuenta_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._lock_cuenta_bancaria(p_cuenta_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._lock_cuenta_bancaria(p_cuenta_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO service_role;
