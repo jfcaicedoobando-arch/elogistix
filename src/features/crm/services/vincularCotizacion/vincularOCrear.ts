@@ -52,8 +52,11 @@ export async function vincularOCrearOportunidadParaCotizacion(
     updated_at?: string | null;
   };
 
+  // El vínculo YA persistió en la RPC: la bitácora es un efecto secundario y
+  // su fallo viaja como aviso (antes rechazaba y el wizard pedía reintentar).
+  let avisoActividad: string | null = null;
   if (payload.oportunidad_id && payload.ya_ligada !== true) {
-    await registrarActividad({
+    avisoActividad = await registrarActividadNoBloqueante({
       modulo: "crm",
       accion: "vincular_cotizacion_oportunidad",
       entidadId: payload.oportunidad_id,
@@ -65,5 +68,6 @@ export async function vincularOCrearOportunidadParaCotizacion(
     oportunidadId: payload.oportunidad_id ?? null,
     leadId: payload.lead_id ?? null,
     updatedAt: payload.updated_at ?? null,
+    avisoActividad,
   };
 }
