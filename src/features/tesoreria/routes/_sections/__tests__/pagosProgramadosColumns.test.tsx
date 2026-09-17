@@ -17,6 +17,7 @@ function factura(over: Partial<FacturaProgramable> = {}): FacturaProgramable {
     moneda: "MXN",
     total: 1000,
     saldo: 1000,
+    estado_aprobacion: "aprobada",
     ...over,
   };
 }
@@ -45,5 +46,22 @@ describe("columna de acciones de pagos programados (MNY-04)", () => {
     renderAcciones(factura({ fecha_programada_pago: "2026-09-05" }));
     expect(screen.getByRole("button", { name: /Ejecutar pago/i })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Programar pago/i })).toBeNull();
+  });
+
+  // MNY-P2.5: el trigger `pagos_proveedor_requiere_aprobacion` rechaza pagar una
+  // factura sin aprobar; la bandeja no puede ofrecer una acción que siempre falla.
+  it("sin aprobación lleva a revisar la aprobación, no a pagar", () => {
+    const f = factura({ fecha_programada_pago: "2026-09-05", estado_aprobacion: "pendiente" });
+    const { onProgramarPago } = renderAcciones(f);
+    expect(screen.queryByRole("button", { name: /Ejecutar pago/i })).toBeNull();
+    expect(screen.getByText(/Por aprobar/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Revisar aprobación/i }));
+    expect(onProgramarPago).toHaveBeenCalledWith(f);
+  });
+
+  it("una factura rechazada se marca como tal", () => {
+    renderAcciones(factura({ fecha_programada_pago: "2026-09-05", estado_aprobacion: "rechazada" }));
+    expect(screen.getByText(/Rechazada/i)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Ejecutar pago/i })).toBeNull();
   });
 });
