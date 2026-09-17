@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
 import { fetchAnticiposDisponibles } from "@/features/anticipos-proveedor/services/anticiposProveedorService";
-import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
+import { toRow, type AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
 export interface SaldoAFavorPorMoneda {
   moneda: string;
