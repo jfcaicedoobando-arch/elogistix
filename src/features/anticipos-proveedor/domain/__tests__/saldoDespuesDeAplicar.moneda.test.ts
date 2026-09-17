@@ -37,7 +37,7 @@ describe("calcularSaldoDespuesDeAplicar · monedas distintas", () => {
     expect(r.quedaCubierta).toBe(false);
   });
 
-  it("USD → EUR cruza vía MXN (100 USD = 86.6850 EUR al DOF de control)", () => {
+  it("USD → EUR cruza vía MXN (100 × 18 / 20.7692 = 86.6668 EUR)", () => {
     const r = calcularSaldoDespuesDeAplicar({
       saldoFactura: 500,
       montoAplicar: 100,
@@ -45,8 +45,8 @@ describe("calcularSaldoDespuesDeAplicar · monedas distintas", () => {
       monedaAnticipo: "USD",
       tc,
     });
-    expect(r.montoEnMonedaFactura).toBeCloseTo(86.685, 2);
-    expect(r.saldoRestante).toBeCloseTo(413.315, 2);
+    expect(r.montoEnMonedaFactura).toBeCloseTo(86.6668, 2);
+    expect(r.saldoRestante).toBeCloseTo(413.3332, 2);
   });
 
   it("sin paridad no inventa saldo", () => {

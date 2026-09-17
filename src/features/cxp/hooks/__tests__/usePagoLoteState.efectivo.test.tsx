@@ -24,8 +24,8 @@ vi.mock("@/features/cxp/hooks/usePagoProveedorLote", () => ({
 import { usePagoLoteState } from "../usePagoLoteState";
 
 const facturas = [
-  { id: "f1", saldo: 600, folio_proveedor: "A-1", fecha_vencimiento: "2026-08-01", moneda: "MXN" },
-  { id: "f2", saldo: 400, folio_proveedor: "A-2", fecha_vencimiento: "2026-08-02", moneda: "MXN" },
+  { factura_id: "f1", saldo: 600, folio_proveedor: "A-1", fecha_vencimiento: "2026-08-01", moneda: "MXN" },
+  { factura_id: "f2", saldo: 400, folio_proveedor: "A-2", fecha_vencimiento: "2026-08-02", moneda: "MXN" },
 ] as never;
 
 function montar() {
@@ -64,6 +64,10 @@ describe("usePagoLoteState · Efectivo sin cuenta bancaria", () => {
     expect(mutateAsync.mock.calls[0][0]).toMatchObject({
       metodo_pago: "Efectivo",
       cuenta_bancaria_id: null,
+      renglones: [
+        { factura_id: "f1", monto: 600 },
+        { factura_id: "f2", monto: 400 },
+      ],
     });
   });
 

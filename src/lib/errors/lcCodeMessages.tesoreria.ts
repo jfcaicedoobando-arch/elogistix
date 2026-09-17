@@ -26,6 +26,10 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   // N5 (v13.823.386): sentido bancario al conciliar.
   LC_MOVIMIENTO_SENTIDO_COBRO:
     "Un cobro de cliente sólo se concilia con un depósito (abono) en la cuenta. Este movimiento es un cargo (salida de dinero).",
+  LC_MOVIMIENTO_SENTIDO_DEVOLUCION:
+    "La devolución de un anticipo se registra como depósito en la cuenta, no como retiro. Revisa el sentido del movimiento.",
+  LC_MOVIMIENTO_ANTICIPO_DEVOLUCION_INVALIDA:
+    "Ese depósito sólo procede si el anticipo está devuelto por el mismo importe. Registra primero la devolución del anticipo.",
   LC_MOVIMIENTO_SENTIDO_PAGO:
     "Un pago a proveedor sólo se concilia con un retiro (cargo) de la cuenta. Este movimiento es un abono (entrada de dinero).",
 
