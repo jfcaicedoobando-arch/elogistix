@@ -46,9 +46,9 @@ BEGIN
 
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
-    folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion
+    folio_interno, embarque_id, fecha_emision, subtotal, total, moneda, estado, estado_aprobacion
   ) VALUES (
-    v_org, v_prov, 'A-9901', v_cat, 'FP-999901', v_emb, 1000, 1000,
+    v_org, v_prov, 'A-9901', v_cat, 'FP-999901', v_emb, public.fecha_negocio_mx(), 1000, 1000,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'pendiente'
   ) RETURNING id INTO v_pf;
 
@@ -95,9 +95,9 @@ BEGIN
   -- impide registrar pagos sobre facturas pendientes de aprobación.
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
-    folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion
+    folio_interno, embarque_id, fecha_emision, subtotal, total, moneda, estado, estado_aprobacion
   ) VALUES (
-    v_org, v_prov, 'A-9902', v_cat, 'FP-999902', v_emb, 500, 500,
+    v_org, v_prov, 'A-9902', v_cat, 'FP-999902', v_emb, public.fecha_negocio_mx(), 500, 500,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
 

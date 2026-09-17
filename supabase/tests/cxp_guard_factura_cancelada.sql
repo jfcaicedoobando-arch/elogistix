@@ -43,10 +43,10 @@ BEGIN
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
+     fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
   VALUES
     ('33333333-3333-3333-3333-3333333333c1', v_org, v_prov, 'Test Prov', 'GUARD-CANC-01',
-     v_cat, 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Cancelada', 'aprobada');
+     v_cat, public.fecha_negocio_mx(), 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Cancelada', 'aprobada');
 
   -- En papelera.
   INSERT INTO public.proveedor_facturas
@@ -55,16 +55,16 @@ BEGIN
      moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion, deleted_at)
   VALUES
     ('33333333-3333-3333-3333-3333333333c2', v_org, v_prov, 'Test Prov', 'GUARD-CANC-02',
-     v_cat, 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Vigente', 'aprobada', now());
+     v_cat, public.fecha_negocio_mx(), 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Vigente', 'aprobada', now());
 
   -- Vigente (control).
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
+     fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
   VALUES
     ('33333333-3333-3333-3333-3333333333c3', v_org, v_prov, 'Test Prov', 'GUARD-CANC-03',
-     v_cat, 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Vigente', 'aprobada');
+     v_cat, public.fecha_negocio_mx(), 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Vigente', 'aprobada');
 END
 $fixture$ LANGUAGE plpgsql;
 
