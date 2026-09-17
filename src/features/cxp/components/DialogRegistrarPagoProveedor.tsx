@@ -106,11 +106,17 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
 
   // YG-04 / MNY: hay captura real del usuario que se perdería al cerrar. El
-  // monto y el T/C vienen prellenados, así que no cuentan como captura.
+  // monto, el T/C, la diferencia y la cuenta vienen prellenados: sólo cuentan
+  // como captura cuando el usuario los tocó (`f.tocados`).
   const isDirty = pagoProveedorCreadoSucio(
-    { referencia: f.referencia, notas: f.notas, metodo: f.metodo, moneda: f.moneda, monto: f.monto },
+    {
+      referencia: f.referencia, notas: f.notas, metodo: f.metodo, moneda: f.moneda,
+      monto: f.monto, fecha: f.fecha, tc: f.tc, diffMxn: f.diffMxn, cuentaId: f.cuentaId,
+    },
     f.valoresIniciales,
+    f.tocados,
   );
+
 
 
 
