@@ -4,7 +4,10 @@
  * y el saldo estimado después de aplicar.
  */
 import { formatCurrency } from "@/lib/formatters";
-import { calcularSaldoDespuesDeAplicar } from "@/features/anticipos-proveedor/domain/saldoDespuesDeAplicar";
+import {
+  calcularSaldoDespuesDeAplicar,
+  type SaldoDespuesResultado,
+} from "@/features/anticipos-proveedor/domain/saldoDespuesDeAplicar";
 import type { TcDofMxn } from "@/features/anticipos-proveedor/domain/topeAplicacionAnticipo";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { SectionHeading } from "@/components/shared/SectionHeading";
@@ -48,6 +51,46 @@ function Renglon(
       </span>
     </div>
   );
+}
+
+/** Notas del cruce de monedas y del excedente (extraído por complejidad). */
+function NotasAplicacion(
+  { res, moneda, monedaAnticipo, montoAplicar }:
+  {
+    res: SaldoDespuesResultado;
+    moneda: string;
+    monedaAnticipo: string;
+    montoAplicar: number;
+  },
+) {
+  if (res.sinTipoCambio) {
+    return (
+      <p className="text-xs text-warning">
+        El anticipo está en {monedaAnticipo} y la factura en {moneda}: sin tipo de cambio oficial
+        de la fecha de aplicación no se puede estimar el saldo restante.
+      </p>
+    );
+  }
+  if (res.excedente > 0) {
+    return (
+      <p className="text-xs text-warning">
+        El monto excede el saldo por pagar en {formatCurrency(res.excedente, moneda)}.
+      </p>
+    );
+  }
+  if (res.estimado) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        El anticipo está en {monedaAnticipo} y la factura en {moneda}: el equivalente mostrado
+        ({formatCurrency(res.montoEnMonedaFactura ?? 0, moneda)}) usa el tipo de cambio oficial de
+        la fecha de aplicación, igual que el servidor.
+      </p>
+    );
+  }
+  if (res.quedaCubierta && montoAplicar > 0) {
+    return <p className="text-xs text-muted-foreground">La factura queda totalmente cubierta.</p>;
+  }
+  return null;
 }
 
 export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar, tc }: Props) {
