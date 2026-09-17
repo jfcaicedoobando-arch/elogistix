@@ -12,6 +12,7 @@ import {
   repartirFifo, validarLote, round2,
   type FacturaLoteCandidata, type RenglonLote,
 } from "@/features/cxp/services/pagoProveedorLote";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 
 interface Args {
   open: boolean;
