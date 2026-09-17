@@ -54,11 +54,17 @@ Deno.test("resolveRedirectTo: conserva origen permitido y apunta a crear contras
 });
 
 Deno.test("resolveRedirectTo: permite localhost", () => {
-  assertEquals(resolveRedirectTo("http://localhost:8080"), "http://localhost:8080/portal/login");
+  assertEquals(
+    resolveRedirectTo("http://localhost:8080"),
+    "http://localhost:8080/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: permite localhost sin puerto", () => {
-  assertEquals(resolveRedirectTo("http://localhost"), "http://localhost/portal/login");
+  assertEquals(
+    resolveRedirectTo("http://localhost"),
+    "http://localhost/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: permite preview oficial allow-listado", () => {
