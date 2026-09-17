@@ -57,7 +57,9 @@ describe("useRegistrarAnticipoDefaults · T/C por fecha del anticipo", () => {
     const { rerender } = montar("2026-08-01", undefined, setValue);
     tcMock.mockReturnValue({ data: { usdMxn: 18.4, eurMxn: 20, fecha: "2026-09-01", exacto: true } });
     act(() => rerender({ fecha: "2026-09-01", tc: 17.1 }));
-    expect(setValue).toHaveBeenLastCalledWith("tipoCambioUsd", 18.4, expect.anything());
+    // El efecto de cuenta bancaria también llama setValue después, así que se
+    // valida la llamada por contenido y no como la última.
+    expect(setValue).toHaveBeenCalledWith("tipoCambioUsd", 18.4, expect.anything());
   });
 
   it("conserva un T/C escrito a mano y lo señala en el hint", () => {
