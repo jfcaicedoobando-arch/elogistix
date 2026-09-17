@@ -22,7 +22,15 @@ describe("pagosProveedor service", () => {
   });
 
   it("v13.823.32: registrarPagoProveedor delega en la RPC atómica y devuelve el pago creado", async () => {
-    mock.setTableResult("pagos_proveedor", { data: { id: "p1", organization_id: "org-1" }, error: null });
+    // MNY: el pago leído debe corresponder al payload enviado (misma factura,
+    // fecha, monto y moneda); si no, el servicio avisa conflicto de llave.
+    mock.setTableResult("pagos_proveedor", {
+      data: {
+        id: "p1", organization_id: "org-1", proveedor_factura_id: "f1",
+        fecha_pago: "2024-01-01", monto: 100, moneda: "MXN",
+      },
+      error: null,
+    });
     mock.setRpcResult("registrar_pago_proveedor_atomico", { data: { pago_id: "p1", movimiento_id: "m1" }, error: null });
     mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
     mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
@@ -50,6 +58,25 @@ describe("pagosProveedor service", () => {
       p_metodo_pago: "Transferencia",
     });
     expect(mock.tableCalls.some(c => c.table === "v_proveedor_facturas_saldo")).toBe(false);
+  });
+
+  it("MNY: avisa conflicto si la llave devolvió un pago con otro contenido", async () => {
+    mock.setTableResult("pagos_proveedor", {
+      data: {
+        id: "p-viejo", organization_id: "org-1", proveedor_factura_id: "f1",
+        fecha_pago: "2024-01-01", monto: 999, moneda: "MXN",
+      },
+      error: null,
+    });
+    mock.setRpcResult("registrar_pago_proveedor_atomico", { data: { pago_id: "p-viejo" }, error: null });
+    mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
+    mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
+    await expect(
+      registrarPagoProveedor({
+        proveedor_factura_id: "f1", fecha_pago: "2024-01-01", monto: 100, moneda: "MXN",
+        metodo_pago: "Transferencia", client_request_id: "k-1",
+      } as Parameters<typeof registrarPagoProveedor>[0], "u1"),
+    ).rejects.toThrow(/datos distintos/i);
   });
 
   it("aborta con ORG_MISMATCH si la org actual difiere de la del padre", async () => {
