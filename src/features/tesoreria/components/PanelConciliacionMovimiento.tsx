@@ -10,6 +10,7 @@ import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDescon
 import { esMovimientoManual } from "@/features/tesoreria/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
+import type { SugerenciasResultado } from "@/features/tesoreria/services/sugerirCandidatos";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
