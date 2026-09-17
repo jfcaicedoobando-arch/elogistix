@@ -173,9 +173,11 @@ BEGIN
   END IF;
 
   IF NEW.anticipo_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text INTO v_pago_org, v_pago_moneda
+    SELECT organization_id, moneda::text, estado::text, COALESCE(monto_devuelto, 0)
+      INTO v_pago_org, v_pago_moneda, v_ant_estado, v_ant_devuelto
     FROM public.anticipos_proveedor
     WHERE id = NEW.anticipo_proveedor_id;
+
 
     IF v_pago_org IS NULL THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_ANTICIPO_INEXISTENTE: el anticipo % no existe', NEW.anticipo_proveedor_id
