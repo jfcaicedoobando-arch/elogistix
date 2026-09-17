@@ -152,6 +152,8 @@ DECLARE
   v_lote uuid;
   v_movs int;
   v_pagos int;
+  v_suma numeric;
+  v_esperado int := 2;
 BEGIN
   v_lote := public.registrar_pago_proveedor_lote(jsonb_build_object(
     'proveedor_id', 'e3333333-3333-3333-3333-333333333333',
@@ -163,13 +165,36 @@ BEGIN
     'importe_recibido', 500,
     'request_id', gen_random_uuid()::text,
     'renglones', jsonb_build_array(
-      jsonb_build_object('factura_id', 'eb000000-0000-0000-0000-00000000000b', 'monto', 500))
+      jsonb_build_object('factura_id', 'eb000000-0000-0000-0000-00000000000b', 'monto', 300),
+      jsonb_build_object('factura_id', 'eb000000-0000-0000-0000-00000000000c', 'monto', 200))
   ));
 
-  SELECT count(*) INTO v_pagos FROM public.pagos_proveedor
+  SELECT count(*), COALESCE(sum(monto), 0)
+    INTO v_pagos, v_suma
+    FROM public.pagos_proveedor
    WHERE pago_proveedor_lote_id = v_lote AND deleted_at IS NULL;
-  IF v_pagos <> 1 THEN
-    RAISE EXCEPTION 'TEST FAIL: P1.2 - se esperaba 1 pago en el lote, hay %', v_pagos;
+
+  IF v_pagos <> v_esperado THEN
+    RAISE EXCEPTION 'TEST FAIL: P1.2 - se esperaban % pagos en el lote, hay %', v_esperado, v_pagos;
+  END IF;
+
+  IF v_suma <> 500 THEN
+    RAISE EXCEPTION 'TEST FAIL: P1.2 - la suma de pagos es %, se esperaba 500', v_suma;
+  END IF;
+
+  -- Confirma que los pagos cubren ambas facturas.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.pagos_proveedor
+     WHERE pago_proveedor_lote_id = v_lote
+       AND factura_id = 'eb000000-0000-0000-0000-00000000000b' AND monto = 300
+       AND deleted_at IS NULL
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.pagos_proveedor
+     WHERE pago_proveedor_lote_id = v_lote
+       AND factura_id = 'eb000000-0000-0000-0000-00000000000c' AND monto = 200
+       AND deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'TEST FAIL: P1.2 - los pagos no corresponden a las dos facturas esperadas';
   END IF;
 
   SELECT count(*) INTO v_movs FROM public.bbva_movimientos
@@ -177,7 +202,7 @@ BEGIN
   IF v_movs <> 0 THEN
     RAISE EXCEPTION 'TEST FAIL: P1.2 - Efectivo creó % movimiento(s) bancario(s)', v_movs;
   END IF;
-  RAISE NOTICE '✓ P1.2: el lote en efectivo se registra sin salida bancaria';
+  RAISE NOTICE '✓ P1.2: el lote en efectivo registra 2 pagos (suma 500) sin salida bancaria';
 END
 $lote$ LANGUAGE plpgsql;
 
