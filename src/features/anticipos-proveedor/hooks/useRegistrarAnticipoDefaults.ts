@@ -115,7 +115,7 @@ export function useRegistrarAnticipoDefaults({
       ? `Sin tipo de cambio DOF publicado para el ${fechaAnticipo}: captúralo a mano.`
       : undefined
     : tcManual
-      ? `Tipo de cambio capturado por ti. El DOF del ${tcDof.fecha} es ${tcDof.usdMxn}.`
+      ? `Tipo de cambio capturado por ti. El DOF del ${tcDof.fecha} es ${moneda === "EUR" ? tcDof.eurMxn ?? "—" : tcDof.usdMxn}.`
       : `Sugerido por el DOF del ${tcDof.fecha}${tcDof.exacto ? "" : " (última publicación antes de la fecha del anticipo)"}. Puedes editarlo.`;
 
   return { cuentasDeMoneda: cuentasCompatibles, tcHint };
