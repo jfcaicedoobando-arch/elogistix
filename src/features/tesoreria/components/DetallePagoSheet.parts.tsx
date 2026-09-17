@@ -133,12 +133,11 @@ export function BloqueMovimiento({
 
   const esCargo = movimiento.cargo > 0;
   const monto = esCargo ? movimiento.cargo : movimiento.abono;
-  // El banco guarda el importe en la moneda de la cuenta; sólo la conocemos con
-  // certeza cuando el movimiento y el pago comparten cuenta bancaria.
-  const mismaCuenta =
-    !!movimiento.cuenta_bancaria_id &&
-    movimiento.cuenta_bancaria_id === cuentaBancariaPagoId;
-  const monedaMovimiento = mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
+  const monedaMovimiento = monedaDelMovimiento(
+    movimiento,
+    cuentaBancariaPagoId,
+    monedaCuentaPago,
+  );
   return (
     <section className="space-y-2">
       <SectionHeading
