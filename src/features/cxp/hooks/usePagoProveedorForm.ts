@@ -6,7 +6,9 @@
  * v13.395.0: soporta modo edición (`pagoEditar`) con las mismas validaciones,
  * devolviendo al saldo el importe del pago original.
  */
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useCamposTocadosPago } from "./usePagoProveedorForm.tocados";
+
 import type { FacturaCxP } from "@/features/cxp/services";
 import { metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
@@ -141,6 +143,14 @@ export function usePagoProveedorForm(
     tcNum, bloqueadoPorTc, requiereCuenta, cuenta: cuentaSeleccionada, diffMxn,
     esUsdPagadoEnMxn, modo, montoOriginalEnMonedaFactura,
   });
+
+  // MNY: qué campos con precarga automática tocó el usuario (aviso de descarte).
+  const { tocados, marcar } = useCamposTocadosPago(open, pagoEditarId);
+  const setTcUi = useCallback((v: string) => { marcar("tc"); setTcManual(v); }, [marcar, setTcManual]);
+  const setDiffUi = useCallback((v: string) => { marcar("diffMxn"); setDiffManual(v); }, [marcar, setDiffManual]);
+  const setCuentaIdUi = useCallback((v: string) => { marcar("cuentaId"); setCuentaId(v); }, [marcar, setCuentaId]);
+
+
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
