@@ -22,7 +22,11 @@ DECLARE
   v_cuenta_moneda text;
   v_vinculos int;
   v_mov numeric;
+  v_ant_estado text;
+  v_ant_devuelto numeric;
+  v_es_devolucion boolean := false;
   c_tol constant numeric := 1.00; -- tolerancia en la moneda del movimiento
+
 BEGIN
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
