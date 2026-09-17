@@ -95,12 +95,17 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.documento_folio ?? "",
       cell: ({ row }) => {
         const folio = row.original.documento_folio ?? (row.original.tipo === "anticipo" ? "Sin factura" : "—");
-        const enLote = row.original.tipo === "pago" && !!row.original.lote_id;
+        // MNY-P2.1: el cobro en lote (un depósito que cubrió varias facturas)
+        // también debe verse como lote; antes sólo se marcaba el pago CxP.
+        const enLote =
+          (row.original.tipo === "pago" || row.original.tipo === "cobro") && !!row.original.lote_id;
+        const etiquetaLote =
+          row.original.tipo === "cobro" ? "Parte de un cobro en lote" : "Parte de un pago en lote";
         return (
           <div className="space-y-0.5">
             <span className="block text-body-sm font-medium">{folio}</span>
             {enLote ? (
-              <span className="block text-2xs text-muted-foreground">Parte de un pago en lote</span>
+              <span className="block text-2xs text-muted-foreground">{etiquetaLote}</span>
             ) : null}
           </div>
         );
