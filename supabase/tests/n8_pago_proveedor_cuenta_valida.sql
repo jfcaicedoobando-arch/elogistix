@@ -52,7 +52,7 @@ BEGIN
      fecha_emision, estado, estado_aprobacion)
   VALUES
     (v_org, v_prov, 'PROVEEDOR N8', 'F-N8-0001', v_categoria_presupuesto,
-     1000, 0, 1000, 'MXN'::public.moneda, 0, CURRENT_DATE,
+     1000, 0, 1000, 'MXN'::public.moneda, 0, public.fecha_negocio_mx(),
      'Vigente'::public.estado_proveedor_factura, 'aprobada')
   RETURNING id INTO v_pf;
 
@@ -66,7 +66,7 @@ BEGIN
   -- ── CASO 1 · cuenta de otra organización.
   BEGIN
     v_res := public.registrar_pago_proveedor_atomico(
-      v_pf, CURRENT_DATE, 100, 'MXN', 'Transferencia', 'N8-C1', v_cta_otra);
+      v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'N8-C1', v_cta_otra);
     RAISE EXCEPTION 'REGRESION P0: se aceptó una cuenta de otra organización';
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT;
@@ -84,7 +84,7 @@ BEGIN
   -- ── CASO 2 · cuenta inactiva.
   BEGIN
     v_res := public.registrar_pago_proveedor_atomico(
-      v_pf, CURRENT_DATE, 100, 'MXN', 'Transferencia', 'N8-C2', v_cta_off);
+      v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'N8-C2', v_cta_off);
     RAISE EXCEPTION 'REGRESION P0: se aceptó una cuenta inactiva';
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT;
@@ -96,7 +96,7 @@ BEGIN
 
   -- ── CASO 3 · cuenta propia y activa: el flujo válido no cambia.
   v_res := public.registrar_pago_proveedor_atomico(
-    v_pf, CURRENT_DATE, 100, 'MXN', 'Transferencia', 'N8-C3', v_cta_ok);
+    v_pf, public.fecha_negocio_mx(), 100, 'MXN', 'Transferencia', 'N8-C3', v_cta_ok);
   IF (v_res->>'pago_id') IS NULL THEN
     RAISE EXCEPTION 'CASO 3 FALLÓ: el pago con cuenta válida no se registró';
   END IF;

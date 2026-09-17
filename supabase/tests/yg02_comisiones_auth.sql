@@ -76,7 +76,7 @@ BEGIN
     jsonb_build_object('sub', 'a0a0a0a0-0000-4000-8000-000000000001')::text, true);
   BEGIN
     PERFORM public.registrar_pago_liquidacion(
-      'a0a0a0a0-0000-4000-8000-000000000010'::uuid, CURRENT_DATE, 'Transferencia');
+      'a0a0a0a0-0000-4000-8000-000000000010'::uuid, public.fecha_negocio_mx(), 'Transferencia');
     RAISE EXCEPTION 'CASO1_FALLO: se aceptó el pago con rol financiero sólo global';
   EXCEPTION WHEN insufficient_privilege THEN
     IF SQLERRM NOT LIKE 'LC_LIQUIDACION_SIN_ROL%' THEN
@@ -115,7 +115,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub', 'a0a0a0a0-0000-4000-8000-000000000002')::text, true);
   PERFORM public.registrar_pago_liquidacion(
-    'a0a0a0a0-0000-4000-8000-000000000010'::uuid, CURRENT_DATE, 'Transferencia');
+    'a0a0a0a0-0000-4000-8000-000000000010'::uuid, public.fecha_negocio_mx(), 'Transferencia');
   SELECT estado INTO v_estado FROM public.liquidaciones_comision
    WHERE id = 'a0a0a0a0-0000-4000-8000-000000000010'::uuid;
   IF v_estado <> 'Pagada' THEN
@@ -132,7 +132,7 @@ DO $caso4$
 BEGIN
   BEGIN
     PERFORM public.registrar_pago_liquidacion(
-      'b0b0b0b0-0000-4000-8000-000000000010'::uuid, CURRENT_DATE, 'Transferencia');
+      'b0b0b0b0-0000-4000-8000-000000000010'::uuid, public.fecha_negocio_mx(), 'Transferencia');
     RAISE EXCEPTION 'CASO4_FALLO: se aceptó el pago de una liquidación de otra org';
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE 'LC_LIQUIDACION_OTRA_ORG%' THEN

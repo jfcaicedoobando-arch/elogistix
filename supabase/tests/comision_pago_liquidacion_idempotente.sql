@@ -49,7 +49,7 @@ DO $b3$
 DECLARE
   v_liq uuid := 'c3c3c3c3-0000-4000-8000-000000000030';
   v_liq_cancelada uuid := 'c3c3c3c3-0000-4000-8000-000000000031';
-  v_fecha date := CURRENT_DATE;
+  v_fecha date := public.fecha_negocio_mx();
   v_row public.liquidaciones_comision;
   v_updated timestamptz;
   v_bitacora_1 integer;

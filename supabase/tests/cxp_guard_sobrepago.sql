@@ -41,11 +41,11 @@ BEGIN
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
+     fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
   VALUES
     (v_fact, v_org, v_prov, 'Test Prov', 'GUARD-SOBRE-01',
      v_cat,
-     'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador', 'aprobada');
+     public.fecha_negocio_mx(), 'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador', 'aprobada');
 END
 $fixture$ LANGUAGE plpgsql;
 
@@ -58,11 +58,11 @@ DECLARE
 BEGIN
   BEGIN
     INSERT INTO public.pagos_proveedor
-      (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+      (organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
     VALUES
       ('11111111-1111-1111-1111-111111111111',
        '33333333-3333-3333-3333-333333333333',
-       4000, 'MXN'::public.moneda, NULL);
+       public.fecha_negocio_mx(), 4000, 'MXN'::public.moneda, NULL);
     RAISE EXCEPTION 'CASO1_FALLO: se aceptó INSERT sobrepago (esperaba LC_PAGO_EXCEDE_SALDO)';
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE;
@@ -80,12 +80,12 @@ DECLARE
   v_mmf numeric;
 BEGIN
   INSERT INTO public.pagos_proveedor
-    (id, organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+    (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
   VALUES
     (v_pago_id,
      '11111111-1111-1111-1111-111111111111',
      '33333333-3333-3333-3333-333333333333',
-     1000, 'MXN'::public.moneda, NULL);
+     public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, NULL);
 
   SELECT monto_en_moneda_factura INTO v_mmf
     FROM public.pagos_proveedor WHERE id = v_pago_id;
@@ -99,12 +99,12 @@ $caso2$ LANGUAGE plpgsql;
 
 -- Segundo pago legítimo (1000) — deja saldo 1000.
 INSERT INTO public.pagos_proveedor
-  (id, organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
+  (id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd)
 VALUES
   ('55555555-5555-5555-5555-555555555555',
    '11111111-1111-1111-1111-111111111111',
    '33333333-3333-3333-3333-333333333333',
-   1000, 'MXN'::public.moneda, NULL);
+   public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, NULL);
 
 -- -------------------------------------------------------------
 -- CASO 3 (BUG histórico): UPDATE eleva pago 1000→2500 en factura 3000

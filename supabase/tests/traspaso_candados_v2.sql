@@ -60,9 +60,9 @@ BEGIN
      saldo_inicial, fecha_saldo_inicial, activa, notas)
   VALUES
     (v_c1, v_org, 'BBVA', 'Origen Candados', '0011', '000000000000000011', 'MXN',
-     1000, CURRENT_DATE, true, ''),
+     1000, public.fecha_negocio_mx(), true, ''),
     (v_c2, v_org, 'BBVA', 'Destino Candados', '0012', '000000000000000012', 'MXN',
-     0, CURRENT_DATE, true, '')
+     0, public.fecha_negocio_mx(), true, '')
   ON CONFLICT (id) DO NOTHING;
 END;
 $fixture$;
@@ -74,7 +74,7 @@ DECLARE
   v_c2 uuid := '2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c';
 BEGIN
   PERFORM public.registrar_traspaso_bancario(
-    v_c1, v_c2, (CURRENT_DATE - 1)::date, 100, 1, 0,
+    v_c1, v_c2, (public.fecha_negocio_mx() - 1)::date, 100, 1, 0,
     'Traspaso con fecha anterior al corte', '', NULL
   );
   RAISE EXCEPTION 'CASO 2 FALLÓ: se permitió un traspaso con fecha anterior al corte de saldo inicial';
@@ -97,7 +97,7 @@ DECLARE
 BEGIN
   -- Primer traspaso: gasta 700 de los 1000 disponibles.
   PERFORM public.registrar_traspaso_bancario(
-    v_c1, v_c2, CURRENT_DATE, 700, 1, 0, 'Traspaso 1', '', NULL
+    v_c1, v_c2, public.fecha_negocio_mx(), 700, 1, 0, 'Traspaso 1', '', NULL
   );
 
   v_saldo := public.saldo_cuenta_bancaria(v_c1);
@@ -110,7 +110,7 @@ BEGIN
   -- justo el que se revalida después del FOR UPDATE.
   BEGIN
     PERFORM public.registrar_traspaso_bancario(
-      v_c1, v_c2, CURRENT_DATE, 800, 1, 0, 'Traspaso 2 (sobregiro)', '', NULL
+      v_c1, v_c2, public.fecha_negocio_mx(), 800, 1, 0, 'Traspaso 2 (sobregiro)', '', NULL
     );
     RAISE EXCEPTION 'CASO 3 FALLÓ: se permitió un traspaso que sobregira la cuenta origen';
   EXCEPTION WHEN OTHERS THEN

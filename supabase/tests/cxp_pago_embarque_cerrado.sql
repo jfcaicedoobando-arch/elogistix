@@ -57,9 +57,9 @@ BEGIN
 
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
-    folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion
+    folio_interno, embarque_id, fecha_emision, subtotal, total, moneda, estado, estado_aprobacion
   ) VALUES (
-    v_org, v_prov, 'A-9911', v_cat, 'FP-999911', v_emb, 1000, 1000,
+    v_org, v_prov, 'A-9911', v_cat, 'FP-999911', v_emb, public.fecha_negocio_mx(), 1000, 1000,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
 
@@ -84,7 +84,7 @@ BEGIN
   ----------------------------------------------------------------------------
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
-  VALUES (v_org, v_pf, current_date, 1000, 'USD'::public.moneda);
+  VALUES (v_org, v_pf, public.fecha_negocio_mx(), 1000, 'USD'::public.moneda);
 
   SELECT estado_liquidacion::text INTO v_liq FROM public.conceptos_costo WHERE id = v_cc;
   IF v_liq <> 'Pagado' THEN

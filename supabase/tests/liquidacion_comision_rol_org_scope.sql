@@ -73,7 +73,7 @@ BEGIN
   v_bloqueado := false;
   BEGIN
     PERFORM public.registrar_pago_liquidacion(
-      'a1a1a1a1-0000-4000-8000-000000000030', CURRENT_DATE, 'Transferencia');
+      'a1a1a1a1-0000-4000-8000-000000000030', public.fecha_negocio_mx(), 'Transferencia');
   EXCEPTION WHEN OTHERS THEN
     v_msg := SQLERRM;
     IF v_msg NOT LIKE '%LC_LIQUIDACION_OTRA_ORG%'
@@ -92,7 +92,7 @@ BEGIN
   v_bloqueado := false;
   BEGIN
     PERFORM public.registrar_pago_liquidacion(
-      'a1a1a1a1-0000-4000-8000-000000000030', CURRENT_DATE, 'Transferencia');
+      'a1a1a1a1-0000-4000-8000-000000000030', public.fecha_negocio_mx(), 'Transferencia');
   EXCEPTION WHEN OTHERS THEN
     v_msg := SQLERRM;
     IF v_msg NOT LIKE '%LC_LIQUIDACION_SIN_ROL%' THEN
@@ -114,7 +114,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub', 'a1a1a1a1-0000-4000-8000-000000000091')::text, true);
   PERFORM public.registrar_pago_liquidacion(
-    'a1a1a1a1-0000-4000-8000-000000000030', CURRENT_DATE, 'Transferencia');
+    'a1a1a1a1-0000-4000-8000-000000000030', public.fecha_negocio_mx(), 'Transferencia');
 
   SELECT estado, fecha_pago INTO v_estado, v_fecha
     FROM public.liquidaciones_comision WHERE id = 'a1a1a1a1-0000-4000-8000-000000000030';
