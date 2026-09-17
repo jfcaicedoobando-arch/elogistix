@@ -19,9 +19,8 @@ interface ConceptoVentaDb {
   aplica_iva?: boolean | null;
   tasa_iva_aplicada?: number | string | null;
   /**
-   * SAT 01 — `conceptos_venta.tipo_iva`. Es opcional a propósito: mientras la
-   * migración preparada no se aplique, la columna no existe y la query no la
-   * selecciona, así que llega `undefined` y la fila queda legacy.
+   * SAT 01 — `conceptos_venta.tipo_iva`. La query ya lo selecciona; `null` =
+   * fila legacy y se sigue resolviendo por `aplica_iva`/`tasa_iva_aplicada`.
    */
   tipo_iva?: string | null;
 }
