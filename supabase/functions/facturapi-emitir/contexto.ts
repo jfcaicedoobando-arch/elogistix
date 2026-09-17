@@ -110,7 +110,7 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     conceptos: (conceptos ?? []).map((c) => ({
       descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
       clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
-      tipo_iva: (c.tipo_iva as "gravado_16" | "tasa_0" | "exento" | null) ?? "gravado_16",
+      tipo_iva: (c.tipo_iva as "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null) ?? "gravado_16",
       tasa_iva: c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0.16,
       tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
       tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
