@@ -89,7 +89,7 @@ export async function moverEtapaOportunidad(input: {
   // Ola 4 · N49: limpieza al salir de "perdida".
   motivo_perdida_id?: string | null;
   expectedUpdatedAt?: string | null;
-}): Promise<string | undefined> {
+}): Promise<ResultadoMutacionOportunidad> {
   const patch: {
     etapa_id: string;
     probabilidad?: number;
