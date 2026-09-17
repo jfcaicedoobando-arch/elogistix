@@ -5,10 +5,10 @@
  * (proveedor fijo, T/C sugerido y cuenta bancaria por moneda). Las reglas de
  * negocio son funciones puras en `domain/registrarAnticipoPolicy`.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { UseFormSetValue } from "react-hook-form";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
-import { useTcInicial } from "@/features/catalogos/hooks";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks";
 import {
   cuentasDeMoneda as filtrarCuentasDeMoneda,
   debeSugerirTc,
@@ -23,6 +23,8 @@ const SET_OPTS = { shouldValidate: true, shouldDirty: true } as const;
 interface Params {
   open: boolean;
   moneda: MonedaAnticipo;
+  /** Fecha del anticipo: define QUÉ DOF se sugiere (MNY P2.7). */
+  fechaAnticipo: string | undefined;
   cuentaBancariaId: string | undefined;
   /** false cuando el método es Efectivo: no debe haber cuenta ni cargo bancario. */
   requiereCuenta: boolean;
@@ -43,6 +45,7 @@ interface Resultado {
 export function useRegistrarAnticipoDefaults({
   open,
   moneda,
+  fechaAnticipo,
   cuentaBancariaId,
   requiereCuenta,
   tipoCambioUsd,
@@ -51,7 +54,22 @@ export function useRegistrarAnticipoDefaults({
   onProveedorFijo,
 }: Params): Resultado {
   const { data: cuentas = [] } = useCuentasBancarias(true);
-  const { data: tc } = useTcInicial();
+  // MNY P2.7: para un anticipo retroactivo se sugiere el DOF de ESA fecha, no
+  // el más reciente (antes se persistía un T/C de otro día).
+  const pedirTc = open && moneda !== "MXN" && Boolean(fechaAnticipo);
+  const { data: tcDof } = useTcDofPorFecha(pedirTc ? fechaAnticipo ?? null : null, pedirTc);
+  const tc = useMemo(
+    () =>
+      tcDof
+        ? {
+            usdMxn: tcDof.usdMxn,
+            eurMxn: tcDof.eurMxn,
+            esFallback: false,
+            eurEsFallback: tcDof.eurMxn == null,
+          }
+        : null,
+    [tcDof],
+  );
 
   const cuentasCompatibles = useMemo(
     () => filtrarCuentasDeMoneda(cuentas, moneda),
@@ -66,11 +84,20 @@ export function useRegistrarAnticipoDefaults({
   }, [open, proveedorIdInicial, setValue, onProveedorFijo]);
 
   // Precarga el T/C sugerido (nunca un fallback estimado, ver EF-04).
+  // MNY P2.7: al cambiar la fecha se re-sugiere sólo si el valor actual venía de
+  // una sugerencia previa; un T/C escrito a mano se conserva.
+  const ultimoSugeridoRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      ultimoSugeridoRef.current = null;
+      return;
+    }
     const sugerido = tcSugeridoParaMoneda(moneda, tc);
-    if (debeSugerirTc(tipoCambioUsd, sugerido)) {
-      setValue("tipoCambioUsd", sugerido, SET_OPTS);
+    if (sugerido === null) return;
+    const eraAutomatico = Number(tipoCambioUsd) === ultimoSugeridoRef.current;
+    if (debeSugerirTc(tipoCambioUsd, sugerido) || eraAutomatico) {
+      ultimoSugeridoRef.current = sugerido;
+      if (Number(tipoCambioUsd) !== sugerido) setValue("tipoCambioUsd", sugerido, SET_OPTS);
     }
   }, [open, moneda, tc, tipoCambioUsd, setValue]);
 
@@ -81,11 +108,15 @@ export function useRegistrarAnticipoDefaults({
     if (siguiente !== null) setValue("cuentaBancariaId", siguiente, SET_OPTS);
   }, [open, cuentaBancariaId, cuentasCompatibles, requiereCuenta, setValue]);
 
-  const tcHint = tc
-    ? tc.fuente === "DOF"
-      ? `Sugerido por el DOF${tc.fecha ? ` del ${tc.fecha}` : ""}. Puedes editarlo.`
-      : "Sugerido por el servicio de tipos de cambio. Puedes editarlo."
-    : undefined;
+  const tcManual =
+    Number(tipoCambioUsd) > 0 && Number(tipoCambioUsd) !== ultimoSugeridoRef.current;
+  const tcHint = !tcDof
+    ? moneda !== "MXN" && fechaAnticipo
+      ? `Sin tipo de cambio DOF publicado para el ${fechaAnticipo}: captúralo a mano.`
+      : undefined
+    : tcManual
+      ? `Tipo de cambio capturado por ti. El DOF del ${tcDof.fecha} es ${tcDof.usdMxn}.`
+      : `Sugerido por el DOF del ${tcDof.fecha}${tcDof.exacto ? "" : " (última publicación antes de la fecha del anticipo)"}. Puedes editarlo.`;
 
   return { cuentasDeMoneda: cuentasCompatibles, tcHint };
 }

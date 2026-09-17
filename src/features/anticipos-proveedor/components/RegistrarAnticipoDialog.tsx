@@ -46,6 +46,7 @@ export function RegistrarAnticipoDialog({
     });
 
   const moneda = watch("moneda");
+  const fechaAnticipo = watch("fechaAnticipo");
   const monto = watch("monto");
   const metodoPago = watch("metodoPago");
   const cuentaBancariaId = watch("cuentaBancariaId");
@@ -67,6 +68,7 @@ export function RegistrarAnticipoDialog({
   const { cuentasDeMoneda = [], tcHint } = useRegistrarAnticipoDefaults({
     open,
     moneda,
+    fechaAnticipo,
     cuentaBancariaId,
     requiereCuenta,
     tipoCambioUsd,
