@@ -16,6 +16,11 @@ export interface ConceptoVentaPrellenado {
   total: number;
   /** Clave SAT heredada del catálogo maestro cuando el paso 2 usó el combobox. */
   clave_sat?: string;
+  /**
+   * Tratamiento fiscal explícito heredado del catálogo. Se propaga sin pérdida
+   * para que `no_objeto` (SAT 01) no se confunda con exento ni con tasa 0.
+   */
+  tipo_iva?: string;
   /** Tasa IVA específica del producto (0.16, 0, exento). Prevalece sobre `tasaIva`. */
   tasa_iva_aplicada?: number;
   /**
