@@ -18,7 +18,8 @@ export function useRegistrarAnticipo() {
   return useMutationWithFeedback({
     mutationFn: (input: RegistrarAnticipoInput) => registrarAnticipo(input),
     // Ola 12 · R3P-02: el anticipo aparece en el estado de cuenta.
-    invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all],
+    // MNY P2.8: el anticipo mueve saldos y movimientos bancarios.
+    invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all, queryKeys.tesoreria.all],
     successTitle: "Anticipo registrado",
     errorTitle: "No se pudo registrar el anticipo",
     errorMethod: "ANTICIPOS_PROVEEDOR_REGISTRAR",
@@ -60,7 +61,8 @@ export function useCancelarAnticipo() {
   return useMutationWithFeedback({
     mutationFn: (v: CancelarAnticipoVars) => cancelarAnticipo(v.id, v.motivo),
     // Ola 12 · R3P-02: el anticipo aparece en el estado de cuenta.
-    invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all],
+    // MNY P2.8: cancelar revierte el movimiento bancario del anticipo.
+    invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all, queryKeys.tesoreria.all],
     successTitle: "Anticipo cancelado",
     errorTitle: "No se pudo cancelar el anticipo",
     errorMethod: "ANTICIPOS_PROVEEDOR_CANCELAR",
