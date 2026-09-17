@@ -2,15 +2,16 @@
  * Definición de columnas + filtro de la bandeja de pagos programados.
  * Extraído de `TesoreriaPagosProgramados` para bajar su tamaño/complejidad.
  */
-import { CalendarClock, Wallet } from "lucide-react";
+import { CalendarClock, ShieldCheck, Wallet } from "lucide-react";
 import { defineColumns } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import type { FacturaProgramableRow } from "@/features/tesoreria/services/pagosProgramados";
-import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { puedeEjecutarPago, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+
 
 export type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
 
