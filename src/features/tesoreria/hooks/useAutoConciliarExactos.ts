@@ -32,9 +32,12 @@ export function useAutoConciliarExactos(
 
     for (const m of pendientes) {
       try {
-        const candidatos = await sugerirCandidatos(m);
+        const { candidatos, truncado } = await sugerirCandidatosDetalle(m);
         const exactos = encontrarCandidatosExactos(m, candidatos);
-        const unico = seleccionarMatchUnico(exactos);
+        // MNY: con la lista recortada por el tope puede existir otra
+        // coincidencia exacta que no se leyó; la unicidad NO está comprobada,
+        // así que se manda a revisión manual en vez de conciliar a ciegas.
+        const unico = truncado ? null : seleccionarMatchUnico(exactos);
 
         if (unico) {
           // Usamos mutateAsync para esperar el resultado antes de contar éxito
@@ -51,6 +54,8 @@ export function useAutoConciliarExactos(
         // Falló el guard o la red, cuenta como revisión
         revision++;
       }
+    }
+
     }
 
     if (conciliados > 0) {
