@@ -22,8 +22,11 @@ export function ConceptoDescripcionSelector({ descripcion, index, actualizar }: 
       onSelect={(p) => {
         const tasa = tasaDesdeTipoIva(p.tipo_iva);
         actualizar(index, "descripcion", p.nombre);
-        actualizar(index, "aplica_iva", p.tipo_iva === "gravado_16");
+        actualizar(index, "aplica_iva", tasa > 0);
         actualizar(index, "tasa_iva_aplicada", tasa);
+        // El tratamiento fiscal explícito (incluye "No objeto de impuesto",
+        // SAT 01) se guarda tal cual: no se puede inferir de la tasa 0.
+        actualizar(index, "tipo_iva", p.tipo_iva);
         if (p.clave_unidad_sat) {
           actualizar(index, "unidad_medida", p.clave_unidad_sat);
         }

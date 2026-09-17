@@ -71,6 +71,7 @@ export function AgregarConceptoInline({
         precio_unitario: precio,
         aplica_iva: tasa > 0,
         tasa_iva_aplicada: tasa,
+        tipo_iva: producto.tipo_iva,
         moneda,
       });
       handleOpenChange(false);
