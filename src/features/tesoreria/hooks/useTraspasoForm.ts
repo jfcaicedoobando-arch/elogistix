@@ -21,6 +21,8 @@ export {
 
 export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const [state, setState] = useState({ ...ESTADO_INICIAL, fecha: hoyIso() });
+  /** MNY P2.4: fecha con la que abrió el diálogo (para detectar cambios). */
+  const [fechaInicial, setFechaInicial] = useState(hoyIso);
   /**
    * MNY: ¿el T/C actual lo escribió el usuario? Sólo así se conserva al
    * cambiar la fecha. Antes la sugerencia se aplicaba una única vez y, al
