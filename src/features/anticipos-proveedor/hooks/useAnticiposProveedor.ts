@@ -15,7 +15,7 @@ export interface AnticipoProveedorRow extends AnticipoConProveedor {
   devuelto: number;
 }
 
-function toRow(a: AnticipoConProveedor): AnticipoProveedorRow {
+export function toRow(a: AnticipoConProveedor): AnticipoProveedorRow {
   // MNY P1.3: `monto - saldo_disponible` incluía el monto devuelto y lo
   // reportaba como aplicado a facturas. La devolución se descuenta aparte.
   const devuelto = Number(a.monto_devuelto ?? 0);
