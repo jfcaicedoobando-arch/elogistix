@@ -79,13 +79,21 @@ function validarTraspaso(
 
 export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const [state, setState] = useState<TraspasoFormState>({ ...ESTADO_INICIAL, fecha: hoyIso() });
+  /**
+   * MNY: ¿el T/C actual lo escribió el usuario? Sólo así se conserva al
+   * cambiar la fecha. Antes la sugerencia se aplicaba una única vez y, al
+   * mover la fecha, quedaba la tasa de otro día con la fecha nueva en pantalla.
+   */
+  const [tcEsManual, setTcEsManual] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setState({ ...ESTADO_INICIAL, fecha: hoyIso() });
+    setTcEsManual(false);
   }, [open]);
 
   const setField = <K extends keyof TraspasoFormState>(key: K, value: TraspasoFormState[K]) => {
+    if (key === "tcQuote") setTcEsManual(true);
     setState((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -102,9 +110,12 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const tcSugerido = useMemo(() => sugerirTcQuote(tcDof, par), [tcDof, par]);
 
   useEffect(() => {
-    if (!requiereTc || !tcSugerido) return;
-    setState((prev) => (prev.tcQuote > 0 ? prev : { ...prev, tcQuote: tcSugerido }));
-  }, [requiereTc, tcSugerido]);
+    if (!requiereTc || !tcSugerido || tcEsManual) return;
+    // La sugerencia se re-aplica al cambiar fecha o par mientras el valor
+    // siga siendo automático.
+    setState((prev) => (prev.tcQuote === tcSugerido ? prev : { ...prev, tcQuote: tcSugerido }));
+  }, [requiereTc, tcSugerido, tcEsManual]);
+
 
   // Multiplicador que consume la RPC: monto_destino = monto_origen * factor.
   const factorOrigenDestino = useMemo(() => {
