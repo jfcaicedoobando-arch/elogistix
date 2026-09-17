@@ -1,6 +1,6 @@
 /** Mutaciones del feature Anticipos a Proveedor — usan `useMutationWithFeedback`. */
-import { useRef } from "react";
 import { useMutationWithFeedback } from "@/hooks/shared";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
 import { queryKeys } from "@/lib/query";
 import {
@@ -35,14 +35,25 @@ interface AplicarAnticipoVars {
 
 export function useAplicarAnticipo() {
   // BL-08: llave de idempotencia por intento de submit — un doble click o
-  // retry de React Query reenvía la MISMA llave y el servidor deduplica;
-  // al concluir con éxito se regenera para el siguiente submit.
-  const requestIdRef = useRef(crypto.randomUUID());
+  // retry de React Query reenvía la MISMA llave y el servidor deduplica.
+  // MNY P1.4: la llave está ligada al contenido (anticipo, factura, monto,
+  // fecha). Si el usuario cambia el destino o el importe y reintenta, se genera
+  // una llave nueva: el servidor ya no puede devolver la aplicación anterior
+  // como si fuera la nueva.
+  const reqId = usePayloadRequestId();
   return useMutationWithFeedback({
     mutationFn: (v: AplicarAnticipoVars) =>
-      aplicarAnticipo(v.anticipoId, v.facturaId, v.monto, v.fechaAplicacion, requestIdRef.current),
+      aplicarAnticipo(
+        v.anticipoId,
+        v.facturaId,
+        v.monto,
+        v.fechaAplicacion,
+        reqId.get(
+          scopeDePayload([v.anticipoId, v.facturaId, v.monto, v.fechaAplicacion ?? null]),
+        ),
+      ),
     onSuccess: () => {
-      requestIdRef.current = crypto.randomUUID();
+      reqId.reset();
     },
     // Ola 12 · R3P-02.
     invalidate: [anticiposProveedorKeys.all, queryKeys.cxp.all, queryKeys.proveedores.all],

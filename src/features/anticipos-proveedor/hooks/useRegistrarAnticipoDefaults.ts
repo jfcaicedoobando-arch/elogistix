@@ -87,6 +87,25 @@ export function useRegistrarAnticipoDefaults({
   // MNY P2.7: al cambiar la fecha se re-sugiere sólo si el valor actual venía de
   // una sugerencia previa; un T/C escrito a mano se conserva.
   const ultimoSugeridoRef = useRef<number | null>(null);
+
+  // MNY P1.3: una tasa capturada a mano pertenece al par de esa moneda. Al
+  // cambiar USD↔EUR (o a MXN) se invalida: antes se reciclaba la tasa de la
+  // divisa anterior porque no era "automática" y el esquema sólo validaba que
+  // fuera positiva. Con el campo vacío se re-sugiere el DOF de la nueva moneda
+  // o el usuario captura la tasa correcta antes de registrar.
+  const monedaAnteriorRef = useRef<MonedaAnticipo | null>(null);
+  useEffect(() => {
+    if (!open) {
+      monedaAnteriorRef.current = null;
+      return;
+    }
+    if (monedaAnteriorRef.current !== null && monedaAnteriorRef.current !== moneda) {
+      ultimoSugeridoRef.current = null;
+      setValue("tipoCambioUsd", undefined, SET_OPTS);
+    }
+    monedaAnteriorRef.current = moneda;
+  }, [open, moneda, setValue]);
+
   useEffect(() => {
     if (!open) {
       ultimoSugeridoRef.current = null;

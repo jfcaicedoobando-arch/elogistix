@@ -12,6 +12,7 @@ import {
   repartirFifo, validarLote, round2,
   type FacturaLoteCandidata, type RenglonLote,
 } from "@/features/cxp/services/pagoProveedorLote";
+import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 
 interface Args {
   open: boolean;
@@ -59,6 +60,11 @@ export function usePagoLoteState(a: Args) {
   // regenera al abrir el diálogo para que cada intento de submit sea
   // distinguible y los reintentos del MISMO submit deduplique en servidor.
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  // MNY P1.4: la llave enviada a la RPC se liga al contenido del lote. Un
+  // reintento del MISMO payload reenvía la misma llave (deduplica); si el
+  // usuario corrige importes, fecha, cuenta o método, la llave se renueva para
+  // que el servidor no responda con el lote anterior.
+  const reqId = usePayloadRequestId();
 
   // CXP-NEW-12 (espejo de `usePagoClienteLoteState`): inicializar UNA sola vez
   // por apertura. Antes cualquier refetch en segundo plano de `a.facturas` o del
@@ -135,7 +141,13 @@ export function usePagoLoteState(a: Args) {
         // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
         // la RPC; la validación exacta también vive en la función.
         importe_recibido: totalNum,
-        request_id: requestId,
+        request_id: reqId.get(
+          scopeDePayload([
+            requestId, a.proveedorId, fecha, a.moneda, metodo, referencia,
+            requiereCuenta ? cuentaId || null : null, tcAplicable, notas, totalNum,
+            renglones.map((r) => `${r.factura_id}:${r.monto}`).join(","),
+          ]),
+        ),
         renglones,
       });
     } catch {

@@ -61,6 +61,25 @@ export function usePagoTcDof(a: Args) {
     diffTocado.current = false;
   }, [open, a.pagoEditarId]);
 
+  // MNY P1.2: un T/C capturado a mano pertenece a UN par de monedas. Al cambiar
+  // el par (USD/MXN → EUR/MXN) la tasa anterior deja de ser válida: se olvida la
+  // captura manual y se limpia el valor para que se precargue el DOF del nuevo
+  // par (o el usuario lo escriba). Sin tasa válida el submit queda bloqueado.
+  const parAnterior = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) {
+      parAnterior.current = null;
+      return;
+    }
+    const par = monedaAplicable;
+    if (parAnterior.current !== null && parAnterior.current !== par) {
+      tcTocado.current = false;
+      diffTocado.current = false;
+      setTc("");
+    }
+    parAnterior.current = par;
+  }, [open, monedaAplicable, setTc]);
+
   const setTcManual = useCallback(
     (v: string) => {
       tcTocado.current = true;

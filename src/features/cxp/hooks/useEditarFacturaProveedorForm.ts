@@ -25,7 +25,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/types";
 
-
 type RowLite = FacturaParaEdicion;
 
 function numOrEmpty(v: unknown): string {
@@ -119,6 +118,10 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       if (k === "emision" || k === "diasCredito") {
         next.vencimiento = addDays(next.emision, Number(next.diasCredito) || 0);
       }
+      // MNY P1.1 (espejo de la captura): al cambiar la moneda el T/C del par
+      // anterior queda inválido y el campo se vacía; la validación impide
+      // guardar hasta tener la tasa del nuevo par o una captura manual.
+      if (k === "moneda") next.tc = "";
       return next;
     });
     if (k === "tc") {
@@ -144,7 +147,6 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       silent: false,
     });
   };
-
 
   // Proveedor NO editable: callback no-op para satisfacer el contrato del form reutilizado.
   const handleProveedorNoop = () => { /* read-only en edit */ };
@@ -195,5 +197,4 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     isErrorRow,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
-
 }
