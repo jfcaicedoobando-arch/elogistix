@@ -8,6 +8,7 @@ import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
 import { resolverProveedorIdPorNombre, type ProveedorCatalogo } from "@/features/embarques/domain/resolverProveedor";
 import { mapConceptoVentaDbAFila, type ConceptoVentaDbLike } from "@/features/embarques/domain/hidratarConceptoVenta";
+import type { ConceptoVentaLocal } from "@/types/concepto";
 
 type ConceptoVentaDb = ConceptoVentaDbLike;
 interface ConceptoCostoDb {
