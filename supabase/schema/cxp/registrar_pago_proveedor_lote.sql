@@ -27,7 +27,15 @@ DECLARE
   v_importe numeric := NULLIF(p_payload->>'importe_recibido','')::numeric;
   v_metodo text := COALESCE(NULLIF(TRIM(p_payload->>'metodo_pago'), ''), 'Transferencia');
   v_referencia text := COALESCE(NULLIF(TRIM(p_payload->>'referencia'), ''), '');
-  v_cuenta_id uuid := NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid;
+  -- MNY P1.2: Efectivo NUNCA genera salida bancaria. Si el cliente manda una
+  -- cuenta obsoleta (selector no limpiado al cambiar de método), se ignora de
+  -- forma autoritativa para no crear un cargo bancario fantasma.
+  v_cuenta_id uuid := CASE
+    WHEN COALESCE(NULLIF(TRIM(p_payload->>'metodo_pago'), ''), 'Transferencia') = 'Efectivo'
+      THEN NULL
+    ELSE NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid
+  END;
+
   v_notas text := COALESCE(p_payload->>'notas','');
   -- BL-02 · idempotencia (espejo RNF-01 de registrar_pago_cliente_lote):
   -- llave opcional del cliente para deduplicar dobles submits/reintentos.
