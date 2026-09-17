@@ -28,8 +28,7 @@ function montar(fecha: string, valorActual: number | undefined, setValue = vi.fn
         requiereCuenta: true,
         tipoCambioUsd: p.tc,
         onProveedorFijo: () => {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setValue: setValue as any,
+        setValue,
       } as never),
     { initialProps: { fecha, tc: valorActual } },
   );
