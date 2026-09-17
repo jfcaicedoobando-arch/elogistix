@@ -32,7 +32,7 @@ describe("crearOportunidad", () => {
 describe("actualizarOportunidad", () => {
   it("llama update con patch", async () => {
     mock.setTableResult("crm_oportunidades", { data: {}, error: null });
-    await expect(actualizarOportunidad({ id: "op-1", patch: { nombre: "Nuevo" } })).resolves.toBeUndefined();
+    await expect(actualizarOportunidad({ id: "op-1", patch: { nombre: "Nuevo" } })).resolves.toMatchObject({ avisoActividad: null });
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
 
@@ -45,7 +45,7 @@ describe("actualizarOportunidad", () => {
 describe("moverEtapaOportunidad", () => {
   it("actualiza etapa_id y probabilidad", async () => {
     mock.setTableResult("crm_oportunidades", { data: {}, error: null });
-    await expect(moverEtapaOportunidad({ id: "op-1", etapa_id: "e-2", probabilidad: 75 })).resolves.toBeUndefined();
+    await expect(moverEtapaOportunidad({ id: "op-1", etapa_id: "e-2", probabilidad: 75 })).resolves.toMatchObject({ avisoActividad: null });
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
 
@@ -76,7 +76,7 @@ describe("moverEtapaOportunidad", () => {
 describe("eliminarOportunidad", () => {
   it("soft-delete con deleted_at", async () => {
     mock.setTableResult("crm_oportunidades", { data: {}, error: null });
-    await expect(eliminarOportunidad("op-1", "u-1")).resolves.toBeUndefined();
+    await expect(eliminarOportunidad("op-1", "u-1")).resolves.toMatchObject({ avisoActividad: null });
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
 });

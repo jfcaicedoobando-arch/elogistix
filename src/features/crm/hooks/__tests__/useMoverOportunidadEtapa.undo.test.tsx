@@ -18,6 +18,8 @@ vi.mock("../moverOportunidadEtapaHelpers", () => ({
   resolverProbabilidad: () => 50,
   resolverCierreGanada: () => ({}),
   resolverLimpiezaCierre: () => ({}),
+  resolverRestauracionCierre: () => ({}),
+  puedeRestaurarCierre: () => true,
   avisarCriteriosPendientes: vi.fn(async () => undefined),
   // v13.823.121: el hook delega en el helper puro la decisión de ofrecer Undo.
   puedeOfrecerUndo: (e?: { tipo?: string; crea_tarea_seguimiento?: boolean | null }) =>

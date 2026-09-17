@@ -43,6 +43,7 @@ describe("vincularOCrearOportunidadParaCotizacion", () => {
       oportunidadId: "op-1",
       leadId: "lead-1",
       updatedAt: "2026-09-03T12:00:00Z",
+      avisoActividad: null,
     });
     expect(registrarActividad).toHaveBeenCalledTimes(1);
   });
