@@ -113,7 +113,8 @@ export default function ResetPassword() {
     }
   };
 
-  const tituloPantalla = esInvitacion ? "Crea tu contraseña" : "Restablecer contraseña";
+  const copy = copyPantalla(esInvitacion);
+  const tituloPantalla = copy.titulo;
 
   const firstFieldError = errors.password?.message ?? errors.password2?.message ?? null;
   const alertMessage = error ?? firstFieldError;
