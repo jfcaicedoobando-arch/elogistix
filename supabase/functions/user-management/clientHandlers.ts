@@ -11,16 +11,26 @@ import { mensajeSeguro } from "./errores.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
+/**
+ * Destino del enlace del correo de invitación.
+ *
+ * El invitado NO tiene contraseña todavía: aterrizarlo en `/login` era un
+ * callejón sin salida. `/reset-password` ya acepta la sesión efímera del enlace
+ * y pide la contraseña; `origen=invitacion` sólo cambia el copy y el destino
+ * final (portal/agente en vez de login).
+ */
 export function resolveRedirectTo(rawOrigin: string): string {
   const ALLOWED_REDIRECT_ORIGINS = new Set<string>([
+    "https://librecarga.com",
+    "https://www.librecarga.com",
     "https://elogistix.lovable.app",
     "https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app",
   ]);
   const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(rawOrigin);
   const safeOrigin = ALLOWED_REDIRECT_ORIGINS.has(rawOrigin) || isLocalhost
     ? rawOrigin
-    : "https://elogistix.lovable.app";
-  return `${safeOrigin}/portal/login`;
+    : "https://librecarga.com";
+  return `${safeOrigin}/reset-password?origen=invitacion`;
 }
 
 function validateInviteInput(body: Record<string, unknown>): { email: string; cliente_id: string; organization_id: string } | string {
