@@ -23,6 +23,13 @@ export interface ConceptoVentaCotizacion {
    * Opcional para soportar cotizaciones legacy persistidas en jsonb.
    */
   tasa_iva_aplicada?: number;
+  /**
+   * Tratamiento fiscal explícito del renglón heredado del catálogo de
+   * productos y servicios. Incluye `no_objeto` (SAT ObjetoImp 01), que NO se
+   * puede derivar de `aplica_iva`/`tasa_iva_aplicada`. Ausente en cotizaciones
+   * legacy: ahí se sigue resolviendo por tasa/flag.
+   */
+  tipo_iva?: string;
   notas?: string;
 }
 

@@ -28,6 +28,13 @@ export interface FilaCostoLocal {
    */
   tasa_iva_aplicada?: number;
   /**
+   * Tratamiento fiscal explícito heredado del catálogo (`gravado_16`,
+   * `gravado_8`, `tasa_0`, `exento`, `no_objeto`). Se propaga tal cual al
+   * concepto de venta: "no objeto" (SAT 01) no se puede reconstruir a partir
+   * de la tasa. `undefined` = fila legacy sin tratamiento explícito.
+   */
+  tipo_iva?: string;
+  /**
    * B-073: linkage a la tarifa/recargo de costeo que originó la fila en la
    * auto-carga desde tarifa. Se persiste en `cotizacion_costos` para que
    * `revalidar_tarifa_cotizacion` pueda comparar el precio vigente contra

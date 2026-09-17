@@ -81,7 +81,9 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
               onUpdate(gi, "concepto", p.nombre);
               onUpdate(gi, "clave_sat", p.clave_sat);
               onUpdate(gi, "concepto_libre", false);
-              onUpdate(gi, "aplica_iva", p.tipo_iva === "gravado_16");
+              // El tratamiento fiscal explícito manda; la tasa es derivada.
+              onUpdate(gi, "tipo_iva", p.tipo_iva);
+              onUpdate(gi, "aplica_iva", tasaDesdeTipoIva(p.tipo_iva) > 0);
               onUpdate(gi, "tasa_iva_aplicada", tasaDesdeTipoIva(p.tipo_iva));
               // Sólo pre-llena unidad si la fila no tenía una elegida a mano.
               if (p.clave_unidad_sat && !fila.unidad_medida) {
