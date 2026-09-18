@@ -95,3 +95,32 @@ Investigación del 2026-09-18 (P1 · auditoría IVA):
   una PPD con varios tratamientos (16% + 0% / Exento / 8%) **sí** se cobra: cada
   grupo lleva su propia BaseDR prorrateada (`trasladoDr.ts` +
   `buildTaxesDr`), sin tasas promedio.
+
+## REP con renglones «No objeto de impuesto» (SAT 01) — XML manual
+
+La API de Facturapi no expone `ObjetoImpDR` en `related_documents` (soporte lo
+confirmó por ticket). Para poder timbrar el complemento de pago de facturas PPD
+con renglones no objeto, Libre Carga **serializa el XML del Complemento de
+Pagos 2.0 por su cuenta** y lo envía en el nodo `complements`:
+
+- `pagoXml.ts` — nodo `pago20:Pagos` (Version 2.0, `Totales` antes de `Pago`).
+- `pagoXmlDr.ts` — `DoctoRelacionado`, `ImpuestosDR` (RetencionesDR antes de
+  TrasladosDR) y acumulación de totales en MXN.
+- `repManual.ts` — decide la ruta (`requiereXmlManual`) y arma el payload.
+
+Reglas fiscales aplicadas:
+
+- `ObjetoImpDR="01"` sólo cuando **todos** los renglones del documento son no
+  objeto; en ese caso se omite `ImpuestosDR` (el SAT prohíbe declarar un
+  impuesto inexistente, aunque sea en ceros).
+- Factura mixta ⇒ `ObjetoImpDR="02"` declarando **únicamente** los impuestos de
+  los renglones gravados. El importe no objeto entra al denominador del
+  prorrateo, no al cálculo del impuesto.
+- Nunca se reclasifica un renglón a `Exento` ni a tasa 0%.
+
+Responsabilidad y verificación: al armar el XML nosotros asumimos su validez
+(versión, orden de nodos, decimales). Antes de usarlo en producción, emitir un
+REP en el ambiente de pruebas del proveedor y revisar el XML timbrado con
+Contabilidad. Si el proveedor rechaza el complemento, el pago queda en estado
+`Error` con `rep_error` (`MSG_REP_NO_OBJETO` o el error del proveedor), sin
+timbrar ni duplicar, y es reintentable.
