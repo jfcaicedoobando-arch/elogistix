@@ -57,7 +57,8 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     adminClient.from("conceptos_venta").select("id, estado_facturacion").eq("embarque_id", embarqueId),
     adminClient.from("conceptos_costo").select("id").eq("embarque_id", embarqueId),
     adminClient.from("facturas").select("numero, estado, total, moneda").eq("embarque_id", embarqueId).limit(10),
-    adminClient.from("proformas").select("folio, estado").eq("embarque_id", embarqueId).limit(10),
+    // `proformas` usa `numero` + `estado_proforma` (no existen folio/estado).
+    adminClient.from("proformas").select("numero, estado_proforma").eq("embarque_id", embarqueId).limit(10),
     adminClient.from("documentos_embarque").select("nombre, estado, archivo").eq("embarque_id", embarqueId).is("deleted_at", null).limit(40),
   ]);
 
