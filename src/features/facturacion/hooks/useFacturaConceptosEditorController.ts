@@ -74,7 +74,9 @@ export function useFacturaConceptosEditorController({ facturaId, organizationId,
       cantidad: row.cantidad,
       precio_unitario: row.precio_unitario,
       clave_sat: row.clave_sat,
-      tipo_iva: row.tipo_iva,
+      // P1 · Auditoría IVA — fila legacy sin tratamiento: queda "Por confirmar"
+      // (undefined) y el formulario exige elegirlo antes de guardar.
+      tipo_iva: row.tipo_iva ?? undefined,
       tasa_ret_isr: row.tasa_ret_isr ?? 0,
       tasa_ret_iva: row.tasa_ret_iva ?? 0,
     });
