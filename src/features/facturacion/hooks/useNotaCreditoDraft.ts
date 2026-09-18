@@ -28,6 +28,8 @@ import {
   conceptosSeleccionados,
 } from "@/features/facturacion/utils/notaCreditoSugerencias";
 import { calcularTotalesNC } from "@/features/facturacion/utils/notaCreditoTotales";
+import { conceptosPorSaldoCompleto } from "@/features/facturacion/utils/saldoCompletoNC";
+import { lineaIndeterminadaNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import { logger } from "@/lib/observability/logger";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
@@ -45,6 +47,10 @@ export function makeConcepto(): ConceptoNotaCredito {
     clave_unidad: CLAVE_UNIDAD_DEFAULT,
     unidad: "Unidad de servicio",
     tasa_iva: TASA_IVA,
+    // P1-IVA: el tratamiento fiscal se declara explícito, nunca se deduce.
+    tipo_iva: "gravado_16",
+    tasa_ret_isr: 0,
+    tasa_ret_iva: 0,
   };
 }
 
