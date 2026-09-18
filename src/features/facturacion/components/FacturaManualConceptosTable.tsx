@@ -17,6 +17,8 @@ import { formatCurrency } from "@/lib/formatters";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 import type { Moneda } from "@/types/db";
+import { useIvaFronteraHabilitada } from "@/features/configuracion";
+import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
 
 interface Props {
   conceptos: ConceptoManualInput[];
@@ -25,6 +27,10 @@ interface Props {
 }
 
 export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Props) {
+  // P2-IVA: el 8% de frontera es un estímulo; si la organización no lo tiene
+  // habilitado la opción se deshabilita aquí (el servidor sigue siendo la
+  // autoridad y rechaza el timbrado, fail-closed).
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   const update = (idx: number, patch: Partial<ConceptoManualInput>) => {
     onChange(conceptos.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
   };
@@ -115,12 +121,21 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gravado_16">IVA 16%</SelectItem>
-                      <SelectItem value="gravado_8">IVA 8% (frontera)</SelectItem>
+                      <SelectItem
+                        value="gravado_8"
+                        disabled={!fronteraHabilitada && c.tipo_iva !== "gravado_8"}
+                        title={fronteraHabilitada ? undefined : AVISO_IVA_FRONTERA_DESHABILITADO}
+                      >
+                        IVA 8% (frontera)
+                      </SelectItem>
                       <SelectItem value="tasa_0">Tasa 0%</SelectItem>
                       <SelectItem value="exento">Exento</SelectItem>
                       <SelectItem value="no_objeto">No objeto de impuesto (SAT 01)</SelectItem>
                     </SelectContent>
                   </Select>
+                  {!fronteraHabilitada && (
+                    <p className="sr-only">{AVISO_IVA_FRONTERA_DESHABILITADO}</p>
+                  )}
                 </div>
                 <div className="col-span-1 flex items-center justify-end gap-1">
                   <span className="text-body-sm tabular-nums text-muted-foreground truncate">
