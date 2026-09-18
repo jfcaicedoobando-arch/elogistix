@@ -1,13 +1,11 @@
 /**
  * Serialización del nodo `pago20:DoctoRelacionado` del Complemento de Pagos 2.0.
  *
- * ¿Por qué armamos el XML a mano? La API de Facturapi sólo acepta
- * `related_documents[].taxes` (base, tipo, tasa) y NO expone `ObjetoImpDR`, así
- * que una factura PPD con renglones "No objeto de impuesto" (SAT 01) no se
- * puede representar por la vía estructurada. Facturapi confirmó por ticket que
- * la alternativa soportada es enviar el XML del complemento en el nodo
- * `complements`. Aquí se construye ese XML SIN recalcular nada: las bases,
- * tasas y prorrateos vienen de `helpers.ts · buildTaxesDr`.
+ * Se arma a mano porque la API de Facturapi sólo acepta
+ * `related_documents[].taxes` y NO expone `ObjetoImpDR` (confirmado por ticket):
+ * la alternativa soportada es enviar el XML del complemento en `complements`.
+ * Aquí NO se recalcula nada: bases, tasas y prorrateos vienen de
+ * `helpers.ts · buildTaxesDr`.
  */
 
 export type FactorXml = "Tasa" | "Exento";
