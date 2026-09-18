@@ -8,6 +8,10 @@ import { jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
 import { withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
+import {
+  esTimbradoValido,
+  MIN_EDAD_LIBERACION_MINUTOS,
+} from "../_shared/timbradoPendiente.ts";
 
 export { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
 import { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
@@ -20,6 +24,8 @@ export interface FacturaRow {
   organization_id: string;
   facturapi_id: string | null;
   facturapi_claim_at: string | null;
+  /** P0-A: id remoto del intento con timbrado pendiente (si hubo). */
+  facturapi_pendiente_id?: string | null;
   serie: string | null;
   numero: string | null;
 }
@@ -44,7 +50,7 @@ export type BusquedaCfdi =
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, organization_id, facturapi_id, facturapi_claim_at, serie, numero")
+    .select("id, organization_id, facturapi_id, facturapi_claim_at, facturapi_pendiente_id, serie, numero")
     .eq("id", facturaId)
     .maybeSingle<FacturaRow>();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
@@ -127,6 +133,8 @@ export async function promoverFactura(input: PromoverInput): Promise<Response> {
     .from("facturas")
     .update({
       numero: `${serieTimbrada}${folio}`, facturapi_id: facturapiId, facturapi_claim_at: null,
+      // P0-A: el intento pendiente quedó resuelto.
+      facturapi_pendiente_id: null, facturapi_pendiente_at: null,
       uuid_fiscal: uuid, folio_fiscal: folio, serie: serieTimbrada,
       factura_pdf_url: pdfUrl, factura_xml_url: xmlUrl, estado: "Emitida", ambiente,
       timbrado_en: match.date ?? new Date().toISOString(), timbrado_por: user.id,
@@ -149,9 +157,11 @@ export async function promoverFactura(input: PromoverInput): Promise<Response> {
 export async function liberarClaim(
   supabase: SupabaseClient, factura: FacturaRow, claimTag: string, edadMin: number, user: UserIdentity,
 ): Promise<Response> {
+  // P0-A.5: la liberación exige superar la ventana de recuperación de
+  // FacturAPI (~50 min), no el umbral de gracia de la consulta (3 min).
   const { data: liberado, error: rpcErr } = await supabase.rpc(
     "liberar_claim_facturapi_huerfano",
-    { p_factura_id: factura.id, p_min_edad_minutos: MIN_EDAD_MINUTOS },
+    { p_factura_id: factura.id, p_min_edad_minutos: MIN_EDAD_LIBERACION_MINUTOS },
   );
   if (rpcErr) return jsonResponse({ error: "release_failed", detail: rpcErr.message }, 500);
 

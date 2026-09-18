@@ -7,7 +7,8 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
-import { MIN_EDAD_MINUTOS, type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
+import { type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
+import { MIN_EDAD_LIBERACION_MINUTOS } from "../_shared/timbradoPendiente.ts";
 
 
 
@@ -23,6 +24,8 @@ export interface NotaCreditoRow {
   organization_id: string;
   facturapi_id: string | null;
   facturapi_claim_at: string | null;
+  /** P0-A: id remoto del intento con timbrado pendiente (si hubo). */
+  facturapi_pendiente_id?: string | null;
   serie: string | null;
   folio: string | null;
 }
@@ -30,7 +33,7 @@ export interface NotaCreditoRow {
 export async function loadNotaCredito(supabase: SupabaseClient, notaCreditoId: string): Promise<NotaCreditoRow | Response> {
   const { data: nc, error: ncErr } = await supabase
     .from("factura_notas_credito")
-    .select("id, organization_id, facturapi_id, facturapi_claim_at, serie, folio")
+    .select("id, organization_id, facturapi_id, facturapi_claim_at, facturapi_pendiente_id, serie, folio")
     .eq("id", notaCreditoId)
     .maybeSingle<NotaCreditoRow>();
   if (ncErr || !nc) return jsonResponse({ error: "nota_credito_not_found", detail: ncErr?.message }, 404);
@@ -68,6 +71,8 @@ export async function promoverNc(input: PromoverNcInput): Promise<Response> {
     .from("factura_notas_credito")
     .update({
       folio: folioFinal, facturapi_id: facturapiId, facturapi_claim_at: null,
+      // P0-A: el intento pendiente quedó resuelto.
+      facturapi_pendiente_id: null, facturapi_pendiente_at: null,
       uuid_fiscal: uuid, folio_fiscal: folio, serie: serieTimbrada,
       pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup_path: respaldo.path,
       estado: "Timbrada", ambiente,
@@ -105,7 +110,8 @@ export async function promoverNc(input: PromoverNcInput): Promise<Response> {
 export async function liberarClaimNc(
   supabase: SupabaseClient, nc: NotaCreditoRow, claimTag: string, edadMin: number, user: UserIdentity,
 ): Promise<Response> {
-  const limite = new Date(Date.now() - MIN_EDAD_MINUTOS * 60_000).toISOString();
+  // P0-A.5: ventana segura posterior a la recuperación de FacturAPI (~50 min).
+  const limite = new Date(Date.now() - MIN_EDAD_LIBERACION_MINUTOS * 60_000).toISOString();
   const { data: liberado, error: updErr } = await supabase
     .from("factura_notas_credito")
     .update({ facturapi_id: null, facturapi_claim_at: null })

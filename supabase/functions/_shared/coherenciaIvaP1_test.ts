@@ -4,7 +4,11 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { clasificarCoherenciaIva } from "./coherenciaIva.ts";
 
-const contextoSource = await Deno.readTextFile(new URL("../facturapi-emitir/contexto.ts", import.meta.url));
+// La clasificación vive en `conceptosFiscales.ts` (extraído de `contexto.ts`
+// por el límite de líneas); se auditan ambos archivos.
+const contextoSource =
+  (await Deno.readTextFile(new URL("../facturapi-emitir/contexto.ts", import.meta.url))) +
+  (await Deno.readTextFile(new URL("../facturapi-emitir/conceptosFiscales.ts", import.meta.url)));
 
 Deno.test("gravado 16% con tasa 0.16 es coherente", () => {
   assertEquals(clasificarCoherenciaIva({ tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 }).estado, "ok");

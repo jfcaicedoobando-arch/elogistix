@@ -69,6 +69,8 @@ export interface FacturapiNcPayload {
   exchange?: number;
   /** Ola 4 · N1 — tag de correlación PENDING:<uuid>. */
   external_id?: string;
+  /** P0-B: llave oficial de idempotencia de FacturAPI (= claimTag). */
+  idempotency_key?: string;
   related: string[];
   relationship: "01";
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
