@@ -31,7 +31,7 @@ import {
 import { resolverNoObjetoDr } from "./objetoImpDr.ts";
 import { payloadRepFinal } from "./repManual.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
-import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
+import { esReTimbradoPermitido, reservarRep } from "./claimRep.ts";
 import { leerConceptosDr } from "./conceptosFacturaDr.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
