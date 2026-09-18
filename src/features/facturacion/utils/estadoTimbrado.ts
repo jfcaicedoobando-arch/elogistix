@@ -59,16 +59,7 @@ export function buildEstadoTimbrado(
     tipoCambio: factura.tipo_cambio == null ? null : Number(factura.tipo_cambio),
   });
 
-  // PPD + "No objeto de impuesto" (SAT 01) SÍ se emite: Facturapi confirmó que
-  // el método de pago es del CFDI completo y `taxability` es por concepto. Lo
-  // único en riesgo es el REP del cobro posterior ⇒ advertencia, no bloqueo.
-  const advertencias = ppdConNoObjetoRequiereAviso(seleccion.metodoPago, conceptos ?? [])
-    ? [AVISO_NO_OBJETO_PPD_REP]
-    : [];
-
-  // La fecha desfasada ya no bloquea: el servidor la realinea al día del timbre.
-  const avisoFecha = avisoFechaEmisionDesfasada(factura.fecha_emision);
-  if (avisoFecha) advertencias.push(avisoFecha);
+  const advertencias = construirAdvertencias(factura, seleccion, conceptos);
 
   const esFastPath =
     puedeTimbrar &&
