@@ -52,10 +52,13 @@ BEGIN
            -- igual que en la rama consolidada (pcc.total ya viene redondeado).
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           public._tipo_iva_desde_tasa(
-             cv.aplica_iva,
-             CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN cv.aplica_iva = false THEN NULL
+           CASE WHEN cv.tipo_iva IS NOT NULL THEN cv.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  cv.aplica_iva,
+                  CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
+                WHEN cv.aplica_iva = false THEN NULL
                 ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, cv.proforma_id
     FROM public.conceptos_venta cv
