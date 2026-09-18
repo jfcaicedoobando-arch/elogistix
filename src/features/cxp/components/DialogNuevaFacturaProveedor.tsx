@@ -86,14 +86,12 @@ function DialogNuevaFacturaProveedorForm({
   });
   const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
 
-  // R170-10: el CFDI puede traer IVA por renglón; si lo trae, el aviso no debe
-  // decir "no desglosado por partida".
-  const ivaDesglosadoPartidas = ctl.cfdiConceptos.reduce(
-    (acc, c) => acc + (Number(c.iva) || 0),
-    0,
-  );
-
-  const { conceptosParaCuadre, cuadre, keyRenglonSospechoso } = useCuadreCaptura({
+  // R170-10 + P2-IVA: el IVA por partida se lee de la misma fuente que el
+  // cuadre (CFDI > conceptos manuales), no sólo del CFDI.
+  const {
+    conceptosParaCuadre, cuadre, keyRenglonSospechoso,
+    ivaPartidas: ivaDesglosadoPartidas,
+  } = useCuadreCaptura({
     subtotal: sub,
     cfdiConceptos: ctl.cfdiConceptos,
     conceptosManuales: ctl.conceptosManuales.conceptos,
