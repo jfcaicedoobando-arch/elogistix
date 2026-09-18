@@ -28,7 +28,7 @@ import {
   type GrupoTrasladoDr,
 } from "./trasladoDr.ts";
 import { resolverNoObjetoDr } from "./objetoImpDr.ts";
-import { conComplementoXmlManual, requiereXmlManual } from "./repManual.ts";
+import { payloadRepFinal } from "./repManual.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 import { leerConceptosDr } from "./conceptosFacturaDr.ts";
