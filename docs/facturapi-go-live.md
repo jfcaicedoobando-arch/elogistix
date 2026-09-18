@@ -47,11 +47,22 @@ Como `admin_org` o `super_admin`:
 2. En la tarjeta de configuración cambia el ambiente a **Producción**.
 3. Avísale a la organización: a partir de ese momento todo timbrado es real.
 
+## Versión del SDK en uso
+`supabase/functions/_shared/facturapiClient.ts` importa `npm:facturapi@5.0.0`
+(publicada el 18-sep-2026, última confirmada en el GitHub oficial). Los breaking
+changes de v5 son de tipado (`SearchResult<T>` con totales opcionales, retiro de
+`CursorSearchResult<T>`) más un fix de serialización de query params anidados;
+no afectan nuestros payloads. Hay un guard de versión en
+`src/__tests__/architecture/facturapi-multi-tenant.test.ts`.
+
 ## Capacidades del PAC disponibles (aún no implementadas en Libre Carga)
 Revisión del GitHub de FacturApi el 2026-08-29:
 - **Complemento de Leyendas Fiscales** (documentado en facturapi-docs).
 - **Rescue CFDI**: recuperación de CFDI emitidos fuera de FacturApi.
 - **Borradores de retenciones** (SDK 4.19.0): no emitimos retenciones hoy.
+- **`invoices.paymentSummary`** (SDK 4.21.0): devuelve el documento relacionado
+  del complemento de pago (parcialidad, saldo anterior e impuestos prorrateados
+  al monto pagado). No lo usamos: hoy calculamos el prorrateo nosotros.
 - **Status 202** (timbrado asíncrono): hoy timbramos en síncrono; si el PAC
   empieza a responder 202 habrá que ajustar los flujos de timbrado.
 
