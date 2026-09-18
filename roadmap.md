@@ -11,3 +11,4 @@
 ## Pendiente
 - [ ] UI/UX del modal "Traspaso entre cuentas propias": layout estable, tipo de cambio con 4 decimales, resumen legible del monto recibido.
 - [x] Cotización: mostrar SAT 01 y Exento como tratamientos fiscales no editables en filas MXN/USD, con pruebas focalizadas.
+- [x] Lote P1 de IVA: coherencia única `tipo_iva`/tasa en cotización, proforma→factura y emisión; bloqueo accionable en casos ambiguos; diagnóstico agregado de sólo lectura.
