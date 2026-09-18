@@ -286,7 +286,11 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
   // Ola 4 · N1 — tag de correlación para recuperar CFDIs "huérfanos".
-  if (ctx.external_id) payload.external_id = ctx.external_id;
+  // P0-B: el MISMO tag viaja como `idempotency_key` (dedup oficial de FacturAPI).
+  if (ctx.external_id) {
+    payload.external_id = ctx.external_id;
+    payload.idempotency_key = ctx.external_id;
+  }
   // v13.208.0 — bloque "Referencias del embarque" al pie del PDF.
   const pdfSection = buildPdfCustomSection(ctx.referencias);
   if (pdfSection) payload.pdf_custom_section = pdfSection;

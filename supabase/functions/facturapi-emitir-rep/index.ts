@@ -271,6 +271,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
   // deduplica por external_id; es sólo un campo de búsqueda).
   payload.external_id = claimTag;
+  // P0-B: dedup oficial de FacturAPI — mismo claim ⇒ misma llave idempotente.
+  payload.idempotency_key = claimTag;
   // Con renglones "no objeto" el complemento viaja como XML nuestro (único
   // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
   const resultado = await timbrarRep({
