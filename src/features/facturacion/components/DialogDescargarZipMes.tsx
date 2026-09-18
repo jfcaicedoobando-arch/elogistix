@@ -1,6 +1,6 @@
 /**
  * DialogDescargarZipMes — descarga el paquete ZIP mensual de CFDI directo del
- * PAC (FacturApi zip-requests, SDK 4.20.0): PDF+XML de facturas, notas de
+ * PAC (FacturApi zip-requests, SDK 5.0.0): PDF+XML de facturas, notas de
  * crédito y REPs del mes en un solo archivo. Pensado para el cierre contable.
  *
  * v13.794.0

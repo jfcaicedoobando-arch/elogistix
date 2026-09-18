@@ -1,6 +1,6 @@
 /**
  * Descarga el paquete ZIP mensual de CFDI (PDF+XML) generado del lado del PAC
- * vía la edge function `facturapi-descargar-zip` (SDK FacturApi 4.20.0,
+ * vía la edge function `facturapi-descargar-zip` (SDK FacturApi 5.0.0,
  * métodos zip-requests). Devuelve un Blob listo para guardar en disco.
  *
  * v13.794.0
