@@ -154,6 +154,10 @@ export function CfdiConceptosPreview({
         </div>
       </div>
       <ConceptosTotalesResumen resumen={resumen} moneda={moneda} />
+      <p className="text-label text-muted-foreground text-right">
+        Total del documento = subtotal + IVA + IEPS − retenciones. Los costos del embarque se
+        concilian contra el subtotal (sin impuestos).
+      </p>
     </FormSection>
   );
 }
