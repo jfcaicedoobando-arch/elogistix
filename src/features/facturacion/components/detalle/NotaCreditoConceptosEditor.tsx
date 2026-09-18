@@ -4,15 +4,33 @@
  *
  * v13.823.297 — los totales salieron a `NotaCreditoResumen`; cada renglón
  * muestra su importe con formato de moneda.
+ *
+ * P1-IVA — el tratamiento fiscal de los renglones COPIADOS del CFDI original es
+ * de sólo lectura (la NC debe reversar exactamente lo timbrado). Un renglón
+ * capturado a mano sí exige elegirlo: nunca nace al 16% por omisión.
  */
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { subtotalLinea } from "@/lib/financial/financialUtils";
-import { etiquetaTratamientoNC } from "@/features/facturacion/utils/impuestosNotaCredito";
+import {
+  etiquetaTratamientoNC,
+  tasaCanonicaNC,
+  TRATAMIENTOS_NC,
+  type TratamientoNC,
+} from "@/features/facturacion/utils/impuestosNotaCredito";
+import { TIPO_IVA_LABEL_SAT } from "@/lib/financial/tipoIvaSat";
+import { useIvaFronteraHabilitada } from "@/features/configuracion";
+import {
+  AVISO_IVA_FRONTERA_DESHABILITADO,
+  TIPO_IVA_FRONTERA,
+} from "@/lib/financial/ivaFrontera";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 interface Props {
@@ -22,6 +40,56 @@ interface Props {
   onUpdate: (i: number, patch: Partial<ConceptoNotaCredito>) => void;
   onRemove: (i: number) => void;
 }
+
+/** Selector de tratamiento fiscal para un renglón capturado a mano. */
+function TratamientoSelect({
+  concepto,
+  indice,
+  fronteraHabilitada,
+  onUpdate,
+}: {
+  concepto: ConceptoNotaCredito;
+  indice: number;
+  fronteraHabilitada: boolean;
+  onUpdate: Props["onUpdate"];
+}) {
+  return (
+    <div className="col-span-11 space-y-1">
+      <Label size="sm" htmlFor={`nc-tratamiento-${indice}`}>
+        Tratamiento fiscal de IVA *
+      </Label>
+      <Select
+        value={concepto.tipo_iva ?? undefined}
+        onValueChange={(v) => {
+          const tipo = v as TratamientoNC;
+          if (tipo === TIPO_IVA_FRONTERA && !fronteraHabilitada) return;
+          onUpdate(indice, { tipo_iva: tipo, tasa_iva: tasaCanonicaNC(tipo) });
+        }}
+      >
+        <SelectTrigger id={`nc-tratamiento-${indice}`} className="h-10">
+          <SelectValue placeholder="Elige el tratamiento de la factura original" />
+        </SelectTrigger>
+        <SelectContent>
+          {TRATAMIENTOS_NC.map((tipo) => (
+            <SelectItem
+              key={tipo}
+              value={tipo}
+              disabled={tipo === TIPO_IVA_FRONTERA && !fronteraHabilitada}
+              title={
+                tipo === TIPO_IVA_FRONTERA && !fronteraHabilitada
+                  ? AVISO_IVA_FRONTERA_DESHABILITADO
+                  : undefined
+              }
+            >
+              {TIPO_IVA_LABEL_SAT[tipo]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 
 export function NotaCreditoConceptosEditor(props: Props) {
   const { conceptos, monedaFactura, onAdd, onUpdate, onRemove } = props;
