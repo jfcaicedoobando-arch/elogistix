@@ -64,9 +64,3 @@ export async function resolverReferenciasEmbarque(
   return refs;
 }
 
-/**
- * Tasas del catálogo SAT c_TasaOCuota aplicables a traslado de IVA.
- * El factor "Exento" no lleva tasa: lo resuelve `factorIvaFacturaOriginal`.
- */
-const TASAS_IVA_SAT: readonly number[] = [0, 0.08, 0.16];
-
