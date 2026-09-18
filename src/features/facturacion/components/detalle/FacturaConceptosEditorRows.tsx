@@ -156,7 +156,9 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       <div className="col-span-2">
         <Label size="sm">IVA</Label>
         <Select value={tipoIva} onValueChange={(v) => patchTipoIva(v as TipoIvaConcepto)}>
-          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9" aria-label="Tratamiento de IVA">
+            <SelectValue placeholder={LABEL_TRATAMIENTO_PENDIENTE} />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">{TIPO_IVA_LABEL.gravado_16}</SelectItem>
             <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
@@ -173,11 +175,19 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         disabled={noObjeto}
         hint={MSG_NO_OBJETO_RETENCIONES}
       />
+      {tratamientoPendiente && (
+        <p className="col-span-12 text-body-sm text-destructive">{MSG_TRATAMIENTO_PENDIENTE}</p>
+      )}
       <div className="col-span-12 flex justify-end gap-1">
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
           <X className="h-4 w-4 mr-1" /> Cancelar
         </Button>
-        <Button size="sm" onClick={onSave} disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0} aria-label="Guardar">
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0 || tratamientoPendiente}
+          aria-label="Guardar"
+        >
           <Check className="h-4 w-4 mr-1" /> Guardar
         </Button>
       </div>
