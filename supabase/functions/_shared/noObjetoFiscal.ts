@@ -18,10 +18,11 @@ export const MSG_NO_OBJETO_RETENCIONES =
   "cambia el tratamiento fiscal del concepto.";
 
 export const MSG_NO_OBJETO_PPD =
-  "Una factura con conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01) no puede emitirse como PPD: el " +
-  "complemento de pago no permite declarar ObjetoImpDR=01, así que el cobro se quedaría sin REP. Emítela " +
-  "como PUE o corrige el tratamiento fiscal del concepto con Contabilidad (nunca a Exento ni Tasa 0% por " +
-  "conveniencia).";
+  "Limitación actual de nuestra integración de timbrado (no es una prohibición del SAT): una factura con " +
+  "conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01) no puede emitirse como PPD, porque el proveedor " +
+  "de timbrado no expone el campo ObjetoImpDR del complemento de pago y el cobro se quedaría sin REP. " +
+  "Emítela como PUE o revisa el tratamiento fiscal del concepto con Contabilidad (nunca cambiarlo a " +
+  "Exento ni Tasa 0% por conveniencia).";
 
 export interface LineaNoObjeto {
   tipo_iva?: string | null;
