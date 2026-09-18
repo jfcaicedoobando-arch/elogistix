@@ -27,6 +27,11 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import type { AppRole } from "@/types/appRole";
 import { TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
+import { useIvaFronteraHabilitada } from "@/features/configuracion/hooks/useIvaFrontera";
+import {
+  AVISO_IVA_FRONTERA_DESHABILITADO,
+  tipoIvaSeleccionable,
+} from "@/lib/financial/ivaFrontera";
 
 /**
  * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
@@ -35,6 +40,13 @@ import { TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
  */
 const ROLES_SIN_ALTA_CATALOGO: readonly AppRole[] = ["vendedor", "ejecutivo_pricing", "gerente_comercial"];
 import { CrearConceptoInlineForm } from "./CrearConceptoInlineForm";
+
+export function productoFronteraBloqueado(
+  producto: Pick<ProductoCatalogo, "tipo_iva">,
+  fronteraHabilitada: boolean,
+): boolean {
+  return !tipoIvaSeleccionable(producto.tipo_iva, fronteraHabilitada);
+}
 
 interface Props {
   value: string; // nombre actual guardado en la cotización
@@ -90,6 +102,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
   const { organizationId } = useOrgActiva();
   const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [creando, setCreando] = useState(false);
@@ -154,12 +167,20 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                     <div className="p-3 text-body text-muted-foreground">Sin coincidencias.</div>
                   </CommandEmpty>
                   <CommandGroup>
-                    {productos.map((p) => (
-                      <CommandItem
-                        key={p.id}
-                        value={p.nombre}
-                        onSelect={() => { onSelect(p); cerrarYResetear(); }}
-                      >
+                    {productos.map((p) => {
+                      const fronteraBloqueada = productoFronteraBloqueado(p, fronteraHabilitada);
+                      return (
+                        <CommandItem
+                          key={p.id}
+                          value={p.nombre}
+                          disabled={fronteraBloqueada}
+                          title={fronteraBloqueada ? AVISO_IVA_FRONTERA_DESHABILITADO : undefined}
+                          onSelect={() => {
+                            if (fronteraBloqueada) return;
+                            onSelect(p);
+                            cerrarYResetear();
+                          }}
+                        >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
@@ -172,9 +193,15 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                             SAT {p.clave_sat} · {p.clave_unidad_sat} ·{" "}
                             {TIPO_IVA_LABEL_CORTO[p.tipo_iva]}
                           </div>
+                          {fronteraBloqueada && (
+                            <div className="text-label text-warning">
+                              Estímulo fronterizo deshabilitado
+                            </div>
+                          )}
                         </div>
-                      </CommandItem>
-                    ))}
+                        </CommandItem>
+                      );
+                    })}
                   </CommandGroup>
                 </>
               )}

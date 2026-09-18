@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
 import type { Tables } from "@/types/db";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { TratamientoIvaBadge } from "./TratamientoIvaBadge";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -66,9 +67,7 @@ export function GrupoConceptosContenedor({
               return (
                 <>
                   {c.descripcion}
-                  {c.moneda === "USD" && c.aplica_iva && (
-                    <Badge variant="warning" className="ml-2 text-body-sm">+IVA</Badge>
-                  )}
+                  <TratamientoIvaBadge concepto={c} />
                 </>
               );
             },

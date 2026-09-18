@@ -7,6 +7,7 @@ import type { PortalProformaConcepto, PortalProformaData } from "@/features/prof
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 function fmtDinero(v: number | null | undefined, moneda: string | null | undefined): string {
   if (v == null) return "—";
   try {
@@ -81,6 +82,7 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
                   <DetailTableHead className="pr-2">Descripción</DetailTableHead>
                   <DetailTableHead className="text-right">Cantidad</DetailTableHead>
                   <DetailTableHead className="text-right">P. unit.</DetailTableHead>
+                  <DetailTableHead>IVA</DetailTableHead>
                   <DetailTableHead className="pl-2 text-right">Importe</DetailTableHead>
                 </TableRow>
               </TableHeader>
@@ -90,6 +92,7 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
                     <TableCell className="pr-2">{c.descripcion ?? "—"}</TableCell>
                     <TableCell className="text-right">{c.cantidad ?? "—"}</TableCell>
                     <TableCell className="text-right">{fmtDinero(c.precio_unitario, c.moneda ?? moneda)}</TableCell>
+                    <TableCell>{etiquetaTratamientoFila(c)}</TableCell>
                     <TableCell className="pl-2 text-right">{fmtDinero(c.importe, c.moneda ?? moneda)}</TableCell>
                   </TableRow>
                 ))}
