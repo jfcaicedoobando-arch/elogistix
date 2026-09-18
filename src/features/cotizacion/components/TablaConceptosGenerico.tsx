@@ -104,7 +104,10 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
           {iva !== undefined && !hayIva && (
-            <span className="text-body-sm text-muted-foreground">Sin IVA: conceptos a tasa 0% o exentos.</span>
+            <span className="text-body-sm text-muted-foreground">
+              Sin IVA: conceptos a tasa 0%, exentos o no objeto de impuesto (cada renglón indica su
+              tratamiento).
+            </span>
           )}
           <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
