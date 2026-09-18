@@ -55,6 +55,19 @@ export async function registrarNcPendiente(
   };
 }
 
+/**
+ * Devuelve la respuesta 202 si el CFDI quedó pendiente en FacturAPI, o `null`
+ * si trae timbre válido y el flujo normal debe continuar.
+ */
+export async function respuestaSiNcPendiente(
+  invoice: { id?: string | null; uuid?: string | null; status?: string | null } | null,
+  args: Omit<Args, "pendienteId">,
+): Promise<{ body: Record<string, unknown>; status: number } | null> {
+  const { esTimbradoPendiente } = await import("../_shared/timbradoPendiente.ts");
+  if (!esTimbradoPendiente(invoice)) return null;
+  return await registrarNcPendiente({ ...args, pendienteId: invoice?.id ?? null });
+}
+
 /** P0-B.4 — llave de idempotencia en uso: reconciliar, nunca crear otra NC. */
 export function cuerpoIdempotencyEnUsoNc(claimTag: string): { body: Record<string, unknown>; status: number } {
   return {
