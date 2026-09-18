@@ -5,7 +5,7 @@
  * el hook que calcula el total.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { ConceptoRowUSD } from "@/features/cotizacion/components/conceptos/ConceptoRowUSD";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
@@ -51,15 +51,21 @@ describe("ConceptoRowUSD · tasa mostrada vs. tasa calculada", () => {
     expect(screen.queryByText("0%")).toBeNull();
   });
 
-  it("una fila legacy sin tasa explícita hereda la tasa de la organización", () => {
+  it("una fila legacy sin clasificar pide definir el tratamiento, no muestra 0%", () => {
     renderRow({ ...base, tipo_iva: undefined, tasa_iva_aplicada: undefined });
-    expect(screen.getByText("16%")).toBeInTheDocument();
+    expect(screen.queryByText("0%")).toBeNull();
+    expect(screen.getByText(/por definir/i)).toBeInTheDocument();
   });
 
-  it("al cambiar el tratamiento a exento se persiste el cambio, no la tasa global", () => {
-    const actualizar = renderRow({ ...base, tipo_iva: "gravado_16" });
-    fireEvent.click(screen.getByText("16%"));
-    expect(screen.getByText("16%")).toBeInTheDocument();
-    expect(actualizar).not.toHaveBeenCalledWith(0, "tasa_iva_aplicada", 0.16);
+  it("una fila de frontera muestra 8% (su propia tasa, no la global)", () => {
+    renderRow({ ...base, tipo_iva: "gravado_8" });
+    expect(screen.getByText("8%")).toBeInTheDocument();
+    expect(screen.queryByText("0%")).toBeNull();
+  });
+
+  it("una fila a tasa 0% sigue mostrando 0%: la tasa global no la pisa", () => {
+    renderRow({ ...base, tipo_iva: "tasa_0" });
+    expect(screen.getByText("0%")).toBeInTheDocument();
+    expect(screen.queryByText("16%")).toBeNull();
   });
 });
