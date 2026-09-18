@@ -1,14 +1,15 @@
 /**
- * P1 · Auditoría IVA — Reglas de "No objeto de impuesto" (SAT ObjetoImp 01)
- * en el cliente: sin retenciones y sin PPD. Espejo de las del servidor.
+ * Reglas de "No objeto de impuesto" (SAT ObjetoImp 01) en el cliente: sin
+ * retenciones, y con PPD permitido (sólo se ADVIERTE por el REP del cobro).
+ * Espejo de las del servidor.
  */
 import { describe, it, expect } from "vitest";
 import {
-  MSG_NO_OBJETO_PPD,
+  AVISO_NO_OBJETO_PPD_REP,
   MSG_NO_OBJETO_RETENCIONES,
   esLineaNoObjeto,
   hayLineaNoObjeto,
-  ppdIncompatibleNoObjeto,
+  ppdConNoObjetoRequiereAviso,
   retencionesIncompatiblesNoObjeto,
   tieneRetenciones,
 } from "@/lib/financial/noObjetoFiscal";
@@ -34,21 +35,21 @@ describe("noObjetoFiscal", () => {
     expect(retencionesIncompatiblesNoObjeto({ tipo_iva: "gravado_16", tasa_ret_isr: 0.1 })).toBe(false);
   });
 
-  it("un solo renglón no objeto inhabilita el PPD de la factura", () => {
+  it("un renglón no objeto en PPD sólo amerita advertencia (no bloqueo)", () => {
     const lineas = [{ tipo_iva: "gravado_16" }, { tipo_iva: "no_objeto" }];
     expect(hayLineaNoObjeto(lineas)).toBe(true);
-    expect(ppdIncompatibleNoObjeto("PPD", lineas)).toBe(true);
-    expect(ppdIncompatibleNoObjeto("PUE", lineas)).toBe(false);
-    expect(ppdIncompatibleNoObjeto("PPD", [{ tipo_iva: "exento" }])).toBe(false);
-    expect(ppdIncompatibleNoObjeto("PPD", null)).toBe(false);
+    expect(ppdConNoObjetoRequiereAviso("PPD", lineas)).toBe(true);
+    expect(ppdConNoObjetoRequiereAviso("PUE", lineas)).toBe(false);
+    expect(ppdConNoObjetoRequiereAviso("PPD", [{ tipo_iva: "exento" }])).toBe(false);
+    expect(ppdConNoObjetoRequiereAviso("PPD", null)).toBe(false);
   });
 
   it("los mensajes explican qué hacer y no sugieren falsear el tratamiento", () => {
     expect(MSG_NO_OBJETO_RETENCIONES).toMatch(/retenciones/i);
-    expect(MSG_NO_OBJETO_PPD).toMatch(/PUE/);
-    expect(MSG_NO_OBJETO_PPD).toMatch(/nunca cambiarlo a Exento/i);
-    // Debe quedar claro que es una limitación de la integración, no del SAT.
-    expect(MSG_NO_OBJETO_PPD).toMatch(/limitaci[oó]n actual de nuestra integraci[oó]n/i);
-    expect(MSG_NO_OBJETO_PPD).toMatch(/no es una prohibici[oó]n del SAT/i);
+    // El aviso NO debe presentarse como prohibición ni mandar a cambiar a PUE.
+    expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/la emisi[oó]n/i);
+    expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/ObjetoImpDR/);
+    expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/nunca se cambiar[aá] el tratamiento a Exento/i);
+    expect(AVISO_NO_OBJETO_PPD_REP).not.toMatch(/no puede emitirse/i);
   });
 });
