@@ -26,8 +26,16 @@ export interface ConceptoNotaCredito {
   clave_unidad?: string | null;
   unidad?: string | null;
   tasa_iva?: number | null;
-  /** Ola 4 · N19: régimen de IVA del concepto (gravado_16 | tasa_0 | exento). */
-  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  /**
+   * Tratamiento fiscal del renglón, igual que en la factura original.
+   * P1-IVA: incluye `gravado_8` (frontera) y `no_objeto` (ObjetoImp 01); nunca
+   * se infiere a partir de la tasa.
+   */
+  tipo_iva?: "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null;
+  /** P1-IVA: retención de ISR del renglón original (0.10 = 10%), se reversa. */
+  tasa_ret_isr?: number | null;
+  /** P1-IVA: retención de IVA del renglón original (0.04, 0.106667), se reversa. */
+  tasa_ret_iva?: number | null;
 }
 
 export interface CrearNotaCreditoInput {
