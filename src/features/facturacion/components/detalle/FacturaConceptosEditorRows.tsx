@@ -38,11 +38,21 @@ const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   no_objeto: "No objeto",
 };
 
-function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
+/**
+ * P1 · Auditoría IVA — un renglón legacy sin `tipo_iva` NO se muestra como 16%:
+ * se marca "Por confirmar" y exige elección deliberada antes de guardar.
+ */
+export const LABEL_TRATAMIENTO_PENDIENTE = "Por confirmar";
+export const MSG_TRATAMIENTO_PENDIENTE =
+  "Este renglón no tiene tratamiento de IVA registrado. Elige el que corresponda (16%, 8%, tasa 0%, exento o no objeto) antes de guardar; el sistema no supone 16%.";
+
+function IvaBadge({ tipo }: { tipo: TipoIvaConcepto | null | undefined }) {
+  if (!tipo) return <Badge variant="outline">{LABEL_TRATAMIENTO_PENDIENTE}</Badge>;
   const variant: "default" | "secondary" | "outline" =
     tipo === "gravado_16" || tipo === "gravado_8" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
   return <Badge variant={variant}>{TIPO_IVA_SHORT[tipo]}</Badge>;
 }
+
 
 function RetBadges({ isr, iva }: { isr: number; iva: number }) {
   if (!isr && !iva) return <span className="text-body-sm text-muted-foreground">—</span>;
