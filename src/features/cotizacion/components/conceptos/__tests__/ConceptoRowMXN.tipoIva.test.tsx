@@ -101,6 +101,7 @@ describe("ConceptoRowUSD — tratamiento fiscal bloqueado", () => {
         total={1}
         actualizar={actualizar}
         eliminar={vi.fn()}
+        tasaIva={0.16}
       />,
     );
 

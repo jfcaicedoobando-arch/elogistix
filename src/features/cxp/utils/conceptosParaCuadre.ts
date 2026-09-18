@@ -6,8 +6,8 @@
 import type { ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 
 export function resolverConceptosParaCuadre(
-  cfdi: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
-  manuales: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
+  cfdi: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null; iva?: number | string | null }>,
+  manuales: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null; iva?: number | string | null }>,
   vinculos: Record<string, { monto?: number | string | null }>,
 ): ConceptoParaCuadre[] {
   const fuente = cfdi.length > 0 ? cfdi : manuales;
