@@ -13,6 +13,7 @@ import {
 
 interface FacturaLike {
   rfc_cliente?: string | null;
+  fecha_emision?: string | null;
   moneda?: string | null;
   tipo_cambio?: number | string | null;
   uso_cfdi?: string | null;
