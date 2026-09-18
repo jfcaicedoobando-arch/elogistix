@@ -53,6 +53,10 @@ export function CfdiConceptoIaRow({
     if (parseMonto(ivaTxt, 0) !== Number(linea.iva)) setIvaTxt(fmt2(linea.iva));
   }, [linea.iva, ivaTxt]);
 
+  useEffect(() => {
+    if (parseMonto(iepsTxt, 0) !== Number(linea.ieps ?? 0)) setIepsTxt(fmt2(linea.ieps));
+  }, [linea.ieps, iepsTxt]);
+
   return (
     <TableRow className="border-t odd:bg-background even:bg-muted/20 align-top">
       <TableCell className="text-muted-foreground">{indice + 1}</TableCell>
