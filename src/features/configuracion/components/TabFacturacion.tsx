@@ -16,6 +16,8 @@ export default function TabFacturacion() {
     <div className="space-y-4">
       <FacturapiCredencialesCard />
       <CierrePeriodoCard />
+      <IvaFronteraCard />
+
       <CatalogoClavesSATCard />
     </div>
   );
