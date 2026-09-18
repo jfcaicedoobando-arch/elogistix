@@ -1,13 +1,17 @@
 /**
- * Ola E3 · Sub-ola C · N2 — Traslado de IVA del documento relacionado (REP).
+ * Traslados de IVA del documento relacionado (REP · Complemento de Pagos 2.0).
  *
- * Antes la tasa se "adivinaba" con la proporción iva/subtotal de la factura y
- * se anclaba a la tasa del catálogo más cercana: con mezcla de tasas eso
- * timbraba un dato falso (p. ej. 16% + exento ⇒ promedio 10% ⇒ 8%).
+ * Historia:
+ *  - Antes la tasa se "adivinaba" con la proporción iva/subtotal y se anclaba a
+ *    la tasa más cercana del catálogo (16% + exento ⇒ 8%: dato falso).
+ *  - Luego cualquier mezcla de tratamientos bloqueaba el REP, lo que dejaba sin
+ *    cobro a facturas PPD válidas (16% + 0%, 16% + 8%, 16% + exento).
  *
- * Ahora la tasa se toma de los renglones (`conceptos_factura`): se agrupa por
- * tasa/factor y, si hay más de un grupo con IVA trasladado, se rechaza el
- * timbrado con un mensaje claro en vez de inventar la tasa.
+ * P1 · Auditoría IVA — Facturapi acepta `related_documents[].taxes` como ARREGLO
+ * de impuestos del documento relacionado, así que ahora se conserva UN grupo por
+ * combinación factor+tasa y su base se prorratea con el importe del renglón
+ * (`helpers.ts · buildTaxesDr`). Nunca se usa una tasa promedio ni se elige un
+ * grupo "dominante".
  */
 
 export type FactorIvaDr = "Tasa" | "Exento";
@@ -15,6 +19,10 @@ export type FactorIvaDr = "Tasa" | "Exento";
 export interface ConceptoTraslado {
   tipo_iva?: string | null;
   tasa_iva_aplicada?: number | string | null;
+  /** Importe del renglón sin impuestos (columna `total` de conceptos_factura). */
+  total?: number | string | null;
+  cantidad?: number | string | null;
+  precio_unitario?: number | string | null;
 }
 
 export interface TrasladoDr {
@@ -22,12 +30,10 @@ export interface TrasladoDr {
   factor: FactorIvaDr;
 }
 
-export const MSG_IVA_MULTITASA =
-  "LC_REP_IVA_MULTITASA: La factura relacionada mezcla más de un tratamiento de IVA " +
-  "(tasas distintas, o gravado junto con exento o tasa 0%). El complemento de pago declara un solo " +
-  "grupo de impuestos por documento relacionado, así que declarar uno de ellos trataría todo el " +
-  "importe con una tasa que no le corresponde. Emite el REP desde una factura con tratamiento " +
-  "homogéneo o reemite la factura separando los tratamientos.";
+/** Grupo de traslado con el importe (sin IVA) que le corresponde en la factura. */
+export interface GrupoTrasladoDr extends TrasladoDr {
+  importe: number;
+}
 
 /**
  * El complemento de pago 2.0 declara `ObjetoImpDR` por documento relacionado y
@@ -35,6 +41,10 @@ export const MSG_IVA_MULTITASA =
  * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`), así
  * que un renglón "no objeto" (SAT 01) NO se puede representar: declararlo como
  * `Exento` sería un dato fiscal falso. Se bloquea el timbrado.
+ *
+ * Desde el lote P1 de la auditoría el ERP tampoco permite EMITIR una factura PPD
+ * con conceptos no objeto (ver `_shared/noObjetoFiscal.ts`), así que este
+ * bloqueo sólo alcanza a facturas legacy ya timbradas.
  */
 export const MSG_REP_NO_OBJETO =
   "LC_REP_NO_OBJETO: Esta integración no puede representar ObjetoImpDR=01 ('No objeto de impuesto', " +
@@ -62,6 +72,12 @@ export const MSG_REP_TRATAMIENTO_INDETERMINADO =
   "complete el tratamiento fiscal (16%, 8%, tasa 0%, exento o no objeto) de cada renglón de la factura " +
   "y vuelve a intentar el REP.";
 
+export const MSG_REP_IMPORTES_FALTANTES =
+  "LC_REP_IMPORTES_FALTANTES: La factura relacionada mezcla varios tratamientos de IVA, pero sus " +
+  "renglones no tienen importe capturado, así que no se puede prorratear la base de cada grupo de " +
+  "impuestos en el complemento de pago. Pide a Contabilidad que revise los importes de los renglones " +
+  "de la factura y vuelve a intentar el REP.";
+
 /** `true` si el renglón trae el tratamiento explícito "no objeto" (SAT 01). */
 export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
   return String(c?.tipo_iva ?? "").trim().toLowerCase() === "no_objeto";
@@ -69,10 +85,9 @@ export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
 
 /**
  * Traslado del renglón. `null` = INDETERMINADO: no hay tratamiento registrado o
- * la tasa guardada contradice el tratamiento. Antes esos casos caían al 16% y
- * el REP declaraba un impuesto que la factura pudo no trasladar.
+ * la tasa guardada contradice el tratamiento. Nunca cae al 16%.
  */
-function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaDr } | null {
+function tasaDeConcepto(c: ConceptoTraslado): TrasladoDr | null {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
   // `exento` sí es representable en el REP (factor Exento). `no_objeto` NO:
   // se detecta antes y bloquea el timbrado (nunca se traduce a Exento).
@@ -86,6 +101,23 @@ function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaD
   const n = Number(raw);
   if (!Number.isFinite(n) || Math.abs(n - canonica) >= EPS) return null;
   return { tasa: canonica, factor: "Tasa" };
+}
+
+/** Importe del renglón sin impuestos: `total` o cantidad × precio unitario. */
+function importeDeConcepto(c: ConceptoTraslado): number {
+  const total = Number(c?.total ?? Number.NaN);
+  if (Number.isFinite(total) && total > 0) return total;
+  const cantidad = Number(c?.cantidad ?? Number.NaN);
+  const precio = Number(c?.precio_unitario ?? Number.NaN);
+  if (Number.isFinite(cantidad) && Number.isFinite(precio) && cantidad * precio > 0) {
+    return cantidad * precio;
+  }
+  return 0;
+}
+
+/** Clave de agrupación: Exento, Tasa 0, Tasa 0.08 y Tasa 0.16 son distintos. */
+function claveGrupo(t: TrasladoDr): string {
+  return t.factor === "Exento" ? "Exento" : `Tasa:${t.tasa.toFixed(6)}`;
 }
 
 /**
@@ -111,34 +143,38 @@ export function trasladoDesdeEncabezado(
 }
 
 /**
- * Traslado a declarar en el REP.
+ * Grupos de traslado a declarar en el REP (uno por combinación factor+tasa).
  * - `"no_objeto"` ⇒ la factura tiene conceptos SAT 01, no representables en el
  *   complemento de pago (el llamador responde 422 ANTES del claim).
- * - `null` ⇒ la factura mezcla tratamientos (tasas distintas, o gravado con
- *   exento/tasa 0): el llamador responde 422. NO se elige un grupo "dominante":
- *   eso declararía el importe completo con una tasa que no le corresponde.
  * - `"indeterminado"` ⇒ algún renglón no tiene tratamiento registrado o su tasa
  *   contradice el tratamiento: el llamador responde 422 ANTES del claim.
+ * - `"sin_importes"` ⇒ hay más de un grupo pero los renglones no traen importe,
+ *   así que no se puede prorratear la base: el llamador responde 422.
  * - `"sin_conceptos"` ⇒ facturas antiguas sin renglones capturados: el llamador
  *   usa `trasladoDesdeEncabezado` y bloquea si tampoco alcanza.
  */
-export function resolverTrasladoDr(
+export function resolverGruposTrasladoDr(
   conceptos: ConceptoTraslado[] | null | undefined,
-): TrasladoDr | null | "sin_conceptos" | "no_objeto" | "indeterminado" {
+): GrupoTrasladoDr[] | "sin_conceptos" | "no_objeto" | "indeterminado" | "sin_importes" {
   const lista = conceptos ?? [];
   if (lista.length === 0) return "sin_conceptos";
   if (lista.some(esConceptoNoObjeto)) return "no_objeto";
 
-  // Un grupo por combinación factor+tasa: Exento, Tasa 0, Tasa 0.08 y Tasa 0.16
-  // son grupos DISTINTOS del complemento de pago; cualquier mezcla se bloquea.
-  const grupos = new Map<string, TrasladoDr>();
+  const grupos = new Map<string, GrupoTrasladoDr>();
   for (const c of lista) {
     const resuelto = tasaDeConcepto(c);
     if (resuelto === null) return "indeterminado";
-    const { tasa, factor } = resuelto;
-    const clave = factor === "Exento" ? "Exento" : `Tasa:${tasa.toFixed(6)}`;
-    if (!grupos.has(clave)) grupos.set(clave, { tasa, factor });
+    const clave = claveGrupo(resuelto);
+    const previo = grupos.get(clave);
+    const importe = importeDeConcepto(c);
+    if (previo) previo.importe += importe;
+    else grupos.set(clave, { ...resuelto, importe });
   }
-  if (grupos.size !== 1) return null;
-  return [...grupos.values()][0];
+  const salida = [...grupos.values()];
+  // Con un solo grupo la base es el pago completo sin IVA: no hace falta
+  // importe por renglón (compatibilidad con facturas legacy sin `total`).
+  if (salida.length > 1 && salida.reduce((a, g) => a + g.importe, 0) <= 0) {
+    return "sin_importes";
+  }
+  return salida;
 }

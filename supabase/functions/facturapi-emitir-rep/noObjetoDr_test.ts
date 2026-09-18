@@ -5,27 +5,27 @@
  * sólo aplica con ObjetoImpDR = 02. La API de Facturapi no expone ObjetoImpDR en
  * `related_documents` (sólo `taxes`), así que un renglón "no objeto" NO puede
  * representarse: antes se traducía a `Exento`, que es un dato fiscal falso.
- * Ahora `resolverTrasladoDr` devuelve el sentinel "no_objeto" y el llamador
+ * Ahora `resolverGruposTrasladoDr` devuelve el sentinel "no_objeto" y el llamador
  * bloquea el timbrado ANTES del claim.
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   esConceptoNoObjeto,
   MSG_REP_NO_OBJETO,
-  resolverTrasladoDr,
+  resolverGruposTrasladoDr,
 } from "./trasladoDr.ts";
 
 Deno.test("no objeto NUNCA se traduce a Exento: se bloquea el REP", () => {
-  assertEquals(resolverTrasladoDr([{ tipo_iva: "no_objeto" }]), "no_objeto");
+  assertEquals(resolverGruposTrasladoDr([{ tipo_iva: "no_objeto" }]), "no_objeto");
   assertEquals(
-    resolverTrasladoDr([{ tipo_iva: "no_objeto", tasa_iva_aplicada: null }]),
+    resolverGruposTrasladoDr([{ tipo_iva: "no_objeto", tasa_iva_aplicada: null }]),
     "no_objeto",
   );
 });
 
 Deno.test("un solo renglón no objeto bloquea aunque el resto sea gravado", () => {
   assertEquals(
-    resolverTrasladoDr([
+    resolverGruposTrasladoDr([
       { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
       { tipo_iva: "no_objeto", tasa_iva_aplicada: null },
     ]),
@@ -34,11 +34,10 @@ Deno.test("un solo renglón no objeto bloquea aunque el resto sea gravado", () =
 });
 
 Deno.test("exento y tasa 0 siguen siendo representables (no se bloquean)", () => {
-  assertEquals(resolverTrasladoDr([{ tipo_iva: "exento" }]), { tasa: 0, factor: "Exento" });
-  assertEquals(resolverTrasladoDr([{ tipo_iva: "tasa_0", tasa_iva_aplicada: 0 }]), {
-    tasa: 0,
-    factor: "Tasa",
-  });
+  assertEquals(resolverGruposTrasladoDr([{ tipo_iva: "exento" }]), [{ tasa: 0, factor: "Exento", importe: 0 }]);
+  assertEquals(resolverGruposTrasladoDr([{ tipo_iva: "tasa_0", tasa_iva_aplicada: 0 }]), [
+    { tasa: 0, factor: "Tasa", importe: 0 },
+  ]);
 });
 
 Deno.test("el bloqueo no se infiere de tasa 0 ni de tipos legacy", () => {
@@ -46,7 +45,7 @@ Deno.test("el bloqueo no se infiere de tasa 0 ni de tipos legacy", () => {
   assertEquals(esConceptoNoObjeto({ tipo_iva: null, tasa_iva_aplicada: 0 }), false);
   assertEquals(esConceptoNoObjeto({ tipo_iva: "NO_OBJETO" }), true);
   // P1-IVA: sin tipo_iva no se puede saber si era tasa 0%, exento o no objeto.
-  assertEquals(resolverTrasladoDr([{ tasa_iva_aplicada: 0 }]), "indeterminado");
+  assertEquals(resolverGruposTrasladoDr([{ tasa_iva_aplicada: 0 }]), "indeterminado");
 });
 
 Deno.test("el mensaje de bloqueo no recomienda atajos contables no autorizados", () => {

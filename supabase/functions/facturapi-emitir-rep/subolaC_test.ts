@@ -3,41 +3,47 @@
  * notas de crédito (N1).
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { resolverTrasladoDr } from "./trasladoDr.ts";
+import { resolverGruposTrasladoDr } from "./trasladoDr.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { calcularParcialidad } from "./context.ts";
 
 Deno.test("N2: tasa homogénea 16% se declara como Tasa 0.16", () => {
-  const r = resolverTrasladoDr([
+  const r = resolverGruposTrasladoDr([
     { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
     { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
   ]);
-  assertEquals(r, { tasa: 0.16, factor: "Tasa" });
+  assertEquals(r, [{ tasa: 0.16, factor: "Tasa", importe: 0 }]);
 });
 
-Deno.test("N2: cualquier mezcla de tratamientos se rechaza (P1-IVA)", () => {
-  // 16% + exento ya NO devuelve el grupo gravado: se bloquea el timbrado.
-  const r = resolverTrasladoDr([
-    { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
-    { tipo_iva: "exento", tasa_iva_aplicada: null },
+Deno.test("N2: la mezcla de tratamientos se declara por grupo (P1 auditoría)", () => {
+  // 16% + exento ya NO bloquea: se declaran dos grupos con su propia base.
+  const r = resolverGruposTrasladoDr([
+    { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16, total: 800 },
+    { tipo_iva: "exento", tasa_iva_aplicada: null, total: 200 },
   ]);
-  assertEquals(r, null);
-  const mezcla = resolverTrasladoDr([
-    { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
-    { tipo_iva: "gravado_8", tasa_iva_aplicada: 0.08 },
+  assertEquals(r, [
+    { tasa: 0.16, factor: "Tasa", importe: 800 },
+    { tasa: 0, factor: "Exento", importe: 200 },
   ]);
-  assertEquals(mezcla, null);
+  const mezcla = resolverGruposTrasladoDr([
+    { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16, total: 500 },
+    { tipo_iva: "gravado_8", tasa_iva_aplicada: 0.08, total: 500 },
+  ]);
+  assertEquals(mezcla, [
+    { tasa: 0.16, factor: "Tasa", importe: 500 },
+    { tasa: 0.08, factor: "Tasa", importe: 500 },
+  ]);
 });
 
 Deno.test("N2: factura toda exenta declara factor Exento", () => {
   assertEquals(
-    resolverTrasladoDr([{ tipo_iva: "exento" }, { tipo_iva: "exento" }]),
-    { tasa: 0, factor: "Exento" },
+    resolverGruposTrasladoDr([{ tipo_iva: "exento" }, { tipo_iva: "exento" }]),
+    [{ tasa: 0, factor: "Exento", importe: 0 }],
   );
 });
 
 Deno.test("N2: sin renglones cae al respaldo histórico", () => {
-  assertEquals(resolverTrasladoDr([]), "sin_conceptos");
+  assertEquals(resolverGruposTrasladoDr([]), "sin_conceptos");
 });
 
 Deno.test("N1: NC aplicada en misma moneda se resta del saldo anterior", () => {

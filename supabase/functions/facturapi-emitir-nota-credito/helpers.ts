@@ -11,6 +11,11 @@ import {
 } from "../_shared/referenciasEmbarque.ts";
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 import { validarTcFiscal } from "../_shared/tcBanda.ts";
+import {
+  esLineaNoObjeto,
+  MSG_NO_OBJETO_RETENCIONES,
+  retencionesIncompatiblesNoObjeto,
+} from "../_shared/noObjetoFiscal.ts";
 
 export interface ConceptoNC {
   descripcion: string;
@@ -143,6 +148,13 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
         message: `Concepto "${c.descripcion}" tiene un tratamiento fiscal (${c.tipo_iva}) que no coincide con su tasa de IVA guardada (${c.tasa_iva}). Corrige la factura original y vuelve a generar la nota de crédito.`,
       });
     }
+    // P1 · IVA — ObjetoImp 01 no admite nodo de impuestos ni en el egreso.
+    if (retencionesIncompatiblesNoObjeto(c)) {
+      issues.push({
+        field: `conceptos[${i}].retenciones`,
+        message: `Concepto "${c.descripcion}": ${MSG_NO_OBJETO_RETENCIONES}`,
+      });
+    }
 
   });
   return issues;
@@ -192,15 +204,18 @@ export function buildTaxesNc(c: ConceptoNC) {
     );
   }
   const taxes: Tax[] = [];
+  const noObjeto = esLineaNoObjeto(c);
   if (tipo === "exento") {
     taxes.push({ type: "IVA", rate: 0, factor: "Exento" });
-  } else if (tipo !== "no_objeto") {
+  } else if (!noObjeto) {
     taxes.push({ type: "IVA", rate: TASA_CANONICA_NC[tipo], factor: "Tasa" });
   }
   // P1-IVA — las retenciones de la factura se reversan en la NC (mismo shape
   // que facturapi-emitir/helpers.ts): omitirlas cambiaba el total del CFDI.
-  const retIsr = Number(c.tasa_ret_isr ?? 0);
-  const retIva = Number(c.tasa_ret_iva ?? 0);
+  // P1 · Auditoría — con ObjetoImp 01 el arreglo queda VACÍO: `validateNcContext`
+  // bloquea la combinación y aquí las retenciones nunca se agregan.
+  const retIsr = noObjeto ? 0 : Number(c.tasa_ret_isr ?? 0);
+  const retIva = noObjeto ? 0 : Number(c.tasa_ret_iva ?? 0);
   if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
   if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
   return taxes;
