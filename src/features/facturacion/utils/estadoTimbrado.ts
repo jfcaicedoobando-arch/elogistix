@@ -5,10 +5,11 @@
  */
 import { buildChecksTimbrado, type CheckTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import {
-  MSG_NO_OBJETO_PPD,
-  ppdIncompatibleNoObjeto,
+  AVISO_NO_OBJETO_PPD_REP,
+  ppdConNoObjetoRequiereAviso,
   type LineaNoObjeto,
 } from "@/lib/financial/noObjetoFiscal";
+
 
 interface FacturaLike {
   rfc_cliente?: string | null;
