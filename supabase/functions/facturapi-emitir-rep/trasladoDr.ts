@@ -83,7 +83,9 @@ function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaD
  * Traslado a declarar en el REP.
  * - `"no_objeto"` ⇒ la factura tiene conceptos SAT 01, no representables en el
  *   complemento de pago (el llamador responde 422 ANTES del claim).
- * - `null` ⇒ la factura mezcla tasas con IVA (el llamador responde 422).
+ * - `null` ⇒ la factura mezcla tratamientos (tasas distintas, o gravado con
+ *   exento/tasa 0): el llamador responde 422. NO se elige un grupo "dominante":
+ *   eso declararía el importe completo con una tasa que no le corresponde.
  * - `"sin_conceptos"` ⇒ facturas antiguas sin renglones capturados: el llamador
  *   usa el respaldo histórico.
  */
@@ -94,18 +96,14 @@ export function resolverTrasladoDr(
   if (lista.length === 0) return "sin_conceptos";
   if (lista.some(esConceptoNoObjeto)) return "no_objeto";
 
-  const grupos = new Set<string>();
-  let exentos = 0;
-  let tasaCero = 0;
+  // Un grupo por combinación factor+tasa: Exento, Tasa 0, Tasa 0.08 y Tasa 0.16
+  // son grupos DISTINTOS del complemento de pago; cualquier mezcla se bloquea.
+  const grupos = new Map<string, TrasladoDr>();
   for (const c of lista) {
     const { tasa, factor } = tasaDeConcepto(c);
-    if (factor === "Exento") { exentos += 1; continue; }
-    if (tasa === 0) { tasaCero += 1; continue; }
-    grupos.add(tasa.toFixed(6));
+    const clave = factor === "Exento" ? "Exento" : `Tasa:${tasa.toFixed(6)}`;
+    if (!grupos.has(clave)) grupos.set(clave, { tasa, factor });
   }
-
-  if (grupos.size > 1) return null;
-  if (grupos.size === 1) return { tasa: Number([...grupos][0]), factor: "Tasa" };
-  if (exentos > 0 && tasaCero === 0) return { tasa: 0, factor: "Exento" };
-  return { tasa: 0, factor: "Tasa" };
+  if (grupos.size !== 1) return null;
+  return [...grupos.values()][0];
 }
