@@ -18,7 +18,6 @@ import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, resolverReferenciasEmbarque } from "./context.ts";
 import { persistirRepTimbrado } from "./persistir.ts";
-import { esTimbradoPendiente } from "../_shared/timbradoPendiente.ts";
 import { respuestaSiRepPendiente } from "./pendiente.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
