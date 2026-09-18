@@ -6,6 +6,8 @@
 -- CFDI como 16%.
 -- B16 (v13.823.379): `aplica_iva = false` manda sobre una tasa legacy stale
 -- (p. ej. 0.16): la línea se persiste exenta y con tasa NULL.
+-- SAT 01 (20260918000100): si el origen trae `tipo_iva` explícito, ése manda;
+-- 'no_objeto' NO es inferible desde la tasa y viaja sin tasa de traslado.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
@@ -25,10 +27,14 @@ BEGIN
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
            -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
            -- importar que arrastre una tasa legacy (p. ej. 0.16).
-           public._tipo_iva_desde_tasa(
-             pcc.aplica_iva,
-             CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN pcc.aplica_iva = false THEN NULL
+           -- El tipo explícito manda; 'no_objeto' (SAT 01) no es inferible.
+           CASE WHEN pcc.tipo_iva IS NOT NULL THEN pcc.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  pcc.aplica_iva,
+                  CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN pcc.tipo_iva = 'no_objeto' THEN NULL
+                WHEN pcc.aplica_iva = false THEN NULL
                 ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, pcc.proforma_id
     FROM public.proforma_conceptos_consolidados pcc
@@ -46,10 +52,13 @@ BEGIN
            -- igual que en la rama consolidada (pcc.total ya viene redondeado).
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           public._tipo_iva_desde_tasa(
-             cv.aplica_iva,
-             CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN cv.aplica_iva = false THEN NULL
+           CASE WHEN cv.tipo_iva IS NOT NULL THEN cv.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  cv.aplica_iva,
+                  CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
+                WHEN cv.aplica_iva = false THEN NULL
                 ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, cv.proforma_id
     FROM public.conceptos_venta cv

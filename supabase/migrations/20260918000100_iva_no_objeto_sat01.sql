@@ -1,7 +1,6 @@
 -- IVA "No objeto de impuesto" (SAT ObjetoImp = 01)
 -- =================================================
--- Migración PREPARADA (no aplicada). Idempotente: se puede correr varias veces.
---
+-- Migración oficial (v13.823.403). Idempotente: se puede correr varias veces.
 -- Objetivo: que el tratamiento fiscal "no objeto" viaje explícito del catálogo
 -- de productos y servicios a la cotización, la proforma y el CFDI, sin
 -- confundirse con "Exento" ni con "Tasa 0%".
