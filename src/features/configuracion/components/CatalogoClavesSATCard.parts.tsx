@@ -39,14 +39,14 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
               <SelectItem key={o.value} value={o.value}>
                 <span className="flex flex-col">
                   <span>{o.label}</span>
-                  <span className="text-xs text-muted-foreground">{TIPO_IVA_AYUDA[o.value]}</span>
+                  <span className="text-label text-muted-foreground">{TIPO_IVA_AYUDA[o.value]}</span>
                 </span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {/* P2-IVA: ayuda breve para no confundir tasa 0%, exento y no objeto. */}
-        <p className="mt-1 text-xs text-muted-foreground">{TIPO_IVA_AYUDA_GENERAL}</p>
+        <p className="mt-1 text-label text-muted-foreground">{TIPO_IVA_AYUDA_GENERAL}</p>
       </TableCell>
 
       <TableCell>
