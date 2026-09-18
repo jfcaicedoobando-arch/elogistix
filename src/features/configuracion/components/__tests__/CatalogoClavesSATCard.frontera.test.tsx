@@ -70,14 +70,14 @@ function montar(draft: Draft, tipoIvaOriginal?: Draft["tipo_iva"]) {
 
 beforeEach(() => {
   estado.habilitada = false;
-  estado.onValueChange = null;
+  estado.handlers = [];
 });
 
 describe("EditRow del catálogo y el estímulo del 8%", () => {
   it("alta nueva: la opción de 8% está deshabilitada y no cambia el borrador", () => {
     const { setDraft } = montar(draftValido);
     expect(screen.getByTestId("opcion-gravado_8")).toHaveAttribute("aria-disabled", "true");
-    estado.onValueChange?.("gravado_8");
+    estado.handlers[0]?.("gravado_8");
     expect(setDraft).not.toHaveBeenCalled();
   });
 

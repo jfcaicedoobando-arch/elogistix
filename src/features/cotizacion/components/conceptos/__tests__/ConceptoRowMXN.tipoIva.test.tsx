@@ -26,6 +26,10 @@ vi.mock("@/features/cotizacion/components/conceptos/ProductoServicioSelect", () 
   ),
 }));
 
+vi.mock("@/features/configuracion", () => ({
+  useIvaFronteraHabilitada: () => false,
+}));
+
 vi.mock("@/features/cotizacion/components/conceptos/UnidadMedidaSelect", () => ({
   UnidadMedidaSelect: () => <div data-testid="unidad" />,
 }));
