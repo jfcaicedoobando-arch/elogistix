@@ -99,12 +99,13 @@ async function main() {
   }
 
   if (findings.length === 0) {
-    console.log("✓ audit:schema — sin mismatches entre .is(...) y schema real.");
+    console.log("✓ audit:schema — sin mismatches entre .is(...) / .select(...) y schema real.");
     return;
   }
-  console.error(`✗ audit:schema — ${findings.length} filtro(s) apuntan a columnas inexistentes:`);
+  console.error(`✗ audit:schema — ${findings.length} referencia(s) a columnas inexistentes:`);
   for (const f of findings) {
-    console.error(`  ${f.file}:${f.line}  .from("${f.table}").is("${f.column}", …) ← columna no existe`);
+    const uso = f.kind === "is" ? `.is("${f.column}", …)` : `.select(… ${f.column} …)`;
+    console.error(`  ${f.file}:${f.line}  .from("${f.table}")${uso} ← columna no existe`);
   }
   process.exit(1);
 }
