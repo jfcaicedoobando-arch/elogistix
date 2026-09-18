@@ -9,6 +9,7 @@ import {
   ppdConNoObjetoRequiereAviso,
   type LineaNoObjeto,
 } from "@/lib/financial/noObjetoFiscal";
+import { avisoFechaEmisionDesfasada } from "@/features/facturacion/utils/avisoFechaTimbrado";
 
 
 interface FacturaLike {
