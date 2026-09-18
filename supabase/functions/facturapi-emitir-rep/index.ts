@@ -150,13 +150,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // único que puede declararse cuando la factura no tiene renglones.
   const tasaIvaDr = gruposIva[0]?.tasa ?? respaldo?.tasa ?? 0;
   const factorIvaFactura = gruposIva[0]?.factor ?? respaldo?.factor ?? "Tasa";
-
-
   // P1 · Auditoría IVA — retenciones del CFDI relacionado: un grupo por
-  // impuesto+tasa con el importe de sus renglones (ya no se bloquea la mezcla
-  // de tasas del mismo impuesto). Sin importes no se puede calcular la base:
-  // bloqueo claro ANTES del claim (reintentable tras corregir la factura).
-  // Los no objeto no admiten retenciones: la base sale sólo de los gravables.
+  // impuesto+tasa con la base de sus renglones (los no objeto no admiten
+  // retención). Sin importes se bloquea ANTES del claim, reintentable.
   const retencionesDr = resolverGruposRetencionDr(conceptosGravables);
   if (retencionesDr === "sin_importes") {
     await supabase.from("pagos_factura")
