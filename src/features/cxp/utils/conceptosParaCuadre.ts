@@ -16,3 +16,18 @@ export function resolverConceptosParaCuadre(
   }
   return Object.values(vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
 }
+
+/**
+ * IVA desglosado en las partidas que el usuario realmente está viendo, con la
+ * MISMA prelación de fuentes que `resolverConceptosParaCuadre` (CFDI > manuales).
+ * Antes sólo se sumaba el IVA del CFDI, así que una captura manual con IVA por
+ * renglón se reportaba como "IVA no desglosado por partida". Los montos
+ * vinculados a embarques no llevan IVA: ahí el desglose es 0 por definición.
+ */
+export function sumarIvaPartidasVisibles(
+  cfdi: ReadonlyArray<{ iva?: number | string | null }>,
+  manuales: ReadonlyArray<{ iva?: number | string | null }>,
+): number {
+  const fuente = cfdi.length > 0 ? cfdi : manuales;
+  return fuente.reduce((acc, c) => acc + (Number(c.iva) || 0), 0);
+}
