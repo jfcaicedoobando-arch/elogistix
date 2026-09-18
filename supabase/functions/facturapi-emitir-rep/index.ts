@@ -21,17 +21,13 @@ import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
 import {
-  conceptosObjetoImpuesto,
-  esConceptoNoObjeto,
-  importeNoObjeto,
   MSG_REP_CONCEPTOS_ILEGIBLES,
   MSG_REP_IMPORTES_FALTANTES,
   MSG_REP_TRATAMIENTO_INDETERMINADO,
-  resolverGruposTrasladoDr,
-  resolverObjetoImpDr,
   trasladoDesdeEncabezado,
   type GrupoTrasladoDr,
 } from "./trasladoDr.ts";
+import { resolverNoObjetoDr } from "./objetoImpDr.ts";
 import { conComplementoXmlManual, requiereXmlManual } from "./repManual.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
