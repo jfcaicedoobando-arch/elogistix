@@ -92,7 +92,9 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
               tipoIva={c.tipo_iva}
               tasa={tasaFila}
               onTasaChange={(tasa) => actualizar(i, "tasa_iva_aplicada", tasa)}
+              onTipoIvaChange={(tipo) => actualizar(i, "tipo_iva", tipo)}
             />
+
           ) : (
             <span className="text-body-sm text-muted-foreground flex items-center h-10">—</span>
           )}

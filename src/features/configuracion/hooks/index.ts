@@ -4,3 +4,5 @@ export * from './useConfiguracion';
 export * from './useConfiguracionGlobal';
 export * from './useConfiguracionOrg';
 export * from './useConfiguracionState';
+export * from './useIvaFrontera';
+

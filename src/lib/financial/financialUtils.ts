@@ -16,12 +16,20 @@ export type { Moneda };
  */
 export const TASA_IVA = 0.16;
 
-/** Tasas de IVA soportadas en México (selector UI). */
+/**
+ * Tasas de IVA soportadas en México (selector UI).
+ *
+ * P2-IVA: la opción de 0% decía "0% — Exento". Eran dos tratamientos SAT
+ * distintos con una sola etiqueta: "tasa 0%" es un acto gravado (da derecho a
+ * acreditamiento) y "exento" no. Aquí sólo viven TASAS; `exento` y
+ * `no_objeto` se eligen en el selector de tratamiento fiscal, nunca aquí.
+ */
 export const TASAS_IVA_MX = [
-  { value: 0, label: '0% — Exento' },
-  { value: 0.08, label: '8% — Frontera' },
+  { value: 0, label: '0% — Tasa 0%' },
+  { value: 0.08, label: '8% — Frontera (estímulo)' },
   { value: 0.16, label: '16% — General' },
 ] as const;
+
 
 const money = (n: number) => currency(n, { precision: 2 });
 const ratio = (n: number) => currency(n, { precision: 4 });

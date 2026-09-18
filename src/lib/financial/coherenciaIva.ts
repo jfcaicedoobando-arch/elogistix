@@ -58,7 +58,9 @@ function clasificarNoCausante(
   tasaNum: number | null,
   flag: boolean | null | undefined,
 ): ResultadoCoherenciaIva {
-  if (tasaNum != null && tasaNum > 0) {
+  // P2-IVA: cualquier tasa distinta de cero es incoherente, incluidas las
+  // negativas (antes sólo se rechazaba > 0, así que un -16% pasaba como "ok").
+  if (tasaNum != null && !igual(tasaNum, 0)) {
     return {
       estado: "incoherente",
       tipo,
@@ -66,6 +68,7 @@ function clasificarNoCausante(
       motivo: `está clasificado como ${etiquetaNoCausante(tipo)} pero tiene una tasa de IVA de ${(tasaNum * 100).toFixed(2)}%`,
     };
   }
+
   if (flag === true && tipo !== "tasa_0") {
     return {
       estado: "incoherente",

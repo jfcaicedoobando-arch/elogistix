@@ -7,7 +7,21 @@ export interface CfdiConceptoParsed {
   importe: number;
   iva: number;
   ieps: number;
+  /**
+   * P2-IVA — ObjetoImp del CFDI 4.0 ("01" = no objeto, "02" = sí objeto).
+   * Opcional: los CFDIs leídos antes de este cambio no lo traen.
+   */
+  objeto_imp?: string;
+  /** P2-IVA — Desglose por traslado, tal como lo declaró el proveedor. */
+  traslados?: Array<{
+    impuesto: string;
+    base: number;
+    tipo_factor: string;
+    tasa_o_cuota: number | null;
+    importe: number;
+  }>;
 }
+
 
 export interface CfdiParsedResponse {
   cfdi: {

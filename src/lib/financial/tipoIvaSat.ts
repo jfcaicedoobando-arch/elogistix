@@ -46,9 +46,32 @@ export const TIPO_IVA_LABEL_CORTO: Record<TipoIvaSat, string> = {
   no_objeto: "No objeto",
 };
 
+/**
+ * P2-IVA — Ayuda breve por tratamiento fiscal. Existe porque "tasa 0%",
+ * "exento" y "no objeto" se confunden entre sí. Ninguna descripción sugiere
+ * que una categoría se deduzca de otra: cada una se elige explícitamente.
+ */
+export const TIPO_IVA_AYUDA: Record<TipoIvaSat, string> = {
+  gravado_16: "Acto gravado a la tasa general del país.",
+  gravado_8:
+    "Estímulo fiscal de la región fronteriza norte/sur: exige aviso ante el SAT y requisitos vigentes.",
+  tasa_0:
+    "Acto SÍ gravado, pero con tasa 0% (p. ej. exportación). Da derecho a acreditar el IVA de los gastos.",
+  exento:
+    "Acto sin IVA por disposición de ley. NO da derecho a acreditar el IVA de los gastos.",
+  no_objeto:
+    "Actividad fuera del objeto de la Ley del IVA (ObjetoImp 01 del CFDI). No es exento ni tasa 0%.",
+};
+
+/** Nota general del selector: cada categoría se captura, no se infiere. */
+export const TIPO_IVA_AYUDA_GENERAL =
+  "Tasa 0%, exento y no objeto son tratamientos distintos ante el SAT y ninguno se deduce de otro: elige el que corresponda al producto o servicio.";
+
 /** Opciones en el orden que espera el contador (de mayor a menor gravamen). */
 export const TIPO_IVA_OPCIONES: ReadonlyArray<{ value: TipoIvaSat; label: string }> =
   TIPOS_IVA_SAT.map((value) => ({ value, label: TIPO_IVA_LABEL_SAT[value] }));
+
+
 
 export function esTipoIvaSat(value: unknown): value is TipoIvaSat {
   return typeof value === "string" && (TIPOS_IVA_SAT as readonly string[]).includes(value);

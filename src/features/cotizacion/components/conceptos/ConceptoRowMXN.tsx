@@ -93,7 +93,9 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
             tipoIva={c.tipo_iva}
             tasa={tasaFila}
             onTasaChange={(tasa) => actualizar(i, "tasa_iva_aplicada", tasa)}
+            onTipoIvaChange={(tipo) => actualizar(i, "tipo_iva", tipo)}
           />
+
         </div>
         <div className={CONCEPTO_SOLO_XL}>
           {i === 0 && <Label size="sm">Subtotal</Label>}

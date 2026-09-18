@@ -2,6 +2,22 @@
 // Se usa regex defensiva — XML CFDI es plano y predecible, y evitamos
 // dependencias DOM en Deno. NO ejecuta DOCTYPE/entities (no hay superficie XXE).
 
+/**
+ * P2-IVA — Desglose de un traslado tal como viene en el XML del proveedor.
+ * Se conserva SIN interpretarlo: sirve para revisar el tratamiento fiscal del
+ * proveedor (base, factor, tasa/cuota) en vez de ver sólo el importe.
+ */
+export interface CfdiTrasladoLinea {
+  /** Clave SAT del impuesto: 002 = IVA, 003 = IEPS. */
+  impuesto: string;
+  base: number;
+  /** "Tasa", "Cuota" o "Exento" tal como lo declaró el emisor. */
+  tipo_factor: string;
+  /** `null` cuando el emisor no lo declara (típico en factor "Exento"). */
+  tasa_o_cuota: number | null;
+  importe: number;
+}
+
 export interface CfdiConcepto {
   descripcion: string;
   cantidad: number;
@@ -9,7 +25,12 @@ export interface CfdiConcepto {
   importe: number;
   iva: number;
   ieps: number;
+  /** ObjetoImp del CFDI 4.0 ("01" = no objeto, "02" = sí objeto). "" si falta. */
+  objeto_imp: string;
+  /** Traslados de la línea, sin alterar importes ni totales. */
+  traslados: CfdiTrasladoLinea[];
 }
+
 
 export interface CfdiParsed {
   uuid: string;
@@ -166,6 +187,24 @@ function extractImpuestosConcepto(conceptoBlock: string): { iva: number; ieps: n
   return { iva, ieps };
 }
 
+/**
+ * P2-IVA — Desglose por línea (base, factor, tasa/cuota, importe) sin tocar
+ * los importes ya calculados. Sólo se preserva lo que el emisor declaró.
+ */
+function extractTrasladosLinea(conceptoBlock: string): CfdiTrasladoLinea[] {
+  return findAllTags(conceptoBlock, "Traslado").map((t) => {
+    const tasaRaw = attr(t, "TasaOCuota");
+    return {
+      impuesto: attr(t, "Impuesto"),
+      base: num(attr(t, "Base")),
+      tipo_factor: attr(t, "TipoFactor"),
+      tasa_o_cuota: tasaRaw === "" ? null : num(tasaRaw),
+      importe: num(attr(t, "Importe")),
+    };
+  });
+}
+
+
 /** Encuentra bloques completos <Concepto>...</Concepto> preservando su contenido. */
 function findConceptoBlocks(xml: string): string[] {
   const re = /<(?:[A-Za-z0-9]+:)?Concepto\b[^>]*?(?:\/>|>[\s\S]*?<\/(?:[A-Za-z0-9]+:)?Concepto\s*>)/gi;
@@ -222,6 +261,9 @@ export function parseCfdi(xml: string): CfdiParsed {
       importe: Math.round(unitario * 1e6) / 1e6,
       iva: imp.iva,
       ieps: imp.ieps,
+      objeto_imp: attr(c, "ObjetoImp"),
+      traslados: extractTrasladosLinea(c),
+
     };
   });
 

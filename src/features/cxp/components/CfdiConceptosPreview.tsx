@@ -25,6 +25,11 @@ import type { CfdiConceptoParsed } from "@/features/cxp/services";
 import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import { Hint } from "@/components/shared/Hint";
+import {
+  AVISO_CFDI_SOLO_IMPORTES,
+  detalleTratamientoLinea,
+  etiquetaTratamientoLinea,
+} from "@/features/cxp/utils/tratamientoLineaCfdi";
 
 interface Props {
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
@@ -58,6 +63,9 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
           ? "Revisa el desglose que propuso la IA: corrige los datos o borra los renglones de más antes de guardar. El importe es unitario; el total de cada línea es importe × cantidad (sin IVA)."
           : "Vista previa del desglose recibido del SAT. El importe es unitario; el total de cada línea es importe × cantidad (sin IVA)."}
       </p>
+      {!editable && (
+        <p className="text-body-sm text-muted-foreground">{AVISO_CFDI_SOLO_IMPORTES}</p>
+      )}
       <div className="rounded-md border overflow-hidden">
         <div className="max-h-80 overflow-y-auto">
           <Table className="w-full text-body-sm tabular-nums">
@@ -71,6 +79,7 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
                 <DetailTableHead className="text-right whitespace-nowrap">IVA</DetailTableHead>
                 {hayIeps && <DetailTableHead className="text-right whitespace-nowrap">IEPS</DetailTableHead>}
                 <DetailTableHead className="text-right whitespace-nowrap">Total</DetailTableHead>
+                {!editable && <DetailTableHead className="whitespace-nowrap">Trat. fiscal</DetailTableHead>}
                 {editable && <DetailTableHead className="text-right"><span className="sr-only">Acciones</span></DetailTableHead>}
               </TableRow>
             </TableHeader>
@@ -109,6 +118,11 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
                     <TableCell className="text-right font-semibold whitespace-nowrap">
                       {formatCurrency(totalLineaConImpuestos(lineas[i]), moneda)}
                     </TableCell>
+                    <Hint label={detalleTratamientoLinea(c)}>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {etiquetaTratamientoLinea(c)}
+                      </TableCell>
+                    </Hint>
                   </TableRow>
                 )
               ))}
@@ -120,6 +134,7 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
                 <TableCell className="text-right">{formatCurrency(resumen.iva, moneda)}</TableCell>
                 {hayIeps && <TableCell className="text-right">{formatCurrency(resumen.ieps, moneda)}</TableCell>}
                 <TableCell className="text-right">{formatCurrency(totalConImpuestos, moneda)}</TableCell>
+                {!editable && <TableCell />}
                 {editable && <TableCell />}
               </TableRow>
             </TableFooter>

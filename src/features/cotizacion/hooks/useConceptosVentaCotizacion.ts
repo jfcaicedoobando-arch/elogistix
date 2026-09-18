@@ -3,7 +3,7 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCot
 
 import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { esNoObjetoIva, tipoIvaDesdeTasaSeleccionada } from "@/lib/financial/tipoIvaSat";
+import { esNoObjetoIva, esTipoIvaSat, tasaDeTipoIva, tipoIvaDesdeTasaSeleccionada } from "@/lib/financial/tipoIvaSat";
 
 /** Tratamientos que no se editan con el selector de tasa (etiqueta fija). */
 const esTratamientoBloqueado = (tipo?: string | null) => esNoObjetoIva(tipo) || tipo === "exento";
@@ -64,6 +64,16 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
           copia[index].tipo_iva = valor ? tipoIvaDesdeTasaSeleccionada(tasaIva) : undefined;
         }
       }
+      // P2-IVA: al clasificar explícitamente una línea "por definir", la tasa
+      // se alinea con el tratamiento elegido para no crear una combinación
+      // contradictoria (no_objeto/exento sin tasa, tasa_0 con 0, gravados con
+      // su tasa canónica).
+      if (campo === "tipo_iva" && esTipoIvaSat(valor)) {
+        const tasaTipo = tasaDeTipoIva(valor, tasaIva);
+        copia[index].tasa_iva_aplicada = tasaTipo ?? 0;
+        copia[index].aplica_iva = (tasaTipo ?? 0) > 0;
+      }
+
 
       const sub = copia[index].cantidad * copia[index].precio_unitario;
       const tasaFila = resolverTasaConcepto(copia[index], tasaIva);
