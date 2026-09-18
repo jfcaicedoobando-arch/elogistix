@@ -70,7 +70,7 @@ export async function cargarContexto(
  * `conceptos_factura` no tiene `aplica_iva` (ver ConceptoRow): la regla
  * compartida decide sólo con el tratamiento canónico + la tasa.
  */
-function resolverConceptosFiscales(conceptos: ConceptoRow[]): ConceptoResuelto[] | Response {
+function resolverConceptosFiscales(conceptos: ConceptoRow[]): FacturaContext["conceptos"] | Response {
   const bloqueos: string[] = [];
   const resueltos = conceptos.map((c) => {
     const clasif = clasificarCoherenciaIva({
