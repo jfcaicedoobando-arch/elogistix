@@ -247,6 +247,16 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   const invoice = await createInvoiceInFacturapi(input, payload);
   if (invoice instanceof Response) return invoice;
 
+  // P0-A: `status: "pending"` o UUID ausente ⇒ NO está timbrado. Se conserva el
+  // claim, no se respalda XML y se responde 202.
+  if (esTimbradoPendiente(invoice)) {
+    return await registrarFacturaPendiente({
+      supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
+      claimTag: input.claim.claimTag, pendienteId: invoice.id ?? null,
+      usuarioId: input.user.id, usuarioEmail: input.user.email,
+    });
+  }
+
   const resultado = parseInvoiceResult(invoice, ctx);
   const respaldo = await respaldarXmlEmitido({
     supabase, apiKey, facturapiId: resultado.facturapiId,
