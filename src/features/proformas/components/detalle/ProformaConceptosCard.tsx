@@ -14,6 +14,12 @@ import {
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
+import {
+  AVISO_IVA_POR_CONFIRMAR,
+  hayLineasIvaPorConfirmar,
+} from "@/lib/financial/lineasPorConfirmarIva";
+import { AlertTriangle } from "lucide-react";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
 
@@ -28,11 +34,14 @@ function BloqueTotales({
   subtotal,
   iva,
   total,
+  estimado = false,
 }: {
   moneda: "USD" | "MXN";
   subtotal: number;
   iva: number;
   total: number;
+  /** Hay renglones con IVA por confirmar: el total no es definitivo. */
+  estimado?: boolean;
 }) {
   return (
     <div className="space-y-1 text-body">
@@ -46,7 +55,7 @@ function BloqueTotales({
         <span className="tabular-nums">{formatCurrency(iva, moneda)}</span>
       </div>
       <div className="flex justify-between gap-6 font-bold border-t pt-1">
-        <span>Total</span>
+        <span>{estimado ? "Total estimado" : "Total"}</span>
         <span className="tabular-nums text-accent">{formatCurrency(total, moneda)}</span>
       </div>
     </div>
@@ -56,6 +65,10 @@ function BloqueTotales({
 export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Props) {
   const moneda = useMemo(() => monedaComun(conceptos), [conceptos]);
   const columns = useMemo(() => buildConceptoColumns(moneda), [moneda]);
+  const tasaIva = useTasaIVA();
+  // P1 · Auditoría IVA: renglones heredados sin clasificar a los que el cálculo
+  // aún aplica la tasa general ⇒ el total es estimado, no definitivo.
+  const porConfirmar = hayLineasIvaPorConfirmar(conceptos, tasaIva);
   const hasUsd = totales.subtotal_usd > 0;
   const hasMxn = totales.subtotal_mxn > 0;
 
@@ -69,6 +82,15 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
+        {porConfirmar && (
+          <div
+            role="alert"
+            className="mx-4 mb-2 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body-sm text-destructive"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{AVISO_IVA_POR_CONFIRMAR}</span>
+          </div>
+        )}
         <DataTable
           columns={columns}
           data={conceptos}
@@ -84,6 +106,7 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
                 subtotal={totales.subtotal_usd}
                 iva={totales.iva_usd}
                 total={totales.total_usd}
+                estimado={porConfirmar}
               />
             )}
             {hasMxn && (
@@ -92,6 +115,7 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
                 subtotal={totales.subtotal_mxn}
                 iva={totales.iva_mxn}
                 total={totales.total_mxn}
+                estimado={porConfirmar}
               />
             )}
           </div>
