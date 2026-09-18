@@ -11484,6 +11484,8 @@ BEGIN
   -- propia de cada concepto y redondeo por línea (BL-12). La tasa efectiva y el
   -- tratamiento fiscal explícito entran al GROUP BY: 'no_objeto', 'exento' y
   -- 'tasa_0' quedan en líneas distintas aunque su IVA sea 0.
+  -- P1 · Auditoría IVA: la tasa es CANÓNICA por tratamiento; una tasa numérica
+  -- faltante NUNCA se rellena con la tasa general si el tipo dice otra cosa.
   INSERT INTO public.proforma_conceptos_consolidados (
     proforma_id, embarque_id, contenedor, tipo_contenedor,
     descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, iva,
