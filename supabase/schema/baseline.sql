@@ -22797,8 +22797,7 @@ BEGIN
   ELSE
     v_estado_link := 'activo';
   END IF;
-  -- BL-11 (migración 20260817142000): link no vigente → no exponer montos,
-  -- conceptos ni datos del cliente; sólo el estado y el número.
+  -- BL-11: link no vigente → no exponer montos, conceptos ni datos del cliente.
   IF v_estado_link <> 'activo' THEN
     RETURN jsonb_build_object(
       'estado_link', v_estado_link,
@@ -22815,7 +22814,10 @@ BEGIN
     'cantidad', pcc.cantidad,
     'precio_unitario', pcc.precio_unitario,
     'importe', pcc.total,
-    'moneda', pcc.moneda
+    'moneda', pcc.moneda,
+    'tipo_iva', pcc.tipo_iva,
+    'tasa_iva_aplicada', pcc.tasa_iva_aplicada,
+    'aplica_iva', pcc.aplica_iva
   ) ORDER BY pcc.created_at), '[]'::jsonb)
     INTO v_conceptos
     FROM public.proforma_conceptos_consolidados pcc
