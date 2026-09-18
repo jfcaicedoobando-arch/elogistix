@@ -102,7 +102,13 @@ function validarImportes(values: Valores, refCtx: RefCtx, ctx: FacturaFormValida
   }
   // FP-000256: IVA fantasma. El total se deriva de subtotal + IVA, así que un
   // IVA imposible (50 sobre 60) infla la factura sin renglón que lo respalde.
-  if (ivaExcedeTasaMaxima(Number(values.subtotal) || 0, Number(values.iva) || 0)) {
+  // El IEPS trasladado forma parte de la base gravable (subtotal 100 + IEPS 8
+  // admite IVA 17.28), así que se suma antes de comparar.
+  if (ivaExcedeTasaMaxima(
+    Number(values.subtotal) || 0,
+    Number(values.iva) || 0,
+    Number(values.ieps) || 0,
+  )) {
     refCtx.addIssue({ code: "custom", path: ["iva"], message: COPY_VALIDACION.ivaMayorATasaMaxima });
   }
   if (ctx.total <= 0) {

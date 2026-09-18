@@ -19,7 +19,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
   USO_CFDI_NC,
   sugerirFormaPagoNC,
@@ -45,11 +44,14 @@ export function makeConcepto(): ConceptoNotaCredito {
     clave_sat: CLAVE_SAT_DEFAULT,
     clave_unidad: CLAVE_UNIDAD_DEFAULT,
     unidad: "Unidad de servicio",
-    tasa_iva: TASA_IVA,
-    // P1-IVA: el tratamiento fiscal se declara explícito, nunca se deduce.
-    tipo_iva: "gravado_16",
+    // P1-IVA: un renglón nuevo NACE SIN tratamiento fiscal. La factura original
+    // puede ser exenta, a tasa 0, no objeto o al 8%: un 16% por omisión
+    // acreditaría un impuesto que nunca se trasladó. El usuario lo elige.
+    tasa_iva: null,
+    tipo_iva: null,
     tasa_ret_isr: 0,
     tasa_ret_iva: 0,
+    es_manual: true,
   };
 }
 
