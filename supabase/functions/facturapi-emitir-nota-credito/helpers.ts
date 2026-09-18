@@ -160,18 +160,33 @@ export function ncTotalEsCero(ctx: NotaCreditoContext): boolean {
 /**
  * Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0.
  * "no_objeto" (ObjetoImp 01) no lleva traslado alguno de IVA.
+ *
+ * P1-IVA: la tasa SIEMPRE es la canónica del tratamiento (0.16 / 0.08 / 0).
+ * Nunca se usa la tasa guardada del renglón: un `gravado_16` con tasa 0.08
+ * construía un traslado al 8%. Las combinaciones imposibles se bloquean antes
+ * en `validateNcContext`; aquí un tipo no reconocido lanza en vez de suponer.
  */
+const TASA_CANONICA_NC: Record<string, number> = {
+  gravado_16: 0.16,
+  gravado_8: 0.08,
+  tasa_0: 0,
+  exento: 0,
+  no_objeto: 0,
+};
+
 export function buildTaxesNc(c: ConceptoNC) {
   type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
-  const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+  const tipo = c.tipo_iva;
+  if (tipo == null || !TIPOS_IVA_NC.includes(tipo)) {
+    throw new Error(
+      `Concepto "${c.descripcion}" sin tratamiento fiscal de IVA reconocido: no se puede construir el CFDI.`,
+    );
+  }
   const taxes: Tax[] = [];
   if (tipo === "exento") {
     taxes.push({ type: "IVA", rate: 0, factor: "Exento" });
   } else if (tipo !== "no_objeto") {
-    const rate = tipo === "tasa_0"
-      ? 0
-      : (c.tasa_iva ?? (tipo === "gravado_8" ? 0.08 : 0.16));
-    taxes.push({ type: "IVA", rate, factor: "Tasa" });
+    taxes.push({ type: "IVA", rate: TASA_CANONICA_NC[tipo], factor: "Tasa" });
   }
   // P1-IVA — las retenciones de la factura se reversan en la NC (mismo shape
   // que facturapi-emitir/helpers.ts): omitirlas cambiaba el total del CFDI.
@@ -184,8 +199,9 @@ export function buildTaxesNc(c: ConceptoNC) {
 
 /**
  * P1-IVA — Tratamientos representables en el CFDI de egreso. Un renglón sin
- * tipo reconocido Y sin tasa numérica es INDETERMINADO: se bloquea el timbrado
- * en vez de suponer 16% (o degradarlo a exento).
+ * tipo reconocido es INDETERMINADO: se bloquea el timbrado en vez de suponer
+ * 16% (una tasa numérica suelta no dice si el original era tasa 0%, exento o
+ * no objeto: son tres declaraciones distintas ante el SAT).
  */
 const TIPOS_IVA_NC: readonly string[] = [
   "gravado_16",
@@ -196,10 +212,18 @@ const TIPOS_IVA_NC: readonly string[] = [
 ];
 
 export function tratamientoNcIndeterminado(c: ConceptoNC): boolean {
-  if (c.tipo_iva != null && TIPOS_IVA_NC.includes(c.tipo_iva)) return false;
-  if (c.tipo_iva != null) return true;
+  return c.tipo_iva == null || !TIPOS_IVA_NC.includes(c.tipo_iva);
+}
+
+/**
+ * P1-IVA — `true` cuando la tasa guardada del renglón contradice su tratamiento
+ * (p. ej. `gravado_16` con 0.08). No se elige una de las dos: se bloquea.
+ */
+export function tasaNcIncoherente(c: ConceptoNC): boolean {
+  if (tratamientoNcIndeterminado(c)) return false;
   const tasa = c.tasa_iva;
-  return tasa === null || tasa === undefined || !Number.isFinite(Number(tasa));
+  if (tasa === null || tasa === undefined || !Number.isFinite(Number(tasa))) return false;
+  return Math.abs(Number(tasa) - TASA_CANONICA_NC[c.tipo_iva as string]) >= 1e-9;
 }
 
 export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
