@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { nonEmpty, uuidSchema } from "./mutationSchemas.shared";
 import { MONTO_MAX, CANTIDAD_MAX } from "./limitesNumericos";
+import { clasificarCoherenciaIva, mensajeCoherenciaIva } from "@/lib/financial/coherenciaIva";
 
 /**
  * B-23: topes de magnitud. No convertimos los objetos a `.strict()` a propósito
@@ -29,7 +30,22 @@ const conceptoVentaSchema = z.object({
     .max(CANTIDAD_MAX, "Cantidad: excede el máximo permitido (1,000,000)."),
   precio_unitario: montoSchema("Precio unitario"),
   total: montoSchema("Total"),
-}).passthrough();
+}).passthrough()
+  // P1-IVA: no se guardan combinaciones que se contradicen (p. ej. "tasa 0%"
+  // con 16%, o gravado con el IVA apagado). Los renglones legados AMBIGUOS
+  // (sin `tipo_iva`, flag apagado y tasa heredada) siguen siendo editables:
+  // sólo se bloquean al timbrar.
+  .superRefine((concepto, ctx) => {
+    const fila = concepto as { tipo_iva?: string | null; tasa_iva_aplicada?: number | null; aplica_iva?: boolean | null };
+    const resultado = clasificarCoherenciaIva(fila);
+    if (resultado.estado === "incoherente") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["tipo_iva"],
+        message: mensajeCoherenciaIva(concepto.descripcion, resultado),
+      });
+    }
+  });
 
 const cotizacionBaseSchema = z.object({
   cliente_nombre: nonEmpty("Cliente", 200),
