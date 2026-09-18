@@ -7,13 +7,9 @@
  * - sugerirCandidatos: matching por monto (±$1) y fecha (±5 días) contra CxC/CxP pendientes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
+import type { Tables } from "@/integrations/supabase/types";
 import { unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
-import {
-  bitacoraImportarMovimientos,
-} from "./conciliacionBitacora";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 
