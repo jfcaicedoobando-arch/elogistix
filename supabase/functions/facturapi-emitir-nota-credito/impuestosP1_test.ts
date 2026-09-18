@@ -6,6 +6,7 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   buildTaxesNc,
   tratamientoNcIndeterminado,
+  tasaNcIncoherente,
   validateNcContext,
   type ConceptoNC,
   type NotaCreditoContext,
@@ -66,7 +67,8 @@ Deno.test("un renglón exento con retención sólo lleva Exento + retención", (
 
 Deno.test("tratamiento indeterminado bloquea la emisión con mensaje claro", () => {
   assertEquals(tratamientoNcIndeterminado(concepto()), true);
-  assertEquals(tratamientoNcIndeterminado(concepto({ tasa_iva: 0.16 })), false);
+  // P1-IVA: una tasa suelta ya NO basta; sin tipo el renglón es indeterminado.
+  assertEquals(tratamientoNcIndeterminado(concepto({ tasa_iva: 0.16 })), true);
   assertEquals(tratamientoNcIndeterminado(concepto({ tipo_iva: "exento" })), false);
   // SAFE-CAST: valor inválido a propósito para probar el fail-closed.
   assertEquals(tratamientoNcIndeterminado(concepto({ tipo_iva: "gravado_11" as never })), true);
@@ -90,4 +92,15 @@ Deno.test("tratamiento indeterminado bloquea la emisión con mensaje claro", () 
   assertEquals(problema !== undefined, true);
   assertEquals(problema!.message.includes("no objeto"), true);
   assertEquals(problema!.message.includes("no se supone una tasa"), true);
+});
+
+Deno.test("P1-IVA: una tasa que contradice el tipo bloquea antes de timbrar", () => {
+  assertEquals(tasaNcIncoherente(concepto({ tipo_iva: "gravado_16", tasa_iva: 0.08 })), true);
+  assertEquals(tasaNcIncoherente(concepto({ tipo_iva: "tasa_0", tasa_iva: 0.16 })), true);
+  assertEquals(tasaNcIncoherente(concepto({ tipo_iva: "gravado_8", tasa_iva: 0.08 })), false);
+  assertEquals(tasaNcIncoherente(concepto({ tipo_iva: "exento", tasa_iva: null })), false);
+  // Un gravado 16% con tasa 0.08 no puede construir un traslado al 8%:
+  assertEquals(buildTaxesNc(concepto({ tipo_iva: "gravado_16", tasa_iva: 0.08 })), [
+    { type: "IVA", rate: 0.16, factor: "Tasa" },
+  ]);
 });

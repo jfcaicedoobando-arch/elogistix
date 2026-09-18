@@ -6,13 +6,15 @@
  * MISMA regla que arma el CFDI, para que el monto de la NC, el resumen y el XML
  * no puedan diferir.
  *
- * Reglas (nunca se infiere un tratamiento):
+ * Reglas (nunca se infiere ni se corrige un tratamiento):
  *  - `no_objeto` (ObjetoImp 01) y `exento` no causan IVA trasladado.
  *  - `tasa_0` traslada IVA a tasa 0 (grupo distinto de exento).
- *  - `gravado_8` / `gravado_16` usan la tasa guardada del renglón; si falta,
- *    caen a 0.08 / 0.16 respectivamente.
- *  - Un renglón sin `tipo_iva` reconocido y sin tasa numérica es INDETERMINADO:
- *    se bloquea antes de guardar o timbrar (no se supone 16%).
+ *  - `gravado_8` / `gravado_16` usan SIEMPRE su tasa canónica (0.08 / 0.16).
+ *  - Un renglón sin `tipo_iva` reconocido es INDETERMINADO: se bloquea antes de
+ *    guardar o timbrar (una tasa numérica suelta no dice si el original era
+ *    tasa 0%, exento o no objeto).
+ *  - Un renglón cuya tasa guardada contradice su tipo es INCOHERENTE y también
+ *    bloquea: no se elige silenciosamente una de las dos.
  *  - Las retenciones ISR/IVA del renglón original se reversan igual que en la
  *    factura: restan del total de la NC.
  */
@@ -28,6 +30,17 @@ export const TRATAMIENTOS_NC = [
 ] as const;
 
 export type TratamientoNC = (typeof TRATAMIENTOS_NC)[number];
+
+/** Tasas canónicas de cada tratamiento (las únicas representables en el CFDI). */
+export const TASA_CANONICA_NC: Record<TratamientoNC, number> = {
+  gravado_16: 0.16,
+  gravado_8: 0.08,
+  tasa_0: 0,
+  exento: 0,
+  no_objeto: 0,
+};
+
+const EPS = 1e-9;
 
 export interface LineaNC {
   cantidad?: number | null;
@@ -47,34 +60,54 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Tasa numérica del renglón, o `null` si no hay una utilizable. */
+function tasaNumerica(linea: LineaNC): number | null {
+  const t = linea.tasa_iva;
+  if (t === null || t === undefined || !Number.isFinite(Number(t))) return null;
+  return Number(t);
+}
+
 /**
- * Tratamiento efectivo del renglón. `null` = indeterminado (no hay tipo
- * reconocido ni tasa numérica): el llamador debe bloquear.
- * Un renglón legacy con tasa numérica explícita se trata como gravado a esa
- * tasa (misma regla histórica del payload); NUNCA se deduce exento ni no objeto.
+ * Tratamiento efectivo del renglón. `null` = indeterminado: el `tipo_iva` falta
+ * o no se reconoce. NO se deduce nada de la tasa: una tasa 0 puede venir de
+ * tasa 0%, exento o no objeto, y son tres declaraciones distintas ante el SAT.
  */
 export function tratamientoLineaNC(linea: LineaNC): TratamientoNC | null {
-  if (esTratamientoNC(linea.tipo_iva)) return linea.tipo_iva;
-  const tasa = linea.tasa_iva;
-  if (tasa === null || tasa === undefined || !Number.isFinite(Number(tasa))) return null;
-  return Number(tasa) === 0 ? "tasa_0" : "gravado_16";
+  return esTratamientoNC(linea.tipo_iva) ? linea.tipo_iva : null;
+}
+
+/** Tasa canónica del tratamiento (0 cuando no causa traslado). */
+export function tasaCanonicaNC(tipo: TratamientoNC): number {
+  return TASA_CANONICA_NC[tipo];
+}
+
+/**
+ * Motivo por el que el renglón no se puede acreditar, o `null` si es válido.
+ * Mismas reglas de coherencia que la emisión normal de facturas.
+ */
+export function problemaLineaNC(linea: LineaNC): string | null {
+  const tipo = tratamientoLineaNC(linea);
+  if (tipo === null) {
+    return "sin tratamiento fiscal de IVA definido en la factura original (16%, 8%, tasa 0%, exento o no objeto)";
+  }
+  const tasa = tasaNumerica(linea);
+  const canonica = tasaCanonicaNC(tipo);
+  if (tasa !== null && Math.abs(tasa - canonica) >= EPS) {
+    return `clasificado como ${TIPO_IVA_LABEL_SAT[tipo]} pero con una tasa guardada de ${(tasa * 100).toFixed(2)}%`;
+  }
+  return null;
 }
 
 /** `true` si el renglón no puede representarse sin inventar el tratamiento. */
 export function lineaIndeterminadaNC(linea: LineaNC): boolean {
-  return tratamientoLineaNC(linea) === null;
+  return problemaLineaNC(linea) !== null;
 }
 
 /** Tasa de IVA trasladado del renglón (0 cuando no causa traslado). */
 export function tasaTrasladoNC(linea: LineaNC): number {
   const tipo = tratamientoLineaNC(linea);
-  if (tipo === null || tipo === "no_objeto" || tipo === "exento") return 0;
-  if (tipo === "tasa_0") return 0;
-  const tasa = linea.tasa_iva;
-  if (tasa === null || tasa === undefined || !Number.isFinite(Number(tasa))) {
-    return tipo === "gravado_8" ? 0.08 : 0.16;
-  }
-  return Number(tasa);
+  if (tipo === null) return 0;
+  return tasaCanonicaNC(tipo);
 }
 
 export interface ImpuestosLineaNC {
@@ -117,11 +150,13 @@ export function claveTratamientoNC(linea: LineaNC): string {
 
 /** Etiqueta de sólo lectura del tratamiento fiscal y retenciones del renglón. */
 export function etiquetaTratamientoNC(linea: LineaNC): string {
+  const problema = problemaLineaNC(linea);
   const tipo = tratamientoLineaNC(linea);
-  if (tipo === null) {
-    return "Tratamiento fiscal por definir en la factura original: no se puede timbrar la nota de crédito.";
+  if (problema !== null || tipo === null) {
+    return `Renglón ${problema ?? "sin tratamiento fiscal"}: corrige la factura original y vuelve a generar la nota de crédito.`;
   }
   const partes = [`IVA: ${TIPO_IVA_LABEL_SAT[tipo]}`];
+
   if (tipo === "gravado_16" || tipo === "gravado_8") {
     const pct = tasaTrasladoNC(linea) * 100;
     partes.push(`tasa ${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(2)}%`);

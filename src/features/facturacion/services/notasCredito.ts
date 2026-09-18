@@ -36,6 +36,12 @@ export interface ConceptoNotaCredito {
   tasa_ret_isr?: number | null;
   /** P1-IVA: retención de IVA del renglón original (0.04, 0.106667), se reversa. */
   tasa_ret_iva?: number | null;
+  /**
+   * P1-IVA: renglón capturado a mano en la NC (no copiado del CFDI original).
+   * Sólo estos permiten elegir el tratamiento fiscal en la UI; los copiados
+   * quedan de sólo lectura para reversar exactamente lo timbrado.
+   */
+  es_manual?: boolean;
 }
 
 export interface CrearNotaCreditoInput {

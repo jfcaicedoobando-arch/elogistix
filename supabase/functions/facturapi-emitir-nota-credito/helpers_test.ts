@@ -23,6 +23,7 @@ const baseCtx = (): NotaCreditoContext => ({
     clave_unidad: "E48",
     unidad: "Servicio",
     tasa_iva: 0.16,
+    tipo_iva: "gravado_16",
   }],
 });
 

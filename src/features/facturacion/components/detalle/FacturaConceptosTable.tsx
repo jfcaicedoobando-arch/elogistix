@@ -23,13 +23,22 @@ import {
   ConceptosDesktopTable,
   type ConceptoRow,
 } from "./FacturaConceptosRows";
+import { tipoIvaDesdeSnapshot } from "@/features/facturacion/utils/tipoIvaSnapshot";
+
+interface ImpuestoSnapshot {
+  type?: string;
+  rate?: number;
+  factor?: string;
+  /** Retención: NO es un traslado, no clasifica el tratamiento del renglón. */
+  withholding?: boolean;
+}
 
 interface ConceptoSnapshot extends ConceptoRow {
   /** Snapshot Facturapi: `product.taxes: [{ type, rate, factor }]` */
-  product?: {
-    taxes?: Array<{ type?: string; rate?: number; factor?: string }>;
-  };
-  taxes?: Array<{ type?: string; rate?: number; factor?: string }>;
+  product?: { taxes?: ImpuestoSnapshot[]; taxability?: string | null };
+  taxes?: ImpuestoSnapshot[];
+  /** ObjetoImp SAT ("01" = no objeto de impuesto). */
+  taxability?: string | null;
 }
 
 interface Props {
@@ -61,26 +70,12 @@ function parseConceptos(snapshot: unknown): ConceptoSnapshot[] {
   return list.filter(isRecord) as ConceptoSnapshot[];
 }
 
-/** Infiere el régimen IVA de un concepto — borrador o snapshot Facturapi. */
+/**
+ * Régimen IVA del renglón. P2-IVA: se delega en un helper puro que usa la tasa
+ * exacta, ignora retenciones y respeta ObjetoImp 01; `null` = "No disponible".
+ */
 function inferirTipoIva(c: ConceptoSnapshot): TipoIvaConcepto | null {
-  // El tipo explícito manda (incluye `no_objeto`, SAT ObjetoImp 01, que NO se
-  // puede reconstruir desde los impuestos del snapshot).
-  if (
-    c.tipo_iva === "gravado_16" || c.tipo_iva === "gravado_8" ||
-    c.tipo_iva === "tasa_0" || c.tipo_iva === "exento" || c.tipo_iva === "no_objeto"
-  ) {
-    return c.tipo_iva;
-  }
-  const taxes = c.product?.taxes ?? c.taxes;
-  if (Array.isArray(taxes) && taxes.length > 0) {
-    const iva = taxes.find((t) => (t.type ?? "").toUpperCase() === "IVA") ?? taxes[0];
-    const factor = (iva.factor ?? "").toLowerCase();
-    if (factor === "exento") return "exento";
-    const rate = Number(iva.rate ?? 0);
-    if (rate === 0) return "tasa_0";
-    return "gravado_16";
-  }
-  return null;
+  return tipoIvaDesdeSnapshot(c) as TipoIvaConcepto | null;
 }
 
 function TotalesFooter({ subtotal, iva, total, moneda }: { subtotal: number; iva: number; total: number; moneda: string }) {

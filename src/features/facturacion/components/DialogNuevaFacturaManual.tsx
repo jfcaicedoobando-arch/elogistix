@@ -107,7 +107,9 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               <span className="tabular-nums">{formatCurrency(totales.subtotal, fiscal.moneda)}</span>
             </div>
             <div className="flex justify-between text-body opacity-80">
-              <span>IVA ({Math.round(tasaIva * 100)}%)</span>
+              {/* P2-IVA: los renglones pueden llevar tratamientos distintos (16%, 8%,
+                  tasa 0%, exento, no objeto): el pie no afirma una sola tasa. */}
+              <span>IVA total</span>
               <span className="tabular-nums">{formatCurrency(totales.iva, fiscal.moneda)}</span>
             </div>
             <div className="pt-3 border-t border-primary-foreground/20 flex justify-between items-baseline">

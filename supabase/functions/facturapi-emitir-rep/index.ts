@@ -16,11 +16,17 @@ import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
-import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
+import { calcularParcialidad, resolverReferenciasEmbarque } from "./context.ts";
 import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
-import { MSG_IVA_MULTITASA, MSG_REP_NO_OBJETO, resolverTrasladoDr } from "./trasladoDr.ts";
+import {
+  MSG_IVA_MULTITASA,
+  MSG_REP_NO_OBJETO,
+  MSG_REP_TRATAMIENTO_INDETERMINADO,
+  resolverTrasladoDr,
+  trasladoDesdeEncabezado,
+} from "./trasladoDr.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 
@@ -95,21 +101,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (!factura.uuid_fiscal) return json({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
   if (factura.metodo_pago !== "PPD") return json({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
 
-  // α.1 — Tasa IVA efectiva de la factura original (extraída a context.ts).
-  const tasaIvaFactura = tasaIvaFacturaOriginal(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0));
-
-  // α.2 (v13.559.1) — Facturas sin IVA: distinguir exentas de tasa 0% para que
-  // el REP siempre lleve el desglose de impuestos que exige el SAT/Facturapi.
+  // P1-IVA — El desglose autoritativo son los renglones de la factura. El
+  // encabezado sólo se usa como respaldo para facturas antiguas sin renglones y
+  // únicamente si su cociente IVA/subtotal cae exacto en una tasa del catálogo.
   const { data: conceptosIva } = await supabase
     .from("conceptos_factura")
     .select("tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", factura.id)
     .is("deleted_at", null);
-  const factorIvaFallback = factorIvaFacturaOriginal(
-    tasaIvaFactura,
-    (conceptosIva ?? []).map((c) => (c as { tipo_iva?: string | null }).tipo_iva),
-  );
-
   // Ola E3 · N2 — traslado por grupo de tasa desde los renglones. Con mezcla
   // de tasas se rechaza el timbrado en vez de declarar una tasa promedio.
   const traslado = resolverTrasladoDr(conceptosIva as Array<{ tipo_iva?: string | null; tasa_iva_aplicada?: number | null }>);
@@ -128,8 +127,20 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       .eq("id", pago.id);
     return json({ error: "rep_no_objeto", message: MSG_REP_NO_OBJETO }, 422);
   }
-  const tasaIvaDr = traslado === "sin_conceptos" ? tasaIvaFactura : traslado.tasa;
-  const factorIvaFactura = traslado === "sin_conceptos" ? factorIvaFallback : traslado.factor;
+  // P1-IVA — tratamiento desconocido o contradictorio: se falla CERRADO antes
+  // del claim, con un mensaje que dice qué debe completar Contabilidad.
+  const trasladoFinal = traslado === "sin_conceptos"
+    ? trasladoDesdeEncabezado(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0))
+    : traslado;
+  if (trasladoFinal === null || trasladoFinal === "indeterminado") {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_REP_TRATAMIENTO_INDETERMINADO })
+      .eq("id", pago.id);
+    return json({ error: "iva_tratamiento_indeterminado", message: MSG_REP_TRATAMIENTO_INDETERMINADO }, 422);
+  }
+  const tasaIvaDr = trasladoFinal.tasa;
+  const factorIvaFactura = trasladoFinal.factor;
+
 
   // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
   // impuesto ⇒ bloqueo claro ANTES del claim (reintentable tras corregir).
