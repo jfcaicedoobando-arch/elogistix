@@ -156,3 +156,7 @@ BEGIN
   RETURN v_nueva;
 END;
 $_$;
+-- Permisos explícitos (CREATE OR REPLACE los conserva; se declaran para la auditoría).
+REVOKE ALL ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid) TO service_role;
