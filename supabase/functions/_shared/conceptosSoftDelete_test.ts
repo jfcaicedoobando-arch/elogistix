@@ -11,8 +11,10 @@ import { assert, assertStringIncludes } from "https://deno.land/std@0.224.0/asse
 
 const ARCHIVOS = [
   "../facturapi-emitir/contexto.ts",
-  "../facturapi-emitir-rep/index.ts",
+  // La lectura del REP vive en este helper (antes estaba inline en index.ts).
+  "../facturapi-emitir-rep/conceptosFacturaDr.ts",
 ] as const;
+
 
 for (const rel of ARCHIVOS) {
   Deno.test(`${rel}: lee conceptos_factura excluyendo la papelera`, async () => {

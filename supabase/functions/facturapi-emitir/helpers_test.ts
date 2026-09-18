@@ -127,16 +127,21 @@ Deno.test("buildFacturapiPayload manda taxability 01 y sin IVA cuando tipo_iva=n
   assertEquals(p.items[0].product.taxes.length, 0);
 });
 
-Deno.test("no_objeto conserva la retención de ISR sin fabricar traslado de IVA", () => {
+Deno.test("no_objeto con retención de ISR: se rechaza y el payload no fabrica impuestos", () => {
+  // Regla fiscal vigente: ObjetoImp 01 no lleva nodo de impuestos, así que la
+  // combinación con retenciones se corta en `validateContext` (fail-closed) y
+  // el payload jamás inventa traslados ni retenciones para ese renglón.
   const ctx: FacturaContext = {
     ...baseCtx,
     conceptos: [{ ...baseCtx.conceptos[0], tipo_iva: "no_objeto", tasa_iva: null, tasa_ret_isr: 0.1 }],
   };
-  const taxes = buildFacturapiPayload(ctx).items[0].product.taxes;
-  assertEquals(taxes.length, 1);
-  assertEquals(taxes[0].type, "ISR");
-  assertEquals(taxes[0].withholding, true);
+  const issues = validateContext(ctx);
+  assert(issues.some((i) => i.field === "conceptos[0].retenciones"));
+  const item = buildFacturapiPayload(ctx).items[0];
+  assertEquals(item.product.taxes.length, 0);
+  assertEquals(item.product.taxability, "01");
 });
+
 
 Deno.test("gravado_16 sigue enviando taxability por default (sin campo)", () => {
   const p = buildFacturapiPayload(baseCtx);
