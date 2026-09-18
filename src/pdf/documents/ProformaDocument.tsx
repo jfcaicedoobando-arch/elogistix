@@ -88,7 +88,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
         {/* P1 · Auditoría IVA: si algún renglón sigue sin clasificar, el total
             impreso es estimado y se dice explícitamente. */}
         {hayPorConfirmar ? (
-          <Text style={[styles.smallNote, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text>
+          <Text style={[styles.notice, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text>
         ) : null}
 
         {/* La caja de totales es indivisible (wrap=false) y sólo salta de
