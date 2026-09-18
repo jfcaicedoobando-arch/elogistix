@@ -14,6 +14,8 @@ import {
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
+import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { registrarFacturaPendiente, respuestaIdempotencyEnUso } from "./pendiente.ts";
 import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
 
 export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
@@ -125,7 +127,7 @@ export async function resolverSustitucion(supabase: SupabaseClient, factura: Fac
 }
 
 
-interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string; status?: string }
 
 async function createInvoiceInFacturapi(
   input: EmitirInput,
@@ -133,6 +135,10 @@ async function createInvoiceInFacturapi(
 ): Promise<FapiInvoice | Response> {
   const { supabase, factura, facturaId, user, claim } = input;
   const facturapi = input.facturapi as { invoices: { create: (p: unknown) => Promise<unknown> } };
+  const meta = {
+    supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
+    claimTag: claim.claimTag, usuarioId: user.id, usuarioEmail: user.email,
+  };
   try {
     // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
     // de dejar la Edge Function ocupada 150 s.
@@ -143,19 +149,21 @@ async function createInvoiceInFacturapi(
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // EF-02 (auditoría): en timeout NO liberamos el claim. Si FacturApi sí
-      // timbró, el tag PENDING:<uuid> (external_id) es la única correlación que
-      // permite a facturapi-recuperar-claim adoptar el CFDI; liberarlo aquí
-      // convertía un timeout benigno en un CFDI duplicado al reintentar.
+      // timbró, el tag PENDING:<uuid> (external_id + idempotency_key) es la
+      // única correlación que permite a facturapi-recuperar-claim adoptar el
+      // CFDI; liberarlo aquí convertía un timeout benigno en un duplicado.
       await registrarBitacoraEdge(supabase, {
         organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
         accion: "facturapi_emitir_timeout", entidadId: facturaId, entidadNombre: factura.numero ?? "",
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return jsonResponse({ error: "facturapi_timeout", message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — no reintentes el timbrado directamente.`, timeout_ms: err.timeoutMs }, 504);
+      return jsonResponse({ error: "facturapi_timeout", message: `${err.message}. No reintentes el timbrado: usa 'Recuperar timbrado' para sincronizar el intento en curso.`, timeout_ms: err.timeoutMs }, 504);
     }
+    const { status, detail } = describeFacturapiError(err);
+    // P0-B.4: la llave de idempotencia en uso NO autoriza otro CFDI.
+    if (esIdempotencyKeyEnUso(detail, status)) return await respuestaIdempotencyEnUso(meta);
     // Error definitivo de FacturApi (no timbró): sí liberamos para reintentar.
     await claim.release();
-    const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
       accion: "facturapi_emitir_failed", entidadId: facturaId, entidadNombre: factura.numero ?? "",
@@ -238,6 +246,16 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
 
   const invoice = await createInvoiceInFacturapi(input, payload);
   if (invoice instanceof Response) return invoice;
+
+  // P0-A: `status: "pending"` o UUID ausente ⇒ NO está timbrado. Se conserva el
+  // claim, no se respalda XML y se responde 202.
+  if (esTimbradoPendiente(invoice)) {
+    return await registrarFacturaPendiente({
+      supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
+      claimTag: input.claim.claimTag, pendienteId: invoice.id ?? null,
+      usuarioId: input.user.id, usuarioEmail: input.user.email,
+    });
+  }
 
   const resultado = parseInvoiceResult(invoice, ctx);
   const respaldo = await respaldarXmlEmitido({

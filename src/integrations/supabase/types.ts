@@ -5083,6 +5083,8 @@ export type Database = {
           factura_id: string
           facturapi_claim_at: string | null
           facturapi_id: string | null
+          facturapi_pendiente_at: string | null
+          facturapi_pendiente_id: string | null
           fecha_emision: string
           folio: string
           folio_fiscal: number | null
@@ -5126,6 +5128,8 @@ export type Database = {
           factura_id: string
           facturapi_claim_at?: string | null
           facturapi_id?: string | null
+          facturapi_pendiente_at?: string | null
+          facturapi_pendiente_id?: string | null
           fecha_emision?: string
           folio: string
           folio_fiscal?: number | null
@@ -5169,6 +5173,8 @@ export type Database = {
           factura_id?: string
           facturapi_claim_at?: string | null
           facturapi_id?: string | null
+          facturapi_pendiente_at?: string | null
+          facturapi_pendiente_id?: string | null
           fecha_emision?: string
           folio?: string
           folio_fiscal?: number | null
@@ -5414,6 +5420,8 @@ export type Database = {
           factura_xml_url: string | null
           facturapi_claim_at: string | null
           facturapi_id: string | null
+          facturapi_pendiente_at: string | null
+          facturapi_pendiente_id: string | null
           fecha_emision: string
           fecha_vencimiento: string
           folio_fiscal: number | null
@@ -5475,6 +5483,8 @@ export type Database = {
           factura_xml_url?: string | null
           facturapi_claim_at?: string | null
           facturapi_id?: string | null
+          facturapi_pendiente_at?: string | null
+          facturapi_pendiente_id?: string | null
           fecha_emision?: string
           fecha_vencimiento: string
           folio_fiscal?: number | null
@@ -5536,6 +5546,8 @@ export type Database = {
           factura_xml_url?: string | null
           facturapi_claim_at?: string | null
           facturapi_id?: string | null
+          facturapi_pendiente_at?: string | null
+          facturapi_pendiente_id?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
           folio_fiscal?: number | null
@@ -6050,6 +6062,8 @@ export type Database = {
           factura_id: string
           facturapi_rep_claim_at: string | null
           facturapi_rep_id: string | null
+          facturapi_rep_pendiente_at: string | null
+          facturapi_rep_pendiente_id: string | null
           fecha_pago: string
           folio_rep: number | null
           forma_pago: string
@@ -6098,6 +6112,8 @@ export type Database = {
           factura_id: string
           facturapi_rep_claim_at?: string | null
           facturapi_rep_id?: string | null
+          facturapi_rep_pendiente_at?: string | null
+          facturapi_rep_pendiente_id?: string | null
           fecha_pago: string
           folio_rep?: number | null
           forma_pago?: string
@@ -6146,6 +6162,8 @@ export type Database = {
           factura_id?: string
           facturapi_rep_claim_at?: string | null
           facturapi_rep_id?: string | null
+          facturapi_rep_pendiente_at?: string | null
+          facturapi_rep_pendiente_id?: string | null
           fecha_pago?: string
           folio_rep?: number | null
           forma_pago?: string
@@ -9666,6 +9684,8 @@ export type Database = {
           factura_xml_url: string | null
           facturapi_claim_at: string | null
           facturapi_id: string | null
+          facturapi_pendiente_at: string | null
+          facturapi_pendiente_id: string | null
           fecha_emision: string
           fecha_vencimiento: string
           folio_fiscal: number | null

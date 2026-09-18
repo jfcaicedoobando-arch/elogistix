@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { esIdempotencyKeyEnUso, MSG_IDEMPOTENCY_EN_USO } from "../_shared/timbradoPendiente.ts";
 
 export interface FapiInvoice {
   id: string;
@@ -12,6 +13,8 @@ export interface FapiInvoice {
   folio_number?: number;
   folio?: number;
   series?: string;
+  /** P0-A: FacturAPI puede responder "pending" (timbre en recuperación). */
+  status?: string;
 }
 
 interface TimbrarDeps {
@@ -55,16 +58,33 @@ export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
         ok: false,
         response: json({
           error: "facturapi_timeout",
-          message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — el REP pudo haberse timbrado; no reintentes directamente.`,
+          message: `${err.message}. El REP pudo haberse timbrado: NO reintentes; usa 'Recuperar timbrado' para sincronizar el intento en curso.`,
           timeout_ms: err.timeoutMs,
           external_id: claimTag,
         }, 504),
       };
     }
 
+    const { status, detail } = describeFacturapiError(err);
+    // P0-B.4: llave de idempotencia en uso ⇒ hay un intento vivo en FacturAPI.
+    // NO se libera el claim ni se marca Error: se reconcilia.
+    if (esIdempotencyKeyEnUso(detail, status)) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId, usuarioId, usuarioEmail, modulo: "facturacion",
+        accion: "facturapi_rep_idempotency_en_uso", entidadId: pagoId,
+        detalles: { external_id: claimTag },
+      });
+      return {
+        ok: false,
+        response: json({
+          error: "idempotency_key_in_use", reintentable: false,
+          external_id: claimTag, message: MSG_IDEMPOTENCY_EN_USO,
+        }, 409),
+      };
+    }
+
     // Error definitivo de Facturapi (no timbró): liberar el claim para reintentar.
     await deps.releaseClaim();
-    const { status, detail } = describeFacturapiError(err);
     const errMsg = typeof detail === "object" && detail !== null
       ? JSON.stringify(detail).slice(0, 500)
       : "Facturapi error";

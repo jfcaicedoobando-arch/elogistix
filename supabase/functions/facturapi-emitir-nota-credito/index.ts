@@ -16,6 +16,8 @@ import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./da
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
+import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { registrarNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -27,13 +29,13 @@ const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
 interface ReqBody { nota_credito_id?: string }
 
-interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string; status?: string }
 
 async function createNcInvoice(
   supabase: ReturnType<typeof createClient>,
   facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
   payload: unknown,
-  meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string },
+  meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string; claimTag: string },
   releaseClaim: () => Promise<void>,
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
@@ -56,11 +58,16 @@ async function createNcInvoice(
         entidadId: meta.notaCreditoId,
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return { ok: false, body: { error: "facturapi_timeout", message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — no reintentes el timbrado directamente.`, timeout_ms: err.timeoutMs }, status: 504 };
+      return { ok: false, body: { error: "facturapi_timeout", message: `${err.message}. No reintentes el timbrado: usa 'Recuperar timbrado' para sincronizar el intento en curso.`, timeout_ms: err.timeoutMs }, status: 504 };
+    }
+    const { status, detail } = describeFacturapiError(err);
+    // P0-B.4: llave de idempotencia en uso ⇒ reconciliar, jamás crear otra NC.
+    if (esIdempotencyKeyEnUso(detail, status)) {
+      const r = cuerpoIdempotencyEnUsoNc(meta.claimTag);
+      return { ok: false, body: r.body, status: r.status };
     }
     // Error definitivo de FacturAPI (no timbró): liberar el claim para reintentar.
     await releaseClaim();
-    const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: meta.organizationId,
       usuarioId: meta.userId,
@@ -133,8 +140,23 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     userId: userData.user.id,
     userEmail: userData.user.email,
     notaCreditoId: body.nota_credito_id,
+    claimTag: claim.claimTag,
   }, claim.release);
   if (!created.ok) return json(created.body, created.status);
+
+  // P0-A: pendiente ⇒ 202, sin marcar Timbrada, sin XML y conservando el claim.
+  if (esTimbradoPendiente(created.invoice)) {
+    const pend = await registrarNcPendiente({
+      supabase,
+      notaCreditoId: body.nota_credito_id,
+      organizationId: nc.organization_id,
+      claimTag: claim.claimTag,
+      pendienteId: created.invoice.id ?? null,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+    });
+    return json(pend.body, pend.status);
+  }
 
   const persisted = await persistTimbradoNc({
     supabase,
