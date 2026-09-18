@@ -7,9 +7,11 @@
  *    impuestos para ese concepto. Por eso un renglón no objeto no puede llevar
  *    retenciones de ISR ni de IVA (antes se conservaban ocultas y el payload
  *    salía con `taxability:"01"` y un arreglo de impuestos no vacío).
- * 2) El complemento de pago no permite declarar ObjetoImpDR = 01, así que una
- *    factura PPD con un renglón no objeto se quedaría sin REP al cobrarse. Se
- *    bloquea el PPD en vez de falsear "Exento" o "Tasa 0".
+ * 2) LIMITACIÓN DE LA INTEGRACIÓN (no del SAT): el Anexo 29 de la RMF sí
+ *    contempla ObjetoImpDR 01 en el complemento de pago (sin nodo ImpuestosDR),
+ *    pero la API de Facturapi no expone ese campo en `related_documents` (sólo
+ *    `taxes`), así que una factura PPD con un renglón no objeto se quedaría sin
+ *    REP al cobrarse. Se bloquea el PPD en vez de falsear "Exento" o "Tasa 0".
  */
 
 export const MSG_NO_OBJETO_RETENCIONES =

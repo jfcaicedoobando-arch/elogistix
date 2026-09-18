@@ -6,8 +6,10 @@
  * 1) Guía de llenado del SAT: con ObjetoImp 01 el CFDI NO debe traer nodo de
  *    impuestos para ese concepto ⇒ un renglón no objeto no puede llevar
  *    retenciones de ISR ni de IVA.
- * 2) El complemento de pago no permite declarar ObjetoImpDR = 01, así que una
- *    factura PPD con un renglón no objeto se quedaría sin REP al cobrarse.
+ * 2) LIMITACIÓN DE LA INTEGRACIÓN (no del SAT): el Anexo 29 de la RMF sí
+ *    contempla ObjetoImpDR 01, pero la API de Facturapi no expone ese campo en
+ *    `related_documents`, así que una factura PPD con un renglón no objeto se
+ *    quedaría sin REP al cobrarse.
  */
 
 export const MSG_NO_OBJETO_RETENCIONES =
