@@ -36,6 +36,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   );
   const multiContenedor = idsUnicos.size >= 2;
   const grupos = agruparPorContenedor(conceptos);
+  const hayPorConfirmar = hayLineasIvaPorConfirmar(conceptos, tasaIva);
 
   // R179-01/PDF-B: etiqueta neutra "IVA <moneda>". No se rotula la tasa global
   // porque las filas pueden tributar a 0/8/16% y mezclarse en una misma moneda.
