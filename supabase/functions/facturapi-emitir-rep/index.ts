@@ -49,8 +49,6 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const json = makeJson(req);
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-
-
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
 
