@@ -23,6 +23,12 @@ export interface ConceptoRowProps {
   total: number;
   actualizar: (index: number, campo: string, valor: string | number | boolean) => void;
   eliminar: (index: number) => void;
+  /**
+   * Tasa de IVA de la organización. Es el MISMO fallback que usa el hook al
+   * calcular el total de la fila: sin ella un renglón `gravado_16` mostraba 0%
+   * en el selector mientras su total ya traía el 16%.
+   */
+  tasaIva: number;
 }
 
 /** Formato de presentación del campo de dinero (sin prefijo de moneda). */
@@ -39,12 +45,12 @@ const formatoMonto = (n: number) => formatNumber(n, { decimals: 2 });
  * (`CONCEPTO_GRID_USD`) para que Unidad e IVA dejen de truncarse, y el precio
  * unitario se lee con formato de dinero al salir del campo.
  */
-export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
+export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar, tasaIva }: ConceptoRowProps) {
   const cantidad = useNumericField(c.cantidad, (n) => actualizar(i, "cantidad", n), { parse: parseCantidad, fallback: 1 });
   const precio = useNumericField(c.precio_unitario, (n) => actualizar(i, "precio_unitario", n), {
     formatDisplay: formatoMonto,
   });
-  const tasaFila = resolverTasaConcepto(c, 0);
+  const tasaFila = resolverTasaConcepto(c, tasaIva);
   const aplicaIva = tasaFila > 0;
   const puedeIva = !!c.descripcion; // el catálogo determina si es gravado; usuario puede overridear
   // Las notas se abren a demanda (igual que en el paso 2): antes cada renglón

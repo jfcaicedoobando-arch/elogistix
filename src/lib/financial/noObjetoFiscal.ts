@@ -7,9 +7,11 @@
  *    impuestos para ese concepto. Por eso un renglón no objeto no puede llevar
  *    retenciones de ISR ni de IVA (antes se conservaban ocultas y el payload
  *    salía con `taxability:"01"` y un arreglo de impuestos no vacío).
- * 2) El complemento de pago no permite declarar ObjetoImpDR = 01, así que una
- *    factura PPD con un renglón no objeto se quedaría sin REP al cobrarse. Se
- *    bloquea el PPD en vez de falsear "Exento" o "Tasa 0".
+ * 2) LIMITACIÓN DE LA INTEGRACIÓN (no del SAT): el Anexo 29 de la RMF sí
+ *    contempla ObjetoImpDR 01 en el complemento de pago (sin nodo ImpuestosDR),
+ *    pero la API de Facturapi no expone ese campo en `related_documents` (sólo
+ *    `taxes`), así que una factura PPD con un renglón no objeto se quedaría sin
+ *    REP al cobrarse. Se bloquea el PPD en vez de falsear "Exento" o "Tasa 0".
  */
 
 export const MSG_NO_OBJETO_RETENCIONES =
@@ -18,10 +20,11 @@ export const MSG_NO_OBJETO_RETENCIONES =
   "cambia el tratamiento fiscal del concepto.";
 
 export const MSG_NO_OBJETO_PPD =
-  "Una factura con conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01) no puede emitirse como PPD: el " +
-  "complemento de pago no permite declarar ObjetoImpDR=01, así que el cobro se quedaría sin REP. Emítela " +
-  "como PUE o corrige el tratamiento fiscal del concepto con Contabilidad (nunca a Exento ni Tasa 0% por " +
-  "conveniencia).";
+  "Limitación actual de nuestra integración de timbrado (no es una prohibición del SAT): una factura con " +
+  "conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01) no puede emitirse como PPD, porque el proveedor " +
+  "de timbrado no expone el campo ObjetoImpDR del complemento de pago y el cobro se quedaría sin REP. " +
+  "Emítela como PUE o revisa el tratamiento fiscal del concepto con Contabilidad (nunca cambiarlo a " +
+  "Exento ni Tasa 0% por conveniencia).";
 
 export interface LineaNoObjeto {
   tipo_iva?: string | null;

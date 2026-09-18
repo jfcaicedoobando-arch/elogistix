@@ -10,7 +10,7 @@ vi.mock("@/features/catalogos/hooks", () => ({ useTasaIVA: () => 0.16 }));
 
 type Concepto = Parameters<typeof TablaConceptosGenerico>[0]["conceptos"][number];
 
-const concepto = (aplica: boolean, tasa: number | null): Concepto =>
+const concepto = (aplica: boolean, tasa: number | null, tipo_iva?: string): Concepto =>
   ({
     descripcion: "Flete marítimo",
     unidad_medida: "E48",
@@ -19,6 +19,7 @@ const concepto = (aplica: boolean, tasa: number | null): Concepto =>
     total: 1000,
     aplica_iva: aplica,
     tasa_iva_aplicada: tasa,
+    tipo_iva,
   }) as unknown as Concepto;
 
 describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
@@ -34,7 +35,25 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
     );
     expect(screen.getByText("Conceptos en MXN")).toBeInTheDocument();
     expect(screen.queryByText(/IVA \(/)).not.toBeInTheDocument();
-    expect(screen.getByText(/tasa 0% o exentos/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/tasa 0%, exentos o no objeto de impuesto/i),
+    ).toBeInTheDocument();
+  });
+
+  it("con todos los renglones no objeto lo nombra sin igualarlo a tasa 0 ni exento", () => {
+    render(
+      <TablaConceptosGenerico
+        moneda="MXN"
+        conceptos={[concepto(false, 0, "no_objeto"), concepto(false, 0, "no_objeto")]}
+        subtotal={2000}
+        iva={0}
+        total={2000}
+      />,
+    );
+    const leyenda = screen.getByText(/tasa 0%, exentos o no objeto de impuesto/i);
+    expect(leyenda).toBeInTheDocument();
+    expect(leyenda.textContent).toMatch(/no objeto de impuesto/i);
+    expect(screen.queryByText(/IVA \(/)).not.toBeInTheDocument();
   });
 
   it("con conceptos gravados usa la tasa real del renglón", () => {

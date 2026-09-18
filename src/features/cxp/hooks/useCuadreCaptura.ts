@@ -8,12 +8,16 @@ import {
   calcularCuadreConceptos,
   type ConceptoParaCuadre,
 } from "@/features/cxp/utils/cuadreConceptos";
-import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
+import {
+  resolverConceptosParaCuadre,
+  sumarIvaPartidasVisibles,
+} from "@/features/cxp/utils/conceptosParaCuadre";
 
 interface ConceptoManual {
   key: string;
   importe?: number | string | null;
   cantidad?: number | null;
+  iva?: number | string | null;
 }
 
 interface Params {
@@ -47,5 +51,13 @@ export function useCuadreCaptura({ subtotal, cfdiConceptos, conceptosManuales, v
     );
   }, [cuadre.estado, conceptosManuales]);
 
-  return { conceptosParaCuadre, cuadre, keyRenglonSospechoso };
+  // IVA desglosado en la MISMA fuente de partidas que alimenta el cuadre: antes
+  // sólo se leía el CFDI y una captura manual con IVA por renglón se reportaba
+  // como "IVA no desglosado por partida".
+  const ivaPartidas = useMemo(
+    () => sumarIvaPartidasVisibles(cfdiConceptos, conceptosManuales),
+    [cfdiConceptos, conceptosManuales],
+  );
+
+  return { conceptosParaCuadre, cuadre, keyRenglonSospechoso, ivaPartidas };
 }

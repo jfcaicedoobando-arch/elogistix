@@ -69,10 +69,13 @@ Investigación del 2026-09-18 (P1 · auditoría IVA):
   debe** declarar nodo de impuestos. Por eso el ERP bloquea "no objeto" con
   retenciones de ISR/IVA en la UI y en `facturapi-emitir` /
   `facturapi-emitir-nota-credito` (`_shared/noObjetoFiscal.ts`).
-- El REP 2.0 declara `ObjetoImpDR` por documento relacionado y sólo admite
-  `ImpuestosDR` cuando es `02`. **FacturApi no expone `ObjetoImpDR`** en
-  `related_documents` (sólo `taxes`), así que no existe ruta soportada para
-  representar `ObjetoImpDR = 01`.
+- El REP 2.0 declara `ObjetoImpDR` por documento relacionado y con `01` no debe
+  existir el nodo `ImpuestosDR` (Anexo 29 RMF 2026): **el SAT sí lo permite**.
+  Revalidado el 2026-09-18 contra la documentación pública de Facturapi
+  (`/docs/guides/invoices/pago`, `/api`): `related_documents[]` expone `uuid`,
+  `amount`, `installment`, `last_balance` y `taxes` — **no expone
+  `ObjetoImpDR`**. Por lo tanto es una **limitación actual de la integración**,
+  no una prohibición fiscal, y así debe comunicarse al usuario.
 - Decisión: no se emite PPD con conceptos no objeto. El diálogo de timbrado lo
   impide antes de emitir y el servidor lo rechaza (fail-closed). Nunca se
   convierte a Exento ni a Tasa 0%. El proceso alterno (emitir PUE o corregir el

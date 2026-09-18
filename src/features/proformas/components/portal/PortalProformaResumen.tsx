@@ -8,6 +8,12 @@ import type { PortalProformaConcepto, PortalProformaData } from "@/features/prof
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
+import {
+  AVISO_IVA_POR_CONFIRMAR,
+  hayLineasIvaPorConfirmar,
+} from "@/lib/financial/lineasPorConfirmarIva";
+
 function fmtDinero(v: number | null | undefined, moneda: string | null | undefined): string {
   if (v == null) return "—";
   try {
@@ -17,11 +23,12 @@ function fmtDinero(v: number | null | undefined, moneda: string | null | undefin
   }
 }
 
-function BloqueTotalesPortal({ moneda, subtotal, iva, total }: {
+function BloqueTotalesPortal({ moneda, subtotal, iva, total, estimado = false }: {
   moneda: string;
   subtotal: number | null;
   iva: number | null;
   total: number | null;
+  estimado?: boolean;
 }) {
   return (
     <div className="min-w-48 space-y-1 text-body">
@@ -35,7 +42,7 @@ function BloqueTotalesPortal({ moneda, subtotal, iva, total }: {
         <span>{fmtDinero(iva, moneda)}</span>
       </div>
       <div className="flex justify-between gap-6 text-base font-semibold border-t pt-2 mt-2">
-        <span>Total</span>
+        <span>{estimado ? "Total estimado" : "Total"}</span>
         <span>{fmtDinero(total, moneda)}</span>
       </div>
     </div>
@@ -49,6 +56,10 @@ interface Props {
 
 export function PortalProformaResumen({ proforma, conceptos }: Props) {
   const moneda = proforma.moneda ?? "MXN";
+  // P1 · Auditoría IVA: el portal no conoce la tasa de la organización, así que
+  // se usa la tasa general del país como referencia SÓLO para detectar el caso
+  // (renglón sin clasificar al que el cálculo ya aplicó IVA). No se recategoriza.
+  const porConfirmar = hayLineasIvaPorConfirmar(conceptos, TASA_IVA);
   return (
     <Card>
       <CardHeader>
@@ -73,6 +84,15 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
             <div className="font-semibold">{moneda}</div>
           </div>
         </div>
+
+        {porConfirmar && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body-sm text-destructive"
+          >
+            <span>{AVISO_IVA_POR_CONFIRMAR}</span>
+          </div>
+        )}
 
         {conceptos.length > 0 && (
           <div className="overflow-x-auto">
@@ -111,12 +131,14 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
               subtotal={proforma.subtotal_usd}
               iva={proforma.iva_usd}
               total={proforma.total_usd}
+              estimado={porConfirmar}
             />
             <BloqueTotalesPortal
               moneda="MXN"
               subtotal={proforma.subtotal_mxn}
               iva={proforma.iva_mxn}
               total={proforma.total_mxn}
+              estimado={porConfirmar}
             />
           </div>
         ) : (
@@ -130,7 +152,7 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
               <span>{fmtDinero(proforma.iva, moneda)}</span>
             </div>
             <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
-              <span>Total</span>
+              <span>{porConfirmar ? "Total estimado" : "Total"}</span>
               <span>{fmtDinero(proforma.total, moneda)}</span>
             </div>
           </div>

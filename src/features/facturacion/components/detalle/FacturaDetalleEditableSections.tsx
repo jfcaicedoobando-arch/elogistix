@@ -21,7 +21,7 @@ export function FacturaDetalleEditableSections({
   if (!puedeEditarBorrador) return null;
   return (
     <>
-      <FacturaDatosFiscalesCard factura={factura} />
+      <FacturaDatosFiscalesCard factura={factura} conceptos={conceptosVivos} />
       <FacturaConceptosEditor
         facturaId={factura.id}
         organizationId={factura.organization_id}

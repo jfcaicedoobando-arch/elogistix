@@ -34,12 +34,21 @@ import {
 interface Props {
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
   moneda: string;
+  /**
+   * Cabecera capturada del documento: se usa SÓLO para conciliar la vista
+   * previa (retenciones y total real). Antes no se pasaba y el resumen no podía
+   * avisar de una diferencia antes de guardar.
+   */
+  retencionesDocumento?: number;
+  totalDocumento?: number;
   /** Sólo para origen PDF con IA: habilita la edición de los renglones. */
   onEditar?: (idx: number, patch: Partial<CfdiConceptoParsed>) => void;
   onEliminar?: (idx: number) => void;
 }
 
-export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }: Props) {
+export function CfdiConceptosPreview({
+  conceptos, moneda, retencionesDocumento, totalDocumento, onEditar, onEliminar,
+}: Props) {
   if (conceptos.length === 0) return null;
   const editable = Boolean(onEditar && onEliminar);
 
@@ -49,8 +58,14 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
     iva: Number(c.iva) || 0,
     ieps: Number(c.ieps) || 0,
   }));
-  const resumen = calcularResumenConceptos(lineas);
-  const hayIeps = resumen.ieps > 0;
+  const resumen = calcularResumenConceptos(lineas, {
+    retenciones: retencionesDocumento ?? null,
+    total: totalDocumento != null && totalDocumento > 0 ? totalDocumento : null,
+  });
+  // En captura por IA la columna de IEPS está siempre disponible: es un dato
+  // corregible, y si sólo apareciera cuando el IEPS es > 0 desaparecería justo
+  // al dejarlo en cero (o no se podría capturar el que la IA no detectó).
+  const hayIeps = editable || resumen.ieps > 0;
   const totalConImpuestos = lineas.reduce((acc, l) => acc + totalLineaConImpuestos(l), 0);
 
   return (
@@ -142,6 +157,10 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
         </div>
       </div>
       <ConceptosTotalesResumen resumen={resumen} moneda={moneda} />
+      <p className="text-label text-muted-foreground text-right">
+        Total del documento = subtotal + IVA + IEPS − retenciones. Los costos del embarque se
+        concilian contra el subtotal (sin impuestos).
+      </p>
     </FormSection>
   );
 }

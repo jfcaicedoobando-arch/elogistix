@@ -10,18 +10,29 @@ export const AVISO_CFDI_SOLO_IMPORTES =
   "la tasa/cuota y el ObjetoImp se muestran aquí para revisión, pero no se " +
   "almacenan por separado: el XML original queda archivado como respaldo.";
 
-/** Etiqueta corta para la columna de tratamiento fiscal. */
+/**
+ * Etiqueta corta para la columna de tratamiento fiscal.
+ *
+ * P2-IVA (segundo lote): cuando la línea no trae traslado de IVA, la etiqueta
+ * incluye el código ObjetoImp declarado en el XML (03, 04, …). Antes sólo decía
+ * "Sin traslado de IVA" y el código quedaba escondido en el tooltip, así que
+ * había que pasar el mouse para saber qué declaró el proveedor. No se infiere
+ * ni se cambia la clasificación: si el XML no trae código, se dice así.
+ */
 export function etiquetaTratamientoLinea(c: CfdiConceptoParsed): string {
   if (c.objeto_imp === "01") return "No objeto (01)";
   const iva = (c.traslados ?? []).filter((t) => t.impuesto === "002");
-  if (iva.length === 0) return c.objeto_imp ? "Sin traslado de IVA" : "No declarado";
+  if (iva.length === 0) {
+    return c.objeto_imp ? `Sin traslado de IVA (ObjetoImp ${c.objeto_imp})` : "No declarado";
+  }
   const exento = iva.some((t) => t.tipo_factor === "Exento");
   const tasas = Array.from(
     new Set(iva.filter((t) => t.tasa_o_cuota != null).map((t) => Number(t.tasa_o_cuota))),
   );
   const partes = tasas.map((t) => `${(t * 100).toFixed(t * 100 % 1 === 0 ? 0 : 2)}%`);
   if (exento) partes.push("Exento");
-  return partes.length > 0 ? partes.join(" + ") : "Sin tasa declarada";
+  const etiqueta = partes.length > 0 ? partes.join(" + ") : "Sin tasa declarada";
+  return c.objeto_imp ? `${etiqueta} (ObjetoImp ${c.objeto_imp})` : etiqueta;
 }
 
 /** Detalle largo (tooltip): base, factor, tasa/cuota e importe por traslado. */

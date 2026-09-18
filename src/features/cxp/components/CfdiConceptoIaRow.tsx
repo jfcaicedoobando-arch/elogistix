@@ -1,7 +1,8 @@
 /**
  * Renglón editable de la vista previa de conceptos extraídos por IA (v13.823.21).
  * Sólo se usa cuando el documento vino de un PDF procesado con IA: permite
- * corregir la descripción, cantidad, importe e IVA, o borrar el renglón de más.
+ * corregir la descripción, cantidad, importe, IVA e IEPS, o borrar el renglón
+ * de más. P2-IVA: el IEPS extraído era sólo texto y no se podía corregir.
  */
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -32,6 +33,7 @@ export function CfdiConceptoIaRow({
   const [cantidadTxt, setCantidadTxt] = useState(String(linea.cantidad));
   const [importeTxt, setImporteTxt] = useState(fmt2(linea.monto));
   const [ivaTxt, setIvaTxt] = useState(fmt2(linea.iva));
+  const [iepsTxt, setIepsTxt] = useState(fmt2(linea.ieps));
 
   // v13.823.33: al borrar un renglón, React reutiliza esta instancia para el
   // renglón que ocupa ahora el mismo índice. Sin esta resincronización los
@@ -51,6 +53,10 @@ export function CfdiConceptoIaRow({
   useEffect(() => {
     if (parseMonto(ivaTxt, 0) !== Number(linea.iva)) setIvaTxt(fmt2(linea.iva));
   }, [linea.iva, ivaTxt]);
+
+  useEffect(() => {
+    if (parseMonto(iepsTxt, 0) !== Number(linea.ieps ?? 0)) setIepsTxt(fmt2(linea.ieps));
+  }, [linea.ieps, iepsTxt]);
 
   return (
     <TableRow className="border-t odd:bg-background even:bg-muted/20 align-top">
@@ -108,8 +114,18 @@ export function CfdiConceptoIaRow({
         />
       </TableCell>
       {hayIeps && (
-        <TableCell className="text-right whitespace-nowrap">
-          {formatCurrency(Number(linea.ieps) || 0, moneda)}
+        <TableCell className="text-right">
+          <Input
+            className="h-9 w-24 text-right tabular-nums"
+            inputMode="decimal"
+            value={iepsTxt}
+            aria-label={`IEPS del concepto ${indice + 1}`}
+            onChange={(e) => {
+              setIepsTxt(e.target.value);
+              onEditar({ ieps: parseMonto(e.target.value, 0) });
+            }}
+            onBlur={() => setIepsTxt(fmt2(parseMonto(iepsTxt, 0)))}
+          />
         </TableCell>
       )}
       <TableCell className="text-right font-semibold whitespace-nowrap">

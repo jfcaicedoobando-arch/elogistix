@@ -98,6 +98,8 @@ export function PasoDocumento({
       <CfdiConceptosPreview
         conceptos={ctl.cfdiConceptos}
         moneda={ctl.values.moneda}
+        retencionesDocumento={Number(ctl.values.retenciones) || 0}
+        totalDocumento={ctl.total}
         onEditar={esIa ? ctl.editarConceptoIa : undefined}
         onEliminar={esIa ? ctl.eliminarConceptoIa : undefined}
       />

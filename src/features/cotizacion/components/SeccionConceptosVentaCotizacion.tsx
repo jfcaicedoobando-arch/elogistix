@@ -90,6 +90,7 @@ export default function SeccionConceptosVentaCotizacion({
               total={conceptosUSD.length}
               actualizar={actualizarConceptoUSD}
               eliminar={eliminarConceptoUSD}
+              tasaIva={tasaIva}
             />
           ))}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
