@@ -42,9 +42,12 @@ export interface GrupoTrasladoDr extends TrasladoDr {
  * que un renglón "no objeto" (SAT 01) NO se puede representar: declararlo como
  * `Exento` sería un dato fiscal falso. Se bloquea el timbrado.
  *
- * Desde el lote P1 de la auditoría el ERP tampoco permite EMITIR una factura PPD
- * con conceptos no objeto (ver `_shared/noObjetoFiscal.ts`), así que este
- * bloqueo sólo alcanza a facturas legacy ya timbradas.
+ * La EMISIÓN de la factura PPD con conceptos no objeto sí está permitida (ver
+ * `_shared/noObjetoFiscal.ts`): esta barrera aplica sólo al complemento de pago.
+ * Al registrar el cobro, el REP queda en estado "Error" con este mensaje y el
+ * pago se conserva íntegro (no se pierde ni se duplica, ni se marca timbrado),
+ * de modo que el flujo es reintentable en cuanto haya soporte real de
+ * ObjetoImpDR 01.
  */
 export const MSG_REP_NO_OBJETO =
   "LC_REP_NO_OBJETO: Esta integración no puede representar ObjetoImpDR=01 ('No objeto de impuesto', " +

@@ -4,10 +4,14 @@
  * `taxability:"01"` y las retenciones de ISR/IVA dentro, y sólo lo rechazaba el
  * PAC. Ahora se bloquea aquí, ANTES del claim, y el builder nunca agrega
  * impuestos a un renglón no objeto.
+ *
+ * El método PPD NO se bloquea: Facturapi confirmó que `payment_method` es del
+ * CFDI completo y `taxability` es por concepto, así que la factura mixta
+ * (no objeto + gravado 16%) se emite normalmente.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildFacturapiPayload, validateContext, type FacturaContext } from "./helpers.ts";
-import { MSG_NO_OBJETO_PPD, MSG_NO_OBJETO_RETENCIONES } from "../_shared/noObjetoFiscal.ts";
+import { MSG_NO_OBJETO_RETENCIONES } from "../_shared/noObjetoFiscal.ts";
 
 const baseCtx: FacturaContext = {
   serie: "A",
