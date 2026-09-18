@@ -133,10 +133,8 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                       <SelectItem value="no_objeto">No objeto de impuesto (SAT 01)</SelectItem>
                     </SelectContent>
                   </Select>
-                  {!fronteraHabilitada && (
-                    <p className="sr-only">{AVISO_IVA_FRONTERA_DESHABILITADO}</p>
-                  )}
                 </div>
+
                 <div className="col-span-1 flex items-center justify-end gap-1">
                   <span className="text-body-sm tabular-nums text-muted-foreground truncate">
                     {formatCurrency(importe, moneda)}
