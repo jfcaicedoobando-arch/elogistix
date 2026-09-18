@@ -6,6 +6,10 @@
  * como si estuviera resuelta. Aquí se muestra el aviso y la acción para
  * definirla explícitamente. Nunca se deriva exento / tasa 0% / no objeto de la
  * tasa ni del interruptor `aplica_iva`.
+ *
+ * P2-IVA (seguimiento): el 8% de la región fronteriza es un estímulo fiscal.
+ * Mientras Contabilidad no lo habilite por organización, esa opción queda
+ * deshabilitada y el callback la rechaza (defensa en profundidad).
  */
 import { AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -16,6 +20,11 @@ import {
   TIPO_IVA_OPCIONES,
   type TipoIvaSat,
 } from "@/lib/financial/tipoIvaSat";
+import {
+  AVISO_IVA_FRONTERA_DESHABILITADO,
+  tipoIvaSeleccionable,
+} from "@/lib/financial/ivaFrontera";
+import { useIvaFronteraHabilitada } from "@/features/configuracion";
 
 export const AVISO_TRATAMIENTO_POR_DEFINIR = "Tratamiento fiscal por definir";
 
@@ -24,11 +33,20 @@ interface Props {
 }
 
 export function TratamientoIvaPorDefinir({ onTipoIvaChange }: Props) {
+  const fronteraHabilitada = useIvaFronteraHabilitada();
+
+  const elegir = (valor: string) => {
+    // Defensa en profundidad: la opción ya viene deshabilitada, pero el
+    // callback tampoco acepta el 8% con el estímulo apagado.
+    if (!tipoIvaSeleccionable(valor, fronteraHabilitada)) return;
+    onTipoIvaChange(valor as TipoIvaSat);
+  };
+
   return (
     <Hint
       label={`${AVISO_TRATAMIENTO_POR_DEFINIR}: elige cómo se declara este concepto ante el SAT. ${TIPO_IVA_AYUDA_GENERAL}`}
     >
-      <Select value="" onValueChange={(v) => onTipoIvaChange(v as TipoIvaSat)}>
+      <Select value="" onValueChange={elegir}>
         <SelectTrigger
           className="h-10 border-warning text-warning-foreground bg-warning/10"
           aria-label={AVISO_TRATAMIENTO_POR_DEFINIR}
@@ -39,14 +57,24 @@ export function TratamientoIvaPorDefinir({ onTipoIvaChange }: Props) {
           </span>
         </SelectTrigger>
         <SelectContent>
-          {TIPO_IVA_OPCIONES.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              <span className="flex flex-col">
-                <span>{o.label}</span>
-                <span className="text-label text-muted-foreground">{TIPO_IVA_AYUDA[o.value]}</span>
-              </span>
-            </SelectItem>
-          ))}
+          {TIPO_IVA_OPCIONES.map((o) => {
+            const habilitada = tipoIvaSeleccionable(o.value, fronteraHabilitada);
+            return (
+              <Hint
+                key={o.value}
+                label={habilitada ? undefined : AVISO_IVA_FRONTERA_DESHABILITADO}
+              >
+                <SelectItem value={o.value} disabled={!habilitada}>
+                  <span className="flex flex-col">
+                    <span>{o.label}</span>
+                    <span className="text-label text-muted-foreground">
+                      {habilitada ? TIPO_IVA_AYUDA[o.value] : AVISO_IVA_FRONTERA_DESHABILITADO}
+                    </span>
+                  </span>
+                </SelectItem>
+              </Hint>
+            );
+          })}
         </SelectContent>
       </Select>
     </Hint>

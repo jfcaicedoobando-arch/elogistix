@@ -46,3 +46,30 @@ export function esTasaFrontera(tasa: number): boolean {
 export function tasaSeleccionable(tasa: number, fronteraHabilitada: boolean): boolean {
   return !esTasaFrontera(tasa) || fronteraHabilitada;
 }
+
+/** Tratamiento fiscal del estímulo fronterizo. */
+export const TIPO_IVA_FRONTERA = "gravado_8";
+
+/**
+ * ¿Se puede ELEGIR este tratamiento fiscal para una línea o producto nuevo?
+ * Igual que `tasaSeleccionable`, pero para el selector de tratamiento.
+ */
+export function tipoIvaSeleccionable(
+  tipo: string,
+  fronteraHabilitada: boolean,
+): boolean {
+  return tipo !== TIPO_IVA_FRONTERA || fronteraHabilitada;
+}
+
+/**
+ * ¿Se puede GUARDAR este tratamiento? El 8% sólo pasa si el estímulo está
+ * habilitado o si el registro ya venía al 8% (no se altera lo histórico).
+ */
+export function puedeGuardarTipoIva(
+  tipoNuevo: string,
+  tipoOriginal: string | null | undefined,
+  fronteraHabilitada: boolean,
+): boolean {
+  if (tipoNuevo !== TIPO_IVA_FRONTERA) return true;
+  return fronteraHabilitada || tipoOriginal === TIPO_IVA_FRONTERA;
+}
