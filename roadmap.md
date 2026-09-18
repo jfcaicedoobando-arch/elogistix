@@ -20,4 +20,4 @@
 - [x] Auditoría IVA P1 (3 hallazgos, commit 8d2644b): REP declara cada retención (ISR/IVA, varias tasas) con la base de sus propios renglones y la prorratea por pago, bloqueando sólo si falta el importe del renglón; `resolverTasaConcepto` y `consolidar_proformas` usan una sola tasa canónica por `tipo_iva` (8% y 0% ya no caen a la tasa general cuando falta la tasa numérica); los renglones legacy sin tratamiento quedan en "Por confirmar" y exigen elección explícita antes de guardar (nunca se supone 16%).
 
 
-- [ ] P2 IVA: seis ajustes de claridad por renglón; migración pendiente; reportar pruebas y limitaciones.
+- [x] P2 IVA: seis ajustes de claridad por renglón; migración pendiente; pruebas y limitaciones reportadas.
