@@ -21,11 +21,12 @@ import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
 import {
-  MSG_IVA_MULTITASA,
+  MSG_REP_IMPORTES_FALTANTES,
   MSG_REP_NO_OBJETO,
   MSG_REP_TRATAMIENTO_INDETERMINADO,
-  resolverTrasladoDr,
+  resolverGruposTrasladoDr,
   trasladoDesdeEncabezado,
+  type GrupoTrasladoDr,
 } from "./trasladoDr.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
@@ -106,40 +107,44 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // únicamente si su cociente IVA/subtotal cae exacto en una tasa del catálogo.
   const { data: conceptosIva } = await supabase
     .from("conceptos_factura")
-    .select("tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .select("tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, total, cantidad, precio_unitario")
     .eq("factura_id", factura.id)
     .is("deleted_at", null);
-  // Ola E3 · N2 — traslado por grupo de tasa desde los renglones. Con mezcla
-  // de tasas se rechaza el timbrado en vez de declarar una tasa promedio.
-  const traslado = resolverTrasladoDr(conceptosIva as Array<{ tipo_iva?: string | null; tasa_iva_aplicada?: number | null }>);
-  if (traslado === null) {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_IVA_MULTITASA })
-      .eq("id", pago.id);
-    return json({ error: "iva_multitasa", message: MSG_IVA_MULTITASA }, 422);
-  }
+  // P1 · Auditoría IVA — un grupo de impuestos por tratamiento, con la BaseDR
+  // prorrateada por importe. Ya no se bloquea la mezcla de tasas (una PPD con
+  // 16% + 0% sí puede cobrarse) y nunca se declara una tasa promedio.
+  const grupos = resolverGruposTrasladoDr(conceptosIva ?? []);
   // "No objeto de impuesto" (SAT 01) no es representable en el complemento de
   // pago vía Facturapi (`related_documents` no expone ObjetoImpDR): se bloquea
   // ANTES del claim en vez de declararlo como Exento (dato fiscal falso).
-  if (traslado === "no_objeto") {
+  if (grupos === "no_objeto") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_REP_NO_OBJETO })
       .eq("id", pago.id);
     return json({ error: "rep_no_objeto", message: MSG_REP_NO_OBJETO }, 422);
   }
+  if (grupos === "sin_importes") {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_REP_IMPORTES_FALTANTES })
+      .eq("id", pago.id);
+    return json({ error: "iva_importes_faltantes", message: MSG_REP_IMPORTES_FALTANTES }, 422);
+  }
   // P1-IVA — tratamiento desconocido o contradictorio: se falla CERRADO antes
   // del claim, con un mensaje que dice qué debe completar Contabilidad.
-  const trasladoFinal = traslado === "sin_conceptos"
+  const respaldo = grupos === "sin_conceptos"
     ? trasladoDesdeEncabezado(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0))
-    : traslado;
-  if (trasladoFinal === null || trasladoFinal === "indeterminado") {
+    : null;
+  if (grupos === "indeterminado" || (grupos === "sin_conceptos" && respaldo === null)) {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_REP_TRATAMIENTO_INDETERMINADO })
       .eq("id", pago.id);
     return json({ error: "iva_tratamiento_indeterminado", message: MSG_REP_TRATAMIENTO_INDETERMINADO }, 422);
   }
-  const tasaIvaDr = trasladoFinal.tasa;
-  const factorIvaFactura = trasladoFinal.factor;
+  const gruposIva: GrupoTrasladoDr[] = Array.isArray(grupos) ? grupos : [];
+  // Compatibilidad: el primer grupo alimenta `tasa_iva`/`factor_iva`, que es lo
+  // único que puede declararse cuando la factura no tiene renglones.
+  const tasaIvaDr = gruposIva[0]?.tasa ?? respaldo?.tasa ?? 0;
+  const factorIvaFactura = gruposIva[0]?.factor ?? respaldo?.factor ?? "Tasa";
 
 
   // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
@@ -230,6 +235,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       metodo_pago: "PPD",
       tasa_iva: tasaIvaDr,
       factor_iva: factorIvaFactura,
+      grupos_iva: gruposIva,
       retenciones: retencionesDr,
       subtotal_factura: Number(factura.subtotal ?? 0),
       total_factura: Number(factura.total ?? 0),

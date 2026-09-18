@@ -10,6 +10,13 @@ import {
   type ReferenciasEmbarque,
 } from "../_shared/referenciasEmbarque.ts";
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
+import {
+  esLineaNoObjeto,
+  MSG_NO_OBJETO_PPD,
+  MSG_NO_OBJETO_RETENCIONES,
+  ppdIncompatibleNoObjeto,
+  retencionesIncompatiblesNoObjeto,
+} from "../_shared/noObjetoFiscal.ts";
 
 export interface ConceptoInterno {
   descripcion: string;
@@ -126,7 +133,20 @@ export function validateContext(ctx: FacturaContext): ValidationIssue[] {
     if (!c.clave_unidad) issues.push({ field: `conceptos[${i}].clave_unidad`, message: `Concepto "${c.descripcion}" sin clave de unidad SAT` });
     if (c.cantidad <= 0) issues.push({ field: `conceptos[${i}].cantidad`, message: `Cantidad inválida` });
     if (c.precio_unitario < 0) issues.push({ field: `conceptos[${i}].precio_unitario`, message: `Precio inválido` });
+    // P1 · IVA — ObjetoImp 01 no admite nodo de impuestos: fail-closed antes
+    // del claim y del PAC (no se depende de que Facturapi lo rechace).
+    if (retencionesIncompatiblesNoObjeto(c)) {
+      issues.push({
+        field: `conceptos[${i}].retenciones`,
+        message: `Concepto "${c.descripcion}": ${MSG_NO_OBJETO_RETENCIONES}`,
+      });
+    }
   });
+  // P1 · IVA — PPD + no objeto se quedaría sin REP al cobrarse: se bloquea la
+  // emisión en vez de dejar el flujo de cobro roto.
+  if (ppdIncompatibleNoObjeto(ctx.metodo_pago, ctx.conceptos)) {
+    issues.push({ field: "metodo_pago", message: MSG_NO_OBJETO_PPD });
+  }
   return issues;
 }
 
@@ -149,7 +169,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       // ObjetoImp SAT: 01 = "No objeto de impuesto" (sin traslado de IVA, ni
       // tasa 0 ni factor Exento); 02 = sí objeto. Facturapi lo recibe como
       // `taxability` dentro de `product` (LineItem.product).
-      const noObjeto = tipo === "no_objeto";
+      const noObjeto = esLineaNoObjeto({ tipo_iva: tipo });
       const taxes: Tax[] = noObjeto
         ? []
         : tipo === "exento"
@@ -160,8 +180,10 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
               factor: "Tasa",
             }];
       // Ola 3 — retenciones por concepto (withholding: true).
-      const retIsr = Number(c.tasa_ret_isr ?? 0);
-      const retIva = Number(c.tasa_ret_iva ?? 0);
+      // P1 · IVA — con ObjetoImp 01 el arreglo de impuestos queda VACÍO: la
+      // combinación se bloquea en `validateContext`, y aquí nunca se agrega.
+      const retIsr = noObjeto ? 0 : Number(c.tasa_ret_isr ?? 0);
+      const retIva = noObjeto ? 0 : Number(c.tasa_ret_iva ?? 0);
       if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
       if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
       return {

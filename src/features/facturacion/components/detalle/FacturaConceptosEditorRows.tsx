@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters";
 import { RetencionSelects } from "./FacturaConceptosRetencionSelects";
+import { MSG_NO_OBJETO_RETENCIONES } from "@/lib/financial/noObjetoFiscal";
 import type {
   ConceptoFacturaInput,
   ConceptoFacturaRow,
@@ -106,6 +107,11 @@ interface FormProps {
 export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) {
   const patch = (p: Partial<ConceptoFacturaInput>) => setDraft({ ...draft, ...p });
   const tipoIva: TipoIvaConcepto = draft.tipo_iva ?? "gravado_16";
+  // P1 · IVA — ObjetoImp 01 no declara impuestos: al elegir "No objeto" se
+  // limpian las retenciones (antes quedaban ocultas y viajaban en el CFDI).
+  const noObjeto = tipoIva === "no_objeto";
+  const patchTipoIva = (v: TipoIvaConcepto) =>
+    patch(v === "no_objeto" ? { tipo_iva: v, tasa_ret_isr: 0, tasa_ret_iva: 0 } : { tipo_iva: v });
   return (
     <div className="grid grid-cols-12 gap-2 items-end border rounded-md p-2 bg-muted/30">
       <div className="col-span-6">
@@ -135,7 +141,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       </div>
       <div className="col-span-2">
         <Label size="sm">IVA</Label>
-        <Select value={tipoIva} onValueChange={(v) => patch({ tipo_iva: v as TipoIvaConcepto })}>
+        <Select value={tipoIva} onValueChange={(v) => patchTipoIva(v as TipoIvaConcepto)}>
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">{TIPO_IVA_LABEL.gravado_16}</SelectItem>
@@ -147,9 +153,11 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         </Select>
       </div>
       <RetencionSelects
-        tasaIsr={draft.tasa_ret_isr ?? 0}
-        tasaIva={draft.tasa_ret_iva ?? 0}
+        tasaIsr={noObjeto ? 0 : (draft.tasa_ret_isr ?? 0)}
+        tasaIva={noObjeto ? 0 : (draft.tasa_ret_iva ?? 0)}
         onChange={patch}
+        disabled={noObjeto}
+        hint={MSG_NO_OBJETO_RETENCIONES}
       />
       <div className="col-span-12 flex justify-end gap-1">
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">

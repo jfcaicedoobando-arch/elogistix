@@ -10,6 +10,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { buildEstadoTimbrado } from "@/features/facturacion/utils/estadoTimbrado";
 import { useTimbrarFacturaDialog } from "@/features/facturacion/hooks/useTimbrarFacturaDialog";
 import { useTimbradoContext } from "@/features/facturacion/hooks/useTimbradoContext";
+import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
 import { DialogTimbrarFacturaFooter } from "./DialogTimbrarFacturaFooter";
 import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
@@ -23,14 +24,17 @@ interface Props {
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const { factura, cliente, defaults } = useTimbradoContext(facturaId);
   const dlg = useTimbrarFacturaDialog(factura, cliente, defaults, () => onOpenChange(false));
+  // P1 · Auditoría IVA — se necesitan los conceptos para detectar PPD + No objeto.
+  const { data: conceptos } = useConceptosFactura(facturaId ?? undefined);
 
   if (!facturaId || !factura) return null;
 
-  const { checks, puedeTimbrar, esFastPath } = buildEstadoTimbrado(factura, cliente, {
-    usoCfdi: dlg.usoCfdi,
-    formaPago: dlg.formaPago,
-    metodoPago: dlg.metodoPago,
-  });
+  const { checks, puedeTimbrar, esFastPath } = buildEstadoTimbrado(
+    factura,
+    cliente,
+    { usoCfdi: dlg.usoCfdi, formaPago: dlg.formaPago, metodoPago: dlg.metodoPago },
+    conceptos,
+  );
 
   const mostrarCompacto = esFastPath && !dlg.modoExpandido;
 

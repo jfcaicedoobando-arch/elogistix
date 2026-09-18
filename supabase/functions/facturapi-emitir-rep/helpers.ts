@@ -43,8 +43,16 @@ export interface PagoContext {
     imp_pagado: number;            // Importe que este pago abona en moneda_dr
     imp_saldo_insoluto: number;    // Saldo después de este pago
     metodo_pago: "PPD";            // siempre PPD para REP
-    /** Tasa principal (0.16, 0). Se asume IVA tasa única por simplicidad. */
+    /** Tasa del primer grupo (compatibilidad y facturas sin renglones). */
     tasa_iva: number;
+    /**
+     * P1 · Auditoría IVA — grupos de traslado del CFDI original (uno por
+     * combinación factor+tasa) con su importe sin IVA. Cuando viene con 1+
+     * grupos, `buildTaxesDr` declara un impuesto por grupo y prorratea la
+     * BaseDR con el importe; así una factura 16% + 0% (o 16% + 8%) sí puede
+     * cobrarse por parcialidades sin declarar una tasa promedio.
+     */
+    grupos_iva?: Array<{ tasa: number; factor: FactorIva; importe: number }>;
     /**
      * Factor del impuesto trasladado del CFDI original.
      * `"Exento"` cuando la factura se emitió sin IVA por exención (fletes
@@ -293,24 +301,73 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
  * requerido` cuando la factura original no trae IVA. Para facturas exentas se
  * declara factor `Exento` con tasa 0.
  */
-export function buildTaxesDr(
-  dr: Pick<PagoContext["documento_relacionado"], "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura">,
-): FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"] {
+type TaxesDr = FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"];
+type DrTaxes = Pick<
+  PagoContext["documento_relacionado"],
+  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva"
+>;
+
+export function buildTaxesDr(dr: DrTaxes): TaxesDr {
+  const grupos = dr.grupos_iva ?? [];
+  const taxes: TaxesDr = grupos.length > 0 ? trasladosPorGrupo(dr, grupos) : [trasladoUnico(dr)];
+  // Ola 12 · R3P-19: RetencionesDR con la BaseDR total del documento (el PAC
+  // calcula ImporteDR = base × tasa y los totales TotalRetenciones*).
+  const baseRetenciones = round2(taxes.reduce((acc, t) => acc + t.base, 0));
+  for (const ret of dr.retenciones ?? []) {
+    if (ret.tasa > 0) {
+      taxes.push({ type: ret.tipo, rate: ret.tasa, factor: "Tasa", withholding: true, base: baseRetenciones });
+    }
+  }
+  return taxes;
+}
+
+/** Camino legacy: un solo traslado (facturas sin renglones capturados). */
+function trasladoUnico(dr: DrTaxes): TaxesDr[number] {
   const tasa = dr.tasa_iva > 0 ? dr.tasa_iva : 0;
   const factor: FactorIva = tasa > 0 ? "Tasa" : (dr.factor_iva ?? "Tasa");
   // Ola 12 · R3P-18 (guía de llenado SAT, complemento de pagos 2.0): la BaseDR
   // es SIN IVA. Con tasa 0 / exento la base es el pago completo (v13.559.1).
   const base = tasa > 0 ? baseDrSinIva(dr) : round2(dr.imp_pagado);
-  const taxes: FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"] =
-    [{ type: "IVA", rate: tasa, factor, withholding: false, base }];
-  // Ola 12 · R3P-19: RetencionesDR con la misma BaseDR (el PAC calcula
-  // ImporteDR = base × tasa y los totales TotalRetenciones*).
-  for (const ret of dr.retenciones ?? []) {
-    if (ret.tasa > 0) {
-      taxes.push({ type: ret.tipo, rate: ret.tasa, factor: "Tasa", withholding: true, base });
-    }
-  }
-  return taxes;
+  return { type: "IVA", rate: tasa, factor, withholding: false, base };
+}
+
+/**
+ * P1 · Auditoría IVA — un traslado por grupo del CFDI original con la BaseDR
+ * prorrateada: base_grupo = imp_pagado × importe_grupo / total_documento.
+ * El último grupo absorbe el redondeo para que la suma cuadre exactamente con
+ * la base del pago (imp_pagado × subtotal / total).
+ */
+function trasladosPorGrupo(
+  dr: DrTaxes,
+  grupos: NonNullable<DrTaxes["grupos_iva"]>,
+): TaxesDr {
+  const denominador = denominadorDocumento(dr, grupos);
+  const sumaImportes = grupos.reduce((acc, g) => acc + g.importe, 0);
+  const baseTotal = round2((dr.imp_pagado * sumaImportes) / denominador);
+  let acumulado = 0;
+  return grupos.map((g, i) => {
+    const esUltimo = i === grupos.length - 1;
+    const base = esUltimo
+      ? round2(baseTotal - acumulado)
+      : round2((dr.imp_pagado * g.importe) / denominador);
+    acumulado = round2(acumulado + base);
+    return { type: "IVA" as const, rate: g.tasa, factor: g.factor, withholding: false, base };
+  });
+}
+
+/**
+ * Total del CFDI original: se prefiere el dato guardado (incluye retenciones);
+ * si falta, se reconstruye con los importes y tasas de los grupos.
+ */
+function denominadorDocumento(dr: DrTaxes, grupos: NonNullable<DrTaxes["grupos_iva"]>): number {
+  const total = Number(dr.total_factura ?? 0);
+  const sub = Number(dr.subtotal_factura ?? 0);
+  const sumaImportes = grupos.reduce((acc, g) => acc + g.importe, 0);
+  // El total guardado sólo es comparable si el subtotal coincide con los
+  // importes de los renglones (evita bases falsas por facturas desincronizadas).
+  if (total > 0 && sub > 0 && Math.abs(sub - sumaImportes) < 0.05) return total;
+  const reconstruido = grupos.reduce((acc, g) => acc + g.importe * (1 + g.tasa), 0);
+  return reconstruido > 0 ? reconstruido : 1;
 }
 
 /**

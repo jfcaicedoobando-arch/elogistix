@@ -4,6 +4,11 @@
  * y poder testear la política de "todo listo" sin renderizar el diálogo.
  */
 import { buildChecksTimbrado, type CheckTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
+import {
+  MSG_NO_OBJETO_PPD,
+  ppdIncompatibleNoObjeto,
+  type LineaNoObjeto,
+} from "@/lib/financial/noObjetoFiscal";
 
 interface FacturaLike {
   rfc_cliente?: string | null;
@@ -36,6 +41,7 @@ export function buildEstadoTimbrado(
   factura: FacturaLike,
   cliente: ClienteLike | null | undefined,
   seleccion: SeleccionTimbrado,
+  conceptos?: LineaNoObjeto[] | null,
 ): EstadoTimbrado {
   const { checks, puedeTimbrar } = buildChecksTimbrado({
     rfc: cliente?.rfc ?? factura.rfc_cliente ?? "",
@@ -48,8 +54,17 @@ export function buildEstadoTimbrado(
     tipoCambio: factura.tipo_cambio == null ? null : Number(factura.tipo_cambio),
   });
 
-  const esFastPath =
-    puedeTimbrar && Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
+  // P1 · Auditoría IVA — PPD + "No objeto de impuesto" (SAT 01) dejaría el cobro
+  // sin REP (el complemento de pago no admite ObjetoImpDR=01). Se avisa aquí,
+  // antes de timbrar; el servidor sigue siendo la autoridad (fail-closed).
+  const ppdNoObjeto = ppdIncompatibleNoObjeto(seleccion.metodoPago, conceptos ?? []);
+  const checksFinales = ppdNoObjeto
+    ? [...checks, { ok: false, label: MSG_NO_OBJETO_PPD }]
+    : checks;
+  const puedeTimbrarFinal = puedeTimbrar && !ppdNoObjeto;
 
-  return { checks, puedeTimbrar, esFastPath };
+  const esFastPath =
+    puedeTimbrarFinal && Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
+
+  return { checks: checksFinales, puedeTimbrar: puedeTimbrarFinal, esFastPath };
 }

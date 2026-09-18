@@ -62,3 +62,22 @@ Revisión del GitHub de FacturApi el 2026-08-29:
 | `500 missing_facturapi_key` | El secret referenciado no existe en Lovable Cloud | Crear el secret con el nombre exacto |
 | `412 webhook_not_configured` | El webhook llegó pero falta `webhook_secret` para la org | Guardar el secret que dio FacturApi |
 | `401 invalid_signature` | El secret del webhook no coincide con el que firma FacturApi | Re-copiar el secret desde el dashboard |
+
+## No objeto de impuesto (SAT ObjetoImp 01) y complemento de pago
+Investigación del 2026-09-18 (P1 · auditoría IVA):
+- La guía de llenado del SAT indica que un concepto con `ObjetoImp = 01` **no
+  debe** declarar nodo de impuestos. Por eso el ERP bloquea "no objeto" con
+  retenciones de ISR/IVA en la UI y en `facturapi-emitir` /
+  `facturapi-emitir-nota-credito` (`_shared/noObjetoFiscal.ts`).
+- El REP 2.0 declara `ObjetoImpDR` por documento relacionado y sólo admite
+  `ImpuestosDR` cuando es `02`. **FacturApi no expone `ObjetoImpDR`** en
+  `related_documents` (sólo `taxes`), así que no existe ruta soportada para
+  representar `ObjetoImpDR = 01`.
+- Decisión: no se emite PPD con conceptos no objeto. El diálogo de timbrado lo
+  impide antes de emitir y el servidor lo rechaza (fail-closed). Nunca se
+  convierte a Exento ni a Tasa 0%. El proceso alterno (emitir PUE o corregir el
+  tratamiento) lo define Contabilidad.
+- `related_documents[].taxes` sí es un arreglo prorrateado por pago, por lo que
+  una PPD con varios tratamientos (16% + 0% / Exento / 8%) **sí** se cobra: cada
+  grupo lleva su propia BaseDR prorrateada (`trasladoDr.ts` +
+  `buildTaxesDr`), sin tasas promedio.

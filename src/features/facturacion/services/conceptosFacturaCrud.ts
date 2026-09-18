@@ -76,6 +76,9 @@ function normalizarLinea(input: ConceptoFacturaInput) {
   if (!clave) {
     throw new Error("La clave SAT (c_ClaveProdServ) es obligatoria. Elige la clave correcta del catálogo SAT.");
   }
+  // P1 · IVA — ObjetoImp 01 (no objeto) no declara impuestos en el CFDI: las
+  // retenciones se guardan en cero para que no viajen ocultas al PAC.
+  const noObjeto = tipo_iva === "no_objeto";
   return {
     descripcion,
     cantidad,
@@ -84,8 +87,8 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     clave_sat: clave,
     tipo_iva,
     tasa_iva_aplicada: resolverTasa(tipo_iva),
-    tasa_ret_isr: Number(input.tasa_ret_isr ?? 0),
-    tasa_ret_iva: Number(input.tasa_ret_iva ?? 0),
+    tasa_ret_isr: noObjeto ? 0 : Number(input.tasa_ret_isr ?? 0),
+    tasa_ret_iva: noObjeto ? 0 : Number(input.tasa_ret_iva ?? 0),
   };
 }
 
