@@ -6,7 +6,6 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 
@@ -24,7 +23,6 @@ export function monedaComun(conceptos: ConceptoVentaRow[]): string | null {
  */
 export function buildConceptoColumns(
   moneda: string | null,
-  tasaIva: number = TASA_IVA,
 ): ColumnDef<ConceptoVentaRow, unknown>[] {
   const sufijo = moneda ? ` (${moneda})` : "";
   const importe = (row: ConceptoVentaRow) =>
