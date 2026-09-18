@@ -18,6 +18,8 @@ import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, resolverReferenciasEmbarque } from "./context.ts";
 import { persistirRepTimbrado } from "./persistir.ts";
+import { esTimbradoPendiente } from "../_shared/timbradoPendiente.ts";
+import { registrarRepPendiente } from "./pendiente.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
 import {
@@ -288,6 +290,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     json,
   });
   if (!resultado.ok) return resultado.response;
+
+  // P0-A: pendiente ⇒ 202, sin marcar Timbrado, sin XML y conservando el claim.
+  if (esTimbradoPendiente(resultado.invoice)) {
+    return await registrarRepPendiente({
+      supabase, pagoId: pago.id, organizationId: pago.organization_id, claimTag,
+      pendienteId: resultado.invoice.id ?? null,
+      usuarioId: userData.user.id, usuarioEmail: userData.user.email, json,
+    });
+  }
+
 
   return await persistirRepTimbrado({
     supabase,
