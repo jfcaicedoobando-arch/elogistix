@@ -65,7 +65,8 @@ async function loadFactura(
   // `saldo_factura` (pagos aplicados y notas de crédito vigentes).
   const { data, error } = await adminClient
     .from('facturas')
-    .select('id, organization_id, cliente_id, numero, serie, folio, cliente_nombre, total, moneda, fecha_vencimiento')
+    // `facturas` no tiene columna `folio` (sólo `numero`, `serie` y `folio_fiscal`).
+    .select('id, organization_id, cliente_id, numero, serie, cliente_nombre, total, moneda, fecha_vencimiento')
     .eq('id', facturaId)
     .maybeSingle();
   if (error) return { factura: null, error: `Error al leer factura: ${error.message}` };
