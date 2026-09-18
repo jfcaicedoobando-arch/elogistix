@@ -69,3 +69,35 @@ describe("facturapi SDK-only guardrail (v13.136.4)", () => {
     expect(helperSrc).toMatch(/npm:facturapi/);
   });
 });
+
+/**
+ * Guardrail de versión del SDK: el import de Deno debe estar PINEADO a la
+ * versión exacta que validamos (sin `^`, `~` ni etiquetas flotantes) y no debe
+ * existir más de una versión importada. Un specifier flotante ya nos rompió el
+ * boot del worker antes (`Could not find constraint 'facturapi@5'`).
+ */
+describe("facturapi SDK version pin", () => {
+  const SDK_VERSION = "5.0.0";
+  const helperSrc = readFileSync(
+    join(ROOT, "supabase/functions/_shared/facturapiClient.ts"),
+    "utf8",
+  );
+
+  it(`importa exactamente npm:facturapi@${SDK_VERSION}`, () => {
+    expect(helperSrc).toContain(`import FacturapiDefault from "npm:facturapi@${SDK_VERSION}";`);
+  });
+
+  it("no usa rangos ni etiquetas flotantes en el import", () => {
+    const imports = helperSrc.match(/from\s+["']npm:facturapi@[^"']+["']/g) ?? [];
+    expect(imports).toHaveLength(1);
+    expect(imports[0]).not.toMatch(/[\^~]|@latest|@\d+["']|@\d+\.\d+["']/);
+  });
+
+  it("no queda ninguna otra versión del SDK importada en las edge functions", () => {
+    const versiones = new Set(
+      [...helperSrc.matchAll(/npm:facturapi@([\d.]+)/g)].map((m) => m[1]),
+    );
+    expect([...versiones]).toEqual([SDK_VERSION]);
+  });
+});
+
