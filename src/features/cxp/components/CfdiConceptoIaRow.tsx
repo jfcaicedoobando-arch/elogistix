@@ -32,6 +32,7 @@ export function CfdiConceptoIaRow({
   const [cantidadTxt, setCantidadTxt] = useState(String(linea.cantidad));
   const [importeTxt, setImporteTxt] = useState(fmt2(linea.monto));
   const [ivaTxt, setIvaTxt] = useState(fmt2(linea.iva));
+  const [iepsTxt, setIepsTxt] = useState(fmt2(linea.ieps));
 
   // v13.823.33: al borrar un renglón, React reutiliza esta instancia para el
   // renglón que ocupa ahora el mismo índice. Sin esta resincronización los
