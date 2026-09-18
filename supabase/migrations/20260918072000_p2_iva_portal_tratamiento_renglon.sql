@@ -118,3 +118,6 @@ BEGIN
     'conceptos', v_conceptos
   );
 END $function$;
+
+REVOKE ALL ON FUNCTION public.portal_obtener_proforma_por_token(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.portal_obtener_proforma_por_token(uuid) TO anon, authenticated;
