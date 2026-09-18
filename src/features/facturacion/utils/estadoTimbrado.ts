@@ -65,6 +65,10 @@ export function buildEstadoTimbrado(
     ? [AVISO_NO_OBJETO_PPD_REP]
     : [];
 
+  // La fecha desfasada ya no bloquea: el servidor la realinea al día del timbre.
+  const avisoFecha = avisoFechaEmisionDesfasada(factura.fecha_emision);
+  if (avisoFecha) advertencias.push(avisoFecha);
+
   const esFastPath =
     puedeTimbrar &&
     advertencias.length === 0 &&
