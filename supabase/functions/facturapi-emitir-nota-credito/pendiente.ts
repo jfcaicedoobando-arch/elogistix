@@ -8,6 +8,7 @@
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import {
   cuerpoTimbradoPendiente,
+  esTimbradoPendiente,
   marcarTimbradoPendiente,
   MSG_IDEMPOTENCY_EN_USO,
 } from "../_shared/timbradoPendiente.ts";
