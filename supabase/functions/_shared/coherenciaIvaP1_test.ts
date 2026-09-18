@@ -26,8 +26,12 @@ Deno.test("tasa 0% con 16% capturado bloquea", () => {
   assertEquals(clasificarCoherenciaIva({ tipo_iva: "tasa_0", tasa_iva_aplicada: 0.16 }).estado, "incoherente");
 });
 
-Deno.test("legado sin tipo con IVA apagado y tasa heredada queda ambiguo", () => {
+Deno.test("cualquier renglón sin tipo_iva reconocido queda ambiguo (no se infiere)", () => {
   assertEquals(clasificarCoherenciaIva({ aplica_iva: false, tasa_iva_aplicada: 0.16 }).estado, "ambiguo");
+  assertEquals(clasificarCoherenciaIva({ aplica_iva: false, tasa_iva_aplicada: 0 }).estado, "ambiguo");
+  assertEquals(clasificarCoherenciaIva({ tasa_iva_aplicada: 0 }).estado, "ambiguo");
+  assertEquals(clasificarCoherenciaIva({ aplica_iva: true, tasa_iva_aplicada: 0.16 }).estado, "ambiguo");
+  assertEquals(clasificarCoherenciaIva({ tipo_iva: "desconocido", tasa_iva_aplicada: 0.16 }).estado, "ambiguo");
 });
 
 Deno.test("contexto: bloquea con 422 antes de armar el payload y sin fallback 16%", () => {
