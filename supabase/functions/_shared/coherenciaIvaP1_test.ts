@@ -41,3 +41,10 @@ Deno.test("contexto: bloquea con 422 antes de armar el payload y sin fallback 16
     throw new Error("Regresó el fallback silencioso de tratamiento/tasa en el contexto de emisión");
   }
 });
+
+Deno.test("P2: una tasa negativa en tasa_0/exento/no_objeto es incoherente", () => {
+  for (const tipo_iva of ["tasa_0", "exento", "no_objeto"]) {
+    assertEquals(clasificarCoherenciaIva({ tipo_iva, tasa_iva_aplicada: -0.16 }).estado, "incoherente");
+  }
+  assertEquals(clasificarCoherenciaIva({ tipo_iva: "tasa_0", tasa_iva_aplicada: 0 }).estado, "ok");
+});
