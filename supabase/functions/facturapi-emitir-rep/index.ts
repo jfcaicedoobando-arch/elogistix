@@ -128,13 +128,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
 
   // P1 · Auditoría IVA — un grupo por tratamiento con BaseDR prorrateada (la
   // mezcla 16% + 0% sí se cobra; nunca una tasa promedio). "No objeto" (SAT 01)
-  // se representa vía XML manual (`repManual.ts`): sus renglones no causan
-  // impuesto pero su importe entra al denominador. Nada se vuelve Exento.
-  const objetoImpDr = resolverObjetoImpDr(conceptosFactura);
-  const hayNoObjeto = conceptosFactura.some(esConceptoNoObjeto);
-  const conceptosGravables = conceptosObjetoImpuesto(conceptosFactura);
-  const importeNoObjetoDr = importeNoObjeto(conceptosFactura);
-  const grupos = objetoImpDr === "01" ? [] : resolverGruposTrasladoDr(conceptosGravables);
+  // se representa vía XML manual (`repManual.ts`): no causa impuesto, pero su
+  // importe entra al denominador del prorrateo. Nada se vuelve Exento.
+  const noObjeto = resolverNoObjetoDr(conceptosFactura);
+  const { objetoImpDr, hayNoObjeto, gravables: conceptosGravables, grupos } = noObjeto;
   if (grupos === "sin_importes") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_REP_IMPORTES_FALTANTES })
