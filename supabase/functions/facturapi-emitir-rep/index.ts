@@ -284,9 +284,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
   // deduplica por external_id; es sólo un campo de búsqueda).
   payload.external_id = claimTag;
-  // Facturas con renglones "no objeto": el complemento viaja como XML armado por
-  // nosotros (único camino que admite ObjetoImpDR). El resto del comprobante y
-  // toda la aritmética de bases/tasas son idénticos.
+  // Con renglones "no objeto" el complemento viaja como XML nuestro (único
+  // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
   const payloadFinal = requiereXmlManual(ctx.documento_relacionado)
     ? conComplementoXmlManual(payload, ctx)
     : (payload as unknown as Record<string, unknown>);
