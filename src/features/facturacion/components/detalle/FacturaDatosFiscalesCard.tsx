@@ -28,9 +28,14 @@ import { queryKeys } from "@/lib/query";
 
 interface Props {
   factura: FacturaDetalle;
+  /**
+   * Conceptos vivos del borrador: se usan sólo para avisar de la limitación
+   * PPD + "No objeto de impuesto" mientras se captura, sin esperar al timbrado.
+   */
+  conceptos?: ReadonlyArray<LineaNoObjeto>;
 }
 
-export function FacturaDatosFiscalesCard({ factura }: Props) {
+export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
   const { data: cliente } = useQuery<ClienteFiscalRow | null>({
     queryKey: queryKeys.facturacion.clienteFiscal(factura.cliente_id),
     enabled: !!factura.cliente_id,
