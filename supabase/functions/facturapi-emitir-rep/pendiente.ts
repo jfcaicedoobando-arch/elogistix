@@ -9,7 +9,30 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { cuerpoTimbradoPendiente, marcarTimbradoPendiente } from "../_shared/timbradoPendiente.ts";
+import {
+  cuerpoTimbradoPendiente,
+  esTimbradoPendiente,
+  marcarTimbradoPendiente,
+} from "../_shared/timbradoPendiente.ts";
+
+interface ArgsPendienteRep {
+  supabase: SupabaseClient;
+  pagoId: string;
+  organizationId: string;
+  claimTag: string;
+  usuarioId: string;
+  usuarioEmail?: string;
+  json: (body: unknown, status?: number) => Response;
+}
+
+/** 202 si el REP quedó pendiente en FacturAPI; `null` si trae timbre válido. */
+export async function respuestaSiRepPendiente(
+  invoice: { id?: string | null; uuid?: string | null; status?: string | null } | null,
+  args: ArgsPendienteRep,
+): Promise<Response | null> {
+  if (!esTimbradoPendiente(invoice)) return null;
+  return await registrarRepPendiente({ ...args, pendienteId: invoice?.id ?? null });
+}
 
 export async function registrarRepPendiente(args: {
   supabase: SupabaseClient;
