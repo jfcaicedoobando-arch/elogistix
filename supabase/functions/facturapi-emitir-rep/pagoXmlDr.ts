@@ -7,7 +7,6 @@
  * Aquí NO se recalcula nada: bases, tasas y prorrateos vienen de
  * `helpers.ts · buildTaxesDr`.
  */
-
 export type FactorXml = "Tasa" | "Exento";
 
 export interface TrasladoXml {
