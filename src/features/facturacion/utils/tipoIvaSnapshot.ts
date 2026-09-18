@@ -11,7 +11,7 @@
  * no alcanza para saberlo, se devuelve `null` (la UI muestra "No disponible")
  * en vez de inventar un tratamiento.
  */
-import { TIPOS_IVA_SAT, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
+import { esTipoIvaSat, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
 
 export interface ImpuestoSnapshot {
   type?: string;
@@ -28,10 +28,6 @@ export interface LineaSnapshotIva {
 }
 
 const EPS = 1e-6;
-
-function esTipoIvaSat(v: unknown): v is TipoIvaSat {
-  return typeof v === "string" && (TIPOS_IVA_SAT as readonly string[]).includes(v);
-}
 
 /** Tratamiento del renglón, o `null` cuando el snapshot no permite saberlo. */
 export function tipoIvaDesdeSnapshot(linea: LineaSnapshotIva): TipoIvaSat | null {

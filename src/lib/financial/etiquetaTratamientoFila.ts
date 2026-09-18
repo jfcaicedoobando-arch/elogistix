@@ -7,7 +7,7 @@
  * "Por confirmar" cuando los datos heredados no alcanzan: NUNCA se deduce
  * exento/tasa 0/no objeto de tener el IVA apagado.
  */
-import { TIPOS_IVA_SAT, TIPO_IVA_LABEL_CORTO, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
+import { esTipoIvaSat, TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
 
 export const ETIQUETA_TRATAMIENTO_POR_CONFIRMAR = "Por confirmar";
 
@@ -18,10 +18,6 @@ export interface FilaTratamiento {
 }
 
 const EPS = 1e-6;
-
-function esTipoIvaSat(v: unknown): v is TipoIvaSat {
-  return typeof v === "string" && (TIPOS_IVA_SAT as readonly string[]).includes(v);
-}
 
 /**
  * Etiqueta corta del tratamiento fiscal de la fila.
