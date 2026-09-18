@@ -131,7 +131,7 @@ Deno.test("un solo grupo mantiene el comportamiento histórico (base sin IVA)", 
   assertEquals(conGrupo[0].base, 1000);
 });
 
-Deno.test("retenciones usan la base total del documento, no la de un grupo", () => {
+Deno.test("retención sin importe de renglones conserva la base total (legacy)", () => {
   const taxes = buildTaxesDr({
     tasa_iva: 0.16,
     factor_iva: "Tasa",
