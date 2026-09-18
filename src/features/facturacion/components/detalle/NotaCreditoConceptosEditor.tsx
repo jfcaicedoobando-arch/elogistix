@@ -93,7 +93,9 @@ function TratamientoSelect({
 
 export function NotaCreditoConceptosEditor(props: Props) {
   const { conceptos, monedaFactura, onAdd, onUpdate, onRemove } = props;
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   return (
+
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label>Conceptos *</Label>
