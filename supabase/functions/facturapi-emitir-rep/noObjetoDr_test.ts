@@ -45,7 +45,8 @@ Deno.test("el bloqueo no se infiere de tasa 0 ni de tipos legacy", () => {
   assertEquals(esConceptoNoObjeto({ tipo_iva: "exento" }), false);
   assertEquals(esConceptoNoObjeto({ tipo_iva: null, tasa_iva_aplicada: 0 }), false);
   assertEquals(esConceptoNoObjeto({ tipo_iva: "NO_OBJETO" }), true);
-  assertEquals(resolverTrasladoDr([{ tasa_iva_aplicada: 0 }]), { tasa: 0, factor: "Tasa" });
+  // P1-IVA: sin tipo_iva no se puede saber si era tasa 0%, exento o no objeto.
+  assertEquals(resolverTrasladoDr([{ tasa_iva_aplicada: 0 }]), "indeterminado");
 });
 
 Deno.test("el mensaje de bloqueo no recomienda atajos contables no autorizados", () => {

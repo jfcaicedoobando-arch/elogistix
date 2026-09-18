@@ -66,7 +66,8 @@ Deno.test("un renglón exento con retención sólo lleva Exento + retención", (
 
 Deno.test("tratamiento indeterminado bloquea la emisión con mensaje claro", () => {
   assertEquals(tratamientoNcIndeterminado(concepto()), true);
-  assertEquals(tratamientoNcIndeterminado(concepto({ tasa_iva: 0.16 })), false);
+  // P1-IVA: una tasa suelta ya NO basta; sin tipo el renglón es indeterminado.
+  assertEquals(tratamientoNcIndeterminado(concepto({ tasa_iva: 0.16 })), true);
   assertEquals(tratamientoNcIndeterminado(concepto({ tipo_iva: "exento" })), false);
   // SAFE-CAST: valor inválido a propósito para probar el fail-closed.
   assertEquals(tratamientoNcIndeterminado(concepto({ tipo_iva: "gravado_11" as never })), true);
