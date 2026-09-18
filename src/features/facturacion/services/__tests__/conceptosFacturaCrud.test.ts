@@ -38,7 +38,7 @@ describe("conceptosFacturaCrud", () => {
       facturaId: "f1",
       organizationId: "org1",
       moneda: "MXN",
-      input: { descripcion: "Servicio", cantidad: 2, precio_unitario: 50, clave_sat: "78101800" },
+      input: { descripcion: "Servicio", cantidad: 2, precio_unitario: 50, clave_sat: "78101800", tipo_iva: "gravado_16" },
     });
     const inserts = mock.tableCalls.filter((c) => c.table === "conceptos_factura" && c.ops.includes("insert"));
     expect(inserts.length).toBe(1);
@@ -54,7 +54,7 @@ describe("conceptosFacturaCrud", () => {
     await expect(
       agregarConceptoFactura({
         facturaId: "f1", organizationId: "org1", moneda: "MXN",
-        input: { descripcion: "Sin clave", cantidad: 1, precio_unitario: 10 },
+        input: { descripcion: "Sin clave", cantidad: 1, precio_unitario: 10, tipo_iva: "gravado_16" },
       }),
     ).rejects.toThrow(/clave SAT/i);
   });
@@ -74,7 +74,7 @@ describe("conceptosFacturaCrud", () => {
     await expect(
       agregarConceptoFactura({
         facturaId: "f1", organizationId: "org1", moneda: "MXN",
-        input: { descripcion: "   ", cantidad: 1, precio_unitario: 10 },
+        input: { descripcion: "   ", cantidad: 1, precio_unitario: 10, tipo_iva: "gravado_16" },
       }),
     ).rejects.toThrow(/descripción/i);
   });
@@ -84,7 +84,7 @@ describe("conceptosFacturaCrud", () => {
     mock.setTableResult("facturas", { data: { subtotal: 0, iva: 0, ret_isr: 0, ret_iva: 0, total: 0 }, error: null });
     await actualizarConceptoFactura({
       conceptoId: "c1", facturaId: "f1",
-      input: { descripcion: "Nuevo", cantidad: 1, precio_unitario: 10, clave_sat: "78101800" },
+      input: { descripcion: "Nuevo", cantidad: 1, precio_unitario: 10, clave_sat: "78101800", tipo_iva: "gravado_16" },
     });
     const update = mock.tableCalls.find((c) => c.table === "conceptos_factura" && c.ops.includes("update"))!;
     expect(update.opArgs[update.ops.indexOf("eq")]).toEqual(["id", "c1"]);
