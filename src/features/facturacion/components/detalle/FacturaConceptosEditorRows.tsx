@@ -9,26 +9,18 @@ import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters";
 import { RetencionSelects } from "./FacturaConceptosRetencionSelects";
 import { MSG_NO_OBJETO_RETENCIONES } from "@/lib/financial/noObjetoFiscal";
+import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
+import { useIvaFronteraHabilitada } from "@/features/configuracion";
+import { FacturaTipoIvaSelect, frontera8Bloqueado } from "./FacturaTipoIvaSelect";
 import type {
   ConceptoFacturaInput,
   ConceptoFacturaRow,
   TipoIvaConcepto,
 } from "@/features/facturacion/services/conceptosFacturaCrud";
 import type { Moneda } from "@/features/facturacion/types";
-
-const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
-  gravado_16: "IVA 16%",
-  gravado_8: "IVA 8% (frontera)",
-  tasa_0: "Tasa 0%",
-  exento: "Exento",
-  no_objeto: "No objeto de impuesto (SAT 01)",
-};
 
 const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   gravado_16: "16%",
@@ -81,7 +73,10 @@ export function ConceptoRow({
   row, moneda, isEditing, draft, setDraft, onStartEdit, onCancelEdit, onSave, onDelete, busy,
 }: RowProps) {
   if (isEditing) {
-    return <FormRow draft={draft} setDraft={setDraft} onCancel={onCancelEdit} onSave={onSave} busy={busy} />;
+    return (
+      <FormRow draft={draft} setDraft={setDraft} onCancel={onCancelEdit}
+        onSave={onSave} busy={busy} tipoOriginal={row.tipo_iva ?? null} />
+    );
   }
   return (
     <div className="grid grid-cols-12 gap-2 items-center border rounded-md p-2">
@@ -112,9 +107,11 @@ interface FormProps {
   onCancel: () => void;
   onSave: () => void;
   busy: boolean;
+  tipoOriginal?: TipoIvaConcepto | null;
 }
 
-export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) {
+export function FormRow({ draft, setDraft, onCancel, onSave, busy, tipoOriginal }: FormProps) {
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   const patch = (p: Partial<ConceptoFacturaInput>) => setDraft({ ...draft, ...p });
   // P1 · Auditoría IVA — sin tratamiento guardado el selector queda vacío
   // ("Por confirmar"): editar la descripción o el precio de una fila legacy
@@ -124,6 +121,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
   // P1 · IVA — ObjetoImp 01 no declara impuestos: al elegir "No objeto" se
   // limpian las retenciones (antes quedaban ocultas y viajaban en el CFDI).
   const noObjeto = tipoIva === "no_objeto";
+  const bloqueoFrontera = frontera8Bloqueado(tipoIva, tipoOriginal, fronteraHabilitada);
   const patchTipoIva = (v: TipoIvaConcepto) =>
     patch(v === "no_objeto" ? { tipo_iva: v, tasa_ret_isr: 0, tasa_ret_iva: 0 } : { tipo_iva: v });
   return (
@@ -155,18 +153,13 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       </div>
       <div className="col-span-2">
         <Label size="sm">IVA</Label>
-        <Select value={tipoIva} onValueChange={(v) => patchTipoIva(v as TipoIvaConcepto)}>
-          <SelectTrigger className="h-9" aria-label="Tratamiento de IVA">
-            <SelectValue placeholder={LABEL_TRATAMIENTO_PENDIENTE} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="gravado_16">{TIPO_IVA_LABEL.gravado_16}</SelectItem>
-            <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
-            <SelectItem value="tasa_0">{TIPO_IVA_LABEL.tasa_0}</SelectItem>
-            <SelectItem value="exento">{TIPO_IVA_LABEL.exento}</SelectItem>
-            <SelectItem value="no_objeto">{TIPO_IVA_LABEL.no_objeto}</SelectItem>
-          </SelectContent>
-        </Select>
+        <FacturaTipoIvaSelect
+          value={tipoIva}
+          tipoOriginal={tipoOriginal}
+          fronteraHabilitada={fronteraHabilitada}
+          placeholder={LABEL_TRATAMIENTO_PENDIENTE}
+          onChange={patchTipoIva}
+        />
       </div>
       <RetencionSelects
         tasaIsr={noObjeto ? 0 : (draft.tasa_ret_isr ?? 0)}
@@ -178,6 +171,9 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       {tratamientoPendiente && (
         <p className="col-span-12 text-body-sm text-destructive">{MSG_TRATAMIENTO_PENDIENTE}</p>
       )}
+      {bloqueoFrontera && (
+        <p className="col-span-12 text-body-sm text-destructive">{AVISO_IVA_FRONTERA_DESHABILITADO}</p>
+      )}
       <div className="col-span-12 flex justify-end gap-1">
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
           <X className="h-4 w-4 mr-1" /> Cancelar
@@ -185,7 +181,10 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         <Button
           size="sm"
           onClick={onSave}
-          disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0 || tratamientoPendiente}
+          disabled={
+            busy || !draft.descripcion.trim() || draft.cantidad <= 0 ||
+            tratamientoPendiente || bloqueoFrontera
+          }
           aria-label="Guardar"
         >
           <Check className="h-4 w-4 mr-1" /> Guardar

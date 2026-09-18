@@ -78,6 +78,18 @@ export const MSG_REP_IMPORTES_FALTANTES =
   "impuestos en el complemento de pago. Pide a Contabilidad que revise los importes de los renglones " +
   "de la factura y vuelve a intentar el REP.";
 
+/**
+ * P1 · Auditoría IVA — Una consulta de renglones que FALLA no es lo mismo que
+ * una factura legacy SIN renglones: si se confunden, el REP se timbraría con
+ * los impuestos inferidos del encabezado y SIN las retenciones reales. Por eso
+ * el error de lectura corta el flujo antes del claim y antes del PAC.
+ */
+export const MSG_REP_CONCEPTOS_ILEGIBLES =
+  "LC_REP_CONCEPTOS_ILEGIBLES: No se pudieron leer los renglones de la factura relacionada, así que " +
+  "no es posible saber qué IVA y qué retenciones debe declarar el complemento de pago. No se timbró " +
+  "nada. Vuelve a intentarlo en unos minutos; si el problema sigue, avisa a soporte de Libre Carga.";
+
+
 /** `true` si el renglón trae el tratamiento explícito "no objeto" (SAT 01). */
 export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
   return String(c?.tipo_iva ?? "").trim().toLowerCase() === "no_objeto";

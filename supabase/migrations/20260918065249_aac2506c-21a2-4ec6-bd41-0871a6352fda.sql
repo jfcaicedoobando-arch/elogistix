@@ -1,17 +1,30 @@
--- Fuente canónica de public._convertir_proformas_insertar_conceptos (helper privado).
--- Extraído en Item 3.2 de arquitectura (v13.309.10) para des-duplicar los 4 bloques
--- de inserción de conceptos_factura desde proforma_conceptos_consolidados o conceptos_venta.
--- Defecto 1 (ronda posterior a v13.823.39): la clasificación fiscal del IVA se
--- delega en public._tipo_iva_desde_tasa para que el 8% de frontera no viaje al
--- CFDI como 16%.
--- B16 (v13.823.379): `aplica_iva = false` manda sobre una tasa legacy stale
--- (p. ej. 0.16): la línea se persiste exenta y con tasa NULL.
--- SAT 01 (20260918000100): si el origen trae `tipo_iva` explícito, ése manda;
--- 'no_objeto' NO es inferible desde la tasa y viaja sin tasa de traslado.
--- P1 auditoría (20260918): la tasa persistida sale de public._tasa_iva_canonica,
--- así que 'gravado_8'/'tasa_0'/'exento' con tasa numérica NULL ya no se guardan
--- al 16%. Sólo el renglón legacy SIN tipo_iva conserva el fallback histórico.
--- Ver supabase/schema/README.md.
+-- P1 · Auditoría IVA — tasa canónica por tratamiento al convertir proforma → factura.
+CREATE OR REPLACE FUNCTION public._tasa_iva_canonica(
+  p_tipo_iva text,
+  p_tasa_iva_aplicada numeric,
+  p_aplica_iva boolean,
+  p_tasa_global numeric DEFAULT 0.16
+) RETURNS numeric
+  LANGUAGE sql
+  IMMUTABLE
+  SET search_path TO 'public'
+AS $$
+  -- Una sola regla, igual que resolverTasaConcepto() en el frontend:
+  --   el TRATAMIENTO explícito manda; una tasa numérica ausente o
+  --   contradictoria NUNCA se resuelve con la tasa general.
+  -- Sólo el renglón legacy SIN tipo_iva conserva el fallback histórico.
+  SELECT CASE
+    WHEN p_tipo_iva = 'gravado_16' THEN p_tasa_global
+    WHEN p_tipo_iva = 'gravado_8'  THEN 0.08
+    WHEN p_tipo_iva IN ('tasa_0', 'exento', 'no_objeto') THEN 0
+    WHEN p_aplica_iva IS FALSE THEN 0
+    ELSE COALESCE(p_tasa_iva_aplicada, p_tasa_global)
+  END;
+$$;
+
+REVOKE ALL ON FUNCTION public._tasa_iva_canonica(text, numeric, boolean, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._tasa_iva_canonica(text, numeric, boolean, numeric) TO authenticated;
+GRANT EXECUTE ON FUNCTION public._tasa_iva_canonica(text, numeric, boolean, numeric) TO service_role;
 
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
  RETURNS void

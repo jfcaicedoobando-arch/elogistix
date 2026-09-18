@@ -7,6 +7,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { FormRow } from "../FacturaConceptosEditorRows";
 import type { ConceptoFacturaInput } from "@/features/facturacion/services/conceptosFacturaCrud";
 
+// El formulario consulta el interruptor del 8% (estímulo fronterizo).
+vi.mock("@/features/configuracion", () => ({ useIvaFronteraHabilitada: () => false }));
+
 const EMPTY: ConceptoFacturaInput = {
   descripcion: "Servicio de flete",
   cantidad: 1,
