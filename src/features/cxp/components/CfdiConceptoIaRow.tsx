@@ -1,7 +1,8 @@
 /**
  * Renglón editable de la vista previa de conceptos extraídos por IA (v13.823.21).
  * Sólo se usa cuando el documento vino de un PDF procesado con IA: permite
- * corregir la descripción, cantidad, importe e IVA, o borrar el renglón de más.
+ * corregir la descripción, cantidad, importe, IVA e IEPS, o borrar el renglón
+ * de más. P2-IVA: el IEPS extraído era sólo texto y no se podía corregir.
  */
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
