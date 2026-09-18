@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.0] - 2026-09-18
+
+Auditoría fiscal posterior a PPD + «No objeto»: la pareja Método/Forma de pago y el cuadre de totales se validan antes de timbrar.
+
+- **fix(CFDI · FormaPago)**: nuevo `src/lib/financial/formaMetodoPago.ts` (+ espejo en `supabase/functions/_shared/`): PPD exige FormaPago 99 «Por definir» y PUE una forma real del catálogo SAT. El servidor es la autoridad (`facturapi-emitir/helpers.ts`) y la UI se alinea: al cambiar PUE↔PPD la forma se realinea sola (`useTimbrarFacturaDialog`, `FacturaDatosFiscalesCard`, `validarDatosTimbrado`).
+- **fix(REP · FormaDePagoP)**: `normalizarFormaPago` ya no inventa 99 para un pago recibido: devuelve `null` para vacío, desconocido, «Otro» y 99, y `validateRepContext` lo rechaza antes del PAC. `formaPagoRepObligatoria` blinda el armado del payload y del XML manual.
+- **fix(CFDI · cuadre)**: nuevos `cuadreFiscal.ts` y `contextoCuadre.ts`; la tolerancia baja de $1.00 a un centavo por renglón y además se cotejan IVA trasladado, retenciones de IVA/ISR y total recalculado contra la cabecera (422 `totales_descuadrados`, con detalle accionable). Ningún tratamiento fiscal se cambia para hacer cuadrar.
+- **fix(CFDI · aplica_iva)**: el contexto ya transporta `aplica_iva` (campo legado; `tipo_iva` sigue siendo el canónico) y bloquea combinaciones contradictorias antes del PAC.
+- **test**: `cuadreFiscal_test.ts`, `formaMetodoPago_test.ts` (Deno y Vitest), `formaMetodoPago_emision_test.ts`, `formaPagoRep_test.ts` y `paridadResumen_test.ts` (contrato de paridad contra `invoices.paymentSummary`).
+
 ## [13.823.404] - 2026-09-18
 
 Complemento de pago (REP) de facturas con renglones «No objeto de impuesto» (SAT 01): ya se puede timbrar, armando el XML del complemento por nuestra cuenta.
