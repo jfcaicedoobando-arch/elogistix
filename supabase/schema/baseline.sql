@@ -2048,12 +2048,14 @@ BEGIN
     SELECT p_factura_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
            pcc.moneda, pcc.total, p_org,
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
-           -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
-           -- importar que arrastre una tasa legacy (p. ej. 0.16).
-           public._tipo_iva_desde_tasa(
-             pcc.aplica_iva,
-             CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN pcc.aplica_iva = false THEN NULL
+           -- El tipo explícito manda; 'no_objeto' (SAT 01) no es inferible.
+           CASE WHEN pcc.tipo_iva IS NOT NULL THEN pcc.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  pcc.aplica_iva,
+                  CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN pcc.tipo_iva = 'no_objeto' THEN NULL
+                WHEN pcc.aplica_iva = false THEN NULL
                 ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, pcc.proforma_id
     FROM public.proforma_conceptos_consolidados pcc
@@ -2069,10 +2071,13 @@ BEGIN
     SELECT p_factura_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           public._tipo_iva_desde_tasa(
-             cv.aplica_iva,
-             CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN cv.aplica_iva = false THEN NULL
+           CASE WHEN cv.tipo_iva IS NOT NULL THEN cv.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  cv.aplica_iva,
+                  CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
+                WHEN cv.aplica_iva = false THEN NULL
                 ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, cv.proforma_id
     FROM public.conceptos_venta cv
@@ -2338,13 +2343,14 @@ BEGIN
         v_total := ROUND(v_cant * v_pu, 2);
         INSERT INTO public.conceptos_venta (
           embarque_id, descripcion, cantidad, precio_unitario, moneda,
-          aplica_iva, tasa_iva_aplicada, total, organization_id
+          aplica_iva, tasa_iva_aplicada, tipo_iva, total, organization_id
         )
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
           v_aplica,
           v_tasa,
+          NULLIF(v_venta->>'tipo_iva', ''),
           v_total, p_org
         );
       END IF;
@@ -5845,6 +5851,10 @@ BEGIN
             NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0),
             NULLIF(tasa_iva_aplicada, 0),
             0.16)
+        END,
+        tipo_iva = CASE
+          WHEN cv ? 'tipo_iva' THEN NULLIF(cv->>'tipo_iva', '')
+          ELSE tipo_iva
         END
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
@@ -5852,7 +5862,7 @@ BEGIN
     ELSE
       INSERT INTO conceptos_venta (
         embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id,
-        aplica_iva, tasa_iva_aplicada, organization_id
+        aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id
       ) VALUES (
         p_embarque_id,
         cv->>'descripcion',
@@ -5868,6 +5878,7 @@ BEGIN
           WHEN COALESCE((cv->>'aplica_iva')::boolean, false) = false THEN 0
           ELSE COALESCE(NULLIF((cv->>'tasa_iva_aplicada')::numeric, 0), 0.16)
         END,
+        NULLIF(cv->>'tipo_iva', ''),
         v_org_id
       )
       RETURNING id INTO v_new_id;
@@ -11457,9 +11468,6 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
   v_numero := public.generar_numero_proforma(v_org_efectiva);
-  -- El encabezado nace en cero y se recalcula abajo como la suma EXACTA del
-  -- detalle regenerado (A-1): copiar los totales persistidos de las proformas
-  -- origen podía no cuadrar con el detalle.
   INSERT INTO public.proformas (
     numero, embarque_id, cliente_id, cliente_nombre, expediente, bl_master,
     subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn,
@@ -11472,26 +11480,32 @@ BEGIN
     p_operador, p_dias_credito, v_org_efectiva,
     'aprobada', true, p_proforma_ids, p_tasa_iva
   ) RETURNING * INTO v_nueva;
-  -- A-1: cantidad SIN ::int (BL-1 permite decimales); IVA por LÍNEA con la
-  -- tasa propia de cada concepto (canon resolverTasaConcepto: tasa explícita
-  -- si existe; si no, la global cuando aplica_iva, y 0 en caso contrario) y
-  -- redondeo por línea (BL-12). La tasa efectiva entra al GROUP BY para no
-  -- mezclar líneas gravadas al 16% con líneas al 8% frontera.
+  -- A-1: cantidad SIN ::int (BL-1 permite decimales); IVA por LÍNEA con la tasa
+  -- propia de cada concepto y redondeo por línea (BL-12). La tasa efectiva y el
+  -- tratamiento fiscal explícito entran al GROUP BY: 'no_objeto', 'exento' y
+  -- 'tasa_0' quedan en líneas distintas aunque su IVA sea 0.
   INSERT INTO public.proforma_conceptos_consolidados (
     proforma_id, embarque_id, contenedor, tipo_contenedor,
     descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, iva,
-    organization_id, tasa_iva_aplicada
+    organization_id, tasa_iva_aplicada, tipo_iva
   )
   SELECT
     v_nueva.id, cv.embarque_id,
     COALESCE(NULLIF(ec.numero_contenedor, ''), NULLIF(e.contenedor, ''), 'Sin contenedor'),
     COALESCE(NULLIF(ec.tipo_contenedor, ''), NULLIF(e.tipo_contenedor, '')),
     cv.descripcion, SUM(cv.cantidad), cv.precio_unitario,
-    ROUND(SUM(cv.cantidad * cv.precio_unitario), 2), cv.moneda, cv.aplica_iva,
+    ROUND(SUM(cv.cantidad * cv.precio_unitario), 2), cv.moneda,
+    CASE WHEN cv.tipo_iva IN ('no_objeto', 'exento') THEN false ELSE cv.aplica_iva END,
     ROUND(SUM(cv.cantidad * cv.precio_unitario)
-          * COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END), 2),
+          * CASE WHEN cv.tipo_iva IN ('no_objeto', 'exento', 'tasa_0') THEN 0
+                 ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+            END, 2),
     v_org_efectiva,
-    COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+    CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
+         WHEN cv.tipo_iva IN ('exento', 'tasa_0') THEN 0
+         ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+    END,
+    cv.tipo_iva
   FROM public.conceptos_venta cv
   LEFT JOIN public.embarques e ON e.id = cv.embarque_id
   LEFT JOIN public.embarque_contenedores ec ON ec.id = cv.contenedor_id
@@ -11502,10 +11516,9 @@ BEGIN
   GROUP BY cv.embarque_id,
     COALESCE(NULLIF(ec.numero_contenedor, ''), NULLIF(e.contenedor, ''), 'Sin contenedor'),
     COALESCE(NULLIF(ec.tipo_contenedor, ''), NULLIF(e.tipo_contenedor, '')),
-    cv.descripcion, cv.precio_unitario, cv.moneda, cv.aplica_iva,
+    cv.descripcion, cv.precio_unitario, cv.moneda, cv.aplica_iva, cv.tipo_iva,
     COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END);
-  -- Encabezado = Σ del detalle recién generado (alineado con
-  -- calcularTotalesProforma: subtotal sin IVA, iva por línea, total = suma).
+  -- Encabezado = Σ del detalle recién generado.
   SELECT
     COALESCE(SUM(pcc.total) FILTER (WHERE pcc.moneda = 'USD'), 0),
     COALESCE(SUM(pcc.iva)   FILTER (WHERE pcc.moneda = 'USD'), 0),
@@ -11525,8 +11538,7 @@ BEGIN
   SET estado_revision = 'consolidada', consolidada_en = v_nueva.id
   WHERE id = ANY(p_proforma_ids);
   -- v13.301.69 FIX BUG 2: repuntar conceptos_venta a la proforma consolidada
-  -- para que sync_conceptos_venta_facturado propague correctamente al
-  -- facturar/cancelar. Bypass defensivo de los guards internos.
+  -- para que sync_conceptos_venta_facturado propague al facturar/cancelar.
   PERFORM set_config('app.bypass_cierre', 'on', true);
   UPDATE public.conceptos_venta
      SET proforma_id = v_nueva.id
@@ -13446,11 +13458,12 @@ BEGIN
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
-                                 aplica_iva, tasa_iva_aplicada, organization_id)
+                                 aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id)
     VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::numeric, (cv->>'precio_unitario')::numeric,
             (cv->>'moneda')::moneda, (cv->>'total')::numeric,
             COALESCE((cv->>'aplica_iva')::boolean, false),
             COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+            NULLIF(cv->>'tipo_iva', ''),
             v_org_id);
   END LOOP;
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
@@ -16268,7 +16281,7 @@ BEGIN
     FROM paired;
     INSERT INTO conceptos_venta (
       embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
-      organization_id, contenedor_id, aplica_iva
+      organization_id, contenedor_id, aplica_iva, tipo_iva
     )
     SELECT
       nuevo_id, descripcion, cantidad, precio_unitario, moneda, total,
@@ -16278,7 +16291,7 @@ BEGIN
           THEN (v_mapping->>contenedor_id::text)::uuid
         ELSE NULL
       END,
-      aplica_iva
+      aplica_iva, tipo_iva
     FROM conceptos_venta
     WHERE embarque_id = p_embarque_origen_id AND deleted_at IS NULL;
     INSERT INTO conceptos_costo (
@@ -31060,7 +31073,7 @@ CREATE TABLE public.catalogo_claves_sat (
     nombre_unidad text,
     CONSTRAINT catalogo_claves_sat_clave_len CHECK ((length(TRIM(BOTH FROM clave_sat)) >= 6)),
     CONSTRAINT catalogo_claves_sat_patron_len CHECK ((length(TRIM(BOTH FROM patron)) > 0)),
-    CONSTRAINT catalogo_claves_sat_tipo_iva_chk CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text])))
+    CONSTRAINT catalogo_claves_sat_tipo_iva_chk CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text])))
 );
 CREATE TABLE public.catalogo_org_desactivado (
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
@@ -31239,7 +31252,7 @@ CREATE TABLE public.conceptos_factura (
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT conceptos_factura_cantidad_pos CHECK ((cantidad > (0)::numeric)),
     CONSTRAINT conceptos_factura_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
-    CONSTRAINT conceptos_factura_tipo_iva_check CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text]))),
+    CONSTRAINT conceptos_factura_tipo_iva_check CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text]))),
     CONSTRAINT conceptos_factura_total_nonneg CHECK ((total >= (0)::numeric))
 );
 CREATE TABLE public.conceptos_venta (
@@ -31261,12 +31274,14 @@ CREATE TABLE public.conceptos_venta (
     tasa_iva_aplicada numeric(5,4) DEFAULT 0.16 NOT NULL,
     origen text DEFAULT 'manual'::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now(),
+    tipo_iva text,
     CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= (1)::numeric)),
     CONSTRAINT conceptos_venta_estado_facturacion_check CHECK ((estado_facturacion = ANY (ARRAY['pendiente'::text, 'en_proforma'::text, 'facturado'::text]))),
     CONSTRAINT conceptos_venta_moneda_soportada CHECK ((moneda = ANY (ARRAY['MXN'::public.moneda, 'USD'::public.moneda]))),
     CONSTRAINT conceptos_venta_origen_check CHECK ((origen = ANY (ARRAY['manual'::text, 'demoras_auto'::text, 'cotizacion'::text, 'costeo_tarifa'::text]))),
     CONSTRAINT conceptos_venta_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
     CONSTRAINT conceptos_venta_tasa_iva_chk CHECK (((tasa_iva_aplicada >= (0)::numeric) AND (tasa_iva_aplicada <= (1)::numeric))),
+    CONSTRAINT conceptos_venta_tipo_iva_chk CHECK (((tipo_iva IS NULL) OR (tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text])))),
     CONSTRAINT conceptos_venta_total_nonneg CHECK ((total >= (0)::numeric))
 );
 CREATE TABLE public.configuracion (
@@ -32377,7 +32392,9 @@ CREATE TABLE public.proforma_conceptos_consolidados (
     tasa_iva_aplicada numeric DEFAULT 0.16 NOT NULL,
     deleted_at timestamp with time zone,
     deleted_by uuid,
-    updated_at timestamp with time zone DEFAULT now()
+    updated_at timestamp with time zone DEFAULT now(),
+    tipo_iva text,
+    CONSTRAINT pcc_tipo_iva_chk CHECK (((tipo_iva IS NULL) OR (tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text]))))
 );
 CREATE TABLE public.proforma_envios (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -32772,6 +32789,8 @@ ALTER TABLE ONLY public.bitacora_actividad
     ADD CONSTRAINT bitacora_actividad_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.catalogo_claves_sat
     ADD CONSTRAINT catalogo_claves_sat_pkey PRIMARY KEY (id);
+ALTER TABLE public.catalogo_claves_sat
+    ADD CONSTRAINT catalogo_claves_sat_tasa_no_objeto_chk CHECK (((tipo_iva <> 'no_objeto'::text) OR (COALESCE(tasa_iva_default, (0)::numeric) = (0)::numeric))) NOT VALID;
 ALTER TABLE ONLY public.catalogo_org_desactivado
     ADD CONSTRAINT catalogo_org_desactivado_pkey PRIMARY KEY (organization_id, catalogo, item_id);
 ALTER TABLE ONLY public.cierre_embarque_log
@@ -32804,6 +32823,8 @@ ALTER TABLE ONLY public.comisiones_recuperaciones
     ADD CONSTRAINT comisiones_recuperaciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.conceptos_costo
     ADD CONSTRAINT conceptos_costo_pkey PRIMARY KEY (id);
+ALTER TABLE public.conceptos_factura
+    ADD CONSTRAINT conceptos_factura_no_objeto_sin_tasa_chk CHECK (((tipo_iva <> 'no_objeto'::text) OR (tasa_iva_aplicada IS NULL))) NOT VALID;
 ALTER TABLE ONLY public.conceptos_factura
     ADD CONSTRAINT conceptos_factura_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.conceptos_venta

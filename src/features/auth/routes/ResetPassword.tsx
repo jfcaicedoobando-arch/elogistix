@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { resolveLandingRoute } from "@/features/auth/services";
@@ -14,47 +13,10 @@ import { CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
 import { AuthCard } from "@/features/auth/components/AuthCard";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
-import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
-import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
+import { PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-
-
-/**
- * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 8 `useState` a RHF+zod.
- */
-const resetSchema = z
-  .object({
-    password: passwordSchema,
-    password2: passwordSchema,
-
-  })
-  .refine((v) => v.password === v.password2, {
-    path: ["password2"],
-    message: COPY_VALIDACION.contrasenasNoCoinciden,
-  });
-
-type ResetValues = z.infer<typeof resetSchema>;
-
-/**
- * Copy de la pantalla. `invitacion` = el usuario llegó por el enlace de
- * invitación al portal y todavía no tiene contraseña.
- */
-function copyPantalla(esInvitacion: boolean) {
-  return esInvitacion
-    ? {
-        titulo: "Crea tu contraseña",
-        intro: "Define la contraseña con la que entrarás a tu portal de Libre Carga.",
-        exito: "Tu contraseña quedó lista",
-        exitoDetalle: "Te llevaremos a tu portal…",
-      }
-    : {
-        titulo: "Restablecer contraseña",
-        intro: "Ingresa tu nueva contraseña para tu cuenta de Libre Carga.",
-        exito: "Contraseña actualizada",
-        exitoDetalle: "Te llevaremos al inicio de sesión…",
-      };
-}
+import { resetSchema, copyPantalla, type ResetValues } from "./resetPasswordCopy";
 
 export default function ResetPassword() {
   const navigate = useNavigate();

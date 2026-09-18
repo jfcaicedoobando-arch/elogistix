@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const fila = (over: Partial<FilaCostoLocal>): FilaCostoLocal =>

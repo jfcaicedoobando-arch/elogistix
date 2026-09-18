@@ -39,6 +39,10 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   // Ola 11 · RNF-10
   LC_CUENTA_MONEDA_CON_MOVIMIENTOS:
     "La cuenta ya tiene movimientos registrados: la moneda no se puede cambiar.",
+  // Idempotencia del cobro individual (_assert_pago_factura_mismo_payload):
+  // el mismo intento ya se guardó, pero con datos distintos a los enviados.
+  LC_PAGO_REINTENTO_DISTINTO:
+    "Este cobro ya se guardó con datos distintos a los que acabas de enviar. No se duplicó el cobro ni se aplicó la edición: revisa el cobro registrado en la factura y, si necesitas corregirlo, edítalo desde ahí.",
   // Ola 11 · lotes (CxC / CxP)
   LC_COBRO_LOTE_EN_PROCESO:
     "El cobro en lote aún se está procesando. Espera unos segundos antes de reintentar.",
