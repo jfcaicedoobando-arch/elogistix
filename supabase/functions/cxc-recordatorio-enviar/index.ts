@@ -149,7 +149,7 @@ function buildTemplateData(
   const dias = diasEntre(factura.fecha_vencimiento, new Date().toISOString()) ?? 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
   const moneda = factura.moneda ?? 'MXN';
-  const numero = factura.numero ?? factura.serie ?? 'sin folio';
+  const numero = folioMostrado(factura);
   const cliente = factura.cliente_nombre ?? orgName ?? 'Cliente';
   return {
     numero,
