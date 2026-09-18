@@ -23,9 +23,11 @@ export interface TrasladoDr {
 }
 
 export const MSG_IVA_MULTITASA =
-  "LC_REP_IVA_MULTITASA: La factura relacionada mezcla más de una tasa de IVA trasladado; " +
-  "el complemento de pago no puede declararlas en un solo grupo. Emite el REP desde una factura " +
-  "con tasa homogénea o reemite la factura separando las tasas.";
+  "LC_REP_IVA_MULTITASA: La factura relacionada mezcla más de un tratamiento de IVA " +
+  "(tasas distintas, o gravado junto con exento o tasa 0%). El complemento de pago declara un solo " +
+  "grupo de impuestos por documento relacionado, así que declarar uno de ellos trataría todo el " +
+  "importe con una tasa que no le corresponde. Emite el REP desde una factura con tratamiento " +
+  "homogéneo o reemite la factura separando los tratamientos.";
 
 /**
  * El complemento de pago 2.0 declara `ObjetoImpDR` por documento relacionado y
