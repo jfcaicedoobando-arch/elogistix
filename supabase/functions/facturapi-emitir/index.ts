@@ -103,7 +103,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     apiKey: resolved.data.apiKey,
     ambiente: resolved.data.ambiente,
     ctx: context,
-    factura: factura as FacturaRow,
+    factura: facturaVigente,
     facturaId: body.factura_id,
     user: { id: userData.user.id, email: userData.user.email ?? "" },
     claim,
