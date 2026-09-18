@@ -38,18 +38,19 @@ describe("coherenciaIva — un solo tratamiento fiscal por renglón", () => {
     expect(clasificarCoherenciaIva({ tipo_iva: "gravado_16", tasa_iva_aplicada: null }).estado).toBe("incoherente");
   });
 
-  it("marca ambiguo el legado sin tipo con IVA apagado y tasa heredada (hallazgo 3)", () => {
-    const r = clasificarCoherenciaIva({ tipo_iva: null, aplica_iva: false, tasa_iva_aplicada: 0.16 });
-    expect(r.estado).toBe("ambiguo");
-    expect(r.tasa).toBe(0);
-  });
-
-  it("resuelve el legado coherente por tasa y flag, sin inventar no objeto", () => {
-    expect(clasificarCoherenciaIva({ aplica_iva: true, tasa_iva_aplicada: 0.16 }))
-      .toMatchObject({ estado: "ok", tipo: "gravado_16" });
-    expect(clasificarCoherenciaIva({ aplica_iva: false, tasa_iva_aplicada: 0 }))
-      .toMatchObject({ estado: "ok", tipo: "exento" });
-    expect(clasificarCoherenciaIva({ aplica_iva: true, tasa_iva_aplicada: 0 }))
-      .toMatchObject({ estado: "ok", tipo: "tasa_0" });
+  it("marca ambiguo cualquier renglón sin tipo_iva reconocido (hallazgo 3)", () => {
+    const casos = [
+      { tipo_iva: null, aplica_iva: false, tasa_iva_aplicada: 0.16 }, // legado con tasa heredada
+      { tipo_iva: null, aplica_iva: false, tasa_iva_aplicada: 0 }, // NO se resuelve como exento
+      { tipo_iva: null, tasa_iva_aplicada: 0 }, // NO se resuelve como tasa_0
+      { aplica_iva: true, tasa_iva_aplicada: 0.16 }, // gravado legado sin tipo
+      { tipo_iva: "desconocido", tasa_iva_aplicada: 0.16 }, // tipo no reconocido
+    ];
+    for (const caso of casos) {
+      const r = clasificarCoherenciaIva(caso);
+      expect(r.estado).toBe("ambiguo");
+      expect(bloqueaTimbrado(r)).toBe(true);
+      expect(r.motivo).toContain("no tiene tratamiento fiscal registrado");
+    }
   });
 });

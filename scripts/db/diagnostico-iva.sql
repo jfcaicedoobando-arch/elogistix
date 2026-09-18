@@ -20,8 +20,13 @@ WITH v AS (
 SELECT
   tabla,
   CASE
-    WHEN tipo_iva IS NULL AND aplica_iva IS FALSE AND COALESCE(tasa_iva_aplicada, 0) > 0
-      THEN 'ambiguo_legado_sin_tipo_con_tasa'
+    -- Ajuste residual P1: un renglón sin tratamiento fiscal reconocido NUNCA
+    -- se cuenta como coherente, sin importar tasa ni flag (no se infiere
+    -- tasa 0% ni exento). Para timbrar es ambiguo y se bloquea.
+    WHEN tipo_iva IS NULL
+      THEN 'sin_tratamiento_fiscal_ambiguo'
+    WHEN tipo_iva NOT IN ('gravado_16','gravado_8','tasa_0','exento','no_objeto')
+      THEN 'tratamiento_desconocido_ambiguo'
     WHEN tipo_iva IN ('exento','no_objeto','tasa_0') AND COALESCE(tasa_iva_aplicada, 0) > 0
       THEN 'no_causante_con_tasa'
     WHEN tipo_iva IN ('gravado_16','gravado_8') AND aplica_iva IS FALSE

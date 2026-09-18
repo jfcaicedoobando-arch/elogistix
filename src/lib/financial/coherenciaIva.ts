@@ -9,9 +9,9 @@
  *  - Una línea gravada con el IVA apagado (o con una tasa que no corresponde a
  *    su tipo) es INCOHERENTE: no se corrige a la callada, se bloquea el
  *    timbrado con un mensaje accionable.
- *  - Una línea legada SIN `tipo_iva` cuyo flag y tasa se contradicen es
- *    AMBIGUA: no se adivina el tratamiento y tampoco se impide editarla; sólo
- *    se bloquea emitir CFDI con ella.
+ *  - Una línea SIN `tipo_iva` reconocido es AMBIGUA SIEMPRE (cualquier tasa o
+ *    flag): no se adivina el tratamiento y tampoco se impide editarla; sólo se
+ *    bloquea emitir CFDI con ella.
  *
  * Espejo Deno (mismas reglas) en `supabase/functions/_shared/coherenciaIva.ts`.
  */
@@ -19,7 +19,6 @@ import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
   TASA_IVA_FRONTERA_MX,
   esTipoIvaSat,
-  tipoIvaDesdeLegacy,
   type TipoIvaSat,
 } from "@/lib/financial/tipoIvaSat";
 
@@ -117,24 +116,18 @@ function clasificarGravado(
 }
 
 /** Renglones legados: sin `tipo_iva` guardado. */
-function clasificarLegado(
-  tasaNum: number | null,
-  flag: boolean | null | undefined,
-  tasaGravadoDefault: number,
-): ResultadoCoherenciaIva {
-  if (flag === false && tasaNum != null && tasaNum > 0) {
-    return {
-      estado: "ambiguo",
-      tipo: "exento",
-      tasa: 0,
-      motivo:
-        "no tiene tratamiento fiscal registrado: el IVA está desactivado pero conserva una tasa distinta de cero, así que no se puede determinar si es tasa 0%, exento o no objeto",
-    };
-  }
+function clasificarLegado(): ResultadoCoherenciaIva {
+  // P1-IVA (ajuste residual): un renglón SIN `tipo_iva` reconocido es AMBIGUO
+  // siempre, sin importar tasa ni flag. Antes se resolvía por `tasa`/`flag`
+  // (tasa 0 → tasa_0, IVA apagado → exento); eso era inferir el tratamiento
+  // SAT, justo lo que el lote prohíbe. `tipo`/`tasa` NO son confiables aquí:
+  // sólo existen para cumplir el contrato del tipo de retorno.
   return {
-    estado: "ok",
-    tipo: tipoIvaDesdeLegacy(flag, tasaNum),
-    tasa: tasaNum != null ? tasaNum : flag ? tasaGravadoDefault : 0,
+    estado: "ambiguo",
+    tipo: "gravado_16",
+    tasa: 0,
+    motivo:
+      "no tiene tratamiento fiscal registrado (tasa 0%, exento, no objeto o gravado), así que no se puede determinar cómo declararlo ante el SAT",
   };
 }
 
@@ -150,7 +143,7 @@ export function clasificarCoherenciaIva(
   const tasaNum = tasa != null && Number.isFinite(Number(tasa)) ? Number(tasa) : null;
   const flag = fila.aplica_iva;
 
-  if (!esTipoIvaSat(fila.tipo_iva)) return clasificarLegado(tasaNum, flag, tasaGravadoDefault);
+  if (!esTipoIvaSat(fila.tipo_iva)) return clasificarLegado();
 
   const tipo = fila.tipo_iva;
   if (tipo === "no_objeto" || tipo === "exento" || tipo === "tasa_0") {
