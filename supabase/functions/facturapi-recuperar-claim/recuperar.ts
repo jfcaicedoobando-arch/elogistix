@@ -36,6 +36,8 @@ export interface FapiClient { invoices: { list: (params: Record<string, unknown>
  */
 export type BusquedaCfdi =
   | { kind: "encontrado"; invoice: FapiInvoice }
+  /** P0-C: existe en FacturAPI pero sigue sin timbre (`pending`/sin UUID). */
+  | { kind: "pendiente_remoto"; invoice: FapiInvoice }
   | { kind: "no_encontrado" }
   | { kind: "incierto"; paginasRevisadas: number };
 
@@ -87,7 +89,10 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
       );
       const items = res.data ?? [];
       const match = items.find((inv) => inv.external_id === claimTag) ?? null;
-      if (match) return { kind: "encontrado", invoice: match };
+      // P0-C: sólo un remoto `valid` con UUID se promueve. Si el intento existe
+      // pero sigue pendiente, NO se promueve ni se libera el claim.
+      if (match && esTimbradoValido(match)) return { kind: "encontrado", invoice: match };
+      if (match) return { kind: "pendiente_remoto", invoice: match };
       // REF-09: sólo "no_encontrado" si tenemos certeza de que no hay más
       // páginas. Con total_pages ausente, una página llena (50) es señal de que
       // puede haber más → incierto.
