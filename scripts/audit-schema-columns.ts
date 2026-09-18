@@ -80,8 +80,9 @@ async function main() {
       const cols = schema.get(table);
       if (!cols) continue;
       for (let j = i; j < Math.min(i + 30, lines.length); j++) {
-        // rompe si aparece otro .from (nueva query)
-        if (j > i && /\.from\(["'`]\w+["'`]\)/.test(lines[j])) break;
+        // rompe si aparece otro `.from(` (nueva query, aunque la tabla venga de
+        // una variable o de un ternario: ahí ya no sabemos a qué tabla aplica).
+        if (j > i && /\.from\(/.test(lines[j])) break;
         const isMatch = lines[j].match(/\.is\(["'`](\w+)["'`]\s*,/);
         if (isMatch && !cols.has(isMatch[1])) {
           findings.push({ file: rel, line: j + 1, table, column: isMatch[1], kind: "is" });
