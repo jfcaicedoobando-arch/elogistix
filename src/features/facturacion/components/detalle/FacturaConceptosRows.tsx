@@ -32,7 +32,8 @@ const IVA_CELL_LABEL: Record<TipoIvaConcepto, string> = {
 };
 
 export function IvaCell({ tipo }: { tipo: TipoIvaConcepto | null }) {
-  if (!tipo) return <span className="text-muted-foreground">—</span>;
+  // P2-IVA: sin dato suficiente se dice "No disponible" en vez de suponer 16%.
+  if (!tipo) return <span className="text-muted-foreground">No disponible</span>;
   const gravado = tipo === "gravado_16" || tipo === "gravado_8";
   const variant: "default" | "secondary" | "outline" =
     gravado ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
