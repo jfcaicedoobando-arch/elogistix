@@ -11,17 +11,19 @@ import { validateContext, type FacturaContext } from "./helpers.ts";
 import type { FacturaRow } from "./types.ts";
 
 interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
+/**
+ * Renglón de `conceptos_factura`.
+ *
+ * OJO: esta tabla NO tiene `aplica_iva` — ese interruptor legado sólo existe en
+ * `conceptos_venta` y `proforma_conceptos_consolidados`. Aquí el tratamiento
+ * SAT se determina con `tipo_iva` (canónico) + `tasa_iva_aplicada`, y sus
+ * contradicciones ya bloquean el timbrado. No volver a pedirlo en el select:
+ * PostgREST responde 400 y el timbrado muere con `conceptos_query_failed`.
+ */
 interface ConceptoRow {
   descripcion: string; cantidad: number | string; precio_unitario: number | string;
   clave_sat?: string | null; clave_unidad?: string | null; tipo_iva?: string | null;
   tasa_iva_aplicada?: number | string | null; tasa_ret_isr?: number | string | null; tasa_ret_iva?: number | string | null;
-  /**
-   * P2 · Auditoría fiscal — `tipo_iva` es el campo CANÓNICO del tratamiento SAT;
-   * `aplica_iva` es el interruptor legado que sigue vivo en la base. Se
-   * transporta para que la regla compartida de coherencia detecte las
-   * contradicciones (p. ej. gravado 16% con el IVA apagado) antes del PAC.
-   */
-  aplica_iva?: boolean | null;
 }
 
 interface BaseContexto {
