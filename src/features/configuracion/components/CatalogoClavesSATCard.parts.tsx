@@ -90,7 +90,7 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid, tipoIv
       <TableCell><Switch checked={draft.activo} onCheckedChange={(v) => p({ activo: v })} aria-label="Producto activo" /></TableCell>
       <TableCell className="text-right">
         <Button size="icon" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar edición"><X className="h-4 w-4" /></Button>
-        <Button size="icon" onClick={onSave} disabled={busy || !valid} aria-label="Guardar producto"><Check className="h-4 w-4" /></Button>
+        <Button size="icon" onClick={onSave} disabled={busy || !guardable} aria-label="Guardar producto"><Check className="h-4 w-4" /></Button>
       </TableCell>
     </DetailTableRow>
   );
