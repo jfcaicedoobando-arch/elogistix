@@ -50,7 +50,8 @@ export interface ConceptoFacturaRow {
   clave_sat: string;
   total: number;
   moneda: Moneda;
-  tipo_iva: TipoIvaConcepto;
+  /** `null` en renglones legacy: tratamiento fiscal "Por confirmar". */
+  tipo_iva: TipoIvaConcepto | null;
   tasa_iva_aplicada: number | null;
   tasa_ret_isr: number;
   tasa_ret_iva: number;
@@ -62,11 +63,20 @@ export interface ConceptoFacturaRow {
   embarque_expediente: string | null;
 }
 
+/**
+ * P1 · Auditoría IVA — mensaje único cuando la línea no trae tratamiento.
+ * Antes se persistía `gravado_16` por omisión, así que editar sólo la
+ * descripción o el precio de una fila legacy cambiaba su IVA y sus totales.
+ */
+export const MSG_TIPO_IVA_REQUERIDO =
+  "Falta el tratamiento de IVA del renglón. Elige 16%, 8% (frontera), tasa 0%, exento o no objeto: el sistema no supone 16%.";
+
 function normalizarLinea(input: ConceptoFacturaInput) {
   // M11: coerción fiscal canónica (tolera "1,200.50" y cantidades decimales).
   const cantidad = parseCantidadFiscal(input.cantidad);
   const precio = parseImporteFiscal(input.precio_unitario);
-  const tipo_iva: TipoIvaConcepto = input.tipo_iva ?? "gravado_16";
+  if (!input.tipo_iva) throw new Error(MSG_TIPO_IVA_REQUERIDO);
+  const tipo_iva: TipoIvaConcepto = input.tipo_iva;
   const descripcion = normalizarDescripcionFiscal(input.descripcion);
   if (!descripcion) throw new Error("La descripción es obligatoria");
   // α.1 — clave SAT es obligatoria; ya no se autocompleta silenciosamente con

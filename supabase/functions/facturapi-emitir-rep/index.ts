@@ -19,7 +19,7 @@ import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers
 import { calcularParcialidad, resolverReferenciasEmbarque } from "./context.ts";
 import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
+import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
 import {
   MSG_REP_IMPORTES_FALTANTES,
   MSG_REP_NO_OBJETO,
@@ -147,14 +147,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const factorIvaFactura = gruposIva[0]?.factor ?? respaldo?.factor ?? "Tasa";
 
 
-  // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
-  // impuesto ⇒ bloqueo claro ANTES del claim (reintentable tras corregir).
-  const retencionesDr = calcularRetencionesDr(conceptosIva);
-  if (retencionesDr === null) {
+  // P1 · Auditoría IVA — retenciones del CFDI relacionado: un grupo por
+  // impuesto+tasa con el importe de sus renglones (ya no se bloquea la mezcla
+  // de tasas del mismo impuesto). Sin importes no se puede calcular la base:
+  // bloqueo claro ANTES del claim (reintentable tras corregir la factura).
+  const retencionesDr = resolverGruposRetencionDr(conceptosIva);
+  if (retencionesDr === "sin_importes") {
     await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_NO_SOPORTADAS })
+      .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_SIN_IMPORTES })
       .eq("id", pago.id);
-    return json({ error: "retenciones_no_soportadas", message: MSG_RETENCIONES_NO_SOPORTADAS }, 422);
+    return json({ error: "retenciones_sin_importes", message: MSG_RETENCIONES_SIN_IMPORTES }, 422);
   }
 
   // 3) Cliente

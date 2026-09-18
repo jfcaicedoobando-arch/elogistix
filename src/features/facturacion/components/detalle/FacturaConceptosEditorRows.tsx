@@ -38,11 +38,21 @@ const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   no_objeto: "No objeto",
 };
 
-function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
+/**
+ * P1 · Auditoría IVA — un renglón legacy sin `tipo_iva` NO se muestra como 16%:
+ * se marca "Por confirmar" y exige elección deliberada antes de guardar.
+ */
+export const LABEL_TRATAMIENTO_PENDIENTE = "Por confirmar";
+export const MSG_TRATAMIENTO_PENDIENTE =
+  "Este renglón no tiene tratamiento de IVA registrado. Elige el que corresponda (16%, 8%, tasa 0%, exento o no objeto) antes de guardar; el sistema no supone 16%.";
+
+function IvaBadge({ tipo }: { tipo: TipoIvaConcepto | null | undefined }) {
+  if (!tipo) return <Badge variant="outline">{LABEL_TRATAMIENTO_PENDIENTE}</Badge>;
   const variant: "default" | "secondary" | "outline" =
     tipo === "gravado_16" || tipo === "gravado_8" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
   return <Badge variant={variant}>{TIPO_IVA_SHORT[tipo]}</Badge>;
 }
+
 
 function RetBadges({ isr, iva }: { isr: number; iva: number }) {
   if (!isr && !iva) return <span className="text-body-sm text-muted-foreground">—</span>;
@@ -106,7 +116,11 @@ interface FormProps {
 
 export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) {
   const patch = (p: Partial<ConceptoFacturaInput>) => setDraft({ ...draft, ...p });
-  const tipoIva: TipoIvaConcepto = draft.tipo_iva ?? "gravado_16";
+  // P1 · Auditoría IVA — sin tratamiento guardado el selector queda vacío
+  // ("Por confirmar"): editar la descripción o el precio de una fila legacy
+  // ya no la declara 16% en silencio.
+  const tipoIva: TipoIvaConcepto | undefined = draft.tipo_iva ?? undefined;
+  const tratamientoPendiente = !tipoIva;
   // P1 · IVA — ObjetoImp 01 no declara impuestos: al elegir "No objeto" se
   // limpian las retenciones (antes quedaban ocultas y viajaban en el CFDI).
   const noObjeto = tipoIva === "no_objeto";
@@ -142,7 +156,9 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       <div className="col-span-2">
         <Label size="sm">IVA</Label>
         <Select value={tipoIva} onValueChange={(v) => patchTipoIva(v as TipoIvaConcepto)}>
-          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9" aria-label="Tratamiento de IVA">
+            <SelectValue placeholder={LABEL_TRATAMIENTO_PENDIENTE} />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">{TIPO_IVA_LABEL.gravado_16}</SelectItem>
             <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
@@ -159,11 +175,19 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         disabled={noObjeto}
         hint={MSG_NO_OBJETO_RETENCIONES}
       />
+      {tratamientoPendiente && (
+        <p className="col-span-12 text-body-sm text-destructive">{MSG_TRATAMIENTO_PENDIENTE}</p>
+      )}
       <div className="col-span-12 flex justify-end gap-1">
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
           <X className="h-4 w-4 mr-1" /> Cancelar
         </Button>
-        <Button size="sm" onClick={onSave} disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0} aria-label="Guardar">
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0 || tratamientoPendiente}
+          aria-label="Guardar"
+        >
           <Check className="h-4 w-4 mr-1" /> Guardar
         </Button>
       </div>

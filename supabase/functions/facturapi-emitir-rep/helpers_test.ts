@@ -1,6 +1,6 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
-import { calcularRetencionesDr } from "./retencionesDr.ts";
+import { resolverGruposRetencionDr } from "./retencionesDr.ts";
 
 const validCtx: PagoContext = {
   receptor: {
@@ -197,13 +197,18 @@ Deno.test("buildRepPayload emite RetencionesDR con la misma BaseDR del traslado"
   assertEquals(ret.base, 1000);
 });
 
-Deno.test("calcularRetencionesDr agrupa una tasa por impuesto y bloquea mezclas", () => {
-  assertEquals(calcularRetencionesDr([{ tasa_ret_iva: 0.04 }, { tasa_ret_iva: 0.04 }]), [
-    { tipo: "IVA", tasa: 0.04 },
+Deno.test("resolverGruposRetencionDr suma el importe de los renglones con retención", () => {
+  assertEquals(
+    resolverGruposRetencionDr([
+      { tasa_ret_iva: 0.04, total: 1000 },
+      { tasa_ret_iva: 0.04, total: 500 },
+    ]),
+    [{ tipo: "IVA", tasa: 0.04, importe: 1500 }],
+  );
+  assertEquals(resolverGruposRetencionDr([{ tasa_ret_isr: 0.0125, total: 800 }]), [
+    { tipo: "ISR", tasa: 0.0125, importe: 800 },
   ]);
-  assertEquals(calcularRetencionesDr([{ tasa_ret_isr: 0.0125 }]), [{ tipo: "ISR", tasa: 0.0125 }]);
-  assertEquals(calcularRetencionesDr([]), []);
-  assertEquals(calcularRetencionesDr([{ tasa_ret_iva: 0.04 }, { tasa_ret_iva: 0.16 }]), null);
+  assertEquals(resolverGruposRetencionDr([]), []);
 });
 
 

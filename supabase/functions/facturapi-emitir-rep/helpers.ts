@@ -60,12 +60,15 @@ export interface PagoContext {
      */
     factor_iva?: FactorIva;
     /**
-     * Ola 12 · R3P-19 — retenciones del CFDI original (tasa 0..1 por impuesto,
-     * p. ej. IVA 4% ⇒ 0.04). Se emiten como RetencionesDR con la misma BaseDR
-     * del traslado. Si la factura mezcla más de una tasa por impuesto,
-     * index.ts bloquea el timbrado con LC_REP_RETENCIONES_NO_SOPORTADAS.
+     * Retenciones del CFDI original (tasa 0..1 por impuesto, p. ej. IVA 4% ⇒
+     * 0.04). El SAT admite RetencionDR de 1 a ilimitado con su propia BaseDR.
+     *
+     * P1 · Auditoría IVA — `importe` es la suma (sin IVA) de los renglones que
+     * traen esa retención; con él la BaseDR se prorratea igual que los
+     * traslados. Sin `importe` (facturas legacy sin renglones) se conserva el
+     * comportamiento histórico: la base total del documento.
      */
-    retenciones?: Array<{ tipo: "IVA" | "ISR"; tasa: number }>;
+    retenciones?: Array<{ tipo: "IVA" | "ISR"; tasa: number; importe?: number }>;
     /** Subtotal del CFDI original; requerido para la BaseDR cuando hay retenciones. */
     subtotal_factura?: number;
     /** Total del CFDI original; requerido para la BaseDR cuando hay retenciones. */
@@ -310,13 +313,20 @@ type DrTaxes = Pick<
 export function buildTaxesDr(dr: DrTaxes): TaxesDr {
   const grupos = dr.grupos_iva ?? [];
   const taxes: TaxesDr = grupos.length > 0 ? trasladosPorGrupo(dr, grupos) : [trasladoUnico(dr)];
-  // Ola 12 · R3P-19: RetencionesDR con la BaseDR total del documento (el PAC
-  // calcula ImporteDR = base × tasa y los totales TotalRetenciones*).
-  const baseRetenciones = round2(taxes.reduce((acc, t) => acc + t.base, 0));
+  // BaseDR total del pago (sin IVA): respaldo para retenciones legacy que no
+  // traen el importe de sus renglones.
+  const baseTotal = round2(taxes.reduce((acc, t) => acc + t.base, 0));
+  // P1 · Auditoría IVA — una RetencionDR por impuesto+tasa, con BaseDR
+  // prorrateada sobre los renglones que SÍ la traen (antes se usaba la base
+  // completa del documento y la retención salía inflada).
+  const denominador = grupos.length > 0 ? denominadorDocumento(dr, grupos) : 0;
   for (const ret of dr.retenciones ?? []) {
-    if (ret.tasa > 0) {
-      taxes.push({ type: ret.tipo, rate: ret.tasa, factor: "Tasa", withholding: true, base: baseRetenciones });
-    }
+    if (!(ret.tasa > 0)) continue;
+    const importe = Number(ret.importe ?? 0);
+    const base = denominador > 0 && importe > 0
+      ? round2((dr.imp_pagado * importe) / denominador)
+      : baseTotal;
+    taxes.push({ type: ret.tipo, rate: ret.tasa, factor: "Tasa", withholding: true, base });
   }
   return taxes;
 }
