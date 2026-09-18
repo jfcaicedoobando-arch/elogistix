@@ -21,6 +21,7 @@ import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
 import {
+  MSG_REP_CONCEPTOS_ILEGIBLES,
   MSG_REP_IMPORTES_FALTANTES,
   MSG_REP_NO_OBJETO,
   MSG_REP_TRATAMIENTO_INDETERMINADO,
@@ -30,6 +31,7 @@ import {
 } from "./trasladoDr.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
+import { leerConceptosDr } from "./conceptosFacturaDr.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -105,15 +107,25 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // P1-IVA — El desglose autoritativo son los renglones de la factura. El
   // encabezado sólo se usa como respaldo para facturas antiguas sin renglones y
   // únicamente si su cociente IVA/subtotal cae exacto en una tasa del catálogo.
-  const { data: conceptosIva } = await supabase
-    .from("conceptos_factura")
-    .select("tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, total, cantidad, precio_unitario")
-    .eq("factura_id", factura.id)
-    .is("deleted_at", null);
+  const lectura = await leerConceptosDr(supabase, factura.id);
+  // P1 · Auditoría IVA — error de LECTURA ≠ factura legacy sin renglones. Si la
+  // consulta falla no se infiere nada del encabezado (se perderían las
+  // retenciones): se corta antes del claim y antes de llamar a Facturapi.
+  if (!lectura.ok) {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_REP_CONCEPTOS_ILEGIBLES })
+      .eq("id", pago.id);
+    return json(
+      { error: "conceptos_no_legibles", message: MSG_REP_CONCEPTOS_ILEGIBLES, detail: lectura.detalle },
+      503,
+    );
+  }
+  const conceptosFactura = lectura.conceptos;
+
   // P1 · Auditoría IVA — un grupo de impuestos por tratamiento, con la BaseDR
   // prorrateada por importe. Ya no se bloquea la mezcla de tasas (una PPD con
   // 16% + 0% sí puede cobrarse) y nunca se declara una tasa promedio.
-  const grupos = resolverGruposTrasladoDr(conceptosIva ?? []);
+  const grupos = resolverGruposTrasladoDr(conceptosFactura);
   // "No objeto de impuesto" (SAT 01) no es representable en el complemento de
   // pago vía Facturapi (`related_documents` no expone ObjetoImpDR): se bloquea
   // ANTES del claim en vez de declararlo como Exento (dato fiscal falso).
@@ -151,7 +163,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // impuesto+tasa con el importe de sus renglones (ya no se bloquea la mezcla
   // de tasas del mismo impuesto). Sin importes no se puede calcular la base:
   // bloqueo claro ANTES del claim (reintentable tras corregir la factura).
-  const retencionesDr = resolverGruposRetencionDr(conceptosIva);
+  const retencionesDr = resolverGruposRetencionDr(conceptosFactura);
   if (retencionesDr === "sin_importes") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_SIN_IMPORTES })

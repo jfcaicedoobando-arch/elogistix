@@ -8825,6 +8825,15 @@ export type Database = {
       }
       _saldo_factura_calc: { Args: { p_factura_id: string }; Returns: number }
       _seed_demo_limpiar_financiero: { Args: never; Returns: undefined }
+      _tasa_iva_canonica: {
+        Args: {
+          p_aplica_iva: boolean
+          p_tasa_global?: number
+          p_tasa_iva_aplicada: number
+          p_tipo_iva: string
+        }
+        Returns: number
+      }
       _tipo_iva_desde_tasa: {
         Args: { _aplica_iva: boolean; _tasa: number }
         Returns: string
