@@ -12,6 +12,8 @@ import {
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 import { CLAVES_FORMA_PAGO_SAT } from "../_shared/formaMetodoPago.ts";
 import { buildTaxesDr, round2 } from "./taxesDr.ts";
+// Re-export para los tests/llamadores que lo importan desde helpers.
+export { buildTaxesDr, round2 } from "./taxesDr.ts";
 
 
 /** Factor del impuesto trasladado (c_TipoFactor del SAT). */
