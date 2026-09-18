@@ -14,27 +14,35 @@ const linea = (extra: Record<string, unknown>) => ({
 } as never);
 
 describe("etiquetaTratamientoLinea", () => {
-  it("muestra la tasa gravada de la línea", () => {
+  it("muestra la tasa gravada de la línea con su ObjetoImp", () => {
     expect(etiquetaTratamientoLinea(linea({
       objeto_imp: "02",
       traslados: [{ impuesto: "002", base: 1000, tipo_factor: "Tasa", tasa_o_cuota: 0.16, importe: 160 }],
-    }))).toBe("16%");
+    }))).toBe("16% (ObjetoImp 02)");
   });
 
   it("distingue tasa 0%, exento y no objeto", () => {
     expect(etiquetaTratamientoLinea(linea({
       objeto_imp: "02",
       traslados: [{ impuesto: "002", base: 1000, tipo_factor: "Tasa", tasa_o_cuota: 0, importe: 0 }],
-    }))).toBe("0%");
+    }))).toBe("0% (ObjetoImp 02)");
     expect(etiquetaTratamientoLinea(linea({
       objeto_imp: "02",
       traslados: [{ impuesto: "002", base: 1000, tipo_factor: "Exento", tasa_o_cuota: null, importe: 0 }],
-    }))).toBe("Exento");
+    }))).toBe("Exento (ObjetoImp 02)");
     expect(etiquetaTratamientoLinea(linea({ objeto_imp: "01", traslados: [] }))).toBe("No objeto (01)");
+  });
+
+  it("hace visible el ObjetoImp 03/04 aunque no haya traslado de IVA", () => {
+    expect(etiquetaTratamientoLinea(linea({ objeto_imp: "03", traslados: [] })))
+      .toBe("Sin traslado de IVA (ObjetoImp 03)");
+    expect(etiquetaTratamientoLinea(linea({ objeto_imp: "04", traslados: [] })))
+      .toBe("Sin traslado de IVA (ObjetoImp 04)");
   });
 
   it("no infiere nada cuando el XML no declara el tratamiento", () => {
     expect(etiquetaTratamientoLinea(linea({}))).toBe("No declarado");
+    expect(etiquetaTratamientoLinea(linea({ traslados: [] }))).toBe("No declarado");
     expect(detalleTratamientoLinea(linea({}))).toContain("no declarado");
   });
 
