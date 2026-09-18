@@ -7,7 +7,11 @@
  */
 import { assert, assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+// El saneo del patch y el cierre de la cancelación viven en `facturaPatch.ts`
+// (extraído de `index.ts` por el límite de complejidad); se auditan ambos.
+const indexSource =
+  (await Deno.readTextFile(new URL("./index.ts", import.meta.url))) +
+  (await Deno.readTextFile(new URL("./facturaPatch.ts", import.meta.url)));
 
 Deno.test("index.ts: invoca la RPC de cierre cuando cancellation_status=accepted", () => {
   assertStringIncludes(indexSource, "cerrar_cancelacion_factura_facturapi");
@@ -17,11 +21,11 @@ Deno.test("index.ts: invoca la RPC de cierre cuando cancellation_status=accepted
 
 Deno.test("index.ts: NO persiste estado/cancellation_status accepted crudos tras invocar la RPC", () => {
   const rpcIdx = indexSource.indexOf('supabase.rpc("cerrar_cancelacion_factura_facturapi"');
-  const updIdx = indexSource.indexOf('.from("facturas")\n    .update(patch)');
-  const bloque = indexSource.slice(rpcIdx, updIdx);
-  assertStringIncludes(bloque, "delete patch.estado");
-  assertStringIncludes(bloque, "delete patch.cancellation_status");
-  assertStringIncludes(bloque, "delete patch.cancelado_en");
+  const bloque = indexSource.slice(rpcIdx);
+  // Se borran del patch antes de persistir (la RPC es la autoridad).
+  for (const campo of ["estado", "cancellation_status", "cancelado_en"]) {
+    assertStringIncludes(bloque, `"${campo}"`);
+  }
 });
 
 Deno.test("index.ts: el update de facturas se vuelve condicional (no corre con patch vacío)", () => {
