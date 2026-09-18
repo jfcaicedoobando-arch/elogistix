@@ -4,13 +4,29 @@
  * timbra sin las retenciones ISR/IVA reales.
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { leerConceptosDr } from "./conceptosFacturaDr.ts";
+import { leerConceptosDr, type ConceptoDrRow } from "./conceptosFacturaDr.ts";
 import { resolverGruposRetencionDr } from "./retencionesDr.ts";
 
-// deno-lint-ignore no-explicit-any
-function clienteFake(resultado: { data: any; error: { message: string } | null }) {
+/** Respuesta que simula el cliente Supabase (data XOR error). */
+interface RespuestaFake {
+  data: ConceptoDrRow[] | null;
+  error: { message: string } | null;
+}
+
+interface QueryFake {
+  select(cols: string): QueryFake;
+  eq(col: string, val: unknown): QueryFake;
+  is(col: string, val: unknown): Promise<RespuestaFake>;
+}
+
+interface ClienteFake {
+  llamadas: string[];
+  from(tabla: string): QueryFake;
+}
+
+function clienteFake(resultado: RespuestaFake): ClienteFake {
   const llamadas: string[] = [];
-  const q = {
+  const q: QueryFake = {
     select() { return q; },
     eq() { return q; },
     is() { llamadas.push("consulta"); return Promise.resolve(resultado); },
@@ -20,18 +36,17 @@ function clienteFake(resultado: { data: any; error: { message: string } | null }
 
 Deno.test("error de lectura: no se devuelve lista vacía, se reporta el fallo", async () => {
   const cli = clienteFake({ data: null, error: { message: "timeout de red" } });
-  // deno-lint-ignore no-explicit-any
-  const r = await leerConceptosDr(cli as any, "f1");
+  const r = await leerConceptosDr(cli, "f1");
   assertEquals(r.ok, false);
   assertEquals(r.ok === false ? r.detalle : "", "timeout de red");
 });
 
 Deno.test("consulta OK con cero filas: fallback legacy permitido", async () => {
   const cli = clienteFake({ data: [], error: null });
-  // deno-lint-ignore no-explicit-any
-  const r = await leerConceptosDr(cli as any, "f1");
+  const r = await leerConceptosDr(cli, "f1");
   assertEquals(r, { ok: true, conceptos: [] });
 });
+
 
 Deno.test("consulta OK con renglones: se conservan las retenciones", async () => {
   const cli = clienteFake({
@@ -41,8 +56,8 @@ Deno.test("consulta OK con renglones: se conservan las retenciones", async () =>
     ],
     error: null,
   });
-  // deno-lint-ignore no-explicit-any
-  const r = await leerConceptosDr(cli as any, "f1");
+  const r = await leerConceptosDr(cli, "f1");
+
   assertEquals(r.ok, true);
   const retenciones = resolverGruposRetencionDr(r.ok ? r.conceptos : []);
   // La retención se calcula sobre el renglón que la trae ($1,000), no sobre $1,500.

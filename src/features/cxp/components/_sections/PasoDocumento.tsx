@@ -30,6 +30,40 @@ interface Props {
   onVerFacturaDuplicada: (id: string) => void;
 }
 
+/** Encabezado del paso: tarjeta del buzón o banner del documento entrante. */
+function OrigenBanner({
+  enBuzon, entrante, autocarga, onVerArchivoBuzon,
+}: Pick<Props, "entrante" | "autocarga" | "onVerArchivoBuzon"> & { enBuzon: boolean }) {
+  if (enBuzon && entrante) {
+    return (
+      <DocumentoBuzonCard
+        entrante={entrante}
+        estado={autocarga.estado}
+        mensaje={autocarga.mensaje}
+        onVerArchivo={onVerArchivoBuzon}
+        onReintentar={autocarga.reintentar}
+      />
+    );
+  }
+  return (
+    <EntranteCapturaBanner
+      entrante={entrante}
+      estado={autocarga.estado}
+      mensaje={autocarga.mensaje}
+    />
+  );
+}
+
+/** Pista para cuando aún no hay partidas capturadas ni leídas del documento. */
+function AvisoSinPartidas({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <p className="rounded-md border border-dashed px-3 py-4 text-center text-body-sm text-muted-foreground">
+      Sube el documento y aquí aparecerán las partidas de la factura.
+    </p>
+  );
+}
+
 export function PasoDocumento({
   ctl, categorias, entrante, autocarga, keyRenglonSospechoso, modoBuzon,
   onVerArchivoBuzon, onVerFacturaDuplicada,
@@ -41,21 +75,13 @@ export function PasoDocumento({
 
   return (
     <div className="space-y-5 min-w-0">
-      {enBuzon && entrante ? (
-        <DocumentoBuzonCard
-          entrante={entrante}
-          estado={autocarga.estado}
-          mensaje={autocarga.mensaje}
-          onVerArchivo={onVerArchivoBuzon}
-          onReintentar={autocarga.reintentar}
-        />
-      ) : (
-        <EntranteCapturaBanner
-          entrante={entrante}
-          estado={autocarga.estado}
-          mensaje={autocarga.mensaje}
-        />
-      )}
+      <OrigenBanner
+        enBuzon={enBuzon}
+        entrante={entrante}
+        autocarga={autocarga}
+        onVerArchivoBuzon={onVerArchivoBuzon}
+      />
+
 
       <CfdiDuplicadoAlert factura={ctl.cfdiDuplicado} onVerFactura={onVerFacturaDuplicada} />
 
@@ -115,11 +141,8 @@ export function PasoDocumento({
         onDuplicar={ctl.conceptosManuales.duplicar}
       />
 
-      {sinPartidas && (enBuzon || ctl.mode !== "manual") && (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-body-sm text-muted-foreground">
-          Sube el documento y aquí aparecerán las partidas de la factura.
-        </p>
-      )}
+      <AvisoSinPartidas visible={sinPartidas && (enBuzon || ctl.mode !== "manual")} />
+
     </div>
   );
 }

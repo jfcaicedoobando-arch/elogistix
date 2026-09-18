@@ -14,7 +14,12 @@ vi.mock("@/features/cotizacion/hooks/useProductosCatalogo", () => ({
   tasaDesdeTipoIva: () => 0.16,
 }));
 vi.mock("@/lib/contexts/AuthContext", () => ({ useAuth: () => ({ organizationId: "org-1" }) }));
-vi.mock("@/features/configuracion", () => ({ useIvaFronteraHabilitada: () => false }));
+// ProductoServicioSelect importa el hook por su módulo exacto: mockear el
+// barril no interceptaba nada y la tabla reventaba sin QueryClientProvider.
+vi.mock("@/features/configuracion/hooks/useIvaFrontera", () => ({
+  useIvaFronteraHabilitada: () => false,
+}));
+
 
 const fila: FilaCostoLocal = {
   concepto: "Flete marítimo",

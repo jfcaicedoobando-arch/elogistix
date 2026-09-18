@@ -150,7 +150,39 @@ export function validateContext(ctx: FacturaContext): ValidationIssue[] {
   return issues;
 }
 
+type TipoIvaLinea = NonNullable<ConceptoInterno["tipo_iva"]>;
+type LineaTax = FacturapiPayload["items"][number]["product"]["taxes"][number];
+
+/** Tratamiento efectivo del renglón (sin inferir más allá del legado tasa 0). */
+function resolverTipoIvaLinea(c: ConceptoInterno): TipoIvaLinea {
+  return c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+}
+
+/** Tasa canónica del traslado según el tratamiento declarado. */
+function tasaTrasladoLinea(c: ConceptoInterno, tipo: TipoIvaLinea): number {
+  if (tipo === "tasa_0") return 0;
+  return c.tasa_iva ?? (tipo === "gravado_8" ? 0.08 : 0.16);
+}
+
+/**
+ * Nodo de impuestos del renglón: traslado + retenciones (withholding: true).
+ * P1 · IVA — con ObjetoImp 01 el arreglo queda VACÍO: la combinación con
+ * retenciones se bloquea en `validateContext` y aquí nunca se agrega nada.
+ */
+function buildTaxesLinea(c: ConceptoInterno, tipo: TipoIvaLinea, noObjeto: boolean): LineaTax[] {
+  if (noObjeto) return [];
+  const taxes: LineaTax[] = tipo === "exento"
+    ? [{ type: "IVA", rate: 0, factor: "Exento" }]
+    : [{ type: "IVA", rate: tasaTrasladoLinea(c, tipo), factor: "Tasa" }];
+  const retIsr = Number(c.tasa_ret_isr ?? 0);
+  const retIva = Number(c.tasa_ret_iva ?? 0);
+  if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
+  if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
+  return taxes;
+}
+
 export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
+
   const payload: FacturapiPayload = {
     type: "I",
     use: ctx.uso_cfdi,
@@ -164,28 +196,11 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       address: { zip: ctx.receptor.address.zip.trim() },
     },
     items: ctx.conceptos.map((c) => {
-      const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
-      type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
       // ObjetoImp SAT: 01 = "No objeto de impuesto" (sin traslado de IVA, ni
       // tasa 0 ni factor Exento); 02 = sí objeto. Facturapi lo recibe como
       // `taxability` dentro de `product` (LineItem.product).
+      const tipo = resolverTipoIvaLinea(c);
       const noObjeto = esLineaNoObjeto({ tipo_iva: tipo });
-      const taxes: Tax[] = noObjeto
-        ? []
-        : tipo === "exento"
-          ? [{ type: "IVA", rate: 0, factor: "Exento" }]
-          : [{
-              type: "IVA",
-              rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? (tipo === "gravado_8" ? 0.08 : 0.16)),
-              factor: "Tasa",
-            }];
-      // Ola 3 — retenciones por concepto (withholding: true).
-      // P1 · IVA — con ObjetoImp 01 el arreglo de impuestos queda VACÍO: la
-      // combinación se bloquea en `validateContext`, y aquí nunca se agrega.
-      const retIsr = noObjeto ? 0 : Number(c.tasa_ret_isr ?? 0);
-      const retIva = noObjeto ? 0 : Number(c.tasa_ret_iva ?? 0);
-      if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
-      if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
       return {
         quantity: c.cantidad,
         product: {
@@ -195,13 +210,14 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
           price: c.precio_unitario,
           unit_key: c.clave_unidad ?? "E48",
           unit_name: c.unidad ?? "Unidad de servicio",
-          tax_included: false,
+          tax_included: false as const,
           // Sólo se envía cuando cambia el default de Facturapi ("02").
           ...(noObjeto ? { taxability: "01" as const } : {}),
-          taxes,
+          taxes: buildTaxesLinea(c, tipo, noObjeto),
         },
       };
     }),
+
   };
   if (ctx.serie) payload.series = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;

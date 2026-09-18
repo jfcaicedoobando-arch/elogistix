@@ -6,6 +6,8 @@
 import { useRef } from "react";
 import { Upload, FileText, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+
 import { cn } from "@/lib/utils";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 import { useCargaCfdi } from "@/features/cxp/hooks/useCargaCfdi";
@@ -28,19 +30,23 @@ function TipoAlert({ parsed }: { parsed: CfdiParsedResponse | null }) {
   const tipo = parsed.cfdi.tipo_comprobante;
   const esNc = tipo === "E";
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-md border px-3 py-2 text-body",
-        esNc ? "bg-success/10 border-success/30 text-success" : "bg-warning/10 border-warning/30 text-warning",
-      )}
-    >
-      {esNc ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-      {esNc
-        ? "CFDI detectado como nota de crédito. Los campos fueron prellenados."
-        : `El CFDI es tipo "${TIPO_LABEL[tipo] || tipo}". Verifica que realmente sea una nota de crédito antes de guardar.`}
-    </div>
+    <Alert variant={esNc ? "success" : "warning"} className="px-3 py-2">
+      <div className={cn("flex items-center gap-2 text-body", esNc ? "text-success" : "text-warning")}>
+        {esNc ? (
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+        ) : (
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+        )}
+        <span>
+          {esNc
+            ? "CFDI detectado como nota de crédito. Los campos fueron prellenados."
+            : `El CFDI es tipo "${TIPO_LABEL[tipo] || tipo}". Verifica que realmente sea una nota de crédito antes de guardar.`}
+        </span>
+      </div>
+    </Alert>
   );
 }
+
 
 interface XmlDropProps {
   xml: File | null;
