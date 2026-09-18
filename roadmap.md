@@ -19,3 +19,5 @@
 - [x] Auditoría IVA P1 (3 hallazgos, commit 6ce07be): "No objeto" (SAT 01) sin retenciones en UI, factura y NC (payload con `taxes` vacío); REP prorratea un grupo de impuestos por tratamiento en `related_documents[].taxes` (una PPD 16% + 0%/Exento/8% ya se cobra, sin tasas promedio) y bloquea sólo cuando faltan importes o el tratamiento es indeterminado; PPD + "No objeto" se impide antes de timbrar (no hay ruta soportada para `ObjetoImpDR = 01`, documentado en `docs/facturapi-go-live.md`).
 - [x] Auditoría IVA P1 (3 hallazgos, commit 8d2644b): REP declara cada retención (ISR/IVA, varias tasas) con la base de sus propios renglones y la prorratea por pago, bloqueando sólo si falta el importe del renglón; `resolverTasaConcepto` y `consolidar_proformas` usan una sola tasa canónica por `tipo_iva` (8% y 0% ya no caen a la tasa general cuando falta la tasa numérica); los renglones legacy sin tratamiento quedan en "Por confirmar" y exigen elección explícita antes de guardar (nunca se supone 16%).
 
+
+- [x] P2 IVA: seis ajustes de claridad por renglón; migración pendiente; pruebas y limitaciones reportadas.

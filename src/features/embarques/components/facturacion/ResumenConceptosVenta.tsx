@@ -13,6 +13,8 @@ import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { TratamientoIvaBadge } from "./TratamientoIvaBadge";
 
 import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
 import { sumarConceptosVentaPorMoneda } from "./resumenConceptosVenta.helpers";
@@ -73,6 +75,11 @@ export function ResumenConceptosVenta({
       facturado: sumarConceptosVentaPorMoneda(conceptosFacturados, tasaIva),
     };
   }, [conceptosPendientes, conceptosEnProforma, conceptosFacturados, tasaIva]);
+  const gruposConIva = useMemo(() => ({
+    pendiente: conceptosPendientes.some((c) => resolverTasaConcepto(c, tasaIva) > 0),
+    enProforma: conceptosEnProforma.some((c) => resolverTasaConcepto(c, tasaIva) > 0),
+    facturado: conceptosFacturados.some((c) => resolverTasaConcepto(c, tasaIva) > 0),
+  }), [conceptosPendientes, conceptosEnProforma, conceptosFacturados, tasaIva]);
 
   return (
     <Card>
@@ -145,9 +152,7 @@ export function ResumenConceptosVenta({
                       return (
                         <>
                           {c.descripcion}
-                          {c.moneda === "USD" && c.aplica_iva && (
-                            <Badge variant="warning" className="ml-2 text-body-sm">+IVA</Badge>
-                          )}
+                          <TratamientoIvaBadge concepto={c} />
                         </>
                       );
                     },
@@ -173,6 +178,7 @@ export function ResumenConceptosVenta({
               pendientesCount={conceptosPendientes.length}
               enProformaCount={conceptosEnProforma.length}
               facturadosCount={conceptosFacturados.length}
+              gruposConIva={gruposConIva}
             />
           </>
         )}

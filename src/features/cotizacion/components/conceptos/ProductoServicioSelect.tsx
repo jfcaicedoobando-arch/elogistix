@@ -16,9 +16,9 @@
  *  - CTA "Crear concepto": alta rápida sin salir del wizard.
  */
 import { useState } from "react";
-import { Check, ChevronsUpDown, AlertTriangle, PenLine, Plus, Package } from "lucide-react";
+import { ChevronsUpDown, AlertTriangle, PenLine, Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandInput, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -26,7 +26,8 @@ import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizaci
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import type { AppRole } from "@/types/appRole";
-import { TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
+import { useIvaFronteraHabilitada } from "@/features/configuracion/hooks/useIvaFrontera";
+import { ProductoServicioOptions } from "./ProductoServicioOptions";
 
 /**
  * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
@@ -90,6 +91,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
   const { organizationId } = useOrgActiva();
   const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [creando, setCreando] = useState(false);
@@ -153,29 +155,12 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                   <CommandEmpty className="p-0">
                     <div className="p-3 text-body text-muted-foreground">Sin coincidencias.</div>
                   </CommandEmpty>
-                  <CommandGroup>
-                    {productos.map((p) => (
-                      <CommandItem
-                        key={p.id}
-                        value={p.nombre}
-                        onSelect={() => { onSelect(p); cerrarYResetear(); }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            seleccionado?.id === p.id ? "opacity-100" : "opacity-0",
-                          )}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium">{p.nombre}</div>
-                          <div className="text-label text-muted-foreground">
-                            SAT {p.clave_sat} · {p.clave_unidad_sat} ·{" "}
-                            {TIPO_IVA_LABEL_CORTO[p.tipo_iva]}
-                          </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                  <ProductoServicioOptions
+                    productos={productos}
+                    seleccionadoId={seleccionado?.id}
+                    fronteraHabilitada={fronteraHabilitada}
+                    onSelect={(producto) => { onSelect(producto); cerrarYResetear(); }}
+                  />
                 </>
               )}
             </CommandList>

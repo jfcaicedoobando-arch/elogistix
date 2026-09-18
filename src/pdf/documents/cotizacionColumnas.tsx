@@ -11,6 +11,7 @@ import { calcularTotales } from "@/generators/cotizacion/conceptosTables";
 import { styles } from "../theme/styles";
 import type { PdfColumn } from "../components/DataTable";
 import type { TotalesMoneda } from "../components/TotalesBox";
+import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 
 /**
  * v13.823.77: dentro de las tablas el código de moneda ya está en el título
@@ -37,10 +38,9 @@ function columnasIva(moneda: string, tasaIva: number): PdfColumn<ConceptoVentaCo
 export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
-      render: (r) => {
-        const tasa = resolverTasaConcepto(r, tasaIva);
-        return tasa > 0 ? `${r.descripcion}  (+IVA ${(tasa * 100).toFixed(0)}%)` : r.descripcion;
-      } },
+      render: (r) => r.descripcion },
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+      render: (r) => etiquetaTratamientoFila(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
@@ -58,6 +58,8 @@ export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<Concept
 export function columnasMXN(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+      render: (r) => etiquetaTratamientoFila(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },

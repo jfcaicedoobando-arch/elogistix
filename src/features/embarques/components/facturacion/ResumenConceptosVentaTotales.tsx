@@ -21,6 +21,11 @@ interface Props {
   pendientesCount: number;
   enProformaCount: number;
   facturadosCount: number;
+  gruposConIva: {
+    pendiente: boolean;
+    enProforma: boolean;
+    facturado: boolean;
+  };
 }
 
 interface ColumnaProps {
@@ -31,9 +36,10 @@ interface ColumnaProps {
   badgeClass: string;
   icon: React.ReactNode;
   emptyText: string;
+  incluyeIva: boolean;
 }
 
-function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, emptyText }: ColumnaProps) {
+function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, emptyText, incluyeIva }: ColumnaProps) {
   const vacio = total.totalMxn === 0 && total.totalUsd === 0;
   return (
     <div className={`rounded-md border p-3 ${cardClass}`}>
@@ -41,7 +47,9 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
         {icon}
         <div>
           <div className="text-body font-semibold">{titulo}</div>
-          <div className="text-2xs text-muted-foreground">Total c/ IVA</div>
+          <div className="text-2xs text-muted-foreground">
+            {incluyeIva ? "Total · IVA incluido" : "Total"}
+          </div>
         </div>
         <Badge className={`ml-auto ${badgeClass}`}>{count}</Badge>
       </div>
@@ -59,7 +67,7 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
 }
 
 export function ResumenConceptosVentaTotales({
-  totales, pendientesCount, enProformaCount, facturadosCount,
+  totales, pendientesCount, enProformaCount, facturadosCount, gruposConIva,
 }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border-t bg-muted/30">
@@ -71,6 +79,7 @@ export function ResumenConceptosVentaTotales({
         badgeClass="bg-secondary text-secondary-foreground"
         icon={<Clock className="h-4 w-4 text-muted-foreground" />}
         emptyText="Sin conceptos por proformar"
+        incluyeIva={gruposConIva.pendiente}
       />
       <ColumnaTotal
         titulo="Proforma generada"
@@ -80,6 +89,7 @@ export function ResumenConceptosVentaTotales({
         badgeClass="bg-info/15 [color:hsl(var(--info))] border-info/30"
         icon={<FileText className="h-4 w-4 [color:hsl(var(--info))]" />}
         emptyText="Sin proformas generadas"
+        incluyeIva={gruposConIva.enProforma}
       />
       <ColumnaTotal
         titulo="Facturado"
@@ -89,6 +99,7 @@ export function ResumenConceptosVentaTotales({
         badgeClass="bg-success/15 [color:hsl(var(--success))] border-success/30"
         icon={<CheckCircle2 className="h-4 w-4 text-success" />}
         emptyText="Sin facturación emitida"
+        incluyeIva={gruposConIva.facturado}
       />
     </div>
   );

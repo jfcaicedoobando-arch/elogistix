@@ -4,6 +4,7 @@
  * accesibles con clave anon (sin login del cliente).
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { TipoIvaSat } from "@/lib/financial/tipoIvaSat";
 
 export type EstadoLink = "activo" | "expirado" | "respondida";
 
@@ -14,6 +15,9 @@ export interface PortalProformaConcepto {
   precio_unitario: number | null;
   importe: number | null;
   moneda: string | null;
+  tipo_iva?: TipoIvaSat | null;
+  tasa_iva_aplicada?: number | null;
+  aplica_iva?: boolean | null;
 }
 
 export interface PortalProformaData {

@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { type PdfColumn } from "../components/DataTable";
 import { formatearDescripcionConcepto } from "./proformaShared";
+import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 
 export type ConceptoVenta = Tables<"conceptos_venta"> & {
   embarque_contenedores?: {
@@ -43,6 +44,8 @@ function columnasBase(moneda: "USD" | "MXN"): PdfColumn<ConceptoVenta>[] {
   return [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+      render: (r) => etiquetaTratamientoFila(r) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.precio_unitario), moneda) },
