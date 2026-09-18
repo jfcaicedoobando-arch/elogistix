@@ -27,7 +27,7 @@ const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
 interface ReqBody { nota_credito_id?: string }
 
-interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string; status?: string }
 
 async function createNcInvoice(
   supabase: ReturnType<typeof createClient>,
@@ -56,11 +56,16 @@ async function createNcInvoice(
         entidadId: meta.notaCreditoId,
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return { ok: false, body: { error: "facturapi_timeout", message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — no reintentes el timbrado directamente.`, timeout_ms: err.timeoutMs }, status: 504 };
+      return { ok: false, body: { error: "facturapi_timeout", message: `${err.message}. No reintentes el timbrado: usa 'Recuperar timbrado' para sincronizar el intento en curso.`, timeout_ms: err.timeoutMs }, status: 504 };
+    }
+    const { status, detail } = describeFacturapiError(err);
+    // P0-B.4: llave de idempotencia en uso ⇒ reconciliar, jamás crear otra NC.
+    if (esIdempotencyKeyEnUso(detail, status)) {
+      const r = cuerpoIdempotencyEnUsoNc(meta.claimTag);
+      return { ok: false, body: r.body, status: r.status };
     }
     // Error definitivo de FacturAPI (no timbró): liberar el claim para reintentar.
     await releaseClaim();
-    const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: meta.organizationId,
       usuarioId: meta.userId,
