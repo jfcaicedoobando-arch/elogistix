@@ -12,11 +12,10 @@ import {
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 import {
   esLineaNoObjeto,
-  MSG_NO_OBJETO_PPD,
   MSG_NO_OBJETO_RETENCIONES,
-  ppdIncompatibleNoObjeto,
   retencionesIncompatiblesNoObjeto,
 } from "../_shared/noObjetoFiscal.ts";
+
 
 export interface ConceptoInterno {
   descripcion: string;
