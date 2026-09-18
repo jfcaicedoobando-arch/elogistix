@@ -43,7 +43,7 @@ export function TratamientoIvaPorDefinir({ onTipoIvaChange }: Props) {
             <SelectItem key={o.value} value={o.value}>
               <span className="flex flex-col">
                 <span>{o.label}</span>
-                <span className="text-label text-muted-foreground">{TIPO_IVA_AYUDA[o.value]}</span>
+                <span className="text-xs text-muted-foreground">{TIPO_IVA_AYUDA[o.value]}</span>
               </span>
             </SelectItem>
           ))}
