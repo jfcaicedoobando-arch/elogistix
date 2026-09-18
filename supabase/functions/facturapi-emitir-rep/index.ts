@@ -261,6 +261,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       retenciones: retencionesDr,
       subtotal_factura: Number(factura.subtotal ?? 0),
       total_factura: Number(factura.total ?? 0),
+      hay_no_objeto: hayNoObjeto,
+      objeto_imp_dr: objetoImpDr,
+      importe_no_objeto: importeNoObjetoDr,
     },
     referencias: refs,
   };
@@ -288,10 +291,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
   // deduplica por external_id; es sólo un campo de búsqueda).
   payload.external_id = claimTag;
+  // Facturas con renglones "no objeto": el complemento viaja como XML armado por
+  // nosotros (único camino que admite ObjetoImpDR). El resto del comprobante y
+  // toda la aritmética de bases/tasas son idénticos.
+  const payloadFinal = requiereXmlManual(ctx.documento_relacionado)
+    ? conComplementoXmlManual(payload, ctx)
+    : (payload as unknown as Record<string, unknown>);
 
   const resultado = await timbrarRep({
     facturapi,
-    payload: payload as unknown as Record<string, unknown>,
+    payload: payloadFinal,
     supabase,
     pagoId: pago.id,
     organizationId: pago.organization_id,
