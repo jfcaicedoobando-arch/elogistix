@@ -90,3 +90,40 @@ export const MSG_IDEMPOTENCY_EN_USO =
  * LIBERACIÓN exige superar esta ventana.
  */
 export const MIN_EDAD_LIBERACION_MINUTOS = 60;
+
+/** Cliente mínimo para persistir el pendiente sin castear todo el SDK. */
+interface DbPendiente {
+  from: (t: string) => {
+    update: (p: Record<string, unknown>) => {
+      eq: (c: string, v: string) => {
+        eq: (c: string, v: string) => PromiseLike<{ error: { message: string } | null }>;
+      };
+    };
+  };
+}
+
+/**
+ * Persiste el pendiente SIN tocar las columnas que la UI lee como CFDI
+ * timbrado: sólo el id remoto pendiente + su marca de tiempo, y sólo si
+ * seguimos poseyendo el claim (`claimCol = claimTag`).
+ */
+export async function marcarTimbradoPendiente(args: {
+  supabase: DbPendiente;
+  tabla: string;
+  id: string;
+  claimCol: string;
+  claimTag: string;
+  pendienteIdCol: string;
+  pendienteAtCol: string;
+  pendienteId: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await args.supabase
+    .from(args.tabla)
+    .update({
+      [args.pendienteIdCol]: args.pendienteId,
+      [args.pendienteAtCol]: new Date().toISOString(),
+    })
+    .eq("id", args.id)
+    .eq(args.claimCol, args.claimTag);
+  return error ? { ok: false, error: error.message } : { ok: true };
+}
