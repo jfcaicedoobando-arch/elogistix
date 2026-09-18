@@ -108,9 +108,8 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     const clasif = clasificarCoherenciaIva({
       tipo_iva: c.tipo_iva ?? null,
       tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
-      // P2 · Auditoría fiscal — el interruptor legado entra a la regla: un
-      // renglón "gravado 16%" con el IVA apagado se bloquea, no se serializa.
-      aplica_iva: c.aplica_iva ?? null,
+      // `conceptos_factura` no tiene `aplica_iva` (ver ConceptoRow): la regla
+      // compartida decide sólo con tratamiento canónico + tasa.
     });
     if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
     return {
