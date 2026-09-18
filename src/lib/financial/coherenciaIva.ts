@@ -117,24 +117,18 @@ function clasificarGravado(
 }
 
 /** Renglones legados: sin `tipo_iva` guardado. */
-function clasificarLegado(
-  tasaNum: number | null,
-  flag: boolean | null | undefined,
-  tasaGravadoDefault: number,
-): ResultadoCoherenciaIva {
-  if (flag === false && tasaNum != null && tasaNum > 0) {
-    return {
-      estado: "ambiguo",
-      tipo: "exento",
-      tasa: 0,
-      motivo:
-        "no tiene tratamiento fiscal registrado: el IVA está desactivado pero conserva una tasa distinta de cero, así que no se puede determinar si es tasa 0%, exento o no objeto",
-    };
-  }
+function clasificarLegado(): ResultadoCoherenciaIva {
+  // P1-IVA (ajuste residual): un renglón SIN `tipo_iva` reconocido es AMBIGUO
+  // siempre, sin importar tasa ni flag. Antes se resolvía por `tasa`/`flag`
+  // (tasa 0 → tasa_0, IVA apagado → exento); eso era inferir el tratamiento
+  // SAT, justo lo que el lote prohíbe. `tipo`/`tasa` NO son confiables aquí:
+  // sólo existen para cumplir el contrato del tipo de retorno.
   return {
-    estado: "ok",
-    tipo: tipoIvaDesdeLegacy(flag, tasaNum),
-    tasa: tasaNum != null ? tasaNum : flag ? tasaGravadoDefault : 0,
+    estado: "ambiguo",
+    tipo: "gravado_16",
+    tasa: 0,
+    motivo:
+      "no tiene tratamiento fiscal registrado (tasa 0%, exento, no objeto o gravado), así que no se puede determinar cómo declararlo ante el SAT",
   };
 }
 
