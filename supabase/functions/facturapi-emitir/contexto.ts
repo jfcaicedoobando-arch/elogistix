@@ -103,31 +103,10 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
   // omisión. Si el tratamiento explícito y la tasa se contradicen (o el
   // renglón legado es ambiguo), se bloquea el timbrado con un mensaje
   // accionable en vez de emitir un importe distinto al aprobado.
-  const bloqueos: string[] = [];
-  const conceptosResueltos = (conceptos ?? []).map((c) => {
-    const clasif = clasificarCoherenciaIva({
-      tipo_iva: c.tipo_iva ?? null,
-      tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
-      // `conceptos_factura` no tiene `aplica_iva` (ver ConceptoRow): la regla
-      // compartida decide sólo con tratamiento canónico + tasa.
-    });
-    if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
-    return {
-      descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
-      clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
-      tipo_iva: clasif.tipo,
-      tasa_iva: clasif.tasa,
-      tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
-      tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
-    };
-  });
-  if (bloqueos.length > 0) {
-    return jsonResponse({
-      error: "tipo_iva_indeterminado",
-      message: bloqueos.join(" "),
-      issues: bloqueos,
-    }, 422);
-  }
+  const resueltos = resolverConceptosFiscales(conceptos ?? []);
+  if (resueltos instanceof Response) return resueltos;
+  const conceptosResueltos = resueltos;
+
 
   const cuadreFiscal = validarCuadreFiscal(conceptosResueltos, factura);
   if (cuadreFiscal) return cuadreFiscal;
