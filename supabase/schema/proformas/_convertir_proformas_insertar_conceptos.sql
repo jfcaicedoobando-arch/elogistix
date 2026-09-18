@@ -6,6 +6,8 @@
 -- CFDI como 16%.
 -- B16 (v13.823.379): `aplica_iva = false` manda sobre una tasa legacy stale
 -- (p. ej. 0.16): la línea se persiste exenta y con tasa NULL.
+-- SAT 01 (20260918000100): si el origen trae `tipo_iva` explícito, ése manda;
+-- 'no_objeto' NO es inferible desde la tasa y viaja sin tasa de traslado.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
