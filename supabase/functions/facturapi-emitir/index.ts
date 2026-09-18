@@ -60,9 +60,20 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     return json({ error: "forbidden", message: "Tu rol no tiene permiso para timbrar facturas de esta organización." }, 403);
   }
 
+  // El SAT certifica con la fecha del timbre: si el borrador quedó fechado otro
+  // día se realinea a hoy (y el trigger del DOF recalcula el T/C) en vez de
+  // rechazar el timbrado. Corre ANTES de las validaciones para que éstas vean
+  // la fila ya actualizada.
+  const realineada = await realinearFechaEmision(
+    supabase, factura as FacturaRow, ESTADOS_FACTURA_TIMBRABLES,
+    { id: userData.user.id, email: userData.user.email ?? "" },
+  );
+  if (realineada instanceof Response) return realineada;
+  const facturaVigente = realineada;
+
   // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,
   // todo ANTES de credenciales/contexto/claim/PAC.
-  const previos = await validarFacturaTimbrable(supabase, factura as FacturaRow, userData.user.id);
+  const previos = await validarFacturaTimbrable(supabase, facturaVigente, userData.user.id);
   if (previos) return previos;
 
   // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
