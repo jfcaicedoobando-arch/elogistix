@@ -7,11 +7,13 @@
  *    impuestos para ese concepto. Por eso un renglón no objeto no puede llevar
  *    retenciones de ISR ni de IVA (antes se conservaban ocultas y el payload
  *    salía con `taxability:"01"` y un arreglo de impuestos no vacío).
- * 2) LIMITACIÓN DE LA INTEGRACIÓN (no del SAT): el Anexo 29 de la RMF sí
+ * 2) LIMITACIÓN DE LA INTEGRACIÓN, NO DE LA EMISIÓN: el Anexo 29 de la RMF
  *    contempla ObjetoImpDR 01 en el complemento de pago (sin nodo ImpuestosDR),
- *    pero la API de Facturapi no expone ese campo en `related_documents` (sólo
- *    `taxes`), así que una factura PPD con un renglón no objeto se quedaría sin
- *    REP al cobrarse. Se bloquea el PPD en vez de falsear "Exento" o "Tasa 0".
+ *    pero la referencia pública de Facturapi no documenta ese campo en
+ *    `related_documents`. Facturapi confirmó que PPD es del CFDI completo y que
+ *    `taxability` es por concepto, así que la factura PPD con renglones no
+ *    objeto SÍ se emite; lo único que puede quedar pendiente es el REP del
+ *    cobro, y eso se avisa (no se bloquea) y nunca se simula como Exento.
  */
 
 export const MSG_NO_OBJETO_RETENCIONES =
@@ -19,12 +21,15 @@ export const MSG_NO_OBJETO_RETENCIONES =
   "la guía de llenado del SAT indica que ese renglón no debe declarar impuestos. Quita la retención o " +
   "cambia el tratamiento fiscal del concepto.";
 
-export const MSG_NO_OBJETO_PPD =
-  "Limitación actual de nuestra integración de timbrado (no es una prohibición del SAT): una factura con " +
-  "conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01) no puede emitirse como PPD, porque el proveedor " +
-  "de timbrado no expone el campo ObjetoImpDR del complemento de pago y el cobro se quedaría sin REP. " +
-  "Emítela como PUE o revisa el tratamiento fiscal del concepto con Contabilidad (nunca cambiarlo a " +
-  "Exento ni Tasa 0% por conveniencia).";
+/**
+ * Advertencia NO bloqueante: la factura PPD con renglones no objeto se emite
+ * normalmente; el riesgo está en el complemento de pago del cobro posterior.
+ */
+export const AVISO_NO_OBJETO_PPD_REP =
+  "Aviso: esta factura es PPD y tiene conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01). La emisión " +
+  "es válida y se hace normalmente; sin embargo, nuestro proveedor de timbrado no documenta el campo " +
+  "ObjetoImpDR del complemento de pago, así que al registrar el cobro el REP puede quedar en error y " +
+  "requerir seguimiento con Contabilidad. Nunca se cambiará el tratamiento a Exento ni a Tasa 0%.";
 
 export interface LineaNoObjeto {
   tipo_iva?: string | null;
@@ -57,8 +62,11 @@ export function hayLineaNoObjeto(lineas: readonly LineaNoObjeto[] | null | undef
   return (lineas ?? []).some(esLineaNoObjeto);
 }
 
-/** `true` cuando el método de pago PPD es inviable por un renglón no objeto. */
-export function ppdIncompatibleNoObjeto(
+/**
+ * `true` cuando conviene ADVERTIR (no bloquear) por el REP: método PPD con al
+ * menos un renglón no objeto. La emisión de la factura no se detiene.
+ */
+export function ppdConNoObjetoRequiereAviso(
   metodoPago: string | null | undefined,
   lineas: readonly LineaNoObjeto[] | null | undefined,
 ): boolean {
