@@ -5,7 +5,9 @@
  * la celda ambigua que mostraba "IEPS" o "Retenciones" en el mismo lugar.
  * v13.789.0 — La cifra principal es el SUBTOTAL (sin impuestos): todo el cuadre
  * de costos del ERP (barra de conceptos y trigger `_cxp_validar_aprobacion`)
- * corre sobre esa base. El total con IVA queda como referencia secundaria.
+ * corre sobre esa base. El total del documento (subtotal + IVA + IEPS −
+ * retenciones) queda como referencia secundaria: ya no se llama "Total con IVA"
+ * porque también incluye IEPS y descuenta retenciones.
  */
 
 import { ChevronDown } from "lucide-react";
@@ -52,7 +54,7 @@ export function TotalesChipDesglose({
             {formatCurrency(subtotal, moneda)}
           </span>
           <span className="block text-label tabular-nums leading-tight text-muted-foreground">
-            Total con IVA {formatCurrency(total, moneda)}
+            Total del documento {formatCurrency(total, moneda)}
           </span>
         </button>
       </PopoverTrigger>
@@ -67,8 +69,11 @@ export function TotalesChipDesglose({
           <Renglon label="Retenciones" value={`− ${formatCurrency(retenciones, moneda)}`} />
         )}
         <div className="border-t pt-1.5">
-          <Renglon label={`Total con IVA ${moneda}`} value={formatCurrency(total, moneda)} />
+          <Renglon label={`Total del documento ${moneda}`} value={formatCurrency(total, moneda)} />
         </div>
+        <p className="text-label text-muted-foreground">
+          Subtotal + IVA{ieps > 0 ? " + IEPS" : ""}{retenciones > 0 ? " − retenciones" : ""}.
+        </p>
         <p className="border-t pt-1.5 text-label text-muted-foreground">
           Las conciliaciones de costo se hacen sobre el subtotal (sin impuestos).
         </p>
