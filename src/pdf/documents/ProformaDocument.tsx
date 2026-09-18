@@ -1,5 +1,9 @@
 import { Document, Page, Text } from "@react-pdf/renderer";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import {
+  AVISO_IVA_POR_CONFIRMAR,
+  hayLineasIvaPorConfirmar,
+} from "@/lib/financial/lineasPorConfirmarIva";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { TotalesBox } from "../components/TotalesBox";
@@ -80,6 +84,12 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           multiContenedor={multiContenedor}
           mostrarSubtituloMoneda={multiMoneda}
         />
+
+        {/* P1 · Auditoría IVA: si algún renglón sigue sin clasificar, el total
+            impreso es estimado y se dice explícitamente. */}
+        {hayPorConfirmar ? (
+          <Text style={[styles.smallNote, { marginTop: 6 }]}>{AVISO_IVA_POR_CONFIRMAR}</Text>
+        ) : null}
 
         {/* La caja de totales es indivisible (wrap=false) y sólo salta de
             página si realmente no cabe completa. */}
