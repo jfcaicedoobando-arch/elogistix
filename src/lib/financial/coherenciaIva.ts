@@ -9,9 +9,9 @@
  *  - Una línea gravada con el IVA apagado (o con una tasa que no corresponde a
  *    su tipo) es INCOHERENTE: no se corrige a la callada, se bloquea el
  *    timbrado con un mensaje accionable.
- *  - Una línea legada SIN `tipo_iva` cuyo flag y tasa se contradicen es
- *    AMBIGUA: no se adivina el tratamiento y tampoco se impide editarla; sólo
- *    se bloquea emitir CFDI con ella.
+ *  - Una línea SIN `tipo_iva` reconocido es AMBIGUA SIEMPRE (cualquier tasa o
+ *    flag): no se adivina el tratamiento y tampoco se impide editarla; sólo se
+ *    bloquea emitir CFDI con ella.
  *
  * Espejo Deno (mismas reglas) en `supabase/functions/_shared/coherenciaIva.ts`.
  */
@@ -19,7 +19,6 @@ import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
   TASA_IVA_FRONTERA_MX,
   esTipoIvaSat,
-  tipoIvaDesdeLegacy,
   type TipoIvaSat,
 } from "@/lib/financial/tipoIvaSat";
 
@@ -144,7 +143,7 @@ export function clasificarCoherenciaIva(
   const tasaNum = tasa != null && Number.isFinite(Number(tasa)) ? Number(tasa) : null;
   const flag = fila.aplica_iva;
 
-  if (!esTipoIvaSat(fila.tipo_iva)) return clasificarLegado(tasaNum, flag, tasaGravadoDefault);
+  if (!esTipoIvaSat(fila.tipo_iva)) return clasificarLegado();
 
   const tipo = fila.tipo_iva;
   if (tipo === "no_objeto" || tipo === "exento" || tipo === "tasa_0") {

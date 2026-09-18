@@ -90,20 +90,16 @@ export function clasificarCoherenciaIva(
     return { estado: "ok", tipo, tasa: canonica };
   }
 
-  // Legado sin `tipo_iva`.
-  if (flag === false && tasaNum != null && tasaNum > 0) {
-    return {
-      estado: "ambiguo",
-      tipo: "exento",
-      tasa: 0,
-      motivo:
-        "no tiene tratamiento fiscal registrado: el IVA está desactivado pero conserva una tasa distinta de cero, así que no se puede determinar si es tasa 0%, exento o no objeto",
-    };
-  }
-  if (flag === false) return { estado: "ok", tipo: "exento", tasa: 0 };
-  if (tasaNum != null && Math.abs(tasaNum) < EPS) return { estado: "ok", tipo: "tasa_0", tasa: 0 };
-  if (tasaNum != null && Math.abs(tasaNum - TASA_FRONTERA) < EPS) return { estado: "ok", tipo: "gravado_8", tasa: TASA_FRONTERA };
-  return { estado: "ok", tipo: "gravado_16", tasa: tasaNum ?? tasaGravadoDefault };
+  // Sin `tipo_iva` reconocido: AMBIGUO siempre, sin importar tasa ni flag.
+  // No se infiere tasa_0 desde una tasa 0 ni exento desde el IVA apagado.
+  // `tipo`/`tasa` no son confiables cuando el estado no es "ok".
+  return {
+    estado: "ambiguo",
+    tipo: "gravado_16",
+    tasa: 0,
+    motivo:
+      "no tiene tratamiento fiscal registrado (tasa 0%, exento, no objeto o gravado), así que no se puede determinar cómo declararlo ante el SAT",
+  };
 }
 
 export function mensajeCoherenciaIva(descripcion: string, resultado: ResultadoCoherenciaIva): string {
