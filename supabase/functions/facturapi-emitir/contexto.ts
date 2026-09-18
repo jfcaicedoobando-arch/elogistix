@@ -5,6 +5,7 @@
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse } from "../_shared/response.ts";
+import { clasificarCoherenciaIva, mensajeCoherenciaIva } from "../_shared/coherenciaIva.ts";
 import { validateContext, type FacturaContext } from "./helpers.ts";
 import type { FacturaRow } from "./types.ts";
 
@@ -113,7 +114,6 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     const clasif = clasificarCoherenciaIva({
       tipo_iva: c.tipo_iva ?? null,
       tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
-      aplica_iva: (c as { aplica_iva?: boolean | null }).aplica_iva ?? null,
     });
     if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
     return {
