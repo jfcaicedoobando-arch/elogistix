@@ -72,7 +72,9 @@ export function conComplementoXmlManual(
     forma_pago: normalizarFormaPago(ctx.forma_pago),
     moneda: ctx.moneda,
     tipo_cambio: ctx.tipo_cambio,
-    monto: pago.related_documents[0].amount,
+    // Monto del pago en SU moneda (el importe del documento relacionado ya va
+    // en `ImpPagado`, que puede estar en otra divisa).
+    monto: ctx.monto,
     num_operacion: ctx.numero_operacion ?? null,
     documentos: [doctoRelacionadoDesdePayload(payload, ctx)],
   });
