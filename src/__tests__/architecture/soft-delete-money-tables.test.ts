@@ -26,11 +26,19 @@ const CASOS: Array<{ file: string; tabla: string; minOcurrencias: number }> = [
     minOcurrencias: 1,
   },
   {
-    // v13.777.7 — `conciliarConPago` salió a conciliacionVincular.ts (límite de
-    // 200 líneas): aquí quedan la deduplicación de importación y el listado.
+    // v13.777.7 — `conciliarConPago` salió a conciliacionVincular.ts y
+    // `importarMovimientos` a conciliacionImportar.ts (límite de 200 líneas):
+    // aquí queda el listado.
     file: "src/features/tesoreria/services/conciliacion.ts",
     tabla: "bbva_movimientos",
-    minOcurrencias: 2,
+    minOcurrencias: 1,
+  },
+  {
+    // La deduplicación de la importación consulta hashes vivos: debe excluir
+    // los borrados para que un hash en papelera no bloquee la re-importación.
+    file: "src/features/tesoreria/services/conciliacionImportar.ts",
+    tabla: "bbva_movimientos",
+    minOcurrencias: 1,
   },
   {
     file: "src/features/tesoreria/services/conciliacionVincular.ts",
