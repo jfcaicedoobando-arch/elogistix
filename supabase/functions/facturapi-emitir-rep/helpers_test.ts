@@ -223,12 +223,15 @@ Deno.test("normalizarFormaPago mapea nombres legibles a codigos SAT", () => {
   assertEquals(normalizarFormaPago("Cheque"), "02");
   assertEquals(normalizarFormaPago("Efectivo"), "01");
   assertEquals(normalizarFormaPago("Tarjeta de crédito"), "04");
-  assertEquals(normalizarFormaPago("Otro"), "99");
+  // P1 · Auditoría fiscal — "Otro" ya NO se disfraza de 99: el SAT exige una
+  // FormaDePagoP real en el complemento de pago.
+  assertEquals(normalizarFormaPago("Otro"), null);
 });
 
-Deno.test("normalizarFormaPago sin dato cae en Por definir", () => {
-  assertEquals(normalizarFormaPago(null), "99");
-  assertEquals(normalizarFormaPago(""), "99");
+Deno.test("normalizarFormaPago sin dato NO inventa Por definir (99)", () => {
+  assertEquals(normalizarFormaPago(null), null);
+  assertEquals(normalizarFormaPago(""), null);
+  assertEquals(normalizarFormaPago("99"), null);
 });
 
 Deno.test("validateRepContext acepta forma de pago legible mapeada", () => {

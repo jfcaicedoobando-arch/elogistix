@@ -6,6 +6,7 @@
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { clasificarCoherenciaIva, mensajeCoherenciaIva } from "../_shared/coherenciaIva.ts";
+import { validarCuadreFiscal, validarCuadreSubtotal } from "./contextoCuadre.ts";
 import { validateContext, type FacturaContext } from "./helpers.ts";
 import type { FacturaRow } from "./types.ts";
 
@@ -14,6 +15,13 @@ interface ConceptoRow {
   descripcion: string; cantidad: number | string; precio_unitario: number | string;
   clave_sat?: string | null; clave_unidad?: string | null; tipo_iva?: string | null;
   tasa_iva_aplicada?: number | string | null; tasa_ret_isr?: number | string | null; tasa_ret_iva?: number | string | null;
+  /**
+   * P2 · Auditoría fiscal — `tipo_iva` es el campo CANÓNICO del tratamiento SAT;
+   * `aplica_iva` es el interruptor legado que sigue vivo en la base. Se
+   * transporta para que la regla compartida de coherencia detecte las
+   * contradicciones (p. ej. gravado 16% con el IVA apagado) antes del PAC.
+   */
+  aplica_iva?: boolean | null;
 }
 
 interface BaseContexto {
@@ -50,22 +58,6 @@ export async function cargarContexto(
   return ctx;
 }
 
-/**
- * BUG-01: el payload que se manda al SAT debe cuadrar con la cabecera guardada.
- * Si la suma de los conceptos vigentes se separa más de $1 del subtotal de la
- * factura, algo quedó desincronizado (conceptos borrados, edición a medias) y
- * preferimos NO timbrar.
- */
-function validarCuadreSubtotal(conceptos: ConceptoRow[], factura: FacturaRow): Response | null {
-  const subtotalHeader = factura.subtotal != null ? Number(factura.subtotal) : null;
-  if (subtotalHeader == null || !Number.isFinite(subtotalHeader)) return null;
-  const suma = conceptos.reduce((acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario), 0);
-  if (Math.abs(suma - subtotalHeader) <= 1) return null;
-  return jsonResponse({
-    error: "subtotal_descuadrado",
-    message: `Los conceptos vigentes suman ${suma.toFixed(2)} pero la factura tiene un subtotal de ${subtotalHeader.toFixed(2)}. Revisa los conceptos antes de timbrar.`,
-  }, 422);
-}
 
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
@@ -77,7 +69,7 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, aplica_iva")
     .eq("factura_id", facturaId)
     // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
     .is("deleted_at", null);
@@ -114,6 +106,9 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     const clasif = clasificarCoherenciaIva({
       tipo_iva: c.tipo_iva ?? null,
       tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
+      // P2 · Auditoría fiscal — el interruptor legado entra a la regla: un
+      // renglón "gravado 16%" con el IVA apagado se bloquea, no se serializa.
+      aplica_iva: c.aplica_iva ?? null,
     });
     if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
     return {
@@ -132,6 +127,9 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
       issues: bloqueos,
     }, 422);
   }
+
+  const cuadreFiscal = validarCuadreFiscal(conceptosResueltos, factura);
+  if (cuadreFiscal) return cuadreFiscal;
 
   const frontera = await bloquearIvaFrontera(supabase, factura, conceptosResueltos);
   if (frontera) return frontera;

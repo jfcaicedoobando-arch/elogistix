@@ -17,7 +17,13 @@ const factura = {
   metodo_pago: "PUE",
 };
 const cliente = { rfc: "AAA010101AAA", codigo_postal: "06600", regimen_fiscal: "601" };
-const seleccion = (metodoPago: string) => ({ usoCfdi: "G03", formaPago: "03", metodoPago });
+// PPD ⇒ FormaPago 99 ("Por definir"); PUE ⇒ forma real. Es la regla del Anexo 20
+// que ahora valida también el servidor.
+const seleccion = (metodoPago: string) => ({
+  usoCfdi: "G03",
+  formaPago: metodoPago === "PPD" ? "99" : "03",
+  metodoPago,
+});
 
 describe("buildEstadoTimbrado — PPD con No objeto", () => {
   it("permite timbrar la factura mixta y advierte por el REP", () => {

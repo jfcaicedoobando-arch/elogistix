@@ -15,6 +15,7 @@ import {
   MSG_NO_OBJETO_RETENCIONES,
   retencionesIncompatiblesNoObjeto,
 } from "../_shared/noObjetoFiscal.ts";
+import { validarFormaMetodoPago } from "../_shared/formaMetodoPago.ts";
 
 
 export interface ConceptoInterno {
@@ -124,8 +125,13 @@ export function validateContext(ctx: FacturaContext): ValidationIssue[] {
   if (!isValidZip(ctx.receptor.address.zip)) issues.push({ field: "codigo_postal", message: "Código postal del receptor requerido (5 dígitos)" });
   if (!ctx.receptor.tax_system) issues.push({ field: "regimen_fiscal", message: "Régimen fiscal del receptor requerido" });
   if (!ctx.uso_cfdi) issues.push({ field: "uso_cfdi", message: "Uso de CFDI requerido" });
-  if (!ctx.forma_pago) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
-  if (!ctx.metodo_pago) issues.push({ field: "metodo_pago", message: "Método de pago SAT requerido (PUE/PPD)" });
+  // P1 · Auditoría fiscal — el servidor es la autoridad de la pareja
+  // MétodoPago/FormaPago: PPD (no pagada) exige 99; PUE (ya pagada) exige una
+  // clave real del catálogo. Así no se emite con un dato obsoleto al cambiar
+  // PUE↔PPD. La forma real del cobro posterior vive en el REP, no aquí.
+  for (const issue of validarFormaMetodoPago(ctx.forma_pago, ctx.metodo_pago)) {
+    issues.push({ field: issue.field, message: issue.message });
+  }
   if (!ctx.conceptos.length) issues.push({ field: "conceptos", message: "La factura no tiene conceptos" });
   ctx.conceptos.forEach((c, i) => {
     if (!c.clave_sat) issues.push({ field: `conceptos[${i}].clave_sat`, message: `Concepto "${c.descripcion}" sin clave SAT` });
