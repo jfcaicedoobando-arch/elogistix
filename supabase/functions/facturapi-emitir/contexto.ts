@@ -152,10 +152,8 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
   // omisión. Si el tratamiento explícito y la tasa se contradicen (o el
   // renglón legado es ambiguo), se bloquea el timbrado con un mensaje
   // accionable en vez de emitir un importe distinto al aprobado.
-  const resueltos = resolverConceptosFiscales(conceptos ?? []);
-  if (resueltos instanceof Response) return resueltos;
-  const conceptosResueltos = resueltos;
-
+  const conceptosResueltos = resolverConceptosFiscales(conceptos);
+  if (conceptosResueltos instanceof Response) return conceptosResueltos;
 
   const cuadreFiscal = validarCuadreFiscal(conceptosResueltos, factura);
   if (cuadreFiscal) return cuadreFiscal;
