@@ -149,10 +149,19 @@ export function convertirAUSD(
   return monto;
 }
 
+/** Tasa 8% del estímulo de la región fronteriza (literal para no ciclar). */
+const TASA_FRONTERA = 0.08;
+
 /**
- * Resuelve la tasa de IVA de un concepto con prioridad:
- *  1. `tasa_iva_aplicada` (si está definida — incluye 0 explícito).
- *  2. `aplica_iva ? fallbackTasaGlobal : 0` para conceptos legacy.
+ * Resuelve la tasa de IVA de un concepto con UNA sola regla canónica:
+ *  1. Tratamiento explícito (`tipo_iva`): `gravado_16` → tasa general de la
+ *     organización, `gravado_8` → 8%, `tasa_0`/`exento`/`no_objeto` → 0.
+ *  2. Sólo si el renglón NO tiene tratamiento (legacy) se usa
+ *     `tasa_iva_aplicada` y, en su ausencia, `aplica_iva ? global : 0`.
+ *
+ * P1 · Auditoría IVA — antes un renglón `gravado_8` con `tasa_iva_aplicada`
+ * nula caía a la tasa global (16%) y se cobraba mal. El tratamiento conocido
+ * NUNCA se rellena con una tasa global distinta.
  *
  * El `fallbackTasaGlobal` proviene de `useTasaIVA()` y refleja la configuración
  * por organización; nunca se mezcla con la constante `TASA_IVA` directamente
@@ -162,9 +171,19 @@ export function resolverTasaConcepto(
   concepto: { tasa_iva_aplicada?: number | null; aplica_iva?: boolean | null; tipo_iva?: string | null },
   fallbackTasaGlobal: number,
 ): number {
-  // SAT 01 — "No objeto de impuesto" no causa IVA trasladado, jamás toma el
-  // fallback global. Literal en vez de import para no ciclar con tipoIvaSat.ts.
-  if (concepto.tipo_iva === "no_objeto" || concepto.tipo_iva === "exento") return 0;
+  // Literales en vez de import para no ciclar con tipoIvaSat.ts.
+  switch (concepto.tipo_iva) {
+    case "no_objeto":
+    case "exento":
+    case "tasa_0":
+      return 0;
+    case "gravado_8":
+      return TASA_FRONTERA;
+    case "gravado_16":
+      return fallbackTasaGlobal;
+    default:
+      break;
+  }
   const tasa = concepto.tasa_iva_aplicada;
   if (tasa != null && Number.isFinite(tasa)) return Number(tasa);
   return concepto.aplica_iva ? fallbackTasaGlobal : 0;
