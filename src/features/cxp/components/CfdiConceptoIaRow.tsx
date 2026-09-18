@@ -108,8 +108,18 @@ export function CfdiConceptoIaRow({
         />
       </TableCell>
       {hayIeps && (
-        <TableCell className="text-right whitespace-nowrap">
-          {formatCurrency(Number(linea.ieps) || 0, moneda)}
+        <TableCell className="text-right">
+          <Input
+            className="h-9 w-24 text-right tabular-nums"
+            inputMode="decimal"
+            value={iepsTxt}
+            aria-label={`IEPS del concepto ${indice + 1}`}
+            onChange={(e) => {
+              setIepsTxt(e.target.value);
+              onEditar({ ieps: parseMonto(e.target.value, 0) });
+            }}
+            onBlur={() => setIepsTxt(fmt2(parseMonto(iepsTxt, 0)))}
+          />
         </TableCell>
       )}
       <TableCell className="text-right font-semibold whitespace-nowrap">
