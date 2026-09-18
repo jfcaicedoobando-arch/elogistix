@@ -270,9 +270,10 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     ...entrada.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
   ];
 
+  const { moneda, total } = monedaMostrada(prof);
   const templateData = {
-    numero: prof.numero, cliente: prof.cliente_nombre, expediente: prof.expediente, moneda: prof.moneda,
-    total: formatoMoneda(prof.total, prof.moneda ?? 'MXN'),
+    numero: prof.numero, cliente: prof.cliente_nombre, expediente: prof.expediente, moneda,
+    total: formatoMoneda(total, moneda),
     mensaje: entrada.mensaje, vigencia: formatoFechaMx(tokenExpira), enlacePortal,
   };
 
