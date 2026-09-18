@@ -19,7 +19,7 @@ import { objetoImpDeTipoIva } from "@/lib/financial/tipoIvaSat";
 const ROOT = process.cwd();
 const MIGRACION = join(
   ROOT,
-  "docs/migraciones-preparadas/20260918000100_iva_no_objeto_sat01.sql",
+  "supabase/migrations/20260918000100_iva_no_objeto_sat01.sql",
 );
 const migracion = readFileSync(MIGRACION, "utf8");
 

@@ -11,7 +11,7 @@ import { buildConceptosVentaPayload } from "@/features/embarques/domain/mappers/
 
 const MIGRACION = resolve(
   process.cwd(),
-  "docs/migraciones-preparadas/20260918000100_iva_no_objeto_sat01.sql",
+  "supabase/migrations/20260918000100_iva_no_objeto_sat01.sql",
 );
 
 const FILA_DB_NO_OBJETO = {
