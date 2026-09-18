@@ -70,7 +70,10 @@ BEGIN
     'cantidad', pcc.cantidad,
     'precio_unitario', pcc.precio_unitario,
     'importe', pcc.total,
-    'moneda', pcc.moneda
+    'moneda', pcc.moneda,
+    'tipo_iva', pcc.tipo_iva,
+    'tasa_iva_aplicada', pcc.tasa_iva_aplicada,
+    'aplica_iva', pcc.aplica_iva
   ) ORDER BY pcc.created_at), '[]'::jsonb)
     INTO v_conceptos
     FROM public.proforma_conceptos_consolidados pcc

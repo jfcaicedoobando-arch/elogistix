@@ -16,7 +16,7 @@
  *  - CTA "Crear concepto": alta rápida sin salir del wizard.
  */
 import { useState } from "react";
-import { Check, ChevronsUpDown, AlertTriangle, PenLine, Plus, Package } from "lucide-react";
+import { ChevronsUpDown, AlertTriangle, PenLine, Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -26,12 +26,8 @@ import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizaci
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import type { AppRole } from "@/types/appRole";
-import { TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
 import { useIvaFronteraHabilitada } from "@/features/configuracion/hooks/useIvaFrontera";
-import {
-  AVISO_IVA_FRONTERA_DESHABILITADO,
-  tipoIvaSeleccionable,
-} from "@/lib/financial/ivaFrontera";
+import { ProductoServicioOptions } from "./ProductoServicioOptions";
 
 /**
  * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
@@ -40,13 +36,6 @@ import {
  */
 const ROLES_SIN_ALTA_CATALOGO: readonly AppRole[] = ["vendedor", "ejecutivo_pricing", "gerente_comercial"];
 import { CrearConceptoInlineForm } from "./CrearConceptoInlineForm";
-
-export function productoFronteraBloqueado(
-  producto: Pick<ProductoCatalogo, "tipo_iva">,
-  fronteraHabilitada: boolean,
-): boolean {
-  return !tipoIvaSeleccionable(producto.tipo_iva, fronteraHabilitada);
-}
 
 interface Props {
   value: string; // nombre actual guardado en la cotización
@@ -166,43 +155,12 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                   <CommandEmpty className="p-0">
                     <div className="p-3 text-body text-muted-foreground">Sin coincidencias.</div>
                   </CommandEmpty>
-                  <CommandGroup>
-                    {productos.map((p) => {
-                      const fronteraBloqueada = productoFronteraBloqueado(p, fronteraHabilitada);
-                      return (
-                        <CommandItem
-                          key={p.id}
-                          value={p.nombre}
-                          disabled={fronteraBloqueada}
-                          title={fronteraBloqueada ? AVISO_IVA_FRONTERA_DESHABILITADO : undefined}
-                          onSelect={() => {
-                            if (fronteraBloqueada) return;
-                            onSelect(p);
-                            cerrarYResetear();
-                          }}
-                        >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            seleccionado?.id === p.id ? "opacity-100" : "opacity-0",
-                          )}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium">{p.nombre}</div>
-                          <div className="text-label text-muted-foreground">
-                            SAT {p.clave_sat} · {p.clave_unidad_sat} ·{" "}
-                            {TIPO_IVA_LABEL_CORTO[p.tipo_iva]}
-                          </div>
-                          {fronteraBloqueada && (
-                            <div className="text-label text-warning">
-                              Estímulo fronterizo deshabilitado
-                            </div>
-                          )}
-                        </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
+                  <ProductoServicioOptions
+                    productos={productos}
+                    seleccionadoId={seleccionado?.id}
+                    fronteraHabilitada={fronteraHabilitada}
+                    onSelect={(producto) => { onSelect(producto); cerrarYResetear(); }}
+                  />
                 </>
               )}
             </CommandList>
