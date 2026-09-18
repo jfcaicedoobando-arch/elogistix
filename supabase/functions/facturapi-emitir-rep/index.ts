@@ -268,12 +268,12 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (!claim.ok) return json({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
   const releaseClaim = claim.releaseClaim;
 
-  const payload = buildRepPayload(ctx);
-  // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
-  // deduplica por external_id; es sólo un campo de búsqueda).
-  payload.external_id = claimTag;
-  // P0-B: dedup oficial de FacturAPI — mismo claim ⇒ misma llave idempotente.
-  payload.idempotency_key = claimTag;
+  // EF-01: `external_id` correlaciona el claim para facturapi-recuperar-claim.
+  // P0-B: `idempotency_key` es el dedup oficial de FacturAPI (mismo claim ⇒
+  // misma llave, así un reintento técnico no crea un segundo REP).
+  const payload = Object.assign(buildRepPayload(ctx), {
+    external_id: claimTag, idempotency_key: claimTag,
+  });
   // Con renglones "no objeto" el complemento viaja como XML nuestro (único
   // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
   const resultado = await timbrarRep({

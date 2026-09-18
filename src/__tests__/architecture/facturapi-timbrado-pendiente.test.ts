@@ -20,7 +20,7 @@ describe("idempotency_key = claimTag en los tres CFDI", () => {
   const casos: Array<[string, RegExp]> = [
     ["supabase/functions/facturapi-emitir/helpers.ts", /idempotency_key\s*[:=]\s*ctx\.external_id/],
     ["supabase/functions/facturapi-emitir-nota-credito/helpers.ts", /idempotency_key\s*[:=]\s*ctx\.external_id/],
-    ["supabase/functions/facturapi-emitir-rep/index.ts", /idempotency_key\s*=\s*claimTag/],
+    ["supabase/functions/facturapi-emitir-rep/index.ts", /idempotency_key\s*[:=]\s*claimTag/],
   ];
   for (const [rel, re] of casos) {
     it(`${rel} envía la llave de idempotencia ligada al claim`, () => {
