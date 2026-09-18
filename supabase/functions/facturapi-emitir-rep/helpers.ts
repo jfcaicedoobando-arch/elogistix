@@ -318,7 +318,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
 type TaxesDr = FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"];
 type DrTaxes = Pick<
   PagoContext["documento_relacionado"],
-  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva"
+  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva" | "importe_no_objeto"
 >;
 
 export function buildTaxesDr(dr: DrTaxes): TaxesDr {
@@ -384,7 +384,7 @@ function denominadorDocumento(dr: DrTaxes, grupos: NonNullable<DrTaxes["grupos_i
   const total = Number(dr.total_factura ?? 0);
   const sub = Number(dr.subtotal_factura ?? 0);
   // Los renglones "no objeto" no causan impuesto, pero SÍ forman parte del
-  // documento: deben entrar al denominador o las bases saldrían inflds.
+  // documento: deben entrar al denominador o las bases saldrían infladas.
   const noObjeto = Number(dr.importe_no_objeto ?? 0);
   const sumaImportes = grupos.reduce((acc, g) => acc + g.importe, 0) + noObjeto;
   // El total guardado sólo es comparable si el subtotal coincide con los
