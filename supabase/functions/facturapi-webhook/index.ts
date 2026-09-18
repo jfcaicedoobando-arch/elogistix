@@ -20,7 +20,26 @@ import {
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { sanearPatchFactura, cerrarCancelacionSiAceptada } from "./facturaPatch.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import {
+  COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
+} from "./pendiente.ts";
+
+interface FacturaLocal {
+  id: string;
+  organization_id: string;
+  estado: string | null;
+  sustituida_por: string | null;
+  cancellation_status: string | null;
+}
+
+interface PagoLocal {
+  id: string;
+  organization_id: string;
+  estado_rep: string | null;
+  rep_cancellation_status: string | null;
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -32,13 +51,14 @@ async function handleReceiptEvent(
   supabase: SB, orgId: string, event: FacturapiWebhookEvent,
   receipt: NonNullable<ReturnType<typeof mapEventToReceiptPatch>>,
 ): Promise<Response> {
-  const { data: pago } = await supabase
-    .from("pagos_factura")
-    .select("id, organization_id, estado_rep, rep_cancellation_status")
-    .eq("facturapi_rep_id", receipt.facturapi_rep_id)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
+  // P0-A.4: el REP puede estar en "timbrado pendiente" (claim PENDING:<uuid>).
+  const localizado = await localizarFila<PagoLocal>({
+    supabase, tabla: "pagos_factura", orgId, cols: COLS_REP,
+    select: "id, organization_id, estado_rep, rep_cancellation_status",
+    remoteId: receipt.facturapi_rep_id, externalId: externalIdDeEvento(event),
+  });
+  if (!localizado) return jsonResponse({ ok: true, ignored: "pago_not_found" });
+  const pago = localizado.fila;
 
   // EF-06 (guard N3 para REP): eventos fuera de orden no deben resucitar un
   // REP cancelado (receipt.status_updated(valid) tardío tras receipt.canceled)
@@ -56,6 +76,13 @@ async function handleReceiptEvent(
     delete patch.rep_cancellation_status;
   }
   if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+
+  // P0-A.4: sólo un evento con UUID válido promueve un REP pendiente.
+  if (localizado.via === "pendiente") {
+    const adopcion = patchAdopcionPendiente(COLS_REP, receipt.facturapi_rep_id, patch);
+    if (!adopcion) return jsonResponse({ ok: true, ignored: "timbrado_pendiente" });
+    Object.assign(patch, adopcion);
+  }
 
   const { error: updErr } = await supabase
     .from("pagos_factura")
@@ -80,55 +107,26 @@ async function handleFacturaEvent(
   const mapped = mapEventToFacturaPatch(event);
   if (!mapped) return jsonResponse({ ok: true, ignored: true });
 
-  const { data: factura } = await supabase
-    .from("facturas")
-    .select("id, organization_id, estado, sustituida_por, cancellation_status")
-    .eq("facturapi_id", mapped.facturapi_id)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!factura) return jsonResponse({ ok: true, ignored: "factura_not_found" });
+  // P0-A.4: la fila puede estar en "timbrado pendiente" (claim PENDING:<uuid>
+  // + id remoto del intento); el evento `valid` la resuelve.
+  const localizada = await localizarFila<FacturaLocal>({
+    supabase, tabla: "facturas", orgId, cols: COLS_FACTURA,
+    select: "id, organization_id, estado, sustituida_por, cancellation_status",
+    remoteId: mapped.facturapi_id, externalId: externalIdDeEvento(event),
+  });
+  if (!localizada) return jsonResponse({ ok: true, ignored: "factura_not_found" });
+  const factura = localizada.fila;
 
-  // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
-  // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
-  // el acuse. Sí conservamos el resto del patch.
-  const patch: Record<string, unknown> = { ...mapped.patch };
-  if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
-    delete patch.estado;
-  }
+  const patch = sanearPatchFactura(mapped, factura);
+  const errCierre = await cerrarCancelacionSiAceptada(supabase, patch, factura.id);
+  if (errCierre) return errCierre;
 
-  // Ola 4 · N3: un evento `valid` tardío (re-notificación de FacturAPI) no
-  // debe regresar a "Emitida" una factura que ya avanzó en su ciclo de vida
-  // (Pagada, Vencida, Parcialmente pagada, Cancelada, Sustituida).
-  const ESTADOS_HASTA_EMISION = new Set(["Borrador", "Por timbrar", "Emitida"]);
-  if (patch.estado === "Emitida" && (!factura.estado || !ESTADOS_HASTA_EMISION.has(factura.estado))) {
-    delete patch.estado;
-  }
-
-  // EF-06: un cancellation_status_updated(pending/verifying) retrasado no debe
-  // regresar una cancelación ya aceptada (retries/reordenamiento de Facturapi).
-  if (
-    factura.cancellation_status === "accepted" &&
-    typeof patch.cancellation_status === "string" &&
-    patch.cancellation_status !== "accepted"
-  ) {
-    delete patch.cancellation_status;
-    delete patch.cancelacion_solicitada_en;
-    delete patch.cancelacion_vence_en;
-  }
-  // El cierre de una cancelación aceptada (estado Cancelada/Sustituida +
-  // factura_embarques + proforma) vive en la RPC compartida con
-  // facturapi-cancelar; NO se persiste el patch crudo con
-  // `cancellation_status=accepted` para no duplicar/desincronizar la lógica.
-  if (patch.cancellation_status === "accepted") {
-    const { error: rpcErr } = await supabase.rpc("cerrar_cancelacion_factura_facturapi", {
-      p_factura_id: factura.id,
-    });
-    if (rpcErr) return jsonResponse({ error: "cerrar_cancelacion_failed", detail: rpcErr.message }, 500);
-    delete patch.estado;
-    delete patch.cancellation_status;
-    delete patch.cancelado_en;
-    delete patch.cancelacion_solicitada_en;
-    delete patch.cancelacion_vence_en;
+  // P0-A.4: sólo un evento con UUID válido promueve un intento pendiente; si
+  // el evento no trae timbre, la fila se queda pendiente tal cual.
+  if (localizada.via === "pendiente") {
+    const adopcion = patchAdopcionPendiente(COLS_FACTURA, mapped.facturapi_id, patch);
+    if (!adopcion) return jsonResponse({ ok: true, ignored: "timbrado_pendiente" });
+    Object.assign(patch, adopcion);
   }
 
   if (Object.keys(patch).length > 0) {

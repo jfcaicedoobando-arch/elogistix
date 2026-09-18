@@ -144,11 +144,24 @@ Deno.test("promoverNc: 409 claim_perdido si el claim cambió antes de persistir"
   assertEquals(json.outcome, "claim_perdido");
 });
 
-Deno.test("liberarClaimNc: libera cuando el claim exacto tiene edad suficiente", async () => {
+// P0-A.5 — la ventana segura es de 60 min (FacturAPI recupera el timbre ~50 min).
+Deno.test("liberarClaimNc: NO libera dentro de la ventana de recuperación", async () => {
+  for (const edad of [5, 30, 59]) {
+    const { state, supabase } = makeFakeNcSupabase({
+      id: baseNc.id, facturapi_id: baseNc.facturapi_id, facturapi_claim_at: baseNc.facturapi_claim_at!,
+    });
+    const res = await liberarClaimNc(supabase, baseNc, "PENDING:nc-1", edad, ncUser);
+    assertEquals((await res.json()).outcome, "sin_cambios", `edad ${edad} min`);
+    assertEquals(state.facturapi_id, baseNc.facturapi_id);
+  }
+});
+
+Deno.test("liberarClaimNc: libera cuando el claim exacto supera la ventana segura", async () => {
+  const viejo = new Date(Date.now() - 90 * 60_000).toISOString();
   const { state, supabase } = makeFakeNcSupabase({
-    id: baseNc.id, facturapi_id: baseNc.facturapi_id, facturapi_claim_at: baseNc.facturapi_claim_at!,
+    id: baseNc.id, facturapi_id: baseNc.facturapi_id, facturapi_claim_at: viejo,
   });
-  const res = await liberarClaimNc(supabase, baseNc, "PENDING:nc-1", 10, ncUser);
+  const res = await liberarClaimNc(supabase, baseNc, "PENDING:nc-1", 61, ncUser);
   assertEquals(res.status, 200);
   const json = await res.json();
   assertEquals(json.outcome, "liberado");
@@ -160,7 +173,7 @@ Deno.test("liberarClaimNc: sin_cambios si el claim ya no coincide", async () => 
   const { supabase } = makeFakeNcSupabase({
     id: baseNc.id, facturapi_id: "OTRO_TAG", facturapi_claim_at: baseNc.facturapi_claim_at!,
   });
-  const res = await liberarClaimNc(supabase, baseNc, "PENDING:nc-1", 10, ncUser);
+  const res = await liberarClaimNc(supabase, baseNc, "PENDING:nc-1", 61, ncUser);
   const json = await res.json();
   assertEquals(json.outcome, "sin_cambios");
 });

@@ -16,6 +16,9 @@ import {
   promoverFactura, promoverNc, promoverPago, liberarClaim, liberarClaimNc, liberarClaimPago,
   type ReqBody, type FapiClient,
 } from "./recuperar.ts";
+import {
+  buscarPorIdPendiente, respuestaPendienteRemoto, type FapiClientRetrieve,
+} from "./pendienteRemoto.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -63,17 +66,20 @@ async function recuperarNotaCredito(supabase: SB, user: Usuario, ncId: string): 
     );
   }
 
-  const busqueda = await buscarCfdiPorExternalId(
-    resolved.data.client as FapiClient, claimTag, nc.facturapi_claim_at,
-  );
+  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const busqueda = await buscarPorIdPendiente(cliente, nc.facturapi_pendiente_id)
+    ?? await buscarCfdiPorExternalId(cliente, claimTag, nc.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "pendiente_remoto") return respuestaPendienteRemoto(busqueda.invoice, claimTag);
   if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverNc({
       supabase, nc, match: busqueda.invoice, claimTag, user,
       apiKey: resolved.data.apiKey, ambiente: resolved.data.ambiente,
     });
   }
+  // P0-A.5: con un intento pendiente registrado jamás se libera el claim.
+  if (nc.facturapi_pendiente_id) return respuestaPendienteRemoto(null, claimTag);
   return liberarClaimNc(supabase, nc, claimTag, edadMin, user);
 }
 
@@ -96,16 +102,19 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
     );
   }
 
-  const busqueda = await buscarCfdiPorExternalId(
-    resolved.data.client as FapiClient, claimTag, factura.facturapi_claim_at,
-  );
+  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const busqueda = await buscarPorIdPendiente(cliente, factura.facturapi_pendiente_id)
+    ?? await buscarCfdiPorExternalId(cliente, claimTag, factura.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "pendiente_remoto") return respuestaPendienteRemoto(busqueda.invoice, claimTag);
   if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverFactura({
       supabase, factura, match: busqueda.invoice, claimTag, user, ambiente: resolved.data.ambiente,
     });
   }
+  // P0-A.5: con un intento pendiente registrado jamás se libera el claim.
+  if (factura.facturapi_pendiente_id) return respuestaPendienteRemoto(null, claimTag);
   return liberarClaim(supabase, factura, claimTag, edadMin, user);
 }
 
@@ -138,17 +147,20 @@ async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promi
     );
   }
 
-  const busqueda = await buscarCfdiPorExternalId(
-    resolved.data.client as FapiClient, claimTag, pago.facturapi_rep_claim_at,
-  );
+  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const busqueda = await buscarPorIdPendiente(cliente, pago.facturapi_rep_pendiente_id)
+    ?? await buscarCfdiPorExternalId(cliente, claimTag, pago.facturapi_rep_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "pendiente_remoto") return respuestaPendienteRemoto(busqueda.invoice, claimTag);
   if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverPago({
       supabase, pago, match: busqueda.invoice, claimTag, user,
       apiKey: resolved.data.apiKey, ambiente: resolved.data.ambiente,
     });
   }
+  // P0-A.5: con un intento pendiente registrado jamás se libera el claim.
+  if (pago.facturapi_rep_pendiente_id) return respuestaPendienteRemoto(null, claimTag);
   return liberarClaimPago(supabase, pago, claimTag, edadMin, user);
 }
 

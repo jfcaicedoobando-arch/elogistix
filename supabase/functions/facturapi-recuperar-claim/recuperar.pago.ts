@@ -7,7 +7,8 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
-import { MIN_EDAD_MINUTOS, type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
+import { type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
+import { MIN_EDAD_LIBERACION_MINUTOS } from "../_shared/timbradoPendiente.ts";
 
 /* ── EF-01 — recuperación de claims en REPs (pagos_factura) ──────────────
  * facturapi-emitir-rep reclama la fila con PENDING:<uuid> y envía ese tag
@@ -20,13 +21,15 @@ export interface PagoRow {
   organization_id: string;
   facturapi_rep_id: string | null;
   facturapi_rep_claim_at: string | null;
+  /** P0-A: id remoto del intento de REP con timbrado pendiente (si hubo). */
+  facturapi_rep_pendiente_id?: string | null;
   factura_id: string | null;
 }
 
 export async function loadPago(supabase: SupabaseClient, pagoId: string): Promise<PagoRow | Response> {
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id, facturapi_rep_id, facturapi_rep_claim_at, factura_id")
+    .select("id, organization_id, facturapi_rep_id, facturapi_rep_claim_at, facturapi_rep_pendiente_id, factura_id")
     .eq("id", pagoId)
     .maybeSingle<PagoRow>();
   if (pErr || !pago) return jsonResponse({ error: "pago_not_found", detail: pErr?.message }, 404);
@@ -59,6 +62,9 @@ export async function promoverPago(input: PromoverPagoInput): Promise<Response> 
     .update({
       facturapi_rep_id: facturapiId,
       facturapi_rep_claim_at: null,
+      // P0-A: el intento pendiente quedó resuelto.
+      facturapi_rep_pendiente_id: null,
+      facturapi_rep_pendiente_at: null,
       uuid_rep: uuid,
       folio_rep: folio,
       serie_rep: serieTimbrada,
@@ -97,7 +103,8 @@ export async function liberarClaimPago(
 ): Promise<Response> {
   const { data: liberado, error: rpcErr } = await supabase.rpc(
     "liberar_claim_rep_huerfano",
-    { p_pago_id: pago.id, p_min_edad_minutos: MIN_EDAD_MINUTOS },
+    // P0-A.5: ventana segura posterior a la recuperación de FacturAPI.
+    { p_pago_id: pago.id, p_min_edad_minutos: MIN_EDAD_LIBERACION_MINUTOS },
   );
   if (rpcErr) return jsonResponse({ error: "release_failed", detail: rpcErr.message }, 500);
 

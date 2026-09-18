@@ -57,6 +57,8 @@ export interface RepVerificado {
 interface PagoRow {
   id: string;
   facturapi_rep_id: string | null;
+  /** P0-A: id remoto del intento de REP con timbrado pendiente. */
+  facturapi_rep_pendiente_id: string | null;
   uuid_rep: string | null;
   serie_rep: string | null;
   folio_rep: number | null;
@@ -154,7 +156,10 @@ async function verificarRep(supabase: SupabaseMin, apiKey: string, p: PagoRow): 
     reconciliado: false,
     error: null,
   };
-  const repId = p.facturapi_rep_id!;
+  // P0-C: si el claim sigue PENDING, el documento remoto es el intento pendiente.
+  const repId = p.facturapi_rep_id!.startsWith("PENDING:")
+    ? p.facturapi_rep_pendiente_id!
+    : p.facturapi_rep_id!;
   try {
     const [xml, remoto] = await Promise.all([descargarXml(apiKey, repId), remotoRep(apiKey, repId)]);
     const meta = leerMetaCfdi(xml);
@@ -205,12 +210,14 @@ export async function verificarReps(
 ): Promise<RepVerificado[]> {
   const { data } = await supabase
     .from("pagos_factura")
-    .select("id, facturapi_rep_id, uuid_rep, serie_rep, folio_rep, fecha_pago, monto, moneda, estado_rep, rep_cancellation_status")
+    .select("id, facturapi_rep_id, facturapi_rep_pendiente_id, uuid_rep, serie_rep, folio_rep, fecha_pago, monto, moneda, estado_rep, rep_cancellation_status")
     .eq("factura_id", facturaId)
     .eq("organization_id", organizationId)
     .order("fecha_pago", { ascending: true });
+  // P0-C: un claim PENDING sólo se verifica si dejó id remoto del intento.
   const pagos = ((data ?? []) as PagoRow[]).filter(
-    (p) => !!p.facturapi_rep_id && !p.facturapi_rep_id.startsWith("PENDING:"),
+    (p) => !!p.facturapi_rep_id
+      && (!p.facturapi_rep_id.startsWith("PENDING:") || !!p.facturapi_rep_pendiente_id),
   );
   const out: RepVerificado[] = [];
   // Secuencial: cada REP hace 2 llamadas a FacturApi + 1 al SAT; el paralelismo

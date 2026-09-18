@@ -71,6 +71,8 @@ export interface FacturapiPayload {
   currency: string;
   exchange?: number;
   external_id?: string;
+  /** P0-B: llave oficial de idempotencia de FacturAPI (= claimTag). */
+  idempotency_key?: string;
   related_documents?: Array<{ relationship: string; documents: string[] }>;
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
   pdf_custom_section?: string;

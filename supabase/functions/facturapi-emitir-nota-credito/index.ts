@@ -16,8 +16,8 @@ import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./da
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
-import { registrarNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
+import { esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { respuestaSiNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -145,18 +145,15 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   if (!created.ok) return json(created.body, created.status);
 
   // P0-A: pendiente ⇒ 202, sin marcar Timbrada, sin XML y conservando el claim.
-  if (esTimbradoPendiente(created.invoice)) {
-    const pend = await registrarNcPendiente({
-      supabase,
-      notaCreditoId: body.nota_credito_id,
-      organizationId: nc.organization_id,
-      claimTag: claim.claimTag,
-      pendienteId: created.invoice.id ?? null,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-    });
-    return json(pend.body, pend.status);
-  }
+  const pend = await respuestaSiNcPendiente(created.invoice, {
+    supabase,
+    notaCreditoId: body.nota_credito_id,
+    organizationId: nc.organization_id,
+    claimTag: claim.claimTag,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+  });
+  if (pend) return json(pend.body, pend.status);
 
   const persisted = await persistTimbradoNc({
     supabase,
