@@ -257,16 +257,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     return json({ error: "validation_failed", issues }, 422);
   }
 
-  // EF-01 (auditoría): claim atómico ANTES de timbrar — mismo patrón que
-  // claimFactura (facturapi-emitir) y claimNotaCredito. Se toma DESPUÉS de
-  // validar para no liberarlo en el 422. El tag viaja como external_id a
-  // Facturapi para recuperar el REP si la edge muere entre timbrar y persistir.
-  const claimTag = `PENDING:${crypto.randomUUID()}`;
-  const claimAt = new Date().toISOString();
-  const claim = await tomarClaimRep(supabase, pago, claimTag, claimAt);
-  if (!claim.ok && claim.error) return json({ error: "claim_failed", detail: claim.error }, 500);
-  if (!claim.ok) return json({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
-  const releaseClaim = claim.releaseClaim;
+  // EF-01 (auditoría): claim atómico ANTES de timbrar (después de validar, para
+  // no liberarlo en el 422). El tag viaja como external_id a FacturAPI.
+  const reserva = await reservarRep(supabase, pago, json);
+  if ("response" in reserva) return reserva.response;
+  const { claimTag, releaseClaim } = reserva;
 
   // EF-01: `external_id` correlaciona el claim para facturapi-recuperar-claim.
   // P0-B: `idempotency_key` es el dedup oficial de FacturAPI (mismo claim ⇒

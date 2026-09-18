@@ -90,3 +90,29 @@ export async function tomarClaimRep(
   if (!claimed) return { ok: false, releaseClaim };
   return { ok: true, releaseClaim };
 }
+
+/**
+ * Reserva el timbrado del REP y devuelve el tag del claim, o la respuesta de
+ * error lista para regresar. Extraído de `index.ts` (Power of 10: líneas por
+ * función); comportamiento idéntico.
+ */
+export async function reservarRep(
+  supabase: Db,
+  pago: PagoClaimRow,
+  json: (body: unknown, status?: number) => Response,
+): Promise<{ response: Response } | { claimTag: string; releaseClaim: ClaimResult["releaseClaim"] }> {
+  const claimTag = `PENDING:${crypto.randomUUID()}`;
+  const claim = await tomarClaimRep(supabase, pago, claimTag, new Date().toISOString());
+  if (!claim.ok && claim.error) {
+    return { response: json({ error: "claim_failed", detail: claim.error }, 500) };
+  }
+  if (!claim.ok) {
+    return {
+      response: json(
+        { error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." },
+        409,
+      ),
+    };
+  }
+  return { claimTag, releaseClaim: claim.releaseClaim };
+}
