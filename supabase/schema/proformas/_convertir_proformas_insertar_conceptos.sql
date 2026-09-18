@@ -27,10 +27,14 @@ BEGIN
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
            -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
            -- importar que arrastre una tasa legacy (p. ej. 0.16).
-           public._tipo_iva_desde_tasa(
-             pcc.aplica_iva,
-             CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END),
-           CASE WHEN pcc.aplica_iva = false THEN NULL
+           -- El tipo explícito manda; 'no_objeto' (SAT 01) no es inferible.
+           CASE WHEN pcc.tipo_iva IS NOT NULL THEN pcc.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  pcc.aplica_iva,
+                  CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN pcc.tipo_iva = 'no_objeto' THEN NULL
+                WHEN pcc.aplica_iva = false THEN NULL
                 ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END,
            p.embarque_id, pcc.proforma_id
     FROM public.proforma_conceptos_consolidados pcc
