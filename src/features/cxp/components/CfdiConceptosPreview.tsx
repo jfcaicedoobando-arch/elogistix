@@ -34,12 +34,21 @@ import {
 interface Props {
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
   moneda: string;
+  /**
+   * Cabecera capturada del documento: se usa SÓLO para conciliar la vista
+   * previa (retenciones y total real). Antes no se pasaba y el resumen no podía
+   * avisar de una diferencia antes de guardar.
+   */
+  retencionesDocumento?: number;
+  totalDocumento?: number;
   /** Sólo para origen PDF con IA: habilita la edición de los renglones. */
   onEditar?: (idx: number, patch: Partial<CfdiConceptoParsed>) => void;
   onEliminar?: (idx: number) => void;
 }
 
-export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }: Props) {
+export function CfdiConceptosPreview({
+  conceptos, moneda, retencionesDocumento, totalDocumento, onEditar, onEliminar,
+}: Props) {
   if (conceptos.length === 0) return null;
   const editable = Boolean(onEditar && onEliminar);
 
@@ -49,7 +58,10 @@ export function CfdiConceptosPreview({ conceptos, moneda, onEditar, onEliminar }
     iva: Number(c.iva) || 0,
     ieps: Number(c.ieps) || 0,
   }));
-  const resumen = calcularResumenConceptos(lineas);
+  const resumen = calcularResumenConceptos(lineas, {
+    retenciones: retencionesDocumento ?? null,
+    total: totalDocumento != null && totalDocumento > 0 ? totalDocumento : null,
+  });
   const hayIeps = resumen.ieps > 0;
   const totalConImpuestos = lineas.reduce((acc, l) => acc + totalLineaConImpuestos(l), 0);
 
