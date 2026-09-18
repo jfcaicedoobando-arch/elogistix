@@ -80,13 +80,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /
   // validation_failed no lo liberaban → la factura quedaba PENDING: y
   // respondía 409 ya_timbrada durante ≥3 min.
-  const sustituyeUuid = await resolverSustitucion(supabase, factura);
+  const sustituyeUuid = await resolverSustitucion(supabase, facturaVigente);
   if (sustituyeUuid instanceof Response) return sustituyeUuid;
 
-  const resolved = await getFacturapiClient(supabase, factura.organization_id);
+  const resolved = await getFacturapiClient(supabase, facturaVigente.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid);
+  const context = await cargarContexto(supabase, body.factura_id, facturaVigente, sustituyeUuid);
   if (context instanceof Response) return context;
 
   // Claim atómico DESPUÉS de validar (comentario espejo de la familia NC): se
