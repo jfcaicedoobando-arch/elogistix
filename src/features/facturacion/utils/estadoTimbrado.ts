@@ -55,8 +55,9 @@ export function buildEstadoTimbrado(
   });
 
   // P1 · Auditoría IVA — PPD + "No objeto de impuesto" (SAT 01) dejaría el cobro
-  // sin REP (el complemento de pago no admite ObjetoImpDR=01). Se avisa aquí,
-  // antes de timbrar; el servidor sigue siendo la autoridad (fail-closed).
+  // sin REP: es una limitación de la integración (Facturapi no expone
+  // ObjetoImpDR), no una prohibición del SAT. Se avisa aquí, antes de timbrar;
+  // el servidor sigue siendo la autoridad (fail-closed).
   const ppdNoObjeto = ppdIncompatibleNoObjeto(seleccion.metodoPago, conceptos ?? []);
   const checksFinales = ppdNoObjeto
     ? [...checks, { ok: false, label: MSG_NO_OBJETO_PPD }]

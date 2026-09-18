@@ -46,6 +46,9 @@ describe("noObjetoFiscal", () => {
   it("los mensajes explican qué hacer y no sugieren falsear el tratamiento", () => {
     expect(MSG_NO_OBJETO_RETENCIONES).toMatch(/retenciones/i);
     expect(MSG_NO_OBJETO_PPD).toMatch(/PUE/);
-    expect(MSG_NO_OBJETO_PPD).toMatch(/nunca a Exento/i);
+    expect(MSG_NO_OBJETO_PPD).toMatch(/nunca cambiarlo a Exento/i);
+    // Debe quedar claro que es una limitación de la integración, no del SAT.
+    expect(MSG_NO_OBJETO_PPD).toMatch(/limitaci[oó]n actual de nuestra integraci[oó]n/i);
+    expect(MSG_NO_OBJETO_PPD).toMatch(/no es una prohibici[oó]n del SAT/i);
   });
 });
