@@ -38,16 +38,17 @@ export interface GrupoTrasladoDr extends TrasladoDr {
 /**
  * El complemento de pago 2.0 declara `ObjetoImpDR` por documento relacionado y
  * el arreglo `ImpuestosDR` sólo aplica cuando ObjetoImpDR = 02. La API de
- * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`), así
- * que un renglón "no objeto" (SAT 01) NO se puede representar: declararlo como
- * `Exento` sería un dato fiscal falso. Se bloquea el timbrado.
+ * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`).
  *
- * La EMISIÓN de la factura PPD con conceptos no objeto sí está permitida (ver
- * `_shared/noObjetoFiscal.ts`): esta barrera aplica sólo al complemento de pago.
- * Al registrar el cobro, el REP queda en estado "Error" con este mensaje y el
- * pago se conserva íntegro (no se pierde ni se duplica, ni se marca timbrado),
- * de modo que el flujo es reintentable en cuanto haya soporte real de
- * ObjetoImpDR 01.
+ * Desde el lote "XML manual" el REP de una factura con renglones "no objeto"
+ * SÍ se timbra: el complemento se serializa a mano y viaja en el nodo
+ * `complements` (ver `pagoXml.ts` y `repManual.ts`), declarando ObjetoImpDR
+ * real. Nunca se traduce a `Exento`.
+ *
+ * Este mensaje queda como RED DE SEGURIDAD: si el proveedor rechaza el XML o la
+ * ruta manual no está disponible, el pago queda en estado "Error" con este
+ * texto, íntegro (no se pierde ni se duplica, ni se marca timbrado) y
+ * reintentable.
  */
 export const MSG_REP_NO_OBJETO =
   "LC_REP_NO_OBJETO: Esta integración no puede representar ObjetoImpDR=01 ('No objeto de impuesto', " +
@@ -97,6 +98,7 @@ export const MSG_REP_CONCEPTOS_ILEGIBLES =
 export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
   return String(c?.tipo_iva ?? "").trim().toLowerCase() === "no_objeto";
 }
+
 
 /**
  * Traslado del renglón. `null` = INDETERMINADO: no hay tratamiento registrado o

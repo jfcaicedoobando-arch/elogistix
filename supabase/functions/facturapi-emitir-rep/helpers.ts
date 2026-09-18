@@ -73,6 +73,17 @@ export interface PagoContext {
     subtotal_factura?: number;
     /** Total del CFDI original; requerido para la BaseDR cuando hay retenciones. */
     total_factura?: number;
+    /**
+     * `true` cuando la factura relacionada tiene al menos un renglón
+     * "No objeto de impuesto" (SAT ObjetoImp 01). Activa la ruta de XML manual
+     * del complemento (`repManual.ts`), porque la vía estructurada de Facturapi
+     * no expone `ObjetoImpDR`.
+     */
+    hay_no_objeto?: boolean;
+    /** ObjetoImpDR del documento: "01" si TODOS sus renglones son no objeto. */
+    objeto_imp_dr?: "01" | "02";
+    /** Importe (sin IVA) de los renglones no objeto; sólo entra al denominador. */
+    importe_no_objeto?: number;
   };
   serie?: string | null;           // Serie del REP (si se usa serie distinta a las facturas)
   /** v13.208.0 — Expediente y BLs del embarque asociado. */
@@ -307,7 +318,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
 type TaxesDr = FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"];
 type DrTaxes = Pick<
   PagoContext["documento_relacionado"],
-  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva"
+  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva" | "importe_no_objeto"
 >;
 
 export function buildTaxesDr(dr: DrTaxes): TaxesDr {
@@ -372,11 +383,14 @@ function trasladosPorGrupo(
 function denominadorDocumento(dr: DrTaxes, grupos: NonNullable<DrTaxes["grupos_iva"]>): number {
   const total = Number(dr.total_factura ?? 0);
   const sub = Number(dr.subtotal_factura ?? 0);
-  const sumaImportes = grupos.reduce((acc, g) => acc + g.importe, 0);
+  // Los renglones "no objeto" no causan impuesto, pero SÍ forman parte del
+  // documento: deben entrar al denominador o las bases saldrían infladas.
+  const noObjeto = Number(dr.importe_no_objeto ?? 0);
+  const sumaImportes = grupos.reduce((acc, g) => acc + g.importe, 0) + noObjeto;
   // El total guardado sólo es comparable si el subtotal coincide con los
   // importes de los renglones (evita bases falsas por facturas desincronizadas).
   if (total > 0 && sub > 0 && Math.abs(sub - sumaImportes) < 0.05) return total;
-  const reconstruido = grupos.reduce((acc, g) => acc + g.importe * (1 + g.tasa), 0);
+  const reconstruido = grupos.reduce((acc, g) => acc + g.importe * (1 + g.tasa), 0) + noObjeto;
   return reconstruido > 0 ? reconstruido : 1;
 }
 

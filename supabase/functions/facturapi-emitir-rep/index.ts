@@ -23,12 +23,12 @@ import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./reten
 import {
   MSG_REP_CONCEPTOS_ILEGIBLES,
   MSG_REP_IMPORTES_FALTANTES,
-  MSG_REP_NO_OBJETO,
   MSG_REP_TRATAMIENTO_INDETERMINADO,
-  resolverGruposTrasladoDr,
   trasladoDesdeEncabezado,
   type GrupoTrasladoDr,
 } from "./trasladoDr.ts";
+import { resolverNoObjetoDr } from "./objetoImpDr.ts";
+import { payloadRepFinal } from "./repManual.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 import { leerConceptosDr } from "./conceptosFacturaDr.ts";
@@ -48,8 +48,6 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (preflight) return preflight;
   const json = makeJson(req);
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-
-
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
@@ -122,19 +120,12 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   }
   const conceptosFactura = lectura.conceptos;
 
-  // P1 · Auditoría IVA — un grupo de impuestos por tratamiento, con la BaseDR
-  // prorrateada por importe. Ya no se bloquea la mezcla de tasas (una PPD con
-  // 16% + 0% sí puede cobrarse) y nunca se declara una tasa promedio.
-  const grupos = resolverGruposTrasladoDr(conceptosFactura);
-  // "No objeto de impuesto" (SAT 01) no es representable en el complemento de
-  // pago vía Facturapi (`related_documents` no expone ObjetoImpDR): se bloquea
-  // ANTES del claim en vez de declararlo como Exento (dato fiscal falso).
-  if (grupos === "no_objeto") {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_REP_NO_OBJETO })
-      .eq("id", pago.id);
-    return json({ error: "rep_no_objeto", message: MSG_REP_NO_OBJETO }, 422);
-  }
+  // P1 · Auditoría IVA — un grupo por tratamiento con BaseDR prorrateada (la
+  // mezcla 16% + 0% sí se cobra; nunca una tasa promedio). "No objeto" (SAT 01)
+  // se representa vía XML manual (`repManual.ts`): no causa impuesto, pero su
+  // importe entra al denominador del prorrateo. Nada se vuelve Exento.
+  const noObjeto = resolverNoObjetoDr(conceptosFactura);
+  const { objetoImpDr, hayNoObjeto, gravables: conceptosGravables, grupos } = noObjeto;
   if (grupos === "sin_importes") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_REP_IMPORTES_FALTANTES })
@@ -157,13 +148,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // único que puede declararse cuando la factura no tiene renglones.
   const tasaIvaDr = gruposIva[0]?.tasa ?? respaldo?.tasa ?? 0;
   const factorIvaFactura = gruposIva[0]?.factor ?? respaldo?.factor ?? "Tasa";
-
-
   // P1 · Auditoría IVA — retenciones del CFDI relacionado: un grupo por
-  // impuesto+tasa con el importe de sus renglones (ya no se bloquea la mezcla
-  // de tasas del mismo impuesto). Sin importes no se puede calcular la base:
-  // bloqueo claro ANTES del claim (reintentable tras corregir la factura).
-  const retencionesDr = resolverGruposRetencionDr(conceptosFactura);
+  // impuesto+tasa con la base de sus renglones (los no objeto no admiten
+  // retención). Sin importes se bloquea ANTES del claim, reintentable.
+  const retencionesDr = resolverGruposRetencionDr(conceptosGravables);
   if (retencionesDr === "sin_importes") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_SIN_IMPORTES })
@@ -253,6 +241,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       retenciones: retencionesDr,
       subtotal_factura: Number(factura.subtotal ?? 0),
       total_factura: Number(factura.total ?? 0),
+      hay_no_objeto: hayNoObjeto,
+      objeto_imp_dr: objetoImpDr,
+      importe_no_objeto: noObjeto.importeNoObjeto,
     },
     referencias: refs,
   };
@@ -280,10 +271,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
   // deduplica por external_id; es sólo un campo de búsqueda).
   payload.external_id = claimTag;
-
+  // Con renglones "no objeto" el complemento viaja como XML nuestro (único
+  // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
   const resultado = await timbrarRep({
     facturapi,
-    payload: payload as unknown as Record<string, unknown>,
+    payload: payloadRepFinal(payload, ctx),
     supabase,
     pagoId: pago.id,
     organizationId: pago.organization_id,

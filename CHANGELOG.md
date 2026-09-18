@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.404] - 2026-09-18
+
+Complemento de pago (REP) de facturas con renglones «No objeto de impuesto» (SAT 01): ya se puede timbrar, armando el XML del complemento por nuestra cuenta.
+
+- **feat(REP · XML manual Pagos 2.0)**: nuevos `pagoXml.ts`, `pagoXmlDr.ts` y `repManual.ts` en `facturapi-emitir-rep`; el complemento viaja en `complements` con `ObjetoImpDR` real («01» si todos los renglones son no objeto, «02» en facturas mixtas declarando sólo el IVA de los renglones gravados). Nunca se traduce a Exento ni a tasa 0%.
+- **feat(REP · contexto)**: `helpers.ts` y `index.ts` transportan `hay_no_objeto`, `objeto_imp_dr` e `importe_no_objeto`; el importe no objeto entra al denominador del prorrateo y se excluye del cálculo de impuestos y retenciones.
+- **fix(REP · bloqueo)**: se elimina el 422 `rep_no_objeto`; `MSG_REP_NO_OBJETO` queda como red de seguridad si el proveedor rechaza el XML (pago íntegro, en error y reintentable). El claim atómico previo al timbrado se conserva.
+- **test**: `pagoXmlManual_test.ts` (7 casos: mixta 16%, todo no objeto sin `ImpuestosDR`, retenciones, moneda distinta, regresión del bloque estructurado, `FechaPago`).
+
+
 ## [13.823.403] - 2026-09-17
 
 Invitación al portal: el enlace del correo ahora aterriza en el paso de crear contraseña en lugar de un login donde el invitado no podía entrar.
