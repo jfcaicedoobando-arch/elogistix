@@ -140,13 +140,18 @@ interface TemplateData {
   ejecutivoTelefono: string;
 }
 
+/** `facturas` no tiene `folio`: se muestra `numero` y, si falta, la serie. */
+function folioMostrado(factura: FacturaRecordatorio): string {
+  if (factura.numero) return factura.numero;
+  return factura.serie ?? 'sin folio';
+}
+
 function buildTemplateData(
   factura: FacturaRecordatorio,
   orgName: string | null,
   perfil: { nombre?: string | null; email?: string | null; telefono?: string | null } | null,
   nota?: string,
 ): TemplateData {
-  // `facturas` no tiene `folio`: se muestra `numero` y, si falta, la serie.
   const dias = diasEntre(factura.fecha_vencimiento, new Date().toISOString()) ?? 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
   const moneda = factura.moneda ?? 'MXN';
