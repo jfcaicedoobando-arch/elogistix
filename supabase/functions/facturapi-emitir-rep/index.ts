@@ -249,7 +249,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       total_factura: Number(factura.total ?? 0),
       hay_no_objeto: hayNoObjeto,
       objeto_imp_dr: objetoImpDr,
-      importe_no_objeto: importeNoObjetoDr,
+      importe_no_objeto: noObjeto.importeNoObjeto,
     },
     referencias: refs,
   };
