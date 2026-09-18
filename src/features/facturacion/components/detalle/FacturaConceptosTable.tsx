@@ -50,7 +50,8 @@ interface Props {
     cantidad: number;
     precio_unitario: number;
     total: number;
-    tipo_iva?: TipoIvaConcepto;
+    /** `null` en renglones legacy sin tratamiento capturado (P1 auditoría IVA). */
+    tipo_iva?: TipoIvaConcepto | null;
     embarque_id?: string | null;
     embarque_expediente?: string | null;
   }>;
@@ -97,7 +98,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
         cantidad: c.cantidad,
         precio_unitario: c.precio_unitario,
         importe: c.total,
-        tipo_iva: c.tipo_iva,
+        tipo_iva: c.tipo_iva ?? undefined,
         embarque_id: c.embarque_id ?? null,
         embarque_expediente: c.embarque_expediente ?? null,
       }))

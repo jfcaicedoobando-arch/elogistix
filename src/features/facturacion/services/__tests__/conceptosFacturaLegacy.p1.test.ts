@@ -39,10 +39,8 @@ describe("P1 · renglones legacy sin tratamiento de IVA", () => {
   ])("editar descripción/precio de una fila legacy (%s) se bloquea sin tipo_iva", async (_caso, tasa) => {
     await expect(
       actualizarConceptoFactura({
-        id: "c-legacy",
+        conceptoId: "c-legacy",
         facturaId: "f1",
-        organizationId: "org1",
-        moneda: "MXN",
         input: { ...baseInput, tasa_iva_aplicada: tasa } as never,
       }),
     ).rejects.toThrow(MSG_TIPO_IVA_REQUERIDO);
