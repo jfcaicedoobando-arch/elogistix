@@ -8,12 +8,16 @@ import {
   calcularCuadreConceptos,
   type ConceptoParaCuadre,
 } from "@/features/cxp/utils/cuadreConceptos";
-import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
+import {
+  resolverConceptosParaCuadre,
+  sumarIvaPartidasVisibles,
+} from "@/features/cxp/utils/conceptosParaCuadre";
 
 interface ConceptoManual {
   key: string;
   importe?: number | string | null;
   cantidad?: number | null;
+  iva?: number | string | null;
 }
 
 interface Params {
