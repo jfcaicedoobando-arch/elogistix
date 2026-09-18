@@ -153,7 +153,13 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
             );
           })}
         </div>
+        {!fronteraHabilitada && (
+          <p className="text-label text-muted-foreground">
+            {AVISO_IVA_FRONTERA_DESHABILITADO}
+          </p>
+        )}
       </div>
+
     </div>
   );
 }
