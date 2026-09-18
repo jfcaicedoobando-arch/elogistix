@@ -93,6 +93,39 @@ function resolverConceptosFiscales(conceptos: ConceptoRow[]): FacturaContext["co
   return resueltos;
 }
 
+/**
+ * Lee los conceptos vigentes y aplica las defensas previas al SAT:
+ * papelera → sin conceptos → cuadre de subtotal → clave SAT.
+ *
+ * El `.select()` sólo puede pedir columnas que existen en `conceptos_factura`
+ * (ver ConceptoRow): una columna inexistente tumba el timbrado con 500.
+ */
+async function cargarConceptosVigentes(
+  supabase: SupabaseClient, facturaId: string, factura: FacturaRow,
+): Promise<ConceptoRow[] | Response> {
+  const { data: conceptos, error: conErr } = await supabase
+    .from("conceptos_factura")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .eq("factura_id", facturaId)
+    // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
+    .is("deleted_at", null);
+  if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+
+  const filas = (conceptos ?? []) as ConceptoRow[];
+  if (filas.length === 0) {
+    return jsonResponse({ error: "sin_conceptos", message: "La factura no tiene conceptos vigentes; no se puede timbrar." }, 422);
+  }
+
+  const cuadre = validarCuadreSubtotal(filas, factura);
+  if (cuadre) return cuadre;
+
+  const sinClave = filas.filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
+  if (sinClave.length > 0) {
+    return jsonResponse({ error: "clave_sat_faltante", message: `Hay ${sinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.` }, 422);
+  }
+  return filas;
+}
+
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
