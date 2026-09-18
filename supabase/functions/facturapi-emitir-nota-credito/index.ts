@@ -33,7 +33,7 @@ async function createNcInvoice(
   supabase: ReturnType<typeof createClient>,
   facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
   payload: unknown,
-  meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string },
+  meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string; claimTag: string },
   releaseClaim: () => Promise<void>,
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
