@@ -22,6 +22,11 @@ import {
   avisoTipoCambioFactura,
   inicialesDatosFiscales,
 } from "@/features/facturacion/domain/datosFiscalesForm";
+import {
+  MSG_NO_OBJETO_PPD,
+  ppdIncompatibleNoObjeto,
+  type LineaNoObjeto,
+} from "@/lib/financial/noObjetoFiscal";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 import { AutoSaveIndicator } from "./AutoSaveIndicator";
 import { queryKeys } from "@/lib/query";
@@ -67,6 +72,10 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
   // B12: el borrador USD nace sin T/C; también avisamos si quedó fuera de banda.
   const avisoTC = avisoTipoCambioFactura(factura.moneda, tipoCambio);
 
+  // P1 · Auditoría IVA: la limitación PPD + "No objeto" se avisa aquí, al
+  // capturar el método de pago, no hasta el diálogo de timbrado.
+  const avisoPpdNoObjeto = ppdIncompatibleNoObjeto(metodoPago, conceptos);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -81,6 +90,15 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
           >
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <span>{avisoTC}</span>
+          </div>
+        )}
+        {avisoPpdNoObjeto && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body text-destructive"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{MSG_NO_OBJETO_PPD}</span>
           </div>
         )}
         <DatosFiscalesForm
