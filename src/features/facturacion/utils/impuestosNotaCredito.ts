@@ -151,11 +151,12 @@ export function claveTratamientoNC(linea: LineaNC): string {
 /** Etiqueta de sólo lectura del tratamiento fiscal y retenciones del renglón. */
 export function etiquetaTratamientoNC(linea: LineaNC): string {
   const problema = problemaLineaNC(linea);
-  if (problema !== null) {
-    return `Renglón ${problema}: corrige la factura original y vuelve a generar la nota de crédito.`;
+  const tipo = tratamientoLineaNC(linea);
+  if (problema !== null || tipo === null) {
+    return `Renglón ${problema ?? "sin tratamiento fiscal"}: corrige la factura original y vuelve a generar la nota de crédito.`;
   }
-  const tipo = tratamientoLineaNC(linea) as TratamientoNC;
   const partes = [`IVA: ${TIPO_IVA_LABEL_SAT[tipo]}`];
+
   if (tipo === "gravado_16" || tipo === "gravado_8") {
     const pct = tasaTrasladoNC(linea) * 100;
     partes.push(`tasa ${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(2)}%`);
