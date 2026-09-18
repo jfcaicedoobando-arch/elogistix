@@ -11496,14 +11496,20 @@ BEGIN
     cv.descripcion, SUM(cv.cantidad), cv.precio_unitario,
     ROUND(SUM(cv.cantidad * cv.precio_unitario), 2), cv.moneda,
     CASE WHEN cv.tipo_iva IN ('no_objeto', 'exento') THEN false ELSE cv.aplica_iva END,
-    ROUND(SUM(cv.cantidad * cv.precio_unitario)
-          * CASE WHEN cv.tipo_iva IN ('no_objeto', 'exento', 'tasa_0') THEN 0
-                 ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
-            END, 2),
+    ROUND(SUM(cv.cantidad * cv.precio_unitario) * CASE
+            WHEN cv.tipo_iva = 'gravado_16' THEN p_tasa_iva
+            WHEN cv.tipo_iva = 'gravado_8'  THEN 0.08
+            WHEN cv.tipo_iva IN ('tasa_0', 'exento', 'no_objeto') THEN 0
+            ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+          END, 2),
     v_org_efectiva,
     CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
-         WHEN cv.tipo_iva IN ('exento', 'tasa_0') THEN 0
-         ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+         ELSE CASE
+            WHEN cv.tipo_iva = 'gravado_16' THEN p_tasa_iva
+            WHEN cv.tipo_iva = 'gravado_8'  THEN 0.08
+            WHEN cv.tipo_iva IN ('tasa_0', 'exento', 'no_objeto') THEN 0
+            ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+          END
     END,
     cv.tipo_iva
   FROM public.conceptos_venta cv
@@ -11517,7 +11523,12 @@ BEGIN
     COALESCE(NULLIF(ec.numero_contenedor, ''), NULLIF(e.contenedor, ''), 'Sin contenedor'),
     COALESCE(NULLIF(ec.tipo_contenedor, ''), NULLIF(e.tipo_contenedor, '')),
     cv.descripcion, cv.precio_unitario, cv.moneda, cv.aplica_iva, cv.tipo_iva,
-    COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END);
+    CASE
+            WHEN cv.tipo_iva = 'gravado_16' THEN p_tasa_iva
+            WHEN cv.tipo_iva = 'gravado_8'  THEN 0.08
+            WHEN cv.tipo_iva IN ('tasa_0', 'exento', 'no_objeto') THEN 0
+            ELSE COALESCE(cv.tasa_iva_aplicada, CASE WHEN cv.aplica_iva THEN p_tasa_iva ELSE 0 END)
+          END;
   -- Encabezado = Σ del detalle recién generado.
   SELECT
     COALESCE(SUM(pcc.total) FILTER (WHERE pcc.moneda = 'USD'), 0),
