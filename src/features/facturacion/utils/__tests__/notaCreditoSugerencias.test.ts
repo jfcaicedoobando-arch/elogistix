@@ -19,6 +19,7 @@ const base: ConceptoNotaCredito = {
   clave_unidad: "E48",
   unidad: "Unidad de servicio",
   tasa_iva: 0.16,
+  tipo_iva: "gravado_16",
 };
 
 describe("notaCreditoSugerencias", () => {
@@ -43,10 +44,15 @@ describe("notaCreditoSugerencias", () => {
   });
 
   it("el concepto por saldo iguala el saldo con IVA incluido", () => {
-    const c = conceptoPorSaldo(1160, base, 0.16);
+    const c = conceptoPorSaldo(1160, base);
     expect(c.precio_unitario).toBe(1000);
     const total = calcularTotalConIVA(subtotalLinea(c.cantidad, c.precio_unitario), 0.16);
     expect(total).toBeCloseTo(1160, 2);
+  });
+
+  it("P1-IVA: un renglón sin tratamiento no se despeja como si fuera 16%", () => {
+    const sinTipo = { ...base, tipo_iva: undefined };
+    expect(conceptoPorSaldo(1160, sinTipo).precio_unitario).toBe(1160);
   });
 
   it("saldo inválido no produce importes negativos", () => {

@@ -62,13 +62,8 @@ const DESCRIPCION_SALDO = "Nota de crédito por saldo pendiente de la factura";
 export function conceptoPorSaldo(
   saldo: number,
   base: ConceptoNotaCredito,
-  /** Sobrescribe la tasa del renglón base (opcional). */
-  tasa?: number,
 ): ConceptoNotaCredito {
-  const linea: ConceptoNotaCredito =
-    tasa === undefined
-      ? base
-      : { ...base, tasa_iva: Number.isFinite(tasa) && tasa >= 0 ? tasa : 0 };
+  const linea = base;
   const factor = factorTotalNC(linea);
   const saldoSeguro = Number.isFinite(saldo) && saldo > 0 ? saldo : 0;
   return {
