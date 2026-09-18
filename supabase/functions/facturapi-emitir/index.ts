@@ -18,7 +18,8 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
+import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar, ESTADOS_FACTURA_TIMBRABLES } from "./emitir.ts";
+import { realinearFechaEmision } from "./fechaEmision.ts";
 import { cargarContexto } from "./contexto.ts";
 import type { FacturaRow } from "./types.ts";
 
