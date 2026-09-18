@@ -273,13 +273,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   payload.external_id = claimTag;
   // Con renglones "no objeto" el complemento viaja como XML nuestro (único
   // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
-  const payloadFinal = requiereXmlManual(ctx.documento_relacionado)
-    ? conComplementoXmlManual(payload, ctx)
-    : (payload as unknown as Record<string, unknown>);
-
   const resultado = await timbrarRep({
     facturapi,
-    payload: payloadFinal,
+    payload: payloadRepFinal(payload, ctx),
     supabase,
     pagoId: pago.id,
     organizationId: pago.organization_id,
