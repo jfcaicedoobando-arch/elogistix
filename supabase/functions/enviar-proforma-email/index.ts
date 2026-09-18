@@ -196,7 +196,7 @@ async function registrarEnvio(admin: SupabaseClient, params: RegistrarEnvioParam
 async function cargarProforma(admin: SupabaseClient, proformaId: string): Promise<ProformaRow | null> {
   const { data, error } = await admin
     .from('proformas')
-    .select('id, numero, cliente_nombre, expediente, moneda, total, organization_id, token_publico, token_expira_at')
+    .select('id, numero, cliente_nombre, expediente, total_usd, total_mxn, organization_id, token_publico, token_expira_at')
     .eq('id', proformaId)
     .maybeSingle();
   if (error || !data) return null;
