@@ -6,6 +6,9 @@
  * con explicación (antes se podía capturar y el bloqueo aparecía sólo al
  * timbrar). Un renglón que YA venía al 8% conserva su tratamiento: no se
  * reescribe lo histórico.
+ *
+ * Las etiquetas y la regla `frontera8Bloqueado` viven en `facturaTipoIva.ts`
+ * para que este archivo sólo exporte el componente (fast refresh).
  */
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -15,29 +18,8 @@ import {
   TIPO_IVA_FRONTERA,
   puedeGuardarTipoIva,
 } from "@/lib/financial/ivaFrontera";
+import { ORDEN_TIPOS_IVA, TIPO_IVA_LABEL } from "./facturaTipoIva";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
-
-export const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
-  gravado_16: "IVA 16%",
-  gravado_8: "IVA 8% (frontera)",
-  tasa_0: "Tasa 0%",
-  exento: "Exento",
-  no_objeto: "No objeto de impuesto (SAT 01)",
-};
-
-const ORDEN: readonly TipoIvaConcepto[] = [
-  "gravado_16", "gravado_8", "tasa_0", "exento", "no_objeto",
-];
-
-/** `true` cuando el tratamiento elegido no puede guardarse (8% deshabilitado). */
-export function frontera8Bloqueado(
-  tipo: TipoIvaConcepto | undefined,
-  tipoOriginal: TipoIvaConcepto | null | undefined,
-  fronteraHabilitada: boolean,
-): boolean {
-  if (!tipo) return false;
-  return !puedeGuardarTipoIva(tipo, tipoOriginal, fronteraHabilitada);
-}
 
 interface Props {
   value: TipoIvaConcepto | undefined;
@@ -65,7 +47,7 @@ export function FacturaTipoIvaSelect({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {ORDEN.map((tipo) => (
+        {ORDEN_TIPOS_IVA.map((tipo) => (
           <SelectItem
             key={tipo}
             value={tipo}
