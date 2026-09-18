@@ -104,7 +104,7 @@ function tasaDeConcepto(c: ConceptoTraslado): TrasladoDr | null {
 }
 
 /** Importe del renglón sin impuestos: `total` o cantidad × precio unitario. */
-function importeDeConcepto(c: ConceptoTraslado): number {
+export function importeDeConcepto(c: ConceptoTraslado): number {
   const total = Number(c?.total ?? Number.NaN);
   if (Number.isFinite(total) && total > 0) return total;
   const cantidad = Number(c?.cantidad ?? Number.NaN);
