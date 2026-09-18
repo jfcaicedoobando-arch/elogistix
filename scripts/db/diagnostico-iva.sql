@@ -27,8 +27,11 @@ SELECT
       THEN 'sin_tratamiento_fiscal_ambiguo'
     WHEN tipo_iva NOT IN ('gravado_16','gravado_8','tasa_0','exento','no_objeto')
       THEN 'tratamiento_desconocido_ambiguo'
-    WHEN tipo_iva IN ('exento','no_objeto','tasa_0') AND COALESCE(tasa_iva_aplicada, 0) > 0
+    -- P2-IVA: cualquier tasa distinta de cero (incluidas negativas) es
+    -- incoherente para un tratamiento que no causa IVA trasladado.
+    WHEN tipo_iva IN ('exento','no_objeto','tasa_0') AND COALESCE(tasa_iva_aplicada, 0) <> 0
       THEN 'no_causante_con_tasa'
+
     WHEN tipo_iva IN ('gravado_16','gravado_8') AND aplica_iva IS FALSE
       THEN 'gravado_con_iva_apagado'
     WHEN tipo_iva IN ('gravado_16','gravado_8') AND tasa_iva_aplicada IS NULL

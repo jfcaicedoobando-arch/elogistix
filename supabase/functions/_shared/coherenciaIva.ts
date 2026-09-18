@@ -48,7 +48,9 @@ export function clasificarCoherenciaIva(
     const etiqueta = tipo === "tasa_0" ? "tasa 0%" : tipo === "exento" ? "exento" : "no objeto de impuesto (SAT 01)";
 
     if (noCausa) {
-      if (tasaNum != null && tasaNum > 0) {
+      // P2-IVA: cualquier tasa distinta de cero (incluida una negativa) es
+      // incoherente para un tratamiento que no causa IVA trasladado.
+      if (tasaNum != null && Math.abs(tasaNum) >= EPS) {
         return {
           estado: "incoherente",
           tipo,
@@ -56,6 +58,7 @@ export function clasificarCoherenciaIva(
           motivo: `está clasificado como ${etiqueta} pero tiene una tasa de IVA de ${(tasaNum * 100).toFixed(2)}%`,
         };
       }
+
       if (flag === true && tipo !== "tasa_0") {
         return { estado: "incoherente", tipo, tasa: 0, motivo: `está clasificado como ${etiqueta} pero tiene el IVA activado` };
       }
