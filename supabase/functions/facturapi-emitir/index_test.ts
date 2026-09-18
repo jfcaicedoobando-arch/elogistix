@@ -70,5 +70,6 @@ Deno.test("facturapi-emitir: resuelve API key por organización vía helper comp
   // Tras la migración al SDK oficial, el index delega en getFacturapiClient
   // (que internamente llama resolveFacturapiKey) en vez de leer FACTURAPI_KEY global directo.
   assertStringIncludes(indexSource, 'from "../_shared/facturapiClient.ts"');
-  assertStringIncludes(indexSource, "getFacturapiClient(supabase, factura.organization_id)");
+  // La fila puede haberse realineado a la fecha de hoy antes de este punto.
+  assertStringIncludes(indexSource, "getFacturapiClient(supabase, facturaVigente.organization_id)");
 });

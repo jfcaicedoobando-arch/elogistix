@@ -14,8 +14,9 @@ import {
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
-import type { Claim, FacturaRow, UserIdentity } from "./types.ts";
+import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
 
+export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 export type { Claim, FacturaRow } from "./types.ts";
 export { cargarContexto } from "./contexto.ts";
 
@@ -32,7 +33,7 @@ export const ESTADOS_FACTURA_TIMBRABLES: readonly string[] = ["Borrador", "Por t
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, fecha_emision, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, iva, total")
+    .select(FACTURA_COLUMNS)
     .eq("id", facturaId)
     // Ola 3 · B: una factura en papelera no es timbrable ni por llamada directa.
     .is("deleted_at", null)
@@ -68,38 +69,14 @@ export function validarTipoCambio(factura: FacturaRow): Response | null {
   return null;
 }
 
-/** `YYYY-MM-DD` de hoy en hora de México (zona fiscal del CFDI). */
-export function hoyMx(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-}
-
-/**
- * EERR-FISCAL (v13.823.247): FacturAPI certifica el CFDI con la fecha/hora del
- * timbre. Si `fecha_emision` quedó en otro día (típico: se captura el último
- * día del mes y el timbre sale al día siguiente), la factura y su TC DOF
- * quedarían en un mes distinto al que reconoce el SAT. Se bloquea antes del PAC
- * para que se actualice la fecha (y con ella el TC) en vez de timbrar desfasado.
- */
-export function validarFechaEmisionVigente(factura: FacturaRow, now: Date = new Date()): Response | null {
-  const fecha = (factura.fecha_emision ?? "").slice(0, 10);
-  const hoy = hoyMx(now);
-  if (!fecha || fecha === hoy) return null;
-  return jsonResponse({
-    error: "fecha_emision_desfasada",
-    message: `La factura tiene fecha ${fecha} y hoy es ${hoy}. Actualiza la fecha de la factura (se recalcula el tipo de cambio del DOF) antes de timbrar: el SAT la certificará con la fecha de hoy.`,
-  }, 422);
-}
-
-
 /**
  * Ola 3 · B — todas las validaciones previas al PAC en un solo boundary
  * (estado timbrable → tipo de cambio → total > 0 → límite de crédito).
  * Se agrupan aquí para que el handler quede lineal.
+ *
+ * La fecha de emisión ya NO se valida aquí: `realinearFechaEmision`
+ * (fechaEmision.ts) la pone en el día del timbre antes de estas validaciones,
+ * y el trigger del DOF vuelve a resolver el tipo de cambio.
  */
 export async function validarFacturaTimbrable(
   supabase: SupabaseClient,
@@ -108,7 +85,6 @@ export async function validarFacturaTimbrable(
 ): Promise<Response | null> {
   return validarEstadoTimbrable(factura)
     ?? validarTipoCambio(factura)
-    ?? validarFechaEmisionVigente(factura)
     ?? validarTotalPositivo(factura)
     ?? (await validarLimiteCredito(supabase, factura, userId));
 }

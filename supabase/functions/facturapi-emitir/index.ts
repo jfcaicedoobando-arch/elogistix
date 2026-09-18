@@ -18,7 +18,8 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
+import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar, ESTADOS_FACTURA_TIMBRABLES } from "./emitir.ts";
+import { realinearFechaEmision } from "./fechaEmision.ts";
 import { cargarContexto } from "./contexto.ts";
 import type { FacturaRow } from "./types.ts";
 
@@ -60,22 +61,33 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     return json({ error: "forbidden", message: "Tu rol no tiene permiso para timbrar facturas de esta organización." }, 403);
   }
 
+  // El SAT certifica con la fecha del timbre: si el borrador quedó fechado otro
+  // día se realinea a hoy (y el trigger del DOF recalcula el T/C) en vez de
+  // rechazar el timbrado. Corre ANTES de las validaciones para que éstas vean
+  // la fila ya actualizada.
+  const realineada = await realinearFechaEmision(
+    supabase, factura as FacturaRow, ESTADOS_FACTURA_TIMBRABLES,
+    { id: userData.user.id, email: userData.user.email ?? "" },
+  );
+  if (realineada instanceof Response) return realineada;
+  const facturaVigente = realineada;
+
   // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,
   // todo ANTES de credenciales/contexto/claim/PAC.
-  const previos = await validarFacturaTimbrable(supabase, factura as FacturaRow, userData.user.id);
+  const previos = await validarFacturaTimbrable(supabase, facturaVigente, userData.user.id);
   if (previos) return previos;
 
   // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
   // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /
   // validation_failed no lo liberaban → la factura quedaba PENDING: y
   // respondía 409 ya_timbrada durante ≥3 min.
-  const sustituyeUuid = await resolverSustitucion(supabase, factura);
+  const sustituyeUuid = await resolverSustitucion(supabase, facturaVigente);
   if (sustituyeUuid instanceof Response) return sustituyeUuid;
 
-  const resolved = await getFacturapiClient(supabase, factura.organization_id);
+  const resolved = await getFacturapiClient(supabase, facturaVigente.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid);
+  const context = await cargarContexto(supabase, body.factura_id, facturaVigente, sustituyeUuid);
   if (context instanceof Response) return context;
 
   // Claim atómico DESPUÉS de validar (comentario espejo de la familia NC): se
@@ -92,7 +104,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     apiKey: resolved.data.apiKey,
     ambiente: resolved.data.ambiente,
     ctx: context,
-    factura: factura as FacturaRow,
+    factura: facturaVigente,
     facturaId: body.factura_id,
     user: { id: userData.user.id, email: userData.user.email ?? "" },
     claim,

@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.1] - 2026-09-18
+
+Timbrar ya no se bloquea porque el borrador quedó fechado otro día.
+
+- **fix(CFDI · fecha de emisión)**: se retira el 422 `fecha_emision_desfasada` (la UI no ofrecía campo para corregir la fecha y el borrador quedaba atorado). Nuevo `facturapi-emitir/fechaEmision.ts`: `realinearFechaEmision` pone `fecha_emision` en el día del timbre antes de validar, clamar y llamar al PAC; los triggers `_factura_tc_dof_obligatorio` y `facturas_set_fecha_vencimiento` recalculan T/C DOF y vencimiento. Nunca toca facturas timbradas ni en papelera, y queda bitácora `realinear_fecha_emision_timbrado`.
+- **fix(CFDI · TC DOF)**: `LC_FACTURA_SIN_TC_DOF` / `LC_FACTURA_TC_DOF_OBSOLETO` se traducen a 422 `tc_dof_no_disponible` reintentable, antes del claim: no se timbra con un tipo de cambio obsoleto.
+- **feat(UI · timbrado)**: `avisoFechaTimbrado.ts` avisa (sin bloquear) que la factura se emitirá con la fecha de hoy y el TC DOF del día.
+- **test**: `fechaEmision_test.ts` (Deno) y `avisoFechaTimbrado.test.ts` (Vitest).
+
 ## [13.824.0] - 2026-09-18
 
 Auditoría fiscal posterior a PPD + «No objeto»: la pareja Método/Forma de pago y el cuadre de totales se validan antes de timbrar.

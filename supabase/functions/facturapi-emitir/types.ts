@@ -28,6 +28,14 @@ export interface FacturaRow {
   total?: number | string | null;
 }
 
+/**
+ * Columnas de `facturas` que alimentan a `FacturaRow`. Vive aquí para que la
+ * carga inicial (`loadFactura`) y el realineo de fecha (`fechaEmision.ts`)
+ * devuelvan EXACTAMENTE la misma forma de fila.
+ */
+export const FACTURA_COLUMNS =
+  "id, numero, serie, estado, moneda, fecha_emision, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, iva, total";
+
 export interface Claim { claimTag: string; claimAt: string; release: () => Promise<void> }
 
 export interface UserIdentity { id: string; email?: string | null }
