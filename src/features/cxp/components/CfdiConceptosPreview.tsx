@@ -62,7 +62,10 @@ export function CfdiConceptosPreview({
     retenciones: retencionesDocumento ?? null,
     total: totalDocumento != null && totalDocumento > 0 ? totalDocumento : null,
   });
-  const hayIeps = resumen.ieps > 0;
+  // En captura por IA la columna de IEPS está siempre disponible: es un dato
+  // corregible, y si sólo apareciera cuando el IEPS es > 0 desaparecería justo
+  // al dejarlo en cero (o no se podría capturar el que la IA no detectó).
+  const hayIeps = editable || resumen.ieps > 0;
   const totalConImpuestos = lineas.reduce((acc, l) => acc + totalLineaConImpuestos(l), 0);
 
   return (
