@@ -99,6 +99,34 @@ export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
 }
 
 /**
+ * ObjetoImpDR del documento relacionado para el XML manual del complemento:
+ * "01" sólo cuando TODOS sus renglones son "no objeto" (entonces el nodo
+ * ImpuestosDR se omite); "02" en cualquier otro caso, incluidas las facturas
+ * mixtas, donde se declaran únicamente los impuestos de los renglones que sí
+ * son objeto. Nunca se reclasifica un tratamiento.
+ */
+export function resolverObjetoImpDr(
+  conceptos: ConceptoTraslado[] | null | undefined,
+): "01" | "02" {
+  const lista = conceptos ?? [];
+  return lista.length > 0 && lista.every(esConceptoNoObjeto) ? "01" : "02";
+}
+
+/** Renglones que SÍ causan impuesto (se excluyen los "no objeto"). */
+export function conceptosObjetoImpuesto<T extends ConceptoTraslado>(
+  conceptos: T[] | null | undefined,
+): T[] {
+  return (conceptos ?? []).filter((c) => !esConceptoNoObjeto(c));
+}
+
+/** Importe (sin impuestos) de los renglones "no objeto" del documento. */
+export function importeNoObjeto(conceptos: ConceptoTraslado[] | null | undefined): number {
+  return (conceptos ?? [])
+    .filter(esConceptoNoObjeto)
+    .reduce((acc, c) => acc + importeDeConcepto(c), 0);
+}
+
+/**
  * Traslado del renglón. `null` = INDETERMINADO: no hay tratamiento registrado o
  * la tasa guardada contradice el tratamiento. Nunca cae al 16%.
  */
