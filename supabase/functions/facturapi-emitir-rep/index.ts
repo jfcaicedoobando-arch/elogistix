@@ -129,18 +129,18 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   }
   // P1-IVA — tratamiento desconocido o contradictorio: se falla CERRADO antes
   // del claim, con un mensaje que dice qué debe completar Contabilidad.
-  const trasladoRespaldo = traslado === "sin_conceptos"
+  const trasladoFinal = traslado === "sin_conceptos"
     ? trasladoDesdeEncabezado(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0))
-    : null;
-  if (traslado === "indeterminado" || (traslado === "sin_conceptos" && trasladoRespaldo === null)) {
+    : traslado;
+  if (trasladoFinal === null || trasladoFinal === "indeterminado") {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: MSG_REP_TRATAMIENTO_INDETERMINADO })
       .eq("id", pago.id);
     return json({ error: "iva_tratamiento_indeterminado", message: MSG_REP_TRATAMIENTO_INDETERMINADO }, 422);
   }
-  const trasladoFinal = traslado === "sin_conceptos" ? trasladoRespaldo! : traslado;
   const tasaIvaDr = trasladoFinal.tasa;
   const factorIvaFactura = trasladoFinal.factor;
+
 
   // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
   // impuesto ⇒ bloqueo claro ANTES del claim (reintentable tras corregir).
