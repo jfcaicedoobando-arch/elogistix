@@ -97,7 +97,18 @@ export function clasificarCoherenciaIva(
         motivo: `está clasificado como gravado (${(canonica * 100).toFixed(0)}%) pero el IVA quedó desactivado; falta definir si es tasa 0%, exento o no objeto`,
       };
     }
-    if (tasaNum != null && !igual(tasaNum, canonica)) {
+    if (tasaNum == null) {
+      if (flag === true) return { estado: "ok", tipo, tasa: canonica };
+      // Gravado sin tasa registrada: el flujo que apagó el IVA dejó la tasa
+      // vacía sin cambiar la clasificación. No se rellena con 16%.
+      return {
+        estado: "incoherente",
+        tipo,
+        tasa: canonica,
+        motivo: `está clasificado como gravado ${(canonica * 100).toFixed(0)}% pero no tiene tasa de IVA registrada`,
+      };
+    }
+    if (!igual(tasaNum, canonica)) {
       return {
         estado: "incoherente",
         tipo,

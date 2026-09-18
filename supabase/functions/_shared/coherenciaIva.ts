@@ -70,7 +70,16 @@ export function clasificarCoherenciaIva(
         motivo: `está clasificado como gravado (${(canonica * 100).toFixed(0)}%) pero el IVA quedó desactivado; falta definir si es tasa 0%, exento o no objeto`,
       };
     }
-    if (tasaNum != null && Math.abs(tasaNum - canonica) >= EPS) {
+    if (tasaNum == null) {
+      if (flag === true) return { estado: "ok", tipo, tasa: canonica };
+      return {
+        estado: "incoherente",
+        tipo,
+        tasa: canonica,
+        motivo: `está clasificado como gravado ${(canonica * 100).toFixed(0)}% pero no tiene tasa de IVA registrada`,
+      };
+    }
+    if (Math.abs(tasaNum - canonica) >= EPS) {
       return {
         estado: "incoherente",
         tipo,
