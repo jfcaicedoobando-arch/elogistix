@@ -14,6 +14,8 @@ import {
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
+import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { registrarFacturaPendiente, respuestaIdempotencyEnUso } from "./pendiente.ts";
 import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
 
 export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
