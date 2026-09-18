@@ -20,6 +20,7 @@ import {
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { sanearPatchFactura, cerrarCancelacionSiAceptada } from "./facturaPatch.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
   COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
@@ -75,6 +76,50 @@ async function handleReceiptEvent(
     delete patch.rep_cancellation_status;
   }
   if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+
+  // P0-A.4: sólo un evento con UUID válido promueve un REP pendiente.
+  if (localizado.via === "pendiente") {
+    const adopcion = patchAdopcionPendiente(COLS_REP, receipt.facturapi_rep_id, patch);
+    if (!adopcion) return jsonResponse({ ok: true, ignored: "timbrado_pendiente" });
+    Object.assign(patch, adopcion);
+  }
+
+  const { error: updErr } = await supabase
+    .from("pagos_factura")
+    .update(patch)
+    .eq("id", pago.id);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
+    accion: receipt.bitacora_accion,
+    entidadId: pago.id,
+    detalles: { event_type: event.type, patch: receipt.patch },
+  });
+  return jsonResponse({ ok: true, target: "pagos_factura" });
+}
+
+async function handleFacturaEvent(
+  supabase: SB, orgId: string, event: FacturapiWebhookEvent,
+): Promise<Response> {
+  const mapped = mapEventToFacturaPatch(event);
+  if (!mapped) return jsonResponse({ ok: true, ignored: true });
+
+  // P0-A.4: la fila puede estar en "timbrado pendiente" (claim PENDING:<uuid>
+  // + id remoto del intento); el evento `valid` la resuelve.
+  const localizada = await localizarFila<FacturaLocal>({
+    supabase, tabla: "facturas", orgId, cols: COLS_FACTURA,
+    select: "id, organization_id, estado, sustituida_por, cancellation_status",
+    remoteId: mapped.facturapi_id, externalId: externalIdDeEvento(event),
+  });
+  if (!localizada) return jsonResponse({ ok: true, ignored: "factura_not_found" });
+  const factura = localizada.fila;
+
+  const patch = sanearPatchFactura(mapped, factura);
+  const errCierre = await cerrarCancelacionSiAceptada(supabase, patch, factura.id);
+  if (errCierre) return errCierre;
 
   // P0-A.4: sólo un evento con UUID válido promueve un REP pendiente.
   if (localizado.via === "pendiente") {
