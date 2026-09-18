@@ -71,7 +71,7 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, aplica_iva")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", facturaId)
     // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
     .is("deleted_at", null);
