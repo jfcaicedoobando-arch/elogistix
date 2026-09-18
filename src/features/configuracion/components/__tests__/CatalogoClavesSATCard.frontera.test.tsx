@@ -10,34 +10,42 @@ import { EMPTY_DRAFT, type Draft } from "@/features/configuracion/components/Cat
 
 const estado = vi.hoisted(() => ({
   habilitada: false,
-  onValueChange: null as ((v: string) => void) | null,
+  /** Un handler por cada `Select` montado; el índice 0 es el de tratamiento fiscal. */
+  handlers: [] as Array<(v: string) => void>,
 }));
 
 vi.mock("@/features/configuracion/hooks/useIvaFrontera", () => ({
   useIvaFronteraHabilitada: () => estado.habilitada,
 }));
 
-vi.mock("@/components/ui/select", () => ({
-  Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (v: string) => void }) => {
-    estado.onValueChange = onValueChange;
-    return <div>{children}</div>;
-  },
-  SelectTrigger: ({ children, ...rest }: { children: React.ReactNode }) => (
-    <button type="button" {...rest}>{children}</button>
-  ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectValue: () => null,
-  SelectItem: ({ children, value, disabled }: { children: React.ReactNode; value: string; disabled?: boolean }) => (
-    <button
-      type="button"
-      data-testid={`opcion-${value}`}
-      aria-disabled={disabled ? "true" : "false"}
-      onClick={() => { if (!disabled) estado.onValueChange?.(value); }}
-    >
-      {children}
-    </button>
-  ),
-}));
+vi.mock("@/components/ui/select", async () => {
+  const React = await import("react");
+  const Ctx = React.createContext<(v: string) => void>(() => {});
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange: (v: string) => void }) => {
+      if (!estado.handlers.includes(onValueChange)) estado.handlers.push(onValueChange);
+      return <Ctx.Provider value={onValueChange}>{children}</Ctx.Provider>;
+    },
+    SelectTrigger: ({ children, ...rest }: { children: React.ReactNode }) => (
+      <button type="button" {...rest}>{children}</button>
+    ),
+    SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SelectValue: () => null,
+    SelectItem: ({ children, value, disabled }: { children: React.ReactNode; value: string; disabled?: boolean }) => {
+      const cambiar = React.useContext(Ctx);
+      return (
+        <button
+          type="button"
+          data-testid={`opcion-${value}`}
+          aria-disabled={disabled ? "true" : "false"}
+          onClick={() => { if (!disabled) cambiar(value); }}
+        >
+          {children}
+        </button>
+      );
+    },
+  };
+});
 
 const draftValido: Draft = { ...EMPTY_DRAFT, patron: "Flete marítimo", clave_sat: "78101800" };
 
