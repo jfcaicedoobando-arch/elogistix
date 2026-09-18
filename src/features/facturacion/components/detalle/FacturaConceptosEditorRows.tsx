@@ -116,7 +116,11 @@ interface FormProps {
 
 export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) {
   const patch = (p: Partial<ConceptoFacturaInput>) => setDraft({ ...draft, ...p });
-  const tipoIva: TipoIvaConcepto = draft.tipo_iva ?? "gravado_16";
+  // P1 · Auditoría IVA — sin tratamiento guardado el selector queda vacío
+  // ("Por confirmar"): editar la descripción o el precio de una fila legacy
+  // ya no la declara 16% en silencio.
+  const tipoIva: TipoIvaConcepto | undefined = draft.tipo_iva ?? undefined;
+  const tratamientoPendiente = !tipoIva;
   // P1 · IVA — ObjetoImp 01 no declara impuestos: al elegir "No objeto" se
   // limpian las retenciones (antes quedaban ocultas y viajaban en el CFDI).
   const noObjeto = tipoIva === "no_objeto";
