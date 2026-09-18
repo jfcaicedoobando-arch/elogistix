@@ -83,7 +83,10 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     facturas: ((facturas ?? []) as Array<{ numero: string; estado: string; total: number; moneda: string }>).map((f) => ({
       folio: f.numero, estado: f.estado, total: Number(f.total ?? 0), moneda: f.moneda ?? "MXN",
     })),
-    proformas: ((proformas ?? []) as Array<{ folio: string; estado: string }>).map((p) => ({ folio: p.folio, estado: p.estado })),
+    proformas: ((proformas ?? []) as Array<{ numero: string | null; estado_proforma: string | null }>).map((p) => ({
+      folio: p.numero ?? "—",
+      estado: p.estado_proforma ?? "—",
+    })),
     documentos: docList,
   };
 }
