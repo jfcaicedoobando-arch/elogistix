@@ -41,20 +41,38 @@ function parseSchema(): Map<string, Set<string>> {
   return out;
 }
 
-interface Finding { file: string; line: number; table: string; column: string; }
+interface Finding { file: string; line: number; table: string; column: string; kind: "is" | "select" }
+
+/**
+ * Columnas simples de un `.select("a, b, c")`. Se ignoran embeds y alias
+ * (`rel(...)`, `alias:col`, `*`, `!inner`) porque ahí el nombre no es una
+ * columna directa de la tabla.
+ */
+function columnasDeSelect(arg: string): string[] {
+  if (arg.includes("(") || arg.includes("*") || arg.includes("$")) return [];
+  return arg
+    .split(",")
+    .map((t) => t.trim())
+    .filter((t) => /^\w+$/.test(t));
+}
 
 async function main() {
   const schema = parseSchema();
-  const files = await fg(["src/**/*.{ts,tsx}"], {
+  // v13.824.2: las Edge Functions también entran. Un `aplica_iva` inexistente
+  // en `conceptos_factura` tumbó el timbrado completo en producción.
+  const files = await fg(["src/**/*.{ts,tsx}", "supabase/functions/**/*.ts"], {
     cwd: ROOT,
-    ignore: ["**/*.test.*", "**/*.spec.*", "**/__tests__/**", "src/integrations/supabase/types.ts"],
+    ignore: [
+      "**/*.test.*", "**/*.spec.*", "**/__tests__/**", "**/*_test.ts",
+      "src/integrations/supabase/types.ts",
+    ],
   });
   const findings: Finding[] = [];
 
   for (const rel of files) {
     const content = fs.readFileSync(path.join(ROOT, rel), "utf8");
     const lines = content.split("\n");
-    // buscar `.from("tabla")` … `.is("col", …)` en una ventana de 20 líneas.
+    // buscar `.from("tabla")` … `.is("col", …)` / `.select("a, b")` en una ventana.
     for (let i = 0; i < lines.length; i++) {
       const fromMatch = lines[i].match(/\.from\(["'`](\w+)["'`]\)/);
       if (!fromMatch) continue;
@@ -66,7 +84,15 @@ async function main() {
         if (j > i && /\.from\(["'`]\w+["'`]\)/.test(lines[j])) break;
         const isMatch = lines[j].match(/\.is\(["'`](\w+)["'`]\s*,/);
         if (isMatch && !cols.has(isMatch[1])) {
-          findings.push({ file: rel, line: j + 1, table, column: isMatch[1] });
+          findings.push({ file: rel, line: j + 1, table, column: isMatch[1], kind: "is" });
+        }
+        const selMatch = lines[j].match(/\.select\(\s*["'`]([^"'`]*)["'`]/);
+        if (selMatch) {
+          for (const col of columnasDeSelect(selMatch[1])) {
+            if (!cols.has(col)) {
+              findings.push({ file: rel, line: j + 1, table, column: col, kind: "select" });
+            }
+          }
         }
       }
     }
