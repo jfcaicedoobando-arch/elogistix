@@ -69,14 +69,17 @@ Deno.test("resolveRedirectTo: permite localhost sin puerto", () => {
 
 Deno.test("resolveRedirectTo: permite preview oficial allow-listado", () => {
   const ok = "https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app";
-  assertEquals(resolveRedirectTo(ok), `${ok}/portal/login`);
+  assertEquals(resolveRedirectTo(ok), `${ok}/reset-password?origen=invitacion`);
 });
 
 Deno.test("resolveRedirectTo: rechaza http no-localhost (downgrade attack)", () => {
-  assertEquals(resolveRedirectTo("http://elogistix.lovable.app"), "https://elogistix.lovable.app/portal/login");
+  assertEquals(
+    resolveRedirectTo("http://elogistix.lovable.app"),
+    "https://librecarga.com/reset-password?origen=invitacion",
+  );
 });
 
 Deno.test("resolveRedirectTo: rechaza string vacío", () => {
-  assertEquals(resolveRedirectTo(""), "https://elogistix.lovable.app/portal/login");
+  assertEquals(resolveRedirectTo(""), "https://librecarga.com/reset-password?origen=invitacion");
 });
 

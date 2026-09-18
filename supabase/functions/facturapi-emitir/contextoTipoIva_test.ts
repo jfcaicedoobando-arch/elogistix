@@ -27,15 +27,13 @@ function fakeSupabase(conceptos: Fila[]) {
       if (tabla === "conceptos_factura") return chain({ data: conceptos, error: null });
       return chain({ data: null, error: null });
     },
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as Parameters<typeof cargarContexto>[0];
 }
 
 const factura = {
   id: "f1", cliente_id: "c1", subtotal: 1000, moneda: "MXN", tipo_cambio: 1,
   serie: "A", forma_pago: "03", metodo_pago: "PUE", uso_cfdi: "G03",
-  // deno-lint-ignore no-explicit-any
-} as any;
+} as unknown as Parameters<typeof cargarContexto>[2];
 
 const conceptoBase = {
   descripcion: "Flete marítimo", cantidad: 1, precio_unitario: 1000,
