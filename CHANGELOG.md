@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.824.2] - 2026-09-18
+
+Se desbloquea el timbrado: la lectura de conceptos pedía una columna inexistente.
+
+- **fix(CFDI · conceptos)**: `facturapi-emitir/contexto.ts` ya no pide `aplica_iva` en el `.select()` de `conceptos_factura` (esa columna sólo existe en `conceptos_venta` y `proforma_conceptos_consolidados`). El error 500 `conceptos_query_failed` bloqueaba el timbrado de TODAS las facturas desde 13.824.1. La coherencia fiscal se decide con el campo canónico `tipo_iva` + tasa.
+- **fix(auditoría de esquema)**: `scripts/audit-schema-columns.ts` ahora revisa también los `.select()` (no sólo los filtros `.is()`) e incluye las Edge Functions.
+- **fix(correo · proformas)**: `enviar-proforma-email` leía `moneda`/`total` inexistentes en `proformas`; ahora usa `total_usd`/`total_mxn` y deriva la moneda del importe.
+- **fix(cobranza)**: `cxc-recordatorio-enviar` ya no pide `folio` (no existe en `facturas`); el folio mostrado usa `numero`/`serie`.
+- **fix(auditoría IA)**: `auditoria-explicar-hallazgo` lee `numero`/`estado_proforma` de `proformas`.
+- **test**: `conceptosColumnas_test.ts` (Deno) fija las columnas reales de `conceptos_factura`.
+
 ## [13.824.1] - 2026-09-18
 
 Timbrar ya no se bloquea porque el borrador quedó fechado otro día.

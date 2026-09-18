@@ -57,7 +57,8 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     adminClient.from("conceptos_venta").select("id, estado_facturacion").eq("embarque_id", embarqueId),
     adminClient.from("conceptos_costo").select("id").eq("embarque_id", embarqueId),
     adminClient.from("facturas").select("numero, estado, total, moneda").eq("embarque_id", embarqueId).limit(10),
-    adminClient.from("proformas").select("folio, estado").eq("embarque_id", embarqueId).limit(10),
+    // `proformas` usa `numero` + `estado_proforma` (no existen folio/estado).
+    adminClient.from("proformas").select("numero, estado_proforma").eq("embarque_id", embarqueId).limit(10),
     adminClient.from("documentos_embarque").select("nombre, estado, archivo").eq("embarque_id", embarqueId).is("deleted_at", null).limit(40),
   ]);
 
@@ -82,7 +83,10 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     facturas: ((facturas ?? []) as Array<{ numero: string; estado: string; total: number; moneda: string }>).map((f) => ({
       folio: f.numero, estado: f.estado, total: Number(f.total ?? 0), moneda: f.moneda ?? "MXN",
     })),
-    proformas: ((proformas ?? []) as Array<{ folio: string; estado: string }>).map((p) => ({ folio: p.folio, estado: p.estado })),
+    proformas: ((proformas ?? []) as Array<{ numero: string | null; estado_proforma: string | null }>).map((p) => ({
+      folio: p.numero ?? "—",
+      estado: p.estado_proforma ?? "—",
+    })),
     documentos: docList,
   };
 }

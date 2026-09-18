@@ -5,24 +5,17 @@
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse } from "../_shared/response.ts";
-import { clasificarCoherenciaIva, mensajeCoherenciaIva } from "../_shared/coherenciaIva.ts";
+import { resolverConceptosFiscales, type ConceptoRow } from "./conceptosFiscales.ts";
 import { validarCuadreFiscal, validarCuadreSubtotal } from "./contextoCuadre.ts";
 import { validateContext, type FacturaContext } from "./helpers.ts";
 import type { FacturaRow } from "./types.ts";
 
 interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
-interface ConceptoRow {
-  descripcion: string; cantidad: number | string; precio_unitario: number | string;
-  clave_sat?: string | null; clave_unidad?: string | null; tipo_iva?: string | null;
-  tasa_iva_aplicada?: number | string | null; tasa_ret_isr?: number | string | null; tasa_ret_iva?: number | string | null;
-  /**
-   * P2 · Auditoría fiscal — `tipo_iva` es el campo CANÓNICO del tratamiento SAT;
-   * `aplica_iva` es el interruptor legado que sigue vivo en la base. Se
-   * transporta para que la regla compartida de coherencia detecte las
-   * contradicciones (p. ej. gravado 16% con el IVA apagado) antes del PAC.
-   */
-  aplica_iva?: boolean | null;
-}
+// `ConceptoRow` (columnas reales de `conceptos_factura`) vive en
+// `conceptosFiscales.ts`. OJO: esa tabla NO tiene `aplica_iva` — el interruptor
+// legado sólo existe en `conceptos_venta` y `proforma_conceptos_consolidados`.
+// Pedirlo en el select devuelve 400 y mata el timbrado con
+// `conceptos_query_failed`: el tratamiento SAT se decide con `tipo_iva`.
 
 interface BaseContexto {
   cliente: ClienteRow;
@@ -59,6 +52,40 @@ export async function cargarContexto(
 }
 
 
+
+/**
+ * Lee los conceptos vigentes y aplica las defensas previas al SAT:
+ * papelera → sin conceptos → cuadre de subtotal → clave SAT.
+ *
+ * El `.select()` sólo puede pedir columnas que existen en `conceptos_factura`
+ * (ver ConceptoRow): una columna inexistente tumba el timbrado con 500.
+ */
+async function cargarConceptosVigentes(
+  supabase: SupabaseClient, facturaId: string, factura: FacturaRow,
+): Promise<ConceptoRow[] | Response> {
+  const { data: conceptos, error: conErr } = await supabase
+    .from("conceptos_factura")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .eq("factura_id", facturaId)
+    // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
+    .is("deleted_at", null);
+  if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+
+  const filas = (conceptos ?? []) as ConceptoRow[];
+  if (filas.length === 0) {
+    return jsonResponse({ error: "sin_conceptos", message: "La factura no tiene conceptos vigentes; no se puede timbrar." }, 422);
+  }
+
+  const cuadre = validarCuadreSubtotal(filas, factura);
+  if (cuadre) return cuadre;
+
+  const sinClave = filas.filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
+  if (sinClave.length > 0) {
+    return jsonResponse({ error: "clave_sat_faltante", message: `Hay ${sinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.` }, 422);
+  }
+  return filas;
+}
+
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
@@ -67,25 +94,9 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     .maybeSingle();
   if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
 
-  const { data: conceptos, error: conErr } = await supabase
-    .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, aplica_iva")
-    .eq("factura_id", facturaId)
-    // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
-    .is("deleted_at", null);
-  if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+  const conceptos = await cargarConceptosVigentes(supabase, facturaId, factura);
+  if (conceptos instanceof Response) return conceptos;
 
-  if ((conceptos ?? []).length === 0) {
-    return jsonResponse({ error: "sin_conceptos", message: "La factura no tiene conceptos vigentes; no se puede timbrar." }, 422);
-  }
-
-  const cuadre = validarCuadreSubtotal(conceptos ?? [], factura);
-  if (cuadre) return cuadre;
-
-  const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
-  if (conceptosSinClave.length > 0) {
-    return jsonResponse({ error: "clave_sat_faltante", message: `Hay ${conceptosSinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.` }, 422);
-  }
 
   // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data: contactoData } = await supabase
@@ -101,32 +112,8 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
   // omisión. Si el tratamiento explícito y la tasa se contradicen (o el
   // renglón legado es ambiguo), se bloquea el timbrado con un mensaje
   // accionable en vez de emitir un importe distinto al aprobado.
-  const bloqueos: string[] = [];
-  const conceptosResueltos = (conceptos ?? []).map((c) => {
-    const clasif = clasificarCoherenciaIva({
-      tipo_iva: c.tipo_iva ?? null,
-      tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
-      // P2 · Auditoría fiscal — el interruptor legado entra a la regla: un
-      // renglón "gravado 16%" con el IVA apagado se bloquea, no se serializa.
-      aplica_iva: c.aplica_iva ?? null,
-    });
-    if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
-    return {
-      descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
-      clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
-      tipo_iva: clasif.tipo,
-      tasa_iva: clasif.tasa,
-      tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
-      tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
-    };
-  });
-  if (bloqueos.length > 0) {
-    return jsonResponse({
-      error: "tipo_iva_indeterminado",
-      message: bloqueos.join(" "),
-      issues: bloqueos,
-    }, 422);
-  }
+  const conceptosResueltos = resolverConceptosFiscales(conceptos);
+  if (conceptosResueltos instanceof Response) return conceptosResueltos;
 
   const cuadreFiscal = validarCuadreFiscal(conceptosResueltos, factura);
   if (cuadreFiscal) return cuadreFiscal;

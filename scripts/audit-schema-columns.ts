@@ -41,20 +41,38 @@ function parseSchema(): Map<string, Set<string>> {
   return out;
 }
 
-interface Finding { file: string; line: number; table: string; column: string; }
+interface Finding { file: string; line: number; table: string; column: string; kind: "is" | "select" }
+
+/**
+ * Columnas simples de un `.select("a, b, c")`. Se ignoran embeds y alias
+ * (`rel(...)`, `alias:col`, `*`, `!inner`) porque ahí el nombre no es una
+ * columna directa de la tabla.
+ */
+function columnasDeSelect(arg: string): string[] {
+  if (arg.includes("(") || arg.includes("*") || arg.includes("$")) return [];
+  return arg
+    .split(",")
+    .map((t) => t.trim())
+    .filter((t) => /^\w+$/.test(t));
+}
 
 async function main() {
   const schema = parseSchema();
-  const files = await fg(["src/**/*.{ts,tsx}"], {
+  // v13.824.2: las Edge Functions también entran. Un `aplica_iva` inexistente
+  // en `conceptos_factura` tumbó el timbrado completo en producción.
+  const files = await fg(["src/**/*.{ts,tsx}", "supabase/functions/**/*.ts"], {
     cwd: ROOT,
-    ignore: ["**/*.test.*", "**/*.spec.*", "**/__tests__/**", "src/integrations/supabase/types.ts"],
+    ignore: [
+      "**/*.test.*", "**/*.spec.*", "**/__tests__/**", "**/*_test.ts",
+      "src/integrations/supabase/types.ts",
+    ],
   });
   const findings: Finding[] = [];
 
   for (const rel of files) {
     const content = fs.readFileSync(path.join(ROOT, rel), "utf8");
     const lines = content.split("\n");
-    // buscar `.from("tabla")` … `.is("col", …)` en una ventana de 20 líneas.
+    // buscar `.from("tabla")` … `.is("col", …)` / `.select("a, b")` en una ventana.
     for (let i = 0; i < lines.length; i++) {
       const fromMatch = lines[i].match(/\.from\(["'`](\w+)["'`]\)/);
       if (!fromMatch) continue;
@@ -62,23 +80,33 @@ async function main() {
       const cols = schema.get(table);
       if (!cols) continue;
       for (let j = i; j < Math.min(i + 30, lines.length); j++) {
-        // rompe si aparece otro .from (nueva query)
-        if (j > i && /\.from\(["'`]\w+["'`]\)/.test(lines[j])) break;
+        // rompe si aparece otro `.from(` (nueva query, aunque la tabla venga de
+        // una variable o de un ternario: ahí ya no sabemos a qué tabla aplica).
+        if (j > i && /\.from\(/.test(lines[j])) break;
         const isMatch = lines[j].match(/\.is\(["'`](\w+)["'`]\s*,/);
         if (isMatch && !cols.has(isMatch[1])) {
-          findings.push({ file: rel, line: j + 1, table, column: isMatch[1] });
+          findings.push({ file: rel, line: j + 1, table, column: isMatch[1], kind: "is" });
+        }
+        const selMatch = lines[j].match(/\.select\(\s*["'`]([^"'`]*)["'`]/);
+        if (selMatch) {
+          for (const col of columnasDeSelect(selMatch[1])) {
+            if (!cols.has(col)) {
+              findings.push({ file: rel, line: j + 1, table, column: col, kind: "select" });
+            }
+          }
         }
       }
     }
   }
 
   if (findings.length === 0) {
-    console.log("✓ audit:schema — sin mismatches entre .is(...) y schema real.");
+    console.log("✓ audit:schema — sin mismatches entre .is(...) / .select(...) y schema real.");
     return;
   }
-  console.error(`✗ audit:schema — ${findings.length} filtro(s) apuntan a columnas inexistentes:`);
+  console.error(`✗ audit:schema — ${findings.length} referencia(s) a columnas inexistentes:`);
   for (const f of findings) {
-    console.error(`  ${f.file}:${f.line}  .from("${f.table}").is("${f.column}", …) ← columna no existe`);
+    const uso = f.kind === "is" ? `.is("${f.column}", …)` : `.select(… ${f.column} …)`;
+    console.error(`  ${f.file}:${f.line}  .from("${f.table}")${uso} ← columna no existe`);
   }
   process.exit(1);
 }

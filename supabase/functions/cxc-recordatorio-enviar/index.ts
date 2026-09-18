@@ -50,7 +50,6 @@ interface FacturaRecordatorio {
   cliente_id: string;
   numero: string | null;
   serie: string | null;
-  folio: string | null;
   cliente_nombre: string | null;
   total: number | null;
   saldo: number | null;
@@ -66,7 +65,8 @@ async function loadFactura(
   // `saldo_factura` (pagos aplicados y notas de crédito vigentes).
   const { data, error } = await adminClient
     .from('facturas')
-    .select('id, organization_id, cliente_id, numero, serie, folio, cliente_nombre, total, moneda, fecha_vencimiento')
+    // `facturas` no tiene columna `folio` (sólo `numero`, `serie` y `folio_fiscal`).
+    .select('id, organization_id, cliente_id, numero, serie, cliente_nombre, total, moneda, fecha_vencimiento')
     .eq('id', facturaId)
     .maybeSingle();
   if (error) return { factura: null, error: `Error al leer factura: ${error.message}` };
@@ -140,6 +140,12 @@ interface TemplateData {
   ejecutivoTelefono: string;
 }
 
+/** `facturas` no tiene `folio`: se muestra `numero` y, si falta, la serie. */
+function folioMostrado(factura: FacturaRecordatorio): string {
+  if (factura.numero) return factura.numero;
+  return factura.serie ?? 'sin folio';
+}
+
 function buildTemplateData(
   factura: FacturaRecordatorio,
   orgName: string | null,
@@ -149,7 +155,7 @@ function buildTemplateData(
   const dias = diasEntre(factura.fecha_vencimiento, new Date().toISOString()) ?? 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
   const moneda = factura.moneda ?? 'MXN';
-  const numero = factura.numero ?? `${factura.serie}-${factura.folio}`;
+  const numero = folioMostrado(factura);
   const cliente = factura.cliente_nombre ?? orgName ?? 'Cliente';
   return {
     numero,
