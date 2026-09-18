@@ -44,7 +44,10 @@ const baseParams = {
 const conceptoOk = {
   descripcion: "Servicio", cantidad: 1, precio_unitario: 500,
   clave_sat: "84111506", clave_unidad: "E48", unidad: "u", tasa_iva: 0.16,
+  // P1-IVA: sin tratamiento fiscal explícito el renglón queda indeterminado.
+  tipo_iva: "gravado_16" as const,
 };
+
 
 beforeEach(() => {
   mocks.crearNotaCredito.mockReset().mockResolvedValue({ id: "nc-1" });
