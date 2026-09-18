@@ -6,7 +6,8 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
-import { TASA_IVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 
 /** Devuelve la moneda común de los conceptos, o `null` si hay mezcla. */
@@ -16,16 +17,11 @@ export function monedaComun(conceptos: ConceptoVentaRow[]): string | null {
 }
 
 /**
- * R-03 (QA r2): la celda IVA dice "Sí" sólo si la tasa resuelta de la fila es
- * > 0. Antes bastaba `aplica_iva || moneda === "MXN"`, lo que marcaba "Sí" en
- * conceptos MXN exentos (`aplica_iva = false`) aunque el cálculo los tratara
- * con tasa 0.
+ * P2-IVA: la columna muestra el TRATAMIENTO fiscal real del renglón (16%, 8%,
+ * 0%, exento, no objeto). Antes decía sólo "Sí/No", que colapsa tratamientos
+ * distintos. Un renglón heredado sin dato suficiente dice "Por confirmar":
+ * nunca se deduce exento/tasa 0/no objeto de tener el IVA apagado.
  */
-function tasaLinea(c: ConceptoVentaRow, tasaIva: number): number {
-  if (c.aplica_iva === false) return 0;
-  return resolverTasaConcepto(c, tasaIva);
-}
-
 export function buildConceptoColumns(
   moneda: string | null,
   tasaIva: number = TASA_IVA,
@@ -62,8 +58,8 @@ export function buildConceptoColumns(
     {
       id: "iva",
       header: "IVA",
-      meta: { align: "center", className: "w-[80px] text-xs" },
-      cell: ({ row }) => (tasaLinea(row.original, tasaIva) > 0 ? "Sí" : "No"),
+      meta: { align: "center", className: "w-[120px] text-label" },
+      cell: ({ row }) => etiquetaTratamientoFila(row.original),
     },
   ]);
 }
