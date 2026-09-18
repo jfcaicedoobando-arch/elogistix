@@ -12,6 +12,7 @@
  * en vez de inventar un tratamiento.
  */
 import { esTipoIvaSat, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 export interface ImpuestoSnapshot {
   type?: string;
@@ -29,6 +30,24 @@ export interface LineaSnapshotIva {
 
 const EPS = 1e-6;
 
+/** Tratamiento a partir de la tasa exacta del traslado (nunca se ancla). */
+function tipoDesdeTasa(rate: number): TipoIvaSat | null {
+  if (Math.abs(rate) < EPS) return "tasa_0";
+  if (Math.abs(rate - 0.08) < EPS) return "gravado_8";
+  if (Math.abs(rate - TASA_IVA) < EPS) return "gravado_16";
+  return null; // Tasa fuera del catálogo: no se fuerza a 16%.
+}
+
+/** Primer traslado de IVA del snapshot (ignora retenciones), o `null`. */
+function trasladoIva(linea: LineaSnapshotIva): ImpuestoSnapshot | null {
+  const taxes = linea.product?.taxes ?? linea.taxes;
+  if (!Array.isArray(taxes)) return null;
+  const traslados = taxes.filter(
+    (t) => !t?.withholding && String(t?.type ?? "").toUpperCase() === "IVA",
+  );
+  return traslados[0] ?? null;
+}
+
 /** Tratamiento del renglón, o `null` cuando el snapshot no permite saberlo. */
 export function tipoIvaDesdeSnapshot(linea: LineaSnapshotIva): TipoIvaSat | null {
   // 1) El tipo explícito manda (incluye no objeto, que no se puede reconstruir).
@@ -37,19 +56,9 @@ export function tipoIvaDesdeSnapshot(linea: LineaSnapshotIva): TipoIvaSat | null
   const taxability = String(linea.product?.taxability ?? linea.taxability ?? "").trim();
   if (taxability === "01") return "no_objeto";
   // 3) Traslados de IVA del snapshot: nunca retenciones.
-  const taxes = linea.product?.taxes ?? linea.taxes;
-  if (!Array.isArray(taxes)) return null;
-  const traslados = taxes.filter(
-    (t) => !t?.withholding && String(t?.type ?? "").toUpperCase() === "IVA",
-  );
-  if (traslados.length === 0) return null;
-  const iva = traslados[0];
+  const iva = trasladoIva(linea);
+  if (iva === null) return null;
   if (String(iva.factor ?? "").toLowerCase() === "exento") return "exento";
   const rate = Number(iva.rate ?? Number.NaN);
-  if (!Number.isFinite(rate)) return null;
-  if (Math.abs(rate) < EPS) return "tasa_0";
-  if (Math.abs(rate - 0.08) < EPS) return "gravado_8";
-  if (Math.abs(rate - 0.16) < EPS) return "gravado_16";
-  // Tasa fuera del catálogo: no se fuerza a 16%.
-  return null;
+  return Number.isFinite(rate) ? tipoDesdeTasa(rate) : null;
 }

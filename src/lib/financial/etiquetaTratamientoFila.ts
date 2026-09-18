@@ -8,6 +8,7 @@
  * exento/tasa 0/no objeto de tener el IVA apagado.
  */
 import { esTipoIvaSat, TIPO_IVA_LABEL_CORTO } from "@/lib/financial/tipoIvaSat";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 export const ETIQUETA_TRATAMIENTO_POR_CONFIRMAR = "Por confirmar";
 
@@ -32,6 +33,6 @@ export function etiquetaTratamientoFila(fila: FilaTratamiento): string {
     return ETIQUETA_TRATAMIENTO_POR_CONFIRMAR;
   }
   if (Math.abs(tasa - 0.08) < EPS) return TIPO_IVA_LABEL_CORTO.gravado_8;
-  if (Math.abs(tasa - 0.16) < EPS) return TIPO_IVA_LABEL_CORTO.gravado_16;
+  if (Math.abs(tasa - TASA_IVA) < EPS) return TIPO_IVA_LABEL_CORTO.gravado_16;
   return `${(tasa * 100).toFixed(2)}%`;
 }
