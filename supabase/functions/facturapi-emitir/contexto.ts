@@ -61,6 +61,38 @@ export async function cargarContexto(
 }
 
 
+/**
+ * P1-IVA: la clasificación fiscal del renglón NO se completa con un 16% por
+ * omisión. Si el tratamiento explícito y la tasa se contradicen (o el renglón
+ * legado es ambiguo), se bloquea el timbrado con un mensaje accionable en vez
+ * de emitir un importe distinto al aprobado.
+ *
+ * `conceptos_factura` no tiene `aplica_iva` (ver ConceptoRow): la regla
+ * compartida decide sólo con el tratamiento canónico + la tasa.
+ */
+function resolverConceptosFiscales(conceptos: ConceptoRow[]): ConceptoResuelto[] | Response {
+  const bloqueos: string[] = [];
+  const resueltos = conceptos.map((c) => {
+    const clasif = clasificarCoherenciaIva({
+      tipo_iva: c.tipo_iva ?? null,
+      tasa_iva_aplicada: c.tasa_iva_aplicada ?? null,
+    });
+    if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
+    return {
+      descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
+      clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
+      tipo_iva: clasif.tipo,
+      tasa_iva: clasif.tasa,
+      tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
+      tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
+    };
+  });
+  if (bloqueos.length > 0) {
+    return jsonResponse({ error: "tipo_iva_indeterminado", message: bloqueos.join(" "), issues: bloqueos }, 422);
+  }
+  return resueltos;
+}
+
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
