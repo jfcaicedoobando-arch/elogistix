@@ -14,8 +14,9 @@ import {
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
-import type { Claim, FacturaRow, UserIdentity } from "./types.ts";
+import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
 
+export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 export type { Claim, FacturaRow } from "./types.ts";
 export { cargarContexto } from "./contexto.ts";
 
