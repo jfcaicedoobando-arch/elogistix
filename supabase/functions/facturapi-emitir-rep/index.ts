@@ -163,8 +163,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // impuesto+tasa con el importe de sus renglones (ya no se bloquea la mezcla
   // de tasas del mismo impuesto). Sin importes no se puede calcular la base:
   // bloqueo claro ANTES del claim (reintentable tras corregir la factura).
-  // Los renglones no objeto no admiten retenciones (se bloquea al emitir), así
-  // que la base se calcula sólo con los renglones que sí causan impuesto.
+  // Los no objeto no admiten retenciones: la base sale sólo de los gravables.
   const retencionesDr = resolverGruposRetencionDr(conceptosGravables);
   if (retencionesDr === "sin_importes") {
     await supabase.from("pagos_factura")
