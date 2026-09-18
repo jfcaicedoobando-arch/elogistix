@@ -35,10 +35,10 @@ export const MSG_IVA_MULTITASA =
  * `Exento` sería un dato fiscal falso. Se bloquea el timbrado.
  */
 export const MSG_REP_NO_OBJETO =
-  "LC_REP_NO_OBJETO: La factura relacionada tiene conceptos 'No objeto de impuesto' (SAT 01) y el " +
-  "complemento de pago no permite declararlos sin convertirlos en 'Exento', lo que sería incorrecto. " +
-  "Registra el pago sin REP o reemite la factura con método PUE (pago en una sola exhibición), " +
-  "que no requiere complemento de pago.";
+  "LC_REP_NO_OBJETO: Esta integración no puede representar ObjetoImpDR=01 ('No objeto de impuesto', " +
+  "SAT 01) en el complemento de pago, porque Facturapi no expone ese campo y declararlo como 'Exento' " +
+  "sería un dato fiscal incorrecto. Por eso el timbrado del REP se ha bloqueado. Detenga este flujo y " +
+  "consulte a Contabilidad o a soporte de Libre Carga para definir el tratamiento autorizado.";
 
 /** Tasas del catálogo SAT c_TasaOCuota admitidas para traslado de IVA. */
 const TASAS_SAT: readonly number[] = [0, 0.08, 0.16];

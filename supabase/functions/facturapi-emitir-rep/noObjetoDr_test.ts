@@ -48,8 +48,13 @@ Deno.test("el bloqueo no se infiere de tasa 0 ni de tipos legacy", () => {
   assertEquals(resolverTrasladoDr([{ tasa_iva_aplicada: 0 }]), { tasa: 0, factor: "Tasa" });
 });
 
-Deno.test("el mensaje de bloqueo es accionable para el usuario", () => {
+Deno.test("el mensaje de bloqueo no recomienda atajos contables no autorizados", () => {
   assertEquals(MSG_REP_NO_OBJETO.startsWith("LC_REP_NO_OBJETO:"), true);
-  assertEquals(MSG_REP_NO_OBJETO.includes("PUE"), true);
-  assertEquals(MSG_REP_NO_OBJETO.includes("Exento"), true);
+  assertEquals(MSG_REP_NO_OBJETO.includes("ObjetoImpDR=01"), true);
+  assertEquals(MSG_REP_NO_OBJETO.includes("bloqueado"), true);
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("contabilidad"), true);
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("soporte"), true);
+  assertEquals(MSG_REP_NO_OBJETO.includes("PUE"), false);
+  assertEquals(MSG_REP_NO_OBJETO.includes("sin REP"), false);
+  assertEquals(MSG_REP_NO_OBJETO.includes("reemite"), false);
 });
