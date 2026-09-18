@@ -146,6 +146,7 @@ function buildTemplateData(
   perfil: { nombre?: string | null; email?: string | null; telefono?: string | null } | null,
   nota?: string,
 ): TemplateData {
+  // `facturas` no tiene `folio`: se muestra `numero` y, si falta, la serie.
   const dias = diasEntre(factura.fecha_vencimiento, new Date().toISOString()) ?? 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
   const moneda = factura.moneda ?? 'MXN';
