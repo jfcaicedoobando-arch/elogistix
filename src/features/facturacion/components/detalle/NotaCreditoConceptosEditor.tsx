@@ -12,6 +12,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { subtotalLinea } from "@/lib/financial/financialUtils";
+import { etiquetaTratamientoNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 interface Props {

@@ -17,6 +17,7 @@
  *    factura: restan del total de la NC.
  */
 import { roundMoney, subtotalLinea } from "@/lib/financial/financialUtils";
+import { TIPO_IVA_LABEL_SAT } from "@/lib/financial/tipoIvaSat";
 
 export const TRATAMIENTOS_NC = [
   "gravado_16",
@@ -112,4 +113,22 @@ export function claveTratamientoNC(linea: LineaNC): string {
     num(linea.tasa_ret_isr).toFixed(6),
     num(linea.tasa_ret_iva).toFixed(6),
   ].join("|");
+}
+
+/** Etiqueta de sólo lectura del tratamiento fiscal y retenciones del renglón. */
+export function etiquetaTratamientoNC(linea: LineaNC): string {
+  const tipo = tratamientoLineaNC(linea);
+  if (tipo === null) {
+    return "Tratamiento fiscal por definir en la factura original: no se puede timbrar la nota de crédito.";
+  }
+  const partes = [`IVA: ${TIPO_IVA_LABEL_SAT[tipo]}`];
+  if (tipo === "gravado_16" || tipo === "gravado_8") {
+    const pct = tasaTrasladoNC(linea) * 100;
+    partes.push(`tasa ${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(2)}%`);
+  }
+  const isr = num(linea.tasa_ret_isr) * 100;
+  const retIva = num(linea.tasa_ret_iva) * 100;
+  if (isr > 0) partes.push(`retención ISR ${isr.toFixed(isr % 1 === 0 ? 0 : 4)}%`);
+  if (retIva > 0) partes.push(`retención IVA ${retIva.toFixed(retIva % 1 === 0 ? 0 : 4)}%`);
+  return partes.join(" · ");
 }
