@@ -133,11 +133,51 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     }, 422);
   }
 
+  const frontera = await bloquearIvaFrontera(supabase, factura, conceptosResueltos);
+  if (frontera) return frontera;
+
   return {
     cliente,
     contactoEmail: contactoData?.email ?? null,
     conceptos: conceptosResueltos,
   };
+}
+
+/**
+ * P2-IVA (seguimiento) — la tasa de 8% es un ESTÍMULO FISCAL de la región
+ * fronteriza sujeto a aviso y requisitos. Aunque el dato ya esté guardado, no
+ * se timbra al 8% mientras Contabilidad no habilite el estímulo en
+ * Configuración → Facturación. Fail-closed: sin fila de configuración (o si la
+ * consulta falla) se considera deshabilitado.
+ */
+async function bloquearIvaFrontera(
+  supabase: SupabaseClient,
+  factura: FacturaRow,
+  conceptos: FacturaContext["conceptos"],
+): Promise<Response | null> {
+  const afectados = conceptos.filter((c) => c.tipo_iva === "gravado_8");
+  if (afectados.length === 0) return null;
+
+  const { data, error } = await supabase
+    .from("configuracion")
+    .select("valor")
+    .eq("organization_id", factura.organization_id)
+    .eq("categoria", "facturacion")
+    .eq("clave", "iva_frontera_habilitado")
+    .maybeSingle();
+  const valor = error ? null : data?.valor;
+  const habilitada = valor === true || valor === "true";
+  if (habilitada) return null;
+
+  const nombres = afectados.map((c) => `"${c.descripcion}"`).join(", ");
+  return jsonResponse({
+    error: "iva_frontera_no_habilitado",
+    message:
+      `Hay ${afectados.length} concepto(s) con IVA 8% de región fronteriza (${nombres}). ` +
+      "El 8% es un estímulo fiscal sujeto a aviso y requisitos ante el SAT: Contabilidad debe " +
+      "habilitarlo en Configuración → Facturación después de confirmar la elegibilidad, " +
+      "o cambiar el tratamiento fiscal del concepto antes de timbrar.",
+  }, 422);
 }
 
 async function cargarReferenciasEmbarque(supabase: SupabaseClient, factura: FacturaRow): Promise<FacturaContext["referencias"]> {
