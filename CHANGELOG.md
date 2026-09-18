@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.3] - 2026-09-18
+
+Lint en cero: se resuelven los 7 bloqueos de GitHub Actions (`--max-warnings 0`). Sólo reorganización de código, sin cambios de comportamiento.
+
+- **fix(lint · emisor)**: `facturapi-emitir/index.ts` extrae `prepararEmision` (carga de factura + rol + realineo de fecha + guards previos) para bajar la complejidad de 18 a ≤16; la prueba de orden estricto ahora verifica las llamadas del handler en vez de la posición de las definiciones.
+- **fix(lint · REP)**: los impuestos del documento relacionado (`buildTaxesDr`, traslados por grupo, retenciones prorrateadas, `round2`) se mueven a `facturapi-emitir-rep/taxesDr.ts`; `helpers.ts` queda bajo el límite de 250 líneas y re-exporta lo que los tests importan.
+- **fix(lint · UI)**: el catálogo de tratamientos de IVA (`TIPO_IVA_LABEL`, `frontera8Bloqueado`) se mueve a `facturaTipoIva.ts` para que `FacturaTipoIvaSelect.tsx` sólo exporte el componente (fast refresh).
+- **fix(lint · pruebas)**: `fechaEmision_test.ts` tipa el fake de Supabase con `SupabaseClient` en vez de `any`.
+- **fix(lint · auditoría)**: `audit-schema-columns.ts` extrae el escaneo de la ventana a una función para respetar la profundidad máxima de 4 bloques.
+
 ## [13.824.2] - 2026-09-18
 
 Se desbloquea el timbrado: la lectura de conceptos pedía una columna inexistente.
