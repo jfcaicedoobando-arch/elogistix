@@ -8,7 +8,7 @@
  *   facturapi_id, uuid_fiscal, folio_fiscal, factura_pdf_url, factura_xml_url,
  *   serie, estado = 'Emitida', timbrado_en, timbrado_por.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // Guardrail multi-tenant (v13.136.0): el helper se sigue importando para que
