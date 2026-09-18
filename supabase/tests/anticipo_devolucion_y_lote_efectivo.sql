@@ -40,8 +40,10 @@ BEGIN
   VALUES (v_cat, v_org, 'Cat E', 0, true, 'CostoDirectoEmbarque')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.cuentas_bancarias (id, organization_id, alias, moneda)
-  VALUES ('e7777777-7777-7777-7777-777777777777', v_org, 'MXN E', 'MXN'::public.moneda)
+  -- fecha_saldo_inicial explícita: el DEFAULT usa la fecha UTC, que puede ser
+  -- posterior a public.fecha_negocio_mx() (CDMX) y bloquearía el guard de movimientos.
+  INSERT INTO public.cuentas_bancarias (id, organization_id, alias, moneda, fecha_saldo_inicial)
+  VALUES ('e7777777-7777-7777-7777-777777777777', v_org, 'MXN E', 'MXN'::public.moneda, public.fecha_negocio_mx())
   ON CONFLICT (id) DO NOTHING;
 
   -- Anticipo MXN disponible para devolver.
