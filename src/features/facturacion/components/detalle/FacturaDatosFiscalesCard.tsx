@@ -8,6 +8,7 @@
  */
 import { useEffect, useState } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -23,8 +24,8 @@ import {
   inicialesDatosFiscales,
 } from "@/features/facturacion/domain/datosFiscalesForm";
 import {
-  MSG_NO_OBJETO_PPD,
-  ppdIncompatibleNoObjeto,
+  AVISO_NO_OBJETO_PPD_REP,
+  ppdConNoObjetoRequiereAviso,
   type LineaNoObjeto,
 } from "@/lib/financial/noObjetoFiscal";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
@@ -72,9 +73,9 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
   // B12: el borrador USD nace sin T/C; también avisamos si quedó fuera de banda.
   const avisoTC = avisoTipoCambioFactura(factura.moneda, tipoCambio);
 
-  // P1 · Auditoría IVA: la limitación PPD + "No objeto" se avisa aquí, al
-  // capturar el método de pago, no hasta el diálogo de timbrado.
-  const avisoPpdNoObjeto = ppdIncompatibleNoObjeto(metodoPago, conceptos);
+  // La factura PPD con renglones "No objeto" SÍ se emite; lo que puede quedar
+  // pendiente es el REP del cobro ⇒ advertencia informativa, nunca bloqueo.
+  const avisoPpdNoObjeto = ppdConNoObjetoRequiereAviso(metodoPago, conceptos);
 
   return (
     <Card>
@@ -93,13 +94,10 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
           </div>
         )}
         {avisoPpdNoObjeto && (
-          <div
-            role="alert"
-            className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body text-destructive"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            <span>{MSG_NO_OBJETO_PPD}</span>
-          </div>
+          <Alert variant="warning" role="alert">
+            <AlertTriangle className="h-4 w-4" aria-hidden />
+            <AlertDescription>{AVISO_NO_OBJETO_PPD_REP}</AlertDescription>
+          </Alert>
         )}
         <DatosFiscalesForm
           usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}

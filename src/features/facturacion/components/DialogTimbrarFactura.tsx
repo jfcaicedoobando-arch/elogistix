@@ -5,8 +5,10 @@
  * vO7 — queries al hook `useTimbradoContext` y footer a componente propio;
  * se elimina el `eslint-disable complexity`.
  */
-import { Stamp } from "lucide-react";
+import { AlertTriangle, Stamp } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+
 import { buildEstadoTimbrado } from "@/features/facturacion/utils/estadoTimbrado";
 import { useTimbrarFacturaDialog } from "@/features/facturacion/hooks/useTimbrarFacturaDialog";
 import { useTimbradoContext } from "@/features/facturacion/hooks/useTimbradoContext";
@@ -29,12 +31,13 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
   if (!facturaId || !factura) return null;
 
-  const { checks, puedeTimbrar, esFastPath } = buildEstadoTimbrado(
+  const { checks, puedeTimbrar, esFastPath, advertencias } = buildEstadoTimbrado(
     factura,
     cliente,
     { usoCfdi: dlg.usoCfdi, formaPago: dlg.formaPago, metodoPago: dlg.metodoPago },
     conceptos,
   );
+
 
   const mostrarCompacto = esFastPath && !dlg.modoExpandido;
 
@@ -83,7 +86,14 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           puedeTimbrar={puedeTimbrar}
         />
       )}
+      {advertencias.map((texto) => (
+        <Alert key={texto} variant="warning" role="alert">
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+          <AlertDescription>{texto}</AlertDescription>
+        </Alert>
+      ))}
       <ReferenciasEmbarquePreview factura={factura} />
+
     </FormDialogShell>
   );
 }

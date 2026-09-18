@@ -5,10 +5,11 @@
  */
 import { buildChecksTimbrado, type CheckTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import {
-  MSG_NO_OBJETO_PPD,
-  ppdIncompatibleNoObjeto,
+  AVISO_NO_OBJETO_PPD_REP,
+  ppdConNoObjetoRequiereAviso,
   type LineaNoObjeto,
 } from "@/lib/financial/noObjetoFiscal";
+
 
 interface FacturaLike {
   rfc_cliente?: string | null;
@@ -35,6 +36,8 @@ export interface EstadoTimbrado {
   checks: CheckTimbrado[];
   puedeTimbrar: boolean;
   esFastPath: boolean;
+  /** Advertencias informativas: NO impiden timbrar. */
+  advertencias: string[];
 }
 
 export function buildEstadoTimbrado(
@@ -54,18 +57,18 @@ export function buildEstadoTimbrado(
     tipoCambio: factura.tipo_cambio == null ? null : Number(factura.tipo_cambio),
   });
 
-  // P1 · Auditoría IVA — PPD + "No objeto de impuesto" (SAT 01) dejaría el cobro
-  // sin REP: es una limitación de la integración (Facturapi no expone
-  // ObjetoImpDR), no una prohibición del SAT. Se avisa aquí, antes de timbrar;
-  // el servidor sigue siendo la autoridad (fail-closed).
-  const ppdNoObjeto = ppdIncompatibleNoObjeto(seleccion.metodoPago, conceptos ?? []);
-  const checksFinales = ppdNoObjeto
-    ? [...checks, { ok: false, label: MSG_NO_OBJETO_PPD }]
-    : checks;
-  const puedeTimbrarFinal = puedeTimbrar && !ppdNoObjeto;
+  // PPD + "No objeto de impuesto" (SAT 01) SÍ se emite: Facturapi confirmó que
+  // el método de pago es del CFDI completo y `taxability` es por concepto. Lo
+  // único en riesgo es el REP del cobro posterior ⇒ advertencia, no bloqueo.
+  const advertencias = ppdConNoObjetoRequiereAviso(seleccion.metodoPago, conceptos ?? [])
+    ? [AVISO_NO_OBJETO_PPD_REP]
+    : [];
 
   const esFastPath =
-    puedeTimbrarFinal && Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
+    puedeTimbrar &&
+    advertencias.length === 0 &&
+    Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
 
-  return { checks: checksFinales, puedeTimbrar: puedeTimbrarFinal, esFastPath };
+  return { checks, puedeTimbrar, esFastPath, advertencias };
 }
+

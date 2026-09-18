@@ -4,10 +4,14 @@
  * `taxability:"01"` y las retenciones de ISR/IVA dentro, y sólo lo rechazaba el
  * PAC. Ahora se bloquea aquí, ANTES del claim, y el builder nunca agrega
  * impuestos a un renglón no objeto.
+ *
+ * El método PPD NO se bloquea: Facturapi confirmó que `payment_method` es del
+ * CFDI completo y `taxability` es por concepto, así que la factura mixta
+ * (no objeto + gravado 16%) se emite normalmente.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildFacturapiPayload, validateContext, type FacturaContext } from "./helpers.ts";
-import { MSG_NO_OBJETO_PPD, MSG_NO_OBJETO_RETENCIONES } from "../_shared/noObjetoFiscal.ts";
+import { MSG_NO_OBJETO_RETENCIONES } from "../_shared/noObjetoFiscal.ts";
 
 const baseCtx: FacturaContext = {
   serie: "A",
@@ -62,10 +66,36 @@ Deno.test("el builder tampoco cuela la retención si llegara a pasar", () => {
   }
 });
 
-Deno.test("no objeto + PPD se bloquea: el cobro se quedaría sin REP", () => {
-  const issues = validateContext({ ...baseCtx, metodo_pago: "PPD" });
-  assert(issues.some((i) => i.message === MSG_NO_OBJETO_PPD));
+Deno.test("factura mixta PPD (no objeto + gravado 16%) pasa validación y serializa cada línea", () => {
+  const ctx: FacturaContext = {
+    ...baseCtx,
+    metodo_pago: "PPD",
+    conceptos: [
+      baseCtx.conceptos[0],
+      {
+        ...baseCtx.conceptos[0],
+        descripcion: "Servicio gravado",
+        tipo_iva: "gravado_16",
+        tasa_iva: 0.16,
+      },
+    ],
+  };
+  assertEquals(validateContext(ctx).length, 0);
+  const payload = buildFacturapiPayload(ctx);
+  assertEquals(payload.payment_method, "PPD");
+  // Renglón no objeto: ObjetoImp 01 y SIN nodo de impuestos.
+  assertEquals(payload.items[0].product.taxability, "01");
+  assertEquals(payload.items[0].product.taxes, []);
+  // Renglón gravado: ObjetoImp 02 (default de Facturapi) con su IVA al 16%.
+  assertEquals(payload.items[1].product.taxability, undefined);
+  assertEquals(payload.items[1].product.taxes, [{ type: "IVA", rate: 0.16, factor: "Tasa" }]);
 });
+
+Deno.test("PUE con no objeto sigue igual (sin advertencias ni cambios de payload)", () => {
+  assertEquals(validateContext(baseCtx).length, 0);
+  assertEquals(buildFacturapiPayload(baseCtx).payment_method, "PUE");
+});
+
 
 Deno.test("un renglón gravado sí conserva sus retenciones (sin regresión)", () => {
   const ctx: FacturaContext = {

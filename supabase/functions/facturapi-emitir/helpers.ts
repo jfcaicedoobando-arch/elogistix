@@ -12,11 +12,10 @@ import {
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 import {
   esLineaNoObjeto,
-  MSG_NO_OBJETO_PPD,
   MSG_NO_OBJETO_RETENCIONES,
-  ppdIncompatibleNoObjeto,
   retencionesIncompatiblesNoObjeto,
 } from "../_shared/noObjetoFiscal.ts";
+
 
 export interface ConceptoInterno {
   descripcion: string;
@@ -142,11 +141,11 @@ export function validateContext(ctx: FacturaContext): ValidationIssue[] {
       });
     }
   });
-  // P1 · IVA — PPD + no objeto se quedaría sin REP al cobrarse: se bloquea la
-  // emisión en vez de dejar el flujo de cobro roto.
-  if (ppdIncompatibleNoObjeto(ctx.metodo_pago, ctx.conceptos)) {
-    issues.push({ field: "metodo_pago", message: MSG_NO_OBJETO_PPD });
-  }
+  // Facturapi confirmó por ticket que `payment_method` es del CFDI completo y
+  // `taxability` es por concepto: una factura PPD con renglones no objeto SÍ se
+  // emite. La única limitación vive en el complemento de pago (ver
+  // `facturapi-emitir-rep/trasladoDr.ts`) y se advierte en la UI, no se bloquea.
+
   return issues;
 }
 
