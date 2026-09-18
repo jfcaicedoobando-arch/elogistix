@@ -14,7 +14,8 @@ import { RetencionSelects } from "./FacturaConceptosRetencionSelects";
 import { MSG_NO_OBJETO_RETENCIONES } from "@/lib/financial/noObjetoFiscal";
 import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
 import { useIvaFronteraHabilitada } from "@/features/configuracion";
-import { FacturaTipoIvaSelect, frontera8Bloqueado } from "./FacturaTipoIvaSelect";
+import { FacturaTipoIvaSelect } from "./FacturaTipoIvaSelect";
+import { frontera8Bloqueado } from "./facturaTipoIva";
 import type {
   ConceptoFacturaInput,
   ConceptoFacturaRow,

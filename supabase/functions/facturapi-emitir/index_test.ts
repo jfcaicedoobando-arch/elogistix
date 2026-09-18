@@ -47,15 +47,23 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
 Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → emitir", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
   // pagada por requests no autorizadas. En v13.303.3 la lógica se movió a
-  // `emitir.ts`; el handler debe orquestar en este orden exacto.
+  // `emitir.ts`; el handler debe orquestar en este orden exacto. Tras la
+  // extracción de `prepararEmision` (lint de complejidad), el orden se verifica
+  // por las LLAMADAS del handler, no por la posición de las definiciones.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
-  const loadIdx = indexSource.indexOf("loadFactura(");
+  const preparaIdx = indexSource.indexOf("prepararEmision(supabase,");
   const resolveIdx = indexSource.indexOf("getFacturapiClient(");
   const emitirIdx = indexSource.indexOf("emitirYActualizar(");
-  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || emitirIdx <= resolveIdx) {
+  if (authIdx <= 0 || preparaIdx <= authIdx || resolveIdx <= preparaIdx || emitirIdx <= resolveIdx) {
     throw new Error(
-      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} emitir=${emitirIdx}`,
+      `Orden inválido: getUser=${authIdx} preparar=${preparaIdx} resolve=${resolveIdx} emitir=${emitirIdx}`,
     );
+  }
+  // Dentro de prepararEmision la factura se carga antes del check de rol.
+  const loadIdx = indexSource.indexOf("loadFactura(");
+  const rolIdx = indexSource.indexOf("authorizeOrgRole(");
+  if (loadIdx <= 0 || rolIdx <= loadIdx) {
+    throw new Error(`Orden inválido en prepararEmision: load=${loadIdx} rol=${rolIdx}`);
   }
   // Y la llamada real al SDK debe vivir sólo en emitir.ts (nunca inline en index).
   assertStringIncludes(emitirSource, "facturapi.invoices.create");

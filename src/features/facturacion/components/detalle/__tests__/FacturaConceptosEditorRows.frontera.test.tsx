@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { FormRow } from "../FacturaConceptosEditorRows";
-import { frontera8Bloqueado } from "../FacturaTipoIvaSelect";
+import { frontera8Bloqueado } from "../facturaTipoIva";
 import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
 import type { ConceptoFacturaInput } from "@/features/facturacion/services/conceptosFacturaCrud";
 

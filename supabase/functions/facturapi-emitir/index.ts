@@ -8,7 +8,7 @@
  *   facturapi_id, uuid_fiscal, folio_fiscal, factura_pdf_url, factura_xml_url,
  *   serie, estado = 'Emitida', timbrado_en, timbrado_por.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // Guardrail multi-tenant (v13.136.0): el helper se sigue importando para que
@@ -32,6 +32,55 @@ void resolveFacturapiKey;
 
 interface ReqBody { factura_id?: string }
 
+/** Resultado intermedio de la preparación: la fila vigente y el UUID sustituido. */
+interface Preparacion {
+  factura: FacturaRow;
+  sustituyeUuid: string | null;
+}
+
+/**
+ * Cadena de validaciones previas al claim/PAC: carga la factura, verifica el
+ * rol, realinea la fecha de emisión al día del timbre y aplica los guards
+ * fiscales. Devuelve la fila ya actualizada o el Response de error.
+ */
+async function prepararEmision(
+  supabase: SupabaseClient,
+  facturaId: string,
+  user: { id: string; email: string },
+  json: ReturnType<typeof makeJson>,
+): Promise<Preparacion | Response> {
+  const factura = await loadFactura(supabase, facturaId);
+  if (factura instanceof Response) return factura;
+  if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+
+  if (!(await authorizeOrgRole(supabase, user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
+    return json({ error: "forbidden", message: "Tu rol no tiene permiso para timbrar facturas de esta organización." }, 403);
+  }
+
+  // El SAT certifica con la fecha del timbre: si el borrador quedó fechado otro
+  // día se realinea a hoy (y el trigger del DOF recalcula el T/C) en vez de
+  // rechazar el timbrado. Corre ANTES de las validaciones para que éstas vean
+  // la fila ya actualizada.
+  const realineada = await realinearFechaEmision(
+    supabase, factura as FacturaRow, ESTADOS_FACTURA_TIMBRABLES, user,
+  );
+  if (realineada instanceof Response) return realineada;
+
+  // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,
+  // todo ANTES de credenciales/contexto/claim/PAC.
+  const previos = await validarFacturaTimbrable(supabase, realineada, user.id);
+  if (previos) return previos;
+
+  // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
+  // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /
+  // validation_failed no lo liberaban → la factura quedaba PENDING: y
+  // respondía 409 ya_timbrada durante ≥3 min.
+  const sustituyeUuid = await resolverSustitucion(supabase, realineada);
+  if (sustituyeUuid instanceof Response) return sustituyeUuid;
+
+  return { factura: realineada, sustituyeUuid };
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
   const preflight = handlePreflightStrict(req);
@@ -49,45 +98,19 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData.user) return json({ error: "unauthorized", message: "Tu sesión expiró. Vuelve a iniciar sesión e intenta de nuevo." }, 401);
+  const user = { id: userData.user.id, email: userData.user.email ?? "" };
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.factura_id) return json({ error: "factura_id_required", message: "No se recibió la factura a timbrar. Recarga la página e intenta de nuevo." }, 400);
 
-  const factura = await loadFactura(supabase, body.factura_id);
-  if (factura instanceof Response) return factura;
-  if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
-
-  if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
-    return json({ error: "forbidden", message: "Tu rol no tiene permiso para timbrar facturas de esta organización." }, 403);
-  }
-
-  // El SAT certifica con la fecha del timbre: si el borrador quedó fechado otro
-  // día se realinea a hoy (y el trigger del DOF recalcula el T/C) en vez de
-  // rechazar el timbrado. Corre ANTES de las validaciones para que éstas vean
-  // la fila ya actualizada.
-  const realineada = await realinearFechaEmision(
-    supabase, factura as FacturaRow, ESTADOS_FACTURA_TIMBRABLES,
-    { id: userData.user.id, email: userData.user.email ?? "" },
-  );
-  if (realineada instanceof Response) return realineada;
-  const facturaVigente = realineada;
-
-  // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,
-  // todo ANTES de credenciales/contexto/claim/PAC.
-  const previos = await validarFacturaTimbrable(supabase, facturaVigente, userData.user.id);
-  if (previos) return previos;
-
-  // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
-  // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /
-  // validation_failed no lo liberaban → la factura quedaba PENDING: y
-  // respondía 409 ya_timbrada durante ≥3 min.
-  const sustituyeUuid = await resolverSustitucion(supabase, facturaVigente);
-  if (sustituyeUuid instanceof Response) return sustituyeUuid;
+  const preparada = await prepararEmision(supabase, body.factura_id, user, json);
+  if (preparada instanceof Response) return preparada;
+  const facturaVigente = preparada.factura;
 
   const resolved = await getFacturapiClient(supabase, facturaVigente.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const context = await cargarContexto(supabase, body.factura_id, facturaVigente, sustituyeUuid);
+  const context = await cargarContexto(supabase, body.factura_id, facturaVigente, preparada.sustituyeUuid);
   if (context instanceof Response) return context;
 
   // Claim atómico DESPUÉS de validar (comentario espejo de la familia NC): se
@@ -106,7 +129,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     ctx: context,
     factura: facturaVigente,
     facturaId: body.factura_id,
-    user: { id: userData.user.id, email: userData.user.email ?? "" },
+    user,
     claim,
   });
 }));

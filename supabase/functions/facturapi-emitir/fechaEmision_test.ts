@@ -5,7 +5,7 @@
  * publicación utilizable, el timbrado se detiene con un 422 reintentable.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-// deno-lint-ignore-file no-explicit-any
+import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { fechaDesfasada, hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 import { ESTADOS_FACTURA_TIMBRABLES } from "./emitir.ts";
 import type { FacturaRow } from "./types.ts";
@@ -32,7 +32,7 @@ function fakeSupabase(resultado: { data?: unknown; error?: { message: string; co
     maybeSingle() { return Promise.resolve({ data: resultado.data ?? null, error: resultado.error ?? null }); },
     insert(row: Record<string, unknown>) { inserts.push(row); return Promise.resolve({ error: null }); },
   };
-  return { supabase: { from: () => builder } as any, calls, inserts };
+  return { supabase: { from: () => builder } as unknown as SupabaseClient, calls, inserts };
 }
 
 Deno.test("fecha de hoy: no escribe nada y devuelve la misma fila", async () => {

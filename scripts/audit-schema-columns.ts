@@ -69,35 +69,37 @@ async function main() {
   });
   const findings: Finding[] = [];
 
-  for (const rel of files) {
-    const content = fs.readFileSync(path.join(ROOT, rel), "utf8");
-    const lines = content.split("\n");
-    // buscar `.from("tabla")` … `.is("col", …)` / `.select("a, b")` en una ventana.
+  // buscar `.from("tabla")` … `.is("col", …)` / `.select("a, b")` en una ventana.
+  const escanearArchivo = (rel: string) => {
+    const lines = fs.readFileSync(path.join(ROOT, rel), "utf8").split("\n");
     for (let i = 0; i < lines.length; i++) {
       const fromMatch = lines[i].match(/\.from\(["'`](\w+)["'`]\)/);
       if (!fromMatch) continue;
-      const table = fromMatch[1];
-      const cols = schema.get(table);
+      const cols = schema.get(fromMatch[1]);
       if (!cols) continue;
-      for (let j = i; j < Math.min(i + 30, lines.length); j++) {
-        // rompe si aparece otro `.from(` (nueva query, aunque la tabla venga de
-        // una variable o de un ternario: ahí ya no sabemos a qué tabla aplica).
-        if (j > i && /\.from\(/.test(lines[j])) break;
-        const isMatch = lines[j].match(/\.is\(["'`](\w+)["'`]\s*,/);
-        if (isMatch && !cols.has(isMatch[1])) {
-          findings.push({ file: rel, line: j + 1, table, column: isMatch[1], kind: "is" });
-        }
-        const selMatch = lines[j].match(/\.select\(\s*["'`]([^"'`]*)["'`]/);
-        if (selMatch) {
-          for (const col of columnasDeSelect(selMatch[1])) {
-            if (!cols.has(col)) {
-              findings.push({ file: rel, line: j + 1, table, column: col, kind: "select" });
-            }
-          }
-        }
+      escanearVentana(rel, fromMatch[1], cols, lines, i);
+    }
+  };
+
+  /** Revisa la ventana de 30 líneas posterior a un `.from("tabla")`. */
+  const escanearVentana = (rel: string, table: string, cols: Set<string>, lines: string[], inicio: number) => {
+    for (let j = inicio; j < Math.min(inicio + 30, lines.length); j++) {
+      // rompe si aparece otro `.from(` (nueva query, aunque la tabla venga de
+      // una variable o de un ternario: ahí ya no sabemos a qué tabla aplica).
+      if (j > inicio && /\.from\(/.test(lines[j])) break;
+      const isMatch = lines[j].match(/\.is\(["'`](\w+)["'`]\s*,/);
+      if (isMatch && !cols.has(isMatch[1])) {
+        findings.push({ file: rel, line: j + 1, table, column: isMatch[1], kind: "is" });
+      }
+      const selMatch = lines[j].match(/\.select\(\s*["'`]([^"'`]*)["'`]/);
+      if (!selMatch) continue;
+      for (const col of columnasDeSelect(selMatch[1])) {
+        if (!cols.has(col)) findings.push({ file: rel, line: j + 1, table, column: col, kind: "select" });
       }
     }
-  }
+  };
+
+  for (const rel of files) escanearArchivo(rel);
 
   if (findings.length === 0) {
     console.log("✓ audit:schema — sin mismatches entre .is(...) / .select(...) y schema real.");
