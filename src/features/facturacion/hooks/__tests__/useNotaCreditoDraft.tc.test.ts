@@ -60,6 +60,7 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
       result.current.setConceptos([{
         descripcion: "x", cantidad: 1, precio_unitario: 100,
         clave_sat: "84111506", clave_unidad: "E48", unidad: "u", tasa_iva: 0.16,
+        tipo_iva: "gravado_16" as const,
       }]);
     });
 
@@ -86,6 +87,7 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
       result.current.setConceptos([{
         descripcion: "x", cantidad: 1, precio_unitario: 100,
         clave_sat: "84111506", clave_unidad: "E48", unidad: "u", tasa_iva: 0.16,
+        tipo_iva: "gravado_16" as const,
       }]);
     });
 
