@@ -187,6 +187,24 @@ function extractImpuestosConcepto(conceptoBlock: string): { iva: number; ieps: n
   return { iva, ieps };
 }
 
+/**
+ * P2-IVA — Desglose por línea (base, factor, tasa/cuota, importe) sin tocar
+ * los importes ya calculados. Sólo se preserva lo que el emisor declaró.
+ */
+function extractTrasladosLinea(conceptoBlock: string): CfdiTrasladoLinea[] {
+  return findAllTags(conceptoBlock, "Traslado").map((t) => {
+    const tasaRaw = attr(t, "TasaOCuota");
+    return {
+      impuesto: attr(t, "Impuesto"),
+      base: num(attr(t, "Base")),
+      tipo_factor: attr(t, "TipoFactor"),
+      tasa_o_cuota: tasaRaw === "" ? null : num(tasaRaw),
+      importe: num(attr(t, "Importe")),
+    };
+  });
+}
+
+
 /** Encuentra bloques completos <Concepto>...</Concepto> preservando su contenido. */
 function findConceptoBlocks(xml: string): string[] {
   const re = /<(?:[A-Za-z0-9]+:)?Concepto\b[^>]*?(?:\/>|>[\s\S]*?<\/(?:[A-Za-z0-9]+:)?Concepto\s*>)/gi;
@@ -243,6 +261,9 @@ export function parseCfdi(xml: string): CfdiParsed {
       importe: Math.round(unitario * 1e6) / 1e6,
       iva: imp.iva,
       ieps: imp.ieps,
+      objeto_imp: attr(c, "ObjetoImp"),
+      traslados: extractTrasladosLinea(c),
+
     };
   });
 
