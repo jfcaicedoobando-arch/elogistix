@@ -81,3 +81,16 @@ export function conComplementoXmlManual(
   const { complements: _estructurado, ...resto } = payload;
   return { ...resto, complements: [{ type: COMPLEMENTO_XML_TYPE, data: xml }] };
 }
+
+/**
+ * Payload final para timbrar: XML manual cuando el documento trae renglones
+ * "no objeto"; bloque estructurado de Facturapi en cualquier otro caso.
+ */
+export function payloadRepFinal(
+  payload: FacturapiRepPayload,
+  ctx: PagoContext,
+): Record<string, unknown> {
+  return requiereXmlManual(ctx.documento_relacionado)
+    ? conComplementoXmlManual(payload, ctx)
+    : (payload as unknown as Record<string, unknown>);
+}
