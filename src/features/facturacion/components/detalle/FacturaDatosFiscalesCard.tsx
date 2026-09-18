@@ -6,6 +6,7 @@
  * v13.164.3 — se removió Serie (FacturAPI la asigna) y el checklist fiscal
  *   (ahora vive en `FacturaReceptorCard`).
  */
+import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
 import { useEffect, useState } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -77,6 +78,13 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
   // pendiente es el REP del cobro ⇒ advertencia informativa, nunca bloqueo.
   const avisoPpdNoObjeto = ppdConNoObjetoRequiereAviso(metodoPago, conceptos);
 
+  // P1 · Auditoría fiscal — al cambiar PUE↔PPD realineamos la forma de pago
+  // (PPD ⇒ 99 "Por definir"; PUE limpia el 99) para no guardar un dato obsoleto.
+  const cambiarMetodoPago = (valor: string) => {
+    setMetodoPago(valor);
+    setFormaPago(formaPagoParaMetodo(valor, formaPago));
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -102,7 +110,7 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
         <DatosFiscalesForm
           usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}
           formaPago={formaPago} setFormaPago={setFormaPago}
-          metodoPago={metodoPago} setMetodoPago={setMetodoPago}
+          metodoPago={metodoPago} setMetodoPago={cambiarMetodoPago}
           diasCredito={diasCredito} setDiasCredito={setDiasCredito}
           tipoCambio={tipoCambio} setTipoCambio={setTipoCambio}
           notas={notas} setNotas={setNotas}

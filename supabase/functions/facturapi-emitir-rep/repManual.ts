@@ -12,7 +12,7 @@
  * tasas se reutiliza tal cual de `helpers.ts · buildTaxesDr`.
  */
 import { buildPagoComplementoXml, type DoctoRelacionadoXml } from "./pagoXml.ts";
-import { normalizarFormaPago, type FacturapiRepPayload, type PagoContext } from "./helpers.ts";
+import { formaPagoRepObligatoria, type FacturapiRepPayload, type PagoContext } from "./helpers.ts";
 
 /**
  * Envoltura con la que Facturapi recibe un complemento en XML crudo. Si el
@@ -69,7 +69,7 @@ export function conComplementoXmlManual(
   const pago = payload.complements[0].data[0];
   const xml = buildPagoComplementoXml({
     fecha_pago: ctx.fecha_pago,
-    forma_pago: normalizarFormaPago(ctx.forma_pago),
+    forma_pago: formaPagoRepObligatoria(ctx.forma_pago),
     moneda: ctx.moneda,
     tipo_cambio: ctx.tipo_cambio,
     // Monto del pago en SU moneda (el importe del documento relacionado ya va

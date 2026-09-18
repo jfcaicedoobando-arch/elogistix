@@ -70,6 +70,8 @@ Deno.test("factura mixta PPD (no objeto + gravado 16%) pasa validación y serial
   const ctx: FacturaContext = {
     ...baseCtx,
     metodo_pago: "PPD",
+    // PPD sin pago recibido ⇒ FormaPago 99 (Por definir), regla del Anexo 20.
+    forma_pago: "99",
     conceptos: [
       baseCtx.conceptos[0],
       {
@@ -101,6 +103,8 @@ Deno.test("un renglón gravado sí conserva sus retenciones (sin regresión)", (
   const ctx: FacturaContext = {
     ...baseCtx,
     metodo_pago: "PPD",
+    // PPD sin pago recibido ⇒ FormaPago 99 (Por definir), regla del Anexo 20.
+    forma_pago: "99",
     conceptos: [{
       ...baseCtx.conceptos[0],
       tipo_iva: "gravado_16",

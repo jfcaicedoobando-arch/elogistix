@@ -23,6 +23,8 @@ export interface FacturaRow {
   expediente?: string | null;
   referencia_bl?: string | null;
   subtotal?: number | string | null;
+  /** P1 · Auditoría fiscal — IVA trasladado guardado; se coteja antes del PAC. */
+  iva?: number | string | null;
   total?: number | string | null;
 }
 

@@ -24,6 +24,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
+import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
 
 interface FacturaLike {
   id: string;
@@ -173,10 +174,18 @@ export function useTimbrarFacturaDialog(
     });
   };
 
+  // P1 · Auditoría fiscal — al cambiar PUE↔PPD la forma de pago se realinea
+  // sola: PPD ⇒ 99 (Por definir) y PUE limpia el 99 para obligar a elegir la
+  // forma real. Así no se timbra con un dato obsoleto.
+  const cambiarMetodoPago = (valor: string) => {
+    setMetodoPago(valor);
+    setFormaPago(formaPagoParaMetodo(valor, formaPago));
+  };
+
   return {
     usoCfdi, setUsoCfdi,
     formaPago, setFormaPago,
-    metodoPago, setMetodoPago,
+    metodoPago, setMetodoPago: cambiarMetodoPago,
     enviarEmail, setEnviarEmail,
     modoExpandido, setModoExpandido,
     timbrarPending: timbrar.isPending || actualizarDatos.isPending,

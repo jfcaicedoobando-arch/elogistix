@@ -10,6 +10,7 @@ import {
   type ReferenciasEmbarque,
 } from "../_shared/referenciasEmbarque.ts";
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
+import { CLAVES_FORMA_PAGO_SAT } from "../_shared/formaMetodoPago.ts";
 
 
 /** Factor del impuesto trasladado (c_TipoFactor del SAT). */
@@ -157,15 +158,40 @@ const FORMA_PAGO_MAP: Record<string, string> = {
   "tarjeta de credito": "04",
   "tarjeta de débito": "28",
   "tarjeta de debito": "28",
-  otro: "99",
 };
 
-export function normalizarFormaPago(formaPago: string | null | undefined): string {
-  if (!formaPago) return "99";
+export const MSG_REP_FORMA_PAGO_INVALIDA =
+  "La forma de pago del cobro no es válida para el complemento de pago: el SAT exige una clave " +
+  "real del catálogo c_FormaPago (efectivo, transferencia, cheque, tarjeta…) distinta de 99 " +
+  "(Por definir). Corrige la forma de pago del cobro registrado y vuelve a intentar el timbrado.";
+
+/**
+ * P1 · Auditoría fiscal — FormaDePagoP del REP: el pago YA se recibió, así que
+ * nunca se inventa un 99. Devuelve `null` cuando el dato está ausente, fuera
+ * del catálogo o es 99/"Otro": el timbrado se detiene ANTES del PAC y el pago
+ * queda registrado con su estado de error reintentable.
+ */
+export function normalizarFormaPago(formaPago: string | null | undefined): string | null {
+  if (!formaPago) return null;
   const v = formaPago.trim();
-  if (/^\d{2}$/.test(v)) return v;
+  if (v === "") return null;
+  if (/^\d{2}$/.test(v)) {
+    if (v === "99") return null;
+    return CLAVES_FORMA_PAGO_SAT.includes(v) ? v : null;
+  }
   const key = v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return FORMA_PAGO_MAP[key] ?? "99";
+  return FORMA_PAGO_MAP[key] ?? null;
+}
+
+/**
+ * FormaDePagoP obligatoria para armar el payload. `validateRepContext` ya
+ * bloquea el caso inválido antes del claim; esto es la red de seguridad para
+ * que ningún camino envíe 99 o una clave fuera de catálogo al PAC.
+ */
+export function formaPagoRepObligatoria(formaPago: string | null | undefined): string {
+  const codigo = normalizarFormaPago(formaPago);
+  if (codigo === null) throw new Error(MSG_REP_FORMA_PAGO_INVALIDA);
+  return codigo;
 }
 
 export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
@@ -173,7 +199,9 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   if (!isValidRfc(ctx.receptor.tax_id)) issues.push({ field: "rfc", message: "RFC del receptor inválido" });
   if (!isValidZip(ctx.receptor.address.zip)) issues.push({ field: "codigo_postal", message: "Código postal del receptor requerido (5 dígitos)" });
   if (!ctx.receptor.tax_system) issues.push({ field: "regimen_fiscal", message: "Régimen fiscal del receptor requerido" });
-  if (!normalizarFormaPago(ctx.forma_pago)) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
+  if (normalizarFormaPago(ctx.forma_pago) === null) {
+    issues.push({ field: "forma_pago", message: MSG_REP_FORMA_PAGO_INVALIDA });
+  }
   if (!ctx.fecha_pago) issues.push({ field: "fecha_pago", message: "Fecha de pago requerida" });
   if (!(ctx.monto > 0)) issues.push({ field: "monto", message: "Monto del pago debe ser mayor a 0" });
   if (ctx.moneda !== "MXN" && !(ctx.tipo_cambio > 0)) {
@@ -262,7 +290,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
         type: "pago",
         data: [
           {
-            payment_form: normalizarFormaPago(ctx.forma_pago),
+            payment_form: formaPagoRepObligatoria(ctx.forma_pago),
             currency: ctx.moneda,
             date: ctx.fecha_pago,
             related_documents: [
