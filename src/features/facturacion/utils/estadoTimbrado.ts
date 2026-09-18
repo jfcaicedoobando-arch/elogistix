@@ -42,6 +42,27 @@ export interface EstadoTimbrado {
   advertencias: string[];
 }
 
+/**
+ * Advertencias informativas: NUNCA cambian `puedeTimbrar`.
+ * - PPD + "No objeto de impuesto" (SAT 01) SÍ se emite: Facturapi confirmó que
+ *   el método de pago es del CFDI completo y `taxability` es por concepto; lo
+ *   único en riesgo es el REP del cobro posterior.
+ * - Fecha de otro día: el servidor la realinea al día del timbre.
+ */
+function construirAdvertencias(
+  factura: FacturaLike,
+  seleccion: SeleccionTimbrado,
+  conceptos?: LineaNoObjeto[] | null,
+): string[] {
+  const avisos: string[] = [];
+  if (ppdConNoObjetoRequiereAviso(seleccion.metodoPago, conceptos ?? [])) {
+    avisos.push(AVISO_NO_OBJETO_PPD_REP);
+  }
+  const avisoFecha = avisoFechaEmisionDesfasada(factura.fecha_emision);
+  if (avisoFecha) avisos.push(avisoFecha);
+  return avisos;
+}
+
 export function buildEstadoTimbrado(
   factura: FacturaLike,
   cliente: ClienteLike | null | undefined,
