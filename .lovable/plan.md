@@ -1,39 +1,35 @@
-# Auditoría IVA — lote P2 (seis hallazgos)
+# REP con "No objeto" (ObjetoImp 01) vía XML manual del complemento
 
-Objetivo: que cada renglón diga su tratamiento de IVA (16%, 8%, 0%, Exento, No objeto o "Por confirmar") en la captura, en pantalla, en el portal del cliente y en los PDF. Sin cambiar ningún importe ni regla fiscal ya resuelta.
+## Qué se quiere lograr
 
-## 1. Cotización: candado del 8% al elegir producto del catálogo
-- `ProductoServicioSelect.tsx`: usar `useIvaFronteraHabilitada`. Los productos con tratamiento 8% quedan deshabilitados en la lista, con la explicación estándar `AVISO_IVA_FRONTERA_DESHABILITADO` y `onSelect` ignorado (misma semántica que `FacturaTipoIvaSelect`).
-- `ConceptoDescripcionSelector.tsx`: no cambia la copia de datos; el bloqueo queda arriba, así que un producto al 8% ya no puede entrar a un renglón nuevo.
-- Las líneas ya guardadas al 8% se conservan intactas (el candado sólo gobierna selecciones nuevas).
-- Regresión: `ProductoServicioSelect.frontera.test.tsx` (estímulo apagado → opción 8% deshabilitada y sin `onSelect`; encendido → selecciona normal).
+Hoy, cuando se registra el cobro de una factura PPD que trae renglones "No objeto de impuesto", el recibo de pago (REP) se detiene con un error claro: el formulario de la API no tiene la casilla `ObjetoImpDR`. El proveedor confirmó que la única salida es que nosotros armemos el XML del complemento de pago y lo mandemos en el nodo `complements`.
 
-## 2. Resumen de conceptos del embarque (MXN y USD)
-- Nuevo componente compartido chico `TratamientoIvaBadge` (en `features/embarques/components/facturacion/`) que rinde `etiquetaTratamientoFila`.
-- `ResumenConceptosVenta.tsx` y `GrupoConceptosContenedor.tsx`: reemplazar el badge `+IVA` condicionado a USD por la etiqueta efectiva por línea, en las dos monedas. No se deriva el tipo del booleano `aplica_iva`.
-- Regresión: prueba de la etiqueta por fila para 16/8/0/exento/no objeto/legacy en MXN y USD.
+El objetivo es emitir ese REP correctamente, sin inventar datos fiscales y sin perder la red de seguridad actual.
 
-## 3. Tarjetas de totales del embarque
-- `ResumenConceptosVentaTotales.tsx`: el subtítulo pasa a "Total" y sólo dice "IVA incluido" cuando el bloque realmente trae IVA. Se recibe un indicador booleano por bloque calculado en el padre a partir de la etiqueta/tasa efectiva de sus conceptos; la aritmética de `sumarConceptosVentaPorMoneda` no se toca.
-- Regresión: todo exento/no objeto → "Total" sin afirmar IVA; con 16% → "IVA incluido".
+## Alcance
 
-## 4. Portal público de proforma
-- Migración (`CREATE OR REPLACE FUNCTION public.portal_obtener_proforma_por_token`): agregar al JSON de cada concepto `tipo_iva`, `tasa_iva_aplicada` y `aplica_iva` (columnas ya existentes en `proforma_conceptos_consolidados`). Sin cambios en encabezado, totales, rate limit ni en las ramas de token expirado/respondido (siguen devolviendo `conceptos: []`).
-- Espejo `supabase/schema/portal/portal_obtener_proforma_por_token.sql` + `db:baseline:update` + `audit:manifest`.
-- `portalPublico.ts`: `PortalProformaConcepto` gana los tres campos opcionales.
-- `PortalProformaResumen.tsx`: columna "IVA" con la etiqueta del tratamiento ("Por confirmar" cuando los datos heredados no alcanzan).
-- Regresión: prueba de render de la tabla del portal con los cinco tratamientos y un renglón legacy.
+1. **Generador del complemento (nuevo)** — Construir el XML `pago20:Pagos` versión 2.0 a partir del mismo contexto que hoy alimenta el pago: fecha, forma de pago, moneda, tipo de cambio, monto, y por documento relacionado el UUID, serie, folio, moneda, parcialidad, saldo anterior, importe pagado, saldo insoluto, `ObjetoImpDR` y, sólo cuando es `02`, el bloque de impuestos (traslados y retenciones) ya calculado por los helpers existentes.
+2. **Reutilizar la aritmética actual** — No se recalculan bases ni tasas: los grupos de traslado y retención que ya produce `trasladoDr.ts` / `retencionesDr.ts` se serializan tal cual, con el mismo redondeo a dos decimales y el prorrateo vigente.
+3. **`ObjetoImpDR` por documento relacionado** — `01` cuando *todos* los renglones de la factura son "no objeto" (sin nodo de impuestos), `02` en cualquier otro caso. Una factura mixta (16% + no objeto) es `02` y declara únicamente los impuestos reales de los renglones gravados; nada se reclasifica a Exento ni a tasa 0%.
+4. **Ruta de emisión** — El payload sigue siendo `type: "P"`. Cuando la factura tiene renglones "no objeto", en lugar del bloque estructurado `{ type: "pago", data: [...] }` se envía el XML generado. Todo lo demás (receptor, serie, sección de referencias del PDF, `external_id` del claim) queda igual.
+5. **Barrera y recuperación** — El bloqueo actual deja de disparar la ruta manual, pero se conserva como red: si el proveedor rechaza el XML, el pago queda con estado de error y mensaje explícito, recuperable, sin duplicar ni perder el cobro y sin marcarse como timbrado. Nada cambia en el flujo PUE ni en facturas sin renglones "no objeto".
+6. **Pruebas** — Serialización del XML (estructura, atributos obligatorios, `ObjetoImpDR` 01 sin impuestos, mixta con 02 y sólo el IVA gravado, retenciones, moneda distinta con tipo de cambio), regresión de que el camino normal sigue usando el bloque estructurado, y que el rechazo del proveedor deja el pago en error recuperable.
+7. **Documentación** — Nota en la guía interna de facturación: por qué existe el XML manual, qué responsabilidad fiscal asumimos y cómo verificar un REP emitido por esa ruta.
 
-## 5. PDF de proforma
-- `proformaConceptosColumns.ts`: nueva columna "Trat. IVA" por línea con `etiquetaTratamientoFila`, presente también cuando el grupo no tiene IVA efectivo (para distinguir exento de no objeto). Columnas de IVA/Total y totales sin cambios.
-- Regresión: snapshot de columnas/etiquetas por tratamiento.
+## Detalles técnicos
 
-## 6. PDF de cotización
-- `cotizacionColumnas.tsx`: quitar el sufijo "(+IVA N%)" de la descripción USD y usar una columna fiscal por renglón idéntica en USD y MXN (misma etiqueta compartida). Totales y `armarBloques` sin cambios.
-- Regresión: mezcla de tasas en MXN muestra la etiqueta por línea; USD igual.
+- Nuevo módulo `supabase/functions/facturapi-emitir-rep/pagoXml.ts` (generador puro, sin red, < 200 líneas; si crece se parte en `pagoXml.ts` + `pagoXmlDr.ts`).
+- Escapado estricto de atributos XML; namespaces `pago20` y `schemaLocation` de Pagos 2.0; `Version="2.0"`.
+- `helpers.ts · buildRepPayload` decide la ruta con una bandera derivada del contexto (`usarXmlManual`), calculada del mismo dato que hoy produce `resolverGruposTrasladoDr` — sin nuevas tablas, columnas ni configuración.
+- `index.ts`: el caso `"no_objeto"` deja de responder 422 y pasa el detalle de tratamiento por renglón al contexto. Los demás bloqueos (`indeterminado`, `sin_importes`, `conceptos_ilegibles`) se conservan intactos, igual que el claim atómico previo al timbrado.
+- `trasladoDr.ts`: se agrega un resolvedor que reporta el `ObjetoImpDR` del documento sin alterar las funciones existentes.
 
-## Notas técnicas
-- Fuente única de etiquetas: `etiquetaTratamientoFila` + `TIPO_IVA_LABEL_CORTO`; nada nuevo se infiere de `aplica_iva`.
-- Sin cambios en cálculo de importes, IVA ni totales en ninguno de los seis puntos.
-- Archivos ≤200 líneas; se extraen subcomponentes si algún archivo crece.
-- Validaciones locales focalizadas: `bunx tsgo --noEmit -p tsconfig.app.json`, `bunx eslint` de los archivos tocados, las seis pruebas nuevas y, por la migración, `bun run db:postcheck`. CI completo, RLS y E2E quedan a GitHub Actions. Sin publicar ni tocar producción.
+## Riesgos que conviene tener presentes
+
+- Al armar el XML nosotros, la validez del complemento (versión, estructura, orden de nodos) queda de nuestro lado; el proveedor sólo lo sella.
+- La ruta no es verificable aquí: la primera emisión real conviene hacerla en ambiente de pruebas del proveedor y revisar el XML sellado con Contabilidad antes de usarla en producción.
+- Si el proveedor rechaza el XML, quedamos igual que hoy (pago en error recuperable), sin retroceso.
+
+## Fuera de alcance
+
+Cambios en la emisión de la factura (ya funciona), migraciones de base, publicación o despliegue, y cualquier reclasificación automática de tratamientos fiscales.
