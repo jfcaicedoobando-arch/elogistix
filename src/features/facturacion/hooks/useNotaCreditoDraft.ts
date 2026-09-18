@@ -133,8 +133,25 @@ export function useNotaCreditoDraft(p: Params) {
     !!descripcion.trim() ||
     conceptos.some((c) => c.descripcion.trim() !== "" || c.cantidad !== 1 || c.precio_unitario !== 0);
 
-  const aplicarSaldoCompleto = () =>
-    setConceptos([conceptoPorSaldo(p.saldoFactura, conceptos[0] ?? makeConcepto())]);
+  // P1-IVA: el saldo completo conserva los tratamientos de la factura (uno por
+  // renglón si son mixtos) o se bloquea con el motivo en pantalla.
+  const aplicarSaldoCompleto = () => {
+    const r = conceptosPorSaldoCompleto(
+      p.saldoFactura,
+      p.conceptosSugeridos ?? [],
+      conceptos[0] ?? makeConcepto(),
+    );
+    if (!r.ok) {
+      notifyError(undefined, {
+        title: "No se puede acreditar el saldo completo",
+        description: r.motivo,
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+    setConceptos(r.conceptos);
+  };
   const aplicarDescuento = (porcentaje: number) =>
     setConceptos((prev) => aplicarPorcentaje(prev, porcentaje));
   const aplicarSeleccion = (indices: number[]) => {
