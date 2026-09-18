@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { RetencionSelects } from "./FacturaConceptosRetencionSelects";
 import { MSG_NO_OBJETO_RETENCIONES } from "@/lib/financial/noObjetoFiscal";
@@ -16,6 +15,11 @@ import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
 import { useIvaFronteraHabilitada } from "@/features/configuracion";
 import { FacturaTipoIvaSelect } from "./FacturaTipoIvaSelect";
 import { frontera8Bloqueado } from "./facturaTipoIva";
+import { IvaBadge, RetBadges } from "./FacturaConceptosEditorBadges";
+import {
+  LABEL_TRATAMIENTO_PENDIENTE,
+  MSG_TRATAMIENTO_PENDIENTE,
+} from "./facturaTratamientoPendiente";
 import type {
   ConceptoFacturaInput,
   ConceptoFacturaRow,
@@ -23,39 +27,8 @@ import type {
 } from "@/features/facturacion/services/conceptosFacturaCrud";
 import type { Moneda } from "@/features/facturacion/types";
 
-const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
-  gravado_16: "16%",
-  gravado_8: "8%",
-  tasa_0: "0%",
-  exento: "Exento",
-  no_objeto: "No objeto",
-};
+export { LABEL_TRATAMIENTO_PENDIENTE, MSG_TRATAMIENTO_PENDIENTE };
 
-/**
- * P1 · Auditoría IVA — un renglón legacy sin `tipo_iva` NO se muestra como 16%:
- * se marca "Por confirmar" y exige elección deliberada antes de guardar.
- */
-export const LABEL_TRATAMIENTO_PENDIENTE = "Por confirmar";
-export const MSG_TRATAMIENTO_PENDIENTE =
-  "Este renglón no tiene tratamiento de IVA registrado. Elige el que corresponda (16%, 8%, tasa 0%, exento o no objeto) antes de guardar; el sistema no supone 16%.";
-
-function IvaBadge({ tipo }: { tipo: TipoIvaConcepto | null | undefined }) {
-  if (!tipo) return <Badge variant="outline">{LABEL_TRATAMIENTO_PENDIENTE}</Badge>;
-  const variant: "default" | "secondary" | "outline" =
-    tipo === "gravado_16" || tipo === "gravado_8" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
-  return <Badge variant={variant}>{TIPO_IVA_SHORT[tipo]}</Badge>;
-}
-
-
-function RetBadges({ isr, iva }: { isr: number; iva: number }) {
-  if (!isr && !iva) return <span className="text-body-sm text-muted-foreground">—</span>;
-  return (
-    <div className="flex flex-wrap gap-1 justify-center">
-      {isr > 0 && <Badge variant="outline" className="text-2xs">ISR {(isr * 100).toFixed(isr === 0.1 ? 0 : 2)}%</Badge>}
-      {iva > 0 && <Badge variant="outline" className="text-2xs">IVA {(iva * 100).toFixed(iva === 0.04 ? 0 : 2)}%</Badge>}
-    </div>
-  );
-}
 
 interface RowProps {
   row: ConceptoFacturaRow;
