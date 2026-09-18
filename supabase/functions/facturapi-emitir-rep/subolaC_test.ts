@@ -15,12 +15,13 @@ Deno.test("N2: tasa homogénea 16% se declara como Tasa 0.16", () => {
   assertEquals(r, { tasa: 0.16, factor: "Tasa" });
 });
 
-Deno.test("N2: 16% + exento se rechaza (antes promediaba a 8%)", () => {
+Deno.test("N2: cualquier mezcla de tratamientos se rechaza (P1-IVA)", () => {
+  // 16% + exento ya NO devuelve el grupo gravado: se bloquea el timbrado.
   const r = resolverTrasladoDr([
     { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
     { tipo_iva: "exento", tasa_iva_aplicada: null },
   ]);
-  assertEquals(r, { tasa: 0.16, factor: "Tasa" });
+  assertEquals(r, null);
   const mezcla = resolverTrasladoDr([
     { tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 },
     { tipo_iva: "gravado_8", tasa_iva_aplicada: 0.08 },
