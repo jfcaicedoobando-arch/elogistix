@@ -108,6 +108,17 @@ export function tipoIvaDesdeLegacy(
 }
 
 /**
+ * P1-IVA — clasificación que corresponde a una tasa elegida en el selector.
+ * Sólo se usa cuando el usuario mueve la tasa de una línea gravable: nunca
+ * produce `exento` ni `no_objeto` (esos tratamientos se eligen explícitamente).
+ */
+export function tipoIvaDesdeTasaSeleccionada(tasa: number): TipoIvaSat {
+  if (tasa === 0) return "tasa_0";
+  if (Math.abs(tasa - TASA_IVA_FRONTERA_MX) < 1e-9) return "gravado_8";
+  return "gravado_16";
+}
+
+/**
  * Tipo efectivo de un renglón: respeta el `tipo_iva` explícito y sólo cae al
  * derivado legacy cuando no hay tipo guardado.
  */

@@ -3,7 +3,10 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCot
 
 import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { esNoObjetoIva } from "@/lib/financial/tipoIvaSat";
+import { esNoObjetoIva, tipoIvaDesdeTasaSeleccionada } from "@/lib/financial/tipoIvaSat";
+
+/** Tratamientos que no se editan con el selector de tasa (etiqueta fija). */
+const esTratamientoBloqueado = (tipo?: string | null) => esNoObjetoIva(tipo) || tipo === "exento";
 
 // ── Factories ──
 const emptyUSD = (): ConceptoVentaCotizacion => ({
@@ -37,17 +40,31 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
       // El tipo de IVA lo determina el producto seleccionado del catálogo,
       // que setea `aplica_iva` y `tasa_iva_aplicada` explícitamente después
       // de la descripción. No hay reset por descripción libre.
-      // Mantener consistencia entre tasa y flag booleano.
+      //
+      // P1-IVA: la tasa y la clasificación fiscal viajan siempre juntas. Al
+      // cambiar la tasa desde el selector se sincroniza `tipo_iva`
+      // (0% → tasa_0, 8% → gravado_8, 16% → gravado_16), y los tratamientos
+      // `exento` / `no_objeto` NO se degradan: esas filas no tienen selector
+      // y su tipo explícito manda.
       if (campo === "tasa_iva_aplicada" && typeof valor === "number") {
-        copia[index].aplica_iva = valor > 0;
-        // Si el usuario grava a mano una línea marcada "no objeto", el
-        // tratamiento fiscal explícito deja de aplicar.
-        if (valor > 0 && esNoObjetoIva(copia[index].tipo_iva)) copia[index].tipo_iva = undefined;
+        if (esTratamientoBloqueado(copia[index].tipo_iva)) {
+          copia[index].tasa_iva_aplicada = prev[index].tasa_iva_aplicada;
+        } else {
+          copia[index].aplica_iva = valor > 0;
+          copia[index].tipo_iva = tipoIvaDesdeTasaSeleccionada(valor);
+        }
       }
       if (campo === "aplica_iva" && typeof valor === "boolean") {
-        copia[index].tasa_iva_aplicada = valor ? tasaIva : 0;
-        if (valor && esNoObjetoIva(copia[index].tipo_iva)) copia[index].tipo_iva = undefined;
+        if (esTratamientoBloqueado(copia[index].tipo_iva)) {
+          copia[index].aplica_iva = prev[index].aplica_iva;
+        } else {
+          copia[index].tasa_iva_aplicada = valor ? tasaIva : 0;
+          // Apagar el IVA NO afirma que el tratamiento SAT sea "Exento": sólo
+          // retira la clasificación gravada para que nadie la contradiga.
+          copia[index].tipo_iva = valor ? tipoIvaDesdeTasaSeleccionada(tasaIva) : undefined;
+        }
       }
+
       const sub = copia[index].cantidad * copia[index].precio_unitario;
       const tasaFila = resolverTasaConcepto(copia[index], tasaIva);
       copia[index].total = calcularTotalConIVA(sub, tasaFila);
