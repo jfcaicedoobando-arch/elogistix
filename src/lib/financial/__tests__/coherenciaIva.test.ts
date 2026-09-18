@@ -54,3 +54,19 @@ describe("coherenciaIva — un solo tratamiento fiscal por renglón", () => {
     }
   });
 });
+
+describe("coherenciaIva — tasas distintas de cero en tratamientos sin IVA (P2)", () => {
+  it.each(["tasa_0", "exento", "no_objeto"])(
+    "rechaza una tasa negativa en %s",
+    (tipo_iva) => {
+      const r = clasificarCoherenciaIva({ tipo_iva, tasa_iva_aplicada: -0.16 });
+      expect(r.estado).toBe("incoherente");
+      expect(bloqueaTimbrado(r)).toBe(true);
+    },
+  );
+
+  it("sigue aceptando tasa cero (y cero negativo) en esos tratamientos", () => {
+    expect(clasificarCoherenciaIva({ tipo_iva: "tasa_0", tasa_iva_aplicada: 0 }).estado).toBe("ok");
+    expect(clasificarCoherenciaIva({ tipo_iva: "exento", tasa_iva_aplicada: -0 }).estado).toBe("ok");
+  });
+});
