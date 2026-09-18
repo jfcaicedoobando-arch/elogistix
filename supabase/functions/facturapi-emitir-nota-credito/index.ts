@@ -16,8 +16,8 @@ import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./da
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
-import { registrarNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
+import { esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { respuestaSiNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
