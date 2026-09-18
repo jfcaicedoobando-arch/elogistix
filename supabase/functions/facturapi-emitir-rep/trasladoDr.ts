@@ -45,38 +45,69 @@ export const MSG_REP_NO_OBJETO =
 /** Tasas del catálogo SAT c_TasaOCuota admitidas para traslado de IVA. */
 const TASAS_SAT: readonly number[] = [0, 0.08, 0.16];
 
-function anclarTasa(valor: number): number {
-  let mejor = 0;
-  let distancia = Number.POSITIVE_INFINITY;
-  for (const tasa of TASAS_SAT) {
-    const d = Math.abs(valor - tasa);
-    if (d < distancia) {
-      distancia = d;
-      mejor = tasa;
-    }
-  }
-  return mejor;
-}
+/** Tasa canónica de cada tratamiento; el resto no causa traslado con tasa. */
+const TASA_CANONICA: Record<string, number> = {
+  gravado_16: 0.16,
+  gravado_8: 0.08,
+  tasa_0: 0,
+};
+
+/** Tolerancia de centavos al comparar la tasa guardada con la canónica. */
+const EPS = 1e-6;
+
+export const MSG_REP_TRATAMIENTO_INDETERMINADO =
+  "LC_REP_TRATAMIENTO_INDETERMINADO: La factura relacionada tiene renglones sin tratamiento de IVA " +
+  "registrado (o con una tasa que contradice su tratamiento), así que no se puede saber cómo declarar " +
+  "el impuesto en el complemento de pago. El sistema no supone una tasa. Pide a Contabilidad que " +
+  "complete el tratamiento fiscal (16%, 8%, tasa 0%, exento o no objeto) de cada renglón de la factura " +
+  "y vuelve a intentar el REP.";
 
 /** `true` si el renglón trae el tratamiento explícito "no objeto" (SAT 01). */
 export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
   return String(c?.tipo_iva ?? "").trim().toLowerCase() === "no_objeto";
 }
 
-function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaDr } {
+/**
+ * Traslado del renglón. `null` = INDETERMINADO: no hay tratamiento registrado o
+ * la tasa guardada contradice el tratamiento. Antes esos casos caían al 16% y
+ * el REP declaraba un impuesto que la factura pudo no trasladar.
+ */
+function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaDr } | null {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
   // `exento` sí es representable en el REP (factor Exento). `no_objeto` NO:
   // se detecta antes y bloquea el timbrado (nunca se traduce a Exento).
   if (tipo === "exento") return { tasa: 0, factor: "Exento" };
+  if (!(tipo in TASA_CANONICA)) return null;
+  const canonica = TASA_CANONICA[tipo];
   const raw = c?.tasa_iva_aplicada;
   if (raw === null || raw === undefined || raw === "") {
-    if (tipo === "gravado_8") return { tasa: 0.08, factor: "Tasa" };
-    if (tipo === "tasa_0") return { tasa: 0, factor: "Tasa" };
-    return { tasa: 0.16, factor: "Tasa" };
+    return { tasa: canonica, factor: "Tasa" };
   }
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return { tasa: 0, factor: "Tasa" };
-  return { tasa: anclarTasa(n), factor: "Tasa" };
+  if (!Number.isFinite(n) || Math.abs(n - canonica) >= EPS) return null;
+  return { tasa: canonica, factor: "Tasa" };
+}
+
+/**
+ * Respaldo para facturas antiguas SIN renglones capturados: la única fuente es
+ * el encabezado. Sólo se acepta cuando el cociente IVA/subtotal cae EXACTO
+ * (a centavos) en una tasa del catálogo; si no hay IVA no se puede distinguir
+ * exento de tasa 0% y se devuelve `null` para fallar cerrado. Nunca se ancla
+ * un promedio a la tasa "más cercana".
+ */
+export function trasladoDesdeEncabezado(
+  subtotal: number,
+  iva: number,
+): TrasladoDr | null {
+  const base = Number(subtotal);
+  const impuesto = Number(iva);
+  if (!Number.isFinite(base) || !Number.isFinite(impuesto) || base <= 0) return null;
+  if (impuesto <= 0) return null;
+  const efectiva = impuesto / base;
+  for (const tasa of TASAS_SAT) {
+    if (tasa > 0 && Math.abs(efectiva - tasa) < 5e-4) return { tasa, factor: "Tasa" };
+  }
+  return null;
 }
 
 /**
@@ -86,12 +117,14 @@ function tasaDeConcepto(c: ConceptoTraslado): { tasa: number; factor: FactorIvaD
  * - `null` ⇒ la factura mezcla tratamientos (tasas distintas, o gravado con
  *   exento/tasa 0): el llamador responde 422. NO se elige un grupo "dominante":
  *   eso declararía el importe completo con una tasa que no le corresponde.
+ * - `"indeterminado"` ⇒ algún renglón no tiene tratamiento registrado o su tasa
+ *   contradice el tratamiento: el llamador responde 422 ANTES del claim.
  * - `"sin_conceptos"` ⇒ facturas antiguas sin renglones capturados: el llamador
- *   usa el respaldo histórico.
+ *   usa `trasladoDesdeEncabezado` y bloquea si tampoco alcanza.
  */
 export function resolverTrasladoDr(
   conceptos: ConceptoTraslado[] | null | undefined,
-): TrasladoDr | null | "sin_conceptos" | "no_objeto" {
+): TrasladoDr | null | "sin_conceptos" | "no_objeto" | "indeterminado" {
   const lista = conceptos ?? [];
   if (lista.length === 0) return "sin_conceptos";
   if (lista.some(esConceptoNoObjeto)) return "no_objeto";
@@ -100,7 +133,9 @@ export function resolverTrasladoDr(
   // son grupos DISTINTOS del complemento de pago; cualquier mezcla se bloquea.
   const grupos = new Map<string, TrasladoDr>();
   for (const c of lista) {
-    const { tasa, factor } = tasaDeConcepto(c);
+    const resuelto = tasaDeConcepto(c);
+    if (resuelto === null) return "indeterminado";
+    const { tasa, factor } = resuelto;
     const clave = factor === "Exento" ? "Exento" : `Tasa:${tasa.toFixed(6)}`;
     if (!grupos.has(clave)) grupos.set(clave, { tasa, factor });
   }
