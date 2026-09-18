@@ -50,76 +50,78 @@ function tasaCanonica(tipo: TipoIvaSat, tasaGlobal: number): number {
   return 0;
 }
 
-/**
- * Clasifica una línea. `tasaGravadoDefault` es la tasa general de la
- * organización (`useTasaIVA()`); sólo se usa para `gravado_16`.
- */
-export function clasificarCoherenciaIva(
-  fila: FilaIvaClasificable,
-  tasaGravadoDefault: number = TASA_IVA,
+const etiquetaNoCausante = (tipo: TipoIvaSat) =>
+  tipo === "tasa_0" ? "tasa 0%" : tipo === "exento" ? "exento" : "no objeto de impuesto (SAT 01)";
+
+/** Tratamientos que no causan IVA trasladado. */
+function clasificarNoCausante(
+  tipo: TipoIvaSat,
+  tasaNum: number | null,
+  flag: boolean | null | undefined,
 ): ResultadoCoherenciaIva {
-  const tasa = fila.tasa_iva_aplicada;
-  const tasaPresente = tasa != null && Number.isFinite(Number(tasa));
-  const tasaNum = tasaPresente ? Number(tasa) : null;
-  const flag = fila.aplica_iva;
-
-  if (esTipoIvaSat(fila.tipo_iva)) {
-    const tipo = fila.tipo_iva;
-    const canonica = tasaCanonica(tipo, tasaGravadoDefault);
-    const noCausa = tipo === "no_objeto" || tipo === "exento" || tipo === "tasa_0";
-
-    if (noCausa) {
-      if (tasaNum != null && tasaNum > 0) {
-        return {
-          estado: "incoherente",
-          tipo,
-          tasa: 0,
-          motivo: `está clasificado como ${tipo === "tasa_0" ? "tasa 0%" : tipo === "exento" ? "exento" : "no objeto de impuesto (SAT 01)"} pero tiene una tasa de IVA de ${(tasaNum * 100).toFixed(2)}%`,
-        };
-      }
-      if (flag === true && tipo !== "tasa_0") {
-        return {
-          estado: "incoherente",
-          tipo,
-          tasa: 0,
-          motivo: `está clasificado como ${tipo === "exento" ? "exento" : "no objeto de impuesto (SAT 01)"} pero tiene el IVA activado`,
-        };
-      }
-      return { estado: "ok", tipo, tasa: 0 };
-    }
-
-    // Gravado (16% general u 8% frontera).
-    if (flag === false) {
-      return {
-        estado: "incoherente",
-        tipo,
-        tasa: canonica,
-        motivo: `está clasificado como gravado (${(canonica * 100).toFixed(0)}%) pero el IVA quedó desactivado; falta definir si es tasa 0%, exento o no objeto`,
-      };
-    }
-    if (tasaNum == null) {
-      if (flag === true) return { estado: "ok", tipo, tasa: canonica };
-      // Gravado sin tasa registrada: el flujo que apagó el IVA dejó la tasa
-      // vacía sin cambiar la clasificación. No se rellena con 16%.
-      return {
-        estado: "incoherente",
-        tipo,
-        tasa: canonica,
-        motivo: `está clasificado como gravado ${(canonica * 100).toFixed(0)}% pero no tiene tasa de IVA registrada`,
-      };
-    }
-    if (!igual(tasaNum, canonica)) {
-      return {
-        estado: "incoherente",
-        tipo,
-        tasa: canonica,
-        motivo: `está clasificado como gravado ${(canonica * 100).toFixed(0)}% pero tiene una tasa de ${(tasaNum * 100).toFixed(2)}%`,
-      };
-    }
-    return { estado: "ok", tipo, tasa: canonica };
+  if (tasaNum != null && tasaNum > 0) {
+    return {
+      estado: "incoherente",
+      tipo,
+      tasa: 0,
+      motivo: `está clasificado como ${etiquetaNoCausante(tipo)} pero tiene una tasa de IVA de ${(tasaNum * 100).toFixed(2)}%`,
+    };
   }
+  if (flag === true && tipo !== "tasa_0") {
+    return {
+      estado: "incoherente",
+      tipo,
+      tasa: 0,
+      motivo: `está clasificado como ${etiquetaNoCausante(tipo)} pero tiene el IVA activado`,
+    };
+  }
+  return { estado: "ok", tipo, tasa: 0 };
+}
 
-  // Sin tratamiento explícito (legado).
+/** Tratamientos gravados (16% general u 8% frontera). */
+function clasificarGravado(
+  tipo: TipoIvaSat,
+  canonica: number,
+  tasaNum: number | null,
+  flag: boolean | null | undefined,
+): ResultadoCoherenciaIva {
+  const pct = (canonica * 100).toFixed(0);
+  if (flag === false) {
+    return {
+      estado: "incoherente",
+      tipo,
+      tasa: canonica,
+      motivo: `está clasificado como gravado (${pct}%) pero el IVA quedó desactivado; falta definir si es tasa 0%, exento o no objeto`,
+    };
+  }
+  if (tasaNum == null) {
+    // Gravado sin tasa registrada: el flujo que apagó el IVA dejó la tasa
+    // vacía sin cambiar la clasificación. No se rellena con 16%.
+    if (flag === true) return { estado: "ok", tipo, tasa: canonica };
+    return {
+      estado: "incoherente",
+      tipo,
+      tasa: canonica,
+      motivo: `está clasificado como gravado ${pct}% pero no tiene tasa de IVA registrada`,
+    };
+  }
+  if (!igual(tasaNum, canonica)) {
+    return {
+      estado: "incoherente",
+      tipo,
+      tasa: canonica,
+      motivo: `está clasificado como gravado ${pct}% pero tiene una tasa de ${(tasaNum * 100).toFixed(2)}%`,
+    };
+  }
+  return { estado: "ok", tipo, tasa: canonica };
+}
+
+/** Renglones legados: sin `tipo_iva` guardado. */
+function clasificarLegado(
+  tasaNum: number | null,
+  flag: boolean | null | undefined,
+  tasaGravadoDefault: number,
+): ResultadoCoherenciaIva {
   if (flag === false && tasaNum != null && tasaNum > 0) {
     return {
       estado: "ambiguo",
@@ -129,10 +131,34 @@ export function clasificarCoherenciaIva(
         "no tiene tratamiento fiscal registrado: el IVA está desactivado pero conserva una tasa distinta de cero, así que no se puede determinar si es tasa 0%, exento o no objeto",
     };
   }
-  const tipo = tipoIvaDesdeLegacy(flag, tasaNum);
-  const tasaResuelta = tasaNum != null ? tasaNum : flag ? tasaGravadoDefault : 0;
-  return { estado: "ok", tipo, tasa: tasaResuelta };
+  return {
+    estado: "ok",
+    tipo: tipoIvaDesdeLegacy(flag, tasaNum),
+    tasa: tasaNum != null ? tasaNum : flag ? tasaGravadoDefault : 0,
+  };
 }
+
+/**
+ * Clasifica una línea. `tasaGravadoDefault` es la tasa general de la
+ * organización (`useTasaIVA()`); sólo se usa para `gravado_16`.
+ */
+export function clasificarCoherenciaIva(
+  fila: FilaIvaClasificable,
+  tasaGravadoDefault: number = TASA_IVA,
+): ResultadoCoherenciaIva {
+  const tasa = fila.tasa_iva_aplicada;
+  const tasaNum = tasa != null && Number.isFinite(Number(tasa)) ? Number(tasa) : null;
+  const flag = fila.aplica_iva;
+
+  if (!esTipoIvaSat(fila.tipo_iva)) return clasificarLegado(tasaNum, flag, tasaGravadoDefault);
+
+  const tipo = fila.tipo_iva;
+  if (tipo === "no_objeto" || tipo === "exento" || tipo === "tasa_0") {
+    return clasificarNoCausante(tipo, tasaNum, flag);
+  }
+  return clasificarGravado(tipo, tasaCanonica(tipo, tasaGravadoDefault), tasaNum, flag);
+}
+
 
 /** `true` cuando la línea NO se puede timbrar con seguridad. */
 export function bloqueaTimbrado(resultado: ResultadoCoherenciaIva): boolean {
