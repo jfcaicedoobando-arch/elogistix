@@ -132,10 +132,22 @@ function validarEntrada(body: Record<string, unknown>): EntradaValidada | { erro
   };
 }
 
+/**
+ * `proformas` es bimoneda: guarda `total_usd` y `total_mxn` (NO existen
+ * `moneda` ni `total`; pedirlas rompía el envío con error 400 de PostgREST).
+ * `moneda`/`total` se derivan aquí sólo para el texto del correo.
+ */
 interface ProformaRow {
   id: string; numero: string | null; cliente_nombre: string | null; expediente: string | null;
-  moneda: string | null; total: number | null; organization_id: string;
+  total_usd: number | null; total_mxn: number | null; organization_id: string;
   token_publico: string | null; token_expira_at: string | null;
+}
+
+/** Moneda a mostrar: USD si la proforma trae importe en USD; si no, MXN. */
+function monedaMostrada(prof: ProformaRow): { moneda: string; total: number } {
+  const usd = Number(prof.total_usd ?? 0);
+  if (usd > 0) return { moneda: 'USD', total: usd };
+  return { moneda: 'MXN', total: Number(prof.total_mxn ?? 0) };
 }
 
 interface RegistrarEnvioParams {
