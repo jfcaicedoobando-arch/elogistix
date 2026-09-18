@@ -64,7 +64,6 @@ export async function respuestaSiNcPendiente(
   invoice: { id?: string | null; uuid?: string | null; status?: string | null } | null,
   args: Omit<Args, "pendienteId">,
 ): Promise<{ body: Record<string, unknown>; status: number } | null> {
-  const { esTimbradoPendiente } = await import("../_shared/timbradoPendiente.ts");
   if (!esTimbradoPendiente(invoice)) return null;
   return await registrarNcPendiente({ ...args, pendienteId: invoice?.id ?? null });
 }
