@@ -31,7 +31,8 @@ import {
 import { resolverNoObjetoDr } from "./objetoImpDr.ts";
 import { payloadRepFinal } from "./repManual.ts";
 import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
-import { esReTimbradoPermitido, reservarRep } from "./claimRep.ts";
+import { reservarRep } from "./claimRep.ts";
+import { precargarPagoRep } from "./precargaPago.ts";
 import { leerConceptosDr } from "./conceptosFacturaDr.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -64,28 +65,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
 
-  // 1) Pago
-  const { data: pago, error: pErr } = await supabase
-    .from("pagos_factura")
-    .select("id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, uuid_rep, rep_cancelado_facturapi_id, monto_aplicado_factura")
-    .eq("id", body.pago_id)
-    .maybeSingle();
-  if (pErr || !pago) return json({ error: "pago_not_found", detail: pErr?.message }, 404);
-  // Ola 12 · R3P-21: un REP cancelado no es un candado — el pago puede
-  // re-timbrar y el REP anterior se archiva para la sustitución motivo 01.
-  if (pago.facturapi_rep_id && !esReTimbradoPermitido(pago)) {
-    const esClaim = String(pago.facturapi_rep_id).startsWith("PENDING:");
-    return json({
-      error: "ya_timbrado_rep",
-      message: esClaim
-        ? "Hay un timbrado de REP en curso o interrumpido. Espera ~3 min y usa 'Recuperar timbrado'."
-        : "Este pago ya tiene REP timbrado.",
-      claim_pendiente: esClaim,
-    }, 409);
-  }
-  if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
-    return json({ error: "forbidden" }, 403);
-  }
+  // 1) Pago (carga + candado de REP ya timbrado + autorización)
+  const precarga = await precargarPagoRep(supabase, body.pago_id, userData.user.id, json);
+  if ("response" in precarga) return precarga.response;
+  const { pago } = precarga;
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, pago.organization_id);
