@@ -9,7 +9,8 @@
  *   dinero y se usa 15 (condonación); si ya se cobró, se replica la forma con
  *   la que entró el dinero (o 03 si no se conoce).
  */
-import { roundMoney, TASA_IVA } from "@/lib/financial/financialUtils";
+import { roundMoney } from "@/lib/financial/financialUtils";
+import { factorTotalNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 /** Única clave de uso de CFDI válida para notas de crédito. */
@@ -53,23 +54,28 @@ export function sugerirFormaPagoNC(params: {
 const DESCRIPCION_SALDO = "Nota de crédito por saldo pendiente de la factura";
 
 /**
- * Un solo concepto cuyo total con IVA iguala el saldo pendiente.
- * El precio se calcula desmontando el IVA para que `precio * (1 + tasa)`
- * regrese al saldo capturado.
+ * Un solo concepto cuyo total iguala el saldo pendiente CONSERVANDO el
+ * tratamiento fiscal del renglón base (P1-IVA): el precio se despeja con el
+ * mismo factor que usa el CFDI (1 + tasa de traslado − retenciones), así un
+ * renglón exento, a tasa 0 o no objeto no se convierte en gravado al 16%.
  */
 export function conceptoPorSaldo(
   saldo: number,
   base: ConceptoNotaCredito,
-  tasa: number = TASA_IVA,
+  /** Sobrescribe la tasa del renglón base (opcional). */
+  tasa?: number,
 ): ConceptoNotaCredito {
-  const tasaSegura = Number.isFinite(tasa) && tasa >= 0 ? tasa : 0;
+  const linea: ConceptoNotaCredito =
+    tasa === undefined
+      ? base
+      : { ...base, tasa_iva: Number.isFinite(tasa) && tasa >= 0 ? tasa : 0 };
+  const factor = factorTotalNC(linea);
   const saldoSeguro = Number.isFinite(saldo) && saldo > 0 ? saldo : 0;
   return {
-    ...base,
+    ...linea,
     descripcion: DESCRIPCION_SALDO,
     cantidad: 1,
-    precio_unitario: roundMoney(saldoSeguro / (1 + tasaSegura)),
-    tasa_iva: tasaSegura,
+    precio_unitario: factor > 0 ? roundMoney(saldoSeguro / factor) : 0,
   };
 }
 
