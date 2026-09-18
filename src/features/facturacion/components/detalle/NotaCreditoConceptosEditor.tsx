@@ -12,6 +12,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { subtotalLinea } from "@/lib/financial/financialUtils";
+import { etiquetaTratamientoNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 interface Props {
@@ -73,6 +74,11 @@ export function NotaCreditoConceptosEditor(props: Props) {
                 )}
               </p>
             </div>
+            {/* P1-IVA: el tratamiento viene de la factura original y no se edita
+                aquí: la NC debe reversar exactamente los mismos impuestos. */}
+            <p className="col-span-11 text-label text-muted-foreground">
+              {etiquetaTratamientoNC(c)}
+            </p>
             <div className="col-span-1 flex justify-end">
               <Button
                 type="button" variant="ghost" size="icon"

@@ -23,11 +23,12 @@ import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
   USO_CFDI_NC,
   sugerirFormaPagoNC,
-  conceptoPorSaldo,
   aplicarPorcentaje,
   conceptosSeleccionados,
 } from "@/features/facturacion/utils/notaCreditoSugerencias";
 import { calcularTotalesNC } from "@/features/facturacion/utils/notaCreditoTotales";
+import { conceptosPorSaldoCompleto } from "@/features/facturacion/utils/saldoCompletoNC";
+import { lineaIndeterminadaNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import { logger } from "@/lib/observability/logger";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
@@ -45,6 +46,10 @@ export function makeConcepto(): ConceptoNotaCredito {
     clave_unidad: CLAVE_UNIDAD_DEFAULT,
     unidad: "Unidad de servicio",
     tasa_iva: TASA_IVA,
+    // P1-IVA: el tratamiento fiscal se declara explícito, nunca se deduce.
+    tipo_iva: "gravado_16",
+    tasa_ret_isr: 0,
+    tasa_ret_iva: 0,
   };
 }
 
@@ -101,8 +106,12 @@ export function useNotaCreditoDraft(p: Params) {
   const conceptosValidos =
     conceptos.length > 0 &&
     conceptos.every((c) => c.descripcion.trim() && c.cantidad > 0 && c.precio_unitario >= 0);
+  // P1-IVA: un renglón sin tratamiento fiscal representable no se puede timbrar
+  // (el CFDI acreditaría impuestos supuestos). Se bloquea con aviso, no se infiere.
+  const tratamientoIndefinido = conceptos.some(lineaIndeterminadaNC);
   const puedeGuardar =
-    !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo && !facturaLiquidada;
+    !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo &&
+    !facturaLiquidada && !tratamientoIndefinido;
   const puedeTimbrar = puedeGuardar && !sinUuid;
 
   // YG-06: etiquetas de lo que falta para poder guardar/timbrar la NC.
@@ -112,6 +121,7 @@ export function useNotaCreditoDraft(p: Params) {
     !conceptosValidos && "conceptos completos (descripción, cantidad y precio)",
     monto <= 0 && "importe mayor a cero",
     excedeSaldo && "monto dentro del saldo de la factura",
+    tratamientoIndefinido && "tratamiento fiscal de IVA definido en cada concepto",
   ].filter((x): x is string => !!x);
   const faltantesTimbrar = sinUuid
     ? [...faltantesGuardar, "UUID fiscal de la factura original"]
@@ -122,8 +132,25 @@ export function useNotaCreditoDraft(p: Params) {
     !!descripcion.trim() ||
     conceptos.some((c) => c.descripcion.trim() !== "" || c.cantidad !== 1 || c.precio_unitario !== 0);
 
-  const aplicarSaldoCompleto = () =>
-    setConceptos([conceptoPorSaldo(p.saldoFactura, conceptos[0] ?? makeConcepto())]);
+  // P1-IVA: el saldo completo conserva los tratamientos de la factura (uno por
+  // renglón si son mixtos) o se bloquea con el motivo en pantalla.
+  const aplicarSaldoCompleto = () => {
+    const r = conceptosPorSaldoCompleto(
+      p.saldoFactura,
+      p.conceptosSugeridos ?? [],
+      conceptos[0] ?? makeConcepto(),
+    );
+    if (!r.ok) {
+      notifyError(undefined, {
+        title: "No se puede acreditar el saldo completo",
+        description: r.motivo,
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+    setConceptos(r.conceptos);
+  };
   const aplicarDescuento = (porcentaje: number) =>
     setConceptos((prev) => aplicarPorcentaje(prev, porcentaje));
   const aplicarSeleccion = (indices: number[]) => {

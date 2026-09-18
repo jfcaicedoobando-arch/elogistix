@@ -22,6 +22,10 @@ export interface ConceptoNC {
   tasa_iva?: number | null;
   /** Ola 4 · N19: mismo contrato que el timbrado de facturas. */
   tipo_iva?: "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto" | null;
+  /** P1-IVA — retención de ISR del renglón original (0.10 = 10%); la NC la reversa. */
+  tasa_ret_isr?: number | null;
+  /** P1-IVA — retención de IVA del renglón original (0.04, 0.106667); la NC la reversa. */
+  tasa_ret_iva?: number | null;
 }
 
 export interface NotaCreditoContext {
@@ -82,7 +86,12 @@ export interface FacturapiNcPayload {
       tax_included: false;
       /** ObjetoImp SAT: "01" = no objeto de impuesto, "02" = sí objeto (default). */
       taxability?: "01" | "02";
-      taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
+      taxes: Array<{
+        type: "IVA" | "ISR";
+        rate: number;
+        factor: "Tasa" | "Exento";
+        withholding?: boolean;
+      }>;
     };
   }>;
 }
@@ -120,6 +129,12 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
     if (!c.clave_unidad) issues.push({ field: `conceptos[${i}].clave_unidad`, message: `Concepto "${c.descripcion}" sin clave de unidad` });
     if (c.cantidad <= 0) issues.push({ field: `conceptos[${i}].cantidad`, message: "Cantidad inválida" });
     if (c.precio_unitario < 0) issues.push({ field: `conceptos[${i}].precio_unitario`, message: "Precio inválido" });
+    if (tratamientoNcIndeterminado(c)) {
+      issues.push({
+        field: `conceptos[${i}].tipo_iva`,
+        message: `Concepto "${c.descripcion}" sin tratamiento fiscal de IVA definido (gravado 16%, 8%, tasa 0%, exento o no objeto). Defínelo en la factura original y vuelve a generar la nota de crédito: no se supone una tasa.`,
+      });
+    }
   });
   return issues;
 }
@@ -147,11 +162,44 @@ export function ncTotalEsCero(ctx: NotaCreditoContext): boolean {
  * "no_objeto" (ObjetoImp 01) no lleva traslado alguno de IVA.
  */
 export function buildTaxesNc(c: ConceptoNC) {
+  type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
   const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
-  if (tipo === "no_objeto") return [];
-  if (tipo === "exento") return [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }];
-  const rate = tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16);
-  return [{ type: "IVA" as const, rate, factor: "Tasa" as const }];
+  const taxes: Tax[] = [];
+  if (tipo === "exento") {
+    taxes.push({ type: "IVA", rate: 0, factor: "Exento" });
+  } else if (tipo !== "no_objeto") {
+    const rate = tipo === "tasa_0"
+      ? 0
+      : (c.tasa_iva ?? (tipo === "gravado_8" ? 0.08 : 0.16));
+    taxes.push({ type: "IVA", rate, factor: "Tasa" });
+  }
+  // P1-IVA — las retenciones de la factura se reversan en la NC (mismo shape
+  // que facturapi-emitir/helpers.ts): omitirlas cambiaba el total del CFDI.
+  const retIsr = Number(c.tasa_ret_isr ?? 0);
+  const retIva = Number(c.tasa_ret_iva ?? 0);
+  if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
+  if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
+  return taxes;
+}
+
+/**
+ * P1-IVA — Tratamientos representables en el CFDI de egreso. Un renglón sin
+ * tipo reconocido Y sin tasa numérica es INDETERMINADO: se bloquea el timbrado
+ * en vez de suponer 16% (o degradarlo a exento).
+ */
+const TIPOS_IVA_NC: readonly string[] = [
+  "gravado_16",
+  "gravado_8",
+  "tasa_0",
+  "exento",
+  "no_objeto",
+];
+
+export function tratamientoNcIndeterminado(c: ConceptoNC): boolean {
+  if (c.tipo_iva != null && TIPOS_IVA_NC.includes(c.tipo_iva)) return false;
+  if (c.tipo_iva != null) return true;
+  const tasa = c.tasa_iva;
+  return tasa === null || tasa === undefined || !Number.isFinite(Number(tasa));
 }
 
 export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {

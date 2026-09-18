@@ -30,7 +30,14 @@ export function NotaCreditoResumen(props: Props) {
   return (
     <div className="rounded-md border p-3 space-y-1">
       <Fila label="Subtotal" valor={formatCurrency(totales.subtotal, monedaFactura)} />
-      <Fila label="IVA" valor={formatCurrency(totales.iva, monedaFactura)} />
+      <Fila label="IVA trasladado" valor={formatCurrency(totales.iva, monedaFactura)} />
+      {/* P1-IVA: la NC reversa las mismas retenciones que trajo la factura. */}
+      {totales.retIsr > 0 && (
+        <Fila label="Retención ISR" valor={`− ${formatCurrency(totales.retIsr, monedaFactura)}`} />
+      )}
+      {totales.retIva > 0 && (
+        <Fila label="Retención IVA" valor={`− ${formatCurrency(totales.retIva, monedaFactura)}`} />
+      )}
       <Fila label="Total de la nota" valor={formatCurrency(totales.total, monedaFactura)} fuerte alerta={excedeSaldo} />
       <Fila label="Saldo de la factura" valor={formatCurrency(saldoFactura, monedaFactura)} />
       <Fila
