@@ -12,6 +12,8 @@ export interface FapiInvoice {
   folio_number?: number;
   folio?: number;
   series?: string;
+  /** P0-A: FacturAPI puede responder "pending" (timbre en recuperación). */
+  status?: string;
 }
 
 interface TimbrarDeps {
