@@ -50,7 +50,6 @@ interface FacturaRecordatorio {
   cliente_id: string;
   numero: string | null;
   serie: string | null;
-  folio: string | null;
   cliente_nombre: string | null;
   total: number | null;
   saldo: number | null;
