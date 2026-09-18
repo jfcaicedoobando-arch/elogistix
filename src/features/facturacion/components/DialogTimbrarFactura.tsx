@@ -29,12 +29,13 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
   if (!facturaId || !factura) return null;
 
-  const { checks, puedeTimbrar, esFastPath } = buildEstadoTimbrado(
+  const { checks, puedeTimbrar, esFastPath, advertencias } = buildEstadoTimbrado(
     factura,
     cliente,
     { usoCfdi: dlg.usoCfdi, formaPago: dlg.formaPago, metodoPago: dlg.metodoPago },
     conceptos,
   );
+
 
   const mostrarCompacto = esFastPath && !dlg.modoExpandido;
 
