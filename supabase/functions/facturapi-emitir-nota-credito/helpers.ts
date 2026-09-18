@@ -135,6 +135,15 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
         message: `Concepto "${c.descripcion}" sin tratamiento fiscal de IVA definido (gravado 16%, 8%, tasa 0%, exento o no objeto). Defínelo en la factura original y vuelve a generar la nota de crédito: no se supone una tasa.`,
       });
     }
+    // P1-IVA: tipo y tasa contradictorios (gravado 16% con 0.08) bloquean:
+    // no se elige silenciosamente ninguno de los dos datos.
+    if (tasaNcIncoherente(c)) {
+      issues.push({
+        field: `conceptos[${i}].tasa_iva`,
+        message: `Concepto "${c.descripcion}" tiene un tratamiento fiscal (${c.tipo_iva}) que no coincide con su tasa de IVA guardada (${c.tasa_iva}). Corrige la factura original y vuelve a generar la nota de crédito.`,
+      });
+    }
+
   });
   return issues;
 }
