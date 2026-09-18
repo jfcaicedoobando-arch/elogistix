@@ -15,6 +15,9 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 vi.mock("@/features/cotizacion/components/conceptos/ConceptoDescripcionSelector", () => ({
   ConceptoDescripcionSelector: () => <div data-testid="producto-select" />,
 }));
+vi.mock("@/features/configuracion", () => ({
+  useIvaFronteraHabilitada: () => false,
+}));
 vi.mock("@/features/cotizacion/components/conceptos/UnidadMedidaSelect", () => ({
   UnidadMedidaSelect: () => <div data-testid="unidad-select" />,
 }));

@@ -97,6 +97,7 @@ export function CatalogoClavesSATCard() {
               )}
               {rows.map((r) => editingId === r.id ? (
                 <EditRow key={r.id} draft={draft} setDraft={setDraft} busy={busy} valid={validDraft}
+                         tipoIvaOriginal={r.tipo_iva}
                          onCancel={() => setEditingId(null)}
                          onSave={handleUpdate} />
               ) : (
