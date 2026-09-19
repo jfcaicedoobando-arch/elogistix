@@ -35,15 +35,18 @@ interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?:
 
 async function createNcInvoice(
   supabase: ReturnType<typeof createClient>,
-  facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
+  /** Cliente opaco del SDK; lo tipa el adaptador `_shared/facturapiSdk.ts`. */
+  facturapi: unknown,
   payload: unknown,
   meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string; claimTag: string },
   releaseClaim: () => Promise<void>,
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
+    // P2-C: el cast del SDK está centralizado en el adaptador tipado.
+    const invoices = exigirInvoices(facturapi, "create");
     // Ola 4 · N1: timeout defensivo (patrón FIX-04/32 de facturapi-emitir):
     // si FacturAPI cuelga, devolvemos 504.
-    const invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+    const invoice = await withFacturapiTimeout("invoices.create", invoices.create(payload)) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
