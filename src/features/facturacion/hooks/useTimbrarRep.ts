@@ -16,6 +16,7 @@ import {
   esRepYaTimbrado,
   type MotivoCancelacionSat,
 } from "@/features/facturacion/services/repFacturapi";
+import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { autoEnviarRepPorCorreo } from "@/features/facturacion/services/repAutoEmail";
 import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -30,6 +31,16 @@ export function useTimbrarRep(facturaId?: string) {
     mutationKey: queryKeys.facturacion.emitirRep,
     mutationFn: (pagoId: string) => emitirRep(pagoId),
     onSuccess: (res, pagoId) => {
+      if (esPendiente(res)) {
+        // 202: sin UUID; el pago sigue sin REP timbrado. No invitar a reintentar.
+        notifyInfo(undefined, {
+          title: "Timbrado del REP en proceso",
+          description: res.message,
+          duration: 15000,
+        });
+        invalidarTrasRep(qc, facturaId);
+        return;
+      }
       notifySuccess(undefined, { title: tituloTimbrado("REP timbrado", res.uuid) });
       invalidarTrasRep(qc, facturaId);
       // Fire-and-forget: no bloquea la UI ni revierte el timbrado si falla.

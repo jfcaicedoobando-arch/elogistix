@@ -10,6 +10,7 @@ import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "@/lib/ui/
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 import { emitirRep, esRepYaTimbrado } from "@/features/facturacion/services/repFacturapi";
+import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { invalidarTrasRep } from "./invalidarRep";
 import { useRegistrarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
@@ -44,11 +45,19 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
   const intentarTimbrarRep = async (pagoId: string, facturaId: string) => {
     setTimbrandoRep(true);
     try {
-      await emitirRep(pagoId);
-      notifySuccess(undefined, {
-        title: "REP timbrado",
-        description: "Se generó el Recibo Electrónico de Pago.",
-      });
+      const res = await emitirRep(pagoId);
+      if (esPendiente(res)) {
+        notifyInfo(undefined, {
+          title: "Pago registrado · timbrado del REP en proceso",
+          description: res.message,
+          duration: 15000,
+        });
+      } else {
+        notifySuccess(undefined, {
+          title: "REP timbrado",
+          description: "Se generó el Recibo Electrónico de Pago.",
+        });
+      }
     } catch (err) {
       if (esRepYaTimbrado(err)) {
         notifyInfo(undefined, {
