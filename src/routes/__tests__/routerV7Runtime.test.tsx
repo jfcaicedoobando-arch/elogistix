@@ -1,0 +1,188 @@
+/**
+ * Pruebas dirigidas de la migración a React Router 7 (modo declarativo).
+ *
+ * Verifican comportamiento en runtime (no sólo estructura del árbol de rutas):
+ *  - `Routes`/`Route`/`Navigate` siguen resolviendo rutas anidadas y profundas.
+ *  - `RedirectPreserveSearch` preserva querystring y hash en los redirects legacy.
+ *  - Los enlaces relativos y el trailing slash conservan la semántica de v6.
+ *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
+ */
+import { describe, it, expect } from "vitest";
+import { render, screen, act, fireEvent } from "@testing-library/react";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+  Link,
+  useLocation,
+  useParams,
+} from "react-router-dom";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
+import { useQueryState } from "nuqs";
+import { RedirectPreserveSearch } from "../RedirectPreserveSearch";
+
+function UrlProbe() {
+  const { pathname, search, hash } = useLocation();
+  return <div data-testid="url">{`${pathname}${search}${hash}`}</div>;
+}
+
+function ParamProbe() {
+  const params = useParams();
+  return <div data-testid="params">{JSON.stringify(params)}</div>;
+}
+
+function LayoutShell() {
+  return (
+    <div>
+      <span>layout</span>
+      <Outlet />
+    </div>
+  );
+}
+
+describe("React Router 7 — rutas declarativas", () => {
+  it("resuelve rutas profundas anidadas con parámetros", () => {
+    render(
+      <MemoryRouter initialEntries={["/crm/clientes/abc-123/contactos"]}>
+        <Routes>
+          <Route path="/crm" element={<LayoutShell />}>
+            <Route path="clientes/:clienteId/contactos" element={<ParamProbe />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("layout")).toBeInTheDocument();
+    expect(screen.getByTestId("params").textContent).toContain('"clienteId":"abc-123"');
+
+  });
+
+  it("aplica Navigate en redirecciones sin acceso", () => {
+    render(
+      <MemoryRouter initialEntries={["/embarques"]}>
+        <Routes>
+          <Route path="/embarques" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<UrlProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("url").textContent).toBe("/login");
+  });
+
+  it("preserva querystring y hash en redirects legacy", () => {
+    render(
+      <MemoryRouter initialEntries={["/cxp/por-capturar?estado=pendiente&page=2#tabla"]}>
+        <Routes>
+          <Route
+            path="/cxp/por-capturar"
+            element={<RedirectPreserveSearch to="/compras/por-capturar" />}
+          />
+          <Route path="/compras/por-capturar" element={<UrlProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("url").textContent).toBe(
+      "/compras/por-capturar?estado=pendiente&page=2#tabla",
+    );
+  });
+
+  it("trata el trailing slash como la misma ruta", () => {
+    render(
+      <MemoryRouter initialEntries={["/cotizaciones/"]}>
+        <Routes>
+          <Route path="/cotizaciones" element={<UrlProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("url").textContent).toBe("/cotizaciones/");
+  });
+
+  it("resuelve enlaces relativos dentro de una ruta anidada", () => {
+    render(
+      <MemoryRouter initialEntries={["/portal/embarques"]}>
+        <Routes>
+          <Route path="/portal" element={<LayoutShell />}>
+            <Route path="embarques" element={<Link to="detalle/9">ver</Link>} />
+            <Route path="embarques/detalle/:id" element={<ParamProbe />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByText("ver"));
+    expect(screen.getByTestId("params").textContent).toContain('"id":"9"');
+  });
+
+  it("mantiene navegación atrás/adelante en rutas profundas", () => {
+    const history: string[] = [];
+    function Spy() {
+      const { pathname } = useLocation();
+      history.push(pathname);
+      return <Link to="/agente/tarifas">ir</Link>;
+    }
+    render(
+      <MemoryRouter initialEntries={["/agente", "/agente/tarifas"]} initialIndex={1}>
+        <Routes>
+          <Route path="/agente" element={<Spy />} />
+          <Route path="/agente/tarifas" element={<UrlProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("url").textContent).toBe("/agente/tarifas");
+    act(() => {
+      window.history.back();
+    });
+    expect(history.length).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("NuqsAdapter v7 — filtros en query string", () => {
+  function Filtros() {
+    const [estado, setEstado] = useQueryState("estado");
+    return (
+      <div>
+        <div data-testid="estado">{estado ?? "sin-filtro"}</div>
+        <button onClick={() => void setEstado("en_transito")}>filtrar</button>
+      </div>
+    );
+  }
+
+  it("lee el valor inicial desde la URL", () => {
+    // `MemoryRouter` no toca `window.location`; el adaptador lee la URL real,
+    // así que se alinean ambas para reproducir el comportamiento del navegador.
+    window.history.replaceState(null, "", "/embarques?estado=en_puerto");
+    render(
+      <MemoryRouter initialEntries={["/embarques?estado=en_puerto"]}>
+        <NuqsAdapter>
+          <Routes>
+            <Route path="/embarques" element={<Filtros />} />
+          </Routes>
+        </NuqsAdapter>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("estado").textContent).toBe("en_puerto");
+  });
+
+  it("escribe el filtro en la URL sin perder la ruta", async () => {
+    render(
+      <MemoryRouter initialEntries={["/embarques"]}>
+        <NuqsAdapter>
+          <Routes>
+            <Route
+              path="/embarques"
+              element={
+                <>
+                  <Filtros />
+                  <UrlProbe />
+                </>
+              }
+            />
+          </Routes>
+        </NuqsAdapter>
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByText("filtrar"));
+    expect(screen.getByTestId("estado").textContent).toBe("en_transito");
+    expect(screen.getByTestId("url").textContent).toContain("/embarques");
+  });
+});

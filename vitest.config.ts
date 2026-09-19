@@ -16,14 +16,39 @@ const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, 
 const ROOT = __dirname;
 const SPLIT = splitTestsByEnvironment(ROOT);
 
+// v13.824.x — React Router 7: `react-router-dom` externalizado se carga como
+// CJS mientras `react-router` (importado por `nuqs/adapters/react-router/v7`)
+// se carga como ESM, creando DOS instancias del contexto del router
+// ("useNavigate() may be used only in the context of a <Router>"). Se fija la
+// variante ESM de ambos para que en tests exista una sola instancia. Sólo
+// aplica a Vitest; el build de producción resuelve el paquete normalmente.
+const RR_ESM = [
+  {
+    find: /^react-router-dom$/,
+    replacement: path.resolve(ROOT, "./node_modules/react-router-dom/dist/index.mjs"),
+  },
+  {
+    find: /^react-router$/,
+    replacement: path.resolve(ROOT, "./node_modules/react-router/dist/development/index.mjs"),
+  },
+  {
+    find: /^react-router\/dom$/,
+    replacement: path.resolve(ROOT, "./node_modules/react-router/dist/development/dom-export.mjs"),
+  },
+];
+
 // Alias compartido por ambos proyectos (los proyectos NO heredan el `resolve`
 // raíz, así que se define una sola vez y se reutiliza).
-const ALIAS = {
-  "@": path.resolve(ROOT, "./src"),
+const ALIAS = [
+  ...RR_ESM,
+  { find: "@", replacement: path.resolve(ROOT, "./src") },
   // En tests, @react-pdf/renderer apunta a un stub ligero
   // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por archivo.
-  "@react-pdf/renderer": path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
-};
+  {
+    find: "@react-pdf/renderer",
+    replacement: path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
+  },
+];
 
 const COMMON_EXCLUDE = [
   "node_modules/**",
@@ -220,12 +245,16 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    alias: [
+      ...RR_ESM,
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
       // Alias global: en tests, @react-pdf/renderer apunta a un stub ligero
       // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por
       // archivo. Aplica también a `vi.importActual("@react-pdf/renderer")`.
-      "@react-pdf/renderer": path.resolve(__dirname, "./src/test/mocks/reactPdfStub.tsx"),
-    },
+      {
+        find: "@react-pdf/renderer",
+        replacement: path.resolve(__dirname, "./src/test/mocks/reactPdfStub.tsx"),
+      },
+    ],
   },
 });
