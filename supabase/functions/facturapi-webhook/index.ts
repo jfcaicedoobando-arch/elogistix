@@ -25,6 +25,13 @@ import { jsonResponse } from "../_shared/response.ts";
 import {
   COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
 } from "./pendiente.ts";
+import {
+  COLS_WEBHOOK_CRED,
+  resolverSecretosWebhook,
+  type CredencialWebhookRow,
+  type SecretoWebhook,
+} from "../_shared/facturapiWebhookConfig.ts";
+
 
 interface FacturaLocal {
   id: string;
@@ -176,21 +183,31 @@ async function despacharEvento(
 
 /**
  * Verifica firma sobre los BYTES exactos aceptados y parsea el evento.
- * Devuelve Response en caso de rechazo.
+ *
+ * P2-A: la firma se prueba contra los secretos del ambiente (activo primero,
+ * opuesto como respaldo y legado sólo si no hay ninguno por ambiente). Se
+ * devuelve el origen del secret que validó para dejarlo en logs/bitácora —
+ * nunca el secret.
  */
 async function validarEvento(
-  bytes: Uint8Array, rawBody: string, signature: string, secret: string,
-): Promise<FacturapiWebhookEvent | Response> {
-  const expected = await computeSignatureBytes(bytes, secret);
-  if (!signature || !safeEqual(signature, expected)) {
-    return jsonResponse({ error: "invalid_signature" }, 401);
+  bytes: Uint8Array, rawBody: string, signature: string, secretos: SecretoWebhook[],
+): Promise<{ event: FacturapiWebhookEvent; origen: SecretoWebhook["origen"] } | Response> {
+  let origen: SecretoWebhook["origen"] | null = null;
+  for (const candidato of secretos) {
+    const expected = await computeSignatureBytes(bytes, candidato.secret);
+    if (signature && safeEqual(signature, expected)) {
+      origen = candidato.origen;
+      break;
+    }
   }
+  if (!origen) return jsonResponse({ error: "invalid_signature" }, 401);
   try {
-    return JSON.parse(rawBody) as FacturapiWebhookEvent;
+    return { event: JSON.parse(rawBody) as FacturapiWebhookEvent, origen };
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
   }
 }
+
 
 /**
  * EF-07 + FIX-22 + Ola 4 · N2 · Dedupe ATÓMICO (INSERT-first): el constraint
@@ -279,10 +296,12 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
 
   const { data: cred } = await supabase
     .from("facturapi_credenciales")
-    .select("webhook_secret")
+    .select(COLS_WEBHOOK_CRED)
     .eq("organization_id", orgId)
     .maybeSingle();
-  if (!cred?.webhook_secret) return jsonResponse({ error: "webhook_not_configured" }, 412);
+  // P2-A: secretos POR AMBIENTE (ya no un `webhook_secret` indistinto).
+  const secretos = resolverSecretosWebhook(cred as CredencialWebhookRow | null);
+  if (secretos.length === 0) return jsonResponse({ error: "webhook_not_configured" }, 412);
 
   // Ola P2: endpoint público (verify_jwt=false por diseño). Nunca materializar
   // un body ilimitado antes de validar el HMAC: lectura acotada con corte real
@@ -294,10 +313,21 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       : jsonResponse({ error: "invalid_body" }, 400);
   }
 
-  const event = await validarEvento(
-    cuerpo.bytes, cuerpo.raw, req.headers.get("facturapi-signature") ?? "", cred.webhook_secret,
+  const validado = await validarEvento(
+    cuerpo.bytes, cuerpo.raw, req.headers.get("facturapi-signature") ?? "", secretos,
   );
-  if (event instanceof Response) return event;
+  if (validado instanceof Response) return validado;
+  const { event, origen: origenSecret } = validado;
+  if (origenSecret === "legacy") {
+    // Diagnóstico accionable sin exponer el secret: la org sigue en el campo
+    // legado y debe migrar a la configuración por ambiente.
+    await captureEdgeMessage("facturapi_webhook_secret_legacy", "warning", {
+      fn: "facturapi-webhook",
+      organization_id: orgId,
+      extra: { event_type: event.type },
+    });
+  }
+
 
   // Dedupe atómico: si el procesamiento falla (no-2xx) se libera la reserva
   // para que el retry de FacturAPI reprocese el evento.
