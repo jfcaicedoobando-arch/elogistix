@@ -103,18 +103,38 @@ Deno.test("resolveFacturapiKey: legacy SÓLO aplica con coincidencia EXACTA de L
   cleanupEnv();
   Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
   Deno.env.set("LEGACY_FACTURAPI_ORG_ID", "org-legacy");
+  // P2-C: el ambiente del fallback legacy es explícito y obligatorio.
+  Deno.env.set("LEGACY_FACTURAPI_AMBIENTE", "live");
   const sb = makeSupabase(null);
 
   const okRes = await resolveFacturapiKey(sb, "org-legacy");
   if (!okRes.ok) throw new Error("esperaba ok (legacy exacto)");
   assertEquals(okRes.data.apiKey, "sk_legacy_999");
   assertEquals(okRes.data.legacy, true);
+  assertEquals(okRes.data.ambiente, "live");
 
   const otraOrg = await resolveFacturapiKey(sb, "org-otra-distinta");
   if (otraOrg.ok) throw new Error("otra org NUNCA debe usar el fallback legacy");
   assertEquals(otraOrg.data.error, "org_facturapi_not_configured");
   cleanupEnv();
 });
+
+Deno.test("resolveFacturapiKey: legacy sin LEGACY_FACTURAPI_AMBIENTE válido queda fail-closed", async () => {
+  cleanupEnv();
+  Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
+  Deno.env.set("LEGACY_FACTURAPI_ORG_ID", "org-legacy");
+  const sb = makeSupabase(null);
+
+  const sinAmbiente = await resolveFacturapiKey(sb, "org-legacy");
+  if (sinAmbiente.ok) throw new Error("sin ambiente explícito NO debe resolver (nunca asumir sandbox)");
+  assertEquals(sinAmbiente.data.status, 412);
+
+  Deno.env.set("LEGACY_FACTURAPI_AMBIENTE", "produccion");
+  const ambienteInvalido = await resolveFacturapiKey(sb, "org-legacy");
+  if (ambienteInvalido.ok) throw new Error("un ambiente inválido tampoco debe resolver");
+  cleanupEnv();
+});
+
 
 Deno.test("resolveFacturapiKey: dos orgs — la configurada usa su key propia, la otra jamás toca la global", async () => {
   cleanupEnv();
