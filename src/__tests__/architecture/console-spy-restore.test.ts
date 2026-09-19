@@ -18,7 +18,11 @@ const RESTAURA_RE = /mockRestore\s*\(|restoreAllMocks\s*\(|silenciarLogEsperado\
 
 describe("spies de consola en pruebas", () => {
   it("todo archivo que espía consola la restaura", async () => {
-    const files = await fg(["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"], { cwd: ROOT });
+    const files = await fg(["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"], {
+      cwd: ROOT,
+      // Este archivo contiene los patrones como texto del propio guard.
+      ignore: ["src/__tests__/architecture/console-spy-restore.test.ts"],
+    });
     const violadores: string[] = [];
     for (const rel of files) {
       const src = readFileSync(path.join(ROOT, rel), "utf-8");
