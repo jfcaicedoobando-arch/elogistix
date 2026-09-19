@@ -7,8 +7,8 @@
  *  - Los enlaces relativos y el trailing slash conservan la semántica de v6.
  *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import {
   MemoryRouter,
   Routes,
@@ -17,6 +17,7 @@ import {
   Outlet,
   Link,
   useLocation,
+  useNavigate,
   useParams,
 } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
@@ -114,25 +115,31 @@ describe("React Router 7 — rutas declarativas", () => {
   });
 
   it("mantiene navegación atrás/adelante en rutas profundas", () => {
-    const history: string[] = [];
-    function Spy() {
-      const { pathname } = useLocation();
-      history.push(pathname);
-      return <Link to="/agente/tarifas">ir</Link>;
+    // `MemoryRouter` tiene su propio historial: `window.history.back()` no lo
+    // mueve. Se navega con `useNavigate(-1)` contra las entradas iniciales.
+    function Atras() {
+      const navigate = useNavigate();
+      return (
+        <>
+          <UrlProbe />
+          <button onClick={() => navigate(-1)}>atras</button>
+          <button onClick={() => navigate(1)}>adelante</button>
+        </>
+      );
     }
     render(
       <MemoryRouter initialEntries={["/agente", "/agente/tarifas"]} initialIndex={1}>
         <Routes>
-          <Route path="/agente" element={<Spy />} />
-          <Route path="/agente/tarifas" element={<UrlProbe />} />
+          <Route path="/agente" element={<Atras />} />
+          <Route path="/agente/tarifas" element={<Atras />} />
         </Routes>
       </MemoryRouter>,
     );
     expect(screen.getByTestId("url").textContent).toBe("/agente/tarifas");
-    act(() => {
-      window.history.back();
-    });
-    expect(history.length).toBeGreaterThanOrEqual(0);
+    fireEvent.click(screen.getByText("atras"));
+    expect(screen.getByTestId("url").textContent).toBe("/agente");
+    fireEvent.click(screen.getByText("adelante"));
+    expect(screen.getByTestId("url").textContent).toBe("/agente/tarifas");
   });
 });
 
