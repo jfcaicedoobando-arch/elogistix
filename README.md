@@ -14,13 +14,14 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 
 ## Stack
 
-- **Frontend**: React 18 + Vite 5 + TypeScript 5
+- **Frontend**: React 19 + Vite 6 + TypeScript 5
 - **UI**: Tailwind CSS v3 + shadcn/ui (read-only) + tokens HSL semánticos
 - **Estado server**: TanStack Query v5
+- **Router**: React Router 7 en modo declarativo (`BrowserRouter` + `Routes`), sin Data/Framework Mode
 - **Forms**: React Hook Form + Zod
 - **Backend**: Lovable Cloud (Supabase) — Postgres + RLS + Storage + Edge Functions (Deno)
 - **AI**: Lovable AI Gateway (Gemini para parsing de CSF, etc.)
-- **Tests**: Vitest + Testing Library
+- **Tests**: Vitest 4 + Testing Library (proyectos `node`/`jsdom`; ver [`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md) y [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md))
 
 ## Módulos principales
 
