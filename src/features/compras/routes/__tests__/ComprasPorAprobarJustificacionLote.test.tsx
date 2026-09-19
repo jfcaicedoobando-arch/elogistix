@@ -22,7 +22,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 
 import { ConfirmarAprobacionLoteDialog } from "../ComprasPorAprobar.confirmDialog";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 
 const A = "11111111-1111-1111-1111-111111111111";
 const B = "22222222-2222-2222-2222-222222222222";
@@ -111,9 +111,11 @@ describe("Aprobación en lote con justificación", () => {
       ),
     });
 
-    await result.current.aprobar([A, B], {
-      justificacion: "  Renta de oficina de agosto  ",
-      requierenJustificacion: new Set([B]),
+    await act(async () => {
+      await result.current.aprobar([A, B], {
+        justificacion: "  Renta de oficina de agosto  ",
+        requierenJustificacion: new Set([B]),
+      });
     });
 
     await waitFor(() => expect(aprobarMock).toHaveBeenCalledTimes(2));

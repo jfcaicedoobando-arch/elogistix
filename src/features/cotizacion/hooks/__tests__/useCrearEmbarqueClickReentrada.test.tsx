@@ -4,7 +4,7 @@
  * del candado de costos; si el candado bloquea, se libera para reintentar.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 const mutateAsync = vi.fn();
 const revalidarTarifa = vi.fn();
@@ -43,12 +43,18 @@ describe("useCrearEmbarqueConRevalidacion — doble clic en Crear embarque", () 
 
     const { result } = renderHook(() => useCrearEmbarqueConRevalidacion("cot-1"));
 
-    const p1 = result.current.handleClick();
-    const p2 = result.current.handleClick();
+    let p1!: Promise<unknown>;
+    let p2!: Promise<unknown>;
+    act(() => {
+      p1 = result.current.handleClick();
+      p2 = result.current.handleClick();
+    });
     expect(verificarCostosOAvisar).toHaveBeenCalledTimes(1);
 
-    liberar(true);
-    await Promise.all([p1, p2]);
+    await act(async () => {
+      liberar(true);
+      await Promise.all([p1, p2]);
+    });
 
     expect(revalidarTarifa).toHaveBeenCalledTimes(1);
     expect(mutateAsync).toHaveBeenCalledTimes(1);
@@ -58,13 +64,13 @@ describe("useCrearEmbarqueConRevalidacion — doble clic en Crear embarque", () 
     verificarCostosOAvisar.mockResolvedValueOnce(false);
     const { result } = renderHook(() => useCrearEmbarqueConRevalidacion("cot-2"));
 
-    await result.current.handleClick();
+    await act(async () => { await result.current.handleClick(); });
     expect(revalidarTarifa).not.toHaveBeenCalled();
 
     verificarCostosOAvisar.mockResolvedValueOnce(true);
     revalidarTarifa.mockResolvedValue({ severidad: "sin_cambios", cambios: [], tarifa_id_vigente: null });
     mutateAsync.mockResolvedValue("emb-2");
-    await result.current.handleClick();
+    await act(async () => { await result.current.handleClick(); });
 
     expect(revalidarTarifa).toHaveBeenCalledTimes(1);
     expect(mutateAsync).toHaveBeenCalledTimes(1);
