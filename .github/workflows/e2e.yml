@@ -385,7 +385,9 @@ jobs:
   multi-tenant:
     name: Multi-tenant isolation (26)
     needs: [guard-secrets, provision-users]
-    if: needs.guard-secrets.outputs.ok == 'true'
+    # MT es OPCIONAL: sólo corre si el tenant de staging tiene los E2E_MT_*.
+    if: needs.guard-secrets.outputs.ok == 'true' && needs.guard-secrets.outputs.mt_ok == 'true'
+
     runs-on: ubuntu-24.04
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
