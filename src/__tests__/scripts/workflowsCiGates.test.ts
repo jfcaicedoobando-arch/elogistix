@@ -29,6 +29,27 @@ describe("ci.yml · bundle size gate", () => {
   it("el script existe y es ejecutable por bash", () => {
     expect(fs.existsSync(path.join(raiz, "scripts/check-bundle-size.sh"))).toBe(true);
   });
+
+  it("conserva el budget original del entry (365 KB) y el comentario coincide", () => {
+    const script = leer("scripts/check-bundle-size.sh");
+    expect(script).toContain('BUDGET_KB="${BUNDLE_BUDGET_KB:-365}"');
+    expect(ci).toContain("entry 365 KB gz");
+  });
+});
+
+describe("e2e.yml · guard-secrets no puede dar falso verde", () => {
+  it("el gate anti-skip valida el resultado de guard-secrets", () => {
+    expect(e2e).toContain("R_GUARD: ${{ needs.guard-secrets.result }}");
+    expect(e2e).toMatch(/guard-secrets no terminó en success/);
+  });
+
+  it("el merge sin blobs exige guard-secrets=success", () => {
+    expect(e2e).toMatch(/Sin blob reports y guard-secrets=\$R_GUARD/);
+  });
+
+  it("la excepción de omisión sólo cubre multi-tenant", () => {
+    expect(e2e).toMatch(/\[ "\$R_MT" = "skipped" \] && \[ "\$MT_OK" = "true" \]/);
+  });
 });
 
 describe("e2e.yml · multi-tenant opcional", () => {
