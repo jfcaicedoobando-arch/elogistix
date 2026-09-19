@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mutateAsync = vi.fn().mockResolvedValue({ version_anterior: 1, version_nueva: 2 });
@@ -27,7 +27,7 @@ describe("RecotizarModal", () => {
     expect(btn).toBeDisabled();
   });
 
-  it("habilita cuando hay motivo y se tipea RECOTIZAR", () => {
+  it("habilita cuando hay motivo y se tipea RECOTIZAR", async () => {
     renderModal();
     fireEvent.change(screen.getByLabelText(/motivo/i), {
       target: { value: "Cliente pidió cambio" },
@@ -35,7 +35,9 @@ describe("RecotizarModal", () => {
     fireEvent.change(screen.getByLabelText(/escribe/i), { target: { value: "RECOTIZAR" } });
     const btn = screen.getByRole("button", { name: /confirmar/i });
     expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
+    await act(async () => {
+      fireEvent.click(btn);
+    });
     expect(mutateAsync).toHaveBeenCalledWith({
       cotizacionId: "c1",
       motivo: "Cliente pidió cambio",

@@ -4,7 +4,7 @@
  * debe pasar `emailLooksValid`; vacío + teléfono sigue siendo válido.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 
 const mutateAsync = vi.fn(async () => ({ id: "lead-1" }));
@@ -51,7 +51,7 @@ describe("NuevoLeadDialog — validación de correo", () => {
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
-  it("con correo vacío y teléfono capturado sí crea el lead", () => {
+  it("con correo vacío y teléfono capturado sí crea el lead", async () => {
     render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
     llenar(/Empresa/i, "Acme");
     llenar(/Teléfono/i, "5551234567");
@@ -59,19 +59,23 @@ describe("NuevoLeadDialog — validación de correo", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     const crear = screen.getByRole("button", { name: /Crear lead/i }) as HTMLButtonElement;
     expect(crear.disabled).toBe(false);
-    fireEvent.click(crear);
+    await act(async () => {
+      fireEvent.click(crear);
+    });
     expect(mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ empresa: "Acme", email: "", telefono: "5551234567" }),
     );
   });
 
-  it("con correo válido permite crear", () => {
+  it("con correo válido permite crear", async () => {
     render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
     llenar(/Empresa/i, "Acme");
     llenar(/^Correo$/i, "qa.cliente@gmail.com");
 
     expect(screen.queryByRole("alert")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    });
     expect(mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ email: "qa.cliente@gmail.com" }),
     );
@@ -83,7 +87,9 @@ describe("NuevoLeadDialog — validación de correo", () => {
     render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
     llenar(/Empresa/i, "Acme");
 
-    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    });
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     // El único feedback de error visible lo emite useCrearLead.onError.
@@ -96,7 +102,9 @@ describe("NuevoLeadDialog — validación de correo", () => {
     render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
     llenar(/Empresa/i, "Acme");
 
-    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    });
 
     await waitFor(() =>
       expect(notifyError).toHaveBeenCalledWith(

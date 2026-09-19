@@ -4,7 +4,7 @@
  * año nuevo.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 
 const mutateAsync = vi.fn();
 vi.mock("@/features/crm/hooks/useHigienePipeline", () => ({
@@ -47,7 +47,9 @@ describe("PresupuestoCrmEditor", () => {
     const anioInicial = Number(anio.value);
 
     fireEvent.change(screen.getByLabelText("Presupuesto de Febrero"), { target: { value: "1200" } });
-    fireEvent.click(screen.getAllByRole("button", { name: "Guardar" })[1]);
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole("button", { name: "Guardar" })[1]);
+    });
 
     expect(mutateAsync).toHaveBeenCalledWith({
       organizationId: "org-1",
