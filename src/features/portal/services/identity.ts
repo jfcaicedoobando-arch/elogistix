@@ -1,11 +1,21 @@
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
-// Schemas reutilizables para joins anidados — validan el shape en runtime.
-const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
-const contactoNullableSchema = z.object({ contacto: z.string().nullable() }).nullable();
+/**
+ * Guards locales para los joins anidados de este archivo.
+ *
+ * Antes eran schemas zod, pero este módulo vive en el chunk inicial (lo usa el
+ * layout del portal), así que importar `zod` aquí metía toda la librería al
+ * arranque. Los shapes son de un solo campo de texto, así que un guard manual
+ * valida exactamente lo mismo: si el campo no es texto, se devuelve `null` en
+ * lugar de propagar un valor inesperado.
+ */
+function leerTextoDeJoin(valor: unknown, campo: "nombre" | "contacto"): string | null {
+  if (!valor || typeof valor !== "object") return null;
+  const bruto = (valor as Record<string, unknown>)[campo];
+  return typeof bruto === "string" ? bruto : null;
+}
 
 const PORTAL_LIST_MAX = 500;
 
