@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { silenciarLogEsperado } from "@/test/helpers/silenciarLogEsperado";
 
 const { mockUnsubscribe, mockSubscribe, mockGetSession } = vi.hoisted(() => {
   const unsub = vi.fn();
