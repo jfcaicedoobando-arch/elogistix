@@ -23,6 +23,8 @@ import {
 
 const raiz = process.cwd();
 const perfSrc = fs.readFileSync(path.join(raiz, "vitest.perf.config.ts"), "utf8");
+/** Fuente sin comentarios: los comentarios explican el patrón viejo. */
+const perfCodigo = perfSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 /** Glob → RegExp mínimo (sólo soporta `**` y `*`, suficiente para estos globs). */
 function globARegExp(glob: string): RegExp {
