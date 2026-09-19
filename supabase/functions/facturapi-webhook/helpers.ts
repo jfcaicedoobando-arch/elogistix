@@ -7,6 +7,8 @@
  * Firma: header `facturapi-signature` = HMAC-SHA256(raw_body, webhook_secret) hex.
  */
 
+import { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
+
 export type FacturapiEventType =
   | "invoice.status_updated"
   | "invoice.cancellation_status_updated"
@@ -14,6 +16,7 @@ export type FacturapiEventType =
   | "invoice.delivered_to_customer"
   | "invoice.created"
   | "receipt.status_updated"
+  | "receipt.cancellation_status_updated"
   | "receipt.canceled"
   | "receipt.created";
 
@@ -210,6 +213,12 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
     : null;
 
   switch (ev.type) {
+    // P1 · FacturAPI 5.0 — el REP también recibe el ciclo de cancelación
+    // asíncrono del SAT con su propio tipo `receipt.*`; `invoice.*` sigue
+    // soportado porque FacturAPI a veces reporta el complemento así.
+    case "receipt.cancellation_status_updated":
+    case "invoice.cancellation_status_updated":
+      return mapReceiptCancellationStatus(facturapi_rep_id, cancellationStatus);
     case "receipt.status_updated":
     case "invoice.status_updated":
       return mapReceiptStatusUpdated(facturapi_rep_id, status, uuid, cancellationStatus);
