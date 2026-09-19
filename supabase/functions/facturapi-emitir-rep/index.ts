@@ -34,6 +34,7 @@ import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { reservarRep } from "./claimRep.ts";
 import { precargarPagoRep } from "./precargaPago.ts";
 import { leerConceptosDr } from "./conceptosFacturaDr.ts";
+import { verificarResumenProveedor } from "./resumenProveedor.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -79,7 +80,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // 2) Factura
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl")
+    .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl, facturapi_id")
     .eq("id", pago.factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
@@ -239,6 +240,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       .eq("id", pago.id);
     return json({ error: "validation_failed", issues }, 422);
   }
+
+  // P1 · FacturAPI 5.0 — `invoices.paymentSummary` es la AUTORIDAD del saldo.
+  // Si el proveedor difiere fuera de tolerancia, o no se puede consultar, NO se
+  // reclama ni se timbra (sin mutar estado_rep a Error).
+  const paridad = await verificarResumenProveedor({
+    facturapi, facturaFacturapiId: factura.facturapi_id ?? null, ctx, supabase,
+    pagoId: pago.id, organizationId: pago.organization_id,
+    usuarioId: userData.user.id, usuarioEmail: userData.user.email, json,
+  });
+  if (paridad) return paridad;
 
   // EF-01 (auditoría): claim atómico ANTES de timbrar (después de validar, para
   // no liberarlo en el 422). El tag viaja como external_id a FacturAPI.
