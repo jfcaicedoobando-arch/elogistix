@@ -23,8 +23,6 @@ import {
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { useQueryState } from "nuqs";
 import { RedirectPreserveSearch } from "../RedirectPreserveSearch";
-const __o = console.error;
-console.error = (...a: unknown[]) => { if (typeof a[0] === "string" && a[0].includes("not wrapped in act")) { __o("ACTSTACK", new Error("x").stack); return; } __o(...(a as [])); };
 
 function UrlProbe() {
   const { pathname, search, hash } = useLocation();
