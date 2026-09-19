@@ -148,7 +148,7 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
   // internos. Con temporizadores falsos se drenan dentro de `act`, de modo que
   // React no reporta actualizaciones fuera de act.
   beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
