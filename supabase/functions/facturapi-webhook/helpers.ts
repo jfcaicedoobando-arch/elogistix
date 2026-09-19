@@ -200,8 +200,6 @@ function mapReceiptCanceled(facturapi_rep_id: string): MappedReceiptUpdate {
   };
 }
 
-export { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
-
 export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceiptUpdate | null {
   const obj = ev.data?.object;
   if (!obj || typeof obj.id !== "string") return null;
