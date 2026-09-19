@@ -46,7 +46,7 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 
 ## Desarrollo local
 
-Requisitos: Node.js 22+ y `npm` o `bun`.
+Requisitos: Node.js 22+ y Bun (el runtime usado por CI).
 > Node 20 NO es compatible: `@supabase/realtime-js` requiere `WebSocket`
 > nativo global (estable desde Node 22). Bajo Node 20 varias suites del
 > proyecto `node` de Vitest fallan en collect.
@@ -70,15 +70,15 @@ Si algún día hubiera un servidor Node en producción, esta tabla debe cambiar
 antes del despliegue.
 
 
-Build de producción: `npm run build` con sourcemaps requiere ~8 GB de RAM
-(runners de CI: 16 GB). En entornos con ≤4 GB usar `npm run build:low-mem`
+Build de producción: `bun run build` con sourcemaps requiere ~8 GB de RAM
+(runners de CI: 16 GB). En entornos con ≤4 GB usar `bun run build:low-mem`
 (sin sourcemaps; el bundle es funcionalmente idéntico).
 
 ```sh
 git clone <repo-url>
 cd librecarga
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 La app se sirve en `http://localhost:8080`. Las variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`) son provistas automáticamente por Lovable Cloud y viven en `.env` (no editar a mano).
@@ -94,11 +94,19 @@ La plataforma expone una cuenta demo pública (`demo@librecarga.com`, contraseñ
 ### Comandos útiles
 
 ```sh
-npm run dev              # Servidor Vite
-bunx vitest run          # Correr tests (279 tests)
-bunx tsc --noEmit        # Type-check
-npm run changelog:add    # Asistente para agregar entrada al changelog
+bun run dev              # Servidor Vite 6
+bun run test             # Vitest 4: proyectos node y jsdom
+bun run typecheck        # TypeScript 5
+bun run test:perf        # Sólo benchmarks *.perf.ts(x)
+bun run changelog:add    # Asistente para agregar entrada al changelog
 ```
+
+Mantenimiento y medición del stack:
+
+- [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md): decisiones de
+  minificación, sourcemaps, cobertura y alias de React Router 7.
+- [`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md): cómo medir shards,
+  procesos y memoria antes de cambiar el paralelismo de Vitest 4.
 
 ## Estructura
 
@@ -138,25 +146,32 @@ Es importante separar tres cosas que suelen confundirse:
 
 1. **Frontend (lo que ven los usuarios)**: se publica **desde Lovable** con `Share → Publish → Update`. No hay comando de GitHub que lo publique; el botón es el único punto de publicación.
 2. **Backend (base de datos, RLS, edge functions)**: se despliega **automáticamente** cuando Lovable detecta cambios en el código. Si una migración llega rota a `main`, puede romper producción sin avisar.
-3. **Los workflows de GitHub Actions**: no despliegan nada. Son **guardias de calidad** que revisan lint, tipos, pruebas, tamaño del bundle, migraciones, drift de esquema y RLS. Piensa en ellos como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
-
-> Nota histórica: existió un workflow `deploy-gate.yml` post-merge. Ya no
-> existe; sus verificaciones viven hoy en `ci.yml` y `rls-tests.yml`.
+3. **Los workflows de GitHub Actions**: no publican la app. Son **guardias de calidad** automáticos o verificaciones operativas manuales. Piensa en ellos como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
 
 ### Recomendación
 
 - Configurar como **required status checks** en GitHub: `Settings → Branches → main → Require status checks to pass before merging`, agregando los jobs de `ci.yml` y `rls-tests.yml`.
 - Los checks automáticos no sustituyen la revisión humana de un PR; sólo validan reglas que ya están en el repo.
 
-### Workflows (lista real)
+### Workflows existentes
 
-- `ci.yml`: lint, typecheck, auditorías, pruebas (3 shards), knip, build con **gate de tamaño de bundle** (`scripts/check-bundle-size.sh`, budget 365 KB gz) y **gate de sourcemaps** (`scripts/check-sourcemaps.sh`).
-- `rls-tests.yml`: suite de RLS de Supabase + paridad del baseline de esquema en cada cambio de base de datos.
-- `e2e.yml`: pruebas end-to-end con Playwright (core/portal obligatorios; multi-tenant opcional según credenciales).
-- `codeql.yml`: análisis estático de seguridad.
-- `dependency-review.yml`: revisión de licencias y vulnerabilidades en dependencias nuevas.
-- `gitleaks.yml`: búsqueda de secretos filtrados.
-- `actionlint.yml`: validación de los propios workflows.
-- `post-deploy-smoke.yml`: verificaciones rápidas después de publicar.
+**Checks automáticos:**
+
+- `ci.yml`: lint, typecheck, auditorías, pruebas Vitest 4 en 3 shards, knip y build. El build incluye el **gate de bundle** (`bun run build && bash scripts/check-bundle-size.sh`, budget 365 KB gz) y el **gate de sourcemaps** (`bash scripts/check-sourcemaps.sh`).
+- `rls-tests.yml`: pruebas RLS y paridad del baseline cuando cambia la base de datos; también admite ejecución manual.
+- `actionlint.yml`: valida workflows y acciones cuando cambian, y en `main`.
+- `gitleaks.yml`: busca secretos filtrados en PR y `main`.
+- `dependency-review.yml`: revisa licencias y vulnerabilidades cuando un PR cambia dependencias.
+- `codeql.yml`: análisis estático semanal y manual.
+
+**Verificaciones manuales:**
+
+- `e2e.yml`: Playwright contra staging; core/portal requieren sus credenciales y multi-tenant es opcional.
+- `post-deploy-smoke.yml`: smoke posterior a una publicación; no publica por sí mismo.
+- Cobertura Vitest: procedimiento manual/nightly, no gate por commit. Usar `bun run test:coverage` o el flujo por shards documentado en [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md). Actualmente no existe un workflow nightly dedicado.
+
+La metodología para justificar cambios de shards/workers está en
+[`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md). Sólo los gates de
+bundle y sourcemaps forman parte obligatoria del job de build.
 
 
