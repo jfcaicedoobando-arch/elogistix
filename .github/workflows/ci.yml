@@ -80,6 +80,25 @@ jobs:
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
+      # Caché de ESLint AISLADA del cache de `node_modules` del composite action.
+      # Antes vivía en `node_modules/.cache/eslint/`, cuya clave es compartida por
+      # lint/checks/tests: el primer job que guardaba ese cache lo escribía sin
+      # estado de ESLint y el de lint nunca persistía.
+      # Clave: runner + versión de Bun + configuración de lint y lockfile. NO
+      # incluye el contenido de `src/`, para que la caché se reutilice de forma
+      # incremental entre commits (`--cache-strategy content` decide por archivo).
+      # `github.run_id` en la clave principal garantiza escritura propia por
+      # corrida (nunca hay colisión con otro job paralelo) y `restore-keys`
+      # recupera la más reciente compatible.
+      - name: Cache ESLint
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/eslint
+          key: ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
+            ${{ runner.os }}-eslint-bun1.4.0-
+
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
         run: bun run lint -- --max-warnings 0
