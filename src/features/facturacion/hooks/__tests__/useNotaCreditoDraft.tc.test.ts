@@ -12,7 +12,20 @@ const mocks = vi.hoisted(() => ({
   timbrarMutate: vi.fn(),
   notifyError: vi.fn(),
   toast: vi.fn(),
+  loggerWarn: vi.fn(),
 }));
+
+// Mock LOCAL del logger (no de consola): este caso provoca a propósito dos
+// `logger.warn` y sólo se capturan aquí. Nada global queda silenciado.
+vi.mock("@/lib/observability/logger", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: mocks.loggerWarn,
+    error: vi.fn(),
+  },
+}));
+
 
 vi.mock("@/features/facturacion/services/notasCredito", () => ({
   crearNotaCredito: mocks.crearNotaCredito,
