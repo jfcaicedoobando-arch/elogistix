@@ -148,3 +148,44 @@ export function exigirWebhooks(client: unknown): FacturapiWebhooksApi {
   exigirOperacion(api, "webhooks.list");
   return api.webhooks as FacturapiWebhooksApi;
 }
+
+/** ¿El fallo viene del contrato del SDK (no de FacturAPI ni de la red)? */
+export function esContratoSdkError(err: unknown): err is FacturapiSdkContratoError {
+  return err instanceof FacturapiSdkContratoError;
+}
+
+/**
+ * Respuesta canónica para un fallo de contrato del SDK: NO se timbró nada, así
+ * que el candado (`claim`) se conserva y jamás se reintenta automáticamente
+ * (un reintento ciego con otra versión del SDK podría duplicar el CFDI).
+ * 503 = condición transitoria del entorno (versión del SDK), diagnosticable
+ * con `operacion` y correlacionable con `external_id`.
+ */
+export function cuerpoContratoSdk(
+  err: FacturapiSdkContratoError,
+  externalId?: string | null,
+): { status: 503; body: Record<string, unknown> } {
+  return {
+    status: 503,
+    body: {
+      error: "facturapi_sdk_contrato",
+      operacion: err.operacion,
+      reintento_automatico: false,
+      reintentable: true,
+      external_id: externalId ?? null,
+      message:
+        `${err.message} No se envió nada al PAC y el candado del documento se conserva: ` +
+        "avisa a soporte técnico y reintenta manualmente cuando se corrija la versión del SDK.",
+    },
+  };
+}
+
+/**
+ * `invoices.cancel` YA está tipada y cubierta por los contract tests de este
+ * adaptador, pero el flujo de cancelación (`facturapi-cancelar`,
+ * `facturapi-cancelar-rep`, `facturapi-cancelar-nota-credito`) todavía resuelve
+ * el SDK con su propio cast: su manejo de timeout persiste
+ * `cancellation_status='verifying'` y migrarlo exige rehacer ese contrato de
+ * estados. Queda fuera del alcance de este lote (P2-C sólo centraliza
+ * `create`, `list` y `paymentSummary`).
+ */
