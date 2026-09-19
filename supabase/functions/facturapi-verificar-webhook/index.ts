@@ -119,20 +119,10 @@ Deno.serve(wrapEdgeHandler("facturapi-verificar-webhook", async (req) => {
 
   // La API key también es la del ambiente PEDIDO: si no es el activo se resuelve
   // la del otro ambiente explícitamente (nunca se inventa ni se reutiliza).
-  const resolved = await resolveFacturapiKey(admin, orgId);
-  if (!resolved.ok) return jsonResponse(resolved.data, resolved.data.status);
-  let apiKey = resolved.data.apiKey;
-  if (resolved.data.ambiente !== ambiente) {
-    const otra = await resolveFacturapiKeyOtherAmbiente(admin, orgId);
-    if (!otra || otra.ambiente !== ambiente) {
-      return jsonResponse({
-        error: "ambiente_sin_credencial",
-        message: `Esta organización no tiene clave de API configurada para el ambiente ` +
-          `${ambiente === "live" ? "Producción" : "Pruebas"}. Configúrala para poder verificarlo.`,
-      }, 409);
-    }
-    apiKey = otra.apiKey;
-  }
+  const llave = await resolverKeyDelAmbiente(admin, orgId, ambiente);
+  if ("respuesta" in llave) return llave.respuesta;
+  const apiKey = llave.apiKey;
+
 
   let remotos: FacturapiWebhookRemoto[];
   try {
