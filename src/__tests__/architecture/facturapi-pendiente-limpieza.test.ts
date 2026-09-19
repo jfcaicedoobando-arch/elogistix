@@ -41,8 +41,8 @@ describe("limpieza de timbrado pendiente", () => {
 
   it("las RPCs de liberación limpian las columnas pendientes", () => {
     const sql = sqlConcatenado();
-    const ultimaFactura = sql.lastIndexOf("liberar_claim_facturapi_huerfano");
-    const ultimoRep = sql.lastIndexOf("liberar_claim_rep_huerfano");
+    const ultimaFactura = sql.lastIndexOf("liberar_claim_facturapi_huerfano(p_factura_id");
+    const ultimoRep = sql.lastIndexOf("liberar_claim_rep_huerfano(p_pago_id");
     expect(ultimaFactura).toBeGreaterThan(-1);
     expect(ultimoRep).toBeGreaterThan(-1);
     expect(sql.slice(ultimaFactura, ultimaFactura + 2500)).toContain("facturapi_pendiente_id = NULL");
