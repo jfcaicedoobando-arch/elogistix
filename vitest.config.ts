@@ -1,6 +1,5 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
-import path from "path";
 import { splitTestsByEnvironment } from "./scripts/lib/testEnvSplit";
 import {
   aliasVitest,
