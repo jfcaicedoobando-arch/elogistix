@@ -56,34 +56,34 @@ const COMMON_TEST = {
   // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
   // liberar memoria al terminar (PDFs / leak regression).
   pool: "forks" as const,
+  // v13.824.x — Migración a Vitest 4: `poolOptions` desapareció y todas sus
+  // claves son ahora opciones de primer nivel (guía oficial, "Pool Rework").
+  // `maxForks`→`maxWorkers`, `minForks` eliminado, `singleFork` equivalía a
+  // `maxWorkers: 1 + isolate: false` (no es nuestro caso). Se declaran DENTRO
+  // de COMMON_TEST porque en Vitest 4 el pool se resuelve por proyecto, así
+  // que ambos proyectos reciben el mismo límite de memoria y `--expose-gc`.
   // v13.342.0 — Paralelismo derivado de los núcleos REALES, no del flag CI.
   // El sandbox tiene 16 vCPU / 125 GB, así que 8 forks × 4 GB heap = 32 GB.
   // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
   // runners ubuntu-24.04 de 4 vCPU/16 GB).
+  maxWorkers: process.env.CI ? 2 : LOCAL_FORKS,
+  execArgv: process.env.CI
+    ? ["--max-old-space-size=8192", "--expose-gc"]
+    : ["--max-old-space-size=4096", "--expose-gc"],
   isolate: true,
   fileParallelism: true,
   sequence: { shuffle: false },
 };
 
+
 export default defineConfig({
   plugins: [react()],
   test: {
-    // Ola 13 · R3TC-01 (re-fix): Vitest 3.2.4 crea el pool UNA sola vez desde
-    // la config GLOBAL (`createPool(this)`; `createForksPool` lee
-    // `vitest.config.poolOptions?.forks`). El fix de la Ola 12 dejó
-    // `poolOptions` dentro de COMMON_TEST, esparcido por proyecto, y nunca se
-    // consultaba: `--expose-gc` no llegaba a los forks y `maxForks`/`minForks`
-    // no aplicaban. En la raíz de `test` los proyectos heredan el pool.
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        maxForks: process.env.CI ? 2 : LOCAL_FORKS,
-        minForks: process.env.CI ? 1 : 2,
-        execArgv: process.env.CI
-          ? ["--max-old-space-size=8192", "--expose-gc"]
-          : ["--max-old-space-size=4096", "--expose-gc"],
-      },
-    },
+    // Vitest 4: el pool y sus límites viven en COMMON_TEST (por proyecto).
+    // Se conserva `maxWorkers` también en la raíz para que el límite global de
+    // procesos concurrentes entre proyectos sea el mismo que antes.
+    maxWorkers: process.env.CI ? 2 : LOCAL_FORKS,
+
     projects: [
       {
         plugins: [react()],

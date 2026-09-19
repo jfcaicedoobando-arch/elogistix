@@ -92,9 +92,12 @@ describe("dynamicImportError · isDynamicImportError", () => {
 });
 
 describe("dynamicImportError · tryReloadForChunkError", () => {
-  let reloadSpy: ReturnType<typeof vi.fn>;
-  let overlaySpy: ReturnType<typeof vi.fn>;
-  let fallbackSpy: ReturnType<typeof vi.fn>;
+  // Vitest 4: `vi.fn()` sin firma infiere `Mock<Procedure | Constructable>`,
+  // que ya no es asignable a un callback `() => void`. Se declara la firma.
+  let reloadSpy: ReturnType<typeof vi.fn<() => void>>;
+  let overlaySpy: ReturnType<typeof vi.fn<() => void>>;
+  let fallbackSpy: ReturnType<typeof vi.fn<() => void>>;
+
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -102,9 +105,10 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
     vi.mocked(saveChunkReloadHistory).mockReset();
     // No mutamos `window.location.reload`: en jsdom `Location.reload` no es
     // configurable y redefinirlo falla antes de escribir el reporte blob.
-    reloadSpy = vi.fn();
-    overlaySpy = vi.fn();
-    fallbackSpy = vi.fn();
+    reloadSpy = vi.fn<() => void>();
+    overlaySpy = vi.fn<() => void>();
+    fallbackSpy = vi.fn<() => void>();
+
   });
 
   afterEach(() => {
