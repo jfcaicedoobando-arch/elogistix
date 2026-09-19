@@ -44,32 +44,70 @@ export interface SecretoWebhook {
   origen: FacturapiAmbiente | "legacy";
 }
 
+/** Secret registrado para UN ambiente concreto (sin fallbacks). */
+export function secretPorAmbiente(
+  row: CredencialWebhookRow | null,
+  ambiente: FacturapiAmbiente,
+): string | null {
+  if (!row) return null;
+  return (ambiente === "live" ? row.webhook_secret_live : row.webhook_secret_sandbox) ?? null;
+}
+
+/** `true` si la organización ya tiene al menos un secret POR AMBIENTE. */
+export function tieneSecretPorAmbiente(row: CredencialWebhookRow | null): boolean {
+  return Boolean(secretPorAmbiente(row, "sandbox") || secretPorAmbiente(row, "live"));
+}
+
+export interface OpcionesSecretosWebhook {
+  /**
+   * Ambiente aislado declarado en la propia URL del webhook (`&amb=sandbox|live`).
+   * Es el ÚNICO mecanismo de transición: cada ambiente usa su propia URL y su
+   * propio secret, sin mezclarse. Si no viene, manda el ambiente activo.
+   */
+  ambienteSolicitado?: FacturapiAmbiente | null;
+  /**
+   * Fin (ISO) de la ventana de compatibilidad del secret legado indistinto.
+   * Sin fecha vigente, el legado NO se acepta.
+   */
+  legacyHasta?: string | null;
+  ahora?: Date;
+}
+
+function legacyVigente(hasta: string | null | undefined, ahora: Date): boolean {
+  if (!hasta) return false;
+  const ts = Date.parse(hasta);
+  return Number.isFinite(ts) && ts > ahora.getTime();
+}
+
 /**
- * Secretos candidatos para verificar la firma, en orden de preferencia:
- * 1. el del ambiente activo de la organización;
- * 2. el del ambiente opuesto (una org en transición sandbox → live todavía
- *    recibe eventos del ambiente viejo, y deben validarse con SU secret);
- * 3. el legado indistinto, sólo si ningún secret por ambiente está configurado.
+ * P2 (corrección de aislamiento) · Secreto ÚNICO aceptado para verificar la
+ * firma del webhook. El endpoint sólo recibe `?org=`, así que no puede saber en
+ * qué ambiente se originó el evento: aceptar además el secret del ambiente
+ * opuesto permitiría que un evento de Sandbox mutara la base de una
+ * organización en Live. Por eso:
+ *
+ *  1. se acepta EXCLUSIVAMENTE el secret del ambiente pedido (el activo, o el
+ *     declarado en la URL aislada `&amb=`);
+ *  2. jamás se prueba el ambiente opuesto;
+ *  3. el secret legado indistinto sólo se acepta si NO hay ningún secret por
+ *     ambiente y además hay ventana de compatibilidad vigente y auditable.
  */
 export function resolverSecretosWebhook(
   row: CredencialWebhookRow | null,
-  ambiente: FacturapiAmbiente = ambienteDeCredencial(row),
+  opciones: OpcionesSecretosWebhook = {},
 ): SecretoWebhook[] {
   if (!row) return [];
-  const otro: FacturapiAmbiente = ambiente === "live" ? "sandbox" : "live";
-  const por = (amb: FacturapiAmbiente): string | null =>
-    (amb === "live" ? row.webhook_secret_live : row.webhook_secret_sandbox) ?? null;
-
-  const lista: SecretoWebhook[] = [];
-  const principal = por(ambiente);
-  if (principal) lista.push({ secret: principal, origen: ambiente });
-  const secundario = por(otro);
-  if (secundario) lista.push({ secret: secundario, origen: otro });
-  if (lista.length === 0 && row.webhook_secret) {
-    lista.push({ secret: row.webhook_secret, origen: "legacy" });
+  const ambiente = opciones.ambienteSolicitado ?? ambienteDeCredencial(row);
+  const propio = secretPorAmbiente(row, ambiente);
+  if (propio) return [{ secret: propio, origen: ambiente }];
+  // Hay secret del otro ambiente pero no del pedido: fail-closed (sin mezcla).
+  if (tieneSecretPorAmbiente(row)) return [];
+  if (row.webhook_secret && legacyVigente(opciones.legacyHasta, opciones.ahora ?? new Date())) {
+    return [{ secret: row.webhook_secret, origen: "legacy" }];
   }
-  return lista;
+  return [];
 }
+
 
 /** Eventos que el ERP necesita recibir para mantener el estado fiscal al día. */
 export const EVENTOS_REQUERIDOS: readonly string[] = [
