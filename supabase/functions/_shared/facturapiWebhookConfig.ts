@@ -166,13 +166,19 @@ function mismaUrl(a: string, b: string): boolean {
   return norm(a) === norm(b);
 }
 
-/** Elige, de los webhooks remotos, el que apunta a esta organización. */
+/**
+ * Elige, de los webhooks remotos, el que apunta a esta organización. Acepta
+ * varias URLs válidas (la simple y la aislada por ambiente).
+ */
 export function elegirWebhookRemoto(
   remotos: readonly { id: string; url?: string }[],
-  urlEsperada: string,
+  urlEsperada: string | readonly string[],
   webhookIdGuardado?: string | null,
 ): { id: string; url?: string } | null {
-  const porUrl = remotos.find((w) => typeof w.url === "string" && mismaUrl(w.url, urlEsperada));
+  const aceptadas = Array.isArray(urlEsperada) ? urlEsperada : [urlEsperada as string];
+  const porUrl = remotos.find(
+    (w) => typeof w.url === "string" && aceptadas.some((u) => mismaUrl(w.url as string, u)),
+  );
   if (porUrl) return porUrl;
   if (webhookIdGuardado) {
     const porId = remotos.find((w) => w.id === webhookIdGuardado);
@@ -180,6 +186,7 @@ export function elegirWebhookRemoto(
   }
   return null;
 }
+
 
 const MSG: Record<EstadoWebhook, string> = {
   ok: "El webhook del proveedor apunta a esta organización y tiene todos los eventos necesarios.",
