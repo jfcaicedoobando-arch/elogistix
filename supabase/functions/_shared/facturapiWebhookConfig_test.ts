@@ -9,7 +9,10 @@ import {
   EVENTOS_REQUERIDOS,
   patchVerificacion,
   resolverSecretosWebhook,
+  secretPorAmbiente,
+  tieneSecretPorAmbiente,
   urlWebhookEsperada,
+
 } from "./facturapiWebhookConfig.ts";
 
 const URL_ESPERADA = urlWebhookEsperada("https://proj.supabase.co", "org-1");
@@ -19,7 +22,17 @@ Deno.test("la URL esperada incluye ?org y no duplica slashes", () => {
   assertEquals(urlWebhookEsperada("https://proj.supabase.co/", "org-1"), URL_ESPERADA);
 });
 
-Deno.test("secretos: el del ambiente activo va primero y el opuesto queda como respaldo", () => {
+const FUTURO = new Date(Date.now() + 86_400_000).toISOString();
+const PASADO = new Date(Date.now() - 86_400_000).toISOString();
+
+Deno.test("la URL aislada por ambiente agrega &amb=", () => {
+  assertEquals(
+    urlWebhookEsperada("https://proj.supabase.co", "org-1", "live"),
+    `${URL_ESPERADA}&amb=live`,
+  );
+});
+
+Deno.test("aislamiento: sólo se acepta el secret del ambiente activo", () => {
   const row = {
     ambiente: "live",
     webhook_secret_sandbox: "s-sbx",
@@ -27,23 +40,51 @@ Deno.test("secretos: el del ambiente activo va primero y el opuesto queda como r
     webhook_secret: "s-legacy",
   };
   assertEquals(ambienteDeCredencial(row), "live");
-  assertEquals(resolverSecretosWebhook(row), [
-    { secret: "s-live", origen: "live" },
-    { secret: "s-sbx", origen: "sandbox" },
-  ]);
-  assertEquals(resolverSecretosWebhook(row, "sandbox")[0], { secret: "s-sbx", origen: "sandbox" });
+  // Una firma de Sandbox NO puede validar en una org Live: el único secret
+  // aceptado es el de Live.
+  assertEquals(resolverSecretosWebhook(row), [{ secret: "s-live", origen: "live" }]);
+  // Y viceversa, cuando la URL aislada declara Sandbox.
+  assertEquals(
+    resolverSecretosWebhook(row, { ambienteSolicitado: "sandbox" }),
+    [{ secret: "s-sbx", origen: "sandbox" }],
+  );
 });
 
-Deno.test("el secret legado sólo se usa si no hay ninguno por ambiente", () => {
-  assertEquals(resolverSecretosWebhook({ ambiente: "sandbox", webhook_secret: "viejo" }), [
+Deno.test("org Live sin secret Live: fail-closed (no cae al de Sandbox ni al legado)", () => {
+  const row = { ambiente: "live", webhook_secret_sandbox: "s-sbx", webhook_secret: "s-legacy" };
+  assertEquals(resolverSecretosWebhook(row, { legacyHasta: FUTURO }), []);
+  const soloSandbox = { ambiente: "sandbox", webhook_secret_live: "s-live", webhook_secret: "viejo" };
+  assertEquals(resolverSecretosWebhook(soloSandbox, { legacyHasta: FUTURO }), []);
+});
+
+Deno.test("el secret legado exige ventana de compatibilidad vigente y ningún secret por ambiente", () => {
+  const legado = { ambiente: "sandbox", webhook_secret: "viejo" };
+  assertEquals(resolverSecretosWebhook(legado, { legacyHasta: FUTURO }), [
     { secret: "viejo", origen: "legacy" },
   ]);
-  const conAmbiente = resolverSecretosWebhook({
-    ambiente: "sandbox", webhook_secret: "viejo", webhook_secret_sandbox: "nuevo",
-  });
-  assertEquals(conAmbiente, [{ secret: "nuevo", origen: "sandbox" }]);
-  assertEquals(resolverSecretosWebhook(null), []);
+  // Sin ventana, o con ventana expirada, el legado no se acepta.
+  assertEquals(resolverSecretosWebhook(legado), []);
+  assertEquals(resolverSecretosWebhook(legado, { legacyHasta: PASADO }), []);
+  assertEquals(resolverSecretosWebhook(legado, { legacyHasta: "no-es-fecha" }), []);
+  // Con secret por ambiente el legado nunca se prueba.
+  assertEquals(
+    resolverSecretosWebhook(
+      { ambiente: "sandbox", webhook_secret: "viejo", webhook_secret_sandbox: "nuevo" },
+      { legacyHasta: FUTURO },
+    ),
+    [{ secret: "nuevo", origen: "sandbox" }],
+  );
+  assertEquals(resolverSecretosWebhook(null, { legacyHasta: FUTURO }), []);
 });
+
+Deno.test("helpers de secret por ambiente", () => {
+  assertEquals(secretPorAmbiente({ webhook_secret_live: "L" }, "live"), "L");
+  assertEquals(secretPorAmbiente({ webhook_secret_live: "L" }, "sandbox"), null);
+  assertEquals(tieneSecretPorAmbiente({ webhook_secret: "viejo" }), false);
+  assertEquals(tieneSecretPorAmbiente({ webhook_secret_sandbox: "S" }), true);
+  assertEquals(tieneSecretPorAmbiente(null), false);
+});
+
 
 Deno.test("diagnóstico ok cuando URL, estado y eventos coinciden", () => {
   const diag = compararConfigRemota({
