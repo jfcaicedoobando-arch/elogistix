@@ -11,12 +11,10 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeMessage } from "../_shared/sentry.ts";
 import {
   computeEventKey,
-  computeSignatureBytes,
   leerCuerpoAcotado,
   MAX_WEBHOOK_BYTES,
   mapEventToFacturaPatch,
   mapEventToReceiptPatch,
-  safeEqual,
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -25,6 +23,8 @@ import { jsonResponse } from "../_shared/response.ts";
 import {
   COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
 } from "./pendiente.ts";
+import { COLS_WEBHOOK_CRED, secretosDeCredencial, validarEvento } from "./secretos.ts";
+
 import {
   COLS_WEBHOOK_CRED,
   resolverSecretosWebhook,
