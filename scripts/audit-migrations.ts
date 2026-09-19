@@ -233,8 +233,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    anon, authenticated` + `GRANT EXECUTE … TO service_role` para la función
  *    de trigger, igual que su espejo canónico). El archivo original queda como
  *    legacy auditado e inmutable.
+ * 10. FIX-H6-10 (2026-09-19): `20260919013000_1b5de5e6-80a0-4322-adfc-79a78c6eb257.sql`
+ *     (cierre correctivo P0, liberación de claims huérfanos de factura y REP)
+ *     creó `liberar_claim_facturapi_huerfano` y `liberar_claim_rep_huerfano`
+ *     (SECURITY DEFINER) sin `REVOKE ALL … FROM PUBLIC` en el mismo archivo.
+ *     La migración correctiva `20260919015150_19913dbc-9532-46c1-b64a-1c651cd8c964.sql`
+ *     re-aplica los permisos (`REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO
+ *     authenticated` para la factura y `REVOKE ALL … FROM PUBLIC` + `GRANT
+ *     EXECUTE … TO authenticated, service_role` para el REP). El archivo original
+ *     queda como legacy auditado e inmutable.
  */
-const BASELINE = "20260917043135";
+const BASELINE = "20260919015150";
 
 
 
