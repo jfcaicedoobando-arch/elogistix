@@ -25,13 +25,6 @@ import {
 } from "./pendiente.ts";
 import { COLS_WEBHOOK_CRED, secretosDeCredencial, validarEvento } from "./secretos.ts";
 
-import {
-  COLS_WEBHOOK_CRED,
-  resolverSecretosWebhook,
-  type CredencialWebhookRow,
-  type SecretoWebhook,
-} from "../_shared/facturapiWebhookConfig.ts";
-
 
 interface FacturaLocal {
   id: string;
