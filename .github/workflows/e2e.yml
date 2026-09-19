@@ -87,8 +87,13 @@ jobs:
       mt_ok: ${{ steps.check.outputs.mt_ok }}
     steps:
       - id: check
-        # El workflow es 100% manual: si faltan credenciales, FALLA con mensaje
-        # claro en vez de dejar un verde vacío.
+        # El workflow es 100% manual. Credenciales CORE (login interno + portal
+        # + provisioning): si faltan, FALLA — un verde vacío está prohibido.
+        # Credenciales MULTI-TENANT (E2E_MT_*): OPCIONALES por decisión de
+        # proyecto. El aislamiento multi-tenant también está cubierto por la
+        # suite RLS (rls-tests.yml) y por tests de arquitectura, así que su
+        # ausencia NO debe bloquear core/portal/mutators. Sólo apaga el job 26
+        # vía `mt_ok=false`, y `merge-reports` acepta ese skip intencional.
         run: |
           set -u
           core_missing=""
@@ -105,15 +110,17 @@ jobs:
             [ -z "$val" ] && mt_missing="$mt_missing $v"
           done
           if [ -n "$core_missing" ]; then
-            echo "::error::E2E secrets ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
+            echo "::error::E2E secrets CORE ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
             exit 1
           fi
           echo "ok=true" >> "$GITHUB_OUTPUT"
           if [ -n "$mt_missing" ]; then
-            echo "::error::E2E_MT_* secrets ausentes:$mt_missing — el job multi-tenant NO puede correr."
-            exit 1
+            echo "::warning::E2E_MT_* ausentes:$mt_missing — el job multi-tenant (spec 26) se omite. Core/portal siguen corriendo."
+            echo "mt_ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mt_ok=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "mt_ok=true" >> "$GITHUB_OUTPUT"
+
 
   provision-users:
     name: Provisionar usuarios E2E
