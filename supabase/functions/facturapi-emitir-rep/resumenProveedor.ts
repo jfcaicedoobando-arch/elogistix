@@ -35,6 +35,8 @@ import {
   type ResumenPagoSdk,
 } from "./paridadResumen.ts";
 import type { PagoContext } from "./helpers.ts";
+import { exigirInvoices } from "../_shared/facturapiSdk.ts";
+
 
 /** Código estable para Contabilidad y para el frontend. */
 export const COD_REP_RESUMEN_DIVERGENTE = "rep_resumen_divergente";
