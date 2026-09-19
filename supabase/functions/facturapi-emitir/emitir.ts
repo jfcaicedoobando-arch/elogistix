@@ -134,7 +134,10 @@ async function createInvoiceInFacturapi(
   payload: ReturnType<typeof buildFacturapiPayload>,
 ): Promise<FapiInvoice | Response> {
   const { supabase, factura, facturaId, user, claim } = input;
-  const facturapi = input.facturapi as { invoices: { create: (p: unknown) => Promise<unknown> } };
+  // P2-C: el cast del SDK vive centralizado en `_shared/facturapiSdk.ts`
+  // (antes cada edge function repetía su propio cast anónimo).
+  const facturapi = { invoices: exigirInvoices(input.facturapi, "create") };
+
   const meta = {
     supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
     claimTag: claim.claimTag, usuarioId: user.id, usuarioEmail: user.email,
