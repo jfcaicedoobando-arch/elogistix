@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Declaración explícita de entorno en archivos de test (P2 auditoría stack).
  *
