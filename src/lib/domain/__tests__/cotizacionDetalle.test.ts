@@ -1,4 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
+
+// Ruido de CI: los casos de parseo inválido provocan a propósito `logger.warn`.
+// Mock LOCAL del logger (antes se espiaba consola caso por caso); las
+// aserciones del diagnóstico se conservan.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/observability/logger", () => ({ logger: loggerMock }));
+
 import {
   parseConceptos,
   calcularTotalesConceptos,
