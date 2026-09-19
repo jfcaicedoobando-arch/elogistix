@@ -30,8 +30,8 @@ function supabaseFake(filas: Array<{ id: string }>) {
     },
   };
   return {
-    // deno-lint-ignore no-explicit-any
-    client: { from: () => chain } as any,
+    // SAFE-CAST: fake con el subconjunto de la API usado por aplicarPatchConCas.
+    client: { from: () => chain } as unknown as Parameters<typeof aplicarPatchConCas>[0]["supabase"],
     filtros,
     get patch() {
       return patchRecibido;
