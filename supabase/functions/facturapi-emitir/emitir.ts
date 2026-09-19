@@ -15,7 +15,7 @@ import {
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
 import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
-import { exigirInvoices } from "../_shared/facturapiSdk.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
 
 
