@@ -7,6 +7,7 @@ import { describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } f
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { esIdempotencyKeyEnUso, MSG_IDEMPOTENCY_EN_USO } from "../_shared/timbradoPendiente.ts";
 import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 
 export interface FapiInvoice {
