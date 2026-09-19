@@ -40,5 +40,9 @@ describe('search/index', () => {
     mockRef.current!.setRpcResult('busqueda_global', { data: null, error: new Error('RPC fail') });
     const result = await buscarGlobal('query');
     expect(result).toEqual([]);
+    // El diagnóstico esperado sigue registrándose con ámbito y error reales.
+    expect(loggerMock.error).toHaveBeenCalledTimes(1);
+    expect(loggerMock.error.mock.calls[0][0]).toBe('busqueda_global');
+    expect((loggerMock.error.mock.calls[0][1] as Error).message).toBe('RPC fail');
   });
 });
