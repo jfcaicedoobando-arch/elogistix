@@ -23,7 +23,7 @@ import { jsonResponse } from "../_shared/response.ts";
 import {
   COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
 } from "./pendiente.ts";
-import { COLS_WEBHOOK_CRED, secretosDeCredencial, validarEvento } from "./secretos.ts";
+import { ambienteDeUrl, COLS_WEBHOOK_CRED, secretosDeCredencial, validarEvento } from "./secretos.ts";
 
 
 interface FacturaLocal {
@@ -260,14 +260,20 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+  // Transición explícita: URL aislada por ambiente (`&amb=`). Sin el parámetro
+  // manda el ambiente activo de la credencial.
+  const ambienteUrl = ambienteDeUrl(url);
+  if (ambienteUrl === "invalido") return jsonResponse({ error: "ambiente_invalido" }, 400);
+
   const { data: cred } = await supabase
     .from("facturapi_credenciales")
     .select(COLS_WEBHOOK_CRED)
     .eq("organization_id", orgId)
     .maybeSingle();
-  // P2-A: secretos POR AMBIENTE (ya no un `webhook_secret` indistinto).
-  const secretos = secretosDeCredencial(cred);
+  // Aislamiento: UN solo secret válido (el del ambiente pedido). Nunca el opuesto.
+  const secretos = secretosDeCredencial(cred, ambienteUrl);
   if (secretos.length === 0) return jsonResponse({ error: "webhook_not_configured" }, 412);
+
 
   // Ola P2: endpoint público (verify_jwt=false por diseño). Nunca materializar
   // un body ilimitado antes de validar el HMAC: lectura acotada con corte real
