@@ -8,7 +8,7 @@
  *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import {
   MemoryRouter,
   Routes,
