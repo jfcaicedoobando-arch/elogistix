@@ -55,20 +55,14 @@ const baseParams = {
   uuidFacturaOriginal: "UUID-1",
 };
 
-let log: LogSilenciado | null = null;
-
 beforeEach(() => {
   mocks.crearNotaCredito.mockReset().mockResolvedValue({ id: "nc-1" });
   mocks.timbrarMutate.mockReset();
   mocks.notifyError.mockReset();
   mocks.toast.mockReset();
+  mocks.loggerWarn.mockReset();
 });
 
-// El spy se restaura siempre, incluso si la prueba falla a mitad.
-afterEach(() => {
-  log?.restaurar();
-  log = null;
-});
 
 describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
   it("bloquea la emisión de NC en USD si el tipo de cambio es 0", async () => {
