@@ -2,8 +2,7 @@
  * FIX-11 (auditoría): la NC nunca debe emitirse con TC=1 silencioso.
  * Cubre la rama defensiva de `useNotaCreditoDraft.handleSubmit`.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { silenciarLogEsperado, type LogSilenciado } from "@/test/helpers/silenciarLogEsperado";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
