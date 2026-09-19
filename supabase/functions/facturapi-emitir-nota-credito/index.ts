@@ -66,8 +66,28 @@ async function createNcInvoice(
       const r = cuerpoIdempotencyEnUsoNc(meta.claimTag);
       return { ok: false, body: r.body, status: r.status };
     }
+    // P2-B: 429 = tope de peticiones antes de timbrar. Se libera el claim para
+    // un reintento MANUAL y se responde con la espera sugerida; el ERP nunca
+    // reintenta solo (evita notas de crédito duplicadas).
+    if (esRateLimitFacturapi(status, detail)) {
+      await releaseClaim();
+      await registrarBitacoraEdge(supabase, {
+        organizationId: meta.organizationId,
+        usuarioId: meta.userId,
+        usuarioEmail: meta.userEmail,
+        modulo: "facturacion",
+        accion: "facturapi_nc_rate_limited",
+        entidadId: meta.notaCreditoId,
+        detalles: {
+          status, retry_after_segundos: detail.retryAfterSegundos ?? null,
+          request_id: detail.requestId ?? null, log_id: detail.logId ?? null,
+        },
+      });
+      return { ok: false, body: cuerpoRateLimit(detail), status: 429 };
+    }
     // Error definitivo de FacturAPI (no timbró): liberar el claim para reintentar.
     await releaseClaim();
+
     await registrarBitacoraEdge(supabase, {
       organizationId: meta.organizationId,
       usuarioId: meta.userId,
