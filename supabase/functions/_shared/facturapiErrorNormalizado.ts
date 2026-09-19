@@ -125,6 +125,25 @@ function mensajeBase(e: ErrorLike, base: Record<string, unknown>, err: unknown):
   return String(err);
 }
 
+const MSG_TIMEOUT = "El proveedor de timbrado no respondió a tiempo. No se timbró nada; " +
+  "vuelve a intentarlo o usa «Recuperar timbrado».";
+
+interface Clasificacion { rateLimited: boolean; timeout: boolean; retryAfterSegundos?: number }
+
+function codigoNormalizado(
+  base: Record<string, unknown>, e: ErrorLike, c: Clasificacion,
+): string | undefined {
+  if (c.rateLimited) return COD_FACTURAPI_RATE_LIMIT;
+  const codeProveedor = typeof base.code === "string" ? base.code : e.code;
+  if (codeProveedor) return codeProveedor;
+  return c.timeout ? COD_FACTURAPI_TIMEOUT : undefined;
+}
+
+function mensajeNormalizado(message: string, c: Clasificacion): string {
+  if (c.rateLimited) return mensajeEsperaRateLimit(c.retryAfterSegundos);
+  return c.timeout ? MSG_TIMEOUT : message;
+}
+
 /**
  * Normaliza cualquier error del SDK / HTTP de FacturAPI a un shape estable.
  * No decide reintentos: sólo informa si el operador puede reintentar.
@@ -134,36 +153,28 @@ export function normalizarErrorFacturapi(err: unknown): FacturapiErrorNormalizad
   const timeout = esTimeout(e);
   const status = e.response?.status ?? e.status ?? (timeout ? 504 : 502);
   const base = (e.response?.data ?? e.data ?? {}) as Record<string, unknown>;
-  const rateLimited = status === 429;
-  const retryAfterSegundos = retryAfterDeError(e, base);
+  const clasificacion: Clasificacion = {
+    rateLimited: status === 429,
+    timeout,
+    retryAfterSegundos: retryAfterDeError(e, base),
+  };
   const message = mensajeBase(e, base, err);
-  const codeProveedor = typeof base.code === "string" ? base.code : e.code;
-
-  let code = codeProveedor;
-  if (rateLimited) code = COD_FACTURAPI_RATE_LIMIT;
-  else if (timeout) code = code ?? COD_FACTURAPI_TIMEOUT;
-
-  let mensajeUsuario = message;
-  if (rateLimited) mensajeUsuario = mensajeEsperaRateLimit(retryAfterSegundos);
-  else if (timeout) {
-    mensajeUsuario = "El proveedor de timbrado no respondió a tiempo. No se timbró nada; " +
-      "vuelve a intentarlo o usa «Recuperar timbrado».";
-  }
 
   return {
     status,
-    code,
+    code: codigoNormalizado(base, e, clasificacion),
     message,
-    mensajeUsuario,
+    mensajeUsuario: mensajeNormalizado(message, clasificacion),
     logId: typeof base.logId === "string" ? base.logId : e.logId,
     requestId: requestIdDeError(e, base),
-    retryAfterSegundos,
-    rateLimited,
+    retryAfterSegundos: clasificacion.retryAfterSegundos,
+    rateLimited: clasificacion.rateLimited,
     timeout,
-    reintentable: rateLimited || timeout || status >= 500,
+    reintentable: clasificacion.rateLimited || timeout || status >= 500,
     reintentoAutomatico: false,
   };
 }
+
 
 /** Metadatos seguros para bitácora/Sentry (sin payloads ni secretos). */
 export function metadatosErrorFacturapi(
