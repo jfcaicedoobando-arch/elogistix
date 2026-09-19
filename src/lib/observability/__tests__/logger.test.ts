@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const logClientErrorMock = vi.fn();
 vi.mock("@/services/observability/logClientError", () => ({
