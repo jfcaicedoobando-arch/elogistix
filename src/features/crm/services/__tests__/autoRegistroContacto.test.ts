@@ -48,6 +48,7 @@ describe("autoRegistroContacto", () => {
   });
 
   it("no propaga errores: el mensaje del vendedor nunca se bloquea", async () => {
+    loggerMock.warn.mockClear();
     crearActividad.mockRejectedValue(new Error("boom"));
     await expect(
       registrarContactoAutomatico(
@@ -55,6 +56,8 @@ describe("autoRegistroContacto", () => {
         null,
       ),
     ).resolves.toBeUndefined();
+    expect(loggerMock.warn).toHaveBeenCalledTimes(1);
+    expect((loggerMock.warn.mock.calls[0][1] as Error).message).toBe("boom");
   });
 
   it("agenda el seguimiento a los días definidos", () => {
