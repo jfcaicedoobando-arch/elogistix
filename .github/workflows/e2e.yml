@@ -515,10 +515,11 @@ jobs:
 
       - name: Merge into HTML
         # Ya NO se oculta el fallo con `|| echo`. Si hay blobs, el merge DEBE
-        # funcionar; si no hay ninguno, sólo se acepta cuando TODOS los jobs de
-        # tests fueron omitidos intencionalmente (MT opcional apagado y el resto
-        # skipped por el detector). Cualquier otro caso es error.
+        # funcionar; si no hay ninguno, sólo se acepta cuando `guard-secrets`
+        # terminó en success Y todos los jobs de tests fueron omitidos
+        # intencionalmente. Cualquier otro caso es error.
         env:
+          R_GUARD: ${{ needs.guard-secrets.result }}
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
           R_PORTAL: ${{ needs.portal.result }}
@@ -530,6 +531,10 @@ jobs:
           if [ "$blobs" -gt 0 ]; then
             bunx playwright merge-reports --reporter=html ./all-blob-reports
             exit 0
+          fi
+          if [ "$R_GUARD" != "success" ]; then
+            echo "::error::Sin blob reports y guard-secrets=$R_GUARD — no es una omisión intencional."
+            exit 1
           fi
           for res in "$R_INTERNAL" "$R_MUTATORS" "$R_PORTAL" "$R_MT"; do
             if [ "$res" != "skipped" ]; then
