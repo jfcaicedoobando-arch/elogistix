@@ -15,6 +15,8 @@ import {
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
 import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
+import { exigirInvoices } from "../_shared/facturapiSdk.ts";
+
 import { registrarFacturaPendiente, respuestaIdempotencyEnUso } from "./pendiente.ts";
 import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
 
@@ -145,9 +147,11 @@ async function createInvoiceInFacturapi(
   try {
     // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
     // de dejar la Edge Function ocupada 150 s.
-    // El SDK se modela como `object` (no publica typings para Deno): se
-    // estrecha arriba al único método que usamos en lugar de castear el detalle.
+    // El cliente del SDK llega como objeto opaco (sus typings no se resuelven
+    // desde `npm:` en Deno): el adaptador `_shared/facturapiSdk.ts` lo tipa y
+    // valida en runtime la operación que se va a usar.
     return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+
 
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
