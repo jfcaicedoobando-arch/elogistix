@@ -11,15 +11,12 @@ name: CI
 #                        compatibilidad con los checks previos (este repo no tiene
 #                        branch protection ni rulesets configurados).
 #
-# Benchmark de referencia (1 job unificado):
-#   run 34196983386: 15m44s de espera total, 922s de ejecución acumulada.
-# Medición YA VALIDADA de la configuración previa (3 shards, lint dentro de checks):
-#   run 34200102375: espera 347s (5m47s), ejecución acumulada 947s (15m47s);
-#   Vitest 1426 archivos/8949 tests, Deno 639; lint 134s dentro del job conjunto
-#   de 296s (resto 143s + setup Deno 2s).
-# La nueva división lint/checks en 2 jobs aún está pendiente de medición; la
-# primera corrida del ensayo de 3 shards (unhandled error en shard 2) no se
-# registra como éxito.
+# Shards/workers: 3 shards × maxWorkers=2. NO se ajustan sin medición; el
+# procedimiento, los criterios y el historial de benchmarks viven en
+# docs/ci-vitest-shards.md (herramienta: scripts/bench-vitest-shards.sh).
+# La configuración vigente (Vitest 4, lint separado de checks) NO tiene medición
+# nueva: los números históricos son de la topología anterior y quedan en ese doc.
+
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
 # nunca quede pending; los pasos irrelevantes se omiten explícitamente.
@@ -128,6 +125,16 @@ jobs:
         env:
           ANALYZE: "false"
         run: bun run build
+
+      # Bundle-size gate (P1 auditoría): el script ya existía pero NINGÚN
+      # workflow lo ejecutaba, así que una regresión de peso pasaba sin aviso.
+      # Corre justo después del build, sobre `dist/assets`, con los budgets del
+      # propio script (entry 365 KB gz, lazy 250, vendor 500, react-pdf 600).
+      - name: Bundle size gate
+        if: needs.detector.outputs.frontend == 'true'
+        run: bash scripts/check-bundle-size.sh
+
+
 
       # Edge Functions: sólo si cambia supabase/functions, deno.* o este workflow.
       - name: Setup Deno

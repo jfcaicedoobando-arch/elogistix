@@ -48,7 +48,26 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 Requisitos: Node.js 22+ y `npm` o `bun`.
 > Node 20 NO es compatible: `@supabase/realtime-js` requiere `WebSocket`
 > nativo global (estable desde Node 22). Bajo Node 20 varias suites del
-> proyecto `node` de Vitest fallan en collect. CI corre con Bun.
+> proyecto `node` de Vitest fallan en collect.
+
+### Runtime: Node vs Bun (decisión explícita)
+
+`package.json` declara `engines.node: ">=22"` y los workflows de GitHub Actions
+ejecutan **Bun** (`.github/actions/setup-bun`, Bun 1.4.0). No es una
+contradicción, son tres capas distintas y ninguna se cambia en silencio:
+
+| Capa | Runtime real | Nota |
+| --- | --- | --- |
+| App en producción | **Ninguno** | Es un SPA estático (Vite build → `dist/`); el navegador ejecuta el bundle. No hay servidor Node. |
+| Backend | **Deno** | Edge Functions de Lovable Cloud (`supabase/functions`), validadas con `deno test` en CI. |
+| Herramientas (build, lint, tests, scripts) | **Bun** en CI, Node 22+ o Bun en local | `engines.node: ">=22"` documenta el piso soportado para quien use Node. |
+
+Por eso NO se duplica la suite bajo Node: sería pagar el doble por validar una
+capa que no existe en producción. El contrato con Node 22 se sostiene con el
+piso declarado en `engines` y con el requisito de `WebSocket` global de arriba.
+Si algún día hubiera un servidor Node en producción, esta tabla debe cambiar
+antes del despliegue.
+
 
 Build de producción: `npm run build` con sourcemaps requiere ~8 GB de RAM
 (runners de CI: 16 GB). En entornos con ≤4 GB usar `npm run build:low-mem`

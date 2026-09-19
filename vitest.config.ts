@@ -1,13 +1,12 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import os from "os";
 import { splitTestsByEnvironment } from "./scripts/lib/testEnvSplit";
-
-// Forks paralelos en local: dejamos 2 núcleos libres para el dev-server/HMR
-// y topamos en 8 para acotar el uso de RAM (8 × 4 GB heap = 32 GB).
-// `VITEST_FORKS` permite afinar el valor sin editar la config (benchmarks).
-const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, os.cpus().length - 2));
+import {
+  aliasVitest,
+  commonTest,
+  MAX_WORKERS,
+  NORMAL_EXCLUDE,
+} from "./vitest.shared";
 
 // v13.344.0 — Reparto por entorno. Medido en el sandbox: un archivo de
 // guardrail en jsdom tarda ~25 s (13.8 s sólo en levantar el entorno + 3.1 s
@@ -16,95 +15,13 @@ const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, 
 const ROOT = __dirname;
 const SPLIT = splitTestsByEnvironment(ROOT);
 
-// v13.824.x — React Router 7: `react-router-dom` externalizado se carga como
-// CJS mientras `react-router` (importado por `nuqs/adapters/react-router/v7`)
-// se carga como ESM, creando DOS instancias del contexto del router
-// ("useNavigate() may be used only in the context of a <Router>"). Se fija la
-// variante ESM de ambos para que en tests exista una sola instancia. Sólo
-// aplica a Vitest; el build de producción resuelve el paquete normalmente.
-const RR_ESM = [
-  {
-    find: /^react-router-dom$/,
-    replacement: path.resolve(ROOT, "./node_modules/react-router-dom/dist/index.mjs"),
-  },
-  {
-    find: /^react-router$/,
-    replacement: path.resolve(ROOT, "./node_modules/react-router/dist/development/index.mjs"),
-  },
-  {
-    find: /^react-router\/dom$/,
-    replacement: path.resolve(ROOT, "./node_modules/react-router/dist/development/dom-export.mjs"),
-  },
-];
-
 // Alias compartido por ambos proyectos (los proyectos NO heredan el `resolve`
 // raíz, así que se define una sola vez y se reutiliza).
-const ALIAS = [
-  ...RR_ESM,
-  { find: "@", replacement: path.resolve(ROOT, "./src") },
-  // En tests, @react-pdf/renderer apunta a un stub ligero
-  // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por archivo.
-  {
-    find: "@react-pdf/renderer",
-    replacement: path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
-  },
-];
+const ALIAS = aliasVitest(ROOT);
 
-const COMMON_EXCLUDE = [
-  "node_modules/**",
-  "dist/**",
-  "src/**/*.perf.test.tsx",
-  "src/**/*.perf.ts",
-  // 13.823.x (ensayo 3 shards) — Ya NO se excluyen los guardrails de
-  // arquitectura/auditoría con `--shard`: no existe job `audits` dedicado, así
-  // que estos archivos se reparten normalmente entre los shards y corren
-  // exactamente una vez entre todos.
-];
-
-
-// Config común a ambos proyectos. `environment`, `setupFiles` e `include` los
-// define cada proyecto.
-const COMMON_TEST = {
-  globals: true,
-  // v13.303.75 · Fija TZ para todos los tests. Antes, los tests sensibles
-  // a timezone (`addDays`, `todayLocalISO`, `parseLocalMx`) sólo pasaban
-  // cuando el runner corría en `America/Mexico_City`. Con esto CI y locales
-  // en otra TZ producen los mismos resultados.
-  env: { TZ: "America/Mexico_City" },
-  exclude: COMMON_EXCLUDE,
-  // Suite completa medida en ~189s (sandbox Lovable). Archivo más lento: 5.1s,
-  // resto <1s. 15s por test/hook deja ~3x de margen sobre el peor caso real
-  // sin esconder tests que se cuelgan.
-  testTimeout: 15_000,
-  hookTimeout: 15_000,
-  teardownTimeout: 15_000,
-  // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
-  // liberar memoria al terminar (PDFs / leak regression).
-  pool: "forks" as const,
-  // v13.824.x — Migración a Vitest 4. PREREQUISITO TÉCNICO: Vitest 4.1.x
-  // declara `vite: ^6 || ^7 || ^8` en peerDependencies, así que el repo subió
-  // a Vite 6.x SÓLO para satisfacer esa compatibilidad (no es parte de la
-  // futura iniciativa Vite → 8, que sigue pendiente y separada).
-  // `poolOptions` desapareció y todas sus claves son ahora opciones de primer
-  // nivel (guía oficial, "Pool Rework").
-
-
-  // `maxForks`→`maxWorkers`, `minForks` eliminado, `singleFork` equivalía a
-  // `maxWorkers: 1 + isolate: false` (no es nuestro caso). Se declaran DENTRO
-  // de COMMON_TEST porque en Vitest 4 el pool se resuelve por proyecto, así
-  // que ambos proyectos reciben el mismo límite de memoria y `--expose-gc`.
-  // v13.342.0 — Paralelismo derivado de los núcleos REALES, no del flag CI.
-  // El sandbox tiene 16 vCPU / 125 GB, así que 8 forks × 4 GB heap = 32 GB.
-  // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
-  // runners ubuntu-24.04 de 4 vCPU/16 GB).
-  maxWorkers: process.env.CI ? 2 : LOCAL_FORKS,
-  execArgv: process.env.CI
-    ? ["--max-old-space-size=8192", "--expose-gc"]
-    : ["--max-old-space-size=4096", "--expose-gc"],
-  isolate: true,
-  fileParallelism: true,
-  sequence: { shuffle: false },
-};
+// Config común a ambos proyectos (ver `vitest.shared.ts`). Los benchmarks
+// (`*.perf.*`) quedan EXCLUIDOS aquí y sólo corren con `vitest.perf.config.ts`.
+const COMMON_TEST = commonTest({ exclude: NORMAL_EXCLUDE });
 
 
 export default defineConfig({
@@ -113,7 +30,10 @@ export default defineConfig({
     // Vitest 4: el pool y sus límites viven en COMMON_TEST (por proyecto).
     // Se conserva `maxWorkers` también en la raíz para que el límite global de
     // procesos concurrentes entre proyectos sea el mismo que antes.
-    maxWorkers: process.env.CI ? 2 : LOCAL_FORKS,
+    // Para cambiar shards/workers en CI hay que medir primero:
+    // `bash scripts/bench-vitest-shards.sh` (ver docs/ci-vitest-shards.md).
+    maxWorkers: MAX_WORKERS,
+
 
     projects: [
       {
@@ -244,17 +164,8 @@ export default defineConfig({
 
     },
   },
-  resolve: {
-    alias: [
-      ...RR_ESM,
-      { find: "@", replacement: path.resolve(__dirname, "./src") },
-      // Alias global: en tests, @react-pdf/renderer apunta a un stub ligero
-      // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por
-      // archivo. Aplica también a `vi.importActual("@react-pdf/renderer")`.
-      {
-        find: "@react-pdf/renderer",
-        replacement: path.resolve(__dirname, "./src/test/mocks/reactPdfStub.tsx"),
-      },
-    ],
-  },
+  // Alias global (mismo set que cada proyecto). Aplica también a
+  // `vi.importActual("@react-pdf/renderer")`.
+  resolve: { alias: ALIAS },
+
 });

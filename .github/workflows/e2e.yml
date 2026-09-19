@@ -87,8 +87,13 @@ jobs:
       mt_ok: ${{ steps.check.outputs.mt_ok }}
     steps:
       - id: check
-        # El workflow es 100% manual: si faltan credenciales, FALLA con mensaje
-        # claro en vez de dejar un verde vacío.
+        # El workflow es 100% manual. Credenciales CORE (login interno + portal
+        # + provisioning): si faltan, FALLA — un verde vacío está prohibido.
+        # Credenciales MULTI-TENANT (E2E_MT_*): OPCIONALES por decisión de
+        # proyecto. El aislamiento multi-tenant también está cubierto por la
+        # suite RLS (rls-tests.yml) y por tests de arquitectura, así que su
+        # ausencia NO debe bloquear core/portal/mutators. Sólo apaga el job 26
+        # vía `mt_ok=false`, y `merge-reports` acepta ese skip intencional.
         run: |
           set -u
           core_missing=""
@@ -105,15 +110,17 @@ jobs:
             [ -z "$val" ] && mt_missing="$mt_missing $v"
           done
           if [ -n "$core_missing" ]; then
-            echo "::error::E2E secrets ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
+            echo "::error::E2E secrets CORE ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
             exit 1
           fi
           echo "ok=true" >> "$GITHUB_OUTPUT"
           if [ -n "$mt_missing" ]; then
-            echo "::error::E2E_MT_* secrets ausentes:$mt_missing — el job multi-tenant NO puede correr."
-            exit 1
+            echo "::warning::E2E_MT_* ausentes:$mt_missing — el job multi-tenant (spec 26) se omite. Core/portal siguen corriendo."
+            echo "mt_ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mt_ok=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "mt_ok=true" >> "$GITHUB_OUTPUT"
+
 
   provision-users:
     name: Provisionar usuarios E2E
@@ -378,7 +385,9 @@ jobs:
   multi-tenant:
     name: Multi-tenant isolation (26)
     needs: [guard-secrets, provision-users]
-    if: needs.guard-secrets.outputs.ok == 'true'
+    # MT es OPCIONAL: sólo corre si el tenant de staging tiene los E2E_MT_*.
+    if: needs.guard-secrets.outputs.ok == 'true' && needs.guard-secrets.outputs.mt_ok == 'true'
+
     runs-on: ubuntu-24.04
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
@@ -451,7 +460,7 @@ jobs:
 
   merge-reports:
     name: Merge HTML report
-    needs: [internal-shard, mutators, portal, multi-tenant]
+    needs: [guard-secrets, internal-shard, mutators, portal, multi-tenant]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -463,16 +472,18 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Gate global anti-skip
-        # Ningún job de tests puede quedar `skipped`: sería un verde sin
-        # cobertura real.
+        # Los jobs CORE no pueden quedar `skipped`: sería un verde sin cobertura
+        # real. `multi-tenant` es la única excepción y sólo cuando el guard
+        # declaró explícitamente `mt_ok=false` (secrets E2E_MT_* ausentes).
         env:
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
           R_PORTAL: ${{ needs.portal.result }}
           R_MT: ${{ needs.multi-tenant.result }}
+          MT_OK: ${{ needs.guard-secrets.outputs.mt_ok }}
         run: |
           fail=0
-          for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL" "multi-tenant:$R_MT"; do
+          for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL"; do
             job="${pair%%:*}"; res="${pair#*:}"
             echo "$job: $res"
             if [ "$res" = "skipped" ]; then
@@ -480,6 +491,11 @@ jobs:
               fail=1
             fi
           done
+          echo "multi-tenant: $R_MT (mt_ok=$MT_OK)"
+          if [ "$R_MT" = "skipped" ] && [ "$MT_OK" = "true" ]; then
+            echo "::error::multi-tenant quedó SKIPPED aunque los secrets E2E_MT_* existen."
+            fail=1
+          fi
           [ "$fail" = "0" ]
 
       - name: Download all blob reports
@@ -490,7 +506,31 @@ jobs:
           merge-multiple: true
 
       - name: Merge into HTML
-        run: bunx playwright merge-reports --reporter=html ./all-blob-reports || echo "no blob reports"
+        # Ya NO se oculta el fallo con `|| echo`. Si hay blobs, el merge DEBE
+        # funcionar; si no hay ninguno, sólo se acepta cuando TODOS los jobs de
+        # tests fueron omitidos intencionalmente (MT opcional apagado y el resto
+        # skipped por el detector). Cualquier otro caso es error.
+        env:
+          R_INTERNAL: ${{ needs.internal-shard.result }}
+          R_MUTATORS: ${{ needs.mutators.result }}
+          R_PORTAL: ${{ needs.portal.result }}
+          R_MT: ${{ needs.multi-tenant.result }}
+        run: |
+          set -euo pipefail
+          blobs=$(find all-blob-reports -type f -name '*.zip' 2>/dev/null | wc -l)
+          echo "blobs encontrados: $blobs"
+          if [ "$blobs" -gt 0 ]; then
+            bunx playwright merge-reports --reporter=html ./all-blob-reports
+            exit 0
+          fi
+          for res in "$R_INTERNAL" "$R_MUTATORS" "$R_PORTAL" "$R_MT"; do
+            if [ "$res" != "skipped" ]; then
+              echo "::error::No hay blob reports pero algún job de tests corrió (internal=$R_INTERNAL mutators=$R_MUTATORS portal=$R_PORTAL mt=$R_MT)."
+              exit 1
+            fi
+          done
+          echo "::notice::Sin blob reports: todos los jobs de tests fueron omitidos intencionalmente."
+
 
       - name: Upload merged HTML report
         if: always()
