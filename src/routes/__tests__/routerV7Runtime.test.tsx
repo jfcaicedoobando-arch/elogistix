@@ -144,6 +144,12 @@ describe("React Router 7 — rutas declarativas", () => {
 });
 
 describe("NuqsAdapter v7 — filtros en query string", () => {
+  afterEach(() => {
+    // Los tests que alinean `window.history` con el MemoryRouter restauran la
+    // URL para no contaminar el resto de la suite.
+    window.history.replaceState(null, "", "/");
+  });
+
   function Filtros() {
     const [estado, setEstado] = useQueryState("estado");
     return (
@@ -189,7 +195,14 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("filtrar"));
-    expect(screen.getByTestId("estado").textContent).toBe("en_transito");
+    // La escritura del query param es asíncrona (scheduler interno de nuqs):
+    // se espera la actualización antes de afirmar estado y URL.
+    await waitFor(() => {
+      expect(screen.getByTestId("estado").textContent).toBe("en_transito");
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("url").textContent).toContain("estado=en_transito");
+    });
     expect(screen.getByTestId("url").textContent).toContain("/embarques");
   });
 });
