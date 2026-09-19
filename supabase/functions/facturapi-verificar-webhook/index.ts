@@ -103,25 +103,33 @@ Deno.serve(wrapEdgeHandler("facturapi-verificar-webhook", async (req) => {
     .eq("organization_id", orgId)
     .maybeSingle();
   const row = cred as CredencialWebhookRow | null;
-  const secretos = resolverSecretosWebhook(row, ambiente);
-  const delAmbiente = secretos.find((s) => s.origen === ambiente);
-  const urlEsperada = urlWebhookEsperada(SUPABASE_URL, orgId);
+  // Aislamiento: el diagnóstico de un ambiente usa el secret de ESE ambiente.
+  const secretDelAmbiente = secretPorAmbiente(row, ambiente);
+  const urlsAceptadas = [
+    urlWebhookEsperada(SUPABASE_URL, orgId),
+    urlWebhookEsperada(SUPABASE_URL, orgId, ambiente),
+  ];
 
+  // La API key también es la del ambiente PEDIDO: si no es el activo se resuelve
+  // la del otro ambiente explícitamente (nunca se inventa ni se reutiliza).
   const resolved = await resolveFacturapiKey(admin, orgId);
   if (!resolved.ok) return jsonResponse(resolved.data, resolved.data.status);
+  let apiKey = resolved.data.apiKey;
   if (resolved.data.ambiente !== ambiente) {
-    // Fail-closed explícito: la key resuelta pertenece al otro ambiente; no se
-    // consulta nada para no comparar peras con manzanas.
-    return jsonResponse({
-      error: "ambiente_no_activo",
-      message: `La organización tiene configurado el ambiente ${resolved.data.ambiente}. ` +
-        "Cambia el ambiente activo para verificar este webhook.",
-    }, 409);
+    const otra = await resolveFacturapiKeyOtherAmbiente(admin, orgId);
+    if (!otra || otra.ambiente !== ambiente) {
+      return jsonResponse({
+        error: "ambiente_sin_credencial",
+        message: `Esta organización no tiene clave de API configurada para el ambiente ` +
+          `${ambiente === "live" ? "Producción" : "Pruebas"}. Configúrala para poder verificarlo.`,
+      }, 409);
+    }
+    apiKey = otra.apiKey;
   }
 
   let remotos: FacturapiWebhookRemoto[];
   try {
-    remotos = await listarWebhooksRemotos(resolved.data.apiKey);
+    remotos = await listarWebhooksRemotos(apiKey);
   } catch (err) {
     const norm = normalizarErrorFacturapi(err);
     console.error("[facturapi-verificar-webhook] listado remoto falló", metadatosErrorFacturapi(norm));
@@ -138,17 +146,19 @@ Deno.serve(wrapEdgeHandler("facturapi-verificar-webhook", async (req) => {
 
   const remoto = elegirWebhookRemoto(
     remotos,
-    urlEsperada,
+    urlsAceptadas,
     ambiente === "live" ? row?.webhook_id_live : row?.webhook_id_sandbox,
   ) as FacturapiWebhookRemoto | null;
 
   const diagnostico = compararConfigRemota({
     ambiente,
-    urlEsperada,
-    secretConfigurado: Boolean(delAmbiente),
-    secretLegado: secretos.length > 0 && secretos[0].origen === "legacy",
+    urlEsperada: urlsAceptadas,
+    secretConfigurado: Boolean(secretDelAmbiente),
+    // El legado ya no valida firmas cuando hay secret por ambiente.
+    secretLegado: !secretDelAmbiente && !tieneSecretPorAmbiente(row) && Boolean(row?.webhook_secret),
     remoto,
   });
+
 
   await admin.from("facturapi_credenciales")
     .update(patchVerificacion(diagnostico))
