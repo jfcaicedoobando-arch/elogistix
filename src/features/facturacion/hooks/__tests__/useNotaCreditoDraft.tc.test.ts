@@ -2,7 +2,8 @@
  * FIX-11 (auditoría): la NC nunca debe emitirse con TC=1 silencioso.
  * Cubre la rama defensiva de `useNotaCreditoDraft.handleSubmit`.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { silenciarLogEsperado, type LogSilenciado } from "@/test/helpers/silenciarLogEsperado";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
@@ -42,6 +43,8 @@ const baseParams = {
   uuidFacturaOriginal: "UUID-1",
 };
 
+let log: LogSilenciado | null = null;
+
 beforeEach(() => {
   mocks.crearNotaCredito.mockReset().mockResolvedValue({ id: "nc-1" });
   mocks.timbrarMutate.mockReset();
@@ -49,8 +52,17 @@ beforeEach(() => {
   mocks.toast.mockReset();
 });
 
+// El spy se restaura siempre, incluso si la prueba falla a mitad.
+afterEach(() => {
+  log?.restaurar();
+  log = null;
+});
+
 describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
   it("bloquea la emisión de NC en USD si el tipo de cambio es 0", async () => {
+    // Este caso provoca a propósito dos `logger.warn` (crearNotaCredito y
+    // handleSubmit). Se silencian sólo aquí; el contenido se sigue afirmando.
+    log = silenciarLogEsperado(["warn"]);
     const { result } = renderHook(
       () => useNotaCreditoDraft({ ...baseParams, monedaFactura: "USD", tipoCambioFactura: 0 }),
       { wrapper },
@@ -75,6 +87,10 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
     expect(descripcion).toContain("tipo de cambio de la factura no está disponible");
     expect(descripcion).not.toContain("LC_TC_NO_DISPONIBLE");
 
+    // El diagnóstico interno sigue registrándose (sólo deja de imprimirse).
+    const warns = log.llamadas("warn").map((args) => args.join(" "));
+    expect(warns.some((m) => m.includes("[useNotaCreditoDraft]") && m.includes("crearNotaCredito failed"))).toBe(true);
+    expect(warns.some((m) => m.includes("handleSubmit failed") && m.includes("LC_TC_NO_DISPONIBLE"))).toBe(true);
   });
 
   it("MXN no requiere TC (usa 1 implícito) y sí llama a crearNotaCredito", async () => {

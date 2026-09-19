@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const logClientErrorMock = vi.fn();
 vi.mock("@/services/observability/logClientError", () => ({
@@ -19,6 +19,15 @@ describe("lib/observability/logger", () => {
     infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  // Los spies de consola aquí son intencionales (el logger imprime), pero deben
+  // restaurarse para no silenciar pruebas posteriores.
+  afterEach(() => {
+    debugSpy.mockRestore();
+    infoSpy.mockRestore();
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it("debug imprime con scope en modo no-prod (test)", () => {
