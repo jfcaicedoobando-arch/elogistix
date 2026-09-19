@@ -120,10 +120,10 @@ export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
       entidadId: pagoId,
       detalles: { status, response: detail },
     });
-    const detalleObj = detail as Record<string, unknown> | null;
-    const message = detalleObj && typeof detalleObj === "object" && typeof detalleObj.message === "string"
-      ? detalleObj.message
+    const message = typeof detail.message === "string" && detail.message.length > 0
+      ? detail.message
       : `FacturApi respondió ${status}`;
+
     return { ok: false, response: json({ error: "facturapi_error", status, detail, message }, 502) };
   }
 }
