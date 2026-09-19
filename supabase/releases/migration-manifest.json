@@ -4193,7 +4193,9 @@
       "20260918000100_iva_no_objeto_sat01.sql",
       "20260918064308_fdce24f7-1564-4ad1-b5eb-4c7ef00fe382.sql",
       "20260918065249_aac2506c-21a2-4ec6-bd41-0871a6352fda.sql",
-      "20260918072000_p2_iva_portal_tratamiento_renglon.sql"
+      "20260918072000_p2_iva_portal_tratamiento_renglon.sql",
+      "20260918223630_d12bb1ad-68e0-40f8-8274-6b0f1d39086f.sql",
+      "20260919013000_1b5de5e6-80a0-4322-adfc-79a78c6eb257.sql"
     ]
   }
 }
