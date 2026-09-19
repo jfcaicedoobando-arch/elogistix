@@ -35,7 +35,7 @@ export function respuestaPendiente(data: unknown): TimbradoPendiente {
 
 /** Discrimina la unión resultado-timbrado / pendiente. */
 export function esPendiente<T extends object>(
-  res: T | TimbradoPendiente,
+  res: T | TimbradoPendiente | null | undefined,
 ): res is TimbradoPendiente {
-  return (res as TimbradoPendiente).pendiente === true;
+  return (res as TimbradoPendiente | null | undefined)?.pendiente === true;
 }
