@@ -11,6 +11,8 @@ import {
   exigirInvoices,
   exigirOperacion,
   exigirWebhooks,
+  esContratoSdkError,
+  cuerpoContratoSdk,
   FacturapiSdkContratoError,
   type FacturapiPaymentSummary,
   type FacturapiSearchResult,
@@ -103,4 +105,29 @@ Deno.test("exigirWebhooks falla claro cuando el SDK/plan no expone webhooks", ()
     FacturapiSdkContratoError,
   ) as FacturapiSdkContratoError;
   assertEquals(err.operacion, "webhooks");
+});
+
+Deno.test("los cuatro métodos usados por el ERP están cubiertos por el contrato", () => {
+  const { cliente } = clienteFake();
+  const invoices = exigirInvoices(cliente, "create", "list", "paymentSummary", "cancel");
+  for (const m of ["create", "list", "paymentSummary", "cancel"] as const) {
+    assertEquals(typeof invoices[m], "function");
+  }
+});
+
+Deno.test("cuerpoContratoSdk es recuperable, diagnosticable y sin reintento automático", () => {
+  const err = assertThrows(
+    () => exigirInvoices({ invoices: {} }, "create"),
+    FacturapiSdkContratoError,
+  ) as FacturapiSdkContratoError;
+  assert(esContratoSdkError(err));
+  assertEquals(esContratoSdkError(new Error("otro")), false);
+  const r = cuerpoContratoSdk(err, "PENDING:abc");
+  assertEquals(r.status, 503);
+  assertEquals(r.body.error, "facturapi_sdk_contrato");
+  assertEquals(r.body.operacion, "invoices.create");
+  assertEquals(r.body.reintento_automatico, false);
+  assertEquals(r.body.reintentable, true);
+  assertEquals(r.body.external_id, "PENDING:abc");
+  assertEquals(cuerpoContratoSdk(err).body.external_id, null);
 });
