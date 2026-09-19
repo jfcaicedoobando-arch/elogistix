@@ -5,7 +5,7 @@ import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { BrowserRouter } from "react-router-dom";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 import { BreadcrumbProvider } from "./lib/contexts/BreadcrumbContext";
 
