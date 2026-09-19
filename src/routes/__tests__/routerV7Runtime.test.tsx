@@ -200,9 +200,13 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
     await waitFor(() => {
       expect(screen.getByTestId("estado").textContent).toBe("en_transito");
     });
+    // El adaptador actualiza la URL real vía History API (shallow), por eso la
+    // afirmación del query se hace contra `window.location` y no contra el
+    // historial interno del MemoryRouter.
     await waitFor(() => {
-      expect(screen.getByTestId("url").textContent).toContain("estado=en_transito");
+      expect(window.location.search).toContain("estado=en_transito");
     });
+    // La ruta del router no se pierde con la escritura del filtro.
     expect(screen.getByTestId("url").textContent).toContain("/embarques");
   });
 });
