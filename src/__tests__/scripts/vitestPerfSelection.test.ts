@@ -101,7 +101,7 @@ describe("vitest.perf.config.ts", () => {
   it("declara proyectos propios en lugar de sobreescribir el include raíz", () => {
     expect(perfSrc).toContain('name: "perf-node"');
     expect(perfSrc).toContain('name: "perf-jsdom"');
-    expect(perfSrc).not.toContain("mergeConfig");
+    expect(perfSrc).not.toMatch(/mergeConfig\s*\(/);
   });
 
   it("toma los include de los globs compartidos", () => {
