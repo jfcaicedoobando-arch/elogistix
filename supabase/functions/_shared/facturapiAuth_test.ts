@@ -38,7 +38,9 @@ function cleanupEnv() {
   Deno.env.delete("FACTURAPI_KEY_ORG1_SANDBOX");
   Deno.env.delete("FACTURAPI_KEY_ORG1_LIVE");
   Deno.env.delete("LEGACY_FACTURAPI_ORG_ID");
+  Deno.env.delete("LEGACY_FACTURAPI_AMBIENTE");
 }
+
 
 Deno.test("resolveFacturapiKey: usa secret sandbox cuando ambiente=sandbox", async () => {
   cleanupEnv();
