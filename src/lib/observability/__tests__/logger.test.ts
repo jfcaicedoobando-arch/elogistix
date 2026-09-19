@@ -21,6 +21,15 @@ describe("lib/observability/logger", () => {
     errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
+  // Los spies de consola aquí son intencionales (el logger imprime), pero deben
+  // restaurarse para no silenciar pruebas posteriores.
+  afterEach(() => {
+    debugSpy.mockRestore();
+    infoSpy.mockRestore();
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
   it("debug imprime con scope en modo no-prod (test)", () => {
     logger.debug("scopeA", "hello", 42);
     expect(debugSpy).toHaveBeenCalledWith("[scopeA]", "hello", 42);
