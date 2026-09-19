@@ -152,7 +152,16 @@ export default function FacturapiCredencialesCard() {
           </div>
         </details>
 
-        <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} />
+        <FacturapiWebhookUrlSection
+          orgId={orgId}
+          copiar={copiar}
+          ambiente={data?.ambiente ?? "sandbox"}
+          estadoSandbox={data?.webhook_estado_sandbox ?? null}
+          estadoLive={data?.webhook_estado_live ?? null}
+          verificadoSandboxAt={data?.webhook_verificado_sandbox_at ?? null}
+          verificadoLiveAt={data?.webhook_verificado_live_at ?? null}
+        />
+
 
         <FacturapiOnboardingWizard
           orgId={orgId}
