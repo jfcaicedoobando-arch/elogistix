@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   PASSWORD_MIN,
   PASSWORD_MAX,
-  passwordSchema,
   validarPassword,
 } from "../policy";
+import { passwordSchema } from "../policySchema";
 
 describe("política de contraseñas (Ola 8 · B2)", () => {
   it("exige al menos 10 caracteres", () => {

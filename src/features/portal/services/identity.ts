@@ -1,11 +1,20 @@
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
-// Schemas reutilizables para joins anidados — validan el shape en runtime.
-const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
-const contactoNullableSchema = z.object({ contacto: z.string().nullable() }).nullable();
+/**
+ * Guards locales para los joins anidados de este archivo.
+ *
+ * Antes eran schemas zod, pero este módulo vive en el chunk inicial (lo usa el
+ * layout del portal), así que importar `zod` aquí metía toda la librería al
+ * arranque. Los shapes son de un solo campo de texto, así que un guard manual
+ * valida exactamente lo mismo: si el campo no es texto, se devuelve `null` en
+ * lugar de propagar un valor inesperado.
+ */
+function leerTextoDeJoin(valor: unknown, campo: "nombre" | "contacto"): string | null {
+  if (!valor || typeof valor !== "object") return null;
+  const bruto = (valor as Record<string, unknown>)[campo];
+  return typeof bruto === "string" ? bruto : null;
+}
 
 const PORTAL_LIST_MAX = 500;
 
@@ -29,7 +38,7 @@ export async function fetchPortalClientUsers(): Promise<PortalClientUser[]> {
   return (rows as unknown as Array<Record<string, unknown>>).map((r) => ({
     ...r,
     cliente_id: typeof r.cliente_id === "string" ? r.cliente_id : "",
-    cliente_nombre: fromDb(r.clientes ?? null, nombreNullableSchema)?.nombre ?? null,
+    cliente_nombre: leerTextoDeJoin(r.clientes ?? null, "nombre"),
   })) as PortalClientUser[];
 }
 
@@ -44,8 +53,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const clientes = fromDb(data?.clientes ?? null, nombreNullableSchema);
-  return clientes?.nombre ?? null;
+  return leerTextoDeJoin(data?.clientes ?? null, "nombre");
 }
 
 /** UIB-10: nombre de la persona de contacto para el saludo del dashboard. */
@@ -60,8 +68,7 @@ export async function fetchPortalContactoNombre(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const clientes = fromDb(data?.clientes ?? null, contactoNullableSchema);
-  return clientes?.contacto ?? null;
+  return leerTextoDeJoin(data?.clientes ?? null, "contacto");
 }
 
 export async function fetchPortalOrgName(): Promise<string | null> {
@@ -75,6 +82,5 @@ export async function fetchPortalOrgName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const org = fromDb(data?.organizations ?? null, nombreNullableSchema);
-  return org?.nombre ?? null;
+  return leerTextoDeJoin(data?.organizations ?? null, "nombre");
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordSchema } from "@/lib/passwords/policy";
+import { passwordSchema } from "@/lib/passwords/policySchema";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 /**
