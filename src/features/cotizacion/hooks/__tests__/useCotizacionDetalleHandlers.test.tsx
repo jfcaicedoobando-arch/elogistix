@@ -150,7 +150,9 @@ describe("useCotizacionDetalleHandlers", () => {
       { wrapper: createWrapper() },
     );
     await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
-    await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    await act(async () => {
+      await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    });
     await act(async () => { await result.current.aceptar.confirmar(); });
     expect(alinearMonedaOportunidadMock).toHaveBeenCalledWith("opp-1", "USD");
     expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "Aceptada" });
@@ -164,7 +166,9 @@ describe("useCotizacionDetalleHandlers", () => {
       { wrapper: createWrapper() },
     );
     await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
-    await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    await act(async () => {
+      await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    });
     await act(async () => { await result.current.aceptar.confirmar(); });
     expect(actualizarEstadoMutateAsync).not.toHaveBeenCalled();
     expect(notifyErrorMock).toHaveBeenCalled();
