@@ -67,7 +67,7 @@ async function recuperarNotaCredito(supabase: SB, user: Usuario, ncId: string): 
   }
 
   const cliente = resolved.data.client as FapiClientRetrieve;
-  const busqueda = await buscarPorIdPendiente(cliente, nc.facturapi_pendiente_id)
+  const busqueda = await buscarPorIdPendiente(cliente, nc.facturapi_pendiente_id ?? null)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, nc.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
@@ -103,7 +103,7 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
   }
 
   const cliente = resolved.data.client as FapiClientRetrieve;
-  const busqueda = await buscarPorIdPendiente(cliente, factura.facturapi_pendiente_id)
+  const busqueda = await buscarPorIdPendiente(cliente, factura.facturapi_pendiente_id ?? null)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, factura.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
@@ -148,7 +148,7 @@ async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promi
   }
 
   const cliente = resolved.data.client as FapiClientRetrieve;
-  const busqueda = await buscarPorIdPendiente(cliente, pago.facturapi_rep_pendiente_id)
+  const busqueda = await buscarPorIdPendiente(cliente, pago.facturapi_rep_pendiente_id ?? null)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, pago.facturapi_rep_claim_at);
   if (busqueda instanceof Response) return busqueda;
   if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
