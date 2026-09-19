@@ -11855,6 +11855,8 @@ CREATE TABLE public.facturas (
     cancelacion_vence_en timestamp with time zone,
     facturapi_claim_at timestamp with time zone,
     reconciliacion_checked_at timestamp with time zone,
+    facturapi_pendiente_id text,
+    facturapi_pendiente_at timestamp with time zone,
     CONSTRAINT facturas_cancelacion_motivo_sat CHECK (((cancelacion_motivo IS NULL) OR (cancelacion_motivo = ANY (ARRAY['01'::text, '02'::text, '03'::text, '04'::text])))),
     CONSTRAINT facturas_cancellation_status_check CHECK ((cancellation_status = ANY (ARRAY['none'::text, 'verifying'::text, 'pending'::text, 'accepted'::text, 'rejected'::text, 'expired'::text]))),
     CONSTRAINT facturas_iva_nonneg CHECK ((iva >= (0)::numeric)),
@@ -20680,9 +20682,14 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
+  -- P0 correctivo: limpiar atómicamente claim + intento pendiente. Si el
+  -- pendiente sobrevive a la liberación, un webhook tardío del intento viejo
+  -- podría localizar la fila ya recapturada y promover el CFDI equivocado.
   UPDATE public.facturas
   SET facturapi_id = NULL,
-      facturapi_claim_at = NULL
+      facturapi_claim_at = NULL,
+      facturapi_pendiente_id = NULL,
+      facturapi_pendiente_at = NULL
   WHERE id = p_factura_id
     AND facturapi_id LIKE 'PENDING:%'
     AND facturapi_claim_at IS NOT NULL
@@ -20712,9 +20719,12 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
+  -- P0 correctivo: limpiar atómicamente claim + intento pendiente del REP.
   UPDATE public.pagos_factura
   SET facturapi_rep_id = NULL,
-      facturapi_rep_claim_at = NULL
+      facturapi_rep_claim_at = NULL,
+      facturapi_rep_pendiente_id = NULL,
+      facturapi_rep_pendiente_at = NULL
   WHERE id = p_pago_id
     AND facturapi_rep_id LIKE 'PENDING:%'
     AND facturapi_rep_claim_at IS NOT NULL
@@ -32146,6 +32156,8 @@ CREATE TABLE public.factura_notas_credito (
     acuse_cancelacion_fecha timestamp with time zone,
     acuse_cancelacion_status text,
     reconciliacion_checked_at timestamp with time zone,
+    facturapi_pendiente_id text,
+    facturapi_pendiente_at timestamp with time zone,
     CONSTRAINT factura_notas_credito_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT factura_notas_credito_tipo_cambio_check CHECK ((tipo_cambio > (0)::numeric))
 );
@@ -32335,6 +32347,8 @@ CREATE TABLE public.pagos_factura (
     refacturacion_id uuid,
     client_request_id uuid,
     rep_reconciliacion_checked_at timestamp with time zone,
+    facturapi_rep_pendiente_id text,
+    facturapi_rep_pendiente_at timestamp with time zone,
     CONSTRAINT pagos_factura_estado_rep_check CHECK ((estado_rep = ANY (ARRAY['NoAplica'::text, 'Pendiente'::text, 'Timbrado'::text, 'Cancelado'::text, 'Error'::text]))),
     CONSTRAINT pagos_factura_monto_aplicado_factura_check CHECK ((monto_aplicado_factura > (0)::numeric)),
     CONSTRAINT pagos_factura_monto_check CHECK ((monto > (0)::numeric)),
@@ -33387,6 +33401,7 @@ CREATE INDEX idx_facturas_cliente_trgm ON public.facturas USING gin (cliente_nom
 CREATE INDEX idx_facturas_cotizacion_id ON public.facturas USING btree (cotizacion_id);
 CREATE INDEX idx_facturas_deleted_at ON public.facturas USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_facturas_embarque ON public.facturas USING btree (embarque_id);
+CREATE INDEX idx_facturas_facturapi_pendiente_id ON public.facturas USING btree (facturapi_pendiente_id) WHERE (facturapi_pendiente_id IS NOT NULL);
 CREATE INDEX idx_facturas_facturapi_pending ON public.facturas USING btree (organization_id, facturapi_claim_at) WHERE (facturapi_id ~~ 'PENDING:%'::text);
 CREATE INDEX idx_facturas_numero_trgm ON public.facturas USING gin (numero extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_org ON public.facturas USING btree (organization_id);
@@ -33398,6 +33413,7 @@ CREATE INDEX idx_facturas_reconciliacion_cursor ON public.facturas USING btree (
 CREATE INDEX idx_facturas_serie ON public.facturas USING btree (serie_id);
 CREATE INDEX idx_facturas_sustituida_por ON public.facturas USING btree (sustituida_por) WHERE (sustituida_por IS NOT NULL);
 CREATE INDEX idx_facturas_sustituye_a ON public.facturas USING btree (sustituye_a) WHERE (sustituye_a IS NOT NULL);
+CREATE INDEX idx_fnc_facturapi_pendiente_id ON public.factura_notas_credito USING btree (facturapi_pendiente_id) WHERE (facturapi_pendiente_id IS NOT NULL);
 CREATE INDEX idx_fnc_facturapi_pending ON public.factura_notas_credito USING btree (organization_id, facturapi_claim_at) WHERE (facturapi_id ~~ 'PENDING:%'::text);
 CREATE INDEX idx_garantia_hist_garantia ON public.embarque_garantias_historial USING btree (garantia_id);
 CREATE INDEX idx_garantia_hist_org ON public.embarque_garantias_historial USING btree (organization_id);
@@ -33427,6 +33443,7 @@ CREATE INDEX idx_pagos_factura_lote_cliente ON public.pagos_factura_lote USING b
 CREATE INDEX idx_pagos_factura_lote_id ON public.pagos_factura USING btree (lote_id) WHERE (lote_id IS NOT NULL);
 CREATE INDEX idx_pagos_factura_lote_org_fecha ON public.pagos_factura_lote USING btree (organization_id, fecha_pago DESC);
 CREATE INDEX idx_pagos_factura_org_fecha ON public.pagos_factura USING btree (organization_id, fecha_pago) WHERE (deleted_at IS NULL);
+CREATE INDEX idx_pagos_factura_rep_pendiente_id ON public.pagos_factura USING btree (facturapi_rep_pendiente_id) WHERE (facturapi_rep_pendiente_id IS NOT NULL);
 CREATE INDEX idx_pagos_factura_rep_pending ON public.pagos_factura USING btree (organization_id, facturapi_rep_claim_at) WHERE (facturapi_rep_id ~~ 'PENDING:%'::text);
 CREATE INDEX idx_pagos_factura_rep_reconciliacion_cursor ON public.pagos_factura USING btree (rep_reconciliacion_checked_at) WHERE (rep_cancellation_status = ANY (ARRAY['pending'::text, 'verifying'::text]));
 CREATE INDEX idx_pagos_factura_uuid_rep ON public.pagos_factura USING btree (uuid_rep) WHERE (uuid_rep IS NOT NULL);
