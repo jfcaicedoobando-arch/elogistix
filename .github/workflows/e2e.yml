@@ -472,10 +472,13 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Gate global anti-skip
-        # Los jobs CORE no pueden quedar `skipped`: sería un verde sin cobertura
-        # real. `multi-tenant` es la única excepción y sólo cuando el guard
-        # declaró explícitamente `mt_ok=false` (secrets E2E_MT_* ausentes).
+        # `guard-secrets` DEBE terminar en success: si falla o queda skipped,
+        # todos los demás jobs se omiten y el merge vería "todo skipped" como
+        # verde vacío. Los jobs CORE tampoco pueden quedar `skipped`.
+        # `multi-tenant` es la única excepción y sólo cuando el guard declaró
+        # explícitamente `mt_ok=false` (secrets E2E_MT_* ausentes).
         env:
+          R_GUARD: ${{ needs.guard-secrets.result }}
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
           R_PORTAL: ${{ needs.portal.result }}
@@ -483,6 +486,11 @@ jobs:
           MT_OK: ${{ needs.guard-secrets.outputs.mt_ok }}
         run: |
           fail=0
+          echo "guard-secrets: $R_GUARD"
+          if [ "$R_GUARD" != "success" ]; then
+            echo "::error::guard-secrets no terminó en success ($R_GUARD) — sin credenciales CORE no hay verde posible."
+            fail=1
+          fi
           for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL"; do
             job="${pair%%:*}"; res="${pair#*:}"
             echo "$job: $res"
