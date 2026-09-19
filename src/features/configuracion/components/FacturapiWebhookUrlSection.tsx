@@ -5,19 +5,38 @@
  * equivocado del proyecto).
  *
  * v13.137.13 — cierra el pendiente 7 del plan fiscal (sincronización REP).
+ * P2-A — la clave de firma es POR AMBIENTE y se puede verificar contra el
+ * proveedor desde aquí.
  */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Webhook } from "lucide-react";
+import { FacturapiWebhookDiagnostico } from "./FacturapiWebhookDiagnostico";
+import type { FacturapiAmbiente } from "../services/facturapiCredenciales";
 
 interface Props {
   orgId: string;
   copiar: (texto: string) => void;
+  /** Ambiente activo de la organización. */
+  ambiente?: FacturapiAmbiente;
+  estadoSandbox?: string | null;
+  estadoLive?: string | null;
+  verificadoSandboxAt?: string | null;
+  verificadoLiveAt?: string | null;
 }
 
-export function FacturapiWebhookUrlSection({ orgId, copiar }: Props) {
+export function FacturapiWebhookUrlSection({
+  orgId,
+  copiar,
+  ambiente = "sandbox",
+  estadoSandbox,
+  estadoLive,
+  verificadoSandboxAt,
+  verificadoLiveAt,
+}: Props) {
+
   const base = import.meta.env.VITE_SUPABASE_URL ?? "";
   const webhookUrl = base
     ? `${base.replace(/\/$/, "")}/functions/v1/facturapi-webhook?org=${orgId}`
