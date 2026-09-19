@@ -192,13 +192,10 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
         </MemoryRouter>,
       );
     });
-    // nuqs programa la hidratación inicial en un timer interno fuera del
-    // render: se envuelve `waitFor` en act para capturar esa actualización.
-    await act(async () => {
-      await waitFor(() => {
-        expect(screen.getByTestId("estado").textContent).toBe("en_puerto");
-      });
-    });
+    // nuqs programa la hidratación inicial en un timer interno: se drena dentro
+    // de act antes de afirmar.
+    await drenarNuqs();
+    expect(screen.getByTestId("estado").textContent).toBe("en_puerto");
   });
 
   it("escribe el filtro en la URL sin perder la ruta", async () => {
