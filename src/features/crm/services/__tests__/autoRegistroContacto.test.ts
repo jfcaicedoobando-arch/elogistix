@@ -5,6 +5,13 @@ vi.mock("@/features/crm/services/actividades", () => ({
   crearActividad: (...args: unknown[]) => crearActividad(...args),
 }));
 
+// Ruido de CI: el caso "no propaga errores" provoca a propósito `logger.warn`.
+// Mock LOCAL del logger; la aserción del diagnóstico se agrega abajo.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/observability/logger", () => ({ logger: loggerMock }));
+
 import {
   registrarContactoAutomatico,
   fechaSeguimientoContacto,
