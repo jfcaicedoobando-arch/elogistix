@@ -144,11 +144,26 @@ describe("React Router 7 — rutas declarativas", () => {
 });
 
 describe("NuqsAdapter v7 — filtros en query string", () => {
+  // nuqs agenda la hidratación y la escritura del query param en temporizadores
+  // internos. Con temporizadores falsos se drenan dentro de `act`, de modo que
+  // React no reporta actualizaciones fuera de act.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
   afterEach(() => {
+    vi.useRealTimers();
     // Los tests que alinean `window.history` con el MemoryRouter restauran la
     // URL para no contaminar el resto de la suite.
     window.history.replaceState(null, "", "/");
   });
+
+  /** Drena los temporizadores pendientes de nuqs dentro de `act`. */
+  async function drenarNuqs() {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+  }
 
   function Filtros() {
     const [estado, setEstado] = useQueryState("estado");
