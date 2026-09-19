@@ -14,7 +14,7 @@ import { jsonResponse, makeJson } from "../_shared/response.ts";
 import {
   loadFactura, loadNotaCredito, loadPago, validarClaim, buscarCfdiPorExternalId,
   promoverFactura, promoverNc, promoverPago, liberarClaim, liberarClaimNc, liberarClaimPago,
-  type ReqBody, type FapiClient,
+  type ReqBody,
 } from "./recuperar.ts";
 import {
   buscarPorIdPendiente, respuestaPendienteRemoto, type FapiClientRetrieve,
@@ -66,7 +66,7 @@ async function recuperarNotaCredito(supabase: SB, user: Usuario, ncId: string): 
     );
   }
 
-  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const cliente = resolved.data.client as FapiClientRetrieve;
   const busqueda = await buscarPorIdPendiente(cliente, nc.facturapi_pendiente_id)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, nc.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
@@ -102,7 +102,7 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
     );
   }
 
-  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const cliente = resolved.data.client as FapiClientRetrieve;
   const busqueda = await buscarPorIdPendiente(cliente, factura.facturapi_pendiente_id)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, factura.facturapi_claim_at);
   if (busqueda instanceof Response) return busqueda;
@@ -147,7 +147,7 @@ async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promi
     );
   }
 
-  const cliente = resolved.data.client as FapiClient & FapiClientRetrieve;
+  const cliente = resolved.data.client as FapiClientRetrieve;
   const busqueda = await buscarPorIdPendiente(cliente, pago.facturapi_rep_pendiente_id)
     ?? await buscarCfdiPorExternalId(cliente, claimTag, pago.facturapi_rep_claim_at);
   if (busqueda instanceof Response) return busqueda;
