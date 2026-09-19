@@ -169,8 +169,24 @@ async function createInvoiceInFacturapi(
     const { status, detail } = describeFacturapiError(err);
     // P0-B.4: la llave de idempotencia en uso NO autoriza otro CFDI.
     if (esIdempotencyKeyEnUso(detail, status)) return await respuestaIdempotencyEnUso(meta);
+    // P2-B: 429 = el proveedor rechazó la petición ANTES de timbrar. Se libera
+    // el claim para que el operador reintente cuando pase la espera, y se
+    // responde 429 accionable (nunca un reintento automático).
+    if (esRateLimitFacturapi(status, detail)) {
+      await claim.release();
+      await registrarBitacoraEdge(supabase, {
+        organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
+        accion: "facturapi_emitir_rate_limited", entidadId: facturaId, entidadNombre: factura.numero ?? "",
+        detalles: {
+          status, retry_after_segundos: detail.retryAfterSegundos ?? null,
+          request_id: detail.requestId ?? null, log_id: detail.logId ?? null,
+        },
+      });
+      return respuestaRateLimit(detail);
+    }
     // Error definitivo de FacturApi (no timbró): sí liberamos para reintentar.
     await claim.release();
+
     await registrarBitacoraEdge(supabase, {
       organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
       accion: "facturapi_emitir_failed", entidadId: facturaId, entidadNombre: factura.numero ?? "",
