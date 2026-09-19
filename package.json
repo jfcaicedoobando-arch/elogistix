@@ -109,7 +109,7 @@
     "currency.js": "^2.0.4",
     "date-fns": "3.6.0",
     "file-saver": "^2.0.5",
-    "jszip": "^3.10.1",
+    "jszip": "^3.10.2",
     "libphonenumber-js": "1.13.13",
     "lucide-react": "1.45.0",
     "nuqs": "2.10.1",
