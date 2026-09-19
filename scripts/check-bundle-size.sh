@@ -14,15 +14,15 @@ set -euo pipefail
 # acción es analizar el driver, no volver a subir el límite a ciegas.
 #
 # P1 auditoría stack: el budget se MANTIENE en 365 KB. La primera medición real
-# del gate (el script existía pero ningún workflow lo ejecutaba) da un entry de
-# ~380 KB gz, es decir el gate queda ROJO a propósito. Subir el umbral sólo para
-# pintar el job de verde está prohibido. Driver medido de los ~15 KB de exceso:
-# actualizaciones de dependencias de esta ronda (react-dom 19.3, React Router 7
-# ≈86 KB raw en el entry, @supabase 2.116, @sentry 10.75). No hay import propio
-# pesado evitable: el archivo propio más grande del entry son 14 KB de
-# `appRoutes.tsx`. Acción correcta: reducir el entry con lazy/split verificable
-# (candidatos: superficie de @supabase, zod del login/portal, date-fns), no
-# mover este número.
+# del gate (el script existía pero ningún workflow lo ejecutaba) dio 380 KB gz.
+# En vez de mover el umbral se corrigió el driver evitable: `zod` (≈240 KB raw)
+# entraba al entry por sólo dos importadores eager — `lib/passwords/policy.ts`
+# (schema separado a `policySchema.ts`, usado sólo por los formularios con
+# zodResolver) y `features/portal/services/identity.ts` (dos schemas de un campo
+# reemplazados por un guard local). Medición posterior: 355 KB gz. El resto del
+# entry es infraestructura no evitable (react-dom, @supabase, @sentry, React
+# Router). Si se rebasa otra vez, la acción es analizar el driver con
+# `ANALYZE=true bun run build`, no subir este número.
 BUDGET_KB="${BUNDLE_BUDGET_KB:-365}"
 DIST_DIR="${DIST_DIR:-dist/assets}"
 
