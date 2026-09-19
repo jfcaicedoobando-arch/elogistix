@@ -17,7 +17,7 @@
     "build": "vite build",
     "build:low-mem": "BUILD_SOURCEMAPS=false vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/ --cache-strategy content",
+    "lint": "eslint . --cache --cache-location .cache/eslint/ --cache-strategy content",
     "lint:unused": "knip --no-progress",
     "lint:unused:strict": "knip --no-progress --include files,dependencies,unlisted,duplicates,exports,types",
     "typecheck": "tsc -b",
