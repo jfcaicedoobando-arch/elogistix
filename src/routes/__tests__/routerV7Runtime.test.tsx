@@ -7,8 +7,8 @@
  *  - Los enlaces relativos y el trailing slash conservan la semántica de v6.
  *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
  */
-import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import {
   MemoryRouter,
   Routes,
