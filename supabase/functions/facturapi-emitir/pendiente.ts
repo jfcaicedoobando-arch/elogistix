@@ -10,6 +10,7 @@ import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
+  cuerpoPendienteNoPersistido,
   cuerpoTimbradoPendiente,
   marcarTimbradoPendiente,
   MSG_IDEMPOTENCY_EN_USO,
@@ -44,11 +45,22 @@ export async function registrarFacturaPendiente(args: Args): Promise<Response> {
     usuarioId: args.usuarioId,
     usuarioEmail: args.usuarioEmail ?? undefined,
     modulo: "facturacion",
-    accion: "facturapi_emitir_pendiente",
+    accion: res.ok ? "facturapi_emitir_pendiente" : "facturapi_emitir_pendiente_no_persistido",
     entidadId: args.facturaId,
     entidadNombre: args.numero ?? "",
-    detalles: { facturapi_pendiente_id: args.pendienteId, external_id: args.claimTag, persistido: res.ok },
+    detalles: {
+      facturapi_pendiente_id: args.pendienteId, external_id: args.claimTag,
+      persistido: res.ok, error: res.error ?? null,
+    },
   });
+
+  // P0 correctivo: sin pendiente persistido no hay rastro para recuperar ⇒ 500.
+  if (!res.ok) {
+    return jsonResponse(
+      cuerpoPendienteNoPersistido({ pendienteId: args.pendienteId, claimTag: args.claimTag, detalle: res.error }),
+      500,
+    );
+  }
 
   return jsonResponse(
     cuerpoTimbradoPendiente({ pendienteId: args.pendienteId, claimTag: args.claimTag }),

@@ -213,6 +213,9 @@ async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body:
       folio: folioFinal,
       facturapi_id: facturapiId,
       facturapi_claim_at: null,
+      // P0 correctivo: limpiar cualquier intento pendiente heredado.
+      facturapi_pendiente_id: null,
+      facturapi_pendiente_at: null,
       uuid_fiscal: uuid,
       folio_fiscal: folio,
       serie: serieTimbrada,

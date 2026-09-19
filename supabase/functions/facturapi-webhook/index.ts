@@ -20,7 +20,7 @@ import {
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { sanearPatchFactura, cerrarCancelacionSiAceptada } from "./facturaPatch.ts";
+import { sanearPatchFactura, cerrarCancelacionSiAceptada, aplicarPatchConCas } from "./facturaPatch.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
   COLS_FACTURA, COLS_REP, externalIdDeEvento, localizarFila, patchAdopcionPendiente,
@@ -32,6 +32,8 @@ interface FacturaLocal {
   estado: string | null;
   sustituida_por: string | null;
   cancellation_status: string | null;
+  /** P0 correctivo: CAS del claim al escribir (evita pisar una recaptura). */
+  facturapi_id: string | null;
 }
 
 interface PagoLocal {
@@ -39,6 +41,7 @@ interface PagoLocal {
   organization_id: string;
   estado_rep: string | null;
   rep_cancellation_status: string | null;
+  facturapi_rep_id: string | null;
 }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -54,7 +57,7 @@ async function handleReceiptEvent(
   // P0-A.4: el REP puede estar en "timbrado pendiente" (claim PENDING:<uuid>).
   const localizado = await localizarFila<PagoLocal>({
     supabase, tabla: "pagos_factura", orgId, cols: COLS_REP,
-    select: "id, organization_id, estado_rep, rep_cancellation_status",
+    select: "id, organization_id, estado_rep, rep_cancellation_status, facturapi_rep_id",
     remoteId: receipt.facturapi_rep_id, externalId: externalIdDeEvento(event),
   });
   if (!localizado) return jsonResponse({ ok: true, ignored: "pago_not_found" });
@@ -84,11 +87,11 @@ async function handleReceiptEvent(
     Object.assign(patch, adopcion);
   }
 
-  const { error: updErr } = await supabase
-    .from("pagos_factura")
-    .update(patch)
-    .eq("id", pago.id);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  const errCas = await aplicarPatchConCas({
+    supabase, tabla: "pagos_factura", id: pago.id,
+    claimCol: COLS_REP.claim, claimEsperado: localizado.claimActual, patch,
+  });
+  if (errCas) return errCas;
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,
@@ -111,7 +114,7 @@ async function handleFacturaEvent(
   // + id remoto del intento); el evento `valid` la resuelve.
   const localizada = await localizarFila<FacturaLocal>({
     supabase, tabla: "facturas", orgId, cols: COLS_FACTURA,
-    select: "id, organization_id, estado, sustituida_por, cancellation_status",
+    select: "id, organization_id, estado, sustituida_por, cancellation_status, facturapi_id",
     remoteId: mapped.facturapi_id, externalId: externalIdDeEvento(event),
   });
   if (!localizada) return jsonResponse({ ok: true, ignored: "factura_not_found" });
@@ -130,11 +133,11 @@ async function handleFacturaEvent(
   }
 
   if (Object.keys(patch).length > 0) {
-    const { error: updErr } = await supabase
-      .from("facturas")
-      .update(patch)
-      .eq("id", factura.id);
-    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+    const errCas = await aplicarPatchConCas({
+      supabase, tabla: "facturas", id: factura.id,
+      claimCol: COLS_FACTURA.claim, claimEsperado: localizada.claimActual, patch,
+    });
+    if (errCas) return errCas;
   }
 
   await registrarBitacoraEdge(supabase, {

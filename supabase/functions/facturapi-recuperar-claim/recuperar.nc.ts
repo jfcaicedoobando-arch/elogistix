@@ -114,7 +114,12 @@ export async function liberarClaimNc(
   const limite = new Date(Date.now() - MIN_EDAD_LIBERACION_MINUTOS * 60_000).toISOString();
   const { data: liberado, error: updErr } = await supabase
     .from("factura_notas_credito")
-    .update({ facturapi_id: null, facturapi_claim_at: null })
+    // P0 correctivo: limpiar también el intento pendiente, o un webhook tardío
+    // podría localizar esta fila por el id pendiente viejo tras recapturarla.
+    .update({
+      facturapi_id: null, facturapi_claim_at: null,
+      facturapi_pendiente_id: null, facturapi_pendiente_at: null,
+    })
     .eq("id", nc.id)
     .eq("facturapi_id", claimTag)
     .lt("facturapi_claim_at", limite)

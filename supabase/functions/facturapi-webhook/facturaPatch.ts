@@ -72,3 +72,30 @@ export async function cerrarCancelacionSiAceptada(
   ]) delete patch[k];
   return null;
 }
+
+/**
+ * P0 correctivo — escritura con CAS sobre la columna de claim.
+ *
+ * Un webhook tardío del intento viejo no debe pisar una fila que ya fue
+ * liberada y recapturada por un intento nuevo: la actualización sólo procede si
+ * la columna de claim sigue teniendo el valor con el que localizamos la fila.
+ */
+export async function aplicarPatchConCas(args: {
+  supabase: SB;
+  tabla: string;
+  id: string;
+  claimCol: string;
+  claimEsperado: string | null;
+  patch: Record<string, unknown>;
+}): Promise<Response | null> {
+  let q = args.supabase.from(args.tabla).update(args.patch).eq("id", args.id);
+  if (args.claimEsperado !== null) q = q.eq(args.claimCol, args.claimEsperado);
+  const { data, error } = await q.select("id");
+  if (error) return jsonResponse({ error: "db_update_failed", detail: error.message }, 500);
+  const filas = Array.isArray(data) ? data.length : data ? 1 : 0;
+  if (filas === 0) {
+    // La fila cambió de dueño (liberada/recapturada): ignorar el evento viejo.
+    return jsonResponse({ ok: true, ignored: "claim_cambiado" });
+  }
+  return null;
+}
