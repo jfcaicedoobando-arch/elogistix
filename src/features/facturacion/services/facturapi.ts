@@ -5,6 +5,11 @@ import {
   toReadableError,
   type EdgeErrorBody,
 } from "./facturapiError";
+import {
+  esRespuestaPendiente,
+  respuestaPendiente,
+  type TimbradoPendiente,
+} from "./timbradoPendiente";
 
 export { FacturapiError, parseFunctionError };
 ;
