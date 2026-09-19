@@ -5,19 +5,32 @@
  * equivocado del proyecto).
  *
  * v13.137.13 — cierra el pendiente 7 del plan fiscal (sincronización REP).
+ * P2-A — la clave de firma es POR AMBIENTE y se puede verificar contra el
+ * proveedor desde aquí.
  */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Webhook } from "lucide-react";
+import { FacturapiWebhookDiagnostico } from "./FacturapiWebhookDiagnostico";
+import type { FacturapiCredencialesRow } from "../services/facturapiCredenciales";
 
 interface Props {
   orgId: string;
   copiar: (texto: string) => void;
+  /** Credenciales guardadas (null si aún no hay). El ambiente activo manda. */
+  cred?: FacturapiCredencialesRow | null;
 }
 
-export function FacturapiWebhookUrlSection({ orgId, copiar }: Props) {
+export function FacturapiWebhookUrlSection({ orgId, copiar, cred = null }: Props) {
+  const ambiente = cred?.ambiente ?? "sandbox";
+  const esLive = ambiente === "live";
+  const estadoGuardado = (esLive ? cred?.webhook_estado_live : cred?.webhook_estado_sandbox) ?? null;
+  const verificadoAt =
+    (esLive ? cred?.webhook_verificado_live_at : cred?.webhook_verificado_sandbox_at) ?? null;
+
+
   const base = import.meta.env.VITE_SUPABASE_URL ?? "";
   const webhookUrl = base
     ? `${base.replace(/\/$/, "")}/functions/v1/facturapi-webhook?org=${orgId}`
@@ -48,11 +61,19 @@ export function FacturapiWebhookUrlSection({ orgId, copiar }: Props) {
       </div>
       <Alert>
         <AlertDescription className="text-xs">
-          El secret de firma (HMAC SHA-256) se genera al guardar la configuración
-          y vive en <code>facturapi_credenciales.webhook_secret</code>. Pégalo
-          también en FacturApi como <em>Webhook Secret</em>.
+          La clave de firma (HMAC SHA-256) es independiente por ambiente: una para
+          Pruebas y otra para Producción. Pega en FacturApi la del ambiente que
+          estés configurando como <em>Webhook Secret</em>.
         </AlertDescription>
       </Alert>
+      <FacturapiWebhookDiagnostico
+        orgId={orgId}
+        ambiente={ambiente}
+        estadoGuardado={estadoGuardado}
+        verificadoAt={verificadoAt}
+
+      />
+
     </div>
   );
 }

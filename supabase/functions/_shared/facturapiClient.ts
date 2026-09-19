@@ -29,13 +29,18 @@
  * fallaba con `Could not find constraint 'facturapi@<versión>' in the list of
  * packages.`, tirando todo request con "Edge Function returned a non-2xx".
  */
-// @ts-ignore -- el paquete `facturapi` no publica typings compatibles con Deno.
+// P2-C: el paquete `facturapi` SÍ publica typings (v5.0.0, `dist/*.d.ts`),
+// pero están declarados para resolución de bundler/Node y el typecheck de Deno
+// no los alcanza desde el especificador `npm:`. De ahí el `@ts-ignore` y el
+// modelado como objeto opaco: la superficie tipada que usa el ERP vive en
+// `_shared/facturapiSdk.ts` (un solo lugar con los casts del SDK).
+// @ts-ignore -- typings del paquete no resolubles desde el especificador `npm:` en Deno.
 import FacturapiDefault from "npm:facturapi@5.0.0";
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
+import { normalizarErrorFacturapi } from "./facturapiErrorNormalizado.ts";
 
-// El SDK `facturapi` no exporta tipos accesibles desde el typecheck de
-// Deno. Lo modelamos como un objeto opaco.
 export type FacturapiClient = object;
+
 type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
 // Algunos empaquetados exponen el ctor como `default.default` (CJS/ESM interop).
@@ -108,6 +113,14 @@ export interface FacturapiErrorDetail {
   errors?: unknown;
   logId?: string;
   raw?: unknown;
+  /** P2-B: metadatos de diagnóstico/rate limiting (429). */
+  requestId?: string;
+  retryAfterSegundos?: number;
+  rateLimited?: boolean;
+  /** Mensaje en español listo para el operador (429/timeout incluidos). */
+  mensajeUsuario?: string;
+  /** Invariante: el timbrado NUNCA se reintenta automáticamente. */
+  reintentoAutomatico?: false;
 }
 
 function pickStr(...values: unknown[]): string | undefined {
@@ -123,10 +136,14 @@ function pickStr(...values: unknown[]): string | undefined {
  * `path`, `location`, `errors[]` y `logId` que expone el SDK como campos
  * planos (desde v4.18.0, vigentes en v5.0.0) — antes se perdían al leer sólo
  * `response.data`.
+ *
+ * P2-B: además conserva `Retry-After`, el request id del proveedor y marca los
+ * 429 con un mensaje accionable. El reintento del timbrado sigue siendo SIEMPRE
+ * manual: reintentar solo un 429 arriesga CFDIs/REP duplicados.
  */
 export function describeFacturapiError(err: unknown): { status: number; detail: FacturapiErrorDetail } {
   const e = (err ?? {}) as FacturapiErrorShape;
-  const status: number = e.response?.status ?? e.status ?? 502;
+  const norm = normalizarErrorFacturapi(err);
   const base = ((e.response?.data ?? e.data ?? {}) as Record<string, unknown>);
   const detail: FacturapiErrorDetail = {
     message: pickStr(base.message, e.message) ?? String(err),
@@ -134,10 +151,16 @@ export function describeFacturapiError(err: unknown): { status: number; detail: 
     path: pickStr(base.path, e.path),
     location: pickStr(base.location, e.location),
     errors: base.errors ?? e.errors,
-    logId: pickStr(base.logId, e.logId),
+    logId: pickStr(base.logId, e.logId) ?? norm.logId,
+    requestId: norm.requestId,
+    retryAfterSegundos: norm.retryAfterSegundos,
+    rateLimited: norm.rateLimited,
+    mensajeUsuario: norm.mensajeUsuario,
+    reintentoAutomatico: false,
   };
-  return { status, detail };
+  return { status: norm.status, detail };
 }
+
 
 /**
  * Extrae un `message` humano del `detail` que devuelve FacturApi (o el fallback

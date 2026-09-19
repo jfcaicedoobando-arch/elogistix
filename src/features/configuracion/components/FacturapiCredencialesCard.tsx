@@ -152,7 +152,9 @@ export default function FacturapiCredencialesCard() {
           </div>
         </details>
 
-        <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} />
+        <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} cred={data ?? null} />
+
+
 
         <FacturapiOnboardingWizard
           orgId={orgId}

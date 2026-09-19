@@ -6,6 +6,8 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { esIdempotencyKeyEnUso, MSG_IDEMPOTENCY_EN_USO } from "../_shared/timbradoPendiente.ts";
+import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
+
 
 export interface FapiInvoice {
   id: string;
@@ -83,6 +85,24 @@ export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
       };
     }
 
+    // P2-B: 429 (tope de peticiones) es transitorio y ocurre ANTES de timbrar:
+    // se libera el claim para permitir un reintento MANUAL y NO se marca
+    // `estado_rep='Error'` (no hay nada que conciliar, sólo hay que esperar).
+    if (esRateLimitFacturapi(status, detail)) {
+      await deps.releaseClaim();
+      await registrarBitacoraEdge(supabase, {
+        organizationId, usuarioId, usuarioEmail, modulo: "facturacion",
+        accion: "facturapi_rep_rate_limited", entidadId: pagoId,
+        detalles: {
+          status, external_id: claimTag,
+          retry_after_segundos: detail.retryAfterSegundos ?? null,
+          request_id: detail.requestId ?? null, log_id: detail.logId ?? null,
+        },
+      });
+      return { ok: false, response: respuestaRateLimit(detail) };
+    }
+
+
     // Error definitivo de Facturapi (no timbró): liberar el claim para reintentar.
     await deps.releaseClaim();
     const errMsg = typeof detail === "object" && detail !== null
@@ -100,10 +120,10 @@ export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
       entidadId: pagoId,
       detalles: { status, response: detail },
     });
-    const detalleObj = detail as Record<string, unknown> | null;
-    const message = detalleObj && typeof detalleObj === "object" && typeof detalleObj.message === "string"
-      ? detalleObj.message
+    const message = typeof detail.message === "string" && detail.message.length > 0
+      ? detail.message
       : `FacturApi respondió ${status}`;
+
     return { ok: false, response: json({ error: "facturapi_error", status, detail, message }, 502) };
   }
 }

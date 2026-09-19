@@ -88,22 +88,54 @@ export type FacturapiResolveResult =
 const GENERIC_NOT_CONFIGURED_MSG =
   "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.";
 
+function credencialNoConfigurada(): FacturapiResolveResult {
+  return {
+    ok: false,
+    data: {
+      error: "org_facturapi_not_configured",
+      message: GENERIC_NOT_CONFIGURED_MSG,
+      status: 412,
+    },
+  };
+}
+
 /**
  * Única excepción fail-closed: si `organizationId` coincide EXACTAMENTE con
  * el secret `LEGACY_FACTURAPI_ORG_ID`, se permite usar el secret global
  * `FACTURAPI_KEY`. Cualquier otra organización sin fila en
  * `facturapi_credenciales` recibe un error genérico (fail-closed).
+ *
+ * DEPRECADO (P2-C · FacturAPI 5.0): este fallback existe sólo para la única
+ * organización que usaba FacturApi antes de `facturapi_credenciales`. Exige
+ * AMBOS secrets: `LEGACY_FACTURAPI_ORG_ID` y `LEGACY_FACTURAPI_AMBIENTE`
+ * (`sandbox` | `live`); nunca cae silenciosamente a sandbox. Migración: dar de
+ * alta la fila en `facturapi_credenciales` con su key en el Vault y borrar los
+ * tres secrets (`FACTURAPI_KEY`, `LEGACY_FACTURAPI_ORG_ID`,
+ * `LEGACY_FACTURAPI_AMBIENTE`). Ver `docs/facturapi-ambientes.md`.
  */
+
 function legacyFallback(organizationId: string): FacturapiResolveResult {
   const legacyOrgId = Deno.env.get("LEGACY_FACTURAPI_ORG_ID") ?? "";
   if (legacyOrgId && organizationId === legacyOrgId) {
     const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
+    // P2-C: el ambiente del fallback legacy es EXPLÍCITO. Antes se asumía
+    // "sandbox", así que una key de PRODUCCIÓN guardada en `FACTURAPI_KEY`
+    // quedaba etiquetada como pruebas y el ERP elegía rutas/diagnósticos del
+    // ambiente equivocado. Sin `LEGACY_FACTURAPI_AMBIENTE` válido no se usa.
+    const ambienteLegacy = Deno.env.get("LEGACY_FACTURAPI_AMBIENTE") ?? "";
+    if (ambienteLegacy !== "sandbox" && ambienteLegacy !== "live") {
+      console.error(
+        "[facturapiAuth] fallback legacy deshabilitado: LEGACY_FACTURAPI_AMBIENTE debe ser 'sandbox' o 'live'",
+        { organizationId },
+      );
+      return credencialNoConfigurada();
+    }
     if (legacy) {
       return {
         ok: true,
         data: {
           apiKey: legacy,
-          ambiente: "sandbox",
+          ambiente: ambienteLegacy,
           baseUrl: FACTURAPI_BASE,
           facturapiOrgId: null,
           legacy: true,
@@ -114,15 +146,10 @@ function legacyFallback(organizationId: string): FacturapiResolveResult {
       organizationId,
     });
   }
-  return {
-    ok: false,
-    data: {
-      error: "org_facturapi_not_configured",
-      message: GENERIC_NOT_CONFIGURED_MSG,
-      status: 412,
-    },
-  };
+
+  return credencialNoConfigurada();
 }
+
 
 let adminSingleton: SupabaseLike | null = null;
 /**

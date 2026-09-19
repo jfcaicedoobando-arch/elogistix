@@ -25,6 +25,14 @@ export interface FacturapiCredencialesRow {
   certificado_cargado: boolean;
   certificado_vence_at: string | null;
   webhook_secret: string | null;
+  /** P2-A: configuración del webhook separada por ambiente. */
+  webhook_estado_sandbox?: string | null;
+  webhook_estado_live?: string | null;
+  webhook_verificado_sandbox_at?: string | null;
+  webhook_verificado_live_at?: string | null;
+  webhook_url_sandbox?: string | null;
+  webhook_url_live?: string | null;
+
   last_test_timbre_at: string | null;
   datos_fiscales_completos: boolean;
   created_at: string;

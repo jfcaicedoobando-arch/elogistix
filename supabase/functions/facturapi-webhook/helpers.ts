@@ -8,6 +8,8 @@
  */
 
 import { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
+import { uuidFiscalValido } from "../_shared/timbradoPendiente.ts";
+
 
 export type FacturapiEventType =
   | "invoice.status_updated"
@@ -225,12 +227,19 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
     case "receipt.canceled":
     case "invoice.canceled":
       return mapReceiptCanceled(facturapi_rep_id);
+    // P2-A · corrección P0 regresiva: `receipt.created` SIN UUID fiscal válido
+    // NO es un timbre. Antes ponía `estado_rep='Timbrado'` (y, vía adopción,
+    // limpiaba el claim) con el REP todavía pendiente en el proveedor: la UI
+    // mostraba timbrado un complemento sin folio fiscal. Ahora se ignora y la
+    // fila queda pendiente hasta el evento `valid` con UUID.
     case "receipt.created":
+      if (!uuidFiscalValido(uuid)) return null;
       return {
         facturapi_rep_id,
-        patch: uuid ? { uuid_rep: uuid, estado_rep: "Timbrado", timbrado_rep_en: new Date().toISOString() } : { estado_rep: "Timbrado" },
+        patch: { uuid_rep: uuid, estado_rep: "Timbrado", timbrado_rep_en: new Date().toISOString() },
         bitacora_accion: "facturapi_webhook_rep_created",
       };
+
     default:
       return null;
   }

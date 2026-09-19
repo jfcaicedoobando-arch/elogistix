@@ -5318,7 +5318,19 @@ export type Database = {
           last_test_timbre_at: string | null
           organization_id: string
           updated_at: string
+          webhook_estado_live: string | null
+          webhook_estado_sandbox: string | null
+          webhook_eventos_live: string[] | null
+          webhook_eventos_sandbox: string[] | null
+          webhook_id_live: string | null
+          webhook_id_sandbox: string | null
           webhook_secret: string | null
+          webhook_secret_live: string | null
+          webhook_secret_sandbox: string | null
+          webhook_url_live: string | null
+          webhook_url_sandbox: string | null
+          webhook_verificado_live_at: string | null
+          webhook_verificado_sandbox_at: string | null
         }
         Insert: {
           ambiente?: string
@@ -5336,7 +5348,19 @@ export type Database = {
           last_test_timbre_at?: string | null
           organization_id: string
           updated_at?: string
+          webhook_estado_live?: string | null
+          webhook_estado_sandbox?: string | null
+          webhook_eventos_live?: string[] | null
+          webhook_eventos_sandbox?: string[] | null
+          webhook_id_live?: string | null
+          webhook_id_sandbox?: string | null
           webhook_secret?: string | null
+          webhook_secret_live?: string | null
+          webhook_secret_sandbox?: string | null
+          webhook_url_live?: string | null
+          webhook_url_sandbox?: string | null
+          webhook_verificado_live_at?: string | null
+          webhook_verificado_sandbox_at?: string | null
         }
         Update: {
           ambiente?: string
@@ -5354,7 +5378,19 @@ export type Database = {
           last_test_timbre_at?: string | null
           organization_id?: string
           updated_at?: string
+          webhook_estado_live?: string | null
+          webhook_estado_sandbox?: string | null
+          webhook_eventos_live?: string[] | null
+          webhook_eventos_sandbox?: string[] | null
+          webhook_id_live?: string | null
+          webhook_id_sandbox?: string | null
           webhook_secret?: string | null
+          webhook_secret_live?: string | null
+          webhook_secret_sandbox?: string | null
+          webhook_url_live?: string | null
+          webhook_url_sandbox?: string | null
+          webhook_verificado_live_at?: string | null
+          webhook_verificado_sandbox_at?: string | null
         }
         Relationships: [
           {
