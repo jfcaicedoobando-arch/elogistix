@@ -14,13 +14,14 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 
 ## Stack
 
-- **Frontend**: React 18 + Vite 5 + TypeScript 5
+- **Frontend**: React 19 + Vite 6 + TypeScript 5
 - **UI**: Tailwind CSS v3 + shadcn/ui (read-only) + tokens HSL semánticos
 - **Estado server**: TanStack Query v5
+- **Router**: React Router 7 en modo declarativo (`BrowserRouter` + `Routes`), sin Data/Framework Mode
 - **Forms**: React Hook Form + Zod
 - **Backend**: Lovable Cloud (Supabase) — Postgres + RLS + Storage + Edge Functions (Deno)
 - **AI**: Lovable AI Gateway (Gemini para parsing de CSF, etc.)
-- **Tests**: Vitest + Testing Library
+- **Tests**: Vitest 4 + Testing Library (proyectos `node`/`jsdom`; ver [`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md) y [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md))
 
 ## Módulos principales
 
@@ -41,7 +42,7 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 - **Roles**: en `public.user_roles` (global) y `organization_members` (por org). Nunca en `profiles` ni `auth.users`.
 - **Hooks**: importar siempre desde el barrel del dominio (`@/hooks/embarque`, `@/services/cliente`, …).
 - **Pages no tocan Supabase**: toda I/O pasa por hook → service → cliente Supabase.
-- **Changelog**: cada cambio se registra en `src/content/changelog/v8/chunks/0.ts` + entrada eager en `src/content/changelogData.ts` + bump de `APP_VERSION` (SemVer; ver §19 de ARCHITECTURE.md).
+- **Changelog**: cada cambio se registra en [`CHANGELOG.md`](./CHANGELOG.md) (raíz) + bump de `APP_VERSION` en `src/constants/appVersion.ts` (SemVer; ver §19 de ARCHITECTURE.md).
 
 ## Desarrollo local
 
@@ -137,21 +138,25 @@ Es importante separar tres cosas que suelen confundirse:
 
 1. **Frontend (lo que ven los usuarios)**: se publica **desde Lovable** con `Share → Publish → Update`. No hay comando de GitHub que lo publique; el botón es el único punto de publicación.
 2. **Backend (base de datos, RLS, edge functions)**: se despliega **automáticamente** cuando Lovable detecta cambios en el código. Si una migración llega rota a `main`, puede romper producción sin avisar.
-3. **`deploy-gate.yml` en GitHub**: no despliega nada. Es una **guardia de calidad** que corre después de cada merge a `main` y revisa que las migraciones, RLS, drift y la suite de RLS estén sanos. Piensa en él como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
+3. **Los workflows de GitHub Actions**: no despliegan nada. Son **guardias de calidad** que revisan lint, tipos, pruebas, tamaño del bundle, migraciones, drift de esquema y RLS. Piensa en ellos como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
+
+> Nota histórica: existió un workflow `deploy-gate.yml` post-merge. Ya no
+> existe; sus verificaciones viven hoy en `ci.yml` y `rls-tests.yml`.
 
 ### Recomendación
 
-- No eliminar el deploy gate. El proyecto ya tiene tests de RLS, migraciones auditadas y radar de drift; el gate asegura que esas protecciones signifiquen algo en producción.
-- Para que sea efectivo, conviene configurarlo como **required status check** en GitHub:
-  - `Settings → Branches → main → Require status checks to pass before merging`
-  - Agregar `deploy-gate` (o los jobs individuales: `Gate — auditoría de migraciones`, `Gate — suite de RLS`, `Gate — radar de drift`).
-- El deploy gate tampoco sustituye la revisión humana de un PR; solo valida reglas automáticas que ya están en el repo.
+- Configurar como **required status checks** en GitHub: `Settings → Branches → main → Require status checks to pass before merging`, agregando los jobs de `ci.yml` y `rls-tests.yml`.
+- Los checks automáticos no sustituyen la revisión humana de un PR; sólo validan reglas que ya están en el repo.
 
-### Workflows principales
+### Workflows (lista real)
 
-- `ci.yml`: lint, typecheck, tests, knip, bundle stats y seguridad en cada PR/push a `main`.
-- `rls-tests.yml`: corre la suite de RLS de Supabase en cada cambio de base de datos.
-- `deploy-gate.yml`: post-merge, verifica que `main` esté sano para producción.
-- `e2e.yml`: pruebas end-to-end en staging (cuando se dispara).
+- `ci.yml`: lint, typecheck, auditorías, pruebas (3 shards), knip, build con **gate de tamaño de bundle** (`scripts/check-bundle-size.sh`, budget 365 KB gz) y **gate de sourcemaps** (`scripts/check-sourcemaps.sh`).
+- `rls-tests.yml`: suite de RLS de Supabase + paridad del baseline de esquema en cada cambio de base de datos.
+- `e2e.yml`: pruebas end-to-end con Playwright (core/portal obligatorios; multi-tenant opcional según credenciales).
+- `codeql.yml`: análisis estático de seguridad.
+- `dependency-review.yml`: revisión de licencias y vulnerabilidades en dependencias nuevas.
+- `gitleaks.yml`: búsqueda de secretos filtrados.
+- `actionlint.yml`: validación de los propios workflows.
 - `post-deploy-smoke.yml`: verificaciones rápidas después de publicar.
+
 
