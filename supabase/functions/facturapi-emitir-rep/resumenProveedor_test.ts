@@ -110,7 +110,11 @@ Deno.test("pago en moneda distinta a la factura: el amount va en moneda de la fa
     { moneda: "MXN", tipo_cambio: 18.5, monto: 10730 },
   );
   assertEquals(montoEnMonedaFactura(ctx), 580);
-  const res = await correr(ctx, { installment: 1, last_balance: 1160, amount: 580, currency: "USD", taxes: [] });
+  const local = calculoLocalRep(ctx);
+  const res = await correr(ctx, {
+    installment: 1, last_balance: 1160, amount: 580, currency: "USD",
+    taxes: local.taxes.map((t) => ({ ...t })),
+  });
   assertEquals(res, null);
   assertEquals(llamadas, [580]);
 });
