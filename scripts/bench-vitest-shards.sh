@@ -28,6 +28,7 @@ echo "total_shards,shard,segundos,exit_code,max_procesos,max_rss_mb" > "$OUT_CSV
 muestrear() {
   # Muestrea procesos vitest y su RSS cada segundo mientras exista $1 (PID).
   local pid="$1" max_proc=0 max_rss=0
+  # shellcheck disable=SC2009 # se requiere el RSS de `ps`, no sólo los PIDs de pgrep
   while kill -0 "$pid" 2>/dev/null; do
     local snap procs rss
     snap=$(ps -eo rss=,args= | grep -F "vitest" | grep -v grep || true)
