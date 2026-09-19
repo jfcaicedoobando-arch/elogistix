@@ -30,8 +30,12 @@ export interface FacturaRow {
   numero: string | null;
 }
 
-interface FapiListResponse { data?: FapiInvoice[]; total_pages?: number; page?: number }
-export interface FapiClient { invoices: { list: (params: Record<string, unknown>) => Promise<FapiListResponse> } }
+/**
+ * P2-C: el cliente llega opaco desde el SDK y lo tipa el adaptador
+ * `_shared/facturapiSdk.ts` (`exigirInvoices(client, "list")`). Ya no se
+ * declara aquí una forma local del SDK.
+ */
+export type FapiClient = unknown;
 
 /**
  * REF-09: resultado tri-estado de la búsqueda por external_id.
