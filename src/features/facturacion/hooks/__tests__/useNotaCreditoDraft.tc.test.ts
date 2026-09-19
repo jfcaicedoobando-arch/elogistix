@@ -90,9 +90,11 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
     expect(descripcion).toContain("tipo de cambio de la factura no está disponible");
     expect(descripcion).not.toContain("LC_TC_NO_DISPONIBLE");
 
-    // El diagnóstico interno sigue registrándose (sólo deja de imprimirse).
-    const warns = log.llamadas("warn").map((args) => args.join(" "));
-    expect(warns.some((m) => m.includes("[useNotaCreditoDraft]") && m.includes("crearNotaCredito failed"))).toBe(true);
+    // El diagnóstico interno sigue registrándose (sólo deja de imprimirse):
+    // exactamente los dos avisos esperados.
+    const warns = mocks.loggerWarn.mock.calls.map((args) => args.join(" "));
+    expect(warns).toHaveLength(2);
+    expect(warns.some((m) => m.includes("useNotaCreditoDraft") && m.includes("crearNotaCredito failed"))).toBe(true);
     expect(warns.some((m) => m.includes("handleSubmit failed") && m.includes("LC_TC_NO_DISPONIBLE"))).toBe(true);
   });
 
