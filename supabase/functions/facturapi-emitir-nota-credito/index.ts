@@ -18,6 +18,7 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
 import { cuerpoRateLimit, esRateLimitFacturapi } from "../_shared/facturapiRateLimit.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 import { respuestaSiNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
 
@@ -35,17 +36,26 @@ interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?:
 
 async function createNcInvoice(
   supabase: ReturnType<typeof createClient>,
-  facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
+  /** Cliente opaco del SDK; lo tipa el adaptador `_shared/facturapiSdk.ts`. */
+  facturapi: unknown,
   payload: unknown,
   meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string; claimTag: string },
   releaseClaim: () => Promise<void>,
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
+    // P2-C: el cast del SDK está centralizado en el adaptador tipado.
+    const invoices = exigirInvoices(facturapi, "create");
     // Ola 4 · N1: timeout defensivo (patrón FIX-04/32 de facturapi-emitir):
     // si FacturAPI cuelga, devolvemos 504.
-    const invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+    const invoice = await withFacturapiTimeout("invoices.create", invoices.create(payload)) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
+    // P2-C: contrato del SDK roto ⇒ no se llamó al PAC. Se conserva el claim y
+    // NO se reintenta automáticamente.
+    if (esContratoSdkError(err)) {
+      const r = cuerpoContratoSdk(err, meta.claimTag);
+      return { ok: false, body: r.body, status: r.status };
+    }
     if (err instanceof FacturapiTimeoutError) {
       // EF-02 (auditoría): en timeout NO liberamos el claim — si FacturAPI sí
       // timbró, recuperar-claim lo promueve por external_id; si no timbró, lo

@@ -12,6 +12,7 @@ import {
   esTimbradoValido,
   MIN_EDAD_LIBERACION_MINUTOS,
 } from "../_shared/timbradoPendiente.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 export { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
 import { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
@@ -30,8 +31,12 @@ export interface FacturaRow {
   numero: string | null;
 }
 
-interface FapiListResponse { data?: FapiInvoice[]; total_pages?: number; page?: number }
-export interface FapiClient { invoices: { list: (params: Record<string, unknown>) => Promise<FapiListResponse> } }
+/**
+ * P2-C: el cliente llega opaco desde el SDK y lo tipa el adaptador
+ * `_shared/facturapiSdk.ts` (`exigirInvoices(client, "list")`). Ya no se
+ * declara aquí una forma local del SDK.
+ */
+export type FapiClient = unknown;
 
 /**
  * REF-09: resultado tri-estado de la búsqueda por external_id.
@@ -82,6 +87,8 @@ export function validarClaim(row: ClaimRow, entidad = "factura"): { claimTag: st
 
 export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: string, claimAt: string | null): Promise<BusquedaCfdi | Response> {
   try {
+    // P2-C: adaptador tipado del SDK (valida `invoices.list` y preserva `this`).
+    const invoices = exigirInvoices(client, "list");
     const desde = claimAt
       ? new Date(new Date(claimAt).getTime() - 5 * 60_000).toISOString()
       : new Date(Date.now() - 24 * 3600_000).toISOString();
@@ -91,9 +98,11 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
       // FIX-04/32 — timeout defensivo en el SDK.
       const res = await withFacturapiTimeout(
         "invoices.list",
-        client.invoices.list({ page, limit: 50, "date[gt]": desde }),
+        invoices.list({ page, limit: 50, "date[gt]": desde }),
       );
-      const items = res.data ?? [];
+      // SAFE-CAST: el adaptador devuelve `FacturapiInvoiceLike` (superconjunto
+      // con index signature); `FapiInvoice` es el subconjunto que se lee aquí.
+      const items = (res.data ?? []) as FapiInvoice[];
       const match = items.find((inv) => inv.external_id === claimTag) ?? null;
       // P0-C: sólo un remoto `valid` con UUID se promueve. Si el intento existe
       // pero sigue pendiente, NO se promueve ni se libera el claim.
@@ -109,10 +118,17 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
     // Se llegó al tope con páginas pendientes: no sabemos si el CFDI existe.
     return { kind: "incierto", paginasRevisadas: maxPages };
   } catch (err) {
+    // P2-C: contrato del SDK roto ⇒ no se consultó nada: se conserva el claim y
+    // NO se libera ni se reintenta automáticamente.
+    if (esContratoSdkError(err)) {
+      const r = cuerpoContratoSdk(err, claimTag);
+      return jsonResponse(r.body, r.status);
+    }
     if (err instanceof FacturapiTimeoutError) {
       return jsonResponse({ error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, 504);
     }
     const detail = err instanceof Error ? err.message : String(err);
+
     return jsonResponse({ error: "facturapi_error", message: detail }, 502);
   }
 }

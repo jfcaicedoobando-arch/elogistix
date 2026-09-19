@@ -7,6 +7,7 @@ import { describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } f
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { esIdempotencyKeyEnUso, MSG_IDEMPOTENCY_EN_USO } from "../_shared/timbradoPendiente.ts";
 import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 
 export interface FapiInvoice {
@@ -20,7 +21,8 @@ export interface FapiInvoice {
 }
 
 interface TimbrarDeps {
-  facturapi: { invoices: { create: (payload: unknown) => Promise<unknown> } };
+  /** Cliente opaco del SDK; lo tipa el adaptador `_shared/facturapiSdk.ts`. */
+  facturapi: unknown;
   payload: Record<string, unknown>;
   supabase: SupabaseClient;
   pagoId: string;
@@ -38,14 +40,22 @@ type Resultado = { ok: true; invoice: FapiInvoice } | { ok: false; response: Res
 export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
   const { supabase, pagoId, organizationId, usuarioId, usuarioEmail, claimTag, json } = deps;
   try {
+    // P2-C: el cast del SDK está centralizado en el adaptador tipado.
+    const invoices = exigirInvoices(deps.facturapi, "create");
     // EF-01/EF-02: timeout defensivo. En timeout NO se libera el claim: si
     // Facturapi sí timbró, el tag es la única correlación para recuperarlo.
     const invoice = await withFacturapiTimeout(
       "invoices.create",
-      deps.facturapi.invoices.create(deps.payload),
+      invoices.create(deps.payload),
     ) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
+    // P2-C: contrato del SDK roto ⇒ no se llamó al PAC: se conserva el claim y
+    // NO se reintenta automáticamente.
+    if (esContratoSdkError(err)) {
+      const r = cuerpoContratoSdk(err, claimTag);
+      return { ok: false, response: json(r.body, r.status) };
+    }
     if (err instanceof FacturapiTimeoutError) {
       await registrarBitacoraEdge(supabase, {
         organizationId,
