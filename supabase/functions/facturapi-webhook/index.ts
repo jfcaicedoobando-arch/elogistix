@@ -266,7 +266,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     .eq("organization_id", orgId)
     .maybeSingle();
   // P2-A: secretos POR AMBIENTE (ya no un `webhook_secret` indistinto).
-  const secretos = resolverSecretosWebhook(cred as CredencialWebhookRow | null);
+  const secretos = secretosDeCredencial(cred);
   if (secretos.length === 0) return jsonResponse({ error: "webhook_not_configured" }, 412);
 
   // Ola P2: endpoint público (verify_jwt=false por diseño). Nunca materializar
