@@ -8,8 +8,6 @@
  * frontend; la edge function replica el mismo mínimo en su propio archivo por
  * no poder importar de `src/`.
  */
-import { z } from "zod";
-
 /** Mínimo de caracteres exigido en cualquier alta o cambio de contraseña. */
 export const PASSWORD_MIN = 10;
 
@@ -21,21 +19,15 @@ export const PASSWORD_SUGERIDA = 14;
 
 export const PASSWORD_HINT = `Mínimo ${PASSWORD_MIN} caracteres. Combina mayúsculas, minúsculas, números y símbolos.`;
 
-const MSG_CORTA = `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres.`;
-const MSG_LARGA = `La contraseña no puede exceder ${PASSWORD_MAX} caracteres.`;
-
-/** Schema zod reutilizable para campos de contraseña. */
-export const passwordSchema = z
-  .string()
-  .min(PASSWORD_MIN, MSG_CORTA)
-  .max(PASSWORD_MAX, MSG_LARGA);
+export const MSG_PASSWORD_CORTA = `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres.`;
+export const MSG_PASSWORD_LARGA = `La contraseña no puede exceder ${PASSWORD_MAX} caracteres.`;
 
 /**
  * Validación imperativa para formularios que no usan zod.
  * @returns mensaje de error en español, o `null` si la contraseña es válida.
  */
 export function validarPassword(password: string): string | null {
-  if (password.length < PASSWORD_MIN) return MSG_CORTA;
-  if (password.length > PASSWORD_MAX) return MSG_LARGA;
+  if (password.length < PASSWORD_MIN) return MSG_PASSWORD_CORTA;
+  if (password.length > PASSWORD_MAX) return MSG_PASSWORD_LARGA;
   return null;
 }
