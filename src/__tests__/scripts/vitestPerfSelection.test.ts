@@ -112,7 +112,7 @@ describe("vitest.perf.config.ts", () => {
   });
 
   it("carga el guard setup.perf.ts en ambos proyectos", () => {
-    const ocurrencias = perfSrc.split("./src/test/setup.perf.ts").length - 1;
+    const ocurrencias = perfSrc.split("./src/test/perfGuard.setup.ts").length - 1;
     expect(ocurrencias).toBe(2);
   });
 
