@@ -71,7 +71,35 @@ misma detección de áreas) antes de fijar 5 shards como configuración
 definitiva. Se mantienen `maxWorkers=2`, sin cobertura y sin blobs. No se
 registran tiempos estimados o simulados como resultados reales.
 
+## Caché de ESLint aislada: qué validar en la siguiente corrida
+
+Commit `1b012c4f10457a29b40968d371dad4d50dea797a`: primera corrida con la caché
+en `.cache/eslint` (fuera de `node_modules`). Fue **corrida fría**: el paso
+mostró `Cache not found` y guardó la caché al final, así que **todavía no hay
+medición de caché caliente**.
+
+Baseline frío para comparar:
+
+- job `ESLint` completo: **2 m 41 s**;
+- comando `bun run lint`: **1 m 55 s**;
+- total de pared del workflow: **3 m 08 s**; shard Vitest más lento **2 m 38 s**.
+
+La siguiente corrida sobre el mismo `eslint.config.js` / `package.json` /
+`bun.lock` debe verificarse en tres puntos:
+
+1. el paso `Cache ESLint` registra `Cache restored successfully` o
+   `Cache hit for restore-key` (nunca `Cache not found`);
+2. la duración del comando ESLint baja respecto de **1 m 55 s** (job frío
+   2 m 41 s); si no baja, la caché no se está reutilizando y hay que revisar la
+   clave, no subir shards;
+3. el **shard Vitest más lento** y el **tiempo total** se comparan contra
+   **2 m 38 s** y **3 m 08 s**.
+
+Hasta tener esos datos se conservan **5 shards** y **`maxWorkers=2`** sin
+cambios, igual que la caché en `.cache/eslint` con `--cache-strategy content`.
+
 ## Limitación conocida
+
 
 El sandbox de desarrollo tiene mucha más RAM/CPU que el runner de GitHub, así
 que los tiempos locales **no** son extrapolables; sirven para comparar

@@ -120,6 +120,18 @@ describe("ci.yml · caché de ESLint aislada", () => {
   it("el job lint tiene su propia actions/cache para .cache/eslint", () => {
     expect(ci).toContain("path: .cache/eslint");
     expect(ci).toMatch(/\$\{\{ runner\.os \}\}-eslint-/);
+    // El comentario histórico del workflow sí menciona la ruta antigua; el
+    // guard contra la regresión real vive en la aserción de package.json.
+
+  });
+
+  it("documenta qué validar en la siguiente corrida con caché caliente", () => {
+    const doc = leer("docs/ci-vitest-shards.md");
+    expect(doc).toContain("Cache restored successfully");
+    expect(doc).toContain("Cache hit for restore-key");
+    expect(doc).toContain("1 m 55 s");
+    expect(doc).toContain("2 m 41 s");
+
   });
 
   it("usa clave propia por corrida más restore-keys (sin bloqueo del primer escritor)", () => {
