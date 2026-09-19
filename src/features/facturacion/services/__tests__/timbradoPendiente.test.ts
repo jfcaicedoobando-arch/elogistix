@@ -30,7 +30,7 @@ describe("timbrado pendiente (202)", () => {
     const res = await emitirFacturapi("f1");
     expect(esPendiente(res)).toBe(true);
     expect(res).toEqual({ pendiente: true, message: "El SAT aún no devuelve el timbre." });
-    expect((res as Record<string, unknown>).uuid).toBeUndefined();
+    expect((res as unknown as Record<string, unknown>).uuid).toBeUndefined();
   });
 
   it("emitirRep devuelve pendiente con mensaje por omisión si falta", async () => {
