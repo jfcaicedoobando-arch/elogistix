@@ -112,6 +112,35 @@ async function resolverKeyDelAmbiente(
 }
 
 
+/** Lista los webhooks remotos; ante fallo deja constancia del estado `error`. */
+async function listarOMarcarError(
+  admin: ReturnType<typeof createClient>,
+  orgId: string,
+  ambiente: FacturapiAmbiente,
+  apiKey: string,
+): Promise<{ remotos: FacturapiWebhookRemoto[] } | { respuesta: Response }> {
+  try {
+    return { remotos: await listarWebhooksRemotos(apiKey) };
+  } catch (err) {
+    const norm = normalizarErrorFacturapi(err);
+    console.error("[facturapi-verificar-webhook] listado remoto falló", metadatosErrorFacturapi(norm));
+    await admin.from("facturapi_credenciales")
+      .update({
+        [`webhook_estado_${ambiente}`]: "error",
+        [`webhook_verificado_${ambiente}_at`]: new Date().toISOString(),
+      })
+      .eq("organization_id", orgId);
+    return {
+      respuesta: jsonResponse({
+        error: "verificacion_no_disponible",
+        message: norm.mensajeUsuario,
+        retryable: norm.reintentable,
+        retry_after_segundos: norm.retryAfterSegundos ?? null,
+      }, norm.status === 429 ? 429 : 502),
+    };
+  }
+}
+
 
 Deno.serve(wrapEdgeHandler("facturapi-verificar-webhook", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
