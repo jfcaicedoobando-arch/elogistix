@@ -496,7 +496,6 @@ jobs:
             echo "::error::multi-tenant quedó SKIPPED aunque los secrets E2E_MT_* existen."
             fail=1
           fi
-          echo "mt_skipped=$([ "$R_MT" = "skipped" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
           [ "$fail" = "0" ]
 
       - name: Download all blob reports
