@@ -18,6 +18,7 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
 import { cuerpoRateLimit, esRateLimitFacturapi } from "../_shared/facturapiRateLimit.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 import { respuestaSiNcPendiente, cuerpoIdempotencyEnUsoNc } from "./pendiente.ts";
 
