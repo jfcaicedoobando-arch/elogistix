@@ -16,17 +16,24 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { basicAuthHeader, resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
+import {
+  basicAuthHeader,
+  resolveFacturapiKey,
+  resolveFacturapiKeyOtherAmbiente,
+  FACTURAPI_BASE,
+} from "../_shared/facturapiAuth.ts";
 import {
   compararConfigRemota,
   COLS_WEBHOOK_CRED,
   elegirWebhookRemoto,
   patchVerificacion,
-  resolverSecretosWebhook,
+  secretPorAmbiente,
+  tieneSecretPorAmbiente,
   urlWebhookEsperada,
   type CredencialWebhookRow,
   type FacturapiAmbiente,
 } from "../_shared/facturapiWebhookConfig.ts";
+
 import {
   metadatosErrorFacturapi,
   normalizarErrorFacturapi,
