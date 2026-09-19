@@ -19,21 +19,41 @@ Todo vive en `public.facturapi_credenciales`, una fila por organización:
 timbrar).
 
 `webhook_secret` (sin sufijo) es **legado**: sólo se usa si no existe ninguna
-clave por ambiente, y cuando eso ocurre el webhook emite la alerta
+clave por ambiente **y** la ventana de compatibilidad
+`FACTURAPI_WEBHOOK_LEGACY_HASTA` (fecha ISO) sigue vigente. Sin esa variable, o
+ya expirada, el legado no valida nada. Cuando se usa, el webhook emite la alerta
 `facturapi_webhook_secret_legacy` en Sentry. Migración: guardar la clave del
-ambiente correspondiente y dejar el campo legado en `NULL`.
+ambiente correspondiente, dejar el campo legado en `NULL` y borrar la variable.
 
-## 2. Verificación de firma del webhook
+## 2. Verificación de firma del webhook (aislamiento estricto)
 
-`facturapi-webhook` prueba el HMAC contra, en este orden:
+`facturapi-webhook` acepta **una sola** clave: la del ambiente resuelto para ese
+evento. Nunca prueba la del ambiente opuesto.
 
-1. la clave del ambiente activo,
-2. la clave del ambiente opuesto (una organización en transición
-   sandbox → live sigue recibiendo eventos del ambiente viejo),
-3. la clave legada, **sólo** si no hay ninguna por ambiente.
+El ambiente se resuelve así:
 
-Nunca se asume una clave indistinta. Si ninguna valida, el evento se rechaza con
-`401 invalid_signature`.
+1. si la URL trae `&amb=sandbox` o `&amb=live`, ése es el ambiente;
+2. si no, el ambiente **activo** de la credencial;
+3. un `&amb` con cualquier otro valor se rechaza con `400 ambiente_invalido`.
+
+Consecuencias, intencionales: una firma de Sandbox **no** valida en una
+organización configurada en Live (y viceversa), y si el ambiente resuelto no
+tiene clave propia el evento se rechaza (`412 webhook_not_configured`) aunque el
+otro ambiente sí la tenga. Si la firma no coincide: `401 invalid_signature`.
+
+### Transición Sandbox ↔ Live
+
+La única transición soportada es **URL aislada por ambiente**: se registra en
+FacturAPI, para cada ambiente, su propia dirección con `&amb=`:
+
+```
+<SUPABASE_URL>/functions/v1/facturapi-webhook?org=<uuid>&amb=sandbox
+<SUPABASE_URL>/functions/v1/facturapi-webhook?org=<uuid>&amb=live
+```
+
+Así los dos ambientes pueden convivir sin que uno valide eventos del otro. La
+compatibilidad con la clave legada es temporal, explícita y auditable: exige
+`FACTURAPI_WEBHOOK_LEGACY_HASTA` con fecha futura y queda registrada en Sentry.
 
 ## 3. Verificación remota (opt-in, administrativa)
 
@@ -43,10 +63,13 @@ Edge function `facturapi-verificar-webhook` (POST, requiere rol emisor fiscal):
 { "organization_id": "<uuid>", "ambiente": "sandbox" | "live" }
 ```
 
-Compara contra FacturAPI, para ESE ambiente:
+Compara contra FacturAPI, para ESE ambiente, usando la API key de ESE ambiente
+(la activa, o la del otro ambiente resuelta explícitamente; nunca se mezclan ni
+se inventan claves). Si la organización no tiene clave de API para el ambiente
+pedido responde `409 ambiente_sin_credencial`.
 
-- la **dirección** registrada vs. la esperada
-  (`<SUPABASE_URL>/functions/v1/facturapi-webhook?org=<uuid>`),
+- la **dirección** registrada vs. las esperadas (la simple
+  `?org=<uuid>` y la aislada `?org=<uuid>&amb=<ambiente>`; ambas se aceptan),
 - los **eventos suscritos** vs. los requeridos por el ERP (facturas y REP:
   `status_updated`, `cancellation_status_updated`, `canceled`,
   `delivered_to_customer`),
@@ -57,9 +80,9 @@ Resultados posibles: `ok`, `no_configurado`, `no_encontrado`, `url_distinta`,
 del ambiente verificado y se muestra en Configuración → Facturación electrónica.
 
 La respuesta **nunca** incluye la API key ni la clave de firma; sólo dirección,
-id, eventos y estado. Si el ambiente pedido no es el activo de la organización
-responde `409 ambiente_no_activo` (fail-closed: no se comparan ambientes
-distintos).
+id, eventos y estado. El indicador `secretLegado` sólo es `true` cuando de hecho
+la firma se validaría con la clave legada (no hay ninguna por ambiente).
+
 
 ## 4. Rate limiting (HTTP 429) y errores
 
