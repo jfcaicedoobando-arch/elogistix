@@ -56,8 +56,14 @@ const COMMON_TEST = {
   // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
   // liberar memoria al terminar (PDFs / leak regression).
   pool: "forks" as const,
-  // v13.824.x — Migración a Vitest 4: `poolOptions` desapareció y todas sus
-  // claves son ahora opciones de primer nivel (guía oficial, "Pool Rework").
+  // v13.824.x — Migración a Vitest 4. PREREQUISITO TÉCNICO: Vitest 4.1.x
+  // declara `vite: ^6 || ^7 || ^8` en peerDependencies, así que el repo subió
+  // a Vite 6.x SÓLO para satisfacer esa compatibilidad (no es parte de la
+  // futura iniciativa Vite → 8, que sigue pendiente y separada).
+  // `poolOptions` desapareció y todas sus claves son ahora opciones de primer
+  // nivel (guía oficial, "Pool Rework").
+
+
   // `maxForks`→`maxWorkers`, `minForks` eliminado, `singleFork` equivalía a
   // `maxWorkers: 1 + isolate: false` (no es nuestro caso). Se declaran DENTRO
   // de COMMON_TEST porque en Vitest 4 el pool se resuelve por proyecto, así
