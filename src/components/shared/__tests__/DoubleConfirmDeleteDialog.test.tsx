@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 
 describe("<DoubleConfirmDeleteDialog />", () => {
@@ -71,9 +71,12 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     fireEvent.change(input, { target: { value: "eliminar" } });
     expect(btn).not.toBeDisabled();
 
-    fireEvent.click(btn);
-    // esperar microtask del await onConfirm
-    await Promise.resolve();
+    // El click dispara un `await onConfirm(...)` interno: se envuelve en
+    // act para esperar la actualización de estado resultante.
+    await act(async () => {
+      fireEvent.click(btn);
+      await Promise.resolve();
+    });
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
@@ -128,9 +131,11 @@ describe("<DoubleConfirmDeleteDialog />", () => {
 
     const input = screen.getByPlaceholderText("ELIMINAR");
     fireEvent.change(input, { target: { value: "ELIMINAR" } });
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
-    await Promise.resolve();
+    await act(async () => {
+      fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+      await Promise.resolve();
+    });
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
@@ -150,9 +155,11 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     fireEvent.change(screen.getByPlaceholderText("ELIMINAR"), {
       target: { value: "ELIMINAR" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /eliminar definitivamente/i }));
-    await Promise.resolve();
-    await Promise.resolve();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /eliminar definitivamente/i }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
     expect(errSpy).toHaveBeenCalled();
