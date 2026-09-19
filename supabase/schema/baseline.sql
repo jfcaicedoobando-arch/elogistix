@@ -32200,6 +32200,18 @@ CREATE TABLE public.facturapi_credenciales (
     api_key_live_vault_id uuid,
     api_key_sandbox_last4 text,
     api_key_live_last4 text,
+    webhook_secret_sandbox text,
+    webhook_secret_live text,
+    webhook_id_sandbox text,
+    webhook_id_live text,
+    webhook_url_sandbox text,
+    webhook_url_live text,
+    webhook_eventos_sandbox text[],
+    webhook_eventos_live text[],
+    webhook_estado_sandbox text,
+    webhook_estado_live text,
+    webhook_verificado_sandbox_at timestamp with time zone,
+    webhook_verificado_live_at timestamp with time zone,
     CONSTRAINT facturapi_credenciales_ambiente_check CHECK ((ambiente = ANY (ARRAY['sandbox'::text, 'live'::text])))
 );
 CREATE TABLE public.facturapi_webhook_eventos (
