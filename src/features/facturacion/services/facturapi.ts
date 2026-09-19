@@ -10,6 +10,7 @@ import {
   respuestaPendiente,
   type TimbradoPendiente,
 } from "./timbradoPendiente";
+import { assertSinRepsVivos } from "./facturapiRepsVivos";
 
 export { FacturapiError, parseFunctionError };
 ;
