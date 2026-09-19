@@ -49,6 +49,12 @@ async function createNcInvoice(
     const invoice = await withFacturapiTimeout("invoices.create", invoices.create(payload)) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
+    // P2-C: contrato del SDK roto ⇒ no se llamó al PAC. Se conserva el claim y
+    // NO se reintenta automáticamente.
+    if (esContratoSdkError(err)) {
+      const r = cuerpoContratoSdk(err, meta.claimTag);
+      return { ok: false, body: r.body, status: r.status };
+    }
     if (err instanceof FacturapiTimeoutError) {
       // EF-02 (auditoría): en timeout NO liberamos el claim — si FacturAPI sí
       // timbró, recuperar-claim lo promueve por external_id; si no timbró, lo
