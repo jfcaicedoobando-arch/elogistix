@@ -7,8 +7,8 @@
  *  - Los enlaces relativos y el trailing slash conservan la semántica de v6.
  *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import {
   MemoryRouter,
   Routes,
@@ -17,6 +17,7 @@ import {
   Outlet,
   Link,
   useLocation,
+  useNavigate,
   useParams,
 } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
@@ -114,29 +115,41 @@ describe("React Router 7 — rutas declarativas", () => {
   });
 
   it("mantiene navegación atrás/adelante en rutas profundas", () => {
-    const history: string[] = [];
-    function Spy() {
-      const { pathname } = useLocation();
-      history.push(pathname);
-      return <Link to="/agente/tarifas">ir</Link>;
+    // `MemoryRouter` tiene su propio historial: `window.history.back()` no lo
+    // mueve. Se navega con `useNavigate(-1)` contra las entradas iniciales.
+    function Atras() {
+      const navigate = useNavigate();
+      return (
+        <>
+          <UrlProbe />
+          <button onClick={() => navigate(-1)}>atras</button>
+          <button onClick={() => navigate(1)}>adelante</button>
+        </>
+      );
     }
     render(
       <MemoryRouter initialEntries={["/agente", "/agente/tarifas"]} initialIndex={1}>
         <Routes>
-          <Route path="/agente" element={<Spy />} />
-          <Route path="/agente/tarifas" element={<UrlProbe />} />
+          <Route path="/agente" element={<Atras />} />
+          <Route path="/agente/tarifas" element={<Atras />} />
         </Routes>
       </MemoryRouter>,
     );
     expect(screen.getByTestId("url").textContent).toBe("/agente/tarifas");
-    act(() => {
-      window.history.back();
-    });
-    expect(history.length).toBeGreaterThanOrEqual(0);
+    fireEvent.click(screen.getByText("atras"));
+    expect(screen.getByTestId("url").textContent).toBe("/agente");
+    fireEvent.click(screen.getByText("adelante"));
+    expect(screen.getByTestId("url").textContent).toBe("/agente/tarifas");
   });
 });
 
 describe("NuqsAdapter v7 — filtros en query string", () => {
+  afterEach(() => {
+    // Los tests que alinean `window.history` con el MemoryRouter restauran la
+    // URL para no contaminar el resto de la suite.
+    window.history.replaceState(null, "", "/");
+  });
+
   function Filtros() {
     const [estado, setEstado] = useQueryState("estado");
     return (
@@ -182,7 +195,18 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("filtrar"));
-    expect(screen.getByTestId("estado").textContent).toBe("en_transito");
+    // La escritura del query param es asíncrona (scheduler interno de nuqs):
+    // se espera la actualización antes de afirmar estado y URL.
+    await waitFor(() => {
+      expect(screen.getByTestId("estado").textContent).toBe("en_transito");
+    });
+    // El adaptador actualiza la URL real vía History API (shallow), por eso la
+    // afirmación del query se hace contra `window.location` y no contra el
+    // historial interno del MemoryRouter.
+    await waitFor(() => {
+      expect(window.location.search).toContain("estado=en_transito");
+    });
+    // La ruta del router no se pierde con la escritura del filtro.
     expect(screen.getByTestId("url").textContent).toContain("/embarques");
   });
 });
