@@ -198,6 +198,25 @@ const MSG: Record<EstadoWebhook, string> = {
   inactivo: "El webhook existe pero está inactivo en el proveedor: reactívalo.",
 };
 
+function urlsAceptadasDe(urlEsperada: string | readonly string[]): readonly string[] {
+  return Array.isArray(urlEsperada) ? urlEsperada as readonly string[] : [urlEsperada as string];
+}
+
+function estadoDeConfig(
+  remoto: { url?: string; status?: string } | null,
+  secretConfigurado: boolean,
+  aceptadas: readonly string[],
+  eventosFaltantes: readonly string[],
+): EstadoWebhook {
+  if (!secretConfigurado) return "no_configurado";
+  if (!remoto) return "no_encontrado";
+  const url = remoto.url;
+  if (typeof url === "string" && !aceptadas.some((u) => mismaUrl(url, u))) return "url_distinta";
+  if (remoto.status && remoto.status !== "active") return "inactivo";
+  if (eventosFaltantes.length > 0) return "eventos_faltantes";
+  return "ok";
+}
+
 /**
  * Compara la configuración remota con la esperada. Devuelve sólo datos NO
  * sensibles (URL, id y eventos); jamás el secret.
@@ -214,20 +233,9 @@ export function compararConfigRemota(args: {
   const requeridos = args.eventosRequeridos ?? EVENTOS_REQUERIDOS;
   const eventosRemotos = args.remoto?.events ?? [];
   const eventosFaltantes = requeridos.filter((e) => !eventosRemotos.includes(e));
-  const aceptadas = Array.isArray(args.urlEsperada)
-    ? args.urlEsperada as readonly string[]
-    : [args.urlEsperada as string];
+  const aceptadas = urlsAceptadasDe(args.urlEsperada);
+  const estado = estadoDeConfig(args.remoto, args.secretConfigurado, aceptadas, eventosFaltantes);
 
-  let estado: EstadoWebhook = "ok";
-  if (!args.remoto) estado = args.secretConfigurado ? "no_encontrado" : "no_configurado";
-  else if (!args.secretConfigurado) estado = "no_configurado";
-  else if (
-    typeof args.remoto.url === "string" &&
-    !aceptadas.some((u) => mismaUrl(args.remoto!.url as string, u))
-  ) {
-    estado = "url_distinta";
-  } else if (args.remoto.status && args.remoto.status !== "active") estado = "inactivo";
-  else if (eventosFaltantes.length > 0) estado = "eventos_faltantes";
 
 
   return {
