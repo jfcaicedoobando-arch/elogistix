@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
+  const base = createSupabaseMock();
+  // El service dispara la notificación best-effort por edge function. Sin este
+  // doble, el mock lanzaba un TypeError real ("reading 'invoke'") que se
+  // imprimía en CI como si fuera un fallo del producto.
+  const invoke = vi.fn(async () => ({ data: null, error: null }));
+  return { ...base, invoke, supabase: { ...base.supabase, functions: { invoke } } };
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 

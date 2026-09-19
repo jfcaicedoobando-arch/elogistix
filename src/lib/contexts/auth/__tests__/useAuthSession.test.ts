@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { silenciarLogEsperado } from "@/test/helpers/silenciarLogEsperado";
 
 const { mockUnsubscribe, mockSubscribe, mockGetSession } = vi.hoisted(() => {
   const unsub = vi.fn();
@@ -60,11 +61,26 @@ describe("useAuthSession", () => {
   });
 
   it("ante error en getCurrentSession no rompe y mantiene user=null", async () => {
-    mockGetSession.mockRejectedValueOnce(new Error("network"));
-    const { result } = renderHook(() => useAuthSession());
-    await waitFor(() => expect(mockGetSession).toHaveBeenCalled());
-    expect(result.current.user).toBeNull();
-    expect(result.current.session).toBeNull();
+    // El hook usa `console.error` en producción: se silencia SÓLO en esta
+    // prueba (que provoca el error a propósito) y se restaura al final.
+    const log = silenciarLogEsperado(["error"]);
+    try {
+      mockGetSession.mockRejectedValueOnce(new Error("network"));
+      const { result } = renderHook(() => useAuthSession());
+      await waitFor(() => expect(mockGetSession).toHaveBeenCalled());
+      expect(result.current.user).toBeNull();
+      expect(result.current.session).toBeNull();
+      // El diagnóstico esperado se sigue registrando.
+      await waitFor(() =>
+        expect(
+          log.llamadas("error").some((args) =>
+            String(args[0]).includes("[useAuthSession] getCurrentSession failed"),
+          ),
+        ).toBe(true),
+      );
+    } finally {
+      log.restaurar();
+    }
   });
 });
 

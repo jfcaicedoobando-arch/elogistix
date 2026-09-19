@@ -7,11 +7,20 @@ vi.mock('@/integrations/supabase/client', () => ({
   get supabase() { return mockRef.current!.supabase; },
 }));
 
+// Ruido de CI: el caso de RPC fallida provoca a propósito `logger.error`.
+// Mock LOCAL del logger (nunca un mock global de consola) para que el stack
+// esperado no se imprima, pero el diagnóstico se siga afirmando.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock('@/lib/observability/logger', () => ({ logger: loggerMock }));
+
 import { buscarGlobal } from '../index';
 
 describe('search/index', () => {
   beforeEach(() => {
     mockRef.current = createSupabaseMock();
+    loggerMock.error.mockReset();
   });
 
   it('buscarGlobal llama al RPC busqueda_global', async () => {
@@ -31,5 +40,9 @@ describe('search/index', () => {
     mockRef.current!.setRpcResult('busqueda_global', { data: null, error: new Error('RPC fail') });
     const result = await buscarGlobal('query');
     expect(result).toEqual([]);
+    // El diagnóstico esperado sigue registrándose con ámbito y error reales.
+    expect(loggerMock.error).toHaveBeenCalledTimes(1);
+    expect(loggerMock.error.mock.calls[0][0]).toBe('busqueda_global');
+    expect((loggerMock.error.mock.calls[0][1] as Error).message).toBe('RPC fail');
   });
 });

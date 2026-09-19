@@ -29,6 +29,13 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
 }));
 
+// Ruido de CI: el flujo de error provoca a propósito el diagnóstico
+// `[useResponderCotizacion] mutation error`. Mock LOCAL del logger.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/observability/logger", () => ({ logger: loggerMock }));
+
 import { usePortalCotizacionDetalleController } from "../usePortalCotizacionDetalleController";
 
 describe("B.3.5 flujo Portal Aprobación Cotización", () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
+import { silenciarLogEsperado } from "@/test/helpers/silenciarLogEsperado";
 
 // `vi.mock` se hoistea por encima de los imports, por lo que cualquier
 // referencia a variables del módulo debe declararse vía `vi.hoisted`.
@@ -76,13 +77,25 @@ describe("useAuthProfile", () => {
   });
 
   it("ante error de fetchUserContext no actualiza el perfil (queda vacío)", async () => {
-    mockFetchUserContext.mockRejectedValueOnce(new Error("network"));
-    const { result } = renderHook(() => useAuthProfile("user-err"), { wrapper: createWrapper() });
-    // v13.309.24: timeout más generoso para blindar contra flake bajo paralelismo pesado.
-    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled(), { timeout: 3000 });
-    // Damos una micro-espera para que cualquier setState post-catch se propague.
-    await waitFor(() => expect(result.current.profile.role).toBeNull(), { timeout: 3000 });
-    expect(result.current.profile.organizationId).toBeNull();
+    // El hook usa `console.error` en producción: se silencia SÓLO aquí (caso
+    // esperado) y se restaura siempre, incluso si la prueba falla.
+    const log = silenciarLogEsperado(["error"]);
+    try {
+      mockFetchUserContext.mockRejectedValueOnce(new Error("network"));
+      const { result } = renderHook(() => useAuthProfile("user-err"), { wrapper: createWrapper() });
+      // v13.309.24: timeout más generoso para blindar contra flake bajo paralelismo pesado.
+      await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled(), { timeout: 3000 });
+      // Damos una micro-espera para que cualquier setState post-catch se propague.
+      await waitFor(() => expect(result.current.profile.role).toBeNull(), { timeout: 3000 });
+      expect(result.current.profile.organizationId).toBeNull();
+      expect(
+        log.llamadas("error").some((args) =>
+          String(args[0]).includes("[useAuthProfile] fetchUserContext failed"),
+        ),
+      ).toBe(true);
+    } finally {
+      log.restaurar();
+    }
   });
 });
 

@@ -18,6 +18,14 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+// Ruido de CI: los casos de edge caída / motivo no catalogado provocan a
+// propósito avisos del logger. Mock LOCAL (no global de consola); las
+// aserciones del fallback (UNRESOLVED_EMAIL, throw) se conservan intactas.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/observability/logger", () => ({ logger: loggerMock }));
+
 import {
   fetchUsuariosOrganizacion,
   updateUserRole,

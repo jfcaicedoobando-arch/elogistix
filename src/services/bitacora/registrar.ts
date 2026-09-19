@@ -54,6 +54,13 @@ export interface RegistrarActividadInput {
  */
 export async function registrarActividad(input: RegistrarActividadInput): Promise<void> {
   try {
+    // Contrato defensivo: en pruebas se usan dobles de Supabase que sólo
+    // exponen `rpc`/`from`. Llamar `auth.getSession()` ahí lanzaba y ensuciaba
+    // la salida con avisos `[bitacora]` que no indican ningún defecto. En el
+    // cliente real `auth.getSession` siempre existe, así que el camino normal
+    // no cambia; los errores de la RPC siguen registrándose.
+    if (typeof supabase.auth?.getSession !== "function") return;
+
     // Perf: `getSession()` lee la sesión ya cacheada en memoria/localStorage.
     // `getUser()` hacía un round-trip a /auth/v1/user en CADA registro, lo que
     // duplicaba la latencia de toda mutación del ERP.

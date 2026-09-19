@@ -21,6 +21,8 @@ const setSuperAdminOrg = vi.fn(async (_id: string | null) => undefined);
 vi.mock("@/features/admin/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => orgs),
   setSuperAdminOrg: (id: string | null) => setSuperAdminOrg(id),
+  // Completar el mock (antes faltaba y el hook registraba un aviso de ruido).
+  getSuperAdminOrg: vi.fn(async () => null),
 }));
 
 const getItem = vi.fn((_key: string): string | null => null);

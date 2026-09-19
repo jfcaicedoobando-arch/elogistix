@@ -1,4 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Ruido de CI: varios casos provocan a propósito `logger.warn` (JSON inválido,
+// formato inválido, conceptos descartados). Mock LOCAL del logger; el
+// comportamiento (arreglo vacío / filtrado) se sigue afirmando en cada caso.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/observability/logger", () => ({ logger: loggerMock }));
+
 import {
   parseConceptos,
   calcularTotalesConceptos,
@@ -35,7 +44,9 @@ describe("cotizacionDetalle | parseConceptos", () => {
   });
 
   it("retorna [] para un string JSON malformado", () => {
+    loggerMock.warn.mockClear();
     expect(parseConceptos("{broken")).toEqual([]);
+    expect(loggerMock.warn).toHaveBeenCalled();
   });
 
   it("retorna [] cuando el JSON no es un array", () => {
