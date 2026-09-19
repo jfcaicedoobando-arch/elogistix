@@ -7,6 +7,14 @@ vi.mock('@/integrations/supabase/client', () => ({
   get supabase() { return mockRef.current!.supabase; },
 }));
 
+// Ruido de CI: el caso de RPC fallida provoca a propósito `logger.error`.
+// Mock LOCAL del logger (nunca un mock global de consola) para que el stack
+// esperado no se imprima, pero el diagnóstico se siga afirmando.
+const { loggerMock } = vi.hoisted(() => ({
+  loggerMock: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock('@/lib/observability/logger', () => ({ logger: loggerMock }));
+
 import { buscarGlobal } from '../index';
 
 describe('search/index', () => {
