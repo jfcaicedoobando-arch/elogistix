@@ -146,10 +146,14 @@ memoria real de CI requiere correr el script dentro de un runner
 
 ## Historia de mediciones
 
-- run `34196983386` — 1 job unificado: 15 m 44 s de espera, 922 s acumulados.
-- run `34200102375` — 3 shards con lint dentro de `checks`: espera 347 s,
-  ejecución acumulada 947 s; Vitest 1426 archivos / 8949 tests.
+- run `35466468012` (CI #4219) — 5 shards, lint separado, caché ESLint caliente:
+  3 m 26 s de pared, shard Vitest más lento 4/5 ~2 m 27 s, ESLint ~7.5 s
+  (ya no es el cuello de botella).
+- run `35464373548` (CI #4217) — 5 shards, lint separado, caché ESLint fría:
+  3 m 08 s de pared, shard Vitest más lento 2 m 38 s, ESLint 2 m 41 s
+  (cuello de botella).
 - run `35462835847` (CI #4213) — 3 shards, lint separado: 4 m 13 s de pared,
   shard Vitest más lento 3 m 47 s.
-- run `35464373548` (CI #4217) — 5 shards, lint separado: 3 m 08 s de pared,
-  shard Vitest más lento 2 m 38 s, ESLint 2 m 41 s (cuello de botella).
+- run `34200102375` — 3 shards con lint dentro de `checks`: espera 347 s,
+  ejecución acumulada 947 s; Vitest 1426 archivos / 8949 tests.
+- run `34196983386` — 1 job unificado: 15 m 44 s de espera, 922 s acumulados.

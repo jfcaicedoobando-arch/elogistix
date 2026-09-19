@@ -96,12 +96,13 @@ describe("docs de shards", () => {
     expect(ci).toContain("Sin coverage, sin blobs/merge/artifacts");
   });
 
-  it("documenta la medición real de 5 vs 3 shards", () => {
+  it("documenta la medición real de 5 shards con caché caliente", () => {
     const doc = leer("docs/ci-vitest-shards.md");
+    expect(doc).toContain("35466468012");
     expect(doc).toContain("35464373548");
     expect(doc).toContain("35462835847");
     expect(doc).not.toMatch(/sin\s+\*\*medición nueva\*\*/);
-    expect(doc).toMatch(/nuevo cuello de botella es ESLint/);
+    expect(doc).toMatch(/ESLint ya no es el cuello de botella/);
   });
 });
 
@@ -125,13 +126,13 @@ describe("ci.yml · caché de ESLint aislada", () => {
 
   });
 
-  it("documenta qué validar en la siguiente corrida con caché caliente", () => {
+  it("documenta la validación de caché caliente y la comparativa fría", () => {
     const doc = leer("docs/ci-vitest-shards.md");
     expect(doc).toContain("Cache restored successfully");
     expect(doc).toContain("Cache hit for restore-key");
     expect(doc).toContain("1 m 55 s");
     expect(doc).toContain("2 m 41 s");
-
+    expect(doc).toContain("caché caliente");
   });
 
   it("usa clave propia por corrida más restore-keys (sin bloqueo del primer escritor)", () => {
