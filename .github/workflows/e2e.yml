@@ -460,7 +460,7 @@ jobs:
 
   merge-reports:
     name: Merge HTML report
-    needs: [internal-shard, mutators, portal, multi-tenant]
+    needs: [guard-secrets, internal-shard, mutators, portal, multi-tenant]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
