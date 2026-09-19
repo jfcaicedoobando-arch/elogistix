@@ -136,6 +136,13 @@ jobs:
         if: needs.detector.outputs.frontend == 'true'
         run: bash scripts/check-bundle-size.sh
 
+      # P2 auditoría stack: ningún `.map` ni referencia `sourceMappingURL` puede
+      # quedar en el `dist` que sirve el hosting. Sin SENTRY_AUTH_TOKEN el build
+      # no los genera; con token, el plugin de Sentry los sube y los borra.
+      - name: Sourcemaps gate
+        if: needs.detector.outputs.frontend == 'true'
+        run: bash scripts/check-sourcemaps.sh
+
 
 
       # Edge Functions: sólo si cambia supabase/functions, deno.* o este workflow.

@@ -101,10 +101,20 @@ export default defineConfig(({ mode }) => {
     // TC-02: 'hidden' + terser en ~291 chunks requiere >4 GB de RAM. En
     // entornos con poca memoria usar `BUILD_SOURCEMAPS=false` (script
     // `build:low-mem`): el bundle queda idéntico pero sin .map ni upload a
-    // Sentry. Default sin cambios para CI/producción.
+    // Sentry.
+    //
+    // P2 auditoría stack — política de sourcemaps: en producción los `.map`
+    // SÓLO se generan cuando existe una subida controlada a Sentry
+    // (`SENTRY_AUTH_TOKEN`), porque es el plugin quien los borra del `dist`
+    // tras subirlos. Sin token, generarlos dejaba el código fuente completo
+    // dentro del `dist` que el hosting sirve públicamente (no referenciado,
+    // pero descargable adivinando el nombre). El guard de CI es
+    // `scripts/check-sourcemaps.sh`.
     sourcemap:
       mode === "production"
-        ? (process.env.BUILD_SOURCEMAPS === "false" ? false : "hidden")
+        ? (process.env.BUILD_SOURCEMAPS === "false" || !process.env.SENTRY_AUTH_TOKEN
+            ? false
+            : "hidden")
         : true,
     minify: "terser",
     terserOptions: {
