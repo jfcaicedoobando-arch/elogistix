@@ -14,6 +14,7 @@ export type FacturapiEventType =
   | "invoice.delivered_to_customer"
   | "invoice.created"
   | "receipt.status_updated"
+  | "receipt.cancellation_status_updated"
   | "receipt.canceled"
   | "receipt.created";
 
@@ -184,6 +185,25 @@ function mapReceiptStatusUpdated(
   return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_status" };
 }
 
+/**
+ * P1 · FacturAPI 5.0 — espejo de `mapCancellationStatusUpdated` para REPs:
+ * `accepted` es TERMINAL (cierra `estado_rep`), el resto sólo reporta el estado
+ * asíncrono del SAT. El guard de orden vive en el handler: un evento atrasado
+ * (pending/verifying) nunca revierte un `accepted` ya persistido.
+ */
+function mapReceiptCancellationStatus(
+  facturapi_rep_id: string,
+  cancellationStatus: string | null,
+): MappedReceiptUpdate | null {
+  if (!cancellationStatus) return null;
+  const patch: Record<string, unknown> = { rep_cancellation_status: cancellationStatus };
+  if (cancellationStatus === "accepted") {
+    patch.estado_rep = "Cancelado";
+    patch.rep_cancelado_en = new Date().toISOString();
+  }
+  return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_cancellation_status" };
+}
+
 /** Ola 5 · RG4-10 — espejo de mapInvoiceCanceled para REPs. */
 function mapReceiptCanceled(facturapi_rep_id: string): MappedReceiptUpdate {
   return {
@@ -210,6 +230,12 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
     : null;
 
   switch (ev.type) {
+    // P1 · FacturAPI 5.0 — el REP también recibe el ciclo de cancelación
+    // asíncrono del SAT con su propio tipo `receipt.*`; `invoice.*` sigue
+    // soportado porque FacturAPI a veces reporta el complemento así.
+    case "receipt.cancellation_status_updated":
+    case "invoice.cancellation_status_updated":
+      return mapReceiptCancellationStatus(facturapi_rep_id, cancellationStatus);
     case "receipt.status_updated":
     case "invoice.status_updated":
       return mapReceiptStatusUpdated(facturapi_rep_id, status, uuid, cancellationStatus);
