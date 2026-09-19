@@ -69,8 +69,9 @@ export function FacturapiWebhookUrlSection({ orgId, copiar, cred = null }: Props
       <FacturapiWebhookDiagnostico
         orgId={orgId}
         ambiente={ambiente}
-        estadoGuardado={ambiente === "live" ? estadoLive : estadoSandbox}
-        verificadoAt={ambiente === "live" ? verificadoLiveAt : verificadoSandboxAt}
+        estadoGuardado={estadoGuardado}
+        verificadoAt={verificadoAt}
+
       />
 
     </div>
