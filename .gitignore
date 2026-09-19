@@ -41,3 +41,6 @@ reports/
 .env.*
 !.env.example
 .db-verify-logs/
+
+# Caché de ESLint (aislada de node_modules; ver .github/workflows/ci.yml job lint)
+.cache/

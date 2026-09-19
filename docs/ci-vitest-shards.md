@@ -42,18 +42,34 @@ Criterio de decisión:
 - subir `maxWorkers` en CI requiere además comprobar el pico de procesos, no
   sólo el tiempo.
 
-## Ensayo vigente: 5 shards
+## Ensayo de 5 shards: medición real
 
-El cambio de 3 a 5 shards es un benchmark pendiente de medir en GitHub Actions;
-no representa todavía una mejora comprobada. Se mantienen `maxWorkers=2`, las
-pruebas sin cobertura y la ausencia de blobs. Después de la ejecución se debe
-comparar contra la historia de 3 shards:
+Commit `954c29de09f96cf0317646899f575e83fbfa7693`.
 
-- duración del shard más lento;
-- tiempo total del workflow;
-- costo y recursos consumidos por cinco runners paralelos.
+| Corrida | Shards | Total (pared) | Vitest más lento |
+| --- | --- | --- | --- |
+| CI #4217 · run `35464373548` | 5 | 3 m 08 s | 2 m 38 s |
+| CI #4213 · run `35462835847` | 3 | 4 m 13 s | 3 m 47 s |
 
-No se deben registrar tiempos estimados o simulados como resultados reales.
+Detalle de #4217: ESLint 2 m 41 s, checks 2 m 06 s, shards Vitest 1 m 39 s,
+2 m 21 s, 2 m 28 s, 2 m 38 s, 2 m 09 s.
+
+Lectura de los datos:
+
+- La mejora de **tiempo de pared fue de 65 s (~26 %)** frente a 3 shards.
+- El **nuevo cuello de botella es ESLint** (2 m 41 s), no Vitest: bajar más los
+  shards ya casi no mueve el total del workflow.
+- La **suma de tiempo de runners de los tests aumentó** (cinco runners con su
+  propio checkout + install). Por lo tanto 5 shards es una decisión de
+  **latencia vs consumo**, no una mejora gratuita.
+- El reparto por archivos fue **331/331/331/330/330 sin solapamiento**, pero el
+  **costo por archivo es desigual**: de ahí el rango 1 m 39 s – 2 m 38 s entre
+  shards.
+
+Conviene una **segunda corrida comparable** (mismo commit o diff equivalente,
+misma detección de áreas) antes de fijar 5 shards como configuración
+definitiva. Se mantienen `maxWorkers=2`, sin cobertura y sin blobs. No se
+registran tiempos estimados o simulados como resultados reales.
 
 ## Limitación conocida
 
@@ -68,6 +84,7 @@ memoria real de CI requiere correr el script dentro de un runner
 - run `34196983386` — 1 job unificado: 15 m 44 s de espera, 922 s acumulados.
 - run `34200102375` — 3 shards con lint dentro de `checks`: espera 347 s,
   ejecución acumulada 947 s; Vitest 1426 archivos / 8949 tests.
-- Ensayo vigente de 5 shards (lint separado de checks, Vitest 4): **sin
-  medición nueva**. Se documentará el resultado real después de ejecutarlo en
-  GitHub Actions; la medición histórica de 3 shards permanece como referencia.
+- run `35462835847` (CI #4213) — 3 shards, lint separado: 4 m 13 s de pared,
+  shard Vitest más lento 3 m 47 s.
+- run `35464373548` (CI #4217) — 5 shards, lint separado: 3 m 08 s de pared,
+  shard Vitest más lento 2 m 38 s, ESLint 2 m 41 s (cuello de botella).

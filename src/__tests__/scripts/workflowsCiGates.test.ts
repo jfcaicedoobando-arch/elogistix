@@ -95,4 +95,46 @@ describe("docs de shards", () => {
     expect(ci).toContain("--shard=${{ matrix.shard }}/5");
     expect(ci).toContain("Sin coverage, sin blobs/merge/artifacts");
   });
+
+  it("documenta la medición real de 5 vs 3 shards", () => {
+    const doc = leer("docs/ci-vitest-shards.md");
+    expect(doc).toContain("35464373548");
+    expect(doc).toContain("35462835847");
+    expect(doc).not.toMatch(/sin\s+\*\*medición nueva\*\*/);
+    expect(doc).toMatch(/nuevo cuello de botella es ESLint/);
+  });
+});
+
+describe("ci.yml · caché de ESLint aislada", () => {
+  it("la caché de lint no vive dentro de node_modules", () => {
+    const pkg = leer("package.json");
+    expect(pkg).toContain("--cache-location .cache/eslint/");
+    expect(pkg).not.toContain("node_modules/.cache/eslint");
+  });
+
+  it("conserva --cache-strategy content y max-warnings 0", () => {
+    expect(leer("package.json")).toContain("--cache-strategy content");
+    expect(ci).toContain("bun run lint -- --max-warnings 0");
+  });
+
+  it("el job lint tiene su propia actions/cache para .cache/eslint", () => {
+    expect(ci).toContain("path: .cache/eslint");
+    expect(ci).toMatch(/\$\{\{ runner\.os \}\}-eslint-/);
+  });
+
+  it("usa clave propia por corrida más restore-keys (sin bloqueo del primer escritor)", () => {
+    expect(ci).toMatch(/-eslint-[^\n]*github\.run_id/);
+    expect(ci).toContain("restore-keys:");
+  });
+
+  it("el composite action sigue cacheando node_modules con su propia clave", () => {
+    const action = leer(".github/actions/setup-bun/action.yml");
+    expect(action).toContain("path: node_modules");
+    expect(action).toMatch(/node-modules-bun/);
+    expect(action).not.toContain("eslint");
+  });
+
+  it("la caché de lint está fuera del control de versiones", () => {
+    expect(leer(".gitignore")).toMatch(/^\.cache\/$/m);
+  });
 });

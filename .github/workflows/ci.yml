@@ -1,6 +1,6 @@
 name: CI
 
-# BENCHMARK/ENSAYO DE 5 SHARDS + LINT/CHECKS EN PARALELO, pendiente de medir.
+# ENSAYO DE 5 SHARDS + LINT/CHECKS EN PARALELO (ya medido, ver docs).
 #
 # Son 5 definiciones de job en YAML que se expanden a 9 jobs reales:
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
@@ -11,12 +11,13 @@ name: CI
 #                        compatibilidad con los checks previos (este repo no tiene
 #                        branch protection ni rulesets configurados).
 #
-# Shards/workers: ensayo vigente de 5 shards × maxWorkers=2. Se comparará en
-# GitHub Actions contra la historia de 3 shards; NO se ajusta otra vez sin medir
-# duración del shard más lento, tiempo total y costo/recursos. El
-# procedimiento, los criterios y el historial de benchmarks viven en
-# docs/ci-vitest-shards.md (herramienta: scripts/bench-vitest-shards.sh).
-# Este ensayo todavía NO tiene medición: no se anticipan resultados.
+# Shards/workers: 5 shards × maxWorkers=2. Medición real en run 35464373548
+# (3 m 08 s de pared) vs run 35462835847 con 3 shards (4 m 13 s): −65 s (~26 %),
+# a costa de más tiempo total de runners. El cuello de botella pasó a ser ESLint
+# (2 m 41 s). NO se ajusta otra vez sin medir duración del shard más lento,
+# tiempo total y costo/recursos; falta una segunda corrida comparable antes de
+# fijarlo. Procedimiento, criterios e historial en docs/ci-vitest-shards.md
+# (herramienta: scripts/bench-vitest-shards.sh).
 
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
@@ -79,6 +80,25 @@ jobs:
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
+
+      # Caché de ESLint AISLADA del cache de `node_modules` del composite action.
+      # Antes vivía en `node_modules/.cache/eslint/`, cuya clave es compartida por
+      # lint/checks/tests: el primer job que guardaba ese cache lo escribía sin
+      # estado de ESLint y el de lint nunca persistía.
+      # Clave: runner + versión de Bun + configuración de lint y lockfile. NO
+      # incluye el contenido de `src/`, para que la caché se reutilice de forma
+      # incremental entre commits (`--cache-strategy content` decide por archivo).
+      # `github.run_id` en la clave principal garantiza escritura propia por
+      # corrida (nunca hay colisión con otro job paralelo) y `restore-keys`
+      # recupera la más reciente compatible.
+      - name: Cache ESLint
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/eslint
+          key: ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-bun1.4.0-${{ hashFiles('eslint.config.js', 'package.json', 'bun.lock') }}-
+            ${{ runner.os }}-eslint-bun1.4.0-
 
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
