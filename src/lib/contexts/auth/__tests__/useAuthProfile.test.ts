@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
+import { silenciarLogEsperado } from "@/test/helpers/silenciarLogEsperado";
 
 // `vi.mock` se hoistea por encima de los imports, por lo que cualquier
 // referencia a variables del módulo debe declararse vía `vi.hoisted`.
