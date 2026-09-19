@@ -139,8 +139,16 @@ async function createInvoiceInFacturapi(
 ): Promise<FapiInvoice | Response> {
   const { supabase, factura, facturaId, user, claim } = input;
   // P2-C: el cast del SDK vive centralizado en `_shared/facturapiSdk.ts`
-  // (antes cada edge function repetía su propio cast anónimo).
-  const facturapi = { invoices: exigirInvoices(input.facturapi, "create") };
+  // (antes cada edge function repetía su propio cast anónimo). Si el SDK no
+  // cumple el contrato NO se libera el claim ni se reintenta solo.
+  let facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } };
+  try {
+    facturapi = { invoices: exigirInvoices(input.facturapi, "create") };
+  } catch (err) {
+    if (!esContratoSdkError(err)) throw err;
+    const r = cuerpoContratoSdk(err, claim.claimTag);
+    return jsonResponse(r.body, r.status);
+  }
 
   const meta = {
     supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
