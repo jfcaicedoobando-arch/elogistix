@@ -44,7 +44,9 @@ describe("cotizacionDetalle | parseConceptos", () => {
   });
 
   it("retorna [] para un string JSON malformado", () => {
+    loggerMock.warn.mockClear();
     expect(parseConceptos("{broken")).toEqual([]);
+    expect(loggerMock.warn).toHaveBeenCalled();
   });
 
   it("retorna [] cuando el JSON no es un array", () => {
