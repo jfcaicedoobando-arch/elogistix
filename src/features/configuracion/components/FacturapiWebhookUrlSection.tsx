@@ -67,11 +67,18 @@ export function FacturapiWebhookUrlSection({
       </div>
       <Alert>
         <AlertDescription className="text-xs">
-          El secret de firma (HMAC SHA-256) se genera al guardar la configuración
-          y vive en <code>facturapi_credenciales.webhook_secret</code>. Pégalo
-          también en FacturApi como <em>Webhook Secret</em>.
+          La clave de firma (HMAC SHA-256) es independiente por ambiente: una para
+          Pruebas y otra para Producción. Pega en FacturApi la del ambiente que
+          estés configurando como <em>Webhook Secret</em>.
         </AlertDescription>
       </Alert>
+      <FacturapiWebhookDiagnostico
+        orgId={orgId}
+        ambiente={ambiente}
+        estadoGuardado={ambiente === "live" ? estadoLive : estadoSandbox}
+        verificadoAt={ambiente === "live" ? verificadoLiveAt : verificadoSandboxAt}
+      />
+
     </div>
   );
 }
