@@ -29,13 +29,18 @@
  * fallaba con `Could not find constraint 'facturapi@<versión>' in the list of
  * packages.`, tirando todo request con "Edge Function returned a non-2xx".
  */
-// @ts-ignore -- el paquete `facturapi` no publica typings compatibles con Deno.
+// P2-C: el paquete `facturapi` SÍ publica typings (v5.0.0, `dist/*.d.ts`),
+// pero están declarados para resolución de bundler/Node y el typecheck de Deno
+// no los alcanza desde el especificador `npm:`. De ahí el `@ts-ignore` y el
+// modelado como objeto opaco: la superficie tipada que usa el ERP vive en
+// `_shared/facturapiSdk.ts` (un solo lugar con los casts del SDK).
+// @ts-ignore -- typings del paquete no resolubles desde el especificador `npm:` en Deno.
 import FacturapiDefault from "npm:facturapi@5.0.0";
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
+import { normalizarErrorFacturapi } from "./facturapiErrorNormalizado.ts";
 
-// El SDK `facturapi` no exporta tipos accesibles desde el typecheck de
-// Deno. Lo modelamos como un objeto opaco.
 export type FacturapiClient = object;
+
 type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
 // Algunos empaquetados exponen el ctor como `default.default` (CJS/ESM interop).
