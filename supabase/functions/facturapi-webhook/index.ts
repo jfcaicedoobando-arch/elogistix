@@ -174,33 +174,6 @@ async function despacharEvento(
 }
 
 
-/**
- * Verifica firma sobre los BYTES exactos aceptados y parsea el evento.
- *
- * P2-A: la firma se prueba contra los secretos del ambiente (activo primero,
- * opuesto como respaldo y legado sólo si no hay ninguno por ambiente). Se
- * devuelve el origen del secret que validó para dejarlo en logs/bitácora —
- * nunca el secret.
- */
-async function validarEvento(
-  bytes: Uint8Array, rawBody: string, signature: string, secretos: SecretoWebhook[],
-): Promise<{ event: FacturapiWebhookEvent; origen: SecretoWebhook["origen"] } | Response> {
-  let origen: SecretoWebhook["origen"] | null = null;
-  for (const candidato of secretos) {
-    const expected = await computeSignatureBytes(bytes, candidato.secret);
-    if (signature && safeEqual(signature, expected)) {
-      origen = candidato.origen;
-      break;
-    }
-  }
-  if (!origen) return jsonResponse({ error: "invalid_signature" }, 401);
-  try {
-    return { event: JSON.parse(rawBody) as FacturapiWebhookEvent, origen };
-  } catch {
-    return jsonResponse({ error: "invalid_json" }, 400);
-  }
-}
-
 
 /**
  * EF-07 + FIX-22 + Ola 4 · N2 · Dedupe ATÓMICO (INSERT-first): el constraint
