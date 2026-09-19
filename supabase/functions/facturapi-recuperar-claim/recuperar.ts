@@ -12,6 +12,7 @@ import {
   esTimbradoValido,
   MIN_EDAD_LIBERACION_MINUTOS,
 } from "../_shared/timbradoPendiente.ts";
+import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
 
 export { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
 import { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
