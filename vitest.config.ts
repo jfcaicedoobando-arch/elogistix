@@ -165,17 +165,8 @@ export default defineConfig({
 
     },
   },
-  resolve: {
-    alias: [
-      ...RR_ESM,
-      { find: "@", replacement: path.resolve(__dirname, "./src") },
-      // Alias global: en tests, @react-pdf/renderer apunta a un stub ligero
-      // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por
-      // archivo. Aplica también a `vi.importActual("@react-pdf/renderer")`.
-      {
-        find: "@react-pdf/renderer",
-        replacement: path.resolve(__dirname, "./src/test/mocks/reactPdfStub.tsx"),
-      },
-    ],
-  },
+  // Alias global (mismo set que cada proyecto). Aplica también a
+  // `vi.importActual("@react-pdf/renderer")`.
+  resolve: { alias: ALIAS },
+
 });
