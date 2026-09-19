@@ -83,6 +83,24 @@ export async function timbrarRep(deps: TimbrarDeps): Promise<Resultado> {
       };
     }
 
+    // P2-B: 429 (tope de peticiones) es transitorio y ocurre ANTES de timbrar:
+    // se libera el claim para permitir un reintento MANUAL y NO se marca
+    // `estado_rep='Error'` (no hay nada que conciliar, sólo hay que esperar).
+    if (esRateLimitFacturapi(status, detail)) {
+      await deps.releaseClaim();
+      await registrarBitacoraEdge(supabase, {
+        organizationId, usuarioId, usuarioEmail, modulo: "facturacion",
+        accion: "facturapi_rep_rate_limited", entidadId: pagoId,
+        detalles: {
+          status, external_id: claimTag,
+          retry_after_segundos: detail.retryAfterSegundos ?? null,
+          request_id: detail.requestId ?? null, log_id: detail.logId ?? null,
+        },
+      });
+      return { ok: false, response: respuestaRateLimit(detail) };
+    }
+
+
     // Error definitivo de Facturapi (no timbró): liberar el claim para reintentar.
     await deps.releaseClaim();
     const errMsg = typeof detail === "object" && detail !== null
