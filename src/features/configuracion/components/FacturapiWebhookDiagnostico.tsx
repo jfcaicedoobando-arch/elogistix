@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   verificarFacturapiWebhook,
@@ -78,10 +78,16 @@ export function FacturapiWebhookDiagnostico({ orgId, ambiente, estadoGuardado, v
             </Badge>
           ) : null}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={() => void verificar()} disabled={cargando}>
-          {cargando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          loading={cargando}
+          onClick={() => void verificar()}
+        >
           Verificar con el proveedor
         </Button>
+
       </div>
 
       {verificadoAt && !diag ? (
