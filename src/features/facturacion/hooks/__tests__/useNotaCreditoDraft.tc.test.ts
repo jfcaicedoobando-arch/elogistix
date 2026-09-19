@@ -87,6 +87,10 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
     expect(descripcion).toContain("tipo de cambio de la factura no está disponible");
     expect(descripcion).not.toContain("LC_TC_NO_DISPONIBLE");
 
+    // El diagnóstico interno sigue registrándose (sólo deja de imprimirse).
+    const warns = log.llamadas("warn").map((args) => args.join(" "));
+    expect(warns.some((m) => m.includes("[useNotaCreditoDraft]") && m.includes("crearNotaCredito failed"))).toBe(true);
+    expect(warns.some((m) => m.includes("handleSubmit failed") && m.includes("LC_TC_NO_DISPONIBLE"))).toBe(true);
   });
 
   it("MXN no requiere TC (usa 1 implícito) y sí llama a crearNotaCredito", async () => {
