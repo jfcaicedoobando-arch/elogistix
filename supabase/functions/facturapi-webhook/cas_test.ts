@@ -88,7 +88,7 @@ Deno.test("la vía pendiente exige claim PENDING vivo y limpia los campos pendie
   assertEquals(claimEsPendiente("fapi_123"), false);
   assertEquals(claimEsPendiente(null), false);
 
-  const adopcion = patchAdopcionPendiente(COLS_FACTURA, "fapi_9", { uuid_fiscal: "UUID-1" });
+  const adopcion = patchAdopcionPendiente(COLS_FACTURA, "fapi_9", { uuid_fiscal: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d" });
   assertEquals(adopcion, {
     facturapi_id: "fapi_9",
     facturapi_claim_at: null,
