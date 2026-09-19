@@ -26,7 +26,6 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { buildTaxesDr } from "./taxesDr.ts";
 import {
   divergenciasResumenPago,
@@ -44,6 +43,27 @@ export const COD_REP_RESUMEN_NO_DISPONIBLE = "rep_resumen_no_disponible";
 export const MSG_REP_RESUMEN_NO_DISPONIBLE =
   "No pudimos consultar el resumen de pago del proveedor de timbrado, así que no se timbró el " +
   "complemento. No se cambió nada del pago: vuelve a intentarlo en unos minutos.";
+
+/**
+ * Timeout local (mismo valor que `FACTURAPI_SDK_TIMEOUT_MS`). No se importa
+ * `_shared/facturapiClient.ts` a propósito: ese módulo hace el import estático
+ * de `npm:facturapi`, que no resuelve en el runner de pruebas aislado.
+ */
+export const TIMEOUT_RESUMEN_MS = 30_000;
+
+async function conTimeout<T>(promesa: Promise<T>, ms = TIMEOUT_RESUMEN_MS): Promise<T> {
+  let timer = 0;
+  try {
+    return await Promise.race([
+      promesa,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`paymentSummary no respondió en ${ms} ms`)), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /** Tolerancia monetaria documentada: un centavo. */
 export const TOLERANCIA_RESUMEN = 0.01;
@@ -144,9 +164,8 @@ export async function verificarResumenProveedor(args: ArgsVerificacion): Promise
   const local = calculoLocalRep(ctx);
   let resumen: ResumenRemoto;
   try {
-    resumen = await withFacturapiTimeout(
-      "invoices.paymentSummary",
-      // SAFE-CAST: el cliente del SDK se modela como objeto opaco.
+    // SAFE-CAST: el cliente del SDK se modela como objeto opaco.
+    resumen = await conTimeout(
       (args.facturapi as unknown as ClienteResumen).invoices.paymentSummary(idRemoto, {
         amount: local.amount,
       }),
