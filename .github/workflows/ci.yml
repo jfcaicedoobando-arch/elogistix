@@ -2,7 +2,7 @@ name: CI
 
 # BENCHMARK/ENSAYO DE 5 SHARDS + LINT/CHECKS EN PARALELO, pendiente de medir.
 #
-# Son 5 definiciones de job en YAML que se expanden a 7 jobs reales:
+# Son 5 definiciones de job en YAML que se expanden a 9 jobs reales:
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
 #   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
 #   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
