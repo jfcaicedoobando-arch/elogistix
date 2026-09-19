@@ -204,7 +204,8 @@ const MSG: Record<EstadoWebhook, string> = {
  */
 export function compararConfigRemota(args: {
   ambiente: FacturapiAmbiente;
-  urlEsperada: string;
+  /** URL simple, o lista (simple + aislada por ambiente). */
+  urlEsperada: string | readonly string[];
   secretConfigurado: boolean;
   secretLegado: boolean;
   remoto: { id: string; url?: string; events?: string[]; status?: string } | null;
@@ -213,14 +214,21 @@ export function compararConfigRemota(args: {
   const requeridos = args.eventosRequeridos ?? EVENTOS_REQUERIDOS;
   const eventosRemotos = args.remoto?.events ?? [];
   const eventosFaltantes = requeridos.filter((e) => !eventosRemotos.includes(e));
+  const aceptadas = Array.isArray(args.urlEsperada)
+    ? args.urlEsperada as readonly string[]
+    : [args.urlEsperada as string];
 
   let estado: EstadoWebhook = "ok";
   if (!args.remoto) estado = args.secretConfigurado ? "no_encontrado" : "no_configurado";
   else if (!args.secretConfigurado) estado = "no_configurado";
-  else if (typeof args.remoto.url === "string" && !mismaUrl(args.remoto.url, args.urlEsperada)) {
+  else if (
+    typeof args.remoto.url === "string" &&
+    !aceptadas.some((u) => mismaUrl(args.remoto!.url as string, u))
+  ) {
     estado = "url_distinta";
   } else if (args.remoto.status && args.remoto.status !== "active") estado = "inactivo";
   else if (eventosFaltantes.length > 0) estado = "eventos_faltantes";
+
 
   return {
     ambiente: args.ambiente,
