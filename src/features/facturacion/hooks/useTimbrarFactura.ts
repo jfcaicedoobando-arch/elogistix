@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
 import { emitirFacturapi, cancelarFacturapi, FacturapiError, type MotivoCancelacionSat, type CancelarFacturapiResult } from "@/features/facturacion/services/facturapi";
+import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { notifySuccess, notifyError, notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
@@ -23,10 +24,20 @@ export function useTimbrarFactura() {
     errorTitle: "No se pudo timbrar",
     errorMethod: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1",
     onSuccess: (res) => {
-      notifySuccess(undefined, {
-        title: "Factura timbrada correctamente",
-        description: `Serie ${res.serie} · Folio ${res.folio}`,
-      });
+      if (esPendiente(res)) {
+        // 202: no hay UUID ni folio y la factura sigue "Por timbrar". Decir
+        // "timbrada" haría creer que ya facturó e invitaría a duplicar el CFDI.
+        notifyInfo(undefined, {
+          title: "Timbrado en proceso",
+          description: res.message,
+          duration: 15000,
+        });
+      } else {
+        notifySuccess(undefined, {
+          title: "Factura timbrada correctamente",
+          description: `Serie ${res.serie} · Folio ${res.folio}`,
+        });
+      }
       invalidateHuecoFacturacion(qc);
       // M-1: bandejas, conteos y cartera CxC también cambian al timbrar.
       invalidarTrasTimbrado(qc);

@@ -9,6 +9,11 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { parseFunctionError, toReadableError, type EdgeErrorBody } from "./facturapiError";
+import {
+  esRespuestaPendiente,
+  respuestaPendiente,
+  type TimbradoPendiente,
+} from "./timbradoPendiente";
 
 export interface RepTimbradoResult {
   uuid: string;
@@ -48,7 +53,10 @@ function lanzarErrorRep(body: EdgeErrorBody, error: unknown, fallback: string): 
   throw toReadableError(error, body, fallback);
 }
 
-export async function emitirRep(pagoId: string): Promise<RepTimbradoResult> {
+/** Timbre listo o 202 "pendiente" (sin UUID/folio, el pago sigue sin REP). */
+export type RepTimbradoRespuesta = RepTimbradoResult | TimbradoPendiente;
+
+export async function emitirRep(pagoId: string): Promise<RepTimbradoRespuesta> {
   const { data, error } = await supabase.functions.invoke<RepTimbradoResult & EdgeErrorBody>(
     "facturapi-emitir-rep",
     { body: { pago_id: pagoId } },
@@ -59,6 +67,8 @@ export async function emitirRep(pagoId: string): Promise<RepTimbradoResult> {
   if (data?.error) {
     lanzarErrorRep(data, null, "No se pudo timbrar el REP.");
   }
+  // 202: FacturAPI sigue recuperando el timbre; no hay UUID ni folio.
+  if (esRespuestaPendiente(data)) return respuestaPendiente(data);
   return data as RepTimbradoResult;
 }
 

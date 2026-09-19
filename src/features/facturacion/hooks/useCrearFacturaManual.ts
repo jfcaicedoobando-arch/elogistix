@@ -2,12 +2,13 @@
  * Mutación: crear factura manual + (opcional) timbrar al instante.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyInfo } from "@/lib/ui/appFeedback";
 import {
   crearFacturaManual,
   type CrearFacturaManualInput,
 } from "@/features/facturacion/services/facturaManual";
 import { emitirFacturapi } from "@/features/facturacion/services/facturapi";
+import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { facturas as facturasKeys, facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -29,6 +30,11 @@ export function useCrearFacturaManual() {
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {
         const res = await emitirFacturapi(facturaId);
+        // 202 pendiente: el proveedor sigue recuperando el timbre. NO es error
+        // (reintentar duplicaría el CFDI) ni éxito con folio.
+        if (esPendiente(res)) {
+          return { facturaId, timbrada: false as const, pendiente: res.message };
+        }
         // P1-2 (R5): el toast decía "timbrada" aunque la respuesta no trajera
         // folio/UUID y la factura quedaba "Sin folio" en Por timbrar.
         if (!res?.uuid || !res?.folio) {
@@ -38,11 +44,17 @@ export function useCrearFacturaManual() {
         }
         return { facturaId, timbrada: true as const, uuid: res.uuid };
       }
-      return { facturaId, timbrada: false as const };
+      return { facturaId, timbrada: false as const, pendiente: undefined };
     },
     onSuccess: (res) => {
       if (res.timbrada) {
         notifySuccess(undefined, { title: tituloTimbrado("Factura manual timbrada", res.uuid) });
+      } else if (res.pendiente) {
+        notifyInfo(undefined, {
+          title: "Factura guardada · timbrado en proceso",
+          description: res.pendiente,
+          duration: 15000,
+        });
       } else {
         notifySuccess(undefined, { title: "Factura manual guardada como borrador" });
       }

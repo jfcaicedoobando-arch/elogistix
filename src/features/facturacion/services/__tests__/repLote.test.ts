@@ -49,9 +49,12 @@ describe("timbrarRepsSecuencial", () => {
   });
 
   it("resumenRepLote usa español mexicano con singular/plural", () => {
-    expect(resumenRepLote({ ok: 1, fallos: [] })).toBe("1 REP timbrado");
-    expect(resumenRepLote({ ok: 3, fallos: [{ pagoId: "x", mensaje: "e" }] })).toBe(
+    expect(resumenRepLote({ ok: 1, pendientes: 0, fallos: [] })).toBe("1 REP timbrado");
+    expect(resumenRepLote({ ok: 3, pendientes: 0, fallos: [{ pagoId: "x", mensaje: "e" }] })).toBe(
       "3 REP timbrados, 1 con error",
+    );
+    expect(resumenRepLote({ ok: 2, pendientes: 1, fallos: [] })).toBe(
+      "2 REP timbrados, 1 en proceso",
     );
   });
 });
