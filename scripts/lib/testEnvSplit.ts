@@ -92,8 +92,13 @@ export function splitTestsByEnvironment(root: string): TestEnvSplit {
   const node: string[] = [];
   for (const file of files) {
     const rel = path.relative(root, file).split(path.sep).join("/");
-    if (file.endsWith(".tsx") || FORCE_JSDOM.has(rel)) { jsdom.push(rel); continue; }
     const body = fs.readFileSync(file, "utf8");
+    // 1) Declaración explícita en el archivo: manda sobre todo lo demás.
+    const declarado = entornoDeclarado(body);
+    if (declarado) { (declarado === "jsdom" ? jsdom : node).push(rel); continue; }
+    // 2) Extensión .tsx u override legado por ruta.
+    if (file.endsWith(".tsx") || FORCE_JSDOM.has(rel)) { jsdom.push(rel); continue; }
+    // 3) Heurística de marcadores de DOM (conservadora: duda → jsdom).
     (DOM_MARKERS.some((m) => body.includes(m)) ? jsdom : node).push(rel);
   }
   return { jsdom, node };
