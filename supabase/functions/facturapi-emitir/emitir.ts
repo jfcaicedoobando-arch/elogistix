@@ -16,6 +16,8 @@ import {
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
 import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
 import { exigirInvoices } from "../_shared/facturapiSdk.ts";
+import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
+
 
 import { registrarFacturaPendiente, respuestaIdempotencyEnUso } from "./pendiente.ts";
 import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
