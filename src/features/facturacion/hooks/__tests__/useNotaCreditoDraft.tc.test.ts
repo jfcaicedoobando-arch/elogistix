@@ -60,6 +60,9 @@ afterEach(() => {
 
 describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
   it("bloquea la emisión de NC en USD si el tipo de cambio es 0", async () => {
+    // Este caso provoca a propósito dos `logger.warn` (crearNotaCredito y
+    // handleSubmit). Se silencian sólo aquí; el contenido se sigue afirmando.
+    log = silenciarLogEsperado(["warn"]);
     const { result } = renderHook(
       () => useNotaCreditoDraft({ ...baseParams, monedaFactura: "USD", tipoCambioFactura: 0 }),
       { wrapper },
