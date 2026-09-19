@@ -8,7 +8,7 @@
  * suite normal completa y ningún `*.perf.*`.
  *
  * Ahora declara proyectos PROPIOS (`perf-node`, `perf-jsdom`) cuyos `include`
- * son exclusivamente los globs de benchmark. Además, `setup.perf.ts` aborta si
+ * son exclusivamente los globs de benchmark. Además, `perfGuard.setup.ts` aborta si
  * un archivo que NO es benchmark entra al run (protección en tiempo de
  * ejecución, por si alguien agrega un glob por error).
  */

@@ -111,7 +111,7 @@ describe("vitest.perf.config.ts", () => {
     expect(perfSrc).toContain("PERF_GLOBS_JSDOM");
   });
 
-  it("carga el guard setup.perf.ts en ambos proyectos", () => {
+  it("carga el guard perfGuard.setup.ts en ambos proyectos", () => {
     const ocurrencias = perfSrc.split("./src/test/perfGuard.setup.ts").length - 1;
     expect(ocurrencias).toBe(2);
   });
