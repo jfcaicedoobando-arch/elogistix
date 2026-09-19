@@ -52,6 +52,9 @@ const CRITICAL = [
   "supabase/functions/facturapi-consultar/index.ts",
   // 13.594.7 — Consulta puntual de REP timbrado (sincronización manual)
   "supabase/functions/facturapi-consultar-rep/index.ts",
+  // P2-A — Verificación remota de la configuración del webhook por ambiente
+  "supabase/functions/facturapi-verificar-webhook/index.ts",
+
   // 13.303.2 — Recuperación de claims huérfanos PENDING:<uuid>
   "supabase/functions/facturapi-recuperar-claim/index.ts",
   // 13.315.0 — Recordatorios de cobro y estado de cuenta CxC
