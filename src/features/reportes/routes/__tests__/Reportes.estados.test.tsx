@@ -66,11 +66,12 @@ describe("Reportes — ramas excluyentes", () => {
     expect(retry).toHaveBeenCalledTimes(1);
   });
 
-  it("loading: contenido con skeletons y sin estado de error", () => {
+  it("loading: contenido con skeletons y sin estado de error", async () => {
     mockCtrl.mockReturnValue({ ...BASE, isLoading: true });
     renderPage();
     expect(screen.queryByText(/no se pudo cargar/i)).not.toBeInTheDocument();
     expect(screen.getByTestId("kpis")).toBeInTheDocument();
+    await screen.findByTestId("chart");
   });
 
   it("data: contenido visible", () => {

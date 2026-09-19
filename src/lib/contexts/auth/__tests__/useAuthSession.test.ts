@@ -26,15 +26,19 @@ beforeEach(() => {
 });
 
 describe("useAuthSession", () => {
-  it("inicia con loading=true y user/session=null", () => {
+  it("inicia con loading=true y user/session=null", async () => {
     const { result } = renderHook(() => useAuthSession());
     expect(result.current.user).toBeNull();
     expect(result.current.session).toBeNull();
+    // El hook resuelve getCurrentSession() de forma asíncrona: se espera a
+    // que termine antes de salir del test para no dejar un update suelto.
+    await waitFor(() => expect(mockGetSession).toHaveBeenCalled());
   });
 
-  it("se suscribe a cambios de auth y llama unsubscribe al desmontar", () => {
+  it("se suscribe a cambios de auth y llama unsubscribe al desmontar", async () => {
     const { unmount } = renderHook(() => useAuthSession());
     expect(mockSubscribe).toHaveBeenCalledOnce();
+    await waitFor(() => expect(mockGetSession).toHaveBeenCalled());
     unmount();
     expect(mockUnsubscribe).toHaveBeenCalledOnce();
   });
@@ -47,7 +51,7 @@ describe("useAuthSession", () => {
       return { unsubscribe: mockUnsubscribe };
     });
     const { result } = renderHook(() => useAuthSession());
-    expect(result.current.user?.id).toBe("u1");
+    await waitFor(() => expect(result.current.user?.id).toBe("u1"));
     expect(result.current.lastEvent).toBe("SIGNED_IN");
   });
 
@@ -83,4 +87,3 @@ describe("useAuthSession", () => {
     }
   });
 });
-

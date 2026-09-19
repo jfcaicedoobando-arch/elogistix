@@ -24,7 +24,7 @@ describe("useEditarProveedorController", () => {
     expect(result.current.fieldErrorMessage("email")).toBe("Correo inválido.");
   });
 
-  it("handles saving when valid", () => {
+  it("handles saving when valid", async () => {
     const onSave = vi.fn();
     const { result } = renderHook(() => useEditarProveedorController(mockProveedor, true, onSave, vi.fn()));
     
@@ -32,8 +32,8 @@ describe("useEditarProveedorController", () => {
       result.current.setField("nombre", "New Name");
     });
     
-    act(() => {
-      result.current.handleSave();
+    await act(async () => {
+      await result.current.handleSave();
     });
     
     expect(onSave).toHaveBeenCalledWith(

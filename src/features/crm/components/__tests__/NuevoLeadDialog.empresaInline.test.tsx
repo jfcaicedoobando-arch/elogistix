@@ -5,7 +5,7 @@
  * inesperado.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 
 const mutateAsync = vi.fn(async () => ({ id: "lead-1" }));
@@ -56,8 +56,9 @@ describe("NuevoLeadDialog — Empresa obligatoria inline", () => {
     fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: "Naviera Monterrey" } });
     expect(screen.queryByRole("alert")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
-    await Promise.resolve();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+    });
     expect(mutateAsync).toHaveBeenCalled();
   });
 });

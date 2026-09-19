@@ -4,7 +4,7 @@
  * ruta, moneda), sin inventar lo que el CRM no tiene y sin pisar captura manual.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types/form";
 import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types/formDefaults";
@@ -96,12 +96,14 @@ describe("usePrefillProspectoOportunidad", () => {
   it("respuesta tardía del CRM no pisa captura manual de modo/ruta ni mezcla el vínculo", async () => {
     // match aún pendiente (null): el usuario captura modo y ruta sin vínculo.
     const { result, rerender } = renderPrefill();
-    result.current.setValue("modo", "Aéreo", { shouldDirty: true });
-    result.current.setValue("origen", "Veracruz", { shouldDirty: true });
-    result.current.setValue("destino", "Houston", { shouldDirty: true });
+    act(() => {
+      result.current.setValue("modo", "Aéreo", { shouldDirty: true });
+      result.current.setValue("origen", "Veracruz", { shouldDirty: true });
+      result.current.setValue("destino", "Houston", { shouldDirty: true });
+    });
     // Ahora llega la respuesta del CRM.
     match.data = MATCH_COMPLETO;
-    rerender();
+    act(() => { rerender(); });
     await waitFor(() => expect(result.current.getValues("modo")).toBe("Aéreo"));
     const v = result.current.getValues();
     expect(v.origen).toBe("Veracruz");
