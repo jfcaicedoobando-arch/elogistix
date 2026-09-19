@@ -13,14 +13,17 @@ set -euo pipefail
 # 365 KB da margen sin ocultar una regresión grande. Si se rebasa otra vez, la
 # acción es analizar el driver, no volver a subir el límite a ciegas.
 #
-# P1 auditoría stack: 365 → 385 KB. Primera medición REAL del gate (el script
-# existía pero ningún workflow lo ejecutaba): entry = 380 KB gz. El driver es
-# medible y deliberado — no es regresión de código sino las actualizaciones de
-# dependencias de esta ronda (react-dom 19.3, React Router 7 ≈86 KB raw en el
-# entry, @supabase 2.116, @sentry 10.75). El desglose por módulo propio no
-# muestra ningún import pesado evitable: el archivo propio más grande del entry
-# son 14 KB de `appRoutes.tsx`. 385 KB deja ~5 KB de margen sobre lo medido.
-BUDGET_KB="${BUNDLE_BUDGET_KB:-385}"
+# P1 auditoría stack: el budget se MANTIENE en 365 KB. La primera medición real
+# del gate (el script existía pero ningún workflow lo ejecutaba) da un entry de
+# ~380 KB gz, es decir el gate queda ROJO a propósito. Subir el umbral sólo para
+# pintar el job de verde está prohibido. Driver medido de los ~15 KB de exceso:
+# actualizaciones de dependencias de esta ronda (react-dom 19.3, React Router 7
+# ≈86 KB raw en el entry, @supabase 2.116, @sentry 10.75). No hay import propio
+# pesado evitable: el archivo propio más grande del entry son 14 KB de
+# `appRoutes.tsx`. Acción correcta: reducir el entry con lazy/split verificable
+# (candidatos: superficie de @supabase, zod del login/portal, date-fns), no
+# mover este número.
+BUDGET_KB="${BUNDLE_BUDGET_KB:-365}"
 DIST_DIR="${DIST_DIR:-dist/assets}"
 
 if [ ! -d "$DIST_DIR" ]; then
