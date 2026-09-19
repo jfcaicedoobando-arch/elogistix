@@ -129,6 +129,16 @@ jobs:
           ANALYZE: "false"
         run: bun run build
 
+      # Bundle-size gate (P1 auditoría): el script ya existía pero NINGÚN
+      # workflow lo ejecutaba, así que una regresión de peso pasaba sin aviso.
+      # Corre justo después del build, sobre `dist/assets`, con los budgets del
+      # propio script (entry 365 KB gz, lazy 250, vendor 500, react-pdf 600).
+      - name: Bundle size gate
+        if: needs.detector.outputs.frontend == 'true'
+        run: bash scripts/check-bundle-size.sh
+
+
+
       # Edge Functions: sólo si cambia supabase/functions, deno.* o este workflow.
       - name: Setup Deno
         if: needs.detector.outputs.edge == 'true'
