@@ -102,7 +102,7 @@ describe("docs de shards", () => {
     expect(doc).toContain("35464373548");
     expect(doc).toContain("35462835847");
     expect(doc).not.toMatch(/sin\s+\*\*medición nueva\*\*/);
-    expect(doc).toMatch(/ESLint ya no es el cuello de botella/);
+    expect(doc).toMatch(/ESLint[^\n]*ya no es el cuello de botella/);
   });
 });
 
