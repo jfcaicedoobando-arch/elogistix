@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 /**
@@ -39,7 +38,7 @@ export async function fetchPortalClientUsers(): Promise<PortalClientUser[]> {
   return (rows as unknown as Array<Record<string, unknown>>).map((r) => ({
     ...r,
     cliente_id: typeof r.cliente_id === "string" ? r.cliente_id : "",
-    cliente_nombre: fromDb(r.clientes ?? null, nombreNullableSchema)?.nombre ?? null,
+    cliente_nombre: leerTextoDeJoin(r.clientes ?? null, "nombre"),
   })) as PortalClientUser[];
 }
 
@@ -54,8 +53,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const clientes = fromDb(data?.clientes ?? null, nombreNullableSchema);
-  return clientes?.nombre ?? null;
+  return leerTextoDeJoin(data?.clientes ?? null, "nombre");
 }
 
 /** UIB-10: nombre de la persona de contacto para el saludo del dashboard. */
@@ -70,8 +68,7 @@ export async function fetchPortalContactoNombre(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const clientes = fromDb(data?.clientes ?? null, contactoNullableSchema);
-  return clientes?.contacto ?? null;
+  return leerTextoDeJoin(data?.clientes ?? null, "contacto");
 }
 
 export async function fetchPortalOrgName(): Promise<string | null> {
@@ -85,6 +82,5 @@ export async function fetchPortalOrgName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const org = fromDb(data?.organizations ?? null, nombreNullableSchema);
-  return org?.nombre ?? null;
+  return leerTextoDeJoin(data?.organizations ?? null, "nombre");
 }
