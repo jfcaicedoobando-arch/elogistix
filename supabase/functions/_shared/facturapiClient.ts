@@ -108,6 +108,14 @@ export interface FacturapiErrorDetail {
   errors?: unknown;
   logId?: string;
   raw?: unknown;
+  /** P2-B: metadatos de diagnóstico/rate limiting (429). */
+  requestId?: string;
+  retryAfterSegundos?: number;
+  rateLimited?: boolean;
+  /** Mensaje en español listo para el operador (429/timeout incluidos). */
+  mensajeUsuario?: string;
+  /** Invariante: el timbrado NUNCA se reintenta automáticamente. */
+  reintentoAutomatico?: false;
 }
 
 function pickStr(...values: unknown[]): string | undefined {
@@ -123,10 +131,14 @@ function pickStr(...values: unknown[]): string | undefined {
  * `path`, `location`, `errors[]` y `logId` que expone el SDK como campos
  * planos (desde v4.18.0, vigentes en v5.0.0) — antes se perdían al leer sólo
  * `response.data`.
+ *
+ * P2-B: además conserva `Retry-After`, el request id del proveedor y marca los
+ * 429 con un mensaje accionable. El reintento del timbrado sigue siendo SIEMPRE
+ * manual: reintentar solo un 429 arriesga CFDIs/REP duplicados.
  */
 export function describeFacturapiError(err: unknown): { status: number; detail: FacturapiErrorDetail } {
   const e = (err ?? {}) as FacturapiErrorShape;
-  const status: number = e.response?.status ?? e.status ?? 502;
+  const norm = normalizarErrorFacturapi(err);
   const base = ((e.response?.data ?? e.data ?? {}) as Record<string, unknown>);
   const detail: FacturapiErrorDetail = {
     message: pickStr(base.message, e.message) ?? String(err),
@@ -134,10 +146,16 @@ export function describeFacturapiError(err: unknown): { status: number; detail: 
     path: pickStr(base.path, e.path),
     location: pickStr(base.location, e.location),
     errors: base.errors ?? e.errors,
-    logId: pickStr(base.logId, e.logId),
+    logId: pickStr(base.logId, e.logId) ?? norm.logId,
+    requestId: norm.requestId,
+    retryAfterSegundos: norm.retryAfterSegundos,
+    rateLimited: norm.rateLimited,
+    mensajeUsuario: norm.mensajeUsuario,
+    reintentoAutomatico: false,
   };
-  return { status, detail };
+  return { status: norm.status, detail };
 }
+
 
 /**
  * Extrae un `message` humano del `detail` que devuelve FacturApi (o el fallback
