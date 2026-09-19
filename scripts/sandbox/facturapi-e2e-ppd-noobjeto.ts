@@ -46,7 +46,7 @@ const TAG = Deno.env.get("FACTURAPI_E2E_TAG") ?? `e2e-ppd-noobjeto-${new Date().
 const LIMPIAR = Deno.env.get("FACTURAPI_E2E_LIMPIAR") === "1";
 
 /** Tasa del concepto gravado (configurable; el no objeto no lleva impuestos). */
-const TASA_GRAVADA = Number(Deno.env.get("FACTURAPI_E2E_TASA") ?? "0.16");
+const TASA_GRAVADA = Number(Deno.env.get("FACTURAPI_E2E_TASA") ?? String(16 / 100));
 
 const auth = "Basic " + btoa(`${KEY}:`);
 
