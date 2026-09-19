@@ -164,13 +164,12 @@ export async function verificarResumenProveedor(args: ArgsVerificacion): Promise
   const local = calculoLocalRep(ctx);
   let resumen: ResumenRemoto;
   try {
-    // SAFE-CAST: el cliente del SDK se modela como objeto opaco.
-    resumen = await conTimeout(
-      (args.facturapi as unknown as ClienteResumen).invoices.paymentSummary(idRemoto, {
-        amount: local.amount,
-      }),
-    );
+    // El único punto de contacto con el SDK v5 pasa por el adaptador tipado,
+    // que valida que la operación exista antes de invocarla.
+    const invoices = exigirInvoices(args.facturapi) as unknown as ClienteResumen["invoices"];
+    resumen = await conTimeout(invoices.paymentSummary(idRemoto, { amount: local.amount }));
   } catch (err) {
+
     await bitacora("facturapi_rep_resumen_no_disponible", {
       moneda: monedaFactura, amount: local.amount, error: String((err as Error)?.message ?? err),
     });
