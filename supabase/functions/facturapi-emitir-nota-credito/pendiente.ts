@@ -7,6 +7,7 @@
  */
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import {
+  cuerpoPendienteNoPersistido,
   cuerpoTimbradoPendiente,
   esTimbradoPendiente,
   marcarTimbradoPendiente,
@@ -45,10 +46,21 @@ export async function registrarNcPendiente(
     usuarioId: args.usuarioId,
     usuarioEmail: args.usuarioEmail ?? undefined,
     modulo: "facturacion",
-    accion: "facturapi_nc_emitir_pendiente",
+    accion: res.ok ? "facturapi_nc_emitir_pendiente" : "facturapi_nc_emitir_pendiente_no_persistido",
     entidadId: args.notaCreditoId,
-    detalles: { facturapi_pendiente_id: args.pendienteId, external_id: args.claimTag, persistido: res.ok },
+    detalles: {
+      facturapi_pendiente_id: args.pendienteId, external_id: args.claimTag,
+      persistido: res.ok, error: res.error ?? null,
+    },
   });
+
+  // P0 correctivo: sin pendiente persistido no hay rastro para recuperar ⇒ 500.
+  if (!res.ok) {
+    return {
+      body: cuerpoPendienteNoPersistido({ pendienteId: args.pendienteId, claimTag: args.claimTag, detalle: res.error }),
+      status: 500,
+    };
+  }
 
   return {
     body: cuerpoTimbradoPendiente({ pendienteId: args.pendienteId, claimTag: args.claimTag }),

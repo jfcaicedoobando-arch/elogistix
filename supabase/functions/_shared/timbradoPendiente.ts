@@ -127,3 +127,29 @@ export async function marcarTimbradoPendiente(args: {
     .eq(args.claimCol, args.claimTag);
   return error ? { ok: false, error: error.message } : { ok: true };
 }
+
+/**
+ * P0 correctivo — el proveedor respondió `pending` pero la BD NO pudo guardar
+ * el intento pendiente. Devolver 202 "normal" dejaría el intento invisible
+ * (sin id remoto que buscar): se responde 500 recuperable conservando el claim
+ * y apuntando a 'Recuperar timbrado'.
+ */
+export const MSG_PENDIENTE_NO_PERSISTIDO =
+  "FacturAPI está timbrando este documento, pero no se pudo guardar el intento en el sistema. NO vuelvas a timbrar: usa 'Recuperar timbrado' para sincronizarlo.";
+
+export function cuerpoPendienteNoPersistido(args: {
+  pendienteId?: string | null;
+  claimTag: string;
+  detalle?: string;
+}): Record<string, unknown> {
+  return {
+    error: "timbrado_pendiente_no_persistido",
+    pendiente: true,
+    reintentable: false,
+    recuperable: true,
+    facturapi_pendiente_id: args.pendienteId ?? null,
+    external_id: args.claimTag,
+    detail: args.detalle ?? null,
+    message: MSG_PENDIENTE_NO_PERSISTIDO,
+  };
+}

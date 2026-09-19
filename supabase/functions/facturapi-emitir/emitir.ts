@@ -207,6 +207,8 @@ async function persistirFacturaTimbrada(
     .from("facturas")
     .update({
       numero, facturapi_id: facturapiId, facturapi_claim_at: null, uuid_fiscal: uuid,
+      // P0 correctivo: limpiar cualquier intento pendiente heredado.
+      facturapi_pendiente_id: null, facturapi_pendiente_at: null,
       folio_fiscal: folio, serie, factura_pdf_url: pdfUrl, factura_xml_url: xmlUrl,
       factura_xml_backup_path: respaldo.path, estado: "Emitida", ambiente: input.ambiente,
       timbrado_en: new Date().toISOString(), timbrado_por: user.id,

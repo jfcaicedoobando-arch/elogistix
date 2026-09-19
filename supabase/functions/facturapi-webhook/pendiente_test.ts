@@ -52,14 +52,14 @@ Deno.test("localiza por facturapi_id (camino normal)", async () => {
 });
 
 Deno.test("localiza por id remoto pendiente cuando el claim sigue PENDING", async () => {
-  const { db } = fakeDb({ col: "facturapi_pendiente_id", valor: "inv_remoto" }, { id: "f2" });
+  const { db } = fakeDb({ col: "facturapi_pendiente_id", valor: "inv_remoto" }, { id: "f2", facturapi_id: "PENDING:abc" });
   const r = await localizarFila<{ id: string }>({ ...base, supabase: db as never, externalId: null });
   assertEquals(r?.via, "pendiente");
   assertEquals(r?.fila.id, "f2");
 });
 
 Deno.test("localiza por external_id del evento (claimTag)", async () => {
-  const { db, consultas } = fakeDb({ col: "facturapi_id", valor: "PENDING:abc" }, { id: "f3" });
+  const { db, consultas } = fakeDb({ col: "facturapi_id", valor: "PENDING:abc" }, { id: "f3", facturapi_id: "PENDING:abc" });
   const r = await localizarFila<{ id: string }>({
     ...base, supabase: db as never, externalId: "PENDING:abc",
   });

@@ -54,6 +54,9 @@ export async function persistirRepTimbrado(p: Params): Promise<Response> {
     .update({
       facturapi_rep_id: facturapiId,
       facturapi_rep_claim_at: null,
+      // P0 correctivo: limpiar cualquier intento pendiente heredado.
+      facturapi_rep_pendiente_id: null,
+      facturapi_rep_pendiente_at: null,
       uuid_rep: uuid,
       folio_rep: folio,
       serie_rep: serie,
