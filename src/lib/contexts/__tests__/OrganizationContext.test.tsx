@@ -14,6 +14,10 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
 }));
 vi.mock("@/features/admin/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => []),
+  // El mock debe exponer TODO lo que consume el hook: sin esto el hook caía al
+  // catch y ensuciaba la salida con `[organization] No se pudo leer el tenant…`.
+  getSuperAdminOrg: vi.fn(async () => null),
+  setSuperAdminOrg: vi.fn(async () => undefined),
 }));
 vi.mock("@/lib/browserStorage", () => ({
   safeLocalStorage: { getItem: vi.fn(() => null), setItem: vi.fn() },
