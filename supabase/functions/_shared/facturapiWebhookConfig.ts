@@ -234,7 +234,7 @@ export function compararConfigRemota(args: {
     ambiente: args.ambiente,
     estado,
     mensaje: MSG[estado],
-    urlEsperada: args.urlEsperada,
+    urlEsperada: aceptadas[0],
     urlRemota: args.remoto?.url ?? null,
     webhookId: args.remoto?.id ?? null,
     eventosFaltantes,
