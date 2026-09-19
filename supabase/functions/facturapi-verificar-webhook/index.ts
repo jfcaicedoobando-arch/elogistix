@@ -149,22 +149,10 @@ Deno.serve(wrapEdgeHandler("facturapi-verificar-webhook", async (req) => {
   const apiKey = llave.apiKey;
 
 
-  let remotos: FacturapiWebhookRemoto[];
-  try {
-    remotos = await listarWebhooksRemotos(apiKey);
-  } catch (err) {
-    const norm = normalizarErrorFacturapi(err);
-    console.error("[facturapi-verificar-webhook] listado remoto falló", metadatosErrorFacturapi(norm));
-    await admin.from("facturapi_credenciales")
-      .update({ [`webhook_estado_${ambiente}`]: "error", [`webhook_verificado_${ambiente}_at`]: new Date().toISOString() })
-      .eq("organization_id", orgId);
-    return jsonResponse({
-      error: "verificacion_no_disponible",
-      message: norm.mensajeUsuario,
-      retryable: norm.reintentable,
-      retry_after_segundos: norm.retryAfterSegundos ?? null,
-    }, norm.status === 429 ? 429 : 502);
-  }
+  const listado = await listarOMarcarError(admin, orgId, ambiente, apiKey);
+  if ("respuesta" in listado) return listado.respuesta;
+  const remotos = listado.remotos;
+
 
   const remoto = elegirWebhookRemoto(
     remotos,
