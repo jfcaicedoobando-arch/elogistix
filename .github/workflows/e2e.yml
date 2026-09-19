@@ -472,16 +472,18 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Gate global anti-skip
-        # Ningún job de tests puede quedar `skipped`: sería un verde sin
-        # cobertura real.
+        # Los jobs CORE no pueden quedar `skipped`: sería un verde sin cobertura
+        # real. `multi-tenant` es la única excepción y sólo cuando el guard
+        # declaró explícitamente `mt_ok=false` (secrets E2E_MT_* ausentes).
         env:
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
           R_PORTAL: ${{ needs.portal.result }}
           R_MT: ${{ needs.multi-tenant.result }}
+          MT_OK: ${{ needs.guard-secrets.outputs.mt_ok }}
         run: |
           fail=0
-          for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL" "multi-tenant:$R_MT"; do
+          for pair in "internal-shard:$R_INTERNAL" "mutators:$R_MUTATORS" "portal:$R_PORTAL"; do
             job="${pair%%:*}"; res="${pair#*:}"
             echo "$job: $res"
             if [ "$res" = "skipped" ]; then
@@ -489,6 +491,12 @@ jobs:
               fail=1
             fi
           done
+          echo "multi-tenant: $R_MT (mt_ok=$MT_OK)"
+          if [ "$R_MT" = "skipped" ] && [ "$MT_OK" = "true" ]; then
+            echo "::error::multi-tenant quedó SKIPPED aunque los secrets E2E_MT_* existen."
+            fail=1
+          fi
+          echo "mt_skipped=$([ "$R_MT" = "skipped" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
           [ "$fail" = "0" ]
 
       - name: Download all blob reports
@@ -499,7 +507,31 @@ jobs:
           merge-multiple: true
 
       - name: Merge into HTML
-        run: bunx playwright merge-reports --reporter=html ./all-blob-reports || echo "no blob reports"
+        # Ya NO se oculta el fallo con `|| echo`. Si hay blobs, el merge DEBE
+        # funcionar; si no hay ninguno, sólo se acepta cuando TODOS los jobs de
+        # tests fueron omitidos intencionalmente (MT opcional apagado y el resto
+        # skipped por el detector). Cualquier otro caso es error.
+        env:
+          R_INTERNAL: ${{ needs.internal-shard.result }}
+          R_MUTATORS: ${{ needs.mutators.result }}
+          R_PORTAL: ${{ needs.portal.result }}
+          R_MT: ${{ needs.multi-tenant.result }}
+        run: |
+          set -euo pipefail
+          blobs=$(find all-blob-reports -type f -name '*.zip' 2>/dev/null | wc -l)
+          echo "blobs encontrados: $blobs"
+          if [ "$blobs" -gt 0 ]; then
+            bunx playwright merge-reports --reporter=html ./all-blob-reports
+            exit 0
+          fi
+          for res in "$R_INTERNAL" "$R_MUTATORS" "$R_PORTAL" "$R_MT"; do
+            if [ "$res" != "skipped" ]; then
+              echo "::error::No hay blob reports pero algún job de tests corrió (internal=$R_INTERNAL mutators=$R_MUTATORS portal=$R_PORTAL mt=$R_MT)."
+              exit 1
+            fi
+          done
+          echo "::notice::Sin blob reports: todos los jobs de tests fueron omitidos intencionalmente."
+
 
       - name: Upload merged HTML report
         if: always()
