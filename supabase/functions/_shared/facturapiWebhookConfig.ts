@@ -120,11 +120,23 @@ export const EVENTOS_REQUERIDOS: readonly string[] = [
   "receipt.canceled",
 ];
 
-/** URL que debe quedar registrada en FacturAPI para la organización. */
-export function urlWebhookEsperada(baseFunctionsUrl: string, orgId: string): string {
+/**
+ * URL que debe quedar registrada en FacturAPI para la organización.
+ *
+ * Con `ambienteAislado` devuelve la variante con `&amb=` — la que se registra
+ * cuando la organización necesita recibir Sandbox y Live en paralelo: cada
+ * ambiente tiene su propia URL y sólo su propio secret la valida.
+ */
+export function urlWebhookEsperada(
+  baseFunctionsUrl: string,
+  orgId: string,
+  ambienteAislado?: FacturapiAmbiente | null,
+): string {
   const base = baseFunctionsUrl.replace(/\/$/, "");
-  return `${base}/functions/v1/facturapi-webhook?org=${orgId}`;
+  const sufijo = ambienteAislado ? `&amb=${ambienteAislado}` : "";
+  return `${base}/functions/v1/facturapi-webhook?org=${orgId}${sufijo}`;
 }
+
 
 export type EstadoWebhook =
   | "ok"
