@@ -7,6 +7,8 @@
  * Firma: header `facturapi-signature` = HMAC-SHA256(raw_body, webhook_secret) hex.
  */
 
+import { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
+
 export type FacturapiEventType =
   | "invoice.status_updated"
   | "invoice.cancellation_status_updated"
@@ -185,25 +187,6 @@ function mapReceiptStatusUpdated(
   return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_status" };
 }
 
-/**
- * P1 · FacturAPI 5.0 — espejo de `mapCancellationStatusUpdated` para REPs:
- * `accepted` es TERMINAL (cierra `estado_rep`), el resto sólo reporta el estado
- * asíncrono del SAT. El guard de orden vive en el handler: un evento atrasado
- * (pending/verifying) nunca revierte un `accepted` ya persistido.
- */
-function mapReceiptCancellationStatus(
-  facturapi_rep_id: string,
-  cancellationStatus: string | null,
-): MappedReceiptUpdate | null {
-  if (!cancellationStatus) return null;
-  const patch: Record<string, unknown> = { rep_cancellation_status: cancellationStatus };
-  if (cancellationStatus === "accepted") {
-    patch.estado_rep = "Cancelado";
-    patch.rep_cancelado_en = new Date().toISOString();
-  }
-  return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_cancellation_status" };
-}
-
 /** Ola 5 · RG4-10 — espejo de mapInvoiceCanceled para REPs. */
 function mapReceiptCanceled(facturapi_rep_id: string): MappedReceiptUpdate {
   return {
@@ -216,6 +199,8 @@ function mapReceiptCanceled(facturapi_rep_id: string): MappedReceiptUpdate {
     bitacora_accion: "facturapi_webhook_rep_canceled",
   };
 }
+
+export { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
 
 export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceiptUpdate | null {
   const obj = ev.data?.object;

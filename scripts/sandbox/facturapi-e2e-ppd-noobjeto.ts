@@ -14,6 +14,7 @@
  */
 import { buildRepPayload, type PagoContext } from "../../supabase/functions/facturapi-emitir-rep/helpers.ts";
 import { payloadRepFinal } from "../../supabase/functions/facturapi-emitir-rep/repManual.ts";
+import { round2 } from "../../supabase/functions/facturapi-emitir-rep/taxesDr.ts";
 import { imprimirReporte, validarFacturaPpdMixta, validarRepNoObjeto } from "./facturapi-e2e-validar.ts";
 
 const API = "https://www.facturapi.io/v2";
@@ -43,6 +44,9 @@ const KEY = (() => {
 /** Etiqueta del intento: hace el guion idempotente y permite limpiar después. */
 const TAG = Deno.env.get("FACTURAPI_E2E_TAG") ?? `e2e-ppd-noobjeto-${new Date().toISOString().slice(0, 10)}`;
 const LIMPIAR = Deno.env.get("FACTURAPI_E2E_LIMPIAR") === "1";
+
+/** Tasa del concepto gravado (configurable; el no objeto no lleva impuestos). */
+const TASA_GRAVADA = Number(Deno.env.get("FACTURAPI_E2E_TASA") ?? "0.16");
 
 const auth = "Basic " + btoa(`${KEY}:`);
 
@@ -94,7 +98,7 @@ async function emitirFacturaPpdMixta(): Promise<Cfdi> {
         quantity: 1,
         product: {
           description: "Flete marítimo (gravado)", product_key: "78101800", unit_key: "E48",
-          price: 10000, taxability: "02", taxes: [{ type: "IVA", rate: 0.16 }],
+          price: 10000, taxability: "02", taxes: [{ type: "IVA", rate: TASA_GRAVADA }],
         },
       },
       {
@@ -135,11 +139,11 @@ async function emitirRep(factura: Cfdi, montoPago: number): Promise<Cfdi> {
       num_parcialidad: resumen.installment,
       imp_saldo_ant: resumen.last_balance,
       imp_pagado: resumen.amount,
-      imp_saldo_insoluto: Math.round((resumen.last_balance - resumen.amount) * 100) / 100,
+      imp_saldo_insoluto: round2(resumen.last_balance - resumen.amount),
       metodo_pago: "PPD",
-      tasa_iva: 0.16,
+      tasa_iva: TASA_GRAVADA,
       factor_iva: "Tasa",
-      grupos_iva: [{ tasa: 0.16, factor: "Tasa", importe: 10000 }],
+      grupos_iva: [{ tasa: TASA_GRAVADA, factor: "Tasa", importe: 10000 }],
       subtotal_factura: 14000,
       total_factura: 15600,
       hay_no_objeto: true,
