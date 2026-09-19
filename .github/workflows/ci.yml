@@ -1,21 +1,22 @@
 name: CI
 
-# ENSAYO DE 3 SHARDS + LINT/CHECKS EN PARALELO (medición pedida por el usuario).
+# BENCHMARK/ENSAYO DE 5 SHARDS + LINT/CHECKS EN PARALELO, pendiente de medir.
 #
-# Son 5 definiciones de job en YAML que se expanden a 7 jobs reales:
+# Son 5 definiciones de job en YAML que se expanden a 9 jobs reales:
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
 #   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
 #   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
-#   4. tests (matrix)  → Vitest shard 1, 2 y 3 (sin coverage, sin retries, sin blobs).
+#   4. tests (matrix)  → Vitest shards 1..5 (sin coverage, retries ni blobs).
 #   5. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
 #                        compatibilidad con los checks previos (este repo no tiene
 #                        branch protection ni rulesets configurados).
 #
-# Shards/workers: 3 shards × maxWorkers=2. NO se ajustan sin medición; el
+# Shards/workers: ensayo vigente de 5 shards × maxWorkers=2. Se comparará en
+# GitHub Actions contra la historia de 3 shards; NO se ajusta otra vez sin medir
+# duración del shard más lento, tiempo total y costo/recursos. El
 # procedimiento, los criterios y el historial de benchmarks viven en
 # docs/ci-vitest-shards.md (herramienta: scripts/bench-vitest-shards.sh).
-# La configuración vigente (Vitest 4, lint separado de checks) NO tiene medición
-# nueva: los números históricos son de la topología anterior y quedan en ese doc.
+# Este ensayo todavía NO tiene medición: no se anticipan resultados.
 
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
@@ -171,16 +172,16 @@ jobs:
             "${tests[@]}"
 
   tests:
-    name: Vitest shard ${{ matrix.shard }}/3
+    name: Vitest shard ${{ matrix.shard }}/5
     needs: detector
     if: needs.detector.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -192,8 +193,8 @@ jobs:
         uses: ./.github/actions/setup-bun
 
       # Sin coverage, sin blobs/merge/artifacts, sin retries globales.
-      - name: Vitest (shard ${{ matrix.shard }}/3)
-        run: bun run test -- --shard=${{ matrix.shard }}/3
+      - name: Vitest (shard ${{ matrix.shard }}/5)
+        run: bun run test -- --shard=${{ matrix.shard }}/5
 
   ci-success:
     # Nombre visible conservado por compatibilidad con los checks previos
@@ -252,7 +253,7 @@ jobs:
 
           if [ "$FRONTEND" = "true" ]; then
             if [ "$TESTS_RESULT" != "success" ]; then
-              echo "::error::los 3 shards de Vitest debían terminar en success ($TESTS_RESULT)."
+              echo "::error::los 5 shards de Vitest debían terminar en success ($TESTS_RESULT)."
               fail=1
             fi
           elif [ "$TESTS_RESULT" != "skipped" ]; then

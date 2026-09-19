@@ -157,7 +157,7 @@ Es importante separar tres cosas que suelen confundirse:
 
 **Checks automáticos:**
 
-- `ci.yml`: lint, typecheck, auditorías, pruebas Vitest 4 en 3 shards, knip y build. El build incluye el **gate de bundle** (`bun run build && bash scripts/check-bundle-size.sh`, budget 365 KB gz) y el **gate de sourcemaps** (`bash scripts/check-sourcemaps.sh`).
+- `ci.yml`: lint, typecheck, auditorías, ensayo pendiente de Vitest 4 en 5 shards (`maxWorkers=2`), knip y build. El ensayo comparará el shard más lento, tiempo total y costo/recursos contra la historia de 3 shards. El build incluye el **gate de bundle** (`bun run build && bash scripts/check-bundle-size.sh`, budget 365 KB gz) y el **gate de sourcemaps** (`bash scripts/check-sourcemaps.sh`).
 - `rls-tests.yml`: pruebas RLS y paridad del baseline cuando cambia la base de datos; también admite ejecución manual.
 - `actionlint.yml`: valida workflows y acciones cuando cambian, y en `main`.
 - `gitleaks.yml`: busca secretos filtrados en PR y `main`.

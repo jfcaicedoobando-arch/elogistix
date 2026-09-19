@@ -8,8 +8,9 @@
 - `pool: "forks"`, `isolate: true` (un fork por archivo).
 - En Vitest 4 el pool se resuelve **por proyecto**, así que el pico de procesos
   puede acercarse a `2 × maxWorkers`.
-- CI: `maxWorkers = 2`, heap `--max-old-space-size=8192`, 3 shards
-  (`ci.yml`, job `tests`). Runner `ubuntu-24.04`: 4 vCPU / 16 GB.
+- CI: ensayo vigente con `maxWorkers = 2`, heap
+  `--max-old-space-size=8192`, 5 shards y `max-parallel = 5` (`ci.yml`, job
+  `tests`). Runner `ubuntu-24.04`: 4 vCPU / 16 GB por shard.
 - Local: `maxWorkers = min(8, cpus-2)`, heap 4096 MB. Override: `VITEST_FORKS`.
 
 Justificación de `maxWorkers=2` en CI: con dos proyectos activos, 2 workers ya
@@ -41,6 +42,19 @@ Criterio de decisión:
 - subir `maxWorkers` en CI requiere además comprobar el pico de procesos, no
   sólo el tiempo.
 
+## Ensayo vigente: 5 shards
+
+El cambio de 3 a 5 shards es un benchmark pendiente de medir en GitHub Actions;
+no representa todavía una mejora comprobada. Se mantienen `maxWorkers=2`, las
+pruebas sin cobertura y la ausencia de blobs. Después de la ejecución se debe
+comparar contra la historia de 3 shards:
+
+- duración del shard más lento;
+- tiempo total del workflow;
+- costo y recursos consumidos por cinco runners paralelos.
+
+No se deben registrar tiempos estimados o simulados como resultados reales.
+
 ## Limitación conocida
 
 El sandbox de desarrollo tiene mucha más RAM/CPU que el runner de GitHub, así
@@ -54,6 +68,6 @@ memoria real de CI requiere correr el script dentro de un runner
 - run `34196983386` — 1 job unificado: 15 m 44 s de espera, 922 s acumulados.
 - run `34200102375` — 3 shards con lint dentro de `checks`: espera 347 s,
   ejecución acumulada 947 s; Vitest 1426 archivos / 8949 tests.
-- Configuración vigente (lint separado de checks, Vitest 4): **sin medición
-  nueva**. Cualquier cambio de shards/workers debe adjuntar la salida del
-  script de arriba.
+- Ensayo vigente de 5 shards (lint separado de checks, Vitest 4): **sin
+  medición nueva**. Se documentará el resultado real después de ejecutarlo en
+  GitHub Actions; la medición histórica de 3 shards permanece como referencia.

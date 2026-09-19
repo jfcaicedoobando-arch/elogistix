@@ -87,4 +87,12 @@ describe("docs de shards", () => {
     expect(fs.existsSync(path.join(raiz, "scripts/bench-vitest-shards.sh"))).toBe(true);
     expect(ci).toContain("docs/ci-vitest-shards.md");
   });
+
+  it("mantiene el ensayo de cinco shards sin cobertura ni blobs", () => {
+    expect(ci).toContain("max-parallel: 5");
+    expect(ci).toContain("shard: [1, 2, 3, 4, 5]");
+    expect(ci).toContain("Vitest shard ${{ matrix.shard }}/5");
+    expect(ci).toContain("--shard=${{ matrix.shard }}/5");
+    expect(ci).toContain("Sin coverage, sin blobs/merge/artifacts");
+  });
 });
