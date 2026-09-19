@@ -42,7 +42,7 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 - **Roles**: en `public.user_roles` (global) y `organization_members` (por org). Nunca en `profiles` ni `auth.users`.
 - **Hooks**: importar siempre desde el barrel del dominio (`@/hooks/embarque`, `@/services/cliente`, …).
 - **Pages no tocan Supabase**: toda I/O pasa por hook → service → cliente Supabase.
-- **Changelog**: cada cambio se registra en `src/content/changelog/v8/chunks/0.ts` + entrada eager en `src/content/changelogData.ts` + bump de `APP_VERSION` (SemVer; ver §19 de ARCHITECTURE.md).
+- **Changelog**: cada cambio se registra en [`CHANGELOG.md`](./CHANGELOG.md) (raíz) + bump de `APP_VERSION` en `src/constants/appVersion.ts` (SemVer; ver §19 de ARCHITECTURE.md).
 
 ## Desarrollo local
 
