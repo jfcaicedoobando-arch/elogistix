@@ -20,6 +20,7 @@ import { buscarGlobal } from '../index';
 describe('search/index', () => {
   beforeEach(() => {
     mockRef.current = createSupabaseMock();
+    loggerMock.error.mockReset();
   });
 
   it('buscarGlobal llama al RPC busqueda_global', async () => {
