@@ -14,28 +14,22 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Webhook } from "lucide-react";
 import { FacturapiWebhookDiagnostico } from "./FacturapiWebhookDiagnostico";
-import type { FacturapiAmbiente } from "../services/facturapiCredenciales";
+import type { FacturapiCredencialesRow } from "../services/facturapiCredenciales";
 
 interface Props {
   orgId: string;
   copiar: (texto: string) => void;
-  /** Ambiente activo de la organización. */
-  ambiente?: FacturapiAmbiente;
-  estadoSandbox?: string | null;
-  estadoLive?: string | null;
-  verificadoSandboxAt?: string | null;
-  verificadoLiveAt?: string | null;
+  /** Credenciales guardadas (null si aún no hay). El ambiente activo manda. */
+  cred?: FacturapiCredencialesRow | null;
 }
 
-export function FacturapiWebhookUrlSection({
-  orgId,
-  copiar,
-  ambiente = "sandbox",
-  estadoSandbox,
-  estadoLive,
-  verificadoSandboxAt,
-  verificadoLiveAt,
-}: Props) {
+export function FacturapiWebhookUrlSection({ orgId, copiar, cred = null }: Props) {
+  const ambiente = cred?.ambiente ?? "sandbox";
+  const esLive = ambiente === "live";
+  const estadoGuardado = (esLive ? cred?.webhook_estado_live : cred?.webhook_estado_sandbox) ?? null;
+  const verificadoAt =
+    (esLive ? cred?.webhook_verificado_live_at : cred?.webhook_verificado_sandbox_at) ?? null;
+
 
   const base = import.meta.env.VITE_SUPABASE_URL ?? "";
   const webhookUrl = base
