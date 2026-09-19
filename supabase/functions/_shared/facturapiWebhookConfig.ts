@@ -44,32 +44,70 @@ export interface SecretoWebhook {
   origen: FacturapiAmbiente | "legacy";
 }
 
+/** Secret registrado para UN ambiente concreto (sin fallbacks). */
+export function secretPorAmbiente(
+  row: CredencialWebhookRow | null,
+  ambiente: FacturapiAmbiente,
+): string | null {
+  if (!row) return null;
+  return (ambiente === "live" ? row.webhook_secret_live : row.webhook_secret_sandbox) ?? null;
+}
+
+/** `true` si la organización ya tiene al menos un secret POR AMBIENTE. */
+export function tieneSecretPorAmbiente(row: CredencialWebhookRow | null): boolean {
+  return Boolean(secretPorAmbiente(row, "sandbox") || secretPorAmbiente(row, "live"));
+}
+
+export interface OpcionesSecretosWebhook {
+  /**
+   * Ambiente aislado declarado en la propia URL del webhook (`&amb=sandbox|live`).
+   * Es el ÚNICO mecanismo de transición: cada ambiente usa su propia URL y su
+   * propio secret, sin mezclarse. Si no viene, manda el ambiente activo.
+   */
+  ambienteSolicitado?: FacturapiAmbiente | null;
+  /**
+   * Fin (ISO) de la ventana de compatibilidad del secret legado indistinto.
+   * Sin fecha vigente, el legado NO se acepta.
+   */
+  legacyHasta?: string | null;
+  ahora?: Date;
+}
+
+function legacyVigente(hasta: string | null | undefined, ahora: Date): boolean {
+  if (!hasta) return false;
+  const ts = Date.parse(hasta);
+  return Number.isFinite(ts) && ts > ahora.getTime();
+}
+
 /**
- * Secretos candidatos para verificar la firma, en orden de preferencia:
- * 1. el del ambiente activo de la organización;
- * 2. el del ambiente opuesto (una org en transición sandbox → live todavía
- *    recibe eventos del ambiente viejo, y deben validarse con SU secret);
- * 3. el legado indistinto, sólo si ningún secret por ambiente está configurado.
+ * P2 (corrección de aislamiento) · Secreto ÚNICO aceptado para verificar la
+ * firma del webhook. El endpoint sólo recibe `?org=`, así que no puede saber en
+ * qué ambiente se originó el evento: aceptar además el secret del ambiente
+ * opuesto permitiría que un evento de Sandbox mutara la base de una
+ * organización en Live. Por eso:
+ *
+ *  1. se acepta EXCLUSIVAMENTE el secret del ambiente pedido (el activo, o el
+ *     declarado en la URL aislada `&amb=`);
+ *  2. jamás se prueba el ambiente opuesto;
+ *  3. el secret legado indistinto sólo se acepta si NO hay ningún secret por
+ *     ambiente y además hay ventana de compatibilidad vigente y auditable.
  */
 export function resolverSecretosWebhook(
   row: CredencialWebhookRow | null,
-  ambiente: FacturapiAmbiente = ambienteDeCredencial(row),
+  opciones: OpcionesSecretosWebhook = {},
 ): SecretoWebhook[] {
   if (!row) return [];
-  const otro: FacturapiAmbiente = ambiente === "live" ? "sandbox" : "live";
-  const por = (amb: FacturapiAmbiente): string | null =>
-    (amb === "live" ? row.webhook_secret_live : row.webhook_secret_sandbox) ?? null;
-
-  const lista: SecretoWebhook[] = [];
-  const principal = por(ambiente);
-  if (principal) lista.push({ secret: principal, origen: ambiente });
-  const secundario = por(otro);
-  if (secundario) lista.push({ secret: secundario, origen: otro });
-  if (lista.length === 0 && row.webhook_secret) {
-    lista.push({ secret: row.webhook_secret, origen: "legacy" });
+  const ambiente = opciones.ambienteSolicitado ?? ambienteDeCredencial(row);
+  const propio = secretPorAmbiente(row, ambiente);
+  if (propio) return [{ secret: propio, origen: ambiente }];
+  // Hay secret del otro ambiente pero no del pedido: fail-closed (sin mezcla).
+  if (tieneSecretPorAmbiente(row)) return [];
+  if (row.webhook_secret && legacyVigente(opciones.legacyHasta, opciones.ahora ?? new Date())) {
+    return [{ secret: row.webhook_secret, origen: "legacy" }];
   }
-  return lista;
+  return [];
 }
+
 
 /** Eventos que el ERP necesita recibir para mantener el estado fiscal al día. */
 export const EVENTOS_REQUERIDOS: readonly string[] = [
@@ -82,11 +120,23 @@ export const EVENTOS_REQUERIDOS: readonly string[] = [
   "receipt.canceled",
 ];
 
-/** URL que debe quedar registrada en FacturAPI para la organización. */
-export function urlWebhookEsperada(baseFunctionsUrl: string, orgId: string): string {
+/**
+ * URL que debe quedar registrada en FacturAPI para la organización.
+ *
+ * Con `ambienteAislado` devuelve la variante con `&amb=` — la que se registra
+ * cuando la organización necesita recibir Sandbox y Live en paralelo: cada
+ * ambiente tiene su propia URL y sólo su propio secret la valida.
+ */
+export function urlWebhookEsperada(
+  baseFunctionsUrl: string,
+  orgId: string,
+  ambienteAislado?: FacturapiAmbiente | null,
+): string {
   const base = baseFunctionsUrl.replace(/\/$/, "");
-  return `${base}/functions/v1/facturapi-webhook?org=${orgId}`;
+  const sufijo = ambienteAislado ? `&amb=${ambienteAislado}` : "";
+  return `${base}/functions/v1/facturapi-webhook?org=${orgId}${sufijo}`;
 }
+
 
 export type EstadoWebhook =
   | "ok"
@@ -116,13 +166,19 @@ function mismaUrl(a: string, b: string): boolean {
   return norm(a) === norm(b);
 }
 
-/** Elige, de los webhooks remotos, el que apunta a esta organización. */
+/**
+ * Elige, de los webhooks remotos, el que apunta a esta organización. Acepta
+ * varias URLs válidas (la simple y la aislada por ambiente).
+ */
 export function elegirWebhookRemoto(
   remotos: readonly { id: string; url?: string }[],
-  urlEsperada: string,
+  urlEsperada: string | readonly string[],
   webhookIdGuardado?: string | null,
 ): { id: string; url?: string } | null {
-  const porUrl = remotos.find((w) => typeof w.url === "string" && mismaUrl(w.url, urlEsperada));
+  const aceptadas = Array.isArray(urlEsperada) ? urlEsperada : [urlEsperada as string];
+  const porUrl = remotos.find(
+    (w) => typeof w.url === "string" && aceptadas.some((u) => mismaUrl(w.url as string, u)),
+  );
   if (porUrl) return porUrl;
   if (webhookIdGuardado) {
     const porId = remotos.find((w) => w.id === webhookIdGuardado);
@@ -130,6 +186,7 @@ export function elegirWebhookRemoto(
   }
   return null;
 }
+
 
 const MSG: Record<EstadoWebhook, string> = {
   ok: "El webhook del proveedor apunta a esta organización y tiene todos los eventos necesarios.",
@@ -141,13 +198,33 @@ const MSG: Record<EstadoWebhook, string> = {
   inactivo: "El webhook existe pero está inactivo en el proveedor: reactívalo.",
 };
 
+function urlsAceptadasDe(urlEsperada: string | readonly string[]): readonly string[] {
+  return Array.isArray(urlEsperada) ? urlEsperada as readonly string[] : [urlEsperada as string];
+}
+
+function estadoDeConfig(
+  remoto: { url?: string; status?: string } | null,
+  secretConfigurado: boolean,
+  aceptadas: readonly string[],
+  eventosFaltantes: readonly string[],
+): EstadoWebhook {
+  if (!secretConfigurado) return "no_configurado";
+  if (!remoto) return "no_encontrado";
+  const url = remoto.url;
+  if (typeof url === "string" && !aceptadas.some((u) => mismaUrl(url, u))) return "url_distinta";
+  if (remoto.status && remoto.status !== "active") return "inactivo";
+  if (eventosFaltantes.length > 0) return "eventos_faltantes";
+  return "ok";
+}
+
 /**
  * Compara la configuración remota con la esperada. Devuelve sólo datos NO
  * sensibles (URL, id y eventos); jamás el secret.
  */
 export function compararConfigRemota(args: {
   ambiente: FacturapiAmbiente;
-  urlEsperada: string;
+  /** URL simple, o lista (simple + aislada por ambiente). */
+  urlEsperada: string | readonly string[];
   secretConfigurado: boolean;
   secretLegado: boolean;
   remoto: { id: string; url?: string; events?: string[]; status?: string } | null;
@@ -156,20 +233,16 @@ export function compararConfigRemota(args: {
   const requeridos = args.eventosRequeridos ?? EVENTOS_REQUERIDOS;
   const eventosRemotos = args.remoto?.events ?? [];
   const eventosFaltantes = requeridos.filter((e) => !eventosRemotos.includes(e));
+  const aceptadas = urlsAceptadasDe(args.urlEsperada);
+  const estado = estadoDeConfig(args.remoto, args.secretConfigurado, aceptadas, eventosFaltantes);
 
-  let estado: EstadoWebhook = "ok";
-  if (!args.remoto) estado = args.secretConfigurado ? "no_encontrado" : "no_configurado";
-  else if (!args.secretConfigurado) estado = "no_configurado";
-  else if (typeof args.remoto.url === "string" && !mismaUrl(args.remoto.url, args.urlEsperada)) {
-    estado = "url_distinta";
-  } else if (args.remoto.status && args.remoto.status !== "active") estado = "inactivo";
-  else if (eventosFaltantes.length > 0) estado = "eventos_faltantes";
+
 
   return {
     ambiente: args.ambiente,
     estado,
     mensaje: MSG[estado],
-    urlEsperada: args.urlEsperada,
+    urlEsperada: aceptadas[0],
     urlRemota: args.remoto?.url ?? null,
     webhookId: args.remoto?.id ?? null,
     eventosFaltantes,
