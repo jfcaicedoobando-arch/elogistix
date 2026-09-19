@@ -130,6 +130,8 @@ jobs:
       # workflow lo ejecutaba, así que una regresión de peso pasaba sin aviso.
       # Corre justo después del build, sobre `dist/assets`, con los budgets del
       # propio script (entry 365 KB gz, lazy 250, vendor 500, react-pdf 600).
+      # Los budgets NO se suben para pintar el job de verde: si el entry excede
+      # 365 KB, el check queda rojo hasta reducirlo con lazy/split real.
       - name: Bundle size gate
         if: needs.detector.outputs.frontend == 'true'
         run: bash scripts/check-bundle-size.sh
