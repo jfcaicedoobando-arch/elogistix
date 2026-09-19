@@ -42,6 +42,25 @@ describe("registrarActividad", () => {
     ).resolves.toBeUndefined();
   });
 
+  // Ruido de CI: los dobles de Supabase de otras suites no exponen `auth`.
+  // Antes eso lanzaba y dejaba 41 líneas `[bitacora] excepción:` en la salida.
+  it("no intenta leer la sesión si el cliente no expone auth.getSession", async () => {
+    const cliente = supabase as unknown as { auth?: unknown };
+    const authOriginal = cliente.auth;
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      cliente.auth = undefined;
+      await expect(
+        registrarActividad({ modulo: "cxp", accion: "crear" }),
+      ).resolves.toBeUndefined();
+      expect(supabase.rpc).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+      cliente.auth = authOriginal;
+    }
+  });
+
   it("expone el catálogo público de módulos", () => {
     const valores = MODULOS_BITACORA.map((m) => m.valor);
     expect(valores).toContain("cxp");
