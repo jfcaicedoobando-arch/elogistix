@@ -55,8 +55,7 @@ Deno.test("lectura de conceptos fallida: 503 y estado_rep Error (no se infiere d
         return { eq: () => Promise.resolve({ data: null, error: null }) };
       },
     }),
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as Parameters<typeof resolverFiscalRep>[0];
 
   const etapa = await resolverFiscalRep(supabase, { id: "f1", subtotal: 1000, iva: 160 }, "pago-1", json);
   assert(!etapa.ok);

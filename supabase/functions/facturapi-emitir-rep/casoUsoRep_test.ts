@@ -56,6 +56,9 @@ function contexto() {
 
 interface Registro { tabla: string; patch: Record<string, unknown> }
 
+/** Cliente de Supabase que esperan las etapas (sólo se usa el subconjunto). */
+type Db = Parameters<typeof validarPagoContext>[0];
+
 /** Doble mínimo del cliente: registra updates/inserts y permite fijar el claim. */
 function fakeDb(updateResultados: Array<Record<string, unknown> | null> = []) {
   const updates: Registro[] = [];
@@ -66,8 +69,7 @@ function fakeDb(updateResultados: Array<Record<string, unknown> | null> = []) {
     const q: Record<string, unknown> = {};
     for (const m of ["select", "eq", "is", "in", "not", "order", "limit"]) q[m] = () => q;
     q.maybeSingle = resolver;
-    // deno-lint-ignore no-explicit-any
-    q.then = (ok: any, err: any) => resolver().then(ok, err);
+    q.then = (ok: (v: unknown) => unknown, err: (e: unknown) => unknown) => resolver().then(ok, err);
     return q;
   };
   const supabase = {
@@ -81,8 +83,7 @@ function fakeDb(updateResultados: Array<Record<string, unknown> | null> = []) {
     }),
     storage: { from: () => ({ upload: () => Promise.resolve({ error: { message: "sin storage" } }) }) },
   };
-  // deno-lint-ignore no-explicit-any
-  return { supabase: supabase as any, updates };
+  return { supabase: supabase as unknown as Db, updates };
 }
 
 Deno.test("contexto: mezcla 16% + No objeto queda válido con ObjetoImpDR 02", async () => {
