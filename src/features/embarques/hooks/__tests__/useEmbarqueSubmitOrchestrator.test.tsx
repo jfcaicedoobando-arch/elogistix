@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueSubmitOrchestrator } from "../useEmbarqueSubmitOrchestrator";
 import { MemoryRouter } from "react-router-dom";
@@ -82,7 +82,10 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     subirDocsMock.mockClear();
     createEmbarqueMock.mockClear();
 
-    const success = await result.current.submit(makeSubmitParams());
+    let success = false;
+    await act(async () => {
+      success = await result.current.submit(makeSubmitParams());
+    });
     expect(resolverExpedienteMock).toHaveBeenCalledWith("BL123", "FCL");
     expect(subirDocsMock).toHaveBeenCalledTimes(1);
     expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
@@ -93,7 +96,10 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     resolverExpedienteMock.mockRejectedValueOnce(new Error("expediente no resuelto"));
     createEmbarqueMock.mockClear();
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
-    const success = await result.current.submit(makeSubmitParams());
+    let success = true;
+    await act(async () => {
+      success = await result.current.submit(makeSubmitParams());
+    });
     expect(success).toBe(false);
     expect(createEmbarqueMock).not.toHaveBeenCalled();
   });
@@ -102,7 +108,10 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     subirDocsMock.mockRejectedValueOnce(new Error("upload error"));
     createEmbarqueMock.mockClear();
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
-    const success = await result.current.submit(makeSubmitParams());
+    let success = true;
+    await act(async () => {
+      success = await result.current.submit(makeSubmitParams());
+    });
     expect(success).toBe(false);
     expect(createEmbarqueMock).not.toHaveBeenCalled();
   });
@@ -113,9 +122,12 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     // SAFE-CAST: ExpedienteCliente es opaco; aquí basta con un fixture mínimo.
     const expedienteFixture = { expediente: "EXP-999", cliente_id: "cli-1" } as unknown as SubmitParams["expedienteSeleccionado"];
-    const success = await result.current.submit(
-      makeSubmitParams({ modoExpediente: "existente", expedienteSeleccionado: expedienteFixture }),
-    );
+    let success = false;
+    await act(async () => {
+      success = await result.current.submit(
+        makeSubmitParams({ modoExpediente: "existente", expedienteSeleccionado: expedienteFixture }),
+      );
+    });
     expect(resolverExpedienteMock).not.toHaveBeenCalled();
     expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
     expect(success).toBe(true);
