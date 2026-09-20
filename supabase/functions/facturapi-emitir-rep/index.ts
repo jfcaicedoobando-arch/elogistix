@@ -8,33 +8,13 @@
  * v13.91.0
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
+import { handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
-import { timbrarRep } from "./timbrar.ts";
-import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
-import { calcularParcialidad, resolverReferenciasEmbarque } from "./context.ts";
-import { persistirRepTimbrado } from "./persistir.ts";
-import { respuestaSiRepPendiente } from "./pendiente.ts";
-import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { resolverGruposRetencionDr, MSG_RETENCIONES_SIN_IMPORTES } from "./retencionesDr.ts";
-import {
-  MSG_REP_CONCEPTOS_ILEGIBLES,
-  MSG_REP_IMPORTES_FALTANTES,
-  MSG_REP_TRATAMIENTO_INDETERMINADO,
-  trasladoDesdeEncabezado,
-  type GrupoTrasladoDr,
-} from "./trasladoDr.ts";
-import { resolverNoObjetoDr } from "./objetoImpDr.ts";
-import { payloadRepFinal } from "./repManual.ts";
-import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
-import { reservarRep } from "./claimRep.ts";
-import { precargarPagoRep } from "./precargaPago.ts";
-import { leerConceptosDr } from "./conceptosFacturaDr.ts";
-import { verificarResumenProveedor } from "./resumenProveedor.ts";
+import { makeJson } from "../_shared/response.ts";
+import { emitirRepCasoUso } from "./casoUso.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -44,7 +24,6 @@ void resolveFacturapiKey;
 
 interface ReqBody { pago_id?: string }
 
-// eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
   const preflight = handlePreflightStrict(req);
@@ -66,238 +45,23 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
 
-  // 1) Pago (carga + candado de REP ya timbrado + autorización)
-  const precarga = await precargarPagoRep(supabase, body.pago_id, userData.user.id, json);
-  if ("response" in precarga) return precarga.response;
-  const { pago } = precarga;
-
-  // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
-  const resolved = await getFacturapiClient(supabase, pago.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const facturapi = resolved.data.client;
-
-
-  // 2) Factura
-  const { data: factura, error: fErr } = await supabase
-    .from("facturas")
-    .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl, facturapi_id")
-    .eq("id", pago.factura_id)
-    .maybeSingle();
-  if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
-  if (!factura.uuid_fiscal) return json({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
-  if (factura.metodo_pago !== "PPD") return json({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
-
-  // P1-IVA — El desglose autoritativo son los renglones de la factura. El
-  // encabezado sólo se usa como respaldo para facturas antiguas sin renglones y
-  // únicamente si su cociente IVA/subtotal cae exacto en una tasa del catálogo.
-  const lectura = await leerConceptosDr(supabase, factura.id);
-  // P1 · Auditoría IVA — error de LECTURA ≠ factura legacy sin renglones. Si la
-  // consulta falla no se infiere nada del encabezado (se perderían las
-  // retenciones): se corta antes del claim y antes de llamar a Facturapi.
-  if (!lectura.ok) {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_REP_CONCEPTOS_ILEGIBLES })
-      .eq("id", pago.id);
-    return json(
-      { error: "conceptos_no_legibles", message: MSG_REP_CONCEPTOS_ILEGIBLES, detail: lectura.detalle },
-      503,
-    );
-  }
-  const conceptosFactura = lectura.conceptos;
-
-  // P1 · Auditoría IVA — un grupo por tratamiento con BaseDR prorrateada (la
-  // mezcla 16% + 0% sí se cobra; nunca una tasa promedio). "No objeto" (SAT 01)
-  // se representa vía XML manual (`repManual.ts`): no causa impuesto, pero su
-  // importe entra al denominador del prorrateo. Nada se vuelve Exento.
-  const noObjeto = resolverNoObjetoDr(conceptosFactura);
-  const { objetoImpDr, hayNoObjeto, gravables: conceptosGravables, grupos } = noObjeto;
-  if (grupos === "sin_importes") {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_REP_IMPORTES_FALTANTES })
-      .eq("id", pago.id);
-    return json({ error: "iva_importes_faltantes", message: MSG_REP_IMPORTES_FALTANTES }, 422);
-  }
-  // P1-IVA — tratamiento desconocido o contradictorio: se falla CERRADO antes
-  // del claim, con un mensaje que dice qué debe completar Contabilidad.
-  const respaldo = grupos === "sin_conceptos"
-    ? trasladoDesdeEncabezado(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0))
-    : null;
-  if (grupos === "indeterminado" || (grupos === "sin_conceptos" && respaldo === null)) {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_REP_TRATAMIENTO_INDETERMINADO })
-      .eq("id", pago.id);
-    return json({ error: "iva_tratamiento_indeterminado", message: MSG_REP_TRATAMIENTO_INDETERMINADO }, 422);
-  }
-  const gruposIva: GrupoTrasladoDr[] = Array.isArray(grupos) ? grupos : [];
-  // Compatibilidad: el primer grupo alimenta `tasa_iva`/`factor_iva`, que es lo
-  // único que puede declararse cuando la factura no tiene renglones.
-  const tasaIvaDr = gruposIva[0]?.tasa ?? respaldo?.tasa ?? 0;
-  const factorIvaFactura = gruposIva[0]?.factor ?? respaldo?.factor ?? "Tasa";
-  // P1 · Auditoría IVA — retenciones del CFDI relacionado: un grupo por
-  // impuesto+tasa con la base de sus renglones (los no objeto no admiten
-  // retención). Sin importes se bloquea ANTES del claim, reintentable.
-  const retencionesDr = resolverGruposRetencionDr(conceptosGravables);
-  if (retencionesDr === "sin_importes") {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_SIN_IMPORTES })
-      .eq("id", pago.id);
-    return json({ error: "retenciones_sin_importes", message: MSG_RETENCIONES_SIN_IMPORTES }, 422);
-  }
-
-  // 3) Cliente
-  const { data: cliente, error: cErr } = await supabase
-    .from("clientes")
-    .select("id, nombre, rfc, codigo_postal, regimen_fiscal")
-    .eq("id", factura.cliente_id)
-    .maybeSingle();
-  if (cErr || !cliente) return json({ error: "cliente_not_found", detail: cErr?.message }, 404);
-
-  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
-  const { data: contactoData } = await supabase
-    .from("contactos_cliente")
-    .select("email")
-    .eq("cliente_id", factura.cliente_id)
-    .not("email", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  // 4) Pagos previos de la misma factura para calcular num_parcialidad e imp_saldo_ant
-  const { data: pagosPrev, error: ppErr } = await supabase
-    .from("pagos_factura")
-    .select("id, fecha_pago, monto_aplicado_factura, created_at")
-    .eq("factura_id", factura.id)
-    .is("deleted_at", null)
-    .order("fecha_pago", { ascending: true })
-    .order("created_at", { ascending: true });
-  if (ppErr) return json({ error: "pagos_query_failed", detail: ppErr.message }, 500);
-
-  // Ola E3 · N1 — notas de crédito aplicadas antes de este pago.
-  const { data: ncsFactura, error: ncErr } = await supabase
-    .from("factura_notas_credito")
-    .select("monto, moneda, tipo_cambio, estado, fecha_emision, deleted_at")
-    .eq("factura_id", factura.id)
-    .is("deleted_at", null);
-  if (ncErr) return json({ error: "nc_query_failed", detail: ncErr.message }, 500);
-  const ncAntes = ncAplicadasEnMonedaFactura(
-    ncsFactura,
-    String(factura.moneda ?? "MXN"),
-    Number(factura.tipo_cambio ?? 1),
-    typeof pago.fecha_pago === "string" ? pago.fecha_pago : null,
-  );
-
-  const { numParcialidad, saldoAnt, impPagado, saldoInsoluto } = calcularParcialidad(
-    pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0), ncAntes,
-  );
-
-  // v13.208.0 — Referencias del embarque vinculado a la factura (con fallback a snapshot).
-  const refs = await resolverReferenciasEmbarque(supabase, factura);
-
-
-  // 5) Construir contexto
-  const ctx: PagoContext = {
-    receptor: {
-      legal_name: cliente.nombre,
-      tax_id: factura.rfc_cliente ?? cliente.rfc ?? "",
-      tax_system: cliente.regimen_fiscal ?? "",
-      address: { zip: cliente.codigo_postal ?? "" },
-      email: contactoData?.email ?? null,
-    },
-    fecha_pago: typeof pago.fecha_pago === "string" ? pago.fecha_pago : new Date(pago.fecha_pago as unknown as string).toISOString(),
-    forma_pago: pago.forma_pago ?? "",
-    moneda: pago.moneda ?? "MXN",
-    tipo_cambio: Number(pago.tipo_cambio ?? 1),
-    monto: Number(pago.monto ?? 0),
-    numero_operacion: pago.referencia ?? null,
-    documento_relacionado: {
-      uuid: factura.uuid_fiscal,
-      folio: factura.folio_fiscal != null ? String(factura.folio_fiscal) : null,
-      serie: factura.serie ?? null,
-      moneda_dr: factura.moneda ?? "MXN",
-      tipo_cambio_dr: Number(factura.tipo_cambio ?? 1),
-      num_parcialidad: numParcialidad,
-      imp_saldo_ant: saldoAnt,
-      imp_pagado: impPagado,
-      imp_saldo_insoluto: saldoInsoluto,
-      metodo_pago: "PPD",
-      tasa_iva: tasaIvaDr,
-      factor_iva: factorIvaFactura,
-      grupos_iva: gruposIva,
-      retenciones: retencionesDr,
-      subtotal_factura: Number(factura.subtotal ?? 0),
-      total_factura: Number(factura.total ?? 0),
-      hay_no_objeto: hayNoObjeto,
-      objeto_imp_dr: objetoImpDr,
-      importe_no_objeto: noObjeto.importeNoObjeto,
-    },
-    referencias: refs,
-  };
-
-  const issues = validateRepContext(ctx);
-  if (issues.length > 0) {
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: issues.map((i) => i.message).join("; ") })
-      .eq("id", pago.id);
-    return json({ error: "validation_failed", issues }, 422);
-  }
-
-  // P1 · FacturAPI 5.0 — `invoices.paymentSummary` es la AUTORIDAD del saldo.
-  // Si el proveedor difiere fuera de tolerancia, o no se puede consultar, NO se
-  // reclama ni se timbra (sin mutar estado_rep a Error).
-  const paridad = await verificarResumenProveedor({
-    facturapi, facturaFacturapiId: factura.facturapi_id ?? null, ctx, supabase,
-    pagoId: pago.id, organizationId: pago.organization_id,
-    usuarioId: userData.user.id, usuarioEmail: userData.user.email, json,
-  });
-  if (paridad) return paridad;
-
-  // EF-01 (auditoría): claim atómico ANTES de timbrar (después de validar, para
-  // no liberarlo en el 422). El tag viaja como external_id a FacturAPI.
-  const reserva = await reservarRep(supabase, pago, json);
-  if ("response" in reserva) return reserva.response;
-  const { claimTag, releaseClaim } = reserva;
-
-  // EF-01: `external_id` correlaciona el claim para facturapi-recuperar-claim.
-  // P0-B: `idempotency_key` es el dedup oficial de FacturAPI (mismo claim ⇒
-  // misma llave, así un reintento técnico no crea un segundo REP).
-  const payload = Object.assign(buildRepPayload(ctx), {
-    external_id: claimTag, idempotency_key: claimTag,
-  });
-  // Con renglones "no objeto" el complemento viaja como XML nuestro (único
-  // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
-  const resultado = await timbrarRep({
-    facturapi,
-    payload: payloadRepFinal(payload, ctx),
+  return await emitirRepCasoUso({
     supabase,
-    pagoId: pago.id,
-    organizationId: pago.organization_id,
-    usuarioId: userData.user.id,
-    usuarioEmail: userData.user.email,
-    claimTag,
-    releaseClaim,
+    pagoId: body.pago_id,
+    usuario: { id: userData.user.id, email: userData.user.email },
     json,
-  });
-  if (!resultado.ok) return resultado.response;
-
-  // P0-A: pendiente ⇒ 202, sin marcar Timbrado, sin XML y conservando el claim.
-  const pend = await respuestaSiRepPendiente(resultado.invoice, {
-    supabase, pagoId: pago.id, organizationId: pago.organization_id, claimTag,
-    usuarioId: userData.user.id, usuarioEmail: userData.user.email, json,
-  });
-  if (pend) return pend;
-
-  return await persistirRepTimbrado({
-    supabase,
-    invoice: resultado.invoice,
-    apiKey: resolved.data.apiKey,
-    ambiente: resolved.data.ambiente,
-    claimTag,
-    pagoId: pago.id,
-    facturaId: factura.id,
-    organizationId: pago.organization_id,
-    usuarioId: userData.user.id,
-    usuarioEmail: userData.user.email,
-    json,
+    // Multi-tenant: el cliente del SDK se crea aquí (adaptador) por organización.
+    resolverFacturapi: async (organizationId: string) => {
+      const resolved = await getFacturapiClient(supabase, organizationId);
+      if (!resolved.ok) {
+        return {
+          ok: false as const,
+          response: json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status),
+        };
+      }
+      return { ok: true as const, data: resolved.data };
+    },
   });
 }));
+
 
