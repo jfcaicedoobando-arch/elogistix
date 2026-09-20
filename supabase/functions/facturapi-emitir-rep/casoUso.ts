@@ -21,7 +21,8 @@ import type { JsonFn, UsuarioRep } from "./etapaResultado.ts";
 
 /** Datos del SDK resueltos por organización (multi-tenant). */
 export interface FacturapiResuelto {
-  client: unknown;
+  /** Cliente opaco del SDK v5; lo tipan los adaptadores compartidos. */
+  client: object;
   apiKey: string;
   ambiente: string;
 }

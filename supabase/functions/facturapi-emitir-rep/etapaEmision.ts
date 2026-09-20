@@ -21,7 +21,7 @@ import type { JsonFn, UsuarioRep } from "./etapaResultado.ts";
 interface ArgsEmision {
   supabase: SupabaseClient;
   /** Cliente opaco del SDK v5; lo tipa el adaptador `_shared/facturapiSdk.ts`. */
-  facturapi: unknown;
+  facturapi: object;
   apiKey: string;
   ambiente: string;
   pago: PagoRep;
