@@ -4,7 +4,7 @@
  * comportamiento.
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/authz.ts";
+import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { esReTimbradoPermitido } from "./claimRep.ts";
 
 const COLS_PAGO =
