@@ -106,7 +106,11 @@ export async function resolverFiscalRep(
   pagoId: string,
   json: JsonFn,
 ): Promise<Etapa<FiscalDr>> {
-  const lectura = await leerConceptosDr(supabase, factura.id);
+  // SAFE-CAST: el cliente implementa el subconjunto de query que usa la lectura.
+  const lectura = await leerConceptosDr(
+    supabase as unknown as Parameters<typeof leerConceptosDr>[0],
+    factura.id,
+  );
   // Error de LECTURA ≠ factura legacy sin renglones: si la consulta falla no se
   // infiere nada del encabezado (se perderían las retenciones).
   if (!lectura.ok) {
