@@ -12,6 +12,45 @@ import type { DatosPagoRep, FacturaRep, PagoRep } from "./etapaDatos.ts";
 import type { FiscalDr } from "./etapaFiscal.ts";
 import { etapaCorte, etapaOk, type Etapa, type JsonFn } from "./etapaResultado.ts";
 
+function receptorDe(factura: FacturaRep, datos: DatosPagoRep): PagoContext["receptor"] {
+  const { cliente } = datos;
+  return {
+    legal_name: cliente.nombre,
+    tax_id: factura.rfc_cliente ?? cliente.rfc ?? "",
+    tax_system: cliente.regimen_fiscal ?? "",
+    address: { zip: cliente.codigo_postal ?? "" },
+    email: datos.emailContacto,
+  };
+}
+
+function documentoRelacionadoDe(
+  factura: FacturaRep,
+  fiscal: FiscalDr,
+  parcialidad: DatosPagoRep["parcialidad"],
+): PagoContext["documento_relacionado"] {
+  return {
+    uuid: factura.uuid_fiscal,
+    folio: factura.folio_fiscal != null ? String(factura.folio_fiscal) : null,
+    serie: factura.serie ?? null,
+    moneda_dr: factura.moneda ?? "MXN",
+    tipo_cambio_dr: Number(factura.tipo_cambio ?? 1),
+    num_parcialidad: parcialidad.numParcialidad,
+    imp_saldo_ant: parcialidad.saldoAnt,
+    imp_pagado: parcialidad.impPagado,
+    imp_saldo_insoluto: parcialidad.saldoInsoluto,
+    metodo_pago: "PPD",
+    tasa_iva: fiscal.tasaIvaDr,
+    factor_iva: fiscal.factorIvaFactura,
+    grupos_iva: fiscal.gruposIva,
+    retenciones: fiscal.retenciones,
+    subtotal_factura: Number(factura.subtotal ?? 0),
+    total_factura: Number(factura.total ?? 0),
+    hay_no_objeto: fiscal.hayNoObjeto,
+    objeto_imp_dr: fiscal.objetoImpDr,
+    importe_no_objeto: fiscal.importeNoObjeto,
+  };
+}
+
 export function construirPagoContext(args: {
   factura: FacturaRep;
   pago: PagoRep;
@@ -19,15 +58,8 @@ export function construirPagoContext(args: {
   datos: DatosPagoRep;
 }): PagoContext {
   const { factura, pago, fiscal, datos } = args;
-  const { cliente, parcialidad, refs } = datos;
   return {
-    receptor: {
-      legal_name: cliente.nombre,
-      tax_id: factura.rfc_cliente ?? cliente.rfc ?? "",
-      tax_system: cliente.regimen_fiscal ?? "",
-      address: { zip: cliente.codigo_postal ?? "" },
-      email: datos.emailContacto,
-    },
+    receptor: receptorDe(factura, datos),
     fecha_pago: typeof pago.fecha_pago === "string"
       ? pago.fecha_pago
       : new Date(pago.fecha_pago as unknown as string).toISOString(),
@@ -36,28 +68,8 @@ export function construirPagoContext(args: {
     tipo_cambio: Number(pago.tipo_cambio ?? 1),
     monto: Number(pago.monto ?? 0),
     numero_operacion: pago.referencia ?? null,
-    documento_relacionado: {
-      uuid: factura.uuid_fiscal,
-      folio: factura.folio_fiscal != null ? String(factura.folio_fiscal) : null,
-      serie: factura.serie ?? null,
-      moneda_dr: factura.moneda ?? "MXN",
-      tipo_cambio_dr: Number(factura.tipo_cambio ?? 1),
-      num_parcialidad: parcialidad.numParcialidad,
-      imp_saldo_ant: parcialidad.saldoAnt,
-      imp_pagado: parcialidad.impPagado,
-      imp_saldo_insoluto: parcialidad.saldoInsoluto,
-      metodo_pago: "PPD",
-      tasa_iva: fiscal.tasaIvaDr,
-      factor_iva: fiscal.factorIvaFactura,
-      grupos_iva: fiscal.gruposIva,
-      retenciones: fiscal.retenciones,
-      subtotal_factura: Number(factura.subtotal ?? 0),
-      total_factura: Number(factura.total ?? 0),
-      hay_no_objeto: fiscal.hayNoObjeto,
-      objeto_imp_dr: fiscal.objetoImpDr,
-      importe_no_objeto: fiscal.importeNoObjeto,
-    },
-    referencias: refs,
+    documento_relacionado: documentoRelacionadoDe(factura, fiscal, datos.parcialidad),
+    referencias: datos.refs,
   };
 }
 
