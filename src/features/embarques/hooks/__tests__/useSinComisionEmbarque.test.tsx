@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import type { QueryClient } from "@tanstack/react-query";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { queryKeys } from "@/lib/query";
@@ -31,7 +31,7 @@ describe("useSinComisionEmbarque", () => {
     const { result } = renderHook(() => useSinComisionEmbarque("e-1"), {
       wrapper: createWrapper(),
     });
-    await vi.waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockFetch).toHaveBeenCalledWith("e-1");
     expect(
       testClient().getQueryData(queryKeys.embarques.sinComision("e-1")),

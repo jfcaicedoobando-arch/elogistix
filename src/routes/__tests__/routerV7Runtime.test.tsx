@@ -151,11 +151,15 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
     vi.useFakeTimers();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
     // Los tests que alinean `window.history` con el MemoryRouter restauran la
-    // URL para no contaminar el resto de la suite.
-    window.history.replaceState(null, "", "/");
+    // URL para no contaminar el resto de la suite. nuqs parchea la History API
+    // y notifica a sus suscriptores: como este hook corre ANTES del cleanup de
+    // RTL (los componentes siguen montados), la restauración va dentro de `act`.
+    await act(async () => {
+      window.history.replaceState(null, "", "/");
+    });
   });
 
   /** Drena los temporizadores pendientes de nuqs dentro de `act`. */
