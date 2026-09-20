@@ -45,6 +45,10 @@ export interface PagoRep {
   forma_pago?: string | null;
   referencia?: string | null;
   monto_aplicado_factura?: number | null;
+  estado_rep?: string | null;
+  facturapi_rep_id?: string | null;
+  uuid_rep?: string | null;
+  rep_cancelado_facturapi_id?: string | null;
 }
 
 export interface DatosPagoRep {

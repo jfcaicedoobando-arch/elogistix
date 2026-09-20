@@ -6,6 +6,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { esReTimbradoPermitido } from "./claimRep.ts";
+import type { PagoRep } from "./etapaDatos.ts";
 
 const COLS_PAGO =
   "id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, uuid_rep, rep_cancelado_facturapi_id, monto_aplicado_factura";
@@ -15,7 +16,7 @@ export async function precargarPagoRep(
   pagoId: string,
   userId: string,
   json: (body: unknown, status?: number) => Response,
-): Promise<{ response: Response } | { pago: Record<string, never> }> {
+): Promise<{ response: Response } | { pago: PagoRep }> {
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura").select(COLS_PAGO).eq("id", pagoId).maybeSingle();
   if (pErr || !pago) return { response: json({ error: "pago_not_found", detail: pErr?.message }, 404) };
@@ -38,5 +39,5 @@ export async function precargarPagoRep(
   if (!(await authorizeOrgRole(supabase, userId, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return { response: json({ error: "forbidden" }, 403) };
   }
-  return { pago };
+  return { pago: pago as unknown as PagoRep };
 }
