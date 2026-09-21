@@ -12,7 +12,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency, formatPercent} from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { ProveedorNotaMonedas } from "@/features/proveedor/components/ProveedorNotaMonedas";
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 
 interface Props {
   totalFacturado: number;

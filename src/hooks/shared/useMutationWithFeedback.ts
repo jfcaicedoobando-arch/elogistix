@@ -23,14 +23,20 @@
  *     },
  *   });
  *
- * Preserva `onSuccess`/`onError` extra del consumer (útil para navegación,
- * closes de modales, etc.). Los hooks callback se ejecutan DESPUÉS del feedback
- * por defecto.
+ * Preserva `onMutate`/`onSuccess`/`onError`/`onSettled` del consumer con el
+ * contrato COMPLETO de TanStack Query v5 (incluido el `MutationFunctionContext`
+ * y el resultado de `onMutate`). Los callbacks del consumer se ejecutan DESPUÉS
+ * del feedback/invalidación. P1-C: sin casts `as`/`unknown`.
  */
 import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+
+/** `MutationFunctionContext` oficial, derivado de los tipos instalados. */
+export type MutationFnContext = Parameters<
+  NonNullable<UseMutationOptions<unknown, Error, unknown, unknown>["onMutate"]>
+>[1];
 
 /**
  * Descriptor de actualización optimista. Soporta 1..N queries: se toma un
@@ -48,13 +54,26 @@ export interface OptimisticUpdate<TVariables, TData = unknown> {
   updater: (old: TData | undefined, variables: TVariables) => TData | undefined;
 }
 
-/** Contexto interno inyectado por el wrapper cuando hay optimismo. */
-interface OptimisticContext {
-  __snapshots?: Array<{ key: QueryKey; previous: unknown }>;
+interface Snapshot {
+  key: QueryKey;
+  previous: unknown;
+}
+
+/**
+ * Contexto interno del wrapper. Envuelve (no mezcla) el resultado del
+ * `onMutate` del consumer para poder reenviárselo intacto y tipado a los
+ * callbacks posteriores, sin necesidad de casts.
+ */
+interface WrapperContext<TContext> {
+  snapshots: Snapshot[];
+  userResult: TContext | undefined;
 }
 
 export interface UseMutationWithFeedbackOptions<TData, TError, TVariables, TContext>
-  extends Omit<UseMutationOptions<TData, TError, TVariables, TContext>, "onSuccess" | "onError" | "onMutate"> {
+  extends Omit<
+    UseMutationOptions<TData, TError, TVariables, TContext>,
+    "onSuccess" | "onError" | "onMutate" | "onSettled"
+  > {
   /** Query keys a invalidar tras éxito. Array = múltiples invalidaciones. */
   invalidate?: QueryKey | QueryKey[];
   /** Título del toast de éxito. Si se omite, no se muestra toast success. */
@@ -77,12 +96,33 @@ export interface UseMutationWithFeedbackOptions<TData, TError, TVariables, TCont
    * El rollback optimista y las invalidaciones siguen funcionando.
    */
   silent?: boolean;
+  /** Callback extra tras onMutate del wrapper; su retorno viaja a los demás. */
+  onMutate?: (
+    variables: TVariables,
+    context: MutationFnContext,
+  ) => Promise<TContext> | TContext;
   /** Callback extra tras éxito (se ejecuta después del toast + invalidate). */
-  onSuccess?: UseMutationOptions<TData, TError, TVariables, TContext>["onSuccess"];
+  onSuccess?: (
+    data: TData,
+    variables: TVariables,
+    onMutateResult: TContext | undefined,
+    context: MutationFnContext,
+  ) => void;
   /** Callback extra tras error (se ejecuta después del toast + rollback). */
-  onError?: UseMutationOptions<TData, TError, TVariables, TContext>["onError"];
-  /** Callback extra tras onMutate del usuario (se ejecuta antes del optimista). */
-  onMutate?: UseMutationOptions<TData, TError, TVariables, TContext>["onMutate"];
+  onError?: (
+    error: TError,
+    variables: TVariables,
+    onMutateResult: TContext | undefined,
+    context: MutationFnContext,
+  ) => void;
+  /** Callback extra al finalizar (después de revalidar las queries optimistas). */
+  onSettled?: (
+    data: TData | undefined,
+    error: TError | null,
+    variables: TVariables,
+    onMutateResult: TContext | undefined,
+    context: MutationFnContext,
+  ) => void;
 }
 
 function toKeyArray(k: QueryKey | QueryKey[] | undefined): QueryKey[] {
@@ -104,7 +144,7 @@ function resolveKey<TVariables>(
   key: QueryKey | ((variables: TVariables) => QueryKey),
   variables: TVariables,
 ): QueryKey {
-  return typeof key === "function" ? (key as (v: TVariables) => QueryKey)(variables) : key;
+  return typeof key === "function" ? key(variables) : key;
 }
 
 export function useMutationWithFeedback<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(
@@ -122,33 +162,25 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
     onSuccess: userOnSuccess,
     onError: userOnError,
     onMutate: userOnMutate,
+    onSettled: userOnSettled,
     ...rest
   } = opts;
 
-  return useMutation<TData, TError, TVariables, TContext>({
+  return useMutation<TData, TError, TVariables, WrapperContext<TContext>>({
     ...rest,
-    onMutate: async (variables) => {
-      const updates = toOptimisticArray(optimistic);
-      const snapshots: Array<{ key: QueryKey; previous: unknown }> = [];
+    onMutate: async (variables, context) => {
+      const snapshots: Snapshot[] = [];
 
-      for (const u of updates) {
+      for (const u of toOptimisticArray(optimistic)) {
         const key = resolveKey(u.queryKey, variables);
         // Cancelar refetches en vuelo para que no pisen nuestra escritura optimista.
         await qc.cancelQueries({ queryKey: key });
-        const previous = qc.getQueryData(key);
-        snapshots.push({ key, previous });
-        qc.setQueryData(key, (old: TData | undefined) => u.updater(old, variables));
+        snapshots.push({ key, previous: qc.getQueryData(key) });
+        qc.setQueryData(key, (old: unknown) => u.updater(old, variables));
       }
 
-      // Combinamos el contexto del usuario con nuestros snapshots.
-      // SAFE-CAST: la firma tipada exige (vars, mutation) pero sólo necesitamos vars.
-      const userCtx = (await (userOnMutate as unknown as (v: TVariables) => unknown)?.(variables)) as unknown;
-      const merged: OptimisticContext & Record<string, unknown> = {
-        ...(userCtx && typeof userCtx === "object" ? (userCtx as Record<string, unknown>) : {}),
-        __snapshots: snapshots,
-      };
-      // SAFE-CAST: unificamos snapshots + ctx del usuario en el tipo TContext genérico.
-      return merged as unknown as TContext;
+      const userResult = await userOnMutate?.(variables, context);
+      return { snapshots, userResult };
     },
     onSuccess: (data, variables, onMutateResult, context) => {
       for (const key of toKeyArray(invalidate)) {
@@ -157,12 +189,10 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       if (successTitle && !silent) {
         notifySuccess(undefined, { title: successTitle, description: successDescription });
       }
-      userOnSuccess?.(data, variables, onMutateResult, context);
+      userOnSuccess?.(data, variables, onMutateResult?.userResult, context);
     },
     onError: (error, variables, onMutateResult, context) => {
-      // SAFE-CAST: recuperamos el contexto interno inyectado en onMutate para rollback.
-      const ctx = onMutateResult as unknown as OptimisticContext | undefined;
-      for (const snap of ctx?.__snapshots ?? []) {
+      for (const snap of onMutateResult?.snapshots ?? []) {
         qc.setQueryData(snap.key, snap.previous);
       }
       // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto (getErrorMessage).
@@ -172,27 +202,20 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       if (!silent) {
         notifyError(undefined, {
           title: errorTitle,
-          // SAFE-CAST: `error` es TError genérico; getErrorMessage acepta Error/unknown.
-          description: getErrorMessage(error as unknown as Error),
+          description: getErrorMessage(error),
           error,
           method: errorMethod,
         });
       }
-      userOnError?.(error, variables, onMutateResult, context);
+      userOnError?.(error, variables, onMutateResult?.userResult, context);
     },
-    onSettled: (data, error, variables, onMutateResult) => {
+    onSettled: (data, error, variables, onMutateResult, context) => {
       // Tras el resultado real, revalidamos las queries optimistas para que
       // reflejen el estado servidor autoritativo.
-      if (optimistic) {
-        const updates = toOptimisticArray(optimistic);
-        for (const u of updates) {
-          const key = resolveKey(u.queryKey, variables);
-          qc.invalidateQueries({ queryKey: key });
-        }
+      for (const u of toOptimisticArray(optimistic)) {
+        qc.invalidateQueries({ queryKey: resolveKey(u.queryKey, variables) });
       }
-      // Delegamos al onSettled del usuario si lo pasó vía `...rest`.
-      // SAFE-CAST: la firma tipada exige un 5° arg (mutation), no lo propagamos.
-      (rest.onSettled as unknown as ((d: TData | undefined, e: TError | null, v: TVariables, c: TContext | undefined) => void) | undefined)?.(data, error, variables, onMutateResult);
+      userOnSettled?.(data, error, variables, onMutateResult?.userResult, context);
     },
   });
 }

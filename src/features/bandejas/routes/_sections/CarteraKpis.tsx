@@ -8,7 +8,7 @@ import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregat
 import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { formatNativos } from "@/features/bandejas/domain/carteraFormat";
 import { useExchangeRates } from "@/features/catalogos/hooks";
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 import { Hint } from "@/components/shared/Hint";
 
 interface Equivalente {

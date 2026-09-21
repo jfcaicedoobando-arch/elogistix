@@ -24,7 +24,7 @@ import { usePdfExport } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 // EC-10: el EERR devengado valúa filas sin embarque con `tcFallbackDof`
 // (estadoResultadosTc), que puede caer al TC de respaldo 17.25/18.5.
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
