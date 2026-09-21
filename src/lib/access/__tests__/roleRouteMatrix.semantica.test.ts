@@ -1,0 +1,111 @@
+/**
+ * Paso 13 de la auditoría — semántica efectiva de la matriz ruta→roles.
+ *
+ * `ProtectedRoute` evalúa con `anyRoleSatisfies` (jerarquía espejo de
+ * `public.has_role()`), mientras `hasRouteAccess` (sidebar / búsqueda) compara
+ * con `includes` EXACTO. Esa diferencia ya existía y es REAL: la jerarquía
+ * concede más accesos. No se alinea en este paso para no ampliar permisos
+ * visibles en silencio; queda fijada aquí como inventario para que cualquier
+ * cambio futuro sea deliberado.
+ */
+import { describe, it, expect } from "vitest";
+import {
+  ROLE_ROUTE_MATRIX,
+  getRouteRoles,
+  hasRouteAccess,
+  COMPRAS_READ_ROLES,
+  COMPRAS_HUB_ROLES,
+  COMPRAS_AGING_ROLES,
+  EMBARQUES_ROLES,
+  FACTURACION_ROLES,
+  PROFORMAS_READ_ROLES,
+  FINANCE_READ_ROLES,
+  PROVEEDORES_ROLES,
+  CLIENTES_ROLES,
+  COTIZACIONES_ROLES,
+  type RouteAccessKey,
+} from "@/lib/access/roleRouteMatrix";
+import { ROLE_EQUIVALENTS, anyRoleSatisfies } from "@/lib/auth/roleHierarchy";
+import type { AppRole } from "@/types/appRole";
+import { DIVERGENCIAS_MATRIZ_VS_JERARQUIA } from "./divergenciasMatrizJerarquia";
+
+const TODOS_LOS_ROLES = Object.keys(ROLE_EQUIVALENTS) as AppRole[];
+const CLAVES = Object.keys(ROLE_ROUTE_MATRIX) as RouteAccessKey[];
+
+const DIVERGENCIAS = new Set<string>(DIVERGENCIAS_MATRIZ_VS_JERARQUIA);
+
+describe("getRouteRoles · fuente única", () => {
+  it("devuelve por identidad la política declarada en la matriz", () => {
+    for (const clave of CLAVES) {
+      expect(getRouteRoles(clave)).toBe(ROLE_ROUTE_MATRIX[clave]);
+    }
+  });
+
+  it("la matriz es inmutable en runtime", () => {
+    expect(Object.isFrozen(ROLE_ROUTE_MATRIX)).toBe(true);
+  });
+});
+
+describe("políticas heredadas del router (paso 13: cero cambio de acceso)", () => {
+  /** El router usaba estos sets; la matriz debe contener exactamente lo mismo. */
+  const esperado: Array<[RouteAccessKey, readonly AppRole[]]> = [
+    ["/compras", COMPRAS_READ_ROLES],
+    ["/compras/aging", COMPRAS_READ_ROLES],
+    ["/embarques/:id", EMBARQUES_ROLES],
+    ["/embarques/:id/editar", EMBARQUES_ROLES],
+    ["/facturacion/:id", FACTURACION_ROLES],
+    ["/proformas/:id", PROFORMAS_READ_ROLES],
+    ["/compras/facturas/:id", FINANCE_READ_ROLES],
+    ["/compras/proveedores/:id", PROVEEDORES_ROLES],
+    ["/proveedores/:id", PROVEEDORES_ROLES],
+    ["/clientes/:id", CLIENTES_ROLES],
+    ["/clientes/:clienteId/estado-de-cuenta", FINANCE_READ_ROLES],
+    ["/cotizaciones/:id", COTIZACIONES_ROLES],
+    ["/cotizaciones/:id/editar", COTIZACIONES_ROLES],
+    ["/dev/pdf-preview/cotizacion/:id", COTIZACIONES_ROLES],
+  ];
+
+  it.each(esperado)("%s conserva el set de roles previo", (clave, roles) => {
+    expect([...getRouteRoles(clave)].sort()).toEqual([...roles].sort());
+  });
+
+  it("los alias de compras que usaban otro nombre son equivalentes", () => {
+    expect([...COMPRAS_HUB_ROLES].sort()).toEqual([...COMPRAS_READ_ROLES].sort());
+    expect([...COMPRAS_AGING_ROLES].sort()).toEqual([...COMPRAS_READ_ROLES].sort());
+  });
+});
+
+describe("hasRouteAccess vs anyRoleSatisfies · inventario exhaustivo", () => {
+  it("coinciden salvo en las divergencias declaradas", () => {
+    const inesperadas: string[] = [];
+    for (const clave of CLAVES) {
+      const permitidos = ROLE_ROUTE_MATRIX[clave];
+      for (const rol of TODOS_LOS_ROLES) {
+        const porMatriz = hasRouteAccess(rol, clave);
+        const porJerarquia = anyRoleSatisfies(permitidos, rol);
+        if (porMatriz === porJerarquia) continue;
+        const par = `${clave}|${rol}`;
+        if (!DIVERGENCIAS.has(par)) inesperadas.push(par);
+      }
+    }
+    expect(inesperadas).toEqual([]);
+  });
+
+  it("la jerarquía nunca es más estricta que la matriz", () => {
+    for (const clave of CLAVES) {
+      const permitidos = ROLE_ROUTE_MATRIX[clave];
+      for (const rol of TODOS_LOS_ROLES) {
+        if (!hasRouteAccess(rol, clave)) continue;
+        expect(anyRoleSatisfies(permitidos, rol)).toBe(true);
+      }
+    }
+  });
+
+  it("toda divergencia declarada sigue vigente (sin baseline muerta)", () => {
+    for (const par of DIVERGENCIAS) {
+      const [clave, rol] = par.split("|") as [RouteAccessKey, AppRole];
+      expect(hasRouteAccess(rol, clave)).toBe(false);
+      expect(anyRoleSatisfies(ROLE_ROUTE_MATRIX[clave], rol)).toBe(true);
+    }
+  });
+});
