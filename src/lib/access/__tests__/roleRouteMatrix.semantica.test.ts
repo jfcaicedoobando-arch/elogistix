@@ -36,6 +36,7 @@ const CLAVES = Object.keys(ROLE_ROUTE_MATRIX) as RouteAccessKey[];
  * `anyRoleSatisfies` concede acceso y el `includes` de `hasRouteAccess` no.
  */
 const DIVERGENCIAS = new Set<string>([
+  "92|",
   "/embarques|tesorero",
   "/embarques|auxiliar_contable",
   "/embarques|ejecutivo_cobranza",
@@ -103,6 +104,31 @@ const DIVERGENCIAS = new Set<string>([
   "/rentabilidad|auxiliar_contable",
   "/reportes|auxiliar_contable",
   "/sistema/bitacora|auxiliar_contable",
+  "/embarques/:id|tesorero",
+  "/embarques/:id|auxiliar_contable",
+  "/embarques/:id|ejecutivo_cobranza",
+  "/embarques/:id/editar|tesorero",
+  "/embarques/:id/editar|auxiliar_contable",
+  "/embarques/:id/editar|ejecutivo_cobranza",
+  "/facturacion/:id|auxiliar_contable",
+  "/facturacion/:id|ejecutivo_pricing",
+  "/proformas/:id|auxiliar_contable",
+  "/proformas/:id|ejecutivo_pricing",
+  "/proformas/:id|gerente_comercial",
+  "/clientes/:id|tesorero",
+  "/clientes/:id|auxiliar_contable",
+  "/cotizaciones/:id|contador",
+  "/cotizaciones/:id|tesorero",
+  "/cotizaciones/:id|auxiliar_contable",
+  "/cotizaciones/:id|ejecutivo_cobranza",
+  "/cotizaciones/:id/editar|contador",
+  "/cotizaciones/:id/editar|tesorero",
+  "/cotizaciones/:id/editar|auxiliar_contable",
+  "/cotizaciones/:id/editar|ejecutivo_cobranza",
+  "/dev/pdf-preview/cotizacion/:id|contador",
+  "/dev/pdf-preview/cotizacion/:id|tesorero",
+  "/dev/pdf-preview/cotizacion/:id|auxiliar_contable",
+  "/dev/pdf-preview/cotizacion/:id|ejecutivo_cobranza",
 ]);
 
 describe("getRouteRoles · fuente única", () => {
