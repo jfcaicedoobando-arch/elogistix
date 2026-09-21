@@ -10,7 +10,6 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildRepPayload, type PagoContext } from "./helpers.ts";
-import { payloadRepFinal } from "./repManual.ts";
 import { reservarRep } from "./claimRep.ts";
 import { timbrarRep } from "./timbrar.ts";
 import { respuestaSiRepPendiente } from "./pendiente.ts";
@@ -42,11 +41,11 @@ export async function emitirRepYPersistir(args: ArgsEmision): Promise<Response> 
   const payload = Object.assign(buildRepPayload(ctx), {
     external_id: claimTag, idempotency_key: claimTag,
   });
-  // Con renglones "no objeto" el complemento viaja como XML nuestro (único
-  // camino con ObjetoImpDR); la aritmética de bases/tasas es idéntica.
+  // El complemento SIEMPRE viaja estructurado (`complements[].type = "pago"`);
+  // el ObjetoImpDR se declara en `related_documents[].taxability`.
   const resultado = await timbrarRep({
     facturapi: args.facturapi,
-    payload: payloadRepFinal(payload, ctx),
+    payload,
     supabase,
     pagoId: pago.id,
     organizationId: pago.organization_id,

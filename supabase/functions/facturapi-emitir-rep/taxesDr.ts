@@ -11,10 +11,13 @@ import type { FactorIva, FacturapiRepPayload, PagoContext } from "./helpers.ts";
 type TaxesDr = FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"];
 type DrTaxes = Pick<
   PagoContext["documento_relacionado"],
-  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva" | "importe_no_objeto"
+  "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura" | "grupos_iva" | "importe_no_objeto" | "objeto_imp_dr"
 >;
 
 export function buildTaxesDr(dr: DrTaxes): TaxesDr {
+  // Documento completamente "no objeto": sin ImpuestosDR (ni traslados ni
+  // retenciones, que tampoco son representables sobre un renglón sin objeto).
+  if (dr.objeto_imp_dr === "01") return [];
   const grupos = dr.grupos_iva ?? [];
   const taxes: TaxesDr = grupos.length > 0 ? trasladosPorGrupo(dr, grupos) : [trasladoUnico(dr)];
   // BaseDR total del pago (sin IVA): respaldo para retenciones legacy que no
