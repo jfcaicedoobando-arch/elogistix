@@ -161,7 +161,7 @@ Deno.test("éxito: persiste Timbrado con uuid, folio y serie y limpia el pendien
   try {
     const db = fakeDb();
     const res = await persistirRepTimbrado({
-      supabase: db.supabase,
+      supabase: db.supabase as unknown as Parameters<typeof persistirRepTimbrado>[0]["supabase"],
       invoice: { id: "fapi-rep-1", uuid: "UUID-REP", folio_number: 12, series: "P" },
       apiKey: "sk_test_x", ambiente: "sandbox", claimTag: "PENDING:abc",
       pagoId: PAGO.id, facturaId: FACTURA.id, organizationId: "org-1",
