@@ -66,10 +66,17 @@ export function validarRepNoObjeto(xml: string, objetoImpEsperado: "01" | "02"):
   return [
     regla(pagos.length === 1, "rep.complemento pago20:Pagos presente", `nodos=${pagos.length}`),
     regla(docs.length >= 1, "rep.DoctoRelacionado presente", `documentos=${docs.length}`),
+    // Pagos 2.0 (CFDI 4.0) eliminó MetodoDePagoDR del DoctoRelacionado: si el
+    // atributo apareciera, el XML no correspondería al complemento vigente.
     regla(
-      valorAtributo(doc, "MetodoDePagoDR") === "PPD",
-      "rep.MetodoDePagoDR=PPD",
+      valorAtributo(doc, "MetodoDePagoDR") === null,
+      "rep.DoctoRelacionado sin MetodoDePagoDR (Pagos 2.0)",
       `MetodoDePagoDR=${valorAtributo(doc, "MetodoDePagoDR")}`,
+    ),
+    regla(
+      valorAtributo(doc, "IdDocumento") !== null,
+      "rep.IdDocumento (UUID de la factura) presente",
+      `IdDocumento=${valorAtributo(doc, "IdDocumento")}`,
     ),
     regla(
       valorAtributo(doc, "ObjetoImpDR") === objetoImpEsperado,
