@@ -224,6 +224,12 @@ export default tseslint.config(
     "supabase/migrations",
     "**/*.md",
   ] },
+  // Paso 14 de la auditoría — una corrida completa sin caché
+  // (`eslint . --no-cache --report-unused-disable-directives`) reportó CERO
+  // directivas `eslint-disable` obsoletas, así que se bloquea la regresión:
+  // todo `eslint-disable` que deje de ser necesario falla el lint.
+  { linterOptions: { reportUnusedDisableDirectives: "error" } },
+
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -240,11 +246,12 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       // 13.274.0 — Estándares React 19. RTC-02: el plugin de build del
       // Compiler se retiró (Ola 11); esta regla queda sólo como guardia
-      // estática de "rules of react", en modo warn para no explotar CI con
-      // las 3 violaciones históricas conocidas (ver
-      // `useSafeNavigate`, `sidebar`, `PlantillaSelector`), pero visibles en
-      // cada `bun run lint` para presión progresiva.
-      "react-compiler/react-compiler": "warn",
+      // estática de "rules of react".
+      // Paso 14 de la auditoría: las 3 violaciones históricas
+      // (`useSafeNavigate`, `sidebar`, `PlantillaSelector`) ya no existen; una
+      // corrida completa sin caché dio 0 incidencias, así que warn→error para
+      // bloquear la regresión.
+      "react-compiler/react-compiler": "error",
       // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
       "react-hooks/exhaustive-deps": "error",
       // Reglas React 19 (`eslint-plugin-react-hooks` v7 "Rules of React"):
@@ -264,24 +271,28 @@ export default tseslint.config(
       // ESLint 10 — `no-useless-assignment` nuevo en recomendado. Genera ruido
       // en patrones legítimos (asignaciones de fallback antes de un branch).
       "no-useless-assignment": "off",
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // Paso 14: 0 incidencias en la corrida completa → warn→error (mismas
+      // opciones y mismos overrides por glob).
+      "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
 
       "@typescript-eslint/no-unused-vars": "off",
       // Power of 10 §5/§10 — Tipado estricto: prohibido `any` sin override documentado.
       // Para casos legítimos puntuales usar `// eslint-disable-next-line @typescript-eslint/no-explicit-any`.
       "@typescript-eslint/no-explicit-any": "error",
-      // Architectural guardrails — prevent drift back into oversized files
-      // Hard cap at 300 LOC; soft warning at 250 to encourage early splitting.
-      "max-lines": ["warn", { max: 250, skipBlankLines: true, skipComments: true }],
-      "max-lines-per-function": ["warn", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
+      // Architectural guardrails — prevent drift back into oversized files.
+      // Paso 14: umbrales SIN CAMBIOS (250 / 200 LOC); sólo la severidad sube a
+      // error porque la corrida completa sin caché dio 0 incidencias.
+      "max-lines": ["error", { max: 250, skipBlankLines: true, skipComments: true }],
+      "max-lines-per-function": ["error", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
       // Umbral pragmático: 16. Funciones con CC ≤ 15 son aceptables
       // (estándar de la industria es 15; subir a 16 evita refactors forzados
       // de bajo valor). Sprint 2 · ítem 2.7 (cierre): promovido warn→error.
       // Tests, columnas de tabla y otros patrones legítimos tienen overrides
       // dedicados que apagan la regla — ver bloques más abajo.
       "complexity": ["error", { max: 16 }],
-      "max-depth": ["warn", 4],
-      "max-params": ["warn", 5],
+      // Paso 14: mismos umbrales (4 / 5), severidad warn→error con baseline 0.
+      "max-depth": ["error", 4],
+      "max-params": ["error", 5],
       // Architectural guardrail — barrel imports for hooks/services
       // Enforces ARCHITECTURE.md §4-§5: importar siempre desde el barrel
       // del dominio (`@/hooks/<dominio>` o `@/services/<dominio>`), no desde
@@ -961,13 +972,14 @@ export default tseslint.config(
     // cubre textarea/select y roles). Mientras tanto se usa
     // `no-restricted-syntax` con selector esquery.
     //
-    // Nivel "warn" + scoped a src/features: existe deuda legacy (cientos de
-    // `<Input>` sin id/aria-label) y subir a "error" rompería `bun run lint`.
-    // Burn-down: cuando el conteo llegue a 0, subir a "error" y ampliar a src/**.
+    // Paso 14 de la auditoría: el burn-down terminó — la corrida completa sin
+    // caché reporta 0 `<Input>` sin `id`/`aria-label` en `src/features/**`, así
+    // que la severidad sube a "error". El SCOPE no cambia (sigue limitado a
+    // `src/features/**`); ampliarlo a `src/**` queda para un paso futuro.
     name: "a11y-input-label",
     files: ["src/features/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-syntax": ["warn",
+      "no-restricted-syntax": ["error",
         {
           selector:
             "JSXOpeningElement[name.name='Input']:not(:has(JSXAttribute[name.name='id'])):not(:has(JSXAttribute[name.name='aria-label'])):not(JSXElement[openingElement.name.name='FormField'] > JSXElement > JSXOpeningElement)",
