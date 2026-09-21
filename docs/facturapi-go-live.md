@@ -117,9 +117,11 @@ Reglas fiscales aplicadas:
   prorrateo, no al cálculo del impuesto.
 - Nunca se reclasifica un renglón a `Exento` ni a tasa 0%.
 
-Responsabilidad y verificación: al armar el XML nosotros asumimos su validez
-(versión, orden de nodos, decimales). Antes de usarlo en producción, emitir un
-REP en el ambiente de pruebas del proveedor y revisar el XML timbrado con
-Contabilidad. Si el proveedor rechaza el complemento, el pago queda en estado
-`Error` con `rep_error` (`MSG_REP_NO_OBJETO` o el error del proveedor), sin
-timbrar ni duplicar, y es reintentable.
+Responsabilidad y verificación: el complemento lo arma el proveedor a partir del
+payload estructurado; nosotros respondemos por el tratamiento declarado
+(`taxability`) y por las bases prorrateadas. Antes de usarlo en producción,
+emitir un REP en el ambiente de pruebas del proveedor y revisar el XML timbrado
+con Contabilidad. Si el proveedor rechaza el complemento, el pago queda en estado
+`Error` con `rep_error` (el error del proveedor, o `MSG_REP_NO_OBJETO` si hubo
+una inconsistencia interna), sin timbrar ni duplicar, y es reintentable.
+
