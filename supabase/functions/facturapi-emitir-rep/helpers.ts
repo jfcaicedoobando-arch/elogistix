@@ -126,8 +126,15 @@ export interface FacturapiRepPayload {
         last_balance: number;
         amount: number;
         /**
-         * SAT/Facturapi exigen SIEMPRE el desglose de impuestos del documento
-         * relacionado, incluso cuando la factura es exenta o tasa 0%.
+         * `ObjetoImpDR` del documento relacionado (SDK 5.1.0 ·
+         * `PaymentRelatedDocument.taxability`): "01" sólo cuando TODOS sus
+         * renglones son "No objeto de impuesto"; "02" en cualquier otro caso.
+         */
+        taxability: "01" | "02";
+        /**
+         * SAT/Facturapi exigen el desglose de impuestos del documento
+         * relacionado con `taxability = "02"`, incluso si es exento o tasa 0%.
+         * Con `taxability = "01"` va vacío: el SAT prohíbe `ImpuestosDR`.
          */
         // Ola 12 · R3P-19: admite retenciones (withholding: true, IVA/ISR).
         taxes: Array<{ type: "IVA" | "ISR"; rate: number; factor: FactorIva; withholding: boolean; base: number }>;
