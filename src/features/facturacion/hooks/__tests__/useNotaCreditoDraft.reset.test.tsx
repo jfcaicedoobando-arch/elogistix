@@ -84,7 +84,7 @@ describe("useNotaCreditoDraft · ciclo abierto/cerrado", () => {
 
     act(() => {
       result.current.setDescripcion("Descuento comercial");
-      result.current.setMotivo("Devolución");
+      result.current.setMotivo("Devolucion");
       result.current.setFecha("2020-01-01");
       result.current.setFormaPago("03");
     });
