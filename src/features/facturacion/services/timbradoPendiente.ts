@@ -17,18 +17,18 @@ export interface TimbradoPendiente {
   message: string;
 }
 
-/** `true` si el cuerpo devuelto por la edge function es el 202 pendiente. */
-export function esRespuestaPendiente(data: unknown): boolean {
-  const d = (data ?? {}) as Record<string, unknown>;
-  return d.pendiente === true || d.outcome === "timbrado_pendiente";
-}
+/**
+ * Type guard real sobre el contrato wire: estrecha a `TimbradoPendienteWire`
+ * en vez de devolver un `boolean` suelto.
+ */
+export const esRespuestaPendiente = esPendienteWire;
 
-export function respuestaPendiente(data: unknown): TimbradoPendiente {
-  const d = (data ?? {}) as Record<string, unknown>;
+/** Normaliza el 202 validado (ya no recibe `unknown`). */
+export function respuestaPendiente(data: TimbradoPendienteWire): TimbradoPendiente {
   return {
     pendiente: true,
-    message: typeof d.message === "string" && d.message.trim().length > 0
-      ? d.message
+    message: typeof data.message === "string" && data.message.trim().length > 0
+      ? data.message
       : MSG_TIMBRADO_PENDIENTE_CLIENTE,
   };
 }
