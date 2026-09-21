@@ -29,8 +29,6 @@ const ROOT = process.cwd();
 const DIRECT_CLIENT_IMPORT = /from\s+["']@\/integrations\/supabase\/client["']/;
 
 
-
-
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
