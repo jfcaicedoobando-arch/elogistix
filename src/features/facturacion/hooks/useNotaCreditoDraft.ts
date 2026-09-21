@@ -1,22 +1,14 @@
 /**
- * Estado y submit del `DialogCrearNotaCredito` — extraído del dialog
- * para respetar Power of 10 (archivos productivos ≤ 200 líneas).
+ * Controlador de estado del `DialogCrearNotaCredito`: guarda el borrador,
+ * expone atajos y compone la política pura (`notaCreditoDraftPolitica`) con el
+ * hook de envío (`useNotaCreditoSubmit`). Sin reglas fiscales propias.
  *
  * v13.823.297 — el uso del CFDI queda fijo en G02 (única clave SAT válida en
  * un egreso) y la forma de pago se sugiere según el estado de cobro.
  */
-import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
-import {
-  crearNotaCredito,
-  type ConceptoNotaCredito,
-} from "@/features/facturacion/services/notasCredito";
-import { useTimbrarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
-import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -25,35 +17,20 @@ import {
   aplicarPorcentaje,
   conceptosSeleccionados,
 } from "@/features/facturacion/utils/notaCreditoSugerencias";
-import { calcularTotalesNC } from "@/features/facturacion/utils/notaCreditoTotales";
 import { conceptosPorSaldoCompleto } from "@/features/facturacion/utils/saldoCompletoNC";
-import { lineaIndeterminadaNC } from "@/features/facturacion/utils/impuestosNotaCredito";
-import { logger } from "@/lib/observability/logger";
+import {
+  makeConcepto,
+  draftInicialNC,
+  derivadosNC,
+  construirInputNC,
+  type DraftNC,
+} from "@/features/facturacion/utils/notaCreditoDraftPolitica";
+import { useNotaCreditoSubmit } from "@/features/facturacion/hooks/useNotaCreditoSubmit";
+
+export { makeConcepto };
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
 type Motivo = Tables<"factura_notas_credito">["motivo"];
-
-const CLAVE_SAT_DEFAULT = "84111506";
-const CLAVE_UNIDAD_DEFAULT = "E48";
-
-export function makeConcepto(): ConceptoNotaCredito {
-  return {
-    descripcion: "",
-    cantidad: 1,
-    precio_unitario: 0,
-    clave_sat: CLAVE_SAT_DEFAULT,
-    clave_unidad: CLAVE_UNIDAD_DEFAULT,
-    unidad: "Unidad de servicio",
-    // P1-IVA: un renglón nuevo NACE SIN tratamiento fiscal. La factura original
-    // puede ser exenta, a tasa 0, no objeto o al 8%: un 16% por omisión
-    // acreditaría un impuesto que nunca se trasladó. El usuario lo elige.
-    tasa_iva: null,
-    tipo_iva: null,
-    tasa_ret_isr: 0,
-    tasa_ret_iva: 0,
-    es_manual: true,
-  };
-}
 
 interface Params {
   open: boolean;
@@ -71,68 +48,53 @@ interface Params {
 }
 
 export function useNotaCreditoDraft(p: Params) {
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const timbrar = useTimbrarNotaCredito(p.facturaId);
-
   const sugerenciaPago = useMemo(
     () => sugerirFormaPagoNC({ facturaCobrada: !!p.facturaCobrada, formaPagoCobro: p.formaPagoCobro }),
     [p.facturaCobrada, p.formaPagoCobro],
   );
 
-  const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [motivo, setMotivo] = useState<Motivo>("Descuento");
-  const [descripcion, setDescripcion] = useState("");
-  const [formaPago, setFormaPago] = useState(sugerenciaPago.formaPago);
-  const [conceptos, setConceptos] = useState<ConceptoNotaCredito[]>(() =>
-    p.conceptosSugeridos?.length ? p.conceptosSugeridos.map((c) => ({ ...c })) : [makeConcepto()],
+  // Los últimos sugeridos se leen por referencia: el efecto de apertura NO
+  // depende de su identidad, así un refetch con el modal abierto no pisa nada.
+  const ultimos = useRef({ conceptos: p.conceptosSugeridos, formaPago: sugerenciaPago.formaPago });
+  ultimos.current = { conceptos: p.conceptosSugeridos, formaPago: sugerenciaPago.formaPago };
+
+  const [draft, setDraft] = useState<DraftNC>(() =>
+    draftInicialNC({ formaPago: sugerenciaPago.formaPago, conceptosSugeridos: p.conceptosSugeridos }),
   );
-  const [guardando, setGuardando] = useState(false);
 
+  // B-bug: sólo la transición real cerrado→abierto reinicia TODO el borrador.
+  // El montaje con `open=true` ya nació inicializado (y StrictMode no lo repite
+  // porque el ref arranca reflejando el estado actual de `open`).
+  const abiertoPrev = useRef(p.open);
   useEffect(() => {
-    if (p.open) {
-      setConceptos(p.conceptosSugeridos?.length ? p.conceptosSugeridos.map((c) => ({ ...c })) : [makeConcepto()]);
-      setFormaPago(sugerenciaPago.formaPago);
+    if (p.open && !abiertoPrev.current) {
+      setDraft(
+        draftInicialNC({
+          formaPago: ultimos.current.formaPago,
+          conceptosSugeridos: ultimos.current.conceptos,
+        }),
+      );
     }
-  }, [p.open, p.conceptosSugeridos, sugerenciaPago.formaPago]);
+    abiertoPrev.current = p.open;
+  }, [p.open]);
 
-  // B-007 (v13.320.34): la NC debe reflejar el total con IVA para que iguale
-  // el saldo de la factura original.
-  const totales = useMemo(() => calcularTotalesNC(conceptos), [conceptos]);
-  const monto = totales.total;
+  const patch = (cambio: Partial<DraftNC>) => setDraft((prev) => ({ ...prev, ...cambio }));
+  const setConceptos = (
+    next: ConceptoNotaCredito[] | ((prev: ConceptoNotaCredito[]) => ConceptoNotaCredito[]),
+  ) =>
+    setDraft((prev) => ({
+      ...prev,
+      conceptos: typeof next === "function" ? next(prev.conceptos) : next,
+    }));
 
-  const excedeSaldo = monto > p.saldoFactura + 0.01;
-  const facturaLiquidada = p.saldoFactura <= 0.01;
-  const sinUuid = !p.uuidFacturaOriginal;
-  const saldoRestante = p.saldoFactura - monto;
-  const conceptosValidos =
-    conceptos.length > 0 &&
-    conceptos.every((c) => c.descripcion.trim() && c.cantidad > 0 && c.precio_unitario >= 0);
-  // P1-IVA: un renglón sin tratamiento fiscal representable no se puede timbrar
-  // (el CFDI acreditaría impuestos supuestos). Se bloquea con aviso, no se infiere.
-  const tratamientoIndefinido = conceptos.some(lineaIndeterminadaNC);
-  const puedeGuardar =
-    !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo &&
-    !facturaLiquidada && !tratamientoIndefinido;
-  const puedeTimbrar = puedeGuardar && !sinUuid;
-
-  // YG-06: etiquetas de lo que falta para poder guardar/timbrar la NC.
-  const faltantesGuardar = [
-    facturaLiquidada && "factura con saldo pendiente",
-    !descripcion.trim() && "descripción",
-    !conceptosValidos && "conceptos completos (descripción, cantidad y precio)",
-    monto <= 0 && "importe mayor a cero",
-    excedeSaldo && "monto dentro del saldo de la factura",
-    tratamientoIndefinido && "tratamiento fiscal de IVA definido en cada concepto",
-  ].filter((x): x is string => !!x);
-  const faltantesTimbrar = sinUuid
-    ? [...faltantesGuardar, "UUID fiscal de la factura original"]
-    : faltantesGuardar;
-
-  // YG-04: hay algo capturado que se perdería si se cierra el modal.
-  const isDirty =
-    !!descripcion.trim() ||
-    conceptos.some((c) => c.descripcion.trim() !== "" || c.cantidad !== 1 || c.precio_unitario !== 0);
+  const d = useMemo(
+    () =>
+      derivadosNC(draft, {
+        saldoFactura: p.saldoFactura,
+        uuidFacturaOriginal: p.uuidFacturaOriginal,
+      }),
+    [draft, p.saldoFactura, p.uuidFacturaOriginal],
+  );
 
   // P1-IVA: el saldo completo conserva los tratamientos de la factura (uno por
   // renglón si son mixtos) o se bloquea con el motivo en pantalla.
@@ -140,7 +102,7 @@ export function useNotaCreditoDraft(p: Params) {
     const r = conceptosPorSaldoCompleto(
       p.saldoFactura,
       p.conceptosSugeridos ?? [],
-      conceptos[0] ?? makeConcepto(),
+      draft.conceptos[0] ?? makeConcepto(),
     );
     if (!r.ok) {
       notifyError(undefined, {
@@ -160,72 +122,53 @@ export function useNotaCreditoDraft(p: Params) {
     setConceptos(elegidos.length ? elegidos : [makeConcepto()]);
   };
 
-  const crearMut = useMutation({
-    mutationFn: () => {
-      // FIX-11: nunca sustituir TC ausente por 1 en monedas ≠ MXN — provoca cálculos MXN silenciosamente erróneos.
-      const tcNormalizado = p.monedaFactura === "MXN" ? 1 : Number(p.tipoCambioFactura);
-      if (!Number.isFinite(tcNormalizado) || tcNormalizado <= 0) {
-        throw new Error("LC_TC_NO_DISPONIBLE: la factura no tiene tipo de cambio válido; refresca antes de emitir la NC.");
-      }
-      return crearNotaCredito({
-        factura_id: p.facturaId,
-        motivo,
-        descripcion: descripcion.trim(),
-        monto,
-        moneda: p.monedaFactura,
-        tipo_cambio: tcNormalizado,
-        fecha_emision: fecha,
-        uso_cfdi: USO_CFDI_NC,
-        forma_pago: formaPago,
-        conceptos,
-      });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(p.facturaId) });
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
-    },
-    onError: (err) => {
-      logger.warn("useNotaCreditoDraft", "crearNotaCredito failed", getErrorMessage(err));
-    },
-  });
+  const submit = useNotaCreditoSubmit({ facturaId: p.facturaId, onOpenChange: p.onOpenChange });
 
   const handleSubmit = async (timbrarAhora: boolean) => {
-    if (!puedeGuardar) return;
-    setGuardando(true);
-    try {
-      const nueva = await crearMut.mutateAsync();
-      toast({
-        title: "Borrador de nota de crédito creado",
-        description: timbrarAhora
-          ? "Se timbrará ahora y FacturAPI asignará el folio fiscal."
-          : "El folio fiscal se asignará al timbrar.",
-      });
-      if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
-      p.onOpenChange(false);
-    } catch (err) {
-      // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna).
-      const rawMsg = err instanceof Error ? err.message : String(err ?? "");
-      logger.warn("useNotaCreditoDraft", "handleSubmit failed", rawMsg);
-      notifyError(undefined, {
-        title: "No se pudo crear la nota de crédito",
-        description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-    } finally {
-      setGuardando(false);
-    }
+    // C-bug: timbrar exige `puedeTimbrar` (incluye UUID), no sólo `puedeGuardar`:
+    // una llamada programática ya no crea el borrador cuando se pidió timbrar.
+    if (timbrarAhora ? !d.puedeTimbrar : !d.puedeGuardar) return;
+    await submit.enviar(
+      () =>
+        construirInputNC({
+          draft,
+          facturaId: p.facturaId,
+          monedaFactura: p.monedaFactura,
+          tipoCambioFactura: p.tipoCambioFactura,
+          monto: d.monto,
+        }),
+      timbrarAhora,
+    );
   };
 
   return {
-    fecha, setFecha, motivo, setMotivo, descripcion, setDescripcion,
+    fecha: draft.fecha,
+    setFecha: (fecha: string) => patch({ fecha }),
+    motivo: draft.motivo,
+    setMotivo: (motivo: Motivo) => patch({ motivo }),
+    descripcion: draft.descripcion,
+    setDescripcion: (descripcion: string) => patch({ descripcion }),
     usoCfdi: USO_CFDI_NC,
-    formaPago, setFormaPago, explicacionFormaPago: sugerenciaPago.explicacion,
-    conceptos, setConceptos,
-    monto, totales, saldoRestante,
-    excedeSaldo, facturaLiquidada, sinUuid,
-    aplicarSaldoCompleto, aplicarDescuento, aplicarSeleccion,
-    puedeGuardar, puedeTimbrar, guardando, handleSubmit,
-    faltantesGuardar, faltantesTimbrar, isDirty,
+    formaPago: draft.formaPago,
+    setFormaPago: (formaPago: string) => patch({ formaPago }),
+    explicacionFormaPago: sugerenciaPago.explicacion,
+    conceptos: draft.conceptos,
+    setConceptos,
+    monto: d.monto,
+    totales: d.totales,
+    saldoRestante: d.saldoRestante,
+    excedeSaldo: d.excedeSaldo,
+    facturaLiquidada: d.facturaLiquidada,
+    sinUuid: d.sinUuid,
+    aplicarSaldoCompleto,
+    aplicarDescuento,
+    aplicarSeleccion,
+    puedeGuardar: d.puedeGuardar,
+    puedeTimbrar: d.puedeTimbrar,
+    guardando: submit.guardando,
+    handleSubmit,
+    faltantesGuardar: d.faltantesGuardar,
+    faltantesTimbrar: d.faltantesTimbrar,
+    isDirty: d.isDirty,
   };
 }
