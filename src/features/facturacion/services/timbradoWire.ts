@@ -44,8 +44,9 @@ export class TimbradoContratoError extends Error {
   constructor(cuerpo: unknown, contexto: string) {
     super(
       `${contexto} respondió correctamente pero con un cuerpo que no se reconoce ` +
-      `(ni timbre, ni pendiente, ni error). No se registró nada: vuelve a intentar ` +
-      `y, si persiste, reporta este caso a soporte.`,
+      `(ni timbre, ni pendiente, ni error). El proveedor pudo haber procesado el documento. ` +
+      `No vuelvas a timbrar. Actualiza o consulta el estado de la factura; si persiste, ` +
+      `contacta a soporte.`,
     );
     this.name = "TimbradoContratoError";
     this.cuerpo = cuerpo;
