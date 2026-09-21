@@ -103,4 +103,13 @@ describe("emitirFacturapi / emitirRep con el contrato validado", () => {
     expect(err).toBeInstanceOf(TimbradoContratoError);
     expect((err as TimbradoContratoError).code).toBe("LC_TIMBRADO_CONTRATO");
   });
+
+  it("el error de contrato advierte no volver a timbrar y no invita a reintentar", async () => {
+    invoke.mockResolvedValueOnce({ data: { folio: 1 }, error: null });
+    const err = await emitirFacturapi("f1").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(TimbradoContratoError);
+    const msg = (err as TimbradoContratoError).message;
+    expect(msg).toContain("No vuelvas a timbrar");
+    expect(msg).not.toContain("vuelve a intentar");
+  });
 });
