@@ -23,12 +23,13 @@ export interface TimbradoExitoWire {
   xml_url: string;
 }
 
-/** 202: el proveedor recibió el documento pero el SAT no ha sellado. */
-export interface TimbradoPendienteWire {
-  pendiente?: true;
-  outcome?: "timbrado_pendiente";
-  message?: string;
-}
+/** 202: el proveedor recibió el documento pero el SAT no ha sellado.
+ *
+ * Unión discriminada real: {} no satisface el tipo estático. La variante
+ * puede venir por bandera (`pendiente: true`) o por `outcome`. */
+export type TimbradoPendienteWire =
+  | { pendiente: true; outcome?: "timbrado_pendiente"; message?: string }
+  | { pendiente?: true; outcome: "timbrado_pendiente"; message?: string };
 
 /** Cuerpo de error estructurado emitido por la edge function. */
 export type TimbradoErrorWire = EdgeErrorBody & { error: string };
@@ -43,8 +44,9 @@ export class TimbradoContratoError extends Error {
   constructor(cuerpo: unknown, contexto: string) {
     super(
       `${contexto} respondió correctamente pero con un cuerpo que no se reconoce ` +
-      `(ni timbre, ni pendiente, ni error). No se registró nada: vuelve a intentar ` +
-      `y, si persiste, reporta este caso a soporte.`,
+      `(ni timbre, ni pendiente, ni error). El proveedor pudo haber procesado el documento. ` +
+      `No vuelvas a timbrar. Actualiza o consulta el estado de la factura; si persiste, ` +
+      `contacta a soporte.`,
     );
     this.name = "TimbradoContratoError";
     this.cuerpo = cuerpo;
