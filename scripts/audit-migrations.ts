@@ -39,6 +39,7 @@ import {
   scanBackfillTenantGuard,
   type Violation,
 } from "./lib/audit-sql-signatures";
+import { scanVersionesDuplicadas } from "./lib/audit-migration-versions";
 
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
@@ -352,9 +353,6 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
         "parcheo textual de función con replace(pg_get_functiondef(...)); re-emitir CREATE OR REPLACE FUNCTION completo",
     });
   }
-
-  return out;
-
 
   return out;
 }
