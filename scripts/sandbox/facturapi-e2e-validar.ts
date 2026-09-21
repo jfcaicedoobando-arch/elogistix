@@ -24,8 +24,11 @@ function valorAtributo(tag: string, nombre: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Factura I: MetodoPago=PPD y ambos ObjetoImp (02 gravado, 01 no objeto). */
-export function validarFacturaPpdMixta(xml: string): Resultado[] {
+/**
+ * Factura I: MetodoPago=PPD y ObjetoImp esperado. Con `esperaGravado` exige
+ * además un concepto 02 (escenario mixto); sin él, todo es no objeto (01).
+ */
+export function validarFacturaPpd(xml: string, esperaGravado: boolean): Resultado[] {
   const comprobante = atributos(xml, "Comprobante")[0] ?? "";
   const conceptos = atributos(xml, "Concepto");
   const objetos = conceptos.map((c) => valorAtributo(c, "ObjetoImp"));
