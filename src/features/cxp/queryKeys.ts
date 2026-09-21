@@ -8,7 +8,10 @@ export const cxp = {
   pagos: (facturaId: string) => ["cxp", "pagos", facturaId] as const,
   notasCredito: (facturaId: string) => ["cxp", "notas-credito", facturaId] as const,
   historial: (facturaId?: string | null) => ["cxp", "historial", facturaId ?? null] as const,
+  /** Prefijo por fecha: `useCerrarFacturaSinPago` invalida con esta tupla. */
   aging: (fecha?: string | null) => ["cxp", "aging", fecha ?? "hoy"] as const,
+  agingByOrg: (fecha?: string | null, organizationId?: string | null) =>
+    ["cxp", "aging", fecha ?? "hoy", organizationId] as const,
   pendientesAprobacionCount: ["cxp", "pendientes-aprobacion-count"] as const,
   conceptosCostoAbiertos: (proveedorId?: string | null, organizationId?: string | null) =>
     ["cxp", "conceptos_costo_abiertos", proveedorId ?? null, organizationId ?? null] as const,
@@ -28,6 +31,9 @@ export const cxp = {
   /** v13.502.0 — Badge del sidebar: documentos por capturar en el buzón. */
   facturasEntrantesPorCapturarCount:
     ["cxp", "facturas-entrantes", "por-capturar-count"] as const,
+  /** Key completa del badge por organización (realtime invalida por prefijo). */
+  facturasEntrantesPorCapturarCountByOrg: (organizationId?: string | null) =>
+    ["cxp", "facturas-entrantes", "por-capturar-count", organizationId ?? "sin-org"] as const,
   facturasEntrantesEstado: (estado: string) =>
     ["cxp", "facturas-entrantes", "estado", estado] as const,
   /** v13.430.1 — Documento del buzón vinculado a una factura de proveedor. */

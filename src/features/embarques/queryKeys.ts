@@ -8,8 +8,9 @@ export const embarques = {
   extrasBranchB: (visibleIds: string[]) => ['embarques', 'extras-branch-b', visibleIds] as const,
   expedientesCliente: (clienteId?: string | null, organizationId?: string | null) =>
     ['embarques', 'expedientes-cliente', clienteId, organizationId] as const,
-  conceptosVenta: (id?: string) => ['conceptos_venta', id] as const,
-  conceptosCosto: (id?: string) => ['conceptos_costo', id] as const,
+  /** Sin `id` devuelve el prefijo raíz (invalidación de todos los embarques). */
+  conceptosVenta: (id?: string) => ['conceptos_venta', ...(id ? [id] : [])] as const,
+  conceptosCosto: (id?: string) => ['conceptos_costo', ...(id ? [id] : [])] as const,
   proveedoresDelEmbarque: (id?: string) => ['embarques', 'proveedores-del-embarque', id] as const,
   /** v13.503.0 — Costos vivos del embarque para un proveedor (cotejo de monto). */
   costosProveedor: (embarqueId?: string, proveedorId?: string | null) =>
@@ -23,6 +24,8 @@ export const embarques = {
   facturas: (id: string) => ['facturas', 'embarque', id] as const,
   eventos: (id: string) => ['eventos_embarque', id] as const,
   relacionados: (id: string, blMaster: string) => ['embarques', 'relacionados', id, blMaster] as const,
+  /** Embarques generados desde una cotización (dueño: embarques). */
+  byCotizacion: (cotizacionId: string) => ['embarques', 'cotizacion', cotizacionId] as const,
   // Detalle singular (distinto de `detail`, usado por hooks de cierre/pnl/seguros/proformas).
   // B-1: `single(id)` es el PREFIJO CANÓNICO del árbol singular
   // ['embarque', id, ...] (adminPendientes, cierre*, pnlFinanciero, tcContexto,

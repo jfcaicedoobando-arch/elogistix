@@ -6,7 +6,18 @@ export const proveedores = {
   selectByOrg: (organizationId?: string | null) => ['proveedores', 'select', organizationId] as const,
   operaciones: (id: string) => ['proveedores', 'operaciones', id] as const,
   estadoCuenta: (id: string) => ['proveedores', 'estado-cuenta', id] as const,
-  movimientos: (id: string) => ['proveedores', 'movimientos', id] as const,
+  /**
+   * Estado de cuenta cronológico. Sin periodo/paginación devuelve el prefijo;
+   * con ellos, la key completa de la página consultada.
+   */
+  movimientos: (
+    id: string,
+    desde?: string,
+    hasta?: string,
+    limite?: number,
+    offset?: number,
+  ) =>
+    ['proveedores', 'movimientos', id, desde ?? '', hasta ?? '', limite ?? '', offset ?? ''] as const,
   documentos: (id: string) => ['proveedores', 'documentos', id] as const,
   contactos: (id: string) => ['proveedores', 'contactos', id] as const,
   inteligencia: (id: string) => ['proveedores', 'inteligencia', id] as const,

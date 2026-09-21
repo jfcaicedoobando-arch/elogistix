@@ -12,8 +12,11 @@ export const tesoreria = {
   estadoCuenta: (cuentaId: string | null, desde: string, hasta: string) =>
     ["tesoreria", "estado-cuenta", cuentaId ?? "none", desde, hasta] as const,
   /** Libro maestro de pagos (cobros + pagos + anticipos) por periodo. */
-  libroPagos: (desde: string, hasta: string) =>
-    ["tesoreria", "libro-pagos", desde, hasta] as const,
+  libroPagos: (desde: string, hasta: string, organizationId?: string | null) =>
+    ["tesoreria", "libro-pagos", desde, hasta, organizationId] as const,
+  /** Indica si la cuenta ya tiene movimientos (bloquea cambio de moneda). */
+  tieneMovimientos: (cuentaId: string | null) =>
+    ["tesoreria", "tiene-movimientos", cuentaId] as const,
   /** Detalle de un pago: movimiento bancario conciliado + facturas aplicadas. */
   pagoDetalle: (tipo: string | null, id: string | null) =>
     ["tesoreria", "pago-detalle", tipo ?? "none", id ?? "none"] as const,

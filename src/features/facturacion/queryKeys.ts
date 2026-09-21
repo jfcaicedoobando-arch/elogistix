@@ -1,5 +1,7 @@
 // Query keys del módulo unificado Facturación (incluye lo que antes vivía en features/facturas).
 export const facturacion = {
+  /** Prefijo canónico del dominio (invalidación amplia). */
+  all: ['facturacion'] as const,
   hueco: (organizationId?: string | null) => ['facturacion', 'hueco', organizationId] as const,
   proyeccion: (organizationId: string | null | undefined, mesKey: string) =>
     ['facturacion', 'proyeccion', organizationId, mesKey] as const,
