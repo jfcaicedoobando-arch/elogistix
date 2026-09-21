@@ -23,6 +23,7 @@ export * from './useEmbarquesPageController';
 export * from './useEmbarquesPageState';
 export * from './useEmbarquesRelacionados';
 export * from './useEventosEmbarque';
+export * from './useNuevoEmbarquePageController';
 export * from './useNuevoEmbarqueWizard';
 export * from './usePortalEmbarqueDetalleController';
 export * from './useProformaDialog';
