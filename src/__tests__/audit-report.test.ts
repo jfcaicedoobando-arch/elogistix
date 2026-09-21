@@ -27,7 +27,6 @@ const OVERSIZED_BASELINE = new Set<string>([
   "src/features/embarques/components/TabDemoras.tsx",
   "src/features/embarques/components/TabPnlContenedor.tsx",
   "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
-  "src/features/cotizacion/components/costosLocal/FilaCostoLocalRow.tsx",
   "src/components/ui/date-picker-mx-helpers.ts",
 ]);
 
