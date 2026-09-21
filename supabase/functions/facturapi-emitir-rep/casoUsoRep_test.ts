@@ -128,7 +128,11 @@ Deno.test("paymentSummary no disponible: 503 recuperable sin mutar estado", asyn
 
 Deno.test("claim ya tomado por otro proceso: 409 antes de llamar al proveedor", async () => {
   const db = fakeDb([null]);
-  const reserva = await reservarRep(db.supabase, PAGO, json);
+  const reserva = await reservarRep(
+    db.supabase as unknown as Parameters<typeof reservarRep>[0],
+    PAGO,
+    json,
+  );
   assert("response" in reserva);
   assertEquals(reserva.response.status, 409);
   assertEquals((await reserva.response.json()).error, "ya_timbrado_rep");
@@ -157,7 +161,7 @@ Deno.test("éxito: persiste Timbrado con uuid, folio y serie y limpia el pendien
   try {
     const db = fakeDb();
     const res = await persistirRepTimbrado({
-      supabase: db.supabase,
+      supabase: db.supabase as unknown as Parameters<typeof persistirRepTimbrado>[0]["supabase"],
       invoice: { id: "fapi-rep-1", uuid: "UUID-REP", folio_number: 12, series: "P" },
       apiKey: "sk_test_x", ambiente: "sandbox", claimTag: "PENDING:abc",
       pagoId: PAGO.id, facturaId: FACTURA.id, organizationId: "org-1",
