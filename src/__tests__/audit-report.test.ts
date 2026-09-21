@@ -2,33 +2,20 @@
  * Smoke test del reporte consolidado. Ejecuta los auditores puros contra
  * el repo y valida el shape esperado del baseline.
  *
- * Algunos chequeos honran allowlists temporales documentadas en
- * `src/lib/__tests__/architecture-baseline.test.ts` y `mem://audit/pendings`.
- * Estos sets DEBEN mantenerse sincronizados con esa fuente de verdad.
+ * Los baselines viven en `scripts/lib/archBaselines.ts` (fuente única); la
+ * autoridad estricta —incluida la detección de entradas obsoletas— es
+ * `src/lib/__tests__/architecture-baseline.test.ts`.
  */
 import { describe, it, expect } from "vitest";
 import { runArchAudit } from "../../scripts/lib/arch";
 import { scanCasts, summarizeCasts } from "../../scripts/lib/casts";
 import { auditTests } from "../../scripts/lib/tests";
+import {
+  PAGES_COMPONENTS_BASELINE,
+  OVERSIZED_BASELINE,
+} from "../../scripts/lib/archBaselines";
 
 const ROOT = process.cwd();
-
-// Sincronizado con PAGES_COMPONENTS_BASELINE en architecture-baseline.test.ts.
-const PAGES_COMPONENTS_BASELINE = new Set<string>([
-  "src/features/auth/components/ForgotPasswordDialog.tsx",
-  "src/features/auth/routes/ResetPassword.tsx",
-]);
-
-// Sincronizado con OVERSIZED_BASELINE en architecture-baseline.test.ts.
-const OVERSIZED_BASELINE = new Set<string>([
-  "src/features/auditoria/domain/ejecutivoAgregados.ts",
-  "src/features/proformas/routes/ProformaDetalle.tsx",
-  "src/features/embarques/services/pnlPorContenedor.ts",
-  "src/features/embarques/components/TabDemoras.tsx",
-  "src/features/embarques/components/TabPnlContenedor.tsx",
-  "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
-  "src/components/ui/date-picker-mx-helpers.ts",
-]);
 
 // Baseline temporal de archivos con `.rejects.toBeDefined()/toBeTruthy()`.
 // 13.14.1: refactor masivo a `.rejects.toThrow()` — baseline en 0.
@@ -40,6 +27,7 @@ const WEAK_REJECTS_BASELINE = new Set<string>();
 // 13.14.2: tras tightening de la regla (sólo flagea cuando usa cadena tabular),
 // baseline en 0. NO agregar nuevos archivos.
 const SUPABASE_MOCK_BASELINE = new Set<string>();
+
 
 
 

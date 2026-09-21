@@ -77,14 +77,9 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
 
 
   it("hooks y contexts no importan @/integrations/supabase/client directamente", () => {
-    // Whitelist: archivos que SÍ pueden tocar el client directamente.
-    // Mantener mínimo; preferir crear un servicio en src/services/.
-    const WHITELIST = new Set<string>([
-      // Auth core — el cliente es parte del contrato de auth.
-      "src/lib/contexts/auth/useAuthSession.ts",
-      "src/lib/contexts/auth/useAuthProfile.ts",
-      "src/lib/contexts/AuthContext.tsx",
-    ]);
+    // v13.x: whitelist eliminada — los tres archivos de auth core
+    // (useAuthSession, useAuthProfile, AuthContext) ya no tocan el cliente.
+    // No reintroducirla: crear un servicio en src/services/ o features/*/services.
     const pattern = /from\s+["']@\/integrations\/supabase\/client["']/;
     const all = [
       ...walk("src/hooks"),
@@ -92,10 +87,10 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
       ...featureSubdirs("hooks").flatMap((d) => walk(d)),
     ];
     const violators = all.filter((f) => {
-      if (WHITELIST.has(f.replace(/\\/g, "/"))) return false;
       const src = readFileSync(f, "utf8");
       return pattern.test(src);
     });
+
     expect(
       violators,
       `Hooks/contexts deben usar servicios en lugar del cliente Supabase directo:\n${violators.join("\n")}`,
