@@ -179,7 +179,7 @@ const okFactura = imprimirReporte("Factura PPD mixta", validarFacturaPpdMixta(aw
 const rep = await emitirRep(factura, 7800);
 console.log(`rep ${rep.id} uuid=${rep.uuid} status=${rep.status}`);
 const okRep = rep.uuid
-  ? imprimirReporte("REP (XML manual)", validarRepNoObjeto(await xmlDe(rep.id), "02"))
+  ? imprimirReporte("REP (estructurado)", validarRepNoObjeto(await xmlDe(rep.id), "02"))
   : (console.error("El REP quedó pendiente de timbre; reintenta con el mismo TAG."), false);
 
 if (LIMPIAR) await limpiar([rep.id, factura.id]);
