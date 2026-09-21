@@ -34,8 +34,8 @@ import {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto vía SDK (v13.136.4).
-void Deno.env.get("FACTURAPI_KEY");
+// La resolución de la API key es por organización vía SDK (v13.136.4).
+// Paso 15: no existe key global; sin credencial propia la org falla con 412.
 void resolveFacturapiKey;
 
 Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {

@@ -1,6 +1,8 @@
 /**
- * Tests del helper `resolveFacturapiKey` — verifica multi-tenant routing,
- * fallback legacy y errores claros.
+ * Tests del helper `resolveFacturapiKey` — verifica multi-tenant routing y
+ * errores claros. Paso 15: el fallback legado (`FACTURAPI_KEY` global +
+ * `LEGACY_FACTURAPI_*`) fue retirado; las pruebas de abajo lo congelan:
+ * incluso con esos secrets presentes, una org sin fila falla cerrado (412).
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { resolveFacturapiKey } from "./facturapiAuth.ts";
@@ -57,7 +59,6 @@ Deno.test("resolveFacturapiKey: usa secret sandbox cuando ambiente=sandbox", asy
   if (!res.ok) throw new Error("esperaba ok");
   assertEquals(res.data.apiKey, "sk_test_abc");
   assertEquals(res.data.ambiente, "sandbox");
-  assertEquals(res.data.legacy, false);
   cleanupEnv();
 });
 
@@ -79,7 +80,7 @@ Deno.test("resolveFacturapiKey: usa secret live cuando ambiente=live", async () 
   cleanupEnv();
 });
 
-Deno.test("resolveFacturapiKey: 412 si la org no tiene fila ni FACTURAPI_KEY global", async () => {
+Deno.test("resolveFacturapiKey: 412 si la org no tiene fila en facturapi_credenciales", async () => {
   cleanupEnv();
   const sb = makeSupabase(null);
   const res = await resolveFacturapiKey(sb, "org-sin-config");
@@ -88,7 +89,7 @@ Deno.test("resolveFacturapiKey: 412 si la org no tiene fila ni FACTURAPI_KEY glo
   assertEquals(res.data.status, 412);
 });
 
-Deno.test("resolveFacturapiKey: SIN LEGACY_FACTURAPI_ORG_ID, ninguna org usa FACTURAPI_KEY global (fail-closed)", async () => {
+Deno.test("resolveFacturapiKey: ninguna org usa FACTURAPI_KEY global (fail-closed)", async () => {
   cleanupEnv();
   Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
   const sb = makeSupabase(null);
@@ -99,42 +100,23 @@ Deno.test("resolveFacturapiKey: SIN LEGACY_FACTURAPI_ORG_ID, ninguna org usa FAC
   cleanupEnv();
 });
 
-Deno.test("resolveFacturapiKey: legacy SÓLO aplica con coincidencia EXACTA de LEGACY_FACTURAPI_ORG_ID", async () => {
+Deno.test("resolveFacturapiKey: con FACTURAPI_KEY y LEGACY_* presentes, la org sin fila sigue fail-closed (fallback retirado)", async () => {
   cleanupEnv();
+  // Escenario de regresión: alguien vuelve a poner los tres secrets del
+  // fallback retirado. El resolver debe ignorarlos por completo.
   Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
   Deno.env.set("LEGACY_FACTURAPI_ORG_ID", "org-legacy");
-  // P2-C: el ambiente del fallback legacy es explícito y obligatorio.
   Deno.env.set("LEGACY_FACTURAPI_AMBIENTE", "live");
   const sb = makeSupabase(null);
 
-  const okRes = await resolveFacturapiKey(sb, "org-legacy");
-  if (!okRes.ok) throw new Error("esperaba ok (legacy exacto)");
-  assertEquals(okRes.data.apiKey, "sk_legacy_999");
-  assertEquals(okRes.data.legacy, true);
-  assertEquals(okRes.data.ambiente, "live");
-
-  const otraOrg = await resolveFacturapiKey(sb, "org-otra-distinta");
-  if (otraOrg.ok) throw new Error("otra org NUNCA debe usar el fallback legacy");
-  assertEquals(otraOrg.data.error, "org_facturapi_not_configured");
+  for (const org of ["org-legacy", "org-otra-distinta"]) {
+    const res = await resolveFacturapiKey(sb, org);
+    if (res.ok) throw new Error(`${org} NO debe resolver: el fallback legado fue retirado`);
+    assertEquals(res.data.error, "org_facturapi_not_configured");
+    assertEquals(res.data.status, 412);
+  }
   cleanupEnv();
 });
-
-Deno.test("resolveFacturapiKey: legacy sin LEGACY_FACTURAPI_AMBIENTE válido queda fail-closed", async () => {
-  cleanupEnv();
-  Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
-  Deno.env.set("LEGACY_FACTURAPI_ORG_ID", "org-legacy");
-  const sb = makeSupabase(null);
-
-  const sinAmbiente = await resolveFacturapiKey(sb, "org-legacy");
-  if (sinAmbiente.ok) throw new Error("sin ambiente explícito NO debe resolver (nunca asumir sandbox)");
-  assertEquals(sinAmbiente.data.status, 412);
-
-  Deno.env.set("LEGACY_FACTURAPI_AMBIENTE", "produccion");
-  const ambienteInvalido = await resolveFacturapiKey(sb, "org-legacy");
-  if (ambienteInvalido.ok) throw new Error("un ambiente inválido tampoco debe resolver");
-  cleanupEnv();
-});
-
 
 Deno.test("resolveFacturapiKey: dos orgs — la configurada usa su key propia, la otra jamás toca la global", async () => {
   cleanupEnv();
@@ -151,11 +133,10 @@ Deno.test("resolveFacturapiKey: dos orgs — la configurada usa su key propia, l
   const resOrg1 = await resolveFacturapiKey(sbOrg1, "org-1");
   if (!resOrg1.ok) throw new Error("esperaba ok");
   assertEquals(resOrg1.data.apiKey, "sk_org1_own_key");
-  assertEquals(resOrg1.data.legacy, false);
 
   const sbOrgSinConfig = makeSupabase(null);
   const resOrg2 = await resolveFacturapiKey(sbOrgSinConfig, "org-2-sin-config");
-  if (resOrg2.ok) throw new Error("esperaba error (fail-closed, sin LEGACY_FACTURAPI_ORG_ID que coincida)");
+  if (resOrg2.ok) throw new Error("esperaba error (fail-closed: sin credencial propia no hay key)");
   assertEquals(resOrg2.data.error, "org_facturapi_not_configured");
   cleanupEnv();
 });
@@ -235,7 +216,6 @@ Deno.test("resolveFacturapiKey: usa RPC vault cuando vault_id está presente", a
   if (!res.ok) throw new Error("esperaba ok");
   assertEquals(res.data.apiKey, "sk_test_from_vault");
   assertEquals(res.data.ambiente, "sandbox");
-  assertEquals(res.data.legacy, false);
 });
 
 Deno.test("resolveFacturapiKey: si el RPC vault falla, cae al fallback env", async () => {
