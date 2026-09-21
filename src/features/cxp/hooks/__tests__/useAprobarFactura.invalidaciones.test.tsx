@@ -27,7 +27,7 @@ vi.mock("@/features/profit/hooks/invalidateProfitDependencies", () => ({
 
 import { useAprobarFactura } from "../useAprobarFactura";
 
-type InvalidateSpy = ReturnType<typeof vi.spyOn<QueryClient, "invalidateQueries">>;
+type InvalidateSpy = { mock: { calls: ReadonlyArray<ReadonlyArray<unknown>> } };
 
 function keysInvalidadas(spy: InvalidateSpy): string[] {
   return spy.mock.calls.map((c) =>
@@ -40,7 +40,7 @@ describe("useAprobarFactura · invalidaciones al rechazar", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    spy = vi.spyOn(QueryClient.prototype, "invalidateQueries");
+    spy = vi.spyOn(QueryClient.prototype, "invalidateQueries") as unknown as InvalidateSpy;
   });
 
   it("usa los prefijos vivos y ningún string muerto", async () => {
