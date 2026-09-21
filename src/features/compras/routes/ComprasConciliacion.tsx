@@ -5,12 +5,10 @@
  * conceptos_costo de cada embarque activo. Permite filtrar por estado
  * (sin_facturar / parcial / completa), moneda y buscar por expediente/cliente.
  * Un click en una fila lleva al detalle del embarque para operar los conceptos.
+ *
+ * P1-B: filtros, consulta y KPIs viven en `useComprasConciliacionController`.
  */
-import { useMemo, useState } from "react";
-import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
-import { useQuery } from "@tanstack/react-query";
-import { compras } from "../queryKeys";
+import { useMemo } from "react";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,62 +19,24 @@ import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
-
-import {
-  listarConciliacionEmbarques,
-  type EstadoConciliacion,
-} from "@/features/compras/services/conciliacionEmbarques";
 import { buildConciliacionColumns } from "./_sections/conciliacionColumns";
 import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
-import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
-
-const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa"] as const;
-type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & (EstadoConciliacion | "todos");
-const MONEDAS_FILTRO = ["todas", "MXN", "USD", "EUR"] as const;
-type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
+import {
+  useComprasConciliacionController,
+  type EstadoFiltro,
+  type MonedaFiltro,
+} from "../hooks/useComprasConciliacionController";
 
 export default function ComprasConciliacion() {
-  // M8 (Ola 8): filtros en la URL → el listado se puede compartir por link.
-  const [estado, setEstado] = useFiltroUrl<EstadoFiltro>("estado", ESTADOS_FILTRO, "todos");
-  const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
-  const [search, setSearch] = useTextoUrl("q");
-  const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
-  const { organizationId, orgListo } = useOrgFilter();
-
-  const { data: rows = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: compras.conciliacionEmbarques({ estado, moneda, search }, organizationId),
-    queryFn: () =>
-      listarConciliacionEmbarques({
-        estado: estado === "todos" ? "todos" : estado,
-        moneda: moneda === "todas" ? undefined : moneda,
-        search: search.trim() || undefined,
-        organizationId,
-      }),
-    // N-3: no consultar hasta que el contexto de organización resolvió.
-    enabled: orgListo,
-    staleTime: 30_000,
-  });
-
-  const kpis = useMemo(() => {
-    const sinFacturar = rows.filter((r) => r.estado_conciliacion === "sin_facturar").length;
-    const parcial = rows.filter((r) => r.estado_conciliacion === "parcial").length;
-    const completa = rows.filter((r) => r.estado_conciliacion === "completa").length;
-    const pendienteMxn = rows
-      .filter((r) => r.moneda === "MXN")
-      .reduce((a, r) => a + r.pendiente, 0);
-    const pendienteUsd = rows
-      .filter((r) => r.moneda === "USD")
-      .reduce((a, r) => a + r.pendiente, 0);
-    const pendienteEur = rows
-      .filter((r) => r.moneda === "EUR")
-      .reduce((a, r) => a + r.pendiente, 0);
-    return { sinFacturar, parcial, completa, pendienteMxn, pendienteUsd, pendienteEur };
-  }, [rows]);
+  const {
+    estado, setEstado, moneda, setMoneda, search, setSearch,
+    detalle, setDetalle,
+    rows, isLoading, isError, error, refetch, kpis,
+  } = useComprasConciliacionController();
 
   const columns = useMemo(() => buildConciliacionColumns(), []);
-
 
   return (
     <PageContainer width="wide">

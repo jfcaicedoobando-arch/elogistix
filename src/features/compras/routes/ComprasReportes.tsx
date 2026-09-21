@@ -2,11 +2,9 @@
  * /compras/reportes — Ola F. Analítica de gasto: top proveedores, evolución
  * mensual y distribución por moneda. Reutiliza el listado de facturas de
  * proveedor filtrado por fechas de emisión.
+ *
+ * P1-B: datos/estado/exportación viven en `useComprasReportesController`.
  */
-import { useMemo, useState } from "react";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
-import { useQuery } from "@tanstack/react-query";
-import { compras } from "../queryKeys";
 import {
   BarChart3, Download, TrendingUp, Banknote, Coins,
 } from "lucide-react";
@@ -22,79 +20,20 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
-import { descargarBlob } from "@/lib/downloadBlob";
-import { toCSV } from "@/lib/io/csv";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
-import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
-import { fetchExchangeRates } from "@/features/catalogos/services";
-import {
-  agruparEvolucionMensual, agruparTopProveedores,
-} from "@/features/compras/services/reportesAgregados";
-import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
-
-
-function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
-function today(): string { return todayLocalISO(); }
+import { useComprasReportesController } from "../hooks/useComprasReportesController";
 
 export default function ComprasReportes() {
-  const [desde, setDesde] = useState<string>(firstOfYear());
-  const [hasta, setHasta] = useState<string>(today());
-  const { organizationId, orgListo } = useOrgFilter();
-
-  const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: compras.reportes({ desde, hasta }, organizationId),
-    queryFn: () => fetchFacturasReporte(desde, hasta, organizationId),
-    // N-3: no consultar hasta que el contexto de organización resolvió.
-    enabled: orgListo,
-  });
-
-  const { data: rates } = useQuery({
-    queryKey: compras.exchangeRatesDofToday(),
-    queryFn: () => fetchExchangeRates(todayLocalISO()),
-    staleTime: 1000 * 60 * 60,
-  });
-
-  const totalMxn = rows.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.total, 0);
-  const totalUsd = rows.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.total, 0);
-  const totalEur = rows.filter((r) => r.moneda === "EUR").reduce((a, r) => a + r.total, 0);
-  const numFacturas = rows.length;
-
-  const tcDof = rates?.usdMxn;
-  const tcEurDof = rates?.eurMxn;
-
-  // Top proveedores — agrupamos por proveedor y moneda.
-  const topProveedores = useMemo(
-    () => agruparTopProveedores(rows, tcDof, tcEurDof),
-    [rows, tcDof, tcEurDof],
-  );
-
-  // Evolución mensual (YYYY-MM) por moneda.
-  const evolucion = useMemo(() => agruparEvolucionMensual(rows), [rows]);
-
-
-  const handleExport = () => {
-    try {
-      const csv = toCSV(
-        topProveedores.map((p) => ({
-          proveedor: p.nombre,
-          facturas: p.count,
-          total_mxn: p.mxn,
-          total_usd: p.usd,
-          total_eur: p.eur,
-          total_equivalente_mxn: p.mxnEquiv,
-        })),
-      );
-      descargarBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), `compras-top-proveedores-${desde}-${hasta}.csv`);
-      notifySuccess(undefined, { title: "CSV descargado", description: `${topProveedores.length} proveedores exportados.` });
-    } catch (e) {
-      notifyError(undefined, { title: "No se pudo exportar el CSV", error: e, method: "EXPORT_REPORTES_CSV" });
-    }
-  };
+  const {
+    desde, setDesde, hasta, setHasta,
+    isLoading, isError, refetch,
+    numFacturas, totalMxn, totalUsd, totalEur,
+    topProveedores, evolucion, handleExport,
+  } = useComprasReportesController();
 
   return (
     <PageContainer>
