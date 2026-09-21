@@ -24,6 +24,7 @@ import { staleTimes } from '@/lib/query/staleTimes';
 import { fetchSidebarAlertCounts } from '@/features/reportes/services';
 import { fetchAdminPendientesCount } from '@/features/embarques/services/cierre';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useAuthSessionToken } from '@/lib/contexts/auth/AuthSessionContext';
 
 const SIDEBAR_QUERY_TUNING = {
   staleTime: staleTimes.VERY_LONG,
@@ -72,7 +73,10 @@ export function useSidebarAlerts() {
   // 13.823.146 (regresión): bastaba `user` en memoria, pero si el token ya
   // expiró PostgREST llama como `anon` y vuelve el "permission denied". Ahora
   // exigimos además un access token vigente en la sesión.
-  const { user, session } = useAuth();
+  // Paso 11: el token viene del contexto estrecho (AuthSessionContext); la
+  // rotación del token ya no re-renderiza a los consumidores de `useAuth`.
+  const { user } = useAuth();
+  const session = useAuthSessionToken();
   const conSesion = Boolean(user && session?.access_token);
 
   const { data } = useQuery({
