@@ -26,7 +26,7 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
   const sinAcceso =
     !loading &&
     Boolean(user) &&
-    Boolean(allowedRoles) &&
+    allowedRoles !== undefined &&
     // A1 (fail-closed): sin rol resuelto NO se concede acceso.
     (!effectiveRole || !anyRoleSatisfies(allowedRoles, effectiveRole));
 
