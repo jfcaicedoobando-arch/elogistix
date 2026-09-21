@@ -52,8 +52,10 @@ export function resolverFiscalDr(
   encabezado: { subtotal: number; iva: number },
 ): ResultadoFiscal {
   // Un grupo por tratamiento con BaseDR prorrateada (la mezcla 16% + 0% sí se
-  // cobra; nunca una tasa promedio). "No objeto" (SAT 01) se representa vía XML
-  // manual: no causa impuesto, pero su importe entra al denominador.
+  // cobra; nunca una tasa promedio). "No objeto" (SAT 01) se declara vía
+  // `taxability` del documento relacionado: no causa impuesto, pero su importe
+  // entra al denominador del prorrateo.
+
   const noObjeto = resolverNoObjetoDr(conceptos);
   const { objetoImpDr, hayNoObjeto, gravables, grupos } = noObjeto;
   if (grupos === "sin_importes") {

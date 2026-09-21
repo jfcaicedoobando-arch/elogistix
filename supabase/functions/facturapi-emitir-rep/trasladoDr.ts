@@ -107,8 +107,9 @@ export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
  */
 function tasaDeConcepto(c: ConceptoTraslado): TrasladoDr | null {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
-  // `exento` sí es representable en el REP (factor Exento). `no_objeto` NO:
-  // se detecta antes y bloquea el timbrado (nunca se traduce a Exento).
+  // `exento` sí es representable como factor Exento del ImpuestosDR. `no_objeto`
+  // NO lleva impuestos: se separa antes (nunca se traduce a Exento ni a tasa 0).
+
   if (tipo === "exento") return { tasa: 0, factor: "Exento" };
   if (!(tipo in TASA_CANONICA)) return null;
   const canonica = TASA_CANONICA[tipo];

@@ -54,10 +54,15 @@ Deno.test("el sentinel no se infiere de tasa 0 ni de tipos legacy", () => {
 Deno.test("el mensaje de respaldo no recomienda atajos contables no autorizados", () => {
   assertEquals(MSG_REP_NO_OBJETO.startsWith("LC_REP_NO_OBJETO:"), true);
   assertEquals(MSG_REP_NO_OBJETO.includes("ObjetoImpDR=01"), true);
-  assertEquals(MSG_REP_NO_OBJETO.includes("bloqueado"), true);
-  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("contabilidad"), true);
+  // Guardrail interno accionable: describe la inconsistencia y es reintentable.
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("inconsistencia interna"), true);
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("reintenta"), true);
   assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("soporte"), true);
+  // Ya no afirma que Facturapi carezca del campo ni manda detener un flujo válido.
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("no expone"), false);
+  assertEquals(MSG_REP_NO_OBJETO.toLowerCase().includes("detenga este flujo"), false);
   assertEquals(MSG_REP_NO_OBJETO.includes("PUE"), false);
   assertEquals(MSG_REP_NO_OBJETO.includes("sin REP"), false);
   assertEquals(MSG_REP_NO_OBJETO.includes("reemite"), false);
+
 });
