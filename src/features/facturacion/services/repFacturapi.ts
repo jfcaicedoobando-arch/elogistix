@@ -9,20 +9,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { parseFunctionError, toReadableError, type EdgeErrorBody } from "./facturapiError";
-import {
-  esRespuestaPendiente,
-  respuestaPendiente,
-  type TimbradoPendiente,
-} from "./timbradoPendiente";
+import { type TimbradoPendiente } from "./timbradoPendiente";
+import { interpretarTimbrado } from "./timbradoParse";
+import type { TimbradoExitoWire, TimbradoWire } from "./timbradoWire";
 
-export interface RepTimbradoResult {
-  uuid: string;
-  folio: number;
-  serie: string;
-  facturapi_id: string;
-  pdf_url: string;
-  xml_url: string;
-}
+/** Mismo contrato wire de éxito que la factura (seis campos del timbre). */
+export type RepTimbradoResult = TimbradoExitoWire;
 
 
 /**
