@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
+import { AuthSessionProvider } from "./auth/AuthSessionContext";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
 import { clearPersistedQueryCache } from "@/lib/browserStorage";
@@ -18,9 +19,11 @@ import { buildAuthSnapshot, buildSentryUserContext } from "@/lib/auth/authSnapsh
 
 ;
 
+// Paso 11: `session` vive fuera de este contexto (ver auth/AuthSessionContext).
+// Su `access_token` rota en cada TOKEN_REFRESHED y re-renderizaría a todos los
+// consumidores; quien necesita el token usa `useAuthSessionToken`.
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   role: AppRole | null;
   orgRole: AppRole | null;
   effectiveRole: AppRole | null;
@@ -35,7 +38,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   role: null,
   orgRole: null,
   effectiveRole: null,
@@ -146,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextType>(
     () => ({
       user,
-      session,
       role: profile.role,
       orgRole: profile.orgRole,
       effectiveRole,
@@ -157,8 +158,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       refreshProfile,
     }),
-    [user, session, profile, effectiveRole, loading, profileError, signOut, refreshProfile],
+    [user, profile, effectiveRole, loading, profileError, signOut, refreshProfile],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // El `Session` (token volátil) se publica en un contexto separado para que
+  // su rotación no invalide el `value` de arriba. La suscripción a Supabase
+  // sigue siendo única: es el mismo `session` de `useAuthSession`.
+  return (
+    <AuthSessionProvider session={session}>
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </AuthSessionProvider>
+  );
 }

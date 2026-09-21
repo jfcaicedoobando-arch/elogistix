@@ -20,10 +20,14 @@ vi.mock('@/features/embarques/services/cierre', () => ({
 }));
 
 // Sentry JAVASCRIPT-REACT-5X: sin sesión los contadores no deben consultarse.
+// Paso 11: user viene de useAuth; el token del contexto estrecho de sesión.
 let usuarioActual: { id: string } | null = { id: 'u-1' };
 let sesionActual: { access_token: string } | null = { access_token: 'tok' };
 vi.mock('@/lib/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: usuarioActual, session: sesionActual }),
+  useAuth: () => ({ user: usuarioActual }),
+}));
+vi.mock('@/lib/contexts/auth/AuthSessionContext', () => ({
+  useAuthSessionToken: () => sesionActual,
 }));
 
 import { useSidebarAlerts, invalidateSidebarAlerts } from '../useSidebarAlerts';
