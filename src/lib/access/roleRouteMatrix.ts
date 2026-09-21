@@ -21,10 +21,16 @@ import {
 export * from "./roleRouteSets";
 
 /**
- * Mapa `ruta base → roles permitidos`. Toda ruta con datos de negocio debe
- * estar listada aquí; `hasRouteAccess` deniega lo no listado (M11).
+ * Mapa `ruta → roles permitidos`. Toda ruta con datos de negocio debe estar
+ * listada aquí; `hasRouteAccess` deniega lo no listado (M11).
+ *
+ * Paso 13 de la auditoría: esta es la ÚNICA decisión ruta→roles. El router
+ * (`appRoutes.tsx`) ya no declara arrays de roles: pasa la clave de ruta a
+ * `guarded(...)`, que resuelve la política con `getRouteRoles`. Por eso también
+ * se listan las rutas dinámicas (`/embarques/:id`, etc.) con su política exacta.
  */
-export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.freeze({
+const MATRIX = {
+
   "/inicio": INICIO_ROLES,
   "/operaciones": OPERACIONES_ROLES,
   "/dashboard": DASHBOARD_DIRECCION_ROLES,
