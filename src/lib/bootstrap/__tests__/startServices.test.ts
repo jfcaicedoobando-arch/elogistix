@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from "vitest";
 import type { QueryClient } from "@tanstack/react-query";
 import { startServices, scheduleIdle } from "../startServices";
