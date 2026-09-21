@@ -15,7 +15,7 @@ const PRODUCTO_PRUEBA = {
   id: "p1",
   nombre: "Flete marítimo",
   clave_sat: "78101800",
-  tipo_iva: "16%",
+  tipo_iva: "gravado_16",
   clave_unidad_sat: "E48",
 };
 
@@ -120,7 +120,7 @@ describe("FilaCostoLocalRow · selección de producto SAT", () => {
       [0, "concepto", "Flete marítimo"],
       [0, "clave_sat", "78101800"],
       [0, "concepto_libre", false],
-      [0, "tipo_iva", "16%"],
+      [0, "tipo_iva", "gravado_16"],
       [0, "aplica_iva", true],
       [0, "tasa_iva_aplicada", 0.16],
     ]);
@@ -137,7 +137,7 @@ describe("FilaCostoLocalRow · selección de producto SAT", () => {
   it("marca aplica_iva=false cuando el producto es No objeto", () => {
     const sinUnidad = { ...filaBase, unidad_medida: "E48" } as FilaCostoLocal;
     const { onUpdate } = renderFila(sinUnidad);
-    ultimoOnSelect?.({ ...PRODUCTO_PRUEBA, tipo_iva: "No objeto" as never });
+    ultimoOnSelect?.({ ...PRODUCTO_PRUEBA, tipo_iva: "no_objeto" as never });
 
     expect(onUpdate).toHaveBeenCalledWith(0, "aplica_iva", false);
     expect(onUpdate).toHaveBeenCalledWith(0, "tasa_iva_aplicada", 0);
