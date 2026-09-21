@@ -82,15 +82,13 @@ Investigación del 2026-09-18 (P1 · auditoría IVA):
   `facturapi-emitir-nota-credito` (`_shared/noObjetoFiscal.ts`).
 - El REP 2.0 declara `ObjetoImpDR` por documento relacionado y con `01` no debe
   existir el nodo `ImpuestosDR` (Anexo 29 RMF 2026): **el SAT sí lo permite**.
-  Revalidado el 2026-09-18 contra la documentación pública de Facturapi
-  (`/docs/guides/invoices/pago`, `/api`): `related_documents[]` expone `uuid`,
-  `amount`, `installment`, `last_balance` y `taxes` — **no expone
-  `ObjetoImpDR`**. Por lo tanto es una **limitación actual de la integración**,
-  no una prohibición fiscal, y así debe comunicarse al usuario.
-- Decisión: no se emite PPD con conceptos no objeto. El diálogo de timbrado lo
-  impide antes de emitir y el servidor lo rechaza (fail-closed). Nunca se
-  convierte a Exento ni a Tasa 0%. El proceso alterno (emitir PUE o corregir el
-  tratamiento) lo define Contabilidad.
+  Actualizado el 2026-09-21: el SDK oficial 5.1.0 **sí** expone el campo como
+  `related_documents[].taxability`, por lo que la antigua "limitación de la
+  integración" quedó superada y el ERP emite el REP con el tratamiento real.
+- Decisión vigente: una PPD con conceptos no objeto **sí** se cobra y timbra su
+  REP declarando `taxability` (`"01"` documento 100% no objeto, `"02"` mixto o
+  gravado). Nunca se convierte a Exento ni a Tasa 0%.
+
 - `related_documents[].taxes` sí es un arreglo prorrateado por pago, por lo que
   una PPD con varios tratamientos (16% + 0% / Exento / 8%) **sí** se cobra: cada
   grupo lleva su propia BaseDR prorrateada (`trasladoDr.ts` +
@@ -119,9 +117,11 @@ Reglas fiscales aplicadas:
   prorrateo, no al cálculo del impuesto.
 - Nunca se reclasifica un renglón a `Exento` ni a tasa 0%.
 
-Responsabilidad y verificación: al armar el XML nosotros asumimos su validez
-(versión, orden de nodos, decimales). Antes de usarlo en producción, emitir un
-REP en el ambiente de pruebas del proveedor y revisar el XML timbrado con
-Contabilidad. Si el proveedor rechaza el complemento, el pago queda en estado
-`Error` con `rep_error` (`MSG_REP_NO_OBJETO` o el error del proveedor), sin
-timbrar ni duplicar, y es reintentable.
+Responsabilidad y verificación: el complemento lo arma el proveedor a partir del
+payload estructurado; nosotros respondemos por el tratamiento declarado
+(`taxability`) y por las bases prorrateadas. Antes de usarlo en producción,
+emitir un REP en el ambiente de pruebas del proveedor y revisar el XML timbrado
+con Contabilidad. Si el proveedor rechaza el complemento, el pago queda en estado
+`Error` con `rep_error` (el error del proveedor, o `MSG_REP_NO_OBJETO` si hubo
+una inconsistencia interna), sin timbrar ni duplicar, y es reintentable.
+

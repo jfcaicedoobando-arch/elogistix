@@ -37,25 +37,26 @@ export interface GrupoTrasladoDr extends TrasladoDr {
 
 /**
  * El complemento de pago 2.0 declara `ObjetoImpDR` por documento relacionado y
- * el arreglo `ImpuestosDR` sólo aplica cuando ObjetoImpDR = 02. La API de
- * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`).
+ * el arreglo `ImpuestosDR` sólo aplica cuando ObjetoImpDR = 02.
  *
- * El SDK 5.1.0 SÍ expone el campo: `PaymentRelatedDocument.taxability`. El REP
- * viaja siempre estructurado (`complements[].type = "pago"`) y declara el
+ * El SDK 5.1.0 expone ese campo como `PaymentRelatedDocument.taxability`. El REP
+ * viaja SIEMPRE estructurado (`complements[].type = "pago"`) y declara el
  * ObjetoImpDR real ("01" sólo si TODOS los renglones son no objeto, "02" en las
- * mixtas). Nunca se traduce a `Exento` ni a tasa 0%.
+ * mixtas o gravadas). Nunca se traduce a `Exento` ni a tasa 0%.
  *
- * Este mensaje queda como RED DE SEGURIDAD del camino puro: `esConceptoNoObjeto`
- * separa los renglones no objeto antes de agrupar, así que ninguna ruta
- * productiva lo dispara; si alguna lo hiciera, el pago queda en estado "Error"
- * con este texto, íntegro (no se pierde ni se duplica, ni se marca timbrado) y
- * reintentable.
+ * Este mensaje es un GUARDRAIL INTERNO: `resolverNoObjetoDr` separa los renglones
+ * no objeto antes de agrupar, así que ninguna ruta productiva lo dispara. Si se
+ * dispara, hay una inconsistencia interna (renglones SAT 01 llegaron sin
+ * separarse): el pago queda en estado "Error" con este texto, íntegro (no se
+ * pierde ni se duplica, ni se marca timbrado) y reintentable.
  */
 export const MSG_REP_NO_OBJETO =
-  "LC_REP_NO_OBJETO: Esta integración no puede representar ObjetoImpDR=01 ('No objeto de impuesto', " +
-  "SAT 01) en el complemento de pago, porque Facturapi no expone ese campo y declararlo como 'Exento' " +
-  "sería un dato fiscal incorrecto. Por eso el timbrado del REP se ha bloqueado. Detenga este flujo y " +
-  "consulte a Contabilidad o a soporte de Libre Carga para definir el tratamiento autorizado.";
+  "LC_REP_NO_OBJETO: Inconsistencia interna al preparar el complemento de pago: llegaron renglones con " +
+  "ObjetoImpDR=01 ('No objeto de impuesto', SAT 01) a la agrupación de impuestos, que sólo admite renglones " +
+  "gravados o exentos. El timbrado se detuvo para no declarar un dato fiscal incorrecto; el cobro quedó " +
+  "registrado y es reintentable. Reintenta el timbrado y, si vuelve a ocurrir, reporta este código a soporte " +
+  "de Libre Carga (y a Contabilidad si el tratamiento de los conceptos está en duda).";
+
 
 /** Tasas del catálogo SAT c_TasaOCuota admitidas para traslado de IVA. */
 const TASAS_SAT: readonly number[] = [0, 0.08, 0.16];
@@ -107,8 +108,9 @@ export function esConceptoNoObjeto(c: ConceptoTraslado): boolean {
  */
 function tasaDeConcepto(c: ConceptoTraslado): TrasladoDr | null {
   const tipo = String(c?.tipo_iva ?? "").trim().toLowerCase();
-  // `exento` sí es representable en el REP (factor Exento). `no_objeto` NO:
-  // se detecta antes y bloquea el timbrado (nunca se traduce a Exento).
+  // `exento` sí es representable como factor Exento del ImpuestosDR. `no_objeto`
+  // NO lleva impuestos: se separa antes (nunca se traduce a Exento ni a tasa 0).
+
   if (tipo === "exento") return { tasa: 0, factor: "Exento" };
   if (!(tipo in TASA_CANONICA)) return null;
   const canonica = TASA_CANONICA[tipo];
