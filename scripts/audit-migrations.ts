@@ -8,6 +8,9 @@
  * regresiones hacia adelante.
  *
  * Checks:
+ *  H0  Unicidad de timestamp (14 dígitos) entre TODOS los archivos, incluido
+ *      pre-baseline. Única excepción legacy exacta: la pareja
+ *      `20260901000100_*` documentada en `lib/audit-migration-versions.ts`.
  *  H1  Nombre de archivo: `YYYYMMDDHHMMSS_snake_case.sql` (uuid tras `_` ok).
  *  H2  `CREATE TABLE ... public.<t>` DEBE ir acompañado en el mismo archivo
  *      de al menos un `GRANT ... ON ... public.<t>` (contrato Data API).
@@ -39,6 +42,7 @@ import {
   scanBackfillTenantGuard,
   type Violation,
 } from "./lib/audit-sql-signatures";
+import { scanVersionesDuplicadas } from "./lib/audit-migration-versions";
 
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
@@ -354,9 +358,6 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   }
 
   return out;
-
-
-  return out;
 }
 
 
@@ -365,6 +366,10 @@ function main() {
   const all = fs.readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort();
   const violations: Violation[] = [];
   const badNames: string[] = [];
+
+  // H0 — unicidad de timestamp. Aplica a TODO el historial (incluido
+  // pre-baseline) con una única excepción legacy exacta.
+  violations.push(...scanVersionesDuplicadas(all));
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);
