@@ -22,7 +22,6 @@ import { translateLcCode } from "@/lib/errors/lcCodes";
 import { normalizarTipoCambioNC } from "@/features/facturacion/utils/notaCreditoDraftPolitica";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
-const HOOKS_DIR = join(process.cwd(), "src");
 
 function readAllMigrations(): string {
   const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql"));
