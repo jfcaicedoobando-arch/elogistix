@@ -43,7 +43,11 @@ export function validarFacturaPpd(xml: string, esperaGravado: boolean): Resultad
       "factura.FormaPago=99 (PPD sin pago recibido)",
       `FormaPago=${valorAtributo(comprobante, "FormaPago")}`,
     ),
-    regla(objetos.includes("02"), "factura.concepto gravado ObjetoImp=02", `ObjetoImp=${objetos.join(",")}`),
+    regla(
+      esperaGravado ? objetos.includes("02") : !objetos.includes("02"),
+      esperaGravado ? "factura.concepto gravado ObjetoImp=02" : "factura.sin conceptos gravados (100% no objeto)",
+      `ObjetoImp=${objetos.join(",")}`,
+    ),
     regla(objetos.includes("01"), "factura.concepto no objeto ObjetoImp=01", `ObjetoImp=${objetos.join(",")}`),
     regla(
       conceptos.filter((c) => valorAtributo(c, "ObjetoImp") === "01" && /<[a-zA-Z0-9]+:Impuestos/.test(c)).length === 0,
