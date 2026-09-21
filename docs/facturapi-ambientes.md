@@ -106,18 +106,24 @@ especificador `npm:`; por eso el cliente se modela opaco en
 `_shared/facturapiClient.ts` y se tipa aquí, con validación en runtime
 (`FacturapiSdkContratoError` si falta una operación).
 
-## 6. Fallback legado `FACTURAPI_KEY` (deprecado)
+## 6. Fallback legado `FACTURAPI_KEY` — retirado (2026-09-21)
 
-Existe sólo para la única organización que usaba FacturApi antes del modelo
-multi-tenant. Requiere **tres** secrets y ya no asume ambiente:
+El fallback que permitía a una organización sin fila en
+`facturapi_credenciales` usar el secret global `FACTURAPI_KEY` (con
+`LEGACY_FACTURAPI_ORG_ID` y `LEGACY_FACTURAPI_AMBIENTE`) **fue eliminado**.
 
-- `LEGACY_FACTURAPI_ORG_ID` — la organización exacta (ninguna otra lo usa),
-- `LEGACY_FACTURAPI_AMBIENTE` — `sandbox` o `live`, **obligatorio**; sin él la
-  resolución es fail-closed (412),
-- `FACTURAPI_KEY` — la key.
+**Razón:** verificación en la base productiva — todos los CFDI emitidos con
+FacturAPI pertenecen a una sola organización y ésta ya tiene su fila completa
+(`ambiente=live`, sandbox y live configuradas, `facturapi_org_id` presente).
+Ninguna organización con CFDI quedaba dependiendo del fallback, y mantener una
+key global es riesgo de mezclar cuentas y folios entre tenants.
 
-**Migración:** dar de alta la fila en `facturapi_credenciales` con su key en el
-Vault, verificar el webhook del ambiente y borrar los tres secrets.
+**Conducta actual (fail-closed):** sin fila en `facturapi_credenciales`,
+`resolveFacturapiKey` responde `412 org_facturapi_not_configured` de inmediato.
+Las únicas keys que se leen del entorno son los secrets **nombrados por
+organización** declarados en esa tabla (o el Vault). Aunque existan
+`FACTURAPI_KEY` o `LEGACY_FACTURAPI_*` en el entorno, el resolver los ignora;
+hay pruebas Deno y un guardrail arquitectónico que impiden reintroducirlos.
 
 ## 7. Qué se prueba en cada ambiente
 

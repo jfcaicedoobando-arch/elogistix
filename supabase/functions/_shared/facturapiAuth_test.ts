@@ -89,7 +89,7 @@ Deno.test("resolveFacturapiKey: 412 si la org no tiene fila en facturapi_credenc
   assertEquals(res.data.status, 412);
 });
 
-Deno.test("resolveFacturapiKey: SIN LEGACY_FACTURAPI_ORG_ID, ninguna org usa FACTURAPI_KEY global (fail-closed)", async () => {
+Deno.test("resolveFacturapiKey: ninguna org usa FACTURAPI_KEY global (fail-closed)", async () => {
   cleanupEnv();
   Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
   const sb = makeSupabase(null);
