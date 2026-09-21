@@ -29,8 +29,11 @@ vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: mocks.notifyError }));
 
 import { useNotaCreditoDraft } from "../useNotaCreditoDraft";
 
+let ultimoQc: QueryClient | null = null;
+
 function wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  ultimoQc = qc;
   return React.createElement(QueryClientProvider, { client: qc }, children);
 }
 
@@ -153,6 +156,23 @@ describe("useNotaCreditoDraft · guard de timbrado", () => {
     expect(mocks.timbrarMutate).not.toHaveBeenCalled();
     expect(mocks.toast).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("el éxito invalida las notas de crédito de la factura y las recientes", async () => {
+    const { result } = renderHook(() => useNotaCreditoDraft(baseParams), { wrapper });
+    const invalidar = vi.spyOn(ultimoQc as QueryClient, "invalidateQueries");
+    act(() => {
+      result.current.setDescripcion("Descuento");
+      result.current.setConceptos([sugerido("Servicio", 500)]);
+    });
+
+    await act(async () => { await result.current.handleSubmit(false); });
+    await waitFor(() => expect(invalidar).toHaveBeenCalledTimes(2));
+
+    const keys = invalidar.mock.calls.map((c) => JSON.stringify(c[0]?.queryKey));
+    expect(keys.some((k) => k?.includes("fact-1"))).toBe(true);
+    expect(keys.some((k) => k?.includes("recientes"))).toBe(true);
+    invalidar.mockRestore();
   });
 
   it("guardar y timbrar con UUID válido timbra la NC creada", async () => {
