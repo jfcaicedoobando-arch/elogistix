@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
+import { diffFields, SENSITIVE_FIELDS } from "@/lib/domain/auditDiff";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ContactoFormData, ClienteFormData } from "./useClienteDetalleController.types";

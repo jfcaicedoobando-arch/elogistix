@@ -16,7 +16,7 @@ import {
   ISO6346_MENSAJE,
   normalizarNumeroContenedor,
 } from "@/features/embarques/domain/contenedorIso6346";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 import { CampoTipoContenedor } from "./CampoTipoContenedor";
 import { cn } from "@/lib/utils";
 

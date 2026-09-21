@@ -1,7 +1,7 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { CotizacionRow } from "@/features/cotizacion/types";
-import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import type { TipoContenedorCatalogo } from "@/lib/domain/tipoContenedor";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { formatDate, formatFechaDia } from "@/lib/formatters";

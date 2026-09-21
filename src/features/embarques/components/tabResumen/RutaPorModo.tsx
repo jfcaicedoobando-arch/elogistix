@@ -2,7 +2,7 @@ import { DetailRow } from "../DetailRow";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTiposContenedor } from "@/features/catalogos/hooks/useTiposContenedor";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 
 const PLACEHOLDER = "—";
 

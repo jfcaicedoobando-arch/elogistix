@@ -2,7 +2,8 @@
  * Helpers puros de `useEditarEmbarqueWizard`. Sin React.
  */
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
-import type { FieldDiff, ConceptosDiff } from "@/features/auditoria/utils/diffFields";
+import type { FieldDiff } from "@/lib/domain/auditDiff";
+import type { ConceptosDiff } from "@/lib/domain/auditDiffConceptos";
 import {
   esNumeroContenedorValido,
   ISO6346_MENSAJE,

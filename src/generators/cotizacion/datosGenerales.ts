@@ -3,7 +3,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
   resolveTipoContenedorNombre,
   type TipoContenedorCatalogo,
-} from '@/features/cotizacion/utils/resolveTipoContenedorNombre';
+} from '@/lib/domain/tipoContenedor';
 import { pluralizar } from '@/lib/format/pluralizar';
 
 function rowsMaritimo(c: CotizacionRow): [string, string][] {

@@ -2,7 +2,7 @@ import { View, Text } from "@react-pdf/renderer";
 import { styles } from "../theme/styles";
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/features/cotizacion/types";
 import { buildDatosGenerales, buildMercancia } from "@/generators/cotizacion/datosGenerales";
-import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import type { TipoContenedorCatalogo } from "@/lib/domain/tipoContenedor";
 import { KeyValueGrid } from "../components/KeyValueGrid";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { sanitizePdfText } from "../text/sanitizePdfText";

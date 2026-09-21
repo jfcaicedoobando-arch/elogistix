@@ -15,7 +15,7 @@ import { VenceBadge } from "@/features/embarques/components/garantias/VenceBadge
 import { useUpdateGarantia } from "@/features/embarques/hooks/useGarantiasContenedor";
 import { todayLocalISO } from "@/lib/date/today";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 
 interface Row extends GarantiaContenedor {
   numero_contenedor: string;

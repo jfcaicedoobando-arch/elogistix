@@ -7,7 +7,7 @@ import { calcularBrechaFacturacion } from "@/features/proveedor/domain/estadoCue
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
-import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
+import { diffFields, SENSITIVE_FIELDS } from "@/lib/domain/auditDiff";
 
 
 /**

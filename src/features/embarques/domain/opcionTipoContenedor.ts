@@ -13,7 +13,7 @@
 import {
   resolveTipoContenedorNombre,
   type TipoContenedorCatalogo,
-} from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+} from "@/lib/domain/tipoContenedor";
 
 export interface OpcionTipoContenedor {
   value: string;
