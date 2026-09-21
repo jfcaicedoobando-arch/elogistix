@@ -42,7 +42,11 @@ export const crm = {
       claves: ReadonlyArray<{ empresa: string; email: string; telefono: string }>,
     ) => ['crm', 'leads', 'duplicados', claves] as const,
     /** Duplicado de un solo lead (alta manual). */
-    duplicado: (empresa: string, email: string, telefono: string) =>
+    duplicado: (
+      empresa?: string | null,
+      email?: string | null,
+      telefono?: string | null,
+    ) =>
       ['crm', 'leads', 'duplicado', empresa, email, telefono] as const,
   },
   prospectos: {
