@@ -23,12 +23,13 @@ export interface TimbradoExitoWire {
   xml_url: string;
 }
 
-/** 202: el proveedor recibió el documento pero el SAT no ha sellado. */
-export interface TimbradoPendienteWire {
-  pendiente?: true;
-  outcome?: "timbrado_pendiente";
-  message?: string;
-}
+/** 202: el proveedor recibió el documento pero el SAT no ha sellado.
+ *
+ * Unión discriminada real: {} no satisface el tipo estático. La variante
+ * puede venir por bandera (`pendiente: true`) o por `outcome`. */
+export type TimbradoPendienteWire =
+  | { pendiente: true; outcome?: "timbrado_pendiente"; message?: string }
+  | { pendiente?: true; outcome: "timbrado_pendiente"; message?: string };
 
 /** Cuerpo de error estructurado emitido por la edge function. */
 export type TimbradoErrorWire = EdgeErrorBody & { error: string };
