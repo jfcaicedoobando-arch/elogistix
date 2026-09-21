@@ -9,7 +9,7 @@ import { RouteLoadingSkeleton } from "@/components/ui/RouteLoadingSkeleton";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: AppRole[];
+  allowedRoles?: readonly AppRole[];
   /**
    * R-12.2: los guards anidados viven DENTRO del layout. Un spinner de alto
    * completo empujaba el contenido y provocaba un parpadeo del sidebar al
@@ -28,8 +28,7 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
     Boolean(user) &&
     Boolean(allowedRoles) &&
     // A1 (fail-closed): sin rol resuelto NO se concede acceso.
-    (!effectiveRole ||
-      !anyRoleSatisfies(allowedRoles as AppRole[], effectiveRole as AppRole));
+    (!effectiveRole || !anyRoleSatisfies(allowedRoles, effectiveRole));
 
   // Aviso al usuario por qué fue redirigido, en lugar de un silencio total.
   useEffect(() => {
