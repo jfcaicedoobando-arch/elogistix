@@ -56,4 +56,30 @@ describe("arquitectura · lógica de datos fuera de components/", () => {
       "Mueve estos hooks a la carpeta hooks/ de su feature",
     ).toEqual([]);
   });
+
+  /**
+   * P1-B — Las cuatro rutas de Compras migradas a hooks controladores no
+   * pueden volver a declarar queries/mutaciones inline. Se listan una por una
+   * (burn-down incremental): cuando se migren otras rutas, agréguelas aquí.
+   */
+  it("las 4 rutas migradas de Compras no usan useQuery/useMutation", () => {
+    const RUTAS_MIGRADAS = [
+      "src/features/compras/routes/ComprasReportes.tsx",
+      "src/features/compras/routes/ComprasNotasCredito.tsx",
+      "src/features/compras/routes/ComprasPagos.tsx",
+      "src/features/compras/routes/ComprasConciliacion.tsx",
+    ];
+    const infractores: string[] = [];
+    for (const rel of RUTAS_MIGRADAS) {
+      const abs = join(process.cwd(), rel);
+      expect(existsSync(abs), `${rel} no existe`).toBe(true);
+      const src = readFileSync(abs, "utf8");
+      if (/\buse(Query|Mutation|InfiniteQuery)\b/.test(src)) infractores.push(rel);
+    }
+    expect(
+      infractores,
+      "La coordinación de datos vive en src/features/compras/hooks/*Controller.ts",
+    ).toEqual([]);
+  });
 });
+
