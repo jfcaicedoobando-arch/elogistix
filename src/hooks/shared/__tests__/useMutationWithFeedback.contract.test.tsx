@@ -11,7 +11,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback";
+import {
+  useMutationWithFeedback,
+  type MutationFnContext,
+} from "@/hooks/shared/useMutationWithFeedback";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 
 vi.mock("@/lib/ui/appFeedback", () => ({
@@ -37,8 +40,8 @@ describe("useMutationWithFeedback · contrato v5", () => {
 
   it("reenvía variables y MutationFunctionContext a mutationFn y onMutate", async () => {
     const { client, wrapper } = makeWrapper();
-    const mutationFn = vi.fn(async () => ({ ok: true }));
-    const onMutate = vi.fn(() => ({ marca: 1 }));
+    const mutationFn = vi.fn(async (_v: { id: string }, _c: MutationFnContext) => ({ ok: true }));
+    const onMutate = vi.fn((_v: { id: string }, _c: MutationFnContext) => ({ marca: 1 }));
 
     const { result } = renderHook(
       () =>
