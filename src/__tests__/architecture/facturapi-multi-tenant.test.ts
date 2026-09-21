@@ -101,3 +101,30 @@ describe("facturapi SDK version pin", () => {
   });
 });
 
+
+/**
+ * Guardrail Paso 15 — el fallback legado fue retirado. Ninguna edge function de
+ * FacturApi (ni el resolver compartido) puede volver a leer la key global
+ * `FACTURAPI_KEY` ni los secrets `LEGACY_FACTURAPI_*`. Sí se permiten los
+ * secrets NOMBRADOS por organización, que se leen vía `secretName` resuelto
+ * desde `facturapi_credenciales`.
+ */
+describe("facturapi sin fallback legado (Paso 15)", () => {
+  const RESOLVER = "supabase/functions/_shared/facturapiAuth.ts";
+  const ARCHIVOS = [RESOLVER, "supabase/functions/_shared/facturapiClient.ts", ...FILES];
+
+  for (const rel of ARCHIVOS) {
+    it(`${rel} no lee Deno.env.get("FACTURAPI_KEY") ni LEGACY_FACTURAPI_*`, () => {
+      const src = readFileSync(join(ROOT, rel), "utf8");
+      expect(src).not.toMatch(/Deno\.env\.get\(\s*["'`]FACTURAPI_KEY["'`]\s*\)/);
+      expect(src).not.toMatch(/Deno\.env\.get\(\s*["'`]LEGACY_FACTURAPI_[A-Z_]*["'`]\s*\)/);
+    });
+  }
+
+  it("el resolver no conserva ninguna función de fallback legado", () => {
+    const src = readFileSync(join(ROOT, RESOLVER), "utf8");
+    expect(src).not.toMatch(/legacyFallback/);
+    // La lectura por secret nombrado por organización sigue permitida.
+    expect(src).toMatch(/Deno\.env\.get\(secretName\)/);
+  });
+});
