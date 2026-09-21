@@ -38,7 +38,6 @@ const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 // productivos en `src/` cumplen el límite de 200 líneas. Cualquier nuevo
 // oversized falla la CI hasta que se divida.
 const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/features/cotizacion/components/costosLocal/FilaCostoLocalRow.tsx",
   "src/components/ui/date-picker-mx-helpers.ts",
 ]);
 
