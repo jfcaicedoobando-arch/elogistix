@@ -10,7 +10,7 @@ import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/shared/Hint";
-import { useFilaCostoLocalRow } from "./useFilaCostoLocalRow";
+import { useFilaCostoLocalRow } from "../../hooks/useFilaCostoLocalRow";
 import { AvisosFilaCosto } from "./AvisosFilaCosto";
 
 interface Props {

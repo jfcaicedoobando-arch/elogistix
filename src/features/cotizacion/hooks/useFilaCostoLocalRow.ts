@@ -3,10 +3,10 @@ import { formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import type { ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
-import { parseCantidad, cantidadFueraDeRango } from "../../utils/parseInputNumero";
+import { parseCantidad, cantidadFueraDeRango } from "@/features/cotizacion/utils/parseInputNumero";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { filaCostoInvalida, filaSinProveedor } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
+import type { FilaCostoLocal } from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 
 /** Formato de presentación de los campos de dinero (sin prefijo de moneda). */
 export const formatoMonto = (n: number) => formatNumber(n, { decimals: 2 });

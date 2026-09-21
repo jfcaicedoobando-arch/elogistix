@@ -19,33 +19,13 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { LC_CODE_MESSAGES } from "@/lib/errors/lcCodeMessages";
 import { translateLcCode } from "@/lib/errors/lcCodes";
+import { normalizarTipoCambioNC } from "@/features/facturacion/utils/notaCreditoDraftPolitica";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
-const HOOKS_DIR = join(process.cwd(), "src");
 
 function readAllMigrations(): string {
   const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql"));
   return files.map((f) => readFileSync(join(MIGRATIONS_DIR, f), "utf8")).join("\n");
-}
-
-function grepRepo(pattern: RegExp, dir: string): string[] {
-  const results: string[] = [];
-  const stack = [dir];
-  while (stack.length) {
-    const current = stack.pop()!;
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
-        stack.push(full);
-        continue;
-      }
-      if (!/\.(ts|tsx)$/.test(entry.name)) continue;
-      const src = readFileSync(full, "utf8");
-      if (pattern.test(src)) results.push(full);
-    }
-  }
-  return results;
 }
 
 describe("SQL LC_ error-code wiring (PR-4 · 3.7)", () => {
@@ -65,11 +45,15 @@ describe("SQL LC_ error-code wiring (PR-4 · 3.7)", () => {
     },
   );
 
-  it("LC_TC_NO_DISPONIBLE se lanza desde el hook de NC (frontend guard)", () => {
+  it("LC_TC_NO_DISPONIBLE se lanza desde la política de NC (frontend guard)", () => {
     // Este código vive en la capa cliente porque el TC se resuelve en frontend
-    // antes de invocar la RPC (evita un round-trip). El guard es equivalente.
-    const hits = grepRepo(/throw new Error\("LC_TC_NO_DISPONIBLE/, HOOKS_DIR);
-    expect(hits.length, "Se esperaba al menos un `throw` con LC_TC_NO_DISPONIBLE").toBeGreaterThan(0);
+    // antes de invocar la RPC (evita un round-trip). Se verifica el contrato de
+    // comportamiento: USD con TC inválido lanza un error que contiene el código.
+    for (const tcInvalido of [0, Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+      expect(() => normalizarTipoCambioNC("USD", tcInvalido)).toThrowError(/LC_TC_NO_DISPONIBLE/);
+    }
+    // Moneda nacional (MXN) normaliza a 1 sin lanzar.
+    expect(normalizarTipoCambioNC("MXN", 0)).toBe(1);
   });
 
   const ALL_CODES = [...SQL_RAISED_CODES, "LC_TC_NO_DISPONIBLE"] as const;
