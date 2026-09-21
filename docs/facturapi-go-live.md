@@ -48,7 +48,7 @@ Como `admin_org` o `super_admin`:
 3. Avísale a la organización: a partir de ese momento todo timbrado es real.
 
 ## Versión del SDK en uso
-`supabase/functions/_shared/facturapiClient.ts` importa `npm:facturapi@5.0.0`
+`supabase/functions/_shared/facturapiClient.ts` importa `npm:facturapi@5.1.0`
 (publicada el 18-sep-2026, última confirmada en el GitHub oficial). Los breaking
 changes de v5 son de tipado (`SearchResult<T>` con totales opcionales, retiro de
 `CursorSearchResult<T>`) más un fix de serialización de query params anidados;

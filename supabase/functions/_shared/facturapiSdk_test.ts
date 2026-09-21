@@ -67,7 +67,7 @@ Deno.test("exigirInvoices falla con mensaje accionable si falta una operación",
     FacturapiSdkContratoError,
   ) as FacturapiSdkContratoError;
   assertEquals(err.operacion, "invoices.paymentSummary");
-  assert(err.message.includes("npm:facturapi@5.0.0"));
+  assert(err.message.includes("npm:facturapi@5.1.0"));
   assertEquals(err.status, 500);
 });
 
