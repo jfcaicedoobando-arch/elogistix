@@ -27,125 +27,30 @@
  * contrato COMPLETO de TanStack Query v5 (incluido el `MutationFunctionContext`
  * y el resultado de `onMutate`). Los callbacks del consumer se ejecutan DESPUÉS
  * del feedback/invalidación. P1-C: sin casts `as`/`unknown`.
+ *
+ * Tipos en `mutationFeedbackTypes.ts`; helpers puros en
+ * `mutationFeedbackHelpers.ts` (Power of 10 #1: ≤ 200 líneas por archivo).
  */
-import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
-import type { QueryKey } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  toKeyArray,
+  toOptimisticArray,
+  resolveKey,
+} from "./mutationFeedbackHelpers";
+import type {
+  Snapshot,
+  WrapperContext,
+  UseMutationWithFeedbackOptions,
+} from "./mutationFeedbackTypes";
 
-/** `MutationFunctionContext` oficial, derivado de los tipos instalados. */
-export type MutationFnContext = Parameters<
-  NonNullable<UseMutationOptions<unknown, Error, unknown, unknown>["onMutate"]>
->[1];
-
-/**
- * Descriptor de actualización optimista. Soporta 1..N queries: se toma un
- * snapshot de cada una, se aplica el updater, y si la mutación falla se
- * restauran a su valor previo (rollback). Tras `settled` se invalida.
- */
-export interface OptimisticUpdate<TVariables, TData = unknown> {
-  /** QueryKey (o función que la deriva de las variables) a actualizar. */
-  queryKey: QueryKey | ((variables: TVariables) => QueryKey);
-  /**
-   * Función pura que recibe el valor cacheado actual y las variables, y
-   * devuelve el nuevo valor cacheado. Si `old` es undefined, típicamente
-   * se retorna undefined (nada que optimizar).
-   */
-  updater: (old: TData | undefined, variables: TVariables) => TData | undefined;
-}
-
-interface Snapshot {
-  key: QueryKey;
-  previous: unknown;
-}
-
-/**
- * Contexto interno del wrapper. Envuelve (no mezcla) el resultado del
- * `onMutate` del consumer para poder reenviárselo intacto y tipado a los
- * callbacks posteriores, sin necesidad de casts.
- */
-interface WrapperContext<TContext> {
-  snapshots: Snapshot[];
-  userResult: TContext | undefined;
-}
-
-export interface UseMutationWithFeedbackOptions<TData, TError, TVariables, TContext>
-  extends Omit<
-    UseMutationOptions<TData, TError, TVariables, TContext>,
-    "onSuccess" | "onError" | "onMutate" | "onSettled"
-  > {
-  /** Query keys a invalidar tras éxito. Array = múltiples invalidaciones. */
-  invalidate?: QueryKey | QueryKey[];
-  /** Título del toast de éxito. Si se omite, no se muestra toast success. */
-  successTitle?: string;
-  /** Descripción opcional del toast de éxito. */
-  successDescription?: string;
-  /** Título del toast de error. Default: "Error". */
-  errorTitle?: string;
-  /** Método reportado a observabilidad. Default: "ON_ERROR". */
-  errorMethod?: string;
-  /**
-   * Actualización(es) optimista(s). Puede ser un descriptor único o un array
-   * para tocar varias queries al vuelo (ej. detalle + lista). El rollback y
-   * la invalidación final las orquesta el wrapper.
-   */
-  optimistic?: OptimisticUpdate<TVariables> | OptimisticUpdate<TVariables>[];
-  /**
-   * Si es true, suprime ambos toasts (éxito y error). Útil cuando el caller
-   * maneja las notificaciones (ej. clasificar errores docs_faltantes).
-   * El rollback optimista y las invalidaciones siguen funcionando.
-   */
-  silent?: boolean;
-  /** Callback extra tras onMutate del wrapper; su retorno viaja a los demás. */
-  onMutate?: (
-    variables: TVariables,
-    context: MutationFnContext,
-  ) => Promise<TContext> | TContext;
-  /** Callback extra tras éxito (se ejecuta después del toast + invalidate). */
-  onSuccess?: (
-    data: TData,
-    variables: TVariables,
-    onMutateResult: TContext | undefined,
-    context: MutationFnContext,
-  ) => void;
-  /** Callback extra tras error (se ejecuta después del toast + rollback). */
-  onError?: (
-    error: TError,
-    variables: TVariables,
-    onMutateResult: TContext | undefined,
-    context: MutationFnContext,
-  ) => void;
-  /** Callback extra al finalizar (después de revalidar las queries optimistas). */
-  onSettled?: (
-    data: TData | undefined,
-    error: TError | null,
-    variables: TVariables,
-    onMutateResult: TContext | undefined,
-    context: MutationFnContext,
-  ) => void;
-}
-
-function toKeyArray(k: QueryKey | QueryKey[] | undefined): QueryKey[] {
-  if (!k) return [];
-  // Un QueryKey es un readonly array; distinguimos "array de keys" cuando el
-  // primer elemento es a su vez array.
-  if (Array.isArray(k) && k.length > 0 && Array.isArray(k[0])) return k as QueryKey[];
-  return [k as QueryKey];
-}
-
-function toOptimisticArray<TVariables>(
-  o: OptimisticUpdate<TVariables> | OptimisticUpdate<TVariables>[] | undefined,
-): OptimisticUpdate<TVariables>[] {
-  if (!o) return [];
-  return Array.isArray(o) ? o : [o];
-}
-
-function resolveKey<TVariables>(
-  key: QueryKey | ((variables: TVariables) => QueryKey),
-  variables: TVariables,
-): QueryKey {
-  return typeof key === "function" ? key(variables) : key;
-}
+// API pública preexistente del módulo.
+export type {
+  MutationFnContext,
+  OptimisticUpdate,
+  UseMutationWithFeedbackOptions,
+} from "./mutationFeedbackTypes";
 
 export function useMutationWithFeedback<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(
   opts: UseMutationWithFeedbackOptions<TData, TError, TVariables, TContext>,

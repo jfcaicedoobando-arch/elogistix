@@ -22,6 +22,18 @@ export function pasosEditarEmbarque(canEditCostos: boolean): PasoEditarEmbarque[
   return canEditCostos ? [...STEPS_BASE, STEP_COSTOS] : [...STEPS_BASE];
 }
 
+/** Subtítulo del wizard: sólo menciona costos si el rol puede editarlos. */
+export function subtituloEditarEmbarque(canEditCostos: boolean): string {
+  return canEditCostos
+    ? "Modifica los datos generales, ruta y costos del embarque"
+    : "Modifica los datos generales y la ruta del embarque";
+}
+
+/** Un embarque cerrado bloquea toda escritura en base de datos. */
+export function embarqueEstaCerrado(estado: string | null | undefined): boolean {
+  return (estado ?? "").toLowerCase() === "cerrado";
+}
+
 /**
  * Paso al que se debe ir dado el `?step=` de la URL.
  *

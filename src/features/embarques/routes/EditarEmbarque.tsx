@@ -19,6 +19,8 @@ import { useDocumentTitle } from "@/hooks/shared";
 import {
   pasosEditarEmbarque,
   resolverPasoEditarEmbarque,
+  subtituloEditarEmbarque,
+  embarqueEstaCerrado,
 } from "@/features/embarques/domain/pasosEditarEmbarque";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -113,7 +115,7 @@ export default function EditarEmbarque() {
   // La base de datos bloquea cualquier escritura sobre un embarque cerrado
   // (`Embarque cerrado: usa reabrir_embarque…`). Evitamos que el usuario llene
   // el wizard para toparse con el error hasta el guardado final.
-  if ((embarque.estado ?? "").toLowerCase() === "cerrado") {
+  if (embarqueEstaCerrado(embarque.estado)) {
     return (
       <PageContainer className="max-w-xl">
         <Alert>
@@ -139,9 +141,8 @@ export default function EditarEmbarque() {
     <FormProvider {...methods}>
       <EmbarqueWizardLayout
         title={`Editar embarque ${labelExpediente(embarque.expediente, embarque.id)}`}
-        subtitle={canEditCostosEmbarque
-          ? "Modifica los datos generales, ruta y costos del embarque"
-          : "Modifica los datos generales y la ruta del embarque"}
+        subtitle={subtituloEditarEmbarque(canEditCostosEmbarque)}
+
 
         steps={steps}
         currentStep={currentStep}
