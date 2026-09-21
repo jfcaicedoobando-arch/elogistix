@@ -1,7 +1,7 @@
 /**
  * Prueba Sandbox E2E (OPT-IN) — Factura PPD con concepto gravado (IVA 16%,
  * ObjetoImp 02) + concepto No objeto (ObjetoImp 01), registro de pago y REP por
- * XML manual del complemento de pagos.
+ * complemento de pagos estructurado (`taxability` = ObjetoImpDR).
  *
  * NUNCA corre en CI: no es un `*_test.ts`, exige variables explícitas de
  * sandbox y aborta si la llave no es de pruebas. No hay credenciales en el
@@ -13,7 +13,6 @@
  *     deno run --allow-env --allow-net scripts/sandbox/facturapi-e2e-ppd-noobjeto.ts
  */
 import { buildRepPayload, type PagoContext } from "../../supabase/functions/facturapi-emitir-rep/helpers.ts";
-import { payloadRepFinal } from "../../supabase/functions/facturapi-emitir-rep/repManual.ts";
 import { round2 } from "../../supabase/functions/facturapi-emitir-rep/taxesDr.ts";
 import { imprimirReporte, validarFacturaPpdMixta, validarRepNoObjeto } from "./facturapi-e2e-validar.ts";
 
@@ -154,7 +153,7 @@ async function emitirRep(factura: Cfdi, montoPago: number): Promise<Cfdi> {
   const payload = Object.assign(buildRepPayload(ctx), {
     external_id: externalId, idempotency_key: externalId,
   });
-  return await api<Cfdi>("POST", "/invoices", payloadRepFinal(payload, ctx));
+  return await api<Cfdi>("POST", "/invoices", payload);
 }
 
 async function limpiar(ids: string[]): Promise<void> {

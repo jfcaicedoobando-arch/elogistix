@@ -3,7 +3,7 @@
 Guion **opt-in** que valida, contra el ambiente de pruebas de FacturAPI, el caso
 fiscal completo: una factura PPD con un concepto gravado (IVA 16%, ObjetoImp 02)
 y otro **No objeto de impuesto** (ObjetoImp 01), el registro del pago y el
-timbrado del REP con el complemento de pagos en XML manual.
+timbrado del REP con el complemento de pagos estructurado (`taxability`).
 
 - Archivos: `scripts/sandbox/facturapi-e2e-ppd-noobjeto.ts` (orquestador) y
   `scripts/sandbox/facturapi-e2e-validar.ts` (reglas sobre el XML).
@@ -60,7 +60,8 @@ anterior, importe y moneda de la factura), que es la autoridad del saldo.
 
 ## Limitaciones reales de la API
 
-- El REP por API no expone `ObjetoImpDR`: la única vía es enviar el XML del
-  complemento dentro de `complements` (lo que hace `repManual.ts`).
+- El `ObjetoImpDR` del REP se declara en `related_documents[].taxability` (SDK
+  5.1.0). La vía de XML manual en `complements` fue retirada: el sandbox la
+  rechaza con `400 El campo complements no es válido`.
 - `payment-summary` sólo existe para facturas emitidas en FacturAPI y su
   `amount` va en la moneda de la **factura**, no del pago.

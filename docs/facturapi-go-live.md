@@ -96,17 +96,18 @@ Investigación del 2026-09-18 (P1 · auditoría IVA):
   grupo lleva su propia BaseDR prorrateada (`trasladoDr.ts` +
   `buildTaxesDr`), sin tasas promedio.
 
-## REP con renglones «No objeto de impuesto» (SAT 01) — XML manual
+## REP con renglones «No objeto de impuesto» (SAT 01) — vía estructurada
 
-La API de Facturapi no expone `ObjetoImpDR` en `related_documents` (soporte lo
-confirmó por ticket). Para poder timbrar el complemento de pago de facturas PPD
-con renglones no objeto, Libre Carga **serializa el XML del Complemento de
-Pagos 2.0 por su cuenta** y lo envía en el nodo `complements`:
+El SDK 5.1.0 expone `PaymentRelatedDocument.taxability`, que es el
+`ObjetoImpDR` del documento relacionado. El REP viaja **siempre** estructurado
+(`complements[].type = "pago"`); la ruta de XML manual (`pagoXml.ts`,
+`pagoXmlDr.ts`, `repManual.ts`) se retiró el 2026-09-21 porque el sandbox la
+rechazaba con `400 El campo complements no es válido`.
 
-- `pagoXml.ts` — nodo `pago20:Pagos` (Version 2.0, `Totales` antes de `Pago`).
-- `pagoXmlDr.ts` — `DoctoRelacionado`, `ImpuestosDR` (RetencionesDR antes de
-  TrasladosDR) y acumulación de totales en MXN.
-- `repManual.ts` — decide la ruta (`requiereXmlManual`) y arma el payload.
+- `helpers.ts · buildRepPayload` — asigna `taxability` desde `objeto_imp_dr`
+  (fallback seguro `"02"`).
+- `taxesDr.ts · buildTaxesDr` — única fuente de la regla de impuestos: `[]`
+  cuando `taxability = "01"`; la usa también el cotejo con `paymentSummary`.
 
 Reglas fiscales aplicadas:
 

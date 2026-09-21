@@ -40,14 +40,15 @@ export interface GrupoTrasladoDr extends TrasladoDr {
  * el arreglo `ImpuestosDR` sólo aplica cuando ObjetoImpDR = 02. La API de
  * Facturapi no expone `ObjetoImpDR` en `related_documents` (sólo `taxes`).
  *
- * Desde el lote "XML manual" el REP de una factura con renglones "no objeto"
- * SÍ se timbra: el complemento se serializa a mano y viaja en el nodo
- * `complements` (ver `pagoXml.ts` y `repManual.ts`), declarando ObjetoImpDR
- * real. Nunca se traduce a `Exento`.
+ * El SDK 5.1.0 SÍ expone el campo: `PaymentRelatedDocument.taxability`. El REP
+ * viaja siempre estructurado (`complements[].type = "pago"`) y declara el
+ * ObjetoImpDR real ("01" sólo si TODOS los renglones son no objeto, "02" en las
+ * mixtas). Nunca se traduce a `Exento` ni a tasa 0%.
  *
- * Este mensaje queda como RED DE SEGURIDAD: si el proveedor rechaza el XML o la
- * ruta manual no está disponible, el pago queda en estado "Error" con este
- * texto, íntegro (no se pierde ni se duplica, ni se marca timbrado) y
+ * Este mensaje queda como RED DE SEGURIDAD del camino puro: `esConceptoNoObjeto`
+ * separa los renglones no objeto antes de agrupar, así que ninguna ruta
+ * productiva lo dispara; si alguna lo hiciera, el pago queda en estado "Error"
+ * con este texto, íntegro (no se pierde ni se duplica, ni se marca timbrado) y
  * reintentable.
  */
 export const MSG_REP_NO_OBJETO =
@@ -161,8 +162,9 @@ export function trasladoDesdeEncabezado(
 
 /**
  * Grupos de traslado a declarar en el REP (uno por combinación factor+tasa).
- * - `"no_objeto"` ⇒ la factura tiene conceptos SAT 01, no representables en el
- *   complemento de pago (el llamador responde 422 ANTES del claim).
+ * - `"no_objeto"` ⇒ la lista incluye conceptos SAT 01; el camino productivo los
+ *   filtra antes (ver `objetoImpDr.ts`), así que este sentinel sólo protege a
+ *   quien llame la función con la lista completa.
  * - `"indeterminado"` ⇒ algún renglón no tiene tratamiento registrado o su tasa
  *   contradice el tratamiento: el llamador responde 422 ANTES del claim.
  * - `"sin_importes"` ⇒ hay más de un grupo pero los renglones no traen importe,
