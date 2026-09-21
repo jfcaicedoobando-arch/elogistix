@@ -100,7 +100,36 @@ const MATRIX = {
   "/rentabilidad": REPORTES_ROLES,
   "/reportes": REPORTES_ROLES,
   "/sistema/bitacora": BITACORA_ROLES,
-});
+  // Rutas dinámicas (detalle/edición). Política idéntica a la de su listado,
+  // copiada tal cual estaba en los guards de `appRoutes.tsx`.
+  "/embarques/:id": EMBARQUES_ROLES,
+  "/embarques/:id/editar": EMBARQUES_ROLES,
+  "/facturacion/:id": FACTURACION_ROLES,
+  "/proformas/:id": PROFORMAS_READ_ROLES,
+  "/compras/facturas/:id": FINANCE_READ_ROLES,
+  "/compras/proveedores/:id": PROVEEDORES_ROLES,
+  "/proveedores/:id": PROVEEDORES_ROLES,
+  "/clientes/:id": CLIENTES_ROLES,
+  "/clientes/:clienteId/estado-de-cuenta": FINANCE_READ_ROLES,
+  "/cotizaciones/:id": COTIZACIONES_ROLES,
+  "/cotizaciones/:id/editar": COTIZACIONES_ROLES,
+  // Preview de PDF: sólo se monta en dev, pero su guard necesita clave tipada.
+  "/dev/pdf-preview/cotizacion/:id": COTIZACIONES_ROLES,
+} satisfies Record<string, readonly AppRole[]>;
+
+/** Clave canónica de acceso: cada ruta declarada en la matriz. */
+export type RouteAccessKey = keyof typeof MATRIX;
+
+export const ROLE_ROUTE_MATRIX: Readonly<Record<RouteAccessKey, readonly AppRole[]>> =
+  Object.freeze(MATRIX);
+
+/** Política canónica de una ruta declarada (tipada: no admite claves nuevas). */
+export function getRouteRoles(path: RouteAccessKey): readonly AppRole[] {
+  return ROLE_ROUTE_MATRIX[path];
+}
+
+/** Búsqueda por string arbitrario (URL real); `undefined` si no está declarada. */
+const MATRIX_LOOKUP = new Map<string, readonly AppRole[]>(Object.entries(ROLE_ROUTE_MATRIX));
 
 /** Quita querystring de una URL de sidebar (ej. `/proformas?estado=aceptada`). */
 function basePath(url: string): string {
@@ -110,15 +139,21 @@ function basePath(url: string): string {
 /**
  * ¿El rol tiene acceso a la ruta? Fail-closed (M11): si la ruta no está en la
  * matriz y no es una ruta libre, se deniega el acceso.
+ *
+ * Nota (paso 13): esta comparación es `includes` EXACTO, más estricta que la
+ * jerarquía de `anyRoleSatisfies` que aplica `ProtectedRoute`. La diferencia es
+ * real (ver `roleRouteMatrix.semantica.test.ts`), así que NO se alinea aquí:
+ * cambiarla ampliaría accesos visibles en el sidebar/búsqueda.
  */
 export function hasRouteAccess(role: AppRole | null | undefined, url: string): boolean {
   const path = basePath(url);
   if (PREFIJOS_PLATAFORMA.some((p) => path === p || path.startsWith(`${p}/`))) {
     return role === "super_admin";
   }
-  const allowed = ROLE_ROUTE_MATRIX[path];
+  const allowed = MATRIX_LOOKUP.get(path);
   if (!allowed) return RUTAS_LIBRES.includes(path);
   if (!role) return false;
   return allowed.includes(role);
 }
+
 
