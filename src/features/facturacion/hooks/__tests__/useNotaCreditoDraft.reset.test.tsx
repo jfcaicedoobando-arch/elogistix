@@ -9,6 +9,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
+import { silenciarLogEsperado } from "@/test/helpers/silenciarLogEsperado";
 
 const mocks = vi.hoisted(() => ({
   crearNotaCredito: vi.fn(),
@@ -167,6 +168,10 @@ describe("useNotaCreditoDraft · guard de timbrado", () => {
   });
 
   it("un error al crear no cierra el modal", async () => {
+    // Los dos avisos de diagnóstico son el comportamiento esperado aquí: se
+    // silencian sólo dentro de esta prueba y la consola se restaura siempre.
+    const log = silenciarLogEsperado();
+    try {
     mocks.crearNotaCredito.mockRejectedValue(new Error("boom"));
     const { result } = renderHook(() => useNotaCreditoDraft(baseParams), { wrapper });
     act(() => {
@@ -177,5 +182,8 @@ describe("useNotaCreditoDraft · guard de timbrado", () => {
     await act(async () => { await result.current.handleSubmit(false); });
     await waitFor(() => expect(mocks.notifyError).toHaveBeenCalled());
     expect(onOpenChange).not.toHaveBeenCalled();
+    } finally {
+      log.restaurar();
+    }
   });
 });
