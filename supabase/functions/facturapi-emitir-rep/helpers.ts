@@ -79,9 +79,9 @@ export interface PagoContext {
     total_factura?: number;
     /**
      * `true` cuando la factura relacionada tiene al menos un renglón
-     * "No objeto de impuesto" (SAT ObjetoImp 01). Activa la ruta de XML manual
-     * del complemento (`repManual.ts`), porque la vía estructurada de Facturapi
-     * no expone `ObjetoImpDR`.
+     * "No objeto de impuesto" (SAT ObjetoImp 01). Informativo: el tratamiento
+     * que viaja al PAC es `objeto_imp_dr` (`taxability` del documento
+     * relacionado en la vía estructurada de Facturapi).
      */
     hay_no_objeto?: boolean;
     /** ObjetoImpDR del documento: "01" si TODOS sus renglones son no objeto. */
