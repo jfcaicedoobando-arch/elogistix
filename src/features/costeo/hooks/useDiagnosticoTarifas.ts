@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   fetchDiagnosticoTarifas,
@@ -32,15 +33,13 @@ export function useDiagnosticoTarifas(p: UseDiagnosticoTarifasParams) {
     p.tipoContenedorIds.length > 0;
 
   const query = useQuery<DiagnosticoTarifas>({
-    queryKey: [
-      "costeo",
-      "diagnostico-tarifas",
+    queryKey: queryKeys.costeo.diagnosticoTarifas({
       organizationId,
-      p.puertoOrigenId,
-      p.puertoDestinoId,
-      [...p.tipoContenedorIds].sort(),
+      puertoOrigenId: p.puertoOrigenId,
+      puertoDestinoId: p.puertoDestinoId,
+      tipoContenedorIds: p.tipoContenedorIds,
       hoy,
-    ],
+    }),
     queryFn: () =>
       fetchDiagnosticoTarifas({
         puertoOrigenId: p.puertoOrigenId!,

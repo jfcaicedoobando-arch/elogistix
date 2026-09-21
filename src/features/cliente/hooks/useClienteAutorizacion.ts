@@ -6,6 +6,7 @@
  * autorización) para no habilitar botones por error.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   obtenerAutorizacionCliente,
   type ClienteAutorizacion,
@@ -19,7 +20,7 @@ const DEFAULT_AUTORIZACION: ClienteAutorizacion = {
 
 export function useClienteAutorizacion(clienteId: string | null | undefined) {
   const query = useQuery({
-    queryKey: ["cliente-autorizacion", clienteId ?? "none"],
+    queryKey: queryKeys.clientes.autorizacion(clienteId),
     enabled: !!clienteId,
     staleTime: 60_000,
     queryFn: () => obtenerAutorizacionCliente(clienteId as string),

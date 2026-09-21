@@ -47,7 +47,7 @@ export default function ComprasReportes() {
   const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: [...compras.reportes({ desde, hasta }), organizationId],
+    queryKey: compras.reportes({ desde, hasta }, organizationId),
     queryFn: () => fetchFacturasReporte(desde, hasta, organizationId),
     // N-3: no consultar hasta que el contexto de organización resolvió.
     enabled: orgListo,

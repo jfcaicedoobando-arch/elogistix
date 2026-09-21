@@ -5,6 +5,7 @@
  * la base de datos.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   fetchFiltrosTarifaCotizacion,
   type FiltrosTarifaCotizacion,
@@ -12,7 +13,7 @@ import {
 
 export function useFiltrosTarifaCotizacion(cotizacionId: string, enabled: boolean) {
   const { data } = useQuery<FiltrosTarifaCotizacion>({
-    queryKey: ["cotizacion", cotizacionId, "filtros-tarifa"],
+    queryKey: queryKeys.cotizaciones.filtrosTarifa(cotizacionId),
     queryFn: () => fetchFiltrosTarifaCotizacion(cotizacionId),
     enabled: enabled && Boolean(cotizacionId),
     staleTime: 5 * 60 * 1000,

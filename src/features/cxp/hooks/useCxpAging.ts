@@ -32,7 +32,7 @@ export interface UseCxpAgingResult {
 export function useCxpAging(fecha?: string): UseCxpAgingResult {
   const { organizationId } = useOrgFilter();
   const q = useQuery({
-    queryKey: [...queryKeys.cxp.aging(fecha), organizationId],
+    queryKey: queryKeys.cxp.agingByOrg(fecha, organizationId),
     queryFn: () => fetchCxpAging(fecha, organizationId),
     staleTime: 60_000,
   });

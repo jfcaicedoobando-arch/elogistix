@@ -51,7 +51,7 @@ export default function Actividades() {
   const vencidasOnly = filtroParam === "vencidas";
 
   const list = useServerPagedList<CrmActividadRow, ActividadesFilters>({
-    queryKey: [...queryKeys.crm.actividades.paged(user?.id), vencidasOnly ? "vencidas" : "todas"],
+    queryKey: queryKeys.crm.actividades.paged(user?.id, vencidasOnly ? "vencidas" : "todas"),
     defaultFilters: DEFAULTS,
     filterLabels: { tipo: "Tipo", estado: "Estado", responsable: "Responsable" },
     defaultPageSize: 100,

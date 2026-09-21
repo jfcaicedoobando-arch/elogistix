@@ -55,7 +55,7 @@ export const cotizacionQueries = {
   /** Embarques vinculados a una cotización. */
   embarquesVinculados: (cotizacionId: string) =>
     queryOptions({
-      queryKey: queryKeys.cotizaciones.embarquesVinculados(cotizacionId),
+      queryKey: queryKeys.embarques.byCotizacion(cotizacionId),
       queryFn: () => fetchEmbarquesVinculados(cotizacionId),
       staleTime: staleTimes.SHORT,
     }),

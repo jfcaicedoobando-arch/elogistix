@@ -53,7 +53,7 @@ export default function ComprasNotasCredito() {
   const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: [...compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }), organizationId],
+    queryKey: compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }, organizationId),
     queryFn: () =>
       listarNotasCreditoGlobal(
         {

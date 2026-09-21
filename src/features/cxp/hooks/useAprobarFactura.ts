@@ -30,8 +30,8 @@ export function useAprobarFactura() {
       // costo vuelven a quedar pendientes de factura: refrescar el expediente.
       if (!vars.aprobar) {
         qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
-        qc.invalidateQueries({ queryKey: ["conceptos_costo"] });
-        qc.invalidateQueries({ queryKey: ["embarque_facturas_entrantes"] });
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto() });
+        qc.invalidateQueries({ queryKey: queryKeys.cxp.facturasEntrantes });
       }
 
       // Aprobar/rechazar impacta egresos del mes en el Dashboard Ejecutivo. v13.300.33.

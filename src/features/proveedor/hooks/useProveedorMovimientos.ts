@@ -13,10 +13,9 @@ export function useProveedorMovimientos(
   offset?: number,
 ) {
   return useQuery({
-    queryKey: [
-      ...queryKeys.proveedores.movimientos(proveedorId ?? ""),
-      desde ?? "", hasta ?? "", limite ?? "", offset ?? "",
-    ],
+    queryKey: queryKeys.proveedores.movimientos(
+      proveedorId ?? "", desde, hasta, limite, offset,
+    ),
     queryFn: () => fetchProveedorMovimientos(proveedorId!, desde, hasta, limite, offset),
     enabled: Boolean(proveedorId),
     staleTime: 30_000,

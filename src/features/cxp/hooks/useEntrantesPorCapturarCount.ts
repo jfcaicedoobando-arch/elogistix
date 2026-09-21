@@ -29,7 +29,7 @@ export function useEntrantesPorCapturarCount() {
     // La org va en la key: al cambiar de tenant (OrgSwitcher del super admin)
     // el badge no muestra la cifra cacheada del tenant anterior. La
     // invalidación por realtime sigue matcheando por prefijo.
-    queryKey: [...cxp.facturasEntrantesPorCapturarCount, organizationId ?? "sin-org"],
+    queryKey: cxp.facturasEntrantesPorCapturarCountByOrg(organizationId),
     queryFn: () => fetchEntrantesPorCapturarCount(organizationId),
     staleTime: staleTimes.LONG,
     // PERF (auditoría 2026-08-18, hallazgo #2): antes 60 s → 2,385 llamadas
