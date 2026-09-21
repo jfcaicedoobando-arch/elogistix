@@ -28,26 +28,6 @@ function readAllMigrations(): string {
   return files.map((f) => readFileSync(join(MIGRATIONS_DIR, f), "utf8")).join("\n");
 }
 
-function grepRepo(pattern: RegExp, dir: string): string[] {
-  const results: string[] = [];
-  const stack = [dir];
-  while (stack.length) {
-    const current = stack.pop()!;
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
-        stack.push(full);
-        continue;
-      }
-      if (!/\.(ts|tsx)$/.test(entry.name)) continue;
-      const src = readFileSync(full, "utf8");
-      if (pattern.test(src)) results.push(full);
-    }
-  }
-  return results;
-}
-
 describe("SQL LC_ error-code wiring (PR-4 · 3.7)", () => {
   const allSql = readAllMigrations();
 
