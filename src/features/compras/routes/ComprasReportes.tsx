@@ -35,7 +35,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }

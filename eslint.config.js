@@ -4,6 +4,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import reactCompiler from "eslint-plugin-react-compiler";
 import tseslint from "typescript-eslint";
+import { listFeatures, crossFeaturePatterns } from "./scripts/lib/features.mjs";
+
 
 // Selectores base de `no-restricted-syntax` compartidos por toda la config
 // (existentes desde React 19). El bloque de query keys inline se agrega
@@ -92,16 +94,12 @@ const QUERY_KEY_AND_IVA_RULES = [
 
 
 
-// Lista de features top-level bajo `src/features/`. Se usa para generar
-// programáticamente los overrides de cross-feature deep imports (Bloque 2.3
-// arquitectura). Mantener sincronizada con `ls src/features/`.
-const FEATURES = [
-  "admin","auditoria","auth","bandejas","catalogos","cliente","comisiones",
-  "compras","configuracion","costeo","cotizacion","crm","cxp","dashboard",
-  "dashboardEjecutivo","dev","embarques","facturacion","legal","marketing",
-  "notificaciones","onboarding","operaciones","portal","portal-agente",
-  "presupuesto","profit","proformas","proveedor","reportes","search","tesoreria",
-];
+// P1-A: el inventario de features se DESCUBRE leyendo `src/features` (fuente
+// única en `scripts/lib/features.mjs`). Antes era una lista manual de 32
+// entradas que ya estaba desfasada (36 carpetas reales), dejando sin regla a
+// `anticipos-proveedor`, `cobranza`, `cxc` y `expediente`.
+const FEATURES = listFeatures(process.cwd());
+
 
 // ARCH-DEBT · Bloque 2.3: allowlist temporal de imports cross-feature ya
 // existentes al momento de introducir la regla (baseline v13.309.4). Cada
@@ -161,12 +159,63 @@ const CROSS_FEATURE_ALLOWLIST = [
   // Sale del allowlist cuando se promueva la familia `entrantes/` a shared.
   "src/features/bandejas/components/BuzonEntrantesModales.tsx",
   "src/features/portal-agente/routes/AgenteInicio.tsx",
+  // ── Baseline P1-A (ronda 1 arquitectura) ────────────────────────────────
+  // Imports cross-feature YA EXISTENTES que afloraron al cerrar dos huecos:
+  //   · el inventario manual de features (faltaban anticipos-proveedor,
+  //     cobranza, cxc y expediente);
+  //   · las rutas profundas (`facturacion/estadoCuenta/**`,
+  //     `compras/matching/**`), que los patrones por carpeta fija no cubrían.
+  // NO se agregó ninguna entrada para el caso reportado (ComprasReportes →
+  // dashboard/direccion): ese se resolvió promoviendo
+  // `TipoCambioFallbackBanner` a `src/components/shared/`. Cada archivo sale
+  // de esta lista promoviendo el módulo a shared/lib o exponiéndolo por el
+  // barrel raíz del feature dueño. NO agregar entradas nuevas.
+  "src/features/cliente/components/ClienteDocumentosTab.tsx",
+  "src/features/cobranza/components/DialogEnviarEstadoCuenta.tsx",
+  "src/features/costeo/hooks/useTopTarifas.ts",
+  "src/features/cotizacion/components/DialogConvertirProspecto.tsx",
+  "src/features/crm/hooks/useLeadDetalleAcciones.ts",
+  "src/features/crm/hooks/useNuevoLeadSubmit.ts",
+  "src/features/cxp/components/VincularEmbarqueSection.tsx",
+  "src/features/cxp/components/_sections/PasoVinculacion.tsx",
+  "src/features/cxp/components/detalle/FacturaProveedorTabs.tsx",
+  "src/features/cxp/components/vincularEmbarqueHelpers.ts",
+  "src/features/dashboardEjecutivo/routes/DashboardEjecutivoPage.tsx",
+  "src/features/embarques/components/facturacion/historialFacturas.helpers.ts",
+  "src/features/embarques/routes/NuevoEmbarque.tsx",
+  "src/features/facturacion/components/detalle/FacturaDetalleFooterDialogs.tsx",
+  "src/features/facturacion/estadoCuenta/components/ExportEmailButton.tsx",
+  "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
+  "src/features/portal/components/SolicitarCotizacionDialog.tsx",
+  "src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx",
+  "src/features/portal/routes/PortalDashboard.tsx",
+  "src/features/portal/routes/PortalEstadoCuenta.tsx",
+  "src/features/proveedor/components/NuevoProveedorDialog.tsx",
+  "src/features/proveedor/components/ProveedorExpedienteCard.tsx",
+  "src/features/proveedor/components/SubirDocumentoProveedorDialog.tsx",
+  "src/features/proveedor/components/proveedorDocumentosColumns.tsx",
+  "src/features/proveedor/routes/ProveedorDetalle.tsx",
 ];
 
-// Overrides por feature: prohíben importar hacia carpetas internas
-// (components / domain / lib) de OTRAS features. Los imports vía
-// `hooks`, `services`, `types`, `queryKeys` y la ruta pública (`routes`)
-// se mantienen permitidos porque son la superficie estable del feature.
+
+// Lápida UI-3: `getEstadoColor` fue eliminado. Se declara aquí para poder
+// reusarla en el bloque `no-legacy-estado-color` Y en los overrides
+// cross-feature (que van después y, al redefinir `no-restricted-imports`,
+// la borrarían para `src/features/**`). P1-A: ese solapamiento era justo la
+// razón por la que la frontera entre features no se aplicaba de forma fiable.
+const RESTRICTED_PATHS_LEGACY = [
+  {
+    name: "@/lib/ui/uiMappings",
+    importNames: ["getEstadoColor"],
+    message: "UI-3: `getEstadoColor` fue eliminado. Usa <StatusBadge estado={...} /> ('@/components/shared/StatusBadge') o `getEstadoVisual(estado).badge` de '@/lib/ui/estadoConfig'. El helper fue eliminado en v13.683.0: no lo reintroduzcas.",
+  },
+];
+
+// Overrides por feature: prohíben importar CUALQUIER internal de OTRO feature,
+// incluidas rutas profundas (`@/features/dashboard/direccion/components/X`,
+// que el patrón anterior por carpeta fija no cubría). Superficie permitida:
+// barrel raíz `@/features/<f>`, barrels de subcapa (hooks/services/domain/
+// types/queryKeys/permissions) y `routes/**` (navegación lazy).
 const crossFeatureOverrides = FEATURES.map((self) => ({
   name: `cross-feature/${self}`,
   files: [`src/features/${self}/**/*.{ts,tsx}`],
@@ -178,31 +227,12 @@ const crossFeatureOverrides = FEATURES.map((self) => ({
   ],
   rules: {
     "no-restricted-imports": ["error", {
-      patterns: FEATURES.filter((f) => f !== self).flatMap((f) => [
-        {
-          group: [`@/features/${f}/components/*`, `@/features/${f}/components/**`],
-          message: `Cross-feature: no importes componentes internos de '${f}'. Si es genuinamente compartido, promuévelo a 'src/components/shared/'. Ver Bloque 2.3 (arquitectura).`,
-        },
-        {
-          group: [`@/features/${f}/domain/*`, `@/features/${f}/domain/**`],
-          message: `Cross-feature: no importes de '${f}/domain'. Promueve la lógica pura a 'src/lib/domain/' o duplícala en tu feature. Ver Bloque 2.3.`,
-        },
-        {
-          group: [`@/features/${f}/lib/*`, `@/features/${f}/lib/**`],
-          message: `Cross-feature: no importes de '${f}/lib'. Promueve a 'src/lib/' (ui/domain/formatters). Ver Bloque 2.3.`,
-        },
-        {
-          group: [`@/features/${f}/utils/*`, `@/features/${f}/utils/**`],
-          message: `Cross-feature: no importes de '${f}/utils'. Promueve el helper a 'src/lib/' o duplícalo en tu feature. Ver Bloque 2.3 y O5 (auditoría 2026-07-29).`,
-        },
-        {
-          group: [`@/features/${f}/constants/*`, `@/features/${f}/constants/**`],
-          message: `Cross-feature: no importes de '${f}/constants'. Promueve la constante a 'src/constants/'. Ver Bloque 2.3 y O5.`,
-        },
-      ]),
+      paths: RESTRICTED_PATHS_LEGACY,
+      patterns: crossFeaturePatterns(self, FEATURES),
     }],
   },
 }));
+
 
 export default tseslint.config(
   // v13.303.5 — Ignores ampliados: además de `dist`/`coverage` (build output),
@@ -923,9 +953,6 @@ export default tseslint.config(
   },
 
 
-  // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
-  ...crossFeatureOverrides,
-
   {
     // ─────────────────────────────────────────────────────────────────────
     // Guardrail `no-legacy-estado-color` — UX-03 (design system).
@@ -950,16 +977,17 @@ export default tseslint.config(
     ],
     rules: {
       "no-restricted-imports": ["error", {
-        paths: [
-          {
-            name: "@/lib/ui/uiMappings",
-            importNames: ["getEstadoColor"],
-            message: "UI-3: `getEstadoColor` fue eliminado. Usa <StatusBadge estado={...} /> ('@/components/shared/StatusBadge') o `getEstadoVisual(estado).badge` de '@/lib/ui/estadoConfig'. El helper fue eliminado en v13.683.0: no lo reintroduzcas.",
-          },
-        ],
+        paths: RESTRICTED_PATHS_LEGACY,
       }],
     },
   },
+
+  // Frontera entre features (P1-A). VA DESPUÉS de `no-legacy-estado-color`
+  // porque ese bloque reescribe `no-restricted-imports` para todo `src/**`;
+  // si fuera antes, borraría estos patrones en `src/features/**`. La lápida
+  // UI-3 se conserva vía `RESTRICTED_PATHS_LEGACY`.
+  ...crossFeatureOverrides,
+
   {
     // ── OLA 5 · a11y: <Input> sin etiqueta accesible ─────────────────────
     // `<Input>` (shadcn) no asocia <label> por sí solo: exigimos `id`

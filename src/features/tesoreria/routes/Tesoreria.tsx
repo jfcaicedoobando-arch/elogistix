@@ -23,7 +23,7 @@ import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
 import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
 import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
 import { TesoreriaTcAvisos } from "./_sections/TesoreriaTcAvisos";
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 
 export default function Tesoreria() {

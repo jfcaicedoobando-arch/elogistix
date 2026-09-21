@@ -11,7 +11,7 @@ vi.mock("@/features/catalogos/hooks", () => ({
   useExchangeRates: () => mockRates(),
 }));
 
-import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 import { CarteraKpis } from "@/features/bandejas/routes/_sections/CarteraKpis";
 import { ProveedorResumenCards } from "@/features/proveedor/components/ProveedorResumenCards";
 import { TopProveedoresCard } from "@/features/compras/routes/_sections/TopProveedoresCard";
