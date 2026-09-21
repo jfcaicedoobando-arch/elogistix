@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Save } from "lucide-react";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
-import { resolveTipoContenedorNombre, type TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre, type TipoContenedorCatalogo } from "@/lib/domain/tipoContenedor";
 
 export interface DraftPatch {
   fecha_descarga?: string | null;

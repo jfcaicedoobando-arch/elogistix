@@ -7,14 +7,15 @@ import type { NavigateFunction } from "react-router-dom";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { getErrorMessage } from "@/lib/errors";
-import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
+import { diffFields, SENSITIVE_FIELDS } from "@/lib/domain/auditDiff";
+import { diffConceptos } from "@/lib/domain/auditDiffConceptos";
 import { validarContenedoresMaritimo, validarRutaMaritimaRequerida, buildBitacoraDetallesEdit } from "./useEditarEmbarqueWizard.helpers";
 import type { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import type { useConceptosForm } from "@/features/cotizacion/hooks";
 import type { useUpdateEmbarque, useEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import type { useRegistrarActividad } from "@/hooks/shared";
 import type { Tables } from "@/integrations/supabase/types";
-import type { ConceptoLike } from "@/features/auditoria/utils/diffFields";
+import type { ConceptoLike } from "@/lib/domain/auditDiffConceptos";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 

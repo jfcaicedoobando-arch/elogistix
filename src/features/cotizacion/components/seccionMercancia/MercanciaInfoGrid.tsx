@@ -3,7 +3,7 @@ import { AlertTriangle, FileDown } from "lucide-react";
 import { getSignedUrl } from "@/services/storage";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 
 interface Cot {
   modo: string;

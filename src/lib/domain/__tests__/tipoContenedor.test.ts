@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveTipoContenedorNombre } from "../resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "../tipoContenedor";
 
 const catalogo = [
   { id: "8014e97d-37a6-4e99-9238-fd507543c340", code: "40HC", name: "40' High Cube" },

@@ -12,7 +12,7 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { parseTarifasInformativas } from "@/features/cotizacion/services";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";

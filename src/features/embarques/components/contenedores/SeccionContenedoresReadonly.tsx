@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/errors";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";

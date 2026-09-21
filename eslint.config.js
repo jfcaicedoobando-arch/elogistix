@@ -109,20 +109,12 @@ const FEATURES = [
 // `src/components/shared/` o `src/lib/{ui,domain}/`, o duplicando la lógica
 // dentro del feature consumidor. NO agregar entradas nuevas sin PR justificado.
 const CROSS_FEATURE_ALLOWLIST = [
-  "src/features/admin/components/TabCatalogosGlobales.tsx",
-  "src/features/admin/hooks/useAdminOrgConfig.ts",
-  "src/features/admin/routes/admin-org/Configuracion.tsx",
   "src/features/auth/routes/TrackingPublico.tsx",
   // v13.488.0 — Cartera monta el diálogo de cobro en lote de facturación (CxC).
   "src/features/bandejas/routes/Cartera.tsx",
-  "src/features/bandejas/routes/CxpPorCapturar.tsx",
-  "src/features/cliente/routes/ClienteDetalle.tsx",
   // v13.343.0 — el panel 360 se movió a esta sección al dividir ClienteDetalle.
   "src/features/cliente/routes/_sections/ClienteDetalleTabs.tsx",
-  "src/features/cliente/services/financials.ts",
-  "src/features/compras/routes/ComprasPorAprobar.tsx",
   // Split de ComprasPorAprobar.tsx (límite 200 líneas): hereda su excepción.
-  "src/features/compras/routes/ComprasPorAprobar.useColumnas.ts",
   "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
   "src/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion.tsx",
   "src/features/cotizacion/components/seccionRuta/OrigenDestinoBlock.tsx",
@@ -135,10 +127,7 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/embarques/components/TabSeguros.tsx",
   "src/features/embarques/components/conceptos/ConceptoCatalogoSelect.tsx",
   "src/features/embarques/components/stepDatosRuta/StepDatosRutaMaritimo.tsx",
-  "src/features/embarques/domain/embarqueWizard.ts",
-  "src/features/embarques/domain/mappers/embarqueToDb.ts",
   "src/features/embarques/hooks/useHidratacionEditarEmbarque.ts",
-  "src/features/embarques/hooks/useUmbralesReconciliacion.ts",
   "src/features/embarques/services/submitProformaDialog.ts",
   "src/features/portal-agente/components/AgenteLayout.tsx",
   "src/features/portal-agente/components/AgenteTarifaForm.tsx",
@@ -150,11 +139,9 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/portal/hooks/usePortalEmbarquesController.ts",
   "src/features/portal/routes/PortalCotizacionDetalle.tsx",
   "src/features/portal/routes/PortalEmbarques.tsx",
-  "src/features/portal/services/queries.ts",
   "src/features/presupuesto/components/TabVsReal.tsx",
   "src/features/profit/hooks/useEstadoResultados.ts",
   "src/features/profit/hooks/usePeriodoMesUrl.ts",
-  "src/features/profit/routes/ProfitDashboardEjecutivo.tsx",
   "src/features/profit/routes/ProfitPresupuesto.tsx",
   "src/features/profit/routes/ProfitProyeccion.tsx",
   "src/features/profit/services/estadoResultados.ts",
@@ -173,13 +160,7 @@ const CROSS_FEATURE_ALLOWLIST = [
   // (vive en embarques/components/entrantes junto a sus 4 subcomponentes).
   // Sale del allowlist cuando se promueva la familia `entrantes/` a shared.
   "src/features/bandejas/components/BuzonEntrantesModales.tsx",
-  "src/features/cliente/hooks/useClienteDetalleHandlers.ts",
-  "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
-  "src/features/embarques/components/tabResumen/RutaPorModo.tsx",
-  "src/features/embarques/hooks/useEditarEmbarqueWizard.helpers.ts",
-  "src/features/embarques/hooks/useEditarEmbarqueWizard.ts",
   "src/features/portal-agente/routes/AgenteInicio.tsx",
-  "src/features/proveedor/hooks/useProveedorDetalleController.ts",
 ];
 
 // Overrides por feature: prohíben importar hacia carpetas internas
@@ -786,7 +767,6 @@ export default tseslint.config(
   "src/features/cxp/components/NotasCreditoSection.tsx",
   "src/features/dashboardEjecutivo/components/SaldosBancosCard.tsx",
   "src/features/embarques/components/OrigenCostosSection.tsx",
-  "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
   "src/features/embarques/components/costos/GrupoCostosProveedor.tsx",
   "src/features/facturacion/components/CobroLoteRenglon.tsx",
   "src/features/facturacion/components/NotasCreditoRecientes.tsx",
