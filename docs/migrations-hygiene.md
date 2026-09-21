@@ -20,7 +20,32 @@ H9**, que aplican a todo el historial.
 | **H5** | Prohibido `DROP TABLE public.X` sin `IF EXISTS`. | Idem H4; evita romper entornos donde la tabla ya se dropeó. |
 | **H6** | Toda función `SECURITY DEFINER` en `public` debe llevar, en el mismo archivo: `REVOKE ALL ON FUNCTION ... FROM PUBLIC` **y** `GRANT EXECUTE ... TO {authenticated\|service_role\|postgres}`. Prohibido `GRANT EXECUTE ... TO PUBLIC` (regla dura, aplica también a legacy). Excepción explícita: comentario `-- audit:allow-no-grants` en la línea previa al `CREATE FUNCTION` para helpers privados intencionales. | `SECURITY DEFINER` corre con los privilegios del owner (habitualmente superuser) — sin `REVOKE FROM PUBLIC` cualquier rol conectado puede escalar. `GRANT EXECUTE TO PUBLIC` es escalación de privilegios directa. |
 
+## Colisión histórica de timestamp (única excepción a H0)
+
+El timestamp `20260901000100` aparece en dos archivos:
+
+- `20260901000100_cierre_lcl_sin_fechas_contenedor.sql` — re-emitió
+  `public.validar_cierre_embarque`.
+- `20260901000100_r4_replay_avanzar_estado_embarque.sql` — re-emitió
+  `public.avanzar_estado_embarque`.
+
+**No se renombran, borran, combinan ni reaplican.** Son archivos ya aplicados en
+bases instaladas; renombrarlos hoy desalinearía el historial de Git respecto al
+registro de migraciones de esas bases. El riesgo real (orden indefinido entre
+ambos) está neutralizado porque las dos funciones fueron re-emitidas y
+sustituidas por migraciones posteriores, que son las que determinan el estado
+final:
+
+- `validar_cierre_embarque` → re-emitida hasta `20260908000500`.
+- `avanzar_estado_embarque` → re-emitida al menos en `20260902000100`.
+
+La excepción está codificada de forma exacta en
+`scripts/lib/audit-migration-versions.ts` (`COLISION_LEGACY`): sólo se tolera si
+el grupo coincide **exactamente** con esos dos nombres. Un tercer archivo con ese
+timestamp — o cualquier otro timestamp duplicado — falla como H0.
+
 ## Excepciones
+
 
 - **RLS en tablas nuevas**: además del GRANT (H2), es obligatorio `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `CREATE POLICY` en el mismo archivo. El auditor no valida esto (los tests de RLS lo hacen), pero es parte del contrato.
 - **Enums nuevos**: no requieren GRANT, sólo `ALTER TYPE ... ADD VALUE IF NOT EXISTS` para bumps posteriores.
