@@ -65,11 +65,13 @@ describe("AuthSessionContext (aislamiento del token)", () => {
     };
 
     const ConsumidorGeneral = memo(() => {
+      // eslint-disable-next-line react-compiler/react-compiler -- sonda de test: contar renders ES la aserción
       sonda.rendersGeneral += 1;
       sonda.userVisto = useAuth().user;
       return null;
     });
     const ConsumidorToken = memo(() => {
+      // eslint-disable-next-line react-compiler/react-compiler -- sonda de test: contar renders ES la aserción
       sonda.rendersToken += 1;
       sonda.tokenVisto = useAuthSessionToken()?.access_token ?? null;
       return null;
@@ -112,6 +114,7 @@ describe("AuthSessionContext (aislamiento del token)", () => {
   it("useAuthSessionToken fuera del provider devuelve null (no lanza)", () => {
     const sonda = { token: "inicial" as string | null };
     const Sonda = () => {
+      // eslint-disable-next-line react-compiler/react-compiler -- sonda de test: capturar el valor ES la aserción
       sonda.token = useAuthSessionToken()?.access_token ?? null;
       return null;
     };
