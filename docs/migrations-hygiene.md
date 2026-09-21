@@ -1,14 +1,18 @@
 # Higiene de migraciones SQL
 
-Reglas obligatorias para toda migración creada a partir del baseline
-`20260723223436` (2026-07-23). El auditor `bun run audit:migrations` las hace
-cumplir en CI. Legacy anterior al baseline queda documentado pero no
-bloquea el pipeline (imposible de reescribir sin refactor de esquema).
+Reglas obligatorias para toda migración creada a partir del baseline vigente
+`20260919015150` (valor de `BASELINE` en `scripts/audit-migrations.ts`; el
+histórico de bumps está al final de este documento). El auditor
+`bun run audit:migrations` las hace cumplir en CI. Legacy anterior al baseline
+queda documentado pero no bloquea el pipeline (imposible de reescribir sin
+refactor de esquema), **salvo las reglas duras H0, H6 (`GRANT … TO PUBLIC`) y
+H9**, que aplican a todo el historial.
 
 ## Reglas
 
 | ID | Regla | Motivo |
 |----|-------|--------|
+| **H0** | El prefijo de 14 dígitos (`YYYYMMDDHHMMSS`) debe ser único entre **todos** los archivos de `supabase/migrations`, incluidos los pre-baseline. Única excepción: la colisión legacy exacta documentada abajo. | Dos archivos con el mismo timestamp comparten la misma `version` para `supabase db push`: el orden de aplicación es indefinido y una base nueva puede quedar con una función distinta a producción. |
 | **H1** | Nombre `YYYYMMDDHHMMSS_slug.sql` (slug snake-case/uuid). | Orden lexicográfico = orden temporal; imprescindible para `supabase db push`. |
 | **H2** | Todo `CREATE TABLE public.X` debe llevar `GRANT ... ON public.X` en el **mismo archivo**. | PostgREST no otorga privilegios por defecto; sin GRANT la Data API devuelve `permission denied` en runtime. |
 | **H3** | `DROP FUNCTION\|TABLE\|VIEW ... CASCADE` debe ir seguido de `CREATE OR REPLACE` o `CREATE TABLE` para la misma entidad. | Evita "olvidos" de recrear dependencias tras un CASCADE. |
