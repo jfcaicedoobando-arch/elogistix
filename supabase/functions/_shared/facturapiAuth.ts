@@ -5,14 +5,13 @@
  * La tabla guarda el NOMBRE del secret donde vive la API key; la key real
  * vive como secret de Supabase (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE`).
  *
- * P1-4: fail-closed por organización. Si la org no tiene fila en
- * `facturapi_credenciales`, YA NO se cae al secret global `FACTURAPI_KEY`
- * para cualquier organización (riesgo de mezclar cuenta/folios entre
- * tenants). El único fallback permitido es para la organización legacy
- * exacta declarada en el secret `LEGACY_FACTURAPI_ORG_ID` (una sola org,
- * documentada aquí: es la organización que usaba FacturApi antes de que
- * existiera `facturapi_credenciales` multi-tenant). Ninguna otra
- * organización puede usar ese fallback.
+ * P1-4 / Paso 15: fail-closed por organización, SIN excepciones. Si la org no
+ * tiene fila en `facturapi_credenciales`, la resolución falla con 412. Ya no
+ * existe ningún fallback al secret global `FACTURAPI_KEY` ni a
+ * `LEGACY_FACTURAPI_ORG_ID` / `LEGACY_FACTURAPI_AMBIENTE` (retirado el
+ * 2026-09-21: la única organización que lo usaba ya tiene credencial propia).
+ * Las únicas keys que se leen del entorno son los secrets nombrados por
+ * organización declarados en la tabla (`secretName`).
  *
  * El mensaje de error devuelto al cliente es genérico en español y NUNCA
  * incluye nombres de secrets ni detalles internos; esos detalles sólo se
@@ -71,8 +70,6 @@ export interface FacturapiResolved {
   ambiente: FacturapiAmbiente;
   baseUrl: string;
   facturapiOrgId: string | null;
-  /** true cuando se cayó al secret global `FACTURAPI_KEY` (sin fila en la tabla). */
-  legacy: boolean;
 }
 
 export interface FacturapiResolveError {
@@ -98,58 +95,6 @@ function credencialNoConfigurada(): FacturapiResolveResult {
     },
   };
 }
-
-/**
- * Única excepción fail-closed: si `organizationId` coincide EXACTAMENTE con
- * el secret `LEGACY_FACTURAPI_ORG_ID`, se permite usar el secret global
- * `FACTURAPI_KEY`. Cualquier otra organización sin fila en
- * `facturapi_credenciales` recibe un error genérico (fail-closed).
- *
- * DEPRECADO (P2-C · FacturAPI 5.0): este fallback existe sólo para la única
- * organización que usaba FacturApi antes de `facturapi_credenciales`. Exige
- * AMBOS secrets: `LEGACY_FACTURAPI_ORG_ID` y `LEGACY_FACTURAPI_AMBIENTE`
- * (`sandbox` | `live`); nunca cae silenciosamente a sandbox. Migración: dar de
- * alta la fila en `facturapi_credenciales` con su key en el Vault y borrar los
- * tres secrets (`FACTURAPI_KEY`, `LEGACY_FACTURAPI_ORG_ID`,
- * `LEGACY_FACTURAPI_AMBIENTE`). Ver `docs/facturapi-ambientes.md`.
- */
-
-function legacyFallback(organizationId: string): FacturapiResolveResult {
-  const legacyOrgId = Deno.env.get("LEGACY_FACTURAPI_ORG_ID") ?? "";
-  if (legacyOrgId && organizationId === legacyOrgId) {
-    const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
-    // P2-C: el ambiente del fallback legacy es EXPLÍCITO. Antes se asumía
-    // "sandbox", así que una key de PRODUCCIÓN guardada en `FACTURAPI_KEY`
-    // quedaba etiquetada como pruebas y el ERP elegía rutas/diagnósticos del
-    // ambiente equivocado. Sin `LEGACY_FACTURAPI_AMBIENTE` válido no se usa.
-    const ambienteLegacy = Deno.env.get("LEGACY_FACTURAPI_AMBIENTE") ?? "";
-    if (ambienteLegacy !== "sandbox" && ambienteLegacy !== "live") {
-      console.error(
-        "[facturapiAuth] fallback legacy deshabilitado: LEGACY_FACTURAPI_AMBIENTE debe ser 'sandbox' o 'live'",
-        { organizationId },
-      );
-      return credencialNoConfigurada();
-    }
-    if (legacy) {
-      return {
-        ok: true,
-        data: {
-          apiKey: legacy,
-          ambiente: ambienteLegacy,
-          baseUrl: FACTURAPI_BASE,
-          facturapiOrgId: null,
-          legacy: true,
-        },
-      };
-    }
-    console.error("[facturapiAuth] LEGACY_FACTURAPI_ORG_ID configurado pero FACTURAPI_KEY ausente", {
-      organizationId,
-    });
-  }
-
-  return credencialNoConfigurada();
-}
-
 
 let adminSingleton: SupabaseLike | null = null;
 /**
@@ -211,7 +156,8 @@ export async function resolveFacturapiKey(
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  if (!cred) return legacyFallback(organizationId);
+  // Fail-closed absoluto: sin credencial explícita no se timbra (Paso 15).
+  if (!cred) return credencialNoConfigurada();
 
   const ambiente: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
   const vaultId = ambiente === "live" ? cred.api_key_live_vault_id : cred.api_key_sandbox_vault_id;
@@ -225,7 +171,6 @@ export async function resolveFacturapiKey(
         ambiente,
         baseUrl: FACTURAPI_BASE,
         facturapiOrgId: cred.facturapi_org_id ?? null,
-        legacy: false,
       },
     };
   }
@@ -268,7 +213,6 @@ export async function resolveFacturapiKey(
       ambiente,
       baseUrl: FACTURAPI_BASE,
       facturapiOrgId: cred.facturapi_org_id ?? null,
-      legacy: false,
     },
   };
 }
