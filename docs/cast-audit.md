@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-09-11
+# Cast Audit — generado 2026-09-21
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3655**
+Total de `as` casts detectados: **3844**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 1049     | 28.7% |
-| LOW       | 1 | 174      | 4.8% |
-| MEDIUM    | 2 | 2432   | 66.5% |
+| SAFE      | 0 | 1096     | 28.5% |
+| LOW       | 1 | 181      | 4.7% |
+| MEDIUM    | 2 | 2567   | 66.8% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -38,12 +38,12 @@ Total de `as` casts detectados: **3655**
 | 7 | `src/features/embarques/hooks/__tests__/useNuevoEmbarqueCotVinculada.test.tsx` | 11 | 22 | 0 | 0 | 11 | 0 | 0 |
 | 8 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 11 | 22 | 0 | 0 | 11 | 0 | 0 |
 | 9 | `src/features/configuracion/index.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 10 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 11 | `src/features/cotizacion/services/__tests__/wizard.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 12 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
-| 13 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
-| 14 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 15 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 10 | `src/features/cotizacion/components/costosLocal/__tests__/FilaCostoLocalRow.captura.test.tsx` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 11 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 12 | `src/features/cotizacion/services/__tests__/wizard.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 13 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
+| 14 | `src/features/auth/components/__tests__/ProtectedRoute.router7.test.tsx` | 10 | 19 | 0 | 1 | 9 | 0 | 0 |
+| 15 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 

@@ -6,6 +6,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { aceptarProformaSinAutorizacion } from "@/features/proformas/services/respuestaCliente";
+import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -15,8 +16,8 @@ export function useAprobarProformaInterna() {
   const mutation = useMutation({
     mutationFn: (proformaId: string) => aceptarProformaSinAutorizacion(proformaId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["proformas"] });
-      void qc.invalidateQueries({ queryKey: ["proforma"] });
+      // `proformas.all` cubre listas y detalle; no existe query con root ["proforma"].
+      void qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
       notifySuccess(undefined, {
         title: "Proforma aprobada internamente",
         description: "El cliente no requiere autorización; ya puedes convertirla a factura.",

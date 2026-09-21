@@ -57,7 +57,7 @@ export function useProformas() {
 /** Invalida todas las queries impactadas por cambios en proformas. */
 function invalidateProformaCaches(qc: ReturnType<typeof useQueryClient>, embarqueId?: string | null) {
   qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
-  qc.invalidateQueries({ queryKey: queryKeys.proformas.conceptosVenta });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta() });
   qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
   if (embarqueId) {
     qc.invalidateQueries({ queryKey: queryKeys.proformas.embarque(embarqueId) });

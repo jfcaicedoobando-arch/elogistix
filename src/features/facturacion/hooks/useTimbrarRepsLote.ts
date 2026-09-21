@@ -40,7 +40,7 @@ export function useTimbrarRepsLote() {
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
       qc.invalidateQueries({ queryKey: queryKeys.facturas.pagosAll });
-      qc.invalidateQueries({ queryKey: ["facturacion"] });
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.all });
     }
   };
 

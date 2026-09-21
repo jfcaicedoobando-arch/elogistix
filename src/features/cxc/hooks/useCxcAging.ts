@@ -32,7 +32,7 @@ export interface UseCxcAgingResult {
 export function useCxcAging(fecha?: string): UseCxcAgingResult {
   const { organizationId } = useOrgFilter();
   const q = useQuery({
-    queryKey: [...queryKeys.cxc.aging(fecha), organizationId],
+    queryKey: queryKeys.cxc.aging(fecha, organizationId),
     queryFn: () => fetchCxcAging(fecha, organizationId),
     // PERF (auditoría 2026-08-18, hallazgo #3): `cxc_aging_clientes` agrega toda
     // la cartera en cada corrida (~200 ms). El aging es un reporte a fecha de

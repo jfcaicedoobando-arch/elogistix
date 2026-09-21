@@ -46,7 +46,7 @@ export default function ComprasConciliacion() {
   const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: [...compras.conciliacionEmbarques({ estado, moneda, search }), organizationId],
+    queryKey: compras.conciliacionEmbarques({ estado, moneda, search }, organizationId),
     queryFn: () =>
       listarConciliacionEmbarques({
         estado: estado === "todos" ? "todos" : estado,

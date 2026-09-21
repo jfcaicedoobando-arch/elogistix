@@ -43,7 +43,7 @@ export function usePagoClienteLote() {
     },
     onSuccess: (res, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
-      qc.invalidateQueries({ queryKey: ["facturacion"] });
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.all });
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
 

@@ -8,11 +8,12 @@
  * lo que guardar otros campos conserva `lead_id` intacto.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { getNombreLead } from "@/features/crm/services/leads";
 
 export function useNombreProspecto(leadId: string | null) {
   return useQuery({
-    queryKey: ["crm", "lead-nombre", leadId],
+    queryKey: queryKeys.crm.leadNombre(leadId),
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,
     queryFn: () => getNombreLead(leadId as string),

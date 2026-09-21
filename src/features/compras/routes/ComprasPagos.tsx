@@ -55,7 +55,7 @@ export default function ComprasPagos() {
   const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: [...compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }), organizationId],
+    queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }, organizationId),
     queryFn: () =>
       listarPagosProveedorGlobal(
         {

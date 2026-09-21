@@ -58,7 +58,7 @@ export function useActualizarCuenta() {
 /** Indica si la cuenta ya tiene movimientos (bloquea el cambio de moneda). */
 export function useTieneMovimientosCuenta(cuentaId: string | null) {
   return useQuery({
-    queryKey: [...queryKeys.tesoreria.all, "tiene-movimientos", cuentaId],
+    queryKey: queryKeys.tesoreria.tieneMovimientos(cuentaId),
     queryFn: () => cuentaTieneMovimientos(cuentaId as string),
     enabled: !!cuentaId,
     staleTime: 60_000,

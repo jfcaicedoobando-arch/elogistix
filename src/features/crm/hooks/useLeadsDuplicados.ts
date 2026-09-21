@@ -3,6 +3,7 @@
  * (v13.630.0 — Ola A CRM).
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { buscarLeadsDuplicados } from "@/features/crm/services/leadsDuplicados";
 import {
   clasificarDuplicado,
@@ -27,7 +28,7 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
     telefono: f.telefono ?? "",
   }));
   const q = useQuery({
-    queryKey: ["crm", "leads", "duplicados", claves],
+    queryKey: queryKeys.crm.leads.duplicados(claves),
     queryFn: () => buscarLeadsDuplicados(claves),
     enabled: claves.length > 0,
     staleTime: STALE,
@@ -56,7 +57,7 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
 export function useDuplicadoLead(clave: LeadClave, habilitado = true) {
   const tiene = Boolean(clave.empresa || clave.email || clave.telefono);
   const q = useQuery({
-    queryKey: ["crm", "leads", "duplicado", clave.empresa, clave.email, clave.telefono],
+    queryKey: queryKeys.crm.leads.duplicado(clave.empresa, clave.email, clave.telefono),
     queryFn: () => buscarLeadsDuplicados([clave]),
     enabled: habilitado && tiene,
     staleTime: STALE,

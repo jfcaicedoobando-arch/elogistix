@@ -12,6 +12,9 @@ export const clientes = {
   diasCredito: (id: string) => ['clientes', 'dias_credito', id] as const,
   exposicionCredito: (id: string) => ['clientes', 'exposicion_credito', id] as const,
   paraPdf: (id: string) => ['clientes', 'para_pdf', id] as const,
+  /** Política de autorización del cliente ("cliente de casa"). */
+  autorizacion: (clienteId?: string | null) =>
+    ['cliente-autorizacion', clienteId ?? 'none'] as const,
 } as const;
 
 export const clienteFinancials = {

@@ -11,6 +11,7 @@
  */
 import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   fetchMonedaOportunidad,
   alinearMonedaOportunidad,
@@ -38,7 +39,7 @@ export function useAceptarCotizacion({
   // refetch externo (invalidación / cambio de foco) reventaba con
   // "Missing queryFn". Ahora la función siempre existe y se guarda sola.
   const monedaQuery = useQuery({
-    queryKey: ["crm", "oportunidad-moneda", oportunidadId],
+    queryKey: queryKeys.crm.oportunidadMoneda(oportunidadId),
     queryFn: () => (oportunidadId ? fetchMonedaOportunidad(oportunidadId) : null),
     enabled: open && !!oportunidadId,
     staleTime: 0,
