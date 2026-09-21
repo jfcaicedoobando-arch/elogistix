@@ -58,25 +58,46 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
   ): Promise<void> => {
     setGuardando(true);
     try {
-      const nueva = await crearMut.mutateAsync(construirInput);
+      // Fase 1: crear el borrador. Si falla, el modal se queda abierto y NO
+      // existe nota; es seguro reintentar.
+      let nueva;
+      try {
+        nueva = await crearMut.mutateAsync(construirInput);
+      } catch (err) {
+        // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna).
+        const rawMsg = err instanceof Error ? err.message : String(err ?? "");
+        logger.warn("useNotaCreditoDraft", "handleSubmit failed", rawMsg);
+        notifyError(undefined, {
+          title: "No se pudo crear la nota de crédito",
+          description: getErrorMessage(err),
+          method: "ON_ERROR",
+          errorCode: ERROR_CODES.VALIDATION_FAILED,
+        });
+        return;
+      }
       toast({
         title: "Borrador de nota de crédito creado",
         description: timbrarAhora
           ? "Se timbrará ahora y FacturAPI asignará el folio fiscal."
           : "El folio fiscal se asignará al timbrar.",
       });
-      if (timbrarAhora) await timbrar.mutateAsync(nueva.id);
+      // Fase 2: timbrar la MISMA nota recién creada. Si falla, el borrador ya
+      // existe: no se vuelve a crear ni se muestra el error genérico de
+      // creación (useTimbrarNotaCredito ya reporta el fallo de timbrado). Se
+      // cierra para impedir un borrador duplicado; el reintento se hace desde
+      // la lista.
+      if (timbrarAhora) {
+        try {
+          await timbrar.mutateAsync(nueva.id);
+        } catch (err) {
+          logger.warn(
+            "useNotaCreditoDraft",
+            "timbrar tras crear failed; borrador conservado",
+            err instanceof Error ? err.message : String(err ?? ""),
+          );
+        }
+      }
       p.onOpenChange(false);
-    } catch (err) {
-      // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna).
-      const rawMsg = err instanceof Error ? err.message : String(err ?? "");
-      logger.warn("useNotaCreditoDraft", "handleSubmit failed", rawMsg);
-      notifyError(undefined, {
-        title: "No se pudo crear la nota de crédito",
-        description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
     } finally {
       setGuardando(false);
     }

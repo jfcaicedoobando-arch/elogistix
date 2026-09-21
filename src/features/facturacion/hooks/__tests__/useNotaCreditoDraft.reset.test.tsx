@@ -187,6 +187,29 @@ describe("useNotaCreditoDraft · guard de timbrado", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it("crear OK + timbrado falla: crea UNA vez, no usa el error de creación y cierra", async () => {
+    // El aviso de diagnóstico de logger.warn es esperado aquí.
+    const log = silenciarLogEsperado();
+    try {
+      mocks.timbrarMutate.mockRejectedValue(new Error("PAC fuera de línea"));
+      const { result } = renderHook(() => useNotaCreditoDraft(baseParams), { wrapper });
+      act(() => {
+        result.current.setDescripcion("Descuento");
+        result.current.setConceptos([sugerido("Servicio", 500)]);
+      });
+
+      await act(async () => { await result.current.handleSubmit(true); });
+      await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+
+      // El borrador ya existe: jamás se vuelve a crear ni se culpa a la creación.
+      expect(mocks.crearNotaCredito).toHaveBeenCalledTimes(1);
+      expect(mocks.timbrarMutate).toHaveBeenCalledWith("nc-1");
+      expect(mocks.notifyError).not.toHaveBeenCalled();
+    } finally {
+      log.restaurar();
+    }
+  });
+
   it("un error al crear no cierra el modal", async () => {
     // Los dos avisos de diagnóstico son el comportamiento esperado aquí: se
     // silencian sólo dentro de esta prueba y la consola se restaura siempre.
