@@ -128,7 +128,11 @@ Deno.test("paymentSummary no disponible: 503 recuperable sin mutar estado", asyn
 
 Deno.test("claim ya tomado por otro proceso: 409 antes de llamar al proveedor", async () => {
   const db = fakeDb([null]);
-  const reserva = await reservarRep(db.supabase, PAGO, json);
+  const reserva = await reservarRep(
+    db.supabase as unknown as Parameters<typeof reservarRep>[0],
+    PAGO,
+    json,
+  );
   assert("response" in reserva);
   assertEquals(reserva.response.status, 409);
   assertEquals((await reserva.response.json()).error, "ya_timbrado_rep");
