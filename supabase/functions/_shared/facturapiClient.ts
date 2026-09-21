@@ -60,7 +60,6 @@ export interface FacturapiClientResolved {
   apiKey: string;
   ambiente: "sandbox" | "live";
   facturapiOrgId: string | null;
-  legacy: boolean;
 }
 
 export type FacturapiClientResult =
@@ -77,7 +76,7 @@ export async function getFacturapiClient(
   const resolved = await resolveFacturapiKey(supabase, organizationId);
   if (!resolved.ok) return { ok: false, data: resolved.data };
 
-  const { apiKey, ambiente, facturapiOrgId, legacy } = resolved.data;
+  const { apiKey, ambiente, facturapiOrgId } = resolved.data;
 
   let client = clientCache.get(apiKey);
   if (!client) {
@@ -87,7 +86,7 @@ export async function getFacturapiClient(
 
   return {
     ok: true,
-    data: { client, apiKey, ambiente, facturapiOrgId, legacy },
+    data: { client, apiKey, ambiente, facturapiOrgId },
   };
 }
 
