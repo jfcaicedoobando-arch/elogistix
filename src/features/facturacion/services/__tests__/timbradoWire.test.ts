@@ -42,7 +42,15 @@ describe("guards del contrato wire", () => {
   it("reconoce pendiente por bandera y por outcome", () => {
     expect(esPendienteWire({ pendiente: true })).toBe(true);
     expect(esPendienteWire({ outcome: "timbrado_pendiente" })).toBe(true);
+    expect(esPendienteWire({ pendiente: true, outcome: "timbrado_pendiente" })).toBe(true);
     expect(esPendienteWire({ outcome: "otro" })).toBe(false);
+  });
+
+  it("rechaza objetos sin discriminador de pendiente", () => {
+    expect(esPendienteWire({})).toBe(false);
+    expect(esPendienteWire({ message: "en proceso" })).toBe(false);
+    expect(esPendienteWire({ pendiente: false })).toBe(false);
+    expect(esPendienteWire({ outcome: null })).toBe(false);
   });
 
   it("reconoce el error estructurado y descarta cuerpos no objeto", () => {
