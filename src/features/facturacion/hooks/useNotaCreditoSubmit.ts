@@ -40,7 +40,9 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
   const [guardando, setGuardando] = useState(false);
 
   const crearMut = useMutation({
-    mutationFn: (input: CrearNotaCreditoInput) => crearNotaCredito(input),
+    // El input se construye DENTRO de la mutación: si la política lanza (p. ej.
+    // TC no disponible) el fallo queda registrado igual que cualquier otro.
+    mutationFn: (construir: () => CrearNotaCreditoInput) => crearNotaCredito(construir()),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(p.facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
@@ -56,7 +58,7 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
   ): Promise<void> => {
     setGuardando(true);
     try {
-      const nueva = await crearMut.mutateAsync(construirInput());
+      const nueva = await crearMut.mutateAsync(construirInput);
       toast({
         title: "Borrador de nota de crédito creado",
         description: timbrarAhora
