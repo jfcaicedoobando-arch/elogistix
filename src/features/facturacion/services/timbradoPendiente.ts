@@ -8,6 +8,7 @@
  * proceso en curso y NO como éxito ni invitar a reintentar (reintentar duplica
  * el CFDI).
  */
+import { esPendienteWire, type TimbradoPendienteWire } from "./timbradoWire";
 
 export const MSG_TIMBRADO_PENDIENTE_CLIENTE =
   "El proveedor recibió el documento y está recuperando el timbre del SAT. No vuelvas a timbrar: el sistema lo marcará como emitido en cuanto el SAT responda.";
