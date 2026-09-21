@@ -139,7 +139,10 @@ export default function EditarEmbarque() {
     <FormProvider {...methods}>
       <EmbarqueWizardLayout
         title={`Editar embarque ${labelExpediente(embarque.expediente, embarque.id)}`}
-        subtitle="Modifica los datos generales, ruta y costos del embarque"
+        subtitle={canEditCostosEmbarque
+          ? "Modifica los datos generales, ruta y costos del embarque"
+          : "Modifica los datos generales y la ruta del embarque"}
+
         steps={steps}
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}

@@ -112,11 +112,14 @@ export const CONFIGURAR_AUTORIZACION_CLIENTE: readonly AppRole[] = [
  * B1 (v13.823.395) — EDITAR costos y pricing del embarque (paso 3 del wizard
  * de edición y el botón «Cargar costos» del tab Costos).
  *
- * Es la mitad de escritura de la visibilidad de sólo lectura que B1 abrió: el
- * coordinador logístico y el gerente de operaciones VEN costo, conciliación y
- * folio de la factura vinculada, pero NO capturan ni editan costos ni pricing.
- * Para el resto de los roles la lista es idéntica a `OPERATIONS`, así que su
- * comportamiento previo (`canEdit`) se conserva.
+ * Decisión 2026-09-21: `coordinador_logistico` SÍ captura y edita costos del
+ * embarque que opera (el paso 3 no le aparecía). La base de datos ya lo
+ * permitía: `_assert_writer` exige el rol `operador` y
+ * `roles_jerarquia('operador')` incluye a `coordinador_logistico`, así que no
+ * hace falta migración.
+ *
+ * `gerente_operaciones` sigue en sólo lectura de costos: VE costo, conciliación
+ * y folio de la factura vinculada, pero no captura ni edita.
  */
 export const EDITAR_COSTOS_EMBARQUE: readonly AppRole[] = [
   "super_admin",
@@ -124,6 +127,8 @@ export const EDITAR_COSTOS_EMBARQUE: readonly AppRole[] = [
   "admin",
   "gerente_comercial",
   "operador",
+  "coordinador_logistico",
   "ejecutivo_pricing",
   "vendedor",
 ];
+
