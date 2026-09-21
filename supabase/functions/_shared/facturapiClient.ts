@@ -21,6 +21,10 @@
  *   serialización de query params anidados. Esta capa tipa el cliente como
  *   objeto opaco y `facturapi-recuperar-claim` ya trata `total_pages` ausente
  *   como búsqueda "incierta", así que no hubo cambios de payload ni de flujo.
+ * - bump 5.0.0 → 5.1.0 (21-sep-2026): cambio ADITIVO — variantes de descarga
+ *   por URL firmada (`downloadPdfUrl`/`downloadXmlUrl`/`downloadZipUrl` y
+ *   equivalentes). Sin breaking changes de payload ni de timbrado; el ERP aún
+ *   no usa los métodos nuevos (YAGNI).
  *
  * NOTA: antes usábamos `import()` dinámico con la spec en variable
  * (`const sdkSpec = "npm:facturapi@5.1.0"; import(sdkSpec)`). Deno Edge
