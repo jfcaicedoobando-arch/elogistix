@@ -49,19 +49,17 @@ function lanzarErrorRep(body: EdgeErrorBody, error: unknown, fallback: string): 
 export type RepTimbradoRespuesta = RepTimbradoResult | TimbradoPendiente;
 
 export async function emitirRep(pagoId: string): Promise<RepTimbradoRespuesta> {
-  const { data, error } = await supabase.functions.invoke<RepTimbradoResult & EdgeErrorBody>(
+  const { data, error } = await supabase.functions.invoke<TimbradoWire>(
     "facturapi-emitir-rep",
     { body: { pago_id: pagoId } },
   );
   if (error) {
     lanzarErrorRep(await parseFunctionError(error), error, "No se pudo timbrar el REP.");
   }
-  if (data?.error) {
-    lanzarErrorRep(data, null, "No se pudo timbrar el REP.");
-  }
-  // 202: FacturAPI sigue recuperando el timbre; no hay UUID ni folio.
-  if (esRespuestaPendiente(data)) return respuestaPendiente(data);
-  return data as RepTimbradoResult;
+  // Mismo parser que la factura: error → pendiente (202) → éxito validado.
+  return interpretarTimbrado(data, "El timbrado del REP", (body) => {
+    lanzarErrorRep(body, null, "No se pudo timbrar el REP.");
+  });
 }
 
 export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
