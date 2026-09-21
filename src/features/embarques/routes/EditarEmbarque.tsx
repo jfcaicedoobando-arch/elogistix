@@ -19,6 +19,8 @@ import { useDocumentTitle } from "@/hooks/shared";
 import {
   pasosEditarEmbarque,
   resolverPasoEditarEmbarque,
+  subtituloEditarEmbarque,
+  embarqueEstaCerrado,
 } from "@/features/embarques/domain/pasosEditarEmbarque";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
