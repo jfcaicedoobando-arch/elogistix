@@ -1,4 +1,4 @@
-# Prueba Sandbox E2E — Factura PPD mixta (IVA 16% + No objeto) y REP
+# Prueba Sandbox E2E — Factura PPD con No objeto y REP
 
 Guion **opt-in** que valida, contra el ambiente de pruebas de FacturAPI, el caso
 fiscal completo: una factura PPD con un concepto gravado (IVA 16%, ObjetoImp 02)
@@ -27,6 +27,7 @@ Variables:
 | `FACTURAPI_SANDBOX_KEY` | sí | Llave de pruebas (`sk_test_…`). Nunca una llave real. |
 | `FACTURAPI_E2E_TAG` | no | Etiqueta del intento (`external_id`/`idempotency_key`). Repetir el mismo tag **reutiliza** los CFDI ya emitidos en vez de duplicarlos. |
 | `FACTURAPI_E2E_LIMPIAR=1` | no | Cancela en sandbox la factura y el REP al terminar. |
+| `FACTURAPI_E2E_ESCENARIO` | no | `B` (default) factura mixta gravado 16% + no objeto ⇒ `ObjetoImpDR=02`; `A` factura 100% no objeto ⇒ `ObjetoImpDR=01` sin `ImpuestosDR`. |
 
 ## Cómo interpretar el resultado
 
@@ -37,17 +38,29 @@ Factura:
 
 - `factura.MetodoPago=PPD` — el método es del comprobante completo.
 - `factura.FormaPago=99` — PPD sin pago recibido.
-- `factura.concepto gravado ObjetoImp=02` y `factura.concepto no objeto ObjetoImp=01`.
+- `factura.concepto gravado ObjetoImp=02` (escenario B) o
+  `factura.sin conceptos gravados` (escenario A), y siempre
+  `factura.concepto no objeto ObjetoImp=01`.
 - `factura.no objeto sin nodo de impuestos` — el concepto 01 no declara traslados
   ni retenciones (no se convierte a exento ni a tasa 0).
 
 REP:
 
 - `rep.complemento pago20:Pagos presente` y `rep.DoctoRelacionado presente`.
-- `rep.MetodoDePagoDR=PPD`.
-- `rep.ObjetoImpDR=02` en la factura mixta (sería `01` si **todos** los renglones
-  fueran no objeto).
-- `rep.traslados coherentes con el tratamiento`.
+- `rep.DoctoRelacionado sin MetodoDePagoDR (Pagos 2.0)` — el complemento vigente
+  ya no lleva ese atributo; sólo el comprobante declara el método.
+- `rep.IdDocumento (UUID de la factura) presente`.
+- `rep.ObjetoImpDR=02` en la factura mixta y `01` cuando **todos** los renglones
+  son no objeto.
+- `rep.traslados coherentes con el tratamiento` — un `TrasladoDR` de IVA 16%
+  sobre base gravada prorrateada en `02`; ninguno en `01`.
+
+### Última corrida real (sandbox, 2026-09-21)
+
+| Escenario | Factura (id / UUID) | REP (id / UUID) | Resultado |
+| --- | --- | --- | --- |
+| B mixta | `6ab15593b08b700609e35882` / `D5599682-…-0F1EBE149997` | `6ab15596b08b700609e35a9e` / `FE1D0604-…-43296A9F2952` | TODO PASA (`ObjetoImpDR=02`, 1 `TrasladoDR`) |
+| A 100% no objeto | `6ab15602b08b700609e38ee1` / `2075BDB9-…-54E994839DC7` | `6ab15605b08b700609e391fb` / `C860FE18-…-8697D4DDCCE5` | TODO PASA (`ObjetoImpDR=01`, 0 `TrasladoDR`) |
 
 Antes del REP se imprime el `paymentSummary` del proveedor (parcialidad, saldo
 anterior, importe y moneda de la factura), que es la autoridad del saldo.
