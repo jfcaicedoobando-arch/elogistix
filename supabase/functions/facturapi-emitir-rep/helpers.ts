@@ -310,6 +310,9 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
                 installment: dr.num_parcialidad,
                 last_balance: round2(dr.imp_saldo_ant),
                 amount: round2(dr.imp_pagado),
+                // ObjetoImpDR real; fallback seguro "02" (declara impuestos).
+                taxability: dr.objeto_imp_dr ?? "02",
+                // `buildTaxesDr` devuelve [] cuando taxability = "01".
                 taxes: buildTaxesDr(dr),
               },
             ],
