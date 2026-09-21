@@ -12,34 +12,23 @@
  * planifica la migración (ver `mem://audit/pendings`).
  *
  * Cuando un archivo del baseline se limpie:
- *   1. Quitarlo de `BASELINE`.
+ *   1. Quitarlo del set correspondiente en `scripts/lib/archBaselines.ts`.
  *   2. El test seguirá pasando.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { runArchAudit } from "../../../scripts/lib/arch";
+import {
+  HOOKS_CONTEXTS_BASELINE as BASELINE,
+  PAGES_COMPONENTS_BASELINE,
+  OVERSIZED_BASELINE,
+} from "../../../scripts/lib/archBaselines";
 
 const ROOT = process.cwd();
 const DIRECT_CLIENT_IMPORT = /from\s+["']@\/integrations\/supabase\/client["']/;
 
-const BASELINE: ReadonlySet<string> = new Set<string>([
-  // 11.59.0 — Baseline VACÍO. Toda la deuda histórica migrada a services/.
-  // Mantener el set vacío hace que cualquier nuevo import directo desde
-  // hooks/ o contexts/ falle la CI de inmediato.
-]);
 
-// Allowlist temporal para imports directos a supabase desde pages/components.
-// 12.76.3 — vacío: todos los flujos de auth migrados a `@/services/auth`.
-const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
-
-// Allowlist temporal para archivos > 200 líneas pendientes de split.
-// v13.182.0 (Ola 2 · Power-of-10 splits): allowlist VACÍA. Todos los archivos
-// productivos en `src/` cumplen el límite de 200 líneas. Cualquier nuevo
-// oversized falla la CI hasta que se divida.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/components/ui/date-picker-mx-helpers.ts",
-]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
