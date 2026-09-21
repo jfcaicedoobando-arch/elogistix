@@ -36,7 +36,6 @@ const CLAVES = Object.keys(ROLE_ROUTE_MATRIX) as RouteAccessKey[];
  * `anyRoleSatisfies` concede acceso y el `includes` de `hasRouteAccess` no.
  */
 const DIVERGENCIAS = new Set<string>([
-  "92|",
   "/embarques|tesorero",
   "/embarques|auxiliar_contable",
   "/embarques|ejecutivo_cobranza",
