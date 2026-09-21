@@ -14,6 +14,11 @@ export const crm = {
   prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
   prospectoOportunidad: (id: string) => ['crm', 'prospecto-oportunidad', id] as const,
   search: (term: string) => ['crm', 'search', term] as const,
+  /** Etiqueta del prospecto (lead) de una oportunidad. */
+  leadNombre: (leadId: string | null) => ['crm', 'lead-nombre', leadId] as const,
+  /** Moneda de la oportunidad ligada a una cotización. */
+  oportunidadMoneda: (oportunidadId: string | null) =>
+    ['crm', 'oportunidad-moneda', oportunidadId] as const,
   nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,
   /** Prefijo para invalidar las señales NBA de cualquier usuario. */
   nbaSignalsAll: ['crm', 'nba-signals'] as const,
@@ -23,13 +28,22 @@ export const crm = {
     vencidasCount: (uid?: string) => ['crm', 'actividades', 'vencidas-count', uid] as const,
     vencidasList: (uid?: string, limit?: number) =>
       ['crm', 'actividades', 'vencidas-list', uid, limit] as const,
-    paged: (uid?: string) => ['crm', 'actividades', 'paged', uid] as const,
+    /** Sin `ambito` es el prefijo; con ámbito, la key completa del listado. */
+    paged: (uid?: string, ambito?: 'vencidas' | 'todas') =>
+      ['crm', 'actividades', 'paged', uid, ...(ambito ? [ambito] : [])] as const,
   },
   leads: {
     all: ['crm', 'leads'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'leads', filters] as const,
     detail: (id: string) => ['crm', 'leads', 'detail', id] as const,
     paged: ['crm', 'leads', 'paged'] as const,
+    /** Duplicados de un lote (importación CSV). */
+    duplicados: (
+      claves: ReadonlyArray<{ empresa: string; email: string; telefono: string }>,
+    ) => ['crm', 'leads', 'duplicados', claves] as const,
+    /** Duplicado de un solo lead (alta manual). */
+    duplicado: (empresa: string, email: string, telefono: string) =>
+      ['crm', 'leads', 'duplicado', empresa, email, telefono] as const,
   },
   prospectos: {
     all: ['crm', 'prospectos'] as const,

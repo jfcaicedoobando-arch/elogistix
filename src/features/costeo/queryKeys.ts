@@ -31,6 +31,24 @@ export const costeo = {
       ] as const,
   },
 
+  /** Diagnóstico cuando el Top 3 de tarifas viene vacío. */
+  diagnosticoTarifas: (params: {
+    organizationId: string | null | undefined;
+    puertoOrigenId: string | undefined;
+    puertoDestinoId: string | undefined;
+    tipoContenedorIds: readonly string[];
+    hoy: string;
+  }) =>
+    [
+      "costeo",
+      "diagnostico-tarifas",
+      params.organizationId,
+      params.puertoOrigenId,
+      params.puertoDestinoId,
+      [...params.tipoContenedorIds].sort(),
+      params.hoy,
+    ] as const,
+
   agentes: {
     all: ["costeo", "agentes"] as const,
     list: (organizationId: string | null | undefined) =>
