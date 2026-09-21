@@ -21,7 +21,7 @@ async function fuente(nombre: string): Promise<string> {
 Deno.test("ningún fuente del REP declara un complemento type custom", async () => {
   for await (const entrada of Deno.readDir(DIR)) {
     if (!entrada.isFile || !entrada.name.endsWith(".ts")) continue;
-    if (entrada.name === "guardrailRepEstructurado_test.ts") continue;
+    if (entrada.name.endsWith("_test.ts")) continue;
     const texto = await fuente(entrada.name);
     assertEquals(
       /type:\s*["']custom["']|COMPLEMENTO_XML_TYPE/.test(texto),
@@ -48,9 +48,10 @@ Deno.test("etapaEmision entrega el payload estructurado tal cual a timbrarRep", 
   assertEquals(texto.includes("payloadRepFinal"), false);
   assertEquals(texto.includes("repManual"), false);
   // El payload con external_id/idempotency_key va directo al timbrado.
-  assert(/payload:\s*payload,/.test(texto));
+  assert(/^\s*payload,$/m.test(texto));
   assert(texto.includes("external_id: claimTag"));
   assert(texto.includes("idempotency_key: claimTag"));
+  assert(texto.includes("buildRepPayload(ctx)"));
 });
 
 Deno.test("buildRepPayload conserva type pago y declara taxability", async () => {
