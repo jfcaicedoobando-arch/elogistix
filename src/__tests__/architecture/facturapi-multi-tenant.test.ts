@@ -77,7 +77,7 @@ describe("facturapi SDK-only guardrail (v13.136.4)", () => {
  * boot del worker antes (`Could not find constraint 'facturapi@5'`).
  */
 describe("facturapi SDK version pin", () => {
-  const SDK_VERSION = "5.0.0";
+  const SDK_VERSION = "5.1.0";
   const helperSrc = readFileSync(
     join(ROOT, "supabase/functions/_shared/facturapiClient.ts"),
     "utf8",

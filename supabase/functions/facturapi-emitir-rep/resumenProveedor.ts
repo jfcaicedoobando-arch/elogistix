@@ -5,7 +5,7 @@
  * FacturAPI publica el resumen oficial del pago sobre la factura relacionada:
  * parcialidad, saldo anterior, total, moneda de la FACTURA e impuestos
  * prorrateados al importe pagado (`GET /invoices/:id/payment-summary`,
- * SDK v5.0.0 `invoices.paymentSummary(id, { amount })`).
+ * SDK v5.1.0 `invoices.paymentSummary(id, { amount })`).
  *
  * Reglas de este módulo:
  * - `amount` SIEMPRE va en la moneda de la FACTURA (no la del pago si difiere):

@@ -1,8 +1,8 @@
 /**
  * facturapiClient — Devuelve una instancia del SDK oficial `facturapi`
- * (v5.0.0) ya configurada para la organización dada.
+ * (v5.1.0) ya configurada para la organización dada.
  *
- * Carga el SDK vía import ESTÁTICO `npm:facturapi@5.0.0` y cachea el cliente
+ * Carga el SDK vía import ESTÁTICO `npm:facturapi@5.1.0` y cachea el cliente
  * por API key para evitar reinstanciar en invocaciones encadenadas dentro de
  * la misma instancia del runtime.
  *
@@ -21,21 +21,25 @@
  *   serialización de query params anidados. Esta capa tipa el cliente como
  *   objeto opaco y `facturapi-recuperar-claim` ya trata `total_pages` ausente
  *   como búsqueda "incierta", así que no hubo cambios de payload ni de flujo.
+ * - bump 5.0.0 → 5.1.0 (21-sep-2026): cambio ADITIVO — variantes de descarga
+ *   por URL firmada (`downloadPdfUrl`/`downloadXmlUrl`/`downloadZipUrl` y
+ *   equivalentes). Sin breaking changes de payload ni de timbrado; el ERP aún
+ *   no usa los métodos nuevos (YAGNI).
  *
  * NOTA: antes usábamos `import()` dinámico con la spec en variable
- * (`const sdkSpec = "npm:facturapi@5.0.0"; import(sdkSpec)`). Deno Edge
+ * (`const sdkSpec = "npm:facturapi@5.1.0"; import(sdkSpec)`). Deno Edge
  * Runtime construye el grafo de paquetes npm SOLO a partir de imports
  * estáticos: al ser dinámico, el paquete no quedaba registrado y el boot
  * fallaba con `Could not find constraint 'facturapi@<versión>' in the list of
  * packages.`, tirando todo request con "Edge Function returned a non-2xx".
  */
-// P2-C: el paquete `facturapi` SÍ publica typings (v5.0.0, `dist/*.d.ts`),
+// P2-C: el paquete `facturapi` SÍ publica typings (v5.1.0, `dist/*.d.ts`),
 // pero están declarados para resolución de bundler/Node y el typecheck de Deno
 // no los alcanza desde el especificador `npm:`. De ahí el `@ts-ignore` y el
 // modelado como objeto opaco: la superficie tipada que usa el ERP vive en
 // `_shared/facturapiSdk.ts` (un solo lugar con los casts del SDK).
 // @ts-ignore -- typings del paquete no resolubles desde el especificador `npm:` en Deno.
-import FacturapiDefault from "npm:facturapi@5.0.0";
+import FacturapiDefault from "npm:facturapi@5.1.0";
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
 import { normalizarErrorFacturapi } from "./facturapiErrorNormalizado.ts";
 
@@ -96,7 +100,7 @@ interface FacturapiErrorShape {
   data?: unknown;
   message?: string;
   // Campos planos expuestos por la clase `FacturapiError` del SDK desde
-  // v4.18.0 y vigentes en v5.0.0 (no viven bajo `response.data`).
+  // v4.18.0 y vigentes en v5.1.0 (no viven bajo `response.data`).
   code?: string;
   path?: string;
   location?: string;
@@ -133,7 +137,7 @@ function pickStr(...values: unknown[]): string | undefined {
  * Normaliza un error lanzado por el SDK de FacturApi a `{ status, detail }`
  * para responder al cliente con un shape consistente. Preserva `code`,
  * `path`, `location`, `errors[]` y `logId` que expone el SDK como campos
- * planos (desde v4.18.0, vigentes en v5.0.0) — antes se perdían al leer sólo
+ * planos (desde v4.18.0, vigentes en v5.1.0) — antes se perdían al leer sólo
  * `response.data`.
  *
  * P2-B: además conserva `Retry-After`, el request id del proveedor y marca los
@@ -183,7 +187,7 @@ export function __resetFacturapiClientCacheForTests(): void {
 /**
  * FIX-04/32 (v13.303.12) — Timeout defensivo para llamadas al SDK FacturApi.
  *
- * El SDK `facturapi` no expone `AbortSignal` (verificado hasta v5.0.0); si la
+ * El SDK `facturapi` no expone `AbortSignal` (verificado hasta v5.1.0); si la
  * red de FacturApi
  * cuelga, la promesa nunca resuelve y la Edge Function se queda ocupada hasta
  * que Deno la mata (~150 s). Cuando el call es el timbrado, el claim

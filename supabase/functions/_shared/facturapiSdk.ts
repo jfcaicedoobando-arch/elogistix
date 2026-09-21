@@ -29,7 +29,7 @@ export interface FacturapiInvoiceLike {
 }
 
 /**
- * v5.0.0: `SearchResult<T>` trae `page`/`total_pages`/`total_results`
+ * v5.1.0: `SearchResult<T>` trae `page`/`total_pages`/`total_results`
  * OPCIONALES (en v4 eran obligatorios) y `CursorSearchResult<T>` se retiró.
  */
 export interface FacturapiSearchResult<T> {
@@ -91,7 +91,7 @@ export class FacturapiSdkContratoError extends Error {
   constructor(operacion: string) {
     super(
       `El SDK de FacturAPI no expone \`${operacion}\`. Revisa la versión instalada ` +
-        "(`npm:facturapi@5.0.0`) antes de usar esta operación.",
+        "(`npm:facturapi@5.1.0`) antes de usar esta operación.",
     );
     this.name = "FacturapiSdkContratoError";
     this.operacion = operacion;
