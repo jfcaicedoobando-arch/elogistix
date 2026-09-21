@@ -5,30 +5,22 @@ import {
   toReadableError,
   type EdgeErrorBody,
 } from "./facturapiError";
-import {
-  esRespuestaPendiente,
-  respuestaPendiente,
-  type TimbradoPendiente,
-} from "./timbradoPendiente";
+import { type TimbradoPendiente } from "./timbradoPendiente";
+import { interpretarTimbrado } from "./timbradoParse";
+import type { TimbradoExitoWire, TimbradoWire } from "./timbradoWire";
 import { assertSinRepsVivos } from "./facturapiRepsVivos";
 
 export { FacturapiError, parseFunctionError };
 ;
 
-export interface TimbradoResult {
-  uuid: string;
-  folio: number;
-  serie: string;
-  facturapi_id: string;
-  pdf_url: string;
-  xml_url: string;
-}
+/** Éxito de timbrado (mismo contrato wire compartido con el REP). */
+export type TimbradoResult = TimbradoExitoWire;
 
 /** Timbre listo o 202 "pendiente" (sin UUID/folio, factura sigue Por timbrar). */
 export type TimbradoRespuesta = TimbradoResult | TimbradoPendiente;
 
 export async function emitirFacturapi(facturaId: string): Promise<TimbradoRespuesta> {
-  const { data, error } = await supabase.functions.invoke<TimbradoResult & EdgeErrorBody>(
+  const { data, error } = await supabase.functions.invoke<TimbradoWire>(
     "facturapi-emitir",
     { body: { factura_id: facturaId } },
   );
@@ -36,12 +28,11 @@ export async function emitirFacturapi(facturaId: string): Promise<TimbradoRespue
     const body = await parseFunctionError(error);
     throw toReadableError(error, body, "No se pudo timbrar la factura.");
   }
-  if (data?.error) {
-    throw toReadableError(null, data, data.error);
-  }
-  // 202: FacturAPI sigue recuperando el timbre; no hay UUID ni folio.
-  if (esRespuestaPendiente(data)) return respuestaPendiente(data);
-  return data as TimbradoResult;
+  // Orden seguro: error → pendiente (202, sin UUID) → éxito. Un 2xx que no
+  // encaje lanza TimbradoContratoError en vez de colarse con un cast.
+  return interpretarTimbrado(data, "El timbrado de la factura", (body) => {
+    throw toReadableError(null, body, body.error);
+  });
 }
 
 export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
