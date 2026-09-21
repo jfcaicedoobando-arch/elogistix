@@ -27,20 +27,16 @@ vi.mock("@/features/profit/hooks/invalidateProfitDependencies", () => ({
 
 import { useAprobarFactura } from "../useAprobarFactura";
 
-type InvalidateSpy = { mock: { calls: ReadonlyArray<ReadonlyArray<unknown>> } };
-
-function keysInvalidadas(spy: InvalidateSpy): string[] {
-  return spy.mock.calls.map((c) =>
-    JSON.stringify((c[0] as { queryKey?: unknown } | undefined)?.queryKey),
-  );
-}
-
 describe("useAprobarFactura · invalidaciones al rechazar", () => {
-  let spy: InvalidateSpy;
+  let keys: string[] = [];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    spy = vi.spyOn(QueryClient.prototype, "invalidateQueries") as unknown as InvalidateSpy;
+    keys = [];
+    vi.spyOn(QueryClient.prototype, "invalidateQueries").mockImplementation((filtros) => {
+      keys.push(JSON.stringify(filtros?.queryKey));
+      return Promise.resolve();
+    });
   });
 
   it("usa los prefijos vivos y ningún string muerto", async () => {
@@ -53,7 +49,6 @@ describe("useAprobarFactura · invalidaciones al rechazar", () => {
       await result.current.mutateAsync({ id: "f-1", aprobar: false, motivo: "no aplica" });
     });
 
-    const keys = keysInvalidadas(spy);
     expect(keys).toContain(JSON.stringify(queryKeys.embarques.conceptosCosto()));
     expect(keys).toContain(JSON.stringify(queryKeys.cxp.facturasEntrantes));
     // Strings muertos que ya no deben aparecer.
@@ -71,7 +66,6 @@ describe("useAprobarFactura · invalidaciones al rechazar", () => {
       await result.current.mutateAsync({ id: "f-2", aprobar: true });
     });
 
-    const keys = keysInvalidadas(spy);
     expect(keys).not.toContain(JSON.stringify(queryKeys.embarques.conceptosCosto()));
     expect(keys).not.toContain(JSON.stringify(queryKeys.cxp.facturasEntrantes));
   });

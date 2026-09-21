@@ -25,7 +25,11 @@ describe("useAprobarProformaInterna", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("invalida proformas.all y no el root muerto ['proforma']", async () => {
-    const spy = vi.spyOn(QueryClient.prototype, "invalidateQueries");
+    const keys: string[] = [];
+    vi.spyOn(QueryClient.prototype, "invalidateQueries").mockImplementation((filtros) => {
+      keys.push(JSON.stringify(filtros?.queryKey));
+      return Promise.resolve();
+    });
     aceptarSvc.mockResolvedValueOnce(undefined);
 
     const { result } = renderHook(() => useAprobarProformaInterna(), {
@@ -37,9 +41,6 @@ describe("useAprobarProformaInterna", () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    const keys = spy.mock.calls.map((c) =>
-      JSON.stringify((c[0] as { queryKey?: unknown } | undefined)?.queryKey),
-    );
     expect(keys).toContain(JSON.stringify(queryKeys.proformas.all));
     expect(keys).not.toContain(JSON.stringify(["proforma"]));
   });
