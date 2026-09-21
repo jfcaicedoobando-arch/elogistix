@@ -162,7 +162,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
           </div>
           <div className="space-y-1">
             <Label htmlFor="qc-actividad-oportunidad">Oportunidad *</Label>
-            <Select value={entidadId || undefined} onValueChange={setEntidadId}>
+            <Select value={entidadId} onValueChange={setEntidadId}>
               <SelectTrigger id="qc-actividad-oportunidad"><SelectValue placeholder="Selecciona…" /></SelectTrigger>
               <SelectContent>
                 {ops.map((o) => (<SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>))}
