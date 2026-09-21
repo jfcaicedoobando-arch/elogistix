@@ -58,18 +58,18 @@ export function registerChunkRecoveryListeners(deps: ChunkRecoveryDeps = {}): vo
   const esChunk = deps.isChunkError ?? isDynamicImportError;
   const recuperar = deps.recover ?? (() => void tryReloadForChunkError());
 
-  target.addEventListener("vite:preloadError", (event: Event) => {
+  target.addEventListener("vite:preloadError", (event) => {
     event.preventDefault();
     recuperar();
   });
 
-  target.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
+  target.addEventListener("unhandledrejection", (event) => {
     if (!esChunk(event.reason)) return;
     event.preventDefault();
     recuperar();
   });
 
-  target.addEventListener("error", (event: ErrorEvent) => {
+  target.addEventListener("error", (event) => {
     if (!esChunk(event.error ?? event.message)) return;
     event.preventDefault();
     recuperar();
