@@ -27,14 +27,16 @@ vi.mock("@/features/profit/hooks/invalidateProfitDependencies", () => ({
 
 import { useAprobarFactura } from "../useAprobarFactura";
 
-function keysInvalidadas(spy: ReturnType<typeof vi.spyOn>): string[] {
+type InvalidateSpy = ReturnType<typeof vi.spyOn<QueryClient, "invalidateQueries">>;
+
+function keysInvalidadas(spy: InvalidateSpy): string[] {
   return spy.mock.calls.map((c) =>
-    JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+    JSON.stringify((c[0] as { queryKey?: unknown } | undefined)?.queryKey),
   );
 }
 
 describe("useAprobarFactura · invalidaciones al rechazar", () => {
-  let spy: ReturnType<typeof vi.spyOn>;
+  let spy: InvalidateSpy;
 
   beforeEach(() => {
     vi.clearAllMocks();

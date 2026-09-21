@@ -38,7 +38,7 @@ describe("useAprobarProformaInterna", () => {
     });
 
     const keys = spy.mock.calls.map((c) =>
-      JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+      JSON.stringify((c[0] as { queryKey?: unknown } | undefined)?.queryKey),
     );
     expect(keys).toContain(JSON.stringify(queryKeys.proformas.all));
     expect(keys).not.toContain(JSON.stringify(["proforma"]));
