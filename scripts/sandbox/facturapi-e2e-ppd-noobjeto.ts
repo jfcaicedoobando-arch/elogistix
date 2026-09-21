@@ -1,7 +1,12 @@
 /**
- * Prueba Sandbox E2E (OPT-IN) — Factura PPD con concepto gravado (IVA 16%,
- * ObjetoImp 02) + concepto No objeto (ObjetoImp 01), registro de pago y REP por
- * complemento de pagos estructurado (`taxability` = ObjetoImpDR).
+ * Prueba Sandbox E2E (OPT-IN) — Factura PPD con conceptos No objeto (ObjetoImp
+ * 01), registro de pago y REP por complemento de pagos estructurado
+ * (`taxability` = ObjetoImpDR).
+ *
+ * Escenarios (FACTURAPI_E2E_ESCENARIO):
+ *   B (default) — factura mixta: gravado IVA 16% + no objeto ⇒ ObjetoImpDR 02
+ *                 con un solo TrasladoDR sobre base gravada prorrateada.
+ *   A           — factura 100% no objeto ⇒ ObjetoImpDR 01 sin ImpuestosDR.
  *
  * NUNCA corre en CI: no es un `*_test.ts`, exige variables explícitas de
  * sandbox y aborta si la llave no es de pruebas. No hay credenciales en el
@@ -14,7 +19,7 @@
  */
 import { buildRepPayload, type PagoContext } from "../../supabase/functions/facturapi-emitir-rep/helpers.ts";
 import { round2 } from "../../supabase/functions/facturapi-emitir-rep/taxesDr.ts";
-import { imprimirReporte, validarFacturaPpdMixta, validarRepNoObjeto } from "./facturapi-e2e-validar.ts";
+import { imprimirReporte, validarFacturaPpd, validarRepNoObjeto } from "./facturapi-e2e-validar.ts";
 
 const API = "https://www.facturapi.io/v2";
 
@@ -40,12 +45,25 @@ const KEY = (() => {
   return key;
 })();
 
+/** Escenario: A = 100% no objeto (ObjetoImpDR 01); B = mixto (ObjetoImpDR 02). */
+const ESCENARIO = (Deno.env.get("FACTURAPI_E2E_ESCENARIO") ?? "B").toUpperCase() === "A" ? "A" : "B";
+const OBJETO_IMP_DR: "01" | "02" = ESCENARIO === "A" ? "01" : "02";
+
 /** Etiqueta del intento: hace el guion idempotente y permite limpiar después. */
-const TAG = Deno.env.get("FACTURAPI_E2E_TAG") ?? `e2e-ppd-noobjeto-${new Date().toISOString().slice(0, 10)}`;
+const TAG = Deno.env.get("FACTURAPI_E2E_TAG") ??
+  `e2e-ppd-noobjeto-${ESCENARIO}-${new Date().toISOString().slice(0, 10)}`;
 const LIMPIAR = Deno.env.get("FACTURAPI_E2E_LIMPIAR") === "1";
 
 /** Tasa del concepto gravado (configurable; el no objeto no lleva impuestos). */
 const TASA_GRAVADA = Number(Deno.env.get("FACTURAPI_E2E_TASA") ?? String(16 / 100));
+
+/** Importes fijos del escenario (subtotal gravado / no objeto / total con IVA). */
+const GRAVADO = ESCENARIO === "A" ? 0 : 10000;
+const NO_OBJETO = 4000;
+const SUBTOTAL = GRAVADO + NO_OBJETO;
+const TOTAL = round2(SUBTOTAL + GRAVADO * TASA_GRAVADA);
+/** Pago parcial: la mitad del total, para ejercitar el prorrateo del REP. */
+const MONTO_PAGO = round2(TOTAL / 2);
 
 const auth = "Basic " + btoa(`${KEY}:`);
 
@@ -81,7 +99,28 @@ const RECEPTOR = {
   address: { zip: "64000" },
 };
 
-async function emitirFacturaPpdMixta(): Promise<Cfdi> {
+function conceptos() {
+  const noObjeto = {
+    quantity: 1,
+    product: {
+      description: "Gasto no objeto de impuesto", product_key: "78101800", unit_key: "E48",
+      price: NO_OBJETO, taxability: "01", taxes: [] as unknown[],
+    },
+  };
+  if (ESCENARIO === "A") return [noObjeto];
+  return [
+    {
+      quantity: 1,
+      product: {
+        description: "Flete marítimo (gravado)", product_key: "78101800", unit_key: "E48",
+        price: GRAVADO, taxability: "02", taxes: [{ type: "IVA", rate: TASA_GRAVADA }],
+      },
+    },
+    noObjeto,
+  ];
+}
+
+async function emitirFacturaPpd(): Promise<Cfdi> {
   const externalId = `${TAG}-I`;
   const previa = await buscarPorExternalId(externalId);
   if (previa) return previa;
@@ -92,22 +131,7 @@ async function emitirFacturaPpdMixta(): Promise<Cfdi> {
     payment_method: "PPD", // PPD es del CFDI completo, no del concepto
     external_id: externalId,
     idempotency_key: externalId,
-    items: [
-      {
-        quantity: 1,
-        product: {
-          description: "Flete marítimo (gravado)", product_key: "78101800", unit_key: "E48",
-          price: 10000, taxability: "02", taxes: [{ type: "IVA", rate: TASA_GRAVADA }],
-        },
-      },
-      {
-        quantity: 1,
-        product: {
-          description: "Gasto no objeto de impuesto", product_key: "78101800", unit_key: "E48",
-          price: 4000, taxability: "01", taxes: [],
-        },
-      },
-    ],
+    items: conceptos(),
   });
 }
 
@@ -142,12 +166,12 @@ async function emitirRep(factura: Cfdi, montoPago: number): Promise<Cfdi> {
       metodo_pago: "PPD",
       tasa_iva: TASA_GRAVADA,
       factor_iva: "Tasa",
-      grupos_iva: [{ tasa: TASA_GRAVADA, factor: "Tasa", importe: 10000 }],
-      subtotal_factura: 14000,
-      total_factura: 15600,
+      grupos_iva: ESCENARIO === "A" ? [] : [{ tasa: TASA_GRAVADA, factor: "Tasa", importe: GRAVADO }],
+      subtotal_factura: SUBTOTAL,
+      total_factura: TOTAL,
       hay_no_objeto: true,
-      objeto_imp_dr: "02",
-      importe_no_objeto: 4000,
+      objeto_imp_dr: OBJETO_IMP_DR,
+      importe_no_objeto: NO_OBJETO,
     },
   };
   const payload = Object.assign(buildRepPayload(ctx), {
@@ -167,19 +191,23 @@ async function limpiar(ids: string[]): Promise<void> {
   }
 }
 
-const factura = await emitirFacturaPpdMixta();
+console.log(`escenario=${ESCENARIO} (ObjetoImpDR esperado ${OBJETO_IMP_DR}) tag=${TAG}`);
+const factura = await emitirFacturaPpd();
 console.log(`factura ${factura.id} uuid=${factura.uuid} status=${factura.status}`);
 if (!factura.uuid) {
   console.error("La factura quedó pendiente de timbre (status pending): reintenta más tarde con el mismo TAG.");
   Deno.exit(1);
 }
 
-const okFactura = imprimirReporte("Factura PPD mixta", validarFacturaPpdMixta(await xmlDe(factura.id)));
+const okFactura = imprimirReporte(
+  `Factura PPD (${ESCENARIO})`,
+  validarFacturaPpd(await xmlDe(factura.id), ESCENARIO === "B"),
+);
 
-const rep = await emitirRep(factura, 7800);
+const rep = await emitirRep(factura, MONTO_PAGO);
 console.log(`rep ${rep.id} uuid=${rep.uuid} status=${rep.status}`);
 const okRep = rep.uuid
-  ? imprimirReporte("REP (estructurado)", validarRepNoObjeto(await xmlDe(rep.id), "02"))
+  ? imprimirReporte("REP (estructurado)", validarRepNoObjeto(await xmlDe(rep.id), OBJETO_IMP_DR))
   : (console.error("El REP quedó pendiente de timbre; reintenta con el mismo TAG."), false);
 
 if (LIMPIAR) await limpiar([rep.id, factura.id]);

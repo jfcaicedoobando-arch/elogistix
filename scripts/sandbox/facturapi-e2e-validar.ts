@@ -24,8 +24,11 @@ function valorAtributo(tag: string, nombre: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Factura I: MetodoPago=PPD y ambos ObjetoImp (02 gravado, 01 no objeto). */
-export function validarFacturaPpdMixta(xml: string): Resultado[] {
+/**
+ * Factura I: MetodoPago=PPD y ObjetoImp esperado. Con `esperaGravado` exige
+ * además un concepto 02 (escenario mixto); sin él, todo es no objeto (01).
+ */
+export function validarFacturaPpd(xml: string, esperaGravado: boolean): Resultado[] {
   const comprobante = atributos(xml, "Comprobante")[0] ?? "";
   const conceptos = atributos(xml, "Concepto");
   const objetos = conceptos.map((c) => valorAtributo(c, "ObjetoImp"));
@@ -40,7 +43,11 @@ export function validarFacturaPpdMixta(xml: string): Resultado[] {
       "factura.FormaPago=99 (PPD sin pago recibido)",
       `FormaPago=${valorAtributo(comprobante, "FormaPago")}`,
     ),
-    regla(objetos.includes("02"), "factura.concepto gravado ObjetoImp=02", `ObjetoImp=${objetos.join(",")}`),
+    regla(
+      esperaGravado ? objetos.includes("02") : !objetos.includes("02"),
+      esperaGravado ? "factura.concepto gravado ObjetoImp=02" : "factura.sin conceptos gravados (100% no objeto)",
+      `ObjetoImp=${objetos.join(",")}`,
+    ),
     regla(objetos.includes("01"), "factura.concepto no objeto ObjetoImp=01", `ObjetoImp=${objetos.join(",")}`),
     regla(
       conceptos.filter((c) => valorAtributo(c, "ObjetoImp") === "01" && /<[a-zA-Z0-9]+:Impuestos/.test(c)).length === 0,
@@ -59,10 +66,17 @@ export function validarRepNoObjeto(xml: string, objetoImpEsperado: "01" | "02"):
   return [
     regla(pagos.length === 1, "rep.complemento pago20:Pagos presente", `nodos=${pagos.length}`),
     regla(docs.length >= 1, "rep.DoctoRelacionado presente", `documentos=${docs.length}`),
+    // Pagos 2.0 (CFDI 4.0) eliminó MetodoDePagoDR del DoctoRelacionado: si el
+    // atributo apareciera, el XML no correspondería al complemento vigente.
     regla(
-      valorAtributo(doc, "MetodoDePagoDR") === "PPD",
-      "rep.MetodoDePagoDR=PPD",
+      valorAtributo(doc, "MetodoDePagoDR") === null,
+      "rep.DoctoRelacionado sin MetodoDePagoDR (Pagos 2.0)",
       `MetodoDePagoDR=${valorAtributo(doc, "MetodoDePagoDR")}`,
+    ),
+    regla(
+      valorAtributo(doc, "IdDocumento") !== null,
+      "rep.IdDocumento (UUID de la factura) presente",
+      `IdDocumento=${valorAtributo(doc, "IdDocumento")}`,
     ),
     regla(
       valorAtributo(doc, "ObjetoImpDR") === objetoImpEsperado,
