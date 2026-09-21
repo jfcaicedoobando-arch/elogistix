@@ -55,19 +55,23 @@ vi.mock("@/lib/auth/authSnapshotBuilder", () => ({
 
 describe("AuthSessionContext (aislamiento del token)", () => {
   it("la rotación del access_token no re-renderiza a consumidores de useAuth y sí al de useAuthSessionToken", () => {
-    let rendersGeneral = 0;
-    let rendersToken = 0;
-    let userVisto: User | null = null;
-    let tokenVisto: string | null = null;
+    // Contadores/valores como PROPIEDADES de un objeto (no reasignación de
+    // variables externas) para cumplir la regla de pureza de react-compiler.
+    const sonda = {
+      rendersGeneral: 0,
+      rendersToken: 0,
+      userVisto: null as User | null,
+      tokenVisto: null as string | null,
+    };
 
     const ConsumidorGeneral = memo(() => {
-      rendersGeneral += 1;
-      userVisto = useAuth().user;
+      sonda.rendersGeneral += 1;
+      sonda.userVisto = useAuth().user;
       return null;
     });
     const ConsumidorToken = memo(() => {
-      rendersToken += 1;
-      tokenVisto = useAuthSessionToken()?.access_token ?? null;
+      sonda.rendersToken += 1;
+      sonda.tokenVisto = useAuthSessionToken()?.access_token ?? null;
       return null;
     });
 
@@ -85,20 +89,20 @@ describe("AuthSessionContext (aislamiento del token)", () => {
 
     sesionActual = { access_token: "token-v1" } as Session;
     const { rerender } = render(arbol());
-    expect(rendersGeneral).toBe(1);
-    expect(rendersToken).toBe(1);
-    expect(tokenVisto).toBe("token-v1");
+    expect(sonda.rendersGeneral).toBe(1);
+    expect(sonda.rendersToken).toBe(1);
+    expect(sonda.tokenVisto).toBe("token-v1");
 
     // Rotación: mismo usuario, nuevo access_token (como TOKEN_REFRESHED).
     sesionActual = { access_token: "token-v2" } as Session;
     rerender(arbol());
 
     // El valor del contexto general no cambió: su consumidor no re-renderizó.
-    expect(rendersGeneral).toBe(1);
-    expect(userVisto).toBe(USUARIO);
+    expect(sonda.rendersGeneral).toBe(1);
+    expect(sonda.userVisto).toBe(USUARIO);
     // El contexto estrecho sí publicó el token nuevo.
-    expect(rendersToken).toBe(2);
-    expect(tokenVisto).toBe("token-v2");
+    expect(sonda.rendersToken).toBe(2);
+    expect(sonda.tokenVisto).toBe("token-v2");
     // La suscripción interna se invoca una vez por render del provider (sin
     // listeners duplicados: el mock reemplaza al hook que suscribe).
     expect(useAuthSessionMock).toHaveBeenCalledTimes(2);
@@ -106,13 +110,13 @@ describe("AuthSessionContext (aislamiento del token)", () => {
   });
 
   it("useAuthSessionToken fuera del provider devuelve null (no lanza)", () => {
-    let token: string | null = "inicial";
+    const sonda = { token: "inicial" as string | null };
     const Sonda = () => {
-      token = useAuthSessionToken()?.access_token ?? null;
+      sonda.token = useAuthSessionToken()?.access_token ?? null;
       return null;
     };
     render(<Sonda />);
-    expect(token).toBeNull();
+    expect(sonda.token).toBeNull();
     cleanup();
   });
 });
