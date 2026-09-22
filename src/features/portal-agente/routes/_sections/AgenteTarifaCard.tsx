@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/formatters";
 import {
   AgenteTarifaAcciones,
   EstadoConVigencia,
+  etiquetaRutaTarifa,
   type AgenteTarifasColumnsDeps,
 } from "./agenteTarifasColumns";
 
@@ -20,7 +21,7 @@ export function AgenteTarifaCard({
     <div className="flex items-start justify-between gap-2 min-w-0">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-medium text-body break-words">
-          {t.puerto_origen_nombre} → {t.puerto_destino_nombre}
+          {etiquetaRutaTarifa(t)}
         </div>
         <div className="text-label text-muted-foreground break-words">
           {t.naviera_nombre} · {t.tipo_contenedor_nombre}
