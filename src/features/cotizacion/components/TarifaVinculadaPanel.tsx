@@ -24,6 +24,7 @@ import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/ap
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
@@ -134,7 +135,7 @@ export default function TarifaVinculadaPanel({
                   <Link2 className="size-4 text-primary" />
                   <span className="font-medium">{tarifa.naviera_nombre}</span>
                   <span className="text-muted-foreground">·</span>
-                  <span className="text-body">{tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}</span>
+                  <span className="text-body">{etiquetaRutaCompleta(origenDe(tarifa), destinoDe(tarifa))}</span>
                   <Badge variant="secondary">{tarifa.tipo_contenedor_nombre}</Badge>
                 </div>
                 <p className="text-body-sm text-muted-foreground">

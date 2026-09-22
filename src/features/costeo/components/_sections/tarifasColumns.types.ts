@@ -6,8 +6,15 @@ import type { CosteoTarifaEstado } from "@/features/costeo/types";
 
 export interface TarifaRow {
   id: string;
+  /** Etapa 2: identidad por ID (agrupación) y contexto de puertos (presentación). */
+  ruta_id: string;
+  tipo_contenedor_id: string;
   puerto_origen_nombre: string;
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
   puerto_destino_nombre: string;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
   agente_nombre: string;
   naviera_nombre: string;
   tipo_contenedor_nombre: string;

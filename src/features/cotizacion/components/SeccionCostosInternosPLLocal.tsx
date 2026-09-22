@@ -7,6 +7,7 @@ import AvisoCostosDesactualizados from "./AvisoCostosDesactualizados";
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
 import { useCostosAutoSync } from "@/features/cotizacion/hooks/wizard/useCostosAutoSync";
 import { marcarEditadaAMano, type DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 
 /** Campos cuya edición manual desvincula la fila de su origen automático. */
 const CAMPOS_DESVINCULAN = new Set<keyof FilaCostoLocal>([
@@ -87,7 +88,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
         <Alert variant="info">
           <Link2 className="size-4" />
           <AlertDescription>
-            Costos precargados desde tarifa <strong>{tarifa.naviera_nombre}</strong> ({tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}).
+            Costos precargados desde tarifa <strong>{tarifa.naviera_nombre}</strong> ({etiquetaRutaCompleta(origenDe(tarifa), destinoDe(tarifa))}).
             Puedes editar, agregar o eliminar conceptos.
           </AlertDescription>
         </Alert>
