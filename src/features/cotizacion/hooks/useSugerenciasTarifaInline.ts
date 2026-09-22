@@ -27,12 +27,23 @@ export function useSugerenciasTarifaInline({ cotizacionId, aplicarOptions }: Use
 
   const origen = watch("origen");
   const destino = watch("destino");
+  const puertoOrigenIdForm = watch("puertoOrigenId");
+  const puertoDestinoIdForm = watch("puertoDestinoId");
   const tipoContenedor = watch("tipoContenedor");
   const validez = watch("validezPropuesta");
 
-  const puertoOrigenId = useMemo(() => resolverPuertoId(origen, puertos), [origen, puertos]);
-  const puertoDestinoId = useMemo(() => resolverPuertoId(destino, puertos), [destino, puertos]);
+  // Etapa 3: el ID capturado en el formulario manda. `resolverPuertoId` queda
+  // sólo como compatibilidad con cotizaciones legacy que únicamente tienen texto.
+  const puertoOrigenId = useMemo(
+    () => puertoOrigenIdForm ?? resolverPuertoId(origen, puertos),
+    [puertoOrigenIdForm, origen, puertos],
+  );
+  const puertoDestinoId = useMemo(
+    () => puertoDestinoIdForm ?? resolverPuertoId(destino, puertos),
+    [puertoDestinoIdForm, destino, puertos],
+  );
   const tipoContenedorId = useMemo(() => resolverTipoId(tipoContenedor, tipos), [tipoContenedor, tipos]);
+
 
   const { data: tarifas = [], isFetching, error, refetch, isRefetching } = useTopTarifas({
     puertoOrigenId,
