@@ -27,6 +27,11 @@ export interface AgenteTarifaRow {
   tipo_contenedor_nombre: string;
   puerto_origen_nombre: string;
   puerto_destino_nombre: string;
+  /** Etapa 6 — identidad global del puerto (país + UN/LOCODE), nullable en legacy. */
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
 }
 
 /** Forma cruda del join anidado de `costeo_tarifas` (alias de relaciones). */
@@ -41,20 +46,27 @@ type RawTarifaAgente = {
   navieras?: { name?: string } | null;
   tipos_contenedor?: { name?: string } | null;
   costeo_rutas?: {
-    puerto_origen?: { name?: string } | null;
-    puerto_destino?: { name?: string } | null;
+    puerto_origen?: { name?: string; code?: string | null; country?: string | null } | null;
+    puerto_destino?: { name?: string; code?: string | null; country?: string | null } | null;
   } | null;
 };
 
 /** Nombres legibles de las relaciones de una tarifa (guion largo si faltan). */
 function nombresRelacionesTarifa(r: RawTarifaAgente) {
   const txt = (v?: string | null) => v ?? "—";
+  const opc = (v?: string | null) => v ?? null;
+  const o = r.costeo_rutas?.puerto_origen;
+  const d = r.costeo_rutas?.puerto_destino;
   return {
     agente_nombre: txt(r.costeo_agentes?.nombre),
     naviera_nombre: txt(r.navieras?.name),
     tipo_contenedor_nombre: txt(r.tipos_contenedor?.name),
-    puerto_origen_nombre: txt(r.costeo_rutas?.puerto_origen?.name),
-    puerto_destino_nombre: txt(r.costeo_rutas?.puerto_destino?.name),
+    puerto_origen_nombre: txt(o?.name),
+    puerto_destino_nombre: txt(d?.name),
+    puerto_origen_code: opc(o?.code),
+    puerto_origen_country: opc(o?.country),
+    puerto_destino_code: opc(d?.code),
+    puerto_destino_country: opc(d?.country),
   };
 }
 
@@ -72,8 +84,8 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       navieras:naviera_id(name),
       tipos_contenedor:tipo_contenedor_id(name),
       costeo_rutas:ruta_id(
-        puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name),
-        puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
+        puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name, code, country),
+        puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name, code, country)
       )
     `)
       .order("vigente_desde", { ascending: false })
