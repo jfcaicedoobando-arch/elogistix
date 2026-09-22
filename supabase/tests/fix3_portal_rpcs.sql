@@ -36,6 +36,8 @@ DECLARE
   v_responder text := pg_get_functiondef('public.portal_responder_por_token(uuid,text,text)'::regprocedure);
   v_solicitar text := pg_get_functiondef('public.portal_solicitar_cotizacion(uuid,modo_transporte,tipo_operacion,text,text,text,text,text,text)'::regprocedure);
   v_obtener   text := pg_get_functiondef('public.portal_obtener_proforma_por_token(uuid)'::regprocedure);
+  -- Etapa 5: la implementación vive en la v2; la v1 es wrapper que delega.
+  v_solicitar_v2 text := pg_get_functiondef('public.portal_solicitar_cotizacion_v2(uuid,modo_transporte,tipo_operacion,text,text,text,text,text,text,uuid,uuid)'::regprocedure);
 BEGIN
   IF v_responder !~* 'FOR UPDATE' THEN
     RAISE EXCEPTION 'FIX3 FAIL: portal_responder_por_token sin FOR UPDATE (TOCTOU)';
@@ -46,8 +48,11 @@ BEGIN
   IF v_responder !~* 'LEFT\(btrim' OR v_responder !~* '1000' THEN
     RAISE EXCEPTION 'FIX3 FAIL: portal_responder_por_token sin cap de motivo (LEFT(btrim(...),1000))';
   END IF;
-  IF v_solicitar !~* 'check_ratelimit' THEN
-    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion sin check_ratelimit';
+  IF v_solicitar_v2 !~* 'check_ratelimit' THEN
+    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion_v2 sin check_ratelimit';
+  END IF;
+  IF v_solicitar !~* 'portal_solicitar_cotizacion_v2' THEN
+    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion v1 no delega en v2 (drift Etapa 5)';
   END IF;
   IF v_obtener !~* 'check_ratelimit' THEN
     RAISE EXCEPTION 'FIX3 FAIL: portal_obtener_proforma_por_token sin check_ratelimit (drift BL-11)';

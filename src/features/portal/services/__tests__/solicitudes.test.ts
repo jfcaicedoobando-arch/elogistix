@@ -26,10 +26,35 @@ describe("solicitarCotizacionPortal", () => {
       id: "cot-1",
       folio: "COT-2026-0001",
     });
-    expect(rpc).toHaveBeenCalledWith("portal_solicitar_cotizacion", expect.objectContaining({
+    expect(rpc).toHaveBeenCalledWith("portal_solicitar_cotizacion_v2", expect.objectContaining({
       p_cliente_id: "cli-1",
       p_destino: "Manzanillo",
     }));
+  });
+
+  it("Etapa 5 · envía los IDs de puerto en Marítimo", async () => {
+    rpc.mockResolvedValue({ data: [{ id: "cot-1", folio: "COT-1" }], error: null });
+    await solicitarCotizacionPortal({ ...input, puertoOrigenId: "p-1", puertoDestinoId: "p-2" });
+    expect(rpc).toHaveBeenCalledWith("portal_solicitar_cotizacion_v2", expect.objectContaining({
+      p_puerto_origen_id: "p-1",
+      p_puerto_destino_id: "p-2",
+    }));
+  });
+
+  it("Etapa 5 · fuerza IDs nulos fuera de Marítimo", async () => {
+    rpc.mockResolvedValue({ data: [{ id: "cot-1", folio: "COT-1" }], error: null });
+    await solicitarCotizacionPortal({
+      ...input, modo: "Aéreo", puertoOrigenId: "p-1", puertoDestinoId: "p-2",
+    });
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_puerto_origen_id).toBeUndefined();
+    expect(args.p_puerto_destino_id).toBeUndefined();
+  });
+
+  it("Etapa 5 · nunca llama la firma v1", async () => {
+    rpc.mockResolvedValue({ data: [{ id: "cot-1", folio: "COT-1" }], error: null });
+    await solicitarCotizacionPortal(input);
+    expect(rpc).not.toHaveBeenCalledWith("portal_solicitar_cotizacion", expect.anything());
   });
 
   it("propaga el error de la base", async () => {

@@ -19,6 +19,14 @@ vi.mock("@/features/portal/hooks/useSolicitarCotizacion", () => ({
   },
 }));
 
+// Etapa 5: el buscador de puertos usa React Query; en esta prueba se sustituye
+// por un input equivalente (mismo id/valor) para no montar un QueryClient.
+vi.mock("@/features/catalogos", () => ({
+  PortSelect: ({ id, value, onValueChange }: {
+    id?: string; value: string; onValueChange: (v: string, pid: string | null) => void;
+  }) => <input id={id} value={value} onChange={(e) => onValueChange(e.target.value, null)} />,
+}));
+
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: mocks.notifySuccess,
   notifyError: mocks.notifyError,

@@ -7,6 +7,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { idsSolicitudPersistibles } from "@/features/portal/domain/solicitudRuta";
+
 
 export type ModoTransporte = Database["public"]["Enums"]["modo_transporte"];
 export type TipoOperacion = Database["public"]["Enums"]["tipo_operacion"];
@@ -21,6 +23,9 @@ export interface SolicitudCotizacionInput {
   tipoContenedor?: string | null;
   descripcionMercancia?: string;
   notas?: string;
+  /** Etapa 5: identidad de puerto (sólo Marítimo; texto libre → null). */
+  puertoOrigenId?: string | null;
+  puertoDestinoId?: string | null;
 }
 
 export interface SolicitudCotizacionResult {
@@ -31,7 +36,14 @@ export interface SolicitudCotizacionResult {
 export async function solicitarCotizacionPortal(
   input: SolicitudCotizacionInput,
 ): Promise<SolicitudCotizacionResult> {
-  const { data, error } = await supabase.rpc("portal_solicitar_cotizacion", {
+  // Etapa 5: sólo Marítimo conserva identidad de puerto; el resto va NULL.
+  const { puertoOrigenId, puertoDestinoId } = idsSolicitudPersistibles({
+    modo: input.modo,
+    puertoOrigenId: input.puertoOrigenId ?? null,
+    puertoDestinoId: input.puertoDestinoId ?? null,
+  });
+
+  const { data, error } = await supabase.rpc("portal_solicitar_cotizacion_v2", {
     p_cliente_id: input.clienteId,
     p_modo: input.modo,
     p_tipo: input.tipo,
@@ -41,6 +53,8 @@ export async function solicitarCotizacionPortal(
     p_tipo_contenedor: input.tipoContenedor ?? undefined,
     p_descripcion_mercancia: input.descripcionMercancia ?? "",
     p_notas: input.notas ?? undefined,
+    p_puerto_origen_id: puertoOrigenId ?? undefined,
+    p_puerto_destino_id: puertoDestinoId ?? undefined,
   });
 
   if (error) throw new Error(error.message);
@@ -50,3 +64,4 @@ export async function solicitarCotizacionPortal(
 
   return { id: fila.id as string, folio: fila.folio as string };
 }
+

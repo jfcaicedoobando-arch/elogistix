@@ -54,8 +54,10 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
   const {
     modo, setModo, tipo, setTipo, tipoEmbarque, setTipoEmbarque,
     origen, setOrigen, destino, setDestino, mercancia, setMercancia, notas, setNotas,
+    puertoOrigenId, puertoDestinoId,
     intentoEnvio, origenVacio, destinoVacio, puedeEnviar, isDirty, faltantes, reset,
   } = f;
+
 
   /** Al cerrar se limpia también la empresa elegida: reabrir con varias
    *  empresas exige elegir de nuevo. */
@@ -78,7 +80,10 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         tipoEmbarque,
         descripcionMercancia: mercancia,
         notas,
+        puertoOrigenId,
+        puertoDestinoId,
       });
+
       guardarSolicitudPreferencias({ modo, tipo, tipoEmbarque });
       notifySuccess(undefined, {
         title: "Solicitud enviada",
@@ -140,11 +145,14 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
       />
 
       <SolicitudRutaFields
+        modo={modo}
         origen={origen} setOrigen={setOrigen}
         destino={destino} setDestino={setDestino}
+        puertoOrigenId={puertoOrigenId} puertoDestinoId={puertoDestinoId}
         intentoEnvio={intentoEnvio}
         origenVacio={origenVacio} destinoVacio={destinoVacio}
       />
+
 
       <FormDialogSection title="Carga" cols={1}>
         <div className="space-y-1.5">
