@@ -36,7 +36,12 @@ export function validarContenedoresMaritimo(
       step: 2,
     };
   }
-  const invalidos = contenedores.some((c) => !esNumeroContenedorValido(c.numero_contenedor));
+  // Sólo se valida el formato de los números informados: en LCL el número
+  // puede quedar vacío (ver nota arriba) y en FCL el bloque anterior ya cubrió
+  // los faltantes.
+  const invalidos = contenedores.some(
+    (c) => c.numero_contenedor.trim() !== "" && !esNumeroContenedorValido(c.numero_contenedor),
+  );
   if (invalidos) {
     return {
       description: `Número de contenedor inválido. ${ISO6346_MENSAJE}`,
