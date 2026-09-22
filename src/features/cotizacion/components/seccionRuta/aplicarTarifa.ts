@@ -53,6 +53,12 @@ export function aplicarTarifaAlForm(
 function aplicarCamposBase(setValue: UseFormSetValue<CotizacionFormValues>, row: TopTarifaRow): void {
   setValue("tarifaId", row.id, OPTS);
   setValue("tarifaOverride", {}, OPTS);
+  // Etapa 3: la ruta de la tarifa es la identidad EXACTA de los puertos. Antes
+  // sólo viajaba el texto y al convertir a embarque se volvía a inferir por
+  // nombre (dos puertos homónimos podían intercambiarse).
+  setValue("puertoOrigenId", row.puerto_origen_id ?? null, OPTS);
+  setValue("puertoDestinoId", row.puerto_destino_id ?? null, OPTS);
+
   setValue("tiempoTransitoDias", row.transit_time_dias ?? undefined, OPTS);
   setValue("diasLibresDestino", row.dias_libres_demoras ?? 0, OPTS);
   setValue("cartaGarantia", !!row.naviera_carta_garantia_activa, OPTS);
