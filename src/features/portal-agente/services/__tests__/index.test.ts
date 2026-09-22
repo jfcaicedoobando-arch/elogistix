@@ -90,33 +90,74 @@ describe("portal-agente/services/index · scoping y errores", () => {
   });
 
   describe("fetchAgenteRutas", () => {
-    it("usa la RPC get_agente_rutas (scoping delegado al servidor)", async () => {
-      mock.setRpcResult("get_agente_rutas", {
+    it("usa la RPC get_agente_rutas_v2 y mapea IDs + país/UN-LOCODE (Etapa 6)", async () => {
+      mock.setRpcResult("get_agente_rutas_v2", {
         data: [
           {
             id: "r1",
             organization_id: "org-1",
             activa: true,
-            puerto_origen_nombre: "MX",
-            puerto_destino_nombre: "US",
+            puerto_origen_id: "po-1",
+            puerto_destino_id: "pd-1",
+            puerto_origen_nombre: "Manzanillo",
+            puerto_destino_nombre: "Valencia",
+            puerto_origen_code: "MXZLO",
+            puerto_origen_country: "México",
+            puerto_destino_code: "ESVLC",
+            puerto_destino_country: "España",
           },
         ],
         error: null,
       });
       const rutas = await fetchAgenteRutas();
-      expect(mock.rpcCalls.some((c) => c.fn === "get_agente_rutas")).toBe(true);
+      expect(mock.rpcCalls.some((c) => c.fn === "get_agente_rutas_v2")).toBe(true);
+      // Nunca debe volver a la v1 (sin país ni código → rutas ambiguas).
+      expect(mock.rpcCalls.some((c) => c.fn === "get_agente_rutas")).toBe(false);
       expect(rutas).toHaveLength(1);
-      expect(rutas[0].organization_id).toBe("org-1");
+      expect(rutas[0]).toMatchObject({
+        organization_id: "org-1",
+        puerto_origen_id: "po-1",
+        puerto_destino_id: "pd-1",
+        puerto_origen_code: "MXZLO",
+        puerto_origen_country: "México",
+        puerto_destino_code: "ESVLC",
+        puerto_destino_country: "España",
+      });
+    });
+
+    it("degrada a null cuando la ruta legacy no trae país ni código", async () => {
+      mock.setRpcResult("get_agente_rutas_v2", {
+        data: [
+          {
+            id: "r2",
+            organization_id: "org-1",
+            activa: true,
+            puerto_origen_id: null,
+            puerto_destino_id: null,
+            puerto_origen_nombre: null,
+            puerto_destino_nombre: null,
+            puerto_origen_code: null,
+            puerto_origen_country: null,
+            puerto_destino_code: null,
+            puerto_destino_country: null,
+          },
+        ],
+        error: null,
+      });
+      const [r] = await fetchAgenteRutas();
+      expect(r.puerto_origen_nombre).toBeUndefined();
+      expect(r.puerto_origen_code).toBeNull();
+      expect(r.puerto_destino_country).toBeNull();
     });
 
     it("devuelve [] cuando la RPC responde data null", async () => {
-      mock.setRpcResult("get_agente_rutas", { data: null, error: null });
+      mock.setRpcResult("get_agente_rutas_v2", { data: null, error: null });
       const rutas = await fetchAgenteRutas();
       expect(rutas).toEqual([]);
     });
 
     it("propaga el error de Supabase al listar rutas del agente", async () => {
-      mock.setRpcResult("get_agente_rutas", { data: null, error: { message: "boom" } });
+      mock.setRpcResult("get_agente_rutas_v2", { data: null, error: { message: "boom" } });
       await expect(fetchAgenteRutas()).rejects.toThrow(/boom/i);
     });
   });
