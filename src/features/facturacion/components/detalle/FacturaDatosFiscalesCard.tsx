@@ -8,7 +8,7 @@
  */
 import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
 import { useEffect, useState } from "react";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
