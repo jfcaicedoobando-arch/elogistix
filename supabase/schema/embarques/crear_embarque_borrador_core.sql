@@ -320,6 +320,8 @@ BEGIN
     msds_archivo,
     organization_id,
     puerto_origen, puerto_destino,
+    puerto_origen_id, puerto_destino_id,
+
     aeropuerto_origen, aeropuerto_destino,
     ciudad_origen, ciudad_destino,
     tarifa_id, tarifa_id_original, tarifa_id_aplicada,
@@ -341,6 +343,8 @@ BEGIN
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
+    v_puerto_o_id, v_puerto_d_id,
+
     v_aero_o, v_aero_d,
     v_ciudad_o, v_ciudad_d,
     v_cot.tarifa_id, v_cot.tarifa_id, v_cot.tarifa_id,
