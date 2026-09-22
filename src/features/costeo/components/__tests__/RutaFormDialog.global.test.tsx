@@ -25,7 +25,7 @@ function crearMock() {
   return { mutateAsync: vi.fn().mockResolvedValue({ id: "r1" }), isPending: false } as never;
 }
 
-const abrir = (id: string) => fireEvent.click(screen.getByRole("combobox", { name: "" }) && document.getElementById(id)!);
+const abrir = (id: string) => fireEvent.click(document.getElementById(id)!);
 
 describe("RutaFormDialog — rutas globales", () => {
   it("lista puertos de cualquier país como origen", () => {
