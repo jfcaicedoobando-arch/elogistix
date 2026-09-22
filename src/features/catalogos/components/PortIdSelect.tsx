@@ -12,14 +12,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { usePuertos } from "@/features/catalogos/hooks";
-
-export interface PuertoOption {
-  id: string;
-  code: string;
-  name: string;
-  country: string;
-  activo?: boolean | null;
-}
+import { etiquetaPuerto, filtrarPuertos, type PuertoOption } from "./PortIdSelect.helpers";
 
 interface Props {
   value: string;
@@ -33,18 +26,6 @@ interface Props {
   excludeId?: string;
   "aria-invalid"?: boolean | undefined;
   className?: string;
-}
-
-export function etiquetaPuerto(p: PuertoOption): string {
-  return `${p.name}, ${p.country} (${p.code})`;
-}
-
-export function filtrarPuertos(puertos: PuertoOption[], query: string): PuertoOption[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return puertos;
-  return puertos.filter((p) =>
-    `${p.name} ${p.country} ${p.code}`.toLowerCase().includes(q),
-  );
 }
 
 export function PortIdSelect({

@@ -39,7 +39,7 @@ export async function insertCosteoAgente(
       .insert({
         nombre: input.nombre,
         proveedor_id: input.proveedor_id,
-        pais: input.pais ?? null,
+        pais: input.pais ?? undefined,
         dias_credito: input.dias_credito,
         contacto_tarifario: input.contacto_tarifario ?? null,
         email: input.email ?? null,

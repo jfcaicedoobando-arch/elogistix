@@ -11,7 +11,8 @@ vi.mock("@/features/catalogos/hooks", () => ({
   usePuertos: () => ({ data: [] }),
 }));
 
-import { PortIdSelect, filtrarPuertos, etiquetaPuerto } from "../PortIdSelect";
+import { PortIdSelect } from "../PortIdSelect";
+import { filtrarPuertos, etiquetaPuerto } from "../PortIdSelect.helpers";
 
 const PUERTOS = [
   { id: "p1", name: "Rotterdam", country: "Países Bajos", code: "NLRTM" },
