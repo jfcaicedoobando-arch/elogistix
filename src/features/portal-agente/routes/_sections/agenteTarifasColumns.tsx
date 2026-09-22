@@ -16,15 +16,7 @@ import { formatNumber } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { resolverEstadoVigenciaTarifa } from "@/features/costeo/utils/vigenciaTarifa";
-import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
-
-/**
- * Etapa 6 — etiqueta inequívoca "Nombre, País (CÓDIGO) → …" con rutas globales
- * (hay puertos homónimos en distintos países). Utilidad única de costeo.
- */
-export function etiquetaRutaTarifa(t: AgenteTarifaRow): string {
-  return etiquetaRutaCompleta(origenDe(t), destinoDe(t));
-}
+import { etiquetaRutaTarifa } from "./agenteTarifaRutaLabel";
 
 export function EstadoBadge({ estado }: { estado: string }) {
   // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.

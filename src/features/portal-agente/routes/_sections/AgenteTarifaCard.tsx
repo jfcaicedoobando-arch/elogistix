@@ -7,10 +7,10 @@
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import { formatNumber } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters";
+import { etiquetaRutaTarifa } from "./agenteTarifaRutaLabel";
 import {
   AgenteTarifaAcciones,
   EstadoConVigencia,
-  etiquetaRutaTarifa,
   type AgenteTarifasColumnsDeps,
 } from "./agenteTarifasColumns";
 
