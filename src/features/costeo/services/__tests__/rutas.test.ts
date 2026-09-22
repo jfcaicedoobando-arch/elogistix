@@ -8,10 +8,12 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   CosteoRutaDuplicadaError,
+  CosteoRutaMismoPuertoError,
   fetchCosteoRutas,
   insertCosteoRuta,
   deleteCosteoRuta,
 } from "../rutas";
+
 
 const ORG = "00000000-0000-0000-0000-000000000001";
 
