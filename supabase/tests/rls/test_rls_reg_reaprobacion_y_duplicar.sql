@@ -28,7 +28,6 @@ DECLARE
   rol     text;
   fallo   boolean;
   n       integer;
-  rev     jsonb;
   tar_b   uuid := gen_random_uuid();
   tar_a   uuid := gen_random_uuid();
   ag_a    uuid := gen_random_uuid();
