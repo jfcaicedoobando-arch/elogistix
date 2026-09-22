@@ -58,13 +58,19 @@ describe("CosteoBuscar — tipo de contenedor", () => {
     );
   });
 
-  it("muestra el nombre aunque el id guardado sea un duplicado legacy", async () => {
+  it("conserva el tipo elegido con teclado y lo envía a la consulta", async () => {
     render(<CosteoBuscar />, { wrapper: createWrapper() });
 
-    fireEvent.click(screen.getByLabelText("Tipo contenedor"));
-    const lista = within(await screen.findByRole("listbox"));
-    fireEvent.click(lista.getByText("20' Dry"));
+    const trigger = screen.getByLabelText("Tipo contenedor");
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    const listbox = await screen.findByRole("listbox");
+    const opciones = within(listbox).getAllByRole("option");
+    fireEvent.keyDown(listbox, { key: "ArrowDown" });
+    fireEvent.keyDown(opciones[1], { key: "Enter" });
 
-    expect(screen.getByLabelText("Tipo contenedor")).toHaveTextContent("20' Dry");
+    expect(screen.getByLabelText("Tipo contenedor")).toHaveTextContent("40' High Cube");
+    expect(useTopTarifasMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tipoContenedorId: TIPO_HC.id }),
+    );
   });
 });
