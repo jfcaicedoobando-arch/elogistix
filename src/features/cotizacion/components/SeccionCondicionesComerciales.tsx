@@ -56,8 +56,10 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
 
   // Clamping de validez si excede vigencia de tarifa (heredado de SeccionRutaCotizacion).
   useEffect(() => {
-    if (!tarifaHasta || !validezPropuesta) return;
-    if (validezPropuesta > tarifaHasta) {
+    if (!tarifaHasta || !(validezPropuesta instanceof Date)) return;
+    // Comparación por timestamp: evita reescrituras cuando la fecha ya quedó
+    // ajustada (dos objetos Date distintos con el mismo instante).
+    if (validezPropuesta.getTime() > tarifaHasta.getTime()) {
       setValue("validezPropuesta", tarifaHasta, { shouldValidate: true, shouldDirty: true });
     }
   }, [tarifaHasta, validezPropuesta, setValue]);
