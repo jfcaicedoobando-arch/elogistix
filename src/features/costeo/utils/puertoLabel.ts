@@ -101,3 +101,31 @@ export function textoBusquedaPuertos(r: FilaConPuertos): string {
     .join(" ")
     .toLowerCase();
 }
+
+/**
+ * Etapa 6 / P2 auditoría v13.824.3 — identidad a partir de TEXTO libre.
+ *
+ * Algunas vistas (p. ej. embarques del portal del agente) sólo traen el puerto
+ * como cadena: "Shanghai", "Dalian, China (CNDAL)" o "Dalian". Aquí se parte
+ * ese texto en nombre/país/código para reimprimirlo con el mismo formato que
+ * el resto del ERP, sin duplicar el país ni el código cuando ya venían.
+ */
+export function identidadDesdeTexto(texto?: string | null): PuertoIdentidad {
+  const s = limpio(texto);
+  if (!s) return {};
+  const m = /^(.*?)(?:\s*\(([A-Za-z0-9]{2,10})\))?$/.exec(s);
+  const code = limpio(m?.[2]) || null;
+  const base = limpio(m?.[1]) || s;
+  const partes = base.split(",").map((p) => p.trim()).filter(Boolean);
+  const nombre = partes[0] || base;
+  const country = partes.length > 1 ? partes.slice(1).join(", ") : null;
+  return { nombre, country, code };
+}
+
+/** Etiqueta de ruta normalizada cuando origen y destino sólo llegan como texto. */
+export function etiquetaRutaTexto(
+  origen?: string | null,
+  destino?: string | null,
+): string {
+  return etiquetaRutaCompleta(identidadDesdeTexto(origen), identidadDesdeTexto(destino));
+}
