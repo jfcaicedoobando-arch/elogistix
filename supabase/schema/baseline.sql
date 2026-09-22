@@ -19446,7 +19446,11 @@ CREATE VIEW public.costeo_tarifas_vigentes_v WITH (security_invoker='on') AS
     t.dias_libres_almacenaje_lcl,
     COALESCE(t.frecuencia_override, nc.frecuencia) AS frecuencia_resuelta,
     nc.frecuencia AS naviera_frecuencia,
-    t.frecuencia_override AS tarifa_frecuencia_override
+    t.frecuencia_override AS tarifa_frecuencia_override,
+    po.code AS puerto_origen_code,
+    po.country AS puerto_origen_country,
+    pd.code AS puerto_destino_code,
+    pd.country AS puerto_destino_country
    FROM (((((((public.costeo_tarifas t
      JOIN public.costeo_agentes a ON ((a.id = t.agente_id)))
      JOIN public.navieras n ON ((n.id = t.naviera_id)))
