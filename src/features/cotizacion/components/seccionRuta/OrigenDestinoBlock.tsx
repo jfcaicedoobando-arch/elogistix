@@ -16,10 +16,9 @@ export default function OrigenDestinoBlock({
 }: { ctx: Ctx; usarPortSelect: boolean; esTerrestre: boolean; conPuntoIntermedio: boolean }) {
   const { watch, setValue } = ctx;
   const [desvinculada, setDesvinculada] = useState(false);
-  const tarifaId = watch("tarifaId");
   // P2: el aviso sólo vive mientras no haya tarifa. Al elegir una nueva tarifa
   // válida desaparece solo, sin quedarse pegado en pantalla.
-  const avisoTarifa = desvinculada && !tarifaId;
+  const avisoTarifa = debeMostrarAvisoTarifa(desvinculada, watch("tarifaId"));
 
   const seleccionar = (campo: CampoPuerto) => (valor: string, puertoId: string | null) => {
     const { tarifaDesvinculada } = aplicarSeleccionPuerto(ctx, campo, valor, puertoId);
