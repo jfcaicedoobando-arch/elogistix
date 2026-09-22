@@ -51,6 +51,14 @@ describe("services/proforma/crud", () => {
     ).rejects.toThrow(/al menos un concepto/);
   });
 
+  // Sentry JAVASCRIPT-REACT-2D: debe ser regla de negocio (expected) para no
+  // abrir issues por una validación de captura.
+  it("crearProforma sin conceptos lanza ReglaNegocioError (expected)", async () => {
+    await expect(
+      crearProforma({ ...BASE, conceptoIds: [] } as never),
+    ).rejects.toMatchObject({ name: "ReglaNegocioError", expected: true });
+  });
+
   it("crearProforma devuelve fila desde RPC", async () => {
     mock.setRpcResult("crear_proforma_atomica", {
       data: { id: "pf1", numero: "PRF-001" },
