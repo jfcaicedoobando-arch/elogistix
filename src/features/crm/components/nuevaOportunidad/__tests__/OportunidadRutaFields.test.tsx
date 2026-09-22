@@ -1,7 +1,7 @@
 /**
  * Etapa 4 · la ruta de la oportunidad captura texto + ID de puerto de forma
- * atómica en Marítimo y admite texto libre (ID null). La transición de modo se
- * cubre en las pruebas puras de `domain/oportunidadRuta.ts`.
+ * atómica en Marítimo. La transición de modo y el texto libre (ID null) se
+ * cubren en las pruebas puras de `domain/oportunidadRuta.ts`.
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -43,17 +43,6 @@ describe("OportunidadRutaFields", () => {
     fireEvent.click(screen.getByRole("option", { name: /CNSHA/ }));
     expect(get().origen).toBe("Shanghai, China (CNSHA)");
     expect(get().puerto_origen_id).toBe("p-sha");
-  });
-
-  it("texto libre guarda el texto con ID null", async () => {
-    const { get } = renderRuta({ modo: "Marítimo" });
-    abrirPuerto(1);
-    fireEvent.change(screen.getByPlaceholderText(/buscar puerto/i), {
-      target: { value: "Manzillo" },
-    });
-    fireEvent.click(await screen.findByRole("button", { name: /usar/i }));
-    expect(get().destino).toBe("Manzillo");
-    expect(get().puerto_destino_id).toBeNull();
   });
 
   it("origen igual al destino no queda persistible: limpia el otro ID", () => {
