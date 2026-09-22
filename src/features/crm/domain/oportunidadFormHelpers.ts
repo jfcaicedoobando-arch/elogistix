@@ -12,6 +12,7 @@ import {
   EMPTY_OPORTUNIDAD,
   type OportunidadFormState,
 } from "@/features/crm/domain/oportunidadFormState";
+import { normalizarModoOportunidad } from "@/features/crm/domain/oportunidadRuta";
 
 interface Etapa {
   id: string;
