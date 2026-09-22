@@ -31,6 +31,11 @@ DECLARE
   v_destino_code  text;
   v_puerto_o      text;
   v_puerto_d      text;
+  v_puerto_o_id   uuid;
+  v_puerto_d_id   uuid;
+  v_ruta_o_id     uuid;
+  v_ruta_d_id     uuid;
+
   v_aero_o        text;
   v_aero_d        text;
   v_ciudad_o      text;
@@ -200,25 +205,66 @@ BEGIN
     NULL
   );
 
-  IF v_origen_code IS NOT NULL THEN
-    SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
-  END IF;
-  IF v_destino_code IS NOT NULL THEN
-    SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.code = v_destino_code LIMIT 1;
-  END IF;
-
   IF v_cot.modo = 'Aéreo'::modo_transporte THEN
-    v_aero_o := COALESCE(v_puerto_o, v_origen_code);
-    v_aero_d := COALESCE(v_puerto_d, v_destino_code);
+    -- Etapa 3: Aéreo y Terrestre NO pasan por el catálogo de puertos.
+    v_aero_o := v_origen_code;
+    v_aero_d := v_destino_code;
     v_puerto_o := NULL; v_puerto_d := NULL;
+    v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSIF v_cot.modo = 'Terrestre'::modo_transporte THEN
-    v_ciudad_o := COALESCE(v_puerto_o, v_origen_code);
-    v_ciudad_d := COALESCE(v_puerto_d, v_destino_code);
+    v_ciudad_o := v_origen_code;
+    v_ciudad_d := v_destino_code;
     v_puerto_o := NULL; v_puerto_d := NULL;
+    v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSE
+    -- Etapa 3: la identidad del puerto viaja por ID, no por texto. Antes se
+    -- extraía un supuesto código con regex y se resolvía con `LIMIT 1`, así que
+    -- con rutas globales dos puertos homónimos podían intercambiarse.
+    v_puerto_o_id := v_cot.puerto_origen_id;
+    v_puerto_d_id := v_cot.puerto_destino_id;
+
+    IF v_cot.tarifa_id IS NOT NULL THEN
+      SELECT r.puerto_origen_id, r.puerto_destino_id
+        INTO v_ruta_o_id, v_ruta_d_id
+        FROM public.costeo_tarifas t
+        JOIN public.costeo_rutas r ON r.id = t.ruta_id
+       WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'LC_COT_TARIFA_ORG_INVALIDA: la tarifa % no pertenece a la organización de la cotización', v_cot.tarifa_id
+          USING ERRCODE = 'P0001';
+      END IF;
+      v_puerto_o_id := v_ruta_o_id;
+      v_puerto_d_id := v_ruta_d_id;
+    END IF;
+
+    -- Legacy sin IDs: sólo UN/LOCODE exacto y ÚNICO. Nunca por nombre/fragmento.
+    IF v_puerto_o_id IS NULL AND v_origen_code IS NOT NULL THEN
+      SELECT max(p.id) INTO v_puerto_o_id
+        FROM public.puertos p
+       WHERE upper(btrim(p.code)) = upper(btrim(v_origen_code))
+      HAVING count(*) = 1;
+    END IF;
+    IF v_puerto_d_id IS NULL AND v_destino_code IS NOT NULL THEN
+      SELECT max(p.id) INTO v_puerto_d_id
+        FROM public.puertos p
+       WHERE upper(btrim(p.code)) = upper(btrim(v_destino_code))
+      HAVING count(*) = 1;
+    END IF;
+    IF v_puerto_o_id IS NOT NULL AND v_puerto_o_id = v_puerto_d_id THEN
+      v_puerto_o_id := NULL; v_puerto_d_id := NULL;
+    END IF;
+
+    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado.
+    IF v_puerto_o_id IS NOT NULL THEN
+      SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.id = v_puerto_o_id;
+    END IF;
+    IF v_puerto_d_id IS NOT NULL THEN
+      SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.id = v_puerto_d_id;
+    END IF;
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
+
 
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
   -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
