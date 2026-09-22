@@ -23169,7 +23169,7 @@ BEGIN
   RETURN jsonb_build_object('id', p_proforma_id, 'estado_cliente', p_respuesta, 'respondida_at', v_now);
 END $$;
 CREATE FUNCTION public.portal_solicitar_cotizacion(p_cliente_id uuid, p_modo public.modo_transporte, p_tipo public.tipo_operacion, p_origen text, p_destino text, p_tipo_embarque text DEFAULT 'FCL'::text, p_tipo_contenedor text DEFAULT NULL::text, p_descripcion_mercancia text DEFAULT ''::text, p_notas text DEFAULT NULL::text) RETURNS TABLE(id uuid, folio text)
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
 BEGIN
