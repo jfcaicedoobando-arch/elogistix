@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import PortSelect from "@/features/catalogos/components/PortSelect";
+import { PortSelect } from "@/features/catalogos";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 import {
   MODOS_OPORTUNIDAD,
