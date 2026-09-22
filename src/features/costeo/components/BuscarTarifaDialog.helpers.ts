@@ -11,31 +11,28 @@ export interface FiltrosTarifaInitial {
   tipoContenedorId?: string;
 }
 
-export const PAISES_CN = ["CN", "China"];
-export const PAISES_MX = ["MX", "Mexico", "México"];
-
-interface PuertoLite {
-  country?: string | null;
-}
-
-export function filtrarPorPais<T extends PuertoLite>(puertos: T[], paises: string[]): T[] {
-  return puertos.filter((p) => paises.includes(String(p.country ?? "")));
-}
-
 /** Filtros del buscador; se resetean al abrir con los valores iniciales. */
 export function useFiltrosTarifa(open: boolean, initial: FiltrosTarifaInitial | undefined) {
-  const [origen, setOrigen] = useState(initial?.puertoOrigenId ?? "");
+  const [origen, setOrigenState] = useState(initial?.puertoOrigenId ?? "");
   const [destino, setDestino] = useState(initial?.puertoDestinoId ?? "");
   const [tipo, setTipo] = useState(initial?.tipoContenedorId ?? "");
   const [fecha, setFecha] = useState(todayLocalISO());
 
   useEffect(() => {
     if (open) {
-      setOrigen(initial?.puertoOrigenId ?? "");
+      setOrigenState(initial?.puertoOrigenId ?? "");
       setDestino(initial?.puertoDestinoId ?? "");
       setTipo(initial?.tipoContenedorId ?? "");
     }
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
 
-  return { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha };
+  /** Si el nuevo origen coincide con el destino elegido, limpiamos destino. */
+  const setOrigen = (id: string) => {
+    setOrigenState(id);
+    if (id && id === destino) setDestino("");
+  };
+
+  const mismoPuerto = !!origen && origen === destino;
+
+  return { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha, mismoPuerto };
 }

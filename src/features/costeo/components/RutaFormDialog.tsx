@@ -1,18 +1,15 @@
 /**
- * Diálogo para alta de una nueva ruta CN → MX.
- * Migrado a FormDialogShell (Ola 2 — Costeo).
+ * Diálogo para alta de una nueva ruta marítima entre dos puertos del catálogo
+ * (cualquier país de origen y destino — etapa 1 de rutas globales).
  */
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { PortIdSelect } from "@/features/catalogos";
 import type { useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
-import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 import type { CosteoRuta } from "@/features/costeo/types";
 
 interface Props {
@@ -23,31 +20,28 @@ interface Props {
 }
 
 export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
-  const { data: puertos = [] } = usePuertos();
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
-  const puertosCN = useMemo(
-    () => puertos.filter((p) => ["china", "cn"].includes((p.country ?? "").trim().toLowerCase())),
-    [puertos],
-  );
-  const puertosMX = useMemo(
-    () => puertos.filter((p) => ["méxico", "mexico", "mx"].includes((p.country ?? "").trim().toLowerCase())),
-    [puertos],
-  );
-
+  // Duplicado direccional: A → B y B → A son rutas distintas.
   const rutaDuplicada = rutas.some(
     (ruta) => ruta.puerto_origen_id === origenId && ruta.puerto_destino_id === destinoId,
   );
+  const mismoPuerto = !!origenId && origenId === destinoId;
   const mostrarDuplicada = !!origenId && !!destinoId && rutaDuplicada;
   const origenInvalido = intentoEnvio && !origenId;
   const destinoInvalido = intentoEnvio && !destinoId;
 
+  const elegirOrigen = (id: string) => {
+    setOrigenId(id);
+    if (id && id === destinoId) setDestinoId("");
+  };
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
-    if (!origenId || !destinoId || rutaDuplicada) return;
+    if (!origenId || !destinoId || rutaDuplicada || mismoPuerto) return;
     try {
       await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
       setOrigenId("");
@@ -64,15 +58,19 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       icon={Route}
-      title="Nueva ruta CN → MX"
-      description="Agrega una nueva ruta de origen en China a destino en México."
+      title="Nueva ruta marítima"
+      description="Agrega una ruta entre dos puertos del catálogo, sin importar el país."
       size="lg"
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="submit" form="ruta-form" disabled={crear.isPending || rutaDuplicada}>
+          <Button
+            type="submit"
+            form="ruta-form"
+            disabled={crear.isPending || rutaDuplicada || mismoPuerto}
+          >
             Guardar
           </Button>
         </>
@@ -81,46 +79,34 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
       <form id="ruta-form" onSubmit={handleGuardar} className="space-y-4">
         <FormDialogSection cols={1} flat>
           <div>
-            <Label htmlFor="ruta-origen">Puerto de origen (China) *</Label>
-            <Select value={origenId} onValueChange={setOrigenId}>
-              <SelectTrigger
-                id="ruta-origen"
-                aria-invalid={origenInvalido || undefined}
-                className={origenInvalido ? "border-destructive" : undefined}
-              >
-                <SelectValue placeholder="Selecciona puerto chino" />
-              </SelectTrigger>
-              <SelectContent>
-                {puertosCN.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="ruta-origen">Puerto de origen *</Label>
+            <PortIdSelect
+              id="ruta-origen"
+              value={origenId}
+              onChange={elegirOrigen}
+              placeholder="Buscar puerto de origen…"
+              aria-invalid={origenInvalido || undefined}
+            />
           </div>
           <div>
-            <Label htmlFor="ruta-destino">Puerto de destino (México) *</Label>
-            <Select value={destinoId} onValueChange={setDestinoId}>
-              <SelectTrigger
-                id="ruta-destino"
-                aria-invalid={destinoInvalido || undefined}
-                className={destinoInvalido ? "border-destructive" : undefined}
-              >
-                <SelectValue placeholder="Selecciona puerto mexicano" />
-              </SelectTrigger>
-              <SelectContent>
-                {puertosMX.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="ruta-destino">Puerto de destino *</Label>
+            <PortIdSelect
+              id="ruta-destino"
+              value={destinoId}
+              onChange={setDestinoId}
+              placeholder="Buscar puerto de destino…"
+              excludeId={origenId}
+              aria-invalid={destinoInvalido || undefined}
+            />
           </div>
+          {mismoPuerto && (
+            <p className="text-body text-destructive" role="alert">
+              El puerto de origen y el de destino deben ser distintos.
+            </p>
+          )}
           {mostrarDuplicada && (
             <p className="text-body text-destructive" role="alert">
-              Esta ruta CN → MX ya está registrada. No necesitas volver a crearla.
+              Esta ruta marítima ya está registrada. No necesitas volver a crearla.
             </p>
           )}
         </FormDialogSection>

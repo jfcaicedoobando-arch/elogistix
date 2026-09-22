@@ -62,10 +62,18 @@ export interface CosteoRutaInput {
 
 export class CosteoRutaDuplicadaError extends Error {
   constructor() {
-    super("Esta ruta CN → MX ya está registrada en tu organización.");
+    super("Esta ruta marítima ya está registrada en tu organización.");
     this.name = "CosteoRutaDuplicadaError";
   }
 }
+
+export class CosteoRutaMismoPuertoError extends Error {
+  constructor() {
+    super("El puerto de origen y el de destino deben ser distintos.");
+    this.name = "CosteoRutaMismoPuertoError";
+  }
+}
+
 
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -88,11 +96,16 @@ export async function insertCosteoRuta(
   organizationId: string,
   input: CosteoRutaInput,
 ): Promise<CosteoRuta> {
+  // Defensa de dominio: la UI ya lo evita, pero una ruta a sí misma no existe.
+  if (input.puerto_origen_id === input.puerto_destino_id) {
+    throw new CosteoRutaMismoPuertoError();
+  }
   const { data, error } = await supabase
     .from("costeo_rutas")
     .insert({ ...input, organization_id: organizationId })
     .select("*")
     .single();
+
   if (error) {
     if (isUniqueViolation(error)) throw new CosteoRutaDuplicadaError();
     throw error;

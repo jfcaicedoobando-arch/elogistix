@@ -1,5 +1,5 @@
 /**
- * Selector múltiple de rutas CN → MX para captura masiva de tarifas.
+ * Selector múltiple de rutas marítimas para captura masiva de tarifas.
  * Permite seleccionar varias rutas en un mismo modal de "Nueva tarifa".
  */
 import { useMemo, useState } from "react";
@@ -62,7 +62,7 @@ export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) 
   const limpiar = () => onChange([]);
 
   const triggerLabel = seleccion.length === 0
-    ? "Selecciona una o varias rutas CN → MX"
+    ? "Selecciona una o varias rutas"
     : seleccion.length === 1
       ? labelRuta(seleccion[0])
       : `${seleccion.length} rutas seleccionadas`;

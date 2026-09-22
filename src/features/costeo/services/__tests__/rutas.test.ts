@@ -8,10 +8,12 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   CosteoRutaDuplicadaError,
+  CosteoRutaMismoPuertoError,
   fetchCosteoRutas,
   insertCosteoRuta,
   deleteCosteoRuta,
 } from "../rutas";
+
 
 const ORG = "00000000-0000-0000-0000-000000000001";
 
@@ -79,6 +81,21 @@ describe("costeo/services/rutas", () => {
     expect(payload.organization_id).toBe(ORG);
     expect(payload.puerto_origen_id).toBe("po");
   });
+
+  it("insertCosteoRuta acepta rutas globales (Rotterdam → Veracruz)", async () => {
+    mock.setTableResult("costeo_rutas", { data: { id: "r3" }, error: null });
+    await insertCosteoRuta(ORG, { puerto_origen_id: "nlrtm", puerto_destino_id: "mxver" });
+    const payload = mock.getMutationPayload("costeo_rutas", "insert") as Record<string, unknown>;
+    expect(payload.puerto_origen_id).toBe("nlrtm");
+    expect(payload.puerto_destino_id).toBe("mxver");
+    expect(payload.organization_id).toBe(ORG);
+  });
+
+  it("insertCosteoRuta rechaza origen igual a destino", async () => {
+    await expect(insertCosteoRuta(ORG, { puerto_origen_id: "mxzlo", puerto_destino_id: "mxzlo" }))
+      .rejects.toBeInstanceOf(CosteoRutaMismoPuertoError);
+  });
+
 
   it("insertCosteoRuta traduce duplicados a error de negocio", async () => {
     mock.setTableResult("costeo_rutas", {

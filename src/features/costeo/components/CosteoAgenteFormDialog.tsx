@@ -116,7 +116,7 @@ export function CosteoAgenteFormDialog({
               <Label htmlFor="agente-pais">País</Label>
               <Input
                 id="agente-pais"
-                value={form.pais ?? "CN"}
+                value={form.pais ?? ""}
                 onChange={(e) => setForm({ ...form, pais: e.target.value })}
               />
             </div>

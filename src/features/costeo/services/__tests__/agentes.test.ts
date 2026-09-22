@@ -31,11 +31,11 @@ describe("costeo/services/agentes", () => {
     expect(res[0].nombre).toBe("Acme");
   });
 
-  it("insertCosteoAgente aplica defaults (pais=CN, activo=true)", async () => {
+  it("insertCosteoAgente no inventa país y deja activo=true", async () => {
     mock.setTableResult("costeo_agentes", { data: { id: "a2", nombre: "Nuevo" }, error: null });
     await insertCosteoAgente(ORG, { nombre: "Nuevo", proveedor_id: "p1", dias_credito: 15 });
     const payload = mock.getMutationPayload("costeo_agentes", "insert") as Record<string, unknown>;
-    expect(payload.pais).toBe("CN");
+    expect(payload.pais).toBeUndefined();
     expect(payload.activo).toBe(true);
     expect(payload.organization_id).toBe(ORG);
   });

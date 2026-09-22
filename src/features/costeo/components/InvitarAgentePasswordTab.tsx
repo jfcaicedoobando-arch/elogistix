@@ -77,7 +77,7 @@ export function InvitarAgentePasswordTab({
         </div>
       </div>
       <p className="text-body-sm text-muted-foreground">
-        Útil cuando el correo no llega (agentes en China, filtros corporativos). La cuenta queda
+        Útil cuando el correo no llega (correo internacional, filtros corporativos). La cuenta queda
         activa al toque y tú compartes las credenciales por WeChat, WhatsApp o el canal que prefieras.
         {" "}Si el agente ya tiene cuenta, esta acción <strong>reasigna</strong> su contraseña.
       </p>

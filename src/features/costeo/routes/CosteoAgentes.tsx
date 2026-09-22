@@ -1,5 +1,5 @@
 /**
- * Página: Agentes de costeo (forwarders chinos vinculados a Proveedores).
+ * Página: Agentes de carga vinculados al directorio de Proveedores.
  * Vínculo obligatorio a un proveedor tipo "Agente de Carga".
  * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
  * v13.225.0 (Lote 5): buscador local envuelto en Card (paridad con /proveedores)
@@ -24,7 +24,7 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 const EMPTY: CosteoAgenteInput = {
   nombre: "",
   proveedor_id: "",
-  pais: "CN",
+  pais: "",
   dias_credito: 0,
   contacto_tarifario: "",
   email: "",
@@ -67,7 +67,7 @@ export default function CosteoAgentes() {
     setForm({
       nombre: a.nombre,
       proveedor_id: a.proveedor_id ?? "",
-      pais: a.pais ?? "CN",
+      pais: a.pais ?? "",
       dias_credito: a.dias_credito ?? 0,
       contacto_tarifario: a.contacto_tarifario ?? "",
       email: a.email ?? "",
@@ -93,8 +93,8 @@ export default function CosteoAgentes() {
   };
 
   const descripcion = isLoading
-    ? "Forwarders chinos vinculados al directorio de Proveedores."
-    : `${agentes.length} agente${agentes.length === 1 ? "" : "s"} · Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito son el criterio principal de desempate.`;
+    ? "Agentes de carga vinculados al directorio de Proveedores."
+    : `${agentes.length} agente${agentes.length === 1 ? "" : "s"} · Agentes de carga vinculados al directorio de Proveedores. Los días de crédito son el criterio principal de desempate.`;
 
   return (
     <PageContainer>

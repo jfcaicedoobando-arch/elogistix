@@ -13,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { PortIdSelect } from "@/features/catalogos";
+
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
 import { TarifasSinResultado } from "@/features/costeo/components/TarifasSinResultado";
@@ -27,36 +29,32 @@ import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
-  const { data: puertos = [] } = usePuertos();
   const { data: tipos = [] } = useTiposContenedor();
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
   const [tipo, setTipo] = useState("");
   const [fecha, setFecha] = useState(todayLocalISO());
+  const mismoPuerto = !!origen && origen === destino;
+
+  // Origen y destino deben diferir; si coinciden no disparamos la búsqueda.
+  const elegirOrigen = (id: string) => {
+    setOrigen(id);
+    if (id && id === destino) setDestino("");
+  };
 
   const { data: tarifas = [], isFetching, tipoContenedorIds } = useTopTarifas({
     puertoOrigenId: origen,
-    puertoDestinoId: destino,
+    puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorId: tipo,
     fecha,
   });
 
   const { diagnostico } = useDiagnosticoTarifas({
     puertoOrigenId: origen,
-    puertoDestinoId: destino,
+    puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorIds,
-    enabled: !isFetching && tarifas.length === 0,
+    enabled: !mismoPuerto && !isFetching && tarifas.length === 0,
   });
-
-  const puertosCN = puertos.filter(
-    (p) => p.country === "CN" || p.country === "China",
-  );
-  const puertosMX = puertos.filter(
-    (p) =>
-      p.country === "MX" ||
-      p.country === "Mexico" ||
-      p.country === "México",
-  );
 
   return (
     <PageContainer>
@@ -68,35 +66,25 @@ export default function CosteoBuscar() {
       <Card className="p-4" role="search" aria-label="Filtros de búsqueda de tarifa">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <Label htmlFor="buscar-origen">Puerto origen (CN)</Label>
-            <Select value={origen} onValueChange={setOrigen}>
-              <SelectTrigger id="buscar-origen">
-                <SelectValue placeholder="Selecciona" />
-              </SelectTrigger>
-              <SelectContent>
-                {(puertosCN.length ? puertosCN : puertos).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}, {p.country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="buscar-origen">Puerto de origen</Label>
+            <PortIdSelect
+              id="buscar-origen"
+              value={origen}
+              onChange={elegirOrigen}
+              placeholder="Buscar puerto de origen…"
+            />
           </div>
           <div>
-            <Label htmlFor="buscar-destino">Puerto destino (MX)</Label>
-            <Select value={destino} onValueChange={setDestino}>
-              <SelectTrigger id="buscar-destino">
-                <SelectValue placeholder="Selecciona" />
-              </SelectTrigger>
-              <SelectContent>
-                {(puertosMX.length ? puertosMX : puertos).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}, {p.country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="buscar-destino">Puerto de destino</Label>
+            <PortIdSelect
+              id="buscar-destino"
+              value={destino}
+              onChange={setDestino}
+              excludeId={origen}
+              placeholder="Buscar puerto de destino…"
+            />
           </div>
+
           <div>
             <Label htmlFor="buscar-tipo">Tipo contenedor</Label>
             <Select value={tipo} onValueChange={setTipo}>
@@ -119,7 +107,13 @@ export default function CosteoBuscar() {
         </div>
       </Card>
 
-      {!origen || !destino || !tipo ? (
+      {mismoPuerto ? (
+        <Card className="p-4">
+          <p className="text-body text-destructive" role="alert">
+            El puerto de origen y el de destino deben ser distintos.
+          </p>
+        </Card>
+      ) : !origen || !destino || !tipo ? (
         <Card>
           <EmptyStateInline
             icon={MapPinned}

@@ -5,7 +5,7 @@
  *  - "email": dispara correo de invitación / reset password (default).
  *  - "password": el admin asigna la contraseña directamente y luego la
  *    comparte por el canal que sea (WeChat, WhatsApp). Útil porque a los
- *    agentes en China muchas veces no les llega el correo.
+ *    a agentes internacionales muchas veces no les llega el correo.
  *
  * Llama a la edge function `user-management` con action `invite-agente`.
  */
@@ -124,8 +124,8 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
             />
           </div>
           <p className="text-body-sm text-muted-foreground">
-            Se enviará un correo para que establezca su contraseña. Si el agente está en China y no
-            le llega el email, usa <strong>Asignar contraseña</strong>.
+            Se enviará un correo para que establezca su contraseña. Si no
+            le llega el correo, usa <strong>Asignar contraseña</strong>.
           </p>
         </TabsContent>
 
