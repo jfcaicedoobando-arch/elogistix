@@ -15,9 +15,18 @@
  * este archivo a `domain/` y consumirlo desde ambos lados.
  */
 import { vigenciaHint } from "../routes/CosteoTarifas.helpers";
+import {
+  contextoRuta, destinoDe, origenDe, rutaCorta, type FilaConPuertos,
+} from "./puertoLabel";
 
 /** Forma mínima que necesita la agrupación (estructural: no acopla a TarifaRow). */
-export interface FilaAgrupable {
+export interface FilaAgrupable extends FilaConPuertos {
+  /**
+   * Etapa 2: la clave de grupo usa IDs, nunca nombres visibles (dos puertos
+   * homónimos de países distintos son rutas distintas).
+   */
+  ruta_id: string;
+  tipo_contenedor_id: string;
   puerto_origen_nombre: string;
   puerto_destino_nombre: string;
   tipo_contenedor_nombre: string;
@@ -31,6 +40,8 @@ export interface FilaAgrupable {
 export interface GrupoTarifas<T extends FilaAgrupable> {
   key: string;
   rutaLabel: string;
+  /** Contexto secundario: "Países Bajos · NLRTM → México · MXVER" (puede ser ""). */
+  rutaContexto: string;
   contenedor: string;
   rows: T[];
   mejor: T | null;
@@ -50,12 +61,13 @@ export function esTarifaElegible(r: Pick<FilaAgrupable, "estado_aprobacion" | "v
 export function buildGruposTarifas<T extends FilaAgrupable>(tarifas: T[], today: string): GrupoTarifas<T>[] {
   const map = new Map<string, GrupoTarifas<T>>();
   for (const t of tarifas) {
-    const key = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+    const key = `${t.ruta_id}|${t.tipo_contenedor_id}`;
     let g = map.get(key);
     if (!g) {
       g = {
         key,
-        rutaLabel: `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
+        rutaLabel: rutaCorta(origenDe(t), destinoDe(t)),
+        rutaContexto: contextoRuta(origenDe(t), destinoDe(t)),
         contenedor: t.tipo_contenedor_nombre,
         rows: [], mejor: null, agentes: 0, porVencer: 0,
         promedio: null, deltaMax: null, elegiblesCount: 0,
