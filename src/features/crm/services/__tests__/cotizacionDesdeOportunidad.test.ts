@@ -110,3 +110,42 @@ describe("actualizarEtapaOportunidad", () => {
     await expect(actualizarEtapaOportunidad("o", "e", 10)).rejects.toThrow("nope");
   });
 });
+
+describe("insertCotizacionDesdeOportunidad · Etapa 4 (identidad de puerto)", () => {
+  const opConPuertos = { ...opBase, puerto_origen_id: "p-sha", puerto_destino_id: "p-zlo" };
+
+  it("copia los IDs de puerto en modo Marítimo", async () => {
+    sinBorradorPrevio();
+    mock.setTableResult("cotizaciones", { data: { id: "c4", folio: "F-4" }, error: null });
+    await insertCotizacionDesdeOportunidad({
+      folio: "F-4", modo: "Marítimo", oportunidad: opConPuertos, operador: "u@x.com",
+    });
+    const payload = mock.getMutationPayload("cotizaciones", "insert") as Record<string, unknown>;
+    expect(payload.puerto_origen_id).toBe("p-sha");
+    expect(payload.puerto_destino_id).toBe("p-zlo");
+  });
+
+  it.each(["Aéreo", "Terrestre", "Multimodal"] as const)(
+    "fuerza NULL en modo %s",
+    async (modo) => {
+      sinBorradorPrevio();
+      mock.setTableResult("cotizaciones", { data: { id: "c5", folio: "F-5" }, error: null });
+      await insertCotizacionDesdeOportunidad({
+        folio: "F-5", modo, oportunidad: opConPuertos, operador: "u@x.com",
+      });
+      const payload = mock.getMutationPayload("cotizaciones", "insert") as Record<string, unknown>;
+      expect(payload.puerto_origen_id).toBeNull();
+      expect(payload.puerto_destino_id).toBeNull();
+    },
+  );
+
+  it("al reutilizar el borrador vivo no escribe ruta ni IDs", async () => {
+    mock.setTableResult("cotizaciones", { data: { id: "cot-prev", folio: "F-PREV" }, error: null });
+    const r = await insertCotizacionDesdeOportunidad({
+      folio: "F-6", modo: "Marítimo", oportunidad: opConPuertos, operador: "u@x.com",
+    });
+    expect(r.reutilizada).toBe(true);
+    expect(mock.getMutationPayload("cotizaciones", "insert")).toBeFalsy();
+    expect(mock.getMutationPayload("cotizaciones", "update")).toBeFalsy();
+  });
+});

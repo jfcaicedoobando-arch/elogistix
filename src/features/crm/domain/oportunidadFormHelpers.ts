@@ -12,6 +12,7 @@ import {
   EMPTY_OPORTUNIDAD,
   type OportunidadFormState,
 } from "@/features/crm/domain/oportunidadFormState";
+import { normalizarModoOportunidad } from "@/features/crm/domain/oportunidadRuta";
 
 interface Etapa {
   id: string;
@@ -59,11 +60,19 @@ function bloqueComercial(o: CrmOportunidadRow) {
   };
 }
 
+/**
+ * Etapa 4: el modo legacy se normaliza si es reconocible ("Maritimo",
+ * "Marítimo FCL", "Aereo consolidado"); si no lo es se conserva el texto tal
+ * cual (la advertencia la muestra el formulario) y los IDs de puerto viajan
+ * como están guardados: los históricos con `null` no exigen recaptura.
+ */
 function bloqueRuta(o: CrmOportunidadRow) {
   return {
-    modo: o.modo ?? "",
+    modo: normalizarModoOportunidad(o.modo).valor,
     origen: o.origen ?? "",
     destino: o.destino ?? "",
+    puerto_origen_id: o.puerto_origen_id ?? null,
+    puerto_destino_id: o.puerto_destino_id ?? null,
     notas: o.notas ?? "",
   };
 }

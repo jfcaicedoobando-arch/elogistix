@@ -31851,7 +31851,10 @@ CREATE TABLE public.crm_oportunidades (
     margen_autorizado_at timestamp with time zone,
     riesgos_objeciones text,
     sector text,
-    CONSTRAINT crm_oportunidades_probabilidad_check CHECK (((probabilidad >= 0) AND (probabilidad <= 100)))
+    puerto_origen_id uuid,
+    puerto_destino_id uuid,
+    CONSTRAINT crm_oportunidades_probabilidad_check CHECK (((probabilidad >= 0) AND (probabilidad <= 100))),
+    CONSTRAINT crm_oportunidades_puertos_distintos_chk CHECK (((puerto_origen_id IS NULL) OR (puerto_destino_id IS NULL) OR (puerto_origen_id <> puerto_destino_id)))
 );
 CREATE TABLE public.crm_plantillas_mensaje (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -34170,6 +34173,10 @@ ALTER TABLE ONLY public.crm_oportunidades
     ADD CONSTRAINT crm_oportunidades_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES public.crm_leads(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.crm_oportunidades
     ADD CONSTRAINT crm_oportunidades_motivo_perdida_id_fkey FOREIGN KEY (motivo_perdida_id) REFERENCES public.crm_motivos_perdida(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.crm_oportunidades
+    ADD CONSTRAINT crm_oportunidades_puerto_destino_id_fkey FOREIGN KEY (puerto_destino_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.crm_oportunidades
+    ADD CONSTRAINT crm_oportunidades_puerto_origen_id_fkey FOREIGN KEY (puerto_origen_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.documentos_embarque
     ADD CONSTRAINT documentos_embarque_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.documentos_embarque

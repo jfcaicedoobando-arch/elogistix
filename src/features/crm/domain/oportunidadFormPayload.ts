@@ -7,6 +7,7 @@
  */
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
+import { idsPuertoPersistibles } from "@/features/crm/domain/oportunidadRuta";
 
 const opt = (v: number) => (v > 0 ? v : null);
 
@@ -53,6 +54,8 @@ export function buildOportunidadFormPayload(
     modo: form.modo,
     origen: form.origen,
     destino: form.destino,
+    // Etapa 4: los IDs sólo se persisten en Marítimo y nunca iguales entre sí.
+    ...idsPuertoPersistibles(form),
     notas: form.notas,
     vendedor_id: form.vendedor_id,
     vendedor_email: form.vendedor_email,

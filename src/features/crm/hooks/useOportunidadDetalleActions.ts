@@ -22,6 +22,9 @@ interface OpLite {
   cliente_nombre?: string | null;
   origen?: string | null;
   destino?: string | null;
+  /** Etapa 4 · identidad canónica del puerto (sólo viaja en Marítimo). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
   etapa_id: string;
   modo: string;
 }
@@ -70,6 +73,8 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
           cliente_nombre: op.cliente_nombre ?? null,
           origen: op.origen ?? null,
           destino: op.destino ?? null,
+          puerto_origen_id: op.puerto_origen_id ?? null,
+          puerto_destino_id: op.puerto_destino_id ?? null,
           etapa_id: op.etapa_id,
           modo: op.modo,
         },
