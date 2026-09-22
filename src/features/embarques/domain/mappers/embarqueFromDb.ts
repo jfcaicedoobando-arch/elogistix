@@ -121,6 +121,9 @@ function mapMaritimo(e: EmbarqueRow) {
   return {
     puertoOrigen: str(e.puerto_origen),
     puertoDestino: str(e.puerto_destino),
+    puertoOrigenId: (row.puerto_origen_id as string | null) ?? null,
+    puertoDestinoId: (row.puerto_destino_id as string | null) ?? null,
+
     naviera: str(e.naviera),
     navieraId: (row.naviera_id as string | null) ?? null,
     agente: str(e.agente),
