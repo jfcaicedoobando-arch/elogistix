@@ -1,11 +1,10 @@
 /**
  * Etapa 4 · la ruta de la oportunidad captura texto + ID de puerto de forma
- * atómica en Marítimo, admite texto libre (ID null) y limpia los IDs al salir
- * de Marítimo. Se prueba el contrato de `setForm` (el reductor real del form).
+ * atómica en Marítimo y admite texto libre (ID null). La transición de modo se
+ * cubre en las pruebas puras de `domain/oportunidadRuta.ts`.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import OportunidadRutaFields from "@/features/crm/components/nuevaOportunidad/OportunidadRutaFields";
 import { EMPTY_OPORTUNIDAD } from "@/features/crm/domain/oportunidadFormState";
 import type { OportunidadFormState } from "@/features/crm/hooks";
@@ -26,60 +25,52 @@ function renderRuta(inicial: Partial<OportunidadFormState>) {
       ? (fn as (f: OportunidadFormState) => OportunidadFormState)(estado)
       : (fn as OportunidadFormState);
   });
-  render(
-    <OportunidadRutaFields form={estado} set={vi.fn()} setForm={setForm} />,
-  );
+  render(<OportunidadRutaFields form={estado} set={vi.fn()} setForm={setForm} />);
   return { get: () => estado };
 }
 
+/** Abre el buscador de puertos del extremo pedido (orden de render: origen, destino). */
+function abrirPuerto(indice: number) {
+  const triggers = screen.getAllByRole("combobox");
+  // El primer combobox es el Select de modo.
+  fireEvent.click(triggers[indice + 1]);
+}
+
 describe("OportunidadRutaFields", () => {
-  it("selección de catálogo guarda texto e ID juntos", async () => {
-    const user = userEvent.setup();
+  it("selección de catálogo guarda texto e ID juntos", () => {
     const { get } = renderRuta({ modo: "Marítimo" });
-    await user.click(screen.getByRole("combobox", { name: /origen/i }));
-    await user.click(screen.getByText("Shanghai, China (CNSHA)"));
+    abrirPuerto(0);
+    fireEvent.click(screen.getByText("Shanghai, China (CNSHA)"));
     expect(get().origen).toBe("Shanghai, China (CNSHA)");
     expect(get().puerto_origen_id).toBe("p-sha");
   });
 
-  it("texto libre guarda el texto con ID null", async () => {
-    const user = userEvent.setup();
+  it("texto libre guarda el texto con ID null", () => {
     const { get } = renderRuta({ modo: "Marítimo" });
-    await user.click(screen.getByRole("combobox", { name: /destino/i }));
-    await user.type(screen.getByPlaceholderText(/buscar puerto/i), "Manzillo");
-    await user.click(screen.getByRole("button", { name: /usar/i }));
+    abrirPuerto(1);
+    fireEvent.change(screen.getByPlaceholderText(/buscar puerto/i), {
+      target: { value: "Manzillo" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /usar/i }));
     expect(get().destino).toBe("Manzillo");
     expect(get().puerto_destino_id).toBeNull();
   });
 
-  it("origen igual al destino no queda persistible: limpia el otro ID", async () => {
-    const user = userEvent.setup();
+  it("origen igual al destino no queda persistible: limpia el otro ID", () => {
     const { get } = renderRuta({
       modo: "Marítimo",
       destino: "Manzanillo, México (MXZLO)",
       puerto_destino_id: "p-zlo",
     });
-    await user.click(screen.getByRole("combobox", { name: /origen/i }));
-    await user.click(screen.getByText("Manzanillo, México (MXZLO)"));
+    abrirPuerto(0);
+    fireEvent.click(screen.getByText("Manzanillo, México (MXZLO)"));
     expect(get().puerto_origen_id).toBe("p-zlo");
     expect(get().puerto_destino_id).toBeNull();
   });
 
-  it("cambiar a un modo no marítimo limpia los IDs y conserva el texto", async () => {
-    const user = userEvent.setup();
-    const { get } = renderRuta({
-      modo: "Marítimo",
-      origen: "Shanghai, China (CNSHA)",
-      puerto_origen_id: "p-sha",
-      destino: "Manzanillo, México (MXZLO)",
-      puerto_destino_id: "p-zlo",
-    });
-    await user.click(screen.getByRole("combobox", { name: /modo/i }));
-    await user.click(screen.getByRole("option", { name: "Aéreo" }));
-    expect(get().modo).toBe("Aéreo");
-    expect(get().puerto_origen_id).toBeNull();
-    expect(get().puerto_destino_id).toBeNull();
-    expect(get().origen).toBe("Shanghai, China (CNSHA)");
+  it("en modo no marítimo usa texto libre y no muestra buscador de puertos", () => {
+    renderRuta({ modo: "Aéreo" });
+    expect(screen.getAllByRole("combobox")).toHaveLength(1);
   });
 
   it("modo legacy no reconocible muestra advertencia accionable", () => {
