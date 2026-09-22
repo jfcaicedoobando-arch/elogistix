@@ -10618,6 +10618,22 @@ export type Database = {
           puerto_origen_nombre: string
         }[]
       }
+      get_agente_rutas_v2: {
+        Args: never
+        Returns: {
+          activa: boolean
+          id: string
+          organization_id: string
+          puerto_destino_code: string
+          puerto_destino_country: string
+          puerto_destino_id: string
+          puerto_destino_nombre: string
+          puerto_origen_code: string
+          puerto_origen_country: string
+          puerto_origen_id: string
+          puerto_origen_nombre: string
+        }[]
+      }
       get_current_agente_context: {
         Args: never
         Returns: {
