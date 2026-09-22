@@ -27,6 +27,9 @@ export type OportunidadInput = {
   tipo_carga?: string;
   origen?: string;
   destino?: string;
+  /** Etapa 4 · identidad canónica del puerto (sólo Marítimo; `null` si no aplica). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
   notas?: string;
   vendedor_id?: string | null;
   vendedor_email?: string;
