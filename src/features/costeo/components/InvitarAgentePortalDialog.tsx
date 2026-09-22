@@ -124,8 +124,8 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
             />
           </div>
           <p className="text-body-sm text-muted-foreground">
-            Se enviará un correo para que establezca su contraseña. Si el correo internacional no
-            le llega el email, usa <strong>Asignar contraseña</strong>.
+            Se enviará un correo para que establezca su contraseña. Si no
+            le llega el correo, usa <strong>Asignar contraseña</strong>.
           </p>
         </TabsContent>
 
