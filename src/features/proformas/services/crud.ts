@@ -5,6 +5,7 @@ import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { logger } from "@/lib/observability/logger";
 import type { ProformaRow } from "./types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 export interface CrearProformaParams {
   organizationId: string;
