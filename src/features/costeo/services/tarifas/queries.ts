@@ -47,19 +47,27 @@ interface RawRow extends CosteoTarifa {
  * Identidad de puertos (Etapa 2) normalizada en un solo lugar: mantiene
  * `mapRow`/`fetchTarifasResumen` por debajo del límite de complejidad.
  */
+function idPuerto(p?: RawPuerto | null) {
+  return {
+    nombre: p?.name ?? "—",
+    code: p?.code ?? null,
+    country: p?.country ?? null,
+  };
+}
+
 function identidadPuertos(ruta?: {
   puerto_origen?: RawPuerto | null;
   puerto_destino?: RawPuerto | null;
 } | null) {
-  const o = ruta?.puerto_origen ?? null;
-  const d = ruta?.puerto_destino ?? null;
+  const o = idPuerto(ruta?.puerto_origen);
+  const d = idPuerto(ruta?.puerto_destino);
   return {
-    puerto_origen_nombre: o?.name ?? "—",
-    puerto_origen_code: o?.code ?? null,
-    puerto_origen_country: o?.country ?? null,
-    puerto_destino_nombre: d?.name ?? "—",
-    puerto_destino_code: d?.code ?? null,
-    puerto_destino_country: d?.country ?? null,
+    puerto_origen_nombre: o.nombre,
+    puerto_origen_code: o.code,
+    puerto_origen_country: o.country,
+    puerto_destino_nombre: d.nombre,
+    puerto_destino_code: d.code,
+    puerto_destino_country: d.country,
   };
 }
 
