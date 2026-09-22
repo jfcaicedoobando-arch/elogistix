@@ -22,6 +22,9 @@ interface OpLite {
   cliente_nombre?: string | null;
   origen?: string | null;
   destino?: string | null;
+  /** Etapa 4 · identidad canónica del puerto (sólo viaja en Marítimo). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
   etapa_id: string;
   modo: string;
 }
