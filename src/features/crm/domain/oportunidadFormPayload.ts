@@ -7,6 +7,7 @@
  */
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
+import { idsPuertoPersistibles } from "@/features/crm/domain/oportunidadRuta";
 
 const opt = (v: number) => (v > 0 ? v : null);
 
