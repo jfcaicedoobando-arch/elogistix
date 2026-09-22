@@ -7,12 +7,8 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { PortIdSelect } from "@/features/catalogos";
-import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { PortIdSelect, TipoContenedorSelect } from "@/features/catalogos";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -31,7 +27,6 @@ interface Props {
 export function BuscarTarifaDialog({
   open, onOpenChange, onElegir, selectLabel, initial,
 }: Props) {
-  const { data: tipos = [] } = useTiposContenedor();
   const { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha, mismoPuerto } =
     useFiltrosTarifa(open, initial);
 
@@ -88,14 +83,7 @@ export function BuscarTarifaDialog({
         </div>
         <div>
           <Label htmlFor="td-tipo">Tipo contenedor</Label>
-          <Select value={tipo} onValueChange={setTipo}>
-            <SelectTrigger id="td-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {tipos.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TipoContenedorSelect id="td-tipo" value={tipo} onChange={setTipo} />
         </div>
         <div>
           <Label htmlFor="td-fecha">Fecha</Label>

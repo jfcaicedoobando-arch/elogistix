@@ -6,15 +6,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { PortIdSelect } from "@/features/catalogos";
+import { PortIdSelect, TipoContenedorSelect } from "@/features/catalogos";
 
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
@@ -29,7 +21,6 @@ import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
-  const { data: tipos = [] } = useTiposContenedor();
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
   const [tipo, setTipo] = useState("");
@@ -87,18 +78,7 @@ export default function CosteoBuscar() {
 
           <div>
             <Label htmlFor="buscar-tipo">Tipo contenedor</Label>
-            <Select value={tipo} onValueChange={setTipo}>
-              <SelectTrigger id="buscar-tipo">
-                <SelectValue placeholder="Selecciona" />
-              </SelectTrigger>
-              <SelectContent>
-                {tipos.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <TipoContenedorSelect id="buscar-tipo" value={tipo} onChange={setTipo} />
           </div>
           <div>
             <Label htmlFor="buscar-fecha">Fecha</Label>

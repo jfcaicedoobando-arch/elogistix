@@ -102,8 +102,8 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
           </div>
         )}
         {avisoPpdNoObjeto && (
-          <Alert variant="warning" role="alert">
-            <AlertTriangle className="h-4 w-4" aria-hidden />
+          <Alert variant="info" role="status">
+            <Info className="h-4 w-4" aria-hidden />
             <AlertDescription>{AVISO_NO_OBJETO_PPD_REP}</AlertDescription>
           </Alert>
         )}
