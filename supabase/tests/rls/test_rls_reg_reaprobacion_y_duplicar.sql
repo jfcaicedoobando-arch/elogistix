@@ -30,6 +30,10 @@ DECLARE
   n       integer;
   rev     jsonb;
   tar_b   uuid := gen_random_uuid();
+  tar_a   uuid := gen_random_uuid();
+  ag_a    uuid := gen_random_uuid();
+  prov_a  uuid := gen_random_uuid();
+  ruta_a  uuid := gen_random_uuid();
   ag_b    uuid := gen_random_uuid();
   prov_b  uuid := gen_random_uuid();
   ruta_b  uuid := gen_random_uuid();
