@@ -145,11 +145,14 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
       />
 
       <SolicitudRutaFields
+        modo={modo}
         origen={origen} setOrigen={setOrigen}
         destino={destino} setDestino={setDestino}
+        puertoOrigenId={puertoOrigenId} puertoDestinoId={puertoDestinoId}
         intentoEnvio={intentoEnvio}
         origenVacio={origenVacio} destinoVacio={destinoVacio}
       />
+
 
       <FormDialogSection title="Carga" cols={1}>
         <div className="space-y-1.5">
