@@ -63,6 +63,8 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   modo: "",
   origen: "",
   destino: "",
+  puerto_origen_id: null,
+  puerto_destino_id: null,
   notas: "",
   vendedor_id: null,
   vendedor_email: "",
