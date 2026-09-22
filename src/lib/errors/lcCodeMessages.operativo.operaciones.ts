@@ -65,6 +65,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_COT_SIN_CLIENTE:
     "La cotización no tiene cliente asociado. Convierte el prospecto en cliente " +
     "antes de aceptarla o de crear el embarque.",
+  LC_COT_TARIFA_ORG_INVALIDA:
+    "La tarifa seleccionada no pertenece a esta organización. Elige una tarifa válida.",
+  LC_COT_PUERTOS_IGUALES:
+    "El puerto de origen y destino no pueden ser el mismo. Corrige la ruta antes de crear el embarque.",
   LC_TARIFA_RUTA_INCOMPATIBLE:
     "La tarifa que elegiste es de otra ruta que la cotización. " +
     "Selecciona una tarifa de la misma ruta o recotiza.",
