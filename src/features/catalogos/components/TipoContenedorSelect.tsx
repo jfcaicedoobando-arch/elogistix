@@ -26,13 +26,13 @@ export function TipoContenedorSelect({
 }: Props) {
   const { data: tipos = [] } = useTiposContenedor();
 
-  // Siempre un string estable presente en la lista; si aún no carga el
-  // catálogo dejamos `undefined` para que Radix muestre el placeholder.
+  // Siempre un string estable (el componente permanece controlado): `""`
+  // representa "sin selección" y Radix muestra el placeholder.
   const canonico = resolverIdCanonicoTipo(tipos, value);
   const visible = tipos.some((t) => t.id === canonico) ? canonico : "";
 
   return (
-    <Select value={visible || undefined} onValueChange={onChange} disabled={disabled}>
+    <Select value={visible} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
