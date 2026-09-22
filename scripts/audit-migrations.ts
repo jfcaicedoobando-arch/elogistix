@@ -246,8 +246,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *     authenticated` para la factura y `REVOKE ALL … FROM PUBLIC` + `GRANT
  *     EXECUTE … TO authenticated, service_role` para el REP). El archivo original
  *     queda como legacy auditado e inmutable.
+ * 11. FIX-H6-11 (2026-09-22): `20260922040444_b6c74ab1-c84c-4eb1-937d-f14805acb608.sql`
+ *     (Etapa 3 · identidad de puertos en cotizaciones/embarques) creó
+ *     `_cotizaciones_sync_puertos_tarifa` (SECURITY DEFINER, trigger) sin el
+ *     bloque REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *     `20260922041658_5a1561e3-0aeb-40a0-8ff1-030e76972d11.sql` re-aplica los
+ *     permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
+ *     authenticated, service_role`). El archivo original queda como legacy
+ *     auditado e inmutable.
  */
-const BASELINE = "20260919015150";
+const BASELINE = "20260922041658";
+
 
 
 
