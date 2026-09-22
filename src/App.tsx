@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
+import { RouteScrollReset } from "./components/layout/RouteScrollReset";
 import { BreadcrumbProvider } from "./lib/contexts/BreadcrumbContext";
 
 import { AppRoutes } from "./routes";
@@ -56,6 +57,7 @@ const App = () => {
       <ErrorDetailsDialog />
       <BrowserRouter>
         <RouteToastCleanup />
+        <RouteScrollReset />
         <NuqsAdapter>
           <BreadcrumbProvider>
             <SentryErrorContextSync />
