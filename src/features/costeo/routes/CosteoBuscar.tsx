@@ -114,7 +114,6 @@ export default function CosteoBuscar() {
           </p>
         </Card>
       ) : !origen || !destino || !tipo ? (
-
         <Card>
           <EmptyStateInline
             icon={MapPinned}
