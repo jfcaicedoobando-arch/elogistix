@@ -19097,6 +19097,25 @@ CREATE FUNCTION public.get_agente_rutas() RETURNS TABLE(id uuid, organization_id
     LEFT JOIN public.puertos pd ON pd.id = r.puerto_destino_id
    WHERE r.activa = true;
 $$;
+CREATE FUNCTION public.get_agente_rutas_v2() RETURNS TABLE(id uuid, organization_id uuid, puerto_origen_id uuid, puerto_destino_id uuid, activa boolean, puerto_origen_nombre text, puerto_destino_nombre text, puerto_origen_code text, puerto_origen_country text, puerto_destino_code text, puerto_destino_country text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT r.id, r.organization_id, r.puerto_origen_id, r.puerto_destino_id, r.activa,
+         po.name AS puerto_origen_nombre,
+         pd.name AS puerto_destino_nombre,
+         po.code AS puerto_origen_code,
+         po.country AS puerto_origen_country,
+         pd.code AS puerto_destino_code,
+         pd.country AS puerto_destino_country
+    FROM public.costeo_rutas r
+    JOIN public.agente_users au ON au.user_id = auth.uid()
+    JOIN public.costeo_agentes a ON a.id = au.agente_id
+                                 AND a.organization_id = r.organization_id
+    LEFT JOIN public.puertos po ON po.id = r.puerto_origen_id
+    LEFT JOIN public.puertos pd ON pd.id = r.puerto_destino_id
+   WHERE r.activa = true;
+$$;
 CREATE FUNCTION public.get_current_agente_context() RETURNS TABLE(agente_id uuid, organization_id uuid, proveedor_id uuid, agente_nombre text, organizacion_nombre text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -35994,6 +36013,9 @@ GRANT ALL ON FUNCTION public.generar_token_proforma(p_proforma_id uuid, p_dias_v
 REVOKE ALL ON FUNCTION public.get_agente_rutas() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_agente_rutas() TO authenticated;
 GRANT ALL ON FUNCTION public.get_agente_rutas() TO service_role;
+REVOKE ALL ON FUNCTION public.get_agente_rutas_v2() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_agente_rutas_v2() TO authenticated;
+GRANT ALL ON FUNCTION public.get_agente_rutas_v2() TO service_role;
 REVOKE ALL ON FUNCTION public.get_current_agente_context() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_current_agente_context() TO authenticated;
 GRANT ALL ON FUNCTION public.get_current_agente_context() TO service_role;
