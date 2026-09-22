@@ -10,7 +10,7 @@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useTiposContenedor } from "@/features/catalogos/hooks/useTiposContenedor";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolverIdCanonicoTipo } from "@/features/catalogos/utils/tiposContenedorCanonico";
 
 interface Props {
