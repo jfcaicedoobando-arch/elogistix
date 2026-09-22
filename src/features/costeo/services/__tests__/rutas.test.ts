@@ -122,3 +122,51 @@ describe("costeo/services/rutas", () => {
     expect(call?.ops).toContain("delete");
   });
 });
+
+/**
+ * Etapa 2 — el servicio de rutas mapea UN/LOCODE y país de ambos puertos.
+ * Pasos: 1) pide name/code/country al catálogo; 2) mapea los seis campos;
+ * 3) filas legacy sin code/country quedan en null (no undefined).
+ */
+describe("costeo/services/rutas · identidad de puertos (Etapa 2)", () => {
+  it("mapea code y country de origen y destino", async () => {
+    mock.setTableResult("costeo_rutas", {
+      data: [
+        {
+          id: "r-nl",
+          puerto_origen_id: "po",
+          puerto_destino_id: "pd",
+          puerto_origen: { name: "Rotterdam", code: "NLRTM", country: "Países Bajos" },
+          puerto_destino: { name: "Veracruz", code: "MXVER", country: "México" },
+          costeo_tarifas: [],
+        },
+      ],
+      error: null,
+    });
+    const [ruta] = await fetchCosteoRutas(ORG);
+    expect(ruta.puerto_origen_nombre).toBe("Rotterdam");
+    expect(ruta.puerto_origen_code).toBe("NLRTM");
+    expect(ruta.puerto_origen_country).toBe("Países Bajos");
+    expect(ruta.puerto_destino_code).toBe("MXVER");
+    expect(ruta.puerto_destino_country).toBe("México");
+  });
+
+  it("filas legacy sin code/country devuelven null", async () => {
+    mock.setTableResult("costeo_rutas", {
+      data: [
+        {
+          id: "r-legacy",
+          puerto_origen_id: "po",
+          puerto_destino_id: "pd",
+          puerto_origen: { name: "Shanghai" },
+          puerto_destino: { name: "Manzanillo" },
+          costeo_tarifas: [],
+        },
+      ],
+      error: null,
+    });
+    const [ruta] = await fetchCosteoRutas(ORG);
+    expect(ruta.puerto_origen_code).toBeNull();
+    expect(ruta.puerto_destino_country).toBeNull();
+  });
+});

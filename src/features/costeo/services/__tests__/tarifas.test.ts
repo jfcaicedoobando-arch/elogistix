@@ -233,3 +233,53 @@ describe("costeo/services/tarifas", () => {
     });
   });
 });
+
+/**
+ * Etapa 2 — las queries de tarifas transportan UN/LOCODE y país.
+ * Pasos: 1) mapea los cuatro campos nuevos; 2) legacy sin datos → null.
+ */
+describe("costeo/services/tarifas · identidad de puertos (Etapa 2)", () => {
+  it("mapea code y country de ambos puertos", async () => {
+    mock.setTableResult("costeo_tarifas", {
+      data: [{
+        id: "t-nl",
+        flete_base: 1000,
+        costeo_agentes: { nombre: "Agente" },
+        navieras: { name: "MSC" },
+        tipos_contenedor: { name: "40HC" },
+        costeo_rutas: {
+          puerto_origen: { name: "Rotterdam", code: "NLRTM", country: "Países Bajos" },
+          puerto_destino: { name: "Veracruz", code: "MXVER", country: "México" },
+        },
+        recargos: [],
+      }],
+      error: null,
+    });
+    const [row] = await fetchCosteoTarifas(ORG);
+    expect(row.puerto_origen_code).toBe("NLRTM");
+    expect(row.puerto_origen_country).toBe("Países Bajos");
+    expect(row.puerto_destino_code).toBe("MXVER");
+    expect(row.puerto_destino_country).toBe("México");
+  });
+
+  it("tarifa legacy sin code/country queda en null", async () => {
+    mock.setTableResult("costeo_tarifas", {
+      data: [{
+        id: "t-legacy",
+        flete_base: 900,
+        costeo_agentes: { nombre: "Agente" },
+        navieras: { name: "COSCO" },
+        tipos_contenedor: { name: "20'" },
+        costeo_rutas: {
+          puerto_origen: { name: "Shanghai" },
+          puerto_destino: { name: "Manzanillo" },
+        },
+        recargos: [],
+      }],
+      error: null,
+    });
+    const [row] = await fetchCosteoTarifas(ORG);
+    expect(row.puerto_origen_code).toBeNull();
+    expect(row.puerto_destino_code).toBeNull();
+  });
+});
