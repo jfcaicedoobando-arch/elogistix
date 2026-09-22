@@ -13,7 +13,7 @@ import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { etiquetaRutaTexto } from "@/features/costeo";
-import { formatFechaSegura } from "@/lib/formatters/datesSegura";
+import { formatFechaDia } from "@/lib/formatters/dates";
 import { etiquetaExpedienteAgente } from "./_sections/agenteEmbarqueLabels";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
@@ -62,7 +62,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.etd),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => formatFechaSegura(row.original.etd),
+        cell: ({ row }) => formatFechaDia(row.original.etd),
       },
       {
         id: "eta",
@@ -71,7 +71,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.eta),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => formatFechaSegura(row.original.eta),
+        cell: ({ row }) => formatFechaDia(row.original.eta),
       },
       statusColumn<EmbarqueAgente>({
         domain: "embarque",
