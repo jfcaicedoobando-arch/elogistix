@@ -45,8 +45,8 @@ describe("crear_embarque_borrador_core · P1-A texto íntegro", () => {
 
   it("el candidato de UN/LOCODE sólo se usa para coincidencia exacta contra puertos.code", () => {
     const usos = SQL.match(/v_origen_code/g) ?? [];
-    // asignación + comparación exacta + guarda de NULL (3 usos máximo)
-    expect(usos.length).toBeLessThanOrEqual(3);
+    // declaración + asignación + guarda de NULL + comparación exacta
+    expect(usos.length).toBeLessThanOrEqual(4);
     expect(SQL).toMatch(/upper\(btrim\(p\.code\)\)\s*=\s*upper\(btrim\(v_origen_code\)\)/);
   });
 });
