@@ -19,4 +19,8 @@ export const LC_CODE_MESSAGES_PORTAL: Record<string, string> = {
     "El embarque del aviso no pertenece a este cliente.",
   LC_NOTIF_URL_NO_PERMITIDA:
     "El enlace del aviso debe apuntar a una pantalla del portal del cliente.",
+  LC_PORTAL_PUERTOS_IGUALES:
+    "El puerto de origen y destino deben ser distintos. Elige dos puertos diferentes.",
+  LC_PORTAL_PUERTO_INVALIDO:
+    "Uno de los puertos elegidos no está disponible. Vuelve a seleccionarlo del catálogo o escribe un nombre distinto.",
 };
