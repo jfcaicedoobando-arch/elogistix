@@ -107,7 +107,14 @@ export default function CosteoBuscar() {
         </div>
       </Card>
 
-      {!origen || !destino || !tipo ? (
+      {mismoPuerto ? (
+        <Card className="p-4">
+          <p className="text-body text-destructive" role="alert">
+            El puerto de origen y el de destino deben ser distintos.
+          </p>
+        </Card>
+      ) : !origen || !destino || !tipo ? (
+
         <Card>
           <EmptyStateInline
             icon={MapPinned}
