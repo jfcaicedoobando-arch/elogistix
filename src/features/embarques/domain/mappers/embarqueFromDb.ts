@@ -75,7 +75,9 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   consignatario: "", consignatarioManual: "", incoterm: "FOB", descripcionMercancia: "",
   pesoKg: "", volumenM3: "", piezas: "", tipoCarga: "Carga General",
   msdsArchivo: null, subiendoMsds: false,
-  puertoOrigen: "", puertoDestino: "", naviera: "", navieraId: null,
+  puertoOrigen: "", puertoDestino: "", puertoOrigenId: null, puertoDestinoId: null,
+  naviera: "", navieraId: null,
+
   agente: "", agenteId: null, tipoServicio: "",
   contenedor: "", tipoContenedor: "", contenedores: [], blMaster: "", blHouse: "",
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
