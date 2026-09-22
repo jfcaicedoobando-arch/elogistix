@@ -62,10 +62,18 @@ export interface CosteoRutaInput {
 
 export class CosteoRutaDuplicadaError extends Error {
   constructor() {
-    super("Esta ruta CN → MX ya está registrada en tu organización.");
+    super("Esta ruta marítima ya está registrada en tu organización.");
     this.name = "CosteoRutaDuplicadaError";
   }
 }
+
+export class CosteoRutaMismoPuertoError extends Error {
+  constructor() {
+    super("El puerto de origen y el de destino deben ser distintos.");
+    this.name = "CosteoRutaMismoPuertoError";
+  }
+}
+
 
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
