@@ -8426,8 +8426,12 @@ export type Database = {
           naviera_nombre: string | null
           naviera_tiene_carta_garantia: boolean | null
           organization_id: string | null
+          puerto_destino_code: string | null
+          puerto_destino_country: string | null
           puerto_destino_id: string | null
           puerto_destino_nombre: string | null
+          puerto_origen_code: string | null
+          puerto_origen_country: string | null
           puerto_origen_id: string | null
           puerto_origen_nombre: string | null
           recargos_total: number | null
@@ -10619,8 +10623,12 @@ export type Database = {
           naviera_nombre: string | null
           naviera_tiene_carta_garantia: boolean | null
           organization_id: string | null
+          puerto_destino_code: string | null
+          puerto_destino_country: string | null
           puerto_destino_id: string | null
           puerto_destino_nombre: string | null
+          puerto_origen_code: string | null
+          puerto_origen_country: string | null
           puerto_origen_id: string | null
           puerto_origen_nombre: string | null
           recargos_total: number | null
@@ -10669,8 +10677,12 @@ export type Database = {
           naviera_nombre: string | null
           naviera_tiene_carta_garantia: boolean | null
           organization_id: string | null
+          puerto_destino_code: string | null
+          puerto_destino_country: string | null
           puerto_destino_id: string | null
           puerto_destino_nombre: string | null
+          puerto_origen_code: string | null
+          puerto_origen_country: string | null
           puerto_origen_id: string | null
           puerto_origen_nombre: string | null
           recargos_total: number | null
