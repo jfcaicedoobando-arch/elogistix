@@ -3656,6 +3656,8 @@ export type Database = {
           origen: string
           probabilidad: number
           proveedor_actual: string | null
+          puerto_destino_id: string | null
+          puerto_origen_id: string | null
           riesgos_objeciones: string | null
           rutas: string | null
           sector: string | null
@@ -3704,6 +3706,8 @@ export type Database = {
           origen?: string
           probabilidad?: number
           proveedor_actual?: string | null
+          puerto_destino_id?: string | null
+          puerto_origen_id?: string | null
           riesgos_objeciones?: string | null
           rutas?: string | null
           sector?: string | null
@@ -3752,6 +3756,8 @@ export type Database = {
           origen?: string
           probabilidad?: number
           proveedor_actual?: string | null
+          puerto_destino_id?: string | null
+          puerto_origen_id?: string | null
           riesgos_objeciones?: string | null
           rutas?: string | null
           sector?: string | null
@@ -3790,6 +3796,20 @@ export type Database = {
             columns: ["motivo_perdida_id"]
             isOneToOne: false
             referencedRelation: "crm_motivos_perdida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_puerto_destino_id_fkey"
+            columns: ["puerto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_puerto_origen_id_fkey"
+            columns: ["puerto_origen_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
             referencedColumns: ["id"]
           },
         ]
