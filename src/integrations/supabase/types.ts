@@ -2717,6 +2717,8 @@ export type Database = {
           prospecto_email: string
           prospecto_empresa: string
           prospecto_telefono: string
+          puerto_destino_id: string | null
+          puerto_origen_id: string | null
           punto_intermedio: string | null
           revalidacion_delta_jsonb: Json | null
           revalidacion_resuelta_en: string | null
@@ -2807,6 +2809,8 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          puerto_destino_id?: string | null
+          puerto_origen_id?: string | null
           punto_intermedio?: string | null
           revalidacion_delta_jsonb?: Json | null
           revalidacion_resuelta_en?: string | null
@@ -2897,6 +2901,8 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          puerto_destino_id?: string | null
+          puerto_origen_id?: string | null
           punto_intermedio?: string | null
           revalidacion_delta_jsonb?: Json | null
           revalidacion_resuelta_en?: string | null
@@ -2977,6 +2983,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_puerto_destino_id_fkey"
+            columns: ["puerto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_puerto_origen_id_fkey"
+            columns: ["puerto_origen_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
             referencedColumns: ["id"]
           },
           {
@@ -4619,7 +4639,9 @@ export type Database = {
           peso_kg: number
           piezas: number
           puerto_destino: string | null
+          puerto_destino_id: string | null
           puerto_origen: string | null
+          puerto_origen_id: string | null
           reabierto_at: string | null
           reabierto_motivo: string | null
           reabierto_por: string | null
@@ -4701,7 +4723,9 @@ export type Database = {
           peso_kg?: number
           piezas?: number
           puerto_destino?: string | null
+          puerto_destino_id?: string | null
           puerto_origen?: string | null
+          puerto_origen_id?: string | null
           reabierto_at?: string | null
           reabierto_motivo?: string | null
           reabierto_por?: string | null
@@ -4783,7 +4807,9 @@ export type Database = {
           peso_kg?: number
           piezas?: number
           puerto_destino?: string | null
+          puerto_destino_id?: string | null
           puerto_origen?: string | null
+          puerto_origen_id?: string | null
           reabierto_at?: string | null
           reabierto_motivo?: string | null
           reabierto_por?: string | null
@@ -4846,6 +4872,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_puerto_destino_id_fkey"
+            columns: ["puerto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_puerto_origen_id_fkey"
+            columns: ["puerto_origen_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
             referencedColumns: ["id"]
           },
           {
