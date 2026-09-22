@@ -8,11 +8,17 @@ import { usePuertos } from "@/features/catalogos/hooks";
 
 interface PortSelectProps {
   value: string;
-  onValueChange: (value: string) => void;
+  /**
+   * Etapa 3: además del texto visible se emite el ID del puerto de catálogo
+   * seleccionado (`null` cuando el usuario escribió texto libre). El segundo
+   * argumento es opcional para los consumidores que sólo necesitan el texto.
+   */
+  onValueChange: (value: string, puertoId: string | null) => void;
   placeholder?: string;
   className?: string;
   "aria-invalid"?: boolean | undefined;
 }
+
 
 function formatPort(port: { code: string; name: string; country: string }) {
   return `${port.name}, ${port.country} (${port.code})`;
