@@ -17,6 +17,12 @@ interface PortSelectProps {
   placeholder?: string;
   className?: string;
   "aria-invalid"?: boolean | undefined;
+  /** Etapa 5: accesibilidad e integración con Label/errores del formulario. */
+  id?: string;
+  "aria-describedby"?: string | undefined;
+  disabled?: boolean;
+  /** Etapa 5: puerto ya usado en el otro extremo de la ruta; no se lista. */
+  excludeId?: string | null;
 }
 
 
@@ -24,21 +30,36 @@ function formatPort(port: { code: string; name: string; country: string }) {
   return `${port.name}, ${port.country} (${port.code})`;
 }
 
-export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto", className, "aria-invalid": ariaInvalid }: PortSelectProps) {
+export default function PortSelect({
+  value,
+  onValueChange,
+  placeholder = "Seleccionar puerto",
+  className,
+  "aria-invalid": ariaInvalid,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  disabled,
+  excludeId,
+}: PortSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const { data: ports = [] } = usePuertos();
+  const { data: todos = [] } = usePuertos();
+  const ports = excludeId ? todos.filter((p) => p.id !== excludeId) : todos;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}
           aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
+          disabled={disabled}
           className={cn("w-full justify-between font-normal", className)}
         >
+
           {value ? <span className="truncate">{value}</span> : <span className="text-muted-foreground">{placeholder}</span>}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
