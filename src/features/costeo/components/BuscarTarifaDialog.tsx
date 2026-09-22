@@ -1,7 +1,7 @@
 /**
  * Dialog reutilizable para buscar Top 3 tarifas marítimas y opcionalmente
  * devolver la elegida al caller (usado en /costeo/buscar y en wizard cotización).
- * Migrado a FormDialogShell (Ola 2 — Costeo).
+ * Etapa 1 rutas globales: acepta cualquier par de puertos del catálogo.
  */
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
+import { PortIdSelect } from "@/features/catalogos";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { ResultadosBody } from "./BuscarTarifaDialog.ResultadosBody";
-import {
-  PAISES_CN, PAISES_MX, filtrarPorPais, useFiltrosTarifa,
-  type FiltrosTarifaInitial,
-} from "./BuscarTarifaDialog.helpers";
+import { useFiltrosTarifa, type FiltrosTarifaInitial } from "./BuscarTarifaDialog.helpers";
 
 interface Props {
   open: boolean;
@@ -33,9 +31,8 @@ interface Props {
 export function BuscarTarifaDialog({
   open, onOpenChange, onElegir, selectLabel, initial,
 }: Props) {
-  const { data: puertos = [] } = usePuertos();
   const { data: tipos = [] } = useTiposContenedor();
-  const { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha } =
+  const { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha, mismoPuerto } =
     useFiltrosTarifa(open, initial);
 
   const {
@@ -43,22 +40,17 @@ export function BuscarTarifaDialog({
     tipoContenedorIds = [],
   } = useTopTarifas({
     puertoOrigenId: origen,
-    puertoDestinoId: destino,
+    puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorId: tipo,
     fecha,
   });
 
   const { diagnostico } = useDiagnosticoTarifas({
     puertoOrigenId: origen,
-    puertoDestinoId: destino,
+    puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorIds,
-    enabled: !isFetching && !error && tarifas.length === 0,
+    enabled: !mismoPuerto && !isFetching && !error && tarifas.length === 0,
   });
-
-  const puertosCN = filtrarPorPais(puertos, PAISES_CN);
-  const puertosMX = filtrarPorPais(puertos, PAISES_MX);
-  const puertosOrigenList = puertosCN.length ? puertosCN : puertos;
-  const puertosDestinoList = puertosMX.length ? puertosMX : puertos;
 
   return (
     <FormDialogShell
@@ -76,26 +68,23 @@ export function BuscarTarifaDialog({
     >
       <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <div>
-          <Label htmlFor="td-origen">Puerto origen (CN)</Label>
-          <Select value={origen} onValueChange={setOrigen}>
-            <SelectTrigger id="td-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {puertosOrigenList.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="td-origen">Puerto de origen</Label>
+          <PortIdSelect
+            id="td-origen"
+            value={origen}
+            onChange={setOrigen}
+            placeholder="Buscar puerto de origen…"
+          />
         </div>
         <div>
-          <Label htmlFor="td-destino">Puerto destino (MX)</Label>
-          <Select value={destino} onValueChange={setDestino}>
-            <SelectTrigger id="td-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {puertosDestinoList.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="td-destino">Puerto de destino</Label>
+          <PortIdSelect
+            id="td-destino"
+            value={destino}
+            onChange={setDestino}
+            excludeId={origen}
+            placeholder="Buscar puerto de destino…"
+          />
         </div>
         <div>
           <Label htmlFor="td-tipo">Tipo contenedor</Label>
@@ -114,14 +103,20 @@ export function BuscarTarifaDialog({
         </div>
       </div>
 
-      <ResultadosBody
-        origen={origen} destino={destino} tipo={tipo}
-        isFetching={isFetching} tarifas={tarifas}
-        error={error} onRetry={() => void refetch()} isRefetching={isRefetching}
-        onElegir={onElegir} onOpenChange={onOpenChange}
-        selectLabel={selectLabel}
-        diagnostico={diagnostico}
-      />
+      {mismoPuerto ? (
+        <p className="text-body text-destructive" role="alert">
+          El puerto de origen y el de destino deben ser distintos.
+        </p>
+      ) : (
+        <ResultadosBody
+          origen={origen} destino={destino} tipo={tipo}
+          isFetching={isFetching} tarifas={tarifas}
+          error={error} onRetry={() => void refetch()} isRefetching={isRefetching}
+          onElegir={onElegir} onOpenChange={onOpenChange}
+          selectLabel={selectLabel}
+          diagnostico={diagnostico}
+        />
+      )}
     </FormDialogShell>
   );
 }
