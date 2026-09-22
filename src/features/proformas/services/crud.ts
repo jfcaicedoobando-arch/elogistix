@@ -5,6 +5,7 @@ import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { logger } from "@/lib/observability/logger";
 import type { ProformaRow } from "./types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 export interface CrearProformaParams {
   organizationId: string;
@@ -24,7 +25,9 @@ export interface CrearProformaParams {
 
 export async function crearProforma(params: CrearProformaParams): Promise<ProformaRow> {
   if (params.conceptoIds.length === 0) {
-    throw new Error("Debe seleccionar al menos un concepto");
+    // Sentry JAVASCRIPT-REACT-2D: validación de captura, no un bug. La UI ya
+    // lo muestra como aviso; `ReglaNegocioError` evita crear issues.
+    throw new ReglaNegocioError("Debe seleccionar al menos un concepto");
   }
 
   // B-1: RPC atómica — update aplica_iva + insert proforma + vincular conceptos en una sola transacción.
