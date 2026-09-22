@@ -19,19 +19,26 @@ const SELECT = `
   navieras:naviera_id(name),
   tipos_contenedor:tipo_contenedor_id(name),
   costeo_rutas:ruta_id(
-    puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name),
-    puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
+    puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name, code, country),
+    puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name, code, country)
   ),
   recargos:costeo_tarifa_recargos(id, tarifa_id, concepto, lado, monto, moneda, incluido_en_total)
 `;
+
+/** Puerto con identidad completa (Etapa 2): nombre + UN/LOCODE + país. */
+interface RawPuerto {
+  name: string;
+  code: string | null;
+  country: string | null;
+}
 
 interface RawRow extends CosteoTarifa {
   costeo_agentes?: { nombre: string } | null;
   navieras?: { name: string } | null;
   tipos_contenedor?: { name: string } | null;
   costeo_rutas?: {
-    puerto_origen?: { name: string } | null;
-    puerto_destino?: { name: string } | null;
+    puerto_origen?: RawPuerto | null;
+    puerto_destino?: RawPuerto | null;
   } | null;
   recargos?: CosteoTarifaRecargo[];
 }
@@ -47,7 +54,11 @@ function mapRow(r: RawRow): CosteoTarifaRow {
     naviera_nombre: r.navieras?.name ?? "—",
     tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
     puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
+    puerto_origen_code: r.costeo_rutas?.puerto_origen?.code ?? null,
+    puerto_origen_country: r.costeo_rutas?.puerto_origen?.country ?? null,
     puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+    puerto_destino_code: r.costeo_rutas?.puerto_destino?.code ?? null,
+    puerto_destino_country: r.costeo_rutas?.puerto_destino?.country ?? null,
     recargos,
     recargos_total,
     total_comparable: Number(r.flete_base || 0) + recargos_total,
@@ -85,7 +96,11 @@ export interface TarifaResumen {
   id: string;
   naviera_nombre: string;
   puerto_origen_nombre: string;
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
   puerto_destino_nombre: string;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
   tipo_contenedor_nombre: string;
   vigente_desde: string | null;
   vigente_hasta: string | null;
@@ -98,8 +113,8 @@ interface RawResumenRow {
   navieras?: { name: string } | null;
   tipos_contenedor?: { name: string } | null;
   costeo_rutas?: {
-    puerto_origen?: { name: string } | null;
-    puerto_destino?: { name: string } | null;
+    puerto_origen?: RawPuerto | null;
+    puerto_destino?: RawPuerto | null;
   } | null;
 }
 
@@ -115,8 +130,8 @@ export async function fetchTarifasResumen(
       navieras:naviera_id(name),
       tipos_contenedor:tipo_contenedor_id(name),
       costeo_rutas:ruta_id(
-        puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name),
-        puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
+        puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name, code, country),
+        puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name, code, country)
       )
     `)
     .in("id", unicos);
@@ -130,7 +145,11 @@ export async function fetchTarifasResumen(
       naviera_nombre: r.navieras?.name ?? "—",
       tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
       puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
+      puerto_origen_code: r.costeo_rutas?.puerto_origen?.code ?? null,
+      puerto_origen_country: r.costeo_rutas?.puerto_origen?.country ?? null,
       puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+      puerto_destino_code: r.costeo_rutas?.puerto_destino?.code ?? null,
+      puerto_destino_country: r.costeo_rutas?.puerto_destino?.country ?? null,
       vigente_desde: r.vigente_desde,
       vigente_hasta: r.vigente_hasta,
     };
