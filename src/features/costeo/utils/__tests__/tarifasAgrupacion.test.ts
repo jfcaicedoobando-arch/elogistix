@@ -5,6 +5,8 @@ const TODAY = "2026-07-29";
 
 function fila(overrides: Partial<FilaAgrupable> = {}): FilaAgrupable {
   return {
+    ruta_id: "ruta-1",
+    tipo_contenedor_id: "tc-40hc",
     puerto_origen_nombre: "MZT",
     puerto_destino_nombre: "SHA",
     tipo_contenedor_nombre: "40HC",

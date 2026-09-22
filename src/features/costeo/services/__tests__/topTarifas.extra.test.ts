@@ -17,7 +17,9 @@ const baseParams: TopTarifasParams = { puertoOrigenId: "po-1", puertoDestinoId: 
 function makeTopRow(o: Partial<TopTarifaRow> = {}): TopTarifaRow {
   return { id:"t-1", organization_id:"org-1", agente_id:"ag-1", agente_nombre:"Agente X", dias_credito:30,
     naviera_id:"nav-1", naviera_nombre:"Nav Y", ruta_id:"ru-1", puerto_origen_id:"po-1", puerto_destino_id:"pd-1",
-    puerto_origen_nombre:"SHA", puerto_destino_nombre:"MZT", tipo_contenedor_id:"tc-1", tipo_contenedor_nombre:"20'",
+    puerto_origen_nombre:"SHA", puerto_destino_nombre:"MZT",
+    puerto_origen_code:"CNSHA", puerto_origen_country:"China",
+    puerto_destino_code:"MXZLO", puerto_destino_country:"México", tipo_contenedor_id:"tc-1", tipo_contenedor_nombre:"20'",
     moneda:"USD", flete_base:1000, recargos_total:200, total_comparable:1200, dias_libres_demoras:14,
     transit_time_dias:28, vigente_desde:"2026-01-01", vigente_hasta:"2026-12-31", estado:"vigente",
     naviera_condicion_id:null, naviera_tiene_carta_garantia:false, naviera_carta_garantia_vigente_hasta:null,
