@@ -115,7 +115,7 @@ export default function OportunidadFormFields({
       </div>
 
       <OportunidadMontosFields form={form} set={set} esGanada={esGanada} />
-      <OportunidadRutaFields form={form} set={set} />
+      <OportunidadRutaFields form={form} set={set} setForm={setForm} />
       <OportunidadMetasFields form={form} set={set} />
       <div className="sm:col-span-2">
         <VendedorSelect
