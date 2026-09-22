@@ -54,6 +54,18 @@ BEGIN
   IF v_solicitar !~* 'portal_solicitar_cotizacion_v2' THEN
     RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion v1 no delega en v2 (drift Etapa 5)';
   END IF;
+  -- Fix CI/RLS: v1 es wrapper SECURITY INVOKER; v2 conserva DEFINER + tenant.
+  IF (SELECT p.prosecdef FROM pg_proc p
+      WHERE p.oid = 'public.portal_solicitar_cotizacion(uuid,modo_transporte,tipo_operacion,text,text,text,text,text,text)'::regprocedure) THEN
+    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion v1 debe ser SECURITY INVOKER';
+  END IF;
+  IF NOT (SELECT p.prosecdef FROM pg_proc p
+      WHERE p.oid = 'public.portal_solicitar_cotizacion_v2(uuid,modo_transporte,tipo_operacion,text,text,text,text,text,text,uuid,uuid)'::regprocedure) THEN
+    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion_v2 debe ser SECURITY DEFINER';
+  END IF;
+  IF v_solicitar_v2 !~* 'client_users' OR v_solicitar_v2 !~* 'organization_id' THEN
+    RAISE EXCEPTION 'FIX3 FAIL: portal_solicitar_cotizacion_v2 sin ancla tenant (client_users/organization_id)';
+  END IF;
   IF v_obtener !~* 'check_ratelimit' THEN
     RAISE EXCEPTION 'FIX3 FAIL: portal_obtener_proforma_por_token sin check_ratelimit (drift BL-11)';
   END IF;
