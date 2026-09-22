@@ -50,3 +50,14 @@ export function aplicarSeleccionPuerto(
 
 export const MSG_TARIFA_DESVINCULADA =
   "Cambiaste la ruta, así que la tarifa vinculada ya no aplica. Elige una tarifa para la nueva ruta; los costos que ya capturaste se conservan.";
+
+/**
+ * P2 · El aviso "elige una tarifa" sólo tiene sentido mientras la cotización
+ * siga sin tarifa. Al aplicar una nueva tarifa válida debe desaparecer.
+ */
+export function debeMostrarAvisoTarifa(
+  desvinculada: boolean,
+  tarifaId: string | null | undefined,
+): boolean {
+  return desvinculada && !tarifaId;
+}
