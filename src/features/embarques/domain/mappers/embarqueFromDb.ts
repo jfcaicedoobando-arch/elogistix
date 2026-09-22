@@ -27,6 +27,10 @@ export interface EmbarqueFormValues {
   subiendoMsds: boolean;
   puertoOrigen: string;
   puertoDestino: string;
+  /** Etapa 3 — identidad exacta del puerto de catálogo (null en texto libre). */
+  puertoOrigenId: string | null;
+  puertoDestinoId: string | null;
+
   naviera: string;
   navieraId: string | null;
   tipoServicio: string;
