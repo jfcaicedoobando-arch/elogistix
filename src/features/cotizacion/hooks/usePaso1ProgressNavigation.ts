@@ -46,8 +46,17 @@ export function usePaso1ProgressNavigation(sectionIds: string[]) {
   const asideRef = useRef<HTMLElement>(null);
   const availableHeight = useAvailableHeight(asideRef);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // JAVASCRIPT-REACT-6N: `sectionIds` llega como arreglo nuevo en cada render
+  // (se deriva del estado del formulario), así que el efecto se re-suscribía y
+  // volvía a llamar `setActiveId` en cada tecleo, alimentando cascadas de
+  // actualización ("Maximum update depth exceeded"). La identidad estable es la
+  // lista de ids, no la referencia del arreglo.
+  const idsKey = sectionIds.join("|");
+  const idsRef = useRef<string[]>(sectionIds);
+  idsRef.current = sectionIds;
 
   useEffect(() => {
+    const sectionIds = idsRef.current;
     let frame = 0;
     const calculate = () => {
       frame = 0;
@@ -79,7 +88,7 @@ export function usePaso1ProgressNavigation(sectionIds: string[]) {
       window.removeEventListener("scroll", schedule, true);
       window.removeEventListener("resize", schedule);
     };
-  }, [sectionIds]);
+  }, [idsKey]);
 
   const navigateTo = (id: string) => {
     const element = document.getElementById(id);

@@ -62,8 +62,8 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
   );
 
   useEffect(() => {
-    if (!tarifaHasta || !validezPropuesta) return;
-    if (validezPropuesta > tarifaHasta) {
+    if (!tarifaHasta || !(validezPropuesta instanceof Date)) return;
+    if (validezPropuesta.getTime() > tarifaHasta.getTime()) {
       setValue("validezPropuesta", tarifaHasta, { shouldValidate: true, shouldDirty: true });
     }
   }, [tarifaHasta, validezPropuesta, setValue]);
