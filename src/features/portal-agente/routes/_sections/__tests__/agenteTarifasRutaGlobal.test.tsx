@@ -44,33 +44,39 @@ const esVenezuela = fila({
   puerto_destino_country: "Venezuela",
 });
 
-function columnaRuta() {
+interface ColumnaRuta {
+  accessorFn: (t: AgenteTarifaRow) => string;
+  cell: (ctx: { row: { original: AgenteTarifaRow } }) => ReactElement;
+}
+
+function columnaRuta(): ColumnaRuta {
   const cols = buildAgenteTarifasColumns({ onEditar: vi.fn(), onDuplicar: vi.fn() });
   const col = cols.find((c) => c.id === "ruta");
   expect(col).toBeTruthy();
-  return col!;
+  // SAFE-CAST: la columna "ruta" se define con accessorFn + cell en este mismo módulo.
+  return col as unknown as ColumnaRuta;
 }
 
 describe("Tarifas del agente · ruta global inequívoca", () => {
   it("el accessor incluye país y UN/LOCODE de ambos puertos", () => {
-    const acc = columnaRuta().accessorFn as (t: AgenteTarifaRow) => string;
+    const acc = columnaRuta().accessorFn;
     expect(acc(fila({}))).toBe("Shanghai, China (CNSHA) → Valencia, España (ESVLC)");
     expect(acc(esVenezuela)).toBe("Shanghai, China (CNSHA) → Valencia, Venezuela (VEVLN)");
   });
 
   it("el orden distingue dos destinos homónimos de países distintos", () => {
-    const acc = columnaRuta().accessorFn as (t: AgenteTarifaRow) => string;
+    const acc = columnaRuta().accessorFn;
     expect(acc(fila({}))).not.toBe(acc(esVenezuela));
   });
 
   it("la celda de la tabla pinta la etiqueta completa", () => {
-    const cell = columnaRuta().cell as (ctx: { row: { original: AgenteTarifaRow } }) => ReactElement;
+    const { cell } = columnaRuta();
     render(<>{cell({ row: { original: fila({}) } })}</>);
     expect(screen.getByText("Shanghai, China (CNSHA) → Valencia, España (ESVLC)")).toBeTruthy();
   });
 
   it("degrada sin comas ni paréntesis vacíos cuando falta país o código", () => {
-    const acc = columnaRuta().accessorFn as (t: AgenteTarifaRow) => string;
+    const acc = columnaRuta().accessorFn;
     const legacy = fila({
       puerto_origen_code: null,
       puerto_origen_country: null,
