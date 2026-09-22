@@ -21,6 +21,14 @@
  */
 import type { TipoContenedor } from "@/features/catalogos/services/catalogosTypes";
 
+/**
+ * Coincidencia defensiva: algunas filas legacy (o mocks) llegan sin
+ * `idsEquivalentes`; en ese caso basta comparar contra el propio ID.
+ */
+function coincideId(t: TipoContenedorCanonico, id: string): boolean {
+  return t.idsEquivalentes?.includes(id) ?? t.id === id;
+}
+
 function normalizarTexto(v: string | null | undefined): string {
   return String(v ?? "")
     .normalize("NFD")
@@ -99,8 +107,8 @@ export function idsEquivalentesDeTipo(
   id: string | null | undefined,
 ): string[] {
   if (!id) return [];
-  const match = catalogo.find((t) => t.idsEquivalentes.includes(id));
-  return match ? [...match.idsEquivalentes] : [id];
+  const match = catalogo.find((t) => coincideId(t, id));
+  return match?.idsEquivalentes ? [...match.idsEquivalentes] : [id];
 }
 
 /** Resuelve cualquier ID equivalente (legacy) al ID canónico del catálogo. */
@@ -109,5 +117,5 @@ export function resolverIdCanonicoTipo(
   id: string | null | undefined,
 ): string {
   if (!id) return "";
-  return catalogo.find((t) => t.idsEquivalentes.includes(id))?.id ?? id;
+  return catalogo.find((t) => coincideId(t, id))?.id ?? id;
 }
