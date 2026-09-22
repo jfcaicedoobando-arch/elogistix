@@ -43,6 +43,26 @@ interface RawRow extends CosteoTarifa {
   recargos?: CosteoTarifaRecargo[];
 }
 
+/**
+ * Identidad de puertos (Etapa 2) normalizada en un solo lugar: mantiene
+ * `mapRow`/`fetchTarifasResumen` por debajo del límite de complejidad.
+ */
+function identidadPuertos(ruta?: {
+  puerto_origen?: RawPuerto | null;
+  puerto_destino?: RawPuerto | null;
+} | null) {
+  const o = ruta?.puerto_origen ?? null;
+  const d = ruta?.puerto_destino ?? null;
+  return {
+    puerto_origen_nombre: o?.name ?? "—",
+    puerto_origen_code: o?.code ?? null,
+    puerto_origen_country: o?.country ?? null,
+    puerto_destino_nombre: d?.name ?? "—",
+    puerto_destino_code: d?.code ?? null,
+    puerto_destino_country: d?.country ?? null,
+  };
+}
+
 function mapRow(r: RawRow): CosteoTarifaRow {
   const recargos = r.recargos ?? [];
   const recargos_total = recargos
@@ -53,12 +73,7 @@ function mapRow(r: RawRow): CosteoTarifaRow {
     agente_nombre: r.costeo_agentes?.nombre ?? "—",
     naviera_nombre: r.navieras?.name ?? "—",
     tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
-    puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
-    puerto_origen_code: r.costeo_rutas?.puerto_origen?.code ?? null,
-    puerto_origen_country: r.costeo_rutas?.puerto_origen?.country ?? null,
-    puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
-    puerto_destino_code: r.costeo_rutas?.puerto_destino?.code ?? null,
-    puerto_destino_country: r.costeo_rutas?.puerto_destino?.country ?? null,
+    ...identidadPuertos(r.costeo_rutas),
     recargos,
     recargos_total,
     total_comparable: Number(r.flete_base || 0) + recargos_total,
@@ -144,12 +159,7 @@ export async function fetchTarifasResumen(
       id: r.id,
       naviera_nombre: r.navieras?.name ?? "—",
       tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
-      puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
-      puerto_origen_code: r.costeo_rutas?.puerto_origen?.code ?? null,
-      puerto_origen_country: r.costeo_rutas?.puerto_origen?.country ?? null,
-      puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
-      puerto_destino_code: r.costeo_rutas?.puerto_destino?.code ?? null,
-      puerto_destino_country: r.costeo_rutas?.puerto_destino?.country ?? null,
+      ...identidadPuertos(r.costeo_rutas),
       vigente_desde: r.vigente_desde,
       vigente_hasta: r.vigente_hasta,
     };
