@@ -85,16 +85,18 @@ export async function actualizarFechaLlegadaRealEmbarque(
       "No se encontró el embarque para marcar la llegada real: no tienes permiso o ya no existe.",
     );
   }
+  // Sentry JAVASCRIPT-REACT-6P: estas tres son guardas de negocio que la UI ya
+  // explica en un toast; `ReglaNegocioError` evita que se reporten como bugs.
   if (current?.fecha_llegada_real) {
-    throw new Error("Este embarque ya tiene una fecha de llegada real capturada.");
+    throw new ReglaNegocioError("Este embarque ya tiene una fecha de llegada real capturada.");
   }
   if (current?.estado && !ESTADOS_QUE_ADMITEN_LLEGADA.has(current.estado)) {
-    throw new Error(
+    throw new ReglaNegocioError(
       `No se puede marcar llegada real en estado "${current.estado}". Confirma y pon en tránsito el embarque primero.`,
     );
   }
   if (current?.etd && fechaIso < current.etd) {
-    throw new Error(
+    throw new ReglaNegocioError(
       `La fecha de llegada real (${fechaIso}) no puede ser anterior al ETD (${current.etd}).`,
     );
   }
