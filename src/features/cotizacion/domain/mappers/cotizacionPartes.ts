@@ -75,9 +75,15 @@ export function partesMercancia(v: CotizacionFormValues) {
 
 export function partesRuta(v: CotizacionFormValues) {
   const esTerrestre = v.modo === "Terrestre";
+  const esMaritimo = v.modo === "Marítimo";
   return {
     origen: v.origen,
     destino: v.destino,
+    // Etapa 3: los IDs de puerto sólo existen en marítimo. Fuera de ese modo la
+    // BD los fuerza a NULL (trigger), así que aquí no se envían valores sueltos.
+    puerto_origen_id: esMaritimo ? (v.puertoOrigenId ?? null) : null,
+    puerto_destino_id: esMaritimo ? (v.puertoDestinoId ?? null) : null,
+
     tiempo_transito_dias: v.tiempoTransitoDias ?? null,
     frecuencia: v.frecuencia,
     ruta_texto: v.rutaTexto,
