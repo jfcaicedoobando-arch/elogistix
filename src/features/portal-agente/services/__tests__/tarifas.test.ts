@@ -43,8 +43,8 @@ describe("portal-agente/services/tarifas · fetchAgenteTarifas", () => {
           navieras: { name: "Naviera X" },
           tipos_contenedor: { name: "40HC" },
           costeo_rutas: {
-            puerto_origen: { name: "Manzanillo" },
-            puerto_destino: { name: "LA" },
+            puerto_origen: { name: "Manzanillo", code: "MXZLO", country: "México" },
+            puerto_destino: { name: "LA", code: "USLAX", country: "Estados Unidos" },
           },
         },
       ],
@@ -68,7 +68,15 @@ describe("portal-agente/services/tarifas · fetchAgenteTarifas", () => {
       tipo_contenedor_nombre: "40HC",
       puerto_origen_nombre: "Manzanillo",
       puerto_destino_nombre: "LA",
+      // Etapa 6 — identidad global para distinguir puertos homónimos.
+      puerto_origen_code: "MXZLO",
+      puerto_origen_country: "México",
+      puerto_destino_code: "USLAX",
+      puerto_destino_country: "Estados Unidos",
     });
+    const select = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("select")][0] as string;
+    expect(select).toContain("puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name, code, country)");
+    expect(select).toContain("puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name, code, country)");
   });
 
   it("usa guion largo cuando faltan relaciones anidadas", async () => {
@@ -103,6 +111,8 @@ describe("portal-agente/services/tarifas · fetchAgenteTarifas", () => {
     expect(t.agente_nombre).toBe("—");
     expect(t.naviera_nombre).toBe("—");
     expect(t.puerto_origen_nombre).toBe("—");
+    expect(t.puerto_origen_code).toBeNull();
+    expect(t.puerto_destino_country).toBeNull();
     expect(t.dias_libres_demoras).toBe(0);
   });
 
