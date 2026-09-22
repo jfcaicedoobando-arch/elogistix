@@ -96,11 +96,16 @@ export async function insertCosteoRuta(
   organizationId: string,
   input: CosteoRutaInput,
 ): Promise<CosteoRuta> {
+  // Defensa de dominio: la UI ya lo evita, pero una ruta a sí misma no existe.
+  if (input.puerto_origen_id === input.puerto_destino_id) {
+    throw new CosteoRutaMismoPuertoError();
+  }
   const { data, error } = await supabase
     .from("costeo_rutas")
     .insert({ ...input, organization_id: organizationId })
     .select("*")
     .single();
+
   if (error) {
     if (isUniqueViolation(error)) throw new CosteoRutaDuplicadaError();
     throw error;
