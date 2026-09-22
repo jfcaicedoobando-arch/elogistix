@@ -13045,6 +13045,11 @@ DECLARE
   i               integer;
   v_target_ids    uuid[];
   v_cid           uuid;
+  -- Texto capturado ÍNTEGRO (nunca se recorta): es lo que ve el usuario.
+  v_origen_raw    text;
+  v_destino_raw   text;
+  -- Candidato a UN/LOCODE: sólo se usa para intentar una coincidencia exacta
+  -- y única contra puertos.code. Jamás sustituye al texto de respaldo.
   v_origen_code   text;
   v_destino_code  text;
   v_puerto_o      text;
@@ -13169,31 +13174,31 @@ BEGIN
   IF v_orphan_id IS NOT NULL THEN
     RETURN v_orphan_id;
   END IF;
+  -- P1-A: el texto capturado se conserva COMPLETO. Antes se guardaba sólo el
+  -- contenido entre paréntesis, así que "Puerto X (Terminal Norte)" terminaba
+  -- como "Terminal Norte" y "Ciudad de México (MEX)" como "MEX".
+  v_origen_raw  := NULLIF(btrim(v_cot.origen), '');
+  v_destino_raw := NULLIF(btrim(v_cot.destino), '');
   v_origen_code := COALESCE(
-    NULLIF(substring(v_cot.origen  FROM '\(([^)]+)\)'), ''),
-    NULLIF(trim(v_cot.origen),  ''),
-    NULL
+    NULLIF(btrim(substring(v_cot.origen  FROM '\(([^)]+)\)')), ''),
+    v_origen_raw
   );
   v_destino_code := COALESCE(
-    NULLIF(substring(v_cot.destino FROM '\(([^)]+)\)'), ''),
-    NULLIF(trim(v_cot.destino), ''),
-    NULL
+    NULLIF(btrim(substring(v_cot.destino FROM '\(([^)]+)\)')), ''),
+    v_destino_raw
   );
   IF v_cot.modo = 'Aéreo'::modo_transporte THEN
     -- Etapa 3: Aéreo y Terrestre NO pasan por el catálogo de puertos.
-    v_aero_o := v_origen_code;
-    v_aero_d := v_destino_code;
+    v_aero_o := v_origen_raw;
+    v_aero_d := v_destino_raw;
     v_puerto_o := NULL; v_puerto_d := NULL;
     v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSIF v_cot.modo = 'Terrestre'::modo_transporte THEN
-    v_ciudad_o := v_origen_code;
-    v_ciudad_d := v_destino_code;
+    v_ciudad_o := v_origen_raw;
+    v_ciudad_d := v_destino_raw;
     v_puerto_o := NULL; v_puerto_d := NULL;
     v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSE
-    -- Etapa 3: la identidad del puerto viaja por ID, no por texto. Antes se
-    -- extraía un supuesto código con regex y se resolvía con `LIMIT 1`, así que
-    -- con rutas globales dos puertos homónimos podían intercambiarse.
     v_puerto_o_id := v_cot.puerto_origen_id;
     v_puerto_d_id := v_cot.puerto_destino_id;
     IF v_cot.tarifa_id IS NOT NULL THEN
@@ -13222,18 +13227,22 @@ BEGIN
        WHERE upper(btrim(p.code)) = upper(btrim(v_destino_code))
       HAVING count(*) = 1;
     END IF;
+    -- P1-B: una ruta con el mismo puerto en ambos extremos es inválida. Antes se
+    -- borraban ambos IDs para eludir el CHECK, ocultando el problema.
     IF v_puerto_o_id IS NOT NULL AND v_puerto_o_id = v_puerto_d_id THEN
-      v_puerto_o_id := NULL; v_puerto_d_id := NULL;
+      RAISE EXCEPTION 'LC_COT_PUERTOS_IGUALES: el puerto de origen y destino no pueden ser el mismo; corrige la ruta antes de crear el embarque'
+        USING ERRCODE = 'P0001';
     END IF;
-    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado.
+    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado
+    -- ÍNTEGRO (nunca el fragmento entre paréntesis).
     IF v_puerto_o_id IS NOT NULL THEN
       SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.id = v_puerto_o_id;
     END IF;
     IF v_puerto_d_id IS NOT NULL THEN
       SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.id = v_puerto_d_id;
     END IF;
-    v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
-    v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
+    v_puerto_o := COALESCE(v_puerto_o, v_origen_raw);
+    v_puerto_d := COALESCE(v_puerto_d, v_destino_raw);
   END IF;
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
