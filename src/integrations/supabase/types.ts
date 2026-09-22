@@ -11071,6 +11071,25 @@ export type Database = {
           id: string
         }[]
       }
+      portal_solicitar_cotizacion_v2: {
+        Args: {
+          p_cliente_id: string
+          p_descripcion_mercancia?: string
+          p_destino: string
+          p_modo: Database["public"]["Enums"]["modo_transporte"]
+          p_notas?: string
+          p_origen: string
+          p_puerto_destino_id?: string
+          p_puerto_origen_id?: string
+          p_tipo: Database["public"]["Enums"]["tipo_operacion"]
+          p_tipo_contenedor?: string
+          p_tipo_embarque?: string
+        }
+        Returns: {
+          folio: string
+          id: string
+        }[]
+      }
       portal_update_contacto: {
         Args: { _nombre: string; _telefono: string }
         Returns: undefined
