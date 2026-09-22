@@ -163,7 +163,9 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
         />
       )}
 
-      {!isError && pagination && (
+      {/* P2 auditoría v13.824.3: mientras carga no se anuncia "Sin resultados"
+          ni un rango falso; el skeleton es el único estado visible. */}
+      {!isError && !isLoading && pagination && (
         <PaginationControls
           page={pagination.page}
           totalPages={pagination.totalPages}

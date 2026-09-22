@@ -48,7 +48,10 @@ describe("noObjetoFiscal", () => {
     expect(MSG_NO_OBJETO_RETENCIONES).toMatch(/retenciones/i);
     // El aviso NO debe presentarse como prohibición ni mandar a cambiar a PUE.
     expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/la emisi[oó]n/i);
-    expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/ObjetoImpDR/);
+    // El aviso ya no anuncia riesgo de error del REP (la integración lo emite).
+    expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/complemento de pago \(REP\)/i);
+    expect(AVISO_NO_OBJETO_PPD_REP).not.toMatch(/no documenta/i);
+    expect(AVISO_NO_OBJETO_PPD_REP).not.toMatch(/puede quedar en error/i);
     expect(AVISO_NO_OBJETO_PPD_REP).toMatch(/nunca se cambiar[aá] el tratamiento a Exento/i);
     expect(AVISO_NO_OBJETO_PPD_REP).not.toMatch(/no puede emitirse/i);
   });

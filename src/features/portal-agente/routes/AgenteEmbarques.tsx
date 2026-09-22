@@ -12,6 +12,9 @@ import { Ship } from "lucide-react";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { etiquetaRutaTexto } from "@/features/costeo";
+import { formatFechaSegura } from "@/lib/formatters/datesSegura";
+import { etiquetaExpedienteAgente } from "./_sections/agenteEmbarqueLabels";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
 
@@ -24,11 +27,11 @@ export default function AgenteEmbarques() {
       {
         id: "expediente",
         header: "Expediente",
-        accessorFn: (e) => e.expediente,
-        sortingFn: sortByString((e) => e.expediente),
+        accessorFn: (e) => etiquetaExpedienteAgente(e.expediente, e.id),
+        sortingFn: sortByString((e) => etiquetaExpedienteAgente(e.expediente, e.id)),
         enableSorting: true,
         meta: { sticky: true, className: "font-medium" },
-        cell: ({ row }) => row.original.expediente,
+        cell: ({ row }) => etiquetaExpedienteAgente(row.original.expediente, row.original.id),
       },
       {
         id: "modo",
@@ -41,9 +44,9 @@ export default function AgenteEmbarques() {
       {
         id: "ruta",
         header: "Ruta",
-        accessorFn: (e) => `${e.puerto_origen ?? "—"} → ${e.puerto_destino ?? "—"}`,
+        accessorFn: (e) => etiquetaRutaTexto(e.puerto_origen, e.puerto_destino),
         meta: { className: "text-xs" },
-        cell: ({ row }) => `${row.original.puerto_origen ?? "—"} → ${row.original.puerto_destino ?? "—"}`,
+        cell: ({ row }) => etiquetaRutaTexto(row.original.puerto_origen, row.original.puerto_destino),
       },
       {
         id: "bl_master",
@@ -59,7 +62,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.etd),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => row.original.etd ?? "—",
+        cell: ({ row }) => formatFechaSegura(row.original.etd),
       },
       {
         id: "eta",
@@ -68,7 +71,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.eta),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => row.original.eta ?? "—",
+        cell: ({ row }) => formatFechaSegura(row.original.eta),
       },
       statusColumn<EmbarqueAgente>({
         domain: "embarque",

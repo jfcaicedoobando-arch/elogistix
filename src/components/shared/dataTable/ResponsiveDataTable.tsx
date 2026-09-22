@@ -95,6 +95,9 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
   }
 
   const renderedFooter = typeof footer === "function" ? (footer as (d: T[]) => ReactNode)(data) : footer;
+  // P2 auditoría v13.824.3: mientras carga (o si hubo error) no se muestran
+  // totales ni paginación; el skeleton es el único estado visible.
+  const sinResumen = isError || isLoading;
 
   return (
     <div className={className}>
@@ -163,10 +166,10 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
             })}
           </ul>
         )}
-        {!isError && renderedFooter && data.length > 0 && !isLoading && (
+        {!sinResumen && renderedFooter && data.length > 0 && (
           <div className="border-t px-3 py-2.5 bg-muted/30">{renderedFooter}</div>
         )}
-        {!isError && pagination && (
+        {!sinResumen && pagination && (
           <PaginationControls
             page={pagination.page}
             totalPages={pagination.totalPages}

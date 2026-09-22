@@ -40,7 +40,15 @@ interface Props {
   pending: boolean;
 }
 
-export const FILA_GRID = "grid grid-cols-[minmax(200px,1.3fr)_140px_120px_minmax(180px,1fr)_minmax(180px,auto)] gap-4 items-center px-4";
+/**
+ * P2 auditoría v13.824.3: a 1280×720 con el menú lateral abierto la cuadrícula
+ * fija recortaba agente/naviera y amontonaba vigencia, total y acciones. Hasta
+ * `2xl` se usan columnas y separaciones más compactas; desde `2xl` vuelve la
+ * versión amplia original (sin regresión en pantallas grandes).
+ */
+export const FILA_GRID =
+  "grid grid-cols-[minmax(140px,1.2fr)_110px_96px_minmax(132px,1fr)_minmax(148px,auto)] gap-2 items-center px-3 " +
+  "2xl:grid-cols-[minmax(200px,1.3fr)_140px_120px_minmax(180px,1fr)_minmax(180px,auto)] 2xl:gap-4 2xl:px-4";
 
 const SIETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -113,7 +121,7 @@ export function TarifaFila({
         <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
           {usd(t.total_comparable)}
         </div>
-        <div className="text-label text-muted-foreground">
+        <div className="hidden text-label text-muted-foreground 2xl:block">
           Flete {usd(Number(t.flete_base))} · Recargos {usd(t.recargos_total)}
         </div>
         {delta > 0 && (

@@ -8,7 +8,7 @@
  */
 import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
 import { useEffect, useState } from "react";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,8 +102,8 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
           </div>
         )}
         {avisoPpdNoObjeto && (
-          <Alert variant="warning" role="alert">
-            <AlertTriangle className="h-4 w-4" aria-hidden />
+          <Alert variant="info" role="status">
+            <Info className="h-4 w-4" aria-hidden />
             <AlertDescription>{AVISO_NO_OBJETO_PPD_REP}</AlertDescription>
           </Alert>
         )}

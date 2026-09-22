@@ -7,13 +7,12 @@
  *    impuestos para ese concepto. Por eso un renglón no objeto no puede llevar
  *    retenciones de ISR ni de IVA (antes se conservaban ocultas y el payload
  *    salía con `taxability:"01"` y un arreglo de impuestos no vacío).
- * 2) LIMITACIÓN DE LA INTEGRACIÓN, NO DE LA EMISIÓN: el Anexo 29 de la RMF
- *    contempla ObjetoImpDR 01 en el complemento de pago (sin nodo ImpuestosDR),
- *    pero la referencia pública de Facturapi no documenta ese campo en
- *    `related_documents`. Facturapi confirmó que PPD es del CFDI completo y que
- *    `taxability` es por concepto, así que la factura PPD con renglones no
- *    objeto SÍ se emite; lo único que puede quedar pendiente es el REP del
- *    cobro, y eso se avisa (no se bloquea) y nunca se simula como Exento.
+ * 2) PPD CON CONCEPTOS MIXTOS ES VÁLIDO: el Anexo 29 de la RMF contempla
+ *    ObjetoImpDR 01 en el complemento de pago (sin nodo ImpuestosDR) y la
+ *    integración ya emite el complemento `type:"pago"` con ese tratamiento
+ *    tomado del documento relacionado. Por eso el mensaje de abajo es
+ *    informativo: no anuncia riesgo de error ni bloquea la emisión, y el
+ *    tratamiento nunca se simula como Exento o Tasa 0%.
  */
 
 export const MSG_NO_OBJETO_RETENCIONES =
@@ -22,14 +21,15 @@ export const MSG_NO_OBJETO_RETENCIONES =
   "cambia el tratamiento fiscal del concepto.";
 
 /**
- * Advertencia NO bloqueante: la factura PPD con renglones no objeto se emite
- * normalmente; el riesgo está en el complemento de pago del cobro posterior.
+ * Nota informativa NO bloqueante: la factura PPD con renglones no objeto se
+ * emite normalmente y el REP del cobro hereda el tratamiento de cada concepto
+ * del documento relacionado.
  */
 export const AVISO_NO_OBJETO_PPD_REP =
-  "Aviso: esta factura es PPD y tiene conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01). La emisión " +
-  "es válida y se hace normalmente; sin embargo, nuestro proveedor de timbrado no documenta el campo " +
-  "ObjetoImpDR del complemento de pago, así que al registrar el cobro el REP puede quedar en error y " +
-  "requerir seguimiento con Contabilidad. Nunca se cambiará el tratamiento a Exento ni a Tasa 0%.";
+  "Nota: esta factura es PPD y tiene conceptos \"No objeto de impuesto\" (SAT ObjetoImp 01). La emisión " +
+  "es válida y se hace normalmente; el complemento de pago (REP) del cobro se construirá con el " +
+  "tratamiento fiscal de cada concepto del documento relacionado. Nunca se cambiará el tratamiento a " +
+  "Exento ni a Tasa 0%.";
 
 export interface LineaNoObjeto {
   tipo_iva?: string | null;
