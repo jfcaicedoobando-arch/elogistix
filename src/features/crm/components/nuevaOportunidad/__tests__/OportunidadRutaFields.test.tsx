@@ -40,7 +40,7 @@ describe("OportunidadRutaFields", () => {
   it("selección de catálogo guarda texto e ID juntos", () => {
     const { get } = renderRuta({ modo: "Marítimo" });
     abrirPuerto(0);
-    fireEvent.click(screen.getByText("Shanghai, China (CNSHA)"));
+    fireEvent.click(screen.getByRole("option", { name: /CNSHA/ }));
     expect(get().origen).toBe("Shanghai, China (CNSHA)");
     expect(get().puerto_origen_id).toBe("p-sha");
   });
@@ -63,7 +63,7 @@ describe("OportunidadRutaFields", () => {
       puerto_destino_id: "p-zlo",
     });
     abrirPuerto(0);
-    fireEvent.click(screen.getByText("Manzanillo, México (MXZLO)"));
+    fireEvent.click(screen.getByRole("option", { name: /MXZLO/ }));
     expect(get().puerto_origen_id).toBe("p-zlo");
     expect(get().puerto_destino_id).toBeNull();
   });
