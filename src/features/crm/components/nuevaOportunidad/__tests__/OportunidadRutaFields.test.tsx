@@ -45,13 +45,13 @@ describe("OportunidadRutaFields", () => {
     expect(get().puerto_origen_id).toBe("p-sha");
   });
 
-  it("texto libre guarda el texto con ID null", () => {
+  it("texto libre guarda el texto con ID null", async () => {
     const { get } = renderRuta({ modo: "Marítimo" });
     abrirPuerto(1);
     fireEvent.change(screen.getByPlaceholderText(/buscar puerto/i), {
       target: { value: "Manzillo" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /usar/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /usar/i }));
     expect(get().destino).toBe("Manzillo");
     expect(get().puerto_destino_id).toBeNull();
   });
