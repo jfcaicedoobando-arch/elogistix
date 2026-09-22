@@ -80,7 +80,10 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         tipoEmbarque,
         descripcionMercancia: mercancia,
         notas,
+        puertoOrigenId,
+        puertoDestinoId,
       });
+
       guardarSolicitudPreferencias({ modo, tipo, tipoEmbarque });
       notifySuccess(undefined, {
         title: "Solicitud enviada",
