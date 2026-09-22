@@ -1,5 +1,5 @@
 /**
- * Tipos del módulo Costeo (tarifas marítimas China → México).
+ * Tipos del módulo Costeo (tarifas marítimas entre puertos globales).
  */
 
 export interface CosteoAgente {

@@ -1,5 +1,5 @@
 /**
- * Servicio: CRUD de agentes de costeo (proveedores chinos vinculados).
+ * Servicio: CRUD de agentes de carga vinculados al directorio de Proveedores.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoAgente } from "@/features/costeo/types";
@@ -39,7 +39,7 @@ export async function insertCosteoAgente(
       .insert({
         nombre: input.nombre,
         proveedor_id: input.proveedor_id,
-        pais: input.pais ?? "CN",
+        pais: input.pais ?? null,
         dias_credito: input.dias_credito,
         contacto_tarifario: input.contacto_tarifario ?? null,
         email: input.email ?? null,

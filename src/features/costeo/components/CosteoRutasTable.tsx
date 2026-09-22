@@ -50,7 +50,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
     () => defineColumns<FilaRuta>([
       {
         id: "origen",
-        header: "Origen (CN)",
+        header: "Origen",
         accessorFn: (f) => f.ruta.puerto_origen_nombre ?? "",
         sortingFn: sortByString((f) => f.ruta.puerto_origen_nombre),
         enableSorting: true,
@@ -59,7 +59,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
       },
       {
         id: "destino",
-        header: "Destino (MX)",
+        header: "Destino",
         accessorFn: (f) => f.ruta.puerto_destino_nombre ?? "",
         sortingFn: sortByString((f) => f.ruta.puerto_destino_nombre),
         enableSorting: true,

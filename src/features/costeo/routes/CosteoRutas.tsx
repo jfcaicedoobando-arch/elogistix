@@ -1,5 +1,5 @@
 /**
- * Página: Rutas de costeo (par puerto origen CN → destino MX).
+ * Página: Rutas de costeo (par puerto origen → puerto destino, cualquier país).
  * v13.68.1: dividida en sub-componentes para cumplir Power of 10 (≤200 líneas).
  * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
  */
