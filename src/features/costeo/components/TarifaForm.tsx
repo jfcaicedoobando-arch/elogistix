@@ -28,6 +28,7 @@ import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
+import type { RutaOption } from "./MultiRutaSelect";
 
 interface Props {
   open: boolean;
@@ -41,7 +42,7 @@ interface Props {
   /** Override del título del modal (e.g. cuando es desde el portal del agente). */
   tituloOverride?: string;
   /** Rutas a usar en lugar de useCosteoRutas() (útil cuando no hay OrganizationContext). */
-  rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
+  rutasOverride?: RutaOption[];
   /**
    * Organización dueña de la tarifa cuando no hay OrganizationContext (portal del
    * agente). Sin ella el insert salía con `organization_id` nulo y RLS lo rechazaba.
