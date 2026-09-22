@@ -11,7 +11,7 @@ import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { aplicarTarifaAlForm } from "../aplicarTarifa";
 import { resolverPuertoId } from "../resolverCatalogos";
-import { aplicarSeleccionPuerto } from "../rutaPuertoHandlers";
+import { aplicarSeleccionPuerto, debeMostrarAvisoTarifa } from "../rutaPuertoHandlers";
 import type { Ctx } from "../overrideHelpers";
 
 const ROTTERDAM = "11111111-1111-1111-1111-111111111111";
@@ -140,5 +140,21 @@ describe("Etapa 3 · aplicarSeleccionPuerto", () => {
     const res = aplicarSeleccionPuerto(ctx, "origen", "Rotterdam, Países Bajos (NLRTM)", ROTTERDAM);
     expect(res.tarifaDesvinculada).toBe(false);
     expect(estado.tarifaId).toBe("tarifa-1");
+  });
+});
+
+describe("P2 · aviso de tarifa desvinculada", () => {
+  it("se muestra al cambiar la ruta y perder la tarifa", () => {
+    expect(debeMostrarAvisoTarifa(true, null)).toBe(true);
+    expect(debeMostrarAvisoTarifa(true, "")).toBe(true);
+    expect(debeMostrarAvisoTarifa(true, undefined)).toBe(true);
+  });
+
+  it("desaparece al aplicar una nueva tarifa válida", () => {
+    expect(debeMostrarAvisoTarifa(true, "tarifa-2")).toBe(false);
+  });
+
+  it("no aparece si nunca se desvinculó nada", () => {
+    expect(debeMostrarAvisoTarifa(false, null)).toBe(false);
   });
 });
