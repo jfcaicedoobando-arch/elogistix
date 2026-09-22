@@ -5,7 +5,7 @@
  * 3. Bloquea origen == destino y detecta duplicado direccional (no el inverso).
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 
 const PUERTOS = [
   { id: "p1", name: "Rotterdam", country: "Países Bajos", code: "NLRTM" },
@@ -56,7 +56,9 @@ describe("RutaFormDialog — rutas globales", () => {
     abrir("ruta-origen");
     fireEvent.click(screen.getByText("Houston, Estados Unidos (USHOU)"));
     abrir("ruta-destino");
-    expect(screen.queryByText("Houston, Estados Unidos (USHOU)")).not.toBeInTheDocument();
+    const lista = within(screen.getByRole("listbox"));
+    expect(lista.queryByText("Houston, Estados Unidos (USHOU)")).not.toBeInTheDocument();
+    expect(lista.getByText("Veracruz, México (MXVER)")).toBeInTheDocument();
   });
 
   it("detecta duplicado direccional y no considera duplicada la ruta inversa", () => {

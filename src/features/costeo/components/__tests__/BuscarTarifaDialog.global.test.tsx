@@ -5,7 +5,7 @@
  * 3. Excluye el origen del selector de destino, así el mismo puerto no se busca.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 
 const PUERTOS = [
   { id: "11111111-1111-1111-1111-111111111111", name: "Rotterdam", country: "Países Bajos", code: "NLRTM" },
@@ -70,7 +70,8 @@ describe("BuscarTarifaDialog — puertos globales", () => {
       { wrapper: createWrapper() },
     );
     fireEvent.click(document.getElementById("td-destino")!);
-    expect(screen.getByText("Los Ángeles, Estados Unidos (USLAX)")).toBeInTheDocument();
-    expect(screen.queryByText("Veracruz, México (MXVER)")).not.toBeInTheDocument();
+    const lista = within(screen.getByRole("listbox"));
+    expect(lista.getByText("Los Ángeles, Estados Unidos (USLAX)")).toBeInTheDocument();
+    expect(lista.queryByText("Veracruz, México (MXVER)")).not.toBeInTheDocument();
   });
 });
