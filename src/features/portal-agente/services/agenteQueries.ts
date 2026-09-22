@@ -57,28 +57,48 @@ export interface AgenteRutaRow {
   id: string;
   organization_id: string;
   activa: boolean;
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
   puerto_origen_nombre?: string;
   puerto_destino_nombre?: string;
+  /** Etapa 6 — identidad global del puerto para etiquetas inequívocas. */
+  puerto_origen_code?: string | null;
+  puerto_origen_country?: string | null;
+  puerto_destino_code?: string | null;
+  puerto_destino_country?: string | null;
 }
 
 /** Lista las rutas activas de la organización del agente vía RPC SECURITY DEFINER
- *  (el agente no tiene SELECT directo sobre `costeo_rutas` por RLS). */
+ *  (el agente no tiene SELECT directo sobre `costeo_rutas` por RLS).
+ *  Etapa 6: usa `get_agente_rutas_v2`, que además devuelve país y UN/LOCODE. */
 export async function fetchAgenteRutas(): Promise<AgenteRutaRow[]> {
-  const data = await unwrapOr(supabase.rpc("get_agente_rutas"), []);
+  const data = await unwrapOr(supabase.rpc("get_agente_rutas_v2"), []);
   // SAFE-CAST: la RPC devuelve SETOF con el shape declarado por la función.
   const rows = data as Array<{
     id: string;
     organization_id: string;
     activa: boolean;
+    puerto_origen_id: string | null;
+    puerto_destino_id: string | null;
     puerto_origen_nombre: string | null;
     puerto_destino_nombre: string | null;
+    puerto_origen_code: string | null;
+    puerto_origen_country: string | null;
+    puerto_destino_code: string | null;
+    puerto_destino_country: string | null;
   }>;
   return rows.map((r) => ({
     id: r.id,
     organization_id: r.organization_id,
     activa: r.activa,
+    puerto_origen_id: r.puerto_origen_id ?? null,
+    puerto_destino_id: r.puerto_destino_id ?? null,
     puerto_origen_nombre: r.puerto_origen_nombre ?? undefined,
     puerto_destino_nombre: r.puerto_destino_nombre ?? undefined,
+    puerto_origen_code: r.puerto_origen_code ?? null,
+    puerto_origen_country: r.puerto_origen_country ?? null,
+    puerto_destino_code: r.puerto_destino_code ?? null,
+    puerto_destino_country: r.puerto_destino_country ?? null,
   }));
 }
 

@@ -16,6 +16,15 @@ import { formatNumber } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { resolverEstadoVigenciaTarifa } from "@/features/costeo/utils/vigenciaTarifa";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
+
+/**
+ * Etapa 6 — etiqueta inequívoca "Nombre, País (CÓDIGO) → …" con rutas globales
+ * (hay puertos homónimos en distintos países). Utilidad única de costeo.
+ */
+export function etiquetaRutaTarifa(t: AgenteTarifaRow): string {
+  return etiquetaRutaCompleta(origenDe(t), destinoDe(t));
+}
 
 export function EstadoBadge({ estado }: { estado: string }) {
   // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
@@ -69,13 +78,13 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
     {
       id: "ruta",
       header: "Ruta",
-      accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
-      sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
+      accessorFn: (t) => etiquetaRutaTarifa(t),
+      sortingFn: sortByString((t) => etiquetaRutaTarifa(t)),
       enableSorting: true,
       meta: { sticky: true, className: "text-sm" },
       cell: ({ row }) => (
         <div>
-          <div>{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
+          <div className="break-words">{etiquetaRutaTarifa(row.original)}</div>
           {row.original.estado_aprobacion === "rechazada" && row.original.motivo_rechazo && (
             <p className="text-xs text-destructive mt-1">
               <strong>Motivo:</strong> {row.original.motivo_rechazo}
@@ -176,7 +185,7 @@ export function AgenteTarifaAcciones({
     <div onClick={(e) => e.stopPropagation()}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={`Acciones de la tarifa ${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`}>
+          <Button variant="ghost" size="icon" aria-label={`Acciones de la tarifa ${etiquetaRutaTarifa(t)}`}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
