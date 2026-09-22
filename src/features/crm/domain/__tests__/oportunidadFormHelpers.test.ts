@@ -98,3 +98,36 @@ describe("buildEmptyForNueva", () => {
     expect(out.vendedor_id).toBeNull();
   });
 });
+
+describe("buildFromOportunidad · Etapa 4 (ruta canónica)", () => {
+  it.each([
+    ["Maritimo", "Marítimo"],
+    ["Marítimo FCL", "Marítimo"],
+    ["Aereo consolidado", "Aéreo"],
+  ])("normaliza el modo legacy %s → %s", (legacy, esperado) => {
+    const row = { ...baseRow, modo: legacy } as unknown as CrmOportunidadRow;
+    expect(buildFromOportunidad(row).modo).toBe(esperado);
+  });
+
+  it("conserva el modo no reconocible (no asume Marítimo)", () => {
+    expect(buildFromOportunidad(baseRow).modo).toBe("FCL");
+  });
+
+  it("hidrata los IDs de puerto cuando existen", () => {
+    const row = {
+      ...baseRow,
+      modo: "Marítimo",
+      puerto_origen_id: "p-sha",
+      puerto_destino_id: "p-zlo",
+    } as unknown as CrmOportunidadRow;
+    const out = buildFromOportunidad(row);
+    expect(out.puerto_origen_id).toBe("p-sha");
+    expect(out.puerto_destino_id).toBe("p-zlo");
+  });
+
+  it("históricos sin IDs quedan en null (sin exigir recaptura)", () => {
+    const out = buildFromOportunidad(baseRow);
+    expect(out.puerto_origen_id).toBeNull();
+    expect(out.puerto_destino_id).toBeNull();
+  });
+});
