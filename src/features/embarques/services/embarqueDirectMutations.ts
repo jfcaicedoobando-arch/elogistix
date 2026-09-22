@@ -8,6 +8,7 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { notaSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { run } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
