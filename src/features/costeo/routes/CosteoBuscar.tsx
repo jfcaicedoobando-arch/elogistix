@@ -13,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { PortIdSelect } from "@/features/catalogos";
+
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
 import { TarifasSinResultado } from "@/features/costeo/components/TarifasSinResultado";
