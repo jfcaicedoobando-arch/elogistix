@@ -258,19 +258,23 @@ BEGIN
        WHERE upper(btrim(p.code)) = upper(btrim(v_destino_code))
       HAVING count(*) = 1;
     END IF;
+    -- P1-B: una ruta con el mismo puerto en ambos extremos es inválida. Antes se
+    -- borraban ambos IDs para eludir el CHECK, ocultando el problema.
     IF v_puerto_o_id IS NOT NULL AND v_puerto_o_id = v_puerto_d_id THEN
-      v_puerto_o_id := NULL; v_puerto_d_id := NULL;
+      RAISE EXCEPTION 'LC_COT_PUERTOS_IGUALES: el puerto de origen y destino no pueden ser el mismo; corrige la ruta antes de crear el embarque'
+        USING ERRCODE = 'P0001';
     END IF;
 
-    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado.
+    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado
+    -- ÍNTEGRO (nunca el fragmento entre paréntesis).
     IF v_puerto_o_id IS NOT NULL THEN
       SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.id = v_puerto_o_id;
     END IF;
     IF v_puerto_d_id IS NOT NULL THEN
       SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.id = v_puerto_d_id;
     END IF;
-    v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
-    v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
+    v_puerto_o := COALESCE(v_puerto_o, v_origen_raw);
+    v_puerto_d := COALESCE(v_puerto_d, v_destino_raw);
   END IF;
 
 
