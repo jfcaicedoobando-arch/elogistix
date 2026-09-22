@@ -121,7 +121,7 @@ export function TarifaFila({
         <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
           {usd(t.total_comparable)}
         </div>
-        <div className="text-label text-muted-foreground">
+        <div className="hidden text-label text-muted-foreground 2xl:block">
           Flete {usd(Number(t.flete_base))} · Recargos {usd(t.recargos_total)}
         </div>
         {delta > 0 && (

@@ -166,7 +166,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
         {!isError && renderedFooter && data.length > 0 && !isLoading && (
           <div className="border-t px-3 py-2.5 bg-muted/30">{renderedFooter}</div>
         )}
-        {!isError && pagination && (
+        {!isError && !isLoading && pagination && (
           <PaginationControls
             page={pagination.page}
             totalPages={pagination.totalPages}
