@@ -97,3 +97,25 @@ describe("costeo/topTarifas (extra)", () => {
     await expect(fetchRecargosDeTarifa("t-1")).rejects.toThrow("select fail");
   });
 });
+
+/**
+ * Etapa 2 — el RPC `get_top_tarifas` conserva todos los campos previos y
+ * añade los cuatro de identidad de puertos (code/country origen y destino).
+ */
+describe("fetchTopTarifas · contrato TopTarifaRow (Etapa 2)", () => {
+  it("devuelve los campos previos más code/country de ambos puertos", async () => {
+    mock.setRpcResult(RPC, { data: [makeTopRow()], error: null });
+    const [row] = await fetchTopTarifas(baseParams);
+    // Campos previos representativos (no deben perderse).
+    expect(row).toMatchObject({
+      id: "t-1", organization_id: "org-1", agente_nombre: "Agente X", dias_credito: 30,
+      naviera_nombre: "Nav Y", ruta_id: "ru-1", tipo_contenedor_nombre: "20'",
+      total_comparable: 1200, dias_libres_demoras: 14, estado: "vigente",
+    });
+    // Nuevos de Etapa 2.
+    expect(row.puerto_origen_code).toBe("CNSHA");
+    expect(row.puerto_origen_country).toBe("China");
+    expect(row.puerto_destino_code).toBe("MXZLO");
+    expect(row.puerto_destino_country).toBe("México");
+  });
+});
