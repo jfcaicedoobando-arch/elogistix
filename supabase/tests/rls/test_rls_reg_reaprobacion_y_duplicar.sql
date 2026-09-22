@@ -101,8 +101,9 @@ BEGIN
     (SELECT count(*) FROM public.cotizaciones WHERE organization_id = org_a) = n,
     'duplicar una cotización eliminada no debe insertar filas');
 
-  -- TEST 4: aislamiento cross-org — una tarifa de org_b no es visible para la
-  -- revalidación de una cotización de org_a (la FK es sólo por UUID).
+  -- TEST 4: aislamiento cross-org — el trigger _cotizaciones_sync_puertos_tarifa
+  -- rechaza vincular a una cotización de org_a una tarifa de org_b con
+  -- LC_COT_TARIFA_ORG_INVALIDA, antes de que quede cualquier estado inválido.
   INSERT INTO public.puertos(id, code, name, country) VALUES (pto_o, 'CNRA1', 'Origen RA', 'CN'), (pto_d, 'MXRA1', 'Destino RA', 'MX');
   INSERT INTO public.tipos_contenedor(id, code, name, activo) VALUES (tcont, '40RA', '40 HC RA', true);
   INSERT INTO public.proveedores(id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, tipo, categoria)
@@ -116,23 +117,37 @@ BEGIN
   INSERT INTO public.costeo_tarifas(id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
                                     moneda, flete_base, dias_libres_demoras, vigente_desde, vigente_hasta)
     VALUES (tar_b, org_b, ag_b, nav_b, ruta_b, tcont, 'USD', 1500, 14, current_date - 5, current_date + 60);
-  UPDATE public.cotizaciones SET tarifa_id = tar_b WHERE id = cot_id;
-  INSERT INTO public.cotizacion_costos(cotizacion_id, organization_id, concepto, moneda, cantidad,
-                                       costo_unitario, precio_venta, costeo_tarifa_id)
-    VALUES (cot_id, org_a, 'Flete', 'USD', 1, 1500, 1800, tar_b);
-  -- La revalidación exige un miembro autenticado de la organización de la cotización.
+  fallo := false;
+  BEGIN
+    UPDATE public.cotizaciones SET tarifa_id = tar_b WHERE id = cot_id;
+  EXCEPTION WHEN OTHERS THEN
+    fallo := SQLERRM LIKE '%LC_COT_TARIFA_ORG_INVALIDA%';
+  END;
+  PERFORM pg_temp.assert(fallo,
+    'vincular una tarifa de otra organización debe rechazarse con LC_COT_TARIFA_ORG_INVALIDA');
+  PERFORM pg_temp.assert(
+    (SELECT tarifa_id FROM public.cotizaciones WHERE id = cot_id) IS NULL,
+    'la cotización no debe quedar vinculada a una tarifa de otra organización');
+  -- Miembro de org_a para duplicar (TEST 5).
   PERFORM pg_temp.seed_auth_user(usr_a, 'miembro-ra@example.com');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (org_a, usr_a, 'admin_org');
-  PERFORM pg_temp.as_user(usr_a);
-  rev := public.revalidar_tarifa_cotizacion(cot_id);
-  PERFORM pg_temp.as_postgres();
-  PERFORM pg_temp.assert((rev->>'tarifa_vigente')::boolean IS NOT TRUE,
-    'una tarifa de otra organización no debe considerarse vigente');
-  PERFORM pg_temp.assert(
-    (rev->'cambios')::text LIKE '%eliminado%',
-    'el costo ligado a una tarifa de otra organización debe reportarse como no encontrado');
 
   -- TEST 5: duplicar copia los campos funcionales y los enlaces de tarifa.
+  -- La tarifa vinculada debe ser válida y de la misma organización (org_a).
+  INSERT INTO public.proveedores(id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, tipo, categoria)
+    VALUES (prov_a, 'Prov RA A', 'RAA010101AAA', 'C', 'a@a', '555', 'USD', org_a,
+            'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor);
+  INSERT INTO public.costeo_agentes(id, organization_id, proveedor_id, nombre, pais, dias_credito, activo)
+    VALUES (ag_a, org_a, prov_a, 'Agente RA A', 'CN', 30, true);
+  INSERT INTO public.costeo_rutas(id, organization_id, puerto_origen_id, puerto_destino_id, activa)
+    VALUES (ruta_a, org_a, pto_o, pto_d, true);
+  INSERT INTO public.costeo_tarifas(id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
+                                    moneda, flete_base, dias_libres_demoras, vigente_desde, vigente_hasta)
+    VALUES (tar_a, org_a, ag_a, nav_b, ruta_a, tcont, 'USD', 1500, 14, current_date - 5, current_date + 60);
+  UPDATE public.cotizaciones SET tarifa_id = tar_a WHERE id = cot_id;
+  INSERT INTO public.cotizacion_costos(cotizacion_id, organization_id, concepto, moneda, cantidad,
+                                       costo_unitario, precio_venta, costeo_tarifa_id)
+    VALUES (cot_id, org_a, 'Flete', 'USD', 1, 1500, 1800, tar_a);
   -- `admin_org` ya quedó sincronizado en `user_roles` desde la membresía.
   PERFORM pg_temp.as_user(usr_a);
   nueva := public.duplicar_cotizacion(cot_id);
@@ -150,7 +165,7 @@ BEGIN
       AND n.tarifa_id = o.tarifa_id AND n.moneda = o.moneda AND n.incoterm = o.incoterm
   ), 'duplicar debe copiar los campos funcionales y resetear estado/versión');
   PERFORM pg_temp.assert(EXISTS (
-    SELECT 1 FROM public.cotizacion_costos WHERE cotizacion_id = nueva AND costeo_tarifa_id = tar_b
+    SELECT 1 FROM public.cotizacion_costos WHERE cotizacion_id = nueva AND costeo_tarifa_id = tar_a
   ), 'duplicar debe conservar el enlace de tarifa de cada costo');
 
   -- TEST 6 (v13.823.352, linter ORG-SCOPE): ancla tenant de
