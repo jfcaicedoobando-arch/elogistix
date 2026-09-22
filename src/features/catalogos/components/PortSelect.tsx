@@ -52,7 +52,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
                 <button
                   type="button"
                   className="w-full px-2 py-1.5 text-sm text-left hover:bg-muted/50 rounded cursor-pointer"
-                  onClick={() => { onValueChange(search.trim()); setSearch(""); setOpen(false); }}
+                  onClick={() => { onValueChange(search.trim(), null); setSearch(""); setOpen(false); }}
                 >
                   Usar "<span className="font-medium">{search.trim()}</span>"
                 </button>
@@ -67,7 +67,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
                   <CommandItem
                     key={port.id}
                     value={`${port.name} ${port.country} ${port.code}`}
-                    onSelect={() => { onValueChange(display); setSearch(""); setOpen(false); }}
+                    onSelect={() => { onValueChange(display, port.id); setSearch(""); setOpen(false); }}
                   >
                     <Check className={cn("mr-2 h-4 w-4", value === display ? "opacity-100" : "opacity-0")} />
                     {display}
