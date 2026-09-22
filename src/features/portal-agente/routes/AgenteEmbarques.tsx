@@ -13,7 +13,7 @@ import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { etiquetaRutaTexto } from "@/features/costeo";
-import { formatFechaSegura } from "@/lib/formatters/datesSegura";
+import { formatFechaDia } from "@/lib/formatters/dates";
 import { etiquetaExpedienteAgente } from "./_sections/agenteEmbarqueLabels";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
