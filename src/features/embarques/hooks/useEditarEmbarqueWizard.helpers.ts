@@ -10,17 +10,24 @@ import {
 } from "@/features/embarques/domain/contenedorIso6346";
 
 /**
- * Marítimo exige número + tipo en cada contenedor. Devuelve `null` si OK,
+ * Marítimo FCL exige número + tipo en cada contenedor. Devuelve `null` si OK,
  * o un objeto con el mensaje para mostrar al usuario y el paso a re-abrir.
  * Además valida que los números con contenido cumplan ISO 6346 antes de
  * enviar al backend (el CHECK `contenedor_iso6346` los rechaza si no).
+ *
+ * v13.824.4 · LCL: la carga va consolidada y el agente no asigna número de
+ * contenedor. El paso 2 (`validateStepRuta`) y el avance de estado ya lo
+ * tratan así; el guardado exigía un dato que la pantalla nunca deja capturar
+ * y dejaba el embarque imposible de guardar.
  */
 export function validarContenedoresMaritimo(
   modo: string,
   contenedores: ContenedorBorrador[],
+  tipoServicio?: string | null,
 ): { description: string; step: number } | null {
   if (modo !== "Marítimo") return null;
-  const faltan = contenedores.some(
+  const esLcl = (tipoServicio ?? "").trim().toUpperCase() === "LCL";
+  const faltan = !esLcl && contenedores.some(
     (c) => !c.numero_contenedor.trim() || !c.tipo_contenedor.trim(),
   );
   if (faltan) {
@@ -29,7 +36,12 @@ export function validarContenedoresMaritimo(
       step: 2,
     };
   }
-  const invalidos = contenedores.some((c) => !esNumeroContenedorValido(c.numero_contenedor));
+  // Sólo se valida el formato de los números informados: en LCL el número
+  // puede quedar vacío (ver nota arriba) y en FCL el bloque anterior ya cubrió
+  // los faltantes.
+  const invalidos = contenedores.some(
+    (c) => c.numero_contenedor.trim() !== "" && !esNumeroContenedorValido(c.numero_contenedor),
+  );
   if (invalidos) {
     return {
       description: `Número de contenedor inválido. ${ISO6346_MENSAJE}`,

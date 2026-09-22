@@ -52,7 +52,11 @@ export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
   try {
     const contenedoresActuales = methods.getValues('contenedores') ?? [];
     const modoActual = methods.getValues('modo');
-    const errContenedores = validarContenedoresMaritimo(modoActual, contenedoresActuales);
+    const errContenedores = validarContenedoresMaritimo(
+      modoActual,
+      contenedoresActuales,
+      methods.getValues('tipoServicio'),
+    );
     if (errContenedores) {
       notifyError(undefined, {
         title: "Faltan datos de contenedores",
