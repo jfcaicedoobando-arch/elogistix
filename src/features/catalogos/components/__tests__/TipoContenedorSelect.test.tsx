@@ -25,31 +25,40 @@ vi.mock("@/features/catalogos/hooks", () => ({
 
 import { TipoContenedorSelect } from "../TipoContenedorSelect";
 
+function Campo({ value }: { value: string }) {
+  return (
+    <>
+      <label htmlFor="t">Tipo contenedor</label>
+      <TipoContenedorSelect id="t" value={value} onChange={onChange} />
+    </>
+  );
+}
+
 const onChange = vi.fn();
 beforeEach(() => onChange.mockReset());
 
 describe("TipoContenedorSelect", () => {
   it("muestra el placeholder cuando el valor es vacío", () => {
-    render(<TipoContenedorSelect id="t" value="" onChange={onChange} />);
-    expect(screen.getByLabelText("t")).toHaveTextContent("Selecciona");
+    render(<Campo value="" />);
+    expect(screen.getByLabelText("Tipo contenedor")).toHaveTextContent("Selecciona");
   });
 
   it("muestra el nombre canónico cuando el valor es un duplicado legacy", () => {
-    render(<TipoContenedorSelect id="t" value={LEGACY_HC} onChange={onChange} />);
-    expect(screen.getByLabelText("t")).toHaveTextContent("40' High Cube");
+    render(<Campo value={LEGACY_HC} />);
+    expect(screen.getByLabelText("Tipo contenedor")).toHaveTextContent("40' High Cube");
   });
 
   it("selecciona con mouse y emite el ID canónico", async () => {
-    render(<TipoContenedorSelect id="t" value="" onChange={onChange} />);
-    fireEvent.click(screen.getByLabelText("t"));
+    render(<Campo value="" />);
+    fireEvent.click(screen.getByLabelText("Tipo contenedor"));
     const lista = within(await screen.findByRole("listbox"));
     fireEvent.click(lista.getByText("40' High Cube"));
     expect(onChange).toHaveBeenCalledWith(TIPO_HC.id);
   });
 
   it("selecciona con teclado y emite el ID canónico", async () => {
-    render(<TipoContenedorSelect id="t" value="" onChange={onChange} />);
-    const trigger = screen.getByLabelText("t");
+    render(<Campo value="" />);
+    const trigger = screen.getByLabelText("Tipo contenedor");
     fireEvent.keyDown(trigger, { key: "Enter" });
     const listbox = await screen.findByRole("listbox");
     const opciones = within(listbox).getAllByRole("option");
