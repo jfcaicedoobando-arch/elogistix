@@ -49,6 +49,13 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
     piezas: watch('piezas'),
   };
 
+  // Etapa 3: el texto visible lo guarda el Controller; el ID de catálogo es la
+  // identidad exacta del puerto. Texto libre ⇒ null.
+  const seleccionarPuerto = (campo: 'puertoOrigenId' | 'puertoDestinoId', id: string | null) => {
+    setValue(campo, id, { shouldValidate: true, shouldDirty: true });
+  };
+
+
   const aplicarConservacion = (filas: typeof contenedores) => {
     setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
       shouldValidate: true,

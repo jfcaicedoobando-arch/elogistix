@@ -21,7 +21,7 @@ export const COTIZACION_ACEPTADA_COLUMNS =
   // v13.823.32: `estado` y `embarque_id` permiten que el alta de embarques
   // ofrezca SÓLO cotizaciones Aceptadas y sin embarque vivo (una cotización
   // no puede producir dos embarques), sin romper el selector de edición.
-  "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas, estado, embarque_id" as const;
+  "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, puerto_origen_id, puerto_destino_id, notas, estado, embarque_id" as const;
 
 
 // ─── Folio helper ───────────────────────────────────────────────────────────
