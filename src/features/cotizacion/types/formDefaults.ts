@@ -42,6 +42,9 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   tipoUnidad: "",
   origen: "",
   destino: "",
+  puertoOrigenId: null,
+  puertoDestinoId: null,
+
   tiempoTransitoDias: undefined,
   frecuencia: "",
   rutaTexto: "",
