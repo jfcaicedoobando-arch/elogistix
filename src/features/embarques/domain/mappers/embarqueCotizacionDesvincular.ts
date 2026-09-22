@@ -21,6 +21,9 @@ const DESVINCULAR_DEFAULTS: Array<FieldUpdate> = [
   ["piezas", ""],
   ["puertoOrigen", ""],
   ["puertoDestino", ""],
+  ["puertoOrigenId", null],
+  ["puertoDestinoId", null],
+
   ["aeropuertoOrigen", ""],
   ["aeropuertoDestino", ""],
   ["ciudadOrigen", ""],
