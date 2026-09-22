@@ -73,6 +73,10 @@ export interface CreateCotizacionInput {
   piezas: number;
   origen: string;
   destino: string;
+  /** Etapa 3 — identidad exacta del puerto de catálogo (sólo marítimo). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
+
   conceptos_venta: ConceptoVentaCotizacion[];
   subtotal: number;
   moneda: string;

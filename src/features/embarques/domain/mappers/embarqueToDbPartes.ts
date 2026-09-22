@@ -44,6 +44,10 @@ export function partesMaritimo(v: EmbarqueFormValues) {
   return {
     puerto_origen: emptyToNull(v.puertoOrigen),
     puerto_destino: emptyToNull(v.puertoDestino),
+    // Etapa 3: identidad exacta del puerto. Texto libre ⇒ null.
+    puerto_origen_id: v.puertoOrigenId ?? null,
+    puerto_destino_id: v.puertoDestinoId ?? null,
+
     naviera: emptyToNull(v.naviera),
     naviera_id: v.navieraId ?? null,
     agente: emptyToNull(v.agente),

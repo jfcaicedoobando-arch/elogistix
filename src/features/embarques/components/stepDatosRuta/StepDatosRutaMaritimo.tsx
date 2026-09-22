@@ -49,6 +49,13 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
     piezas: watch('piezas'),
   };
 
+  // Etapa 3: el texto visible lo guarda el Controller; el ID de catálogo es la
+  // identidad exacta del puerto. Texto libre ⇒ null.
+  const seleccionarPuerto = (campo: 'puertoOrigenId' | 'puertoDestinoId', id: string | null) => {
+    setValue(campo, id, { shouldValidate: true, shouldDirty: true });
+  };
+
+
   const aplicarConservacion = (filas: typeof contenedores) => {
     setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
       shouldValidate: true,
@@ -82,7 +89,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
         <Controller name="puertoOrigen" render={({ field }) => (
           <PortSelect
             value={field.value}
-            onValueChange={field.onChange}
+            onValueChange={(v, id) => { field.onChange(v); seleccionarPuerto('puertoOrigenId', id); }}
             placeholder="Seleccionar puerto origen"
             className={cn(errors.puertoOrigen && 'border-destructive')}
             aria-invalid={errors.puertoOrigen ? true : undefined}
@@ -95,13 +102,14 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
         <Controller name="puertoDestino" render={({ field }) => (
           <PortSelect
             value={field.value}
-            onValueChange={field.onChange}
+            onValueChange={(v, id) => { field.onChange(v); seleccionarPuerto('puertoDestinoId', id); }}
             placeholder="Seleccionar puerto destino"
             className={cn(errors.puertoDestino && 'border-destructive')}
             aria-invalid={errors.puertoDestino ? true : undefined}
           />
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
+
       </div>
       <NavieraEmbarqueSelector cotizacionNavieraId={cotizacionNavieraId} />
       <AgenteEmbarqueSelector cotizacionAgenteId={cotizacionAgenteId} />

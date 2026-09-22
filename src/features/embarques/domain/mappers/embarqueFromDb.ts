@@ -27,6 +27,10 @@ export interface EmbarqueFormValues {
   subiendoMsds: boolean;
   puertoOrigen: string;
   puertoDestino: string;
+  /** Etapa 3 — identidad exacta del puerto de catálogo (null en texto libre). */
+  puertoOrigenId: string | null;
+  puertoDestinoId: string | null;
+
   naviera: string;
   navieraId: string | null;
   tipoServicio: string;
@@ -71,7 +75,9 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   consignatario: "", consignatarioManual: "", incoterm: "FOB", descripcionMercancia: "",
   pesoKg: "", volumenM3: "", piezas: "", tipoCarga: "Carga General",
   msdsArchivo: null, subiendoMsds: false,
-  puertoOrigen: "", puertoDestino: "", naviera: "", navieraId: null,
+  puertoOrigen: "", puertoDestino: "", puertoOrigenId: null, puertoDestinoId: null,
+  naviera: "", navieraId: null,
+
   agente: "", agenteId: null, tipoServicio: "",
   contenedor: "", tipoContenedor: "", contenedores: [], blMaster: "", blHouse: "",
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
@@ -115,6 +121,9 @@ function mapMaritimo(e: EmbarqueRow) {
   return {
     puertoOrigen: str(e.puerto_origen),
     puertoDestino: str(e.puerto_destino),
+    puertoOrigenId: (row.puerto_origen_id as string | null) ?? null,
+    puertoDestinoId: (row.puerto_destino_id as string | null) ?? null,
+
     naviera: str(e.naviera),
     navieraId: (row.naviera_id as string | null) ?? null,
     agente: str(e.agente),

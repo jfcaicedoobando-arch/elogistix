@@ -1,21 +1,43 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import PortSelect from "@/features/catalogos/components/PortSelect";
 import { FormField } from "@/components/shared/FormField";
+import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { OPTS, type Ctx } from "./overrideHelpers";
+import {
+  aplicarSeleccionPuerto,
+  MSG_TARIFA_DESVINCULADA,
+  type CampoPuerto,
+} from "./rutaPuertoHandlers";
 
 export default function OrigenDestinoBlock({
   ctx, usarPortSelect, esTerrestre, conPuntoIntermedio,
 }: { ctx: Ctx; usarPortSelect: boolean; esTerrestre: boolean; conPuntoIntermedio: boolean }) {
   const { watch, setValue } = ctx;
+  const [avisoTarifa, setAvisoTarifa] = useState(false);
+
+  const seleccionar = (campo: CampoPuerto) => (valor: string, puertoId: string | null) => {
+    const { tarifaDesvinculada } = aplicarSeleccionPuerto(ctx, campo, valor, puertoId);
+    if (tarifaDesvinculada) setAvisoTarifa(true);
+  };
+
   if (usarPortSelect) {
     return (
       <>
         <FormField label="Origen">
-          <PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen…" />
+          <PortSelect value={watch("origen")} onValueChange={seleccionar("origen")} placeholder="Buscar puerto de origen…" />
         </FormField>
         <FormField label="Destino">
-          <PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino…" />
+          <PortSelect value={watch("destino")} onValueChange={seleccionar("destino")} placeholder="Buscar puerto de destino…" />
         </FormField>
+        {avisoTarifa && (
+          <ValidationAlert
+            severity="warning"
+            title="Revisa la tarifa"
+            message={MSG_TARIFA_DESVINCULADA}
+            className="md:col-span-2"
+          />
+        )}
       </>
     );
   }

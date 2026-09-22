@@ -29,6 +29,10 @@ export interface CotizacionParaVincular {
   piezas: number;
   origen: string;
   destino: string;
+  /** Etapa 3 — identidad exacta del puerto de catálogo (sólo marítimo). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
+
   msds_archivo?: string | null;
   num_contenedores?: number | null;
   tipo_embarque?: string | null;
@@ -117,8 +121,15 @@ export function buildMercanciaUpdates(cot: CotizacionParaVincular): FieldUpdate[
 
 export function buildRutaUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
   if (esModoMaritimo(cot.modo)) {
-    return [["puertoOrigen", cot.origen || ""], ["puertoDestino", cot.destino || ""]];
+    return [
+      ["puertoOrigen", cot.origen || ""],
+      ["puertoDestino", cot.destino || ""],
+      // Etapa 3: el embarque hereda la identidad exacta, no sólo el texto.
+      ["puertoOrigenId", cot.puerto_origen_id ?? null],
+      ["puertoDestinoId", cot.puerto_destino_id ?? null],
+    ];
   }
+
   if (esModoAereo(cot.modo)) {
     return [["aeropuertoOrigen", cot.origen || ""], ["aeropuertoDestino", cot.destino || ""]];
   }

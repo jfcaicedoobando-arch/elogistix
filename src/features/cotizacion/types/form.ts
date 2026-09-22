@@ -64,6 +64,15 @@ export interface CotizacionFormValues {
   tipoUnidad: string;
   origen: string;
   destino: string;
+  /**
+   * Etapa 3 — identidad EXACTA del puerto elegido del catálogo (UUID). El texto
+   * `origen`/`destino` sigue siendo lo que ve el cliente (puede ser una ruta
+   * puerta a puerta); estos IDs son la fuente de verdad para buscar tarifa y
+   * heredar la ruta al embarque. `null` cuando se capturó texto libre.
+   */
+  puertoOrigenId: string | null;
+  puertoDestinoId: string | null;
+
   tiempoTransitoDias: number | undefined;
   frecuencia: string;
   rutaTexto: string;
@@ -133,6 +142,10 @@ export interface CotizacionInitialData {
   tipo_unidad: string | null;
   origen: string;
   destino: string;
+  /** Etapa 3 — IDs de catálogo persistidos (null en cotizaciones legacy). */
+  puerto_origen_id?: string | null;
+  puerto_destino_id?: string | null;
+
   tiempo_transito_dias: number | null;
   frecuencia: string;
   ruta_texto: string;

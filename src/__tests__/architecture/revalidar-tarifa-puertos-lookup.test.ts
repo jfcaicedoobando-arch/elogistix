@@ -23,10 +23,26 @@ const SCHEMA_PATH = resolve(
 describe("crear_embarque_borrador_core · puertos lookup (regresión revalidar tarifa)", () => {
   const sql = readFileSync(SCHEMA_PATH, "utf8");
 
-  it("consulta public.puertos usando la columna real `code`", () => {
-    // Debe existir al menos una consulta con `WHERE p.code =` sobre `public.puertos p`.
-    expect(sql).toMatch(/FROM\s+public\.puertos\s+p\b[\s\S]*?WHERE\s+p\.code\s*=/i);
+  it("consulta public.puertos usando la columna real `code` (respaldo legacy)", () => {
+    // Etapa 3: el UN/LOCODE dejó de ser la vía principal (ahora manda el ID de
+    // catálogo), pero sigue siendo el ÚNICO respaldo para cotizaciones legacy.
+    expect(sql).toMatch(/FROM\s+public\.puertos\s+p\b[\s\S]*?WHERE\s+upper\(btrim\(p\.code\)\)\s*=/i);
   });
+
+  it("Etapa 3 · resuelve el puerto por ID de catálogo y sin `LIMIT 1` por nombre", () => {
+    expect(sql).toMatch(/v_puerto_o_id\s*:=\s*v_cot\.puerto_origen_id\b/);
+    expect(sql).toMatch(/v_puerto_d_id\s*:=\s*v_cot\.puerto_destino_id\b/);
+    expect(sql).toMatch(/WHERE\s+p\.id\s*=\s*v_puerto_o_id\b/);
+    // El respaldo por UN/LOCODE exige unicidad, nunca "el primero que aparezca".
+    expect(sql).toMatch(/HAVING\s+count\(\*\)\s*=\s*1/i);
+    expect(sql).not.toMatch(/WHERE\s+p\.code\s*=\s*v_(origen|destino)_code\s*LIMIT\s+1/i);
+  });
+
+  it("Etapa 3 · persiste los IDs de puerto en el embarque", () => {
+    expect(sql).toMatch(/puerto_origen_id,\s*puerto_destino_id/);
+    expect(sql).toMatch(/v_puerto_o_id,\s*v_puerto_d_id/);
+  });
+
 
   it("selecciona el nombre del puerto usando la columna real `name`", () => {
     expect(sql).toMatch(/SELECT\s+p\.name\s+INTO\s+v_puerto_[od]/i);

@@ -31,6 +31,11 @@ function partesMercanciaInsert(input: CreateCotizacionInput) {
     piezas: input.piezas,
     origen: input.origen,
     destino: input.destino,
+    // Etapa 3: identidad exacta del puerto (el trigger de BD los fuerza a NULL
+    // fuera del modo marítimo y los sincroniza con la ruta de la tarifa).
+    puerto_origen_id: input.puerto_origen_id ?? null,
+    puerto_destino_id: input.puerto_destino_id ?? null,
+
     tipo_carga: input.tipo_carga || "Carga General",
     msds_archivo: input.msds_archivo || null,
     tipo_embarque: input.tipo_embarque || "FCL",

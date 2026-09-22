@@ -86,7 +86,10 @@ function partesRuta(d: CotizacionInitialData) {
   return {
     origen: d.origen ?? "",
     destino: d.destino ?? "",
+    puertoOrigenId: d.puerto_origen_id ?? null,
+    puertoDestinoId: d.puerto_destino_id ?? null,
     tiempoTransitoDias: d.tiempo_transito_dias ?? undefined,
+
     frecuencia: d.frecuencia ?? "",
     rutaTexto: d.ruta_texto ?? "",
     // EC-06: `validez_propuesta` es date-only; "T00:00:00" lo ancla a

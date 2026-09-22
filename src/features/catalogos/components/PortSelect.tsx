@@ -8,11 +8,17 @@ import { usePuertos } from "@/features/catalogos/hooks";
 
 interface PortSelectProps {
   value: string;
-  onValueChange: (value: string) => void;
+  /**
+   * Etapa 3: además del texto visible se emite el ID del puerto de catálogo
+   * seleccionado (`null` cuando el usuario escribió texto libre). El segundo
+   * argumento es opcional para los consumidores que sólo necesitan el texto.
+   */
+  onValueChange: (value: string, puertoId: string | null) => void;
   placeholder?: string;
   className?: string;
   "aria-invalid"?: boolean | undefined;
 }
+
 
 function formatPort(port: { code: string; name: string; country: string }) {
   return `${port.name}, ${port.country} (${port.code})`;
@@ -46,7 +52,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
                 <button
                   type="button"
                   className="w-full px-2 py-1.5 text-sm text-left hover:bg-muted/50 rounded cursor-pointer"
-                  onClick={() => { onValueChange(search.trim()); setSearch(""); setOpen(false); }}
+                  onClick={() => { onValueChange(search.trim(), null); setSearch(""); setOpen(false); }}
                 >
                   Usar "<span className="font-medium">{search.trim()}</span>"
                 </button>
@@ -61,7 +67,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
                   <CommandItem
                     key={port.id}
                     value={`${port.name} ${port.country} ${port.code}`}
-                    onSelect={() => { onValueChange(display); setSearch(""); setOpen(false); }}
+                    onSelect={() => { onValueChange(display, port.id); setSearch(""); setOpen(false); }}
                   >
                     <Check className={cn("mr-2 h-4 w-4", value === display ? "opacity-100" : "opacity-0")} />
                     {display}

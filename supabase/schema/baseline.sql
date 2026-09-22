@@ -2184,6 +2184,37 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._cotizaciones_sync_puertos_tarifa() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_o uuid;
+  v_d uuid;
+BEGIN
+  IF NEW.modo::text <> 'Marítimo' THEN
+    NEW.puerto_origen_id := NULL;
+    NEW.puerto_destino_id := NULL;
+    RETURN NEW;
+  END IF;
+  IF NEW.tarifa_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT r.puerto_origen_id, r.puerto_destino_id
+    INTO v_o, v_d
+    FROM public.costeo_tarifas t
+    JOIN public.costeo_rutas r ON r.id = t.ruta_id
+   WHERE t.id = NEW.tarifa_id
+     AND t.organization_id = NEW.organization_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_COT_TARIFA_ORG_INVALIDA: la tarifa % no pertenece a la organización de la cotización.', NEW.tarifa_id
+      USING ERRCODE = 'P0001';
+  END IF;
+  NEW.puerto_origen_id := v_o;
+  NEW.puerto_destino_id := v_d;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._cotizaciones_sync_vigencia() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -13018,6 +13049,10 @@ DECLARE
   v_destino_code  text;
   v_puerto_o      text;
   v_puerto_d      text;
+  v_puerto_o_id   uuid;
+  v_puerto_d_id   uuid;
+  v_ruta_o_id     uuid;
+  v_ruta_d_id     uuid;
   v_aero_o        text;
   v_aero_d        text;
   v_ciudad_o      text;
@@ -13058,14 +13093,6 @@ BEGIN
   IF v_cot.cliente_id IS NULL OR v_cot.es_prospecto THEN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #2: una cotización con dinero en más de una
-  -- moneda no puede convertirse sin tipo de cambio sellado; convertir con TC
-  -- implícito (o 1:1) deformaría el P&L del embarque.
-  -- v13.823.392 · Auditoría cotización→embarque #2: el conteo cubría SÓLO las
-  -- monedas efectivas de `conceptos_venta`. Una venta en USD con costos en MXN
-  -- (caso real) generaba un embarque multi-moneda sin TC sellado. Ahora se
-  -- evalúa la UNIÓN de monedas efectivas de ventas y de `cotizacion_costos`
-  -- vivos; las filas con importe cero siguen sin contar.
   SELECT count(*)
     INTO v_monedas
     FROM (
@@ -13073,9 +13100,6 @@ BEGIN
         FROM jsonb_array_elements(
                CASE WHEN jsonb_typeof(COALESCE(v_cot.conceptos_venta, '[]'::jsonb)) = 'array'
                     THEN v_cot.conceptos_venta ELSE '[]'::jsonb END) c
-       -- v13.823.347: el importe efectivo cae a cantidad x precio cuando el
-       -- renglón legacy trae `total` nulo o 0; antes esas filas USD no contaban y
-       -- una cotización mixta se convertía sin tipo de cambio.
        WHERE COALESCE(
                NULLIF(
                  CASE WHEN COALESCE(NULLIF(c->>'total', ''), '0') ~ '^-?[0-9]+(\.[0-9]+)?$'
@@ -13098,24 +13122,16 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_TC_REQUERIDO: la cotización % tiene importes en más de una moneda y no tiene tipo de cambio; captúralo antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.330 · Auditoría YAGNI #4: FCL exige número de contenedores real.
-  -- Antes `GREATEST(1, ...)` convertía 0 en 1 en silencio. LCL no cambia.
   v_es_fcl := v_cot.modo = 'Marítimo'::modo_transporte
     AND upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, ''))) = 'FCL';
   IF v_es_fcl AND COALESCE(v_cot.num_contenedores, 0) < 1 THEN
     RAISE EXCEPTION 'LC_COT_CONTENEDORES_REQUERIDOS: la cotización % es marítima FCL y no indica cuántos contenedores; captura el número de contenedores (1 o más) antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.396 · Q1: FCL exige TIPO de contenedor. El Paso 1 dejaba avanzar sin
-  -- seleccionarlo y el hijo FCL nacía con `tipo_contenedor` vacío. No se acepta
-  -- ni se inventa '' (cadena vacía).
   IF v_es_fcl AND NULLIF(btrim(COALESCE(v_cot.tipo_contenedor, '')), '') IS NULL THEN
     RAISE EXCEPTION 'LC_COT_TIPO_CONTENEDOR_REQUERIDO: la cotización % es marítima FCL y no indica el tipo de contenedor; selecciónalo en el Paso 1 antes de crear el embarque', COALESCE(v_cot.folio, p_cotizacion_id::text)
       USING ERRCODE = 'P0001';
   END IF;
-  -- v13.823.396 · Q3: falla cerrada si el tipo de contenedor quedó desalineado
-  -- de la tarifa todavía vinculada (un 40' valuado con costos y recargos de una
-  -- tarifa 20'). Se normaliza el valor legado (code/nombre) o el UUID directo.
   IF v_es_fcl AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT t.tipo_contenedor_id INTO v_tarifa_tipo_cont
       FROM public.costeo_tarifas t
@@ -13137,9 +13153,6 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
-  -- v13.823.357 · Auditoría YAGNI P1 #1/#3 y P2 #7: sin venta positiva, con
-  -- precio de venta capturado que no llegó a los conceptos, o con moneda no
-  -- soportada, el embarque nacería en cero o con importes deformados.
   PERFORM public._assert_cotizacion_venta_valida(v_cot.id);
   IF v_cot.embarque_id IS NOT NULL THEN
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
@@ -13166,36 +13179,67 @@ BEGIN
     NULLIF(trim(v_cot.destino), ''),
     NULL
   );
-  IF v_origen_code IS NOT NULL THEN
-    SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
-  END IF;
-  IF v_destino_code IS NOT NULL THEN
-    SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.code = v_destino_code LIMIT 1;
-  END IF;
   IF v_cot.modo = 'Aéreo'::modo_transporte THEN
-    v_aero_o := COALESCE(v_puerto_o, v_origen_code);
-    v_aero_d := COALESCE(v_puerto_d, v_destino_code);
+    -- Etapa 3: Aéreo y Terrestre NO pasan por el catálogo de puertos.
+    v_aero_o := v_origen_code;
+    v_aero_d := v_destino_code;
     v_puerto_o := NULL; v_puerto_d := NULL;
+    v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSIF v_cot.modo = 'Terrestre'::modo_transporte THEN
-    v_ciudad_o := COALESCE(v_puerto_o, v_origen_code);
-    v_ciudad_d := COALESCE(v_puerto_d, v_destino_code);
+    v_ciudad_o := v_origen_code;
+    v_ciudad_d := v_destino_code;
     v_puerto_o := NULL; v_puerto_d := NULL;
+    v_puerto_o_id := NULL; v_puerto_d_id := NULL;
   ELSE
+    -- Etapa 3: la identidad del puerto viaja por ID, no por texto. Antes se
+    -- extraía un supuesto código con regex y se resolvía con `LIMIT 1`, así que
+    -- con rutas globales dos puertos homónimos podían intercambiarse.
+    v_puerto_o_id := v_cot.puerto_origen_id;
+    v_puerto_d_id := v_cot.puerto_destino_id;
+    IF v_cot.tarifa_id IS NOT NULL THEN
+      SELECT r.puerto_origen_id, r.puerto_destino_id
+        INTO v_ruta_o_id, v_ruta_d_id
+        FROM public.costeo_tarifas t
+        JOIN public.costeo_rutas r ON r.id = t.ruta_id
+       WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'LC_COT_TARIFA_ORG_INVALIDA: la tarifa % no pertenece a la organización de la cotización', v_cot.tarifa_id
+          USING ERRCODE = 'P0001';
+      END IF;
+      v_puerto_o_id := v_ruta_o_id;
+      v_puerto_d_id := v_ruta_d_id;
+    END IF;
+    -- Legacy sin IDs: sólo UN/LOCODE exacto y ÚNICO. Nunca por nombre/fragmento.
+    IF v_puerto_o_id IS NULL AND v_origen_code IS NOT NULL THEN
+      SELECT max(p.id) INTO v_puerto_o_id
+        FROM public.puertos p
+       WHERE upper(btrim(p.code)) = upper(btrim(v_origen_code))
+      HAVING count(*) = 1;
+    END IF;
+    IF v_puerto_d_id IS NULL AND v_destino_code IS NOT NULL THEN
+      SELECT max(p.id) INTO v_puerto_d_id
+        FROM public.puertos p
+       WHERE upper(btrim(p.code)) = upper(btrim(v_destino_code))
+      HAVING count(*) = 1;
+    END IF;
+    IF v_puerto_o_id IS NOT NULL AND v_puerto_o_id = v_puerto_d_id THEN
+      v_puerto_o_id := NULL; v_puerto_d_id := NULL;
+    END IF;
+    -- Texto canónico desde el catálogo por ID; respaldo: el texto capturado.
+    IF v_puerto_o_id IS NOT NULL THEN
+      SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.id = v_puerto_o_id;
+    END IF;
+    IF v_puerto_d_id IS NOT NULL THEN
+      SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.id = v_puerto_d_id;
+    END IF;
     v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
-  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
-  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
-  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
-  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
-  -- creado por conversión directa mostraba "Servicio —".
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
     IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
@@ -13209,14 +13253,9 @@ BEGIN
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
     SELECT COALESCE(v_agente_id, t.agente_id), COALESCE(v_naviera_id, t.naviera_id)
       INTO v_agente_id, v_naviera_id
-    -- v13.823.351: la tarifa se lee SIEMPRE acotada a la organización de la
-    -- cotización; un id de otro tenant no debe sembrar agente/naviera.
     FROM public.costeo_tarifas t
      WHERE t.id = v_cot.tarifa_id AND t.organization_id = v_cot.organization_id;
   END IF;
-  -- v13.823.355 (YAGNI r2 · P1): el agente se lee acotado a la organización de
-  -- la cotización. Una referencia cruzada copiaba el nombre del agente de otro
-  -- tenant al embarque; ahora falla cerrado.
   IF v_agente_id IS NOT NULL THEN
     SELECT nombre INTO v_agente_nombre
       FROM public.costeo_agentes
@@ -13234,6 +13273,7 @@ BEGIN
     msds_archivo,
     organization_id,
     puerto_origen, puerto_destino,
+    puerto_origen_id, puerto_destino_id,
     aeropuerto_origen, aeropuerto_destino,
     ciudad_origen, ciudad_destino,
     tarifa_id, tarifa_id_original, tarifa_id_aplicada,
@@ -13241,8 +13281,6 @@ BEGIN
     seguro, valor_seguro_usd,
     agente_id, naviera_id, agente, naviera,
     tipo_servicio,
-    -- v13.823.330 · Auditoría YAGNI #3: el TC sellado en la cotización se hereda
-    -- al embarque; antes el borrador nacía sin tipo de cambio.
     tipo_cambio_usd
   )
   VALUES (
@@ -13250,11 +13288,10 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
-    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
-    -- hereda al embarque; antes el borrador nacía sin el documento.
     v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
+    v_puerto_o_id, v_puerto_d_id,
     v_aero_o, v_aero_d,
     v_ciudad_o, v_ciudad_d,
     v_cot.tarifa_id, v_cot.tarifa_id, v_cot.tarifa_id,
@@ -13265,11 +13302,6 @@ BEGIN
     NULLIF(GREATEST(COALESCE(v_cot.tipo_cambio_usd, 0), 0), 0)
   )
   RETURNING id INTO v_embarque_id;
-  -- v13.823.332 · BL-EMB-02: los contenedores hijos SÓLO existen en marítimo.
-  -- Antes se insertaba al menos una fila para cualquier modo, así que Aéreo y
-  -- Terrestre nacían con un hijo vacío (numero/tipo '') que además contaminaba
-  -- el prorrateo de costos (FIN-EMB-03) y encendía el badge "Datos pendientes".
-  -- LCL: una sola fila con tipo 'LCL'. FCL: N filas reales. Otros modos: ninguna.
   v_target_ids := ARRAY[]::uuid[];
   IF v_cot.modo = 'Marítimo'::modo_transporte THEN
     IF v_tipo_servicio = 'LCL' THEN
@@ -31574,9 +31606,12 @@ CREATE TABLE public.cotizaciones (
     origen_portal boolean DEFAULT false NOT NULL,
     created_by uuid DEFAULT auth.uid(),
     tipo_cambio_usd numeric,
+    puerto_origen_id uuid,
+    puerto_destino_id uuid,
     CONSTRAINT cotizaciones_estado_revalidacion_chk CHECK ((estado_revalidacion = ANY (ARRAY['ninguna'::text, 'pendiente_reaprobacion'::text, 'reaprobada'::text, 'rechazada'::text]))),
     CONSTRAINT cotizaciones_peso_nonneg CHECK ((peso_kg >= (0)::numeric)),
     CONSTRAINT cotizaciones_piezas_nonneg CHECK ((piezas >= 0)),
+    CONSTRAINT cotizaciones_puertos_distintos_chk CHECK (((puerto_origen_id IS NULL) OR (puerto_destino_id IS NULL) OR (puerto_origen_id <> puerto_destino_id))),
     CONSTRAINT cotizaciones_subtotal_nonneg CHECK ((subtotal >= (0)::numeric)),
     CONSTRAINT cotizaciones_tipo_documento_check CHECK ((tipo_documento = ANY (ARRAY['transaccional'::text, 'informativa'::text]))),
     CONSTRAINT cotizaciones_volumen_nonneg CHECK ((volumen_m3 >= (0)::numeric))
@@ -32060,11 +32095,14 @@ CREATE TABLE public.embarques (
     agente_id uuid,
     naviera_id uuid,
     sin_comision boolean,
+    puerto_origen_id uuid,
+    puerto_destino_id uuid,
     CONSTRAINT embarques_cobro_cliente_status_check CHECK ((cobro_cliente_status = ANY (ARRAY['pendiente'::text, 'parcial'::text, 'pagado'::text]))),
     CONSTRAINT embarques_eta_after_etd CHECK (((etd IS NULL) OR (eta IS NULL) OR (eta >= etd))),
     CONSTRAINT embarques_medidas_no_negativas CHECK (((COALESCE(peso_kg, (0)::numeric) >= (0)::numeric) AND (COALESCE(volumen_m3, (0)::numeric) >= (0)::numeric) AND (COALESCE(piezas, 0) >= 0))),
     CONSTRAINT embarques_peso_kg_nonneg CHECK ((peso_kg >= (0)::numeric)),
     CONSTRAINT embarques_piezas_nonneg CHECK ((piezas >= 0)),
+    CONSTRAINT embarques_puertos_distintos_chk CHECK (((puerto_origen_id IS NULL) OR (puerto_destino_id IS NULL) OR (puerto_origen_id <> puerto_destino_id))),
     CONSTRAINT embarques_tarifa_decision_chk CHECK (((tarifa_decision IS NULL) OR (tarifa_decision = ANY (ARRAY['sin_cambios'::text, 'mantenida_por_operaciones'::text, 'refrescada'::text, 'sustituida'::text, 'reaprobada_ventas'::text])))),
     CONSTRAINT embarques_tc_eur_pos CHECK ((tipo_cambio_eur > (0)::numeric)),
     CONSTRAINT embarques_tc_usd_pos CHECK ((tipo_cambio_usd > (0)::numeric)),
@@ -33650,6 +33688,7 @@ CREATE TRIGGER trg_cotizaciones_envio_sin_oportunidad BEFORE UPDATE ON public.co
 CREATE TRIGGER trg_cotizaciones_guard_en_operacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
 CREATE TRIGGER trg_cotizaciones_sod_aceptacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_auto_aceptacion();
 CREATE TRIGGER trg_cotizaciones_subtotal_server BEFORE INSERT OR UPDATE OF conceptos_venta, moneda ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.trg_cotizacion_subtotal_server();
+CREATE TRIGGER trg_cotizaciones_sync_puertos_tarifa BEFORE INSERT OR UPDATE OF modo, tarifa_id, puerto_origen_id, puerto_destino_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_sync_puertos_tarifa();
 CREATE TRIGGER trg_cotizaciones_sync_vigencia BEFORE INSERT OR UPDATE OF validez_propuesta, vigencia_dias, fecha_vigencia ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_sync_vigencia();
 CREATE TRIGGER trg_cotizaciones_validar_prospecto BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_validar_prospecto();
 CREATE TRIGGER trg_crear_garantia_contenedor AFTER INSERT ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.crear_garantia_contenedor();
@@ -34097,6 +34136,10 @@ ALTER TABLE ONLY public.cotizaciones
 ALTER TABLE ONLY public.cotizaciones
     ADD CONSTRAINT cotizaciones_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.cotizaciones
+    ADD CONSTRAINT cotizaciones_puerto_destino_id_fkey FOREIGN KEY (puerto_destino_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.cotizaciones
+    ADD CONSTRAINT cotizaciones_puerto_origen_id_fkey FOREIGN KEY (puerto_origen_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.cotizaciones
     ADD CONSTRAINT cotizaciones_tarifa_id_fkey FOREIGN KEY (tarifa_id) REFERENCES public.costeo_tarifas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.crm_etapa_criterios
     ADD CONSTRAINT crm_etapa_criterios_etapa_id_fkey FOREIGN KEY (etapa_id) REFERENCES public.crm_etapas_pipeline(id) ON DELETE CASCADE;
@@ -34160,6 +34203,10 @@ ALTER TABLE ONLY public.embarques
     ADD CONSTRAINT embarques_naviera_id_fkey FOREIGN KEY (naviera_id) REFERENCES public.navieras(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.embarques
     ADD CONSTRAINT embarques_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+ALTER TABLE ONLY public.embarques
+    ADD CONSTRAINT embarques_puerto_destino_id_fkey FOREIGN KEY (puerto_destino_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.embarques
+    ADD CONSTRAINT embarques_puerto_origen_id_fkey FOREIGN KEY (puerto_origen_id) REFERENCES public.puertos(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.embarques
     ADD CONSTRAINT embarques_tarifa_id_aplicada_fkey FOREIGN KEY (tarifa_id_aplicada) REFERENCES public.costeo_tarifas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.embarques
@@ -35101,6 +35148,9 @@ GRANT ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_importes() TO auth
 GRANT ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_importes() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad() TO service_role;
+REVOKE ALL ON FUNCTION public._cotizaciones_sync_puertos_tarifa() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._cotizaciones_sync_puertos_tarifa() TO authenticated;
+GRANT ALL ON FUNCTION public._cotizaciones_sync_puertos_tarifa() TO service_role;
 GRANT ALL ON FUNCTION public._cotizaciones_sync_vigencia() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizaciones_sync_vigencia() TO service_role;
 GRANT ALL ON FUNCTION public._cotizaciones_validar_prospecto() TO authenticated;
@@ -36926,6 +36976,10 @@ GRANT SELECT(naviera_id) ON TABLE public.embarques TO authenticated;
 GRANT SELECT(naviera_id) ON TABLE public.embarques TO anon;
 GRANT SELECT(sin_comision) ON TABLE public.embarques TO authenticated;
 GRANT SELECT(sin_comision) ON TABLE public.embarques TO anon;
+GRANT SELECT(puerto_origen_id) ON TABLE public.embarques TO authenticated;
+GRANT SELECT(puerto_origen_id) ON TABLE public.embarques TO anon;
+GRANT SELECT(puerto_destino_id) ON TABLE public.embarques TO authenticated;
+GRANT SELECT(puerto_destino_id) ON TABLE public.embarques TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.embarques_interno_v TO authenticated;
 GRANT ALL ON TABLE public.embarques_interno_v TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.eventos_embarque TO anon;
