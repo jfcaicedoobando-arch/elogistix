@@ -79,7 +79,9 @@ export function esExitoWire(data: unknown): data is TimbradoExitoWire {
     textoNoVacio(data.uuid) &&
     typeof data.folio === "number" &&
     Number.isFinite(data.folio) &&
-    textoNoVacio(data.serie) &&
+    // La serie puede venir vacía: el SAT no la exige y los REP se timbran sin
+    // serie propia. Sólo se valida el tipo, no que tenga contenido.
+    typeof data.serie === "string" &&
     textoNoVacio(data.facturapi_id) &&
     textoNoVacio(data.pdf_url) &&
     textoNoVacio(data.xml_url)
