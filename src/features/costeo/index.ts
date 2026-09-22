@@ -9,6 +9,8 @@ export {
   destinoDe,
   etiquetaPuertoCompleta,
   etiquetaRutaCompleta,
+  etiquetaRutaTexto,
+  identidadDesdeTexto,
   nombrePuerto,
   origenDe,
   rutaCorta,
