@@ -39,6 +39,10 @@ describe("guards del contrato wire", () => {
     expect(esExitoWire(sinXml)).toBe(false);
   });
 
+  it("acepta el éxito con serie vacía (REP y facturas sin serie)", () => {
+    expect(esExitoWire({ ...EXITO, serie: "" })).toBe(true);
+  });
+
   it("reconoce pendiente por bandera y por outcome", () => {
     expect(esPendienteWire({ pendiente: true })).toBe(true);
     expect(esPendienteWire({ outcome: "timbrado_pendiente" })).toBe(true);
