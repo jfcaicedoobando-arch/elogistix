@@ -12,6 +12,8 @@ const row = (over: Partial<TopTarifaRow>): TopTarifaRow =>
     naviera_id: "n", naviera_nombre: "Naviera",
     ruta_id: "r", puerto_origen_id: "po", puerto_destino_id: "pd",
     puerto_origen_nombre: "Shanghái", puerto_destino_nombre: "Manzanillo",
+    puerto_origen_code: "CNSHA", puerto_origen_country: "China",
+    puerto_destino_code: "MXZLO", puerto_destino_country: "México",
     tipo_contenedor_id: "tc", tipo_contenedor_nombre: "40HC",
     moneda: "USD",
     flete_base: 0, recargos_total: 0,

@@ -27,6 +27,11 @@ export interface CosteoRuta {
   updated_at: string;
   puerto_origen_nombre?: string;
   puerto_destino_nombre?: string;
+  /** Etapa 2: contexto inequívoco del puerto (UN/LOCODE + país). Legacy puede ser null. */
+  puerto_origen_code?: string | null;
+  puerto_origen_country?: string | null;
+  puerto_destino_code?: string | null;
+  puerto_destino_country?: string | null;
   /** Conteo de tarifas con estado='vigente' y vigente_hasta >= hoy. */
   tarifas_vigentes_count?: number;
   /** Fecha (ISO date) de la tarifa vigente más próxima a vencer. */
@@ -80,6 +85,11 @@ export interface CosteoTarifaRow extends CosteoTarifa {
   naviera_nombre: string;
   puerto_origen_nombre: string;
   puerto_destino_nombre: string;
+  /** Etapa 2: UN/LOCODE + país de cada puerto (null en catálogo legacy). */
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
   tipo_contenedor_nombre: string;
   recargos_total: number;
   total_comparable: number;
@@ -100,6 +110,11 @@ export interface TopTarifaRow {
   puerto_destino_id: string;
   puerto_origen_nombre: string;
   puerto_destino_nombre: string;
+  /** Etapa 2: la vista `costeo_tarifas_vigentes_v` los expone al final. */
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
   tipo_contenedor_id: string;
   tipo_contenedor_nombre: string;
   moneda: string;

@@ -19,7 +19,8 @@ export function TotalTarifaCell({
   mejorPorGrupo: TarifasColumnsDeps["mejorPorGrupo"];
 }) {
   const ap = t.estado_aprobacion ?? "vigente";
-  const grupoKey = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+  // Etapa 2: la clave usa IDs (puertos homónimos no deben compartir grupo).
+  const grupoKey = `${t.ruta_id}|${t.tipo_contenedor_id}`;
   const mejor = mejorPorGrupo.get(grupoKey);
   const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente";
   const delta =

@@ -19,12 +19,19 @@ import { formatFechaDia } from "@/lib/formatters/dates";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
+import {
+  contextoPuerto, destinoDe, etiquetaPuertoCompleta, nombrePuerto, origenDe,
+} from "@/features/costeo/utils/puertoLabel";
 
 
 interface RutaRow {
   id: string;
   puerto_origen_nombre?: string | null;
+  puerto_origen_code?: string | null;
+  puerto_origen_country?: string | null;
   puerto_destino_nombre?: string | null;
+  puerto_destino_code?: string | null;
+  puerto_destino_country?: string | null;
   tarifas_vigentes_count?: number | null;
   proveedores_count?: number | null;
   proxima_expiracion?: string | null;
@@ -43,6 +50,20 @@ interface Props {
   onEliminar: (id: string) => void;
 }
 
+/**
+ * Etapa 2: nombre en la línea principal y "País · UN/LOCODE" como contexto
+ * secundario, para identificar el puerto sin ensanchar la tabla a 1280 px.
+ */
+function PuertoCelda({ p }: { p: Parameters<typeof contextoPuerto>[0] }) {
+  const ctx = contextoPuerto(p);
+  return (
+    <div className="min-w-0">
+      <div className="font-medium">{nombrePuerto(p)}</div>
+      {ctx && <div className="text-label text-muted-foreground">{ctx}</div>}
+    </div>
+  );
+}
+
 export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onEliminar }: Props) {
   const navigate = useNavigate();
 
@@ -51,19 +72,19 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
       {
         id: "origen",
         header: "Origen",
-        accessorFn: (f) => f.ruta.puerto_origen_nombre ?? "",
-        sortingFn: sortByString((f) => f.ruta.puerto_origen_nombre),
+        accessorFn: (f) => etiquetaPuertoCompleta(origenDe(f.ruta)),
+        sortingFn: sortByString((f) => etiquetaPuertoCompleta(origenDe(f.ruta))),
         enableSorting: true,
-        meta: { sticky: true, className: "font-medium" },
-        cell: ({ row }) => row.original.ruta.puerto_origen_nombre ?? "—",
+        meta: { sticky: true },
+        cell: ({ row }) => <PuertoCelda p={origenDe(row.original.ruta)} />,
       },
       {
         id: "destino",
         header: "Destino",
-        accessorFn: (f) => f.ruta.puerto_destino_nombre ?? "",
-        sortingFn: sortByString((f) => f.ruta.puerto_destino_nombre),
+        accessorFn: (f) => etiquetaPuertoCompleta(destinoDe(f.ruta)),
+        sortingFn: sortByString((f) => etiquetaPuertoCompleta(destinoDe(f.ruta))),
         enableSorting: true,
-        cell: ({ row }) => row.original.ruta.puerto_destino_nombre ?? "—",
+        cell: ({ row }) => <PuertoCelda p={destinoDe(row.original.ruta)} />,
       },
       {
         id: "tarifas",

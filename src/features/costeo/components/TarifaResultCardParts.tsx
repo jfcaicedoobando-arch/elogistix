@@ -9,6 +9,9 @@ import { CalendarClock, Info, Ship, Trophy } from "lucide-react";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { cn } from "@/lib/utils";
 import { formatFechaMx, usdTarifa as usd } from "@/features/costeo/utils/tarifaFormatters";
+import {
+  destinoDe, etiquetaRutaCompleta, origenDe,
+} from "@/features/costeo/utils/puertoLabel";
 
 export function CardHeader({ row, rank, esGanador }: { row: TopTarifaRow; rank: number; esGanador: boolean }) {
   return (
@@ -27,6 +30,10 @@ export function CardHeader({ row, rank, esGanador }: { row: TopTarifaRow; rank: 
           <p className="text-body-sm text-muted-foreground flex items-center gap-1 truncate">
             <Ship className="size-3 shrink-0" />
             <span className="truncate">{row.naviera_nombre} · {row.tipo_contenedor_nombre}</span>
+          </p>
+          {/* Etapa 2: ruta con país y UN/LOCODE para no confundir homónimos. */}
+          <p className="text-label text-muted-foreground truncate">
+            {etiquetaRutaCompleta(origenDe(row), destinoDe(row))}
           </p>
         </div>
       </div>

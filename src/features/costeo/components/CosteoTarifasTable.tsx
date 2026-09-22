@@ -31,7 +31,7 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
     for (const t of tarifas) {
       const ap = t.estado_aprobacion ?? "vigente";
       if (ap !== "vigente" || t.vigente_hasta < hoy || t.estado === "reemplazada") continue;
-      const k = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+      const k = `${t.ruta_id}|${t.tipo_contenedor_id}`;
       const prev = map.get(k);
       if (prev == null || t.total_comparable < prev) map.set(k, t.total_comparable);
     }

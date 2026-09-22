@@ -13,9 +13,15 @@ interface RawTarifaAggregate {
   agente_id: string | null;
 }
 
+interface RawPuertoRuta {
+  name: string;
+  code: string | null;
+  country: string | null;
+}
+
 interface RawRuta extends CosteoRuta {
-  puerto_origen?: { name: string } | null;
-  puerto_destino?: { name: string } | null;
+  puerto_origen?: RawPuertoRuta | null;
+  puerto_destino?: RawPuertoRuta | null;
   costeo_tarifas?: RawTarifaAggregate[] | null;
 }
 
@@ -23,7 +29,7 @@ export async function fetchCosteoRutas(organizationId: string): Promise<CosteoRu
   const { data, error } = await supabase
     .from("costeo_rutas")
     .select(
-      "*, puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name), puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name), costeo_tarifas!costeo_tarifas_ruta_id_fkey(estado,vigente_hasta,updated_at,agente_id)",
+      "*, puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name,code,country), puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name,code,country), costeo_tarifas!costeo_tarifas_ruta_id_fkey(estado,vigente_hasta,updated_at,agente_id)",
     )
     .eq("organization_id", organizationId);
   if (error) throw error;
@@ -44,7 +50,11 @@ export async function fetchCosteoRutas(organizationId: string): Promise<CosteoRu
     return {
       ...r,
       puerto_origen_nombre: r.puerto_origen?.name,
+      puerto_origen_code: r.puerto_origen?.code ?? null,
+      puerto_origen_country: r.puerto_origen?.country ?? null,
       puerto_destino_nombre: r.puerto_destino?.name,
+      puerto_destino_code: r.puerto_destino?.code ?? null,
+      puerto_destino_country: r.puerto_destino?.country ?? null,
       tarifas_vigentes_count: vigentes.length,
       proxima_expiracion: fechasFin[0] ?? null,
       ultima_actualizacion_tarifa: updates[updates.length - 1] ?? null,

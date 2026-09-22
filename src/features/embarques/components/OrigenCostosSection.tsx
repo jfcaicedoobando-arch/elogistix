@@ -14,6 +14,7 @@ import { GitBranch } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import { useTarifasResumen } from "@/features/costeo/hooks/useTarifasResumen";
 import type { TarifaResumen } from "@/features/costeo/services/tarifas";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -161,7 +162,7 @@ function TarifaChip({
       ) : resumen ? (
         <>
           <p className="text-body font-medium">
-            {resumen.naviera_nombre} · {resumen.puerto_origen_nombre} → {resumen.puerto_destino_nombre}
+            {resumen.naviera_nombre} · {etiquetaRutaCompleta(origenDe(resumen), destinoDe(resumen))}
             {suffix && <span className="ml-2 text-label font-normal text-muted-foreground">{suffix}</span>}
           </p>
           <p className="text-label text-muted-foreground">

@@ -11,12 +11,17 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
 
 export interface RutaOption {
   id: string;
   activa: boolean;
   puerto_origen_nombre?: string;
+  puerto_origen_code?: string | null;
+  puerto_origen_country?: string | null;
   puerto_destino_nombre?: string;
+  puerto_destino_code?: string | null;
+  puerto_destino_country?: string | null;
 }
 
 interface Props {
@@ -27,8 +32,8 @@ interface Props {
   id?: string;
 }
 
-const labelRuta = (r: RutaOption) =>
-  `${r.puerto_origen_nombre ?? "?"} → ${r.puerto_destino_nombre ?? "?"}`;
+/** Etapa 2: etiqueta inequívoca "Nombre, País (CÓDIGO) → …" (utilidad única). */
+const labelRuta = (r: RutaOption) => etiquetaRutaCompleta(origenDe(r), destinoDe(r));
 
 export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) {
   const [open, setOpen] = useState(false);

@@ -11,6 +11,9 @@ import {
   TotalTarifaCell,
   VigenciaTarifaCell,
 } from "./tarifasColumns.cells";
+import {
+  contextoRuta, destinoDe, etiquetaRutaCompleta, origenDe, rutaCorta,
+} from "../../utils/puertoLabel";
 
 export type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
 import type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
@@ -21,13 +24,19 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
     {
       id: "ruta",
       header: "Ruta",
-      accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
-      sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
+      accessorFn: (t) => etiquetaRutaCompleta(origenDe(t), destinoDe(t)),
+      sortingFn: sortByString((t) => etiquetaRutaCompleta(origenDe(t), destinoDe(t))),
       enableSorting: true,
       meta: { sticky: true, width: COL_W.ruta, className: "text-body" },
       cell: ({ row }) => (
         <div className="min-w-0">
-          <div className="font-medium">{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
+          <div className="font-medium">{rutaCorta(origenDe(row.original), destinoDe(row.original))}</div>
+          {/* Etapa 2: "País · UN/LOCODE → País · UN/LOCODE" como contexto. */}
+          {contextoRuta(origenDe(row.original), destinoDe(row.original)) && (
+            <div className="text-label text-muted-foreground">
+              {contextoRuta(origenDe(row.original), destinoDe(row.original))}
+            </div>
+          )}
           {/* MR-UI-02: bajo 2xl (1280×720) Contenedor y Vigencia viven aquí
               para que la tabla no requiera scroll horizontal. */}
           <div className="text-label text-muted-foreground 2xl:hidden">

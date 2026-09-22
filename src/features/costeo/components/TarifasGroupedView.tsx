@@ -17,8 +17,14 @@ import { buildGruposTarifas } from "../utils/tarifasAgrupacion";
 import { todayLocalISO } from "@/lib/date/today";
 
 interface TarifaRow extends FilaTarifa {
+  ruta_id: string;
+  tipo_contenedor_id: string;
   puerto_origen_nombre: string;
+  puerto_origen_code: string | null;
+  puerto_origen_country: string | null;
   puerto_destino_nombre: string;
+  puerto_destino_code: string | null;
+  puerto_destino_country: string | null;
   tipo_contenedor_nombre: string;
   agente_id?: string;
 }
@@ -62,6 +68,9 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
                 <div className="text-subsection">{g.rutaLabel}</div>
+                {g.rutaContexto && (
+                  <div className="text-label text-muted-foreground">{g.rutaContexto}</div>
+                )}
                 <div className="text-body-sm text-muted-foreground">
                   {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
                   {g.porVencer > 0 && (

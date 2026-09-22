@@ -24,6 +24,9 @@ import {
   DEFAULT_ESTADO,
 } from "./useCosteoTarifasPageState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import {
+  destinoDe, etiquetaRutaCompleta, origenDe,
+} from "@/features/costeo/utils/puertoLabel";
 
 export default function CosteoTarifas() {
   // MR-UI-01: la pestaña del navegador debe reflejar la página activa.
@@ -61,7 +64,7 @@ export default function CosteoTarifas() {
           <p className="text-body">
             Filtrando por ruta:{" "}
             <span className="font-medium">
-              {s.tarifas[0].puerto_origen_nombre} → {s.tarifas[0].puerto_destino_nombre}
+              {etiquetaRutaCompleta(origenDe(s.tarifas[0]), destinoDe(s.tarifas[0]))}
             </span>
           </p>
           <Button variant="ghost" size="sm" onClick={s.clearRutaUrl}>

@@ -12,6 +12,7 @@ import {
   buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
 } from "./CosteoTarifas.helpers";
 import { todayLocalISO } from "@/lib/date/today";
+import { textoBusquedaPuertos } from "@/features/costeo/utils/puertoLabel";
 
 export type ViewMode = "agrupada" | "tabla";
 
@@ -67,7 +68,8 @@ export function useCosteoTarifasPageState() {
     return tarifas.filter((t) => {
       if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) return false;
       if (!q) return true;
-      const hay = `${t.puerto_origen_nombre} ${t.puerto_destino_nombre} ${t.agente_nombre} ${t.naviera_nombre}`.toLowerCase();
+      // Etapa 2: también encuentra por país o UN/LOCODE de origen/destino.
+      const hay = `${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`.toLowerCase();
       return hay.includes(q);
     });
   }, [tarifas, aprobacion, busqueda]);

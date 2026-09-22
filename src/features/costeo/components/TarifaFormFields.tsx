@@ -14,6 +14,8 @@ import { MultiRutaSelect } from "./MultiRutaSelect";
 interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: boolean; activa?: boolean }
 
 import { NavieraQuickCreate } from "./NavieraQuickCreate";
+import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
+import type { RutaOption } from "./MultiRutaSelect";
 
 interface EntidadesProps {
   form: TarifaInput;
@@ -95,7 +97,7 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
 interface RutaTipoProps {
   form: TarifaInput;
   setForm: (f: TarifaInput) => void;
-  rutas: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
+  rutas: RutaOption[];
   tipos: CatalogosRow[];
   errores?: Record<string, boolean>;
   /** Modo multi-ruta: 1 captura → N tarifas. Solo en alta/duplicado. */
@@ -143,7 +145,7 @@ export function RutaTipoFields({
             <SelectContent>
               {rutas.filter((r) => r.activa).map((r) => (
                 <SelectItem key={r.id} value={r.id}>
-                  {r.puerto_origen_nombre} → {r.puerto_destino_nombre}
+                  {etiquetaRutaCompleta(origenDe(r), destinoDe(r))}
                 </SelectItem>
               ))}
             </SelectContent>
