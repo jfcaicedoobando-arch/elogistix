@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.824.4] - 2026-09-22
+
+- **chore(version)**: bump a v13.824.4.
+
 ## [13.824.3] - 2026-09-18
 
 Lint en cero: se resuelven los 7 bloqueos de GitHub Actions (`--max-warnings 0`). Sólo reorganización de código, sin cambios de comportamiento.
