@@ -5,7 +5,8 @@
 --     rechazo de la decisión directa `recotizada`.
 --   · duplicar_cotizacion: rechaza cotización eliminada y copia los campos
 --     funcionales + los enlaces de tarifa de los costos.
---   · revalidar_tarifa_cotizacion: no ve tarifas de otra organización.
+--   · _cotizaciones_sync_puertos_tarifa: rechaza (LC_COT_TARIFA_ORG_INVALIDA)
+--     vincular a una cotización una tarifa de otra organización.
 --
 -- Ejecución:
 --   psql "$DATABASE_URL" -f supabase/tests/rls/test_rls_reg_reaprobacion_y_duplicar.sql
