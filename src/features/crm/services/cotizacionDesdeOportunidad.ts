@@ -50,6 +50,12 @@ export async function insertCotizacionDesdeOportunidad(
     cliente_nombre: input.oportunidad.cliente_nombre ?? "",
     origen: input.oportunidad.origen ?? "",
     destino: input.oportunidad.destino ?? "",
+    // Etapa 4: la identidad de puerto sólo aplica al modo Marítimo; en los
+    // demás modos se insertan NULL (sin resolución por nombre ni fuzzy match).
+    puerto_origen_id:
+      input.modo === "Marítimo" ? (input.oportunidad.puerto_origen_id ?? null) : null,
+    puerto_destino_id:
+      input.modo === "Marítimo" ? (input.oportunidad.puerto_destino_id ?? null) : null,
     oportunidad_id: input.oportunidad.id,
     operador: input.operador,
     es_prospecto: !input.oportunidad.cliente_id,
