@@ -62,7 +62,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.etd),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => formatFechaSegura(row.original.etd),
+        cell: ({ row }) => formatFechaDia(row.original.etd),
       },
       {
         id: "eta",
@@ -71,7 +71,7 @@ export default function AgenteEmbarques() {
         sortingFn: sortByDate((e) => e.eta),
         enableSorting: true,
         meta: { className: "text-xs" },
-        cell: ({ row }) => formatFechaSegura(row.original.eta),
+        cell: ({ row }) => formatFechaDia(row.original.eta),
       },
       statusColumn<EmbarqueAgente>({
         domain: "embarque",
