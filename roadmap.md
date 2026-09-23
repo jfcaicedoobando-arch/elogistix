@@ -1,6 +1,7 @@
 # Roadmap
 
 ## En curso — pulido responsive 691×763 (38 hallazgos)
+- [x] QA focal: agentes sin botones anidados y con paridad de acciones móvil/escritorio.
 - [x] Auditar cada hallazgo contra el código actual y conservar lo ya resuelto.
 - [x] Corregir datos y acciones fuera de vista (1–12).
 - [x] Corregir claridad, densidad y navegación (13–34).
