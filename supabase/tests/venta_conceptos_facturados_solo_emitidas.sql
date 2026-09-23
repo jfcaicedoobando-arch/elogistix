@@ -38,7 +38,6 @@ DECLARE
   v_check jsonb;
   v_fallo boolean := false;
 
-  PROCEDURE_PLACEHOLDER boolean;
 BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST VENTA FACTURADOS', 'TVF000000XX0', 'basico', true)
