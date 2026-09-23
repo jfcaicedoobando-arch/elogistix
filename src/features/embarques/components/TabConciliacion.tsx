@@ -33,12 +33,16 @@ export function TabConciliacion({ embarqueId }: Props) {
   return (
     <div className="space-y-6">
       {decisionLabel && (
-        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-body-sm text-info-foreground flex items-center gap-2">
-          <span className="font-medium">Decisión aplicada:</span>
+        // P2-6: `text-info-foreground` es el color para fondos sólidos `bg-info`;
+        // sobre `bg-info/10` quedaba casi blanco en tema claro. El texto usa
+        // `text-foreground` (contraste AA en claro y oscuro) y el rótulo `text-info`.
+        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-body-sm text-foreground flex items-center gap-2">
+          <span className="font-medium text-info">Decisión aplicada:</span>
           <span>{decisionLabel}</span>
           <span className="text-muted-foreground">— ver pestaña Resumen → Origen de costos para el detalle.</span>
         </div>
       )}
+
 
       <Card>
         <CardHeader className="pb-2">

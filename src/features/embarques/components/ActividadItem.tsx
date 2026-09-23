@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
+import { etiquetaEvento } from "@/features/embarques/domain/actividadHumana";
 import { ActividadDetalles } from "@/features/embarques/components/ActividadDetalles";
 import { Hint } from "@/components/shared/Hint";
 
@@ -16,10 +17,36 @@ interface Props {
   item: Item;
 }
 
+/** P2-3: registros técnicos del mismo hecho, colapsados y sin perder auditoría. */
+function Relacionados({ items }: { items: Item[] }) {
+  return (
+    <details className="mt-1 text-body-sm text-muted-foreground">
+      <summary className="cursor-pointer underline decoration-dotted rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {items.length === 1
+          ? "Ver 1 registro relacionado"
+          : `Ver ${items.length} registros relacionados`}
+      </summary>
+      <ul className="mt-1 space-y-1 pl-3 border-l">
+        {items.map((r) => (
+          <li key={r.id}>
+            <span className="font-medium">{etiquetaEvento(r.accion)}</span>
+            {" · "}
+            {formatDate(r.fecha, "HH:mm")}
+            {r.titulo && <span className="block break-words">{r.titulo}</span>}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 export function ActividadItem({ item }: Props) {
   const usuario = item.usuario ? nombreDesdeEmail(item.usuario) : "Sistema";
   const monto =
     typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
+  const accion = etiquetaEvento(item.accion);
+  const titulo = etiquetaEvento(item.titulo);
+  const relacionados = item.relacionados ?? [];
 
   return (
     <li className="relative text-body">
@@ -31,7 +58,7 @@ export function ActividadItem({ item }: Props) {
         <Badge variant={CATEGORIA_VARIANT[item.categoria] ?? "secondary"} className="text-2xs uppercase">
           {CATEGORIA_LABEL[item.categoria]}
         </Badge>
-        <span className="font-medium">{item.accion}</span>
+        <span className="font-medium">{accion}</span>
         <span className="text-body-sm text-muted-foreground">
           <Hint label={item.usuario || undefined}>
             <span className="font-medium text-foreground">{usuario}</span>
@@ -41,11 +68,12 @@ export function ActividadItem({ item }: Props) {
         </span>
         {monto && <span className="ml-auto text-body-sm font-semibold tabular-nums">{monto}</span>}
       </div>
-      <p className="mt-1 break-words whitespace-pre-wrap">{item.titulo}</p>
+      {titulo !== accion && <p className="mt-1 break-words whitespace-pre-wrap">{titulo}</p>}
       {item.descripcion && (
         <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{item.descripcion}</p>
       )}
       {item.detalles && <ActividadDetalles detalles={item.detalles} />}
+      {relacionados.length > 0 && <Relacionados items={relacionados} />}
     </li>
   );
 }

@@ -38,6 +38,9 @@ export interface ActividadItem {
   /** Clave del hecho de negocio: mismo hecho registrado por varias fuentes. */
   dedupeKey?: string;
   detalles?: Record<string, unknown>;
+  /** P2-3: registros técnicos del mismo hecho de negocio (expandibles). */
+  relacionados?: ActividadItem[];
+
 
 }
 
