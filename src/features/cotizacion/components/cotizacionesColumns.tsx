@@ -68,12 +68,12 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
           ? (r.prospecto_empresa || r.cliente_nombre)
           : r.cliente_nombre;
         return (
-          <span className="flex items-center gap-2 min-w-0">
+          <span className="flex min-w-0 flex-col items-start gap-1 py-0.5">
             {/* MEJ-20260908-01: el nombre puede truncarse al ajustar la tabla al
                 ancho disponible; el tooltip conserva el texto completo. */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <span className="truncate">{nombre}</span>
+                <span className="line-clamp-2 break-words">{nombre}</span>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">{nombre || "—"}</TooltipContent>
             </Tooltip>

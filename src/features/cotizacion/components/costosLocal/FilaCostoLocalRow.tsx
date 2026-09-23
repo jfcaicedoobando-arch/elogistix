@@ -148,6 +148,15 @@ export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
         </div>
       </div>
 
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t border-border/60 pt-2 text-label tabular-nums 2xl:hidden">
+        <span className="text-muted-foreground">Costo total <strong className="text-foreground">{formatNumber(costoTotal, { decimals: 2 })}</strong></span>
+        <span className="text-muted-foreground">Venta total <strong className="text-foreground">{formatNumber(ventaTotal, { decimals: 2 })}</strong></span>
+        <span className="text-muted-foreground">
+          Utilidad <strong className={profit >= 0 ? "text-success" : "text-destructive"}>{formatNumber(profit, { decimals: 2 })}</strong>
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground">Margen <ProfitBadge porcentaje={pct} venta={ventaTotal} /></span>
+      </div>
+
       <AvisosFilaCosto
         gi={gi}
         conceptoLibre={!!fila.concepto_libre}

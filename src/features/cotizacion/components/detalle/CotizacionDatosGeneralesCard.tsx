@@ -32,6 +32,10 @@ interface Row {
   colSpan2?: boolean;
 }
 
+function esCampoRuta(label: string) {
+  return label === "Origen" || label === "Destino";
+}
+
 function baseRows(c: Cotizacion): Row[] {
   return [
     { label: "Modo", value: c.modo, title: c.modo },
@@ -94,11 +98,15 @@ export function CotizacionDatosGeneralesCard({ cotizacion }: Props) {
     <Card>
       <CardHeader><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body [&>div]:min-w-0 [&>div>p]:truncate">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body [&>div]:min-w-0">
           {rows.map((r) => (
             <div key={r.label} className={r.colSpan2 ? "col-span-2" : undefined}>
               <span className="text-muted-foreground">{r.label}</span>
-              <Hint label={r.title}><p className="font-medium">{r.value}</p></Hint>
+              <Hint label={r.title}>
+                <p className={esCampoRuta(r.label) ? "font-medium line-clamp-2 break-words" : "font-medium truncate"}>
+                  {r.value}
+                </p>
+              </Hint>
             </div>
           ))}
         </div>

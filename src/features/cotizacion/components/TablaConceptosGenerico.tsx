@@ -7,6 +7,8 @@ import { useTasaIVA } from "@/features/catalogos/hooks";
 import { etiquetaTasaIva, tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import { importeEfectivoConcepto } from "@/lib/domain/cotizacionDetalle";
+import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
+import { Badge } from "@/components/ui/badge";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 
 interface Props {
@@ -74,6 +76,11 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                   <DetailTableRow key={concepto.id ?? `${concepto.descripcion ?? "concepto"}-${indice}`}>
                     <TableCell>
                       {concepto.descripcion ?? "—"}
+                      <div className="mt-1">
+                        <Badge variant="neutral" size="sm">
+                          IVA: {etiquetaTratamientoFila(concepto)}
+                        </Badge>
+                      </div>
                       {notaCliente && (
                         <p className="text-body-sm text-muted-foreground mt-0.5">↳ {notaCliente}</p>
                       )}

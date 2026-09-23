@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TablaCostosLocal from "../TablaCostosLocal";
-import { COL_COSTO } from "../costosLocal/columnasCosto";
+import { COL_COSTO, COSTO_GRID_MIN_W } from "../costosLocal/columnasCosto";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 vi.mock("@/features/cotizacion/hooks/useProductosCatalogo", () => ({
@@ -66,6 +66,15 @@ describe("TablaCostosLocal · columnas alineadas", () => {
     const total = screen.getByText("Totales");
     expect(encabezado.className).toContain(COL_COSTO.costoTotal);
     expect(total.className).toContain(COL_COSTO.concepto);
+  });
+
+  it("mantiene métricas compactas hasta 2xl y acciones visibles", () => {
+    renderTabla();
+    expect(COSTO_GRID_MIN_W).toContain("2xl:min-w");
+    expect(COL_COSTO.margen).toContain("hidden 2xl:block");
+    expect(screen.getAllByText("Margen").length).toBeGreaterThan(1);
+    expect(screen.getByLabelText("Agregar notas")).toBeInTheDocument();
+    expect(screen.getByLabelText("Eliminar concepto")).toBeInTheDocument();
   });
 
   it("no muestra encabezados cuando la tabla está vacía", () => {

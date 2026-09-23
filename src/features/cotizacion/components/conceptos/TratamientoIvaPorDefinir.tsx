@@ -48,15 +48,15 @@ export function TratamientoIvaPorDefinir({ onTipoIvaChange }: Props) {
     >
       <Select value="" onValueChange={elegir}>
         <SelectTrigger
-          className="h-10 border-warning text-warning-foreground bg-warning/10"
+          className="h-10 border-warning/60 bg-warning/15 text-foreground dark:bg-warning/20"
           aria-label={AVISO_TRATAMIENTO_POR_DEFINIR}
         >
           <span className="flex items-center gap-1 truncate text-body-sm">
-            <AlertTriangle className="size-3.5 shrink-0" />
+            <AlertTriangle className="size-3.5 shrink-0 text-warning" />
             Por definir
           </span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="border-warning/30">
           {TIPO_IVA_OPCIONES.map((o) => {
             const habilitada = tipoIvaSeleccionable(o.value, fronteraHabilitada);
             return (
@@ -64,10 +64,14 @@ export function TratamientoIvaPorDefinir({ onTipoIvaChange }: Props) {
                 key={o.value}
                 label={habilitada ? undefined : AVISO_IVA_FRONTERA_DESHABILITADO}
               >
-                <SelectItem value={o.value} disabled={!habilitada}>
+                <SelectItem
+                  value={o.value}
+                  disabled={!habilitada}
+                  className="group data-[highlighted]:bg-selection data-[highlighted]:text-selection-foreground data-[state=checked]:bg-selection data-[state=checked]:text-selection-foreground data-[disabled]:opacity-100 data-[disabled]:text-muted-foreground"
+                >
                   <span className="flex flex-col">
                     <span>{o.label}</span>
-                    <span className="text-label text-muted-foreground">
+                    <span className="text-label text-muted-foreground group-data-[highlighted]:text-selection-foreground group-data-[state=checked]:text-selection-foreground">
                       {habilitada ? TIPO_IVA_AYUDA[o.value] : AVISO_IVA_FRONTERA_DESHABILITADO}
                     </span>
                   </span>
