@@ -49,6 +49,14 @@ BEGIN
   VALUES (v_org, v_uid, 'admin_org'::public.app_role) ON CONFLICT DO NOTHING;
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
+  -- Las facturas USD del fixture pasan por `_factura_tc_dof_obligatorio()`, que
+  -- exige el T/C DOF de la fecha de emisión; se siembra con el mismo valor del
+  -- fixture (todo se revierte con el ROLLBACK final).
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE, 17, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 17;
+
+
   INSERT INTO public.clientes (organization_id, nombre, email)
   VALUES (v_org, 'CLIENTE VENTA FACTURADOS', 'cli-vf@test.mx')
   RETURNING id INTO v_cli;
