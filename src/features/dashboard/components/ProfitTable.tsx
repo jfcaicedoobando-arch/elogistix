@@ -12,6 +12,7 @@ import { formatCurrency, toTitleCase, formatTipoCambio} from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { proyectarFilasUtilidadVisible } from "@/features/dashboard/domain/proyeccionVisible";
 
 interface Props {
   embarques: EmbarqueConProfit[];
@@ -78,6 +79,10 @@ function construirColumnas(verCostos: boolean): ColumnDef<EmbarqueConProfit, unk
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
   const { canViewCosts } = usePermissions();
   const columns = useMemo(() => construirColumnas(canViewCosts), [canViewCosts]);
+  // P2-B: misma política de presentación que el tablero y el P&L del embarque:
+  // utilidad y margen visibles se derivan de venta/costo ya redondeados.
+  const filas = useMemo(() => proyectarFilasUtilidadVisible(embarques), [embarques]);
+
 
   return (
     <Card>
@@ -91,7 +96,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
         <div className="overflow-auto max-h-[320px]">
           <DataTable
             columns={columns}
-            data={embarques}
+            data={filas}
             isLoading={isLoading}
             emptyMessage="Sin embarques con arribo este mes"
             getRowHref={(e) => `/embarques/${e.id}`}

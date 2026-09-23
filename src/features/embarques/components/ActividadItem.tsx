@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
 import { etiquetaEvento } from "@/features/embarques/domain/actividadHumana";
+import { descripcionHumana } from "@/features/embarques/domain/actividadDescripcion";
+
 import { ActividadDetalles } from "@/features/embarques/components/ActividadDetalles";
 import { Hint } from "@/components/shared/Hint";
 
@@ -45,8 +47,13 @@ export function ActividadItem({ item }: Props) {
   const monto =
     typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
   const accion = etiquetaEvento(item.accion);
-  const titulo = etiquetaEvento(item.titulo);
+  // P2-A: título y descripción también pueden traer la clave técnica dentro
+  // del texto ("Factura: factura.borrador_generado"); se humanizan sin tocar
+  // las descripciones ya escritas en lenguaje natural.
+  const titulo = item.titulo ? descripcionHumana(item.titulo) : accion;
+  const descripcion = descripcionHumana(item.descripcion);
   const relacionados = item.relacionados ?? [];
+
 
   return (
     <li className="relative text-body">
@@ -69,9 +76,10 @@ export function ActividadItem({ item }: Props) {
         {monto && <span className="ml-auto text-body-sm font-semibold tabular-nums">{monto}</span>}
       </div>
       {titulo !== accion && <p className="mt-1 break-words whitespace-pre-wrap">{titulo}</p>}
-      {item.descripcion && (
-        <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{item.descripcion}</p>
+      {descripcion && descripcion !== titulo && (
+        <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{descripcion}</p>
       )}
+
       {item.detalles && <ActividadDetalles detalles={item.detalles} />}
       {relacionados.length > 0 && <Relacionados items={relacionados} />}
     </li>

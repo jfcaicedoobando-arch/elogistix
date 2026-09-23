@@ -14,6 +14,11 @@ import { CalendarDays, DollarSign, TrendingUp, FileCheck, Ship } from "lucide-re
 import { Progress } from "@/components/ui/progress";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
+import {
+  proyectarFilasUtilidadVisible,
+  proyectarUtilidadVisible,
+} from "@/features/dashboard/domain/proyeccionVisible";
+
 
 interface Props {
   embarques: EmbarqueMesSiguiente[];
@@ -106,7 +111,12 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   },
 ]);
 
-export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinancials = false }: Props) {
+export function EmbarquesActivosTable({ embarques, resumen: resumenCrudo, isLoading, hideFinancials = false }: Props) {
+  // P2-B: la utilidad mostrada (fila, tooltip, orden y tono) se deriva de la
+  // venta y el costo YA redondeados a centavos, igual que Costos y el P&L.
+  const filas = useMemo(() => proyectarFilasUtilidadVisible(embarques), [embarques]);
+  const resumen = useMemo(() => proyectarUtilidadVisible(resumenCrudo), [resumenCrudo]);
+
   const nombreMesCap = resumen.nombreMes
     ? resumen.nombreMes.charAt(0).toUpperCase() + resumen.nombreMes.slice(1)
     : "Próximo mes";
@@ -119,6 +129,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
     () => (hideFinancials ? columns.filter((c) => c.id !== "profit" && c.id !== "facturado") : columns),
     [hideFinancials],
   );
+
 
   return (
     <Card>
@@ -171,7 +182,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
 
         <DataTable
           columns={visibleColumns}
-          data={embarques}
+          data={filas}
           isLoading={isLoading}
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
           getRowHref={(e) => `/embarques/${e.id}`}

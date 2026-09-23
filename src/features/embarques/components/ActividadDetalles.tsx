@@ -1,4 +1,6 @@
 import { detallesLegibles } from "@/features/embarques/domain/actividadHumana";
+import { etiquetaCampo } from "@/features/embarques/domain/actividadDescripcion";
+
 
 interface CambioCampo {
   campo: string;
@@ -37,7 +39,7 @@ export function ActividadDetalles({ detalles }: Props) {
         <ul className="mt-1 space-y-0.5 text-body-sm text-muted-foreground">
           {cambios.slice(0, 6).map((c, i) => (
             <li key={`${c.campo}-${i}`}>
-              <span className="font-medium">{c.campo}:</span>{" "}
+              <span className="font-medium">{etiquetaCampo(c.campo)}:</span>{" "}
               <span className="line-through opacity-70">{String(c.antes ?? "—")}</span>
               {" → "}
               <span className="text-foreground">{String(c.despues ?? "—")}</span>
