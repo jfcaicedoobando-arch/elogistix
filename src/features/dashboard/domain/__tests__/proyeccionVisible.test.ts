@@ -14,7 +14,9 @@ describe("proyeccionVisible (P2-B)", () => {
     expect(fila.ventaMXN).toBe(61638.15);
     expect(fila.costoMXN).toBe(53137.53);
     expect(fila.profitMXN).toBe(8500.62);
-    expect(fila.profitMXN).toBe(fila.ventaMXN - fila.costoMXN);
+    // Identidad de presentación (la resta en binario arrastra ruido, no el monto).
+    expect(fila.profitMXN).toBeCloseTo(fila.ventaMXN - fila.costoMXN, 6);
+
   });
 
   it("recalcula el margen sólo cuando la fila lo trae", () => {
