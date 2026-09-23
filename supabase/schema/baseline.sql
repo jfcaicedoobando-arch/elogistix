@@ -30712,7 +30712,7 @@ DECLARE
   v_cont_incompletos int := 0; v_cont_ids uuid[] := ARRAY[]::uuid[];
   v_cont_sin_fechas int := 0; v_cont_fechas_ids uuid[] := ARRAY[]::uuid[];
   v_tiene_contenedores boolean := false;
-  v_venta_pendientes int; v_venta_en_proforma int;
+  v_venta_pendientes int; v_venta_en_proforma int; v_venta_sin_emitir int := 0;
   v_costos_sin_factura int;
   v_rep_pendientes int := 0; v_rep_ids uuid[] := ARRAY[]::uuid[];
   v_ent_pendientes int := 0; v_ent_dias_max int := 0;
@@ -30741,9 +30741,6 @@ BEGIN
   END IF;
   SELECT EXISTS (SELECT 1 FROM embarque_contenedores
     WHERE embarque_id=p_embarque_id AND deleted_at IS NULL) INTO v_tiene_contenedores;
-  -- v13.820.6: las fechas de descarga/devolución sólo aplican a contenedores
-  -- completos (Marítimo FCL). En LCL (caja compartida) y otros modos no hay
-  -- contenedor que descargar/devolver, aunque existan filas de agrupación.
   IF v_tiene_contenedores AND v_emb.modo='Marítimo' AND COALESCE(v_emb.tipo_carga,'') ILIKE 'FCL%' THEN
     SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_cont_sin_fechas, v_cont_fechas_ids
     FROM embarque_contenedores WHERE embarque_id=p_embarque_id AND deleted_at IS NULL
@@ -30770,7 +30767,6 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','costo_conceptos_con_factura','ok',v_ok,
     'detalle', jsonb_build_object('sin_factura', v_costos_sin_factura)));
-  -- Buzón CxP: ningún invoice puede quedar sin capturar.
   SELECT COUNT(*),
          COALESCE(MAX(GREATEST(0, (now()::date - efe.created_at::date))), 0)
     INTO v_ent_pendientes, v_ent_dias_max
@@ -30787,11 +30783,6 @@ BEGIN
     'regla','facturas_entrantes_capturadas','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_ent_pendientes, 'dias_max', v_ent_dias_max,
       'buzon_vacio', v_ent_vacio, 'costos_sin_factura', v_costos_sin_factura)));
-  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el
-  -- buzón. v13.820.4: un costo ya ligado a una factura de proveedor vigente
-  -- cuenta como evidencia aunque la factura no haya entrado por el buzón
-  -- (captura directa desde Costos); antes el paso 1 quedaba pendiente para
-  -- siempre pese a que el paso 3 estaba completo.
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
@@ -30825,12 +30816,6 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
-  -- N-BL-01: el pagado CxP se convierte a la moneda de la factura con
-  -- monto_pago_en_moneda_factura (antes sumaba pp.monto en crudo: una factura
-  -- USD pagada en MXN inflaba el pagado ~19x y permitía cerrar con CxP
-  -- pendiente). Fail-closed consistente con saldo_factura_proveedor: un pago
-  -- sin tipo de cambio con moneda distinta se EXCLUYE del pagado (nunca 1:1
-  -- silencioso) y se reporta en pagos_sin_tipo_cambio.
   WITH agg AS (
     SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
       COALESCE(SUM((SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(
@@ -30856,8 +30841,6 @@ BEGIN
       'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
-  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
-  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01);
@@ -30865,16 +30848,42 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
-  SELECT COUNT(*) FILTER (WHERE estado_facturacion='pendiente'),
-         COUNT(*) FILTER (WHERE estado_facturacion='en_proforma')
-    INTO v_venta_pendientes, v_venta_en_proforma
-    FROM conceptos_venta WHERE embarque_id=p_embarque_id AND deleted_at IS NULL;
-  v_ok := (v_venta_pendientes=0 AND v_venta_en_proforma=0); v_puede := v_puede AND v_ok;
+  -- P1-1 fail-closed: un concepto sólo cuenta como facturado si existe factura
+  -- vigente EMITIDA ligada a su proforma y NO queda ninguna factura vigente sin
+  -- emitir de la misma proforma (proforma partida por moneda: USD + MXN).
+  WITH cv AS (
+    SELECT cv.id, cv.estado_facturacion, cv.proforma_id
+      FROM conceptos_venta cv
+     WHERE cv.embarque_id=p_embarque_id AND cv.deleted_at IS NULL),
+  lig AS (
+    SELECT c.id AS cv_id, f.estado::text AS estado
+      FROM cv c
+      JOIN facturas f
+        ON f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
+       AND (c.proforma_id IS NULL
+            OR f.proforma_id = c.proforma_id
+            OR EXISTS (SELECT 1 FROM proformas pr
+                        WHERE pr.id=c.proforma_id AND pr.deleted_at IS NULL
+                          AND f.id IN (pr.factura_id, pr.factura_secundaria_id))
+            OR EXISTS (SELECT 1 FROM conceptos_factura cf
+                        WHERE cf.factura_id=f.id AND cf.deleted_at IS NULL
+                          AND cf.proforma_id_origen = c.proforma_id)))
+  SELECT COUNT(*) FILTER (WHERE c.estado_facturacion='pendiente'),
+         COUNT(*) FILTER (WHERE c.estado_facturacion='en_proforma'),
+         COUNT(*) FILTER (WHERE c.estado_facturacion='facturado' AND (
+           NOT EXISTS (SELECT 1 FROM lig l WHERE l.cv_id=c.id
+                        AND l.estado IN ('Emitida','Pagada','Parcialmente pagada','Vencida'))
+           OR EXISTS (SELECT 1 FROM lig l WHERE l.cv_id=c.id
+                       AND l.estado NOT IN ('Emitida','Pagada','Parcialmente pagada',
+                                            'Vencida','Cancelada','Sustituida'))))
+    INTO v_venta_pendientes, v_venta_en_proforma, v_venta_sin_emitir
+    FROM cv c;
+  v_ok := (v_venta_pendientes=0 AND v_venta_en_proforma=0 AND v_venta_sin_emitir=0);
+  v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','venta_conceptos_facturados','ok',v_ok,
-    'detalle', jsonb_build_object('pendientes', v_venta_pendientes, 'en_proforma', v_venta_en_proforma)));
-  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
-  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
+    'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
+      'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
   SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
     FROM facturas f
    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
@@ -30897,8 +30906,6 @@ BEGIN
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
   INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
-  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
-  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01);
@@ -30917,13 +30924,6 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','rep_timbrados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_rep_pendientes, 'ids', v_rep_ids)));
-  -- Ola 2 · O2.2: se bloquea por pendientes REALES (nota de pendiente o
-  -- cola de recálculo), no por la bandera `definitiva` que sólo se marca al
-  -- cerrar (círculo vicioso que obligaba a "forzar" todos los cierres).
-  -- v13.823.291: si el embarque no genera comisión (override propio o cliente
-  -- marcado `sin_comision`), el check NO bloquea: la UI ya lo muestra en gris
-  -- "No aplica" y el checklist se veía completo mientras el candado contaba una
-  -- comisión huérfana (ELIMP00298: nota "Sin vendedora asignada al embarque").
   v_sin_comision := public.resolver_sin_comision(p_embarque_id);
   IF v_sin_comision THEN
     v_com_count := 0;
