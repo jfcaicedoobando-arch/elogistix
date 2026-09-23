@@ -20,7 +20,7 @@ interface Args {
 }
 
 export function useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote }: Args) {
-  const { idsBloqueados } = useSodAprobacion();
+  const { idsBloqueados, motivoBloqueo } = useSodAprobacion();
   const bloqueadosSod = useMemo(() => idsBloqueados(rows), [rows, idsBloqueados]);
 
   const columns = useMemo(() => {
@@ -38,5 +38,5 @@ export function useColumnasPorAprobar({ rows, selected, setSelected, seleccionEn
     ];
   }, [rows, selected, setSelected, seleccionEnLote, bloqueadosSod]);
 
-  return { columns, bloqueadosSod };
+  return { columns, bloqueadosSod, motivoBloqueo };
 }

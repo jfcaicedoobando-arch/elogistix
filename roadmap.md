@@ -1,5 +1,14 @@
 # Roadmap
 
+## En curso — pulido responsive/UI 691×763
+- [ ] 1. Compras por aprobar: selección individual accesible en tarjeta móvil con SoD.
+- [ ] 2–3. Costos de embarque: cotizado/facturado/ajuste y contenedor en móvil.
+- [ ] 4. Costeo agentes: restaurar clic de fila en escritorio sin romper menú móvil.
+- [ ] 5. Cotizaciones: menú móvil de Duplicar/Eliminar con permisos.
+- [ ] 6–9. CxP: ocultar columnas en móvil y apilar acciones del encabezado.
+- [ ] 10. Buzón de costos: ayuda neutra inicial y error sólo tras interacción.
+- [ ] Validaciones focales, typecheck/lint focal y vista 691×763/1280×720.
+
 ## Cerrado — CI #4293
 - [x] Extraer bloques cohesivos y dejar tablas de rutas/costos en ≤200 líneas.
 - [x] Ajustar pruebas para las variantes móvil y escritorio renderizadas simultáneamente.

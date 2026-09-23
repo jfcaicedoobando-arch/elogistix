@@ -20,7 +20,7 @@ import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { ComprasPorAprobarMobileCard } from "@/features/compras/components/ComprasPorAprobarMobileCard";
+import { ComprasPorAprobarMobileRow } from "./ComprasPorAprobar.mobileCard";
 
 
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
@@ -55,7 +55,7 @@ export default function ComprasPorAprobar() {
   const { data: rechazadas = [] } = useFacturasCxP({ aprobacion: "rechazada" });
 
   const seleccionEnLote = canAprobarFacturaProveedor && aprobacion === "pendiente";
-  const { columns } = useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote });
+  const { columns, bloqueadosSod, motivoBloqueo } = useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote });
 
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
@@ -172,7 +172,16 @@ export default function ComprasPorAprobar() {
               density={TABLE_DENSITY.embebida}
               initialSort={{ key: "vencimiento", dir: "asc" }}
               onRowClick={(fact) => navigate(`/compras/facturas/${fact.id}`)}
-              mobileCard={(f) => <ComprasPorAprobarMobileCard row={f} />}
+              mobileCard={(f) => (
+                <ComprasPorAprobarMobileRow
+                  row={f}
+                  seleccionEnLote={seleccionEnLote}
+                  selected={selected}
+                  setSelected={setSelected}
+                  bloqueadosSod={bloqueadosSod}
+                  motivoBloqueo={motivoBloqueo}
+                />
+              )}
             />
           )}
         </CardContent>
