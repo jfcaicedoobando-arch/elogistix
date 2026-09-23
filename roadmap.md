@@ -1,5 +1,11 @@
 # Roadmap
 
+## Cerrado — CI #4293
+- [x] Extraer bloques cohesivos y dejar tablas de rutas/costos en ≤200 líneas.
+- [x] Ajustar pruebas para las variantes móvil y escritorio renderizadas simultáneamente.
+- [x] Actualizar contratos de overflow y fondos sticky sin restaurar clases obsoletas.
+- [x] Validar pruebas focales, tipos, lint y sanity visual de Costeo.
+
 ## En curso — pulido responsive 691×763 (38 hallazgos)
 - [x] QA focal: agentes sin botones anidados y con paridad de acciones móvil/escritorio.
 - [x] Auditar cada hallazgo contra el código actual y conservar lo ya resuelto.

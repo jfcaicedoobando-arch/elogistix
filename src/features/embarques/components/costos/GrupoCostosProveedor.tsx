@@ -7,14 +7,11 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import {
   calcularSubtotales,
   estatusBadgeClass,
-  etiquetaConteos,
   estatusLabel,
   ordenarFilasPorAjuste,
   pagoBadgeClass,
@@ -25,8 +22,8 @@ import { AjusteChip } from "./AjusteChip";
 import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
 import { GrupoCostosProveedorVinculo } from "./GrupoCostosProveedorVinculo";
 import { Hint } from "@/components/shared/Hint";
-import { TONE_TEXT } from "@/lib/ui/badgeTone";
 import { GrupoCostosMobileRows } from "./GrupoCostosMobileRows";
+import { GrupoCostosProveedorResumen } from "./GrupoCostosProveedorResumen";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -92,32 +89,12 @@ export function GrupoCostosProveedor({
             <Badge variant="destructive" className="text-body-sm shrink-0">Asignar proveedor</Badge>
           )}
         </div>
-        <TooltipProvider delayDuration={200}>
-          <div className="hidden items-center gap-3 text-body-sm tabular-nums shrink-0 sm:flex">
-            {resumenNarrativo.map(({ moneda, d }) => (
-              <Tooltip key={moneda}>
-                <TooltipTrigger asChild>
-                  <span className={cn("flex items-center gap-1.5 cursor-help", TONE_TEXT[d.tone])}>
-                    <span aria-hidden>{d.icono}</span>
-                    <span className="font-medium">{d.titulo === "Sin ajuste" || d.titulo === "Sin factura" ? d.titulo : d.titulo}</span>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground">{moneda}</span>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="text-body-sm">
-                  <div>Cotizado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.cotizado ?? 0, moneda)}</div>
-                  <div>Facturado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.facturado ?? 0, moneda)}</div>
-                  <div className="mt-1">{d.detalle}</div>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-            {etiquetaConteos(conteos.conAjuste, conteos.sinFactura) && (
-              <span className="text-muted-foreground">
-                {etiquetaConteos(conteos.conAjuste, conteos.sinFactura)}
-              </span>
-            )}
-          </div>
-        </TooltipProvider>
+        <GrupoCostosProveedorResumen
+          resumen={resumenNarrativo}
+          subtotales={subtotales}
+          conAjuste={conteos.conAjuste}
+          sinFactura={conteos.sinFactura}
+        />
       </button>
 
       {!vinculadoACatalogo && proveedorNombre !== "Sin proveedor" && (

@@ -20,11 +20,9 @@ import { formatFechaDia } from "@/lib/formatters/dates";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
-import {
-  contextoPuerto, destinoDe, etiquetaPuertoCompleta, nombrePuerto, origenDe,
-} from "@/features/costeo/utils/puertoLabel";
+import { destinoDe, etiquetaPuertoCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
 import { CosteoRutasMobileCard } from "./CosteoRutasMobileCard";
-
+import { PuertoCelda } from "./PuertoCelda";
 
 export interface RutaRow {
   id: string;
@@ -52,20 +50,6 @@ interface Props {
   onEliminar: (id: string) => void;
 }
 
-/**
- * Etapa 2: nombre en la línea principal y "País · UN/LOCODE" como contexto
- * secundario, para identificar el puerto sin ensanchar la tabla a 1280 px.
- */
-function PuertoCelda({ p }: { p: Parameters<typeof contextoPuerto>[0] }) {
-  const ctx = contextoPuerto(p);
-  return (
-    <div className="min-w-0">
-      <div className="font-medium">{nombrePuerto(p)}</div>
-      {ctx && <div className="text-label text-muted-foreground">{ctx}</div>}
-    </div>
-  );
-}
-
 export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onEliminar }: Props) {
   const navigate = useNavigate();
 
@@ -78,7 +62,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         sortingFn: sortByString((f) => etiquetaPuertoCompleta(origenDe(f.ruta))),
         enableSorting: true,
         meta: { sticky: true },
-        cell: ({ row }) => <PuertoCelda p={origenDe(row.original.ruta)} />,
+        cell: ({ row }) => <PuertoCelda puerto={origenDe(row.original.ruta)} />,
       },
       {
         id: "destino",
@@ -86,7 +70,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         accessorFn: (f) => etiquetaPuertoCompleta(destinoDe(f.ruta)),
         sortingFn: sortByString((f) => etiquetaPuertoCompleta(destinoDe(f.ruta))),
         enableSorting: true,
-        cell: ({ row }) => <PuertoCelda p={destinoDe(row.original.ruta)} />,
+        cell: ({ row }) => <PuertoCelda puerto={destinoDe(row.original.ruta)} />,
       },
       {
         id: "tarifas",

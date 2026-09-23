@@ -9,7 +9,7 @@ export function CostosCotizacionMobile({ filas, moneda, canEdit, onUpdate }: {
   filas: Fila[]; moneda: "USD" | "MXN"; canEdit: boolean;
   onUpdate: (index: number, field: "proveedor" | "costo_unitario" | "venta", value: string) => void;
 }) {
-  return <ul className="divide-y rounded-md border md:hidden">{filas.map((f, i) => {
+  return <ul aria-label={`Costos móviles en ${moneda}`} className="divide-y rounded-md border md:hidden">{filas.map((f, i) => {
     const costo = f.cantidad * f.costo_unitario;
     const utilidad = calcularUtilidad(f.venta, costo);
     return <li key={`${f.concepto}-${i}`} className="space-y-2 p-3">

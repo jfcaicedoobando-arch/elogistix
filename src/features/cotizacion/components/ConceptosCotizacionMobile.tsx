@@ -10,7 +10,7 @@ export function ConceptosCotizacionMobile({ conceptos, moneda, tasaIva }: {
   moneda: "USD" | "MXN";
   tasaIva: number;
 }) {
-  return <ul className="divide-y rounded-md border md:hidden">{conceptos.map((c, i) => {
+  return <ul aria-label={`Conceptos móviles en ${moneda}`} className="divide-y rounded-md border md:hidden">{conceptos.map((c, i) => {
     const base = calcularSubtotal(c.cantidad, c.precio_unitario);
     const iva = calcularIVA(base, resolverTasaConcepto(c, tasaIva));
     const total = moneda === "MXN" ? base + iva : importeEfectivoConcepto(c, tasaIva);
