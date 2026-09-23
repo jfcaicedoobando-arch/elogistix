@@ -29,9 +29,11 @@ export function PnlAvisosCards({
             <CardTitle>Sin actividad real todavía</CardTitle>
           </CardHeader>
           <CardContent className="text-body-sm text-muted-foreground">
-            El embarque está en Borrador y aún no tiene facturas de venta ni costos reales.
-            Las cifras mostradas son el presupuesto; las desviaciones aparecerán cuando
-            empiece la operación.
+            {/* P1-3 — El aviso no debe afirmar que el embarque está en Borrador:
+                un Confirmado con facturas en borrador también llega aquí. */}
+            Este embarque aún no tiene facturas de venta emitidas ni costos reales
+            registrados. Las cifras mostradas son el presupuesto; las desviaciones
+            aparecerán cuando haya importes reales.
           </CardContent>
         </Card>
       )}

@@ -102,6 +102,11 @@ describe("cierreCheckFormatters", () => {
     expect(fmtVentaPendientes({ pendientes: 3 })).toBe("3 concepto(s) pendiente(s)");
     expect(fmtVentaPendientes({ en_proforma: 2 })).toBe("2 en proforma sin facturar");
     expect(fmtVentaPendientes({})).toBeNull();
+    // P1-1: conceptos marcados facturados cuya factura sigue en borrador.
+    expect(fmtVentaPendientes({ facturados_sin_emitir: 2 })).toBe("2 en factura borrador (sin emitir)");
+    expect(fmtVentaPendientes({ pendientes: 1, facturados_sin_emitir: 1 })).toBe(
+      "1 concepto(s) pendiente(s) · 1 en factura borrador (sin emitir)",
+    );
   });
 
   it("fmtSinFactura: muestra conceptos sin factura de proveedor", () => {

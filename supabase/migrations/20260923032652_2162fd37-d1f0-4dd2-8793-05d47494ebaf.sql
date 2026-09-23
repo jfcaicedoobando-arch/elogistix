@@ -1,13 +1,3 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
--- N-BL-01 (v13.666.0): pagado CxP convertido a la moneda de la factura con
--- monto_pago_en_moneda_factura; fail-closed (pago sin TC se excluye y se reporta
--- en pagos_sin_tipo_cambio), consistente con saldo_factura_proveedor.
--- v13.823.291: alineado con resolver_sin_comision (clientes con sin_comision).
--- P1-1: venta_conceptos_facturados exige factura vigente EMITIDA por concepto
--- (los borradores se reportan en detalle.facturados_sin_emitir y no dan OK).
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -177,9 +167,9 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
-  -- P1-1 (v13.824.x): `estado_facturacion='facturado'` se enciende en cuanto la
-  -- proforma queda 'facturada', y eso ocurre al crear una factura BORRADOR. El
-  -- check daba OK con facturas sin emitir (falso positivo, además CxC excluye
+  -- P1-1: `estado_facturacion='facturado'` se enciende en cuanto la proforma
+  -- queda 'facturada', y eso ocurre al crear una factura BORRADOR. El check
+  -- daba OK con facturas sin emitir (falso positivo; además CxC excluye
   -- Borrador). Ahora un concepto sólo cuenta como facturado si existe factura
   -- vigente EMITIDA del embarque ligada a su proforma; Borrador/Por timbrar/
   -- Cancelada/Sustituida no cuentan. Conceptos legacy sin proforma (backfill)
