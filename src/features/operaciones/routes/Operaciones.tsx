@@ -65,7 +65,7 @@ export default function Operaciones() {
       {/* v13.823.26 (auditoría 1280x720): grid con ancho mínimo por tarjeta
           para que el label envuelva antes de truncar ("Contenedore…",
           "Tarifas pendi…"); 5 columnas sólo cuando hay espacio real (2xl). */}
-      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard label="Cargas activas" value={global.totalActivas} icon={Ship} variant="info" iconVariant="chip" loading={isLoading} />
         {/* R221: TEU real de `embarque_contenedores` (40'/45' = 2 TEU); antes contaba embarques. */}
         <KpiCard
@@ -81,7 +81,7 @@ export default function Operaciones() {
         </KpiCard>
         {/* VB-28: la moneda ya la muestra el valor ("USD …"); no duplicarla en el label. */}
         <KpiCard label="Utilidad" value={formatCurrencyCompact(global.totalProfit, "USD")} valueTooltip={formatCurrency(global.totalProfit, "USD")} icon={TrendingUp} variant="success" iconVariant="chip" loading={isLoading} />
-        <KpiCard label="Alertas" value={totalAlertas} sublabel={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icon={AlertTriangle} variant="destructive" iconVariant="chip" loading={isLoading} />
+        <KpiCard label="Alertas" value={totalAlertas} sublabel={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icon={AlertTriangle} variant={totalAlertas > 0 ? "destructive" : "default"} iconVariant="chip" loading={isLoading} />
         {isErrorTarifasPendientes ? (
           <KpiErrorCard onRetry={() => refetchTarifasPendientes()} />
         ) : (

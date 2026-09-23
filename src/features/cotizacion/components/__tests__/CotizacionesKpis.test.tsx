@@ -13,4 +13,13 @@ describe("CotizacionesKpis", () => {
     expect(screen.getByText("30 días")).toBeTruthy();
     expect(screen.queryByText(/Total cotizaciones \(30 días\)/)).toBeNull();
   });
+
+  it("presenta cero rechazos con tono neutro", () => {
+    const { container } = render(
+      <CotizacionesKpis total={4} aceptadas={2} rechazadas={0} tasa="50" />,
+    );
+    const rechazadas = screen.getByText("Rechazadas").closest("div.border");
+    expect(rechazadas).not.toHaveClass("border-destructive/30");
+    expect(container.querySelector(".text-destructive")).toBeNull();
+  });
 });

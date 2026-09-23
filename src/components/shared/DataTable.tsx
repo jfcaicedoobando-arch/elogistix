@@ -57,6 +57,8 @@ interface DataTableProps<T> {
   tableClassName?: string;
   /** Ancla el encabezado al top del contenedor de scroll (útil en tablas largas). */
   stickyHeader?: boolean;
+  /** Notifica si las columnas exceden realmente el ancho visible. */
+  onHorizontalOverflowChange?: (overflowing: boolean) => void;
   /** Visibilidad de columnas controlada (persistida por el caller vía `useColumnVisibility`). */
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
@@ -100,6 +102,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
     rowSelection, onRowSelectionChange, enableRowSelection,
     isLoading, isError, emptyMessage, skeletonRows, sortMode, density,
     striped, hoverable, bordered, tableClassName, stickyHeader,
+    onHorizontalOverflowChange,
   } = mergeDataTableProps(rawProps);
 
 
@@ -160,6 +163,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
           selectionMode={selectionMode}
           renderedFooter={renderedFooter}
           showFooter={showFooter}
+          onHorizontalOverflowChange={onHorizontalOverflowChange}
         />
       )}
 

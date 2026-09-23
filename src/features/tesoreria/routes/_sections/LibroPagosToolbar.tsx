@@ -38,8 +38,8 @@ export function LibroPagosToolbar({
 }: Props) {
   return (
     <Card>
-      <CardContent density="compact" className="flex flex-wrap items-end gap-3">
-        <div>
+      <CardContent density="compact" className="grid grid-cols-2 items-end gap-3 short:gap-2 md:grid-cols-12">
+        <div className="md:col-span-2">
           <p className="text-body-sm text-muted-foreground mb-1">Desde</p>
           <DatePickerMx
             value={rango.desde}
@@ -47,7 +47,7 @@ export function LibroPagosToolbar({
             max={rango.hasta}
           />
         </div>
-        <div>
+        <div className="md:col-span-2">
           <p className="text-body-sm text-muted-foreground mb-1">Hasta</p>
           <DatePickerMx
             value={rango.hasta}
@@ -56,7 +56,7 @@ export function LibroPagosToolbar({
           />
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 md:col-span-3">
           <Button type="button" variant="outline" size="sm" onClick={() => onRangoChange(rangoMesPagos())}>
             Mes
           </Button>
@@ -68,7 +68,7 @@ export function LibroPagosToolbar({
           </Button>
         </div>
 
-        <div className="min-w-[170px]">
+        <div className="col-span-2 md:col-span-3">
           <p className="text-body-sm text-muted-foreground mb-1">Cuenta bancaria</p>
           <Select
             value={filtros.cuentaId}
@@ -84,7 +84,7 @@ export function LibroPagosToolbar({
           </Select>
         </div>
 
-        <div className="min-w-[120px]">
+        <div className="md:col-span-2">
           <p className="text-body-sm text-muted-foreground mb-1">Moneda</p>
           <Select value={filtros.moneda} onValueChange={(v) => onFiltrosChange({ moneda: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -95,7 +95,7 @@ export function LibroPagosToolbar({
           </Select>
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="md:col-span-2">
           <p className="text-body-sm text-muted-foreground mb-1">Método de pago</p>
           <Select value={filtros.metodo} onValueChange={(v) => onFiltrosChange({ metodo: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -106,7 +106,7 @@ export function LibroPagosToolbar({
           </Select>
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="md:col-span-2">
           <p className="text-body-sm text-muted-foreground mb-1">Conciliación</p>
           <Select
             value={filtros.conciliacion}
@@ -121,7 +121,7 @@ export function LibroPagosToolbar({
           </Select>
         </div>
 
-        <div className="min-w-[170px]">
+        <div className="md:col-span-3">
           <p className="text-body-sm text-muted-foreground mb-1">Complemento de pago</p>
           <Select
             value={filtros.rep}
@@ -137,7 +137,7 @@ export function LibroPagosToolbar({
           </Select>
         </div>
 
-        <div className="min-w-[200px] flex-1">
+        <div className="col-span-2 md:col-span-5 md:row-start-1 md:col-start-8">
           <p className="text-body-sm text-muted-foreground mb-1">Buscar</p>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />

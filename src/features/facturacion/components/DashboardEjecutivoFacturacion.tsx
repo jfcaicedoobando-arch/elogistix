@@ -121,7 +121,7 @@ export function DashboardEjecutivoFacturacion() {
         }}
       />
       {/* 5 KPIs ejecutivos con la card canónica del UI kit. */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <KpiCard
           label="Listas para facturar"
           value={listasValue}

@@ -2,8 +2,13 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = ({ ref, className, ...props }: React.HTMLAttributes<HTMLTableElement> & { ref?: React.Ref<HTMLTableElement> }) => (
-    <div className="relative w-full overflow-auto">
+type TableProps = React.HTMLAttributes<HTMLTableElement> & {
+  ref?: React.Ref<HTMLTableElement>;
+  wrapperClassName?: string;
+};
+
+const Table = ({ ref, className, wrapperClassName, ...props }: TableProps) => (
+    <div className={cn("relative w-full overflow-auto", wrapperClassName)}>
       <table ref={ref} className={cn("w-full caption-bottom text-body", className)} {...props} />
     </div>
   );

@@ -7,6 +7,8 @@ import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters";
 import { CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
+import { topChartHeightClass } from "@/features/reportes/domain/topChartHeight";
+import { cn } from "@/lib/utils";
 
 
 interface Props {
@@ -15,6 +17,7 @@ interface Props {
 }
 
 export default function ReportesTopChart({ data, isLoading }: Props) {
+  const chartHeightClass = isLoading ? "h-72" : topChartHeightClass(data.length);
   function renderBody() {
     if (isLoading) return <ChartSkeleton height={300} />;
     if (data.length === 0) {
@@ -62,7 +65,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
           <BarChart3 className="h-4 w-4 text-muted-foreground" /> Top {Math.min(data.length, 10)} por utilidad
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-[350px]">{renderBody()}</CardContent>
+      <CardContent className={cn(chartHeightClass)}>{renderBody()}</CardContent>
     </Card>
   );
 }
