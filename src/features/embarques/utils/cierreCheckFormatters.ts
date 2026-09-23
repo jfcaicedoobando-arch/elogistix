@@ -107,9 +107,13 @@ export const fmtMargen = (d: unknown): string | null => {
 export const fmtVentaPendientes = (d: unknown): string | null => {
   const p = Number(pick(d, "pendientes") ?? 0);
   const ep = Number(pick(d, "en_proforma") ?? 0);
+  // P1-1: conceptos marcados como facturados cuya factura sigue en borrador
+  // (sin emitir). Se reportan aparte para que el paso no parezca completo.
+  const sinEmitir = Number(pick(d, "facturados_sin_emitir") ?? 0);
   const partes: string[] = [];
   if (p > 0) partes.push(`${p} concepto(s) pendiente(s)`);
   if (ep > 0) partes.push(`${ep} en proforma sin facturar`);
+  if (sinEmitir > 0) partes.push(`${sinEmitir} en factura borrador (sin emitir)`);
   return partes.length > 0 ? partes.join(" · ") : null;
 };
 

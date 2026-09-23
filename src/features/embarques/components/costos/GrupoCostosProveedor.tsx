@@ -23,6 +23,7 @@ import {
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
 import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
+import { GrupoCostosProveedorVinculo } from "./GrupoCostosProveedorVinculo";
 import { Hint } from "@/components/shared/Hint";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
@@ -34,6 +35,10 @@ interface Props {
   showContenedorCol?: boolean;
   renderContenedor?: (id: string | null | undefined) => React.ReactNode;
   filaContenedorId?: (fila: FilaReconciliacion) => string | null | undefined;
+  /** P1-2 — false = nombre libre sin proveedor del catálogo (sin UUID). */
+  vinculadoACatalogo?: boolean;
+  /** P1-2 — acción existente para vincular el costo al catálogo. */
+  onVincularProveedor?: () => void;
 }
 
 
@@ -43,6 +48,8 @@ export function GrupoCostosProveedor({
   showContenedorCol,
   renderContenedor,
   filaContenedorId,
+  vinculadoACatalogo = true,
+  onVincularProveedor,
 }: Props) {
   const [abierto, setAbierto] = useState(true);
   const subtotales = useMemo(() => calcularSubtotales(filas), [filas]);
@@ -111,6 +118,15 @@ export function GrupoCostosProveedor({
           </div>
         </TooltipProvider>
       </button>
+
+      {!vinculadoACatalogo && proveedorNombre !== "Sin proveedor" && (
+        <GrupoCostosProveedorVinculo
+          proveedorNombre={proveedorNombre}
+          onVincular={onVincularProveedor}
+        />
+      )}
+
+
 
       {abierto && (
         <div className="overflow-x-auto">

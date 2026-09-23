@@ -21,10 +21,12 @@ export interface AlertasPnl {
   utilidadReal: number;
   margenReal: number;
   /**
-   * v13.823.366 — El embarque sigue en Borrador y no hay venta ni costo real:
-   * no es una desviación financiera, es que la operación no ha empezado. Con
-   * esta bandera el tab muestra contexto en vez de "Venta facturada menor a
-   * presupuestada" y Δ -100%.
+   * v13.823.366 — No hay venta ni costo real: no es una desviación financiera,
+   * es que la operación no ha empezado a facturarse. Con esta bandera el tab
+   * muestra contexto en vez de "Venta facturada menor a presupuestada" y Δ -100%.
+   *
+   * P1-3 — Ya no depende del estado operativo: un embarque Confirmado con
+   * facturas en borrador (venta real 0) tampoco tiene desviación real.
    */
   sinActividadReal: boolean;
   alertaSobrecosto: boolean;
@@ -39,14 +41,13 @@ export function calcularAlertasPnl(args: {
   costoPresup: number;
   /** Δ% del costo real vs presupuestado (salida de `deltaPnl`). */
   deltaCostoPct: number;
-  /** Estado del embarque; en Borrador sin importes reales no hay desviación. */
+  /** Estado del embarque; sólo informativo para el copy de los avisos. */
   estadoEmbarque?: string | null;
 }): AlertasPnl {
   const { ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct } = args;
   const utilidadReal = ventaReal - costoReal;
   const margenReal = ventaReal > 0 ? (utilidadReal / ventaReal) * 100 : 0;
-  const sinActividadReal =
-    args.estadoEmbarque === "Borrador" && ventaReal <= 0 && costoReal <= 0;
+  const sinActividadReal = ventaReal <= 0 && costoReal <= 0;
   if (sinActividadReal) {
     return {
       utilidadReal, margenReal, sinActividadReal,

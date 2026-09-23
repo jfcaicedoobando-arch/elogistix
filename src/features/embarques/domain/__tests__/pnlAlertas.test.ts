@@ -46,6 +46,34 @@ describe("calcularAlertasPnl", () => {
     expect(r.alertaMargen).toBe(false);
   });
 
+  // P1-3 — Confirmado con facturas en borrador: venta/costo real 0 tampoco es
+  // desviación, aunque el embarque ya no esté en Borrador.
+  it("Confirmado sin venta ni costo real → estado neutral sin alertas", () => {
+    const r = calcularAlertasPnl({
+      ventaReal: 0, costoReal: 0, ventaPresup: 50000, costoPresup: 40000,
+      deltaCostoPct: -100, estadoEmbarque: "Confirmado",
+    });
+    expect(r.sinActividadReal).toBe(true);
+    expect(r.alertaVenta).toBe(false);
+  });
+
+  it("sin estado y sin importes reales también es neutral", () => {
+    const r = calcularAlertasPnl({
+      ventaReal: 0, costoReal: 0, ventaPresup: 10000, costoPresup: 8000, deltaCostoPct: -100,
+    });
+    expect(r.sinActividadReal).toBe(true);
+  });
+
+  it("con sólo costo real ya hay actividad: se evalúan alertas", () => {
+    const r = calcularAlertasPnl({
+      ventaReal: 0, costoReal: 5000, ventaPresup: 50000, costoPresup: 1000,
+      deltaCostoPct: 400, estadoEmbarque: "Confirmado",
+    });
+    expect(r.sinActividadReal).toBe(false);
+    expect(r.alertaSobrecosto).toBe(true);
+    expect(r.alertaVenta).toBe(true);
+  });
+
   it("embarque operativo con venta menor a la presupuestada SÍ alerta", () => {
     const r = calcularAlertasPnl({
       ventaReal: 30000, costoReal: 20000, ventaPresup: 50000, costoPresup: 40000,

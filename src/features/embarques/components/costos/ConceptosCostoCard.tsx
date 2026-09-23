@@ -62,6 +62,9 @@ export function ConceptosCostoCard({
   }, [filas, costoFocus]);
 
   // Agrupación por proveedor, ordenada alfabéticamente.
+  // P1-2: `vinculado` distingue el proveedor del catálogo (con UUID) del nombre
+  // libre heredado de la cotización, que el checklist de cierre y el buzón de
+  // facturas siguen tratando como "sin proveedor asignado".
   const grupos = useMemo(() => {
     const map = new Map<string, FilaReconciliacion[]>();
     for (const f of filasFiltradas) {
@@ -71,9 +74,13 @@ export function ConceptosCostoCard({
       map.set(key, arr);
     }
     return Array.from(map.entries())
-      .map(([nombre, filas]) => ({ nombre, filas }))
+      .map(([nombre, filas]) => ({
+        nombre,
+        filas,
+        vinculado: filas.every((f) => Boolean(rawById.get(f.concepto_costo_id)?.proveedor_id)),
+      }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
-  }, [filasFiltradas]);
+  }, [filasFiltradas, rawById]);
 
   // Totales globales por moneda. B-057: además de cotizado/facturado
   // guardamos `cotizadoFacturable` (sólo filas con factura) para que el
@@ -151,6 +158,8 @@ export function ConceptosCostoCard({
                 showContenedorCol={showContenedorCol}
                 renderContenedor={renderContenedor}
                 filaContenedorId={filaContenedorId}
+                vinculadoACatalogo={g.vinculado}
+                onVincularProveedor={irACargarCostos?.onClick}
               />
             ))}
           </>
