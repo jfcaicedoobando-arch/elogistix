@@ -204,8 +204,8 @@ BEGIN
     SELECT c.id AS cv_id, f.estado::text AS estado
       FROM cv c
       JOIN facturas f
-        ON COALESCE(f.moneda::text,'MXN') = c.moneda
         ON f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
+       AND COALESCE(f.moneda::text,'MXN') = c.moneda
        AND (c.proforma_id IS NULL
             OR f.proforma_id = c.proforma_id
             OR EXISTS (SELECT 1 FROM proformas pr
