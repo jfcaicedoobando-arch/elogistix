@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
 import { etiquetaEvento } from "@/features/embarques/domain/actividadHumana";
+import { descripcionHumana } from "@/features/embarques/domain/actividadDescripcion";
+
 import { ActividadDetalles } from "@/features/embarques/components/ActividadDetalles";
 import { Hint } from "@/components/shared/Hint";
 
