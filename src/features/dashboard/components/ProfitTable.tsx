@@ -78,6 +78,10 @@ function construirColumnas(verCostos: boolean): ColumnDef<EmbarqueConProfit, unk
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
   const { canViewCosts } = usePermissions();
   const columns = useMemo(() => construirColumnas(canViewCosts), [canViewCosts]);
+  // P2-B: misma política de presentación que el tablero y el P&L del embarque:
+  // utilidad y margen visibles se derivan de venta/costo ya redondeados.
+  const filas = useMemo(() => proyectarFilasUtilidadVisible(embarques), [embarques]);
+
 
   return (
     <Card>
