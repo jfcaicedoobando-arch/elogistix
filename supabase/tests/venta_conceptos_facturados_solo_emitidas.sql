@@ -182,12 +182,14 @@ BEGIN
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 5: reemplazo MXN emitido → OK.
+  -- CASO 5: reemplazo MXN emitido → OK. El índice único
+  -- uq_facturas_proforma_moneda_viva impide reusar (proforma_id, MXN), así que
+  -- el reemplazo se liga por conceptos_factura.proforma_id_origen (refacturación).
   -- ---------------------------------------------------------------
   INSERT INTO public.facturas
-    (organization_id, cliente_id, cliente_nombre, embarque_id, proforma_id, numero, expediente,
+    (organization_id, cliente_id, cliente_nombre, embarque_id, numero, expediente,
      fecha_emision, fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado)
-  VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_a, 'VF-MXN-REEMPLAZO', 'ELIMP99201',
+  VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, 'VF-MXN-REEMPLAZO', 'ELIMP99201',
           CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 100, 16, 116, 'Borrador')
   RETURNING id INTO v_fac_mxn2;
   INSERT INTO public.conceptos_factura
@@ -195,7 +197,7 @@ BEGIN
      embarque_id, proforma_id_origen)
   VALUES (v_org, v_fac_mxn2, 'Flete MXN', 1, 100, 'MXN'::public.moneda, 100, v_emb, v_prof_a);
   UPDATE public.facturas SET estado = 'Emitida' WHERE id = v_fac_mxn2;
-  UPDATE public.proformas SET factura_secundaria_id = v_fac_mxn2 WHERE id = v_prof_a;
+
 
   SELECT c INTO v_check
     FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
