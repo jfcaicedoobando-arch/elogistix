@@ -35,11 +35,13 @@ export interface KpiBodyProps {
   children?: React.ReactNode;
 }
 
-/** Fila de etiqueta canónica: label truncado + hint opcional. */
+/** Fila de etiqueta canónica: hasta dos líneas visibles + hint opcional. */
 function KpiLabel({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
-      <Hint label={label}><p className="text-label text-muted-foreground truncate">{label}</p></Hint>
+      <Hint label={label}>
+        <p className="min-h-7 text-label leading-tight text-muted-foreground line-clamp-2">{label}</p>
+      </Hint>
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -72,7 +74,7 @@ export function KpiBodyInline({
             <Skeleton className="h-7 w-20" />
           ) : (
             <Hint label={valueTooltip ?? valueStr}>
-              <p className={cn(kpiValueSize(valueStr, "inline"), "font-semibold tabular-nums truncate")}>
+              <p className={cn(kpiValueSize(valueStr, "inline"), "font-semibold tabular-nums leading-tight whitespace-nowrap")}>
                 {value}
               </p>
             </Hint>
@@ -121,7 +123,7 @@ export function KpiBodyChip({
               <p
                 className={cn(
                   kpiValueSize(valueStr, "chip"),
-                  "font-semibold text-foreground tabular-nums leading-tight truncate",
+                   "font-semibold text-foreground tabular-nums leading-tight whitespace-nowrap",
                 )}
               >
                 {value}

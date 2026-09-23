@@ -31,6 +31,7 @@ interface DataTableContentProps<T> {
   selectionMode?: boolean;
   renderedFooter: React.ReactNode;
   showFooter: boolean;
+  onHorizontalOverflowChange?: (overflowing: boolean) => void;
 }
 
 export function DataTableContent<T>(props: DataTableContentProps<T>) {
@@ -39,9 +40,14 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
     density, isLoading, skeletonRows, emptyMessage, emptyHint, emptyIcon,
     emptyState, rowClassName, onRowClick, onRowMouseEnter, getRowHref,
     getRowAriaLabel, selectionMode, renderedFooter, showFooter,
+    onHorizontalOverflowChange,
   } = props;
 
   const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
+
+  React.useEffect(() => {
+    onHorizontalOverflowChange?.(overflowing);
+  }, [onHorizontalOverflowChange, overflowing]);
 
   // VT-18: sin filas (y fuera de carga) el thead quedaba "flotando" sobre el
   // empty state y parecía una tabla rota — se oculta hasta que haya datos.
@@ -57,7 +63,7 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
         className="relative w-full overflow-x-auto rounded-md pr-2 [scrollbar-width:thin]"
       >
 
-        <Table className={tableClassName}>
+        <Table className={tableClassName} wrapperClassName="overflow-visible">
           {showHeader && (
             <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
           )}
