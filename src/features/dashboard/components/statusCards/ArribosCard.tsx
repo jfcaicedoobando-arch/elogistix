@@ -119,7 +119,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
               autoFit
               mobileStack
               mobileCols={2}
-              className="sm:max-md:grid-cols-2"
+              className="max-md:!grid-cols-2"
             >
               <KpiCard label="Total" value={arribosEsteMes.total} loading={isLoading} />
               <KpiCard
