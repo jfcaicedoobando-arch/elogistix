@@ -8,7 +8,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { TratamientoIvaPorDefinir } from "@/features/cotizacion/components/conceptos/TratamientoIvaPorDefinir";
+import {
+  AVISO_TRATAMIENTO_POR_DEFINIR,
+  TratamientoIvaPorDefinir,
+} from "@/features/cotizacion/components/conceptos/TratamientoIvaPorDefinir";
 import { TIPO_IVA_LABEL_SAT } from "@/lib/financial/tipoIvaSat";
 
 const estado = vi.hoisted(() => ({
@@ -29,11 +32,12 @@ vi.mock("@/components/ui/select", () => ({
     <button type="button" {...rest}>{children}</button>
   ),
   SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value, disabled }: { children: React.ReactNode; value: string; disabled?: boolean }) => (
+  SelectItem: ({ children, value, disabled, className }: { children: React.ReactNode; value: string; disabled?: boolean; className?: string }) => (
     <button
       type="button"
       data-testid={`opcion-${value}`}
       aria-disabled={disabled ? "true" : "false"}
+      className={className}
       onClick={() => { if (!disabled) estado.onValueChange?.(value); }}
     >
       {children}
@@ -53,6 +57,8 @@ describe("TratamientoIvaPorDefinir y el estímulo del 8%", () => {
     expect(opcion).toHaveAttribute("aria-disabled", "true");
     expect(opcion).toHaveTextContent(/deshabilitada/i);
     expect(opcion).toHaveTextContent(TIPO_IVA_LABEL_SAT.gravado_8);
+    expect(opcion.className).toContain("data-[disabled]:text-muted-foreground");
+    expect(screen.getByLabelText(AVISO_TRATAMIENTO_POR_DEFINIR)).toHaveClass("text-foreground");
   });
 
   it("con el estímulo apagado el callback rechaza el 8% aunque se fuerce la selección", () => {

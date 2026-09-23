@@ -25,4 +25,15 @@ describe("CotizacionDatosGeneralesCard", () => {
     expect(screen.getByText("1 día")).toBeInTheDocument();
     expect(screen.queryByText(/1 días/)).not.toBeInTheDocument();
   });
+
+  it("permite dos líneas en origen y destino sin truncar los demás campos", () => {
+    render(<CotizacionDatosGeneralesCard cotizacion={{
+      ...cotizacion,
+      origen: "Busan, Corea del Sur (KRPUS)",
+      destino: "Parque Industrial Apodaca, Nuevo León, México",
+    }} />);
+    expect(screen.getByText(/Busan, Corea/)).toHaveClass("line-clamp-2", "break-words");
+    expect(screen.getByText(/Parque Industrial Apodaca/)).toHaveClass("line-clamp-2", "break-words");
+    expect(screen.getByText("FOB")).toHaveClass("truncate");
+  });
 });

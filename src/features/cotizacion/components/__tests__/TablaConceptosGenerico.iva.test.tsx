@@ -54,6 +54,26 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
     expect(leyenda).toBeInTheDocument();
     expect(leyenda.textContent).toMatch(/no objeto de impuesto/i);
     expect(screen.queryByText(/IVA \(/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("IVA: No objeto")).toHaveLength(2);
+  });
+
+  it("muestra el tratamiento por renglón sin inventar el dato indefinido", () => {
+    render(
+      <TablaConceptosGenerico
+        moneda="USD"
+        conceptos={[
+          concepto(true, 0, "tasa_0"),
+          concepto(false, 0, "exento"),
+          concepto(false, 0, "no_objeto"),
+          concepto(false, 0),
+        ]}
+        total={4000}
+      />,
+    );
+    expect(screen.getByText("IVA: 0%")).toBeInTheDocument();
+    expect(screen.getByText("IVA: Exento")).toBeInTheDocument();
+    expect(screen.getByText("IVA: No objeto")).toBeInTheDocument();
+    expect(screen.getByText("IVA: Por confirmar")).toBeInTheDocument();
   });
 
   it("con conceptos gravados usa la tasa real del renglón", () => {

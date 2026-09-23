@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TablaCostosLocal from "../TablaCostosLocal";
-import { COL_COSTO } from "../costosLocal/columnasCosto";
+import { COL_COSTO, COSTO_GRID_MIN_W } from "../costosLocal/columnasCosto";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 vi.mock("@/features/cotizacion/hooks/useProductosCatalogo", () => ({
@@ -53,7 +53,7 @@ describe("TablaCostosLocal · columnas alineadas", () => {
   it("muestra encabezados de columna cuando hay filas", () => {
     renderTabla();
     for (const label of ["Concepto", "Proveedor", "Unidad", "Cant.", "Costo unit.", "Venta unit.", "Costo total", "Venta total", "Margen"]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
     // v13.823.286: "Utilidad" aparece también en el resumen compacto del pie
     // que se muestra cuando las columnas calculadas están ocultas.
@@ -62,10 +62,19 @@ describe("TablaCostosLocal · columnas alineadas", () => {
 
   it("el total de la columna usa el mismo ancho que su encabezado", () => {
     renderTabla();
-    const encabezado = screen.getByText("Costo total");
+    const encabezado = screen.getAllByText("Costo total")[0];
     const total = screen.getByText("Totales");
     expect(encabezado.className).toContain(COL_COSTO.costoTotal);
     expect(total.className).toContain(COL_COSTO.concepto);
+  });
+
+  it("mantiene métricas compactas hasta 2xl y acciones visibles", () => {
+    renderTabla();
+    expect(COSTO_GRID_MIN_W).toContain("2xl:min-w");
+    expect(COL_COSTO.margen).toContain("hidden 2xl:block");
+    expect(screen.getAllByText("Margen").length).toBeGreaterThan(1);
+    expect(screen.getByLabelText("Agregar notas")).toBeInTheDocument();
+    expect(screen.getByLabelText("Eliminar concepto")).toBeInTheDocument();
   });
 
   it("no muestra encabezados cuando la tabla está vacía", () => {

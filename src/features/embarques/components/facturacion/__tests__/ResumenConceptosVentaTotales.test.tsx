@@ -22,6 +22,19 @@ describe("ResumenConceptosVentaTotales", () => {
       totales={totales} pendientesCount={1} enProformaCount={0} facturadosCount={1}
       gruposConIva={{ pendiente: true, enProforma: false, facturado: false }}
     />);
-    expect(screen.getAllByText("Total · IVA incluido")).toHaveLength(1);
+    expect(screen.getByText("Total · IVA incluido")).toBeInTheDocument();
+    expect(screen.getByText("Conceptos vinculados")).toBeInTheDocument();
+    expect(screen.getByText("Borrador o emitida")).toBeInTheDocument();
+  });
+
+  it("nombra conceptos vinculados sin presentarlos como conteo de documentos", () => {
+    render(<ResumenConceptosVentaTotales
+      totales={totales} pendientesCount={1} enProformaCount={0} facturadosCount={1}
+      gruposConIva={{ pendiente: false, enProforma: false, facturado: false }}
+    />);
+    expect(screen.getByText("Conceptos en proforma")).toBeInTheDocument();
+    expect(screen.getByText("Sin conceptos vinculados a proforma")).toBeInTheDocument();
+    expect(screen.getByText("Conceptos en factura")).toBeInTheDocument();
+    expect(screen.queryByText("Sin proformas generadas")).not.toBeInTheDocument();
   });
 });

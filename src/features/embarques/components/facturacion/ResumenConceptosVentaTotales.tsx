@@ -37,9 +37,10 @@ interface ColumnaProps {
   icon: React.ReactNode;
   emptyText: string;
   incluyeIva: boolean;
+  alcance?: string;
 }
 
-function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, emptyText, incluyeIva }: ColumnaProps) {
+function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, emptyText, incluyeIva, alcance }: ColumnaProps) {
   const vacio = total.totalMxn === 0 && total.totalUsd === 0;
   return (
     <div className={`rounded-md border p-3 ${cardClass}`}>
@@ -48,7 +49,7 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
         <div>
           <div className="text-body font-semibold">{titulo}</div>
           <div className="text-2xs text-muted-foreground">
-            {incluyeIva ? "Total · IVA incluido" : "Total"}
+            {alcance ?? (incluyeIva ? "Total · IVA incluido" : "Total")}
           </div>
         </div>
         <Badge className={`ml-auto ${badgeClass}`}>{count}</Badge>
@@ -82,24 +83,26 @@ export function ResumenConceptosVentaTotales({
         incluyeIva={gruposConIva.pendiente}
       />
       <ColumnaTotal
-        titulo="Proforma generada"
+        titulo="Conceptos en proforma"
         count={enProformaCount}
         total={totales.enProforma}
         cardClass="border-info/30 bg-info/5"
         badgeClass="bg-info/15 [color:hsl(var(--info))] border-info/30"
         icon={<FileText className="h-4 w-4 [color:hsl(var(--info))]" />}
-        emptyText="Sin proformas generadas"
+        emptyText="Sin conceptos vinculados a proforma"
         incluyeIva={gruposConIva.enProforma}
+        alcance={gruposConIva.enProforma ? "Conceptos vinculados · IVA incluido" : "Conceptos vinculados"}
       />
       <ColumnaTotal
-        titulo="Facturado"
+        titulo="Conceptos en factura"
         count={facturadosCount}
         total={totales.facturado}
         cardClass="border-success/30 bg-success/5"
         badgeClass="bg-success/15 [color:hsl(var(--success))] border-success/30"
         icon={<CheckCircle2 className="h-4 w-4 text-success" />}
-        emptyText="Sin facturación emitida"
+        emptyText="Sin conceptos vinculados a factura"
         incluyeIva={gruposConIva.facturado}
+        alcance={gruposConIva.facturado ? "Borrador o emitida · IVA incluido" : "Borrador o emitida"}
       />
     </div>
   );
