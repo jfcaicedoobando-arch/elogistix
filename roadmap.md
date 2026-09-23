@@ -9,6 +9,14 @@
 - [x] D6 — Proformas: hidratar facturas vinculadas (FK inversa + factura_id + secundaria) en detalle e historial.
 
 ## Pendiente
+- [ ] P2 visual: tratamiento fiscal por renglón en detalle de cotización.
+- [ ] P2 visual: Origen/Destino hasta dos líneas con tooltip.
+- [ ] P2 visual: resumen de conceptos sin confundir conceptos con documentos.
+- [ ] P2 visual: nombre de prospecto hasta dos líneas sin desplazar badge/acciones.
+- [ ] P2 visual: contraste del selector fiscal en claro/oscuro y opción 8% deshabilitada.
+- [ ] P2 visual: costos compactos debajo de 2xl, alineados a 1280/1440.
+- [ ] Validación dirigida: pruebas focales, typecheck/lint y Playwright 1280/1440.
+
 - [ ] UI/UX del modal "Traspaso entre cuentas propias": layout estable, tipo de cambio con 4 decimales, resumen legible del monto recibido.
 - [x] Cotización: mostrar SAT 01 y Exento como tratamientos fiscales no editables en filas MXN/USD, con pruebas focalizadas.
 - [x] Lote P1 de IVA: coherencia única `tipo_iva`/tasa en cotización, proforma→factura y emisión; bloqueo accionable en casos ambiguos; diagnóstico agregado de sólo lectura.
