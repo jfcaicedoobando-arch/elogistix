@@ -3,14 +3,17 @@
  * Extraído de `TabPnl.tsx` en v13.56.2 (auditoría — paso 5).
  */
 import { formatCurrency } from "@/lib/formatters";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 /**
  * P2-7 — Política única de presentación: los KPI mostrados se redondean a
  * centavos ANTES de restarse, para que la utilidad mostrada sea exactamente
  * la resta de la venta y el costo mostrados (61,638.15 − 53,137.53 = 8,500.62).
+ * Usa `roundMoney` (half-away-from-zero, igual que Postgres ROUND).
  * El SQL `a_mxn` conserva 4 decimales y NO se toca: esto es sólo pantalla.
  */
-export const centavosPnl = (n: number): number => Math.round(((n ?? 0) + Number.EPSILON) * 100) / 100;
+export const centavosPnl = (n: number): number => roundMoney(n ?? 0);
+
 
 /** Formato MXN compacto para tarjetas/tablas de P&L. */
 export const fmtPnl = (n: number): string => formatCurrency(n ?? 0, "MXN");
