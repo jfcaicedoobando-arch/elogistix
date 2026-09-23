@@ -186,18 +186,25 @@ BEGIN
   -- de esa misma proforma sin emitir (Borrador/Por timbrar). Esto cubre la
   -- proforma partida por moneda (facturas USD + MXN comparten proforma_id):
   -- emitir sólo una ya no da OK. Cancelada/Sustituida no bloquean ni acreditan.
+  -- P1 (v13.824.x): el vínculo además exige MISMA MONEDA que el concepto
+  -- (conceptos_venta.moneda ↔ facturas.moneda), porque construirFacturasAEmitir
+  -- genera una factura por moneda desde total_usd/total_mxn: una proforma mixta
+  -- con la USD Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y
+  -- daba OK. Una factura emitida en otra moneda no acredita al concepto.
   -- El vínculo factura↔proforma usa facturas.proforma_id, los punteros
   -- proformas.factura_id / factura_secundaria_id y conceptos_factura
   -- .proforma_id_origen (consolidadas). Conceptos legacy sin proforma se
-  -- validan contra cualquier factura emitida del embarque.
+  -- validan contra cualquier factura emitida del embarque en su moneda.
   WITH cv AS (
-    SELECT cv.id, cv.estado_facturacion, cv.proforma_id
+    SELECT cv.id, cv.estado_facturacion, cv.proforma_id,
+           COALESCE(cv.moneda::text,'MXN') AS moneda
       FROM conceptos_venta cv
      WHERE cv.embarque_id=p_embarque_id AND cv.deleted_at IS NULL),
   lig AS (
     SELECT c.id AS cv_id, f.estado::text AS estado
       FROM cv c
       JOIN facturas f
+        ON COALESCE(f.moneda::text,'MXN') = c.moneda
         ON f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
        AND (c.proforma_id IS NULL
             OR f.proforma_id = c.proforma_id
