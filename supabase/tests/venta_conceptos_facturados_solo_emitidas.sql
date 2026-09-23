@@ -49,6 +49,14 @@ BEGIN
   VALUES (v_org, v_uid, 'admin_org'::public.app_role) ON CONFLICT DO NOTHING;
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
+  -- Las facturas USD del fixture pasan por `_factura_tc_dof_obligatorio()`, que
+  -- exige el T/C DOF de la fecha de emisión; se siembra con el mismo valor del
+  -- fixture (todo se revierte con el ROLLBACK final).
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE, 17, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 17;
+
+
   INSERT INTO public.clientes (organization_id, nombre, email)
   VALUES (v_org, 'CLIENTE VENTA FACTURADOS', 'cli-vf@test.mx')
   RETURNING id INTO v_cli;
@@ -61,20 +69,23 @@ BEGIN
   RETURNING id INTO v_emb;
 
   -- Proforma A: se factura partida por moneda (USD + MXN).
+  -- `estado_cliente = 'aceptada'` es obligatorio: sin ello el trigger
+  -- enforce_proforma_aceptada_before_factura() bloquea el vínculo a factura.
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
-                                expediente, numero, estado_proforma,
+                                expediente, numero, estado_proforma, estado_cliente,
                                 subtotal_mxn, iva_mxn, total_mxn)
   VALUES (v_org, v_emb, v_cli, 'CLIENTE VENTA FACTURADOS', 'ELIMP99201',
-          'PRO-VF-1', 'facturada', 100, 16, 116)
+          'PRO-VF-1', 'facturada', 'aceptada', 100, 16, 116)
   RETURNING id INTO v_prof_a;
 
   -- Proforma B: una sola factura.
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
-                                expediente, numero, estado_proforma,
+                                expediente, numero, estado_proforma, estado_cliente,
                                 subtotal_mxn, iva_mxn, total_mxn)
   VALUES (v_org, v_emb, v_cli, 'CLIENTE VENTA FACTURADOS', 'ELIMP99201',
-          'PRO-VF-2', 'facturada', 200, 32, 232)
+          'PRO-VF-2', 'facturada', 'aceptada', 200, 32, 232)
   RETURNING id INTO v_prof_b;
+
 
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion, cantidad,
                                       precio_unitario, total, moneda, estado_facturacion, proforma_id)
@@ -95,6 +106,14 @@ BEGIN
   VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_a, 'BORRADOR-VF-MXN', 'ELIMP99201',
           CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 100, 16, 116, 'Borrador')
   RETURNING id INTO v_fac_mxn;
+  -- Toda factura requiere al menos un concepto para poder emitirse
+  -- (congelar_factura_al_emitir → LC_FACTURA_SIN_CONCEPTOS).
+  INSERT INTO public.conceptos_factura
+    (organization_id, factura_id, descripcion, cantidad, precio_unitario, moneda, total,
+     embarque_id, proforma_id_origen)
+  VALUES (v_org, v_fac_usd, 'Flete USD', 1, 50, 'USD'::public.moneda, 50, v_emb, v_prof_a),
+         (v_org, v_fac_mxn, 'Flete MXN', 1, 100, 'MXN'::public.moneda, 100, v_emb, v_prof_a);
+
   -- Punteros reales del corte por moneda.
   UPDATE public.proformas
      SET factura_id = v_fac_usd, factura_secundaria_id = v_fac_mxn
@@ -164,6 +183,10 @@ BEGIN
   VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_b, 'BORRADOR-VF-B', 'ELIMP99201',
           CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 200, 32, 232, 'Borrador')
   RETURNING id INTO v_fac_b;
+  INSERT INTO public.conceptos_factura
+    (organization_id, factura_id, descripcion, cantidad, precio_unitario, moneda, total,
+     embarque_id, proforma_id_origen)
+  VALUES (v_org, v_fac_b, 'Maniobras', 1, 200, 'MXN'::public.moneda, 200, v_emb, v_prof_b);
   UPDATE public.proformas SET factura_id = v_fac_b WHERE id = v_prof_b;
 
   SELECT c INTO v_check
