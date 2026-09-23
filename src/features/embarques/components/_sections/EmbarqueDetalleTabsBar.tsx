@@ -45,21 +45,50 @@ export function EmbarqueDetalleTabsBar() {
       setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
     };
 
-    updateScrollState();
+    // TABS-UX-03 (P2-5): la pestaña activa quedaba tapada por la flecha/fade
+    // derecha al terminar la carga asíncrona (cambia el ancho del contenedor).
+    // Se desplaza en el eje horizontal SOLO lo necesario, con margen para la
+    // flecha, sin `scrollIntoView` (provoca salto vertical) y sin reintentos
+    // en bucle: el propio `scroll` recalcula el estado de las flechas.
+    const MARGEN = 40;
+    const asegurarActivaVisible = () => {
+      const activa = el.querySelector<HTMLElement>('[data-state="active"]');
+      if (!activa) return;
+      const inicio = activa.offsetLeft - MARGEN;
+      const fin = activa.offsetLeft + activa.offsetWidth + MARGEN;
+      if (inicio < el.scrollLeft) el.scrollLeft = Math.max(inicio, 0);
+      else if (fin > el.scrollLeft + el.clientWidth) el.scrollLeft = fin - el.clientWidth;
+    };
+
+    const actualizar = () => {
+      asegurarActivaVisible();
+      updateScrollState();
+    };
+
+    actualizar();
     el.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
+    window.addEventListener("resize", actualizar);
     // TABS-UX-02: el ancho también cambia al colapsar el sidebar o al cargar
     // la tipografía, sin que dispare `resize` en window.
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateScrollState) : null;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(actualizar) : null;
     ro?.observe(el);
+    // La pestaña activa cambia por clic o por la URL: observamos `data-state`
+    // en lugar de re-suscribir el efecto en cada render.
+    const mo =
+      typeof MutationObserver !== "undefined"
+        ? new MutationObserver(asegurarActivaVisible)
+        : null;
+    mo?.observe(el, { attributes: true, subtree: true, attributeFilter: ["data-state"] });
     return () => {
       el.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
+      window.removeEventListener("resize", actualizar);
       ro?.disconnect();
+      mo?.disconnect();
     };
   }, []);
 
   const scrollBy = (delta: number) => scrollRef.current?.scrollBy({ left: delta, behavior: "smooth" });
+
 
   return (
     // TABS-UX-01: el espacio de las flechas se reserva FUERA del área

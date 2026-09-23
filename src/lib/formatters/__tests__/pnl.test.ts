@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtPnl, pctPnl, deltaPnl } from "../pnl";
+import { fmtPnl, pctPnl, deltaPnl, centavosPnl } from "../pnl";
 
 describe("lib/formatters/pnl", () => {
   describe("fmtPnl", () => {
@@ -42,6 +42,24 @@ describe("lib/formatters/pnl", () => {
         abs: 0,
         pct: 0,
       });
+    });
+  });
+
+  // P2-7: Costos mostraba 8,500.62 y Utilidad/dashboard 8,500.63 porque uno
+  // restaba valores crudos de 4 decimales y el otro ya redondeados.
+  describe("centavosPnl", () => {
+    it("la utilidad mostrada es la resta de la venta y el costo mostrados", () => {
+      const venta = centavosPnl(61638.1538);
+      const costo = centavosPnl(53137.525);
+      expect(venta).toBe(61638.15);
+      expect(costo).toBe(53137.53);
+      expect(centavosPnl(venta - costo)).toBe(8500.62);
+      // La resta cruda daba el medio centavo de más.
+      expect(centavosPnl(61638.1538 - 53137.525)).toBe(8500.63);
+    });
+    it("trata null/undefined como 0", () => {
+      expect(centavosPnl(null as unknown as number)).toBe(0);
+      expect(centavosPnl(undefined as unknown as number)).toBe(0);
     });
   });
 });

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
+import { fmtPnl, pctPnl, deltaPnl, centavosPnl } from "@/lib/formatters/pnl";
 import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarques/domain/pnlAlertas";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
@@ -48,12 +48,16 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
     );
   }
 
-  const ventaReal = data.venta.real_mxn;
-  const costoReal = data.costo.real_mxn;
-  const ventaPresup = data.venta.presupuestada_mxn;
-  const costoPresup = data.costo.presupuestado_mxn;
-  const utilidadPresup = ventaPresup - costoPresup;
+  // P2-7: redondeo a centavos antes de restar, igual que `computeEmbarqueKpis`
+  // en el tab Costos. Así Costos y Utilidad muestran la misma cifra y la
+  // utilidad mostrada es la resta de la venta y el costo mostrados.
+  const ventaReal = centavosPnl(data.venta.real_mxn);
+  const costoReal = centavosPnl(data.costo.real_mxn);
+  const ventaPresup = centavosPnl(data.venta.presupuestada_mxn);
+  const costoPresup = centavosPnl(data.costo.presupuestado_mxn);
+  const utilidadPresup = centavosPnl(ventaPresup - costoPresup);
   const margenPresup = ventaPresup > 0 ? (utilidadPresup / ventaPresup) * 100 : 0;
+
 
   const dVenta = deltaPnl(ventaReal, ventaPresup);
   const dCosto = deltaPnl(costoReal, costoPresup);

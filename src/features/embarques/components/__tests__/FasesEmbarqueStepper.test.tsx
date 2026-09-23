@@ -45,7 +45,17 @@ describe("FasesEmbarqueStepper", () => {
     render(<FasesEmbarqueStepper embarque={BASE} variant="completa" />);
     expect(screen.getAllByText(/^est\. /).length).toBeGreaterThan(0);
   });
+
+  // P2-1: una fase completada sin fecha capturada decía "Pendiente".
+  it("distingue una fase completada sin fecha de una fase pendiente", () => {
+    render(<FasesEmbarqueStepper embarque={BASE} variant="completa" />);
+    // "Propuesta" está completada (hay cotización) pero sin fecha de cotización.
+    expect(screen.getAllByText("Sin fecha registrada").length).toBeGreaterThan(0);
+    // Las fases futuras sin fecha siguen diciendo "Pendiente".
+    expect(screen.getAllByText("Pendiente").length).toBeGreaterThan(0);
+  });
 });
+
 
 describe("helpers temporales del embarque", () => {
   it("un embarque entregado o con llegada real se considera arribado", () => {

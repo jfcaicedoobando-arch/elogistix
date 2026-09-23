@@ -16,7 +16,33 @@ export async function calcularDemorasEmbarque(embarqueId: string): Promise<Demor
   return desglose;
 }
 
+/**
+ * P2-4: ¿hay conceptos `demoras_auto` realmente persistidos?
+ * El botón "Eliminar auto" dependía de un estado local que se perdía al
+ * recargar, así que se ofrecía una acción destructiva sin nada que eliminar.
+ */
+export async function contarDemorasAuto(embarqueId: string): Promise<number> {
+  const [costo, venta] = await Promise.all([
+    supabase
+      .from("conceptos_costo")
+      .select("id", { count: "exact", head: true })
+      .eq("embarque_id", embarqueId)
+      .eq("origen", "demoras_auto")
+      .is("deleted_at", null),
+    supabase
+      .from("conceptos_venta")
+      .select("id", { count: "exact", head: true })
+      .eq("embarque_id", embarqueId)
+      .eq("origen", "demoras_auto")
+      .is("deleted_at", null),
+  ]);
+  if (costo.error) throw costo.error;
+  if (venta.error) throw venta.error;
+  return (costo.count ?? 0) + (venta.count ?? 0);
+}
+
 export async function eliminarDemorasAuto(embarqueId: string): Promise<void> {
+
   const [c, v] = await Promise.all([
     supabase.from("conceptos_costo").delete().eq("embarque_id", embarqueId).eq("origen", "demoras_auto"),
     supabase.from("conceptos_venta").delete().eq("embarque_id", embarqueId).eq("origen", "demoras_auto"),

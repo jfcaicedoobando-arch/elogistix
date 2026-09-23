@@ -1,9 +1,25 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyInfo, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
-import { calcularDemorasEmbarque, eliminarDemorasAuto } from "../services/demorasEmbarque";
+import { calcularDemorasEmbarque, contarDemorasAuto, eliminarDemorasAuto } from "../services/demorasEmbarque";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+
+/**
+ * P2-4 — Conceptos `demoras_auto` realmente persistidos en el embarque.
+ * Sirve para no ofrecer "Eliminar auto" cuando no hay nada que eliminar,
+ * incluso tras recargar la página (el estado local se perdía).
+ */
+export function useDemorasAutoExistentes(embarqueId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.embarques.demorasAutoExistentes(embarqueId),
+    queryFn: () => contarDemorasAuto(embarqueId!),
+    enabled: Boolean(embarqueId),
+    staleTime: 30_000,
+  });
+}
+
+
 export function useRecalcularDemoras(embarqueId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({

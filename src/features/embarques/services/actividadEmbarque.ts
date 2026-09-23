@@ -11,11 +11,14 @@ import {
   type ActividadItem,
   type ActividadRow,
 } from '@/features/embarques/domain/actividadFeed';
+import { agruparHechosNegocio } from '@/features/embarques/domain/actividadAgrupacion';
 
 export async function fetchActividadEmbarque(embarqueId: string): Promise<ActividadItem[]> {
   const { data, error } = await supabase.rpc('actividad_embarque', { p_embarque_id: embarqueId });
   if (error) throw error;
   // SAFE-CAST: el RPC devuelve exactamente las columnas de ActividadRow.
   const rows = (data ?? []) as unknown as ActividadRow[];
-  return ordenarActividad(deduplicarActividad(normalizarActividad(rows)));
+  const ordenados = ordenarActividad(deduplicarActividad(normalizarActividad(rows)));
+  return agruparHechosNegocio(ordenados);
 }
+

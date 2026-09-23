@@ -23,12 +23,17 @@ interface Props {
   variant?: "compacta" | "completa";
 }
 
-/** Texto de fecha de la fase: real, estimada o pendiente. */
+/**
+ * Texto de fecha de la fase: real, estimada o pendiente.
+ * P2-1: una fase completada sin fecha capturada decía "Pendiente" aunque el
+ * nodo se pintaba con check; "Pendiente" queda reservado a fases pendientes.
+ */
 function textoFecha(fase: FaseEmbarque): string {
-  if (!fase.fecha) return "Pendiente";
+  if (!fase.fecha) return fase.estado === "pendiente" ? "Pendiente" : "Sin fecha registrada";
   const fecha = formatDate(fase.fecha, "dd MMM");
   return fase.estado === "pendiente" ? `est. ${fecha}` : fecha;
 }
+
 
 function tituloNodo(fase: FaseEmbarque): string {
   if (!fase.fecha) return `${fase.label} — sin fecha`;
