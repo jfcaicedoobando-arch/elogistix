@@ -69,20 +69,23 @@ BEGIN
   RETURNING id INTO v_emb;
 
   -- Proforma A: se factura partida por moneda (USD + MXN).
+  -- `estado_cliente = 'aceptada'` es obligatorio: sin ello el trigger
+  -- enforce_proforma_aceptada_before_factura() bloquea el vínculo a factura.
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
-                                expediente, numero, estado_proforma,
+                                expediente, numero, estado_proforma, estado_cliente,
                                 subtotal_mxn, iva_mxn, total_mxn)
   VALUES (v_org, v_emb, v_cli, 'CLIENTE VENTA FACTURADOS', 'ELIMP99201',
-          'PRO-VF-1', 'facturada', 100, 16, 116)
+          'PRO-VF-1', 'facturada', 'aceptada', 100, 16, 116)
   RETURNING id INTO v_prof_a;
 
   -- Proforma B: una sola factura.
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
-                                expediente, numero, estado_proforma,
+                                expediente, numero, estado_proforma, estado_cliente,
                                 subtotal_mxn, iva_mxn, total_mxn)
   VALUES (v_org, v_emb, v_cli, 'CLIENTE VENTA FACTURADOS', 'ELIMP99201',
-          'PRO-VF-2', 'facturada', 200, 32, 232)
+          'PRO-VF-2', 'facturada', 'aceptada', 200, 32, 232)
   RETURNING id INTO v_prof_b;
+
 
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion, cantidad,
                                       precio_unitario, total, moneda, estado_facturacion, proforma_id)
