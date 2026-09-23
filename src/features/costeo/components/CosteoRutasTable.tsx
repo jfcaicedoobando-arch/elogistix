@@ -12,7 +12,8 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AlertTriangle, ExternalLink, Trash2 } from "lucide-react";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatFechaDia } from "@/lib/formatters/dates";
@@ -22,9 +23,10 @@ import {
 import {
   contextoPuerto, destinoDe, etiquetaPuertoCompleta, nombrePuerto, origenDe,
 } from "@/features/costeo/utils/puertoLabel";
+import { CosteoRutasMobileCard } from "./CosteoRutasMobileCard";
 
 
-interface RutaRow {
+export interface RutaRow {
   id: string;
   puerto_origen_nombre?: string | null;
   puerto_origen_code?: string | null;
@@ -38,7 +40,7 @@ interface RutaRow {
   ultima_actualizacion_tarifa?: string | null;
 }
 
-interface FilaRuta {
+export interface FilaRuta {
   ruta: RutaRow;
   meta: RutaEstadoMeta;
 }
@@ -184,13 +186,20 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
 
   return (
     <Card>
-      <DataTable<FilaRuta>
+      <ResponsiveDataTable<FilaRuta>
         columns={columns}
         data={rutasOrdenadas}
         rowKey={(f) => f.ruta.id}
         isLoading={isLoading}
         getRowHref={(f) => `/costeo/tarifas?ruta=${f.ruta.id}`}
         emptyMessage={totalRutas === 0 ? "Sin rutas registradas." : "Sin rutas para el filtro seleccionado."}
+        mobileCard={(fila) => (
+          <CosteoRutasMobileCard
+            fila={fila}
+            onVer={() => navigate(`/costeo/tarifas?ruta=${fila.ruta.id}`)}
+            onEliminar={() => onEliminar(fila.ruta.id)}
+          />
+        )}
       />
     </Card>
   );

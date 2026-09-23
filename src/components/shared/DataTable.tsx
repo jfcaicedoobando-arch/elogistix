@@ -179,6 +179,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
           pageSizeOptions={pagination.pageSizeOptions}
           pageSizeLabels={pagination.pageSizeLabels}
           total={pagination.total}
+          hideWhenSinglePage={pagination.hideWhenSinglePage}
         />
       )}
     </div>

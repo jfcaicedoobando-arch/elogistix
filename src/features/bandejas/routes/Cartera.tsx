@@ -157,7 +157,7 @@ export default function Cartera() {
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
-            pagination={paged.pagination}
+            pagination={{ ...paged.pagination, hideWhenSinglePage: true }}
             emptyIcon={Inbox}
             emptyMessage="Sin cartera pendiente"
             emptyHint="¡Todo cobrado!"

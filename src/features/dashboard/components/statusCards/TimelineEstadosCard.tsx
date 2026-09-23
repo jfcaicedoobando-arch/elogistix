@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/features/dashboard/hooks";
 import { getEstadoVisual } from "@/lib/ui/estadoConfig";
 import { Hint } from "@/components/shared/Hint";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   conteoPorEstado: Record<EstadoFiltro, number>;
@@ -12,6 +14,8 @@ interface Props {
 
 export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
   const navigate = useNavigate();
+  const [mostrarTodos, setMostrarTodos] = useState(false);
+  const estados = mostrarTodos ? ESTADOS_FILTRO : ESTADOS_FILTRO.slice(0, 4);
 
   return (
     <Card className="overflow-hidden" data-testid="timeline-estados-card">
@@ -21,16 +25,16 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
             contenedor es más angosto que la tira (v13.823.24: el fade se
             mantiene hasta lg, porque en tablet la tira sigue desbordando). */}
         <div
-          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] lg:[mask-image:none]"
+          className="-mx-1 px-1"
         >
-          <div className="flex items-start justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
+          <div className="grid grid-cols-4 items-start gap-2 sm:flex sm:justify-between sm:gap-3 relative">
 
             {/* Armonización global: la línea arcoíris (info→warning→success) se
                 sustituye por un separador neutro; el color se reserva para
                 estados semánticos (alertas, vencidos). */}
             <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-px bg-border" />
 
-            {ESTADOS_FILTRO.map((estado, idx) => {
+            {estados.map((estado, idx) => {
               const cfg = getEstadoVisual(estado);
               const Icon = cfg.icon;
               const count = conteoPorEstado[estado];
@@ -76,7 +80,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                   </Hint>
 
 
-                  {idx < ESTADOS_FILTRO.length - 1 && (
+                  {idx < estados.length - 1 && (
                     <div className="absolute top-5 sm:top-6 left-full w-full flex items-center justify-center pointer-events-none">
                       <div className="w-full h-0.5" />
                     </div>
@@ -86,6 +90,11 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
             })}
           </div>
         </div>
+        {ESTADOS_FILTRO.length > 4 && (
+          <Button variant="ghost" size="sm" className="mt-2 w-full sm:hidden" onClick={() => setMostrarTodos((v) => !v)}>
+            {mostrarTodos ? "Ver menos estados" : `Ver ${ESTADOS_FILTRO.length - 4} estados más`}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

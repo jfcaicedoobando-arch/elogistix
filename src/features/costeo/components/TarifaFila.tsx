@@ -47,7 +47,7 @@ interface Props {
  * versión amplia original (sin regresión en pantallas grandes).
  */
 export const FILA_GRID =
-  "grid grid-cols-[minmax(140px,1.2fr)_110px_96px_minmax(132px,1fr)_minmax(148px,auto)] gap-2 items-center px-3 " +
+  "grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center px-3 md:grid-cols-[minmax(140px,1.2fr)_110px_96px_minmax(132px,1fr)_minmax(148px,auto)] " +
   "2xl:grid-cols-[minmax(200px,1.3fr)_140px_120px_minmax(180px,1fr)_minmax(180px,auto)] 2xl:gap-4 2xl:px-4";
 
 const SIETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -113,11 +113,11 @@ export function TarifaFila({
         </div>
         <div className="text-body-sm text-muted-foreground truncate">{t.naviera_nombre}</div>
       </div>
-      <VigenciaBar desde={t.vigente_desde} hasta={t.vigente_hasta} />
-      <div className="flex justify-start">
+      <div className="max-md:col-span-2"><VigenciaBar desde={t.vigente_desde} hasta={t.vigente_hasta} /></div>
+      <div className="flex justify-start max-md:order-3">
         <TarifaEstadoUnificado estado={t.estado} estadoAprobacion={ap} vigenteHasta={t.vigente_hasta} motivo={t.motivo_rechazo} />
       </div>
-      <div className="text-right tabular-nums">
+      <div className="text-right tabular-nums max-md:row-start-1 max-md:col-start-2">
         <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
           {usd(t.total_comparable)}
         </div>
@@ -128,7 +128,7 @@ export function TarifaFila({
           <div className="text-label text-muted-foreground">+{usd(delta)} vs mejor</div>
         )}
       </div>
-      <div className="flex items-center justify-end gap-1.5">
+      <div className="flex items-center justify-end gap-1.5 max-md:order-4">
         {puedeAprobar && (
           <TarifaQuickApprovalButtons
             variant="grouped"
@@ -155,7 +155,7 @@ export function TarifaFila({
 
 export function TarifaColumnHeader() {
   return (
-    <div className={`${FILA_GRID} py-2 text-overline bg-muted/20 border-y`}>
+    <div className={`${FILA_GRID} hidden py-2 text-overline bg-muted/20 border-y md:grid`}>
       <div>Agente · Naviera</div>
       <div>Vigencia</div>
       <div className="text-left">Estado</div>

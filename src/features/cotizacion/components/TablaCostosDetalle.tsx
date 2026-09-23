@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
+import { CostosCotizacionMobile } from "./CostosCotizacionMobile";
 
 interface FilaCostoDetalle {
   concepto: string;
@@ -54,7 +55,8 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
         <CardTitle className="text-base flex items-center gap-2">{icon} {title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md overflow-auto">
+        <CostosCotizacionMobile filas={filasMoneda} moneda={moneda} canEdit={canEdit} onUpdate={(idx, field, value) => onUpdate(getGlobalIndex(filas, moneda, idx), field, value)} />
+        <div className="hidden border rounded-md overflow-auto md:block">
           <Table>
             <TableHeader>
               <TableRow>

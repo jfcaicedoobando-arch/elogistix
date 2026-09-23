@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import {
   useCondicionesNaviera,
   useNavierasCatalogo,
@@ -21,6 +21,7 @@ import { Ship, SearchX } from "lucide-react";
 import { NavieraFiltrosBar } from "@/features/costeo/components/NavieraFiltrosBar";
 import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib/navierasFiltro";
 import { useCosteoNavierasColumns } from "@/features/costeo/hooks/useCosteoNavierasColumns";
+import { CosteoNavieraMobileCard } from "@/features/costeo/components/CosteoNavieraMobileCard";
 
 export default function CosteoNavieras() {
   const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
@@ -75,10 +76,13 @@ export default function CosteoNavieras() {
             onEstadoChange={setEstado}
           />
           <Card>
-            <DataTable<FilaNaviera>
+            <ResponsiveDataTable<FilaNaviera>
               columns={columns}
               data={filasFiltradas}
               rowKey={(f) => f.naviera_id}
+              mobileCard={(fila) => (
+                <CosteoNavieraMobileCard fila={fila} onConfigurar={() => setSeleccion(fila)} />
+              )}
               emptyState={
                 filas.length === 0 && !hayFiltrosActivos ? (
                   <EmptyStateInline

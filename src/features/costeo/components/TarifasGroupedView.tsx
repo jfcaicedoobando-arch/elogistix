@@ -53,7 +53,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
 
   return (
     <div className="space-y-2">
-      <div className="sticky top-0 z-10 bg-background rounded-md border overflow-hidden">
+      <div className="sticky top-0 z-10 hidden bg-background rounded-md border overflow-hidden md:block">
         <TarifaColumnHeader />
       </div>
       {grupos.map((g) => {
@@ -87,7 +87,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               {g.mejor && (
                 <Hint label="Menor total comparable (flete base + recargos incluidos en total) entre tarifas aprobadas, vigentes y no reemplazadas">
                   <Badge
-                    className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end"
+                    className="hidden bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end sm:inline-flex"
                     variant="outline"
                   >
                     <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}

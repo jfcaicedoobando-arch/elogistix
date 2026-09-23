@@ -178,6 +178,8 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
             onPageSizeChange={pagination.onPageSizeChange}
             pageSizeOptions={pagination.pageSizeOptions}
             pageSizeLabels={pagination.pageSizeLabels}
+            total={pagination.total}
+            hideWhenSinglePage={pagination.hideWhenSinglePage}
           />
         )}
       </div>

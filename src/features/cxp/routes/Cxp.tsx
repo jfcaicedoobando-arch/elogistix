@@ -175,6 +175,7 @@ export default function Cxp() {
                   onPageSizeChange: f.setPageSize,
                   pageSizeOptions: [50, 100, 200],
                   total: data.length,
+                  hideWhenSinglePage: true,
                 }}
                 mobileCard={(fact) => <CxpMobileCard factura={fact} />}
               />

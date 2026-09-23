@@ -20,8 +20,15 @@ interface Props {
 }
 
 export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
+  const current = steps.find((step) => step.num === currentStep);
   return (
-    <ol
+    <div>
+      {current && (
+        <p className="mb-2 text-body-sm font-medium md:hidden">
+          Paso {currentStep} de {steps.length} · {current.title}
+        </p>
+      )}
+      <ol
       className="flex items-center gap-1 sm:gap-2 overflow-x-auto list-none p-0 m-0"
       aria-label="Progreso del wizard"
     >
@@ -78,6 +85,7 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
           </li>
         );
       })}
-    </ol>
+      </ol>
+    </div>
   );
 }

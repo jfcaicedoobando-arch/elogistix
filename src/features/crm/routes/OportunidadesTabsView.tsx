@@ -4,13 +4,14 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
+import { OportunidadMobileCard } from "@/features/crm/components/OportunidadMobileCard";
 
 interface Props {
   vista: string;
@@ -59,7 +60,7 @@ export default function OportunidadesTabsView({
             {isError ? (
               <ErrorState className="m-4" onRetry={() => void refetch()} />
             ) : (
-              <DataTable
+              <ResponsiveDataTable
                 columns={columnas}
                 data={ops}
                 isLoading={isLoading}
@@ -67,6 +68,7 @@ export default function OportunidadesTabsView({
                 getRowHref={(o) => `/crm/oportunidades/${o.id}`}
                 rowKey={(o) => o.id}
                 density={TABLE_DENSITY.listado}
+                mobileCard={(o) => <OportunidadMobileCard oportunidad={o} etapas={etapas} />}
               />
             )}
           </CardContent>

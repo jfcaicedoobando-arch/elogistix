@@ -22,13 +22,13 @@ export function ComprasPorAprobarKpis({
 }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <KpiCard
+      {!(aprobacion === "pendiente" && rows.length === pendientes.length) && <KpiCard
         icon={ClipboardCheck}
         label="Pendientes"
         value={`${pendientes.length} ${plural(pendientes.length)}`}
         sublabel={`${formatCurrency(sumaMxn(pendientes), "MXN")} · ${formatCurrency(sumaUsd(pendientes), "USD")}`}
         variant="warning"
-      />
+      />}
       <KpiCard icon={CheckCircle2} label="Aprobadas" value={`${aprobadas.length} ${plural(aprobadas.length)}`} variant="success" />
       <KpiCard icon={XCircle} label="Rechazadas" value={`${rechazadas.length} ${plural(rechazadas.length)}`} variant="destructive" />
       <KpiCard

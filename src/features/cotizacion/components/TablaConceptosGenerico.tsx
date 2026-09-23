@@ -10,6 +10,7 @@ import { importeEfectivoConcepto } from "@/lib/domain/cotizacionDetalle";
 import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
 import { Badge } from "@/components/ui/badge";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
+import { ConceptosCotizacionMobile } from "./ConceptosCotizacionMobile";
 
 interface Props {
   moneda: "USD" | "MXN";
@@ -42,7 +43,8 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md overflow-auto">
+        <ConceptosCotizacionMobile conceptos={conceptos} moneda={moneda} tasaIva={tasaIva} />
+        <div className="hidden border rounded-md overflow-auto md:block">
           <Table>
             <TableHeader>
               <TableRow>

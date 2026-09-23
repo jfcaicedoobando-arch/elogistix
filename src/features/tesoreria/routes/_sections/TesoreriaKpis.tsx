@@ -20,13 +20,14 @@ function desgloseMonedas(saldos: Record<string, number>): string {
 
 export function TesoreriaKpis({ data }: Props) {
   const neto = data.flujo.por_cobrar_total_mxn - data.flujo.por_pagar_total_mxn;
+  const hayCuentas = data.cuentas.length > 0;
   return (
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <KpiCard
         label="Saldo total en bancos"
-        value={formatCurrencyCompact(data.saldo_bancos_mxn, "MXN")}
-        valueTooltip={formatCurrency(data.saldo_bancos_mxn, "MXN")}
-        sublabel={desgloseMonedas(data.saldos_por_moneda)}
+        value={hayCuentas ? formatCurrencyCompact(data.saldo_bancos_mxn, "MXN") : "No disponible"}
+        valueTooltip={hayCuentas ? formatCurrency(data.saldo_bancos_mxn, "MXN") : "Sin cuentas configuradas"}
+        sublabel={hayCuentas ? desgloseMonedas(data.saldos_por_moneda) : "Sin cuentas configuradas"}
         icon={Wallet}
         iconVariant="chip"
         variant="info"

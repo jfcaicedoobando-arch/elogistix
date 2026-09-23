@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency } from "@/lib/formatters";
 import {
   buildConceptoColumns,
@@ -20,6 +20,7 @@ import {
   hayLineasIvaPorConfirmar,
 } from "@/lib/financial/lineasPorConfirmarIva";
 import { AlertTriangle } from "lucide-react";
+import { ProformaConceptoMobileCard } from "./ProformaConceptoMobileCard";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
 
@@ -91,12 +92,13 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
             <span>{AVISO_IVA_POR_CONFIRMAR}</span>
           </div>
         )}
-        <DataTable
+        <ResponsiveDataTable
           columns={columns}
           data={conceptos}
           rowKey={(c) => c.id}
           density={TABLE_DENSITY.embebida}
           emptyMessage={emptyMessage}
+          mobileCard={(concepto) => <ProformaConceptoMobileCard concepto={concepto} />}
         />
         {(hasUsd || hasMxn) && (
           <div className="flex flex-col sm:flex-row sm:justify-end gap-6 border-t px-4 py-3 bg-muted/30">

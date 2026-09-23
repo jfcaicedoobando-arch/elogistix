@@ -177,7 +177,7 @@ export default function Comisiones() {
                 sortMode="server"
                 controlledSort={paged.controlledSort}
                 onSortChange={paged.setSort}
-                pagination={paged.pagination}
+                pagination={{ ...paged.pagination, hideWhenSinglePage: true }}
                 density={TABLE_DENSITY.listado}
               />
             </CardContent>

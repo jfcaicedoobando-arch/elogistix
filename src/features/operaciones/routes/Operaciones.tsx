@@ -65,7 +65,7 @@ export default function Operaciones() {
       {/* v13.823.26 (auditoría 1280x720): grid con ancho mínimo por tarjeta
           para que el label envuelva antes de truncar ("Contenedore…",
           "Tarifas pendi…"); 5 columnas sólo cuando hay espacio real (2xl). */}
-      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard label="Cargas activas" value={global.totalActivas} icon={Ship} variant="info" iconVariant="chip" loading={isLoading} />
         {/* R221: TEU real de `embarque_contenedores` (40'/45' = 2 TEU); antes contaba embarques. */}
         <KpiCard

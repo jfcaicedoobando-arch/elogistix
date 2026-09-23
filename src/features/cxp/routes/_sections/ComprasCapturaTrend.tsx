@@ -8,6 +8,8 @@ import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { hoyMx } from "@/lib/date/mx";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { FileText } from "lucide-react";
 
 export interface CapturaTrendRow { fecha_emision: string | null }
 
@@ -43,7 +45,9 @@ export function ComprasCapturaTrend({ rows }: { rows: CapturaTrendRow[] }) {
         </p>
       </CardHeader>
       <CardContent className="p-4 pt-2">
-        <div className="h-[220px] w-full">
+        {total === 0 ? (
+          <EmptyStateInline density="compact" icon={FileText} message="Sin facturas capturadas en los últimos 14 días" />
+        ) : <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
@@ -61,7 +65,7 @@ export function ComprasCapturaTrend({ rows }: { rows: CapturaTrendRow[] }) {
               <Area type="monotone" dataKey="capturadas" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#cxp-captura-fill)" />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

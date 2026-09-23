@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
@@ -38,6 +38,7 @@ import { baseActividadColumns, actividadActionColumn } from "./actividadesColumn
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { ACTIVIDAD_TIPO_LABEL } from "@/features/crm/domain/actividadLabels";
+import { ActividadMobileCard } from "@/features/crm/components/ActividadMobileCard";
 
 
 type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
@@ -162,7 +163,7 @@ export default function Actividades() {
           {list.error ? (
             <ErrorState className="m-4" onRetry={() => void list.refetch()} />
           ) : (
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={items}
             isLoading={list.isLoading}
@@ -178,6 +179,7 @@ export default function Actividades() {
               pageSizeLabels: { 500: "500" },
             }}
             tableClassName="w-full table-fixed"
+            mobileCard={(actividad) => <ActividadMobileCard actividad={actividad} />}
           />
           )}
         </CardContent>
