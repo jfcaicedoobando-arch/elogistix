@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, RefreshCw, AlertTriangle, Trash2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useRecalcularDemoras, useEliminarDemorasAuto } from "@/features/embarques/hooks/useDemorasEmbarque";
+import {
+  useRecalcularDemoras,
+  useEliminarDemorasAuto,
+  useDemorasAutoExistentes,
+} from "@/features/embarques/hooks/useDemorasEmbarque";
 import type { DemoraDesglose } from "@/features/embarques/types/demoraDesglose";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
@@ -21,6 +25,10 @@ interface Props {
 export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
   const recalc = useRecalcularDemoras(embarqueId);
   const elim = useEliminarDemorasAuto(embarqueId);
+  // P2-4: el estado local se perdía al recargar; la existencia de conceptos
+  // `demoras_auto` se deriva de la base para no ofrecer un borrado vacío.
+  const existentes = useDemorasAutoExistentes(embarqueId);
+  const hayDemorasAuto = (existentes.data ?? 0) > 0;
   const [last, setLast] = useState<DemoraDesglose | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -46,28 +54,43 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
               <RefreshCw className={`size-4 mr-2 ${recalc.isPending ? 'animate-spin' : ''}`} />
               Recalcular
             </Button>
-            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirmOpen(true)}>
-              <Trash2 className="size-4 mr-2" /> Eliminar auto
-            </Button>
-            <ConfirmActionDialog
-              open={confirmOpen}
-              onOpenChange={setConfirmOpen}
-              title="Eliminar demoras automáticas"
-              variant="destructive"
-              confirmLabel="Eliminar"
-              onConfirm={() => {
-                elim.mutate();
-                setConfirmOpen(false);
-              }}
-              description={'Se eliminarán los conceptos de costo y venta marcados como "demoras_auto". Los conceptos manuales no se tocarán.'}
-            />
+            {hayDemorasAuto && (
+              <>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={() => setConfirmOpen(true)}
+                  disabled={elim.isPending}
+                >
+                  <Trash2 className="size-4 mr-2" /> Eliminar auto
+                </Button>
+                <ConfirmActionDialog
+                  open={confirmOpen}
+                  onOpenChange={setConfirmOpen}
+                  title="Eliminar demoras automáticas"
+                  variant="destructive"
+                  confirmLabel="Eliminar"
+                  onConfirm={() => {
+                    elim.mutate();
+                    setConfirmOpen(false);
+                  }}
+                  description={'Se eliminarán los conceptos de costo y venta marcados como "demoras_auto". Los conceptos manuales no se tocarán.'}
+                />
+              </>
+            )}
           </div>
         )}
       </CardHeader>
       <CardContent>
         {!last && (
-          <p className="text-body text-muted-foreground">Pulsa <strong>Recalcular</strong> para obtener el desglose actual.</p>
+          <p className="text-body text-muted-foreground">
+            {hayDemorasAuto
+              ? <>Este embarque ya tiene <strong>{existentes.data}</strong> concepto(s) de demoras automáticas aplicados. Pulsa <strong>Recalcular</strong> para ver el desglose actualizado.</>
+              : <>No hay demoras automáticas aplicadas. Pulsa <strong>Recalcular</strong> para obtener el desglose actual.</>}
+          </p>
         )}
+
         {last?.sin_eventos && (
           <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-body">
             <AlertTriangle className="size-4 mt-0.5 text-warning" />
