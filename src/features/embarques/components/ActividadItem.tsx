@@ -45,8 +45,13 @@ export function ActividadItem({ item }: Props) {
   const monto =
     typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
   const accion = etiquetaEvento(item.accion);
-  const titulo = etiquetaEvento(item.titulo);
+  // P2-A: título y descripción también pueden traer la clave técnica dentro
+  // del texto ("Factura: factura.borrador_generado"); se humanizan sin tocar
+  // las descripciones ya escritas en lenguaje natural.
+  const titulo = item.titulo ? descripcionHumana(item.titulo) : accion;
+  const descripcion = descripcionHumana(item.descripcion);
   const relacionados = item.relacionados ?? [];
+
 
   return (
     <li className="relative text-body">
