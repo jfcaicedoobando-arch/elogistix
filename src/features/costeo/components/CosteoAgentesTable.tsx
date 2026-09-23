@@ -139,9 +139,13 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         rowKey={(a) => a.id}
         isLoading={isLoading}
         emptyMessage="Sin agentes registrados."
-        onRowClick={onEditar}
         mobileCard={(agente) => (
-          <CosteoAgenteMobileCard agente={agente} onAcciones={() => onEditar(agente)} />
+          <CosteoAgenteMobileCard
+            agente={agente}
+            onEditar={() => onEditar(agente)}
+            onInvitarPortal={() => onInvitarPortal(agente)}
+            onEliminar={() => onEliminar({ id: agente.id, nombre: agente.nombre })}
+          />
         )}
       />
     </Card>
