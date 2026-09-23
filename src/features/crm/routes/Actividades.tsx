@@ -37,6 +37,7 @@ import { pluralizar } from "@/lib/format/pluralizar";
 import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ACTIVIDAD_TIPO_LABEL } from "@/features/crm/domain/actividadLabels";
 
 
 type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
@@ -129,7 +130,7 @@ export default function Actividades() {
               <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los tipos</SelectItem>
-                {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{ACTIVIDAD_TIPO_LABEL[t]}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select
@@ -176,6 +177,7 @@ export default function Actividades() {
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
             }}
+            tableClassName="w-full table-fixed"
           />
           )}
         </CardContent>

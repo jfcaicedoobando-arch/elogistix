@@ -17,8 +17,8 @@ interface Kpis {
 export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLoading: boolean }) {
   const cards: Array<{ label: string; value: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
     { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, variant: "default" },
-    { label: "Venta total USD", value: formatCurrencyCompact(kpis.revenue, "USD"), tooltip: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, variant: "default" },
-    { label: "Utilidad total USD", value: formatCurrencyCompact(kpis.profit, "USD"), tooltip: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, variant: "default" },
+    { label: "Venta total", value: formatCurrencyCompact(kpis.revenue, "USD"), tooltip: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, variant: "default" },
+    { label: "Utilidad total", value: formatCurrencyCompact(kpis.profit, "USD"), tooltip: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, variant: "default" },
     { label: "Margen promedio", value: kpis.margenProm.toFixed(1) + "%", icon: Percent, variant: kpis.margenProm < 0 ? "destructive" : "default" },
   ];
 

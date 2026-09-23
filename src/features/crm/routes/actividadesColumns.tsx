@@ -9,14 +9,33 @@ import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import type { CrmActividadRow } from "@/features/crm/hooks";
 import { formatFechaHora } from "@/lib/formatters/dates";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { Hint } from "@/components/shared/Hint";
+import {
+  ACTIVIDAD_ENTIDAD_LABEL,
+  ACTIVIDAD_TIPO_LABEL,
+  actividadTipoVariant,
+} from "@/features/crm/domain/actividadLabels";
 
 export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   // v13.823.78 — anchos compactados para que la tabla quepa en 1280x720 sin
   // scroll horizontal (antes ~996px de contenido en ~950px de ancho útil).
-  { id: "tipo", header: "Tipo", meta: { width: COL_W.short }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
-  { id: "asunto", header: "Asunto", meta: { className: "font-medium truncate" }, cell: ({ row }) => row.original.asunto },
-  { id: "entidad", header: "Entidad", meta: { width: COL_W.short, className: "text-body-sm" }, cell: ({ row }) => row.original.entidad_tipo },
-  { id: "responsable", header: "Responsable", meta: { width: COL_W.nombre, className: "text-body-sm truncate" }, cell: ({ row }) => row.original.responsable_email || "—" },
+  {
+    id: "tipo", header: "Tipo", meta: { width: COL_W.short },
+    cell: ({ row }) => <Badge variant={actividadTipoVariant(row.original.tipo)}>{ACTIVIDAD_TIPO_LABEL[row.original.tipo]}</Badge>,
+  },
+  {
+    id: "asunto", header: "Asunto", meta: { className: "max-w-52 font-medium" },
+    cell: ({ row }) => <Hint label={row.original.asunto}><span className="block truncate">{row.original.asunto}</span></Hint>,
+  },
+  {
+    id: "entidad", header: "Entidad", meta: { width: COL_W.short, className: "text-body-sm" },
+    cell: ({ row }) => <Badge variant="neutral">{ACTIVIDAD_ENTIDAD_LABEL[row.original.entidad_tipo]}</Badge>,
+  },
+  {
+    id: "responsable", header: "Responsable",
+    meta: { width: COL_W.nombre, className: "hidden text-body-sm truncate 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
+    cell: ({ row }) => row.original.responsable_email || "—",
+  },
   {
     ...statusColumn<CrmActividadRow>({
       domain: "actividad_crm",
@@ -48,7 +67,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
 export const actividadActionColumn = (
   puedeGestionar: (a: CrmActividadRow) => boolean,
 ): ColumnDef<CrmActividadRow, unknown> => ({
-  id: "acciones", header: "", meta: { width: COL_W.fecha, stickyRight: true, align: "right" },
+  id: "acciones", header: "", meta: { width: COL_W.acciones, stickyRight: true, align: "right" },
   cell: ({ row }) =>
     puedeGestionar(row.original) ? <ActividadRowActions actividad={row.original} /> : null,
 });

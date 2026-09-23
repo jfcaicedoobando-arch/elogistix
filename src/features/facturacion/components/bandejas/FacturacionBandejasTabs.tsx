@@ -18,6 +18,8 @@ import { BandejaRepsHistorico } from "@/features/facturacion/components/bandejas
 import type {
   FacturasEmitidasAcciones, FacturasEmitidasFiltros, FacturasEmitidasTabla,
 } from "@/features/facturacion/components/facturasEmitidasProps";
+import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
+import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 
 interface Props {
   activeBandeja: BandejaId;
@@ -31,10 +33,14 @@ interface Props {
 }
 
 export function FacturacionBandejasTabs(p: Props) {
+  const { ref, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
   return (
     <Tabs value={p.activeBandeja} onValueChange={p.setActiveBandeja}>
-      <div className="sticky top-0 z-20 -mx-4 px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 overflow-x-auto">
-        <BandejaTabs />
+      <div className="sticky top-0 z-20 -mx-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div ref={ref} className="overflow-x-auto px-4 [scrollbar-width:thin]">
+          <BandejaTabs />
+        </div>
+        <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
       </div>
 
       <TabsContent value="embarques-sin-factura" className="space-y-4">
