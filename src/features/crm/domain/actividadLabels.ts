@@ -9,6 +9,8 @@ export const ACTIVIDAD_TIPO_LABEL: Record<CrmActividadTipo, string> = {
 };
 
 export const ACTIVIDAD_ENTIDAD_LABEL: Record<CrmEntidadTipo, string> = {
+  cliente: "Cliente",
+  contacto: "Contacto",
   lead: "Lead",
   oportunidad: "Oportunidad",
 };
