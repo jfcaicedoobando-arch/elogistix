@@ -6,8 +6,10 @@
 -- monto_pago_en_moneda_factura; fail-closed (pago sin TC se excluye y se reporta
 -- en pagos_sin_tipo_cambio), consistente con saldo_factura_proveedor.
 -- v13.823.291: alineado con resolver_sin_comision (clientes con sin_comision).
--- P1-1: venta_conceptos_facturados exige factura vigente EMITIDA por concepto
--- (los borradores se reportan en detalle.facturados_sin_emitir y no dan OK).
+-- P1-1: venta_conceptos_facturados exige factura vigente EMITIDA por concepto y
+-- fail-closed si queda otra factura vigente SIN emitir de la misma proforma
+-- (proforma partida por moneda); se reportan en detalle.facturados_sin_emitir.
+
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
