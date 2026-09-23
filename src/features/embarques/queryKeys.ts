@@ -11,6 +11,14 @@ export const embarques = {
   /** Sin `id` devuelve el prefijo raíz (invalidación de todos los embarques). */
   conceptosVenta: (id?: string) => ['conceptos_venta', ...(id ? [id] : [])] as const,
   conceptosCosto: (id?: string) => ['conceptos_costo', ...(id ? [id] : [])] as const,
+  /**
+   * P2-4 — Existencia de conceptos `demoras_auto` persistidos. Cuelga del
+   * prefijo `conceptos_costo/<id>` para que las mutaciones de demoras (que ya
+   * invalidan ese prefijo) la refresquen sin invalidaciones extra.
+   */
+  demorasAutoExistentes: (id?: string) =>
+    ['conceptos_costo', ...(id ? [id] : []), 'demoras-auto'] as const,
+
   proveedoresDelEmbarque: (id?: string) => ['embarques', 'proveedores-del-embarque', id] as const,
   /** v13.503.0 — Costos vivos del embarque para un proveedor (cotejo de monto). */
   costosProveedor: (embarqueId?: string, proveedorId?: string | null) =>
