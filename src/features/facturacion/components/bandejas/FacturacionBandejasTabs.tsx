@@ -2,6 +2,7 @@
  * Bandejas de Facturación (Tabs internos) — extraído de `Facturacion.tsx`
  * para mantenerlo por debajo de 200 líneas tras envolverlo con `CargaGuard`.
  */
+import { useEffect } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
 import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
@@ -34,6 +35,20 @@ interface Props {
 
 export function FacturacionBandejasTabs(p: Props) {
   const { ref, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const container = ref.current;
+      const active = container?.querySelector<HTMLElement>('[data-state="active"]');
+      if (!container || !active) return;
+      const left = active.offsetLeft - 16;
+      const right = left + active.offsetWidth + 32;
+      if (left < container.scrollLeft) container.scrollTo({ left, behavior: "smooth" });
+      else if (right > container.scrollLeft + container.clientWidth) {
+        container.scrollTo({ left: right - container.clientWidth, behavior: "smooth" });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [p.activeBandeja, ref]);
   return (
     <Tabs value={p.activeBandeja} onValueChange={p.setActiveBandeja}>
       <div className="sticky top-0 z-20 -mx-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">

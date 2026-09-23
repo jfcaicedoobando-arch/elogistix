@@ -102,7 +102,7 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex items-center flex-wrap gap-2 pt-3 mt-3 border-t border-border">
+    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 short:mt-2 short:pt-2">
       <span className="text-body-sm font-medium text-muted-foreground">Activos:</span>
       {chips.map((chip) => (
         <Badge

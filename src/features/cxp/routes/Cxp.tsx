@@ -95,19 +95,21 @@ export default function Cxp() {
       {estado !== "error" && <CxpKpiCards kpis={kpis} data={data} />}
 
       <Card>
-        <CardContent className="p-4 space-y-3">
-          <CxpFiltros
-            search={f.search} onSearchChange={f.setSearch}
-            estatus={f.estatus} onEstatusChange={f.setEstatus}
-            moneda={f.moneda} onMonedaChange={f.setMoneda}
-            origen={f.origen} onOrigenChange={f.setOrigen}
-            aprobacion={f.aprobacion} onAprobacionChange={f.setAprobacion}
-            proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
-            categoriaPresupuestoId={f.categoriaPresupuestoId} onCategoriaPresupuestoChange={f.setCategoriaPresupuestoId}
-            fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
-            fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
-          />
-          <div className="flex justify-end">
+        <CardContent className="flex items-start gap-2 p-4 short:p-3">
+          <div className="min-w-0 flex-1">
+            <CxpFiltros
+              search={f.search} onSearchChange={f.setSearch}
+              estatus={f.estatus} onEstatusChange={f.setEstatus}
+              moneda={f.moneda} onMonedaChange={f.setMoneda}
+              origen={f.origen} onOrigenChange={f.setOrigen}
+              aprobacion={f.aprobacion} onAprobacionChange={f.setAprobacion}
+              proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
+              categoriaPresupuestoId={f.categoriaPresupuestoId} onCategoriaPresupuestoChange={f.setCategoriaPresupuestoId}
+              fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
+              fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
+            />
+          </div>
+          <div className="shrink-0">
             <ColumnVisibilityMenu
               options={CXP_COL_OPTIONS}
               visibility={colVis.visibility}

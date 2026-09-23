@@ -100,7 +100,7 @@ export function CxpFiltros(props: Props) {
           <SearchInput value={props.search} onChange={props.onSearchChange}
             placeholder="Buscar folio o proveedor…" className="flex-1 min-w-[220px]" />
           <div className="flex flex-col gap-0.5 shrink-0">
-            <span className="text-label uppercase tracking-wider text-muted-foreground/70 px-1">Origen</span>
+            <span className="px-1 text-overline text-muted-foreground short:sr-only">Origen</span>
             <div className="flex gap-1 rounded-md border bg-background p-0.5">
               {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
                 <Button key={opt} type="button"
