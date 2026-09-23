@@ -8,7 +8,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { TratamientoIvaPorDefinir } from "@/features/cotizacion/components/conceptos/TratamientoIvaPorDefinir";
+import {
+  AVISO_TRATAMIENTO_POR_DEFINIR,
+  TratamientoIvaPorDefinir,
+} from "@/features/cotizacion/components/conceptos/TratamientoIvaPorDefinir";
 import { TIPO_IVA_LABEL_SAT } from "@/lib/financial/tipoIvaSat";
 
 const estado = vi.hoisted(() => ({

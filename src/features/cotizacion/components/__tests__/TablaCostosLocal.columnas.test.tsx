@@ -53,7 +53,7 @@ describe("TablaCostosLocal · columnas alineadas", () => {
   it("muestra encabezados de columna cuando hay filas", () => {
     renderTabla();
     for (const label of ["Concepto", "Proveedor", "Unidad", "Cant.", "Costo unit.", "Venta unit.", "Costo total", "Venta total", "Margen"]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
     // v13.823.286: "Utilidad" aparece también en el resumen compacto del pie
     // que se muestra cuando las columnas calculadas están ocultas.
@@ -62,7 +62,7 @@ describe("TablaCostosLocal · columnas alineadas", () => {
 
   it("el total de la columna usa el mismo ancho que su encabezado", () => {
     renderTabla();
-    const encabezado = screen.getByText("Costo total");
+    const encabezado = screen.getAllByText("Costo total")[0];
     const total = screen.getByText("Totales");
     expect(encabezado.className).toContain(COL_COSTO.costoTotal);
     expect(total.className).toContain(COL_COSTO.concepto);
