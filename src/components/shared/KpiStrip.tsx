@@ -13,6 +13,8 @@ interface KpiStripProps {
    *  deja tiles cortados a la mitad en el borde) por una sola columna
    *  apilada, sin scroll horizontal. */
   mobileStack?: boolean;
+  /** Columnas móviles cuando `mobileStack` está activo. Default 1. */
+  mobileCols?: 1 | 2;
   className?: string;
 }
 
@@ -34,6 +36,7 @@ export function KpiStrip({
   desktopCols = 6,
   autoFit = false,
   mobileStack = false,
+  mobileCols = 1,
   className,
 }: KpiStripProps) {
   return (
@@ -41,7 +44,7 @@ export function KpiStrip({
       className={cn(
         mobileStack
           // Mobile: 1 columna apilada, sin scroll horizontal ni cortes.
-          ? "grid grid-cols-1 gap-3 min-w-0"
+          ? cn("grid gap-3 min-w-0", mobileCols === 2 ? "grid-cols-2" : "grid-cols-1")
           : [
               // Mobile: carrusel snap
               "flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 pb-2",

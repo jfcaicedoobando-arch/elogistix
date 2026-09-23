@@ -5,8 +5,8 @@
 - [x] Corregir datos y acciones fuera de vista (1–12).
 - [x] Corregir claridad, densidad y navegación (13–34).
 - [x] Corregir patrones transversales pendientes (35–38).
-- [ ] Ejecutar pruebas focales, typecheck/lint focal y QA visual claro/oscuro a 691×763.
-- [ ] Ejecutar sanity visual a 1280×720 sin publicar ni cambiar versión.
+- [x] Ejecutar pruebas focales, typecheck/lint focal y QA visual claro/oscuro a 691×763.
+- [x] Ejecutar sanity visual a 1280×720 sin publicar ni cambiar versión.
 
 ## Cerrado — primera ronda visual (exactamente 10 mejoras)
 - [x] 1. CRM Actividades: columnas críticas visibles y tipos humanizados.
