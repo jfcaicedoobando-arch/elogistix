@@ -76,9 +76,10 @@ export function ActividadItem({ item }: Props) {
         {monto && <span className="ml-auto text-body-sm font-semibold tabular-nums">{monto}</span>}
       </div>
       {titulo !== accion && <p className="mt-1 break-words whitespace-pre-wrap">{titulo}</p>}
-      {item.descripcion && (
-        <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{item.descripcion}</p>
+      {descripcion && descripcion !== titulo && (
+        <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{descripcion}</p>
       )}
+
       {item.detalles && <ActividadDetalles detalles={item.detalles} />}
       {relacionados.length > 0 && <Relacionados items={relacionados} />}
     </li>
