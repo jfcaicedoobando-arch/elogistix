@@ -106,8 +106,8 @@ describe("FilaCostoLocalRow · captura numérica (R-01)", () => {
       <FilaCostoLocalRow fila={fila} gi={0} moneda="MXN" onUpdate={vi.fn()} onRemove={vi.fn()} />,
     );
 
-    expect(screen.getByText(/30,000/)).toBeInTheDocument();
-    expect(screen.getByText(/40,000/)).toBeInTheDocument();
+    expect(screen.getByText("Costo total").closest("span")).toHaveTextContent("30,000.00");
+    expect(screen.getByText("Venta total").closest("span")).toHaveTextContent("40,000.00");
   });
 });
 
