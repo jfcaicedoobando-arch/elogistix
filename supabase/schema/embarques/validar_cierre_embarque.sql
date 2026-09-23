@@ -178,26 +178,44 @@ BEGIN
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
   -- P1-1 (v13.824.x): `estado_facturacion='facturado'` se enciende en cuanto la
-  -- proforma queda 'facturada', y eso ocurre al crear una factura BORRADOR. El
-  -- check daba OK con facturas sin emitir (falso positivo, además CxC excluye
-  -- Borrador). Ahora un concepto sólo cuenta como facturado si existe factura
-  -- vigente EMITIDA del embarque ligada a su proforma; Borrador/Por timbrar/
-  -- Cancelada/Sustituida no cuentan. Conceptos legacy sin proforma (backfill)
-  -- se validan contra cualquier factura emitida del embarque para no romper el
-  -- estado histórico.
-  SELECT COUNT(*) FILTER (WHERE cv.estado_facturacion='pendiente'),
-         COUNT(*) FILTER (WHERE cv.estado_facturacion='en_proforma'),
-         COUNT(*) FILTER (WHERE cv.estado_facturacion='facturado' AND NOT EXISTS (
-           SELECT 1 FROM facturas f
-            WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
-              AND f.estado IN ('Emitida','Pagada','Parcialmente pagada','Vencida')
-              AND (cv.proforma_id IS NULL
-                   OR f.proforma_id = cv.proforma_id
-                   OR EXISTS (SELECT 1 FROM conceptos_factura cf
-                               WHERE cf.factura_id=f.id AND cf.deleted_at IS NULL
-                                 AND cf.proforma_id_origen = cv.proforma_id))))
+  -- proforma queda 'facturada', y eso ocurre al crear una factura BORRADOR.
+  -- Fail-closed: un concepto sólo cuenta como facturado si (a) existe factura
+  -- vigente EMITIDA ligada a su proforma y (b) NO queda ninguna factura vigente
+  -- de esa misma proforma sin emitir (Borrador/Por timbrar). Esto cubre la
+  -- proforma partida por moneda (facturas USD + MXN comparten proforma_id):
+  -- emitir sólo una ya no da OK. Cancelada/Sustituida no bloquean ni acreditan.
+  -- El vínculo factura↔proforma usa facturas.proforma_id, los punteros
+  -- proformas.factura_id / factura_secundaria_id y conceptos_factura
+  -- .proforma_id_origen (consolidadas). Conceptos legacy sin proforma se
+  -- validan contra cualquier factura emitida del embarque.
+  WITH cv AS (
+    SELECT cv.id, cv.estado_facturacion, cv.proforma_id
+      FROM conceptos_venta cv
+     WHERE cv.embarque_id=p_embarque_id AND cv.deleted_at IS NULL),
+  lig AS (
+    SELECT c.id AS cv_id, f.estado::text AS estado
+      FROM cv c
+      JOIN facturas f
+        ON f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
+       AND (c.proforma_id IS NULL
+            OR f.proforma_id = c.proforma_id
+            OR EXISTS (SELECT 1 FROM proformas pr
+                        WHERE pr.id=c.proforma_id AND pr.deleted_at IS NULL
+                          AND f.id IN (pr.factura_id, pr.factura_secundaria_id))
+            OR EXISTS (SELECT 1 FROM conceptos_factura cf
+                        WHERE cf.factura_id=f.id AND cf.deleted_at IS NULL
+                          AND cf.proforma_id_origen = c.proforma_id)))
+  SELECT COUNT(*) FILTER (WHERE c.estado_facturacion='pendiente'),
+         COUNT(*) FILTER (WHERE c.estado_facturacion='en_proforma'),
+         COUNT(*) FILTER (WHERE c.estado_facturacion='facturado' AND (
+           NOT EXISTS (SELECT 1 FROM lig l WHERE l.cv_id=c.id
+                        AND l.estado IN ('Emitida','Pagada','Parcialmente pagada','Vencida'))
+           OR EXISTS (SELECT 1 FROM lig l WHERE l.cv_id=c.id
+                       AND l.estado NOT IN ('Emitida','Pagada','Parcialmente pagada',
+                                            'Vencida','Cancelada','Sustituida'))))
     INTO v_venta_pendientes, v_venta_en_proforma, v_venta_sin_emitir
-    FROM conceptos_venta cv WHERE cv.embarque_id=p_embarque_id AND cv.deleted_at IS NULL;
+    FROM cv c;
+
   v_ok := (v_venta_pendientes=0 AND v_venta_en_proforma=0 AND v_venta_sin_emitir=0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
