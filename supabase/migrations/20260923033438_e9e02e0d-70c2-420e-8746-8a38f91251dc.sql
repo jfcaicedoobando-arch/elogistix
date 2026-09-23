@@ -270,3 +270,7 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $$;
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO service_role;
