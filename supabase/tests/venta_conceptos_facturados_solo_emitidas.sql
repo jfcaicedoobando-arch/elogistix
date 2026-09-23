@@ -1,20 +1,23 @@
 -- =============================================================
--- venta_conceptos_facturados_solo_emitidas.sql · P1-1
+-- venta_conceptos_facturados_solo_emitidas.sql · P1-1 / P1 moneda
 --
 -- `validar_cierre_embarque` daba OK en el paso "Todos los conceptos de venta
 -- facturados" con facturas en BORRADOR: el concepto pasa a
 -- `estado_facturacion='facturado'` en cuanto su proforma queda 'facturada',
 -- aunque la factura nunca se haya emitido (caso real ELIMP00008).
 --
--- Además, una MISMA proforma puede partirse en dos facturas por moneda
--- (USD + MXN comparten `proforma_id`). Emitir sólo una no debe dar OK.
+-- Además, una MISMA proforma se parte en DOS facturas por moneda
+-- (construirFacturasAEmitir: una por total_usd y otra por total_mxn). El
+-- vínculo debe ser por concepto Y moneda: una factura emitida en otra moneda
+-- no acredita al concepto, y una Cancelada no acredita su moneda.
 --
---   · CASO 1: misma proforma, USD Borrador + MXN Borrador  → ok=false, sin_emitir=1
---   · CASO 2: misma proforma, USD Emitida + MXN Borrador   → ok=false, sin_emitir=1
---   · CASO 3: misma proforma, ambas Emitidas               → ok=true
---   · CASO 4: misma proforma, USD Emitida + MXN Cancelada  → ok=true
---   · CASO 5: segunda proforma con factura Borrador        → ok=false
---   · CASO 6: segunda proforma emitida                     → ok=true
+--   · CASO 1: USD Borrador + MXN Borrador           → ok=false, sin_emitir=2
+--   · CASO 2: USD Emitida + MXN Borrador            → ok=false, sin_emitir=1
+--   · CASO 3: ambas Emitidas                        → ok=true
+--   · CASO 4: USD Emitida + MXN Cancelada           → ok=false, sin_emitir=1
+--   · CASO 5: reemplazo MXN emitido                 → ok=true
+--   · CASO 6: segunda proforma con factura Borrador → ok=false
+--   · CASO 7: segunda proforma emitida              → ok=true
 --
 -- Todo el fixture vive dentro de BEGIN…ROLLBACK.
 --
@@ -34,6 +37,7 @@ DECLARE
   v_prof_b uuid;
   v_fac_usd uuid;
   v_fac_mxn uuid;
+  v_fac_mxn2 uuid;
   v_fac_b uuid;
   v_check jsonb;
   v_fallo boolean := false;
@@ -56,7 +60,6 @@ BEGIN
   VALUES (CURRENT_DATE, 17, 'manual')
   ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 17;
 
-
   INSERT INTO public.clientes (organization_id, nombre, email)
   VALUES (v_org, 'CLIENTE VENTA FACTURADOS', 'cli-vf@test.mx')
   RETURNING id INTO v_cli;
@@ -68,17 +71,18 @@ BEGIN
           'LCL', 'Confirmado'::public.estado_embarque)
   RETURNING id INTO v_emb;
 
-  -- Proforma A: se factura partida por moneda (USD + MXN).
+  -- Proforma A: MIXTA (importes en USD y en MXN) → se factura partida por moneda.
   -- `estado_cliente = 'aceptada'` es obligatorio: sin ello el trigger
   -- enforce_proforma_aceptada_before_factura() bloquea el vínculo a factura.
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
                                 expediente, numero, estado_proforma, estado_cliente,
+                                subtotal_usd, iva_usd, total_usd,
                                 subtotal_mxn, iva_mxn, total_mxn)
   VALUES (v_org, v_emb, v_cli, 'CLIENTE VENTA FACTURADOS', 'ELIMP99201',
-          'PRO-VF-1', 'facturada', 'aceptada', 100, 16, 116)
+          'PRO-VF-1', 'facturada', 'aceptada', 50, 8, 58, 100, 16, 116)
   RETURNING id INTO v_prof_a;
 
-  -- Proforma B: una sola factura.
+  -- Proforma B: una sola factura (MXN).
   INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
                                 expediente, numero, estado_proforma, estado_cliente,
                                 subtotal_mxn, iva_mxn, total_mxn)
@@ -86,10 +90,11 @@ BEGIN
           'PRO-VF-2', 'facturada', 'aceptada', 200, 32, 232)
   RETURNING id INTO v_prof_b;
 
-
+  -- DOS conceptos activos en la MISMA proforma, uno por moneda.
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion, cantidad,
                                       precio_unitario, total, moneda, estado_facturacion, proforma_id)
-  VALUES (v_org, v_emb, 'Flete', 1, 100, 100, 'MXN'::public.moneda, 'facturado', v_prof_a);
+  VALUES (v_org, v_emb, 'Flete MXN', 1, 100, 100, 'MXN'::public.moneda, 'facturado', v_prof_a),
+         (v_org, v_emb, 'Flete USD', 1, 50, 50, 'USD'::public.moneda, 'facturado', v_prof_a);
 
   -- ---------------------------------------------------------------
   -- CASO 1: misma proforma, dos facturas (USD y MXN) en Borrador.
@@ -126,20 +131,20 @@ BEGIN
     RAISE WARNING 'CASO 1 FALLÓ: con sólo facturas Borrador el check dio OK (%).', v_check;
     v_fallo := true;
   END IF;
-  IF (v_check -> 'detalle' ->> 'facturados_sin_emitir')::int <> 1 THEN
-    RAISE WARNING 'CASO 1 FALLÓ: facturados_sin_emitir esperado 1, got %.', v_check -> 'detalle';
+  IF (v_check -> 'detalle' ->> 'facturados_sin_emitir')::int <> 2 THEN
+    RAISE WARNING 'CASO 1 FALLÓ: facturados_sin_emitir esperado 2, got %.', v_check -> 'detalle';
     v_fallo := true;
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 2: misma proforma, sólo la USD emitida (el punto ciego original).
+  -- CASO 2: sólo la USD emitida; el concepto MXN sigue sin facturar.
   -- ---------------------------------------------------------------
   UPDATE public.facturas SET estado = 'Emitida' WHERE id = v_fac_usd;
   SELECT c INTO v_check
     FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
    WHERE c ->> 'regla' = 'venta_conceptos_facturados';
   IF (v_check ->> 'ok')::boolean THEN
-    RAISE WARNING 'CASO 2 FALLÓ: misma proforma con la factura MXN en Borrador dio OK (%).', v_check;
+    RAISE WARNING 'CASO 2 FALLÓ: la factura MXN en Borrador dio OK (%).', v_check;
     v_fallo := true;
   END IF;
   IF (v_check -> 'detalle' ->> 'facturados_sin_emitir')::int <> 1 THEN
@@ -148,7 +153,7 @@ BEGIN
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 3: misma proforma, ambas emitidas → OK.
+  -- CASO 3: ambas emitidas → OK.
   -- ---------------------------------------------------------------
   UPDATE public.facturas SET estado = 'Emitida' WHERE id = v_fac_mxn;
   SELECT c INTO v_check
@@ -160,19 +165,48 @@ BEGIN
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 4: la MXN se cancela; la cancelada no bloquea ni acredita.
+  -- CASO 4: la MXN se cancela → el concepto MXN queda sin factura vigente.
+  -- La USD emitida NO acredita a otra moneda (bug original: daba OK).
   -- ---------------------------------------------------------------
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = v_fac_mxn;
   SELECT c INTO v_check
     FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
    WHERE c ->> 'regla' = 'venta_conceptos_facturados';
-  IF NOT (v_check ->> 'ok')::boolean THEN
-    RAISE WARNING 'CASO 4 FALLÓ: factura Cancelada bloqueó el check (%).', v_check;
+  IF (v_check ->> 'ok')::boolean THEN
+    RAISE WARNING 'CASO 4 FALLÓ: con la MXN Cancelada el concepto MXN dio OK (%).', v_check;
+    v_fallo := true;
+  END IF;
+  IF (v_check -> 'detalle' ->> 'facturados_sin_emitir')::int <> 1 THEN
+    RAISE WARNING 'CASO 4 FALLÓ: facturados_sin_emitir esperado 1, got %.', v_check -> 'detalle';
     v_fallo := true;
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 5: segundo concepto en OTRA proforma, con factura Borrador.
+  -- CASO 5: reemplazo MXN emitido → OK.
+  -- ---------------------------------------------------------------
+  INSERT INTO public.facturas
+    (organization_id, cliente_id, cliente_nombre, embarque_id, proforma_id, numero, expediente,
+     fecha_emision, fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado)
+  VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_a, 'VF-MXN-REEMPLAZO', 'ELIMP99201',
+          CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 100, 16, 116, 'Borrador')
+  RETURNING id INTO v_fac_mxn2;
+  INSERT INTO public.conceptos_factura
+    (organization_id, factura_id, descripcion, cantidad, precio_unitario, moneda, total,
+     embarque_id, proforma_id_origen)
+  VALUES (v_org, v_fac_mxn2, 'Flete MXN', 1, 100, 'MXN'::public.moneda, 100, v_emb, v_prof_a);
+  UPDATE public.facturas SET estado = 'Emitida' WHERE id = v_fac_mxn2;
+  UPDATE public.proformas SET factura_secundaria_id = v_fac_mxn2 WHERE id = v_prof_a;
+
+  SELECT c INTO v_check
+    FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
+   WHERE c ->> 'regla' = 'venta_conceptos_facturados';
+  IF NOT (v_check ->> 'ok')::boolean THEN
+    RAISE WARNING 'CASO 5 FALLÓ: con el reemplazo MXN emitido el check no dio OK (%).', v_check;
+    v_fallo := true;
+  END IF;
+
+  -- ---------------------------------------------------------------
+  -- CASO 6: tercer concepto en OTRA proforma, con factura Borrador.
   -- ---------------------------------------------------------------
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion, cantidad,
                                       precio_unitario, total, moneda, estado_facturacion, proforma_id)
@@ -193,30 +227,30 @@ BEGIN
     FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
    WHERE c ->> 'regla' = 'venta_conceptos_facturados';
   IF (v_check ->> 'ok')::boolean THEN
-    RAISE WARNING 'CASO 5 FALLÓ: proforma B con factura Borrador dio OK (%).', v_check;
+    RAISE WARNING 'CASO 6 FALLÓ: proforma B con factura Borrador dio OK (%).', v_check;
     v_fallo := true;
   END IF;
   IF (v_check -> 'detalle' ->> 'facturados_sin_emitir')::int <> 1 THEN
-    RAISE WARNING 'CASO 5 FALLÓ: facturados_sin_emitir esperado 1, got %.', v_check -> 'detalle';
+    RAISE WARNING 'CASO 6 FALLÓ: facturados_sin_emitir esperado 1, got %.', v_check -> 'detalle';
     v_fallo := true;
   END IF;
 
   -- ---------------------------------------------------------------
-  -- CASO 6: proforma B emitida → OK global del paso.
+  -- CASO 7: proforma B emitida → OK global del paso.
   -- ---------------------------------------------------------------
   UPDATE public.facturas SET estado = 'Emitida' WHERE id = v_fac_b;
   SELECT c INTO v_check
     FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb) -> 'checks') AS c
    WHERE c ->> 'regla' = 'venta_conceptos_facturados';
   IF NOT (v_check ->> 'ok')::boolean THEN
-    RAISE WARNING 'CASO 6 FALLÓ: todas las facturas emitidas y el check no dio OK (%).', v_check;
+    RAISE WARNING 'CASO 7 FALLÓ: todas las facturas emitidas y el check no dio OK (%).', v_check;
     v_fallo := true;
   END IF;
 
   IF v_fallo THEN
     RAISE EXCEPTION 'venta_conceptos_facturados_solo_emitidas: al menos un caso falló.';
   END IF;
-  RAISE NOTICE 'venta_conceptos_facturados_solo_emitidas: 6 casos OK.';
+  RAISE NOTICE 'venta_conceptos_facturados_solo_emitidas: 7 casos OK.';
 END $$;
 
 ROLLBACK;
