@@ -1,5 +1,18 @@
 # Roadmap
 
+## En curso — primera ronda visual (exactamente 10 mejoras)
+- [ ] 1. CRM Actividades: columnas críticas visibles y tipos humanizados.
+- [ ] 2. Facturación: navegación secundaria estable por grupos.
+- [ ] 3. KPIs: etiquetas y cifras principales legibles a 1280 px.
+- [ ] 4. Operaciones: cinco KPIs en composición equilibrada.
+- [ ] 5. KPIs: cero alertas/rechazos con tono neutro.
+- [ ] 6. Tablas: celdas sticky integradas con fondo de fila.
+- [ ] 7. Compras/Tesorería: filtros más densos y sin huecos.
+- [ ] 8. Rentabilidad: gráfica Top adaptable al número de filas.
+- [ ] 9. Costeo: aviso horizontal sólo con overflow real.
+- [ ] 10. CRM: etiquetas humanas y badges coherentes.
+- [ ] Validación focal: pruebas, tipos/reglas y smoke visual claro/oscuro a 1280×720.
+
 ## Cerrado — lote financiero D1–D6 (v13.823.382)
 - [x] D1 — P&L: convertir notas de crédito a moneda de la factura antes de restar (cliente y proveedor) en `pnl_financiero_embarque`.
 - [x] D2 — CxC: RPC atómica e idempotente para cobro individual (pago + movimiento espejo).
