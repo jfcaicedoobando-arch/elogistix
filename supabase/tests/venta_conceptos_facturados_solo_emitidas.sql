@@ -106,6 +106,14 @@ BEGIN
   VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_a, 'BORRADOR-VF-MXN', 'ELIMP99201',
           CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 100, 16, 116, 'Borrador')
   RETURNING id INTO v_fac_mxn;
+  -- Toda factura requiere al menos un concepto para poder emitirse
+  -- (congelar_factura_al_emitir → LC_FACTURA_SIN_CONCEPTOS).
+  INSERT INTO public.conceptos_factura
+    (organization_id, factura_id, descripcion, cantidad, precio_unitario, moneda, total,
+     embarque_id, proforma_id_origen)
+  VALUES (v_org, v_fac_usd, 'Flete USD', 1, 50, 'USD'::public.moneda, 50, v_emb, v_prof_a),
+         (v_org, v_fac_mxn, 'Flete MXN', 1, 100, 'MXN'::public.moneda, 100, v_emb, v_prof_a);
+
   -- Punteros reales del corte por moneda.
   UPDATE public.proformas
      SET factura_id = v_fac_usd, factura_secundaria_id = v_fac_mxn
