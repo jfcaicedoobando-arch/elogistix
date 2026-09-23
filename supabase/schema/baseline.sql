@@ -30848,11 +30848,13 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
-  -- P1-1 fail-closed: un concepto sólo cuenta como facturado si existe factura
-  -- vigente EMITIDA ligada a su proforma y NO queda ninguna factura vigente sin
-  -- emitir de la misma proforma (proforma partida por moneda: USD + MXN).
+  -- P1 (v13.824.x): el vínculo concepto↔factura exige MISMA MONEDA
+  -- (conceptos_venta.moneda ↔ facturas.moneda), porque la facturación genera una
+  -- factura por moneda desde total_usd/total_mxn: una proforma mixta con la USD
+  -- Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y daba OK.
   WITH cv AS (
-    SELECT cv.id, cv.estado_facturacion, cv.proforma_id
+    SELECT cv.id, cv.estado_facturacion, cv.proforma_id,
+           COALESCE(cv.moneda::text,'MXN') AS moneda
       FROM conceptos_venta cv
      WHERE cv.embarque_id=p_embarque_id AND cv.deleted_at IS NULL),
   lig AS (
@@ -30860,6 +30862,7 @@ BEGIN
       FROM cv c
       JOIN facturas f
         ON f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
+       AND COALESCE(f.moneda::text,'MXN') = c.moneda
        AND (c.proforma_id IS NULL
             OR f.proforma_id = c.proforma_id
             OR EXISTS (SELECT 1 FROM proformas pr
