@@ -25,8 +25,13 @@ const EVENTO_LABEL: Record<string, string> = {
   crear_embarque: 'Alta del embarque',
   proforma_generada: 'Proforma generada',
   proforma_enviada: 'Proforma enviada al cliente',
+  'proforma.aceptada_sin_autorizacion': 'Proforma aceptada sin autorización previa',
+  'proforma.aceptada': 'Proforma aceptada por el cliente',
+  editar_cotizacion: 'Edición de la cotización',
+  crear_cotizacion: 'Alta de la cotización',
   pago_registrado: 'Pago registrado',
   documento_subido: 'Documento cargado',
+
 };
 
 /** Etiquetas humanas de las claves de `detalles`. */

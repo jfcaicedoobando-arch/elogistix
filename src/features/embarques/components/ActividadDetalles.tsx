@@ -1,4 +1,6 @@
 import { detallesLegibles } from "@/features/embarques/domain/actividadHumana";
+import { etiquetaCampo } from "@/features/embarques/domain/actividadDescripcion";
+
 
 interface CambioCampo {
   campo: string;
