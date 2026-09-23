@@ -108,7 +108,12 @@ export function GrupoCostosProveedor({
 
       {abierto && (
         <>
-        <GrupoCostosMobileRows filas={filasOrdenadas} />
+        <GrupoCostosMobileRows
+          filas={filasOrdenadas}
+          showContenedorCol={showContenedorCol}
+          renderContenedor={renderContenedor}
+          filaContenedorId={filaContenedorId}
+        />
         <div className="hidden overflow-x-auto md:block">
           {/* v13.823.336 (HD 1280×720): anchos mínimos + concepto fijo para
               que Estado y Pago no queden fuera de la vista. */}
