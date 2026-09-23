@@ -183,6 +183,10 @@ BEGIN
   VALUES (v_org, v_cli, 'CLIENTE VENTA FACTURADOS', v_emb, v_prof_b, 'BORRADOR-VF-B', 'ELIMP99201',
           CURRENT_DATE, CURRENT_DATE + 30, 'MXN'::public.moneda, 1, 200, 32, 232, 'Borrador')
   RETURNING id INTO v_fac_b;
+  INSERT INTO public.conceptos_factura
+    (organization_id, factura_id, descripcion, cantidad, precio_unitario, moneda, total,
+     embarque_id, proforma_id_origen)
+  VALUES (v_org, v_fac_b, 'Maniobras', 1, 200, 'MXN'::public.moneda, 200, v_emb, v_prof_b);
   UPDATE public.proformas SET factura_id = v_fac_b WHERE id = v_prof_b;
 
   SELECT c INTO v_check
