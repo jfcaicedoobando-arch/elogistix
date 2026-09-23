@@ -182,7 +182,7 @@ export function EmbarquesActivosTable({ embarques, resumen: resumenCrudo, isLoad
 
         <DataTable
           columns={visibleColumns}
-          data={embarques}
+          data={filas}
           isLoading={isLoading}
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
           getRowHref={(e) => `/embarques/${e.id}`}

@@ -12,6 +12,7 @@ import { formatCurrency, toTitleCase, formatTipoCambio} from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { proyectarFilasUtilidadVisible } from "@/features/dashboard/domain/proyeccionVisible";
 
 interface Props {
   embarques: EmbarqueConProfit[];
@@ -95,7 +96,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
         <div className="overflow-auto max-h-[320px]">
           <DataTable
             columns={columns}
-            data={embarques}
+            data={filas}
             isLoading={isLoading}
             emptyMessage="Sin embarques con arribo este mes"
             getRowHref={(e) => `/embarques/${e.id}`}
