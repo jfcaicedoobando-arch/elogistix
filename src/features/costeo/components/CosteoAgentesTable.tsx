@@ -14,11 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { Trash2, Pencil, UserPlus, MoreHorizontal } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
+import { CosteoAgenteMobileCard } from "./CosteoAgenteMobileCard";
 
 export interface AgenteRow {
   id: string;
@@ -131,13 +133,16 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
 
   return (
     <Card>
-      <DataTable<AgenteRow>
+      <ResponsiveDataTable<AgenteRow>
         columns={columns}
         data={agentes}
         rowKey={(a) => a.id}
         isLoading={isLoading}
         emptyMessage="Sin agentes registrados."
         onRowClick={onEditar}
+        mobileCard={(agente) => (
+          <CosteoAgenteMobileCard agente={agente} onAcciones={() => onEditar(agente)} />
+        )}
       />
     </Card>
   );

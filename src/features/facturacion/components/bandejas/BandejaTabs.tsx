@@ -83,7 +83,7 @@ export function BandejaTabs() {
             )}
             <div className="flex min-w-0 flex-1 flex-col">
 
-              <span className="px-3 pt-0.5 text-overline text-muted-foreground">
+              <span className="whitespace-nowrap px-3 pt-0.5 text-overline text-muted-foreground">
                 {GROUP_LABELS[group]}
               </span>
               <div className="flex gap-1">

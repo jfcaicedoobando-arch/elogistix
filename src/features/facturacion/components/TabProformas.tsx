@@ -185,6 +185,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
               total: c.filtered.length,
+              hideWhenSinglePage: true,
             }}
             mobileCard={(p) => <ProformaMobileCard proforma={p} />}
           />

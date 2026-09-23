@@ -12,6 +12,8 @@ export interface DataTablePagination {
   pageSizeLabels?: Record<number, string>;
   /** Total de registros (server-side). Habilita el rango "1–20 de 134". */
   total?: number;
+  /** Oculta controles y selector cuando todos los registros caben en una página. */
+  hideWhenSinglePage?: boolean;
 }
 
 export const DENSITY_CELL: Record<TableDensity, string> = {

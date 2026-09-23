@@ -82,13 +82,20 @@ function nbaLeadsSinContactar(leads: NbaLead[], nowMs: number): NbaItem[] {
       id: `lead:${l.id}`,
       regla: "lead_sin_contactar",
       titulo: `Contactar a ${l.empresa}`,
-      subtitulo: `Lead nuevo · lleva ${horas}h sin atención`,
+      subtitulo: `Lead nuevo · ${etiquetaTiempoSinAtencion(horas)} sin atención`,
       href: `/crm/leads/${l.id}`,
       score: 100 - Math.min(20, Math.floor(horas / 24)),
       icono: "lead",
     });
   }
   return out;
+}
+
+export function etiquetaTiempoSinAtencion(horas: number): string {
+  if (horas < 24) return `${horas} h`;
+  const dias = Math.floor(horas / 24);
+  const resto = horas % 24;
+  return resto > 0 ? `${dias} d ${resto} h` : `${dias} d`;
 }
 
 function nbaCotSinRespuesta(cots: NbaCotizacionSinRespuesta[]): NbaItem[] {

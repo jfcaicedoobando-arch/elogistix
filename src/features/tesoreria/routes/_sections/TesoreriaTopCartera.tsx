@@ -43,7 +43,7 @@ export function TesoreriaTopCartera({
       <CardContent density="compact" className="flex flex-1 flex-col">
         <SectionHeading as="h3" className="mb-3">{titulo}</SectionHeading>
         {items.length === 0 ? (
-          <EmptyStateInline icon={Wallet} message={vacio} className="py-4" />
+          <EmptyStateInline density="compact" icon={Wallet} message={vacio} />
         ) : (
           <ul className="space-y-1.5 text-body">
             {items.map((d) => (
@@ -62,7 +62,7 @@ export function TesoreriaTopCartera({
             ))}
           </ul>
         )}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-body-sm text-muted-foreground">
+        {items.length > 0 && <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-body-sm text-muted-foreground">
           <span>
             Total vencido: <span className="font-medium text-foreground tabular-nums">
               {formatCurrency(totalVencido, "MXN")}
@@ -78,7 +78,7 @@ export function TesoreriaTopCartera({
           <Link to={verTodoTo} className="inline-flex items-center gap-1 text-accent hover:underline">
             {verTodoLabel} <ArrowRight className="h-3 w-3" />
           </Link>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

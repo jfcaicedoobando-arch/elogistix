@@ -26,6 +26,7 @@ import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
 import { GrupoCostosProveedorVinculo } from "./GrupoCostosProveedorVinculo";
 import { Hint } from "@/components/shared/Hint";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
+import { GrupoCostosMobileRows } from "./GrupoCostosMobileRows";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -79,7 +80,7 @@ export function GrupoCostosProveedor({
         onClick={() => setAbierto(v => !v)}
         className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-muted/40 hover:bg-muted/60 text-left"
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           {abierto ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
           <Hint label={proveedorNombre}>
             <span className="font-medium text-body truncate">{toTitleCase(proveedorNombre)}</span>
@@ -92,7 +93,7 @@ export function GrupoCostosProveedor({
           )}
         </div>
         <TooltipProvider delayDuration={200}>
-          <div className="flex items-center gap-3 text-body-sm tabular-nums shrink-0">
+          <div className="hidden items-center gap-3 text-body-sm tabular-nums shrink-0 sm:flex">
             {resumenNarrativo.map(({ moneda, d }) => (
               <Tooltip key={moneda}>
                 <TooltipTrigger asChild>
@@ -129,7 +130,9 @@ export function GrupoCostosProveedor({
 
 
       {abierto && (
-        <div className="overflow-x-auto">
+        <>
+        <GrupoCostosMobileRows filas={filasOrdenadas} />
+        <div className="hidden overflow-x-auto md:block">
           {/* v13.823.336 (HD 1280×720): anchos mínimos + concepto fijo para
               que Estado y Pago no queden fuera de la vista. */}
           <Table className="w-full min-w-[900px] text-body">
@@ -192,6 +195,7 @@ export function GrupoCostosProveedor({
             </TableBody>
           </Table>
         </div>
+        </>
       )}
     </div>
   );

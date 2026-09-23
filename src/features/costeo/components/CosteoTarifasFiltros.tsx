@@ -51,9 +51,9 @@ export function CosteoTarifasFiltros({
           id="filtro-buscar"
           value={busqueda}
           onChange={(e) => onBusquedaChange(e.target.value)}
-          placeholder="Buscar por puerto, agente o naviera…"
+          placeholder="Buscar ruta, agente o naviera"
           className="pl-9 pr-8 h-9"
-          aria-label="Buscar tarifas"
+          aria-label="Buscar tarifas por puerto, ruta, agente o naviera"
         />
         {busqueda && (
           <button

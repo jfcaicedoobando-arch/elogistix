@@ -53,7 +53,7 @@ export function ActividadesHoyCard({ items, isError = false, onRetry }: Props) {
             onRetry={onRetry}
           />
         ) : items.length === 0 ? (
-          <EmptyStateInline icon={Clock} message="Sin actividades programadas hoy" />
+          <EmptyStateInline density="compact" icon={Clock} message="Sin actividades programadas hoy" />
         ) : (
           <ul className="space-y-1.5">
             {items.map((a) => (

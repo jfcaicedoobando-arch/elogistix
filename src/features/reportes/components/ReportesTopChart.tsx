@@ -28,6 +28,9 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
     if (data.every((d) => !d.profit)) {
       return <EmptyStateInline icon={BarChart3} message="Sin utilidad registrada en el periodo seleccionado" />;
     }
+    if (data.length === 1) {
+      return <div className="flex h-full items-center justify-between gap-4 rounded-md border bg-muted/20 p-4"><p className="min-w-0 break-words font-medium">{data[0].name}</p><p className="shrink-0 text-kpi tabular-nums">{formatCurrency(data[0].profit, "USD")}</p></div>;
+    }
     return (
       <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
