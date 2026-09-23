@@ -52,18 +52,21 @@ function renderGrupo(folioInterno: string | null) {
 describe("GrupoCostosProveedor · enlace a la factura", () => {
   it("muestra el folio interno y enlaza al detalle de la factura", () => {
     renderGrupo("FP-000256");
-    const link = screen.getByRole("link", { name: /Abrir factura FP-000256/i });
-    expect(link).toHaveAttribute(
-      "href",
-      "/compras/facturas/70e4b713-153f-4c9e-b908-a238989a914f",
-    );
-    expect(link).toHaveTextContent("FP-000256");
+    const links = screen.getAllByRole("link", { name: /Abrir factura FP-000256/i });
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link).toHaveAttribute("href", "/compras/facturas/70e4b713-153f-4c9e-b908-a238989a914f");
+      expect(link).toHaveTextContent("FP-000256");
+    }
   });
 
   it("cae al folio del proveedor cuando no hay folio interno", () => {
     renderGrupo(null);
-    expect(
-      screen.getByRole("link", { name: /Abrir factura 034G545923/i }),
-    ).toBeInTheDocument();
+    const links = screen.getAllByRole("link", { name: /Abrir factura 034G545923/i });
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link).toHaveAttribute("href", "/compras/facturas/70e4b713-153f-4c9e-b908-a238989a914f");
+      expect(link).toHaveTextContent("034G545923");
+    }
   });
 });

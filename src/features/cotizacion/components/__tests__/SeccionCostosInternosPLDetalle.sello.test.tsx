@@ -11,7 +11,7 @@
  * NO ejecutado en Lovable; corre en GitHub Actions con el resto de la suite.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 
 const mutateAsync = vi.hoisted(() => vi.fn());
 const notifyError = vi.hoisted(() => vi.fn());
@@ -213,7 +213,8 @@ describe("guardado rápido de costos con sello optimista", () => {
     mutateAsync.mockRejectedValue(new Error("LC_CONFLICTO_CONCURRENCIA"));
     const { rerender } = renderSeccion();
     abrirEdicion();
-    fireEvent.change(screen.getByLabelText(/proveedor de flete/i), {
+    const costosEscritorio = within(screen.getByRole("table", { name: "Costos de escritorio en MXN" }));
+    fireEvent.change(costosEscritorio.getByLabelText(/proveedor de flete/i), {
       target: { value: "PROVEEDOR EDITADO" },
     });
     snapshot = { costos: COSTOS_600, updatedAt: S1 };
@@ -223,6 +224,6 @@ describe("guardado rápido de costos con sello optimista", () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
     expect(notifySuccess).not.toHaveBeenCalled();
     // La captura sigue en pantalla (no se rehidrató desde la BD).
-    expect(screen.getByLabelText(/proveedor de flete/i)).toHaveValue("PROVEEDOR EDITADO");
+    expect(costosEscritorio.getByLabelText(/proveedor de flete/i)).toHaveValue("PROVEEDOR EDITADO");
   });
 });

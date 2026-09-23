@@ -3,7 +3,7 @@
  * los renglones, no de la tasa global de la organización.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
 
 vi.mock("@/features/catalogos/hooks", () => ({ useTasaIVA: () => 0.16 }));
@@ -54,7 +54,10 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
     expect(leyenda).toBeInTheDocument();
     expect(leyenda.textContent).toMatch(/no objeto de impuesto/i);
     expect(screen.queryByText(/IVA \(/)).not.toBeInTheDocument();
-    expect(screen.getAllByText("IVA: No objeto")).toHaveLength(2);
+    const movil = within(screen.getByRole("list", { name: "Conceptos móviles en MXN" }));
+    const escritorio = within(screen.getByRole("table", { name: "Conceptos de escritorio en MXN" }));
+    expect(movil.getAllByText("IVA: No objeto")).toHaveLength(2);
+    expect(escritorio.getAllByText("IVA: No objeto")).toHaveLength(2);
   });
 
   it("muestra el tratamiento por renglón sin inventar el dato indefinido", () => {
@@ -70,10 +73,15 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
         total={4000}
       />,
     );
-    expect(screen.getByText("IVA: 0%")).toBeInTheDocument();
-    expect(screen.getByText("IVA: Exento")).toBeInTheDocument();
-    expect(screen.getByText("IVA: No objeto")).toBeInTheDocument();
-    expect(screen.getByText("IVA: Por confirmar")).toBeInTheDocument();
+    for (const region of [
+      within(screen.getByRole("list", { name: "Conceptos móviles en USD" })),
+      within(screen.getByRole("table", { name: "Conceptos de escritorio en USD" })),
+    ]) {
+      expect(region.getByText("IVA: 0%")).toBeInTheDocument();
+      expect(region.getByText("IVA: Exento")).toBeInTheDocument();
+      expect(region.getByText("IVA: No objeto")).toBeInTheDocument();
+      expect(region.getByText("IVA: Por confirmar")).toBeInTheDocument();
+    }
   });
 
   it("con conceptos gravados usa la tasa real del renglón", () => {

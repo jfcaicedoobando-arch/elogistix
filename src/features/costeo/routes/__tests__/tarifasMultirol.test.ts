@@ -52,11 +52,13 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
   });
   it("muestra un affordance visible para el desplazamiento horizontal en HD", () => {
     expect(tabla).toContain("Desplaza horizontalmente para consultar columnas secundarias");
-    expect(tabla).toContain("2xl:hidden");
+    expect(tabla).toContain("hasHorizontalOverflow &&");
+    expect(tabla).toContain("onHorizontalOverflowChange={setHasHorizontalOverflow}");
   });
   it("usa fondos opacos en las celdas fijas para impedir texto superpuesto", () => {
-    expect(filaDataTable).toContain("[tr:nth-child(even)_&]:bg-muted");
-    expect(filaDataTable).toContain("[tr:hover_&]:bg-muted");
+    expect(filaDataTable.match(/bg-inherit/g)).toHaveLength(2);
+    expect(filaDataTable).toContain("meta.sticky && STICKY_LEFT");
+    expect(filaDataTable).toContain("meta.stickyRight && STICKY_RIGHT");
     expect(filaDataTable).not.toMatch(/STICKY_(?:LEFT|RIGHT)[\s\S]*?bg-(?:muted|primary)\/[0-9]+/);
   });
 });

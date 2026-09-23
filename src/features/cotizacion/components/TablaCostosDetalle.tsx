@@ -57,7 +57,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
       <CardContent>
         <CostosCotizacionMobile filas={filasMoneda} moneda={moneda} canEdit={canEdit} onUpdate={(idx, field, value) => onUpdate(getGlobalIndex(filas, moneda, idx), field, value)} />
         <div className="hidden border rounded-md overflow-auto md:block">
-          <Table>
+          <Table aria-label={`Costos de escritorio en ${moneda}`}>
             <TableHeader>
               <TableRow>
                 <DetailTableHead className="whitespace-nowrap">Concepto</DetailTableHead>

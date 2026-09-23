@@ -45,7 +45,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
       <CardContent>
         <ConceptosCotizacionMobile conceptos={conceptos} moneda={moneda} tasaIva={tasaIva} />
         <div className="hidden border rounded-md overflow-auto md:block">
-          <Table>
+          <Table aria-label={`Conceptos de escritorio en ${moneda}`}>
             <TableHeader>
               <TableRow>
                 <DetailTableHead>Descripción</DetailTableHead>
