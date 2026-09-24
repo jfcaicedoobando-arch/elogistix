@@ -64,9 +64,9 @@ export function usePaso1Handlers({
 }: Paso1Deps) {
   const { crearCotizacion, updateCotizacion, registrarActividad } = mutations;
   // P1-1: la tarifa ya cargada (panel) permite validar IDs de puerto vs tarifa.
-  const tarifaEnCache = useCallback((v: CotizacionFormValues) => (v.tarifaId
-    ? queryClient.getQueryData<PuertosDeTarifa | null>(queryKeys.cotizaciones.tarifaVinculada(v.tarifaId))
-    : null), []);
+  // En cache miss se consulta; si no se puede verificar, se bloquea (fail-closed).
+  const validar = useCallback(async (v: CotizacionFormValues) =>
+    validatePaso1(v) ?? (await errorCoherenciaEstricta(queryClient, v)), []);
   // P0: si el vínculo CRM falla, el wizard NO avanza; se conserva la captura y
   // el mismo `cotizacionId` para reintentar sin duplicar nada.
   const [vinculoCrmError, setVinculoCrmError] = useState<string | null>(null);
@@ -135,7 +135,7 @@ export function usePaso1Handlers({
 
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
-    const err = validatePaso1(v, tarifaEnCache(v));
+    const err = await validar(v);
     if (err) { marcarErrorPaso1(err); return; }
 
     try {
@@ -154,7 +154,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, tarifaEnCache]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, validar]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -162,7 +162,7 @@ export function usePaso1Handlers({
    */
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
-    const err = validatePaso1(v, tarifaEnCache(v));
+    const err = await validar(v);
     if (err) { marcarErrorPaso1(err); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     try {
@@ -186,7 +186,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, tarifaEnCache]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, validar]);
 
   return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }
