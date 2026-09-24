@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
 function factura(id: string, folio: string): FacturaCxP {
   return {
     id, folio_proveedor: folio, folio_interno: folio, proveedor_nombre: "Proveedor",
-    proveedor_id: "p1", proveedor_origen: "Nacional", embarque_id: null,
-    embarque_expediente: null, fecha_emision: "2026-09-01", fecha_vencimiento: "2026-09-30",
+    proveedor_id: "p1", proveedor_origen: "Nacional", embarque_id: id === "b" ? "emb-1" : null,
+    embarque_expediente: id === "b" ? "ELIMP00008" : null, fecha_emision: "2026-09-01", fecha_vencimiento: "2026-09-30",
     dias_vencido: 0, moneda: "MXN", total: 1160, pagado: 0, notas_credito: 0,
     saldo: 1160, estado: "Vigente", estatus: "Vigente", tipo_cambio_usd: 1,
     estado_aprobacion: "pendiente", motivo_rechazo: null, categoria_presupuesto_id: null,
@@ -71,12 +71,9 @@ describe("selección efectiva de compras por aprobar", () => {
     mocks.bloqueados.clear();
   });
 
-  it("limpia la factura seleccionada al cambiar la búsqueda y cierra el diálogo", () => {
+  it("limpia la factura seleccionada al cambiar la búsqueda e impide abrir el diálogo", () => {
     renderPage();
     fireEvent.click(screen.getByLabelText("Seleccionar factura FP-A"));
-    fireEvent.click(screen.getByRole("button", { name: "Aprobar seleccionadas (1)" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "FP-B" } });
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -84,12 +81,20 @@ describe("selección efectiva de compras por aprobar", () => {
     expect(mocks.aprobar).not.toHaveBeenCalled();
   });
 
-  it("excluye una fila bloqueada por SoD del conteo y del lote", () => {
-    mocks.bloqueados.add("a");
+  it("excluye del conteo, justificación y payload una selección que después queda bloqueada", async () => {
     renderPage();
+    fireEvent.click(screen.getByLabelText("Seleccionar factura FP-A"));
+    mocks.bloqueados.add("a");
+    fireEvent.click(screen.getByLabelText("Seleccionar factura FP-B"));
 
-    expect(screen.getByLabelText("Seleccionar factura FP-A")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Aprobar seleccionadas (0)" })).toBeDisabled();
-    expect(mocks.aprobar).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Aprobar seleccionadas (1)" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Aprobar seleccionadas (1)" }));
+    expect(screen.queryByLabelText("Justificación del gasto")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aprobar 1" }));
+
+    expect(mocks.aprobar).toHaveBeenCalledWith(["b"], {
+      justificacion: "",
+      requierenJustificacion: new Set(),
+    });
   });
 });
