@@ -175,4 +175,6 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Esta cotización ya no está en captura, así que sus costos no pueden reemplazarse. Usa \"Re-cotizar\" para generar una nueva versión.",
   LC_COT_COSTOS_CON_EMBARQUE:
     "Esta cotización ya tiene un embarque vinculado; sus costos no pueden reemplazarse. Ajusta los costos en el embarque.",
+  LC_CONDICION_NAVIERA_NO_ENCONTRADA:
+    "No encontramos las condiciones de esta naviera o no tienes acceso a ellas. Recarga la página e inténtalo de nuevo.",
 };
