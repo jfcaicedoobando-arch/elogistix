@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { mensajeVigencia } from "./TarifaForm.helpers";
 
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;
@@ -61,6 +62,9 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
 }
 
 export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
+  const msg = errores && (errores.vigente_desde || errores.vigente_hasta)
+    ? mensajeVigencia(form.vigente_desde, form.vigente_hasta)
+    : null;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
@@ -79,6 +83,7 @@ export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
           className={`w-full ${invalidCls(errores?.vigente_hasta) ?? ""}`}
         />
       </div>
+      {msg && <p role="alert" className="sm:col-span-2 text-body-sm text-destructive">{msg}</p>}
     </div>
   );
 }

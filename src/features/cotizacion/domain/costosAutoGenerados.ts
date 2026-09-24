@@ -20,7 +20,7 @@ export const NOTA_AUTO_TARIFA = "Auto-cargado desde tarifa marítima";
 export const NOTA_AUTO_FLETE_LCL = "Auto-cargado desde Flete LCL manual";
 
 /** Motivo por el que los costos automáticos quedaron desactualizados. */
-export type DesajusteCostos = "tarifa_cantidad" | "flete_lcl";
+export type DesajusteCostos = "tarifa_cantidad" | "flete_lcl" | "tarifa_distinta";
 
 type FilaConNota = Pick<FilaCostoLocal, "notas">;
 
@@ -50,9 +50,39 @@ export const NOTA_EDITADA_A_MANO = "Editado a mano";
  * recalcular. Sin la marca no hay bloqueo del botón "Siguiente" ni pérdida de
  * lo capturado.
  */
-export function marcarEditadaAMano<T extends { notas?: string }>(fila: T): T {
+export function marcarEditadaAMano<
+  T extends { notas?: string; costeo_tarifa_id?: string | null; costeo_tarifa_recargo_id?: string | null },
+>(fila: T): T {
   if (!esCostoAutoGenerado(fila as FilaConNota)) return fila;
-  return { ...fila, notas: `${NOTA_EDITADA_A_MANO} — ${(fila.notas ?? "").trim()}` };
+  // P1-4: además se corta el linaje automático (costeo_tarifa_id/recargo): la
+  // revalidación SQL ya no lo compara contra la tarifa. El origen queda
+  // auditable en la nota ("Editado a mano — Auto-cargado desde …").
+  const editada = { ...fila, notas: `${NOTA_EDITADA_A_MANO} — ${(fila.notas ?? "").trim()}` };
+  if ("costeo_tarifa_id" in fila) editada.costeo_tarifa_id = null;
+  if ("costeo_tarifa_recargo_id" in fila) editada.costeo_tarifa_recargo_id = null;
+  return editada;
+}
+
+/**
+ * P1-3/P2-5: filas automáticas de tarifa cuyo linaje ya no es la tarifa
+ * vigente (se cambió o se quitó). Las legacy sin `costeo_tarifa_id` no cuentan.
+ */
+export function costosAutoDeOtraTarifa(
+  filas: FilaCostoLocal[],
+  tarifaIdVigente: string | null | undefined,
+): FilaCostoLocal[] {
+  return filas.filter(
+    (f) => esCostoAutoTarifa(f) && !!f.costeo_tarifa_id && f.costeo_tarifa_id !== (tarifaIdVigente ?? null),
+  );
+}
+
+/** P2-5: conserva las filas de otra tarifa como manuales (sin linaje). */
+export function conservarComoManuales(
+  filas: FilaCostoLocal[],
+  tarifaIdVigente: string | null | undefined,
+): FilaCostoLocal[] {
+  const ajenas = new Set(costosAutoDeOtraTarifa(filas, tarifaIdVigente));
+  return filas.map((f) => (ajenas.has(f) ? marcarEditadaAMano(f) : f));
 }
 
 /** Filas sin las auto-generadas desde tarifa (conserva manuales y LCL). */

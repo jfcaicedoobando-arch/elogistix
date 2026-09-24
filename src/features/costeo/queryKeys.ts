@@ -73,7 +73,8 @@ export const costeo = {
         ["costeo", "demoras_tramos", navieraCondicionId] as const,
     },
     tiposContenedor: () => ["costeo", "tipos_contenedor_demoras"] as const,
-    catalogo: () => ["costeo", "navieras_catalogo"] as const,
+    // P2-2: cuelga de `navieras.all` para que el alta de naviera la invalide.
+    catalogo: () => ["navieras", "costeo_catalogo"] as const,
   },
 
   proveedores: {

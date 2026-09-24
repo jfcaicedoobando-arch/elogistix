@@ -82,10 +82,17 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
                 </Label>
               </div>
             </RadioGroup>
-            {tipoEmbarque === "FCL" ? (
+            {/* P2-7: sin FCL/LCL elegido no se muestran campos específicos. */}
+            {tipoEmbarque === "FCL" && (
               <SeccionMercanciaMaritimaFCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-            ) : (
+            )}
+            {tipoEmbarque === "LCL" && (
               <SeccionMercanciaMaritimaLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+            )}
+            {tipoEmbarque !== "FCL" && tipoEmbarque !== "LCL" && (
+              <p className="text-body-sm text-muted-foreground">
+                Elige FCL o LCL para capturar los datos de la mercancía.
+              </p>
             )}
           </div>
         ) : w.esAereo ? (

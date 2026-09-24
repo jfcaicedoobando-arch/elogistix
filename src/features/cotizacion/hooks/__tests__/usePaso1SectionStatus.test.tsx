@@ -97,6 +97,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "FCL",
         tipoContenedor: "",
@@ -106,6 +107,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "FCL",
         tipoContenedor: "40HC",
@@ -118,6 +120,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "FCL",
         tipoContenedor: "40HC",
@@ -130,6 +133,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "LCL",
         dimensionesLCL: [],
@@ -138,6 +142,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "LCL",
         dimensionesLCL: [{ piezas: 0, volumen_m3: 5 } as never],
@@ -149,6 +154,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "LCL",
         dimensionesLCL: [{ piezas: 2, volumen_m3: 1.5 } as never],
@@ -160,6 +166,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Marítimo",
         tipoEmbarque: "LCL",
         dimensionesLCL: [
@@ -171,7 +178,8 @@ describe("usePaso1SectionStatus — mercancia", () => {
 
   it("Aéreo: false sin filas válidas", () => {
     expect(
-      statusFor({ tipoCarga: "General", modo: "Aéreo", dimensionesAereas: [] }).mercancia,
+      statusFor({ tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices", modo: "Aéreo", dimensionesAereas: [] }).mercancia,
     ).toBe(false);
   });
 
@@ -179,6 +187,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Aereo",
         dimensionesAereas: [{ piezas: 1, peso_volumetrico_kg: 12 } as never],
       }).mercancia,
@@ -189,6 +198,7 @@ describe("usePaso1SectionStatus — mercancia", () => {
     expect(
       statusFor({
         tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices",
         modo: "Aéreo",
         dimensionesAereas: [
           { piezas: 1, peso_volumetrico_kg: 0, alto_cm: 5, largo_cm: 5, ancho_cm: 5 } as never,
@@ -199,16 +209,19 @@ describe("usePaso1SectionStatus — mercancia", () => {
 
   it("Terrestre/default: false sin peso ni piezas", () => {
     expect(
-      statusFor({ tipoCarga: "General", modo: "Terrestre", pesoKg: 0, piezas: 0 }).mercancia,
+      statusFor({ tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices", modo: "Terrestre", pesoKg: 0, piezas: 0 }).mercancia,
     ).toBe(false);
   });
 
   it("Terrestre/default: true con peso o piezas capturados", () => {
     expect(
-      statusFor({ tipoCarga: "General", modo: "Terrestre", pesoKg: 100, piezas: 0 }).mercancia,
+      statusFor({ tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices", modo: "Terrestre", pesoKg: 100, piezas: 0 }).mercancia,
     ).toBe(true);
     expect(
-      statusFor({ tipoCarga: "General", modo: "Terrestre", pesoKg: 0, piezas: 3 }).mercancia,
+      statusFor({ tipoCarga: "General",
+        descripcionMercancia: "Refacciones automotrices", modo: "Terrestre", pesoKg: 0, piezas: 3 }).mercancia,
     ).toBe(true);
   });
 });
@@ -355,4 +368,20 @@ describe("usePaso1SectionStatus — cierre", () => {
       expect(statusFor({ modo, tipoEmbarque: "FCL", numContenedores: 0 }).cierre).toBe(true);
     },
   );
+});
+
+describe("usePaso1SectionStatus — P2-7/P2-8 mercancía", () => {
+  const fcl = { modo: "Marítimo", tipoCarga: "General", tipoEmbarque: "FCL", tipoContenedor: "tc-40hc", numContenedores: 1 };
+  const lcl = { modo: "Marítimo", tipoCarga: "General", tipoEmbarque: "LCL", dimensionesLCL: [{ piezas: 2, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 1.2 }] };
+  it("FCL sin descripción no está completa", () => {
+    expect(statusFor({ ...fcl, descripcionMercancia: "" } as never).mercancia).toBe(false);
+    expect(statusFor({ ...fcl, descripcionMercancia: "Refacciones" } as never).mercancia).toBe(true);
+  });
+  it("LCL sin descripción no está completa", () => {
+    expect(statusFor({ ...lcl, descripcionMercancia: " " } as never).mercancia).toBe(false);
+    expect(statusFor({ ...lcl, descripcionMercancia: "Textiles" } as never).mercancia).toBe(true);
+  });
+  it("marítimo sin FCL/LCL elegido no está completa", () => {
+    expect(statusFor({ modo: "Marítimo", tipoCarga: "General", tipoEmbarque: "", pesoKg: 100, descripcionMercancia: "X" } as never).mercancia).toBe(false);
+  });
 });

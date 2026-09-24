@@ -99,55 +99,31 @@ export async function fetchDemorasTramos(
 }
 
 /**
- * Reemplaza el tabulador completo del (condicion × tipo_contenedor):
- * elimina los tramos existentes y reinserta los nuevos. Es la estrategia
- * más simple para evitar inconsistencias parciales (similar al patrón usado
- * en editar embarques con conceptos).
+ * P1-5: reemplaza el tabulador (condición × tipo de contenedor) en UNA
+ * transacción de BD. Si la inserción falla, se conserva el tabulador previo.
  */
 export async function replaceDemorasTramos(
   navieraCondicionId: string,
   tipoContenedorId: string,
   tramos: DemorasTramoInput[],
 ): Promise<void> {
-  await run(
-    supabase
-      .from("costeo_naviera_demoras_tarifa")
-      .delete()
-      .eq("naviera_condicion_id", navieraCondicionId)
-      .eq("tipo_contenedor_id", tipoContenedorId),
-  );
-  if (tramos.length === 0) {
-    await registrarActividad({
-      modulo: "costeo",
-      accion: "editar_tabulador_demoras_naviera",
-      entidadId: navieraCondicionId,
-      entidadNombre: `Tabulador ${tipoContenedorId} (vacío)`,
-    });
-    return;
-  }
-  // M7: la org viaja explícita; el trigger de BD la re-deriva de la condición padre.
-  const padre = await unwrap(
-    supabase
-      .from("costeo_navieras_condiciones")
-      .select("organization_id")
-      .eq("id", navieraCondicionId)
-      .single(),
-  );
-  const rows = tramos.map((t) => ({
-    naviera_condicion_id: navieraCondicionId,
-    organization_id: padre.organization_id,
-    tipo_contenedor_id: tipoContenedorId,
-    desde_dia: t.desde_dia,
-    hasta_dia: t.hasta_dia,
-    monto_por_dia: t.monto_por_dia,
-    moneda: t.moneda,
-  }));
-  await run(supabase.from("costeo_naviera_demoras_tarifa").insert(rows));
+  const { data, error } = await supabase.rpc("reemplazar_demoras_tramos_rpc", {
+    p_naviera_condicion_id: navieraCondicionId,
+    p_tipo_contenedor_id: tipoContenedorId,
+    p_tramos: tramos.map((t) => ({
+      desde_dia: t.desde_dia,
+      hasta_dia: t.hasta_dia,
+      monto_por_dia: t.monto_por_dia,
+      moneda: t.moneda,
+    })),
+  });
+  if (error) throw error;
+  const n = Number(data ?? 0);
   await registrarActividad({
     modulo: "costeo",
     accion: "editar_tabulador_demoras_naviera",
     entidadId: navieraCondicionId,
-    entidadNombre: `Tabulador ${tipoContenedorId} (${rows.length} tramos)`,
+    entidadNombre: `Tabulador ${tipoContenedorId} (${n === 0 ? "vacío" : `${n} tramos`})`,
   });
 }
 

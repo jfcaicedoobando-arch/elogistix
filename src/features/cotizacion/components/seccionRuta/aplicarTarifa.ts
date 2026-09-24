@@ -12,6 +12,19 @@ import type { TopTarifaRow } from "@/features/costeo/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
 import { buildCostosDesdeTarifa } from "./buildCostosDesdeTarifa";
+import { etiquetaPuertoCompleta, origenDe, destinoDe } from "@/features/costeo";
+import { notifyError } from "@/lib/ui/appFeedback";
+
+/**
+ * P1-2: última tarifa solicitada por formulario (clave = `setValue`, estable
+ * por instancia de RHF). Una respuesta tardía de otra tarifa se descarta.
+ */
+const solicitudVigente = new WeakMap<object, string | null>();
+
+/** Invalida cualquier auto-carga en vuelo (p. ej. al quitar la tarifa). */
+export function cancelarAutocargaTarifa(setValue: object): void {
+  solicitudVigente.set(setValue, null);
+}
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
@@ -47,7 +60,7 @@ export function aplicarTarifaAlForm(
     "validezPropuesta",
     "rutaTexto",
   ]);
-  autoCargarCostos(row, options);
+  autoCargarCostos(setValue, row, options);
 }
 
 function aplicarCamposBase(setValue: UseFormSetValue<CotizacionFormValues>, row: TopTarifaRow): void {
@@ -58,6 +71,10 @@ function aplicarCamposBase(setValue: UseFormSetValue<CotizacionFormValues>, row:
   // nombre (dos puertos homónimos podían intercambiarse).
   setValue("puertoOrigenId", row.puerto_origen_id ?? null, OPTS);
   setValue("puertoDestinoId", row.puerto_destino_id ?? null, OPTS);
+  // P1-1: el texto visible sale de la MISMA tarifa (sin heurística por nombre)
+  // para que texto, IDs y tarifa nunca se contradigan.
+  if (row.puerto_origen_nombre) setValue("origen", etiquetaPuertoCompleta(origenDe(row)), OPTS);
+  if (row.puerto_destino_nombre) setValue("destino", etiquetaPuertoCompleta(destinoDe(row)), OPTS);
 
   setValue("tiempoTransitoDias", row.transit_time_dias ?? undefined, OPTS);
   setValue("diasLibresDestino", row.dias_libres_demoras ?? 0, OPTS);
@@ -95,18 +112,33 @@ function aplicarValidezPropuesta(
   }
 }
 
-function autoCargarCostos(row: TopTarifaRow, options: AplicarTarifaOptions): void {
+function autoCargarCostos(
+  setValue: object,
+  row: TopTarifaRow,
+  options: AplicarTarifaOptions,
+): void {
   if (!options.onAutocargaCostos) return;
   const cb = options.onAutocargaCostos;
   const markup = options.markup ?? 0.15;
   const rawCantidad = options.cantidad ?? 1;
   const cantidad = Number.isFinite(rawCantidad) && rawCantidad >= 1 ? rawCantidad : 1;
+  solicitudVigente.set(setValue, row.id);
+  const sigueVigente = () => solicitudVigente.get(setValue) === row.id;
   void fetchRecargosDeTarifa(row.id)
     .then((recargos) => {
+      if (!sigueVigente()) return;
       const filas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad });
       if (filas.length > 0) cb(filas);
     })
-    .catch(() => {
-      // Silencioso: el usuario siempre puede capturar manualmente.
+    .catch((error: unknown) => {
+      if (!sigueVigente()) return;
+      // P1-3: ya no es silencioso. Los costos previos quedan marcados como
+      // de otra tarifa (useCostosAutoSync) y el Paso 2 ofrece recalcular.
+      notifyError(undefined, {
+        title: "No se pudieron cargar los costos de la tarifa",
+        description: "Vuelve a elegir la tarifa o recalcula en el Paso 2. Tus costos capturados a mano se conservan.",
+        error,
+        method: "COTIZACION_AUTOCARGA_COSTOS_TARIFA",
+      });
     });
 }

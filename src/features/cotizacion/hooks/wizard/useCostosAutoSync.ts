@@ -20,7 +20,11 @@ import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion"
 import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
 import { buildCostosLCLManual } from "@/features/cotizacion/components/seccionRuta/buildCostosLCLManual";
 import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
+  conservarComoManuales,
+  costosAutoDeOtraTarifa,
+  sinCostosAutoTarifa,
   desajusteCantidadTarifa,
   fleteLclDesactualizado,
   reemplazarCostosAutoFleteLcl,
@@ -43,6 +47,8 @@ export interface CostosAutoSync {
   desajuste: DesajusteCostos | null;
   recalculando: boolean;
   recalcular: () => void;
+  /** P2-5: conserva como manuales los costos de una tarifa ya no vinculada. */
+  conservarManuales: () => void;
 }
 
 export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args): CostosAutoSync {
@@ -117,6 +123,8 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
   }, [tipoEmbarque, tarifaId, filas.length, filasLclEsperadas, setFilas]);
 
   const desajuste: DesajusteCostos | null = useMemo(() => {
+    // P1-3/P2-5: cada fila automática debe pertenecer a la tarifa vigente.
+    if (costosAutoDeOtraTarifa(filas, tarifaId).length > 0) return "tarifa_distinta";
     if (tarifaId && desajusteCantidadTarifa(filas, cantidad)) return "tarifa_cantidad";
     if (fleteLclDesactualizado(filas, filasLclEsperadas)) return "flete_lcl";
     return null;
@@ -132,14 +140,31 @@ export function useCostosAutoSync({ filas, setFilas, onDesajusteChange }: Args):
       setFilas((prev) => reemplazarCostosAutoFleteLcl(prev, filasLclEsperadas));
       return;
     }
-    if (desajuste !== "tarifa_cantidad") return;
+    if (desajuste === "tarifa_distinta" && !tarifaId) {
+      setFilas((prev) => sinCostosAutoTarifa(prev));
+      return;
+    }
+    if (desajuste !== "tarifa_cantidad" && desajuste !== "tarifa_distinta") return;
     setRecalculando(true);
     void construirFilasTarifa()
       .then((nuevas) => {
         if (nuevas.length > 0) setFilas((prev) => reemplazarCostosAutoTarifa(prev, nuevas));
       })
+      .catch((error: unknown) =>
+        notifyError(undefined, {
+          title: "No se pudieron recalcular los costos de la tarifa",
+          description: "Intenta de nuevo en unos segundos. Tus costos capturados a mano se conservan.",
+          error,
+          method: "COTIZACION_RECALCULAR_COSTOS_TARIFA",
+        }),
+      )
       .finally(() => setRecalculando(false));
-  }, [desajuste, filasLclEsperadas, construirFilasTarifa, setFilas]);
+  }, [desajuste, tarifaId, filasLclEsperadas, construirFilasTarifa, setFilas]);
 
-  return { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular };
+  const conservarManuales = useCallback(
+    () => setFilas((prev) => conservarComoManuales(prev, tarifaId)),
+    [setFilas, tarifaId],
+  );
+
+  return { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular, conservarManuales };
 }

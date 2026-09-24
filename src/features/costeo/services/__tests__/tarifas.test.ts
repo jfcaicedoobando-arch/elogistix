@@ -13,8 +13,6 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   fetchCosteoTarifas,
-  insertTarifaConRecargos,
-  MSG_TARIFA_DUPLICADA,
   updateTarifaConRecargos,
   marcarTarifaReemplazada,
   deleteTarifa,
@@ -111,70 +109,7 @@ describe("costeo/services/tarifas", () => {
     });
   });
 
-  describe("insertTarifaConRecargos", () => {
-    it("forza moneda=USD, estado=vigente y organization_id en el insert padre", async () => {
-      mock.setTableResult("costeo_tarifas", { data: { id: "t3" }, error: null });
-      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
-
-      await insertTarifaConRecargos(ORG, baseInput);
-
-      const payload = mock.getMutationPayload("costeo_tarifas", "insert") as Record<string, unknown>;
-      expect(payload.moneda).toBe("USD");
-      expect(payload.estado).toBe("vigente");
-      expect(payload.organization_id).toBe(ORG);
-      expect(payload.flete_base).toBe(2500);
-    });
-
-    it("inserta recargos válidos con defaults (lado=origen, incluido=true)", async () => {
-      mock.setTableResult("costeo_tarifas", { data: { id: "t4" }, error: null });
-      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
-
-      await insertTarifaConRecargos(ORG, baseInput);
-
-      const rows = mock.getMutationPayload("costeo_tarifa_recargos", "insert") as Array<Record<string, unknown>>;
-      expect(rows).toHaveLength(2);
-      expect(rows[0]).toMatchObject({ tarifa_id: "t4", moneda: "USD", lado: "origen", incluido_en_total: true });
-    });
-
-    it("filtra recargos con concepto vacío o monto <= 0", async () => {
-      mock.setTableResult("costeo_tarifas", { data: { id: "t5" }, error: null });
-      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
-      await insertTarifaConRecargos(ORG, {
-        ...baseInput,
-        recargos: [
-          { concepto: "   ", monto: 100 },
-          { concepto: "BAF", monto: 0 },
-          { concepto: "OK", monto: 50 },
-        ],
-      });
-      const rows = mock.getMutationPayload("costeo_tarifa_recargos", "insert") as Array<Record<string, unknown>>;
-      expect(rows).toHaveLength(1);
-      expect(rows[0].concepto).toBe("OK");
-    });
-
-    it("no llama a insert de recargos si la lista queda vacía", async () => {
-      mock.setTableResult("costeo_tarifas", { data: { id: "t6" }, error: null });
-      await insertTarifaConRecargos(ORG, { ...baseInput, recargos: [] });
-      const recargoCalls = mock.tableCalls.filter((c) => c.table === "costeo_tarifa_recargos");
-      expect(recargoCalls).toHaveLength(0);
-    });
-
-    it("propaga el error del insert padre", async () => {
-      mock.setTableResult("costeo_tarifas", { data: null, error: { message: "fk" } });
-      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow();
-    });
-
-    // v13.823.159: «Duplicar como nueva» con la misma vigencia choca con el
-    // UNIQUE (org, agente, naviera, ruta, contenedor, vigente_desde). El mensaje
-    // crudo de Postgres no explicaba nada al agente.
-    it("traduce el choque de unicidad a un mensaje accionable", async () => {
-      mock.setTableResult("costeo_tarifas", {
-        data: null,
-        error: { code: "23505", message: 'duplicate key value violates unique constraint "costeo_tarifas_organization_id_agente_id_naviera_id_ruta_id_key"' },
-      });
-      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow(MSG_TARIFA_DUPLICADA);
-    });
-  });
+  // P1-5/P1-6: el contrato atómico (RPC) se prueba en costeoAtomicoLoteAuditoria.test.ts.
 
   describe("updateTarifaConRecargos", () => {
     it("Ola 6 · M7: usa la RPC atómica con tarifa + recargos filtrados", async () => {

@@ -24,6 +24,8 @@ import {
 
 
 
+import { errorCoherenciaRutaTarifa, type PuertosDeTarifa } from "@/features/cotizacion/domain/coherenciaRutaTarifa";
+
 // ── Pure sub-validators ──────────────────────────────────────────────────────
 
 /**
@@ -113,10 +115,11 @@ export function validateContenedores(v: CotizacionFormValues): string | null {
   });
 }
 
-export function validatePaso1(v: CotizacionFormValues): string | null {
+export function validatePaso1(v: CotizacionFormValues, tarifa?: PuertosDeTarifa | null): string | null {
   return (
     validateCliente(v) ??
     validateDatosGenerales(v) ??
+    errorCoherenciaRutaTarifa(v, tarifa) ??
     validateProspecto(v) ??
     validateTerrestre(v) ??
     validateContenedores(v) ??

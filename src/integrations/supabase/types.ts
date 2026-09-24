@@ -10043,6 +10043,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      crear_tarifa_con_recargos_rpc: {
+        Args: { p_organization_id: string; p_recargos: Json; p_tarifa: Json }
+        Returns: {
+          agente_id: string
+          aprobada_en: string | null
+          aprobada_por: string | null
+          creado_por: string | null
+          created_at: string
+          dias_libres_almacenaje_lcl: number | null
+          dias_libres_demoras: number
+          estado: string
+          estado_aprobacion: string
+          flete_base: number
+          frecuencia_override: string | null
+          id: string
+          moneda: string
+          motivo_rechazo: string | null
+          naviera_id: string
+          notas: string | null
+          organization_id: string
+          reemplazada_por: string | null
+          ruta_id: string
+          tipo_contenedor_id: string
+          transit_time_dias: number | null
+          updated_at: string
+          vigente_desde: string
+          vigente_hasta: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "costeo_tarifas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       credito_en_uso_mxn: { Args: { p_cliente_id: string }; Returns: number }
       crm_autorizar_margen: {
         Args: { _margen_pct: number; _oportunidad_id: string }
@@ -11308,6 +11343,14 @@ export type Database = {
       }
       reemplazar_conceptos_factura_proveedor: {
         Args: { p_conceptos: Json; p_factura_id: string }
+        Returns: number
+      }
+      reemplazar_demoras_tramos_rpc: {
+        Args: {
+          p_naviera_condicion_id: string
+          p_tipo_contenedor_id: string
+          p_tramos: Json
+        }
         Returns: number
       }
       refacturacion_expediente: { Args: { p_caso_id: string }; Returns: Json }

@@ -46,6 +46,9 @@ const base = (over: Partial<CotizacionFormValues> = {}): CotizacionFormValues =>
   origen: "MXVER",
   destino: "CNSHA",
   tipoContenedor: "tc-1",
+  // P1-1: con tarifa vinculada los puertos deben traer su ID de catálogo.
+  puertoOrigenId: "p-ver",
+  puertoDestinoId: "p-sha",
   tarifaId: "",
   ...over,
 } as unknown as CotizacionFormValues);

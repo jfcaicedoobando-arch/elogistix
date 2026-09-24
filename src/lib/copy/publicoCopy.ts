@@ -65,6 +65,9 @@ export const COPY_VALIDACION = {
   renglonesSinConcepto: "Hay renglones de costo sin concepto.",
   renglonesSinProveedor: "Hay renglones de costo sin proveedor.",
   /** Q2 (v13.823.396): la tarifa se aplicó con otra cantidad de contenedores. */
+  /** P1-3/P2-5: hay costos automáticos de una tarifa que ya no está vinculada. */
+  costosDeOtraTarifa:
+    "Hay costos automáticos de una tarifa que ya no está vinculada. Recalcula desde la tarifa actual, quítalos o consérvalos como manuales antes de continuar.",
   costosTarifaDesactualizados:
     "Los costos automáticos de la tarifa no corresponden al número de contenedores actual. Recalcula los costos desde la tarifa antes de continuar.",
   /** Q6 (v13.823.396): cambiaron las entradas del flete LCL manual del Paso 1. */
