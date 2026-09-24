@@ -1,7 +1,8 @@
 /**
  * R-10 — Alta rápida de naviera desde el formulario de tarifas de costeo.
  * Antes había que salir a Configuración → Catálogos, perdiendo la captura.
- * Las restricciones de permiso las aplica la base de datos (RLS del catálogo).
+ * El catálogo de navieras es global: sólo super_admin puede darlo de alta
+ * (RLS "Super admin CRUD navieras"). Para otros roles no se muestra el botón.
  */
 import { useState } from "react";
 import { Plus } from "lucide-react";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useAdminNavieras } from "@/features/catalogos/hooks";
+import { usePermissions } from "@/hooks/shared";
 
 interface Props {
   /** Se invoca con el id de la naviera recién creada para seleccionarla. */
@@ -25,6 +27,8 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const { agregarNaviera } = useAdminNavieras();
+
+  const { isSuperAdmin } = usePermissions();
 
   const puedeGuardar = code.trim().length > 0 && name.trim().length > 0;
 
@@ -43,6 +47,8 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
       },
     );
   };
+
+  if (!isSuperAdmin) return null;
 
   return (
     <>
