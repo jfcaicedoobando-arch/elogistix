@@ -71,7 +71,7 @@ export default function Leads() {
   });
 
   // P2-4: nunca exponer ni permitir operar filas de la consulta anterior.
-  const leads = list.isStaleView ? [] : list.rows;
+  const leads = useMemo(() => (list.isStaleView ? [] : list.rows), [list.isStaleView, list.rows]);
 
   const { selected, toggle, toggleAll, clearSel } = useLeadsSelection(leads, {
     search: list.search, estado: list.filters.estado, fuente: list.filters.fuente,

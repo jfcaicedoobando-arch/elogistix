@@ -27,6 +27,13 @@ export interface ConteosTarjetasCxP {
   programadoN: number;
 }
 
+/** Cada moneda en su bolsa: EUR nunca se suma a MXN/USD. */
+function sumarProgramado(r: ConteosTarjetasCxP, moneda: string | null | undefined, saldo: number): void {
+  if (moneda === "USD") r.programadoUsd += saldo;
+  else if (moneda === "MXN") r.programadoMxn += saldo;
+  else if (moneda === "EUR") r.programadoEur += saldo;
+}
+
 export function resumirTarjetasCxP(
   filas: FacturaCxP[],
   hoyIso: string = todayLocalISO(),
@@ -55,10 +62,7 @@ export function resumirTarjetasCxP(
     const prog = f.fecha_programada_pago?.slice(0, 10);
     if (prog && prog >= hoyIso && prog <= limite) {
       r.programadoN++;
-      // Cada moneda en su bolsa: EUR nunca se suma a MXN/USD.
-      if (usd) r.programadoUsd += f.saldo;
-      else if (mxn) r.programadoMxn += f.saldo;
-      else if (f.moneda === "EUR") r.programadoEur += f.saldo;
+      sumarProgramado(r, f.moneda, f.saldo);
     }
   }
   return r;
