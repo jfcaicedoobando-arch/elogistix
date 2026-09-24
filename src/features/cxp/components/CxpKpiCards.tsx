@@ -29,7 +29,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
   // usa `esFacturaPorPagar` + la ventana canónica de 7 días).
   const {
     porPagarMxn, porPagarUsd, vencidasN, porVencerN,
-    programadoMxn, programadoUsd, programadoN,
+    programadoMxn, programadoUsd, programadoEur, programadoN,
   } = useMemo(() => resumirTarjetasCxP(data), [data]);
   return (
     // Ola 9: a 1280x720 las 5 tarjetas truncaban el importe ("MXN 80,234…") y
@@ -71,7 +71,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Programado 7d"
         value={formatCurrencyCompact(programadoMxn, "MXN")}
         valueTooltip={formatCurrency(programadoMxn, "MXN")}
-        sublabel={`${formatCurrency(programadoUsd, "USD")} · ${countLabelCorto(programadoN)}`}
+        sublabel={`${formatCurrency(programadoUsd, "USD")}${sufijoEur(programadoEur)} · ${countLabelCorto(programadoN)}`}
       />
     </div>
   );
