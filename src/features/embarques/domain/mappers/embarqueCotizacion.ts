@@ -48,6 +48,8 @@ export interface CotizacionParaVincular {
   agente_nombre?: string | null;
   naviera_id?: string | null;
   naviera_nombre?: string | null;
+  /** LCL: consolidador (proveedor) elegido en la captura manual. */
+  lcl_consolidador_id?: string | null;
 }
 
 export type DesvincularModo = "limpiar" | "conservar" | "solo-conceptos";
