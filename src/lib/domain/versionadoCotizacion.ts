@@ -65,8 +65,7 @@ export interface ResumenReconciliacion3C {
   moneda_total: "MXN";
   /** Renglones excluidos por falta de tipo de cambio para su moneda. */
   filas_sin_tipo_cambio: number;
-  /** Renglones sin factura o pendientes de TC: fuera del delta. */
-  filas_pendientes?: number;
+  filas_pendientes?: number; // sin factura o pendientes de TC: fuera del delta
 }
 
 /** % absoluto entre dos montos. base=0 → 0 si actual=0, sino 100. */
