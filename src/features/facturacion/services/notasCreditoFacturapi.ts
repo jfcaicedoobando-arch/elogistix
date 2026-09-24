@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
+import { parseFunctionError, toReadableError } from "@/features/facturacion/services/facturapiError";
 
 export interface ValidationIssue { field: string; message: string }
 
@@ -21,7 +22,11 @@ export async function timbrarNotaCreditoFacturapi(notaCreditoId: string): Promis
   const { data, error } = await supabase.functions.invoke<
     TimbradoNcResult & { error?: string; issues?: ValidationIssue[]; message?: string }
   >("facturapi-emitir-nota-credito", { body: { nota_credito_id: notaCreditoId } });
-  if (error) throw new Error(error.message);
+  // El SDK oculta el cuerpo en `error.context`; lo leemos para mostrar el
+  // motivo real de FacturApi/SAT en vez de "non-2xx status code".
+  if (error) {
+    throw toReadableError(error, await parseFunctionError(error), "No se pudo timbrar la nota de crédito.");
+  }
   if (data?.error) {
     const issues = data.issues?.length ? `: ${data.issues.map((i) => i.message).join("; ")}` : "";
     throw new Error((data.message ?? data.error) + issues);
@@ -44,7 +49,9 @@ export async function cancelarNotaCreditoFacturapi(
     "facturapi-cancelar-nota-credito",
     { body: { nota_credito_id: notaCreditoId, motivo, sustituye_uuid: sustituyeUuid } },
   );
-  if (error) throw new Error(error.message);
+  if (error) {
+    throw toReadableError(error, await parseFunctionError(error), "No se pudo cancelar la nota de crédito.");
+  }
   if (data?.error) throw new Error(data.message ?? data.error);
   // Ola 4 · N4: la cancelación puede quedar pendiente de aceptación del
   // receptor; el hook lo comunica en el toast.
