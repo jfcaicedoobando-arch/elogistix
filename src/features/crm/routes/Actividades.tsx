@@ -179,7 +179,12 @@ export default function Actividades() {
               pageSizeLabels: { 500: "500" },
             }}
             tableClassName="w-full table-fixed"
-            mobileCard={(actividad) => <ActividadMobileCard actividad={actividad} />}
+            mobileCard={(actividad) => (
+              <ActividadMobileCard
+                actividad={actividad}
+                puedeGestionar={canCrearActividad && canGestionarActividad(actividad.responsable_id)}
+              />
+            )}
           />
           )}
         </CardContent>
