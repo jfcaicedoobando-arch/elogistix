@@ -58,17 +58,23 @@ export function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: To
         {totalesPorMoneda.map((t) => (
           <div
             key={t.moneda}
+            data-testid={`total-moneda-${t.moneda}`}
             className="rounded-md border bg-muted/30 px-3 py-2 grid grid-cols-5 gap-2 text-xs tabular-nums"
           >
             <div className="font-semibold">TOTAL {t.moneda}</div>
             <div className="text-right">{formatCurrency(t.cotizado, t.moneda)}</div>
             <div className="text-right">{formatCurrency(t.real, t.moneda)}</div>
-            <div className={`text-right font-medium ${classFromNumber(t.diferencia)}`}>
-              {formatCurrency(t.diferencia, t.moneda)}
+            <div className={`text-right font-medium ${t.diferencia === null ? "text-muted-foreground" : classFromNumber(t.diferencia)}`}>
+              {t.diferencia === null ? "N/D" : formatCurrency(t.diferencia, t.moneda)}
             </div>
-            <div className={`text-right ${classFromNumber(t.desviacion_pct)}`}>
-              {formatPercent(t.desviacion_pct)}
+            <div className={`text-right ${t.desviacion_pct === null ? "text-muted-foreground" : classFromNumber(t.desviacion_pct)}`}>
+              {t.desviacion_pct === null ? "N/D" : formatPercent(t.desviacion_pct)}
             </div>
+            {t.pendientes_tc > 0 && (
+              <div className="col-span-5 text-2xs text-warning">
+                {t.pendientes_tc} renglón(es) pendiente(s) de tipo de cambio: real parcial, fuera de la variación.
+              </div>
+            )}
           </div>
         ))}
       </div>

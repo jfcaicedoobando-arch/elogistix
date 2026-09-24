@@ -9,7 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { compras } from "../../queryKeys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
-  calcularResumen,
   calcularResumenPorEstatus,
   calcularResumenPorMoneda,
   fetchPartidasHuerfanasCount,
@@ -41,7 +40,6 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
     staleTime: 30_000,
   });
 
-  const resumen = useMemo(() => calcularResumen(filas), [filas]);
   const resumenEstatus = useMemo(() => calcularResumenPorEstatus(filas), [filas]);
   const totalesPorMoneda = useMemo(() => calcularResumenPorMoneda(filas), [filas]);
 
@@ -55,8 +53,6 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
     });
   };
 
-  const monedaResumen = embarque?.moneda ?? filas[0]?.moneda ?? "MXN";
-
   return (
     <Sheet open={Boolean(embarque)} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto">
@@ -64,10 +60,9 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
           <>
             <HeaderPanel embarque={embarque} onOpenEmbarque={() => navigate(`/embarques/${embarque.embarque_id}`)} />
             <ResumenGrid
-              resumen={resumen}
+              totalesPorMoneda={totalesPorMoneda}
               resumenEstatus={resumenEstatus}
               huerfanas={huerfanas}
-              monedaResumen={monedaResumen}
             />
             <div className="mt-4">
               <CuerpoTabla

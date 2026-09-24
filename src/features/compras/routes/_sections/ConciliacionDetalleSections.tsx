@@ -11,8 +11,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
-import {
-  calcularResumen,
+import type {
   calcularResumenPorEstatus,
 } from "@/features/embarques/services/reconciliacionCostos";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
@@ -57,32 +56,45 @@ export function HeaderPanel({
   );
 }
 
-type ResumenBase = ReturnType<typeof calcularResumen>;
 type ResumenEstatus = ReturnType<typeof calcularResumenPorEstatus>;
 
+function TilesMoneda({ t }: { t: TotalesMoneda[number] }) {
+  const nd = t.diferencia === null;
+  return (
+    <div className="grid grid-cols-2 gap-2" data-testid={`kpi-moneda-${t.moneda}`}>
+      <ResumenTile label={`Presupuesto ${t.moneda}`} value={formatCurrency(t.cotizado, t.moneda)} />
+      <ResumenTile
+        label={t.pendientes_tc > 0 ? "Real facturado (parcial)" : "Real facturado"}
+        value={formatCurrency(t.real, t.moneda)}
+      />
+      <ResumenTile
+        label="Variación comparable"
+        value={nd ? "N/D" : formatCurrency(t.diferencia ?? 0, t.moneda)}
+        tone={nd ? "muted" : toneFromNumber(t.diferencia ?? 0)}
+      />
+      <ResumenTile
+        label="Desviación %"
+        value={t.desviacion_pct === null ? "N/D" : formatPercent(t.desviacion_pct)}
+        tone={t.desviacion_pct === null ? "muted" : toneFromNumber(t.desviacion_pct)}
+      />
+    </div>
+  );
+}
+
 export function ResumenGrid({
-  resumen, resumenEstatus, huerfanas, monedaResumen,
+  totalesPorMoneda, resumenEstatus, huerfanas,
 }: {
-  resumen: ResumenBase;
+  totalesPorMoneda: TotalesMoneda;
   resumenEstatus: ResumenEstatus;
   huerfanas: number;
-  monedaResumen: string;
 }) {
   return (
     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <ResumenTile label="Cotizado" value={formatCurrency(resumen.total_cotizado, monedaResumen)} />
-        <ResumenTile label="Real facturado" value={formatCurrency(resumen.total_real, monedaResumen)} />
-        <ResumenTile
-          label="Diferencia"
-          value={formatCurrency(resumen.diferencia_total, monedaResumen)}
-          tone={toneFromNumber(resumen.diferencia_total)}
-        />
-        <ResumenTile
-          label="Desviación %"
-          value={formatPercent(resumen.desviacion_pct_total)}
-          tone={toneFromNumber(resumen.desviacion_pct_total)}
-        />
+      <div className="space-y-2">
+        {totalesPorMoneda.length === 0 && (
+          <ResumenTile label="Variación comparable" value="N/D" tone="muted" />
+        )}
+        {totalesPorMoneda.map((t) => <TilesMoneda key={t.moneda} t={t} />)}
       </div>
       <div className="rounded-md border p-3">
         <div className="text-2xs uppercase tracking-wide text-muted-foreground mb-2">
@@ -93,6 +105,7 @@ export function ResumenGrid({
           <EstatusCount label="Parcial" count={resumenEstatus.parcial} tone="warning" />
           <EstatusCount label="Conciliado" count={resumenEstatus.conciliado} tone="success" />
           <EstatusCount label="Excedente" count={resumenEstatus.excedente} tone="destructive" />
+          <EstatusCount label="Pendiente de TC" count={resumenEstatus.no_comparable} tone="warning" />
         </div>
         <div className="mt-2 pt-2 border-t text-label text-muted-foreground flex justify-between">
           <span>Partidas huérfanas</span>
@@ -104,9 +117,6 @@ export function ResumenGrid({
     </div>
   );
 }
-
-
-
 
 export function CuerpoTabla({
   isLoading, error, onRetry, filas, expandidos, onToggle, onVincular, totalesPorMoneda,
