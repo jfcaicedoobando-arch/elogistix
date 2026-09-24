@@ -1,6 +1,22 @@
 import { formatCurrency, fraccionAPorcentaje } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 
+/** Nota fiscal: no infiere tasa 0/exento/no objeto de un IVA cero. */
+function notaIvaCotizacion(o: {
+  hayDesglose: boolean; mostrarUSD: boolean; mostrarMXN: boolean;
+  sinIva: boolean; monedasConIva: string | null; tasaPct: string;
+}): string | null {
+  if (o.hayDesglose && !o.mostrarUSD && !o.mostrarMXN) return null;
+  if (o.sinIva) return "* Sin IVA trasladado en los conceptos mostrados.";
+  if (o.monedasConIva) {
+    return `* Los conceptos en ${o.monedasConIva} incluyen IVA según la tasa de cada concepto (general ${o.tasaPct}).`;
+  }
+  return `* Los conceptos en MXN incluyen IVA ${o.tasaPct}`;
+}
+
+function etiquetaTotalUSD(ivaUSD: number | undefined): string {
+  return ivaUSD != null && ivaUSD > 0 ? "Total USD (c/IVA):" : "Total USD:";
+}
 
 interface Props {
   totalUSD: number;
@@ -35,13 +51,7 @@ export default function ResumenTotalesCotizacion({
     : null;
   const sinIva = hayDesglose && !monedasConIva;
 
-  const nota = (() => {
-    if (sinIva) return "* Los conceptos de esta cotización están a tasa 0% o exentos de IVA.";
-    if (monedasConIva) {
-      return `* Los conceptos en ${monedasConIva} incluyen IVA según la tasa de cada concepto (general ${tasaPct}).`;
-    }
-    return `* Los conceptos en MXN incluyen IVA ${tasaPct}`;
-  })();
+  const nota = notaIvaCotizacion({ hayDesglose, mostrarUSD, mostrarMXN, sinIva, monedasConIva, tasaPct });
 
   return (
     <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
@@ -49,7 +59,7 @@ export default function ResumenTotalesCotizacion({
         <span className="text-base font-bold">
           {/* Bug 5: se etiqueta la base — este total sí incluye el IVA de los
               conceptos en USD que lo llevan; el margen se calcula sin IVA. */}
-          {ivaUSD != null && ivaUSD > 0 ? "Total USD (c/IVA):" : "Total USD:"} {formatCurrency(totalUSD, 'USD')}
+          {etiquetaTotalUSD(ivaUSD)} {formatCurrency(totalUSD, 'USD')}
         </span>
       )}
       {mostrarMXN && (
@@ -57,7 +67,7 @@ export default function ResumenTotalesCotizacion({
           {sinIva ? "Total MXN:" : "Total MXN (c/IVA):"} {formatCurrency(totalMXN, 'MXN')}
         </span>
       )}
-      <span className="text-body-sm text-muted-foreground">{nota}</span>
+      {nota && <span className="text-body-sm text-muted-foreground">{nota}</span>}
     </div>
   );
 }

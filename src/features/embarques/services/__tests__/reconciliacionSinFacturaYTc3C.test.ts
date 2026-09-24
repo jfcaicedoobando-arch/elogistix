@@ -104,8 +104,8 @@ describe("P1-C · CSV coincide con la pantalla", () => {
     );
     const csv = generarCsvReconciliacion3C(filas);
     expect(csv).not.toContain("-100.00");
-    expect(csv).toContain("Flete,USD,100,100,0,,Sin factura");
+    expect(csv).toContain("Flete,USD,100,100,0,,,Sin factura");
     expect(csv).toContain("THC,USD,200,200,220,10.00,");
-    expect(csv).toContain('"Maniobras, patio",MXN,1000,1000,0,,Pendiente de tipo de cambio');
+    expect(csv).toContain('"Maniobras, patio",MXN,1000,1000,0,,,Pendiente de tipo de cambio');
   });
 });

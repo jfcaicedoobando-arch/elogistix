@@ -11,7 +11,7 @@ export function estatusFila3C(f: FilaReconciliacion3C): string {
 
 export function generarCsvReconciliacion3C(filas: FilaReconciliacion3C[]): string {
   return toCsv(
-    ["Concepto", "Moneda", "Cotizado", "Refrescado", "Real", "Δ Cot vs Real (%)", "Clasificación"],
+    ["Concepto", "Moneda", "Cotizado", "Refrescado", "Real", "Δ Cot vs Real (%)", "Δ Refr vs Real (%)", "Clasificación"],
     filas.map((f) => [
       f.concepto,
       f.moneda,
@@ -19,6 +19,7 @@ export function generarCsvReconciliacion3C(filas: FilaReconciliacion3C[]): strin
       String(f.refrescado),
       String(f.real),
       f.sin_factura || f.pendiente_tc ? "" : f.delta_cot_vs_real.pct.toFixed(2),
+      f.sin_factura || f.pendiente_tc ? "" : f.delta_refr_vs_real.pct.toFixed(2),
       estatusFila3C(f),
     ]),
   );

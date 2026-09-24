@@ -161,7 +161,7 @@ export function construirResumen(
     total_refrescado: roundMoney(total_refrescado),
     total_real: roundMoney(total_real),
     delta_cot_vs_real: delta,
-    clasificacion: comparables === 0 && filas_pendientes > 0 ? "pendiente" : clasificarVarianza(delta.pct, umbrales),
+    clasificacion: comparables === 0 && filas_pendientes + filas_sin_tipo_cambio > 0 ? "pendiente" : clasificarVarianza(delta.pct, umbrales),
     filas_pendientes,
     moneda_total: "MXN",
     filas_sin_tipo_cambio,
