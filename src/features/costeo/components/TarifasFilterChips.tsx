@@ -15,6 +15,8 @@ interface Props {
   agenteId: string;
   tipoId: string;
   busqueda: string;
+  soloPorVencer?: boolean;
+  onClearPorVencer?: () => void;
   agentes: OpcionId[];
   tipos: OpcionId[];
   onClearEstado: () => void;
@@ -64,6 +66,9 @@ export function TarifasFilterChips(props: Props) {
   }
   if (props.estado !== "todas") {
     chips.push({ key: "es", label: estadoLabels[props.estado], remove: props.onClearEstado });
+  }
+  if (props.soloPorVencer && props.onClearPorVencer) {
+    chips.push({ key: "pv", label: "Por vencer ≤ 7 días", remove: props.onClearPorVencer });
   }
   if (props.agenteId !== "todos") {
     const a = props.agentes.find((x) => x.id === props.agenteId);

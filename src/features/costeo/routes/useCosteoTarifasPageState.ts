@@ -13,6 +13,9 @@ import {
 } from "./CosteoTarifas.helpers";
 import { todayLocalISO } from "@/lib/date/today";
 import { textoBusquedaPuertos } from "@/features/costeo/utils/puertoLabel";
+import {
+  coincideBusqueda, esBorradorAprobable, esTarifaPorVencerEn,
+} from "@/features/costeo/utils/vigenciaTarifa";
 
 export type ViewMode = "agrupada" | "tabla";
 
@@ -39,6 +42,8 @@ export function useCosteoTarifasPageState() {
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
   const [busqueda, setBusqueda] = useState("");
+  // P1-3: filtro explícito "Por vencer ≤ 7 días" (no es sinónimo de Vigentes).
+  const [soloPorVencer, setSoloPorVencer] = useState(false);
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
   const [editId, setEditId] = useState<string | undefined>();
@@ -64,18 +69,17 @@ export function useCosteoTarifasPageState() {
   const { eliminar } = useCosteoTarifaMutations();
 
   const tarifasFiltradas = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
+    const hoy = todayLocalISO();
     return tarifas.filter((t) => {
       if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) return false;
-      if (!q) return true;
-      // Etapa 2: también encuentra por país o UN/LOCODE de origen/destino.
-      const hay = `${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`.toLowerCase();
-      return hay.includes(q);
+      if (soloPorVencer && !esTarifaPorVencerEn(t, hoy)) return false;
+      // Etapa 2 + P2-6: país/UN/LOCODE; todos los términos, sin contigüidad ni acentos.
+      return coincideBusqueda(`${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`, busqueda);
     });
-  }, [tarifas, aprobacion, busqueda]);
+  }, [tarifas, aprobacion, busqueda, soloPorVencer]);
 
   const pendientesCount = useMemo(
-    () => tarifas.filter((t) => (t.estado_aprobacion ?? "vigente") === "borrador").length,
+    () => { const hoy = todayLocalISO(); return tarifas.filter((t) => esBorradorAprobable(t, hoy)).length; },
     [tarifas],
   );
 
@@ -84,11 +88,12 @@ export function useCosteoTarifasPageState() {
     estado !== DEFAULT_ESTADO ||
     agenteId !== "todos" ||
     tipoId !== "todos" ||
+    soloPorVencer ||
     busqueda.trim() !== "";
 
   const activeKpi: "pendientes" | "porVencer" | null =
     aprobacion === "borrador" ? "pendientes"
-      : (aprobacion === "vigente" && estado === "vigente") ? "porVencer"
+      : soloPorVencer ? "porVencer"
       : null;
 
   const clearAll = useCallback(() => {
@@ -97,6 +102,7 @@ export function useCosteoTarifasPageState() {
     setAgenteId("todos");
     setTipoId("todos");
     setBusqueda("");
+    setSoloPorVencer(false);
   }, []);
 
   const clearRutaUrl = useCallback(() => {
@@ -135,8 +141,9 @@ export function useCosteoTarifasPageState() {
 
   const onFilterPendientes = useCallback(() => setAprobacion("borrador"), []);
   const onFilterPorVencer = useCallback(() => {
-    setAprobacion("vigente");
-    setEstado("vigente");
+    setAprobacion(DEFAULT_APROB);
+    setEstado(DEFAULT_ESTADO);
+    setSoloPorVencer(true);
   }, []);
 
   return {
@@ -156,6 +163,7 @@ export function useCosteoTarifasPageState() {
     agenteId, setAgenteId,
     tipoId, setTipoId,
     busqueda, setBusqueda,
+    soloPorVencer, setSoloPorVencer,
     hasActiveFilters,
     clearAll,
     activeKpi,

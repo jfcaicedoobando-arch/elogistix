@@ -101,6 +101,8 @@ export default function CosteoTarifas() {
         agenteId={s.agenteId}
         tipoId={s.tipoId}
         busqueda={s.busqueda}
+        soloPorVencer={s.soloPorVencer}
+        onClearPorVencer={() => s.setSoloPorVencer(false)}
         agentes={agentes}
         tipos={tipos}
         onClearEstado={() => s.setEstado(DEFAULT_ESTADO)}
