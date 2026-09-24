@@ -7,6 +7,7 @@ import { TarifaEstadoUnificado } from "../TarifaEstadoUnificado";
 import { TarifaRowActions } from "../TarifaRowActions";
 import { TarifaQuickApprovalButtons } from "../TarifaQuickApprovalButtons";
 import { usd, formatVigencia, vigenciaHint } from "../../routes/CosteoTarifas.helpers";
+import { esTarifaElegible } from "../../utils/tarifasAgrupacion";
 import { todayLocalISO } from "@/lib/date/today";
 import type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
 
@@ -22,7 +23,7 @@ export function TotalTarifaCell({
   // Etapa 2: la clave usa IDs (puertos homónimos no deben compartir grupo).
   const grupoKey = `${t.ruta_id}|${t.tipo_contenedor_id}`;
   const mejor = mejorPorGrupo.get(grupoKey);
-  const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente";
+  const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente" && esTarifaElegible(t, todayLocalISO());
   const delta =
     mejor != null && !esMejor && t.total_comparable > mejor ? t.total_comparable - mejor : 0;
   return (
@@ -59,6 +60,7 @@ export function EstadoTarifaCell({ t }: { t: TarifaRow }) {
       estado={t.estado}
       estadoAprobacion={t.estado_aprobacion ?? "vigente"}
       vigenteHasta={t.vigente_hasta}
+      vigenteDesde={t.vigente_desde}
       motivo={t.motivo_rechazo}
     />
   );

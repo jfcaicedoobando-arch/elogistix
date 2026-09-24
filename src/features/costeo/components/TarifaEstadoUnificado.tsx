@@ -20,16 +20,24 @@ interface Props {
   estado: CosteoTarifaEstado;
   estadoAprobacion?: string;
   vigenteHasta: string;
+  vigenteDesde?: string;
   motivo?: string | null;
 }
 
 export function TarifaEstadoUnificado(props: Props) {
-  const { estadoCanonico, advertencia } = resolverEstadoVigenciaTarifa({
+  const { estadoCanonico, advertencia, programada } = resolverEstadoVigenciaTarifa({
     estadoAprobacion: props.estadoAprobacion,
     estado: props.estado,
     vigenteHasta: props.vigenteHasta,
+    vigenteDesde: props.vigenteDesde,
     hoy: todayLocalISO(),
   });
+
+  // P1-2: aprobada con inicio futuro → nunca "Vigente" a secas.
+  if (programada) {
+    // Tono neutro ("Borrador") para distinguirla visualmente de "Vigente".
+    return <StatusBadge domain="tarifa_maritima" status="Borrador" label={advertencia} title="Aprobada; aún no inicia su vigencia" />;
+  }
 
   const badge = <StatusBadge domain="tarifa_maritima" status={estadoCanonico} />;
 
