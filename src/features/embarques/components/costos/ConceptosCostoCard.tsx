@@ -10,6 +10,7 @@ import type { FilaReconciliacion } from "@/features/embarques/services/reconcili
 import type { ConceptoCostoRow } from "@/features/embarques/hooks";
 import { GrupoCostosProveedor } from "./GrupoCostosProveedor";
 import { ResumenAjusteBar } from "./ResumenAjusteBar";
+import { calcularSubtotales } from "./grupoCostosProveedorHelpers";
 
 const FOCUS_LABEL: Record<string, string> = {
   cxp: "facturas de proveedor por pagar",
