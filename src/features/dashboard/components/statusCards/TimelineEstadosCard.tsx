@@ -41,7 +41,12 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
               const count = conteoPorEstado[estado];
 
               return (
-                <div key={estado} className="flex flex-col items-center relative z-10 min-w-0 flex-1">
+                <div
+                  key={estado}
+                  className={`flex flex-col items-center relative z-10 min-w-0 flex-1${
+                    idx >= 4 && !mostrarTodos ? " hidden sm:flex" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => navigate(`/embarques?estado=${encodeURIComponent(estado)}`)}
