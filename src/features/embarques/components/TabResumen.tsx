@@ -25,6 +25,10 @@ export function TabResumen({ embarque }: Props) {
   // `tarifa_delta_jsonb` no es legible en la tabla `embarques`: viene de la
   // vista interna (staff). Sin esto la sección "Origen de costos" quedaba vacía.
   const { data: interno } = useEmbarqueInterno(embarque.id);
+  // LCL capturado a mano: no hay tarifa de catálogo que mostrar.
+  const esLclManual = embarque.tipo_servicio === "LCL" && Boolean(embarque.cotizacion_id)
+    && !(embarque as { tarifa_id_original?: string | null }).tarifa_id_original
+    && !(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada;
 
   return (
     <div className="space-y-6">
@@ -72,11 +76,9 @@ export function TabResumen({ embarque }: Props) {
         </div>
       )}
 
-      {embarque.tipo_servicio === "LCL" && embarque.cotizacion_id
-        && !(embarque as { tarifa_id_original?: string | null }).tarifa_id_original && (
+      {esLclManual && embarque.cotizacion_id ? (
         <OrigenLclManualCard cotizacionId={embarque.cotizacion_id} />
-      )}
-
+      ) : (
       <OrigenCostosSection
         tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}
         tarifaIdAplicada={(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada}
@@ -84,6 +86,7 @@ export function TabResumen({ embarque }: Props) {
         deltaJsonb={interno?.tarifa_delta_jsonb}
         revalidadaEn={(embarque as { tarifa_revalidada_en?: string | null }).tarifa_revalidada_en}
       />
+      )}
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard
