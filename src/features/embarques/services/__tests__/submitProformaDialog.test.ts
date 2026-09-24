@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { submitProformaDialog, type SubmitProformaParams } from "../submitProformaDialog";
+import { submitProformaDialog, ProformaValidationError, type SubmitProformaParams } from "../submitProformaDialog";
 
 const baseEmbarque = { id: "e-1", cliente_id: "cli-1", cliente_nombre: "ACME", expediente: "EXP-001", bl_master: null } as Parameters<typeof submitProformaDialog>[0]["embarque"];
 
@@ -8,7 +8,7 @@ const baseTotales = { subtotal_usd: 100, iva_usd: 16, total_usd: 116, subtotal_m
 function makeParams(overrides: Partial<SubmitProformaParams> = {}): SubmitProformaParams {
   return {
     embarque: baseEmbarque,
-    conceptosSeleccionados: [{ id: "cv-1", moneda: "USD", cantidad: 1, precio_unitario: 100, aplica_iva: true } as Parameters<typeof submitProformaDialog>[0]["conceptosSeleccionados"][0]],
+    conceptosSeleccionados: [{ id: "cv-1", moneda: "USD", cantidad: 1, precio_unitario: 100, aplica_iva: true, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 } as Parameters<typeof submitProformaDialog>[0]["conceptosSeleccionados"][0]],
     seleccionados: new Set(["cv-1"]),
     ivaPorConcepto: { "cv-1": true },
     notas: "",
@@ -46,6 +46,14 @@ describe("submitProformaDialog", () => {
     const llamada = vi.mocked(params.crearProformaMutateAsync).mock.calls[0][0];
     expect(llamada.notas).toContain("MSCU001");
     expect(llamada.notas).toContain("Nota extra");
+  });
+
+  it("rechaza la proforma si un concepto tiene IVA por definir", async () => {
+    const params = makeParams({
+      conceptosSeleccionados: [{ id: "cv-1", moneda: "USD", cantidad: 1, precio_unitario: 100, aplica_iva: true } as Parameters<typeof submitProformaDialog>[0]["conceptosSeleccionados"][0]],
+    });
+    await expect(submitProformaDialog(params)).rejects.toBeInstanceOf(ProformaValidationError);
+    expect(params.crearProformaMutateAsync).not.toHaveBeenCalled();
   });
 
   it("propaga el error si crearProformaMutateAsync rechaza", async () => {
