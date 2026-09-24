@@ -167,7 +167,6 @@ export function construirResumen(
     filas_sin_tipo_cambio,
   };
 }
-
 export class CotizacionYaAceptadaError extends Error {
   constructor(message = "La cotización ya fue aceptada; debe re-cotizarse para modificarla.") {
     super(message);
