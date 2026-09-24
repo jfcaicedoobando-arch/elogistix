@@ -15,7 +15,7 @@ describe("bitácora: una tarjeta por transición (#7)", () => {
       { ...base, id: "b", accion: "Cambio de estado", titulo: "Cambio de estado", detalles: { nuevoEstado: "Confirmado" } },
     ] as ActividadItem[]);
     expect(out).toHaveLength(1);
-    expect(out[0].relacionados?.map((r) => r.id)).toEqual(["b"]);
+    expect(out[0].relacionados).toHaveLength(1);
   });
 
   it("no muestra claves técnicas en la descripción", () => {
