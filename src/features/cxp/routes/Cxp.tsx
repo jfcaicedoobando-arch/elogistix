@@ -190,11 +190,8 @@ export default function Cxp() {
         isPendingEliminar={eliminar.isPending}
         onConfirmEliminar={async () => {
           if (!f.aEliminar) return;
-          try {
-            await eliminar.mutateAsync(f.aEliminar.id);
-            f.setAEliminar(null);
-          } catch { /* el hook notifica; el diálogo sigue abierto para reintentar */ }
-          f.setAEliminar(null);
+          // P2-5: cerrar sólo si se eliminó; si falla, el hook notifica y se reintenta.
+          try { await eliminar.mutateAsync(f.aEliminar.id); f.setAEliminar(null); } catch { /* notificado */ }
         }}
       />
     </PageContainer>
