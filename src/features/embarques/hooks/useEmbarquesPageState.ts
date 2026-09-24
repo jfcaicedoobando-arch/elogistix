@@ -29,8 +29,6 @@ import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarqu
 
 ;
 
-
-
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
@@ -113,7 +111,6 @@ export function useEmbarquesPageState() {
       filterEstado,
     });
   }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
-
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
