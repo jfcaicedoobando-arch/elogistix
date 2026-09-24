@@ -100,7 +100,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
           />
           {tieneTarifa && (
             <p className="text-body-sm text-muted-foreground mt-1">
-              Sugerida desde la tarifa. Puedes editarla si el agente confirma escalas.
+              Sugerida desde la tarifa. Si la editas, tu texto se conserva al cambiar puerto o quitar la tarifa.
             </p>
           )}
         </FormField>

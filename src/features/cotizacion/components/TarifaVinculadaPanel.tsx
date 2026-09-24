@@ -29,7 +29,6 @@ import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
 import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
-const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
 // ── Component ────────────────────────────────────────────────────────────────
 
