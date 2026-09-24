@@ -1,6 +1,18 @@
 import { formatCurrency, fraccionAPorcentaje } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 
+/** Nota fiscal: no infiere tasa 0/exento/no objeto de un IVA cero. */
+function notaIvaCotizacion(o: {
+  hayDesglose: boolean; mostrarUSD: boolean; mostrarMXN: boolean;
+  sinIva: boolean; monedasConIva: string | null; tasaPct: string;
+}): string | null {
+  if (o.hayDesglose && !o.mostrarUSD && !o.mostrarMXN) return null;
+  if (o.sinIva) return "* Sin IVA trasladado en los conceptos mostrados.";
+  if (o.monedasConIva) {
+    return `* Los conceptos en ${o.monedasConIva} incluyen IVA según la tasa de cada concepto (general ${o.tasaPct}).`;
+  }
+  return `* Los conceptos en MXN incluyen IVA ${o.tasaPct}`;
+}
 
 interface Props {
   totalUSD: number;
@@ -35,16 +47,7 @@ export default function ResumenTotalesCotizacion({
     : null;
   const sinIva = hayDesglose && !monedasConIva;
 
-  const sinConceptos = hayDesglose && !mostrarUSD && !mostrarMXN;
-  const nota = (() => {
-    if (sinConceptos) return null;
-    // No se infiere tratamiento fiscal (tasa 0, exento o no objeto) de un IVA cero.
-    if (sinIva) return "* Sin IVA trasladado en los conceptos mostrados.";
-    if (monedasConIva) {
-      return `* Los conceptos en ${monedasConIva} incluyen IVA según la tasa de cada concepto (general ${tasaPct}).`;
-    }
-    return `* Los conceptos en MXN incluyen IVA ${tasaPct}`;
-  })();
+  const nota = notaIvaCotizacion({ hayDesglose, mostrarUSD, mostrarMXN, sinIva, monedasConIva, tasaPct });
 
   return (
     <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">

@@ -57,7 +57,7 @@ describe("generarCsvReconciliacion3C", () => {
       sin_factura: false,
     };
     const csv = generarCsvReconciliacion3C([fila]);
-    expect(csv).toContain('"Flete, manejo ""especial""\nurgente",USD,100,110,120,20.00,alerta');
+    expect(csv).toContain('"Flete, manejo ""especial""\nurgente",USD,100,110,120,20.00,9.09,alerta');
   });
 });
 
