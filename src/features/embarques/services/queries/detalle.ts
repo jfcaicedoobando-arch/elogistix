@@ -18,15 +18,18 @@ type NotaEmbarqueRow = Tables<"notas_embarque">;
  * R221: un expediente en la papelera (`deleted_at`) no debe abrirse por enlace
  * directo. Antes devolvía la ficha completa (ELIMP00293).
  */
-export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
+export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow | null> {
+  // maybeSingle: un embarque inexistente/eliminado o de otra org no es un
+  // "error de carga" — devuelve null para que la pantalla muestre su estado
+  // de "no encontrado" en lugar del ErrorState genérico (Sentry 6W/6V).
   const { data, error } = await supabase
     .from("embarques")
     .select(EMBARQUE_DETAIL_COLUMNS)
     .eq("id", id)
     .is("deleted_at", null)
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  return data as EmbarqueRow;
+  return (data as EmbarqueRow | null) ?? null;
 }
 
 export interface EmbarqueFullData {

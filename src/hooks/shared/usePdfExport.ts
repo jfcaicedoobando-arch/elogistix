@@ -4,6 +4,10 @@
  */
 import { useCallback, useRef, useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import {
+  isDynamicImportError,
+  tryReloadForChunkError,
+} from "@/lib/errors/dynamicImportError";
 
 interface Options {
   /** Título del toast de éxito. Si se omite, no se muestra toast de éxito. */
