@@ -43,6 +43,17 @@ describe("usePdfExport", () => {
     expect(notifyError).toHaveBeenCalled();
   });
 
+  it("ante un chunk caducado recarga la página en lugar del toast genérico", async () => {
+    const { result } = renderHook(() => usePdfExport());
+    const chunkError = new TypeError("Failed to fetch dynamically imported module");
+    await act(async () => {
+      await result.current.run(() => Promise.reject(chunkError));
+    });
+    expect(tryReloadForChunkError).toHaveBeenCalledTimes(1);
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(result.current.isExporting).toBe(false);
+  });
+
   it("ignora llamadas concurrentes mientras ya está exportando", async () => {
     const fn = vi.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() => usePdfExport());
