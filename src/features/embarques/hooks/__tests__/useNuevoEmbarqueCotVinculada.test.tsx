@@ -82,14 +82,15 @@ describe("useNuevoEmbarqueCotVinculada", () => {
       setConceptosVenta: vi.fn(), setConceptosCosto: setCosto, proveedoresDb: [], onClearExpediente: vi.fn(),
     };
     const { result } = renderHook(() => useNuevoEmbarqueCotVinculada(props), { wrapper });
-    act(() => { result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
+    await act(async () => { result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
+    expect(fetchCostos).toHaveBeenCalledTimes(1);
     act(() => { result.current.marcarCostosEditados(); });
     await act(async () => { resolver([{ concepto: "Flete", costo_unitario: 1, cantidad: 1, costo_total: 1, moneda: "USD", proveedor: null }]); });
     expect(setCosto).toHaveBeenCalledTimes(1);
     expect(setCosto).toHaveBeenLastCalledWith([]);
   });
 
-  it("desvincular y restaurar invalidan una respuesta en vuelo", async () => {
+  it("restaurar antes de iniciar la importación la cancela sin pedir costos", async () => {
     let resolver: (value: unknown[]) => void = () => undefined;
     fetchCostos.mockReturnValue(new Promise((resolve) => { resolver = resolve; }));
     const setCosto = vi.fn();
@@ -101,7 +102,47 @@ describe("useNuevoEmbarqueCotVinculada", () => {
     act(() => { result.current.handleVincularCotizacion({ id: "cot-a" } as never); });
     act(() => { result.current.restaurarVinculacion({ id: "cot-draft" } as never); });
     await act(async () => { resolver([{ concepto: "Flete", costo_unitario: 1, cantidad: 1, costo_total: 1, moneda: "USD", proveedor: null }]); });
+    expect(fetchCostos).not.toHaveBeenCalled();
     expect(setCosto).toHaveBeenCalledTimes(1);
+    expect(setCosto).toHaveBeenLastCalledWith([]);
+    expect(result.current.costosBloqueados).toBe(false);
+  });
+
+  it("restaurar con la importación en vuelo descarta la respuesta tardía", async () => {
+    let resolver: (value: unknown[]) => void = () => undefined;
+    fetchCostos.mockReturnValue(new Promise((resolve) => { resolver = resolve; }));
+    const setCosto = vi.fn();
+    const props = {
+      form: { vincularCotizacion: vi.fn(), desvincularCotizacion: vi.fn() },
+      setConceptosVenta: vi.fn(), setConceptosCosto: setCosto, proveedoresDb: [], onClearExpediente: vi.fn(),
+    };
+    const { result } = renderHook(() => useNuevoEmbarqueCotVinculada(props), { wrapper });
+    await act(async () => { result.current.handleVincularCotizacion({ id: "cot-a" } as never); });
+    expect(fetchCostos).toHaveBeenCalledTimes(1);
+    act(() => { result.current.restaurarVinculacion({ id: "cot-draft" } as never); });
+    await act(async () => { resolver([{ concepto: "Flete", costo_unitario: 1, cantidad: 1, costo_total: 1, moneda: "USD", proveedor: null }]); });
+    expect(setCosto).toHaveBeenCalledTimes(1);
+    expect(setCosto).toHaveBeenLastCalledWith([]);
+    expect(result.current.costosBloqueados).toBe(false);
+  });
+
+  it("una edición tras seleccionar (antes del fetch) no se resetea", async () => {
+    let resolver: (value: unknown[]) => void = () => undefined;
+    fetchCostos.mockReturnValue(new Promise((resolve) => { resolver = resolve; }));
+    const setCosto = vi.fn();
+    const props = {
+      form: { vincularCotizacion: vi.fn(), desvincularCotizacion: vi.fn() },
+      setConceptosVenta: vi.fn(), setConceptosCosto: setCosto, proveedoresDb: [], onClearExpediente: vi.fn(),
+    };
+    const { result } = renderHook(() => useNuevoEmbarqueCotVinculada(props), { wrapper });
+    await act(async () => {
+      void result.current.handleVincularCotizacion({ id: "cot-x" } as never);
+      result.current.marcarCostosEditados();
+    });
+    await act(async () => { resolver([{ concepto: "Flete", costo_unitario: 1, cantidad: 1, costo_total: 1, moneda: "USD", proveedor: null }]); });
+    expect(setCosto).toHaveBeenCalledTimes(1);
+    expect(setCosto).toHaveBeenLastCalledWith([]);
+    expect(result.current.errorCostosVinculados).toBe(true);
   });
 
   // R201-COT-06 (remate)
@@ -142,7 +183,7 @@ describe("useNuevoEmbarqueCotVinculada", () => {
       setConceptosVenta: vi.fn(), setConceptosCosto: vi.fn(), proveedoresDb: [], onClearExpediente: vi.fn(),
     };
     const { result } = renderHook(() => useNuevoEmbarqueCotVinculada(props), { wrapper });
-    act(() => { result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
+    act(() => { void result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
     expect(result.current.costosBloqueados).toBe(true);
     await act(async () => { resolver([]); });
     expect(result.current.costosBloqueados).toBe(false);
@@ -156,7 +197,8 @@ describe("useNuevoEmbarqueCotVinculada", () => {
       setConceptosVenta: vi.fn(), setConceptosCosto: vi.fn(), proveedoresDb: [], onClearExpediente: vi.fn(),
     };
     const { result } = renderHook(() => useNuevoEmbarqueCotVinculada(props), { wrapper });
-    act(() => { result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
+    await act(async () => { result.current.handleVincularCotizacion({ id: "cot-lenta" } as never); });
+    expect(fetchCostos).toHaveBeenCalledTimes(1);
     act(() => { result.current.marcarCostosEditados(); });
     await act(async () => { resolver([{ concepto: "Flete", costo_unitario: 1, cantidad: 1, costo_total: 1, moneda: "USD", proveedor: null }]); });
     expect(result.current.errorCostosVinculados).toBe(true);

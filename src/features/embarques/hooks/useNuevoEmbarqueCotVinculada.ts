@@ -89,13 +89,25 @@ export function useNuevoEmbarqueCotVinculada({
 
   const handleVincularCotizacion = useCallback(
     async (original: CotizacionRow) => {
+      // Bloqueo, limpieza e invalidación SÍNCRONOS desde la selección: ningún
+      // await antes de esto, para que no haya ventana editable que luego se
+      // resetee ni un fetch tardío que pise la captura local.
       const token = ++vinculacionRef.current;
-      const cot = await enriquecerAgenteLcl(original);
+      costosEditadosRef.current = false;
+      setCargandoCostosVinculados(true);
+      setErrorCostosVinculados(false);
+      setConceptosCosto([]);
+      let cot = original;
+      try {
+        cot = await enriquecerAgenteLcl(original);
+      } catch {
+        // Sin agente inferido: se vincula tal cual (no se adivina identidad).
+      }
+      // Invalidada (desvincular/restaurar/otra selección): el nuevo dueño del
+      // token ya gestionó el estado de carga; no tocamos nada.
       if (vinculacionRef.current !== token) return;
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
-      costosEditadosRef.current = false;
-      setConceptosCosto([]);
       setConceptosVenta(mapConceptosVentaFromCotizacion(cot));
       void cargarCostosVinculados(cot, token);
     },
