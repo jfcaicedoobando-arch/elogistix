@@ -31,7 +31,7 @@ export function esCambioDeEstado(item: ActividadItem): boolean {
 /** Estado destino declarado por el registro (título, descripción o detalles). */
 export function estadoDestino(item: ActividadItem): string | null {
   const detalles = item.detalles ?? {};
-  const directo = detalles['estado_nuevo'] ?? detalles['estadoNuevo'] ?? detalles['estado'];
+  const directo = detalles['estado_nuevo'] ?? detalles['estadoNuevo'] ?? detalles['nuevoEstado'] ?? detalles['estado'];
   if (typeof directo === 'string' && directo.trim()) return directo.trim();
   const texto = textoCompleto(item);
   const match = /estado (?:cambiado )?a\s+"?([A-Za-zÁÉÍÓÚáéíóúñ ]+)"?/i.exec(texto);

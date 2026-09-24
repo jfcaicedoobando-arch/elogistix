@@ -77,9 +77,13 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
             </span>
           </AccordionTrigger>
           <AccordionContent className="pt-2">
-            <Label htmlFor="cot-notas">Notas</Label>
+            <Label htmlFor="cot-notas">Notas para el cliente (visibles en cotización/PDF)</Label>
+            <p id="cot-notas-ayuda" className="text-body-sm text-muted-foreground">
+              El cliente verá este texto en la cotización y en el PDF. No escribas datos internos.
+            </p>
             <Textarea
               id="cot-notas"
+              aria-describedby="cot-notas-ayuda"
               {...form.register("notas")}
               placeholder="Observaciones o condiciones…"
               rows={3}

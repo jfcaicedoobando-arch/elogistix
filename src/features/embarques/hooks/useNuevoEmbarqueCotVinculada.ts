@@ -9,6 +9,15 @@ import {
 import type { DesvincularOpcion } from "@/features/embarques/components/DesvincularCotizacionDialog";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { resolverAgenteDeConsolidador } from "@/features/embarques/services/agenteDeConsolidador";
+
+/** LCL sin agente: hereda el agente vinculado al consolidador, si es único. */
+export async function enriquecerAgenteLcl(cot: CotizacionRow): Promise<CotizacionRow> {
+  const consolidador = cot.lcl_consolidador_id;
+  if (cot.agente_id || !consolidador || cot.tipo_embarque !== "LCL") return cot;
+  const agente = await resolverAgenteDeConsolidador(consolidador);
+  return agente ? { ...cot, agente_id: agente.id } : cot;
+}
 
 interface Params {
   form: {
@@ -79,12 +88,14 @@ export function useNuevoEmbarqueCotVinculada({
   );
 
   const handleVincularCotizacion = useCallback(
-    (cot: CotizacionRow) => {
+    async (original: CotizacionRow) => {
+      const token = ++vinculacionRef.current;
+      const cot = await enriquecerAgenteLcl(original);
+      if (vinculacionRef.current !== token) return;
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
       costosEditadosRef.current = false;
       setConceptosCosto([]);
-      const token = ++vinculacionRef.current;
       setConceptosVenta(mapConceptosVentaFromCotizacion(cot));
       void cargarCostosVinculados(cot, token);
     },

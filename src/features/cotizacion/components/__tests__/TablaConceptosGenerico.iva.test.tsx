@@ -27,7 +27,7 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
     render(
       <TablaConceptosGenerico
         moneda="MXN"
-        conceptos={[concepto(false, 0)]}
+        conceptos={[concepto(false, 0, "tasa_0")]}
         subtotal={1000}
         iva={0}
         total={1000}

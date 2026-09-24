@@ -172,9 +172,12 @@ export function formatFechaDia(
 ): string {
   if (!valor) return fallback;
   if (valor instanceof Date) {
-    return Number.isNaN(valor.getTime())
-      ? fallback
-      : formatFechaDia(valor.toISOString(), fallback);
+    // Un `Date` que llega aquí es un día de calendario (Calendar/date-fns lo
+    // crea a medianoche LOCAL). Pasarlo por `toISOString()` y reformatear en
+    // TZ_MX restaba un día (01/10 → 30/09). Se toman las partes locales.
+    if (Number.isNaN(valor.getTime())) return fallback;
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${p(valor.getDate())}/${p(valor.getMonth() + 1)}/${valor.getFullYear()}`;
   }
   const iso = valor;
   // Node no lanza con fechas inválidas (devuelve "Invalid Date"): se valida antes.

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toTitleCase } from "@/lib/formatters";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
 import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
@@ -12,6 +11,8 @@ import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCar
 import { ComisionEmbarqueCard } from "./tabResumen/ComisionEmbarqueCard";
 import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
+import { CargaConsolidadaCard } from "./contenedores/CargaConsolidadaCard";
+import { OrigenLclManualCard } from "./OrigenLclManualCard";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -24,6 +25,10 @@ export function TabResumen({ embarque }: Props) {
   // `tarifa_delta_jsonb` no es legible en la tabla `embarques`: viene de la
   // vista interna (staff). Sin esto la sección "Origen de costos" quedaba vacía.
   const { data: interno } = useEmbarqueInterno(embarque.id);
+  // LCL capturado a mano: no hay tarifa de catálogo que mostrar.
+  const esLclManual = embarque.tipo_servicio === "LCL" && Boolean(embarque.cotizacion_id)
+    && !(embarque as { tarifa_id_original?: string | null }).tarifa_id_original
+    && !(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada;
 
   return (
     <div className="space-y-6">
@@ -59,10 +64,21 @@ export function TabResumen({ embarque }: Props) {
 
       {embarque.modo === "Marítimo" && (
         <div ref={registerRef("contenedores")} data-focus="contenedores">
-          <SeccionContenedoresReadonly embarqueId={embarque.id} />
+          {embarque.tipo_servicio === "LCL" ? (
+            <CargaConsolidadaCard
+              piezas={embarque.piezas}
+              pesoKg={embarque.peso_kg}
+              volumenM3={embarque.volumen_m3}
+            />
+          ) : (
+            <SeccionContenedoresReadonly embarqueId={embarque.id} />
+          )}
         </div>
       )}
 
+      {esLclManual && embarque.cotizacion_id ? (
+        <OrigenLclManualCard cotizacionId={embarque.cotizacion_id} />
+      ) : (
       <OrigenCostosSection
         tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}
         tarifaIdAplicada={(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada}
@@ -70,6 +86,7 @@ export function TabResumen({ embarque }: Props) {
         deltaJsonb={interno?.tarifa_delta_jsonb}
         revalidadaEn={(embarque as { tarifa_revalidada_en?: string | null }).tarifa_revalidada_en}
       />
+      )}
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard
@@ -84,7 +101,8 @@ export function TabResumen({ embarque }: Props) {
 
 /** Campo de "Partes" con estado vacío accionable hacia la edición del embarque. */
 function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: string | null; embarqueId: string }) {
-  const texto = toTitleCase(valor ?? "");
+  // Razón social / shipper: literal capturado (no se reescriben siglas).
+  const texto = (valor ?? "").trim();
   return (
     <div className="space-y-1">
       <div className="text-body-sm uppercase tracking-wide text-muted-foreground">{label}</div>

@@ -68,8 +68,18 @@ function sinUuid(texto: string): string {
  * Descripción legible: traduce la clave técnica y suprime el prefijo cuando
  * queda redundante ("Factura: Se generó un borrador de factura").
  */
+/** Claves camelCase heredadas ("TipoEvento: Otro · NuevoEstado: X"). */
+function sinClavesCamel(texto: string): string {
+  return texto
+    .replace(/\b(?:TipoEvento|tipoEvento):\s*Otro\s*(?:·\s*)?/g, "")
+    .replace(/\b(?:TipoEvento|tipoEvento):/g, "Tipo de evento:")
+    .replace(/\b(?:NuevoEstado|nuevoEstado):/g, "Estado nuevo:")
+    .replace(/\b(?:DescripcionEvento|descripcionEvento):/g, "Descripción:")
+    .trim();
+}
+
 export function descripcionHumana(texto: string | null | undefined): string {
-  const limpio = sinUuid((texto ?? "").trim());
+  const limpio = sinClavesCamel(sinUuid((texto ?? "").trim()));
   if (!limpio) return "";
 
   const m = PREFIJO_RE.exec(limpio);

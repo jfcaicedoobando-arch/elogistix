@@ -7,7 +7,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks";
 import { etiquetaTasaIva, tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import { importeEfectivoConcepto } from "@/lib/domain/cotizacionDetalle";
-import { etiquetaTratamientoFila } from "@/lib/financial/etiquetaTratamientoFila";
+import { etiquetaTratamientoFila, tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { Badge } from "@/components/ui/badge";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { ConceptosCotizacionMobile } from "./ConceptosCotizacionMobile";
@@ -28,6 +28,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
   // encabezado decía "MXN + IVA" y la columna "IVA (16%)" incluso cuando todos
   // los conceptos estaban a tasa 0% o exentos, contradiciendo el pie de página.
   const hayIva = tasasEfectivas(conceptos, tasaIva).length > 0 || (iva ?? 0) > 0;
+  const hayPendientes = conceptos.some(tratamientoIvaPendiente);
   const ivaLabel = `IVA (${etiquetaTasaIva(conceptos, tasaIva)})`;
 
   if (conceptos.length === 0) return null;
@@ -112,15 +113,26 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
           {iva !== undefined && hayIva && (
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
-          {iva !== undefined && !hayIva && (
-            <span className="text-body-sm text-muted-foreground">
-              Sin IVA: conceptos a tasa 0%, exentos o no objeto de impuesto (cada renglón indica su
-              tratamiento).
-            </span>
-          )}
+          {iva !== undefined && !hayIva && <AvisoSinIva pendientes={hayPendientes} />}
           <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AvisoSinIva({ pendientes }: { pendientes: boolean }) {
+  if (pendientes) {
+    return (
+      <span className="text-body-sm text-warning">
+        IVA calculado: 0. Hay conceptos con tratamiento "Por definir": no es un total fiscal definitivo.
+      </span>
+    );
+  }
+  return (
+    <span className="text-body-sm text-muted-foreground">
+      Sin IVA: conceptos a tasa 0%, exentos o no objeto de impuesto (cada renglón indica su
+      tratamiento).
+    </span>
   );
 }

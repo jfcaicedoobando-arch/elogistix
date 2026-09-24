@@ -36,7 +36,16 @@ export default function SeccionMercanciaCotizacionDetalle({ cotizacion }: Props)
       <CardContent className="space-y-4">
         <MercanciaInfoGrid cotizacion={cotizacion} />
 
-        {cotizacion.descripcion_adicional && (
+        {cotizacion.descripcion_mercancia?.trim()
+          && cotizacion.descripcion_mercancia !== cotizacion.sector_economico && (
+          <div className="text-body">
+            <span className="text-muted-foreground">Descripción de la mercancía</span>
+            <p className="font-medium whitespace-pre-wrap break-words">{cotizacion.descripcion_mercancia}</p>
+          </div>
+        )}
+
+        {cotizacion.descripcion_adicional
+          && cotizacion.descripcion_adicional !== cotizacion.descripcion_mercancia && (
           <div className="text-body">
             <span className="text-muted-foreground">Descripción Adicional</span>
             <p className="font-medium whitespace-pre-wrap">{cotizacion.descripcion_adicional}</p>

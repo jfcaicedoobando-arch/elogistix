@@ -10,6 +10,7 @@ import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorC
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
 import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
+import { tratamientoIvaPendiente, MSG_PROFORMA_IVA_PENDIENTE } from "@/lib/financial/etiquetaTratamientoFila";
 
 /**
  * Error de pre-validación esperada (ej. FCL sin peso/volumen).
@@ -75,6 +76,11 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
     crearProformaMutateAsync, fetchClienteParaPdfCached,
   } = params;
+
+  // Tratamiento de IVA desconocido ≠ no gravado: se exige decisión explícita.
+  if (conceptosSeleccionados.some(tratamientoIvaPendiente)) {
+    throw new ProformaValidationError(MSG_PROFORMA_IVA_PENDIENTE);
+  }
 
   // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.
   const validacion = validarContenedoresFCL(embarque, contenedores);

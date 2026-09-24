@@ -20,6 +20,8 @@ interface Props {
   origen: string;
   destino: string;
   numContenedores: number;
+  /** LCL: texto de carga consolidada; sustituye a "Contenedores/BLs". */
+  cargaLcl?: string;
   modo: string;
   incoterm: string;
   tipo: string;
@@ -34,7 +36,7 @@ const DATO = (label: string, valor: string) => ({ label, valor });
 
 export default function PasoResumenCotizacion({
   plUSD, plMXN, tieneCostosUSD, tieneCostosMXN,
-  nombreCliente, origen, destino, numContenedores,
+  nombreCliente, origen, destino, numContenedores, cargaLcl,
   modo, incoterm, tipo, totalUSD, totalMXN, esEdicion = false,
 }: Props) {
 
@@ -42,7 +44,11 @@ export default function PasoResumenCotizacion({
   const datos = [
     DATO("Cliente", nombreCliente || "—"),
     DATO("Ruta", `${origen || "—"} → ${destino || "—"}`),
-    ...(modo === "Marítimo" ? [DATO("Contenedores/BLs", String(numContenedores))] : []),
+    ...(modo === "Marítimo"
+      ? [cargaLcl !== undefined
+        ? DATO("Carga consolidada (LCL)", cargaLcl)
+        : DATO("Contenedores/BLs", String(numContenedores))]
+      : []),
     DATO("Modo", modo || "—"),
     DATO("Incoterm", incoterm || "—"),
     DATO("Tipo", tipo || "—"),

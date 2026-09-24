@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatDate, toTitleCase, nombreDesdeEmail, formatNumber } from "@/lib/formatters";
+import { formatDate, nombreDesdeEmail, formatNumber } from "@/lib/formatters";
 import { DetailRow } from "../DetailRow";
 import { FechaConOriginal } from "./FechaConOriginal";
 import { RutaMaritimo, RutaAereo, RutaTerrestre } from "./RutaPorModo";
@@ -45,7 +45,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
             </span>
           }
         />
-        <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia) || PLACEHOLDER} />
+        <DetailRow label="Mercancía" value={embarque.descripcion_mercancia?.trim() || PLACEHOLDER} />
         <DetailRow label="Peso" value={formatNumber(Number(embarque.peso_kg), { suffix: "kg" })} />
         <DetailRow label="Volumen" value={formatNumber(Number(embarque.volumen_m3), { decimals: 2, suffix: "m³" })} />
         <DetailRow label="Piezas" value={formatNumber(embarque.piezas)} />

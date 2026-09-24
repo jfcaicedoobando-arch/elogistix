@@ -6,6 +6,7 @@ export const cotizaciones = {
   costos: (id: string) => ['cotizacion_costos', id] as const,
   costosSnapshot: (id: string) => ['cotizacion_costos', id, 'snapshot'] as const,
   folio: (id: string) => ['cotizaciones', 'folio', id] as const,
+  origenLcl: (id: string) => ['cotizaciones', id, 'origen-lcl'] as const,
   /** Filtros precargados del buscador de tarifas de la cotización. */
   filtrosTarifa: (cotizacionId: string) =>
     ['cotizacion', cotizacionId, 'filtros-tarifa'] as const,
