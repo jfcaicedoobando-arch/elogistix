@@ -7,7 +7,9 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 
-const tryReloadForChunkError = vi.fn();
+const { tryReloadForChunkError } = vi.hoisted(() => ({
+  tryReloadForChunkError: vi.fn(),
+}));
 vi.mock("@/lib/errors/dynamicImportError", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@/lib/errors/dynamicImportError")>();
