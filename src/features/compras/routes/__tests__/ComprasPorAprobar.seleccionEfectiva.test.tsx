@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -92,9 +92,11 @@ describe("selección efectiva de compras por aprobar", () => {
     expect(screen.queryByLabelText("Justificación del gasto")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Aprobar 1" }));
 
-    expect(mocks.aprobar).toHaveBeenCalledWith(["b"], {
-      justificacion: "",
-      requierenJustificacion: new Set(),
+    await waitFor(() => {
+      expect(mocks.aprobar).toHaveBeenCalledWith(["b"], {
+        justificacion: "",
+        requierenJustificacion: new Set(),
+      });
     });
   });
 });

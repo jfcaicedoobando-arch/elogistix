@@ -1,10 +1,10 @@
 # Roadmap
 
 ## En curso — P1 selección efectiva en compras
-- [ ] Limpiar selección y diálogo al cambiar la búsqueda.
-- [ ] Unificar filas efectivas visibles, pendientes y sin bloqueo SoD para toda acción en lote.
-- [ ] Impedir apertura, validación o aprobación de lotes vacíos.
-- [ ] Cubrir búsqueda y cambio de elegibilidad/SoD con pruebas focales.
+- [x] Limpiar selección y diálogo al cambiar la búsqueda.
+- [x] Unificar filas efectivas visibles, pendientes y sin bloqueo SoD para toda acción en lote.
+- [x] Impedir apertura, validación o aprobación de lotes vacíos.
+- [x] Cubrir búsqueda y cambio de elegibilidad/SoD con pruebas focales.
 - [ ] Ejecutar test, typecheck y lint focal sin CI/RLS completos.
 
 ## En curso — pulido responsive/UI 691×763
