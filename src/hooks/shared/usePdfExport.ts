@@ -4,6 +4,10 @@
  */
 import { useCallback, useRef, useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import {
+  isDynamicImportError,
+  tryReloadForChunkError,
+} from "@/lib/errors/dynamicImportError";
 
 interface Options {
   /** Título del toast de éxito. Si se omite, no se muestra toast de éxito. */
@@ -29,6 +33,14 @@ export function usePdfExport(options: Options = {}) {
         await fn();
         if (successTitle) notifySuccess(undefined, { title: successTitle });
       } catch (error) {
+        // Sentry 6T: el generador de PDF se carga con import() dinámico; si la
+        // pestaña quedó abierta desde antes de un deploy, el chunk ya no existe
+        // y el toast genérico no ayuda. En ese caso se recarga sola (con
+        // guarda anti-bucles) en lugar de reportar "No se pudo generar el PDF".
+        if (isDynamicImportError(error)) {
+          tryReloadForChunkError();
+          return;
+        }
         notifyError(undefined, { title: errorTitle, error, method });
       } finally {
         lockRef.current = false;

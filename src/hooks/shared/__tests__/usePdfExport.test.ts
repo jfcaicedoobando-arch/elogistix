@@ -7,6 +7,15 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 
+const { tryReloadForChunkError } = vi.hoisted(() => ({
+  tryReloadForChunkError: vi.fn(),
+}));
+vi.mock("@/lib/errors/dynamicImportError", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/errors/dynamicImportError")>();
+  return { ...actual, tryReloadForChunkError };
+});
+
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 
 describe("usePdfExport", () => {
@@ -34,6 +43,17 @@ describe("usePdfExport", () => {
     });
     expect(result.current.isExporting).toBe(false);
     expect(notifyError).toHaveBeenCalled();
+  });
+
+  it("ante un chunk caducado recarga la página en lugar del toast genérico", async () => {
+    const { result } = renderHook(() => usePdfExport());
+    const chunkError = new TypeError("Failed to fetch dynamically imported module");
+    await act(async () => {
+      await result.current.run(() => Promise.reject(chunkError));
+    });
+    expect(tryReloadForChunkError).toHaveBeenCalledTimes(1);
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(result.current.isExporting).toBe(false);
   });
 
   it("ignora llamadas concurrentes mientras ya está exportando", async () => {

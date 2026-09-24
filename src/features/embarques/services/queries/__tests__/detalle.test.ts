@@ -19,13 +19,18 @@ beforeEach(() => {
 });
 
 describe("fetchEmbarqueById", () => {
-  it("queries embarques table with .single() using the given id", async () => {
+  it("queries embarques table with .maybeSingle() using the given id", async () => {
     const row = { id: UUID, expediente: "EXP-001" };
     mock.setTableResult("embarques", { data: row, error: null });
     const result = await fetchEmbarqueById(UUID);
     expect(result).toMatchObject({ id: UUID });
     const call = mock.tableCalls.find((c) => c.table === "embarques");
     expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq"]));
+  });
+
+  it("devuelve null (sin throw) cuando el embarque no existe o está eliminado", async () => {
+    mock.setTableResult("embarques", { data: null, error: null });
+    await expect(fetchEmbarqueById(UUID)).resolves.toBeNull();
   });
 
   it("throws when fetchEmbarqueById supabase errors", async () => {
