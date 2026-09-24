@@ -10,6 +10,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { buildTarifasColumns, type TarifaRow } from "./_sections/tarifasColumns";
+import { esTarifaElegible } from "@/features/costeo/utils/tarifasAgrupacion";
 import { todayLocalISO } from "@/lib/date/today";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
@@ -30,8 +31,7 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
     const hoy = todayLocalISO();
     const map = new Map<string, number>();
     for (const t of tarifas) {
-      const ap = t.estado_aprobacion ?? "vigente";
-      if (ap !== "vigente" || t.vigente_hasta < hoy || t.estado === "reemplazada") continue;
+      if (!esTarifaElegible(t, hoy)) continue;
       const k = `${t.ruta_id}|${t.tipo_contenedor_id}`;
       const prev = map.get(k);
       if (prev == null || t.total_comparable < prev) map.set(k, t.total_comparable);

@@ -115,7 +115,7 @@ export function TarifaFila({
       </div>
       <div className="max-md:col-span-2"><VigenciaBar desde={t.vigente_desde} hasta={t.vigente_hasta} /></div>
       <div className="flex justify-start max-md:order-3">
-        <TarifaEstadoUnificado estado={t.estado} estadoAprobacion={ap} vigenteHasta={t.vigente_hasta} motivo={t.motivo_rechazo} />
+        <TarifaEstadoUnificado estado={t.estado} estadoAprobacion={ap} vigenteHasta={t.vigente_hasta} vigenteDesde={t.vigente_desde} motivo={t.motivo_rechazo} />
       </div>
       <div className="text-right tabular-nums max-md:row-start-1 max-md:col-start-2">
         <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>

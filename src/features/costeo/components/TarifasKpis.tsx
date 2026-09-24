@@ -5,9 +5,11 @@
 import { CheckCircle2, Clock, AlertTriangle, Route } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
-import { diasHastaFecha, parseDateOnlyLocal } from "@/lib/date/dateOnly";
+import { todayLocalISO } from "@/lib/date/today";
+import { calcularKpisTarifas } from "@/features/costeo/utils/vigenciaTarifa";
 
 interface TarifaLike {
+  vigente_desde?: string;
   vigente_hasta: string;
   estado: string;
   estado_aprobacion?: string;
@@ -33,50 +35,41 @@ const activeRing: Record<KpiVariant, string> = {
 };
 
 export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, activeKpi }: Props) {
-  const today = new Date().setHours(0, 0, 0, 0);
-  let vigentes = 0;
-  let porVencer = 0;
-  let pendientes = 0;
-  const rutas = new Set<string>();
-
-  for (const t of tarifas) {
-    const ap = t.estado_aprobacion ?? "vigente";
-    if (ap === "borrador") pendientes++;
-    // B-089: vigente_hasta es date-only → medianoche LOCAL (no UTC).
-    const hasta = parseDateOnlyLocal(t.vigente_hasta).getTime();
-    if (ap === "vigente" && hasta >= today && t.estado !== "reemplazada") {
-      vigentes++;
-      if (diasHastaFecha(t.vigente_hasta) <= 7) porVencer++;
-    }
-    if (t.ruta_id) rutas.add(t.ruta_id);
-  }
+  // P1-1/P2-4/P2-5: misma regla que ranking y filtro (utils/vigenciaTarifa).
+  const k = calcularKpisTarifas(tarifas, todayLocalISO());
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 short:gap-2 [&>div>div]:short:py-2.5">
       <KpiCard
         label="Vigentes hoy"
-        value={vigentes}
+        value={k.vigentes}
         icon={CheckCircle2}
         variant="success"
         className={cn(activeKpi === "vigentes" && activeRing.success)}
       />
       <KpiCard
         label="Por vencer ≤ 7 días"
-        value={porVencer}
+        value={k.porVencer}
         icon={Clock}
         variant="warning"
-        onClick={porVencer > 0 ? onFilterPorVencer : undefined}
+        onClick={k.porVencer > 0 ? onFilterPorVencer : undefined}
         className={cn(activeKpi === "porVencer" && activeRing.warning)}
       />
       <KpiCard
         label="Pendientes aprobación"
-        value={pendientes}
+        value={k.pendientes}
+        hint={k.borradoresVencidos > 0 ? `+${k.borradoresVencidos} borradores vencidos (requieren renovar vigencia)` : undefined}
         icon={AlertTriangle}
         variant="info"
-        onClick={pendientes > 0 ? onFilterPendientes : undefined}
+        onClick={k.pendientes + k.borradoresVencidos > 0 ? onFilterPendientes : undefined}
         className={cn(activeKpi === "pendientes" && activeRing.info)}
       />
-      <KpiCard label="Rutas cubiertas" value={rutas.size} icon={Route} />
+      <KpiCard
+        label="Rutas cubiertas"
+        value={k.rutasCubiertas}
+        icon={Route}
+        hint="Rutas con al menos una tarifa utilizable hoy (según filtros de agente/contenedor)"
+      />
     </div>
   );
 }

@@ -7,14 +7,14 @@
  *   una tarifa es elegible para "mejor/promedio/Δ máx" si
  *     · (estado_aprobacion ?? "vigente") === "vigente"  (aprobadas; las de
  *       antes del módulo de aprobación no tienen la columna poblada),
- *     · vigente_hasta >= hoy (ISO local), y
+ *     · vigente_desde <= hoy <= vigente_hasta (ISO local; futuras excluidas), y
  *     · estado !== "reemplazada".
  *   "Mejor" = la elegible con menor `total_comparable` (flete_base +
  *   recargos marcados `incluido_en_total`, ver `services/tarifas/queries.ts`).
  * Si en el futuro el comparador de cotización adopta esta regla, promover
  * este archivo a `domain/` y consumirlo desde ambos lados.
  */
-import { vigenciaHint } from "../routes/CosteoTarifas.helpers";
+import { esTarifaPorVencerEn, esTarifaUsableEn } from "./vigenciaTarifa";
 import {
   contextoRuta, destinoDe, origenDe, rutaCorta, type FilaConPuertos,
 } from "./puertoLabel";
@@ -32,6 +32,7 @@ export interface FilaAgrupable extends FilaConPuertos {
   tipo_contenedor_nombre: string;
   agente_nombre?: string;
   total_comparable: number;
+  vigente_desde: string;
   vigente_hasta: string;
   estado?: string;
   estado_aprobacion?: string;
@@ -52,10 +53,11 @@ export interface GrupoTarifas<T extends FilaAgrupable> {
   elegiblesCount: number;
 }
 
-export function esTarifaElegible(r: Pick<FilaAgrupable, "estado_aprobacion" | "vigente_hasta" | "estado">, today: string): boolean {
-  return (r.estado_aprobacion ?? "vigente") === "vigente"
-    && r.vigente_hasta >= today
-    && r.estado !== "reemplazada";
+export function esTarifaElegible(
+  r: Pick<FilaAgrupable, "estado_aprobacion" | "vigente_desde" | "vigente_hasta" | "estado">,
+  today: string,
+): boolean {
+  return esTarifaUsableEn(r, today);
 }
 
 export function buildGruposTarifas<T extends FilaAgrupable>(tarifas: T[], today: string): GrupoTarifas<T>[] {
@@ -81,7 +83,7 @@ export function buildGruposTarifas<T extends FilaAgrupable>(tarifas: T[], today:
     const elegibles = g.rows.filter((r) => esTarifaElegible(r, today));
     g.mejor = elegibles[0] ?? null;
     g.agentes = new Set(g.rows.map((r) => r.agente_nombre)).size;
-    g.porVencer = elegibles.filter((r) => vigenciaHint(r.vigente_hasta).tone === "warn").length;
+    g.porVencer = elegibles.filter((r) => esTarifaPorVencerEn(r, today)).length;
     g.elegiblesCount = elegibles.length;
     if (elegibles.length >= 2) {
       const suma = elegibles.reduce((acc, r) => acc + r.total_comparable, 0);
