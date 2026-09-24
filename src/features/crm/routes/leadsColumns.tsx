@@ -24,7 +24,9 @@ export function makeLeadsColumns(
       meta: { width: COL_W.micro },
       cell: ({ row }) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <Checkbox checked={selected.has(row.original.id)} onCheckedChange={() => toggle(row.original.id)} />
+          <Checkbox checked={selected.has(row.original.id)} onCheckedChange={() => toggle(row.original.id)}
+            aria-label={`Seleccionar lead ${row.original.empresa}`}
+          />
         </div>
       ),
     };

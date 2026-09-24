@@ -33,7 +33,7 @@ import { useLeadsExport } from "./useLeadsExport";
 import LeadsFiltrosPrimarios from "./LeadsFiltrosPrimarios";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LeadMobileCard } from "@/features/crm/components/LeadMobileCard";
 import { queryKeys } from "@/lib/query";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -158,14 +158,12 @@ export default function Leads() {
             controlledSort={list.controlledSort}
             onSortChange={(key, dir) => list.setSort(key, dir)}
             mobileCard={(l) => (
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-body truncate">{toTitleCase(l.empresa)}</div>
-                  <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(l.contacto ?? "") || l.email || "—"}</div>
-                  <div className="text-label text-muted-foreground mt-0.5">{l.fuente}{typeof l.score === "number" ? ` · score ${l.score}` : ""}</div>
-                </div>
-                <StatusBadge domain="lead" status={l.estado} />
-              </div>
+              <LeadMobileCard
+                lead={l}
+                puedeSeleccionar={canGestionarLeadsEnLote}
+                seleccionado={selected.has(l.id)}
+                onToggle={toggle}
+              />
             )}
             pagination={{
               ...list.pagination,
