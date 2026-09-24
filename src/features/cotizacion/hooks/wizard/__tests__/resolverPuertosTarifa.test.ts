@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 import { errorCoherenciaEstricta, MSG_TARIFA_NO_VERIFICABLE } from "../resolverPuertosTarifa";
-import { MSG_ORIGEN_INCOHERENTE } from "../coherenciaRutaTarifa";
+import { MSG_ORIGEN_INCOHERENTE } from "@/features/cotizacion/domain/coherenciaRutaTarifa";
 import { queryKeys } from "@/lib/query";
 
 const qc = () => new QueryClient({ defaultOptions: { queries: { retry: false } } });
