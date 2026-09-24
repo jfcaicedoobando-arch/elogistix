@@ -22,6 +22,7 @@ export function GrupoCostosMobileRows({
         const pago = peorEstadoPago(fila.facturas);
         const ajuste = describirAjuste(fila.cotizado, fila.real_facturado, fila.moneda, {
           tieneFactura: fila.facturas.length > 0,
+          pendienteTc: (fila.vinculos_excluidos ?? 0) > 0,
         });
         const contenedor = renderContenedor && filaContenedorId
           ? renderContenedor(filaContenedorId(fila))

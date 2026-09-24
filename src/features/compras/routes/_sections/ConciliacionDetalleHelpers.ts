@@ -12,6 +12,7 @@ export const ESTATUS_META: Record<
   parcial:    { label: "Parcial",    variant: "secondary",   dot: "bg-warning" },
   conciliado: { label: "Conciliado", variant: "default",     dot: "bg-success" },
   excedente:  { label: "Excedente",  variant: "destructive", dot: "bg-destructive" },
+  no_comparable: { label: "Pendiente de tipo de cambio", variant: "outline", dot: "bg-warning" },
 };
 
 export type ResumenTileTone = "destructive" | "success" | "muted" | "default";

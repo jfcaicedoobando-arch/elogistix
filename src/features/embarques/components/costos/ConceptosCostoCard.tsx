@@ -86,16 +86,8 @@ export function ConceptosCostoCard({
   // guardamos `cotizadoFacturable` (sólo filas con factura) para que el
   // % de "Ahorro/Sobrecosto" no se infle con costos por devengar.
   const totales = useMemo(() => {
-    const map = new Map<string, { moneda: string; cotizado: number; facturado: number; cotizadoFacturable: number; sinFactura: number }>();
-    for (const f of filasFiltradas) {
-      const cur = map.get(f.moneda) ?? { moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0, sinFactura: 0 };
-      cur.cotizado += f.cotizado;
-      cur.facturado += f.real_facturado;
-      if (f.facturas.length > 0) cur.cotizadoFacturable += f.cotizado;
-      else cur.sinFactura += 1;
-      map.set(f.moneda, cur);
-    }
-    return Array.from(map.values());
+    // P1-1: misma fuente que el grupo; excluye filas pendientes de TC del ajuste.
+    return calcularSubtotales(filasFiltradas);
   }, [filasFiltradas]);
 
   // MNY-NEW-03: vínculos no comparables (moneda distinta sin T.C.).

@@ -14,20 +14,34 @@ export type SubtotalPorMoneda = {
   facturado: number;
   /** B-057: cotizado sólo de filas con factura ligada — base para % de ajuste. */
   cotizadoFacturable: number;
+  /** P1-1: facturado sólo de filas comparables (con factura y sin vínculos sin TC). */
+  facturadoFacturable: number;
   /** B-057: cuántas filas aún no tienen factura del proveedor. */
   sinFactura: number;
+  /** P1-1: filas con facturas pendientes de tipo de cambio (fuera del ajuste). */
+  noComparables: number;
 };
+
+/** Fila con factura ligada cuyo ajuste es definitivo (sin vínculos sin TC). */
+export function esFilaComparable(f: FilaReconciliacion): boolean {
+  return f.facturas.length > 0 && (f.vinculos_excluidos ?? 0) === 0;
+}
 
 export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMoneda[] {
   const map = new Map<string, SubtotalPorMoneda>();
   for (const f of filas) {
     const cur = map.get(f.moneda) ?? {
-      moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0, sinFactura: 0,
+      moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0,
+      facturadoFacturable: 0, sinFactura: 0, noComparables: 0,
     };
     cur.cotizado += f.cotizado;
     cur.facturado += f.real_facturado;
-    if (f.facturas.length > 0) cur.cotizadoFacturable += f.cotizado;
-    else cur.sinFactura += 1;
+    if (f.facturas.length === 0) cur.sinFactura += 1;
+    else if (!esFilaComparable(f)) cur.noComparables += 1;
+    else {
+      cur.cotizadoFacturable += f.cotizado;
+      cur.facturadoFacturable += f.real_facturado;
+    }
     map.set(f.moneda, cur);
   }
   return Array.from(map.values());
@@ -41,6 +55,7 @@ export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMone
 export function ordenarFilasPorAjuste(filas: FilaReconciliacion[]): FilaReconciliacion[] {
   const bucket = (f: FilaReconciliacion): number => {
     if (f.facturas.length === 0) return 1;             // sin factura
+    if (!esFilaComparable(f)) return 1;                // pendiente de TC
     if (Math.abs(f.diferencia) < 0.01) return 2;       // sin ajuste
     return 0;                                          // con ajuste
   };
@@ -56,6 +71,7 @@ export function estatusBadgeClass(estatus: FilaReconciliacion["estatus_renglon"]
     case "conciliado": return "bg-success/15 text-success border-success/30";
     case "parcial": return "bg-warning/15 text-warning border-warning/30";
     case "excedente": return "bg-destructive/15 text-destructive border-destructive/30";
+    case "no_comparable": return "bg-warning/10 text-warning border-warning/30";
     case "sin_match":
     default: return "bg-muted text-muted-foreground border-border";
   }
@@ -66,6 +82,7 @@ export function estatusLabel(estatus: FilaReconciliacion["estatus_renglon"]): st
     case "conciliado": return "Conciliado";
     case "parcial": return "Parcial";
     case "excedente": return "Excedente";
+    case "no_comparable": return "Pendiente de tipo de cambio";
     case "sin_match":
     default: return "Sin factura";
   }

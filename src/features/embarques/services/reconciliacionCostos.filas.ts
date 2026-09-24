@@ -118,7 +118,11 @@ export function buildFilasReconciliacion(
       diferencia,
       desviacion_pct: calcularDesviacionPct(cotizado, real),
       estado_liquidacion: c.estado_liquidacion,
-      estatus_renglon: clasificarRenglon(cotizado, real, comparables.length > 0),
+      // Con vínculos sin TC el facturado es parcial: nunca se presenta como
+      // ahorro/sobrecosto definitivo.
+      estatus_renglon: excluidas > 0
+        ? "no_comparable"
+        : clasificarRenglon(cotizado, real, comparables.length > 0),
       facturas: facs,
       vinculos_excluidos: excluidas,
     };
