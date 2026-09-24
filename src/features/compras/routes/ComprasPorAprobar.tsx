@@ -11,7 +11,6 @@ import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useAprobarFacturasLote, useVerificarSatLote } from "@/features/cxp/hooks";
-import { esValidableEnSat } from "@/features/cxp";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { ComprasPorAprobarKpis } from "./ComprasPorAprobar.kpis";
 import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
@@ -20,6 +19,7 @@ import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ComprasPorAprobarMobileRow } from "./ComprasPorAprobar.mobileCard";
+import { useSeleccionEfectiva } from "./ComprasPorAprobar.seleccion";
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
 type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
 
@@ -52,29 +52,16 @@ export default function ComprasPorAprobar() {
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
 
-  const seleccionadas = useMemo(() => rows.filter((r) => selected.has(r.id)), [rows, selected]);
-  const totalSelMxn = sumaMxn(seleccionadas);
-  const totalSelUsd = sumaUsd(seleccionadas);
-
-  // Sólo los CFDI (proveedor nacional, con UUID) se consultan en el SAT.
-  // Las facturas extranjeras o de captura manual no dependen del SAT y se
-  // aprueban normalmente: ver `requiereValidacionSat`.
-  const validablesSat = useMemo(
-    () => seleccionadas.filter((f) => esValidableEnSat(f)).map((f) => f.id),
-    [seleccionadas],
-  );
-
-  // FP-000221: sin embarque ligado la base exige justificación escrita.
-  const idsSinEmbarque = useMemo(
-    () => new Set(seleccionadas.filter((f) => !f.embarque_id).map((f) => f.id)),
-    [seleccionadas],
-  );
+  const seleccion = useSeleccionEfectiva(rows, selected, bloqueadosSod);
 
   const handleAprobarLote = async () => {
-    const idsAprobables = Array.from(selected).filter((id) => !bloqueadosSod.has(id));
-    await aprobar(idsAprobables, {
+    if (seleccion.ids.length === 0) {
+      setConfirmOpen(false);
+      return;
+    }
+    await aprobar(seleccion.ids, {
       justificacion: justificacionLote,
-      requierenJustificacion: idsSinEmbarque,
+      requierenJustificacion: seleccion.idsSinEmbarque,
     });
     setSelected(new Set());
     setJustificacionLote("");
@@ -130,21 +117,30 @@ export default function ComprasPorAprobar() {
           </Tabs>
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={(value) => {
+              setSearch(value);
+              setSelected(new Set());
+              setJustificacionLote("");
+              setConfirmOpen(false);
+            }}
             placeholder="Buscar por folio, folio proveedor o proveedor…"
           />
           {seleccionEnLote && (
             <ComprasPorAprobarBulkBar
-              selectedCount={selected.size}
-              totalSelMxn={totalSelMxn}
-              totalSelUsd={totalSelUsd}
+              selectedCount={seleccion.filas.length}
+              totalSelMxn={seleccion.totalMxn}
+              totalSelUsd={seleccion.totalUsd}
               isRunning={isRunning}
               progreso={progreso}
-              onOpenConfirm={() => setConfirmOpen(true)}
-              validablesCount={validablesSat.length}
+              onOpenConfirm={() => {
+                if (seleccion.filas.length > 0) setConfirmOpen(true);
+              }}
+              validablesCount={seleccion.validablesSat.length}
               satRunning={satRunning}
               satProgreso={satProgreso}
-              onValidarSat={() => void verificarSat(validablesSat)}
+              onValidarSat={() => {
+                if (seleccion.validablesSat.length > 0) void verificarSat(seleccion.validablesSat);
+              }}
             />
           )}
         </CardContent>
@@ -183,11 +179,11 @@ export default function ComprasPorAprobar() {
       <ConfirmarAprobacionLoteDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        cantidad={selected.size}
-        totalMxn={totalSelMxn}
-        totalUsd={totalSelUsd}
+        cantidad={seleccion.filas.length}
+        totalMxn={seleccion.totalMxn}
+        totalUsd={seleccion.totalUsd}
         isRunning={isRunning}
-        requierenJustificacion={idsSinEmbarque.size}
+        requierenJustificacion={seleccion.idsSinEmbarque.size}
         justificacion={justificacionLote}
         onJustificacionChange={setJustificacionLote}
         onConfirm={() => void handleAprobarLote()}
