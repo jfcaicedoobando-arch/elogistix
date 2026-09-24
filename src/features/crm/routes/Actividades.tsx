@@ -89,7 +89,8 @@ export default function Actividades() {
     }
   }, [vencidasOnly]);
 
-  const items = list.rows;
+  // P2-4: nunca exponer filas de la consulta anterior bajo filtros nuevos.
+  const items = list.isStaleView ? [] : list.rows;
   const columns = canCrearActividad
     ? [...baseActividadColumns, actividadActionColumn((a) => canGestionarActividad(a.responsable_id))]
     : baseActividadColumns;
@@ -107,7 +108,7 @@ export default function Actividades() {
         description="Registro de llamadas, reuniones y tareas de seguimiento CRM"
       />
       <CrmSubheader
-        context={pluralizar(list.count, "actividad", { plural: "actividades" })}
+        context={list.isStaleView ? "Actualizando…" : pluralizar(list.count, "actividad", { plural: "actividades" })}
         actions={vencidasOnly ? (
           <Button variant="outline" size="sm" onClick={limpiarFiltro} className="h-7">
             <X className="h-3 w-3 mr-1" /> Filtro: Vencidas
@@ -166,7 +167,7 @@ export default function Actividades() {
           <ResponsiveDataTable
             columns={columns}
             data={items}
-            isLoading={list.isLoading}
+            isLoading={list.isLoading || list.isStaleView}
             emptyMessage="Sin actividades"
             rowKey={(a) => a.id}
             density={TABLE_DENSITY.listado}

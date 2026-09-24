@@ -13,7 +13,6 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
-import { toTitleCase } from "@/lib/formatters";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
@@ -71,7 +70,8 @@ export default function Leads() {
     },
   });
 
-  const leads = list.rows;
+  // P2-4: nunca exponer ni permitir operar filas de la consulta anterior.
+  const leads = list.isStaleView ? [] : list.rows;
 
   const { selected, toggle, toggleAll, clearSel } = useLeadsSelection(leads, {
     search: list.search, estado: list.filters.estado, fuente: list.filters.fuente,
@@ -110,7 +110,7 @@ export default function Leads() {
       {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
           (count exact de listLeads) y se etiqueta cuando hay filtros. */}
       <CrmSubheader
-        context={copiaContadorLeads(list.count, Boolean(list.search) || list.activeCount > 0)}
+        context={list.isStaleView ? "Actualizando…" : copiaContadorLeads(list.count, Boolean(list.search) || list.activeCount > 0)}
 
       />
 
@@ -149,7 +149,7 @@ export default function Leads() {
           <ResponsiveDataTable
             columns={columns}
             data={leads}
-            isLoading={list.isLoading}
+            isLoading={list.isLoading || list.isStaleView}
             emptyMessage={list.search ? "No se encontraron leads" : "No hay leads registrados"}
             getRowHref={(l) => `/crm/leads/${l.id}`}
             rowKey={(l) => l.id}
