@@ -12,6 +12,7 @@ function fila(overrides: Partial<FilaAgrupable> = {}): FilaAgrupable {
     tipo_contenedor_nombre: "40HC",
     agente_nombre: "Agente A",
     total_comparable: 1000,
+    vigente_desde: "2026-01-01",
     vigente_hasta: "2026-12-31",
     estado: "activa",
     estado_aprobacion: "vigente",
@@ -140,5 +141,21 @@ describe("buildGruposTarifas · identidad de puertos (Etapa 2)", () => {
     expect(grupos).toHaveLength(1);
     expect(grupos[0].agentes).toBe(2);
     expect(grupos[0].rutaLabel).toBe("Shanghai → Manzanillo");
+  });
+});
+
+describe("P1-2 · tarifas con inicio futuro", () => {
+  const HOY = "2026-09-24";
+  it("grupo con sólo tarifa futura → mejor null", () => {
+    const [g] = buildGruposTarifas([fila({ vigente_desde: "2026-10-15", vigente_hasta: "2026-11-15", total_comparable: 2750 })], HOY);
+    expect(g.mejor).toBeNull();
+    expect(g.elegiblesCount).toBe(0);
+  });
+  it("futura más barata + actual → la actual es la mejor", () => {
+    const futura = fila({ vigente_desde: "2026-10-15", vigente_hasta: "2026-11-15", total_comparable: 2750 });
+    const actual = fila({ vigente_desde: "2026-09-24", vigente_hasta: "2026-10-24", total_comparable: 2850 });
+    const [g] = buildGruposTarifas([futura, actual], HOY);
+    expect(g.mejor).toBe(actual);
+    expect(g.promedio).toBeNull();
   });
 });
