@@ -36,3 +36,15 @@ export function etiquetaTratamientoFila(fila: FilaTratamiento): string {
   if (Math.abs(tasa - TASA_IVA) < EPS) return TIPO_IVA_LABEL_CORTO.gravado_16;
   return `${(tasa * 100).toFixed(2)}%`;
 }
+
+/**
+ * Tratamiento fiscal DESCONOCIDO: sin `tipo_iva` SAT y sin tasa gravada
+ * explícita. Es distinto de "no gravado": nadie ha decidido todavía.
+ */
+export function tratamientoIvaPendiente(fila: FilaTratamiento): boolean {
+  return etiquetaTratamientoFila(fila) === ETIQUETA_TRATAMIENTO_POR_CONFIRMAR;
+}
+
+export const MSG_PROFORMA_IVA_PENDIENTE =
+  "Hay conceptos con tratamiento de IVA \"Por definir\". Clasifícalos (16%, 8%, tasa 0%, exento o no objeto) " +
+  "en los conceptos de venta del embarque antes de generar la proforma.";
