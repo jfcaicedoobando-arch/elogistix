@@ -15,7 +15,8 @@ const flete: CCRow = {
 };
 const maniobras: CCRow = { ...flete, id: "cc-man", concepto: "Maniobras", monto: 300 };
 
-function vinc(id: string, cc: string, monto: number, moneda: string, tc: number | null, estado = "Vigente"): PFCRow {
+function vinc(id: string, cc: string, monto: number, fx: { moneda: string; tc: number | null; estado?: string }): PFCRow {
+  const { moneda, tc, estado = "Vigente" } = fx;
   return {
     monto, concepto_costo_id: cc, descripcion: null,
     proveedor_facturas: {
@@ -27,7 +28,7 @@ function vinc(id: string, cc: string, monto: number, moneda: string, tc: number 
 
 describe("P1-1 pendiente de tipo de cambio", () => {
   it("factura MXN ligada a costo USD sin TC: no_comparable, folio visible, sin ahorro", () => {
-    const [f] = buildFilasReconciliacion([flete], [vinc("pf1", "cc-flete", 21000, "MXN", null)]);
+    const [f] = buildFilasReconciliacion([flete], [vinc("pf1", "cc-flete", 21000, { moneda: "MXN", tc: null })]);
     expect(f.estatus_renglon).toBe("no_comparable");
     expect(f.facturas[0].folio_interno).toBe("FP-00001");
     expect(f.facturas[0].monto_original).toBe(21000);
@@ -43,8 +44,8 @@ describe("P1-1 pendiente de tipo de cambio", () => {
 
   it("1 comparable + 1 excluida en el mismo renglón: sigue no_comparable", () => {
     const [f] = buildFilasReconciliacion([flete], [
-      vinc("pf1", "cc-flete", 500, "USD", null),
-      vinc("pf2", "cc-flete", 9000, "MXN", null),
+      vinc("pf1", "cc-flete", 500, { moneda: "USD", tc: null }),
+      vinc("pf2", "cc-flete", 9000, { moneda: "MXN", tc: null }),
     ]);
     expect(f.estatus_renglon).toBe("no_comparable");
     expect(f.real_facturado).toBe(500);
@@ -53,8 +54,8 @@ describe("P1-1 pendiente de tipo de cambio", () => {
 
   it("con TC válido se compara normal y entra al ajuste neto", () => {
     const filas = buildFilasReconciliacion([flete, maniobras], [
-      vinc("pf1", "cc-flete", 21000, "MXN", 17.5),
-      vinc("pf2", "cc-man", 5000, "MXN", null),
+      vinc("pf1", "cc-flete", 21000, { moneda: "MXN", tc: 17.5 }),
+      vinc("pf2", "cc-man", 5000, { moneda: "MXN", tc: null }),
     ]);
     expect(filas[0].estatus_renglon).toBe("conciliado");
     const [s] = calcularSubtotales(filas);
@@ -65,7 +66,7 @@ describe("P1-1 pendiente de tipo de cambio", () => {
   });
 
   it("factura cancelada no acredita: sin_match", () => {
-    const [f] = buildFilasReconciliacion([flete], [vinc("pf1", "cc-flete", 21000, "MXN", null, "Cancelada")]);
+    const [f] = buildFilasReconciliacion([flete], [vinc("pf1", "cc-flete", 21000, { moneda: "MXN", tc: null, estado: "Cancelada" })]);
     expect(f.estatus_renglon).toBe("sin_match");
     expect(f.facturas).toHaveLength(0);
   });
