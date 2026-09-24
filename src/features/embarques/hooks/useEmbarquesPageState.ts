@@ -38,7 +38,9 @@ export function useEmbarquesPageState() {
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = useEmbarquesFilters();
 
-  const { data: alertasResumen } = useEmbarquesAlertasResumen();
+  const {
+    data: alertasResumen, isLoading: alertasLoading, isError: alertasError, refetch: refetchAlertas,
+  } = useEmbarquesAlertasResumen();
 
   const {
     modo: filterModo,
@@ -187,7 +189,7 @@ export function useEmbarquesPageState() {
     expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
     extras,
-    alertasResumen, alertIdSet,
+    alertasResumen, alertIdSet, alertasLoading, alertasError, refetchAlertas,
   };
 }
 
