@@ -19,6 +19,7 @@ import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbrale
 import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
 import { fmt, pctOPendiente, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
+import { filtrarSoloVarianza, clavePctOrden } from "./reconciliacionVista";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { generarCsvReconciliacion3C } from "@/features/embarques/services/reconciliacion3Columnas.helpers";
@@ -34,9 +35,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
 
   const filas = useMemo<FilaReconciliacion3C[]>(() => {
     if (!data) return [];
-    return soloVarianza
-      ? data.filas.filter((f) => f.clasificacion !== "dentro_rango")
-      : data.filas;
+    return soloVarianza ? filtrarSoloVarianza(data.filas) : data.filas;
   }, [data, soloVarianza]);
 
   const columns = useMemo<ColumnDef<FilaReconciliacion3C, unknown>[]>(
@@ -72,14 +71,16 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
       {
         id: "delta_cot",
         header: "Δ vs Cot.",
-        accessorFn: (f) => f.delta_cot_vs_real.pct,
+        accessorFn: (f) => clavePctOrden(f, f.delta_cot_vs_real.pct),
+        sortUndefined: "last",
         meta: { align: "right", className: "tabular-nums" },
         cell: ({ row }) => pctOPendiente(row.original.delta_cot_vs_real.pct, row.original.sin_factura || row.original.pendiente_tc === true),
       },
       {
         id: "delta_refr",
         header: "Δ vs Refr.",
-        accessorFn: (f) => f.delta_refr_vs_real.pct,
+        accessorFn: (f) => clavePctOrden(f, f.delta_refr_vs_real.pct),
+        sortUndefined: "last",
         meta: { align: "right", className: "tabular-nums" },
         cell: ({ row }) => pctOPendiente(row.original.delta_refr_vs_real.pct, row.original.sin_factura || row.original.pendiente_tc === true),
       },
@@ -120,8 +121,8 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
   const exportCsv = () => {
     downloadCsvWithFeedback({
       filename: `reconciliacion-${embarqueId}.csv`,
-      csv: generarCsvReconciliacion3C(data.filas),
-      rowCount: data.filas.length,
+      csv: generarCsvReconciliacion3C(filas),
+      rowCount: filas.length,
       emptyWarning: { description: "No hay filas de reconciliación para exportar." },
     });
   };

@@ -35,8 +35,11 @@ export default function ResumenTotalesCotizacion({
     : null;
   const sinIva = hayDesglose && !monedasConIva;
 
+  const sinConceptos = hayDesglose && !mostrarUSD && !mostrarMXN;
   const nota = (() => {
-    if (sinIva) return "* Los conceptos de esta cotización están a tasa 0% o exentos de IVA.";
+    if (sinConceptos) return null;
+    // No se infiere tratamiento fiscal (tasa 0, exento o no objeto) de un IVA cero.
+    if (sinIva) return "* Sin IVA trasladado en los conceptos mostrados.";
     if (monedasConIva) {
       return `* Los conceptos en ${monedasConIva} incluyen IVA según la tasa de cada concepto (general ${tasaPct}).`;
     }
@@ -57,7 +60,7 @@ export default function ResumenTotalesCotizacion({
           {sinIva ? "Total MXN:" : "Total MXN (c/IVA):"} {formatCurrency(totalMXN, 'MXN')}
         </span>
       )}
-      <span className="text-body-sm text-muted-foreground">{nota}</span>
+      {nota && <span className="text-body-sm text-muted-foreground">{nota}</span>}
     </div>
   );
 }

@@ -42,6 +42,11 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
           Δ parcial: {resumen.filas_pendientes} renglón(es) sin factura o pendientes de TC quedan fuera.
         </div>
       )}
+      {resumen.filas_sin_tipo_cambio > 0 && resumen.clasificacion !== "pendiente" && (
+        <div className="text-body-sm text-warning mt-1">
+          Totales y Δ parciales: sólo incluyen conceptos convertibles a MXN.
+        </div>
+      )}
       {resumen.filas_sin_tipo_cambio > 0 && (
         <div className="text-body-sm text-destructive mt-1">
           {resumen.filas_sin_tipo_cambio} concepto(s) en moneda extranjera no se
