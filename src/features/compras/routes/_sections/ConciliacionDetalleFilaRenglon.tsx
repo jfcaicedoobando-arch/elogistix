@@ -56,7 +56,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
           {formatCurrency(fila.real_facturado, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${dCls}`}>
-          {pendienteTc ? <span title="Pendiente de tipo de cambio">N/D</span> : formatCurrency(fila.diferencia, fila.moneda)}
+          {pendienteTc ? <span>N/D</span> : formatCurrency(fila.diferencia, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${pCls}`}>
           {pendienteTc ? "N/D" : formatPercent(fila.desviacion_pct)}
