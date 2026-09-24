@@ -8,6 +8,7 @@
 import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWatch } from "react-hook-form";
+import { resumenCargaLcl } from "@/lib/domain/resumenCargaLcl";
 
 import SeccionConceptosVentaCotizacion from "@/features/cotizacion/components/SeccionConceptosVentaCotizacion";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
@@ -37,6 +38,9 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
   const origen = useWatch({ control, name: "origen" });
   const destino = useWatch({ control, name: "destino" });
   const numContenedores = useWatch({ control, name: "numContenedores" });
+  const tipoEmbarque = useWatch({ control, name: "tipoEmbarque" });
+  const dimensionesLCL = useWatch({ control, name: "dimensionesLCL" });
+  const pesoKg = useWatch({ control, name: "pesoKg" });
   const modo = useWatch({ control, name: "modo" });
   const incoterm = useWatch({ control, name: "incoterm" });
   const tipo = useWatch({ control, name: "tipo" });
@@ -120,6 +124,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
             origen={origen}
             destino={destino}
             numContenedores={numContenedores}
+            cargaLcl={tipoEmbarque === "LCL" ? resumenCargaLcl(dimensionesLCL, pesoKg) : undefined}
             modo={modo}
             incoterm={incoterm}
             tipo={tipo}

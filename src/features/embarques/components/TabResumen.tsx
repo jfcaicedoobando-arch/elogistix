@@ -11,6 +11,7 @@ import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCar
 import { ComisionEmbarqueCard } from "./tabResumen/ComisionEmbarqueCard";
 import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
+import { CargaConsolidadaCard } from "./contenedores/CargaConsolidadaCard";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -58,7 +59,15 @@ export function TabResumen({ embarque }: Props) {
 
       {embarque.modo === "Marítimo" && (
         <div ref={registerRef("contenedores")} data-focus="contenedores">
-          <SeccionContenedoresReadonly embarqueId={embarque.id} />
+          {embarque.tipo_servicio === "LCL" ? (
+            <CargaConsolidadaCard
+              piezas={embarque.piezas}
+              pesoKg={embarque.peso_kg}
+              volumenM3={embarque.volumen_m3}
+            />
+          ) : (
+            <SeccionContenedoresReadonly embarqueId={embarque.id} />
+          )}
         </div>
       )}
 
