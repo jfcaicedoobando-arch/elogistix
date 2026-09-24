@@ -107,7 +107,9 @@ export function buildFilasReconciliacion(
     const excluidas = facs.length - comparables.length;
     const real = comparables.reduce((s, f) => s + f.monto, 0);
     const cotizado = Number(c.monto) || 0;
-    const diferencia = real - cotizado;
+    // Con vínculos sin TC la variación no es interpretable: se reporta 0 y el
+    // estatus `no_comparable` indica a las vistas que deben mostrar N/D.
+    const diferencia = excluidas > 0 ? 0 : real - cotizado;
     return {
       concepto_costo_id: c.id,
       concepto: c.concepto,
@@ -116,7 +118,7 @@ export function buildFilasReconciliacion(
       cotizado,
       real_facturado: real,
       diferencia,
-      desviacion_pct: calcularDesviacionPct(cotizado, real),
+      desviacion_pct: excluidas > 0 ? 0 : calcularDesviacionPct(cotizado, real),
       estado_liquidacion: c.estado_liquidacion,
       // Con vínculos sin TC el facturado es parcial: nunca se presenta como
       // ahorro/sobrecosto definitivo.

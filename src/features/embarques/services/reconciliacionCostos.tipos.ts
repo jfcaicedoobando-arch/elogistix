@@ -48,8 +48,11 @@ export interface FilaReconciliacion {
 export interface ResumenReconciliacion {
   total_cotizado: number;
   total_real: number;
-  diferencia_total: number;
-  desviacion_pct_total: number;
+  /** Sólo filas comparables; `null` si no hay ninguna comparable (N/D). */
+  diferencia_total: number | null;
+  desviacion_pct_total: number | null;
+  /** Filas `no_comparable` (facturas ligadas sin tipo de cambio). */
+  pendientes_tc: number;
   /** Líneas todavía sin ninguna factura proveedor vinculada. */
   conceptos_sin_factura: number;
 }
@@ -64,10 +67,14 @@ export interface ResumenPorEstatus {
 
 export interface ResumenPorMoneda {
   moneda: string;
+  /** Presupuesto total de la moneda (incluye pendientes de TC). */
   cotizado: number;
+  /** Real facturado comparable; parcial si `pendientes_tc > 0`. */
   real: number;
-  diferencia: number;
-  desviacion_pct: number;
+  /** Variación sólo de filas comparables; `null` = N/D. */
+  diferencia: number | null;
+  desviacion_pct: number | null;
+  pendientes_tc: number;
 }
 
 export interface PFCRow {

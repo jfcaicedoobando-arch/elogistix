@@ -75,7 +75,7 @@ describe("buildFilasReconciliacion · moneda", () => {
     );
     expect(fila.real_facturado).toBe(0);
     expect(fila.vinculos_excluidos).toBe(1);
-    expect(fila.estatus_renglon).toBe("sin_match");
+    expect(fila.estatus_renglon).toBe("no_comparable");
     expect(fila.facturas[0].excluida).toBe(true);
     expect(fila.facturas[0].motivo_exclusion).toContain("tipo de cambio");
   });

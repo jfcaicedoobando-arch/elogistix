@@ -1,5 +1,7 @@
 /**
  * Totales agregados de reconciliación de costos.
+ * Las filas `no_comparable` (factura ligada sin tipo de cambio) cuentan en el
+ * presupuesto pero nunca en la variación: ni numerador ni denominador.
  */
 import { calcularDesviacionPct } from "./reconciliacionCostos.filas";
 import type {
@@ -9,19 +11,41 @@ import type {
   ResumenReconciliacion,
 } from "./reconciliacionCostos.tipos";
 
-export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliacion {
-  let cot = 0, real = 0, sinFac = 0;
+export function esFilaNoComparable(f: FilaReconciliacion): boolean {
+  return f.estatus_renglon === "no_comparable" || (f.vinculos_excluidos ?? 0) > 0;
+}
+
+interface Acum { cot: number; real: number; cotComp: number; realComp: number; comparables: number; pendientes: number }
+
+function acumular(filas: FilaReconciliacion[]): Acum {
+  const a: Acum = { cot: 0, real: 0, cotComp: 0, realComp: 0, comparables: 0, pendientes: 0 };
   for (const f of filas) {
-    cot += f.cotizado;
-    real += f.real_facturado;
-    if (f.facturas.length === 0) sinFac += 1;
+    a.cot += f.cotizado;
+    a.real += f.real_facturado;
+    if (esFilaNoComparable(f)) { a.pendientes += 1; continue; }
+    a.comparables += 1;
+    a.cotComp += f.cotizado;
+    a.realComp += f.real_facturado;
   }
+  return a;
+}
+
+function variacion(a: Acum): { diferencia: number | null; pct: number | null } {
+  if (a.comparables === 0) return { diferencia: null, pct: null };
+  return { diferencia: a.realComp - a.cotComp, pct: calcularDesviacionPct(a.cotComp, a.realComp) };
+}
+
+/** Ojo: no separa monedas; para mostrar montos usar `calcularResumenPorMoneda`. */
+export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliacion {
+  const a = acumular(filas);
+  const v = variacion(a);
   return {
-    total_cotizado: cot,
-    total_real: real,
-    diferencia_total: real - cot,
-    desviacion_pct_total: calcularDesviacionPct(cot, real),
-    conceptos_sin_factura: sinFac,
+    total_cotizado: a.cot,
+    total_real: a.real,
+    diferencia_total: v.diferencia,
+    desviacion_pct_total: v.pct,
+    pendientes_tc: a.pendientes,
+    conceptos_sin_factura: filas.filter((f) => f.facturas.length === 0).length,
   };
 }
 
@@ -33,18 +57,14 @@ export function calcularResumenPorEstatus(filas: FilaReconciliacion[]): ResumenP
 
 /** Totales agrupados por moneda (los montos de distintas monedas no se suman). */
 export function calcularResumenPorMoneda(filas: FilaReconciliacion[]): ResumenPorMoneda[] {
-  const map = new Map<string, ResumenPorMoneda>();
-  for (const f of filas) {
-    const cur = map.get(f.moneda) ?? {
-      moneda: f.moneda, cotizado: 0, real: 0, diferencia: 0, desviacion_pct: 0,
+  const grupos = new Map<string, FilaReconciliacion[]>();
+  for (const f of filas) grupos.set(f.moneda, [...(grupos.get(f.moneda) ?? []), f]);
+  return Array.from(grupos.entries()).map(([moneda, fs]) => {
+    const a = acumular(fs);
+    const v = variacion(a);
+    return {
+      moneda, cotizado: a.cot, real: a.real,
+      diferencia: v.diferencia, desviacion_pct: v.pct, pendientes_tc: a.pendientes,
     };
-    cur.cotizado += f.cotizado;
-    cur.real += f.real_facturado;
-    map.set(f.moneda, cur);
-  }
-  return Array.from(map.values()).map((m) => ({
-    ...m,
-    diferencia: m.real - m.cotizado,
-    desviacion_pct: calcularDesviacionPct(m.cotizado, m.real),
-  }));
+  });
 }

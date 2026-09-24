@@ -7,7 +7,7 @@ import { ChevronDown, ChevronRight, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
-import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
+import type { FacturaVinculada, FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import { ESTATUS_META, classFromNumber } from "./ConciliacionDetalleHelpers";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,8 +22,9 @@ interface Props {
 export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
   const meta = ESTATUS_META[fila.estatus_renglon];
   const tienePartidas = fila.facturas.length > 0;
-  const dCls = classFromNumber(fila.diferencia);
-  const pCls = classFromNumber(fila.desviacion_pct);
+  const pendienteTc = fila.estatus_renglon === "no_comparable" || (fila.vinculos_excluidos ?? 0) > 0;
+  const dCls = pendienteTc ? "text-muted-foreground" : classFromNumber(fila.diferencia);
+  const pCls = pendienteTc ? "text-muted-foreground" : classFromNumber(fila.desviacion_pct);
 
   return (
     <>
@@ -55,10 +56,10 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
           {formatCurrency(fila.real_facturado, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${dCls}`}>
-          {formatCurrency(fila.diferencia, fila.moneda)}
+          {pendienteTc ? <span title="Pendiente de tipo de cambio">N/D</span> : formatCurrency(fila.diferencia, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${pCls}`}>
-          {formatPercent(fila.desviacion_pct)}
+          {pendienteTc ? "N/D" : formatPercent(fila.desviacion_pct)}
         </TableCell>
         <TableCell className="align-top">
           <Badge variant={meta.variant} className="gap-1 text-2xs">
@@ -103,6 +104,7 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
           </TableHeader>
           <TableBody>
             {fila.facturas.map((p) => {
+              if (p.excluida) return <PartidaExcluida key={p.proveedor_factura_id + p.folio_proveedor} p={p} />;
               const pct = fila.cotizado > 0 ? (p.monto / fila.cotizado) * 100 : 0;
               return (
                 <TableRow key={p.proveedor_factura_id + p.folio_proveedor} className="border-t border-border/50">
@@ -122,6 +124,24 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
         </Table>
         </div>
       </TableCell>
+    </TableRow>
+  );
+}
+
+/** Factura ligada sin TC: se muestra en su moneda original, nunca como $0. */
+function PartidaExcluida({ p }: { p: FacturaVinculada }) {
+  return (
+    <TableRow className="border-t border-border/50" data-testid="partida-excluida">
+      <TableCell className="font-mono">{p.folio_proveedor}</TableCell>
+      <TableCell>{p.fecha_emision ?? "—"}</TableCell>
+      <TableCell>
+        <div>{p.descripcion ?? "—"}</div>
+        <div className="text-2xs text-warning">{p.motivo_exclusion ?? "Pendiente de tipo de cambio"}</div>
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {formatCurrency(p.monto_original ?? 0, p.moneda ?? "MXN")}
+      </TableCell>
+      <TableCell className="text-right tabular-nums text-muted-foreground">N/D</TableCell>
     </TableRow>
   );
 }
