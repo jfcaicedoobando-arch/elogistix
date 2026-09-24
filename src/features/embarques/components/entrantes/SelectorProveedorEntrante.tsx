@@ -32,6 +32,7 @@ interface Props {
   seleccionado: ProveedorOpcion | null;
   detectadoId: string | null;
   onSeleccionar: (proveedor: ProveedorOpcion | null) => void;
+  onInteract?: () => void;
 }
 
 function Fila({
@@ -63,6 +64,7 @@ export function SelectorProveedorEntrante({
   seleccionado,
   detectadoId,
   onSeleccionar,
+  onInteract,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const { data: delEmbarque = [] } = useProveedoresDelEmbarque(embarqueId);
@@ -72,13 +74,17 @@ export function SelectorProveedorEntrante({
   const resto = todos.filter((p) => !idsEmbarque.has(p.id));
 
   const elegir = (opcion: ProveedorOpcion | null) => {
+    onInteract?.();
     onSeleccionar(opcion);
     setAbierto(false);
   };
 
   return (
     <div className="space-y-2">
-      <Popover open={abierto} onOpenChange={setAbierto}>
+      <Popover open={abierto} onOpenChange={(next) => {
+        setAbierto(next);
+        if (next) onInteract?.();
+      }}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

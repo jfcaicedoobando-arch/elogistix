@@ -67,7 +67,7 @@ export function CotizacionesPageActions({
         </Button>
       )}
       {canEdit && (
-        <Button onClick={onNueva} className="hidden sm:inline-flex">
+        <Button onClick={onNueva} className="hidden md:inline-flex">
           <Plus className="h-4 w-4 mr-2" /> Nueva cotización
         </Button>
       )}

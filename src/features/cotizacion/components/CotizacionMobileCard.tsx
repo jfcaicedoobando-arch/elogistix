@@ -5,7 +5,12 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatCurrency } from "@/lib/formatters";
+import { Copy, MoreHorizontal, Trash2 } from "lucide-react";
 import type { SubtotalMoneda } from "@/features/cotizacion/domain/subtotalesPorMoneda";
 import { formatFechaEs } from "@/lib/formatters";
 
@@ -17,10 +22,15 @@ interface Props {
   /** Un renglón por moneda: las cotizaciones mixtas tienen USD y MXN. */
   subtotales: SubtotalMoneda[];
   esProspecto?: boolean;
+  canDuplicar?: boolean;
+  canEliminar?: boolean;
+  onDuplicar?: () => void;
+  onEliminar?: () => void;
 }
 
 export function CotizacionMobileCard({
   folio, clienteNombre, createdAt, estado, subtotales, esProspecto = false,
+  canDuplicar = false, canEliminar = false, onDuplicar, onEliminar,
 }: Props) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
@@ -38,7 +48,31 @@ export function CotizacionMobileCard({
             {createdAt ? formatFechaEs(createdAt) : ""}
           </div>
         </div>
-        <StatusBadge domain="cotizacion" status={estado} />
+        <div className="flex shrink-0 items-start gap-1" data-no-row-nav>
+          <StatusBadge domain="cotizacion" status={estado} />
+          {(canDuplicar || canEliminar) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label={`Acciones para ${folio}`}>
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+                {canDuplicar && onDuplicar && (
+                  <DropdownMenuItem onClick={onDuplicar}>
+                    <Copy className="mr-2 size-4" />Duplicar
+                  </DropdownMenuItem>
+                )}
+                {canDuplicar && canEliminar && <DropdownMenuSeparator />}
+                {canEliminar && onEliminar && (
+                  <DropdownMenuItem onClick={onEliminar} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 size-4" />Eliminar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       {subtotales.map((s, i) => (
         <MoneyCell

@@ -20,6 +20,7 @@ import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { Trash2, Pencil, UserPlus, MoreHorizontal } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
+import { useIsMobile } from "@/hooks/shared";
 import { CosteoAgenteMobileCard } from "./CosteoAgenteMobileCard";
 
 export interface AgenteRow {
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, onInvitarPortal }: Props) {
+  const isMobile = useIsMobile();
   const columns = useMemo<ColumnDef<AgenteRow, unknown>[]>(
     () => defineColumns<AgenteRow>([
       {
@@ -139,6 +141,7 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         rowKey={(a) => a.id}
         isLoading={isLoading}
         emptyMessage="Sin agentes registrados."
+        onRowClick={isMobile ? undefined : onEditar}
         mobileCard={(agente) => (
           <CosteoAgenteMobileCard
             agente={agente}

@@ -164,6 +164,12 @@ export default function Cotizaciones() {
                 estado={r.estado}
                 subtotales={subtotalesDeFila(r)}
                 esProspecto={r.es_prospecto === true}
+                canDuplicar={canDuplicateCotizacion}
+                canEliminar={canDeleteCotizacion}
+                onDuplicar={() => duplicar.mutate(r.id, {
+                  onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
+                })}
+                onEliminar={() => c.setCotizacionAEliminar(r.id)}
               />
             )}
             pagination={c.pagination}

@@ -20,7 +20,7 @@ export function CxpHeaderActions({
 }) {
   const navigate = useNavigate();
   return (
-    <div className="flex gap-2">
+    <div className="flex w-full flex-wrap gap-2 md:w-auto">
       <Button variant="outline" onClick={onExportar} disabled={!puedeExportar}>
         <Download className="h-4 w-4 mr-2" /> Exportar CSV
       </Button>
