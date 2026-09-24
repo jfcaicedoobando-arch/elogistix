@@ -74,14 +74,14 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
         header: "Δ vs Cot.",
         accessorFn: (f) => f.delta_cot_vs_real.pct,
         meta: { align: "right", className: "tabular-nums" },
-        cell: ({ row }) => pctOPendiente(row.original.delta_cot_vs_real.pct, row.original.sin_factura),
+        cell: ({ row }) => pctOPendiente(row.original.delta_cot_vs_real.pct, row.original.sin_factura || row.original.pendiente_tc === true),
       },
       {
         id: "delta_refr",
         header: "Δ vs Refr.",
         accessorFn: (f) => f.delta_refr_vs_real.pct,
         meta: { align: "right", className: "tabular-nums" },
-        cell: ({ row }) => pctOPendiente(row.original.delta_refr_vs_real.pct, row.original.sin_factura),
+        cell: ({ row }) => pctOPendiente(row.original.delta_refr_vs_real.pct, row.original.sin_factura || row.original.pendiente_tc === true),
       },
       {
         id: "estado",
@@ -89,7 +89,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
         accessorFn: (f) => f.clasificacion,
         cell: ({ row }) => (
           <Badge className={colorPorClasificacion(row.original.clasificacion)}>
-            {etiquetaClasificacion(row.original.clasificacion)}
+            {row.original.pendiente_tc ? "Pendiente de TC" : etiquetaClasificacion(row.original.clasificacion)}
           </Badge>
         ),
       },
