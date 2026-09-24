@@ -8,7 +8,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
 import { queryKeys } from "@/lib/query";
-import { errorCoherenciaRutaTarifa, type PuertosDeTarifa, type RutaConTarifa } from "./coherenciaRutaTarifa";
+import { errorCoherenciaRutaTarifa, type PuertosDeTarifa, type RutaConTarifa } from "@/features/cotizacion/domain/coherenciaRutaTarifa";
 
 export const MSG_TARIFA_NO_VERIFICABLE =
   "No pudimos verificar la tarifa vinculada contra la ruta. Revisa tu conexión y vuelve a intentarlo, o elige la tarifa de nuevo.";
