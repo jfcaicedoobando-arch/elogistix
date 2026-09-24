@@ -1,7 +1,6 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
-import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -21,15 +20,11 @@ import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ComprasPorAprobarMobileRow } from "./ComprasPorAprobar.mobileCard";
-
-
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
 type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
 
 export default function ComprasPorAprobar() {
   const { canAprobarFacturaProveedor } = usePermissions();
-  const navigate = useNavigate();
-  // M8 (Ola 8): pestaña y búsqueda viven en la URL (link compartible).
   const [aprobacion, setAprobacion] = useFiltroUrl<AprobacionFiltro>("estado", APROBACION_FILTROS, "pendiente");
   const [search, setSearch] = useTextoUrl("q");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -42,8 +37,6 @@ export default function ComprasPorAprobar() {
     isRunning: satRunning,
     progreso: satProgreso,
   } = useVerificarSatLote();
-
-
   const { data: rows = [], isLoading, isError, refetch } = useFacturasCxP({
     aprobacion,
     search: search || undefined,
@@ -56,7 +49,6 @@ export default function ComprasPorAprobar() {
 
   const seleccionEnLote = canAprobarFacturaProveedor && aprobacion === "pendiente";
   const { columns, bloqueadosSod, motivoBloqueo } = useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote });
-
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
 
@@ -72,7 +64,6 @@ export default function ComprasPorAprobar() {
     [seleccionadas],
   );
 
-
   // FP-000221: sin embarque ligado la base exige justificación escrita.
   const idsSinEmbarque = useMemo(
     () => new Set(seleccionadas.filter((f) => !f.embarque_id).map((f) => f.id)),
@@ -80,7 +71,8 @@ export default function ComprasPorAprobar() {
   );
 
   const handleAprobarLote = async () => {
-    await aprobar(Array.from(selected), {
+    const idsAprobables = Array.from(selected).filter((id) => !bloqueadosSod.has(id));
+    await aprobar(idsAprobables, {
       justificacion: justificacionLote,
       requierenJustificacion: idsSinEmbarque,
     });
@@ -171,7 +163,8 @@ export default function ComprasPorAprobar() {
               rowKey={(f) => f.id}
               density={TABLE_DENSITY.embebida}
               initialSort={{ key: "vencimiento", dir: "asc" }}
-              onRowClick={(fact) => navigate(`/compras/facturas/${fact.id}`)}
+              getRowHref={(fact) => `/compras/facturas/${fact.id}`}
+              getRowAriaLabel={(fact) => `Abrir factura ${fact.folio_proveedor || fact.folio_interno || "sin folio"}`}
               mobileCard={(f) => (
                 <ComprasPorAprobarMobileRow
                   row={f}

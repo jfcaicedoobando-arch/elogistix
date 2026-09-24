@@ -35,4 +35,9 @@ describe("CotizacionesPageActions · Exportar CSV", () => {
     fireEvent.click(boton);
     expect(onExportar).toHaveBeenCalledTimes(1);
   });
+
+  it("separa el CTA de escritorio del FAB móvil en el breakpoint md", () => {
+    montar(3);
+    expect(screen.getByRole("button", { name: "Nueva cotización" })).toHaveClass("hidden", "md:inline-flex");
+  });
 });

@@ -1,7 +1,8 @@
 /** v13.823.25: tarjeta móvil de /compras/por-aprobar muestra folio/vencimiento/total. */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ComprasPorAprobarMobileCard } from "../ComprasPorAprobarMobileCard";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 function factura(overrides: Partial<FacturaCxP> = {}): FacturaCxP {
@@ -29,5 +30,32 @@ describe("ComprasPorAprobarMobileCard", () => {
     expect(screen.getByText("Acme SA de CV")).toBeInTheDocument();
     expect(screen.getByText("FP-1")).toBeInTheDocument();
     expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+  });
+
+  it("selecciona sin activar la tarjeta y explica un bloqueo", () => {
+    const onSelectedChange = vi.fn();
+    const { rerender } = render(
+      <ComprasPorAprobarMobileCard
+        row={factura()}
+        seleccionable
+        onSelectedChange={onSelectedChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /Seleccionar factura FP-1/i }));
+    expect(onSelectedChange).toHaveBeenCalledWith(true);
+    expect(document.querySelector("button button")).toBeNull();
+
+    rerender(
+      <TooltipProvider>
+        <ComprasPorAprobarMobileCard
+          row={factura()}
+          seleccionable
+          bloqueada
+          motivoBloqueo="Quien captura no puede aprobar."
+        />
+      </TooltipProvider>,
+    );
+    expect(screen.getByRole("checkbox", { name: /Seleccionar factura FP-1/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Quien captura no puede aprobar/i })).toBeInTheDocument();
   });
 });

@@ -109,7 +109,7 @@ export default function Cxp() {
               fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
             />
           </div>
-          <div className="shrink-0">
+          <div className="hidden shrink-0 md:block">
             <ColumnVisibilityMenu
               options={CXP_COL_OPTIONS}
               visibility={colVis.visibility}

@@ -43,7 +43,7 @@ export function CotizacionesBannerOrigen({ hayAceptadas = true, onNuevaCotizacio
           </p>
         )}
         {!hayAceptadas && onNuevaCotizacion && (
-          <Button type="button" size="sm" variant="outline" onClick={onNuevaCotizacion}>
+          <Button type="button" size="sm" variant="outline" className="hidden md:inline-flex" onClick={onNuevaCotizacion}>
             Nueva cotización
           </Button>
         )}

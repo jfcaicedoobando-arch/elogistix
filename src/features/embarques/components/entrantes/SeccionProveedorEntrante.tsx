@@ -2,6 +2,7 @@
  * Sección "Proveedor" del modal de subida al buzón CxP:
  * selector + aviso de discrepancia contra el RFC del CFDI.
  */
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import {
@@ -27,6 +28,7 @@ export function SeccionProveedorEntrante({
   tieneXml,
   onSeleccionar,
 }: Props) {
+  const [interactuado, setInteractuado] = useState(false);
   const aviso = avisoProveedorEntrante({
     detectadoId: detectado?.id ?? null,
     detectadoNombre: detectado?.nombre ?? null,
@@ -46,13 +48,14 @@ export function SeccionProveedorEntrante({
           seleccionado={seleccionado}
           detectadoId={detectado?.id ?? null}
           onSeleccionar={onSeleccionar}
+          onInteract={() => setInteractuado(true)}
         />
-        {!seleccionado && (
+        {!seleccionado && !interactuado && (
           <p className="text-body-sm text-muted-foreground">
             Elige el proveedor para poder enviar el documento al buzón.
           </p>
         )}
-        {aviso && <p className="text-body-sm text-warning">{aviso}</p>}
+        {aviso && (seleccionado || interactuado) && <p className="text-body-sm text-warning">{aviso}</p>}
       </div>
     </FormDialogSection>
   );

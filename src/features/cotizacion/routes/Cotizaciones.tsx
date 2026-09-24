@@ -34,8 +34,6 @@ export default function Cotizaciones() {
   const { canDuplicateCotizacion, canDeleteCotizacion } = usePermissions();
   const { data: tcInicial } = useTcInicial();
 
-  // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
-  // pesado de la tabla queda en background y no bloquea el input de búsqueda.
   const deferredPaginated = useDeferredValue(c.paginated);
 
   const columns = useMemo(
@@ -150,10 +148,6 @@ export default function Cotizaciones() {
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
             density={TABLE_DENSITY.listado}
-            // MEJ-20260908-01: con `min-w-max` la tabla medía ~1.4k px y las
-            // acciones quedaban fuera de la vista en 1280x720. Ajustada al ancho
-            // disponible, las columnas clave (Folio, Cliente, Estado, importe,
-            // acciones) caben sin scroll horizontal.
             tableClassName="w-full table-fixed"
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
@@ -164,12 +158,17 @@ export default function Cotizaciones() {
                 estado={r.estado}
                 subtotales={subtotalesDeFila(r)}
                 esProspecto={r.es_prospecto === true}
+                canDuplicar={canDuplicateCotizacion}
+                canEliminar={canDeleteCotizacion}
+                onDuplicar={() => duplicar.mutate(r.id, {
+                  onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
+                })}
+                onEliminar={() => c.setCotizacionAEliminar(r.id)}
               />
             )}
             pagination={c.pagination}
             controlledSort={c.controlledSort}
             onSortChange={c.setSort}
-
           />
         </CardContent>
       </Card>

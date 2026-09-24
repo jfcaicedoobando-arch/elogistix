@@ -3,9 +3,10 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { CosteoAgentesTable, type AgenteRow } from "../CosteoAgentesTable";
 
+const viewport = vi.hoisted(() => ({ mobile: true }));
 vi.mock("@/hooks/shared", async (original) => ({
   ...(await original<Record<string, unknown>>()),
-  useIsMobile: () => true,
+  useIsMobile: () => viewport.mobile,
 }));
 
 const agente: AgenteRow = {
@@ -19,7 +20,8 @@ const agente: AgenteRow = {
   activo: true,
 };
 
-function setup() {
+function setup(mobile = true) {
+  viewport.mobile = mobile;
   const acciones = { editar: vi.fn(), invitar: vi.fn(), eliminar: vi.fn() };
   Object.defineProperty(window, "innerWidth", { configurable: true, value: 691 });
   render(
@@ -60,5 +62,18 @@ describe("CosteoAgentesTable móvil", () => {
     fireEvent.pointerDown(screen.getByRole("button", { name: "Acciones para agencia prueba" }));
     fireEvent.click(screen.getByRole("menuitem", { name: etiqueta }));
     expect(acciones[callback]).toHaveBeenCalledWith(argumento);
+  });
+
+  it("edita por clic de fila sólo en escritorio y el menú no dispara ese clic", () => {
+    const acciones = setup(false);
+    const fila = screen.getByText("Agencia Prueba").closest("tr");
+    expect(fila).not.toBeNull();
+    fireEvent.click(fila as HTMLElement);
+    expect(acciones.editar).toHaveBeenCalledWith(agente);
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Acciones para agencia prueba" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Invitar al portal" }));
+    expect(acciones.editar).toHaveBeenCalledTimes(1);
+    expect(acciones.invitar).toHaveBeenCalledWith(agente);
   });
 });
