@@ -113,20 +113,26 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
           {iva !== undefined && hayIva && (
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
-          {iva !== undefined && !hayIva && hayPendientes && (
-            <span className="text-body-sm text-warning">
-              IVA calculado: 0. Hay conceptos con tratamiento "Por definir": no es un total fiscal definitivo.
-            </span>
-          )}
-          {iva !== undefined && !hayIva && !hayPendientes && (
-            <span className="text-body-sm text-muted-foreground">
-              Sin IVA: conceptos a tasa 0%, exentos o no objeto de impuesto (cada renglón indica su
-              tratamiento).
-            </span>
-          )}
+          {iva !== undefined && !hayIva && <AvisoSinIva pendientes={hayPendientes} />}
           <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AvisoSinIva({ pendientes }: { pendientes: boolean }) {
+  if (pendientes) {
+    return (
+      <span className="text-body-sm text-warning">
+        IVA calculado: 0. Hay conceptos con tratamiento "Por definir": no es un total fiscal definitivo.
+      </span>
+    );
+  }
+  return (
+    <span className="text-body-sm text-muted-foreground">
+      Sin IVA: conceptos a tasa 0%, exentos o no objeto de impuesto (cada renglón indica su
+      tratamiento).
+    </span>
   );
 }
