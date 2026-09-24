@@ -84,9 +84,25 @@ describe("useServerPagedList", () => {
     await waitFor(() => expect(result.current.isPlaceholderData).toBe(true));
     expect(result.current.rows).toEqual([{ id: "cliente-1" }]);
 
+    expect(result.current.isStaleView).toBe(true);
     await act(async () => { resolverNuevaConsulta?.({ rows: [], count: 0 }); });
     await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
     expect(result.current.rows).toEqual([]);
+    expect(result.current.isStaleView).toBe(false);
+  });
+
+  it("P2-4: isStaleView cubre el debounce de búsqueda", async () => {
+    const fetcher = vi.fn().mockResolvedValue({ rows: [{ id: "aceros-mty" }], count: 1 });
+    const { result } = renderHook(
+      () => useServerPagedList<{ id: string }, Filters>({ queryKey: ["test-stale"], fetcher, defaultFilters: DEFAULTS }),
+      { wrapper: buildWrapper() },
+    );
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
+    expect(result.current.isStaleView).toBe(false);
+    act(() => { result.current.setSearch("logistica regia"); });
+    // Durante el debounce las filas son de la búsqueda previa: vista obsoleta.
+    await waitFor(() => expect(result.current.search).toBe("logistica regia"));
+    expect(result.current.isStaleView).toBe(true);
   });
 
   it("refetch cuando cambia search o filtros", async () => {

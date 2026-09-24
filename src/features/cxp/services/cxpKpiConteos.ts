@@ -22,7 +22,16 @@ export interface ConteosTarjetasCxP {
   porVencerN: number;
   programadoMxn: number;
   programadoUsd: number;
+  /** P2-6: EUR programado, sin mezclar con MXN/USD. */
+  programadoEur: number;
   programadoN: number;
+}
+
+/** Cada moneda en su bolsa: EUR nunca se suma a MXN/USD. */
+function sumarProgramado(r: ConteosTarjetasCxP, moneda: string | null | undefined, saldo: number): void {
+  if (moneda === "USD") r.programadoUsd += saldo;
+  else if (moneda === "MXN") r.programadoMxn += saldo;
+  else if (moneda === "EUR") r.programadoEur += saldo;
 }
 
 export function resumirTarjetasCxP(
@@ -31,7 +40,7 @@ export function resumirTarjetasCxP(
 ): ConteosTarjetasCxP {
   const r: ConteosTarjetasCxP = {
     porPagarMxn: 0, porPagarUsd: 0, vencidasN: 0, porVencerN: 0,
-    programadoMxn: 0, programadoUsd: 0, programadoN: 0,
+    programadoMxn: 0, programadoUsd: 0, programadoEur: 0, programadoN: 0,
   };
   const limite = todayLocalISOPlus(DIAS_POR_VENCER_CXC, new Date(`${hoyIso}T12:00:00Z`));
   for (const f of filas) {
@@ -53,8 +62,7 @@ export function resumirTarjetasCxP(
     const prog = f.fecha_programada_pago?.slice(0, 10);
     if (prog && prog >= hoyIso && prog <= limite) {
       r.programadoN++;
-      // EUR (u otra moneda) nunca se suma a MXN: sólo cuenta en el conteo.
-      if (usd) r.programadoUsd += f.saldo; else if (mxn) r.programadoMxn += f.saldo;
+      sumarProgramado(r, f.moneda, f.saldo);
     }
   }
   return r;

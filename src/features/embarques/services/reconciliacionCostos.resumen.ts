@@ -26,7 +26,7 @@ export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliac
 }
 
 export function calcularResumenPorEstatus(filas: FilaReconciliacion[]): ResumenPorEstatus {
-  const r: ResumenPorEstatus = { sin_match: 0, parcial: 0, conciliado: 0, excedente: 0 };
+  const r: ResumenPorEstatus = { sin_match: 0, parcial: 0, conciliado: 0, excedente: 0, no_comparable: 0 };
   for (const f of filas) r[f.estatus_renglon] += 1;
   return r;
 }

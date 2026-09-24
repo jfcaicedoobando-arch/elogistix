@@ -64,7 +64,14 @@ export function GrupoCostosFacturasCell({ fila }: Props) {
               <TooltipContent className="text-body-sm">
                 <div className="font-medium">{folio}</div>
                 <div>Folio proveedor: {fa.folio_proveedor}</div>
-                <div>Monto: {formatCurrency(fa.monto, fila.moneda)}</div>
+                {fa.excluida ? (
+                  <>
+                    <div>Monto original: {formatCurrency(fa.monto_original ?? 0, fa.moneda ?? fila.moneda)}</div>
+                    <div className="text-warning">{fa.motivo_exclusion ?? "Pendiente de tipo de cambio"}</div>
+                  </>
+                ) : (
+                  <div>Monto: {formatCurrency(fa.monto, fila.moneda)}</div>
+                )}
                 <div>Emisión: {fecha}</div>
                 {fa.fecha_vencimiento && <div>Vencimiento: {fmtFecha(fa.fecha_vencimiento)}</div>}
                 {fa.estatus_pago && <div>Pago: {fa.estatus_pago}</div>}

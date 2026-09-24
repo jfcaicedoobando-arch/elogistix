@@ -172,6 +172,12 @@ export function useServerPagedList<
      * La UI debe pintar esqueleto para no operar sobre filas de otro segmento.
      */
     isPlaceholderData: query.isPlaceholderData,
+    /**
+     * P2-4: la vista NO corresponde a los filtros actuales — filas de la
+     * consulta anterior (placeholder) o búsqueda aún en debounce (350 ms).
+     * Las rutas deben ocultar esas filas y mostrar "Actualizando…".
+     */
+    isStaleView: query.isPlaceholderData || searchDebounced !== filtersState.search,
     error: query.error,
     refetch: query.refetch,
     // Estado de filtros/orden (para armar barra y columnas)

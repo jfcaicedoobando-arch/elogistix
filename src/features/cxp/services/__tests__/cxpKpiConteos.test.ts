@@ -66,7 +66,16 @@ describe("resumirTarjetasCxP", () => {
     ], HOY);
     expect(r.programadoMxn).toBe(200);
     expect(r.programadoUsd).toBe(300);
+    expect(r.programadoEur).toBe(500);
     expect(r.programadoN).toBe(3);
+  });
+
+  it("P2-6: EUR fuera de la ventana no suma a programadoEur", () => {
+    const r = resumirTarjetasCxP([
+      f({ id: "e1", moneda: "EUR", saldo: 700, fecha_programada_pago: "2026-03-30" }),
+    ], HOY);
+    expect(r.programadoEur).toBe(0);
+    expect(r.programadoN).toBe(0);
   });
 
   it("programado incluye hoy y hoy+7, excluye hoy+8", () => {

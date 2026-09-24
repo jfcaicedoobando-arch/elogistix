@@ -27,6 +27,8 @@ export function useEmbarquesAlertasResumen() {
     gcTime: 10 * 60_000,
   });
 
+  // P2-8: EMPTY sólo como valor inicial; `isError` se propaga para que un
+  // fallo de red nunca se lea como "cero alertas".
   return {
     ...query,
     data: query.data ?? EMPTY,

@@ -9,6 +9,7 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
 import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
+import { EmbarquesAlertasError } from "@/features/embarques/components/EmbarquesAlertasError";
 import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
@@ -42,6 +43,7 @@ export default function Embarques() {
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize, limpiarFiltros,
     filtered, expedientesCount, totalPages, totalCount, alertasResumen,
+    alertasError, refetchAlertas,
   } = state;
 
 
@@ -98,7 +100,9 @@ export default function Embarques() {
           <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
         ) : (
           <>
-          {alertasResumen ? (
+          {alertasError ? (
+            <EmbarquesAlertasError onRetry={() => void refetchAlertas()} />
+          ) : alertasResumen ? (
             <EmbarquesAlertasPanel
               resumen={alertasResumen}
               activeAlerta={filterAlerta}

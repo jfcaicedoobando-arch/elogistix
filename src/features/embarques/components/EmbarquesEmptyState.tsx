@@ -26,7 +26,7 @@ export function EmbarquesEmptyState({ canEdit, onCreate }: Props) {
 
   const descripcion = canEdit
     ? "Comienza registrando tu primer embarque para dar seguimiento a tus operaciones de importación, exportación y más."
-    : "Aquí verás los embarques en cuanto se generen desde una cotización aprobada. Con tu rol puedes darles seguimiento, no crearlos.";
+    : "Los embarques se crean desde una cotización aceptada. Abre una cotización para iniciar el flujo.";
 
   return (
     <Card>

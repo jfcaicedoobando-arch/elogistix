@@ -6,7 +6,7 @@
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { formatCurrency } from "@/lib/formatters";
 
-export type AjusteKind = "sin_factura" | "sin_ajuste" | "ahorro" | "sobrecosto";
+export type AjusteKind = "sin_factura" | "sin_ajuste" | "ahorro" | "sobrecosto" | "no_comparable";
 
 export interface AjusteDescripcion {
   kind: AjusteKind;
@@ -27,8 +27,16 @@ export function describirAjuste(
   cotizado: number,
   facturado: number,
   moneda: string,
-  opts: { tieneFactura: boolean },
+  opts: { tieneFactura: boolean; pendienteTc?: boolean },
 ): AjusteDescripcion {
+  if (opts.pendienteTc) {
+    return {
+      kind: "no_comparable", tone: "warning", icono: "•",
+      titulo: "Pendiente de tipo de cambio",
+      detalle: "Hay facturas en otra moneda sin tipo de cambio; el ajuste se calculará al capturarlo.",
+      monto: 0, pct: 0,
+    };
+  }
   if (!opts.tieneFactura) {
     return {
       kind: "sin_factura", tone: "neutral", icono: "•",
@@ -72,6 +80,7 @@ export function describirAjusteNeto(
   facturado: number,
   moneda: string,
 ): AjusteDescripcion {
+  // P1-1: `facturado` debe venir sólo de filas comparables (sin vínculos excluidos).
   // B-057 (v13.320.40): sin factura del proveedor NO es "ahorro" — es costo por
   // devengar. Sólo hay ajuste real cuando el proveedor ya facturó (facturado > 0).
   return describirAjuste(cotizado, facturado, moneda, { tieneFactura: facturado > 0 });

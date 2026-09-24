@@ -14,6 +14,7 @@ import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
 import { useEmbarquesAlertasResumen } from "@/features/embarques/hooks/useEmbarquesAlertasResumen";
+import { estadoCargaConAlertas } from "@/features/embarques/domain/estadoCargaAlertas";
 import {
   compareBy,
   computeCounts,
@@ -28,8 +29,6 @@ import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarqu
 
 ;
 
-
-
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
@@ -38,7 +37,9 @@ export function useEmbarquesPageState() {
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = useEmbarquesFilters();
 
-  const { data: alertasResumen } = useEmbarquesAlertasResumen();
+  const {
+    data: alertasResumen, isLoading: alertasLoading, isError: alertasError, refetch: refetchAlertas,
+  } = useEmbarquesAlertasResumen();
 
   const {
     modo: filterModo,
@@ -87,9 +88,14 @@ export function useEmbarquesPageState() {
     staleTime: 60_000,
   });
 
-  const isLoading = fullSetActivo ? loadingFull : loadingServer;
-  const isError = fullSetActivo ? errorFull : errorServer;
-  const refetch = fullSetActivo ? refetchFull : refetchServer;
+  // P2-8: con ?alerta= activo, un fallo de alertas es error de la vista (no "0").
+  const { isLoading, isError } = estadoCargaConAlertas({
+    alertaFilterActivo, alertasLoading, alertasError,
+    listaLoading: fullSetActivo ? loadingFull : loadingServer,
+    listaError: fullSetActivo ? errorFull : errorServer,
+  });
+  const refetchLista = fullSetActivo ? refetchFull : refetchServer;
+  const refetch = () => { if (alertasError) void refetchAlertas(); return refetchLista(); };
 
   const alertIdSet = useMemo(() => {
     if (!alertaFilterActivo || !alertasResumen) return null;
@@ -105,7 +111,6 @@ export function useEmbarquesPageState() {
       filterEstado,
     });
   }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
-
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
@@ -187,7 +192,7 @@ export function useEmbarquesPageState() {
     expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
     extras,
-    alertasResumen, alertIdSet,
+    alertasResumen, alertIdSet, alertasLoading, alertasError, refetchAlertas,
   };
 }
 

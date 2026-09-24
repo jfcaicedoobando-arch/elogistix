@@ -70,7 +70,7 @@ export default function Prospectos() {
       />
 
       <CrmSubheader
-        context={copiaContadorProspectos(
+        context={list.isStaleView ? "Actualizando…" : copiaContadorProspectos(
           list.count,
           Boolean(list.search) || list.activeCount > 0,
         )}
@@ -107,8 +107,8 @@ export default function Prospectos() {
           ) : (
             <ResponsiveDataTable
               columns={prospectosColumns}
-              data={list.rows}
-              isLoading={list.isLoading}
+              data={list.isStaleView ? [] : list.rows}
+              isLoading={list.isLoading || list.isStaleView}
               emptyMessage={
                 list.search
                   ? "No se encontraron prospectos"

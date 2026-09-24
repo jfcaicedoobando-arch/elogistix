@@ -14,8 +14,12 @@ interface TotalPorMoneda {
   facturado: number;
   /** B-057: cotizado sólo de filas con factura ligada (base para % de ajuste). */
   cotizadoFacturable: number;
+  /** P1-1: facturado sólo de filas comparables. */
+  facturadoFacturable: number;
   /** B-057: filas todavía sin factura del proveedor. */
   sinFactura: number;
+  /** P1-1: filas pendientes de tipo de cambio. */
+  noComparables: number;
 }
 
 interface Props {
@@ -30,10 +34,12 @@ export function ResumenAjusteBar({ totales }: Props) {
         // B-057: comparamos facturado vs. cotizadoFacturable (excluyendo filas
         // sin factura), así el % de Ahorro/Sobrecosto refleja sólo lo ya
         // devengado y no se distorsiona con costos por devengar.
-        const d = describirAjusteNeto(t.cotizadoFacturable, t.facturado, t.moneda);
-        const detalle = t.sinFactura > 0
-          ? `${d.detalle} (excluye ${t.sinFactura} concepto${t.sinFactura === 1 ? "" : "s"} sin factura)`
-          : d.detalle;
+        const d = describirAjusteNeto(t.cotizadoFacturable, t.facturadoFacturable, t.moneda);
+        const excl = [
+          t.sinFactura > 0 ? `${t.sinFactura} sin factura` : null,
+          t.noComparables > 0 ? `${t.noComparables} pendiente${t.noComparables === 1 ? "" : "s"} de tipo de cambio` : null,
+        ].filter(Boolean).join(", ");
+        const detalle = excl ? `${d.detalle} (excluye ${excl})` : d.detalle;
         return (
           <div
             key={t.moneda}

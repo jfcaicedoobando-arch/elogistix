@@ -57,6 +57,7 @@ export function GrupoCostosProveedor({
     let conAjuste = 0, sinFactura = 0;
     for (const f of filas) {
       if (f.facturas.length === 0) sinFactura++;
+      else if ((f.vinculos_excluidos ?? 0) > 0) continue;
       else if (Math.abs(f.diferencia) >= 0.01) conAjuste++;
     }
     return { conAjuste, sinFactura };
@@ -67,7 +68,7 @@ export function GrupoCostosProveedor({
   // ficticios cuando el proveedor aún no ha facturado.
   const resumenNarrativo = subtotales.map(s => ({
     moneda: s.moneda,
-    d: describirAjusteNeto(s.cotizadoFacturable, s.facturado, s.moneda),
+    d: describirAjusteNeto(s.cotizadoFacturable, s.facturadoFacturable, s.moneda),
   }));
 
   return (
@@ -134,6 +135,7 @@ export function GrupoCostosProveedor({
               {filasOrdenadas.map((f, idx) => {
                 const ajuste = describirAjuste(f.cotizado, f.real_facturado, f.moneda, {
                   tieneFactura: f.facturas.length > 0,
+                  pendienteTc: (f.vinculos_excluidos ?? 0) > 0,
                 });
                 const pago = peorEstadoPago(f.facturas);
                 return (

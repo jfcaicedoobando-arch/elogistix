@@ -63,10 +63,11 @@ export function TabCostos({
     // UI-15: los KPIs de useEmbarqueFinancials ya vienen convertidos a MXN
     // (computeEmbarqueKpis → totalEnMxn); la moneda se pasa explícita para no
     // depender del default de formatCurrency.
-    { label: 'Total Venta', value: formatCurrency(totalVenta, 'MXN'), color: '' },
-    { label: 'Total Costo', value: formatCurrency(totalCosto, 'MXN'), color: '' },
-    { label: 'Utilidad', value: formatCurrency(utilidad, 'MXN'), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
-    { label: 'Margen', value: formatPercent(margen), color: claseTonoMargen(margen, { umbrales: UMBRAL_MARGEN_OPERATIVO }) },
+    // P2-7: vienen de conceptos de venta/costo (presupuesto), no de facturas de proveedor.
+    { label: 'Venta presupuestada', value: formatCurrency(totalVenta, 'MXN'), color: '' },
+    { label: 'Costo presupuestado', value: formatCurrency(totalCosto, 'MXN'), color: '' },
+    { label: 'Utilidad estimada', value: formatCurrency(utilidad, 'MXN'), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
+    { label: 'Margen estimado', value: formatPercent(margen), color: claseTonoMargen(margen, { umbrales: UMBRAL_MARGEN_OPERATIVO }) },
   ];
 
   const irACargarCostos = canEditCostos && embarqueId
@@ -97,6 +98,9 @@ export function TabCostos({
           </Card>
         ))}
       </div>
+      <p className="-mt-4 text-body-sm text-muted-foreground" data-testid="nota-kpis-presupuesto">
+        Cifras presupuestadas con los conceptos capturados. El costo y la utilidad reales se ven en la conciliación tras capturar las facturas de proveedor.
+      </p>
 
       <ConceptosCostoCard
         filas={filasReconc}

@@ -22,7 +22,8 @@ export interface FacturaVinculada {
   motivo_exclusion?: string | null;
 }
 
-export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente";
+/** `no_comparable`: hay facturas ligadas sin TC para convertir; el ajuste no es definitivo. */
+export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente" | "no_comparable";
 
 /** Tolerancia relativa para clasificar Conciliado (±1%). */
 export const TOLERANCIA_CONCILIACION = 0.01;
@@ -58,6 +59,7 @@ export interface ResumenPorEstatus {
   parcial: number;
   conciliado: number;
   excedente: number;
+  no_comparable: number;
 }
 
 export interface ResumenPorMoneda {
