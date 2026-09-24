@@ -37,7 +37,7 @@ describe("GrupoCostosMobileRows", () => {
     const mobile = screen.getByRole("list");
     expect(within(mobile).getByText("Cotizado")).toBeInTheDocument();
     expect(within(mobile).getByText("Facturado")).toBeInTheDocument();
-    expect(within(mobile).getByText("Sin factura")).toBeInTheDocument();
+    expect(within(mobile).getAllByText("Sin factura").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText(/100\.00/)).toHaveLength(2);
   });
 
