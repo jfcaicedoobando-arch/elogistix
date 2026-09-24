@@ -14,6 +14,7 @@ import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
 import { useEmbarquesAlertasResumen } from "@/features/embarques/hooks/useEmbarquesAlertasResumen";
+import { estadoCargaConAlertas } from "@/features/embarques/domain/estadoCargaAlertas";
 import {
   compareBy,
   computeCounts,
@@ -90,9 +91,11 @@ export function useEmbarquesPageState() {
   });
 
   // P2-8: con ?alerta= activo, un fallo de alertas es error de la vista (no "0").
-  const alertaBloquea = alertaFilterActivo && alertasError;
-  const isLoading = (fullSetActivo ? loadingFull : loadingServer) || (alertaFilterActivo && alertasLoading);
-  const isError = (fullSetActivo ? errorFull : errorServer) || alertaBloquea;
+  const { isLoading, isError } = estadoCargaConAlertas({
+    alertaFilterActivo, alertasLoading, alertasError,
+    listaLoading: fullSetActivo ? loadingFull : loadingServer,
+    listaError: fullSetActivo ? errorFull : errorServer,
+  });
   const refetchLista = fullSetActivo ? refetchFull : refetchServer;
   const refetch = () => { if (alertasError) void refetchAlertas(); return refetchLista(); };
 
