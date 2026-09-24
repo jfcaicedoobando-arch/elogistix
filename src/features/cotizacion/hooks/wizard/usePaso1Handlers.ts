@@ -6,8 +6,7 @@
  */
 import { useCallback, useState } from "react";
 import { queryClient } from "@/lib/query/queryClient";
-import { queryKeys } from "@/lib/query";
-import type { PuertosDeTarifa } from "@/features/cotizacion/domain/coherenciaRutaTarifa";
+import { errorCoherenciaEstricta } from "@/features/cotizacion/domain/resolverPuertosTarifa";
 import type { Path, UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
