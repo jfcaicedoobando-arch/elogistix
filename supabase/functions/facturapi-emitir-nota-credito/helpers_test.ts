@@ -55,8 +55,10 @@ Deno.test("validateNcContext detecta sin conceptos", () => {
 Deno.test("buildNcPayload arma type E, related y relationship 01", () => {
   const p = buildNcPayload(baseCtx());
   assertEquals(p.type, "E");
-  assertEquals(p.relationship, "01");
-  assertEquals(p.related, ["00000000-0000-0000-0000-000000000001"]);
+  assertEquals(p.related_documents, [
+    { relationship: "01", documents: ["00000000-0000-0000-0000-000000000001"] },
+  ]);
+  assertEquals("related" in p, false);
   assertEquals(p.serie, "NC");
   assertEquals(p.items.length, 1);
   assertEquals(p.items[0].product.taxes[0].rate, 0.16);

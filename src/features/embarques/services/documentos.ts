@@ -1,3 +1,4 @@
+import { ReglaNegocioError } from '@/lib/errors/reglaNegocio';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage/index';
 import { buildEmbarqueDocOrgPath } from '@/services/storage/orgPath';
@@ -128,7 +129,7 @@ export async function setDocumentoEstadoNoAplica(
     .select('id');
   if (error) throw error;
   if (!updated || updated.length === 0) {
-    throw new Error('No se pudo actualizar el documento (verifica que no tenga archivo adjunto).');
+    throw new ReglaNegocioError('No se pudo actualizar el documento (verifica que no tenga archivo adjunto).');
   }
   await registrarActividad({
     modulo: 'documentos',

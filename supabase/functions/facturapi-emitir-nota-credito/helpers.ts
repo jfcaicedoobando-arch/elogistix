@@ -1,6 +1,6 @@
 /**
  * Helpers para construir el payload de Facturapi al timbrar una Nota de Crédito
- * (CFDI tipo E, related = UUID de la factura original, relationship = '01').
+ * (CFDI tipo E, related_documents 01 → UUID de la factura original).
  *
  * Lógica pura — sin red, sin Supabase — para que sea testeable con Deno test.
  */
@@ -71,8 +71,8 @@ export interface FacturapiNcPayload {
   external_id?: string;
   /** P0-B: llave oficial de idempotencia de FacturAPI (= claimTag). */
   idempotency_key?: string;
-  related: string[];
-  relationship: "01";
+  /** Sentry JAVASCRIPT-REACT-6S/6Q: FacturAPI v2 rechaza `related`/`relationship` sueltos. */
+  related_documents: Array<{ relationship: "01"; documents: string[] }>;
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
   pdf_custom_section?: string;
   customer: {
@@ -260,8 +260,7 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
     // Guía de llenado del SAT: un egreso no admite parcialidades ni REP.
     payment_method: "PUE",
     currency: ctx.moneda,
-    related: [ctx.uuid_factura_relacionada],
-    relationship: "01",
+    related_documents: [{ relationship: "01", documents: [ctx.uuid_factura_relacionada] }],
     customer: {
       legal_name: ctx.receptor.legal_name,
       tax_id: ctx.receptor.tax_id.trim().toUpperCase(),
