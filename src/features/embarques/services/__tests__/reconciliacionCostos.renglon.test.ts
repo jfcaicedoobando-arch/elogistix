@@ -51,7 +51,7 @@ describe("calcularResumenPorEstatus", () => {
       f("4", "conciliado"), f("5", "conciliado"), f("6", "conciliado"),
       f("7", "excedente"),
     ]);
-    expect(r).toEqual({ sin_match: 2, parcial: 1, conciliado: 3, excedente: 1 });
+    expect(r).toEqual({ sin_match: 2, parcial: 1, conciliado: 3, excedente: 1, no_comparable: 0 });
   });
 });
 

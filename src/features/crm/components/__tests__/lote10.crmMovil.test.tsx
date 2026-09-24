@@ -44,7 +44,7 @@ describe("P1-3 LeadMobileCard", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar lead Aceros del Norte" }));
     expect(onToggle).toHaveBeenCalledWith("l1");
     expect(onCard).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByText("Aceros Del Norte"));
+    fireEvent.click(screen.getByText(/aceros del norte/i));
     expect(onCard).toHaveBeenCalled();
   });
   it("rol sin permiso no ve casilla", () => {
