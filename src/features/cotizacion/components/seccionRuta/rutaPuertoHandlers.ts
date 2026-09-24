@@ -62,6 +62,16 @@ export function aplicarSeleccionPuerto(
 
   if (!tarifaId || idPrevio === puertoId) return { tarifaDesvinculada: false };
 
+  desvincularTarifa(ctx);
+  return { tarifaDesvinculada: true };
+}
+
+/**
+ * Helper único para "Quitar" y cambio de puerto: limpia lo heredado (antes de
+ * borrar el mapa de overrides, para respetar lo editado a mano), el agente y
+ * la naviera derivados. Los costos NO se tocan: el Paso 2 pide decisión.
+ */
+export function desvincularTarifa(ctx: Ctx): void {
   cancelarAutocargaTarifa(ctx.setValue);
   limpiarHeredadosDeTarifa(ctx);
   ctx.setValue("tarifaId", null, OPTS);
@@ -70,7 +80,6 @@ export function aplicarSeleccionPuerto(
   ctx.setValue("agenteNombre", "", OPTS);
   ctx.setValue("navieraId", null, OPTS);
   ctx.setValue("navieraNombre", "", OPTS);
-  return { tarifaDesvinculada: true };
 }
 
 export const MSG_TARIFA_DESVINCULADA =
