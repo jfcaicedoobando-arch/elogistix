@@ -20,7 +20,8 @@ import TarifaResumenHeredado from "./TarifaResumenHeredado";
 import { formatNumber } from "@/lib/formatters/numbers";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
-import { aplicarTarifaAlForm, cancelarAutocargaTarifa, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
+import { desvincularTarifa } from "./seccionRuta/rutaPuertoHandlers";
+import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -43,7 +44,8 @@ interface Props {
 export default function TarifaVinculadaPanel({
   complete, onAutocargaCostos, markup, cantidad,
 }: Props = {}) {
-  const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
+  const form = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, trigger } = form;
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
 
@@ -75,11 +77,7 @@ export default function TarifaVinculadaPanel({
 
   // P2-5: los costos automáticos de la tarifa quitada NO se borran aquí; el
   // Paso 2 los marca como "de otra tarifa" y pide una decisión explícita.
-  const quitarVinculo = () => {
-    cancelarAutocargaTarifa(setValue);
-    setValue("tarifaId", null, OPTS);
-    setValue("tarifaOverride", {}, OPTS);
-  };
+  const quitarVinculo = () => desvincularTarifa(form);
 
 
 

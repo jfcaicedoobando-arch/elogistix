@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon, Lock } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
+import { marcarOverride } from "./seccionRuta/overrideHelpers";
 import SeguroBlock from "./seccionRuta/SeguroBlock";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
@@ -90,7 +91,10 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
         <FormField label="Ruta del barco" span={2}>
           <Input
             value={rutaTexto}
-            onChange={(e) => setValue("rutaTexto", e.target.value, { shouldValidate: true, shouldDirty: true })}
+            onChange={(e) => {
+              setValue("rutaTexto", e.target.value, { shouldValidate: true, shouldDirty: true });
+              if (tieneTarifa) marcarOverride(ctx, "rutaTexto");
+            }}
             placeholder="Ej. Shanghai → Manzanillo (directo)"
             disabled={!camposHabilitados}
           />
