@@ -7,6 +7,13 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 
+const tryReloadForChunkError = vi.fn();
+vi.mock("@/lib/errors/dynamicImportError", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/errors/dynamicImportError")>();
+  return { ...actual, tryReloadForChunkError };
+});
+
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 
 describe("usePdfExport", () => {
