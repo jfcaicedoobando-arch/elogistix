@@ -52,27 +52,40 @@ export default function ComprasPorAprobar() {
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
 
-  const seleccionadas = useMemo(() => rows.filter((r) => selected.has(r.id)), [rows, selected]);
-  const totalSelMxn = sumaMxn(seleccionadas);
-  const totalSelUsd = sumaUsd(seleccionadas);
+  const seleccionEfectiva = useMemo(
+    () => rows.filter((r) =>
+      selected.has(r.id) &&
+      r.estado_aprobacion === "pendiente" &&
+      !bloqueadosSod.has(r.id)),
+    [rows, selected, bloqueadosSod],
+  );
+  const idsSeleccionEfectiva = useMemo(
+    () => seleccionEfectiva.map((r) => r.id),
+    [seleccionEfectiva],
+  );
+  const totalSelMxn = sumaMxn(seleccionEfectiva);
+  const totalSelUsd = sumaUsd(seleccionEfectiva);
 
   // Sólo los CFDI (proveedor nacional, con UUID) se consultan en el SAT.
   // Las facturas extranjeras o de captura manual no dependen del SAT y se
   // aprueban normalmente: ver `requiereValidacionSat`.
   const validablesSat = useMemo(
-    () => seleccionadas.filter((f) => esValidableEnSat(f)).map((f) => f.id),
-    [seleccionadas],
+    () => seleccionEfectiva.filter((f) => esValidableEnSat(f)).map((f) => f.id),
+    [seleccionEfectiva],
   );
 
   // FP-000221: sin embarque ligado la base exige justificación escrita.
   const idsSinEmbarque = useMemo(
-    () => new Set(seleccionadas.filter((f) => !f.embarque_id).map((f) => f.id)),
-    [seleccionadas],
+    () => new Set(seleccionEfectiva.filter((f) => !f.embarque_id).map((f) => f.id)),
+    [seleccionEfectiva],
   );
 
   const handleAprobarLote = async () => {
-    const idsAprobables = Array.from(selected).filter((id) => !bloqueadosSod.has(id));
-    await aprobar(idsAprobables, {
+    if (idsSeleccionEfectiva.length === 0) {
+      setConfirmOpen(false);
+      return;
+    }
+    await aprobar(idsSeleccionEfectiva, {
       justificacion: justificacionLote,
       requierenJustificacion: idsSinEmbarque,
     });
@@ -130,17 +143,24 @@ export default function ComprasPorAprobar() {
           </Tabs>
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={(value) => {
+              setSearch(value);
+              setSelected(new Set());
+              setJustificacionLote("");
+              setConfirmOpen(false);
+            }}
             placeholder="Buscar por folio, folio proveedor o proveedor…"
           />
           {seleccionEnLote && (
             <ComprasPorAprobarBulkBar
-              selectedCount={selected.size}
+              selectedCount={seleccionEfectiva.length}
               totalSelMxn={totalSelMxn}
               totalSelUsd={totalSelUsd}
               isRunning={isRunning}
               progreso={progreso}
-              onOpenConfirm={() => setConfirmOpen(true)}
+              onOpenConfirm={() => {
+                if (seleccionEfectiva.length > 0) setConfirmOpen(true);
+              }}
               validablesCount={validablesSat.length}
               satRunning={satRunning}
               satProgreso={satProgreso}
@@ -183,7 +203,7 @@ export default function ComprasPorAprobar() {
       <ConfirmarAprobacionLoteDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        cantidad={selected.size}
+        cantidad={seleccionEfectiva.length}
         totalMxn={totalSelMxn}
         totalUsd={totalSelUsd}
         isRunning={isRunning}
