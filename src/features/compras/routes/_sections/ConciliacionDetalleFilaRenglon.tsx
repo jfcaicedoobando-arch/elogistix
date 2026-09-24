@@ -19,14 +19,23 @@ interface Props {
   onVincular: () => void;
 }
 
+/** Motivo por el que la variación no aplica; null si la fila es comparable. */
+function motivoVariacionNoDisponible(
+  fila: FilaReconciliacion,
+  pendienteTc: boolean,
+): "N/D" | "Sin factura" | null {
+  if (pendienteTc) return "N/D";
+  return fila.facturas.some((f) => !f.excluida) ? null : "Sin factura";
+}
+
 export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
   const meta = ESTATUS_META[fila.estatus_renglon];
   const tienePartidas = fila.facturas.length > 0;
   const pendienteTc = fila.estatus_renglon === "no_comparable" || (fila.vinculos_excluidos ?? 0) > 0;
-  const sinFactura = !pendienteTc && !fila.facturas.some((f) => !f.excluida);
-  const nd = pendienteTc ? "N/D" : sinFactura ? "Sin factura" : null;
+  const nd = motivoVariacionNoDisponible(fila, pendienteTc);
   const dCls = nd ? "text-muted-foreground" : classFromNumber(fila.diferencia);
   const pCls = nd ? "text-muted-foreground" : classFromNumber(fila.desviacion_pct);
+
 
   return (
     <>
