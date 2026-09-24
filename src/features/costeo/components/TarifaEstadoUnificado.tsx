@@ -35,11 +35,8 @@ export function TarifaEstadoUnificado(props: Props) {
 
   // P1-2: aprobada con inicio futuro → nunca "Vigente" a secas.
   if (programada) {
-    return (
-      <span className="inline-flex rounded-md border border-info/40 bg-info/10 px-2 py-0.5 text-label text-info">
-        {advertencia}
-      </span>
-    );
+    // Tono neutro ("Borrador") para distinguirla visualmente de "Vigente".
+    return <StatusBadge domain="tarifa_maritima" status="Borrador" label={advertencia} title="Aprobada; aún no inicia su vigencia" />;
   }
 
   const badge = <StatusBadge domain="tarifa_maritima" status={estadoCanonico} />;
