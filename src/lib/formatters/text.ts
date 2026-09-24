@@ -7,7 +7,7 @@ const TITLECASE_LOWER_WORDS = new Set([
 const TITLECASE_ACRONYMS = new Set([
   "RFC", "CFDI", "IVA", "ISR", "USD", "EUR", "MXN", "USA", "EU", "UE",
   "LCL", "FCL", "BL", "ETD", "ETA", "CSF", "CDMX", "INE", "API", "CRM",
-  "ERP", "SAT", "DOF",
+  "ERP", "SAT", "DOF", "HC", "QA", "DC", "RF", "OT", "FR",
 ]);
 
 const TITLECASE_CORP_TOKENS = new Set([
@@ -21,6 +21,9 @@ function capitalizeWord(word: string): string {
 
 function processToken(original: string, idx: number): string {
   if (!original) return original;
+  // Puntuación envolvente ("(QA)", "HC,"): se procesa el núcleo y se conserva.
+  const m = /^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}.]*)$/u.exec(original);
+  if (m && (m[1] || m[3]) && m[2]) return m[1] + processToken(m[2], idx) + m[3];
   if (/[A-Za-z]\.([A-Za-z]\.?)+/.test(original)) {
     return original.toUpperCase();
   }

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toTitleCase } from "@/lib/formatters";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
 import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
@@ -84,7 +83,8 @@ export function TabResumen({ embarque }: Props) {
 
 /** Campo de "Partes" con estado vacío accionable hacia la edición del embarque. */
 function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: string | null; embarqueId: string }) {
-  const texto = toTitleCase(valor ?? "");
+  // Razón social / shipper: literal capturado (no se reescriben siglas).
+  const texto = (valor ?? "").trim();
   return (
     <div className="space-y-1">
       <div className="text-body-sm uppercase tracking-wide text-muted-foreground">{label}</div>
