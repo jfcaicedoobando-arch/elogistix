@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resumenCargaLcl } from "@/lib/domain/resumenCargaLcl";
-import { calcularFleteLcl } from "@/features/embarques/components/OrigenLclManualCard";
+import { calcularFleteLcl, resumenCargaLcl } from "@/lib/domain/resumenCargaLcl";
 
 describe("LCL (#8/#9)", () => {
   it("resume piezas, kg y m³", () => {

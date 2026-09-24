@@ -16,3 +16,9 @@ export function resumenCargaLcl(
   const volumen = lista.reduce((s, d) => s + (Number(d.volumen_m3) || 0), 0);
   return textoCargaLcl(piezas, Number(pesoKg) || 0, volumen);
 }
+
+/** W/M = mayor entre m³ y toneladas; flete = max(W/M × tarifa, mínimo). */
+export function calcularFleteLcl(tarifaWm: number, minimo: number | null, m3: number, kg: number) {
+  const wm = Math.max(m3, kg / 1000);
+  return { wm, costo: Math.max(wm * tarifaWm, minimo ?? 0) };
+}

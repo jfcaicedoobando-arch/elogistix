@@ -16,7 +16,7 @@ export async function enriquecerAgenteLcl(cot: CotizacionRow): Promise<Cotizacio
   const consolidador = cot.lcl_consolidador_id;
   if (cot.agente_id || !consolidador || cot.tipo_embarque !== "LCL") return cot;
   const agente = await resolverAgenteDeConsolidador(consolidador);
-  return agente ? { ...cot, agente_id: agente.id, agente_nombre: agente.nombre } : cot;
+  return agente ? { ...cot, agente_id: agente.id } : cot;
 }
 
 interface Params {
