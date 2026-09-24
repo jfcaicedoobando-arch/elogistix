@@ -51,15 +51,15 @@ describe("B.3.3 flujo Factura proveedor → Conciliación", () => {
     const man = filas.find((f) => f.concepto_costo_id === "cc-maniobras")!;
     expect(man.real_facturado).toBe(0);
     expect(man.facturas).toHaveLength(0);
-    expect(man.diferencia).toBe(-5000);
+    expect(man.diferencia).toBe(0); // P1-A: sin factura → N/D
 
     const resumen = calcularResumen(filas);
     expect(resumen.total_cotizado).toBe(7300);
     expect(resumen.total_real).toBe(2360);
-    expect(resumen.diferencia_total).toBe(-4940);
+    expect(resumen.diferencia_total).toBe(60);
     expect(resumen.conceptos_sin_factura).toBe(1);
-    // -4940 / 7300 * 100
-    expect(resumen.desviacion_pct_total).toBeCloseTo(-67.6712, 3);
+    // P1-A: sólo comparables: 60 / 2300 * 100
+    expect(resumen.desviacion_pct_total).toBeCloseTo(2.6087, 3);
   });
 
   it("cotizado 0 con real > 0 marca 100% desviación en fila y resumen", () => {

@@ -66,7 +66,7 @@ describe("buildFilasReconciliacion", () => {
     const filas = buildFilasReconciliacion(conceptos, []);
     expect(filas[1].real_facturado).toBe(0);
     expect(filas[1].cotizado).toBe(200);
-    expect(filas[1].diferencia).toBe(-200);
+    expect(filas[1].diferencia).toBe(0); // P1-A: sin factura → N/D, no ahorro
   });
 });
 
@@ -84,7 +84,7 @@ describe("calcularResumen", () => {
     const r = calcularResumen(filas);
     expect(r.total_cotizado).toBe(1500);
     expect(r.total_real).toBe(1100);
-    expect(r.diferencia_total).toBe(-400);
+    expect(r.diferencia_total).toBe(100); // P1-A: sólo la comparable
     expect(r.conceptos_sin_factura).toBe(1);
   });
 

@@ -19,7 +19,7 @@ interface Acum { cot: number; real: number; cotComp: number; realComp: number; c
 
 /** P1-A: sin factura vinculada el real es 0 por falta de captura, no un ahorro. */
 export function esFilaSinFactura(f: FilaReconciliacion): boolean {
-  return f.estatus_renglon === "sin_match" || f.facturas.length === 0;
+  return f.estatus_renglon === "sin_match";
 }
 
 function acumular(filas: FilaReconciliacion[]): Acum {

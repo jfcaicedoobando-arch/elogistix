@@ -43,7 +43,7 @@ describe("agruparRealesFacturados", () => {
     const filas = buildFilasReconciliacion([conceptoCosto("c1", "Flete", 4500)], []);
     const reales = agruparRealesFacturados(filas);
     expect(reales).toEqual([
-      { concepto: "Flete", moneda: "MXN", monto: 0, tiene_factura: false },
+      { concepto: "Flete", moneda: "MXN", monto: 0, tiene_factura: false, pendiente_tc: false },
     ]);
   });
 
@@ -53,7 +53,7 @@ describe("agruparRealesFacturados", () => {
       [pfc("c1", 4700, "Vigente")],
     );
     expect(agruparRealesFacturados(filas)).toEqual([
-      { concepto: "Flete", moneda: "MXN", monto: 4700, tiene_factura: true },
+      { concepto: "Flete", moneda: "MXN", monto: 4700, tiene_factura: true, pendiente_tc: false },
     ]);
   });
 
@@ -63,7 +63,7 @@ describe("agruparRealesFacturados", () => {
       [pfc("c1", 4700, "Cancelada")],
     );
     expect(agruparRealesFacturados(filas)).toEqual([
-      { concepto: "Flete", moneda: "MXN", monto: 0, tiene_factura: false },
+      { concepto: "Flete", moneda: "MXN", monto: 0, tiene_factura: false, pendiente_tc: false },
     ]);
   });
 
@@ -73,7 +73,7 @@ describe("agruparRealesFacturados", () => {
       [pfc("c1", 1000, "Vigente")],
     );
     expect(agruparRealesFacturados(filas)).toEqual([
-      { concepto: "Maniobras", moneda: "MXN", monto: 1000, tiene_factura: true },
+      { concepto: "Maniobras", moneda: "MXN", monto: 1000, tiene_factura: true, pendiente_tc: false },
     ]);
   });
 });
