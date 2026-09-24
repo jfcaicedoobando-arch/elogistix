@@ -31,6 +31,8 @@ const EVENTO_LABEL: Record<string, string> = {
   crear_cotizacion: 'Alta de la cotización',
   pago_registrado: 'Pago registrado',
   documento_subido: 'Documento cargado',
+  editar: 'Edición del embarque',
+  'Avanzó estado de embarque': 'Cambio de estado del embarque',
 
 };
 
@@ -42,6 +44,9 @@ const DETALLE_LABEL: Record<string, string> = {
   embarque_ids: 'Embarques incluidos',
   estado_anterior: 'Estado anterior',
   estado_nuevo: 'Estado nuevo',
+  nuevoEstado: 'Estado nuevo',
+  tipoEvento: 'Tipo de evento',
+  descripcionEvento: 'Descripción',
   moneda: 'Moneda',
   total: 'Total',
   subtotal: 'Subtotal',
