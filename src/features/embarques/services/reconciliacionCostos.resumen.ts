@@ -15,14 +15,20 @@ export function esFilaNoComparable(f: FilaReconciliacion): boolean {
   return f.estatus_renglon === "no_comparable" || (f.vinculos_excluidos ?? 0) > 0;
 }
 
-interface Acum { cot: number; real: number; cotComp: number; realComp: number; comparables: number; pendientes: number }
+interface Acum { cot: number; real: number; cotComp: number; realComp: number; comparables: number; pendientes: number; sinFactura: number }
+
+/** P1-A: sin factura vinculada el real es 0 por falta de captura, no un ahorro. */
+export function esFilaSinFactura(f: FilaReconciliacion): boolean {
+  return f.estatus_renglon === "sin_match" || f.facturas.length === 0;
+}
 
 function acumular(filas: FilaReconciliacion[]): Acum {
-  const a: Acum = { cot: 0, real: 0, cotComp: 0, realComp: 0, comparables: 0, pendientes: 0 };
+  const a: Acum = { cot: 0, real: 0, cotComp: 0, realComp: 0, comparables: 0, pendientes: 0, sinFactura: 0 };
   for (const f of filas) {
     a.cot += f.cotizado;
     a.real += f.real_facturado;
     if (esFilaNoComparable(f)) { a.pendientes += 1; continue; }
+    if (esFilaSinFactura(f)) { a.sinFactura += 1; continue; }
     a.comparables += 1;
     a.cotComp += f.cotizado;
     a.realComp += f.real_facturado;
@@ -45,7 +51,7 @@ export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliac
     diferencia_total: v.diferencia,
     desviacion_pct_total: v.pct,
     pendientes_tc: a.pendientes,
-    conceptos_sin_factura: filas.filter((f) => f.facturas.length === 0).length,
+    conceptos_sin_factura: a.sinFactura,
   };
 }
 
@@ -64,7 +70,7 @@ export function calcularResumenPorMoneda(filas: FilaReconciliacion[]): ResumenPo
     const v = variacion(a);
     return {
       moneda, cotizado: a.cot, real: a.real,
-      diferencia: v.diferencia, desviacion_pct: v.pct, pendientes_tc: a.pendientes,
+      diferencia: v.diferencia, desviacion_pct: v.pct, pendientes_tc: a.pendientes, sin_factura: a.sinFactura,
     };
   });
 }
