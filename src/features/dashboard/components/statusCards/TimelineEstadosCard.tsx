@@ -15,7 +15,8 @@ interface Props {
 export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
   const navigate = useNavigate();
   const [mostrarTodos, setMostrarTodos] = useState(false);
-  const estados = mostrarTodos ? ESTADOS_FILTRO : ESTADOS_FILTRO.slice(0, 4);
+  // En móvil se muestran 4 estados con botón "Ver más"; en sm+ siempre los 7.
+  const estados = ESTADOS_FILTRO;
 
   return (
     <Card className="overflow-hidden" data-testid="timeline-estados-card">
@@ -40,7 +41,12 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
               const count = conteoPorEstado[estado];
 
               return (
-                <div key={estado} className="flex flex-col items-center relative z-10 min-w-0 flex-1">
+                <div
+                  key={estado}
+                  className={`flex flex-col items-center relative z-10 min-w-0 flex-1${
+                    idx >= 4 && !mostrarTodos ? " hidden sm:flex" : ""
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => navigate(`/embarques?estado=${encodeURIComponent(estado)}`)}
