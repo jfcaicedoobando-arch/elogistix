@@ -9,6 +9,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { etiquetaTasaIva } from "@/lib/financial/etiquetaTasaIva";
+import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";
 import { AgregarConceptoInline } from "./wizard/AgregarConceptoInline";
 
@@ -161,7 +162,11 @@ export default function SeccionConceptosVentaCotizacion({
           <span className="text-body-sm text-muted-foreground">* Los conceptos en MXN incluyen IVA {tasaPctMXN}</span>
         )}
         {!hayIvaMXN && !hayIvaUSD && (
-          <span className="text-body-sm text-muted-foreground">* Ningún concepto causa IVA</span>
+          <span className="text-body-sm text-muted-foreground">
+            {[...conceptosUSD, ...conceptosMXN].some(tratamientoIvaPendiente)
+              ? "* IVA calculado: 0 — hay conceptos con tratamiento \"Por definir\""
+              : "* Ningún concepto causa IVA"}
+          </span>
         )}
         {hayIvaUSD && <span className="text-body-sm text-warning">* Algunos conceptos USD incluyen IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}</span>}
       </div>
