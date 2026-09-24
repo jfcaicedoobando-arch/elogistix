@@ -1,15 +1,15 @@
 # Roadmap
 
-## En curso — lote 10 hallazgos (HEAD 05bea0cf)
-- [ ] P1-1 Conciliación: vínculos sin TC = "Pendiente de tipo de cambio"
-- [ ] P1-2 Actividades móvil: acciones con permisos
-- [ ] P1-3 / P3-10 Leads móvil: selección en lote + aria-label
-- [ ] P2-4 Listas CRM: sin filas obsoletas al filtrar
-- [ ] P2-5 CxP: diálogo eliminar sigue abierto si falla
-- [ ] P2-6 CxP: Programado 7d incluye EUR
-- [ ] P2-7 TabCostos: etiquetas presupuestadas
-- [ ] P2-8 Embarques: error de alertas no es cero
-- [ ] P3-9 Embarques vacío: copy desde cotización
+## Cerrado — lote 10 hallazgos (HEAD 05bea0cf)
+- [x] P1-1 Conciliación: vínculos sin TC = "Pendiente de tipo de cambio"
+- [x] P1-2 Actividades móvil: acciones con permisos
+- [x] P1-3 / P3-10 Leads móvil: selección en lote + aria-label
+- [x] P2-4 Listas CRM: sin filas obsoletas al filtrar
+- [x] P2-5 CxP: diálogo eliminar sigue abierto si falla
+- [x] P2-6 CxP: Programado 7d incluye EUR
+- [x] P2-7 TabCostos: etiquetas presupuestadas
+- [x] P2-8 Embarques: error de alertas no es cero
+- [x] P3-9 Embarques vacío: copy desde cotización
 
 ## Cerrado — P1 selección efectiva en compras
 - [x] Limpiar selección y diálogo al cambiar la búsqueda.
