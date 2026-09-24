@@ -14,6 +14,10 @@ function notaIvaCotizacion(o: {
   return `* Los conceptos en MXN incluyen IVA ${o.tasaPct}`;
 }
 
+function etiquetaTotalUSD(ivaUSD: number | undefined): string {
+  return ivaUSD != null && ivaUSD > 0 ? "Total USD (c/IVA):" : "Total USD:";
+}
+
 interface Props {
   totalUSD: number;
   totalMXN: number;
@@ -55,7 +59,7 @@ export default function ResumenTotalesCotizacion({
         <span className="text-base font-bold">
           {/* Bug 5: se etiqueta la base — este total sí incluye el IVA de los
               conceptos en USD que lo llevan; el margen se calcula sin IVA. */}
-          {ivaUSD != null && ivaUSD > 0 ? "Total USD (c/IVA):" : "Total USD:"} {formatCurrency(totalUSD, 'USD')}
+          {etiquetaTotalUSD(ivaUSD)} {formatCurrency(totalUSD, 'USD')}
         </span>
       )}
       {mostrarMXN && (
