@@ -75,6 +75,11 @@ export function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: To
                 {t.pendientes_tc} renglón(es) pendiente(s) de tipo de cambio: real parcial, fuera de la variación.
               </div>
             )}
+            {t.sin_factura > 0 && (
+              <div className="col-span-5 text-2xs text-muted-foreground">
+                {t.sin_factura} renglón(es) sin factura: fuera de la variación{t.diferencia === null ? "" : " (variación parcial)"}.
+              </div>
+            )}
           </div>
         ))}
       </div>

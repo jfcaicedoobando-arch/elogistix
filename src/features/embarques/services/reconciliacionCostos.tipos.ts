@@ -75,6 +75,8 @@ export interface ResumenPorMoneda {
   diferencia: number | null;
   desviacion_pct: number | null;
   pendientes_tc: number;
+  /** Renglones sin factura: fuera de la variación (numerador y base). */
+  sin_factura: number;
 }
 
 export interface PFCRow {

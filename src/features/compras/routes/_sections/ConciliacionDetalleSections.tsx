@@ -64,11 +64,11 @@ function TilesMoneda({ t }: { t: TotalesMoneda[number] }) {
     <div className="grid grid-cols-2 gap-2" data-testid={`kpi-moneda-${t.moneda}`}>
       <ResumenTile label={`Presupuesto ${t.moneda}`} value={formatCurrency(t.cotizado, t.moneda)} />
       <ResumenTile
-        label={t.pendientes_tc > 0 ? "Real facturado (parcial)" : "Real facturado"}
+        label={t.pendientes_tc + t.sin_factura > 0 ? "Real facturado (parcial)" : "Real facturado"}
         value={formatCurrency(t.real, t.moneda)}
       />
       <ResumenTile
-        label="Variación comparable"
+        label={!nd && t.sin_factura + t.pendientes_tc > 0 ? "Variación comparable (parcial)" : "Variación comparable"}
         value={nd ? "N/D" : formatCurrency(t.diferencia ?? 0, t.moneda)}
         tone={nd ? "muted" : toneFromNumber(t.diferencia ?? 0)}
       />

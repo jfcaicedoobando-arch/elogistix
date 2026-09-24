@@ -23,8 +23,10 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
   const meta = ESTATUS_META[fila.estatus_renglon];
   const tienePartidas = fila.facturas.length > 0;
   const pendienteTc = fila.estatus_renglon === "no_comparable" || (fila.vinculos_excluidos ?? 0) > 0;
-  const dCls = pendienteTc ? "text-muted-foreground" : classFromNumber(fila.diferencia);
-  const pCls = pendienteTc ? "text-muted-foreground" : classFromNumber(fila.desviacion_pct);
+  const sinFactura = !pendienteTc && !fila.facturas.some((f) => !f.excluida);
+  const nd = pendienteTc ? "N/D" : sinFactura ? "Sin factura" : null;
+  const dCls = nd ? "text-muted-foreground" : classFromNumber(fila.diferencia);
+  const pCls = nd ? "text-muted-foreground" : classFromNumber(fila.desviacion_pct);
 
   return (
     <>
@@ -56,10 +58,10 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
           {formatCurrency(fila.real_facturado, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${dCls}`}>
-          {pendienteTc ? <span>N/D</span> : formatCurrency(fila.diferencia, fila.moneda)}
+          {nd ?? formatCurrency(fila.diferencia, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${pCls}`}>
-          {pendienteTc ? "N/D" : formatPercent(fila.desviacion_pct)}
+          {nd ?? formatPercent(fila.desviacion_pct)}
         </TableCell>
         <TableCell className="align-top">
           <Badge variant={meta.variant} className="gap-1 text-2xs">

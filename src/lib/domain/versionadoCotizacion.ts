@@ -51,6 +51,8 @@ export interface FilaReconciliacion3C {
   clasificacion: ClasificacionVarianza;
   /** v13.823.370 (P1-2) — sin factura de proveedor vigente ligada. */
   sin_factura: boolean;
+  /** Factura ligada en otra moneda sin TC: real parcial, delta N/D. */
+  pendiente_tc?: boolean;
 }
 
 export interface ResumenReconciliacion3C {
@@ -63,6 +65,7 @@ export interface ResumenReconciliacion3C {
   moneda_total: "MXN";
   /** Renglones excluidos por falta de tipo de cambio para su moneda. */
   filas_sin_tipo_cambio: number;
+  filas_pendientes?: number; // sin factura o pendientes de TC: fuera del delta
 }
 
 /** % absoluto entre dos montos. base=0 → 0 si actual=0, sino 100. */
@@ -93,6 +96,7 @@ export interface EntradaReconciliacion {
   real: number;
   /** v13.823.370 (P1-2) — true si el real todavía no está facturado. */
   sin_factura?: boolean;
+  pendiente_tc?: boolean;
 }
 
 export function construirFilaReconciliacion(
@@ -111,10 +115,11 @@ export function construirFilaReconciliacion(
     delta_cot_vs_real: deltaCR,
     delta_cot_vs_refr: deltaCRefr,
     delta_refr_vs_real: deltaRR,
-    clasificacion: entrada.sin_factura === true
+    clasificacion: entrada.sin_factura === true || entrada.pendiente_tc === true
       ? "pendiente"
       : clasificarVarianza(deltaCR.pct, umbrales),
     sin_factura: entrada.sin_factura === true,
+    pendiente_tc: entrada.pendiente_tc === true,
   };
 }
 
@@ -130,11 +135,8 @@ export function construirResumen(
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
   tc: TiposCambio = {},
 ): ResumenReconciliacion3C {
-  let total_cotizado = 0;
-  let total_refrescado = 0;
-  let total_real = 0;
-  let filas_sin_tipo_cambio = 0;
-
+  let total_cotizado = 0, total_refrescado = 0, total_real = 0;
+  let cotComp = 0, realComp = 0, comparables = 0, filas_sin_tipo_cambio = 0;
   for (const f of filas) {
     const cot = convertirMxn(f.cotizado, f.moneda, tc);
     const refr = convertirMxn(f.refrescado, f.moneda, tc);
@@ -146,21 +148,21 @@ export function construirResumen(
     total_cotizado += cot.mxn;
     total_refrescado += refr.mxn;
     total_real += real.mxn;
+    // P1-B: sin factura o pendiente de TC no entran al delta (ni numerador ni base).
+    if (f.sin_factura || f.pendiente_tc) continue;
+    comparables += 1;
+    cotComp += cot.mxn;
+    realComp += real.mxn;
   }
-
-  total_cotizado = roundMoney(total_cotizado);
-  total_refrescado = roundMoney(total_refrescado);
-  total_real = roundMoney(total_real);
-  const delta = calcularDelta(total_cotizado, total_real);
-  // v13.823.370 (P1-2) — mientras NINGÚN renglón tenga factura de proveedor, el
-  // total real es 0 por falta de captura: no es una desviación de -100%.
-  const todoPendiente = filas.length > 0 && filas.every((f) => f.sin_factura === true);
+  const delta = calcularDelta(roundMoney(cotComp), roundMoney(realComp));
+  const filas_pendientes = filas.filter((f) => f.sin_factura || f.pendiente_tc).length;
   return {
-    total_cotizado,
-    total_refrescado,
-    total_real,
+    total_cotizado: roundMoney(total_cotizado),
+    total_refrescado: roundMoney(total_refrescado),
+    total_real: roundMoney(total_real),
     delta_cot_vs_real: delta,
-    clasificacion: todoPendiente ? "pendiente" : clasificarVarianza(delta.pct, umbrales),
+    clasificacion: comparables === 0 && filas_pendientes > 0 ? "pendiente" : clasificarVarianza(delta.pct, umbrales),
+    filas_pendientes,
     moneda_total: "MXN",
     filas_sin_tipo_cambio,
   };

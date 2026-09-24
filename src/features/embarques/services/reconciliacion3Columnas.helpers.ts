@@ -4,7 +4,6 @@
  * líneas por archivo (Power of 10).
  */
 import type { CostoVersionado } from "@/features/cotizacion/services/versionado";
-import { toCsv } from "@/lib/csv/serializeCsv";
 import {
   construirFilaReconciliacion,
   UMBRALES_DEFAULT,
@@ -29,6 +28,8 @@ export interface RealPorConcepto {
   moneda: string;
   monto: number | string;
   tiene_factura?: boolean;
+  /** Algún vínculo excluido por falta de TC: real parcial, no comparable. */
+  pendiente_tc?: boolean;
 }
 
 export interface ResultadoReconciliacion3C {
@@ -38,20 +39,7 @@ export interface ResultadoReconciliacion3C {
   version_aceptada: number | null;
 }
 
-export function generarCsvReconciliacion3C(filas: FilaReconciliacion3C[]): string {
-  return toCsv(
-    ["Concepto", "Moneda", "Cotizado", "Refrescado", "Real", "Δ Cot vs Real (%)", "Clasificación"],
-    filas.map((f) => [
-      f.concepto,
-      f.moneda,
-      String(f.cotizado),
-      String(f.refrescado),
-      String(f.real),
-      f.delta_cot_vs_real.pct.toFixed(2),
-      f.clasificacion,
-    ]),
-  );
-}
+export * from "./reconciliacion3Columnas.csv";
 
 const norm = (v: string | null | undefined): string => (v ?? "").trim().toLowerCase();
 
@@ -141,6 +129,7 @@ export function buildFilas3C(
           refrescado: calcularRefrescado(eje, delta, monedasPorConcepto),
           real: real ? Number(real.monto) || 0 : 0,
           sin_factura: real?.tiene_factura !== true,
+          pendiente_tc: real?.pendiente_tc === true,
         },
         umbrales,
       ),
@@ -159,6 +148,7 @@ export function buildFilas3C(
           refrescado: 0,
           real: Number(r.monto) || 0,
           sin_factura: r.tiene_factura !== true,
+          pendiente_tc: r.pendiente_tc === true,
         },
         umbrales,
       ),
@@ -178,7 +168,7 @@ export function agruparRealesFacturados(
     concepto: string;
     moneda: string;
     real_facturado: number;
-    facturas: ReadonlyArray<unknown>;
+    facturas: ReadonlyArray<{ excluida?: boolean }>;
   }>,
 ): RealPorConcepto[] {
   const map = new Map<string, RealPorConcepto>();
@@ -189,7 +179,10 @@ export function agruparRealesFacturados(
     const key = `${norm(f.concepto)}|${norm(f.moneda)}`;
     const cur = map.get(key) ?? { concepto: f.concepto, moneda: f.moneda, monto: 0, tiene_factura: false };
     cur.monto = (Number(cur.monto) || 0) + (Number(f.real_facturado) || 0);
-    cur.tiene_factura = cur.tiene_factura === true || f.facturas.length > 0;
+    // P1-B: una factura excluida por falta de TC NO cuenta como facturada comparable.
+    const excluidas = f.facturas.filter((x) => x.excluida === true).length;
+    cur.tiene_factura = cur.tiene_factura === true || f.facturas.length > excluidas;
+    cur.pendiente_tc = cur.pendiente_tc === true || excluidas > 0;
     map.set(key, cur);
   }
   return Array.from(map.values());
