@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa } from "@/features/costeo/types";
-import { run, unwrap } from "@/lib/supabase/response";
+import { run } from "@/lib/supabase/response";
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -27,25 +27,6 @@ export interface TarifaInput {
   transit_time_dias?: number | null;
   notas?: string | null;
   recargos: TarifaRecargoInput[];
-}
-
-function buildRecargoRows(
-  tarifaId: string,
-  organizationId: string,
-  recargos: TarifaRecargoInput[],
-) {
-  return recargos
-    .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
-    .map((r) => ({
-      tarifa_id: tarifaId,
-      // M7: la org viaja explícita; el trigger de BD la re-deriva del padre.
-      organization_id: organizationId,
-      concepto: r.concepto.trim(),
-      lado: r.lado ?? "origen",
-      monto: Number(r.monto) || 0,
-      moneda: "USD",
-      incluido_en_total: r.incluido_en_total ?? true,
-    }));
 }
 
 /**
@@ -90,43 +71,43 @@ function traducirErrorTarifa(e: unknown): unknown {
   return e;
 }
 
+/** Recargos válidos para las RPC (concepto no vacío y monto > 0). */
+function recargosParaRpc(recargos: TarifaRecargoInput[]) {
+  return recargos
+    .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
+    .map((r) => ({
+      concepto: r.concepto.trim(),
+      lado: r.lado ?? "origen",
+      monto: Number(r.monto) || 0,
+      incluido_en_total: r.incluido_en_total ?? true,
+    }));
+}
+
+/**
+ * P1-6: tarifa + recargos en UNA transacción (mismo patrón que la edición).
+ * Si los recargos fallan no queda una tarifa incompleta, así que reintentar no
+ * duplica: la UNIQUE de vigencia sigue protegiendo contra dobles altas.
+ */
 export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
 ): Promise<CosteoTarifa> {
   const { recargos, ...rest } = input;
-  const tarifa = sanitizeTarifaDates(rest);
-  let data: CosteoTarifa;
-  try {
-    data = (await unwrap(
-      supabase
-        .from("costeo_tarifas")
-        .insert({
-          ...tarifa,
-          moneda: "USD",
-          estado: "vigente",
-          organization_id: organizationId,
-        })
-        .select("*")
-        .single(),
-    )) as CosteoTarifa;
-  } catch (e) {
-    throw traducirErrorTarifa(e);
-  }
-
-  const rows = buildRecargoRows(data.id, organizationId, recargos);
-  if (rows.length > 0) {
-    await run(supabase.from("costeo_tarifa_recargos").insert(rows));
-  }
+  const { data, error } = await supabase.rpc("crear_tarifa_con_recargos_rpc", {
+    p_organization_id: organizationId,
+    p_tarifa: sanitizeTarifaDates(rest),
+    p_recargos: recargosParaRpc(recargos),
+  });
+  if (error) throw traducirErrorTarifa(error);
+  const tarifa = data as unknown as CosteoTarifa; // SAFE-CAST: RPC devuelve la fila completa de costeo_tarifas.
   await registrarActividad({
     modulo: "costeo",
     accion: "crear_tarifa",
-    entidadId: data.id,
+    entidadId: tarifa.id,
     entidadNombre: nombreTarifa(input),
   });
-  return data;
+  return tarifa;
 }
-
 
 export async function updateTarifaConRecargos(
   id: string,
@@ -139,14 +120,7 @@ export async function updateTarifaConRecargos(
   const { error } = await supabase.rpc("actualizar_tarifa_con_recargos_rpc", {
     p_id: id,
     p_tarifa: tarifa,
-    p_recargos: recargos
-      .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
-      .map((r) => ({
-        concepto: r.concepto.trim(),
-        lado: r.lado ?? "origen",
-        monto: Number(r.monto) || 0,
-        incluido_en_total: r.incluido_en_total ?? true,
-      })),
+    p_recargos: recargosParaRpc(recargos),
   });
   if (error) throw traducirErrorTarifa(error);
   await registrarActividad({

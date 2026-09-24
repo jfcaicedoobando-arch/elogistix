@@ -28,7 +28,7 @@ interface Props {
  * automáticos desactualizados viven en `useCostosAutoSync`.
  */
 export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesajusteChange }: Props) {
-  const { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular } =
+  const { tarifa, mostrarAvisoLclFcl, lclAutoCargado, desajuste, recalculando, recalcular, conservarManuales } =
     useCostosAutoSync({ filas, setFilas, onDesajusteChange });
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
@@ -73,6 +73,8 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas, onDesaju
           desajuste={desajuste}
           recalculando={recalculando}
           onRecalcular={recalcular}
+          onConservar={conservarManuales}
+          sinTarifa={!tarifa}
         />
       )}
       {mostrarAvisoLclFcl && (

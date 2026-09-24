@@ -11,7 +11,6 @@ import {
   upsertCondicionNaviera,
   deleteCondicionNaviera,
   fetchDemorasTramos,
-  replaceDemorasTramos,
   fetchTiposContenedorParaDemoras,
   fetchNavierasCatalogo,
 } from "../navieraCondiciones";
@@ -119,28 +118,7 @@ describe("costeo/services/navieraCondiciones", () => {
     });
   });
 
-  describe("replaceDemorasTramos", () => {
-    it("lanza error si falla el delete", async () => {
-      mock.setTableResult("costeo_naviera_demoras_tarifa", { data: null, error: { message: "del err" } });
-      await expect(replaceDemorasTramos("c1", "tc", [])).rejects.toThrow("del err");
-    });
-
-    it("lanza error si falla el insert", async () => {
-      // Mock para el delete exitoso
-      mock.setTableResult("costeo_naviera_demoras_tarifa", { data: null, error: null });
-      // Para el insert, el mock de SupabaseChainMock es global por tabla por defecto, 
-      // pero podemos encadenar si el mock lo soporta o simplemente fallar el siguiente.
-      // SupabaseChainMock.setTableResult suele sobreescribir.
-      // En este caso, replaceDemorasTramos hace delete y luego insert si tramos > 0.
-      
-      // Si queremos forzar error en el insert después del delete, necesitamos que el mock maneje múltiples respuestas.
-      // SupabaseChainMock.tableCalls nos ayuda a ver qué pasó.
-      
-      // Vamos a probar si simplemente configuramos el error y mandamos tramos.
-      mock.setTableResult("costeo_naviera_demoras_tarifa", { data: null, error: { message: "ins err" } });
-      await expect(replaceDemorasTramos("c1", "tc", [{}] as any)).rejects.toThrow("ins err");
-    });
-  });
+  // P1-5/P1-6: el contrato atómico (RPC) se prueba en costeoAtomicoLoteAuditoria.test.ts.
 
   describe("fetchTiposContenedorParaDemoras", () => {
     it("maneja data null y errores", async () => {

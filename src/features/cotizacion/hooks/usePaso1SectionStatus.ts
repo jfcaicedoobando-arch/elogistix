@@ -29,7 +29,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       "clienteId", "esProspecto", "prospectoEmpresa", "oportunidadId", "leadId",
       "modo", "tipo", "incoterm",
       "origen", "destino",
-      "tipoCarga", "pesoKg", "piezas",
+      "tipoCarga", "pesoKg", "piezas", "descripcionMercancia",
       "tipoEmbarque", "tipoContenedor",
       "dimensionesAereas", "dimensionesLCL",
       "tarifaId",
@@ -43,7 +43,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     clienteId, esProspecto, prospectoEmpresa, oportunidadId, leadId,
     modo, tipo, incoterm,
     origen, destino,
-    tipoCarga, pesoKg, piezas,
+    tipoCarga, pesoKg, piezas, descripcionMercancia,
     tipoEmbarque, tipoContenedor,
     dimensionesAereas, dimensionesLCL,
     tarifaId,
@@ -54,7 +54,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     string, boolean, string, string, string,
     string, string, string,
     string, string,
-    string, number, number,
+    string, number, number, string,
     string, string,
     DimensionAerea[] | undefined, DimensionLCL[] | undefined,
     string | null,
@@ -76,7 +76,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     operacion: !!modo && !!tipo && !!incoterm,
     ruta: !!origen?.trim() && !!destino?.trim(),
     mercancia: mercanciaOk({
-      tipoCarga, pesoKg, piezas,
+      tipoCarga, pesoKg, piezas, descripcionMercancia,
       esMaritimo, esAereo,
       tipoEmbarque, tipoContenedor, numContenedores,
       dimensionesAereas, dimensionesLCL,
@@ -131,6 +131,8 @@ interface MercanciaArgs {
   tipoCarga: string;
   pesoKg: number;
   piezas: number;
+  /** P2-8: `datosGeneralesSchema` la exige; el check verde también. */
+  descripcionMercancia: string;
   esMaritimo: boolean;
   esAereo: boolean;
   tipoEmbarque: string;
@@ -140,28 +142,28 @@ interface MercanciaArgs {
   dimensionesLCL: DimensionLCL[] | undefined;
 }
 
-function mercanciaOk(a: MercanciaArgs): boolean {
-  if (!a.tipoCarga) return false;
+type DimensionConPiezas = { piezas?: number; alto_cm?: number; largo_cm?: number; ancho_cm?: number };
 
+/** Fila con piezas y (medida directa > 0 o las tres dimensiones > 0). */
+function filaValida(d: DimensionConPiezas, medida: number | undefined): boolean {
+  if ((d.piezas ?? 0) <= 0) return false;
+  return (medida ?? 0) > 0 || ((d.alto_cm ?? 0) > 0 && (d.largo_cm ?? 0) > 0 && (d.ancho_cm ?? 0) > 0);
+}
+
+function mercanciaMaritimaOk(a: MercanciaArgs): boolean {
   // Marítimo FCL: se define por contenedor(es).
-  if (a.esMaritimo && a.tipoEmbarque === "FCL") {
-    return !!a.tipoContenedor && (a.numContenedores ?? 0) >= 1;
-  }
-
+  if (a.tipoEmbarque === "FCL") return !!a.tipoContenedor && (a.numContenedores ?? 0) >= 1;
   // Marítimo LCL: al menos una fila con piezas y dimensiones/volumen válidos.
-  if (a.esMaritimo && a.tipoEmbarque === "LCL") {
-    return (a.dimensionesLCL ?? []).some(
-      (d) => (d.piezas ?? 0) > 0 && ((d.volumen_m3 ?? 0) > 0 || ((d.alto_cm ?? 0) > 0 && (d.largo_cm ?? 0) > 0 && (d.ancho_cm ?? 0) > 0)),
-    );
-  }
+  if (a.tipoEmbarque === "LCL") return (a.dimensionesLCL ?? []).some((d) => filaValida(d, d.volumen_m3));
+  // P2-7: marítimo sin FCL/LCL elegido no puede estar completo.
+  return false;
+}
 
+function mercanciaOk(a: MercanciaArgs): boolean {
+  if (!a.tipoCarga || !a.descripcionMercancia?.trim()) return false;
+  if (a.esMaritimo) return mercanciaMaritimaOk(a);
   // Aéreo: al menos una fila con piezas y peso volumétrico/dimensiones válidas.
-  if (a.esAereo) {
-    return (a.dimensionesAereas ?? []).some(
-      (d) => (d.piezas ?? 0) > 0 && ((d.peso_volumetrico_kg ?? 0) > 0 || ((d.alto_cm ?? 0) > 0 && (d.largo_cm ?? 0) > 0 && (d.ancho_cm ?? 0) > 0)),
-    );
-  }
-
+  if (a.esAereo) return (a.dimensionesAereas ?? []).some((d) => filaValida(d, d.peso_volumetrico_kg));
   // Terrestre / default: campos planos.
   return (a.pesoKg ?? 0) > 0 || (a.piezas ?? 0) > 0;
 }

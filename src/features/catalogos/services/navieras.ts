@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
-import { unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { LIMITE_CATALOGOS, type Naviera } from "./catalogosTypes";
@@ -20,8 +20,9 @@ export async function fetchNavieras(includeInactive = false): Promise<Naviera[]>
   return rows.map((r) => ({ ...r, activoOrg: r.activo && !apagados.has(r.id) }));
 }
 
-export async function insertNaviera(input: { code: string; name: string }): Promise<void> {
-  await run(supabase.from("navieras").insert(input));
+/** P2-1: devuelve el id creado para que el alta rápida lo seleccione. */
+export async function insertNaviera(input: { code: string; name: string }): Promise<{ id: string }> {
+  return await unwrap(supabase.from("navieras").insert(input).select("id").single());
 }
 
 /** Enciende/apaga la naviera SÓLO para la empresa activa (el catálogo es global). */

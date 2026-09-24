@@ -5,6 +5,9 @@
  * `savePaso1` y vinculación CRM tras crear.
  */
 import { useCallback, useState } from "react";
+import { queryClient } from "@/lib/query/queryClient";
+import { queryKeys } from "@/lib/query";
+import type { PuertosDeTarifa } from "@/features/cotizacion/domain/coherenciaRutaTarifa";
 import type { Path, UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
@@ -34,9 +37,6 @@ function marcarErroresGuardadoPaso1(
   }
 }
 
-
-
-
 interface Paso1Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<CotizacionRow>; isPending: boolean };
   updateCotizacion: {
@@ -63,6 +63,10 @@ export function usePaso1Handlers({
   msdsFile, buildPaso1Data, mutations,
 }: Paso1Deps) {
   const { crearCotizacion, updateCotizacion, registrarActividad } = mutations;
+  // P1-1: la tarifa ya cargada (panel) permite validar IDs de puerto vs tarifa.
+  const tarifaEnCache = useCallback((v: CotizacionFormValues) => (v.tarifaId
+    ? queryClient.getQueryData<PuertosDeTarifa | null>(queryKeys.cotizaciones.tarifaVinculada(v.tarifaId))
+    : null), []);
   // P0: si el vínculo CRM falla, el wizard NO avanza; se conserva la captura y
   // el mismo `cotizacionId` para reintentar sin duplicar nada.
   const [vinculoCrmError, setVinculoCrmError] = useState<string | null>(null);
@@ -114,8 +118,6 @@ export function usePaso1Handlers({
     [form, updateCotizacion],
   );
 
-
-
   /**
    * T-12: un solo toast resumen + error inline en el campo culpable, con
    * scroll/focus a su sección. Devuelve `true` si el paso 1 es inválido.
@@ -133,7 +135,7 @@ export function usePaso1Handlers({
 
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
-    const err = validatePaso1(v);
+    const err = validatePaso1(v, tarifaEnCache(v));
     if (err) { marcarErrorPaso1(err); return; }
 
     try {
@@ -152,7 +154,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, tarifaEnCache]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -160,7 +162,7 @@ export function usePaso1Handlers({
    */
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
-    const err = validatePaso1(v);
+    const err = validatePaso1(v, tarifaEnCache(v));
     if (err) { marcarErrorPaso1(err); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     try {
@@ -184,7 +186,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, tarifaEnCache]);
 
   return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }

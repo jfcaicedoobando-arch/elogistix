@@ -33,8 +33,8 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
     agregarNaviera.mutate(
       { code: code.trim().toUpperCase(), name: name.trim() },
       {
-        onSuccess: (creada: unknown) => {
-          const id = (creada as { id?: string } | null)?.id;
+        onSuccess: (creada) => {
+          const id = (creada as { id?: string } | null | undefined)?.id; // SAFE-CAST: la fábrica tipa `unknown`; insertNaviera devuelve { id }.
           if (id) onCreada(id);
           setCode("");
           setName("");

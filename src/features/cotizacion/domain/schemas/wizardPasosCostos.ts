@@ -24,7 +24,7 @@ export const costosPaso2Schema = z
      * Q2/Q6 (v13.823.396): los costos automáticos ya no corresponden al Paso 1
      * (cantidad de contenedores o entradas del flete LCL). Se exige recalcular.
      */
-    desajusteAutomaticos: z.enum(["tarifa_cantidad", "flete_lcl"]).nullish(),
+    desajusteAutomaticos: z.enum(["tarifa_cantidad", "flete_lcl", "tarifa_distinta"]).nullish(),
   })
   .superRefine((v, ctx) => {
     if (v.totalCostos === 0) {
@@ -63,10 +63,13 @@ export const costosPaso2Schema = z
       ctx.addIssue({
         code: "custom",
         path: ["desajusteAutomaticos"],
-        message:
-          v.desajusteAutomaticos === "tarifa_cantidad"
-            ? COPY_VALIDACION.costosTarifaDesactualizados
-            : COPY_VALIDACION.costosFleteLclDesactualizado,
+        message: MSG_DESAJUSTE[v.desajusteAutomaticos],
       });
     }
   });
+
+const MSG_DESAJUSTE = {
+  tarifa_cantidad: COPY_VALIDACION.costosTarifaDesactualizados,
+  flete_lcl: COPY_VALIDACION.costosFleteLclDesactualizado,
+  tarifa_distinta: COPY_VALIDACION.costosDeOtraTarifa,
+} as const;

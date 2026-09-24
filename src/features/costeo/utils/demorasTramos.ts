@@ -49,3 +49,20 @@ export function vigenciasSeSolapan(
   const bFin = bHasta ?? "9999-12-31";
   return aDesde <= bFin && bDesde <= aFin;
 }
+
+/** P2-4: firma comparable de un tabulador (sin claves de UI). */
+export interface TramoComparable extends TramoDias {
+  monto_por_dia: number;
+  moneda: string;
+}
+
+function firma(rows: TramoComparable[]): string {
+  return JSON.stringify(
+    rows.map((r) => [Number(r.desde_dia), r.hasta_dia === null ? null : Number(r.hasta_dia), Number(r.monto_por_dia), r.moneda]),
+  );
+}
+
+/** ¿El tabulador en edición difiere del guardado? */
+export function tramosSucios(actuales: TramoComparable[], guardados: TramoComparable[]): boolean {
+  return firma(actuales) !== firma(guardados);
+}

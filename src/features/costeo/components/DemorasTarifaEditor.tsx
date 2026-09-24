@@ -2,7 +2,8 @@
  * Editor del tabulador escalonado de demoras por tipo de contenedor.
  * Permite agregar/quitar tramos (desde_dia, hasta_dia, monto/día) y guardar.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,26 +21,14 @@ import {
   useReemplazarTramos,
   useTiposContenedorDemoras,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
-import { encontrarSolapeTramos } from "@/features/costeo/utils/demorasTramos";
+import { encontrarSolapeTramos, tramosSucios } from "@/features/costeo/utils/demorasTramos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
+import { nuevoTramo, tramosEditablesDeTipo, type TramoEditable } from "./demorasTarifaEditor.helpers";
 
 interface Props {
   navieraCondicionId: string;
 }
-
-interface TramoEditable extends DemorasTramoInput {
-  _key: string;
-}
-
-const nuevoTramo = (i: number): TramoEditable => ({
-  _key: `new-${i}-${Date.now()}`,
-  tipo_contenedor_id: "",
-  desde_dia: 1,
-  hasta_dia: null,
-  monto_por_dia: 0,
-  moneda: "USD",
-});
 
 export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
   const { data: tipos = [] } = useTiposContenedorDemoras();
@@ -52,19 +41,16 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
     if (!tipoSel && tipos.length > 0) setTipoSel(tipos[0].id);
   }, [tipoSel, tipos]);
 
-  useEffect(() => {
-    const filtered = tramos
-      .filter((t) => t.tipo_contenedor_id === tipoSel)
-      .map((t, i) => ({
-        _key: t.id ?? `t-${i}`,
-        tipo_contenedor_id: t.tipo_contenedor_id,
-        desde_dia: t.desde_dia,
-        hasta_dia: t.hasta_dia,
-        monto_por_dia: Number(t.monto_por_dia),
-        moneda: t.moneda,
-      }));
-    setRows(filtered);
-  }, [tramos, tipoSel]);
+  const guardados = useMemo(() => tramosEditablesDeTipo(tramos, tipoSel), [tramos, tipoSel]);
+  useEffect(() => { setRows(guardados); }, [guardados]);
+
+  // P2-4: cambiar de tipo con tramos sin guardar pide confirmación.
+  const [tipoPendiente, setTipoPendiente] = useState<string | null>(null);
+  const cambiarTipo = (v: string) => {
+    if (v === tipoSel) return;
+    if (tramosSucios(rows, guardados)) setTipoPendiente(v);
+    else setTipoSel(v);
+  };
 
   const update = (key: string, patch: Partial<TramoEditable>) =>
     setRows((prev) => prev.map((r) => (r._key === key ? { ...r, ...patch } : r)));
@@ -101,10 +87,19 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
 
   return (
     <div className="space-y-3">
+      <ConfirmActionDialog
+        open={!!tipoPendiente}
+        onOpenChange={(o) => { if (!o) setTipoPendiente(null); }}
+        title="Tienes tramos sin guardar"
+        description="Si cambias de tipo de contenedor se descartan los cambios de este tabulador."
+        confirmLabel="Descartar y cambiar"
+        variant="destructive"
+        onConfirm={() => { if (tipoPendiente) setTipoSel(tipoPendiente); setTipoPendiente(null); }}
+      />
       <div className="flex items-center gap-3">
         <div className="w-64">
           <Label htmlFor="demoras-tipo" className="sr-only">Tipo de contenedor</Label>
-          <Select value={tipoSel} onValueChange={setTipoSel}>
+          <Select value={tipoSel} onValueChange={cambiarTipo}>
             <SelectTrigger id="demoras-tipo" aria-label="Tipo de contenedor del tabulador">
               <SelectValue placeholder="Tipo de contenedor" />
             </SelectTrigger>

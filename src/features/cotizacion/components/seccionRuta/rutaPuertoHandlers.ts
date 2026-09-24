@@ -11,6 +11,29 @@
  * tocan: el usuario decide qué hacer con ellos.
  */
 import { OPTS, type Ctx } from "./overrideHelpers";
+import { cancelarAutocargaTarifa } from "./aplicarTarifa";
+import type { CotizacionFormValues } from "@/features/cotizacion/types";
+
+/**
+ * P2-6: campos que la tarifa hereda al formulario. Al desvincular se limpian
+ * SÓLO los que el usuario no sobrescribió a mano (`tarifaOverride[campo]`).
+ */
+const HEREDADOS: Partial<Record<keyof CotizacionFormValues, unknown>> = {
+  rutaTexto: "",
+  tiempoTransitoDias: undefined,
+  frecuencia: "",
+  diasLibresDestino: 0,
+  diasAlmacenaje: 0,
+  cartaGarantia: false,
+};
+
+export function limpiarHeredadosDeTarifa(ctx: Ctx): void {
+  const overrides = (ctx.getValues("tarifaOverride") ?? {}) as Record<string, boolean>;
+  for (const [campo, vacio] of Object.entries(HEREDADOS)) {
+    if (overrides[campo]) continue;
+    ctx.setValue(campo as "rutaTexto", vacio as string, OPTS);
+  }
+}
 
 export type CampoPuerto = "origen" | "destino";
 
@@ -39,6 +62,8 @@ export function aplicarSeleccionPuerto(
 
   if (!tarifaId || idPrevio === puertoId) return { tarifaDesvinculada: false };
 
+  cancelarAutocargaTarifa(ctx.setValue);
+  limpiarHeredadosDeTarifa(ctx);
   ctx.setValue("tarifaId", null, OPTS);
   ctx.setValue("tarifaOverride", {}, OPTS);
   ctx.setValue("agenteId", null, OPTS);

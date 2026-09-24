@@ -45,7 +45,22 @@ export function esFormValido(form: TarifaInput, opts?: { skipRutaId?: boolean })
   if (!form.agente_id || !form.naviera_id || !form.tipo_contenedor_id) return false;
   if (!opts?.skipRutaId && !form.ruta_id) return false;
   if (form.flete_base <= 0) return false;
-  return form.vigente_desde <= form.vigente_hasta;
+  return vigenciaValida(form.vigente_desde, form.vigente_hasta);
+}
+
+const ISO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
+/** P2-3: ambas fechas son obligatorias (NOT NULL en BD) y el rango debe ser válido. */
+export function vigenciaValida(desde: string, hasta: string): boolean {
+  if (!ISO_FECHA.test(desde ?? "") || !ISO_FECHA.test(hasta ?? "")) return false;
+  return desde <= hasta;
+}
+
+/** Mensaje inline de vigencia, o `null` si es válida. */
+export function mensajeVigencia(desde: string, hasta: string): string | null {
+  if (!desde || !hasta) return "Captura las fechas de inicio y fin de vigencia.";
+  if (!vigenciaValida(desde, hasta)) return "La fecha de fin de vigencia debe ser igual o posterior a la de inicio.";
+  return null;
 }
 
 export function computeValido(baseValido: boolean, multiple: boolean, rutaIdsCount: number): boolean {
@@ -76,7 +91,7 @@ export function calcularErrores(form: TarifaInput, rutaIdsCount: number, multipl
     tipo_contenedor_id: !form.tipo_contenedor_id,
     flete_base: !(Number(form.flete_base) > 0),
     vigente_desde: !form.vigente_desde,
-    vigente_hasta: !form.vigente_hasta,
+    vigente_hasta: !form.vigente_hasta || (!!form.vigente_desde && !vigenciaValida(form.vigente_desde, form.vigente_hasta)),
   };
 }
 
