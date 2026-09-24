@@ -89,9 +89,12 @@ export function useEmbarquesPageState() {
     staleTime: 60_000,
   });
 
-  const isLoading = fullSetActivo ? loadingFull : loadingServer;
-  const isError = fullSetActivo ? errorFull : errorServer;
-  const refetch = fullSetActivo ? refetchFull : refetchServer;
+  // P2-8: con ?alerta= activo, un fallo de alertas es error de la vista (no "0").
+  const alertaBloquea = alertaFilterActivo && alertasError;
+  const isLoading = (fullSetActivo ? loadingFull : loadingServer) || (alertaFilterActivo && alertasLoading);
+  const isError = (fullSetActivo ? errorFull : errorServer) || alertaBloquea;
+  const refetchLista = fullSetActivo ? refetchFull : refetchServer;
+  const refetch = () => { if (alertasError) void refetchAlertas(); return refetchLista(); };
 
   const alertIdSet = useMemo(() => {
     if (!alertaFilterActivo || !alertasResumen) return null;
