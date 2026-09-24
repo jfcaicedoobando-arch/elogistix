@@ -90,8 +90,8 @@ describe("calcularResumen", () => {
 
   it("desviación total 0 con lista vacía", () => {
     expect(calcularResumen([])).toEqual({
-      total_cotizado: 0, total_real: 0, diferencia_total: 0,
-      desviacion_pct_total: 0, conceptos_sin_factura: 0,
+      total_cotizado: 0, total_real: 0, diferencia_total: null,
+      desviacion_pct_total: null, pendientes_tc: 0, conceptos_sin_factura: 0,
     });
   });
 });
