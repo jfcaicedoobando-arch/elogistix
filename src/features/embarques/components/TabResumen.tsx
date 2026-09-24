@@ -12,6 +12,7 @@ import { ComisionEmbarqueCard } from "./tabResumen/ComisionEmbarqueCard";
 import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
 import { CargaConsolidadaCard } from "./contenedores/CargaConsolidadaCard";
+import { OrigenLclManualCard } from "./OrigenLclManualCard";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -69,6 +70,11 @@ export function TabResumen({ embarque }: Props) {
             <SeccionContenedoresReadonly embarqueId={embarque.id} />
           )}
         </div>
+      )}
+
+      {embarque.tipo_servicio === "LCL" && embarque.cotizacion_id
+        && !(embarque as { tarifa_id_original?: string | null }).tarifa_id_original && (
+        <OrigenLclManualCard cotizacionId={embarque.cotizacion_id} />
       )}
 
       <OrigenCostosSection
