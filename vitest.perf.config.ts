@@ -33,6 +33,7 @@ export default defineConfig({
     maxWorkers: MAX_WORKERS,
     projects: [
       {
+        extends: false,
         plugins: [react()],
         resolve: { alias: ALIAS },
         test: {
@@ -44,6 +45,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         plugins: [react()],
         resolve: { alias: ALIAS },
         test: {

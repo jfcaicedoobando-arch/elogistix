@@ -105,6 +105,9 @@ export interface CommonTestOptions {
 export function commonTest({ exclude }: CommonTestOptions) {
   return {
     globals: true,
+    // Vitest 5 activa clearMocks por defecto. Conservar la semántica de la
+    // suite existente; migrar mocks compartidos requeriría una ronda aparte.
+    clearMocks: false,
     // Fija TZ para todos los tests: CI y locales en otra zona dan el mismo
     // resultado en `addDays`, `todayLocalISO`, `parseLocalMx`.
     env: { TZ: "America/Mexico_City" },

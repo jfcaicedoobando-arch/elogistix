@@ -27,7 +27,7 @@ const COMMON_TEST = commonTest({ exclude: NORMAL_EXCLUDE });
 export default defineConfig({
   plugins: [react()],
   test: {
-    // Vitest 4: el pool y sus límites viven en COMMON_TEST (por proyecto).
+    // El pool y sus límites viven en COMMON_TEST (por proyecto).
     // Se conserva `maxWorkers` también en la raíz para que el límite global de
     // procesos concurrentes entre proyectos sea el mismo que antes.
     // Para cambiar shards/workers en CI hay que medir primero:
@@ -37,6 +37,9 @@ export default defineConfig({
 
     projects: [
       {
+        // Vitest 5 hereda la config raíz en proyectos inline por defecto.
+        // Mantener el aislamiento de Vitest 4 evita duplicar el plugin React.
+        extends: false,
         plugins: [react()],
         resolve: { alias: ALIAS },
         test: {
@@ -48,6 +51,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         plugins: [react()],
         resolve: { alias: ALIAS },
         test: {
