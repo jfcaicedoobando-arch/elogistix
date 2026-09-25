@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 
 interface Props {
   value: string | null;
