@@ -47,4 +47,4 @@ export function tratamientoIvaPendiente(fila: FilaTratamiento): boolean {
 
 export const MSG_PROFORMA_IVA_PENDIENTE =
   "Hay conceptos con tratamiento de IVA \"Por definir\". Clasifícalos (16%, 8%, tasa 0%, exento o no objeto) " +
-  "en los conceptos de venta del embarque antes de generar la proforma.";
+  "en Editar embarque → Conceptos de venta (selector \"IVA\" de cada línea) antes de generar la proforma.";
