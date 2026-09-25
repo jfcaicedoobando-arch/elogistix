@@ -57,7 +57,6 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
     setValue(campo, id, { shouldValidate: true, shouldDirty: true });
   };
 
-
   const aplicarConservacion = (filas: typeof contenedores) => {
     setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
       shouldValidate: true,
@@ -82,8 +81,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
 
   // Borradores reabiertos ya en FCL con filas en cero: se avisa y el operador
   // decide (nunca se repone en automático, para respetar el cero explícito).
-  const mostrarAvisoConservar =
-    tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
+  const mostrarAvisoConservar = tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
 
   return (
     <>
@@ -112,7 +110,6 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           />
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
-
       </div>
       <NavieraEmbarqueSelector cotizacionNavieraId={cotizacionNavieraId} />
       <AgenteEmbarqueSelector cotizacionAgenteId={cotizacionAgenteId} />
@@ -133,7 +130,6 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
         )} />
         {errors.tipoServicio && <p className={errClass}>{errors.tipoServicio}</p>}
       </div>
-
       <div className="space-y-2 md:col-span-2">
         <Label>Contenedores *</Label>
         {tipoServicio === 'LCL' ? (
