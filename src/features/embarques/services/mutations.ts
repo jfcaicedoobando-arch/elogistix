@@ -84,17 +84,13 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
   const { operador: _op, created_by_email: _cbe, created_by: _cb, ...embarqueSinCreador } = input.embarque;
   void _op; void _cbe; void _cb;
   await run(
-    // SAFE-CAST: la firma de la nueva RPC todavía no está en `types.ts`.
-    (supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: unknown }>)('actualizar_embarque_con_contenedores', {
+    supabase.rpc('actualizar_embarque_con_contenedores', {
       p_embarque_id: input.id,
       p_embarque: toDbJson(embarqueSinCreador),
       p_conceptos_venta: toDbJson(input.conceptosVenta),
       p_conceptos_costo: toDbJson(input.conceptosCosto),
       p_request_id: input.requestId,
-      p_expected_updated_at: input.expectedUpdatedAt ?? null,
+      p_expected_updated_at: input.expectedUpdatedAt ?? undefined,
       p_contenedores: input.contenedores === undefined ? null : toDbJson(input.contenedores),
     }),
   );

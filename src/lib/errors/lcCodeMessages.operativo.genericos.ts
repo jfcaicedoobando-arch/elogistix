@@ -121,6 +121,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El proveedor seleccionado no existe o pertenece a otra organización.",
   LC_IDEMPOTENCIA_FN_DISTINTA:
     "Esa clave de operación ya se usó en otro proceso. Recarga la página y vuelve a intentarlo.",
+  LC_IDEMPOTENCIA_PENDIENTE:
+    "El guardado anterior sigue en curso. Verifica el embarque antes de volver a intentarlo.",
   LC_DELETED_AT_INMUTABLE:
     "No se puede cambiar directamente el estado de borrado del registro. Usa las acciones de eliminar o restaurar de la papelera.",
   LC_RESTORE_DIRECTO:

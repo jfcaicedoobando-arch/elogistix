@@ -136,7 +136,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           <>
             {avisoCambioFcl && (
               <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Revisa los costos antes de guardar como LCL</AlertTitle>
                 <AlertDescription>
                   El cambio quita los contenedores FCL. Si alguno tiene costos o ventas vinculados,
@@ -150,7 +150,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           <>
             {mostrarAvisoConservar && (
               <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Las cantidades quedarían en cero</AlertTitle>
                 <AlertDescription className="space-y-2">
                   <p>
