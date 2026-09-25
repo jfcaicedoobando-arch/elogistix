@@ -21,8 +21,8 @@ vi.mock("@/features/catalogos/hooks", () => ({
 
 vi.mock("@/features/catalogos", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
-  PortIdSelect: ({ id, value }: { id: string; value: string }) => (
-    <button type="button" id={id} data-value={value}>puerto</button>
+  PortIdSelect: ({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) => (
+    <button type="button" id={id} data-value={value} onClick={() => onChange(id)}>puerto</button>
   ),
 }));
 
@@ -30,8 +30,9 @@ const useTopTarifasMock = vi.fn();
 vi.mock("@/features/costeo/hooks/useTopTarifas", () => ({
   useTopTarifas: (...args: unknown[]) => useTopTarifasMock(...args),
 }));
+const diagMock = vi.fn((_: { enabled: boolean }) => ({ diagnostico: undefined }));
 vi.mock("@/features/costeo/hooks/useDiagnosticoTarifas", () => ({
-  useDiagnosticoTarifas: () => ({ diagnostico: null }),
+  useDiagnosticoTarifas: (a: { enabled: boolean }) => diagMock(a),
 }));
 
 import CosteoBuscar from "../CosteoBuscar";
@@ -75,16 +76,34 @@ describe("CosteoBuscar — tipo de contenedor", () => {
   });
 });
 
+async function elegirTodo() {
+  render(<CosteoBuscar />, { wrapper: createWrapper() });
+  fireEvent.click(document.getElementById("buscar-origen")!);
+  fireEvent.click(document.getElementById("buscar-destino")!);
+  fireEvent.click(screen.getByLabelText("Tipo contenedor"));
+  fireEvent.click(within(await screen.findByRole("listbox")).getByText("40' High Cube"));
+}
+
 describe("CosteoBuscar — error vs sin resultados", () => {
-  it("un fallo de consulta muestra error con Reintentar, no 'sin tarifas'", () => {
+  it("un fallo de consulta muestra error con Reintentar y no diagnostica", async () => {
     const refetch = vi.fn();
     useTopTarifasMock.mockReturnValue({
       data: [], isFetching: false, isError: true, isSuccess: false, refetch, tipoContenedorIds: [],
     });
-    render(<CosteoBuscar />, { wrapper: createWrapper() });
-    fireEvent.click(screen.getByLabelText("Tipo contenedor"));
-    return screen.findByRole("listbox").then((lb) => {
-      fireEvent.click(within(lb).getByText("40' High Cube"));
+    await elegirTodo();
+    expect(screen.getByText("No pudimos consultar las tarifas")).toBeInTheDocument();
+    expect(screen.queryByText(/No hay tarifas/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Reintentar/ }));
+    expect(refetch).toHaveBeenCalled();
+    expect(diagMock).toHaveBeenLastCalledWith(expect.objectContaining({ enabled: false }));
+  });
+
+  it("búsqueda exitosa vacía muestra sin resultados y sí diagnostica", async () => {
+    useTopTarifasMock.mockReturnValue({
+      data: [], isFetching: false, isError: false, isSuccess: true, refetch: vi.fn(), tipoContenedorIds: [],
     });
+    await elegirTodo();
+    expect(screen.queryByText("No pudimos consultar las tarifas")).toBeNull();
+    expect(diagMock).toHaveBeenLastCalledWith(expect.objectContaining({ enabled: true }));
   });
 });
