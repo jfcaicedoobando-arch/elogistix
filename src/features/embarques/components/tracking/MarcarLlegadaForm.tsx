@@ -12,7 +12,8 @@ const llegadaSchema = z.object({
   fecha: z.string().min(1, "Fecha requerida"),
   ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
 });
-type LlegadaForm = z.infer<typeof llegadaSchema>;
+type LlegadaInput = z.input<typeof llegadaSchema>;
+type LlegadaForm = z.output<typeof llegadaSchema>;
 
 interface Props {
   fechaLlegadaActual: string | null;
@@ -30,7 +31,7 @@ export function MarcarLlegadaForm({
   onCancel,
 }: Props) {
   const hoy = todayLocalISO();
-  const { control, handleSubmit, formState: { errors, isValid } } = useForm<LlegadaForm>({
+  const { control, handleSubmit, formState: { errors, isValid } } = useForm<LlegadaInput, unknown, LlegadaForm>({
     resolver: zodResolver(llegadaSchema),
     defaultValues: {
       fecha: (fechaLlegadaActual ?? "").slice(0, 10) || hoy,

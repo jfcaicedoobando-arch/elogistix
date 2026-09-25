@@ -12,7 +12,7 @@ import { equivalenteMxnAnticipo } from "@/features/anticipos-proveedor/domain/re
 import { todayLocalISO } from "@/lib/date/today";
 import { RegistrarAnticipoFields } from "./RegistrarAnticipoFields";
 import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
-import { registrarAnticipoSchema, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
+import { registrarAnticipoSchema, type RegistrarAnticipoFormInput, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 
 interface Props {
   open: boolean;
@@ -35,7 +35,7 @@ export function RegistrarAnticipoDialog({
   const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
-    useForm<RegistrarAnticipoFormValues>({
+    useForm<RegistrarAnticipoFormInput, unknown, RegistrarAnticipoFormValues>({
       resolver: zodResolver(registrarAnticipoSchema),
       defaultValues: {
         proveedorId: proveedorIdInicial ?? "", monto: 0, moneda: "MXN",
@@ -54,6 +54,11 @@ export function RegistrarAnticipoDialog({
   const metodoPago = watch("metodoPago");
   const cuentaBancariaId = watch("cuentaBancariaId");
   const tipoCambioUsd = watch("tipoCambioUsd");
+  // El input HTML entrega texto, mientras que el tipo de cambio sugerido se
+  // guarda como número. Normalizamos ambos para no reemplazar una captura manual.
+  const tipoCambioNumerico = tipoCambioUsd === "" || tipoCambioUsd == null
+    ? undefined
+    : Number(tipoCambioUsd);
   const embarqueId = watch("embarqueId");
   const embarqueExpediente = watch("embarqueExpediente");
   const requiereCuenta = metodoPago !== "Efectivo";
@@ -74,7 +79,7 @@ export function RegistrarAnticipoDialog({
     fechaAnticipo,
     cuentaBancariaId,
     requiereCuenta,
-    tipoCambioUsd,
+    tipoCambioUsd: Number.isFinite(tipoCambioNumerico) ? tipoCambioNumerico : undefined,
     proveedorIdInicial,
     setValue,
     onProveedorFijo,
@@ -87,7 +92,7 @@ export function RegistrarAnticipoDialog({
 
   // B-061: sin handler de inválidos, la promesa de handleSubmit rechazaba
   // en silencio (pageerror con el JSON crudo de zod y cero feedback visible).
-  const onInvalid = (errs: FieldErrors<RegistrarAnticipoFormValues>) => {
+  const onInvalid = (errs: FieldErrors<RegistrarAnticipoFormInput>) => {
     const first = Object.values(errs)[0];
     notifyError(undefined, {
       title: "Revisa el formulario",
@@ -129,8 +134,8 @@ export function RegistrarAnticipoDialog({
   }, onInvalid);
 
   const equivalenteMxn = useMemo(
-    () => equivalenteMxnAnticipo(monto, moneda, tipoCambioUsd),
-    [monto, moneda, tipoCambioUsd],
+    () => equivalenteMxnAnticipo(Number(monto), moneda, tipoCambioNumerico),
+    [monto, moneda, tipoCambioNumerico],
   );
 
   const footer = (

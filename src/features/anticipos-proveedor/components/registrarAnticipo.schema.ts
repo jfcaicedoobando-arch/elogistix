@@ -80,4 +80,5 @@ export const registrarAnticipoSchema = z
     }
   });
 
-export type RegistrarAnticipoFormValues = z.infer<typeof registrarAnticipoSchema>;
+export type RegistrarAnticipoFormInput = z.input<typeof registrarAnticipoSchema>;
+export type RegistrarAnticipoFormValues = z.output<typeof registrarAnticipoSchema>;
