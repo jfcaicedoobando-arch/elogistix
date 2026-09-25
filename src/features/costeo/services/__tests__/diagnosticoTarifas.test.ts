@@ -50,3 +50,33 @@ describe("fetchDiagnosticoTarifas", () => {
     expect(await fetchDiagnosticoTarifas(base)).toBe("ninguna");
   });
 });
+
+describe("fetchDiagnosticoTarifas — P2-A7 acciones reales", () => {
+  it("borrador vencido + borrador vigente → 'pendiente' (sí hay uno aprobable)", async () => {
+    mock.setTableResult("costeo_tarifas", {
+      data: [
+        { estado_aprobacion: "borrador", vigente_hasta: "2026-07-06" },
+        { estado_aprobacion: "borrador", vigente_hasta: "2026-09-02" },
+      ],
+      error: null,
+    });
+    expect(await fetchDiagnosticoTarifas(base)).toBe("pendiente");
+  });
+  it("sólo borrador vencido → 'vencida', no promete aprobación", async () => {
+    mock.setTableResult("costeo_tarifas", {
+      data: [{ estado_aprobacion: "borrador", vigente_hasta: "2026-07-06" }],
+      error: null,
+    });
+    expect(await fetchDiagnosticoTarifas(base)).toBe("vencida");
+  });
+  it("borrador vencido + aprobada vencida → 'vencida'", async () => {
+    mock.setTableResult("costeo_tarifas", {
+      data: [
+        { estado_aprobacion: "borrador", vigente_hasta: "2026-07-06" },
+        { estado_aprobacion: "vigente", vigente_hasta: "2026-08-01" },
+      ],
+      error: null,
+    });
+    expect(await fetchDiagnosticoTarifas(base)).toBe("vencida");
+  });
+});
