@@ -88,15 +88,13 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           />
         </div>
         <div className="min-w-0">
-          {i === 0 && <Label size="sm">Tasa IVA</Label>}
+          {i === 0 && <Label size="sm">IVA</Label>}
           <TratamientoIvaFila
             tipoIva={c.tipo_iva}
-            tasa={tasaFila}
-            onTasaChange={(tasa) => actualizar(i, "tasa_iva_aplicada", tasa)}
             onTipoIvaChange={(tipo) => actualizar(i, "tipo_iva", tipo)}
           />
-
         </div>
+
         <div className={CONCEPTO_SOLO_XL}>
           {i === 0 && <Label size="sm">Subtotal</Label>}
           <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted tabular-nums text-right" />
