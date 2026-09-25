@@ -5,6 +5,7 @@
  */
 import { Info } from "lucide-react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks";
 import { useBandejaConteos } from "@/features/facturacion/hooks/useBandejas";
@@ -32,6 +33,12 @@ const GROUP_LABELS: Record<GroupId, string> = {
   historico: "Histórico",
 };
 
+const GROUP_FIRST: Record<GroupId, BandejaId> = {
+  preparar: "embarques-sin-factura",
+  cobrar: "por-cobrar",
+  historico: "emitidas",
+};
+
 // Sólo mantenemos tooltip en los tabs con criterio técnico no evidente.
 // El resto usa un label auto-descriptivo (ley de Miller: menos ruido cognitivo).
 const DEFS: Def[] = [
@@ -55,7 +62,10 @@ function badgeClass(tone: Def["tone"]): string {
 
 type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas" | "reps">, number>;
 
-export function BandejaTabs() {
+export function BandejaTabs({ activeBandeja, onSelect }: {
+  activeBandeja: BandejaId;
+  onSelect: (id: BandejaId) => void;
+}) {
   const { data: conteos } = useBandejaConteos();
   const { totalEmbarques } = useHuecoFacturacion();
   const { data: proformasListasCount = 0 } = useProformasListasCount();
@@ -72,69 +82,68 @@ export function BandejaTabs() {
 
   const groups: GroupId[] = ["preparar", "cobrar", "historico"];
 
+  const activeGroup = DEFS.find((d) => d.id === activeBandeja)?.group ?? "preparar";
   return (
-    <TabsList variant="underline" className="h-auto min-w-max flex-row items-stretch gap-0 border-b-0">
-      {groups.map((group, gIdx) => {
-        const defs = DEFS.filter((d) => d.group === group);
-        return (
-          <div key={group} className="flex shrink-0 items-stretch">
-            {gIdx > 0 && (
-              <span aria-hidden className="mx-2 hidden self-center h-6 w-px bg-border md:block" />
-            )}
-            <div className="flex min-w-0 flex-1 flex-col">
-
-              <span className="whitespace-nowrap px-3 pt-0.5 text-overline text-muted-foreground">
-                {GROUP_LABELS[group]}
-              </span>
-              <div className="flex gap-1">
-                {defs.map((d) => {
-                  const count = d.id === "emitidas" || d.id === "notas" || d.id === "reps" ? 0 : counts[d.id];
-                  return (
-                    <TabsTrigger
-                      key={d.id}
-                      value={d.id}
-                      variant="underline"
-                      className="px-3 py-2 data-[state=active]:text-primary"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {d.label}
-                        {typeof count === "number" && count > 0 && (
-                          <span className={`text-2xs font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
-                            {count}
-                          </span>
-                        )}
-                        {d.hint && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Info: ${d.label}`}
-                                onClick={(e) => e.stopPropagation()}
-                                onKeyDown={(e) => e.stopPropagation()}
-                                className="inline-flex"
-                              >
-                                <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="bottom"
-                              collisionPadding={12}
-                              className="max-w-sm text-body-sm leading-relaxed whitespace-normal"
-                            >
-                              {d.hint}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+    <div className="space-y-0.5">
+      <div className="flex flex-wrap gap-1 px-1 pt-1" aria-label="Etapa de facturación">
+        {groups.map((group) => (
+          <Button
+            key={group}
+            type="button"
+            variant={activeGroup === group ? "secondary" : "ghost"}
+            size="sm"
+            aria-pressed={activeGroup === group}
+            onClick={() => onSelect(GROUP_FIRST[group])}
+          >
+            {GROUP_LABELS[group]}
+          </Button>
+        ))}
+      </div>
+      <TabsList variant="underline" aria-label={`Bandejas de ${GROUP_LABELS[activeGroup]}`} className="flex h-auto flex-wrap items-stretch gap-2 border-b-0 px-1">
+        {DEFS.filter((d) => d.group === activeGroup).map((d) => {
+          const count = d.id === "emitidas" || d.id === "notas" || d.id === "reps" ? 0 : counts[d.id];
+          return (
+            <TabsTrigger
+              key={d.id}
+              value={d.id}
+              variant="underline"
+              className="px-2 py-1.5 data-[state=active]:text-primary"
+            >
+              <span className="flex items-center gap-1.5">
+                {d.label}
+                {typeof count === "number" && count > 0 && (
+                  <span className={`text-2xs font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
+                    {count}
+                  </span>
+                )}
+                {d.hint && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Info: ${d.label}`}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="inline-flex"
+                      >
+                        <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
                       </span>
-                    </TabsTrigger>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </TabsList>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        collisionPadding={12}
+                        className="max-w-sm text-body-sm leading-relaxed whitespace-normal"
+                      >
+                        {d.hint}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+              </span>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+    </div>
   );
 }

@@ -164,6 +164,7 @@ export default function Embarques() {
                   pageSizeOptions: [50, 100, 200, 500],
                   pageSizeLabels: { 500: "500" },
                   total: totalCount,
+                  hideWhenSinglePage: true,
                 }}
               />
             </CardContent>

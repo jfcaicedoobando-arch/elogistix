@@ -60,6 +60,9 @@ export function buildEmbarqueColumns({
         const e = row.original;
         const docInfo = docsMap[e.id];
         const hayPendientes = docInfo && docInfo.pendientes > 0;
+        const origen = shortName(getOrigen(e));
+        const destino = shortName(getDestino(e));
+        const ruta = origen || destino ? `${origen || "Origen por definir"} → ${destino || "Destino por definir"}` : "Ruta por definir";
         // MEJ-CE-251-01: en Desktop HD las columnas secundarias (BL, modo,
         // ruta, ETD, contenedores) se muestran desde 2xl; el tooltip del
         // expediente conserva el acceso a esos datos (patrón de Cotizaciones).
@@ -70,14 +73,17 @@ export function buildEmbarqueColumns({
           `ETD: ${e.etd || "—"}`,
         ].join(" · ");
         return (
-          <span className="flex items-center gap-1">
+          <span className="flex flex-col min-w-0 gap-0.5">
+            <span className="flex items-center gap-1">
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   {/* R257-04: `tabIndex`/`aria-label` para que el detalle de la
                       ruta también sea alcanzable por teclado y lector. */}
                   <span tabIndex={0} aria-label={detalle} className="block truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    {labelExpediente(e.expediente, e.id, e.estado)}
+                    {e.estado === "Borrador" && !e.expediente?.trim()
+                      ? "Borrador de embarque"
+                      : labelExpediente(e.expediente, e.id, e.estado)}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">
@@ -97,6 +103,10 @@ export function buildEmbarqueColumns({
                 </Tooltip>
               </TooltipProvider>
             )}
+            </span>
+            <Hint label={ruta}>
+              <span className="block max-w-[220px] truncate text-label font-normal text-muted-foreground">{ruta}</span>
+            </Hint>
           </span>
         );
       },

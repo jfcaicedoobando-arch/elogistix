@@ -140,7 +140,7 @@ export default function CxpPorPagar() {
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
-            pagination={paged.pagination}
+            pagination={{ ...paged.pagination, hideWhenSinglePage: true }}
             getRowHref={(r) => `/cxp?factura=${r.factura_id}`}
             getRowAriaLabel={(r) => `Factura ${r.folio_proveedor ?? ""} de ${r.proveedor_nombre ?? ""}`}
             emptyIcon={Inbox}

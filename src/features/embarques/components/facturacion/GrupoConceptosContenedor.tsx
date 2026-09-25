@@ -52,7 +52,7 @@ export function GrupoConceptosContenedor({
           )}
           {canEdit && onGenerar && pendientesCount > 0 && (
             <Button size="sm" variant="outline" onClick={onGenerar}>
-              Generar proforma
+              Sólo este grupo
               <Badge variant="secondary" className="ml-2">{pendientesCount}</Badge>
             </Button>
           )}

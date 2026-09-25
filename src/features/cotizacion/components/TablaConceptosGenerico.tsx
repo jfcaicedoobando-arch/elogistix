@@ -19,9 +19,11 @@ interface Props {
   subtotal?: number;
   iva?: number;
   total: number;
+  /** El detalle general ya muestra el total consolidado por moneda. */
+  showTotal?: boolean;
 }
 
-export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total }: Props) {
+export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total, showTotal = true }: Props) {
   const tasaIva = useTasaIVA();
   // v13.823.341 — la etiqueta y las columnas de IVA salen de las tasas reales
   // de los renglones, no de la tasa global de la organización. Antes el
@@ -114,11 +116,16 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
           {iva !== undefined && !hayIva && <AvisoSinIva pendientes={hayPendientes} />}
-          <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
+          <TotalConceptos mostrar={showTotal} moneda={moneda} total={total} />
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function TotalConceptos({ mostrar, moneda, total }: { mostrar: boolean; moneda: "USD" | "MXN"; total: number }) {
+  if (!mostrar) return null;
+  return <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>;
 }
 
 function AvisoSinIva({ pendientes }: { pendientes: boolean }) {

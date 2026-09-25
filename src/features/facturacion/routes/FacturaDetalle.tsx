@@ -41,9 +41,10 @@ export default function FacturaDetalle() {
   const idValido = esUuid(id);
   const controller = useFacturaDetalleController(idValido ? id : undefined);
   const { canEdit, puedeEmitir, factura, isLoading, error, refetch, flags } = controller;
-  useRegisterBreadcrumbLabel(id, factura?.numero);
+  const numeroVisible = factura?.numero?.startsWith("BORRADOR-") ? "Borrador de factura" : factura?.numero;
+  useRegisterBreadcrumbLabel(id, numeroVisible);
   // UIA-12: título de pestaña por folio de factura.
-  useDocumentTitle(factura?.numero ? `Factura ${factura.numero}` : "Factura");
+  useDocumentTitle(numeroVisible ? `Factura ${numeroVisible}` : "Factura");
 
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import AgenteEmbarques from "@/features/portal-agente/routes/AgenteEmbarques";
 
 const embarquesMock = [
@@ -38,21 +39,21 @@ vi.mock("@/features/portal-agente/hooks", () => ({
 
 describe("AgenteEmbarques — formateo de fechas date-only (TZ México)", () => {
   it("muestra el día exacto de la fecha almacenada sin correrla por zona horaria", () => {
-    render(<AgenteEmbarques />);
+    render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
 
     expect(screen.getByText("28/09/2026")).toBeInTheDocument();
     expect(screen.getByText("22/10/2026")).toBeInTheDocument();
   });
 
   it("no muestra el día anterior (regresión física confirmada)", () => {
-    render(<AgenteEmbarques />);
+    render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
 
     expect(screen.queryByText("27/09/2026")).not.toBeInTheDocument();
     expect(screen.queryByText("21/10/2026")).not.toBeInTheDocument();
   });
 
   it("usa el guión como fallback cuando la fecha es nula", () => {
-    render(<AgenteEmbarques />);
+    render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
 
     const guiones = screen.getAllByText("—");
     expect(guiones.length).toBeGreaterThanOrEqual(2);

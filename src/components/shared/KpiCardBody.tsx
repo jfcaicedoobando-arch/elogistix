@@ -81,7 +81,7 @@ export function KpiBodyInline({
           )}
           {delta && <p className={cn("text-body-sm tabular-nums", kpiDeltaClass(deltaVariant))}>{delta}</p>}
           {sublabel && !delta && (
-            <Hint label={sublabel}><p className="text-label text-muted-foreground truncate">{sublabel}</p></Hint>
+            <Hint label={sublabel}><p className="text-label text-muted-foreground line-clamp-2 break-words">{sublabel}</p></Hint>
           )}
           {children}
         </div>
@@ -134,7 +134,7 @@ export function KpiBodyChip({
             )}
             {sublabel && !delta && (
               <Hint label={sublabel}>
-                <p className="text-body-sm text-muted-foreground truncate mt-0.5">
+                <p className="text-body-sm text-muted-foreground line-clamp-2 break-words mt-0.5">
                   {sublabel}
                 </p>
               </Hint>

@@ -158,7 +158,7 @@ export function DashboardEjecutivoFacturacion() {
         />
       </div>
 
-      {tendencia.length > 0 && (
+      {tendencia.some((t) => t.facturado_mxn !== 0 || t.cobrado_mxn !== 0) && (
         <Card>
           <CardContent className="p-3">
             <p className="text-overline mb-2">
@@ -184,4 +184,3 @@ export function DashboardEjecutivoFacturacion() {
     </div>
   );
 }
-
