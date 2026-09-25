@@ -48,7 +48,9 @@ export async function fetchDiagnosticoTarifas(
     (f) => f.estado_aprobacion !== "rechazada",
   );
   if (filas.length === 0) return "ninguna";
-  if (filas.some((f) => f.estado_aprobacion === "borrador")) return "pendiente";
-  if (filas.every((f) => esVigenciaVencida(f.vigente_hasta, p.hoy))) return "vencida";
+  // P2-A7: sólo se ofrece aprobar un borrador que TODAVÍA puede aprobarse.
+  const vencida = (f: FilaDiagnostico) => esVigenciaVencida(f.vigente_hasta, p.hoy);
+  if (filas.some((f) => f.estado_aprobacion === "borrador" && !vencida(f))) return "pendiente";
+  if (filas.every(vencida)) return "vencida";
   return "ninguna";
 }

@@ -87,7 +87,7 @@ export function CosteoTarifasFiltros({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todas">Todas</SelectItem>
-          <SelectItem value="vigente">Vigentes</SelectItem>
+          <SelectItem value="vigente">Vigentes hoy</SelectItem>
           <SelectItem value="vencida">Vencidas</SelectItem>
           <SelectItem value="reemplazada">Reemplazadas</SelectItem>
         </SelectContent>

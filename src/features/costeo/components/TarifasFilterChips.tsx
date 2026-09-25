@@ -35,7 +35,7 @@ const aprobLabels: Record<AprobacionFiltro, string> = {
 };
 
 const estadoLabels: Record<EstadoFiltro, string> = {
-  vigente: "Vigentes",
+  vigente: "Vigentes hoy",
   vencida: "Vencidas",
   reemplazada: "Reemplazadas",
   todas: "Todas",
