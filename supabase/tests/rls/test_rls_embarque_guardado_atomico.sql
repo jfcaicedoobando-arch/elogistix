@@ -28,7 +28,7 @@ BEGIN
     id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo,
     tipo_servicio, tipo_contenedor, bl_house
   ) VALUES (
-    v_embarque, 'ELATOMIC01', v_cliente, 'Cliente prueba atómica', v_org,
+    v_embarque, 'ELATM00001', v_cliente, 'Cliente prueba atómica', v_org,
     'Marítimo', 'Importación', 'FCL', '40HC', 'BL-ORIGINAL'
   );
   INSERT INTO public.embarque_contenedores(
