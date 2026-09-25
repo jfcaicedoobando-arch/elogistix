@@ -78,8 +78,12 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
   } = params;
 
   // Tratamiento de IVA desconocido ≠ no gravado: se exige decisión explícita.
-  if (conceptosSeleccionados.some(tratamientoIvaPendiente)) {
-    throw new ProformaValidationError(MSG_PROFORMA_IVA_PENDIENTE);
+  const pendientes = conceptosSeleccionados.filter(tratamientoIvaPendiente);
+  if (pendientes.length > 0) {
+    const nombres = pendientes.map((c) => c.descripcion).filter(Boolean).join(", ");
+    throw new ProformaValidationError(
+      `${MSG_PROFORMA_IVA_PENDIENTE}${nombres ? ` Pendientes: ${nombres}.` : ""}`,
+    );
   }
 
   // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.

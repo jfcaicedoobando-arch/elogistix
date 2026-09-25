@@ -12,6 +12,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
 import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
 import type { ConceptoVentaLocal as ConceptoVentaRow } from "@/types/concepto";
+import { SelectTratamientoIva } from "@/features/embarques/components/conceptos/SelectTratamientoIva";
 import { ventaBloqueada, MOTIVO_VENTA_BLOQUEADA } from "@/features/embarques/domain/conceptoBloqueado";
 
 interface Props {
@@ -40,6 +41,7 @@ export function FilaVentaPrecio({
     // rejilla `minmax(0,1fr)` del padre en lugar de desbordar el card.
     <div className={`grid ${cols} gap-2 items-center [&>*]:min-w-0`}>
       {bloqueado && <span className="sr-only">{MOTIVO_VENTA_BLOQUEADA}</span>}
+      <div className="flex flex-col gap-1">
       <ConceptoCatalogoSelect
         value={venta.concepto}
         disabled={bloqueado}
@@ -54,6 +56,19 @@ export function FilaVentaPrecio({
           update(venta.id, 'tipoIva', f.tipoIva);
         }}
       />
+      {/* Clasificación explícita para líneas heredadas "Por definir". */}
+      <SelectTratamientoIva
+        tipoIva={venta.tipoIva}
+        aplicaIva={venta.aplicaIva}
+        tasaIva={venta.tasaIva}
+        disabled={bloqueado}
+        onChange={c => {
+          update(venta.id, 'tipoIva', c.tipoIva);
+          update(venta.id, 'tasaIva', c.tasaIva);
+          update(venta.id, 'aplicaIva', c.aplicaIva);
+        }}
+      />
+      </div>
       <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
       {/* R219-UI-01: el campo es el precio UNITARIO; el subtotal de la fila se
           muestra en la columna "Total USD" ya multiplicado por la cantidad. */}
