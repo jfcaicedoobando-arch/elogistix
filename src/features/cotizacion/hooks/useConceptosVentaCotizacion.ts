@@ -42,10 +42,9 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
       // de la descripción. No hay reset por descripción libre.
       //
       // P1-IVA: la tasa y la clasificación fiscal viajan siempre juntas. Al
-      // cambiar la tasa desde el selector se sincroniza `tipo_iva`
+      // llegar una tasa (catálogo o tarifa) se sincroniza `tipo_iva`
       // (0% → tasa_0, 8% → gravado_8, 16% → gravado_16), y los tratamientos
-      // `exento` / `no_objeto` NO se degradan: esas filas no tienen selector
-      // y su tipo explícito manda.
+      // `exento` / `no_objeto` NO se degradan: su tipo explícito manda.
       if (campo === "tasa_iva_aplicada" && typeof valor === "number") {
         if (esTratamientoBloqueado(copia[index].tipo_iva)) {
           copia[index].tasa_iva_aplicada = prev[index].tasa_iva_aplicada;
@@ -54,16 +53,13 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
           copia[index].tipo_iva = tipoIvaDesdeTasaSeleccionada(valor);
         }
       }
-      if (campo === "aplica_iva" && typeof valor === "boolean") {
-        if (esTratamientoBloqueado(copia[index].tipo_iva)) {
-          copia[index].aplica_iva = prev[index].aplica_iva;
-        } else {
-          copia[index].tasa_iva_aplicada = valor ? tasaIva : 0;
-          // Apagar el IVA NO afirma que el tratamiento SAT sea "Exento": sólo
-          // retira la clasificación gravada para que nadie la contradiga.
-          copia[index].tipo_iva = valor ? tipoIvaDesdeTasaSeleccionada(tasaIva) : undefined;
-        }
+      // IVA explícito: ya no existe el interruptor de "IVA apagado". `aplica_iva`
+      // es un valor DERIVADO del tratamiento SAT, así que un cambio directo se
+      // ignora: apagar el IVA no dice si la línea es tasa 0%, exenta o no objeto.
+      if (campo === "aplica_iva") {
+        copia[index].aplica_iva = prev[index].aplica_iva;
       }
+
       // P2-IVA: al clasificar explícitamente una línea "por definir", la tasa
       // se alinea con el tratamiento elegido para no crear una combinación
       // contradictoria (no_objeto/exento sin tasa, tasa_0 con 0, gravados con

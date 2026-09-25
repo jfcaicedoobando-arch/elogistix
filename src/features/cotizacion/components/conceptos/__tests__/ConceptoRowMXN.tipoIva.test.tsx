@@ -66,9 +66,9 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
   });
 
   it.each([
-    ["no_objeto", "No objeto · SAT 01"],
+    ["no_objeto", "No objeto"],
     ["exento", "Exento"],
-  ])("muestra %s sin selector ni intento de cambiar la tasa", (tipoIva, etiqueta) => {
+  ])("muestra %s en el selector de tratamiento, sin tasa suelta", (tipoIva, etiqueta) => {
     const actualizar = vi.fn();
     render(
       <ConceptoRowMXN
@@ -81,8 +81,9 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue(etiqueta);
+    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveTextContent(etiqueta);
     expect(screen.queryByLabelText("Tasa de IVA")).not.toBeInTheDocument();
+    // Abrir el selector no reclasifica nada por sí solo.
     fireEvent.click(screen.getByLabelText("Tratamiento de IVA"));
     expect(actualizar).not.toHaveBeenCalled();
   });
@@ -90,9 +91,9 @@ describe("ConceptoRowMXN — tratamiento fiscal del catálogo", () => {
 
 describe("ConceptoRowUSD — tratamiento fiscal bloqueado", () => {
   it.each([
-    ["no_objeto", "No objeto · SAT 01"],
+    ["no_objeto", "No objeto"],
     ["exento", "Exento"],
-  ])("muestra %s sin selector ni intento de cambiar la tasa", (tipoIva, etiqueta) => {
+  ])("muestra %s en el selector de tratamiento, sin tasa suelta", (tipoIva, etiqueta) => {
     const actualizar = vi.fn();
     render(
       <ConceptoRowUSD
@@ -105,8 +106,9 @@ describe("ConceptoRowUSD — tratamiento fiscal bloqueado", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveValue(etiqueta);
+    expect(screen.getByLabelText("Tratamiento de IVA")).toHaveTextContent(etiqueta);
     expect(screen.queryByLabelText("Tasa de IVA")).not.toBeInTheDocument();
+    // Abrir el selector no reclasifica nada por sí solo.
     fireEvent.click(screen.getByLabelText("Tratamiento de IVA"));
     expect(actualizar).not.toHaveBeenCalled();
   });
