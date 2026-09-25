@@ -45,7 +45,7 @@ export function SugerenciasTarifaResultados({ isFetching, error, isRefetching, t
       <EmptyStateInline
         icon={FileSearch}
         message="No hay tarifas vigentes para esta combinación."
-        hint='Cotiza manualmente o captura una nueva en "Tarifas marítimas".'
+        hint="Para FCL, vincula una tarifa vigente o captura una nueva en Catálogo de tarifas antes de continuar."
         className="rounded-md border border-dashed"
       />
     );

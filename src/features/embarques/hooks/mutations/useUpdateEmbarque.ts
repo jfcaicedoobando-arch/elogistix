@@ -9,12 +9,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/query';
 import { actualizarEmbarqueRpc } from '@/features/embarques/services';
-import { sincronizarContenedores } from '@/features/embarques/services/contenedores';
 import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError } from '@/lib/ui/appFeedback';
 import { invalidateProfitDependencies } from '@/features/profit/hooks/invalidateProfitDependencies';
-import { getErrorMessage } from "@/lib/errors";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -36,9 +33,6 @@ export function useUpdateEmbarque() {
   return useMutation({
     mutationFn: async (input: UpdateEmbarqueInput) => {
       await actualizarEmbarqueRpc({ ...input, requestId: input.requestId ?? newRequestId() });
-      if (input.contenedores !== undefined) {
-        await sincronizarContenedores(input.id, input.contenedores);
-      }
       return { id: input.id } as EmbarqueRow;
     },
     onSuccess: (embarqueActualizado) => {
@@ -60,9 +54,6 @@ export function useUpdateEmbarque() {
       invalidateProfitDependencies(queryClient);
       // Nota: el toast de éxito lo dispara el caller (p. ej. useEditarEmbarqueWizard)
       // con una descripción más específica; evitamos duplicar aquí.
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo actualizar embarque", description: getErrorMessage(error), error, method: "UPDATE_EMBARQUE" });
     },
   });
 }

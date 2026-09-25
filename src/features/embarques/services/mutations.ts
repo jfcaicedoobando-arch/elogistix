@@ -65,6 +65,8 @@ export interface ActualizarEmbarqueRpcInput {
   embarque: Partial<TablesInsert<'embarques'>>;
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
+  /** Si se proporciona, los contenedores se guardan en la misma transacción. */
+  contenedores?: ContenedorBorrador[];
   /** Idempotency key (A.3): si llega el mismo id dos veces, no se reescriben los conceptos. */
   requestId?: string;
   /**
@@ -82,18 +84,18 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
   const { operador: _op, created_by_email: _cbe, created_by: _cb, ...embarqueSinCreador } = input.embarque;
   void _op; void _cbe; void _cb;
   await run(
-    // SAFE-CAST: la firma de 6 args con p_expected_updated_at aún no está
-    // regenerada en `types.ts`; el schema real en BD la acepta.
+    // SAFE-CAST: la firma de la nueva RPC todavía no está en `types.ts`.
     (supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: unknown }>)('actualizar_embarque_completo', {
+    ) => Promise<{ data: unknown; error: unknown }>)('actualizar_embarque_con_contenedores', {
       p_embarque_id: input.id,
       p_embarque: toDbJson(embarqueSinCreador),
       p_conceptos_venta: toDbJson(input.conceptosVenta),
       p_conceptos_costo: toDbJson(input.conceptosCosto),
       p_request_id: input.requestId,
       p_expected_updated_at: input.expectedUpdatedAt ?? null,
+      p_contenedores: input.contenedores === undefined ? null : toDbJson(input.contenedores),
     }),
   );
   await registrarBitacoraEmbarque({
