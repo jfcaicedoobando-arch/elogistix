@@ -50,11 +50,19 @@ describe("useConceptosVentaCotizacion — tasa y tratamiento fiscal sincronizado
     expect(result.current.conceptosUSD[1].tasa_iva_aplicada).toBe(0);
   });
 
-  it("apagar el IVA retira la clasificación gravada sin afirmar 'exento'", () => {
-    const { result } = renderHook(() => useConceptosVentaCotizacion());
+  it("ya no hay 'IVA apagado': un cambio directo de aplica_iva se ignora", () => {
+    const { result } = renderHook(() =>
+      useConceptosVentaCotizacion({
+        initialMXN: [{
+          descripcion: "Maniobras", unidad_medida: "Servicio", cantidad: 1, precio_unitario: 1000,
+          moneda: "MXN", total: 1160, aplica_iva: true, tasa_iva_aplicada: 0.16, tipo_iva: "gravado_16",
+        }],
+      }),
+    );
     act(() => result.current.actualizarConcepto("MXN", 0, "aplica_iva", false));
     const fila = result.current.conceptosMXN[0];
-    expect(fila.tipo_iva).toBeUndefined();
-    expect(fila.tasa_iva_aplicada).toBe(0);
+    expect(fila.aplica_iva).toBe(true);
+    expect(fila.tipo_iva).toBe("gravado_16");
+    expect(fila.tasa_iva_aplicada).toBe(0.16);
   });
 });
