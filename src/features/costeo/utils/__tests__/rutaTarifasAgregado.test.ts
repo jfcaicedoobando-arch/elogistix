@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { agregarTarifasRuta, type TarifaRutaAgregable } from "../rutaTarifasAgregado";
-import { calcularEstadoRuta } from "../rutaEstado";
+import { computeRutaEstado } from "../rutaEstado";
 
 const HOY = "2026-09-24";
 const base: TarifaRutaAgregable = {
@@ -38,7 +38,7 @@ describe("agregarTarifasRuta", () => {
   });
   it("ruta con sólo tarifa futura no se muestra Activa", () => {
     const agg = agregarTarifasRuta([{ ...base, vigente_desde: "2026-10-15", vigente_hasta: "2026-11-15" }], HOY);
-    const estado = calcularEstadoRuta({ activa: true, ...agg } as never, HOY);
+    const estado = computeRutaEstado({ activa: true, ...agg } as never);
     expect(estado.key).not.toBe("activa");
   });
 });
