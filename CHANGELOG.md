@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.5] - 2026-09-25
+
+Pulido visual del ERP: mejor legibilidad y navegación en escritorio HD y pantallas estrechas, sin cambios de lógica de negocio.
+
+- **fix(UI · agente y embarques)**: el encabezado evita solapamientos; tarifas y embarques priorizan ruta, estado y flete, con tarjetas legibles en móvil y borradores sin identificadores técnicos a la vista.
+- **fix(UI · facturación y cotizaciones)**: bandejas agrupadas por etapa, acciones de proforma sin duplicación, total de cotización mostrado una sola vez y estados sin factura expresados como conteos claros.
+- **fix(UI · finanzas y reportes)**: columnas y paneles adaptados a 1280 px, importes exactos accesibles, ayudas legibles y gráficos de baja densidad más compactos. Se agregan pruebas de regresión visual y de contratos existentes.
+
 ## [13.824.4] - 2026-09-22
 
 - **chore(version)**: bump a v13.824.4.
