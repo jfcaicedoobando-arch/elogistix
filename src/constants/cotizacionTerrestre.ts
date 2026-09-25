@@ -10,6 +10,7 @@ export const MODALIDADES_EQUIPO_TERRESTRE = [
   "Torton",
   "Camión Full",
   "Camión Sencillo",
+  "Cja 53' Refrigerada",
 ] as const;
 
 export const TIPOS_OPERACION_TERRESTRE = ["Nacional", "Cross Trade"] as const;
