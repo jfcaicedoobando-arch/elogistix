@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { SelectTratamientoIva, cambioDesdeTipoIva } from "../SelectTratamientoIva";
+import { SelectTratamientoIva } from "../SelectTratamientoIva";
+import { cambioDesdeTipoIva } from "@/features/embarques/domain/cambioTratamientoIva";
 
 describe("SelectTratamientoIva", () => {
   it("deriva tasa y switch coherentes por tratamiento", () => {

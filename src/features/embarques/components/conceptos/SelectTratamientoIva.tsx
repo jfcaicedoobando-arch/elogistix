@@ -5,21 +5,10 @@
  * concepto del catálogo. Nunca infiere: el usuario elige explícitamente.
  */
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TIPO_IVA_OPCIONES, TIPO_IVA_LABEL_CORTO, esTipoIvaSat, tasaDeTipoIva, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
+import { TIPO_IVA_OPCIONES, TIPO_IVA_LABEL_CORTO, esTipoIvaSat } from "@/lib/financial/tipoIvaSat";
 import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { cn } from "@/lib/utils";
-
-export interface CambioTratamientoIva {
-  tipoIva: TipoIvaSat;
-  tasaIva: number;
-  aplicaIva: boolean;
-}
-
-/** Deriva los tres campos de la línea a partir del tratamiento SAT elegido. */
-export function cambioDesdeTipoIva(tipo: TipoIvaSat): CambioTratamientoIva {
-  const tasa = tasaDeTipoIva(tipo);
-  return { tipoIva: tipo, tasaIva: tasa ?? 0, aplicaIva: tasa != null && tasa > 0 };
-}
+import { cambioDesdeTipoIva, type CambioTratamientoIva } from "@/features/embarques/domain/cambioTratamientoIva";
 
 interface Props {
   tipoIva?: string | null;
