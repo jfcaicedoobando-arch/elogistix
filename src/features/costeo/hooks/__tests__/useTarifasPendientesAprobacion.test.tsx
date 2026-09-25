@@ -25,7 +25,9 @@ describe("useTarifasPendientesAprobacion", () => {
   });
 
   it("devuelve el conteo cuando hay 5 tarifas en borrador", async () => {
-    const eq2 = vi.fn().mockResolvedValue({ count: 5, error: null });
+    // P2-A6: tras los dos eq se filtran vencidos con gte(vigente_hasta, hoy).
+    const gte = vi.fn().mockResolvedValue({ count: 5, error: null });
+    const eq2 = vi.fn().mockReturnValue({ gte });
     const eq1 = vi.fn().mockReturnValue({ eq: eq2 });
     mockSelect.mockReturnValue({ eq: eq1 });
 
@@ -35,7 +37,8 @@ describe("useTarifasPendientesAprobacion", () => {
   });
 
   it("propaga error de Supabase sin devolver 0", async () => {
-    const eq2 = vi.fn().mockResolvedValue({ count: null, error: new Error("boom") });
+    const gte = vi.fn().mockResolvedValue({ count: null, error: new Error("boom") });
+    const eq2 = vi.fn().mockReturnValue({ gte });
     const eq1 = vi.fn().mockReturnValue({ eq: eq2 });
     mockSelect.mockReturnValue({ eq: eq1 });
 
