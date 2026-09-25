@@ -75,7 +75,7 @@ export function TarifaRecargosEditor({ value, onChange, mostrarErrores = false }
               aria-describedby={mostrarErrores && !(Number(r.monto) > 0) ? `recargo-monto-err-${i}` : undefined}
             />
             {mostrarErrores && !(Number(r.monto) > 0) && (
-              <p id={`recargo-monto-err-${i}`} className="mt-1 text-caption text-destructive">
+              <p id={`recargo-monto-err-${i}`} className="mt-1 text-body-sm text-destructive">
                 Captura un monto mayor a 0 o quita el recargo.
               </p>
             )}
