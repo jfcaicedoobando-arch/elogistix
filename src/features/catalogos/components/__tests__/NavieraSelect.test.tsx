@@ -13,6 +13,9 @@ vi.mock("@/components/shared/NavieraFormDialog", () => ({
   NavieraFormDialog: () => null,
 }));
 
+const perms = { isSuperAdmin: true };
+vi.mock("@/hooks/shared", () => ({ usePermissions: () => perms }));
+
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 
 describe("<NavieraSelect />", () => {
@@ -25,5 +28,14 @@ describe("<NavieraSelect />", () => {
     expect(screen.getByTestId("naviera-select-empty")).toBeInTheDocument();
     expect(screen.getByText(/No hay navieras activas/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /crear naviera/i })).toBeInTheDocument();
+  });
+
+  it("oculta la CTA a usuarios sin permiso de alta (RLS navieras)", () => {
+    perms.isSuperAdmin = false;
+    vi.mocked(useNavieras).mockReturnValue({ data: [], isLoading: false } as unknown as ReturnType<typeof useNavieras>);
+    render(<NavieraSelect value={null} onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole("combobox"));
+    expect(screen.queryByRole("button", { name: /crear naviera/i })).not.toBeInTheDocument();
+    perms.isSuperAdmin = true;
   });
 });
