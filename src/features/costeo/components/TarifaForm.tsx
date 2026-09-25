@@ -50,9 +50,6 @@ interface Props {
   organizationIdOverride?: string | null;
 }
 
-
-
-
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride, organizationIdOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
   const { data: rutasData = [] } = useCosteoRutas();
@@ -117,7 +114,6 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
     if (!valido || pendiente) return;
     ejecutarSubmit();
   };
-
 
   const guardarLabel = computeGuardarLabel({ pendiente, esEdicion, rutasCount: rutaIds.length });
 

@@ -19,6 +19,7 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `crear_embarque_borrador_desde_cotizacion` | `embarques/` |
 | `avanzar_estado_embarque` | `embarques/` |
 | `actualizar_embarque_completo` | `embarques/` |
+| `actualizar_embarque_con_contenedores` | `embarques/` — envuelve actualización y sincronización de contenedores en una transacción (`20260925021600`) |
 | `crear_embarque_borrador_core` | `embarques/` |
 
 ## Altas Ola 6 (O6-SCHEMA) — capturadas 1:1 desde las migraciones 2026-08-18/19

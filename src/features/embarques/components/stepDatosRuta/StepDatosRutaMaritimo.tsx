@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ function filaErrores(errors: StepValidationErrors, index: number): string[] {
 
 export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNavieraId }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
+  const [avisoCambioFcl, setAvisoCambioFcl] = useState(false);
   const tipoServicio = watch('tipoServicio');
   const contenedores = watch('contenedores') ?? [];
   const generales = {
@@ -55,7 +57,6 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
     setValue(campo, id, { shouldValidate: true, shouldDirty: true });
   };
 
-
   const aplicarConservacion = (filas: typeof contenedores) => {
     setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
       shouldValidate: true,
@@ -64,6 +65,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
   };
 
   const handleTipoServicioChange = (v: string) => {
+    setAvisoCambioFcl(v === 'LCL' && tipoServicio === 'FCL' && contenedores.length > 0);
     setValue('tipoServicio', v, { shouldValidate: true, shouldDirty: true });
     if (v === 'LCL') {
       setValue('tipoContenedor', 'LCL', { shouldValidate: true, shouldDirty: true });
@@ -79,8 +81,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
 
   // Borradores reabiertos ya en FCL con filas en cero: se avisa y el operador
   // decide (nunca se repone en automático, para respetar el cero explícito).
-  const mostrarAvisoConservar =
-    tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
+  const mostrarAvisoConservar = tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
 
   return (
     <>
@@ -109,7 +110,6 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           />
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
-
       </div>
       <NavieraEmbarqueSelector cotizacionNavieraId={cotizacionNavieraId} />
       <AgenteEmbarqueSelector cotizacionAgenteId={cotizacionAgenteId} />
@@ -130,16 +130,27 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
         )} />
         {errors.tipoServicio && <p className={errClass}>{errors.tipoServicio}</p>}
       </div>
-
       <div className="space-y-2 md:col-span-2">
         <Label>Contenedores *</Label>
         {tipoServicio === 'LCL' ? (
-          <Input aria-label="Contenedores" value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
+          <>
+            {avisoCambioFcl && (
+              <Alert variant="warning">
+                <AlertTriangle className="size-4" />
+                <AlertTitle>Revisa los costos antes de guardar como LCL</AlertTitle>
+                <AlertDescription>
+                  El cambio quita los contenedores FCL. Si alguno tiene costos o ventas vinculados,
+                  primero reasigna esos conceptos; el guardado se rechazará sin modificar el embarque.
+                </AlertDescription>
+              </Alert>
+            )}
+            <Input aria-label="Contenedores" value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
+          </>
         ) : (
           <>
             {mostrarAvisoConservar && (
               <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Las cantidades quedarían en cero</AlertTitle>
                 <AlertDescription className="space-y-2">
                   <p>

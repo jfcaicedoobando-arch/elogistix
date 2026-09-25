@@ -26,8 +26,8 @@ vi.mock("@/features/embarques/services/contenedores", () => ({
   sincronizarContenedores: vi.fn().mockResolvedValue([]),
 }));
 
-import { crearEmbarqueRpc } from "@/features/embarques/services";
-import { crearMuchos, sincronizarContenedores } from "@/features/embarques/services/contenedores";
+import { crearEmbarqueRpc, actualizarEmbarqueRpc } from "@/features/embarques/services";
+import { crearMuchos } from "@/features/embarques/services/contenedores";
 import { eliminarEmbarqueRpc } from "@/features/embarques/services";
 import { useCreateEmbarque } from "../useCreateEmbarque";
 import { useUpdateEmbarque } from "../useUpdateEmbarque";
@@ -113,7 +113,7 @@ describe("useCreateEmbarque", () => {
 });
 
 describe("useUpdateEmbarque", () => {
-  it("sincroniza contenedores cuando vienen definidos e invalida las queries", async () => {
+  it("envía los contenedores dentro de la RPC e invalida las queries", async () => {
     const { wrapper, spy } = makeWrapper();
     const { result } = renderHook(() => useUpdateEmbarque(), { wrapper });
     await result.current.mutateAsync({
@@ -123,13 +123,13 @@ describe("useUpdateEmbarque", () => {
       conceptosCosto: [],
       contenedores: [],
     });
-    expect(sincronizarContenedores).toHaveBeenCalledWith("emb-1", []);
+    expect(actualizarEmbarqueRpc).toHaveBeenCalledWith(expect.objectContaining({ id: "emb-1", contenedores: [] }));
     expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.detail("emb-1") });
   });
 
-  it("omite sincronizarContenedores si contenedores es undefined", async () => {
+  it("omite los contenedores si son undefined", async () => {
     const { wrapper } = makeWrapper();
-    vi.mocked(sincronizarContenedores).mockClear();
+    vi.mocked(actualizarEmbarqueRpc).mockClear();
     const { result } = renderHook(() => useUpdateEmbarque(), { wrapper });
     await result.current.mutateAsync({
       id: "emb-2",
@@ -137,7 +137,7 @@ describe("useUpdateEmbarque", () => {
       conceptosVenta: [],
       conceptosCosto: [],
     });
-    expect(sincronizarContenedores).not.toHaveBeenCalled();
+    expect(vi.mocked(actualizarEmbarqueRpc).mock.calls[0]?.[0]).not.toHaveProperty("contenedores");
   });
 });
 

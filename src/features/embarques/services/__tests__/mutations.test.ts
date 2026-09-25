@@ -104,23 +104,27 @@ describe("crearEmbarqueRpc", () => {
 });
 
 describe("actualizarEmbarqueRpc", () => {
-  it("envía p_embarque_id y p_request_id a la RPC", async () => {
-    mock.setRpcResult("actualizar_embarque_completo", { data: null, error: null });
+  it("envía embarque y contenedores en una sola RPC", async () => {
+    mock.setRpcResult("actualizar_embarque_con_contenedores", { data: null, error: null });
+    const contenedores = [{ numero_contenedor: "COSU1234560", tipo_contenedor: "40HC" }];
     await actualizarEmbarqueRpc({
       id: UUID,
       embarque: { eta: "2026-06-15" },
       conceptosVenta: [],
       conceptosCosto: [],
+      contenedores: contenedores as never,
       requestId: "req-upd",
     });
-    const call = mock.rpcCalls.find((c) => c.fn === "actualizar_embarque_completo");
-    const args = call?.args as { p_embarque_id: string; p_request_id: string };
+    const call = mock.rpcCalls.find((c) => c.fn === "actualizar_embarque_con_contenedores");
+    const args = call?.args as { p_embarque_id: string; p_request_id: string; p_contenedores: unknown };
     expect(args.p_embarque_id).toBe(UUID);
     expect(args.p_request_id).toBe("req-upd");
+    expect(args.p_contenedores).toEqual(contenedores);
+    expect(mock.rpcCalls).toHaveLength(1);
   });
 
   it("propaga el error de Supabase", async () => {
-    mock.setRpcResult("actualizar_embarque_completo", { data: null, error: new Error("conflict") });
+    mock.setRpcResult("actualizar_embarque_con_contenedores", { data: null, error: new Error("conflict") });
     await expect(
       actualizarEmbarqueRpc({
         id: UUID,

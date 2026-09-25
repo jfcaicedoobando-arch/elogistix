@@ -1,7 +1,4 @@
-/**
- * Estado y handlers de la página `CosteoTarifas` extraídos para mantener el
- * componente por debajo de los límites de líneas/complejidad (eslint).
- */
+/** Estado y handlers de la página `CosteoTarifas`. */
 import { useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
@@ -18,10 +15,8 @@ import {
 } from "@/features/costeo/utils/vigenciaTarifa";
 
 export type ViewMode = "agrupada" | "tabla";
-
 const DEFAULT_APROB: AprobacionFiltro = "todas";
 const DEFAULT_ESTADO: EstadoFiltro = "todas";
-
 function readViewMode(): ViewMode {
   return safeLocalStorage.getItem(STORAGE_KEYS.tarifasViewMode) === "tabla" ? "tabla" : "agrupada";
 }
@@ -54,7 +49,6 @@ export function useCosteoTarifasPageState() {
   const [editId, setEditId] = useState<string | undefined>();
   const [aEliminar, setAEliminar] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
-
   const changeView = useCallback((v: ViewMode) => {
     setViewMode(v);
     safeLocalStorage.setItem(STORAGE_KEYS.tarifasViewMode, v);
@@ -72,7 +66,6 @@ export function useCosteoTarifasPageState() {
 
   const { data: tarifas = [], isLoading, isError, refetch } = useCosteoTarifas(tarifaFilters);
   const { eliminar } = useCosteoTarifaMutations();
-
   const tarifasFiltradas = useMemo(() => {
     const hoy = todayLocalISO();
     return tarifas.filter((t) => {

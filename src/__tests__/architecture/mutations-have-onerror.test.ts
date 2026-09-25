@@ -24,6 +24,9 @@ const WHITELIST = new Set<string>([
   // (`DialogEliminarEmbarque`) muestra el toast con el mensaje enriquecido
   // (expediente + error real). Un onError aquí produciría doble toast.
   "src/features/embarques/hooks/mutations/useDeleteEmbarque.ts",
+  // `useUpdateEmbarque` propaga el error al wizard; su caller muestra el
+  // mensaje contextual. Un onError aquí duplicaría el toast al guardar.
+  "src/features/embarques/hooks/mutations/useUpdateEmbarque.ts",
   // `useRegistrarPagoProveedor` es silencioso por diseño: la UI consumidora
   // (`DialogRegistrarPagoProveedor`) emite los toasts de éxito/error con
   // mensajes traducidos. Un onError aquí produciría doble toast (v13.218.2).
