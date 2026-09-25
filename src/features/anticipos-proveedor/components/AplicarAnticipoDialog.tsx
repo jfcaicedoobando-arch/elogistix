@@ -21,7 +21,8 @@ import { buildSchema } from "../domain/aplicarAnticipoSchema";
 import { calcularTopeAplicable } from "../domain/topeAplicacionAnticipo";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks";
 
-type FormValues = z.infer<ReturnType<typeof buildSchema>>;
+type FormInput = z.input<ReturnType<typeof buildSchema>>;
+type FormValues = z.output<ReturnType<typeof buildSchema>>;
 
 interface Props {
   open: boolean;
@@ -55,7 +56,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
     [saldoDisponible, monedaAnticipo, tope.tope],
   );
 
-  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
+  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       facturaId: "", saldoFactura: 0, monedaFactura: "MXN",
@@ -85,7 +86,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const monedaDifiere = Boolean(anticipo) && monedaFactura && anticipo!.moneda !== monedaFactura;
 
   // B-061: handler de inválidos — el JSON crudo de zod ya no se traga.
-  const onInvalid = (errs: FieldErrors<FormValues>) => {
+  const onInvalid = (errs: FieldErrors<FormInput>) => {
     const first = Object.values(errs)[0];
     notifyError(undefined, {
       title: "Revisa el formulario",

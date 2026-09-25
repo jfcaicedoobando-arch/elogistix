@@ -9,16 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { ProveedorCombobox } from "@/features/cxp";
 import { formatCurrency } from "@/lib/formatters";
-import { type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
+import { type RegistrarAnticipoFormInput, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 import { EmbarqueAnticipoPicker } from "./EmbarqueAnticipoPicker";
 import { RegistrarAnticipoPagoFields } from "./RegistrarAnticipoPagoFields";
 import { type CuentaOption } from "../domain/etiquetaCuenta";
 
 
 interface Props {
-  control: Control<RegistrarAnticipoFormValues>;
-  register: UseFormRegister<RegistrarAnticipoFormValues>;
-  errors: FieldErrors<RegistrarAnticipoFormValues>;
+  control: Control<RegistrarAnticipoFormInput, unknown, RegistrarAnticipoFormValues>;
+  register: UseFormRegister<RegistrarAnticipoFormInput>;
+  errors: FieldErrors<RegistrarAnticipoFormInput>;
   moneda: string;
   requiereCuenta: boolean;
   cuentaBancariaId?: string;

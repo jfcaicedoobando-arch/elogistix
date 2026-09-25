@@ -16,7 +16,7 @@ import {
   tcSugeridoParaMoneda,
   type MonedaAnticipo,
 } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
-import type { RegistrarAnticipoFormValues } from "@/features/anticipos-proveedor/components/registrarAnticipo.schema";
+import type { RegistrarAnticipoFormInput } from "@/features/anticipos-proveedor/components/registrarAnticipo.schema";
 
 const SET_OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
@@ -30,7 +30,7 @@ interface Params {
   requiereCuenta: boolean;
   tipoCambioUsd: number | undefined;
   proveedorIdInicial?: string;
-  setValue: UseFormSetValue<RegistrarAnticipoFormValues>;
+  setValue: UseFormSetValue<RegistrarAnticipoFormInput>;
   /** Se invoca al abrir con proveedor fijo, para reflejar el nombre en la UI. */
   onProveedorFijo: () => void;
 }

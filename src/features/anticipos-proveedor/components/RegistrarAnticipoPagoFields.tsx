@@ -8,12 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { METODOS_PAGO, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
+import { METODOS_PAGO, type RegistrarAnticipoFormInput, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 import { etiquetaCuenta, type CuentaOption } from "../domain/etiquetaCuenta";
 
 interface Props {
-  control: Control<RegistrarAnticipoFormValues>;
-  errors: FieldErrors<RegistrarAnticipoFormValues>;
+  control: Control<RegistrarAnticipoFormInput, unknown, RegistrarAnticipoFormValues>;
+  errors: FieldErrors<RegistrarAnticipoFormInput>;
   moneda: string;
   requiereCuenta: boolean;
   cuentaBancariaId?: string;
