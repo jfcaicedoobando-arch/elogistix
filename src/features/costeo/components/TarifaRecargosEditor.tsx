@@ -17,9 +17,11 @@ const CONCEPTOS = ["BAF", "LSS", "ISPS", "THC Origen", "Cargos en Origen", "Carg
 interface Props {
   value: TarifaRecargoInput[];
   onChange: (next: TarifaRecargoInput[]) => void;
+  /** P2-A8: pinta en rojo los recargos con monto <= 0 tras intentar guardar. */
+  mostrarErrores?: boolean;
 }
 
-export function TarifaRecargosEditor({ value, onChange }: Props) {
+export function TarifaRecargosEditor({ value, onChange, mostrarErrores = false }: Props) {
   const update = (i: number, patch: Partial<TarifaRecargoInput>) => {
     onChange(value.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   };
@@ -69,7 +71,14 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
               onChange={(n: number) => update(i, { monto: n })}
               currency="USD"
               aria-label={`Monto del recargo ${i + 1} en USD`}
+              aria-invalid={mostrarErrores && !(Number(r.monto) > 0) ? true : undefined}
+              aria-describedby={mostrarErrores && !(Number(r.monto) > 0) ? `recargo-monto-err-${i}` : undefined}
             />
+            {mostrarErrores && !(Number(r.monto) > 0) && (
+              <p id={`recargo-monto-err-${i}`} className="mt-1 text-caption text-destructive">
+                Captura un monto mayor a 0 o quita el recargo.
+              </p>
+            )}
           </div>
           <div className="col-span-3">
             <Label htmlFor={`recargo-lado-${i}`} className="sr-only">{`Lado del recargo ${i + 1}`}</Label>
