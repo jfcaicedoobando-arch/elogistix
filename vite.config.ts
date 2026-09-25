@@ -141,14 +141,9 @@ export default defineConfig(({ mode }) => {
     // (lazy-loaded en routes.tsx) — el costo de bundle inicial es aceptable
     // y la app deja de quedarse en pantalla en blanco.
     //
-    // P17 · Higiene: fusionar automáticamente chunks minúsculos (<10 kB) para
-    // reducir cascadas de requests HTTP en rutas con muchos micro-imports.
-    // No cambia el grafo; solo consolida hojas pequeñas.
-    rollupOptions: {
-      output: {
-        experimentalMinChunkSize: 10_000,
-      },
-    },
+    // Vite 8 usa Rolldown. El antiguo `experimentalMinChunkSize` de Rollup
+    // ya no existe; dejamos su partición automática para preservar los
+    // límites por ruta y evitar grupos manuales con imports circulares.
   },
   };
 });
