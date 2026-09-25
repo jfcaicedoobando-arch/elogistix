@@ -156,3 +156,24 @@ describe("esTarifaSucia", () => {
     expect(esTarifaSucia({ ...base }, base, ["r2", "r1"], ["r1", "r2"])).toBe(false);
   });
 });
+
+describe("P2-A8 · recargos con monto 0 no se pierden en silencio", () => {
+  const baseOk = {
+    agente_id: "a", naviera_id: "n", ruta_id: "r", tipo_contenedor_id: "t", flete_base: 2000,
+    dias_libres_demoras: 14, vigente_desde: "2026-09-01", vigente_hasta: "2026-09-30",
+    transit_time_dias: 0, notas: "",
+  };
+  it("BAF con monto 0 bloquea el guardado y marca el error", async () => {
+    const h = await import("../TarifaForm.helpers");
+    const form = { ...baseOk, recargos: [{ concepto: "BAF", monto: 0, lado: "origen" as const, incluido_en_total: true }] };
+    expect(h.recargosInvalidos(form.recargos)).toEqual([0]);
+    expect(h.esFormValido(form)).toBe(false);
+    expect(h.calcularErrores(form, 1, false).recargos).toBe(true);
+    expect(h.camposFaltantes(h.calcularErrores(form, 1, false)).join()).toMatch(/recargos/i);
+  });
+  it("recargo con monto positivo es válido", async () => {
+    const h = await import("../TarifaForm.helpers");
+    const form = { ...baseOk, recargos: [{ concepto: "BAF", monto: 150, lado: "origen" as const, incluido_en_total: true }] };
+    expect(h.esFormValido(form)).toBe(true);
+  });
+});

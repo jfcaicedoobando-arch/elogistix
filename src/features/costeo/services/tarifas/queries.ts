@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa, CosteoTarifaRecargo, CosteoTarifaRow } from "@/features/costeo/types";
 import { CAP_LISTA } from "@/constants/queryCaps";
+import { todayLocalISO } from "@/lib/date/today";
 
 // O8 (auditoría 2026-07-29): `*` → columnas explícitas. La lista cubre el
 // listado agrupado/tabla, KPIs, filtros y `buildInitialFromTarifa`
@@ -105,7 +106,17 @@ export async function fetchCosteoTarifas(
     .eq("organization_id", organizationId)
     .order("vigente_desde", { ascending: false })
     .limit(CAP_LISTA);
-  if (filters.estado && filters.estado !== "todas") q = q.eq("estado", filters.estado);
+  if (filters.estado === "vigente") {
+    // P2-A1: "Vigentes hoy" = mismo predicado que `esTarifaUsableEn` (aprobada,
+    // no reemplazada, desde <= hoy <= hasta). Se filtra en servidor para que
+    // el cap de la lista no trunque resultados. Programadas y pendientes
+    // siguen visibles en "Todas".
+    const hoy = todayLocalISO();
+    q = q.eq("estado", "vigente").eq("estado_aprobacion", "vigente")
+      .lte("vigente_desde", hoy).gte("vigente_hasta", hoy);
+  } else if (filters.estado && filters.estado !== "todas") {
+    q = q.eq("estado", filters.estado);
+  }
   if (filters.agenteId) q = q.eq("agente_id", filters.agenteId);
   if (filters.tipoContenedorId) q = q.eq("tipo_contenedor_id", filters.tipoContenedorId);
   if (filters.rutaId) q = q.eq("ruta_id", filters.rutaId);

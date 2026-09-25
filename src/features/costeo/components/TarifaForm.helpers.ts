@@ -45,7 +45,16 @@ export function esFormValido(form: TarifaInput, opts?: { skipRutaId?: boolean })
   if (!form.agente_id || !form.naviera_id || !form.tipo_contenedor_id) return false;
   if (!opts?.skipRutaId && !form.ruta_id) return false;
   if (form.flete_base <= 0) return false;
+  if (recargosInvalidos(form.recargos).length > 0) return false;
   return vigenciaValida(form.vigente_desde, form.vigente_hasta);
+}
+
+/**
+ * P2-A8: índices de recargos visibles que el backend omitiría (monto <= 0).
+ * Se bloquea el guardado para que ningún recargo desaparezca en silencio.
+ */
+export function recargosInvalidos(recargos: TarifaInput["recargos"] | undefined): number[] {
+  return (recargos ?? []).flatMap((r, i) => (Number(r.monto) > 0 ? [] : [i]));
 }
 
 const ISO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
@@ -81,6 +90,7 @@ const ETIQUETAS: Record<string, string> = {
   flete_base: "Flete base",
   vigente_desde: "Vigencia desde",
   vigente_hasta: "Vigencia hasta",
+  recargos: "Monto de recargos (mayor a 0 o quítalos)",
 };
 
 export function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: boolean): Record<string, boolean> {
@@ -92,6 +102,7 @@ export function calcularErrores(form: TarifaInput, rutaIdsCount: number, multipl
     flete_base: !(Number(form.flete_base) > 0),
     vigente_desde: !form.vigente_desde,
     vigente_hasta: !form.vigente_hasta || (!!form.vigente_desde && !vigenciaValida(form.vigente_desde, form.vigente_hasta)),
+    recargos: recargosInvalidos(form.recargos).length > 0,
   };
 }
 

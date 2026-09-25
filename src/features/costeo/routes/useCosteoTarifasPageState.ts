@@ -30,6 +30,11 @@ function readAprobacionFromUrl(value: string | null): AprobacionFiltro {
   return value === "borrador" || value === "vigente" || value === "rechazada" ? value : DEFAULT_APROB;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function rutaIdValida(id: string | undefined): id is string {
+  return !!id && UUID_RE.test(id);
+}
+
 export function useCosteoTarifasPageState() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
@@ -89,6 +94,7 @@ export function useCosteoTarifasPageState() {
     agenteId !== "todos" ||
     tipoId !== "todos" ||
     soloPorVencer ||
+    !!rutaIdFromUrl ||
     busqueda.trim() !== "";
 
   const activeKpi: "pendientes" | "porVencer" | null =
@@ -103,13 +109,22 @@ export function useCosteoTarifasPageState() {
     setTipoId("todos");
     setBusqueda("");
     setSoloPorVencer(false);
-  }, []);
+    // P2-A2: "Limpiar filtros" también quita la ruta y la aprobación del URL.
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("ruta");
+      next.delete("aprobacion");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const clearRutaUrl = useCallback(() => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("ruta");
-    setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("ruta");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const openFormFrom = useCallback((id: string | undefined, init: Partial<TarifaInput> | undefined) => {
     setEditId(id);
@@ -137,9 +152,18 @@ export function useCosteoTarifasPageState() {
     openFormFrom(id, buildInitialFromTarifa(t));
   }, [findTarifa, openFormFrom]);
 
-  const nuevo = useCallback(() => openFormFrom(undefined, undefined), [openFormFrom]);
+  // P2-A3: desde una ruta filtrada, "Nueva tarifa" la preselecciona.
+  const nuevo = useCallback(
+    () => openFormFrom(undefined, rutaIdValida(rutaIdFromUrl) ? { ruta_id: rutaIdFromUrl } : undefined),
+    [openFormFrom, rutaIdFromUrl],
+  );
 
-  const onFilterPendientes = useCallback(() => setAprobacion("borrador"), []);
+  // P2-A4: cada KPI restablece los filtros incompatibles con su universo.
+  const onFilterPendientes = useCallback(() => {
+    setSoloPorVencer(false);
+    setEstado(DEFAULT_ESTADO);
+    setAprobacion("borrador");
+  }, []);
   const onFilterPorVencer = useCallback(() => {
     setAprobacion(DEFAULT_APROB);
     setEstado(DEFAULT_ESTADO);

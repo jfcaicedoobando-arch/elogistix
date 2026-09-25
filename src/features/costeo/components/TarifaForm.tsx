@@ -114,7 +114,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
-    if (!valido) return;
+    if (!valido || pendiente) return;
     ejecutarSubmit();
   };
 
@@ -129,6 +129,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       // Al guardar, `onSuccess` cierra con `onOpenChange(false)` directo: no
       // pasa por la guarda y por tanto no advierte.
       isDirty={sucio && !pendiente}
+      // P2-A5: mientras guarda, X / Escape / clic fuera no cierran el modal.
+      busy={pendiente}
       title={getTituloModal(tituloOverride, esEdicion)}
       description={multiple
         ? "Captura la tarifa una sola vez y elige una o varias rutas para generarlas en lote."
@@ -180,6 +182,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
         <TarifaRecargosEditor
           value={form.recargos}
           onChange={(recargos: TarifaRecargoInput[]) => setForm({ ...form, recargos })}
+          mostrarErrores={intentoEnvio}
         />
 
         <div>

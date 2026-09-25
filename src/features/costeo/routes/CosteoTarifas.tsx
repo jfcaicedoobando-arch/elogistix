@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
+import { useCosteoRutas } from "@/features/costeo/hooks/useCosteoRutas";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
@@ -35,6 +36,12 @@ export default function CosteoTarifas() {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
 
+  const { data: rutas = [] } = useCosteoRutas();
+  const rutaUrl = s.rutaIdFromUrl ? rutas.find((r) => r.id === s.rutaIdFromUrl) : undefined;
+  // P2-A2: el contexto de ruta se muestra aunque la ruta no tenga tarifas.
+  const rutaLabel = s.tarifas[0]
+    ? etiquetaRutaCompleta(origenDe(s.tarifas[0]), destinoDe(s.tarifas[0]))
+    : rutaUrl ? `${rutaUrl.puerto_origen_nombre ?? "—"} → ${rutaUrl.puerto_destino_nombre ?? "—"}` : "ruta seleccionada";
   const showEmpty = !s.isLoading && !s.isError && s.tarifasFiltradas.length === 0;
 
   return (
@@ -59,12 +66,12 @@ export default function CosteoTarifas() {
         activeKpi={s.activeKpi}
       />
 
-      {s.rutaIdFromUrl && s.tarifas[0] && (
+      {s.rutaIdFromUrl && (
         <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2">
           <p className="text-body">
             Filtrando por ruta:{" "}
             <span className="font-medium">
-              {etiquetaRutaCompleta(origenDe(s.tarifas[0]), destinoDe(s.tarifas[0]))}
+              {rutaLabel}
             </span>
           </p>
           <Button variant="ghost" size="sm" onClick={s.clearRutaUrl}>
@@ -119,6 +126,7 @@ export default function CosteoTarifas() {
         <Card>
           <TarifasEmptyState
             hasActiveFilters={s.hasActiveFilters}
+            rutaLabel={s.rutaIdFromUrl ? rutaLabel : undefined}
             onClearFilters={s.clearAll}
             onNueva={s.nuevo}
           />
