@@ -6,13 +6,14 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { useCambiarTipoEmbarque } from "../useCambiarTipoEmbarque";
-import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import { COTIZACION_FORM_DEFAULTS, type CotizacionFormValues } from "@/features/cotizacion/types";
+import { buildPaso1Data } from "@/features/cotizacion/domain/mappers/cotizacion";
 
 function setup(inicial: Partial<CotizacionFormValues>) {
   const setCostos = vi.fn();
   const setMsds = vi.fn();
   const { result } = renderHook(() => {
-    const form = useForm<CotizacionFormValues>({ defaultValues: inicial as CotizacionFormValues });
+    const form = useForm<CotizacionFormValues>({ defaultValues: { ...COTIZACION_FORM_DEFAULTS, ...inicial } });
     const cambiar = useCambiarTipoEmbarque({ form, setCostosInternos: setCostos, setMsdsFile: setMsds });
     return { form, cambiar };
   });
@@ -38,6 +39,8 @@ describe("useCambiarTipoEmbarque", () => {
     expect(v.agenteId).toBeNull();
     expect(v.navieraId).toBeNull();
     expect(v.tarifaOverride).toEqual({});
+    const payload = buildPaso1Data(v, [], "u@x.com");
+    expect(payload).toMatchObject({ tarifa_id: null, agente_id: null, naviera_id: null, tipo_carga: v.tipoCarga });
   });
 
   it("sin tarifa vinculada respeta agente/naviera elegidos a mano", () => {
