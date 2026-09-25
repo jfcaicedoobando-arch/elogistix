@@ -9039,18 +9039,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      actualizar_embarque_con_contenedores: {
-        Args: {
-          p_conceptos_costo: Json
-          p_conceptos_venta: Json
-          p_contenedores?: Json
-          p_embarque: Json
-          p_embarque_id: string
-          p_expected_updated_at?: string
-          p_request_id?: string
-        }
-        Returns: Json
-      }
       actualizar_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
