@@ -163,7 +163,7 @@
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.1",
-    "vite": "^6.4.3",
+    "vite": "^8.3.0",
     "vitest": "4.1.9",
     "zod-validation-error": "^4.0.2"
   },
