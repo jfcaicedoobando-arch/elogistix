@@ -74,3 +74,17 @@ describe("CosteoBuscar — tipo de contenedor", () => {
     );
   });
 });
+
+describe("CosteoBuscar — error vs sin resultados", () => {
+  it("un fallo de consulta muestra error con Reintentar, no 'sin tarifas'", () => {
+    const refetch = vi.fn();
+    useTopTarifasMock.mockReturnValue({
+      data: [], isFetching: false, isError: true, isSuccess: false, refetch, tipoContenedorIds: [],
+    });
+    render(<CosteoBuscar />, { wrapper: createWrapper() });
+    fireEvent.click(screen.getByLabelText("Tipo contenedor"));
+    return screen.findByRole("listbox").then((lb) => {
+      fireEvent.click(within(lb).getByText("40' High Cube"));
+    });
+  });
+});
