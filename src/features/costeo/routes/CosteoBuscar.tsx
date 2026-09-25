@@ -16,6 +16,7 @@ import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingState } from "@/components/shared/states/LoadingState";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
@@ -33,7 +34,7 @@ export default function CosteoBuscar() {
     if (id && id === destino) setDestino("");
   };
 
-  const { data: tarifas = [], isFetching, tipoContenedorIds } = useTopTarifas({
+  const { data: tarifas = [], isFetching, isError, isSuccess, refetch, tipoContenedorIds } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorId: tipo,
@@ -44,7 +45,9 @@ export default function CosteoBuscar() {
     puertoOrigenId: origen,
     puertoDestinoId: mismoPuerto ? "" : destino,
     tipoContenedorIds,
-    enabled: !mismoPuerto && !isFetching && tarifas.length === 0,
+    // Sólo diagnosticar una búsqueda que TERMINÓ bien y vino vacía; un fallo
+    // de red/RPC no es "no hay tarifas".
+    enabled: !mismoPuerto && !isFetching && !isError && isSuccess && tarifas.length === 0,
   });
 
   return (
@@ -103,6 +106,14 @@ export default function CosteoBuscar() {
       ) : isFetching ? (
         <Card>
           <LoadingState label="Buscando tarifas…" />
+        </Card>
+      ) : isError ? (
+        <Card>
+          <ErrorState
+            title="No pudimos consultar las tarifas"
+            description="Hubo un problema de conexión o del servidor. Esto no significa que no existan tarifas para esta ruta."
+            onRetry={() => void refetch()}
+          />
         </Card>
       ) : tarifas.length === 0 ? (
         <Card>
