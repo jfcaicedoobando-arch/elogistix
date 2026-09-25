@@ -94,20 +94,20 @@ export default function AgenteLayout() {
     <div className="min-h-dvh bg-background flex flex-col">
       <header className="border-b bg-card sticky top-0 z-50 shadow-card">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16 gap-2">
-          <Link to="/agente" className="flex items-center min-w-0">
-            <span className="hidden md:flex">
+          <Link to="/agente" className="flex items-center min-w-0 xl:max-w-[260px]">
+            <span className="hidden xl:flex min-w-0">
               <BrandLockup
                 variant="horizontal"
                 size="sm"
                 subtitle={ctx?.agenteNombre ? `Portal Agente · ${ctx.agenteNombre}` : "Portal del Agente"}
               />
             </span>
-            <span className="md:hidden">
+            <span className="xl:hidden">
               <BrandLockup variant="icon" size="sm" />
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1 shrink-0">
             {NAV.map((item) => {
               const active = isActive(item.href, location.pathname);
               return (
@@ -151,13 +151,13 @@ export default function AgenteLayout() {
         </div>
 
         {orgName && (
-          <div className="md:hidden border-t bg-muted/30 px-3 py-1 flex items-center gap-1.5 text-label text-muted-foreground">
+          <div className="xl:hidden border-t bg-muted/30 px-3 py-1 flex items-center gap-1.5 text-label text-muted-foreground">
             <Building2 className="h-3 w-3 shrink-0" />
             <span className="truncate font-medium text-foreground">{orgName}</span>
           </div>
         )}
 
-        <nav className="md:hidden border-t bg-card/80 px-2 py-1 flex items-center gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,black_0,black_calc(100%-20px),transparent_100%)]">
+        <nav className="xl:hidden border-t bg-card/80 px-2 py-1 flex items-center gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,black_0,black_calc(100%-20px),transparent_100%)]">
           {NAV.map((item) => {
             const active = isActive(item.href, location.pathname);
             return (

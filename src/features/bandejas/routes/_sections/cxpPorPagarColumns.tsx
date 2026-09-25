@@ -6,6 +6,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatDate, toTitleCase } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/numbers";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import type { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
@@ -64,7 +65,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       id: "embarque",
       header: "Embarque",
       enableSorting: false,
-      meta: { width: COL_W.folio, className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.folio, className: "font-mono text-xs hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
@@ -105,7 +106,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         accessor: (r) => Number(r.total),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     },
     {
       ...moneyColumn<CxpRow>({
@@ -114,7 +115,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         accessor: (r) => Number(r.pagado),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-success hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     },
     {
       ...moneyColumn<CxpRow>({
@@ -124,6 +125,14 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         currencyAccessor: (r) => r.moneda,
       }),
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      cell: ({ row }) => (
+        <div className="text-right tabular-nums whitespace-nowrap">
+          <span className="font-semibold">{formatCurrency(Number(row.original.saldo), row.original.moneda)}</span>
+          <span className="block text-xs font-normal text-muted-foreground 2xl:hidden">
+            Pagado: {formatCurrency(Number(row.original.pagado), row.original.moneda)}
+          </span>
+        </div>
+      ),
     },
   ]);
 }

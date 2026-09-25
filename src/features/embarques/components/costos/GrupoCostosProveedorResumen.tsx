@@ -17,14 +17,18 @@ export function GrupoCostosProveedorResumen({ resumen, subtotales, conAjuste, si
   return (
     <TooltipProvider delayDuration={200}>
       <div className="hidden items-center gap-3 text-body-sm tabular-nums shrink-0 sm:flex">
-        {resumen.map(({ moneda, d }) => (
+        {resumen.filter(({ d }) => d.kind !== "sin_factura").map(({ moneda, d }) => (
           <Tooltip key={moneda}>
             <TooltipTrigger asChild>
               <span className={cn("flex items-center gap-1.5 cursor-help", TONE_TEXT[d.tone])}>
                 <span aria-hidden>{d.icono}</span>
                 <span className="font-medium">{d.titulo}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">{moneda}</span>
+                {(d.kind === "ahorro" || d.kind === "sobrecosto") && (
+                  <>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-muted-foreground">{moneda}</span>
+                  </>
+                )}
               </span>
             </TooltipTrigger>
             <TooltipContent className="text-body-sm">

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import AgenteEmbarques from "@/features/portal-agente/routes/AgenteEmbarques";
 
 vi.mock("@/features/portal-agente/hooks", () => ({
@@ -8,14 +9,14 @@ vi.mock("@/features/portal-agente/hooks", () => ({
 
 describe("AgenteEmbarques — empty state", () => {
   it("explica que Operaciones asigna embarques al vincular la cotización/operación", () => {
-    render(<AgenteEmbarques />);
+    render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
     expect(
       screen.getByText(/Operaciones asigna embarques al agente cuando la cotización u operación lo vincula/i),
     ).toBeInTheDocument();
   });
 
   it("no ofrece un CTA a otros módulos", () => {
-    render(<AgenteEmbarques />);
+    render(<MemoryRouter><AgenteEmbarques /></MemoryRouter>);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /ir a|crear|nuevo/i })).not.toBeInTheDocument();
   });

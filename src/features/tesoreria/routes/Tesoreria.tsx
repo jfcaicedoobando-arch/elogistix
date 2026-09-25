@@ -125,7 +125,7 @@ export default function Tesoreria() {
               </Alert>
             ) : null}
 
-            <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
+            <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_34rem]">
               <TesoreriaFlujoChart />
               <TesoreriaFlujoMonedas flujo={data.flujo} />
             </div>

@@ -40,6 +40,12 @@ function renderGrupo(vinculado: boolean, onVincular?: () => void) {
 }
 
 describe("GrupoCostosProveedor · vínculo con el catálogo", () => {
+  it("presenta el conteo sin factura sin aparentar un importe en USD", () => {
+    renderGrupo(true);
+    expect(screen.getByText("1 concepto sin factura")).toBeInTheDocument();
+    expect(screen.queryByText(/USD 1 sin factura/)).toBeNull();
+  });
+
   it("avisa cuando el proveedor es sólo un nombre libre", () => {
     renderGrupo(false);
     expect(screen.getByTestId("costos-proveedor-sin-vinculo")).toBeInTheDocument();

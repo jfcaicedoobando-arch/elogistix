@@ -51,9 +51,9 @@ export default {
         // Reemplazan los ~25 usos de `text-[10px]` y aislados `text-[9px]` en `src/features/**`.
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
         "3xs": ["0.5625rem", { lineHeight: "0.75rem" }],
-        // Ola 8 · Auditoría UI 1080p — reemplaza los ~129 usos de `text-[11px]`
-        // en chips, footers de tabla y etiquetas densas.
-        label: ["0.6875rem", { lineHeight: "1rem" }],
+        // Etiquetas operativas: 12 px como mínimo; 2xs/3xs quedan para
+        // metadatos estrictamente terciarios.
+        label: ["0.75rem", { lineHeight: "1rem" }],
         // ─────────────────────────────────────────────────────────────────────
         // Ola 10 · Contrato tipográfico único del ERP.
         // Un solo escalón por rol, con peso y line-height fijos, para que
@@ -70,7 +70,7 @@ export default {
         section: ["1rem", { lineHeight: "1.4", fontWeight: "600" }],
         subsection: ["0.875rem", { lineHeight: "1.35", fontWeight: "600" }],
         "card-title": ["1rem", { lineHeight: "1.4", fontWeight: "600" }],
-        "table-head": ["0.6875rem", { lineHeight: "1rem", fontWeight: "600" }],
+        "table-head": ["0.75rem", { lineHeight: "1rem", fontWeight: "600" }],
         body: ["0.875rem", { lineHeight: "1.5" }],
         "body-sm": ["0.8125rem", { lineHeight: "1.25rem" }],
       },

@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { FileSpreadsheet, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
@@ -28,15 +27,13 @@ interface Props {
   canEdit: boolean;
   /** Mapa concepto.id → estado tri-valor calculado por TabFacturacion. */
   estadosConceptos: Map<string, EstadoConcepto>;
-  /** Abre el diálogo con filtro 'todos'. */
-  onGenerarProforma: () => void;
   /** v12.14.0: abre el diálogo con filtro fijado a un contenedor concreto. */
   onGenerarProformaContenedor?: (contenedorId: string) => void;
 }
 
 export function ResumenConceptosVenta({
   conceptos, contenedores, tasaIva, canEdit, estadosConceptos,
-  onGenerarProforma, onGenerarProformaContenedor,
+  onGenerarProformaContenedor,
 }: Props) {
   const estadoDe = useCallback(
     (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente",
@@ -92,14 +89,6 @@ export function ResumenConceptosVenta({
             </Badge>
           )}
         </CardTitle>
-        {canEdit && conceptosPendientes.length > 0 && (
-          <Button size="sm" onClick={onGenerarProforma}>
-            <FileSpreadsheet className="h-4 w-4 mr-1" /> Generar Proforma
-            <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-0">
-              {conceptosPendientes.length}
-            </Badge>
-          </Button>
-        )}
       </CardHeader>
       <CardContent className="p-0">
         {conceptos.length === 0 ? (

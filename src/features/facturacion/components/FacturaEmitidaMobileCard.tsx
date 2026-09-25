@@ -21,7 +21,7 @@ export function FacturaEmitidaMobileCard({ factura }: { factura: Factura }) {
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-semibold text-body truncate">
-          {esBorradorSinFolio ? `Sin folio · ${factura.numero?.slice(-8)}` : factura.numero}
+          {esBorradorSinFolio ? <span title={factura.numero}>Sin folio (borrador)</span> : factura.numero}
         </div>
         <div className="text-body-sm text-muted-foreground truncate">
           {toTitleCase(factura.cliente_nombre ?? "") || "—"}

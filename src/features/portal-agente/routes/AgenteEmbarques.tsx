@@ -5,7 +5,9 @@
  */
 import { useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { Ship } from "lucide-react";
@@ -92,12 +94,25 @@ export default function AgenteEmbarques() {
       {isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : (
-      <DataTable<EmbarqueAgente>
+      <ResponsiveDataTable<EmbarqueAgente>
         columns={columns}
         data={embarques}
         rowKey={(e) => e.id}
         isLoading={isLoading}
         emptyMessage="Aún no hay embarques asignados a tu agente. Operaciones asigna embarques al agente cuando la cotización u operación lo vincula."
+        mobileCard={(e) => (
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-medium break-words">{etiquetaExpedienteAgente(e.expediente, e.id)}</span>
+              <StatusBadge domain="embarque" status={e.estado} />
+            </div>
+            <p className="text-body-sm break-words">{etiquetaRutaTexto(e.puerto_origen, e.puerto_destino)}</p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {e.modo} · ETD {formatFechaDia(e.etd)} · ETA {formatFechaDia(e.eta)}
+            </p>
+            {e.bl_master && <p className="text-xs text-muted-foreground break-all">BL Master: {e.bl_master}</p>}
+          </div>
+        )}
       />
       )}
 

@@ -3,7 +3,7 @@ import { topChartHeightClass } from "../topChartHeight";
 
 describe("topChartHeight", () => {
   it("mantiene compacta una sola barra", () => {
-    expect(topChartHeightClass(1)).toBe("h-56");
+    expect(topChartHeightClass(1)).toBe("h-24");
   });
 
   it("crece con los resultados sin superar el alto actual", () => {

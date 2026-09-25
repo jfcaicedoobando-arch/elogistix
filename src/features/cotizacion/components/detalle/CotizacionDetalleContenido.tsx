@@ -114,8 +114,8 @@ export function CotizacionDetalleContenido({
       />
 
       {/* VIS-CE-251-06: el detalle USD ahora explica subtotal/IVA igual que MXN. */}
-      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} subtotal={subtotalUSD} iva={ivaUSD} total={totalUSD} />
-      <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
+      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} subtotal={subtotalUSD} iva={ivaUSD} total={totalUSD} showTotal={false} />
+      <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} showTotal={false} />
       <ResumenTotalesCotizacion
         totalUSD={totalUSD}
         totalMXN={totalMXN}

@@ -23,7 +23,7 @@ const columns = defineColumns<FilaPorTimbrar>([
     meta: { width: COL_W.nombre, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) =>
       row.original.numero.startsWith("BORRADOR-")
-        ? <span className="text-muted-foreground italic">Sin folio · {row.original.numero.slice(-8)}</span>
+        ? <span className="text-muted-foreground italic" title={row.original.numero}>Sin folio (borrador)</span>
         : row.original.numero,
   },
   clientColumn<FilaPorTimbrar>({ accessor: (r) => r.cliente_nombre }),
@@ -78,7 +78,9 @@ export function BandejaPorTimbrar() {
             }
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
-            getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
+            getRowAriaLabel={(r) => r.numero.startsWith("BORRADOR-")
+              ? `Abrir borrador de factura de ${r.cliente_nombre}`
+              : `Abrir factura ${r.numero}`}
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
@@ -87,7 +89,7 @@ export function BandejaPorTimbrar() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-body truncate font-mono">
-                    {r.numero.startsWith("BORRADOR-") ? <span className="text-muted-foreground italic font-sans">Sin folio · {r.numero.slice(-8)}</span> : r.numero}
+                    {r.numero.startsWith("BORRADOR-") ? <span className="text-muted-foreground italic font-sans" title={r.numero}>Sin folio (borrador)</span> : r.numero}
                   </div>
                   <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
                   <div className="text-label text-muted-foreground mt-0.5">{formatDate(r.fecha_emision)}</div>

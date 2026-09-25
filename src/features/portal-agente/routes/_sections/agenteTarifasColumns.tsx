@@ -77,6 +77,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       cell: ({ row }) => (
         <div>
           <div className="break-words">{etiquetaRutaTarifa(row.original)}</div>
+          <span className="block text-xs text-muted-foreground 2xl:hidden">{row.original.naviera_nombre}</span>
           {row.original.estado_aprobacion === "rechazada" && row.original.motivo_rechazo && (
             <p className="text-xs text-destructive mt-1">
               <strong>Motivo:</strong> {row.original.motivo_rechazo}
@@ -86,11 +87,19 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       ),
     },
     {
+      id: "estado",
+      header: "Estado",
+      accessorFn: (t) => t.estado_aprobacion,
+      enableSorting: true,
+      cell: ({ row }) => <EstadoConVigencia t={row.original} />,
+    },
+    {
       id: "naviera",
       header: "Naviera",
       accessorFn: (t) => t.naviera_nombre,
       sortingFn: sortByString((t) => t.naviera_nombre),
       enableSorting: true,
+      meta: { className: "hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => row.original.naviera_nombre,
     },
     {
@@ -106,7 +115,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       accessorFn: (t) => t.transit_time_dias ?? -1,
       sortingFn: sortByNumber((t) => t.transit_time_dias ?? -1),
       enableSorting: true,
-      meta: { align: "right", className: "tabular-nums" },
+      meta: { align: "right", className: "tabular-nums hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => (row.original.transit_time_dias != null ? `${row.original.transit_time_dias} días` : "—"),
     },
     {
@@ -115,7 +124,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       accessorFn: (t) => t.dias_libres_demoras,
       sortingFn: sortByNumber((t) => t.dias_libres_demoras),
       enableSorting: true,
-      meta: { align: "right", className: "tabular-nums" },
+      meta: { align: "right", className: "tabular-nums hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => `${row.original.dias_libres_demoras} días`,
     },
     {
@@ -138,13 +147,6 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       // UIB-14: mismo formato corto que el resto de la app (dd/MM/yy), no ISO crudo.
       cell: ({ row }) =>
         `${formatDate(row.original.vigente_desde, "dd/MM/yy")} → ${formatDate(row.original.vigente_hasta, "dd/MM/yy")}`,
-    },
-    {
-      id: "estado",
-      header: "Estado",
-      accessorFn: (t) => t.estado_aprobacion,
-      enableSorting: true,
-      cell: ({ row }) => <EstadoConVigencia t={row.original} />,
     },
     {
       id: "acciones",

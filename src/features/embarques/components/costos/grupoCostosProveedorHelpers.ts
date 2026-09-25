@@ -96,7 +96,7 @@ export function estatusLabel(estatus: FilaReconciliacion["estatus_renglon"]): st
 export function etiquetaConteos(conAjuste: number, sinFactura: number): string | null {
   const partes: string[] = [];
   if (conAjuste > 0) partes.push(`${conAjuste} con ajuste`);
-  if (sinFactura > 0) partes.push(`${sinFactura} sin factura`);
+  if (sinFactura > 0) partes.push(`${sinFactura} concepto${sinFactura === 1 ? "" : "s"} sin factura`);
   return partes.length > 0 ? partes.join(", ") : null;
 }
 

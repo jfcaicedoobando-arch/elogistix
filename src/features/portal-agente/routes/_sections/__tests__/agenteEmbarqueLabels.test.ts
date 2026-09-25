@@ -12,11 +12,11 @@ describe("etiquetaExpedienteAgente", () => {
       .toBe("EXP-2026-014");
   });
 
-  it("deriva un identificador corto para borradores sin expediente", () => {
+  it("no expone un fragmento técnico como título del borrador", () => {
     expect(etiquetaExpedienteAgente(null, "f7e31d5a-1111-2222-3333-444444444444"))
-      .toBe("Borrador f7e31d5a");
+      .toBe("Borrador de embarque");
     expect(etiquetaExpedienteAgente("   ", "1bac49af-1111-2222-3333-444444444444"))
-      .toBe("Borrador 1bac49af");
+      .toBe("Borrador de embarque");
   });
 });
 

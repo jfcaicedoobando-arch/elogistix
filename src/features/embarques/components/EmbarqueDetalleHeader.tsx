@@ -73,7 +73,9 @@ export function EmbarqueDetalleHeader({
       <DetailHeader
         backTo={volver}
         backLabel="Volver a Embarques"
-        title={labelExpediente(embarque.expediente, embarque.id, embarque.estado)}
+        title={embarque.estado === "Borrador" && !embarque.expediente?.trim()
+          ? "Borrador de embarque"
+          : labelExpediente(embarque.expediente, embarque.id, embarque.estado)}
         badge={
           <>
             <EmbarqueStatusChip

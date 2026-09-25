@@ -123,7 +123,6 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
           tasaIva={tasaIva}
           canEdit={canEdit}
           estadosConceptos={estadosConceptos}
-          onGenerarProforma={() => abrirGenerarProforma()}
           onGenerarProformaContenedor={(contenedorId) => abrirGenerarProforma(contenedorId)}
         />
       </div>
