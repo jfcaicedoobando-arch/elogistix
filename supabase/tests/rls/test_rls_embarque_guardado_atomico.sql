@@ -20,7 +20,8 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (v_org, 'Prueba guardado atómico');
   INSERT INTO public.organization_members(organization_id, user_id, role)
   VALUES (v_org, v_user, 'admin_org');
-  INSERT INTO public.user_roles(user_id, role) VALUES (v_user, 'admin_org');
+  INSERT INTO public.user_roles(user_id, role) VALUES (v_user, 'admin_org')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
   VALUES (v_cliente, 'Cliente prueba atómica', 'XAXX010101000', 'atomico@test.local', v_org);
   INSERT INTO public.embarques(
