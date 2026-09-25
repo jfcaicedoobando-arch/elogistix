@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Props {
   value: string | null;
@@ -24,6 +25,8 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
   const { data: navieras = [], isLoading } = useNavieras();
   const [open, setOpen] = useState(false);
   const [creando, setCreando] = useState(false);
+  // Catálogo global: sólo el admin de plataforma puede dar altas (RLS de navieras).
+  const { isSuperAdmin } = usePermissions();
 
   const seleccionada = value ? navieras.find((n) => n.id === value) : undefined;
   const vacio = !isLoading && navieras.length === 0;
@@ -55,7 +58,7 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
                     message="No hay navieras activas en el catálogo."
                     density="compact"
                   />
-                  <div className="px-3 pb-3">
+                  {isSuperAdmin && <div className="px-3 pb-3">
                     <Button
                       type="button"
                       variant="secondary"
@@ -65,7 +68,7 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
                     >
                       <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear naviera
                     </Button>
-                  </div>
+                  </div>}
                 </div>
               ) : (
                 <>
@@ -78,7 +81,7 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
                       </CommandItem>
                     ))}
                   </CommandGroup>
-                  <div className="border-t p-1">
+                  {isSuperAdmin && <div className="border-t p-1">
                     <Button
                       type="button"
                       variant="ghost"
@@ -88,18 +91,18 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
                     >
                       <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear naviera
                     </Button>
-                  </div>
+                  </div>}
                 </>
               )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-      <NavieraFormDialog
+      {isSuperAdmin && <NavieraFormDialog
         open={creando}
         onOpenChange={setCreando}
         onGuardado={(n) => { if (n.id) onSelect({ id: n.id, name: n.name }); }}
-      />
+      />}
     </>
   );
 }
