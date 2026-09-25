@@ -105,7 +105,7 @@ export function buildEmbarqueColumns({
             )}
             </span>
             <Hint label={ruta}>
-              <span className="block max-w-[220px] truncate text-xs font-normal text-muted-foreground">{ruta}</span>
+              <span className="block max-w-[220px] truncate text-label font-normal text-muted-foreground">{ruta}</span>
             </Hint>
           </span>
         );

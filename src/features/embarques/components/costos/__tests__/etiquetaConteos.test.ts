@@ -7,7 +7,7 @@ import { etiquetaConteos } from "../grupoCostosProveedorHelpers";
 
 describe("etiquetaConteos", () => {
   it("omite 'con ajuste' cuando es cero", () => {
-    expect(etiquetaConteos(0, 1)).toBe("1 sin factura");
+    expect(etiquetaConteos(0, 1)).toBe("1 concepto sin factura");
   });
 
   it("omite 'sin factura' cuando es cero", () => {
@@ -15,7 +15,7 @@ describe("etiquetaConteos", () => {
   });
 
   it("muestra ambas categorías cuando ambas aplican", () => {
-    expect(etiquetaConteos(2, 3)).toBe("2 con ajuste, 3 sin factura");
+    expect(etiquetaConteos(2, 3)).toBe("2 con ajuste, 3 conceptos sin factura");
   });
 
   it("devuelve null cuando no hay nada que reportar", () => {

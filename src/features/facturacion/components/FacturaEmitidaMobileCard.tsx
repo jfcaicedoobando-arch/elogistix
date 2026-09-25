@@ -5,6 +5,7 @@
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
@@ -21,7 +22,11 @@ export function FacturaEmitidaMobileCard({ factura }: { factura: Factura }) {
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-semibold text-body truncate">
-          {esBorradorSinFolio ? <span title={factura.numero}>Sin folio (borrador)</span> : factura.numero}
+          {esBorradorSinFolio ? (
+            <Hint label={factura.numero}>
+              <span tabIndex={0} aria-label="Sin folio (borrador)">Sin folio (borrador)</span>
+            </Hint>
+          ) : factura.numero}
         </div>
         <div className="text-body-sm text-muted-foreground truncate">
           {toTitleCase(factura.cliente_nombre ?? "") || "—"}

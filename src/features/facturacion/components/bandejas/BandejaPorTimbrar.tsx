@@ -7,6 +7,7 @@ import { Stamp } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { defineColumns } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { Hint } from "@/components/shared/Hint";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
@@ -23,7 +24,7 @@ const columns = defineColumns<FilaPorTimbrar>([
     meta: { width: COL_W.nombre, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) =>
       row.original.numero.startsWith("BORRADOR-")
-        ? <span className="text-muted-foreground italic" title={row.original.numero}>Sin folio (borrador)</span>
+        ? <Hint label={row.original.numero}><span tabIndex={0} aria-label="Sin folio (borrador)" className="text-muted-foreground italic">Sin folio (borrador)</span></Hint>
         : row.original.numero,
   },
   clientColumn<FilaPorTimbrar>({ accessor: (r) => r.cliente_nombre }),
@@ -89,7 +90,11 @@ export function BandejaPorTimbrar() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-body truncate font-mono">
-                    {r.numero.startsWith("BORRADOR-") ? <span className="text-muted-foreground italic font-sans" title={r.numero}>Sin folio (borrador)</span> : r.numero}
+                    {r.numero.startsWith("BORRADOR-") ? (
+                      <Hint label={r.numero}>
+                        <span tabIndex={0} aria-label="Sin folio (borrador)" className="text-muted-foreground italic font-sans">Sin folio (borrador)</span>
+                      </Hint>
+                    ) : r.numero}
                   </div>
                   <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
                   <div className="text-label text-muted-foreground mt-0.5">{formatDate(r.fecha_emision)}</div>
