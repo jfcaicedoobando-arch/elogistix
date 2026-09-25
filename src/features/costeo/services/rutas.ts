@@ -5,13 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CosteoRuta } from "@/features/costeo/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { registrarActividad } from "@/services/bitacora/registrar";
-
-interface RawTarifaAggregate {
-  estado: string;
-  vigente_hasta: string | null;
-  updated_at: string | null;
-  agente_id: string | null;
-}
+import {
+  agregarTarifasRuta,
+  type TarifaRutaAgregable,
+} from "@/features/costeo/utils/rutaTarifasAgregado";
 
 interface RawPuertoRuta {
   name: string;
@@ -22,45 +19,28 @@ interface RawPuertoRuta {
 interface RawRuta extends CosteoRuta {
   puerto_origen?: RawPuertoRuta | null;
   puerto_destino?: RawPuertoRuta | null;
-  costeo_tarifas?: RawTarifaAggregate[] | null;
+  costeo_tarifas?: TarifaRutaAgregable[] | null;
 }
 
 export async function fetchCosteoRutas(organizationId: string): Promise<CosteoRuta[]> {
   const { data, error } = await supabase
     .from("costeo_rutas")
     .select(
-      "*, puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name,code,country), puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name,code,country), costeo_tarifas!costeo_tarifas_ruta_id_fkey(estado,vigente_hasta,updated_at,agente_id)",
+      "*, puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name,code,country), puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name,code,country), costeo_tarifas!costeo_tarifas_ruta_id_fkey(estado,estado_aprobacion,vigente_desde,vigente_hasta,updated_at,agente_id)",
     )
     .eq("organization_id", organizationId);
   if (error) throw error;
   const hoyIso = todayLocalISO();
-  return ((data ?? []) as RawRuta[]).map((r) => {
-    const vigentes = (r.costeo_tarifas ?? []).filter(
-      (t) => t.estado === "vigente" && (!t.vigente_hasta || t.vigente_hasta >= hoyIso),
-    );
-    const fechasFin = vigentes
-      .map((t) => t.vigente_hasta)
-      .filter((d): d is string => !!d)
-      .sort();
-    const updates = vigentes
-      .map((t) => t.updated_at)
-      .filter((d): d is string => !!d)
-      .sort();
-    const agentes = new Set(vigentes.map((t) => t.agente_id).filter(Boolean));
-    return {
-      ...r,
-      puerto_origen_nombre: r.puerto_origen?.name,
-      puerto_origen_code: r.puerto_origen?.code ?? null,
-      puerto_origen_country: r.puerto_origen?.country ?? null,
-      puerto_destino_nombre: r.puerto_destino?.name,
-      puerto_destino_code: r.puerto_destino?.code ?? null,
-      puerto_destino_country: r.puerto_destino?.country ?? null,
-      tarifas_vigentes_count: vigentes.length,
-      proxima_expiracion: fechasFin[0] ?? null,
-      ultima_actualizacion_tarifa: updates[updates.length - 1] ?? null,
-      proveedores_count: agentes.size,
-    };
-  });
+  return ((data ?? []) as RawRuta[]).map((r) => ({
+    ...r,
+    puerto_origen_nombre: r.puerto_origen?.name,
+    puerto_origen_code: r.puerto_origen?.code ?? null,
+    puerto_origen_country: r.puerto_origen?.country ?? null,
+    puerto_destino_nombre: r.puerto_destino?.name,
+    puerto_destino_code: r.puerto_destino?.code ?? null,
+    puerto_destino_country: r.puerto_destino?.country ?? null,
+    ...agregarTarifasRuta(r.costeo_tarifas ?? [], hoyIso),
+  }));
 }
 
 
