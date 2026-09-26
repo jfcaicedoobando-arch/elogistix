@@ -22,14 +22,23 @@ import { Hint } from "@/components/shared/Hint";
 export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
     {
-      id: "folio_interno", header: "Folio",
+      id: "folio_interno", header: () => <span className="whitespace-normal">Folio interno</span>,
       accessorFn: (f) => f.folio_interno, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
-      meta: { width: COL_W.folio, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
-      cell: ({ row }) => row.original.folio_interno,
+      meta: { width: COL_W.nombre, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
+      cell: ({ row }) => (
+        <div>
+          {row.original.folio_interno}
+          {row.original.folio_proveedor && (
+            <span className="block whitespace-normal break-words text-label font-normal text-muted-foreground">
+              Prov.: {row.original.folio_proveedor}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
-      id: "folio", header: "Folio prov.",
+      id: "folio", header: () => <span className="whitespace-normal">Folio proveedor</span>,
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
       meta: { width: COL_W.folio, className: "whitespace-nowrap text-body-sm text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
@@ -113,4 +122,3 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     },
   ]);
 }
-

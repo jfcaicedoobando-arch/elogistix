@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
 import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
+import { PricingField } from "./PricingField";
 import type { ConceptoVentaLocal as ConceptoVentaRow } from "@/types/concepto";
 import { SelectTratamientoIva } from "@/features/embarques/components/conceptos/SelectTratamientoIva";
 import { ventaBloqueada, MOTIVO_VENTA_BLOQUEADA } from "@/features/embarques/domain/conceptoBloqueado";
@@ -39,8 +40,10 @@ export function FilaVentaPrecio({
   return (
     // `[&>*]:min-w-0` (VIS-CE-251-01): deja que cada celda se encoja con la
     // rejilla `minmax(0,1fr)` del padre en lugar de desbordar el card.
-    <div className={`grid ${cols} gap-2 items-center [&>*]:min-w-0`}>
+    <div role="group" aria-label={`Venta: ${venta.concepto || "sin concepto"}`}
+      className={`grid grid-cols-2 ${cols} gap-3 items-end rounded-lg border p-3 lg:gap-2 lg:items-center lg:border-0 lg:p-0 [&>*]:min-w-0`}>
       {bloqueado && <span className="sr-only">{MOTIVO_VENTA_BLOQUEADA}</span>}
+      <PricingField label="Concepto y tratamiento de IVA" className="col-span-2 lg:col-span-1">
       <div className="flex flex-col gap-1">
       <ConceptoCatalogoSelect
         value={venta.concepto}
@@ -69,17 +72,25 @@ export function FilaVentaPrecio({
         }}
       />
       </div>
+      </PricingField>
+      <PricingField label="Cantidad">
       <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
+      </PricingField>
       {/* R219-UI-01: el campo es el precio UNITARIO; el subtotal de la fila se
           muestra en la columna "Total USD" ya multiplicado por la cantidad. */}
+      <PricingField label="Precio unitario (sin IVA)">
       <NumericInput decimals value={venta.precioUnitario} disabled={bloqueado} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Precio unitario venta (sin IVA)" />
+      </PricingField>
+      <PricingField label="Moneda">
       <Select value={venta.moneda} disabled={bloqueado} onValueChange={v => update(venta.id, 'moneda', v)}>
-        <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="text-body" aria-label="Moneda de venta"><SelectValue /></SelectTrigger>
         {/* Ola 2 · A (YAGNI): la venta sólo se factura en MXN o USD. EUR sigue
             disponible en costos/CxP, pero aquí terminaba facturándose en $0. */}
         <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
       </Select>
+      </PricingField>
       {showContenedorCol && embarqueId && (
+        <PricingField label="Contenedor" className="col-span-2 lg:col-span-1">
         <SelectContenedorConcepto
           embarqueId={embarqueId}
           value={venta.contenedorId ?? null}
@@ -87,7 +98,9 @@ export function FilaVentaPrecio({
           onChange={v => update(venta.id, 'contenedorId', v)}
           className="text-body"
         />
+        </PricingField>
       )}
+      <PricingField label="Total USD">
       <div className="flex items-center gap-1">
         <Input
           readOnly
@@ -107,7 +120,8 @@ export function FilaVentaPrecio({
           </Tooltip>
         )}
       </div>
-      <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => remove(venta.id)} disabled={disableRemove || bloqueado} aria-label="Eliminar concepto de venta">
+      </PricingField>
+      <Button variant="ghost" size="icon" className="col-span-2 justify-self-end min-h-11 min-w-11 lg:col-span-1 lg:h-8 lg:w-8 lg:min-h-0 lg:min-w-0" onClick={() => remove(venta.id)} disabled={disableRemove || bloqueado} aria-label="Eliminar concepto de venta">
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>

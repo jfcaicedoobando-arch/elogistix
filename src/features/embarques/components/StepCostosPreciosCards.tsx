@@ -35,7 +35,7 @@ export function CostosCard(p: CostosCardProps) {
       <CardHeader><CardTitle>Costos directos del embarque</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className={`grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
+          <div className={`hidden lg:grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
             <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
             {p.showContenedorCol && <span>Contenedor</span>}
             <span>Total USD</span><span></span>
@@ -93,7 +93,7 @@ export function VentasCard(p: VentasCardProps) {
       <CardHeader><CardTitle>Conceptos de Venta</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className={`grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
+          <div className={`hidden lg:grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
             <span>Concepto</span><span>Cantidad</span><span>Precio unitario (sin IVA)</span><span>Moneda</span>
             {p.showContenedorCol && <span>Contenedor</span>}
             <span>Total USD</span><span></span>

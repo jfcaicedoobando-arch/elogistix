@@ -18,13 +18,13 @@ function toneDiasParaVencer(dias: number): ChipTone {
 export function CxpPorPagarMobileCard({ row }: { row: CxpRow }) {
   const dias = row.dias_para_vencer ?? 0;
   return (
-    <div className="flex items-start justify-between gap-2">
+    <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_max-content]">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-semibold text-body truncate">
           {toTitleCase(row.proveedor_nombre ?? "") || "—"}
         </div>
-        <div className="text-body-sm text-muted-foreground font-mono truncate">
-          {row.folio_proveedor ?? "—"}
+        <div className="text-body-sm text-muted-foreground">
+          Folio proveedor: <span className="font-mono break-all">{row.folio_proveedor ?? "—"}</span>
         </div>
         <div className="flex items-center gap-1.5 text-label text-muted-foreground">
           <span>{row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}</span>
@@ -37,7 +37,8 @@ export function CxpPorPagarMobileCard({ row }: { row: CxpRow }) {
         label="Saldo"
         value={formatCurrency(row.saldo, row.moneda)}
         highlight
-        className="shrink-0 max-w-[48%]"
+        className="sm:shrink-0"
+        valueClassName="overflow-visible text-clip whitespace-normal break-words"
       />
     </div>
   );
