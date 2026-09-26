@@ -4,6 +4,7 @@
  * para cumplir Power of 10 (≤200 líneas) tras el refactor de complejidad.
  */
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRecargosDeTarifa } from "@/features/costeo/hooks/useRecargosDeTarifa";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -32,8 +33,8 @@ interface Props {
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
   const { data: recargos = [] } = useRecargosDeTarifa(row.id);
 
-  const esGanador = meta?.esGanador ?? rank === 1;
-  const etiquetas = meta?.etiquetasMejorEn ?? (rank === 1 ? ["Mejor precio"] : []);
+  const esGanador = meta?.esGanador ?? false;
+  const etiquetas = meta?.etiquetasMejorEn ?? [];
   const delta = meta?.deltaTotalVsGanador ?? 0;
   const vencePronto = meta?.vencePronto ?? false;
 
@@ -48,6 +49,7 @@ export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", 
         )}
       >
         {esGanador && <WinnerBadge />}
+        {meta?.unicaTarifa && <Badge variant="outline" className="w-fit">Única tarifa vigente</Badge>}
         <CardHeader row={row} rank={rank} esGanador={esGanador} />
         <EtiquetasList etiquetas={etiquetas} />
         <PreciosBase row={row} />

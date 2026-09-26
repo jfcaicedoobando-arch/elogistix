@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { formatDate } from "@/lib/formatters";
 
 interface Props {
   estadoVisual: string;
+  etd?: string | null;
   siguienteEstado: string;
   avanzandoEstado: boolean;
   bloqueadoPorDocs: boolean;
@@ -25,7 +28,7 @@ interface Props {
 }
 
 export function AvanzarEstadoButton({
-  estadoVisual, siguienteEstado, avanzandoEstado,
+  estadoVisual, siguienteEstado, avanzandoEstado, etd,
   bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
   faltantesConfirmado = [], onIrAEditar,
   onAvanzarEstado, onIrACierre, onIrADocumentos,
@@ -33,6 +36,7 @@ export function AvanzarEstadoButton({
   const [dialogOpen, setDialogOpen] = useState(false);
   const siguienteLabel = labelEstadoEmbarque(siguienteEstado);
   const actualLabel = labelEstadoEmbarque(estadoVisual);
+  const etdFutura = siguienteEstado === "En Tránsito" && !!etd && diffDiasCalendario(new Date(), etd) > 0;
 
   // v13.142.5 — Cuando faltan docs, el botón NO se deshabilita: abre un
   // AlertDialog explicativo. Esto reemplaza el tooltip (invisible en móvil).
@@ -139,7 +143,14 @@ export function AvanzarEstadoButton({
         isPending={avanzandoEstado}
         onConfirm={() => { setDialogOpen(false); onAvanzarEstado(); }}
         description={
-          <>¿Estás seguro de cambiar el estado de <strong>{actualLabel}</strong> a <strong>{siguienteLabel}</strong>? Esta acción quedará registrada en la bitácora.</>
+          <div className="space-y-2">
+            <p>¿Estás seguro de cambiar el estado de <strong>{actualLabel}</strong> a <strong>{siguienteLabel}</strong>? Esta acción quedará registrada en la bitácora.</p>
+            {etdFutura && (
+              <p role="note" className="rounded-md border border-warning/40 bg-warning/10 p-2 text-foreground">
+                La salida estimada (ETD) es el {formatDate(etd!, "dd/MM/yyyy")}, una fecha futura. Si el transporte ya salió, confirma el avance y actualiza la ETD a la fecha real para evitar datos contradictorios.
+              </p>
+            )}
+          </div>
         }
       />
     </>

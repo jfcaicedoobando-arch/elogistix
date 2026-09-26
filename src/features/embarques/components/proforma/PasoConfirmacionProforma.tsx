@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
 import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
+import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -16,10 +17,11 @@ interface Props {
   totales: TotalesProforma;
   tasaIva: number;
   notas: string;
+  pendientesIva: ConceptoVenta[];
 }
 
 export function PasoConfirmacionProforma({
-  conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas,
+  conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas, pendientesIva,
 }: Props) {
   const etiquetaIvaMxn = etiquetaIvaFilas(
     conceptosSeleccionados.filter((c) => c.moneda === "MXN"),
@@ -27,6 +29,11 @@ export function PasoConfirmacionProforma({
   );
   return (
     <div className="space-y-4">
+      {pendientesIva.length > 0 && (
+        <div role="alert" className="rounded-md border border-warning/40 bg-warning/10 p-3 text-body">
+          Hay {pendientesIva.length} concepto(s) con IVA por confirmar. Vuelve y clasifícalos antes de generar la proforma.
+        </div>
+      )}
       <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-body">
         <p className="[color:hsl(var(--warning))]">
           <strong>Importante:</strong> Aún no se ha guardado nada. Revisa el resumen y confirma para generar la proforma y descargar el PDF.
@@ -48,6 +55,7 @@ export function PasoConfirmacionProforma({
             { id: "iva", header: "IVA", meta: { className: "text-center", headerClassName: "text-center" },
               cell: ({ row }) => {
                 const c = row.original;
+                if (tratamientoIvaPendiente(c)) return <Badge variant="outline" className="text-body-sm">Por confirmar</Badge>;
                 // R179-01: MXN ya no se marca "Sí" por moneda; se lee su
                 // tratamiento fiscal guardado, el mismo que persiste el RPC.
                 const aplica = c.moneda === "MXN" ? ivaDeFila(c) : !!ivaPorConcepto[c.id];

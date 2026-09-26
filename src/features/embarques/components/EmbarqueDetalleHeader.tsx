@@ -116,7 +116,7 @@ export function EmbarqueDetalleHeader({
           <EmbarqueDetalleHeaderActions
             contexto={{
               expediente: labelExpediente(embarque.expediente, embarque.id, embarque.estado),
-              estadoVisual, siguienteEstado, canEdit, embarqueId,
+              estadoVisual, siguienteEstado, canEdit, embarqueId, etd: embarque.etd,
             }}
             estado={{
               avanzandoEstado: avanzarEstado.isPending,

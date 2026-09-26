@@ -1,4 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { FiltroContenedorChips } from "./FiltroContenedorChips";
 import {
@@ -7,7 +9,8 @@ import {
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
-import { ListFilter } from "lucide-react";
+import { ListFilter, TriangleAlert } from "lucide-react";
+import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -38,6 +41,8 @@ interface Props {
   onToggleAll: () => void;
   onToggleIva: (id: string, moneda: string) => void;
   onNotasChange: (v: string) => void;
+  pendientesIva: ConceptoVenta[];
+  onEditarConceptos: () => void;
 }
 
 export function PasoSeleccionConceptos({
@@ -46,6 +51,7 @@ export function PasoSeleccionConceptos({
   seleccionados, ivaPorConcepto, totales, tasaIva,
   notas,
   onToggle, onToggleAll, onToggleIva, onNotasChange,
+  pendientesIva, onEditarConceptos,
 }: Props) {
 
   const visiblesIds = conceptosVisibles.map((c) => c.id);
@@ -55,6 +61,16 @@ export function PasoSeleccionConceptos({
 
   return (
     <div className="space-y-4">
+      {pendientesIva.length > 0 && (
+        <Alert variant="warning" data-testid="proforma-iva-pendiente">
+          <TriangleAlert className="size-4" />
+          <AlertTitle>Confirma el IVA antes de generar la proforma</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>{pendientesIva.length === 1 ? "Un concepto seleccionado aún tiene" : `${pendientesIva.length} conceptos seleccionados aún tienen`} tratamiento fiscal “Por confirmar”. No se asumirá “Sin IVA”. Define el tratamiento en los conceptos de venta del embarque.</p>
+            <Button type="button" size="sm" variant="outline" onClick={onEditarConceptos}>Editar conceptos de venta</Button>
+          </AlertDescription>
+        </Alert>
+      )}
       <FiltroContenedorChips
         contenedores={contenedores}
         value={filtroContenedor}
@@ -93,6 +109,7 @@ export function PasoSeleccionConceptos({
                 isSelected={isSelected}
                 ivaActivo={ivaActivo}
                 ivaBloqueado={ivaBloqueado}
+                ivaPendiente={tratamientoIvaPendiente(c)}
                 etiquetaIvaFila={etiquetaIvaFilas([c], tasaIva)}
                 contLabel={contLabel}
                 showGeneralBadge={!c.contenedor_id && contenedores.length >= 2}

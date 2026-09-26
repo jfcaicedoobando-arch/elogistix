@@ -18,6 +18,7 @@ export interface AccionesEmbarqueContexto {
   siguienteEstado: string | null;
   canEdit: boolean;
   embarqueId: string;
+  etd?: string | null;
 }
 
 /** Estado en vivo: banderas de carga y bloqueos. */
@@ -81,7 +82,7 @@ function derivarEstadoAcciones(estadoVisual: string) {
 export function EmbarqueDetalleHeaderActions({
   contexto, estado, cierre, acciones,
 }: Props) {
-  const { expediente, estadoVisual, siguienteEstado, canEdit, embarqueId } = contexto;
+  const { expediente, estadoVisual, siguienteEstado, canEdit, embarqueId, etd } = contexto;
   const {
     avanzandoEstado, trackingPending, tieneLinkActivo, puedeReabrir, reabriendoEstado,
     docsFaltantes, bloqueadoPorDocs, cancelandoEmbarque, tieneDeudaPendiente,
@@ -106,7 +107,7 @@ export function EmbarqueDetalleHeaderActions({
     cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
 
   const accionPrincipal = AccionPrincipalEmbarque({
-    canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
+    canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado, etd,
     bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist, faltantesConfirmado,
     onAvanzarEstado, onIrACierre, onIrADocumentos, goEditar,
   });
@@ -163,4 +164,3 @@ export function EmbarqueDetalleHeaderActions({
     </div>
   );
 }
-

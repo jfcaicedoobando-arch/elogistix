@@ -21,7 +21,7 @@ describe("computeFreshness · sin eventos", () => {
 
   it("Confirmado: conserva la advertencia", () => {
     const f = computeFreshness(SIN_EVENTOS, null, false, "Confirmado");
-    expect(f.label).toBe("Sin eventos registrados");
+    expect(f.label).toBe("Sin actualizaciones de transporte registradas");
     expect(f.critical).toBe(true);
   });
 
@@ -35,6 +35,25 @@ describe("computeFreshness · sin eventos", () => {
 });
 
 describe("computeFreshness · con eventos", () => {
+  it("ignora el cambio automático de estado y no lo presenta como actualización de naviera", () => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const f = computeFreshness([
+      { fecha: hoy, tipo: "Otro", descripcion: 'Estado cambiado a "Confirmado"', ubicacion: null },
+    ], null, false, "Confirmado");
+    expect(f.label).toBe("Sin actualizaciones de transporte registradas");
+    expect(f.critical).toBe(true);
+  });
+
+  it("toma el último evento operativo aunque haya un cambio interno más reciente", () => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const f = computeFreshness([
+      { fecha: hoy, tipo: "Otro", descripcion: 'Estado cambiado a "En Tránsito"', ubicacion: null },
+      { fecha: "2026-01-01", tipo: "Zarpe", descripcion: "Buque zarpó", ubicacion: "Ningbo" },
+    ], null, false, "En Tránsito");
+    expect(f.label).toContain("Zarpe");
+    expect(f.label).not.toContain("Otro");
+  });
+
   it("el estado no altera el cálculo cuando ya hay eventos", () => {
     const hoy = new Date().toISOString().slice(0, 10);
     const eventos = [{ fecha: hoy, tipo: "Salida", ubicacion: "Apodaca" }];
