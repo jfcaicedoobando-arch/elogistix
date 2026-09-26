@@ -25,12 +25,12 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio_interno", header: () => <span className="whitespace-normal">Folio interno</span>,
       accessorFn: (f) => f.folio_interno, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
-      meta: { width: COL_W.folio, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.nombre, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
       cell: ({ row }) => (
         <div>
           {row.original.folio_interno}
           {row.original.folio_proveedor && (
-            <span className="block whitespace-normal break-all text-label font-normal text-muted-foreground">
+            <span className="block whitespace-normal break-words text-label font-normal text-muted-foreground">
               Prov.: {row.original.folio_proveedor}
             </span>
           )}
