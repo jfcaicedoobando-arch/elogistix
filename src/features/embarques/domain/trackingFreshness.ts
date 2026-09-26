@@ -11,18 +11,31 @@ export interface Freshness {
   dias: number;
 }
 
+interface EventoParaFrescura {
+  fecha: string;
+  tipo: string;
+  ubicacion: string | null;
+  descripcion?: string | null;
+}
+
+/** Los cambios internos de estado no prueban una actualización del transportista. */
+export function esEventoOperativoTracking(evento: EventoParaFrescura): boolean {
+  return !/^Estado cambiado a\s+["“]?.+["”]?$/i.test(evento.descripcion?.trim() ?? "");
+}
+
 /**
  * v13.823.370 (P2-3) — Un Borrador recién convertido no tiene eventos porque la
  * operación todavía no empieza: acusarlo con "Requiere actualización" es ruido.
  * La advertencia se conserva para embarques ya confirmados/en tránsito.
  */
 export function computeFreshness(
-  eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>,
+  eventos: EventoParaFrescura[],
   eta: string | null | undefined,
   arribado: boolean,
   estado?: string | null,
 ): Freshness {
-  if (eventos.length === 0) {
+  const eventosOperativos = eventos.filter(esEventoOperativoTracking);
+  if (eventosOperativos.length === 0) {
     const esBorrador = (estado ?? "").trim().toLowerCase() === "borrador";
     if (esBorrador) {
       return {
@@ -32,9 +45,9 @@ export function computeFreshness(
         dias: 0,
       };
     }
-    return { label: "Sin eventos registrados", critical: !arribado, etaProxima: false, dias: 0 };
+    return { label: "Sin actualizaciones de transporte registradas", critical: !arribado, etaProxima: false, dias: 0 };
   }
-  const ultimo = eventos[0];
+  const ultimo = eventosOperativos[0];
   const dias = diffDiasCalendario(ultimo.fecha, new Date());
   const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
 

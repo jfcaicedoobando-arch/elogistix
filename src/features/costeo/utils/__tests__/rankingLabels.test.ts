@@ -42,6 +42,13 @@ describe("costeo/utils/rankingLabels.computeRankingMeta", () => {
     expect(computeRankingMeta([])).toEqual([]);
   });
 
+  it("una sola tarifa no recibe comparativos ni insignia de ganador", () => {
+    const [meta] = computeRankingMeta([row({ total_comparable: 1000, dias_credito: 30, dias_libres_demoras: 14, transit_time_dias: 25 })]);
+    expect(meta.unicaTarifa).toBe(true);
+    expect(meta.esGanador).toBe(false);
+    expect(meta.etiquetasMejorEn).toEqual([]);
+  });
+
   it("marca al primero como ganador y delta 0", () => {
     const rows = [
       row({ id: "1", total_comparable: 1000 }),

@@ -35,6 +35,8 @@ const renderConKpis = (tcUsd: number) => {
         utilidad={k.utilidad}
         margen={k.margen}
         montosSinTipoCambio={k.montosSinTipoCambio}
+        tipoCambioUsd={tcUsd}
+        monedasExtranjeras={["USD"]}
         embarqueId="emb-1"
       />
     </MemoryRouter>,
@@ -55,5 +57,7 @@ describe("TabCostos · aviso de tipo de cambio faltante", () => {
     const k = renderConKpis(17.5);
     expect(k.montosSinTipoCambio).toBe(0);
     expect(screen.queryByTestId("aviso-sin-tipo-cambio")).toBeNull();
+    expect(screen.getByTestId("tipo-cambio-kpis")).toHaveTextContent("1 USD =");
+    expect(screen.getByTestId("tipo-cambio-kpis")).toHaveTextContent("17.50");
   });
 });

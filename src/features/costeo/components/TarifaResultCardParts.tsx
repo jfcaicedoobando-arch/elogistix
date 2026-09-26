@@ -23,7 +23,7 @@ export function CardHeader({ row, rank, esGanador }: { row: TopTarifaRow; rank: 
             esGanador ? "bg-success text-success-foreground" : "bg-primary/10 text-primary",
           )}
         >
-          {rank === 1 ? <Trophy className="size-4" /> : `#${rank}`}
+          {esGanador ? <Trophy className="size-4" /> : `#${rank}`}
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-foreground truncate">{row.agente_nombre}</p>

@@ -18,6 +18,7 @@ import {
   type FiltroContenedor,
 } from "@/features/embarques/domain/conceptosPorContenedor";
 import { submitProformaDialog, ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
+import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { toast } from "@/hooks/shared";
 import { useProformaTcRecovery, esErrorTcRequerido } from "./useProformaTcRecovery";
 import {
@@ -123,6 +124,11 @@ export function useDialogGenerarProformaController(
     [conceptosPendientes, seleccionados],
   );
 
+  const pendientesIva = useMemo(
+    () => conceptosSeleccionados.filter(tratamientoIvaPendiente),
+    [conceptosSeleccionados],
+  );
+
   const totales = useMemo(
     () => calcularTotalesProforma(conceptosSeleccionados, ivaPorConcepto, tasaIva),
     [conceptosSeleccionados, tasaIva, ivaPorConcepto],
@@ -176,8 +182,7 @@ export function useDialogGenerarProformaController(
     seleccionados, ivaPorConcepto, notas, diasCredito,
     setNotas,
     toggle, toggleAll, toggleIva,
-    conceptosSeleccionados,
-    conceptosVisibles,
+    conceptosSeleccionados, pendientesIva, conceptosVisibles,
     contenedores,
     filtroContenedor, setFiltroContenedor,
     totales, tasaIva,
@@ -190,6 +195,3 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
-
-
-

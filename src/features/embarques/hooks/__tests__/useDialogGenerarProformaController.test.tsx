@@ -74,6 +74,20 @@ describe("useDialogGenerarProformaController", () => {
     expect(result.current.diasCredito).toBe("30");
   });
 
+  it("identifica conceptos seleccionados cuyo IVA sigue por confirmar", () => {
+    const conceptos = [
+      { ...mockConceptos[0], tipo_iva: null, tasa_iva_aplicada: null, aplica_iva: null },
+      { ...mockConceptos[1], tipo_iva: "no_objeto", aplica_iva: false },
+    ];
+    const { result } = renderHook(
+      () => useDialogGenerarProformaController(true, mockEmbarque, conceptos, vi.fn()),
+      { wrapper },
+    );
+    expect(result.current.pendientesIva.map((c) => c.id)).toEqual(["c1"]);
+    act(() => result.current.toggle("c1"));
+    expect(result.current.pendientesIva).toEqual([]);
+  });
+
   it("calcula totales correctamente", () => {
     const { result } = renderHook(
       () => useDialogGenerarProformaController(true, mockEmbarque, mockConceptos, vi.fn()),

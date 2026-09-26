@@ -7,6 +7,7 @@ import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface RankingMeta {
   esGanador: boolean;
+  unicaTarifa: boolean;
   etiquetasMejorEn: string[]; // ej. ["Mejor precio", "Más crédito"]
   deltaTotalVsGanador: number; // 0 para el ganador, positivo para el resto (USD)
   vencePronto: boolean; // vigente_hasta dentro de 7 días
@@ -22,6 +23,17 @@ function diasHasta(iso: string | null | undefined): number | null {
 
 export function computeRankingMeta(rows: ReadonlyArray<TopTarifaRow>): RankingMeta[] {
   if (!rows.length) return [];
+  const unicaTarifa = rows.length === 1;
+  if (unicaTarifa) {
+    const dias = diasHasta(rows[0].vigente_hasta);
+    return [{
+      esGanador: false,
+      unicaTarifa: true,
+      etiquetasMejorEn: [],
+      deltaTotalVsGanador: 0,
+      vencePronto: dias != null && dias >= 0 && dias <= 7,
+    }];
+  }
   const ganadorTotal = rows[0]?.total_comparable ?? 0;
 
   const minTotal = Math.min(...rows.map((r) => Number(r.total_comparable || 0)));
@@ -49,6 +61,7 @@ export function computeRankingMeta(rows: ReadonlyArray<TopTarifaRow>): RankingMe
 
     return {
       esGanador: i === 0,
+      unicaTarifa: false,
       etiquetasMejorEn: etiquetas,
       deltaTotalVsGanador: Number(r.total_comparable || 0) - ganadorTotal,
       vencePronto,

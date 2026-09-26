@@ -110,6 +110,9 @@ export function EmbarqueDetalleTabs({
           utilidad={financials.utilidad}
           margen={financials.margen}
           montosSinTipoCambio={financials.montosSinTipoCambio}
+          tipoCambioUsd={embarque.tipo_cambio_usd}
+          tipoCambioEur={embarque.tipo_cambio_eur}
+          monedasExtranjeras={monedasExtranjeras}
           embarqueId={embarqueId}
           canEditCostos={canEditCostosEmbarque}
         />

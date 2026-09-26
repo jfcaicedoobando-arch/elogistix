@@ -16,6 +16,7 @@ interface ConceptoRowProps {
   isSelected: boolean;
   ivaActivo: boolean;
   ivaBloqueado: boolean;
+  ivaPendiente: boolean;
   /** Etiqueta de la tasa real de la fila (ej. "16%", "0%"). */
   etiquetaIvaFila: string;
   contLabel: string | null;
@@ -25,7 +26,7 @@ interface ConceptoRowProps {
 }
 
 export function ConceptoRow({
-  c, isSelected, ivaActivo, ivaBloqueado, etiquetaIvaFila, contLabel, showGeneralBadge,
+  c, isSelected, ivaActivo, ivaBloqueado, ivaPendiente, etiquetaIvaFila, contLabel, showGeneralBadge,
   onToggle, onToggleIva,
 }: ConceptoRowProps) {
   const sub = Number(c.cantidad) * Number(c.precio_unitario);
@@ -52,7 +53,9 @@ export function ConceptoRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
-        {ivaBloqueado ? (
+        {ivaPendiente ? (
+          <Badge variant="outline" className="text-body-sm text-warning border-warning/40">IVA por confirmar</Badge>
+        ) : ivaBloqueado ? (
           // R179-01: el badge muestra el tratamiento fiscal REAL de la fila.
           // Antes decía siempre "IVA 16% incluido" aunque el concepto estuviera
           // guardado sin IVA, y el total confirmado cambiaba al guardar.
@@ -134,5 +137,4 @@ export function ProformaFooterFields({ notas, onNotasChange }: FooterFieldsProps
     </div>
   );
 }
-
 

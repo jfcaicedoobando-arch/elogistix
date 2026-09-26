@@ -7,6 +7,7 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
+import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -51,10 +52,11 @@ export function SugerenciasTarifaResultados({ isFetching, error, isRefetching, t
     );
   }
 
+  const meta = computeRankingMeta(tarifas);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {tarifas.map((t, i) => (
-        <TarifaResultCard key={t.id} row={t} rank={i + 1} onElegir={onElegir} selectLabel="Elegir esta" />
+        <TarifaResultCard key={t.id} row={t} rank={i + 1} meta={meta[i]} onElegir={onElegir} selectLabel="Elegir esta" />
       ))}
     </div>
   );

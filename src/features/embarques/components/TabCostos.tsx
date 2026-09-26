@@ -32,6 +32,10 @@ interface Props {
    * inventa un tipo de cambio ni se mezclan monedas.
    */
   montosSinTipoCambio?: number;
+  /** Tasas capturadas en el embarque y usadas para convertir los KPIs a MXN. */
+  tipoCambioUsd?: number | null;
+  tipoCambioEur?: number | null;
+  monedasExtranjeras?: string[];
 }
 
 const kpiColors = [
@@ -44,6 +48,7 @@ const kpiColors = [
 export function TabCostos({
   conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEditCostos,
   montosSinTipoCambio = 0,
+  tipoCambioUsd, tipoCambioEur, monedasExtranjeras = [],
 }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
@@ -98,6 +103,18 @@ export function TabCostos({
           </Card>
         ))}
       </div>
+      {monedasExtranjeras.length > 0 && (
+        <p className="-mt-4 text-body-sm text-muted-foreground" data-testid="tipo-cambio-kpis">
+          Conversión a MXN con el tipo de cambio capturado en el embarque:
+          {monedasExtranjeras.includes("USD") && Number(tipoCambioUsd) > 1 && (
+            <span className="ml-1 whitespace-nowrap">1 USD = {formatCurrency(Number(tipoCambioUsd), "MXN")}</span>
+          )}
+          {monedasExtranjeras.includes("EUR") && Number(tipoCambioEur) > 1 && (
+            <span className="ml-1 whitespace-nowrap">1 EUR = {formatCurrency(Number(tipoCambioEur), "MXN")}</span>
+          )}
+          {montosSinTipoCambio > 0 && <span className="ml-1">Los conceptos sin tasa válida se excluyen.</span>}
+        </p>
+      )}
       <p className="-mt-4 text-body-sm text-muted-foreground" data-testid="nota-kpis-presupuesto">
         Cifras presupuestadas con los conceptos capturados. El costo y la utilidad reales se ven en la conciliación tras capturar las facturas de proveedor.
       </p>

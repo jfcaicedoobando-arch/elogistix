@@ -7,6 +7,7 @@ export interface AccionPrincipalArgs {
   siguienteEstado: string | null;
   ocultarAvance: boolean;
   estadoVisual: string;
+  etd?: string | null;
   avanzandoEstado: boolean;
   bloqueadoPorDocs: boolean;
   docsFaltantes: string[];
@@ -29,6 +30,7 @@ export function AccionPrincipalEmbarque(a: AccionPrincipalArgs) {
     return (
       <AvanzarEstadoButton
         estadoVisual={a.estadoVisual}
+        etd={a.etd}
         siguienteEstado={a.siguienteEstado}
         avanzandoEstado={a.avanzandoEstado}
         bloqueadoPorDocs={a.bloqueadoPorDocs}
