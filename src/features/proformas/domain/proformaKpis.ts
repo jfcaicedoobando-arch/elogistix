@@ -24,13 +24,13 @@ export function buildKpisProforma(input: ProformaKpiInput): DocumentoKpi[] {
   const subtotal = hayUsd ? totales.subtotal_usd : totales.subtotal_mxn;
   const iva = hayUsd ? totales.iva_usd : totales.iva_mxn;
   const total = hayUsd ? totales.total_usd : totales.total_mxn;
-  const hintMixto =
-    hayUsd && hayMxn ? `+ ${formatCurrency(totales.total_mxn, "MXN")}` : undefined;
+  const hintMxn = (monto: number) =>
+    hayUsd && hayMxn ? `+ ${formatCurrency(monto, "MXN")}` : undefined;
 
   return [
-    { label: "Total", value: formatCurrency(total, moneda), hint: hintMixto },
-    { label: "Subtotal", value: formatCurrency(subtotal, moneda) },
-    { label: "IVA", value: formatCurrency(iva, moneda) },
+    { label: "Total", value: formatCurrency(total, moneda), hint: hintMxn(totales.total_mxn) },
+    { label: "Subtotal", value: formatCurrency(subtotal, moneda), hint: hintMxn(totales.subtotal_mxn) },
+    { label: "IVA", value: formatCurrency(iva, moneda), hint: hintMxn(totales.iva_mxn) },
     {
       label: "Crédito",
       value: `${input.diasCredito ?? 0} días`,

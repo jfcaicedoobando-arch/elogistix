@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
 import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
+import { PricingField } from "./PricingField";
 import type { ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 import { costoBloqueado, MOTIVO_COSTO_BLOQUEADO } from "@/features/embarques/domain/conceptoBloqueado";
 
@@ -71,26 +72,35 @@ export function FilaCostoPrecio({
   return (
     // `[&>*]:min-w-0` (VIS-CE-251-01): deja que cada celda se encoja con la
     // rejilla `minmax(0,1fr)` del padre en lugar de desbordar el card.
-    <div className={`grid ${cols} gap-2 items-center [&>*]:min-w-0`}>
+    <div role="group" aria-label={`Costo: ${costo.concepto || "sin concepto"}`}
+      className={`grid grid-cols-2 ${cols} gap-3 items-end rounded-lg border p-3 lg:gap-2 lg:items-center lg:border-0 lg:p-0 [&>*]:min-w-0`}>
       {bloqueado && <span className="sr-only">{MOTIVO_COSTO_BLOQUEADO}</span>}
+      <PricingField label="Proveedor" className="col-span-2 sm:col-span-1">
       <SelectProveedorCosto
         costo={costo}
         proveedoresDb={proveedoresDb}
         bloqueado={bloqueado}
         onChange={v => update(costo.id, 'proveedorId', v)}
       />
-
+      </PricingField>
+      <PricingField label="Concepto" className="col-span-2 sm:col-span-1">
       <ConceptoCatalogoSelect
         value={costo.concepto}
         disabled={bloqueado}
         onChange={v => update(costo.id, 'concepto', v)}
       />
+      </PricingField>
+      <PricingField label="Subtotal (sin IVA)">
       <NumericInput decimals value={costo.monto} disabled={bloqueado} onChange={n => update(costo.id, 'monto', n)} className="text-body h-10" aria-label="Subtotal costo" />
+      </PricingField>
+      <PricingField label="Moneda">
       <Select value={costo.moneda} disabled={bloqueado} onValueChange={v => update(costo.id, 'moneda', v)}>
-        <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="text-body" aria-label="Moneda del costo"><SelectValue /></SelectTrigger>
         <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
       </Select>
+      </PricingField>
       {showContenedorCol && embarqueId && (
+        <PricingField label="Contenedor" className="col-span-2 lg:col-span-1">
         <SelectContenedorConcepto
           embarqueId={embarqueId}
           value={costo.contenedorId ?? null}
@@ -98,7 +108,9 @@ export function FilaCostoPrecio({
           onChange={v => update(costo.id, 'contenedorId', v)}
           className="text-body"
         />
+        </PricingField>
       )}
+      <PricingField label="Total USD">
       <div className="flex items-center gap-1">
         <Input
           readOnly
@@ -118,7 +130,8 @@ export function FilaCostoPrecio({
           </Tooltip>
         )}
       </div>
-      <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => remove(costo.id)} disabled={disableRemove || bloqueado} aria-label="Eliminar costo directo">
+      </PricingField>
+      <Button variant="ghost" size="icon" className="justify-self-end min-h-11 min-w-11 lg:h-8 lg:w-8 lg:min-h-0 lg:min-w-0" onClick={() => remove(costo.id)} disabled={disableRemove || bloqueado} aria-label="Eliminar costo directo">
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>
