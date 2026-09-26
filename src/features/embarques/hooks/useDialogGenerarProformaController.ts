@@ -182,9 +182,7 @@ export function useDialogGenerarProformaController(
     seleccionados, ivaPorConcepto, notas, diasCredito,
     setNotas,
     toggle, toggleAll, toggleIva,
-    conceptosSeleccionados,
-    pendientesIva,
-    conceptosVisibles,
+    conceptosSeleccionados, pendientesIva, conceptosVisibles,
     contenedores,
     filtroContenedor, setFiltroContenedor,
     totales, tasaIva,
@@ -197,5 +195,3 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
-
-
