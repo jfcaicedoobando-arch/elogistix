@@ -23,8 +23,8 @@ export const CXP_COL_DEFAULTS: Record<string, boolean> = {
 };
 
 export const CXP_COL_OPTIONS: ColumnOption[] = [
-  { id: "folio_interno", label: "Folio", required: true },
-  { id: "folio", label: "Folio prov." },
+  { id: "folio_interno", label: "Folio interno", required: true },
+  { id: "folio", label: "Folio proveedor" },
   { id: "proveedor", label: "Proveedor", required: true },
   { id: "emision", label: "Emisión" },
   { id: "vencimiento", label: "Vencimiento" },

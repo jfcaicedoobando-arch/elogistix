@@ -55,7 +55,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
     },
     {
       id: "folio",
-      header: "Folio",
+      header: () => <span className="whitespace-normal">Folio proveedor</span>,
       accessorFn: (r) => r.folio_proveedor ?? "",
       enableSorting: true,
       meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap" },

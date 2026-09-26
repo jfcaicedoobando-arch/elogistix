@@ -45,10 +45,10 @@ interface Props {
 // recortaban). R257 · VIS-CE-251-01: el ancho mayor (150px) va a la columna
 // de Total (última antes del botón) para que quepan el importe y el indicador
 // FX; la de Contenedor usa 110px.
-const COSTO_COLS_BASE = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_150px_36px]";
-const COSTO_COLS_CONT = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_110px_150px_36px]";
-const VENTA_COLS_BASE = "grid-cols-[minmax(0,1fr)_72px_120px_88px_150px_36px]";
-const VENTA_COLS_CONT = "grid-cols-[minmax(0,1fr)_72px_120px_88px_110px_150px_36px]";
+const COSTO_COLS_BASE = "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_150px_36px]";
+const COSTO_COLS_CONT = "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_110px_150px_36px]";
+const VENTA_COLS_BASE = "lg:grid-cols-[minmax(0,1fr)_72px_120px_88px_150px_36px]";
+const VENTA_COLS_CONT = "lg:grid-cols-[minmax(0,1fr)_72px_120px_88px_110px_150px_36px]";
 
 /** Texto de trazabilidad del T/C precargado (helper puro: baja la complejidad del componente). */
 function describirOrigenTc(tc: TcInicial | null | undefined): string | null {

@@ -1,13 +1,13 @@
 /**
- * Acciones inline para una fila de actividad: Completar, Posponer y Notas.
+ * Menú compacto para una fila de actividad: Completar, Posponer y Notas.
  * Las notas siguen disponibles incluso en actividades completadas.
  */
 import { useState } from "react";
-import { CheckCircle2, Clock, FileText } from "lucide-react";
+import { CheckCircle2, Clock, FileText, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Hint } from "@/components/shared/Hint";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,
@@ -22,8 +22,7 @@ export default function ActividadRowActions({ actividad }: Props) {
   const [notasOpen, setNotasOpen] = useState(false);
   const completada = !!actividad.fecha_completada;
 
-  const handleCompletar = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCompletar = async () => {
     // El hook `useCompletarActividad` ya notifica éxito y error: un solo aviso.
     try {
       await completar.mutateAsync({ id: actividad.id });
@@ -43,49 +42,38 @@ export default function ActividadRowActions({ actividad }: Props) {
 
   return (
     <>
-      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-        {!completada && (
-          <>
-            <Hint label="Marcar como completada">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2"
-                onClick={handleCompletar}
-                disabled={completar.isPending}
-                loading={completar.isPending}
-                aria-label="Marcar como completada"
-              >
-                {!completar.isPending && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
-              </Button>
-            </Hint>
-            <DropdownMenu>
-              <Hint label="Posponer">
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} loading={posponer.isPending} aria-label="Posponer">
-                    {!posponer.isPending && <Clock className="h-4 w-4" />}
-                  </Button>
-                </DropdownMenuTrigger>
-              </Hint>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => handlePosponer(1)}>+1 día</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(3)}>+3 días</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(7)}>+1 semana</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        )}
-        <Hint label="Notas / resultado">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2"
-            onClick={() => setNotasOpen(true)}
-            aria-label="Notas / resultado"
-          >
-            <FileText className="h-3.5 w-3.5" />
-          </Button>
-        </Hint>
+      <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="ghost" className="h-8 w-8"
+              disabled={completar.isPending || posponer.isPending}
+              loading={completar.isPending || posponer.isPending}
+              aria-label="Acciones de actividad">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            {!completada && (
+              <>
+                <DropdownMenuItem onSelect={() => void handleCompletar()}>
+                  <CheckCircle2 className="mr-2 h-4 w-4 text-success" />Marcar como completada
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger><Clock className="mr-2 h-4 w-4" />Posponer</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onSelect={() => void handlePosponer(1)}>+1 día</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void handlePosponer(3)}>+3 días</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void handlePosponer(7)}>+1 semana</DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onSelect={() => setNotasOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" />Notas / resultado
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <ActividadNotasSheet
         actividad={actividad}
