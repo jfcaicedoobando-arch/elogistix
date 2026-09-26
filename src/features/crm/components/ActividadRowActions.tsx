@@ -49,17 +49,17 @@ export default function ActividadRowActions({ actividad }: Props) {
               disabled={completar.isPending || posponer.isPending}
               loading={completar.isPending || posponer.isPending}
               aria-label="Acciones de actividad">
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             {!completada && (
               <>
                 <DropdownMenuItem onSelect={() => void handleCompletar()}>
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-success" />Marcar como completada
+                  <CheckCircle2 className="mr-2 size-4 text-success" />Marcar como completada
                 </DropdownMenuItem>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger><Clock className="mr-2 h-4 w-4" />Posponer</DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger><Clock className="mr-2 size-4" />Posponer</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     <DropdownMenuItem onSelect={() => void handlePosponer(1)}>+1 día</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void handlePosponer(3)}>+3 días</DropdownMenuItem>
@@ -70,7 +70,7 @@ export default function ActividadRowActions({ actividad }: Props) {
               </>
             )}
             <DropdownMenuItem onSelect={() => setNotasOpen(true)}>
-              <FileText className="mr-2 h-4 w-4" />Notas / resultado
+              <FileText className="mr-2 size-4" />Notas / resultado
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
