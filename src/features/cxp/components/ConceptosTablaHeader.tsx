@@ -12,7 +12,7 @@ export function ConceptosTablaHeader() {
       <span className="w-20 text-right">IEPS</span>
       <span className="w-16">Unidad</span>
       <span className="w-24 text-right">Total línea</span>
-      <span className="w-16" />
+      <span className="w-28" />
     </div>
   );
 }

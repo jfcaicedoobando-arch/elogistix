@@ -99,7 +99,7 @@ export function DialogEditarConceptosFactura({
       icon={ListPlus}
       title={`Editar conceptos · ${folio}`}
       description="Sólo aplica a facturas capturadas a mano, sin pagos y no canceladas. Revisa el desglose y los importes antes de guardar. El cambio queda en la bitácora."
-      size="xl"
+      size="4xl"
       footer={
         <FormDialogFooter
           onCancel={() => onOpenChange(false)}

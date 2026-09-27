@@ -69,14 +69,14 @@ export function ConceptoLineaRow({
     >
       <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
         <Input
-          className="h-9 w-full md:flex-1"
+          className="h-9 w-full min-w-0 md:flex-1"
           placeholder="Descripción del servicio"
           value={c.descripcion}
           onChange={(e) => onActualizar(c.key, "descripcion", e.target.value)}
           aria-label="Descripción del concepto"
         />
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Cant.</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-16"
@@ -93,7 +93,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Precio</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-24"
@@ -108,7 +108,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">IVA</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-20"
@@ -123,7 +123,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">IEPS</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-20"
@@ -138,7 +138,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Unidad</span>
           <Input
             className="h-9 w-full md:w-16"
@@ -160,7 +160,7 @@ export function ConceptoLineaRow({
           {formatCurrency(total, moneda)}
         </span>
 
-        <div className="ml-auto flex w-auto items-center justify-end gap-0.5 md:w-16">
+        <div className="ml-auto flex w-auto items-center justify-end gap-0.5 md:w-28">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
