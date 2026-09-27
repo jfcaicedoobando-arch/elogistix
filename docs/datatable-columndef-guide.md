@@ -1,6 +1,7 @@
 # Guía de migración y autoría de tablas — `ColumnDef` nativo
 
-> Vigente desde **APP_VERSION 10.0.0** (refactor Fase 3). Suplanta cualquier
+> Revisado el 2026-09-26; contrato nativo vigente desde la retirada de API legacy.
+> Suplanta cualquier
 > referencia al API legacy `DataTableColumn<T>` / `sortValue` / `render` /
 > `key`, que **ya no existe** en el proyecto.
 
@@ -66,7 +67,7 @@ const columns: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
     sortingFn: sortByDate<EmbarqueRow>((r) => r.etd),
     cell: ({ row }) => formatDateMX(row.original.etd),
   },
-]) as ColumnDef<EmbarqueRow, unknown>[];
+]);
 ```
 
 Y el render:
@@ -90,17 +91,15 @@ Y el render:
 ### 2.1 Usar siempre `defineColumns<T>([...])`
 
 Activa la augmentación de `meta` (`LibreCargaColumnMeta`) y conserva la
-inferencia de `T` sin necesidad de anotar cada campo. La aserción final
-`as ColumnDef<T, unknown>[]` se mantiene **sólo** para preservar el contrato
-de la prop `columns` y evitar incompatibilidades de variancia con genéricos
-estrictos — no es un escape de tipos.
+inferencia de `T` sin necesidad de anotar cada campo. `defineColumns` ya devuelve `ColumnDef<T, unknown>[]`: no necesita una
+aserción final redundante para el ejemplo.
 
 ### 2.2 `id` es **obligatorio** y se usa como clave de orden server-side
 
 El `onSortChange(key, dir)` devuelve exactamente este `id`. Cuando el RPC
 de Supabase espera columnas como `expediente`, `fecha_etd`, `cliente_nombre`,
 usa **el mismo string** como `id`. No dependas de `accessorKey` para esto:
-cuando hay `accessorFn`, TanStack genera ids posicionales y romperás el
+cuando hay `accessorFn`, no depender de la inferencia de ID de TanStack para el
 mapeo con el backend.
 
 ### 2.3 Datos crudos en `accessorFn`, formato visual en `cell`
@@ -119,8 +118,9 @@ numérico/de fecha.
 | Números/MXN/USD | `sortByNumber<T>((r) => r.campo)`              |
 | Fechas (ISO)    | `sortByDate<T>((r) => r.campo)`                |
 
-- Todos son **null-safe**: `null`/`undefined` van al final independientemente
-  de la dirección. No reimplementes esto por columna.
+- Los helpers manejan valores ausentes. Verificar la posición de null/undefined
+  en ambas direcciones con la configuración real de TanStack; el comparador
+  por sí solo no garantiza null-last al invertir el orden.
 - `sortByString` usa `Intl.Collator("es-MX", { sensitivity: "base" })`:
   acentos y mayúsculas insensibles. **No** uses `String.prototype.localeCompare`
   manual.
@@ -226,7 +226,7 @@ cell: ({ row }) => (
       onClick={(e) => e.stopPropagation()}
       asChild
     >
-      <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
+      <Button variant="ghost" size="icon" aria-label="Más acciones"><MoreHorizontal /></Button>
     </DropdownMenuTrigger>
     ...
   </DropdownMenu>
@@ -307,7 +307,8 @@ cualquier tabla nueva no-trivial, agrega como mínimo:
 - [ ] `onRowClick` + acciones internas con `e.stopPropagation()`.
 - [ ] Archivo de columnas ≤ 200 líneas; celdas complejas extraídas.
 - [ ] Tests de regresión actualizados.
-- [ ] Changelog (`src/content/changelogData.ts` + `chunk0`) actualizado.
+- [ ] Guía/contrato actualizado cuando cambie; changelog de producto sólo
+      si forma parte de una release aprobada.
 
 ---
 

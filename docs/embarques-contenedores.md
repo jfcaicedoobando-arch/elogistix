@@ -1,137 +1,53 @@
-# Embarques ↔ Contenedores
+# Embarques y contenedores
 
-Documenta el modelo de datos y los flujos UI introducidos por el refactor
-"1 embarque ↔ N contenedores" (Fases A–G, v12.3.0 – v12.7.0).
+Revisado el **2026-09-26**. Modelo: un embarque puede tener varios
+`embarque_contenedores`. Conceptos de costo/venta tienen `contenedor_id`
+opcional; `NULL` representa cargo general.
 
-## Modelo de datos
+## Persistencia
 
-```
-embarques (1) ───────────────< embarque_contenedores (N)
-                                    │
-                                    └──< conceptos_venta / conceptos_costo
-                                         (campo opcional contenedor_id)
-```
+Tipos en `src/features/embarques/types/contenedor.ts`.
+Servicios en `src/features/embarques/services/contenedores/` y
+`services/mutations.ts`; hooks en `hooks/mutations/`.
 
-- **`embarque_contenedores`**: número, tipo, BL House, peso, volumen, piezas,
-  `orden`, soft-delete. RLS por `organization_id` + lectura para clientes
-  propietarios.
-- **`conceptos_venta.contenedor_id`** y **`conceptos_costo.contenedor_id`**
-  (nullable). `NULL` significa "concepto general del embarque" — siempre se
-  incluye al filtrar proformas por contenedor.
+Alta: contenedores viajan **dentro de la RPC** junto al embarque/conceptos.
+No describir una segunda llamada de inserción como flujo vigente.
+Actualización con contenedores usa `actualizar_embarque_con_contenedores`,
+en una transacción, con requestId/control optimista según el servicio.
 
-### Campos legacy en `embarques` (deprecated)
+Lista omitida al actualizar no significa vaciar hijos.
+Conservar IDs existentes y remapear sólo en duplicación; no dejar conceptos
+referenciando hijos de otro embarque.
 
-`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas` se
-sincronizan automáticamente desde el primer contenedor hijo (`orden ASC`) vía
-trigger `sync_embarque_desde_contenedor`. Se mantienen por compat con export,
-reportes y listados. Plan de eliminación: cuando todas las vistas migren a leer
-desde `embarque_contenedores`.
+## Modos
 
-## Capa de datos (cliente)
+- Marítimo FCL: lista de contenedores y captura requerida según el paso/estado.
+- LCL: rama específica de carga consolidada, no exigir número FCL ficticio.
+- Aéreo/terrestre: no inventar contenedores marítimos.
+- Campos de cabecera legacy se sincronizan según el trigger SQL vigente.
 
-- **Types**: `src/types/embarque/contenedor.ts` (Zod schema
-  `contenedorBorradorSchema`, helpers `rowAContenedorBorrador`).
-- **Servicios**: `src/services/embarque/contenedores/`
-  (`listarPorEmbarque`, `crear`, `crearMuchos`, `actualizar`, `eliminar`
-  soft-delete, `reemplazarTodos`).
-- **Hook**: `useContenedoresEmbarque(embarqueId)` con React Query.
+La UI de wizard y los requisitos al cerrar no son idénticos: un borrador
+puede necesitar captura posterior. Consultar schemas y guard de cierre.
+Los consumidores legacy deben migrarse antes de retirar columnas/triggers.
 
-## UI
+## Conceptos y proformas
 
-- **Vista detalle (`TabResumen.tsx`)**: `SeccionContenedores` permite agregar,
-  editar y eliminar contenedores con "Guardar cambios" (delete-soft +
-  re-insert vía `reemplazarTodos`).
-- **Wizard de creación**: captura un contenedor inicial. Los adicionales se
-  agregan desde el detalle (integración wizard-multicontenedor diferida a una
-  futura versión menor).
+La selección por contenedor distingue cargos específicos y generales.
+Un cargo general no se factura una vez por cada contenedor: revisar
+elegibilidad/estado/proforma de origen antes de seleccionar.
 
-## Proformas filtradas por contenedor
+Proformas multi-contenedor agrupan conceptos y subtotales en UI/PDF.
+Consolidación requiere mismo embarque/cliente según RPC y conserva origen.
+Conceptos asociados a hijos eliminados necesitan el tratamiento del helper
+vigente, no un nuevo cargo duplicado.
 
-`DialogGenerarProforma` (v12.6.0):
+## Duplicación
 
-- Chips de filtro en el paso de selección: "Todos", "Generales",
-  uno por cada contenedor.
-- "Generales" filtra solo conceptos con `contenedor_id IS NULL`.
-- Seleccionar un contenedor incluye sus conceptos + los generales (porque
-  también aplican a ese contenedor).
-- Al confirmar, la proforma resultante registra en `notas` un prefijo
-  `"Proforma del contenedor X"` que aparece en el PDF.
+`duplicar_embarque_completo` crea hijos nuevos y remapea `contenedor_id`;
+concepto general continúa general. Nunca reutilizar IDs de contenedor origen.
 
-## Duplicación de embarques
+## Verificación de cambios
 
-RPC `duplicar_embarque_completo` (v12.7.0) ahora:
-
-1. Crea N nuevos embarques (uno por entrada en `p_copias`).
-2. Copia los contenedores hijos del embarque origen → embarque copia.
-3. Re-mapea `contenedor_id` en los conceptos copiados al `id` del nuevo
-   contenedor correspondiente (matching por `orden`). Si el concepto era
-   general (`NULL`) sigue siendo general en la copia.
-
-## Flujo wizard (v12.8.0)
-
-A partir de v12.8.0, el wizard "Nuevo Embarque" usa la lista dinámica de contenedores en `StepDatosRutaMaritimo`:
-
-- **FCL**: el operador agrega N contenedores con `ListaContenedoresEditable`. Validación zod en `validateStepRuta` exige `contenedores.length >= 1` y que cada fila tenga `numero_contenedor` y `tipo_contenedor`.
-- **LCL**: el wizard no muestra la lista; al persistir se inyecta automáticamente una única fila con `tipo_contenedor='LCL'`.
-- **Aéreo / Terrestre**: `contenedores` queda vacío y no se insertan filas hijas.
-
-El submit (`useEmbarqueSubmitOrchestrator` → `useCreateEmbarque`) llama `crearMuchos(embarqueId, contenedores)` después de `crearEmbarqueRpc`. El trigger DB sincroniza `embarques.contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3` y `piezas` desde la tabla hija para mantener compatibilidad con reportes y queries legacy.
-
-## Asignar conceptos a un contenedor (v12.9.0)
-
-Al **editar** un embarque con ≥2 contenedores, el paso de Costos del wizard muestra una columna extra "Contenedor" en cada fila de costo y de venta (componente `SelectContenedorConcepto`). Opciones:
-
-- **General (todo el embarque)** → `contenedor_id = null`. Es el default y siempre aparece en cualquier filtro de proforma.
-- **Cualquier contenedor del embarque** → guarda el `id` del contenedor.
-
-`TabCostos` también incluye la columna "Contenedor" en modo lectura.
-
-### Por qué importa
-
-Sin este paso, todos los conceptos quedaban como "General" y los chips de filtro por contenedor en `DialogGenerarProforma` (v12.6.0) no separaban nada. Con la asignación habilitada, generar una "Proforma del Contenedor MSCU123…" trae sólo:
-
-1. Los conceptos asignados a ese contenedor.
-2. Los conceptos generales (aplican a todo el embarque).
-
-### Reglas
-
-- Si el embarque tiene 0 o 1 contenedor, la columna se oculta automáticamente (no aporta valor).
-- Si un concepto referencia un contenedor que se eliminó (soft-delete), se trata como "General" al filtrar (`conceptosPorContenedor.ts`).
-- El wizard de creación (`NuevoEmbarque`) **no** muestra esta columna: el embarque aún no existe, así que primero se crea con sus contenedores y luego se editan los conceptos para asignarlos.
-
-## Proformas multi-contenedor (Fase 6, v12.14.0+)
-
-Cuando un embarque tiene ≥2 contenedores activos, el flujo de facturación se
-adapta para evitar errores de sobre-facturación:
-
-- **`ResumenConceptosVenta`** agrupa los conceptos pendientes por contenedor
-  (subcomponente `GrupoConceptosContenedor`) con subtotales por moneda. Los
-  conceptos con `contenedor_id = NULL` se renderizan al final en un bloque
-  "Cargos generales del BL".
-- **Atajo "Generar proforma" por contenedor:** cada bloque tiene su propio
-  botón que abre `DialogGenerarProforma` con `initialFiltroContenedor` ya fijo
-  a ese contenedor y los conceptos visibles preseleccionados.
-- **PDFs (`ProformaDocument`, `ProformaConsolidadaDocument`):** cuando una
-  proforma cubre 2+ contenedores, los conceptos se renderizan agrupados por
-  contenedor con subtotal por grupo. Para 1 contenedor el layout queda plano.
-- **Bucket `__multi__` en `agruparProformasPendientes`:** las proformas que ya
-  consolidaron varios contenedores se muestran como un grupo virtual en la
-  bandeja de pendientes.
-
-### Convenciones
-
-- `contenedor_id = NULL` en `conceptos_venta` / `conceptos_costo` significa
-  "cargo general del BL" — siempre se incluye al generar una proforma por
-  contenedor específico.
-- `consolidar_proformas` (RPC) sólo permite consolidar proformas que comparten
-  `embarque_id` y `cliente_id`. La UI agrupa por expediente para garantizarlo;
-  el cliente añade un guard defensivo (v12.14.1) y los errores cross-embarque
-  / cross-cliente del RPC se mapean a mensajes en español.
-
-### Captura pendiente (v12.14.1)
-
-La lista de embarques (`embarqueColumns.tsx`) muestra un badge naranja
-"Datos pendientes" cuando un embarque marítimo tiene BL Master vacío o
-contenedores hijos sin número/tipo capturado. El badge sólo informa, no
-bloquea ninguna acción. Datos calculados por `useContenedoresInfoMap`
-(`incompletos`).
+Comprobar FCL de varios hijos, LCL y no marítimo, guardado/edición sin pérdida
+de IDs, conceptos específicos/generales, proformas y datos pendientes.
+Pruebas SQL en base efímera. Esta guía no cambió registros o schema.

@@ -3,6 +3,9 @@
 Documento de gobierno para la implementación de Sentry (front + edge functions).
 Fuente de la verdad para on-call y para futuras auditorías.
 
+> Revisión documental: 2026-09-26. Describe código/configurable; no certifica
+> alertas, destinatarios, retención o crons activos en el dashboard remoto.
+
 ## 1. Piezas y dónde viven
 
 | Capa | Archivo | Función |
@@ -86,7 +89,7 @@ verifica que `scrubEventPii` lo cubre antes de mergear.
 | `kind` | `queryClient.ts` | `query` vs `mutation` |
 | `auth_status` | `user.ts` | `authenticated` vs `anonymous` |
 | `organization_id` / `active_organization_id` | `user.ts` | Multi-tenant blast radius |
-| `effective_role` | `user.ts` | Rol resuelto (owner, contador…) |
+| `effective_role` | `user.ts` | Rol resuelto (administrador, contador…) |
 | `crashed_route` | `ErrorBoundary` | Ruta que rompió |
 | `app_version` | init + boundary | Correlaciona con release |
 | `fn` | Edge wrapper | Nombre de la edge function |
@@ -112,5 +115,5 @@ verifica que `scrubEventPii` lo cubre antes de mergear.
 
 - Tests: `src/__tests__/architecture/sentry-*.test.ts` (imports, wrapping,
   fiscal services), `sentry/__tests__/*` (unit).
-- Memoria: `mem://preferences/sentry-resolve` — cerrar issues en el mismo turno
-  del fix.
+- Cerrar issues después de verificar la corrección y su despliegue; mantener
+  evidencia de versión/ruta, no ocultar eventos para simular cierre.

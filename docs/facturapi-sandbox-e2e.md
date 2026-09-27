@@ -10,12 +10,15 @@ timbrado del REP con el complemento de pagos estructurado (`taxability`).
 - **No corre en CI**: no es un `*_test.ts`, exige variables explícitas y aborta
   si la llave no empieza con `sk_test`. No hay credenciales en el repositorio.
 
+> Revisión documental: 2026-09-26. No se repitieron emisiones en este repaso.
+> Emite/cancela documentos de Sandbox: exige entorno y autorización apropiados.
+
 ## Cómo ejecutarlo
 
 ```bash
 FACTURAPI_SANDBOX_E2E=1 \
 FACTURAPI_SANDBOX_KEY=sk_test_xxxxxxxx \
-FACTURAPI_E2E_TAG=e2e-2026-09-19 \
+FACTURAPI_E2E_TAG=<tag-estable-del-intento> \
 deno run --allow-env --allow-net scripts/sandbox/facturapi-e2e-ppd-noobjeto.ts
 ```
 
@@ -55,7 +58,7 @@ REP:
 - `rep.traslados coherentes con el tratamiento` — un `TrasladoDR` de IVA 16%
   sobre base gravada prorrateada en `02`; ninguno en `01`.
 
-### Última corrida real (sandbox, 2026-09-21)
+### Evidencia histórica (sandbox, 2026-09-21)
 
 | Escenario | Factura (id / UUID) | REP (id / UUID) | Resultado |
 | --- | --- | --- | --- |

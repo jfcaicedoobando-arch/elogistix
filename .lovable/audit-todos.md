@@ -1,14 +1,17 @@
-# Auditoría — TODOs accionables abiertos
+# Auditoría — pendientes por verificar
 
-Fuente única de verdad para trabajo futuro identificado durante la auditoría
-arquitectónica. Sólo entries con valor real.
+Revisión de inventario Git: **2026-09-26**. No implica auditoría de Live.
 
-| ID | Archivo | Descripción | Bloqueo |
-|---|---|---|---|
-| AUDIT-M16 | `.env` | Sigue en el índice de git aunque ya está en `.gitignore`. Procedimiento completo en [`docs/ops/purga-env-git.md`](../docs/ops/purga-env-git.md). Verificado el 2026-08-29: el archivo sólo contiene variables públicas, así que es higiene de repo, no fuga de credenciales. | Reescritura de historial de git (manual, fuera del agente) |
+| ID | Referencia | Estado |
+| --- | --- | --- |
+| AUDIT-M16 | `.env` sigue trackeado aunque `.gitignore` lo excluye | Higiene pendiente de decisión; no hace falta purga histórica automática |
 
-## Convención
+[Procedimiento](../docs/ops/purga-env-git.md).
+No reescribir historia ni rotar claves públicas sólo para cerrar una casilla.
+Cualquier credencial privada expuesta sí requiere rotación.
 
-Todo `TODO` futuro en código productivo debe usar el prefijo `// AUDIT(<id>)`
-y referenciar una fila en esta tabla. Si la deuda se cierra, eliminar el
-comentario **y** la fila aquí.
+[Otros pendientes históricos](../docs/auditoria/pendientes-historicos.md)
+necesitan verificación antes de declararse bugs actuales o cerrados.
+
+TODOs productivos nuevos: prefijo `AUDIT(<id>)` y referencia al issue/registro
+que describa evidencia, responsable y cierre.

@@ -2,6 +2,11 @@
 
 **Fecha:** 2026-09-19 · **Estado:** aplicado (infraestructura de pruebas)
 
+> **Registro histórico, sustituido como configuración vigente.** Al 2026-09-26
+> el proyecto usa Vite 8 / Vitest 5 / TypeScript 6 / Router 7.
+> Consultar [stack actual](../stack-mantenimiento.md) y [CI](../ops/ci.md).
+> Los números/validaciones siguientes corresponden a la transición anterior.
+
 ## Contexto
 
 Vitest 4.1.x declara en `peerDependencies`:
@@ -55,7 +60,7 @@ la major 3 (su peer es `vite: ^4 || ^5 || ^6`) y `lovable-tagger` declara
 
 ## Riesgos residuales
 
-- Vite 6 cambia el target por defecto a `baseline-widely-available` y el
+- La migración requiere verificar el target de build configurado y el
   manejo de `sass`/`lightningcss`; el build de producción se verificó y el
   bundle sigue generando los mismos chunks y el gate de `index.html`.
 - La cobertura real bajo Vitest 4 podría diferir; si CI muestra una caída

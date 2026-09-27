@@ -4,6 +4,8 @@ description: Al convertir cotización aceptada en embarque, se revalida la tarif
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 ## Flujo
 
 ```
@@ -45,7 +47,7 @@ Restricción única `(organization_id, categoria, clave)` desde 13.71.3 — un v
 
 ## Archivos
 
-- Dominio puro: `src/lib/domain/revalidacionTarifa.ts`
+- Dominio puro: `src/features/cotizacion/domain/revalidacionTarifa.ts`
 - Servicio: `src/features/cotizacion/services/revalidacion/index.ts`
 - Hooks: `src/features/cotizacion/hooks/useRevalidacionTarifa.ts`, `usePendientesReaprobacion.ts`, `embarques/hooks/useEmbarqueTarifaInfo.ts`
 - UI cotización: `src/features/cotizacion/components/revalidacion/{RevalidarTarifaModal,ReaprobacionTarifaBanner,CrearEmbarqueConRevalidacion}.tsx`
@@ -53,7 +55,7 @@ Restricción única `(organization_id, categoria, clave)` desde 13.71.3 — un v
 - Dashboards: KPI en `/operaciones`, banner comercial en `/dashboard`
 - Lista cotizaciones: badge `⚠ Re-aprobación pendiente` cuando `estado_revalidacion='pendiente_reaprobacion'`
 
-## Pendientes conocidos (no implementados)
+## Propuestas históricas por verificar (no son cola confirmada)
 
 - Emails automáticos al cliente cuando ventas re-aprueba o re-cotiza con cambio de precio (hoy sólo bitácora + notificación interna).
 - Badge "Precio cambió" en tiempo real por fila (requiere RPC batch que compare snapshot vs tarifa vigente — el badge "Tarifa vencida" ya está, usa el JOIN de la lista).

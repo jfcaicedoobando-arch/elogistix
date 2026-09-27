@@ -1,15 +1,18 @@
-# remotion
+# Remotion — video de presentación
 
-To install dependencies:
+Subproyecto independiente del frontend ERP. Su `package.json` tiene dependencias
+propias: no asumir que usa las versiones React/TypeScript del paquete raíz.
+
+El entry de composiciones está en `remotion/src/index.ts`, registradas en `remotion/src/Root.tsx`.
+`index.ts` raíz sólo imprime un saludo; no genera el video.
+
+Desde esta carpeta:
 
 ```bash
-bun install
+bun install --frozen-lockfile
+bunx remotion studio src/index.ts
 ```
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Para render consultar composiciones/props y `bunx remotion --help`.
+No generar video, actualizar dependencias o cambiar configuración como efecto
+secundario de mantener documentación. Revisado el 2026-09-26.

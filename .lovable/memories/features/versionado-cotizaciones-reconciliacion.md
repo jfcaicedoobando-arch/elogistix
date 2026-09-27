@@ -4,6 +4,8 @@ description: Fase 2 — `cotizacion_costos` inmutable; histórico por versión; 
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 # Contrato
 
 - `cotizaciones.version` (int, default 1) — incrementa con cada re-cotización.

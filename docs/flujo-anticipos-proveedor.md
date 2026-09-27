@@ -1,5 +1,7 @@
 # Anticipos a proveedor (pagar antes de la factura)
 
+> Revisión documental: 2026-09-26. Confirmar rol/destino antes de registrar dinero.
+
 Flujo para cuando el proveedor pide el pago **antes** de enviar su factura.
 
 ## 1. Registrar el anticipo
@@ -40,8 +42,8 @@ Si resultó menor, el remanente sigue disponible para otra factura del mismo pro
 ## 5. Conciliar
 
 Tesorería → *Estado de cuenta*: el movimiento del anticipo ya aparece como **Conciliado**
-y ligado al anticipo. Si el anticipo se cancela, ese movimiento se da de baja y el saldo
-del banco regresa.
+y ligado al anticipo. La cancelación/reversión sigue el flujo servidor; un movimiento real del banco
+no desaparece físicamente por cambiar el estado del anticipo en el ERP.
 
 ## 6. Vincular el anticipo con un embarque (opcional)
 
@@ -55,6 +57,10 @@ Operaciones necesita saber de qué expediente salió el dinero adelantado:
 - Si se aplica el anticipo a una factura de otro expediente, sale un **aviso amarillo**
   que no bloquea: hay casos legítimos (anticipo general, expediente corregido después).
 
+En cruces de moneda, comparar saldo a favor/aplicación/saldo de factura en
+las monedas y paridades que define la RPC. No comparar MXN contra USD como
+números sin convertir ni usar TC actual para una aplicación histórica.
+
 ## Reglas y validaciones
 
 - Roles que pueden registrar, aplicar, vincular y cancelar: administrador, contador y tesorero.
@@ -62,4 +68,3 @@ Operaciones necesita saber de qué expediente salió el dinero adelantado:
 - No se puede cancelar un anticipo que ya tenga aplicaciones vivas: primero se reversan.
 - El monto a aplicar nunca puede exceder el saldo a favor ni el saldo de la factura.
 - No se puede vincular un embarque a un anticipo cancelado ni a un embarque de otra organización.
-

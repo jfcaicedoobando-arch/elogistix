@@ -3,9 +3,12 @@ name: Cotización tarifa-first
 description: Política y mecánica del wizard de cotización marítima que obliga vincular tarifa antes del Paso 2, con auto-carga de costos y venta sugerida.
 type: feature
 ---
+
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 Wizard de cotización marítima (`src/features/cotizacion/components/wizard/PasoDatosGenerales.tsx`):
 
-**Orden del Paso 1 cuando `modo === "Marítimo"`** (v13.35.0):
+**Orden de referencia del Paso 1 cuando `modo === "Marítimo"`** (v13.35.0):
 1. Cliente
 2. Operación (modo/tipo/incoterm)
 3. Ruta (origen, destino, validez, tránsito, días libres)
@@ -15,7 +18,7 @@ Wizard de cotización marítima (`src/features/cotizacion/components/wizard/Paso
 
 Aéreo/Terrestre/General: orden tradicional sin sección Tarifa.
 
-**Bloqueo duro**: `validatePaso1` (`src/features/cotizacion/hooks/wizard/handlePaso1Crm.ts`) retorna error y registra `cotizacion_bloqueada_sin_tarifa` en `bitacora_actividad` si marítimo + sin `tarifaId`. Mensaje al usuario: "Vincula o crea una tarifa marítima antes de continuar".
+**Bloqueo duro**: `validatePaso1` (`src/features/cotizacion/hooks/wizard/handlePaso1Crm.ts`) retorna error y registra `cotizacion_bloqueada_sin_tarifa` en `bitacora_actividad` si Marítimo FCL con flete + sin `tarifaId`. LCL permite flete manual validado; incoterms sin flete tienen excepción explícita en `validateMaritimo`. Mensaje al usuario: "Vincula o crea una tarifa marítima antes de continuar".
 
 **Auto-carga de costos** (`aplicarTarifaAlForm` + `buildCostosDesdeTarifa`):
 - Se ejecuta al elegir tarifa desde sugerencias inline o `BuscarTarifaDialog`.

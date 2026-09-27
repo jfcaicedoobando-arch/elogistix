@@ -1,76 +1,40 @@
-# Baseline de esquema (estado final esperado)
+# Baseline de esquema
 
-## Qué problema resuelve
+`supabase/schema/baseline.sql` es la referencia normalizada del schema final
+esperado por CI, no una certificación de la base publicada.
 
-CI ya verificaba que las migraciones **apliquen** en una base limpia (drift radar)
-y que la base **funcione** (suites RLS, guardia de integridad). Lo que nadie
-miraba era que el esquema final fuera **exactamente** el esperado: si una
-migración borra un índice, relaja un `CHECK`, abre un `GRANT`, elimina un trigger
-o cambia el cuerpo de una RPC sin querer, todo pasaba en verde.
+## Workflow vigente (2026-09-26)
 
-La baseline es la radiografía de referencia: un `pg_dump --schema-only`
-normalizado del esquema `public`, versionado en el repo.
+`rls-tests.yml`: un job **`RLS tests result`** prepara PostgreSQL 17.9:
+bootstrap → squash/replay → permisos → post-migrate → cobertura/integridad →
+baseline → guards → suites.
 
-- Archivo: `supabase/schema/baseline.sql`
-- Generador: `scripts/db/schema-snapshot.sh`
-- Job de CI: `rls-tests.yml → schema-baseline` (bloqueante, agregado en
-  `rls-tests-result`)
+Baseline se compara **antes de fixtures**. No hay job separado
+`schema-baseline` ni transporte de dumps entre jobs.
+Dump dentro del contenedor pinneado, normalizado por
+`scripts/db/schema-snapshot.sh`.
 
-Cubre tablas, columnas, tipos/enums, índices, constraints, triggers, cuerpos de
-funciones/RPCs, políticas RLS y GRANTs. No incluye datos.
+## Cambio intencional
 
-## Flujo en CI
-
-1. El job `rls` prepara la base (bootstrap → drift → migraciones en orden →
-   post-migrate) y publica el dump como artifact.
-2. `schema-baseline` restaura ese dump, genera el snapshot normalizado y lo
-   compara con `supabase/schema/baseline.sql`.
-3. Si hay diferencia, falla mostrando el diff en el resumen del run y sube los
-   artifacts `schema-snapshot-actual` y `schema-baseline-diff`.
-
-## Cuando el cambio es intencional
-
-Cualquier migración que modifique el esquema **debe** venir con la baseline
-regenerada en el mismo PR:
-
-```sh
-bun run db:baseline:update   # docker + migraciones + regenera baseline.sql
-git add supabase/schema/baseline.sql
+```bash
+bun run db:baseline:update
+bun run db:baseline:check
 ```
 
-El diff de la baseline es parte del review: ahí se ve, en una sola vista, qué
-cambió realmente en la base.
+Consultar requisitos del script local. No apuntarlo a Live.
+Revisar diff junto con migración y espejo.
 
-## Verificar sin regenerar
+`db:postcheck` prepara/comprueba local y puede actualizar baseline;
+`db:postcheck -- --check` compara sin actualizar.
+No hace falta ejecutarlos por cambios sólo documentales.
 
-```sh
-bun run db:baseline:check    # falla mostrando el diff, sin tocar el archivo
-```
+| Diff | Revisar |
+| --- | --- |
+| Amplio sin SQL nuevo | Versión de pg_dump, bootstrap y normalización |
+| RPC/función | Última definición efectiva y espejo |
+| Policies/GRANT | Permisos cambiados |
+| Índices/constraints/triggers | Intención vs regresión |
+| Tokens restrict/unrestrict | Normalización del snapshot |
 
-## Primera generación
-
-Si `supabase/schema/baseline.sql` todavía no existe, el job falla con
-instrucciones. Dos caminos:
-
-- Local (recomendado): `bun run db:baseline:update` y commitear el archivo.
-- Sin Docker local: descargar el artifact `schema-snapshot-actual` del run y
-  commitearlo como `supabase/schema/baseline.sql`.
-
-## Notas de determinismo
-
-- `pg_dump` corre **dentro** del contenedor de la imagen Postgres pinneada
-  (17.9, mismo digest en CI y en local). Un `pg_dump` de otra versión formatea
-  distinto y generaría diffs falsos.
-- El snapshot elimina líneas volátiles: comentarios, `SET` de sesión,
-  `ALTER ... OWNER TO` y líneas en blanco.
-- El orden de objetos es estable porque siempre se reconstruye desde una base
-  limpia aplicando las migraciones en el mismo orden.
-
-## Falsos positivos frecuentes
-
-| Síntoma | Causa | Acción |
-| --- | --- | --- |
-| Diff enorme sin cambios de migraciones | `pg_dump` de otra versión | Regenerar con `bun run db:baseline:update` (usa el contenedor pinneado) |
-| Diff sólo en cuerpos de funciones | `CREATE OR REPLACE` reformateado | Es real: revisar y commitear la baseline |
-| Diff en `GRANT`/policies | Permisos abiertos o cerrados | Revisar con lupa: es exactamente lo que este job vino a atrapar |
-| Diff sólo en `\restrict` / `\unrestrict` con token aleatorio | `pg_dump` 17 envuelve el dump con esos metacomandos | Ya se filtran en `schema-snapshot.sh`; si reaparecen, regenerar la baseline |
+El workflow conserva diff/logs al fallar. No aceptar un artifact a ciegas.
+Migraciones aplicadas siguen inmutables.

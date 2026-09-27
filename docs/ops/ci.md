@@ -1,130 +1,83 @@
-# CI y RLS en GitHub Actions
+# CI de Libre Carga
 
-CI simplificado (YAGNI + Power of 10): menos orquestación, una sola instalación
-por workflow y ningún reporting que no bloquee. Las pruebas funcionales y de
-seguridad bloqueantes se conservan íntegras.
+Fuente de verdad: `.github/workflows/` y `.github/actions/`.
+Revisado el **2026-09-26**. Esta guía no configura protección de rama.
 
-## Workflows
+## CI principal
 
-| Workflow             | Disparo                                              | Nombre del check           |
-| -------------------- | ---------------------------------------------------- | -------------------------- |
-| `ci.yml`             | PR, push a `main`, manual                            | `CI Success (aggregator)`  |
-| `rls-tests.yml`      | PR/push que toca BD, manual                          | `RLS tests result`         |
-| `dependency-review`  | PR que toca `package.json` / `bun.lock` / su workflow | —                          |
-| `gitleaks`           | según su workflow                                     | —                          |
-| `actionlint`         | según su workflow                                     | —                          |
-| `codeql`             | semanal + manual                                      | —                          |
-| `e2e`                | **sólo manual** (sin schedule)                        | —                          |
-| `post-deploy-smoke`  | **sólo manual**                                       | —                          |
+`ci.yml`: PR, push a `main` y dispatch manual. Sin `paths-ignore`.
+`Detectar áreas` usa `scripts/ci/detect-areas.sh` para frontend/edge/database.
+El agregador comprueba omisiones válidas, no las presenta como tests pasados.
 
-## CI (`ci.yml`) — ensayo de 3 shards + lint/checks en paralelo
+| Job | Trabajo |
+| --- | --- |
+| `Detectar áreas` | Clasificación del diff |
+| `ESLint` | Lint `--max-warnings=0`, caché por contenido |
+| `Typecheck · guards DB · build · Deno` | Steps condicionados por área |
+| `Vitest shard 1/5` … `5/5` | Cinco shards de la suite normal |
+| `CI Success (aggregator)` | Éxito/omisión válida de los jobs esperados |
 
-Estructura actual (experimento de medición, no un cambio de política):
+Nueve jobs al expandir la matriz. ESLint, comprobaciones y shards pueden
+correr en paralelo.
 
-Son **5 definiciones de job en YAML** que se expanden a **7 jobs reales** (1
-`detector` + 1 `lint` + 1 `checks` + 3 shards de `tests` + 1 `ci-success`):
+- Frontend: typecheck, build, límites de bundle y sourcemaps.
+- DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
+- Edge: Deno **2.6.x**, `*_test.ts` salvo smoke; typecheck habilitado.
+- Vitest: `bun run test -- --shard=N/5`, **sin coverage, retry ni blobs**.
+  Scripts de coverage optativos no describen el CI principal.
 
-1. `detector` — job ligero: sólo checkout y el paso de diff. Expone
-   `frontend` / `edge` / `database`.
-2. `lint` — ESLint (`--max-warnings 0`) con checkout + `setup-bun`. Corre sólo
-   si `frontend=true`, depende sólo del detector y corre **en paralelo** con
-   `checks` y los shards.
-3. `checks` — `typecheck`, guard estático de BD (condicional), `build` sin
-   `ANALYZE` y tests Deno condicionales. Corre **en paralelo** con `lint` y los
-   shards.
-4. `tests` — matrix Vitest `shard: [1,2,3]`, `max-parallel: 3`,
-   `fail-fast: false`, `bun run test -- --shard=N/3`. Sin coverage, sin blobs ni
-   merge de artifacts, sin retries.
-5. `CI Success (aggregator)` — job final con `if: always()`; falla si el
-   detector no termina en `success` o entrega flags inválidas, si `lint` no es
-   `success` con `frontend=true`, si `checks` no es `success` habiendo áreas
-   activas, o si la matrix no es `success` cuando `frontend=true`. Un `skipped`
-   sólo se acepta cuando el área correspondiente es `false`. Sin
-   `continue-on-error` ni retries.
+Bun **1.4.0** vía `setup-bun`. Cada job tiene instalación/caché propia;
+`node_modules` no se comparte en memoria entre runners.
+Sin caché: lockfile congelado, `--ignore-scripts`.
 
-Benchmarks:
+## Otros workflows
 
-- Referencia de 1 job unificado: `run 34196983386`, 15m44s de espera total y
-  922s de ejecución acumulada.
-- Configuración previa **ya validada** (3 shards, lint dentro de `checks`):
-  `run 34200102375`, espera 347s (5m47s), ejecución acumulada 947s (15m47s).
-  Vitest 1426 archivos / 8949 tests; Deno 639. ESLint 134s dentro del job
-  conjunto `checks` de 296s (resto 143s + setup Deno 2s).
-- La nueva división `lint`/`checks` en 2 jobs **aún debe medirse**; no registrar
-  la primera corrida del ensayo de 3 shards (`unhandled error` asíncrono en
-  shard 2) como éxito.
+| Workflow | Activación | Alcance |
+| --- | --- | --- |
+| `gitleaks.yml` | PR, push main, manual | Secretos |
+| `rls-tests.yml` | PR/push por rutas DB, manual | Postgres efímero y reglas DB |
+| `actionlint.yml` | Rutas workflows/actions, manual | Actions |
+| `dependency-review.yml` | PR por rutas configuradas | Dependencias |
+| `codeql.yml` | Lunes 06:00 UTC y manual | JavaScript/TypeScript |
+| `e2e.yml` | Sólo manual | Playwright/provisioning/staging |
+| `post-deploy-smoke.yml` | Sólo manual | Smoke del destino seleccionado |
 
-Los guardrails de arquitectura/auditoría (`architecture.test.ts`,
-`architecture-baseline.test.ts`, `audit-report`, `audit-casts-classifier`) ya
-**no** se excluyen bajo `--shard`: se reparten entre los tres shards y corren
-exactamente una vez entre todos, así que Power of 10 sigue bloqueando.
+Consultar filtros exactos en YAML. E2E contiene mutadores; smoke tampoco
+debe suponerse read-only. Confirmar destino/efectos antes del dispatch.
+Estos workflows no publican automáticamente frontend en Lovable.
 
-Filtro por áreas (en el job `detector`):
+## RLS
 
-- PR: `base.sha` vs `HEAD`.
-- push a `main`: `github.event.before` vs `github.sha` (todos los commits).
-- dispatch manual, diff no disponible o `git diff` fallido: se ejecuta **todo**.
+Un único job **`RLS tests result`**, sin matriz.
+PostgreSQL **17.9 pinneado por digest**, cliente 17:
 
-Los tests Deno de Edge Functions (con typecheck, sin `--no-check`) corren sólo
-si el diff toca `supabase/functions/**`, un `deno.json`/`deno.jsonc`/`deno.lock`
-de la raíz (si existen), el propio `ci.yml` o la acción `setup-bun`.
+1. Bootstrap → squash/inventario → replay ordenado.
+2. Candado service-role-only y post-migrate.
+3. Cobertura RLS e integridad.
+4. Baseline antes de fixtures.
+5. Guards bloqueantes del manifiesto.
+6. Suites `test_rls_*.sql`, aisladas `BEGIN … ROLLBACK`.
+7. Concurrencia de cotización ganadora.
 
-### Guard estático de BD (condicional, bloqueante)
+Logs/diff al fallar, retención tres días.
+Ver [baseline](baseline-esquema.md) y
+[RLS](../../supabase/tests/rls/README.md). No toca producción.
 
-En el job `checks`, con Bun ya instalado, corre `audit:manifest`, `audit:schema`,
-`audit:schema-functions`, `audit:migrations`, `audit:replay-mirror` y
-`audit:rpc-sync` **sólo si el diff toca** `supabase/migrations|schema|tests|releases`,
-`scripts/audit-*`, `scripts/lib/`, `src/constants/appVersion.ts` (el manifiesto
-depende de ella), `package.json`/`bun.lock`, `ci.yml` o la acción compuesta
-`setup-bun`. Dispatch manual o diff ausente activa también este área. No se
-reintrodujo `audit:all`, ni reports, ni un job de audits, ni audits de frontend
-duplicados (ésos ya viven en Vitest).
+## Leer un resultado y medir
 
-El workflow siempre arranca (sin `paths-ignore`), así el check nunca queda
-*pending*; los jobs/pasos irrelevantes se omiten explícitamente.
+Verificar SHA de run/PR; un verde anterior no valida código posterior.
+Distinguir success/failure/cancelled/skipped.
+Docs-only puede pasar detector/agregador con lint/build/Vitest omitidos;
+no significa que esas suites se ejecutaron.
 
+Investigar el step rojo antes de corregir. No ocultarlo con
+`continue-on-error`, relax de guards o baseline aceptada a ciegas.
 
+Vitest 5: dos proyectos node/jsdom, forks, aislamiento y límite configurado
+de **dos workers en CI**. Heap no equivale a memoria reservada/RSS.
+Medir wall-clock, shard más lento, cache y lint antes de subir concurrencia.
+[Mediciones históricas](../ci-vitest-shards.md) no son SLA del stack actual.
 
-Los nombres `CI Success (aggregator)` y `RLS tests result` se conservan por
-compatibilidad con los checks previos. Hoy el repositorio **no** tiene branch
-protection ni rulesets configurados; esta tarea no cambia esos ajustes.
-
-## RLS (`rls-tests.yml`)
-
-Un job, una instancia Postgres 17 efímera, sin matrix ni transporte de
-snapshots. Orden:
-
-1. Bootstrap de stubs + baseline squash + replay ordenado de todas las
-   migraciones posteriores (`scripts/ci/rls-prepare-db.sh`).
-2. Candado `service_role`-only (antes de post-migrate).
-3. Post-migrate, verify RLS, guardia de integridad.
-4. **Baseline de esquema** sobre el estado preparado, antes de cualquier fixture.
-5. Guards bloqueantes del manifiesto (`scripts/ci/run-guards.sh`).
-6. Todas las suites `supabase/tests/rls/test_rls_*.sql` descubiertas por patrón
-   (`scripts/ci/run-rls-suites.sh`): verifica el aislamiento `BEGIN…ROLLBACK`,
-   nunca omite una suite en silencio y falla si la lista queda vacía.
-7. Prueba real de concurrencia de cotización ganadora.
-
-Los logs y el diff se suben **sólo al fallar**, con retención corta.
-
-## Correr CI y RLS a mano
-
-En GitHub: pestaña **Actions** → workflow → **Run workflow** (`workflow_dispatch`).
-Con `gh`:
-
-```sh
-gh workflow run ci.yml --ref main
-gh workflow run rls-tests.yml --ref main
-gh workflow run e2e.yml --ref main
-gh workflow run post-deploy-smoke.yml --ref main
-```
-
-**Las suites (Vitest, RLS, E2E) se ejecutan únicamente en GitHub Actions.** No
-las corras en Lovable ni como parte del trabajo local de un cambio: ahí sólo
-tienen sentido validaciones focalizadas al archivo o módulo tocado.
-
-## Publicación
-
-**Publicar en Lovable sigue siendo una acción manual del usuario.** Ningún
-workflow despliega la app; `post-deploy-smoke` sólo verifica un backend ya
-desplegado y se ejecuta a mano.
+Suite completa en Actions; local/Lovable, comprobaciones focales.
+Publicar producto sólo tras validación y autorización. Docs-only no
+publica ni cambia versión.

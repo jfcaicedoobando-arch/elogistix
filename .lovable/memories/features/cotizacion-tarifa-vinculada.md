@@ -4,6 +4,8 @@ description: La tarifa marítima del módulo Costeo es la fuente de verdad para 
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 Flujo desde v13.26.0:
 
 - En Paso 1 del wizard de cotización marítima existe el panel `<TarifaVinculadaPanel>` (ya integrado en `PasoDatosGenerales.tsx`).

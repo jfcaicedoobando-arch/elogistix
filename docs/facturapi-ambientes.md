@@ -1,8 +1,10 @@
-# FacturAPI: ambientes, webhooks y credenciales (P2 · SDK 5.0)
+# FacturAPI: ambientes, webhooks y credenciales (SDK 5.1.0)
 
 Guía operativa de cómo el ERP separa **Sandbox (pruebas)** y **Live
 (producción)**, qué se verifica en cada ambiente y cómo migrar la configuración
 heredada.
+
+> Revisado el 2026-09-26 contra el código; no implica verificar configuración de Live.
 
 ## 1. Qué hay por ambiente
 
@@ -60,8 +62,10 @@ compatibilidad con la clave legada es temporal, explícita y auditable: exige
 Edge function `facturapi-verificar-webhook` (POST, requiere rol emisor fiscal):
 
 ```json
-{ "organization_id": "<uuid>", "ambiente": "sandbox" | "live" }
+{ "organization_id": "<uuid>", "ambiente": "sandbox" }
 ```
+
+Para el otro ambiente usar `"live"`; no es una unión de tipos dentro de JSON.
 
 Compara contra FacturAPI, para ESE ambiente, usando la API key de ESE ambiente
 (la activa, o la del otro ambiente resuelta explícitamente; nunca se mezclan ni
@@ -100,7 +104,7 @@ request id y el status de cada error. Ante un 429 el ERP:
 
 `_shared/facturapiSdk.ts` centraliza la superficie tipada del SDK
 (`invoices.create|retrieve|list|cancel|paymentSummary`, `webhooks.list|retrieve`).
-El paquete `facturapi@5.0.0` **sí** publica typings, pero están declarados para
+El paquete `facturapi@5.1.0` **sí** publica typings, pero están declarados para
 resolución de bundler/Node y el typecheck de Deno no los alcanza desde el
 especificador `npm:`; por eso el cliente se modela opaco en
 `_shared/facturapiClient.ts` y se tipa aquí, con validación en runtime
@@ -112,7 +116,7 @@ El fallback que permitía a una organización sin fila en
 `facturapi_credenciales` usar el secret global `FACTURAPI_KEY` (con
 `LEGACY_FACTURAPI_ORG_ID` y `LEGACY_FACTURAPI_AMBIENTE`) **fue eliminado**.
 
-**Razón:** verificación en la base productiva — todos los CFDI emitidos con
+**Razón histórica documentada el 2026-09-21:** verificación en la base productiva — todos los CFDI emitidos con
 FacturAPI pertenecen a una sola organización y ésta ya tiene su fila completa
 (`ambiente=live`, sandbox y live configuradas, `facturapi_org_id` presente).
 Ninguna organización con CFDI quedaba dependiendo del fallback, y mantener una

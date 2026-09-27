@@ -4,6 +4,8 @@ description: Reglas de bloqueo de transición de estado por documentos faltantes
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 Al avanzar el estado de un embarque, la app aplica un candado por documentos faltantes con dureza **mixta** según el estado destino:
 
 | Estado destino | Comportamiento |

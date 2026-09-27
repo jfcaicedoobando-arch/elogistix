@@ -1,177 +1,97 @@
-# Libre Carga
+# Libre Carga / eLogistix
 
-Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en México. Centraliza cotizaciones, embarques, facturación, portal de clientes, auditoría operativa y reportes.
+ERP para agencias de carga: CRM, costeo y rutas, cotizaciones, embarques,
+compras, facturación, cobranza, tesorería, comisiones y reportes. Incluye
+portales de cliente y agente con acceso por rol y organización.
 
-> **Versión actual**: ver `src/constants/appVersion.ts` y el [`CHANGELOG.md`](./CHANGELOG.md).
-> **Arquitectura y convenciones**: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Documentación de dominio**: [`docs/auditoria.md`](./docs/auditoria.md), [`docs/tables.md`](./docs/tables.md).
-> **Diseño**: [`docs/design-system.md`](./docs/design-system.md).
-> **Seguridad**: [`docs/security-checklist.md`](./docs/security-checklist.md), [`docs/rls-multitenant-audit.md`](./docs/rls-multitenant-audit.md), [`docs/riesgos-aceptados.md`](./docs/riesgos-aceptados.md).
-> **Operación**: [`docs/operations.md`](./docs/operations.md), [`docs/observability.md`](./docs/observability.md), [`docs/backups-rollback.md`](./docs/backups-rollback.md).
-> **Histórico de cambios**: [`docs/changelog-archive-v13.md`](./docs/changelog-archive-v13.md) (v13.0.0 → v13.499.3), [`docs/changelog-archive.md`](./docs/changelog-archive.md) (pre-v13).
+Aplicación: [librecarga.com](https://librecarga.com/).
+La versión del producto procede de `src/constants/appVersion.ts`, no del paquete npm.
 
----
+## Documentación
 
-## Stack
+El [índice de documentación](docs/README.md) distingue guías, reportes e historial.
 
-- **Frontend**: React 19 + Vite 6 + TypeScript 5
-- **UI**: Tailwind CSS v3 + shadcn/ui (read-only) + tokens HSL semánticos
-- **Estado server**: TanStack Query v5
-- **Router**: React Router 7 en modo declarativo (`BrowserRouter` + `Routes`), sin Data/Framework Mode
-- **Forms**: React Hook Form + Zod
-- **Backend**: Lovable Cloud (Supabase) — Postgres + RLS + Storage + Edge Functions (Deno)
-- **AI**: Lovable AI Gateway (Gemini para parsing de CSF, etc.)
-- **Tests**: Vitest 4 + Testing Library (proyectos `node`/`jsdom`; ver [`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md) y [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md))
+- [Arquitectura](ARCHITECTURE.md) y [contribución](CONTRIBUTING.md).
+- [Sistema de diseño](docs/design-system.md) y [tablas](docs/tables.md).
+- [CI vigente](docs/ops/ci.md).
+- [Facturación](docs/flujo-facturacion.md) y [FacturAPI](docs/facturapi-go-live.md).
+- [Operaciones/recuperación](docs/operations.md).
+- [Historial de cambios](CHANGELOG.md).
 
-## Módulos principales
+## Stack revisado el 2026-09-26
 
-- **Embarques**: ciclo de vida en 7 estados, wizard de alta/edición, tracking automatizado, documentos, P&L.
-- **Cotizaciones**: wizard, conversión a embarques, P&L USD/MXN, generación de PDF.
-- **Clientes / Proveedores**: alta con CSF parseado por IA, contactos, documentos onboarding.
-- **Facturación**: proformas (regulares y consolidadas), proyección, conceptos venta/costo.
-- **Auditoría operativa**: hallazgos por reglas (docs faltantes, márgenes, fechas), revisiones, asignación de responsables, snapshots diarios.
-- **Operaciones / Reportes / Dashboard**: KPIs en vivo, distribución por cliente/estado, alertas de demora.
-- **Portal de clientes**: vista white-label con embarques, cotizaciones y facturas del cliente final.
-- **Admin (super-admin)**: gestión de organizaciones, planes, miembros e impersonación.
+Las restricciones declaradas están en `package.json`; `bun.lock` fija la resolución
+instalada. No significa que sean las últimas versiones de cada proveedor.
 
-## Convenciones rápidas
+| Capa | Implementación |
+| --- | --- |
+| Interfaz | React 19, TypeScript 6 estricto |
+| Desarrollo/build | Vite 8, React SWC, Terser |
+| Navegación | React Router 7 declarativo (`BrowserRouter`), nuqs v7 |
+| UI | Tailwind CSS 3, Radix/shadcn adaptados, Lucide |
+| Formularios | React Hook Form 7, resolvers 5, Zod 4 |
+| Datos/tablas | TanStack Query 5, Table 8 y Virtual 3, Supabase |
+| Pruebas | Vitest 5, Testing Library, Playwright |
+| Backend | PostgreSQL, Supabase Edge Functions / Deno |
+| CFDI | SDK FacturAPI 5.1.0 exclusivamente en backend |
+| PDF | `@react-pdf/renderer` |
 
-- **Localización**: es-MX, fechas `DD/MM/YYYY`, moneda base **MXN** + vista USD (Frankfurter, cache 1h).
-- **IVA**: nunca hardcodear — usar `useTasaIVA` y `lib/financial/financialUtils.ts`.
-- **Multi-tenant**: toda fila de dominio lleva `organization_id`; RLS + `OrganizationContext` (org efectiva considera impersonación).
-- **Roles**: en `public.user_roles` (global) y `organization_members` (por org). Nunca en `profiles` ni `auth.users`.
-- **Hooks**: importar siempre desde el barrel del dominio (`@/hooks/embarque`, `@/services/cliente`, …).
-- **Pages no tocan Supabase**: toda I/O pasa por hook → service → cliente Supabase.
-- **Changelog**: cada cambio se registra en [`CHANGELOG.md`](./CHANGELOG.md) (raíz) + bump de `APP_VERSION` en `src/constants/appVersion.ts` (SemVer; ver §19 de ARCHITECTURE.md).
+## Desarrollo
 
-## Desarrollo local
+Node.js **≥22.12.0** según `engines`. CI utiliza Bun **1.4.0**.
 
-Requisitos: Node.js 22+ y Bun (el runtime usado por CI).
-> Node 20 NO es compatible: `@supabase/realtime-js` requiere `WebSocket`
-> nativo global (estable desde Node 22). Bajo Node 20 varias suites del
-> proyecto `node` de Vitest fallan en collect.
-
-### Runtime: Node vs Bun (decisión explícita)
-
-`package.json` declara `engines.node: ">=22"` y los workflows de GitHub Actions
-ejecutan **Bun** (`.github/actions/setup-bun`, Bun 1.4.0). No es una
-contradicción, son tres capas distintas y ninguna se cambia en silencio:
-
-| Capa | Runtime real | Nota |
-| --- | --- | --- |
-| App en producción | **Ninguno** | Es un SPA estático (Vite build → `dist/`); el navegador ejecuta el bundle. No hay servidor Node. |
-| Backend | **Deno** | Edge Functions de Lovable Cloud (`supabase/functions`), validadas con `deno test` en CI. |
-| Herramientas (build, lint, tests, scripts) | **Bun** en CI, Node 22+ o Bun en local | `engines.node: ">=22"` documenta el piso soportado para quien use Node. |
-
-Por eso NO se duplica la suite bajo Node: sería pagar el doble por validar una
-capa que no existe en producción. El contrato con Node 22 se sostiene con el
-piso declarado en `engines` y con el requisito de `WebSocket` global de arriba.
-Si algún día hubiera un servidor Node en producción, esta tabla debe cambiar
-antes del despliegue.
-
-
-Build de producción: `bun run build` con sourcemaps requiere ~8 GB de RAM
-(runners de CI: 16 GB). En entornos con ≤4 GB usar `bun run build:low-mem`
-(sin sourcemaps; el bundle es funcionalmente idéntico).
-
-```sh
-git clone <repo-url>
-cd librecarga
-bun install
+```bash
+bun install --frozen-lockfile
 bun run dev
 ```
 
-La app se sirve en `http://localhost:8080`. Las variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`) son provistas automáticamente por Lovable Cloud y viven en `.env` (no editar a mano).
+Servidor: `http://localhost:8080`. Configurar variables públicas de Supabase
+sin subir secretos. Localhost puede apuntar a datos remotos: no equivale a staging.
 
-### Cuenta demo (by design)
+| Comando | Uso |
+| --- | --- |
+| `bun run typecheck` | TypeScript (`tsc -b`) |
+| `bun run lint` | ESLint con caché |
+| `bun run lint:unused` | Diagnóstico Knip, no gate automático actual |
+| `bun run test -- <archivo>` | Regresión Vitest focal |
+| `bun run test:watch` | Desarrollo de pruebas |
+| `bun run test:perf` | Benchmarks separados |
+| `bun run build` | Producción |
+| `bun run build:low-mem` | Build sin sourcemaps |
+| `bun run audit:report` | Informe generado en `reports/` |
 
-La plataforma expone una cuenta demo pública (`demo@librecarga.com`, contraseña fija `demo-libre-carga-2026`, definida en `supabase/functions/demo-access/index.ts`). Es **intencional**: habilita el botón "Ver demo" del login sin alta previa. Sus límites de seguridad, verificados en la auditoría 2026-07-29 (O9/S5-17):
+La suite completa de CI/RLS corre en GitHub Actions. Local/Lovable:
+comprobaciones proporcionales, no repetir todas las suites tras cada commit.
 
-- La sesión demo es rol `operador` sobre la **org demo**, aislada de los tenants reales por RLS (cobertura enforced en CI).
-- La re-siembra (`seed_demo_organization`) solo es ejecutable por `service_role` o `super_admin` (guard M8); la edge `demo-access` la invoca con service key.
-- Las credenciales NO son un secreto: no moverlas a vault ni rotarlas (el flujo del login depende de que sean estables). El riesgo residual aceptado es que cualquiera puede operar datos ficticios de la org demo; si eso deja de ser aceptable, la opción documentada es un proyecto de backend separado para demo, no credenciales secretas.
-
-### Comandos útiles
-
-```sh
-bun run dev              # Servidor Vite 6
-bun run test             # Vitest 4: proyectos node y jsdom
-bun run typecheck        # TypeScript 5
-bun run test:perf        # Sólo benchmarks *.perf.ts(x)
-bun run changelog:add    # Asistente para agregar entrada al changelog
-```
-
-Mantenimiento y medición del stack:
-
-- [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md): decisiones de
-  minificación, sourcemaps, cobertura y alias de React Router 7.
-- [`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md): cómo medir shards,
-  procesos y memoria antes de cambiar el paralelismo de Vitest 4.
-
-## Estructura
+## Organización
 
 ```text
 src/
-├── pages/           Composición de UI por ruta (no tocan Supabase)
-├── components/      Componentes por feature + shared/ + ui/ (shadcn read-only)
-├── hooks/           React Query + estado local, organizado por dominio (barrels)
-├── services/        Acceso puro a datos (Supabase, edge functions)
-├── lib/             domain, mappers, parsers, financial, formatters, ui, query
-├── contexts/        Auth, Organization, Theme, Breadcrumb
-├── generators/      PDF / CSV
-├── content/         Changelog y copy editorial
-├── constants/       Constantes de dominio y appVersion
-├── types/           Tipos compartidos
-└── integrations/    Supabase client + types (auto-generados, NO editar)
-
+  features/          UI, hooks, services, domain, tipos y queryKeys por dominio
+  routes/            declaración de rutas y guards
+  features/.../routes/ pantallas de cada dominio
+  components/shared/ patrones UI transversales
+  components/ui/     primitivas y controles adaptados
+  lib/               acceso, query, errores, observabilidad, dominio compartido
+  integrations/      cliente Supabase y tipos generados
+  pdf/ y generators/ documentos y preparación de datos
 supabase/
-├── functions/       Edge Functions (Deno)
-├── migrations/      SQL versionado (RLS, RPCs, triggers)
-└── config.toml
+  functions/         casos de uso e integraciones del servidor
+  migrations/        historial SQL aplicado, inmutable
+  schema/            espejos SQL revisables y baseline
+  tests/             guards y suites DB
+docs/                guías y registros históricos identificados
+e2e/                 Playwright, incluidos escenarios mutadores
 ```
 
-Detalle completo y reglas de capa en [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+## CI y publicación
 
-## Edición desde Lovable
+CI principal: detector, ESLint, comprobaciones, **cinco shards Vitest** y
+agregador. No ejecuta coverage en cada PR. RLS se activa por rutas DB;
+E2E y smoke post-deploy son manuales. Detalles en [CI](docs/ops/ci.md).
 
-Este proyecto se desarrolla principalmente en [Lovable](https://lovable.dev). Los cambios hechos en el editor se commitean automáticamente al repo, y los pushes externos se reflejan en Lovable.
+Merge en Git no demuestra que la web esté actualizada. Publicar frontend en
+Lovable mediante interfaz o integración autorizada y comprobar la web pública.
+Migraciones y funciones requieren verificación de despliegue independiente.
 
-Para publicar: en Lovable → **Share → Publish**. Para conectar dominio propio: **Project → Settings → Domains → Connect Domain**.
-
----
-
-## Despliegue y CI/CD
-
-Es importante separar tres cosas que suelen confundirse:
-
-1. **Frontend (lo que ven los usuarios)**: se publica **desde Lovable** con `Share → Publish → Update`. No hay comando de GitHub que lo publique; el botón es el único punto de publicación.
-2. **Backend (base de datos, RLS, edge functions)**: se despliega **automáticamente** cuando Lovable detecta cambios en el código. Si una migración llega rota a `main`, puede romper producción sin avisar.
-3. **Los workflows de GitHub Actions**: no publican la app. Son **guardias de calidad** automáticos o verificaciones operativas manuales. Piensa en ellos como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
-
-### Recomendación
-
-- Configurar como **required status checks** en GitHub: `Settings → Branches → main → Require status checks to pass before merging`, agregando los jobs de `ci.yml` y `rls-tests.yml`.
-- Los checks automáticos no sustituyen la revisión humana de un PR; sólo validan reglas que ya están en el repo.
-
-### Workflows existentes
-
-**Checks automáticos:**
-
-- `ci.yml`: lint, typecheck, auditorías, ensayo pendiente de Vitest 4 en 5 shards (`maxWorkers=2`), knip y build. El ensayo comparará el shard más lento, tiempo total y costo/recursos contra la historia de 3 shards. El build incluye el **gate de bundle** (`bun run build && bash scripts/check-bundle-size.sh`, budget 365 KB gz) y el **gate de sourcemaps** (`bash scripts/check-sourcemaps.sh`).
-- `rls-tests.yml`: pruebas RLS y paridad del baseline cuando cambia la base de datos; también admite ejecución manual.
-- `actionlint.yml`: valida workflows y acciones cuando cambian, y en `main`.
-- `gitleaks.yml`: busca secretos filtrados en PR y `main`.
-- `dependency-review.yml`: revisa licencias y vulnerabilidades cuando un PR cambia dependencias.
-- `codeql.yml`: análisis estático semanal y manual.
-
-**Verificaciones manuales:**
-
-- `e2e.yml`: Playwright contra staging; core/portal requieren sus credenciales y multi-tenant es opcional.
-- `post-deploy-smoke.yml`: smoke posterior a una publicación; no publica por sí mismo.
-- Cobertura Vitest: procedimiento manual/nightly, no gate por commit. Usar `bun run test:coverage` o el flujo por shards documentado en [`docs/stack-mantenimiento.md`](./docs/stack-mantenimiento.md). Actualmente no existe un workflow nightly dedicado.
-
-La metodología para justificar cambios de shards/workers está en
-[`docs/ci-vitest-shards.md`](./docs/ci-vitest-shards.md). Sólo los gates de
-bundle y sourcemaps forman parte obligatoria del job de build.
-
-
+Docs-only no necesita bump de versión, changelog del producto ni publicación.
