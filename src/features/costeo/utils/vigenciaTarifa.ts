@@ -100,6 +100,7 @@ export interface TarifaVigenciaLike {
 export function esTarifaUsableEn(t: TarifaVigenciaLike, hoy: string): boolean {
   return (t.estado_aprobacion ?? "vigente") === "vigente"
     && t.estado !== "reemplazada"
+    && t.estado !== "vencida"
     && (t.vigente_desde ?? "") <= hoy
     && t.vigente_hasta >= hoy;
 }
