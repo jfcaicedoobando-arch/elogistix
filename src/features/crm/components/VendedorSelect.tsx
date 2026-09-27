@@ -24,7 +24,7 @@ interface Props {
 
 export default function VendedorSelect({ value, onChange, label = "Vendedor asignado", disabled = false }: Props) {
   const { canReasignarVendedorCrm } = usePermissions();
-  const { data: users = [] } = useUsuarios();
+  const { data: users = [] } = useUsuarios({ enabled: canReasignarVendedorCrm });
 
   if (!canReasignarVendedorCrm) return null;
 

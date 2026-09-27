@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ilikePattern } from "@/lib/search/ilike";
 import { unwrapOr } from "@/lib/supabase/response";
 import type { Database } from "@/integrations/supabase/types";
+import type { ActividadEntidadContexto } from "../domain/actividadEntidad";
 
-export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"];
+export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"] & ActividadEntidadContexto;
 export type CrmActividadTipo = Database["public"]["Enums"]["crm_actividad_tipo"];
 export type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 

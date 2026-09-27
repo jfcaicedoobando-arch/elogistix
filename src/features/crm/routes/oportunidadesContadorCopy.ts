@@ -12,3 +12,8 @@ export function copiaContadorOportunidades(mostradas: number, total: number): st
 export function copiaOportunidadesAbiertas(cantidad: number): string {
   return cantidad === 1 ? "1 oportunidad abierta" : `${cantidad} oportunidades abiertas`;
 }
+
+/** El resumen del tablero incluye todas las tarjetas que cumplen los filtros. */
+export function copiaOportunidadesVisibles(cantidad: number): string {
+  return cantidad === 1 ? "1 oportunidad visible" : `${cantidad} oportunidades visibles`;
+}

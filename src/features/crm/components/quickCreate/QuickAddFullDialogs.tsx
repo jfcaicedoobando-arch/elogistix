@@ -10,6 +10,7 @@ import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDi
 import type { LeadQuickDraft } from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
 import type { OportunidadQuickDraft } from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
 import type { ActividadQuickDraft } from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
+import { useVolverAgendaActividad } from "@/features/crm/hooks/useVolverAgendaActividad";
 
 /** Props del borrador express hacia el formulario completo de actividad. */
 function propsActividad(draft: ActividadQuickDraft | null) {
@@ -41,6 +42,7 @@ export default function QuickAddFullDialogs({
   importOpen, onImportOpenChange,
 }: Props) {
   const navigate = useNavigate();
+  const volverAgenda = useVolverAgendaActividad();
   return (
     <>
       <NuevoLeadDialog
@@ -60,7 +62,7 @@ export default function QuickAddFullDialogs({
         open={actOpen}
         onOpenChange={onActOpenChange}
         {...propsActividad(actDraft)}
-        onCreated={() => navigate("/crm/actividades")}
+        onCreated={volverAgenda}
       />
       <ImportarLeadsCsvDialog open={importOpen} onOpenChange={onImportOpenChange} />
     </>

@@ -4,14 +4,17 @@
  * monedas distintas ni se etiqueta el total como MXN — se muestran subtotales
  * separados por moneda (p. ej. "$1,000.00 MXN · $500.00 USD").
  */
-import { copiaOportunidadesAbiertas } from "@/features/crm/routes/oportunidadesContadorCopy";
+import { copiaOportunidadesVisibles } from "@/features/crm/routes/oportunidadesContadorCopy";
 import { TrendingUp, Target, Scale } from "lucide-react";
 import { formatCurrency, porcentajeEntero } from "@/lib/formatters";
 import { totalesEtapa, type TotalesEtapaMoneda } from "@/features/crm/domain/criterios";
-import type { CrmOportunidadRow } from "@/features/crm/hooks";
+import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
+import { resumenEtapasVisibles } from "@/features/crm/domain/resumenEtapasVisibles";
+import { pluralizar } from "@/lib/format/pluralizar";
 
 interface Props {
   oportunidades: CrmOportunidadRow[];
+  etapas: Pick<CrmEtapaRow, "id" | "tipo">[];
 }
 
 function textoPorMoneda(porMoneda: TotalesEtapaMoneda[], campo: "estimado" | "meta" | "ponderado"): string {
@@ -19,8 +22,9 @@ function textoPorMoneda(porMoneda: TotalesEtapaMoneda[], campo: "estimado" | "me
   return porMoneda.map((p) => formatCurrency(p[campo], p.moneda)).join(" · ");
 }
 
-export default function PipelineResumen({ oportunidades }: Props) {
+export default function PipelineResumen({ oportunidades, etapas }: Props) {
   const t = totalesEtapa(oportunidades);
+  const estados = resumenEtapasVisibles(oportunidades, etapas);
   // El % de meta capturada sólo tiene sentido comparando dentro de la misma
   // moneda; con monedas mezcladas no hay una cifra única que no sea inventada.
   const unicaMoneda = t.porMoneda.length === 1 ? t.porMoneda[0] : null;
@@ -44,8 +48,9 @@ export default function PipelineResumen({ oportunidades }: Props) {
         </div>
       ))}
       <div className="ml-auto text-body-sm text-muted-foreground">
-        {copiaOportunidadesAbiertas(t.cantidad)}
-        {cumplimiento != null ? ` · ${cumplimiento}% de la meta capturada` : ""}
+        <p>{copiaOportunidadesVisibles(t.cantidad)}</p>
+        <p>{pluralizar(estados.abiertas, "abierta")} · {pluralizar(estados.ganadas, "ganada")} · {pluralizar(estados.perdidas, "perdida")}{estados.sinEtapa > 0 ? ` · ${estados.sinEtapa} sin etapa` : ""}</p>
+        {cumplimiento != null ? <p>{cumplimiento}% de la meta capturada</p> : null}
       </div>
     </div>
   );

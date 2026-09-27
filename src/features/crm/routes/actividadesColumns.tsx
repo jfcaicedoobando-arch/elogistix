@@ -10,8 +10,8 @@ import type { CrmActividadRow } from "@/features/crm/hooks";
 import { formatFechaHora } from "@/lib/formatters/dates";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Hint } from "@/components/shared/Hint";
+import { ActividadEntidad } from "@/features/crm/components/actividades/ActividadEntidad";
 import {
-  ACTIVIDAD_ENTIDAD_LABEL,
   ACTIVIDAD_TIPO_LABEL,
   actividadTipoVariant,
 } from "@/features/crm/domain/actividadLabels";
@@ -28,8 +28,8 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
     cell: ({ row }) => <Hint label={row.original.asunto}><span className="block truncate">{row.original.asunto}</span></Hint>,
   },
   {
-    id: "entidad", header: "Entidad", meta: { width: COL_W.short, className: "text-body-sm" },
-    cell: ({ row }) => <Badge variant="neutral">{ACTIVIDAD_ENTIDAD_LABEL[row.original.entidad_tipo]}</Badge>,
+    id: "entidad", header: "Entidad", meta: { width: COL_W.nombre, className: "text-body-sm" },
+    cell: ({ row }) => <ActividadEntidad actividad={row.original} />,
   },
   {
     id: "responsable", header: "Responsable",
@@ -71,4 +71,3 @@ export const actividadActionColumn = (
   cell: ({ row }) =>
     puedeGestionar(row.original) ? <ActividadRowActions actividad={row.original} /> : null,
 });
-
