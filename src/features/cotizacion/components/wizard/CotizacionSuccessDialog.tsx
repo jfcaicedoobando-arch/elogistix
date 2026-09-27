@@ -70,7 +70,7 @@ export function CotizacionSuccessDialog({
               <Truck className="h-4 w-4 mr-2" /> Crear embarque
             </Button>
           ) : (
-            <Button variant="outline" onClick={onVerDetalle} className="justify-start">
+            <Button variant="outline" onClick={onVerDetalle} className="h-auto min-h-10 justify-start whitespace-normal text-left">
               <Truck className="h-4 w-4 mr-2" /> Ver cotización y aceptar
             </Button>
           )}
@@ -84,7 +84,7 @@ export function CotizacionSuccessDialog({
 
         {!puedeCrearEmbarque && (
           <p className="pt-1 text-center text-label text-muted-foreground">
-            El embarque se genera cuando el cliente acepta la cotización.
+            Aceptar la cotización no genera un embarque automáticamente. Después, un usuario con permiso debe seleccionar «Crear embarque» en el detalle. Si cotizaste a un prospecto, primero conviértelo en cliente.
           </p>
         )}
 
@@ -105,4 +105,3 @@ export function CotizacionSuccessDialog({
     </Dialog>
   );
 }
-

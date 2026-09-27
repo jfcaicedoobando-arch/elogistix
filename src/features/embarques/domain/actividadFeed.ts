@@ -2,6 +2,7 @@
  * Dominio del feed unificado de actividad de un embarque.
  * Sin dependencias de React: normaliza, deduplica y agrupa por día.
  */
+import { fechaDiaNegocio } from '@/lib/formatters';
 
 export type ActividadCategoria = 'operacion' | 'comercial' | 'finanzas' | 'riesgo' | 'cierre';
 
@@ -169,7 +170,7 @@ export function filtrarPorCategoria(
 export function agruparPorDia(items: ActividadItem[]): ActividadGrupo[] {
   const grupos = new Map<string, ActividadItem[]>();
   for (const item of items) {
-    const dia = item.fecha.slice(0, 10);
+    const dia = fechaDiaNegocio(item.fecha) ?? 'Sin fecha válida';
     const lista = grupos.get(dia);
     if (lista) lista.push(item);
     else grupos.set(dia, [item]);

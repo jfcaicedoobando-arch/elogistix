@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
+import { formatCurrency, formatFechaHora, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
 import { etiquetaEvento } from "@/features/embarques/domain/actividadHumana";
 import { descripcionHumana } from "@/features/embarques/domain/actividadDescripcion";
@@ -33,7 +33,7 @@ function Relacionados({ items }: { items: Item[] }) {
           <li key={r.id}>
             <span className="font-medium">{etiquetaEvento(r.accion)}</span>
             {" · "}
-            {formatDate(r.fecha, "HH:mm")}
+            {formatFechaHora(r.fecha, { hour: "2-digit", minute: "2-digit", hour12: false })}
             {r.titulo && <span className="block break-words">{r.titulo}</span>}
           </li>
         ))}
@@ -71,7 +71,7 @@ export function ActividadItem({ item }: Props) {
             <span className="font-medium text-foreground">{usuario}</span>
           </Hint>
           {" · "}
-          {formatDate(item.fecha, "HH:mm")}
+          {formatFechaHora(item.fecha, { hour: "2-digit", minute: "2-digit", hour12: false })}
         </span>
         {monto && <span className="ml-auto text-body-sm font-semibold tabular-nums">{monto}</span>}
       </div>

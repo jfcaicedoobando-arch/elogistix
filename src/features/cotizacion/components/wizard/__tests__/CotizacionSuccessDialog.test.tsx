@@ -64,6 +64,8 @@ describe("CotizacionSuccessDialog — estado (R215-COT-01)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Ver cotización y aceptar/i }));
     expect(props.onVerDetalle).toHaveBeenCalledTimes(1);
     expect(props.onCrearEmbarque).not.toHaveBeenCalled();
+    expect(screen.getByText(/Aceptar la cotización no genera un embarque automáticamente/)).toHaveTextContent(/seleccionar «Crear embarque»/);
+    expect(screen.getByText(/primero conviértelo en cliente/)).toBeInTheDocument();
   });
 
   it("en Aceptada ofrece 'Crear embarque'", () => {

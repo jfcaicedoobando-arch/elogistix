@@ -85,6 +85,17 @@ describe('actividadFeed', () => {
     expect(filtrarPorCategoria(items, 'todos')).toHaveLength(3);
     expect(contarPorCategoria(items)).toEqual({ finanzas: 2, riesgo: 1 });
   });
+
+  it('agrupa al mismo día CDMX instantes que cruzan medianoche UTC', () => {
+    const items = ordenarActividad(normalizarActividad([
+      row({ id: 'tarde', fecha: '2026-09-26T23:50:00Z' }),
+      row({ id: 'noche', fecha: '2026-09-27T02:50:30Z' }),
+      row({ id: 'medianoche', fecha: '2026-09-27T06:00:00Z' }),
+    ]));
+    expect(agruparPorDia(items).map((g) => [g.dia, g.items.map((i) => i.id)])).toEqual([
+      ['2026-09-27', ['medianoche']], ['2026-09-26', ['noche', 'tarde']],
+    ]);
+  });
 });
 
 describe('actividadFeed — dedupe_key (B4)', () => {
