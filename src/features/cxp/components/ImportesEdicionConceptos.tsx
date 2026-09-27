@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { parseMonto } from "@/lib/format/parseMonto";
 import type { ImpuestosNoDesglosados, ImportesFacturaConceptos } from "../utils/impuestosConceptos";
@@ -54,7 +55,7 @@ export function ImportesEdicionConceptos({ anterior, nuevo, moneda, globales, mo
       <section aria-label="Importes antes y después de guardar" className="rounded-md border">
         <h3 className="px-3 py-2 text-body-sm font-medium">Importes antes y después de guardar</h3>
         <DataTable data={filas} columns={columnas} rowKey={(fila) => fila.campo}
-          density="compact" striped={false} hoverable={false} tableClassName="w-full"
+          density={TABLE_DENSITY.embebida} striped={false} hoverable={false} tableClassName="w-full"
           rowClassName={(fila) => fila.campo === "total" ? "font-semibold" : ""} />
       </section>
     </div>
