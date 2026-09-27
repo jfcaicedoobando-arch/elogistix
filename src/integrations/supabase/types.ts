@@ -11354,7 +11354,7 @@ export type Database = {
         Returns: number
       }
       reemplazar_conceptos_factura_proveedor: {
-        Args: { p_conceptos: Json; p_factura_id: string }
+        Args: { p_conceptos: Json; p_factura_id: string; p_impuestos_no_desglosados?: Json }
         Returns: number
       }
       reemplazar_demoras_tramos_rpc: {

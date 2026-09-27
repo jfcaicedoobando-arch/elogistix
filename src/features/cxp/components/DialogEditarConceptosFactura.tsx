@@ -12,12 +12,14 @@ import { ListPlus } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { ConceptosManualesSection } from "@/features/cxp/components/ConceptosManualesSection";
-import { CuadreConceptosChip } from "@/features/cxp/components/CuadreConceptosChip";
 import { useConceptosManuales } from "@/features/cxp/hooks/useConceptosManuales";
 import { useConceptosCfdiFactura } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 import { useEditarConceptosFactura } from "@/features/cxp/hooks/useEditarConceptosFactura";
 import { sumarConceptos } from "@/features/cxp/utils/cuadreConceptos";
 import { formatCurrency } from "@/lib/formatters";
+import { parseMonto } from "@/lib/format/parseMonto";
+import { impuestosNoDesglosados, importesConceptosEditados } from "../utils/impuestosConceptos";
+import { ImportesEdicionConceptos } from "./ImportesEdicionConceptos";
 
 interface Props {
   open: boolean;
@@ -27,15 +29,21 @@ interface Props {
   moneda: string;
   /** Subtotal actual de la cabecera; se muestra sólo como referencia previa. */
   subtotal: number;
+  iva?: number;
+  ieps?: number;
+  retenciones?: number;
+  total?: number;
 }
 
 export function DialogEditarConceptosFactura({
-  open, onOpenChange, facturaId, folio, moneda, subtotal,
+  open, onOpenChange, facturaId, folio, moneda, subtotal, iva = 0, ieps = 0, retenciones = 0, total,
 }: Props) {
-  const { data: actuales = [] } = useConceptosCfdiFactura(open ? facturaId : null);
+  const { data: actuales = [], isLoading, isError } = useConceptosCfdiFactura(open ? facturaId : null);
   const api = useConceptosManuales();
   const { mutateAsync, isPending } = useEditarConceptosFactura(facturaId);
   const [precargado, setPrecargado] = useState(false);
+  const [globales, setGlobales] = useState({ iva: "0", ieps: "0" });
+  const [mostrarGlobales, setMostrarGlobales] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -43,7 +51,10 @@ export function DialogEditarConceptosFactura({
       api.limpiar();
       return;
     }
-    if (precargado || actuales.length === 0) return;
+    if (precargado || isLoading || isError) return;
+    const global = impuestosNoDesglosados(actuales, { iva, ieps });
+    setGlobales({ iva: String(global.iva), ieps: String(global.ieps) });
+    setMostrarGlobales(global.iva !== 0 || global.ieps !== 0);
     api.reemplazar(actuales.map((c) => ({
       descripcion: c.descripcion ?? "",
       cantidad: Number(c.cantidad) || 1,
@@ -53,7 +64,7 @@ export function DialogEditarConceptosFactura({
       ieps: Number(c.ieps) || 0,
     })));
     setPrecargado(true);
-  }, [open, actuales, precargado, api]);
+  }, [open, actuales, precargado, api, iva, ieps, isLoading, isError]);
 
   const lineas = useMemo(
     () => api.conceptos.map((c) => ({
@@ -67,9 +78,17 @@ export function DialogEditarConceptosFactura({
   const subtotalNuevo = useMemo(() => sumarConceptos(lineas), [lineas]);
   const hayRenglonEnCero = lineas.some((l) => l.monto === 0);
   const cambia = Math.abs(subtotalNuevo - subtotal) > 0.005;
+  const impuestosGlobales = { iva: parseMonto(globales.iva), ieps: parseMonto(globales.ieps) };
+  const anterior = { subtotal, iva, ieps, retenciones, total: total ?? subtotal + iva + ieps - retenciones };
+  const nuevo = importesConceptosEditados(api.conceptos.map((c) => ({
+    monto: c.importe, cantidad: c.cantidad, iva: c.iva, ieps: c.ieps,
+  })), impuestosGlobales, retenciones);
+  const globalInvalido = Object.values(globales).some((v) => !v.trim() || !Number.isFinite(parseMonto(v, NaN)) || parseMonto(v) < 0);
+  const cambiaImportes = (Object.keys(anterior) as Array<keyof typeof anterior>)
+    .some((campo) => Math.abs(anterior[campo] - nuevo[campo]) > 0.005);
 
   const guardar = async () => {
-    await mutateAsync({ folio, conceptos: api.conceptos });
+    await mutateAsync({ folio, conceptos: api.conceptos, impuestosNoDesglosados: impuestosGlobales });
     onOpenChange(false);
   };
 
@@ -79,24 +98,15 @@ export function DialogEditarConceptosFactura({
       onOpenChange={onOpenChange}
       icon={ListPlus}
       title={`Editar conceptos · ${folio}`}
-      description="Sólo aplica a facturas capturadas a mano, sin pagos y no canceladas. El subtotal de la factura se recalcula con estos renglones. El cambio queda en la bitácora."
+      description="Sólo aplica a facturas capturadas a mano, sin pagos y no canceladas. Revisa el desglose y los importes antes de guardar. El cambio queda en la bitácora."
       size="xl"
-      headerAside={
-        <CuadreConceptosChip
-          estado={api.conceptos.length === 0 ? "sin_conceptos" : "cuadrado"}
-          suma={subtotalNuevo}
-          subtotal={subtotalNuevo}
-          diferencia={0}
-          moneda={moneda}
-        />
-      }
       footer={
         <FormDialogFooter
           onCancel={() => onOpenChange(false)}
           onConfirm={guardar}
-          confirmLabel="Guardar conceptos"
+          confirmLabel={cambiaImportes ? "Guardar y actualizar importes" : "Guardar conceptos"}
           loading={isPending}
-          disabled={api.conceptos.length === 0}
+          disabled={api.conceptos.length === 0 || !precargado || isLoading || isError || globalInvalido}
         />
       }
     >
@@ -112,6 +122,10 @@ export function DialogEditarConceptosFactura({
           Hay renglones con importe en cero: revísalos antes de guardar.
         </div>
       )}
+      {globalInvalido && <p role="alert" className="text-body-sm text-destructive">Revisa los impuestos globales: deben ser importes válidos, no negativos.</p>}
+      <ImportesEdicionConceptos anterior={anterior} nuevo={nuevo} moneda={moneda}
+        globales={globales} mostrarGlobales={mostrarGlobales}
+        onGlobales={(campo, valor) => setGlobales((prev) => ({ ...prev, [campo]: valor }))} />
       <ConceptosManualesSection
         conceptos={api.conceptos}
         moneda={moneda}

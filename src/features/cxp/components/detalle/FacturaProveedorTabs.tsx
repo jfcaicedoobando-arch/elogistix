@@ -46,6 +46,8 @@ export function FacturaProveedorTabs({
         <ConceptosFacturaSection
           facturaId={f.id}
           moneda={f.moneda}
+          iva={f.iva}
+          ieps={f.ieps}
           retenciones={f.retenciones}
           total={f.total}
           edicion={canEdit ? {

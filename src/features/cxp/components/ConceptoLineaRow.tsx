@@ -46,6 +46,7 @@ export function ConceptoLineaRow({
   const [cantidadTxt, setCantidadTxt] = useState(String(c.cantidad ?? 1));
   const [importeTxt, setImporteTxt] = useState(fmt2(c.importe ?? 0));
   const [ivaTxt, setIvaTxt] = useState(fmt2(c.iva ?? 0));
+  const [iepsTxt, setIepsTxt] = useState(fmt2(c.ieps ?? 0));
 
   const total = totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad });
 
@@ -53,7 +54,7 @@ export function ConceptoLineaRow({
     // BUG-14: redondeo canónico (half away from zero, igual que Postgres);
     // el modelo CfdiConceptoParsed no guarda tasa por renglón, así que este
     // botón aplica la tasa general declarada en TASA_IVA.
-    const iva = calcularIVA(total, TASA_IVA);
+    const iva = calcularIVA(total + (Number(c.ieps) || 0), TASA_IVA);
     setIvaTxt(fmt2(iva));
     onActualizar(c.key, "iva", iva);
   };
@@ -119,6 +120,21 @@ export function ConceptoLineaRow({
             }}
             onBlur={() => setIvaTxt(fmt2(parseMonto(ivaTxt)))}
             aria-label="IVA del concepto"
+          />
+        </label>
+
+        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+          <span className="text-label text-muted-foreground md:hidden">IEPS</span>
+          <Input
+            className="h-9 w-full text-right tabular-nums md:w-20"
+            inputMode="decimal"
+            value={iepsTxt}
+            onChange={(e) => {
+              setIepsTxt(e.target.value);
+              onActualizar(c.key, "ieps", parseMonto(e.target.value));
+            }}
+            onBlur={() => setIepsTxt(fmt2(parseMonto(iepsTxt)))}
+            aria-label="IEPS del concepto"
           />
         </label>
 

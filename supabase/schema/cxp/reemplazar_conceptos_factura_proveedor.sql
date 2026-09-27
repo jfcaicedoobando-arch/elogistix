@@ -7,7 +7,8 @@
 
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
   p_factura_id uuid,
-  p_conceptos jsonb
+  p_conceptos jsonb,
+  p_impuestos_no_desglosados jsonb DEFAULT NULL::jsonb
 ) RETURNS integer
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -21,6 +22,8 @@ DECLARE
   v_iva numeric := 0;
   v_ieps numeric := 0;
   v_fiscales int := 0;
+  v_iva_global numeric;
+  v_ieps_global numeric;
 BEGIN
   SELECT * INTO v_f FROM public.proveedor_facturas
    WHERE id = p_factura_id
@@ -64,6 +67,30 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  -- La captura histórica admite impuestos globales sin distribución por partida.
+  -- No convertir un cambio de descripción en una reducción de la deuda.
+  -- El parámetro explícito permite distribuirlos o corregirlos conscientemente.
+  SELECT ROUND(COALESCE(v_f.iva, 0) - COALESCE(SUM(iva), 0), 2),
+         ROUND(COALESCE(v_f.ieps, 0) - COALESCE(SUM(ieps), 0), 2)
+    INTO v_iva_global, v_ieps_global
+    FROM public.proveedor_facturas_conceptos
+   WHERE proveedor_factura_id = p_factura_id AND concepto_costo_id IS NULL;
+
+  IF p_impuestos_no_desglosados IS NOT NULL THEN
+    IF jsonb_typeof(p_impuestos_no_desglosados) IS DISTINCT FROM 'object'
+       OR jsonb_typeof(p_impuestos_no_desglosados->'iva') IS DISTINCT FROM 'number'
+       OR jsonb_typeof(p_impuestos_no_desglosados->'ieps') IS DISTINCT FROM 'number' THEN
+      RAISE EXCEPTION 'LC_CONCEPTOS_IMPUESTOS: indica IVA e IEPS globales como importes numéricos'
+        USING ERRCODE = '22023';
+    END IF;
+    v_iva_global := ROUND((p_impuestos_no_desglosados->>'iva')::numeric, 2);
+    v_ieps_global := ROUND((p_impuestos_no_desglosados->>'ieps')::numeric, 2);
+    IF v_iva_global < 0 OR v_ieps_global < 0 THEN
+      RAISE EXCEPTION 'LC_CONCEPTOS_IMPUESTOS: los impuestos globales no pueden ser negativos'
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
   DELETE FROM public.proveedor_facturas_conceptos
    WHERE proveedor_factura_id = p_factura_id
      AND concepto_costo_id IS NULL;
@@ -94,12 +121,17 @@ BEGIN
      AND concepto_costo_id IS NULL;
 
   SELECT COALESCE(SUM(monto * COALESCE(NULLIF(cantidad, 0), 1)), 0),
-         COALESCE(SUM(iva), 0),
-         COALESCE(SUM(ieps), 0)
+         COALESCE(SUM(iva) FILTER (WHERE concepto_costo_id IS NULL), 0) + v_iva_global,
+         COALESCE(SUM(ieps) FILTER (WHERE concepto_costo_id IS NULL), 0) + v_ieps_global
     INTO v_subtotal, v_iva, v_ieps
     FROM public.proveedor_facturas_conceptos
    WHERE proveedor_factura_id = p_factura_id
      AND (v_fiscales = 0 OR concepto_costo_id IS NULL);
+
+  IF v_iva < 0 OR v_ieps < 0 THEN
+    RAISE EXCEPTION 'LC_CONCEPTOS_IMPUESTOS: el desglose produciría impuestos negativos; revisa los importes globales'
+      USING ERRCODE = '22023';
+  END IF;
 
   UPDATE public.proveedor_facturas
      SET subtotal = ROUND(v_subtotal, 2),
@@ -122,5 +154,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb) TO authenticated, service_role;

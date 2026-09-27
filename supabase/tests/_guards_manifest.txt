@@ -153,3 +153,4 @@ supabase/tests/anticipo_devolucion_y_lote_efectivo.sql
 supabase/tests/pago_proveedor_contador_lock_cuenta.sql
 supabase/tests/tolerancia_conciliacion_por_moneda.sql
 supabase/tests/venta_conceptos_facturados_solo_emitidas.sql
+supabase/tests/cxp_impuestos_globales_y_base_iva.sql

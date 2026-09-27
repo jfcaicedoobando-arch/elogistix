@@ -4,6 +4,7 @@
 import { describe, it, expect } from "vitest";
 import { facturaFormErrorsFromZod } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.schema";
 import type { FacturaFormValues } from "@/features/cxp/types";
+import { aplicarProveedorAValues } from "../useNuevaFacturaProveedorForm.helpers";
 
 const base: FacturaFormValues = {
   provId: "prov-1",
@@ -23,6 +24,17 @@ const base: FacturaFormValues = {
 };
 
 describe("facturaFormErrorsFromZod · EC-18 (diasCredito)", () => {
+  it("hereda contado y descarta el vencimiento del proveedor anterior", () => {
+    const result = aplicarProveedorAValues(base, "p2", "Contado", 0);
+    expect(result.diasCredito).toBe(0);
+    expect(result.vencimiento).toBe(base.emision);
+  });
+
+  it.each([undefined, NaN, Infinity, -1])("sin crédito válido (%s) conserva el anterior", (dias) => {
+    const result = aplicarProveedorAValues(base, "p2", "Sin crédito válido", dias);
+    expect(result.diasCredito).toBe(30);
+    expect(result.vencimiento).toBe("2026-08-30");
+  });
   it("acepta el caso base", () => {
     expect(facturaFormErrorsFromZod(base, { total: 1160 })).toEqual({});
   });
