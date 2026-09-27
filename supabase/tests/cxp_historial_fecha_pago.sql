@@ -19,7 +19,7 @@ BEGIN
   INSERT INTO auth.users (id, email) VALUES (v_uid, 'cxp-fecha@test.local');
   INSERT INTO public.organization_members (organization_id, user_id, role)
     VALUES (v_org, v_uid, 'admin_org');
-  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin_org');
+  -- organization_members sincroniza user_roles; no insertar el mismo usuario dos veces.
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa, tipo_contable)
     VALUES (v_org, 'Administracion TEST fecha', 1, true, 'Administracion') RETURNING id INTO v_cat;
   INSERT INTO public.proveedores (organization_id, nombre, categoria, tipo)
