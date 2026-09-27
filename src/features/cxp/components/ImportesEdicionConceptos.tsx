@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { parseMonto } from "@/lib/format/parseMonto";
 import type { ImpuestosNoDesglosados, ImportesFacturaConceptos } from "../utils/impuestosConceptos";
@@ -13,6 +14,21 @@ interface Props {
 }
 
 export function ImportesEdicionConceptos({ anterior, nuevo, moneda, globales, mostrarGlobales, onGlobales }: Props) {
+  const filas = (["subtotal", "iva", "ieps", "retenciones", "total"] as const).map((campo) => ({
+    campo,
+    etiqueta: campo === "iva" || campo === "ieps" ? campo.toUpperCase() : campo[0].toUpperCase() + campo.slice(1),
+    anterior: anterior[campo],
+    nuevo: nuevo[campo],
+  }));
+  const columnas = defineColumns<(typeof filas)[number]>([
+    { id: "importe", header: `Importe (${moneda})`, accessorKey: "etiqueta", enableSorting: false },
+    { id: "actual", header: "Actual", accessorKey: "anterior", enableSorting: false,
+      cell: ({ row }) => formatCurrency(row.original.anterior, moneda),
+      meta: { align: "right", className: "tabular-nums whitespace-nowrap" } },
+    { id: "nuevo", header: "Al guardar", accessorKey: "nuevo", enableSorting: false,
+      cell: ({ row }) => formatCurrency(row.original.nuevo, moneda),
+      meta: { align: "right", className: "tabular-nums whitespace-nowrap" } },
+  ]);
   return (
     <div className="space-y-3">
       {mostrarGlobales && (
@@ -35,23 +51,12 @@ export function ImportesEdicionConceptos({ anterior, nuevo, moneda, globales, mo
           </div>
         </fieldset>
       )}
-      <div className="overflow-x-auto rounded-md border">
-        <table className="w-full text-body-sm tabular-nums">
-          <caption className="px-3 py-2 text-left font-medium">Importes antes y después de guardar</caption>
-          <thead className="bg-muted/30"><tr>
-            <th scope="col" className="p-2 text-left">Importe ({moneda})</th>
-            <th scope="col" className="p-2 text-right">Actual</th>
-            <th scope="col" className="p-2 text-right">Al guardar</th>
-          </tr></thead>
-          <tbody>{(["subtotal", "iva", "ieps", "retenciones", "total"] as const).map((campo) => (
-            <tr key={campo} className={campo === "total" ? "border-t font-semibold" : "border-t"}>
-              <th scope="row" className="p-2 text-left font-medium">{campo === "iva" || campo === "ieps" ? campo.toUpperCase() : campo[0].toUpperCase() + campo.slice(1)}</th>
-              <td className="p-2 text-right">{formatCurrency(anterior[campo], moneda)}</td>
-              <td className="p-2 text-right">{formatCurrency(nuevo[campo], moneda)}</td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
+      <section aria-label="Importes antes y después de guardar" className="rounded-md border">
+        <h3 className="px-3 py-2 text-body-sm font-medium">Importes antes y después de guardar</h3>
+        <DataTable data={filas} columns={columnas} rowKey={(fila) => fila.campo}
+          density="compact" striped={false} hoverable={false} tableClassName="w-full"
+          rowClassName={(fila) => fila.campo === "total" ? "font-semibold" : ""} />
+      </section>
     </div>
   );
 }

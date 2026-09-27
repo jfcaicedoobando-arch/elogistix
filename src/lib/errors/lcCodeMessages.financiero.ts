@@ -75,7 +75,9 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_CXP_RECHAZO_CON_PAGOS:
     "Esta factura ya tiene pagos aplicados. Anula o reversa los pagos antes de rechazarla.",
   LC_CXP_IVA_IMPLAUSIBLE:
-    "El IVA capturado es mayor al 16% del subtotal. Corrige el IVA de la factura antes de aprobarla.",
+    "El IVA capturado es mayor al 16% de la base subtotal + IEPS. Corrige el IVA de la factura antes de aprobarla.",
+  LC_CONCEPTOS_IMPUESTOS:
+    "Revisa el IVA y el IEPS globales sin desglose: deben ser importes válidos, no negativos.",
   LC_AJUSTE_DESPROPORCIONADO:
     "El ajuste no puede exceder el total de la factura. Revisa la moneda del costo vinculado.",
   LC_CXP_VINCULO_MONEDA:
@@ -151,4 +153,3 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_PROFORMA_DIAS_CREDITO_DISTINTOS:
     "Las proformas seleccionadas tienen plazos de crédito distintos. Iguala el plazo o indica el plazo de la factura antes de fusionarlas.",
 };
-

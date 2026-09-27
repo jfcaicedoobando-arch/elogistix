@@ -17,4 +17,15 @@ describe("concepto manual con IEPS · AUD-F02", () => {
     expect(onActualizar).toHaveBeenCalledWith("c1", "ieps", 100);
     expect(screen.getByLabelText("IEPS del concepto")).toHaveValue("100.00");
   });
+  it("las acciones extraídas mantienen la identidad del concepto", () => {
+    const onDuplicar = vi.fn();
+    const onEliminar = vi.fn();
+    render(<TooltipProvider><ConceptoLineaRow moneda="MXN" onActualizar={vi.fn()}
+      onDuplicar={onDuplicar} onEliminar={onEliminar}
+      concepto={{ key: "c1", descripcion: "Servicio", cantidad: 1, importe: 1000, iva: 172.8, ieps: 80 }} /></TooltipProvider>);
+    fireEvent.click(screen.getByLabelText("Duplicar concepto"));
+    fireEvent.click(screen.getByLabelText("Eliminar concepto"));
+    expect(onDuplicar).toHaveBeenCalledWith("c1");
+    expect(onEliminar).toHaveBeenCalledWith("c1");
+  });
 });

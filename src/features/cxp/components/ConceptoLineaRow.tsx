@@ -4,16 +4,14 @@
  * formatear al salir del campo (12 → 12.00) sin pelearse con el estado padre.
  */
 import { useState } from "react";
-import { Copy, Percent, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, TASA_IVA } from "@/lib/financial/financialUtils";
 import { parseMonto } from "@/lib/format/parseMonto";
 import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { ConceptoLineaAcciones } from "./ConceptoLineaAcciones";
 
 interface Props {
   concepto: ConceptoManual;
@@ -160,55 +158,11 @@ export function ConceptoLineaRow({
           {formatCurrency(total, moneda)}
         </span>
 
-        <div className="ml-auto flex w-auto items-center justify-end gap-0.5 md:w-28">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
-                onClick={aplicarIva16}
-                aria-label="Aplicar IVA 16% a esta línea"
-              >
-                <Percent className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-body-sm">Calcular IVA 16%</TooltipContent>
-          </Tooltip>
-          {onDuplicar && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
-                  onClick={() => onDuplicar(c.key)}
-                  aria-label="Duplicar concepto"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-body-sm">Duplicar línea</TooltipContent>
-            </Tooltip>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-destructive"
-                onClick={() => onEliminar(c.key)}
-                aria-label="Eliminar concepto"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-body-sm">Eliminar línea</TooltipContent>
-          </Tooltip>
-        </div>
+        <ConceptoLineaAcciones
+          onAplicarIva={aplicarIva16}
+          onDuplicar={onDuplicar ? () => onDuplicar(c.key) : undefined}
+          onEliminar={() => onEliminar(c.key)}
+        />
       </div>
     </div>
   );
