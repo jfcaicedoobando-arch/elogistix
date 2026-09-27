@@ -4,6 +4,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { FilaCostoPrecio } from "../FilaCostoPrecio";
 import { FilaVentaPrecio } from "../FilaVentaPrecio";
 
+vi.mock("@/features/configuracion", () => ({ useIvaFronteraHabilitada: () => false }));
+
 vi.mock("@/features/embarques/components/conceptos/ConceptoCatalogoSelect", () => ({
   ConceptoCatalogoSelect: ({ value, disabled }: { value: string; disabled: boolean }) =>
     <button disabled={disabled}>{value}</button>,

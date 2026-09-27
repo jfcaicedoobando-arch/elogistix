@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SelectTratamientoIva } from "../SelectTratamientoIva";
 import { cambioDesdeTipoIva } from "@/features/embarques/domain/cambioTratamientoIva";
+
+vi.mock("@/features/configuracion", () => ({ useIvaFronteraHabilitada: () => false }));
 
 describe("SelectTratamientoIva", () => {
   it("deriva tasa y switch coherentes por tratamiento", () => {
