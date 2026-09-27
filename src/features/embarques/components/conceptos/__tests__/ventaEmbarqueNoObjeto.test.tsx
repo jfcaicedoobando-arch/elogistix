@@ -10,6 +10,8 @@ import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
 import { resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import type { ConceptoVentaLocal } from "@/types/concepto";
 
+vi.mock("@/features/configuracion", () => ({ useIvaFronteraHabilitada: () => false }));
+
 vi.mock("@/features/embarques/components/conceptos/ConceptoCatalogoSelect", () => ({
   ConceptoCatalogoSelect: ({
     onChange,
