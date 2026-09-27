@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { TratamientoIvaProforma } from "../TratamientoIvaProforma";
 import { PasoConfirmacionProforma } from "../PasoConfirmacionProforma";
 import { ConceptoRow } from "../PasoSeleccionConceptos.parts";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 
