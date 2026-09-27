@@ -19,6 +19,7 @@ const semana = (over: Partial<SemanaFlujo> = {}): SemanaFlujo => ({
 
 const flujo = (saldoFinal: number, semanas: SemanaFlujo[] = []): FlujoProyectado => ({
   saldo_inicial_mxn: 0,
+  saldo_inicial_disponible: true,
   semanas,
   total_entradas_mxn: 0,
   total_salidas_mxn: 0,
@@ -82,6 +83,15 @@ describe("calcularAlertas", () => {
       presupuesto: presupuesto(),
     });
     expect(r.find((a) => a.severidad === "critica")).toBeDefined();
+  });
+
+  it("no genera alertas de saldo negativo cuando el saldo inicial no está disponible", () => {
+    const r = calcularAlertas({
+      flujo: { ...flujo(-5000, [semana({ saldo_proyectado_mxn: -5000 })]), saldo_inicial_disponible: false },
+      tesoreria: tesoreria(),
+      presupuesto: presupuesto(),
+    });
+    expect(r.some((a) => a.id.startsWith("flujo-negativo-"))).toBe(false);
   });
 
   it("detecta cartera vencida sobre umbral", () => {

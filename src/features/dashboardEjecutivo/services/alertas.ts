@@ -24,7 +24,9 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
   const umbral = input.umbralCarteraVencida ?? UMBRAL_CARTERA_DEFAULT;
 
   // Saldo bancario proyectado < 0 en próximas semanas
-  const semanasNegativas = input.flujo.semanas.filter((s) => s.saldo_proyectado_mxn < 0);
+  const semanasNegativas = input.flujo.saldo_inicial_disponible
+    ? input.flujo.semanas.filter((s) => s.saldo_proyectado_mxn < 0)
+    : [];
   if (semanasNegativas.length > 0) {
     const primera = semanasNegativas[0];
     alertas.push({

@@ -25,8 +25,8 @@ export function FormDialogHeaderBlock({
 }: Props) {
   const showStepper = stepper !== undefined && stepper.totalSteps > 1;
   return (
-    <DialogHeader className="px-6 pt-6 pb-4 border-b space-y-3">
-      <div className="flex items-start justify-between gap-4">
+    <DialogHeader className="pl-6 pr-20 pt-6 pb-4 border-b space-y-3">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <div className="shrink-0 h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
             <Icon className="h-5 w-5" />
@@ -40,7 +40,7 @@ export function FormDialogHeaderBlock({
             )}
           </div>
         </div>
-        {headerAside && <div className="text-right shrink-0">{headerAside}</div>}
+        {headerAside && <div className="max-w-full break-words sm:text-right shrink-0">{headerAside}</div>}
       </div>
       {showStepper && (
         <FormDialogStepper

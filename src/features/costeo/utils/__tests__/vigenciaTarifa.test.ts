@@ -3,9 +3,16 @@ import {
   resolverEstadoVigenciaTarifa,
   puedeAprobarTarifa,
   esVigenciaVencida,
+  esTarifaUsableEn,
 } from "../vigenciaTarifa";
 
 describe("vigenciaTarifa", () => {
+  it("mantiene fuera de vigentes una tarifa marcada vencida aunque sus fechas hayan cambiado", () => {
+    expect(esTarifaUsableEn({
+      estado: "vencida", estado_aprobacion: "vigente",
+      vigente_desde: "2026-09-01", vigente_hasta: "2026-10-30",
+    }, "2026-09-26")).toBe(false);
+  });
   it("vence HOY no se considera vencida", () => {
     expect(esVigenciaVencida("2026-09-01", "2026-09-01")).toBe(false);
   });

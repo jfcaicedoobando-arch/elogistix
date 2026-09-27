@@ -14,11 +14,7 @@ import { ROUTES } from "@/constants/routes";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import { todayLocalISO } from "@/lib/date/today";
 import { useDocumentTitle } from "@/hooks/shared";
-
-// B-087: "vigente" = aprobada + estado derivado vigente (no reemplazada) +
-// no vencida por fecha — mismo criterio que `get_top_tarifas` (FIX B-079).
-const esVigenteReal = (t: { estado_aprobacion: string; estado: string; vigente_hasta: string }, hoy: string) =>
-  t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
+import { esTarifaUsableEn } from "@/features/costeo";
 
 export default function AgenteInicio() {
   useDocumentTitle("Portal agente");
@@ -27,11 +23,11 @@ export default function AgenteInicio() {
   const { data: embarques = [] } = useAgenteEmbarques();
 
   const hoy = todayLocalISO();
-  const vigentes = tarifas.filter((t) => esVigenteReal(t, hoy)).length;
+  const vigentes = tarifas.filter((t) => esTarifaUsableEn(t, hoy)).length;
   const borradores = tarifas.filter((t) => t.estado_aprobacion === "borrador").length;
   const rechazadas = tarifas.filter((t) => t.estado_aprobacion === "rechazada").length;
   const en30 = tarifas.filter((t) => {
-    if (!esVigenteReal(t, hoy)) return false;
+    if (!esTarifaUsableEn(t, hoy)) return false;
     const diff = diffDiasCalendario(hoy, t.vigente_hasta);
     return diff >= 0 && diff <= 30;
   }).length;

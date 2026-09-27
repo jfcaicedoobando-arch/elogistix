@@ -23,15 +23,14 @@ import {
 import { AgenteTarifaCard } from "./_sections/AgenteTarifaCard";
 import { todayLocalISO } from "@/lib/date/today";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { esTarifaUsableEn } from "@/features/costeo";
 
 type Filter = "todas" | "borrador" | "vigente" | "rechazada";
 
 /**
- * B-087 (complementa FIX B-079): vigencia derivada — aprobada + `estado='vigente'`
- * + no vencida por fecha. Las reemplazadas dejan de contar como vigentes.
+ * Misma vigencia de negocio que el catálogo: aprobada y dentro de inicio/fin.
  */
-const esVigenteReal = (t: AgenteTarifaRow, hoy: string) =>
-  t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
+const esVigenteReal = esTarifaUsableEn;
 
 interface EditorState {
   open: boolean;
@@ -45,9 +44,7 @@ export default function AgenteTarifas() {
   const [filtro, setFiltro] = useState<Filter>("todas");
   const [editor, setEditor] = useState<EditorState>({ open: false, modo: "crear" });
 
-  // B-087 (complementa FIX B-079): el tab "Vigente" y su conteo usan el estado
-  // derivado — aprobada + `estado='vigente'` + no vencida por fecha. Las
-  // reemplazadas dejan de contar como vigentes (quedan visibles en "Todas").
+  // Las programadas y reemplazadas siguen visibles en "Todas", no en vigentes.
   const hoy = todayLocalISO();
 
   const filtradas = useMemo(() => {

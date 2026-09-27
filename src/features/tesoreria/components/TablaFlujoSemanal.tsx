@@ -17,9 +17,9 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/utils";
 
-interface Props { semanas: SemanaFlujo[] }
+interface Props { semanas: SemanaFlujo[]; saldoDisponible?: boolean }
 
-export default function TablaFlujoSemanal({ semanas }: Props) {
+export default function TablaFlujoSemanal({ semanas, saldoDisponible = true }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggle = (key: string) => {
@@ -49,7 +49,7 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
           <TableBody>
             {semanas.map((s, i) => {
               const isOpen = expanded.has(s.semana_iso);
-              const saldoNeg = s.saldo_proyectado_mxn < 0;
+              const saldoNeg = saldoDisponible && s.saldo_proyectado_mxn < 0;
               const striped = i % 2 === 1;
               return (
                 <Fragment key={s.semana_iso}>
@@ -78,7 +78,7 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
                       {formatCurrency(s.flujo_neto_mxn, "MXN")}
                     </TableCell>
                     <TableCell className={cn("whitespace-nowrap text-right tabular-nums font-semibold", saldoNeg && "text-destructive")}>
-                      {formatCurrency(s.saldo_proyectado_mxn, "MXN")}
+                      {saldoDisponible ? formatCurrency(s.saldo_proyectado_mxn, "MXN") : "No disponible"}
                     </TableCell>
                   </DetailTableRow>
                   {isOpen && (

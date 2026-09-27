@@ -16,15 +16,15 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useIsMobile } from "@/hooks/shared";
 import { LineChart as LineChartIcon } from "lucide-react";
 
-interface Props { semanas: SemanaFlujo[] }
+interface Props { semanas: SemanaFlujo[]; saldoDisponible?: boolean }
 
-export default function GraficoFlujoProyectado({ semanas }: Props) {
+export default function GraficoFlujoProyectado({ semanas, saldoDisponible = true }: Props) {
   const isMobile = useIsMobile();
   const data = semanas.map((s) => ({
     semana: s.semana_iso.slice(5),
     Entradas: Math.round(s.entradas_mxn),
     Salidas: -Math.round(s.salidas_mxn),
-    Saldo: Math.round(s.saldo_proyectado_mxn),
+    Saldo: saldoDisponible ? Math.round(s.saldo_proyectado_mxn) : null,
   }));
 
   if (data.length < 2) {
@@ -57,7 +57,7 @@ export default function GraficoFlujoProyectado({ semanas }: Props) {
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="Entradas" fill="hsl(var(--kpi-success))" />
               <Bar dataKey="Salidas" fill="hsl(var(--destructive))" />
-              <Line type="monotone" dataKey="Saldo" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 3 }} />
+              {saldoDisponible && <Line type="monotone" dataKey="Saldo" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 3 }} />}
             </ComposedChart>
           </ResponsiveContainer>
         </div>

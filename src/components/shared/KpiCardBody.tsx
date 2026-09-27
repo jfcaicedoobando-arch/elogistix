@@ -101,7 +101,8 @@ export function KpiBodyChip({
 }: KpiBodyProps) {
   const tone = kpiVariantToTone[variant];
   return (
-    <CardContent className="p-3 sm:p-5 flex items-center gap-2 sm:gap-4">
+    <CardContent className="p-4">
+      <div className="flex items-center gap-3 mb-2 min-w-0">
       {Icon && (
         <div
           aria-hidden="true"
@@ -113,8 +114,9 @@ export function KpiBodyChip({
           <Icon className="h-5 w-5" />
         </div>
       )}
-      <div className="min-w-0 flex-1">
         <KpiLabel label={label} hint={hint} />
+      </div>
+      <div className="min-w-0">
         {loading ? (
           <Skeleton className="h-8 w-24 mt-1" />
         ) : (
@@ -123,7 +125,7 @@ export function KpiBodyChip({
               <p
                 className={cn(
                   kpiValueSize(valueStr, "chip"),
-                   "font-semibold text-foreground tabular-nums leading-tight whitespace-nowrap",
+                   "font-semibold text-foreground tabular-nums leading-tight whitespace-normal break-words",
                 )}
               >
                 {value}

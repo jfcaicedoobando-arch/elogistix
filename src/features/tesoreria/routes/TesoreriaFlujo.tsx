@@ -60,6 +60,15 @@ export default function TesoreriaFlujo() {
             </div>
           ) : null}
 
+          {!data.saldo_inicial_disponible && (
+            <Alert>
+              <AlertDescription>
+                Saldo inicial no disponible: no hay cuentas bancarias configuradas.
+                Se muestran entradas, salidas y flujo neto; no se puede determinar el saldo bancario proyectado.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {data.saldo_incompleto && (
             <Alert variant="warning">
               <AlertTriangle className="h-4 w-4" />
@@ -74,17 +83,17 @@ export default function TesoreriaFlujo() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KpiCard label="Saldo hoy (MXN aprox)" value={formatCurrency(data.saldo_inicial_mxn, "MXN")} />
+            <KpiCard label="Saldo hoy (MXN aprox)" value={data.saldo_inicial_disponible ? formatCurrency(data.saldo_inicial_mxn, "MXN") : "No disponible"} />
             <KpiCard label="Entradas 90 días" value={formatCurrency(data.total_entradas_mxn, "MXN")} variant="success" />
             <KpiCard label="Salidas 90 días" value={formatCurrency(data.total_salidas_mxn, "MXN")} variant="warning" />
             <KpiCard
               label="Saldo final proyectado"
-              value={formatCurrency(data.saldo_final_mxn, "MXN")}
-              variant={data.saldo_final_mxn >= 0 ? "success" : "destructive"}
+              value={data.saldo_inicial_disponible ? formatCurrency(data.saldo_final_mxn, "MXN") : "No disponible"}
+              variant={!data.saldo_inicial_disponible ? "default" : data.saldo_final_mxn >= 0 ? "success" : "destructive"}
             />
           </div>
 
-          {data.alertas_negativas > 0 && (
+          {data.saldo_inicial_disponible && data.alertas_negativas > 0 && (
             <Card className="border-destructive/40 bg-destructive/5">
               <CardContent density="tight" className="flex items-center gap-2 text-body">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -100,13 +109,13 @@ export default function TesoreriaFlujo() {
             <CardContent density="compact">
               <SectionHeading className="mb-3">Flujo semanal (MXN)</SectionHeading>
               <Suspense fallback={<ChartSkeleton height={288} />}>
-                <GraficoFlujoProyectado semanas={data.semanas} />
+                <GraficoFlujoProyectado semanas={data.semanas} saldoDisponible={data.saldo_inicial_disponible} />
               </Suspense>
             </CardContent>
           </Card>
 
           <Suspense fallback={<ChartSkeleton height={256} detailed={false} />}>
-            <TablaFlujoSemanal semanas={data.semanas} />
+            <TablaFlujoSemanal semanas={data.semanas} saldoDisponible={data.saldo_inicial_disponible} />
           </Suspense>
         </>
       )}

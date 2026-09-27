@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import {
   useCondicionesNaviera,
   useNavierasCatalogo,
+  useProveedoresNaviera,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import { NavieraCondicionesDialog } from "@/features/costeo/components/NavieraCondicionesDialog";
 import { combinarFilasNaviera, type FilaNaviera } from "@/features/costeo/types/filaNaviera";
@@ -31,6 +32,9 @@ export default function AgenteGarantias() {
   useDocumentTitle('Carta Garantía y Demoras');
   const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
   const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
+  // Una consulta compartida con el formulario; nunca una consulta por fila.
+  const { data: proveedores = [], isLoading: loadingProv, isError: errorProv, refetch: refetchProv } = useProveedoresNaviera();
+  const proveedorDisponible = proveedores.length > 0;
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState<EstadoNavieraFiltro>("todos");
@@ -50,7 +54,7 @@ export default function AgenteGarantias() {
     setEstado("todos");
   };
 
-  const columns = useAgenteGarantiasColumns(setSeleccion);
+  const columns = useAgenteGarantiasColumns(setSeleccion, proveedorDisponible);
 
   return (
     <div className="space-y-6">
@@ -70,11 +74,12 @@ export default function AgenteGarantias() {
         </p>
       </Card>
 
-      {errorNav || errorCond ? (
+      {errorNav || errorCond || errorProv ? (
         <ErrorState
           onRetry={() => {
             void refetchNav();
             void refetchCond();
+            void refetchProv();
           }}
         />
       ) : (
@@ -89,10 +94,10 @@ export default function AgenteGarantias() {
             columns={columns}
             data={filasFiltradas}
             rowKey={(f) => f.naviera_id}
-            isLoading={loadingNav || loadingCond}
+            isLoading={loadingNav || loadingCond || loadingProv}
             onRowClick={(f) => setSeleccion(f)}
             rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
-            mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} />}
+            mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} proveedorDisponible={proveedorDisponible} />}
             emptyState={
               filas.length === 0 ? (
                 <EmptyStateInline icon={Ship} message="Sin navieras configuradas." />

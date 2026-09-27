@@ -9,6 +9,15 @@ const totales = {
 };
 
 describe("ResumenConceptosVentaTotales", () => {
+  it("el IVA por confirmar convierte el agregado pendiente en provisional", () => {
+    render(<ResumenConceptosVentaTotales
+      totales={totales} pendientesCount={2} enProformaCount={0} facturadosCount={0}
+      gruposConIva={{ pendiente: true, enProforma: false, facturado: false }} ivaPendienteCount={1}
+    />);
+    expect(screen.getByText("Pendientes de proforma")).toBeInTheDocument();
+    expect(screen.getByText("Total provisional · 1 con IVA por confirmar")).toBeInTheDocument();
+    expect(screen.queryByText("Total · IVA incluido")).not.toBeInTheDocument();
+  });
   it("no afirma IVA cuando el grupo sólo tiene exento o no objeto", () => {
     render(<ResumenConceptosVentaTotales
       totales={totales} pendientesCount={1} enProformaCount={0} facturadosCount={1}

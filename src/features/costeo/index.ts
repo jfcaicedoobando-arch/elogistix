@@ -17,3 +17,4 @@ export {
   textoBusquedaPuertos,
 } from "./utils/puertoLabel";
 export type { FilaConPuertos, PuertoIdentidad } from "./utils/puertoLabel";
+export { esTarifaUsableEn } from "./utils/vigenciaTarifa";

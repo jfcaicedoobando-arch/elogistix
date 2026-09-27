@@ -5,7 +5,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { ReactElement } from "react";
 import { render, screen } from "@testing-library/react";
-import { buildAgenteTarifasColumns } from "../agenteTarifasColumns";
+import { buildAgenteTarifasColumns, EstadoConVigencia } from "../agenteTarifasColumns";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 
 function fila(vigenteHasta: string): AgenteTarifaRow {
@@ -39,6 +39,12 @@ function renderEstado(vigenteHasta: string) {
 }
 
 describe("agenteTarifasColumns — aviso de vigencia", () => {
+  it("una aprobada futura se muestra programada, no vigente", () => {
+    render(<EstadoConVigencia t={{ ...fila("2999-12-31"), estado_aprobacion: "vigente", vigente_desde: "2999-01-01" }} />);
+    expect(screen.getByText("Programada")).toBeInTheDocument();
+    expect(screen.getByText(/Aprobada · inicia/)).toBeInTheDocument();
+    expect(screen.queryByText("Vigente")).not.toBeInTheDocument();
+  });
   it("muestra advertencia cuando el borrador ya venció", () => {
     renderEstado("2000-01-01");
     expect(screen.getByText(/vigencia vencida/i)).toBeTruthy();

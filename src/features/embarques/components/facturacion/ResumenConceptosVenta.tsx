@@ -14,6 +14,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { TratamientoIvaBadge } from "./TratamientoIvaBadge";
+import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 
 import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
 import { sumarConceptosVentaPorMoneda } from "./resumenConceptosVenta.helpers";
@@ -168,6 +169,7 @@ export function ResumenConceptosVenta({
               enProformaCount={conceptosEnProforma.length}
               facturadosCount={conceptosFacturados.length}
               gruposConIva={gruposConIva}
+              ivaPendienteCount={conceptosPendientes.filter(tratamientoIvaPendiente).length}
             />
           </>
         )}
