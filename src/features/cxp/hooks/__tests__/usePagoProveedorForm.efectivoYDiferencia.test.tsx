@@ -38,11 +38,17 @@ describe("usePagoProveedorForm · efectivo sin cuenta bancaria", () => {
       wrapper: createWrapper(),
     });
     expect(result.current.cuentaBancariaIdEnvio).toBe("c1");
+    expect(result.current.impacto?.salida.tipo).toBe("banco");
 
     act(() => result.current.setMetodo("Efectivo"));
     expect(result.current.requiereCuenta).toBe(false);
     expect(result.current.cuentaId).toBe("");
     expect(result.current.cuentaBancariaIdEnvio).toBeNull();
+    expect(result.current.impacto?.salida.tipo).toBe("efectivo");
+
+    act(() => result.current.setMetodo("Transferencia"));
+    expect(result.current.impacto?.salida.tipo).toBe("banco");
+    expect(result.current.cuentaBancariaIdEnvio).toBe("c1");
   });
 
   it("no auto-selecciona cuenta si el formulario abre en efectivo", () => {
@@ -50,6 +56,18 @@ describe("usePagoProveedorForm · efectivo sin cuenta bancaria", () => {
       wrapper: createWrapper(),
     });
     act(() => result.current.setMetodo("Efectivo"));
+    expect(result.current.cuentaBancariaIdEnvio).toBeNull();
+  });
+
+  it("editar efectivo conserva el medio y devuelve el pago original a la base del saldo", () => {
+    const f = { ...factura("MXN"), saldo: 700, pagado: 300 };
+    const pago = { id: "p1", fecha_pago: "2026-09-26", monto: 300, moneda: "MXN" as const,
+      tipo_cambio_usd: null, metodo_pago: "Efectivo", referencia: "Caja", notas: null,
+      cuenta_bancaria_id: null, diferencia_cambiaria_mxn: null };
+    const { result } = renderHook(() => usePagoProveedorForm(f, true, pago), { wrapper: createWrapper() });
+    expect(result.current.impacto?.salida).toEqual({ tipo: "efectivo", moneda: "MXN", monto: 300 });
+    expect(result.current.impacto?.factura.saldoAntes).toBe(1000);
+    expect(result.current.impacto?.factura.saldoDespues).toBe(700);
     expect(result.current.cuentaBancariaIdEnvio).toBeNull();
   });
 });

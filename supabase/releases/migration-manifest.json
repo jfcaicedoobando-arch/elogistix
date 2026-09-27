@@ -4246,7 +4246,8 @@
       "20260923040259_921921af-b469-40da-a3ab-39d4aa26a0aa.sql",
       "20260924195449_13f90afa-470d-4585-85fb-60b35b60cadc.sql",
       "20260925021600_atomic_embarque_update_containers.sql",
-      "20260927040000_cxp_impuestos_globales_y_base_iva.sql"
+      "20260927040000_cxp_impuestos_globales_y_base_iva.sql",
+      "20260927050000_cxp_historial_fecha_pago.sql"
     ]
   }
 }

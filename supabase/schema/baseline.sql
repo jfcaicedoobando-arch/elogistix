@@ -20624,7 +20624,7 @@ BEGIN
     WHERE pf.id = p_id AND pf.aprobada_at IS NOT NULL
     UNION ALL
     SELECT
-      pp.fecha_pago::timestamptz,
+      pp.created_at,
       'pago'::text,
       ('Pago registrado' ||
         CASE WHEN pp.referencia IS NOT NULL AND pp.referencia <> ''
@@ -20632,7 +20632,7 @@ BEGIN
       COALESCE(u.email, '')::text,
       pp.monto,
       pp.moneda::text,
-      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia)
+      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago)
     FROM public.pagos_proveedor pp
     LEFT JOIN auth.users u ON u.id = pp.created_by
     WHERE pp.proveedor_factura_id = p_id AND pp.deleted_at IS NULL

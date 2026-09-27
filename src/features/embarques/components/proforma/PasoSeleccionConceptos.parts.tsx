@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
+import { TratamientoIvaProforma } from "./TratamientoIvaProforma";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 
@@ -17,8 +18,6 @@ interface ConceptoRowProps {
   ivaActivo: boolean;
   ivaBloqueado: boolean;
   ivaPendiente: boolean;
-  /** Etiqueta de la tasa real de la fila (ej. "16%", "0%"). */
-  etiquetaIvaFila: string;
   contLabel: string | null;
   showGeneralBadge: boolean;
   onToggle: (id: string) => void;
@@ -26,7 +25,7 @@ interface ConceptoRowProps {
 }
 
 export function ConceptoRow({
-  c, isSelected, ivaActivo, ivaBloqueado, ivaPendiente, etiquetaIvaFila, contLabel, showGeneralBadge,
+  c, isSelected, ivaActivo, ivaBloqueado, ivaPendiente, contLabel, showGeneralBadge,
   onToggle, onToggleIva,
 }: ConceptoRowProps) {
   const sub = Number(c.cantidad) * Number(c.precio_unitario);
@@ -53,24 +52,15 @@ export function ConceptoRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
-        {ivaPendiente ? (
-          <Badge variant="outline" className="text-body-sm text-warning border-warning/40">IVA por confirmar</Badge>
-        ) : ivaBloqueado ? (
-          // R179-01: el badge muestra el tratamiento fiscal REAL de la fila.
-          // Antes decía siempre "IVA 16% incluido" aunque el concepto estuviera
-          // guardado sin IVA, y el total confirmado cambiaba al guardar.
-          ivaActivo ? (
-            <Badge variant="secondary" className="text-body-sm">IVA {etiquetaIvaFila} incluido</Badge>
-          ) : (
-            <Badge variant="outline" className="text-body-sm text-muted-foreground">Sin IVA</Badge>
-          )
-        ) : (
+        <TratamientoIvaProforma concepto={c} ivaActivo={ivaActivo} />
+        {!ivaPendiente && !ivaBloqueado && (
           <div className="flex items-center gap-2">
             <Label size="sm" htmlFor={`iva-${c.id}`} className="text-muted-foreground cursor-pointer">
               IVA
             </Label>
             <Switch
               id={`iva-${c.id}`}
+              aria-label={`Trasladar IVA en proforma: ${c.descripcion}`}
               checked={ivaActivo}
               onCheckedChange={() => onToggleIva(c.id, c.moneda)}
               disabled={!isSelected}
@@ -137,4 +127,3 @@ export function ProformaFooterFields({ notas, onNotasChange }: FooterFieldsProps
     </div>
   );
 }
-

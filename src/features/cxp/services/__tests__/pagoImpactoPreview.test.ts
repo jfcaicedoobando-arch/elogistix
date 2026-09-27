@@ -11,6 +11,7 @@ function build(over: Partial<Parameters<typeof calcularImpactoPago>[0]> = {}) {
     monedaPago: "MXN",
     tcNum: null,
     bloqueadoPorTc: false,
+    requiereCuenta: true,
     cuentaEtiqueta: "BBVA · Operativa (MXN)",
     proveedor: { saldoTotal: 2500, facturasAbiertas: 3 },
     ...over,
@@ -51,7 +52,7 @@ describe("calcularImpactoPago", () => {
     const r = build({ bloqueadoPorTc: true })!;
     expect(r.aplicable).toBe(false);
     expect(r.factura.saldoDespues).toBe(1000);
-    expect(r.banco.montoMxn).toBe(400);
+    expect(r.salida).toMatchObject({ tipo: "banco", montoMxn: 400 });
   });
 
   it("convierte la salida de banco a MXN con el TC capturado", () => {
@@ -63,11 +64,28 @@ describe("calcularImpactoPago", () => {
       tcNum: 18.5,
       proveedor: { saldoTotal: 300, facturasAbiertas: 2 },
     })!;
-    expect(r.banco.montoMxn).toBe(925);
+    expect(r.salida).toMatchObject({ tipo: "banco", montoMxn: 925 });
     expect(r.factura.saldoDespues).toBe(50);
   });
 
   it("omite el bloque de proveedor cuando no hay datos", () => {
     expect(build({ proveedor: null })!.proveedor).toBeNull();
+  });
+
+  it("efectivo aplica a la deuda sin describir una salida bancaria, aun con cuenta residual", () => {
+    const r = build({ requiereCuenta: false })!;
+    expect(r.salida).toEqual({ tipo: "efectivo", moneda: "MXN", monto: 400 });
+    expect(r.factura.saldoDespues).toBe(600);
+    expect(r.proveedor?.saldoDespues).toBe(2100);
+  });
+
+  it("conserva la moneda capturada en efectivo cuando la deuda está en otra moneda", () => {
+    const r = build({ requiereCuenta: false, monedaPago: "USD", monto: 20, tcNum: 20 })!;
+    expect(r.salida).toEqual({ tipo: "efectivo", moneda: "USD", monto: 20 });
+    expect(r.factura.saldoDespues).toBe(600);
+  });
+
+  it("una transferencia sin cuenta sigue siendo bancaria; no se confunde con efectivo", () => {
+    expect(build({ cuentaEtiqueta: null })!.salida).toMatchObject({ tipo: "banco", cuentaEtiqueta: null });
   });
 });

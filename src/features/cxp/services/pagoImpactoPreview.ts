@@ -34,16 +34,23 @@ export interface ProveedorImpacto {
 }
 
 export interface SalidaBancoImpacto {
+  tipo: "banco";
   moneda: string;
   monto: number;
   montoMxn: number | null;
   cuentaEtiqueta: string | null;
 }
 
+export type SalidaPagoImpacto = SalidaBancoImpacto | {
+  tipo: "efectivo";
+  moneda: string;
+  monto: number;
+};
+
 export interface ImpactoPago {
   factura: FacturaImpacto;
   proveedor: ProveedorImpacto | null;
-  banco: SalidaBancoImpacto;
+  salida: SalidaPagoImpacto;
   aplicable: boolean;
 }
 
@@ -61,6 +68,8 @@ export interface ParamsImpactoPago {
   monedaPago: string;
   tcNum: number | null;
   bloqueadoPorTc: boolean;
+  /** El medio de pago, no la ausencia de una cuenta, determina si hay débito bancario. */
+  requiereCuenta: boolean;
   cuentaEtiqueta: string | null;
   /** Saldos abiertos del proveedor en la moneda de la factura (esta factura incluida). */
   proveedor: {
@@ -119,7 +128,8 @@ export function calcularImpactoPago(p: ParamsImpactoPago): ImpactoPago | null {
       }
     : null;
 
-  const banco: SalidaBancoImpacto = {
+  const salida: SalidaPagoImpacto = p.requiereCuenta ? {
+    tipo: "banco",
     moneda: p.monedaPago,
     monto: redondear(p.monto),
     montoMxn:
@@ -129,7 +139,7 @@ export function calcularImpactoPago(p: ParamsImpactoPago): ImpactoPago | null {
           ? redondear(p.monto * p.tcNum)
           : null,
     cuentaEtiqueta: p.cuentaEtiqueta,
-  };
+  } : { tipo: "efectivo", moneda: p.monedaPago, monto: redondear(p.monto) };
 
-  return { factura, proveedor, banco, aplicable };
+  return { factura, proveedor, salida, aplicable };
 }
