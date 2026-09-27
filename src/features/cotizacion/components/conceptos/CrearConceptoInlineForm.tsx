@@ -7,10 +7,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { crearProductoCatalogo, type ProductoCatalogo } from "@/features/cotizacion/services/productosCatalogoService";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { TIPO_IVA_OPCIONES } from "@/lib/financial/tipoIvaSat";
+import { useIvaFronteraHabilitada } from "@/features/configuracion";
+import { AVISO_IVA_FRONTERA_DESHABILITADO, tipoIvaSeleccionable } from "@/lib/financial/ivaFrontera";
+import { SelectTratamientoIvaFila } from "./SelectTratamientoIvaFila";
 
 interface Props {
   organizationId: string;
@@ -20,13 +21,16 @@ interface Props {
 }
 
 export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCreado, onCancel }: Props) {
+  const fronteraHabilitada = useIvaFronteraHabilitada();
   const [nombre, setNombre] = useState(nombreInicial);
   const [claveSat, setClaveSat] = useState("");
   const [claveUnidad, setClaveUnidad] = useState("E48");
   const [tipoIva, setTipoIva] = useState<ProductoCatalogo["tipo_iva"]>("gravado_16");
   const [saving, setSaving] = useState(false);
 
-  const puede = nombre.trim().length > 0 && claveSat.trim().length > 0 && claveUnidad.trim().length > 0;
+  // Revalidar también al guardar: la configuración puede cambiar con el alta abierta.
+  const tratamientoPermitido = tipoIvaSeleccionable(tipoIva, fronteraHabilitada);
+  const puede = tratamientoPermitido && nombre.trim().length > 0 && claveSat.trim().length > 0 && claveUnidad.trim().length > 0;
 
   const handleCrear = async () => {
     if (!puede || saving) return;
@@ -69,14 +73,10 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
       </div>
       <div className="space-y-1">
         <Label className="text-label">IVA</Label>
-        <Select value={tipoIva} onValueChange={(v) => setTipoIva(v as ProductoCatalogo["tipo_iva"])}>
-          <SelectTrigger className="h-8 text-body" aria-label="Tratamiento de IVA"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {TIPO_IVA_OPCIONES.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectTratamientoIvaFila tipoIva={tipoIva} onTipoIvaChange={setTipoIva} />
+        {!tratamientoPermitido && (
+          <p role="status" className="text-label text-warning">{AVISO_IVA_FRONTERA_DESHABILITADO}</p>
+        )}
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
