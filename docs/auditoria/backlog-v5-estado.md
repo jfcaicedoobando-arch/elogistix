@@ -1,4 +1,7 @@
-# Backlog QA v5 — estado verificado (2026-08-28)
+# Backlog QA v5 — registro histórico (2026-08-28)
+
+> Revisado documentalmente el 2026-09-26. Leer el cierre, no usar la tabla
+> original como cola actual. Datos personales se omiten de este resumen.
 
 Verificación de los 45 hallazgos de `elogistix_bugs_pendientes-5.md` contra el
 estado **vivo** de la base (`pg_proc`, `pg_trigger` incluyendo la lista de
@@ -15,11 +18,11 @@ y `confdeltype`, `pg_indexes`, `pg_get_viewdef`) y contra el código actual.
 | E4 (8) | 7 | M6 |
 | E5 (1) | 0 | N13 |
 
-## Pendientes
+## Pendientes de la auditoría original (superados por el cierre posterior)
 
 | ID | Sev | Estado | Hallazgo verificado |
 |---|---|---|---|
-| M3-res | Medium | ABIERTO | No existe índice único `clientes(organization_id, lower(btrim(email)))`; hay un duplicado activo real (`betoazaver@hotmail.com` en la org `…0001`) que bloquearía la creación del índice. |
+| M3-res | Medium | ABIERTO | No existe índice único `clientes(organization_id, lower(btrim(email)))`; hay un duplicado activo real (correo omitido, org `…0001`) que bloquearía la creación del índice. |
 | N18 | Medium | ABIERTO | `duplicar_factura_para_refacturacion`, `cancelar_factura_proveedor`, `cancelar_anticipo_proveedor` y `aprobar_nota_credito_proveedor` no usan `idempotency_claim/store`; sólo guardas de estado. |
 | N19 | Medium | ABIERTO | Único trigger de bitácora es `trg_bitacora_facturas_estado`. Sin registro de montos/TC en embarques, cliente/subtotal/TC en factura borrador, ni edición de `bbva_movimientos` / comisiones. |
 | M6 | Medium | PARCIAL | `cartera_pendiente()` reimplementa en línea la cascada de conversión de NC en vez de llamar `_nc_aplicadas_moneda_factura`. Dos copias vivas. |
@@ -62,8 +65,8 @@ El backlog v5 afirma cosas que hoy no son ciertas:
 | N13 | **Cerrado (v13.791.0)**: existe la RPC `devolver_anticipo_proveedor` (devolución simple que deja el saldo a favor en cero) + diálogo `DevolverAnticipoDialog` con su hook `useDevolverAnticipoForm`. |
 | N14 | Cerrado (v13.796.0): la aplicación de anticipos se valúa con la paridad DOF del día; EUR y cruces MXN↔USD ya no se bloquean. |
 
-## Estado consolidado (v13.793.0)
+## Estado consolidado histórico
 
-**44 de 45 hallazgos cerrados.** Único abierto: **N14** (anticipos en EUR),
-pendiente de decisión de producto sobre la fuente oficial de paridad EUR/MXN.
-
+El cierre descrito arriba incluye N14 en v13.796.0: **45 de 45 cerrados
+según ese registro histórico**. No es una auditoría nueva de Live ni prueba
+de que no existan otros bugs. N13/N14 no se reabren por limpiar esta guía.

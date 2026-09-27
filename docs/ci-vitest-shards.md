@@ -1,48 +1,39 @@
-# CI · Vitest: shards, workers y memoria
+# Vitest: shards, workers y mediciones
 
-Última revisión: P1 auditoría stack Vite 6 / Vitest 4 / React Router 7.
+Configuración revisada el **2026-09-26**: Vite 8 / Vitest 5 / Router 7.
+Fuente: `ci.yml`, `vitest.config.ts`, `vitest.shared.ts`.
 
-## Topología actual
+## Configuración vigente
 
-- Dos proyectos Vitest: `node` y `jsdom` (reparto en `scripts/lib/testEnvSplit.ts`).
-- `pool: "forks"`, `isolate: true` (un fork por archivo).
-- En Vitest 4 el pool se resuelve **por proyecto**, así que el pico de procesos
-  puede acercarse a `2 × maxWorkers`.
-- CI: ensayo vigente con `maxWorkers = 2`, heap
-  `--max-old-space-size=8192`, 5 shards y `max-parallel = 5` (`ci.yml`, job
-  `tests`). Runner `ubuntu-24.04`: 4 vCPU / 16 GB por shard.
-- Local: `maxWorkers = min(8, cpus-2)`, heap 4096 MB. Override: `VITEST_FORKS`.
+- Cinco shards, `max-parallel: 5`, sin coverage/retry/blobs en CI principal.
+- Proyectos node/jsdom con `extends: false` y opciones explícitas.
+- `pool: forks`, aislamiento por archivo; límite `MAX_WORKERS=2` en CI.
+- Heap de workers: 8192 MB CI, 4096 MB local; no es reserva de RAM.
+- Local: mínimo 2, máximo 8 según CPU; override `VITEST_FORKS`.
+- Aliases ESM Router y stub PDF centralizados en `aliasVitest()`.
+- `clearMocks: false` explícito conserva la semántica de mocks de esta suite.
 
-Justificación de `maxWorkers=2` en CI: con dos proyectos activos, 2 workers ya
-pueden significar ~4 forks vivos; a 8 GB de heap cada uno, subirlos arriesga
-OOM en un runner de 16 GB. Por eso el paralelismo en CI se consigue con
-**shards** (procesos en runners distintos), no con más workers por runner.
+No deducir “cuatro forks activos” ni RSS multiplicando proyectos por workers:
+la concurrencia efectiva se mide. Cinco runners reducen latencia pero pueden
+aumentar minutos totales facturados.
 
-## Cómo medir antes de cambiar algo
+## Medir antes de ajustar
 
-No se ajustan shards ni workers sin evidencia. Ejecutar:
+`scripts/bench-vitest-shards.sh` conserva un ensayo local de 1/2/3 shards.
+Consultar parámetros y límites del script antes de usarlo para otro escenario.
+La comparación de cinco shards se obtiene del run real de Actions.
 
-```bash
-# 1, 2 y 3 shards; registra duración, procesos y RSS pico
-bash scripts/bench-vitest-shards.sh
+Comparar mismo SHA/áreas, cache fría/caliente, duración de cada shard,
+wall-clock, instalación, lint y RSS pico. Un sandbox local no predice tiempos
+del runner ni una cifra de memoria del proveedor.
 
-# simular el paralelismo de CI
-VITEST_FORKS=2 bash scripts/bench-vitest-shards.sh
-```
+## Mediciones históricas
 
-Salida: tabla en consola y CSV en `/tmp/vitest-shard-bench.csv` con
-`total_shards, shard, segundos, exit_code, max_procesos, max_rss_mb`.
+Los registros siguientes son evidencia anterior a este repaso.
+No son SLA ni benchmark repetido del stack Vite 8/Vitest 5.
+No se ejecutó suite completa ni ensayo de rendimiento durante esta limpieza.
 
-Criterio de decisión:
 
-- subir shards sólo si el tiempo de pared del shard más lento baja de forma
-  consistente (≥ 15 %) en dos corridas;
-- el pico de RSS por runner debe quedar por debajo de ~12 GB en un runner de
-  16 GB;
-- subir `maxWorkers` en CI requiere además comprobar el pico de procesos, no
-  sólo el tiempo.
-
-## Ensayo de 5 shards: medición real
 
 ### Primera corrida caliente (caché de ESLint activa)
 
@@ -103,57 +94,5 @@ Lectura histórica:
   **costo por archivo es desigual**: de ahí el rango 1 m 39 s – 2 m 38 s entre
   shards.
 
-Conviene una **segunda corrida comparable** (mismo commit o diff equivalente,
-misma detección de áreas) antes de fijar 5 shards como configuración
-definitiva. No se registran tiempos estimados o simulados como resultados reales.
-
-## Caché de ESLint aislada: validación caliente
-
-Commit `9de2325b6a8d276cd84ce8c4d3d19bb80e6f6e51` · CI #4219 · run
-`35466468012`: primera corrida con la caché en `.cache/eslint` fuera de
-`node_modules` y **caché caliente**. El paso `Cache ESLint` registró un hit por
-`Cache hit for restore-key` (equivalente a `Cache restored successfully`); no
-apareció `Cache not found`.
-
-Comparativa fría vs caliente:
-
-| Métrica | Corrida fría (#4217) | Corrida caliente (#4219) |
-| --- | --- | --- |
-| job `ESLint` completo | **2 m 41 s** | ~16 s |
-| `bun run lint` | **1 m 55 s** | ~7.5 s |
-| total de pared | **3 m 08 s** | 3 m 26 s |
-| shard Vitest más lento | **2 m 38 s** | ~2 m 27 s |
-
-Validación cumplida:
-
-1. `Cache ESLint` restauró vía `Cache hit for restore-key` o
-   `Cache restored successfully`, sin `Cache not found`.
-2. La duración del comando ESLint bajó de **1 m 55 s** a ~7.5 s.
-3. El shard Vitest más lento y el tiempo total se midieron; el total varió
-   dentro del rango esperado por diferencias de runner.
-
-Se conservan **5 shards** y **`maxWorkers=2`** sin cambios, igual que la caché en
-`.cache/eslint` con `--cache-strategy content`.
-
-## Limitación conocida
-
-
-El sandbox de desarrollo tiene mucha más RAM/CPU que el runner de GitHub, así
-que los tiempos locales **no** son extrapolables; sirven para comparar
-configuraciones entre sí, no para predecir la duración en CI. La medición con
-memoria real de CI requiere correr el script dentro de un runner
-`ubuntu-24.04` vía `workflow_dispatch`.
-
-## Historia de mediciones
-
-- run `35466468012` (CI #4219) — 5 shards, lint separado, caché ESLint caliente:
-  3 m 26 s de pared, shard Vitest más lento 4/5 ~2 m 27 s, ESLint ~7.5 s
-  (ya no es el cuello de botella).
-- run `35464373548` (CI #4217) — 5 shards, lint separado, caché ESLint fría:
-  3 m 08 s de pared, shard Vitest más lento 2 m 38 s, ESLint 2 m 41 s
-  (cuello de botella).
-- run `35462835847` (CI #4213) — 3 shards, lint separado: 4 m 13 s de pared,
-  shard Vitest más lento 3 m 47 s.
-- run `34200102375` — 3 shards con lint dentro de `checks`: espera 347 s,
-  ejecución acumulada 947 s; Vitest 1426 archivos / 8949 tests.
-- run `34196983386` — 1 job unificado: 15 m 44 s de espera, 922 s acumulados.
+Para un ajuste futuro conviene una segunda corrida comparable, con mismo SHA
+/ áreas detectadas. No se registran tiempos estimados o simulados como resultados reales.

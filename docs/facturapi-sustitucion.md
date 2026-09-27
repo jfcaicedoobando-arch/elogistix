@@ -1,131 +1,55 @@
-# Sustitución CFDI — flujo asíncrono (v13.301.0+)
+# Cancelación y sustitución CFDI — flujo asíncrono
 
-## Contexto
+Revisión técnica: **2026-09-26**. La disponibilidad/aceptación de una cancelación
+la determina el proveedor/SAT. No deducirla por monto o fecha del comprobante
+ni convertir un plazo estimado en autorización fiscal.
 
-La cancelación de un CFDI en el SAT NO siempre es inmediata. Por regla
-2.7.1.34 RMF, si el CFDI supera $1,000 MXN y NO se cancela el mismo día de
-emisión, el receptor tiene **72 horas hábiles** para aceptar o rechazar la
-cancelación desde su Buzón Tributario (silencio positivo). FacturApi expone
-este estado en el campo `cancellation_status`:
+## Estados
 
-| Valor       | Significado                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `none`      | No hay solicitud registrada.                                 |
-| `verifying` | El SAT recibió la solicitud y la está validando.             |
-| `pending`   | Requiere aceptación del receptor.                            |
-| `accepted`  | Cancelación aceptada (terminal).                             |
-| `rejected`  | El receptor rechazó (terminal).                              |
-| `expired`   | El receptor no respondió en 72 h — silencio positivo (terminal). |
+`cancellation_status` refleja la respuesta remota: none, verifying, pending,
+accepted, rejected o expired según la API.
+Solicitar cancelación no equivale a que ya fue aceptada.
 
-## Estado en BD (`public.facturas`)
+Conservar identificadores, fecha de solicitud y estado hasta reconciliar.
+`cancelacion_vence_en`, cuando exista, es estimación de UI:
+no confirma aceptación ni autoriza marcar Cancelada.
+No tratar expired automáticamente como accepted.
 
-- `cancellation_status text` — refleja el valor devuelto por FacturApi.
-- `cancelacion_solicitada_en timestamptz` — cuándo se envió la solicitud.
-- `cancelacion_vence_en timestamptz` — vencimiento estimado (72 h hábiles).
-- `estado` (enum) — sólo pasa a `Cancelada`/`Sustituida` cuando el SAT
-  confirma `accepted`. Mientras el status sea `pending`/`verifying` la
-  factura sigue en `Timbrada`/`Emitida`.
-- `sustituida_por uuid` — se llena desde la solicitud (no depende de la
-  aceptación final).
+## Flujo servidor
 
-## Componentes del flujo
+- `facturapi-cancelar` pide cancelación y guarda resultado.
+- Timeout conserva incertidumbre/verificación; puede haberse enviado al proveedor.
+- `facturapi-webhook` procesa eventos de estado y cancelación.
+- `facturapi-reconciliar-cancelaciones` permite reconciliar solicitudes pendientes.
+- La UI también puede consultar estado.
 
-### 1. Edge `facturapi-cancelar`
+Que exista código de cron no demuestra que el job esté activo en producción.
+Verificar configuración/logs al investigar demoras.
+No repetir cancelación o modificar saldos sin consultar el documento remoto.
 
-Llama `facturapi.invoices.cancel()` y ramifica según `cancellation_status`:
+REP también soporta `receipt.cancellation_status_updated`.
+Accepted es terminal; evento atrasado pending/verifying no lo revierte.
+Las reglas de reversión de pagos/movimientos se ejecutan mediante el flujo
+servidor; un movimiento bancario real no se borra por cancelar un REP.
 
-- `accepted` (o `status='canceled'` sin ack): flujo histórico — descarga
-  acuse XML, marca estado terminal, revierte proformas ligadas si no fue
-  sustitución.
-- `pending` / `verifying`: guarda `cancellation_status`,
-  `cancelacion_solicitada_en`, `cancelacion_vence_en` (via RPC
-  `calc_cancelacion_vence`), sin cambiar `estado` ni tocar proformas.
-- `rejected` / `expired`: guarda el status y regresa 409 con mensaje.
+## Sustitución
 
-### 2. Edge `facturapi-webhook`
+1. Crear/reutilizar borrador sustituto desde la acción de la factura original.
+2. Revisar receptor, conceptos, moneda y relación con original.
+3. Timbrar sustituta y confirmar UUID válido.
+4. Solicitar cancelación de original con motivo/relación correspondientes.
+5. Consultar aceptación y comprobar estado local, acuse y documentos vinculados.
 
-FacturApi emite `invoice.cancellation_status_updated` cuando el receptor
-acepta/rechaza o cuando el SAT resuelve. El webhook sincroniza sólo el
-campo `cancellation_status`. El cambio a `Cancelada`/`Sustituida` + acuse
-+ reversión de proformas lo hace el cron (necesita descargar acuse y
-correr lógica de negocio, no cabe en la firma del webhook).
+No cancelar original con sustituta todavía pending o sin UUID.
+No perder vínculo por abrir otra pestaña ni volver a duplicar borrador sin
+verificar el que ya existe. La persistencia del flujo en navegador no reemplaza
+los vínculos guardados en backend.
 
-### 3. Cron `facturapi-reconciliar-cancelaciones`
+## Validación
 
-Cada 30 minutos consulta a FacturApi el estado real de todas las facturas
-con `cancellation_status IN ('pending','verifying')`. Si detecta:
+Prueba E2E `e2e/specs/25-sustituir-cfdi.spec.ts`, sólo Sandbox con fixtures
+y configuración del [workflow E2E](../e2e/README.md).
+No ejecutarla como parte de una limpieza documental ni contra Live.
 
-- `accepted` → descarga acuse, marca estado terminal, revierte proformas
-  (si no es sustitución), bitácora `facturapi_cancelada_async` /
-  `facturapi_sustituida_async`.
-- `rejected` / `expired` → limpia solicitud (`cancelacion_solicitada_en` y
-  `cancelacion_vence_en = NULL`), bitácora `facturapi_cancelacion_no_aceptada`.
-- Sin cambio → no-op.
-
-Programado con `pg_cron` (job `facturapi-reconciliar-cancelaciones`,
-schedule `*/30 * * * *`).
-
-### 4. UI `DialogSustituirFactura`
-
-Flujo single-tab:
-
-1. **Intro**: usuario confirma → llama RPC `duplicar_factura_para_sustitucion`
-   (copia conceptos, seals a NULL, estado `Borrador`) → guarda
-   `sustitucion:{facturaId}` en sessionStorage con `nuevaId` y `ts` →
-   navega a `/facturacion/{nuevaId}?accion=timbrar` en la misma pestaña.
-2. **Timbrado del borrador**: usuario edita/timbra el CFDI sustituto
-   normalmente. FacturApi asigna `related_documents` automáticamente al
-   detectar `sustituye_a`.
-3. **Volver a la original**: al reabrir el diálogo de sustitución, se
-   detecta el `sessionStorage` y se restaura el paso "confirmar", con
-   botones "Volver al borrador" y "Cancelar original". La cancelación
-   dispara la edge `facturapi-cancelar` con `motivo='01'` y
-   `sustituida_por_factura_id=nuevaId`.
-
-El entry de sessionStorage expira automáticamente a las 24 h.
-
-## Diagrama
-
-```text
-┌──────────┐    duplicar    ┌──────────┐    timbrar    ┌──────────┐
-│ Original │ ─────────────► │ Borrador │ ────────────► │ Sustituta│
-│ Timbrada │                │  → BOR   │               │ Timbrada │
-└─────┬────┘                └──────────┘               └────┬─────┘
-      │                                                     │
-      │  cancelar (motivo 01, substitution=facturapi_id)    │
-      │◄────────────────────────────────────────────────────┘
-      │
-      ▼ FacturApi devuelve cancellation_status
-  ┌─────────┴─────────┐
-  │                   │
-accepted           pending/verifying
-  │                   │
-  ▼                   ▼
-Estado: Sustituida    Estado: Timbrada (sin cambio)
-Acuse guardado        cancelacion_solicitada_en / _vence_en
-                      │
-                      ▼ cron cada 30 min
-                  Reconciliar → accepted/rejected/expired
-```
-
-## Errores comunes
-
-- `CancelacionSAT no está disponible` → error transitorio del SAT.
-  `facturapi-cancelar` devuelve `transient: true` y la UI ofrece
-  reintentar sin cerrar el modal.
-- `No cancelable por SAT` → típicamente falta aceptación del receptor
-  (regla 2.7.1.34) o hay REP/NC vinculados. El mensaje enriquecido lo
-  explica.
-
-## Pruebas E2E
-
-Spec: `e2e/specs/25-sustituir-cfdi.spec.ts` (sandbox).
-
-```bash
-E2E_FISCAL=1 \
-E2E_SUSTITUCION_FACTURA_UUID=<uuid-factura-timbrada-sandbox> \
-npx playwright test 25
-```
-
-Corre en el project `chromium-mutators` (serial). Cubre: happy path,
-persistencia sessionStorage, guard UI y auto-reset ante borrador eliminado.
+Ver [integración](facturapi-go-live.md) y [ambientes](facturapi-ambientes.md).
+Esta guía describe implementación, no asesoría ni plazos legales del SAT.

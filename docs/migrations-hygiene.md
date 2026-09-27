@@ -1,12 +1,15 @@
 # Higiene de migraciones SQL
 
 Reglas obligatorias para toda migración creada a partir del baseline vigente
-`20260919015150` (valor de `BASELINE` en `scripts/audit-migrations.ts`; el
+`20260922041658` (valor de `BASELINE` en `scripts/audit-migrations.ts`; el
 histórico de bumps está al final de este documento). El auditor
 `bun run audit:migrations` las hace cumplir en CI. Legacy anterior al baseline
 queda documentado pero no bloquea el pipeline (imposible de reescribir sin
 refactor de esquema), **salvo las reglas duras H0, H6 (`GRANT … TO PUBLIC`) y
 H9**, que aplican a todo el historial.
+
+> Revisado contra `scripts/audit-migrations.ts` el 2026-09-26.
+> La limpieza no movió BASELINE, no hizo squash/repair ni cambió SQL.
 
 ## Reglas
 
@@ -19,6 +22,15 @@ H9**, que aplican a todo el historial.
 | **H4** | `CREATE INDEX` requiere `IF NOT EXISTS`. `CREATE POLICY` requiere `DROP POLICY IF EXISTS ... ; CREATE POLICY ...` (Postgres <16 no soporta `CREATE POLICY IF NOT EXISTS`). | Migraciones idempotentes; permite re-ejecutar sin corromper estado. |
 | **H5** | Prohibido `DROP TABLE public.X` sin `IF EXISTS`. | Idem H4; evita romper entornos donde la tabla ya se dropeó. |
 | **H6** | Toda función `SECURITY DEFINER` en `public` debe llevar, en el mismo archivo: `REVOKE ALL ON FUNCTION ... FROM PUBLIC` **y** `GRANT EXECUTE ... TO {authenticated\|service_role\|postgres}`. Prohibido `GRANT EXECUTE ... TO PUBLIC` (regla dura, aplica también a legacy). Excepción explícita: comentario `-- audit:allow-no-grants` en la línea previa al `CREATE FUNCTION` para helpers privados intencionales. | `SECURITY DEFINER` corre con los privilegios del owner (habitualmente superuser) — sin `REVOKE FROM PUBLIC` cualquier rol conectado puede escalar. `GRANT EXECUTE TO PUBLIC` es escalación de privilegios directa. |
+
+## Reglas adicionales del auditor
+
+- **H7:** renombrar valor de enum requiere recrear funciones dependientes;
+  sus cuerpos no se reescriben automáticamente.
+- **H8:** revisar backfills que llaman funciones con guard de tenant;
+  un contexto sin organización no puede simularse con un UPDATE masivo.
+- **H9:** no parchear cuerpos con `replace(pg_get_functiondef(...))`;
+  reemitir función completa. Aplica también al histórico.
 
 ## Colisión histórica de timestamp (única excepción a H0)
 

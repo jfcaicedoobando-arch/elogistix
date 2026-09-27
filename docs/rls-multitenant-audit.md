@@ -5,7 +5,11 @@ verificada contra el estado **vivo** de la base (`pg_class`, `pg_policies`).
 Complementa `docs/security-checklist.md` y debe reejecutarse al menos
 trimestralmente o tras cualquier `CREATE TABLE` en `public`.
 
-## Números duros (estado vivo)
+> Revisión documental: 2026-09-26. **Snapshot del 2026-08-29**, no resultado actual.
+> No se consultó Live durante esta limpieza. Workflow actual: un job RLS,
+> Postgres 17.9 y descubrimiento de suites; ver [CI](ops/ci.md).
+
+## Números observados en la fecha original
 
 | Métrica | Valor |
 |---|---|
@@ -98,7 +102,9 @@ WHERE (SELECT count(*) FROM pg_policies pp
 ORDER BY 1;
 ```
 
-El query debe devolver 0 filas. Complementos:
+Este query es heurístico: busca patrones de texto y puede omitir funciones
+que implementan el scope indirectamente. No sustituye revisar policies/RPCs
+ni pruebas conductuales. Complementos:
 
 ```sql
 -- Tablas con RLS pero sin ninguna política (quedan cerradas y rompen la app)

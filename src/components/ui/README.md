@@ -1,18 +1,16 @@
-# components/ui — shadcn/ui (read-only)
+# Primitivas UI adaptadas
 
-Estos archivos son componentes generados por **shadcn/ui** y deben permanecer
-sin modificar.
+Base Radix/shadcn con tokens y comportamientos propios de Libre Carga.
+No es una copia read-only: controles, botones y variantes fueron adaptados.
 
-## Reglas
+Preferir wrappers compartidos o componentes del feature para necesidades locales.
+Un cambio transversal en una primitiva requiere revisar consumidores, foco,
+teclado, labels, error/deshabilitado, claro/oscuro y pantallas estrechas.
 
-1. **No editar directamente.** Si necesitas variar comportamiento o estilo,
-   crea un wrapper en otra carpeta (`components/<feature>/`).
-2. **Solo se actualizan vía CLI** de shadcn cuando se introduce una versión
-   nueva.
-3. **Excepciones documentadas**: si por motivos de tema (HSL tokens) hubo que
-   tocar un archivo, deja un comentario `// LIBRECARGA: ...` en la línea
-   editada para hacerlo trazable.
+No sobrescribir cambios locales con una actualización CLI de shadcn.
+Revisar el diff de proveedor y aplicar sólo lo aprobado.
 
-## ¿Por qué?
-Mantener estos archivos prístinos garantiza que podamos migrar a versiones
-nuevas de shadcn sin conflictos manuales.
+El wrapper estándar `FormField` vive en `src/components/shared/FormField.tsx`;
+no confundirlo con las primitivas RHF de esta carpeta.
+
+Ver [sistema de diseño](../../../docs/design-system.md).

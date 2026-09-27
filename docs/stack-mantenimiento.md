@@ -1,61 +1,45 @@
-# Mantenimiento del stack de build y pruebas (P2)
+# Mantenimiento del stack de build y pruebas
 
-Decisiones medidas, no intuidas. Fecha de medición: 2026-09-19, sandbox de 8 vCPU.
+Revisión del repositorio: **2026-09-26**. Stack: Vite 8, Vitest 5, Router 7,
+TypeScript 6. [CI](ops/ci.md) es la guía de jobs/triggers.
 
-## Minificador: se conserva Terser
+## Build
 
-| Configuración | Tiempo de build | Entry `index-*.js` (gzip) | Budget |
-| --- | --- | --- | --- |
-| `minify: "terser"` (actual) | 67 s | **355–364 KB** | 365 KB |
-| `minify: "esbuild"` | 48 s (−19 s) | **376 KB** | ✗ excede |
-| `terser` + `reportCompressedSize: false` | 70 s (sin mejora medible) | 364 KB | — |
+`vite.config.ts` conserva Terser. No se mantienen `manualChunks` históricos.
+Sourcemaps de producción sólo con token Sentry y sin `BUILD_SOURCEMAPS=false`;
+se suben y eliminan del dist. Sin token se desactivan y se advierte.
+`check-sourcemaps.sh` verifica el dist tras build en el job de comprobaciones.
 
-Conclusión: esbuild ahorra ~19 s de build pero engorda el entry ~13 KB gz y
-rompe el gate de 365 KB. `reportCompressedSize: false` no dio mejora
-reproducible (la diferencia queda dentro del ruido). **No se cambia nada**: se
-conserva `minify: "terser"` y el reporte de tamaños tal como estaban.
+`build:low-mem` desactiva maps; no cambia reglas del producto.
+El tamaño/RAM de un build deben medirse en su entorno real.
 
-## Sourcemaps
+## Coverage
 
-- Producción con `SENTRY_AUTH_TOKEN`: `sourcemap: "hidden"`; el plugin de Sentry
-  los sube y los borra del `dist` (`filesToDeleteAfterUpload`).
-- Producción **sin** token: `sourcemap: false`. Antes se generaban `.map` que
-  quedaban dentro del `dist` publicado (no referenciados, pero descargables).
-- Guard: `scripts/check-sourcemaps.sh`, conectado al job `build` de `ci.yml`
-  después del gate de tamaño. Falla si aparece cualquier `.map` o una
-  referencia `sourceMappingURL` en `dist`.
+CI principal usa **cinco shards sin coverage**.
+No hay workflow nightly de coverage vigente. Medición optativa:
 
-## Cobertura: manual / nightly, NO gate por commit
+- `bun run test:coverage`.
+- `test:coverage:shard -- --shard=N/TOTAL` con el mismo TOTAL en todas las partes.
+- `test:coverage:merge` une blobs y aplica thresholds del total.
+- `coverage:report` genera resumen.
 
-- `ci.yml` corre las pruebas en 3 shards **sin cobertura**. Los thresholds de
-  `vitest.config.ts` **no son gate de cada commit ni de cada PR**.
-- Para medirla a propósito:
-  - Local completo: `bun run test:coverage` (requiere bastante RAM).
-  - Por partes: `bun run test:coverage:shard -- --shard=1/3` (×3, genera blobs
-    en `.vitest-reports`) y luego `bun run test:coverage:merge` (= `test:ci`),
-    que aplica los thresholds sobre el total unido.
-  - Reporte legible: `bun run coverage:report`.
-- Los scripts se conservan porque son el procedimiento oficial de esa medición
-  manual/nightly; no son huérfanos.
+No confundir `test:ci` (alias de merge de coverage) con el comando real de CI.
 
-## Aliases de React Router en Vitest
+## Vitest/Router
 
-Los alias a `node_modules/react-router*/dist/*.mjs` siguen siendo necesarios
-(evitan la doble instancia del contexto del router entre CJS y ESM con
-`nuqs/adapters/react-router/v7`). Están encapsulados en `aliasVitest()` de
-`vitest.shared.ts` y cubiertos por el contract test
-`src/__tests__/scripts/routerAliasContract.test.ts`, que falla si el paquete
-cambia el layout de archivos o si `react-router` y `react-router-dom`
-divergen de minor. No se migra a Data Router.
+Proyectos node/jsdom definidos explícitamente con `extends: false` para
+evitar herencia/duplicación de plugins. Benchmarks `perf` están separados.
+`clearMocks: false` es una decisión de compatibilidad de la suite.
 
-## Entorno de pruebas declarado por archivo
+Aliases ESM de Router evitan doble contexto CJS/ESM con nuqs v7.
+Contract test comprueba layout; no eliminar alias por estética.
+`testEnvSplit.ts` reparte archivos; un `@vitest-environment` explícito manda.
 
-`scripts/lib/testEnvSplit.ts` reparte los tests entre los proyectos `node` y
-`jsdom`. Además de la heurística, un archivo puede declarar su entorno:
+## Evidencia histórica
 
-```ts
-// @vitest-environment jsdom
-```
+El ensayo de minificadores del 2026-09-19 midió Terser 67 s / 355–364 KB gzip
+frente a esbuild 48 s / 376 KB. Son datos del stack/entorno de entonces,
+no un benchmark de Vite 8 ni budgets actuales garantizados.
+[Historia de shards](ci-vitest-shards.md).
 
-La declaración manda sobre la extensión y sobre los marcadores. Es la vía para
-casos nuevos; la lista `FORCE_JSDOM` queda como legado.
+No se cambió configuración ni se repitieron benchmarks en esta actualización.

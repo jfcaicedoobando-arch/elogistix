@@ -2,6 +2,10 @@
 
 Fecha: 2026-07-21 · v13.303.75 · Estado: Aceptado
 
+> Revisión documental: 2026-09-26. Conserva la decisión de distinguir fallo/vacío.
+> Implementación actual: `src/lib/query/queryErrorReporting.ts` y
+> `src/lib/query/queryClient.ts`; los detalles de deduplicación/filtros pueden evolucionar.
+
 ## Contexto
 
 Antes de v13.303.75, un fallo de red en una `useQuery` sólo se reportaba a

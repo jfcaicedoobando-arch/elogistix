@@ -4,6 +4,10 @@ Fuente única de verdad para construir pantallas nuevas sin romper la coherencia
 visual del ERP. Si algo no está aquí, **no se inventa**: se agrega a esta guía y
 al token correspondiente.
 
+> Revisado contra componentes compartidos el 2026-09-26.
+> Las excepciones efectivamente permitidas están en ESLint/pruebas; no son
+> autorización para sobrescribir primitivas o estilos en este repaso.
+
 Referencias de archivo:
 
 | Tema | Archivo |
@@ -48,7 +52,7 @@ como colores Tailwind en `tailwind.config.ts`.
 | --- | --- | --- |
 | `background` / `foreground` | Lienzo de la app y texto principal | `210 30% 99%` / `220 40% 12%` |
 | `primary` | Marca, botón principal, totales | `216 47% 20%` |
-| `accent` | Acción secundaria destacada, enlaces | `221 83% 53%` |
+| `accent` | Realce de marca / variante explícita del componente | `221 83% 53%` |
 | `muted` / `muted-foreground` | Fondos suaves, texto de apoyo | `210 33% 95%` / `215 18% 42%` |
 | `card`, `popover`, `border`, `input`, `ring` | Superficies y bordes | — |
 | `destructive` | Errores, eliminación | `0 84% 60%` |
@@ -64,8 +68,9 @@ Los dos tokens son azules de la marca y se confundían al colorear iconos. Regla
   enlaces, tabs activas, totales de una tabla.
 - **`text-accent` / `bg-accent`** → iconografía y realces *decorativos* sobre
   una superficie (icon-tile de un modal, icono de una tarjeta, chip informativo).
-- Nunca mezclar ambos en el mismo elemento ni usar `accent` para un elemento
-  clickeable: si el usuario puede pulsarlo, es `primary`.
+- No mezclar tonos arbitrariamente. Los componentes compartidos pueden ofrecer
+  variante `accent` para CTA; usar su API, no reinterpretar el token por pantalla.
+- Icon-tile de `FormDialogShell` conserva `primary/10`; no recolorearlo por separado.
 
 ### Escalas de dominio
 
@@ -233,8 +238,8 @@ Dos presets de densidad, sin excepciones (`tableTokens.ts`):
 - Paginación: **siempre** `PaginationControls` (muestra rango + total,
   "1–20 de 134"). Prohibido reimplementar botones Anterior/Siguiente.
 - Estado vacío: componente compartido `EmptyState`.
-- Sin enlaces `<a>` inline en celdas (regla `tables-no-inline-links`): usar el
-  patrón de navegación por fila.
+- Evitar enlaces ad-hoc en celdas; seguir navegación por fila/acciones compartidas
+  y verificar un acceso equivalente con teclado.
 - Menús de acción en filas: `e.stopPropagation()` para no disparar el click de fila.
 - Guía extendida de columnas y sort: `docs/tables.md` y
   `docs/datatable-columndef-guide.md`.
@@ -252,9 +257,10 @@ Todos los controles comparten tokens de `field.tokens.ts`:
 - Foco: `FIELD_STATE_CLASS` (inputs), `FIELD_STATE_RADIX_CLASS` (SelectTrigger),
   `FIELD_STATE_WITHIN_CLASS` (contenedores con input adentro),
   `FIELD_FOCUS_RING_COMPACT_CLASS` (checkbox, radio, switch).
-- Error inline: `FIELD_ERROR_CLASS` (`text-xs text-destructive`).
+- Error inline: tokens del control; `FormField` compartido usa
+  `text-body-sm text-destructive`, `role="alert"` y vínculo al control.
 - Etiquetas: componente `<Label>` sin clases extra (no `text-xs text-muted-foreground`). Para formularios densos usa la variante `size="sm"` (equivale a `text-xs`), nunca `className="text-xs"`.
-- Campos: `<FormField>` genera el `id` del control y liga el `Label` con `htmlFor` + el error con `aria-describedby`. Pasa `htmlFor` sólo si necesitas un id fijo.
+- Campos: `<FormField>` de `src/components/shared/FormField.tsx` genera el `id` del control y liga el `Label` con `htmlFor` + el error con `aria-describedby`. Pasa `htmlFor` sólo si necesitas un id fijo.
 - Fechas: siempre `DatePickerMx`. Selects de Radix nunca con `value=""` (usar
   `"todos"`).
 
@@ -270,6 +276,9 @@ Todos los controles comparten tokens de `field.tokens.ts`:
 </FormDialogShell>
 ```
 
+- Wizard: `FormDialogShell` recibe `stepper={{ step, totalSteps, labels }}`.
+- Guardado por Enter: `formId` + `onSubmit`, footer con submit asociado.
+- Cierre: `isDirty` pide confirmar descarte y `busy` impide cerrar durante operación.
 - `FormDialogSection` da subtítulo + grid responsivo (1 col móvil / 2 col desktop);
   `flat` cuando el hijo maneja su propio layout; `cols={1}` para bloques angostos.
 - Nada de tarjetas con borde o fondos grises dentro del modal: las secciones son planas.
@@ -305,7 +314,8 @@ Otras reglas:
 - `asChild` para envolver `<Link>`; en ese caso el spinner no se inyecta.
 - Íconos de `lucide-react`, tamaño heredado (`[&_svg]:size-4`), a la izquierda del texto.
 - Eliminaciones destructivas: doble confirmación con la palabra `ELIMINAR`
-  (ver `mem://features/data-safety-confirmations`).
+  con el componente/guard correspondiente al flujo; no anidar diálogos
+  ni inventar confirmaciones diferentes en cada módulo.
 
 ---
 
@@ -329,7 +339,7 @@ Nunca componer un badge a mano con `bg-*/15 text-*`.
 - [ ] Modales con `FormDialogShell` / `FormDialogSection` y `size` adecuado.
 - [ ] Una sola acción `default`; el resto `outline` / `ghost`.
 - [ ] Cero colores, px o `style` literales; textos en español mexicano.
-- [ ] Verificado a 1280×720 y en modo oscuro.
+- [ ] Verificado a 1280×720 y 691×763, claro/oscuro, sidebar y teclado.
 - [ ] `bun run lint` y las pruebas de arquitectura en verde.
 
 ---

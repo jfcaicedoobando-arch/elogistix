@@ -1,60 +1,44 @@
-# Visual audit · design language
+# Capturas para auditoría visual
 
-Recorrido automatizado para verificar que todas las rutas principales de la app
-comparten el mismo design language después de las Olas 1–7 (PageContainer,
-PageHeader, StatusBadge, FormDialogShell, KpiCard, etc.).
+`capture.mjs` navega por rutas configuradas y genera PNG, `report.json`
+y `REPORT.md`. Las capturas no certifican por sí solas permisos/workflows
+ni todos los estados. Revisado el **2026-09-26**.
 
-## Correr localmente
+## Preparar
 
-```bash
-# 1. Levanta el dev server en otra terminal
-bun run dev
+Servidor local/preview autorizado y Chromium para Playwright.
+Comprobar URL, cuenta y organización: local puede apuntar a base remota.
+No poner credenciales por defecto ni en Git.
 
-# 2. Corre el auditor visual
-node scripts/visual-audit/capture.mjs --base=http://localhost:8080 --out=./visual-snapshots
-```
-
-## Correr en el sandbox de Lovable
-
-El dev server ya está corriendo en `http://localhost:8080` y Playwright/Chromium
-vienen preinstalados. Basta con:
+Ejemplo Bash (en PowerShell configurar `$env:...` por separado):
 
 ```bash
-AUDIT_EMAIL=<usuario-de-pruebas> \
-AUDIT_PASSWORD=<password-de-pruebas> \
-node scripts/visual-audit/capture.mjs --out=/tmp/visual-snapshots
+AUDIT_EMAIL=<usuario-prueba> AUDIT_PASSWORD=<password-prueba> \
+node scripts/visual-audit/capture.mjs \
+  --base=http://localhost:8080 --out=./visual-snapshots
 ```
 
-Consulta `mem://reference/audit-login` para el usuario de pruebas o pídeselo al owner del proyecto.
-Los scripts abortan si `AUDIT_EMAIL` / `AUDIT_PASSWORD` no están definidos — no llevan defaults hardcodeados.
+`AUDIT_BASE_URL` es alternativa a `--base`. Sin credenciales el script aborta.
+Ver viewport/rutas efectivos en el script; no afirmar que un entorno viene
+con Chromium o dev-server preinstalados sin comprobarlo.
 
-## Variables
+## Interpretación
 
-| Variable | Default | Descripción |
-|---|---|---|
-| `--base` / `AUDIT_BASE_URL` | `http://localhost:8080` | URL del preview |
-| `--out` | `./visual-snapshots` | Carpeta de salida |
-| `AUDIT_EMAIL` | — (obligatoria) | Usuario de pruebas |
-| `AUDIT_PASSWORD` | — (obligatoria) | Password del usuario de pruebas |
+Registrar por corrida: SHA/versión, URL, rol, organización, tema, viewport,
+rutas, errores y estados realmente observados.
+Identificar diferencias entre el frame y el viewport completo.
 
-## Qué produce
+Además del tamaño automático, validar 1280×720 y 691×763, claro/oscuro,
+sidebar abierto/colapsado, teclado, modales y contenido largo.
+Cambiar resolución/tema no equivale a validar acciones transaccionales.
 
-- `NN-slug.png` — captura 1440×900 por ruta.
-- `report.json` — metadatos + conteo de errores de consola por ruta.
-- `REPORT.md` — resumen legible en Markdown.
+Informe por hallazgo: evidencia, impacto, propuesta, prioridad y criterio
+de aceptación. Un error de consola no es automáticamente un bug visual.
+Capturas con datos reales se guardan protegidas, no en el repo público.
 
-## Cómo se usa el reporte
+## Seguimiento
 
-1. Abre las capturas lado a lado y verifica:
-   - **Header** con `PageHeader` (misma altura, misma tipografía).
-   - **Filtros** con `UnifiedFiltersBar` (mismo alto, mismos radios).
-   - **Badges** de estado consistentes (usando `StatusBadge`).
-   - **KPI cards** con la misma sombra/borde (`KpiCard`).
-   - Sin `text-[10px]`, `emerald-*` ni `amber-*` sueltos (usar tokens).
-2. Si alguna ruta rompe el patrón, abre un hallazgo en `.lovable/plan.md`.
-
-## Baseline
-
-Guarda una carpeta de baseline (`./visual-snapshots-baseline/`) cuando el
-design language esté 100% homologado. En corridas posteriores, un `diff` entre
-carpetas te dice qué rutas regresionaron visualmente.
+Usar issue/PR o informe autorizado, no el antiguo `.lovable/plan.md`.
+Contrastar baseline contra el mismo estado/rol/viewport.
+No ejecutar seeds, formularios, borrados o pruebas fiscales como parte de
+un diagnóstico sólo visual sin autorización.

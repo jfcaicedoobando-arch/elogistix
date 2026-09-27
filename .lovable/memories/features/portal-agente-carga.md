@@ -4,6 +4,8 @@ description: Portal /agente para forwarders externos. Suben tarifas (borrador→
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 Introducido en v13.128.0. Editor de tarifas + garantías desde portal en v13.129.0.
 
 **Acceso**:
@@ -35,7 +37,7 @@ Introducido en v13.128.0. Editor de tarifas + garantías desde portal en v13.129
 **Garantías en portal** (v13.129.0):
 - `AgenteGarantias.tsx` ya no es placeholder: reusa `useCondicionesNaviera`/`useNavierasCatalogo` + `NavieraCondicionForm` + `DemorasTarifaEditor`. RLS asegura que sólo vea/edite condiciones de su proveedor.
 
-**Estructura frontend**:
+**Estructura frontend de referencia**:
 - `src/features/portal-agente/` con `components/AgenteLayout.tsx`, `components/AgenteTarifaForm.tsx`, `routes/{AgenteInicio,AgenteTarifas,AgenteGarantias,AgenteEmbarques,AgentePerfil}.tsx`, `services/index.ts`, `hooks/index.ts`.
 - Guard: `src/features/auth/components/AgenteProtectedRoute.tsx`.
 - Routes: `src/routes/agenteRoutes.tsx` incluidas en `src/routes.tsx`.
@@ -47,7 +49,6 @@ Introducido en v13.128.0. Editor de tarifas + garantías desde portal en v13.129
 - Notificación interna automática: el RPC inserta en `notificaciones_internas` para el `agente_users.user_id` vinculado (tipo `tarifa_aprobada`/`tarifa_rechazada`).
 - Trigger `costeo_tarifas_agente_force_borrador` también limpia `motivo_rechazo` cuando el agente reedita.
 
-**Pendiente**:
+**Propuestas históricas no verificadas en Live en este repaso**:
 - Upload del PDF de carta garantía al bucket privado `agente-cartas-garantia` (hoy el campo es sólo metadatos: vigencia, folio, notas).
 - Email real al agente además de la notificación in-app.
-

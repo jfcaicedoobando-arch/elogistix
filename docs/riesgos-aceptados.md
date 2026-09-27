@@ -3,8 +3,9 @@
 Registro de riesgos conocidos que se decidieron aceptar (con su mitigación), para
 que una auditoría futura no los reporte como hallazgos nuevos.
 
-**Última revisión:** 2026-08-29 (v13.793.0). Cifras verificadas contra el estado
-vivo del repo y de la base.
+**Evidencia histórica:** 2026-08-29 (v13.793.0).
+**Revisión documental:** 2026-09-26. Conteos/tablas de Live no se reauditaron;
+no usarlos como inventario vigente. Las aceptaciones no se cierran por retirar planes.
 
 ## RN-EC-4 · Rate limit por IP con `x-forwarded-for` (Ola 5, 2026-08)
 
@@ -27,7 +28,7 @@ valor y obtener una cuota nueva por cada IP inventada.
 (formularios web, tracking anónimo), ese endpoint debe pasar a un rate limit con
 identidad no falsificable (token firmado o captcha) antes de publicarse.
 
-## V-14 · `formatFechaEs` sigue en 39 call-sites (34 archivos)
+## V-14 · Uso legacy de `formatFechaEs` (conteo histórico)
 
 Deprecado, congelado por ratchet (`formatfechaes-deprecado.test.ts`). Migración
 progresiva a `formatFechaDia`; no bloquea release porque el comportamiento de
@@ -109,7 +110,8 @@ corrección de su membresía, o retiro del rol huérfano) ANTES del deploy.
 
 **Cuándo revisar.** Cuando la query lleve dos releases consecutivos en 0
 filas, el riesgo legacy se puede dar por saneado y esta entrada retirarse.
-Además, queda el caso multi-org pre-existente: `current_user_org_id()` es la
+El alcance de producto es un usuario por organización. Como riesgo histórico,
+el caso multi-org pre-existente: `current_user_org_id()` es la
 primera membresía, así que un miembro de 2 orgs es rechazado por el guard de
 org en documentos de su segunda organización (H2 del review 2026-08-27); si el
 negocio adopta multi-org de verdad hay que resolver ese guard, no sólo el

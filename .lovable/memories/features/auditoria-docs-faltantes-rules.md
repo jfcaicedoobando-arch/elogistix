@@ -4,6 +4,8 @@ description: Matriz canónica de documentos exigidos por modo y estado en la aud
 type: feature
 ---
 
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 La RPC `auditoria_embarques_org` (CTE `exigidos`) delega en `_docs_requeridos_por_estado` (fuente única). `getDocsForMode` (`src/features/embarques/constants/embarqueConstants.ts`) sólo dicta qué documentos puede **adjuntar** el usuario en el wizard — la auditoría exige un subconjunto por estado.
 
 Matriz vigente (v13.299.18):

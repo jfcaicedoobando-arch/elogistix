@@ -3,6 +3,9 @@ name: Auditoría reglas proformas
 description: Reglas de auditoría sobre proformas — endurecimiento de proforma_vencida y nuevos hallazgos de borrador
 type: feature
 ---
+
+> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+
 Reglas de auditoría sobre proformas (v13.24.0+):
 
 - **`proforma_vencida`**: aplica SOLO a proformas reales (estado_aprobacion <> 'borrador', total_mxn > 0, con conceptos_venta vinculados, estado_proforma='pendiente' y más de `dias_proforma_vencida` días). Severidad alto.

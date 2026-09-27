@@ -1,6 +1,7 @@
 # Módulo Auditoría — Arquitectura y flujo de datos
 
-> Documento vivo. Acompaña a `ARCHITECTURE.md` y a `mem://features/seguridad-y-roles`.
+> Revisión documental: 2026-09-26. Acompaña a `ARCHITECTURE.md`.
+> Describe componentes/servicios versionados, no una nueva auditoría de Live.
 
 Este documento describe **cómo se compone la página de Auditoría**, qué hace
 cada hook/helper y cómo viajan los datos desde la base hasta la UI. El objetivo
@@ -15,16 +16,16 @@ todo el módulo.
 Supabase (RPC + tablas)
         │
         ▼
-services/auditoria/*           ← I/O puro (fetchReporteAuditoria, fetchAuditoriaRevisiones, …)
+features/auditoria/services/           ← I/O puro (fetchReporteAuditoria, fetchAuditoriaRevisiones, …)
         │
         ▼
-hooks/auditoria/*              ← React Query + derivaciones de dominio
+features/auditoria/hooks/              ← React Query + derivaciones de dominio
         │
         ▼
-components/auditoria/*         ← UI presentacional (tarjetas, tablas, dialogs)
+features/auditoria/components/         ← UI presentacional (tarjetas, tablas, dialogs)
         │
         ▼
-pages/Auditoria.tsx            ← Composición de la ruta /auditoria
+features/auditoria/routes/AuditoriaPage.tsx            ← Composición de la ruta /auditoria
 ```
 
 Reglas (heredadas de `ARCHITECTURE.md`):
@@ -32,15 +33,16 @@ Reglas (heredadas de `ARCHITECTURE.md`):
 - **Pages** sólo componen tabs y pasan datos. No tocan Supabase.
 - **Hooks** son la única capa autorizada a llamar `services/*` y a usar
   `@tanstack/react-query`.
-- **Components** reciben datos por props. No conocen React Query ni Supabase.
+- **Presentacionales** reciben props. Contenedores del feature coordinan hooks;
+  no importan Supabase ni hacen I/O directo en la UI.
 - **Services** sólo hacen I/O y mapeos triviales. Ningún cálculo de negocio.
 
 ---
 
 ## 2. Hooks del dominio
 
-Todos viven en `src/hooks/auditoria/` y se exportan vía el barrel
-`hooks/auditoria/index.ts`.
+Todos viven en `src/features/auditoria/hooks/` y se exportan vía el barrel
+`features/auditoria/hooks/index.ts`.
 
 | Hook | Responsabilidad | Cache / notas |
 |------|-----------------|---------------|
@@ -59,9 +61,9 @@ Todos viven en `src/hooks/auditoria/` y se exportan vía el barrel
 
 ## 3. Vista ejecutiva — desglose de componentes
 
-Antes vivía todo en `AuditoriaEjecutivoTab.tsx` (~420 líneas). Hoy ese archivo
-es un **compositor delgado** (~95 líneas). La lógica visual está en
-`src/components/auditoria/ejecutivo/`.
+`AuditoriaEjecutivoTab.tsx` es un compositor de tarjetas; no mantener conteos
+de líneas o versiones antiguas como contrato. La lógica visual está en
+`src/features/auditoria/components/ejecutivo/`.
 
 ```text
 AuditoriaEjecutivoTab (compositor)
@@ -104,14 +106,14 @@ tab y la aplicación del filtro en la tabla operativa.
 
 ## 4. Configuración compartida de reglas
 
-`src/components/shared/utils/auditoriaConfig.ts` es la **fuente única** para:
+`src/features/auditoria/constants/auditoriaConfig.ts` es la **fuente única** para:
 
 - `REGLA_INFO[regla]` → `{ shortLabel, label, description, icon }`.
 - `REGLAS_ORDEN` → orden canónico de presentación (mayor severidad operativa
   primero).
 - Helpers `reglaShortLabel()` / `reglaLabel()`.
 
-Tanto `pages/Auditoria.tsx` (vista detalle) como `EjecutivoPorReglaGrid`
+Tanto `features/auditoria/routes/AuditoriaPage.tsx` (vista detalle) como `EjecutivoPorReglaGrid`
 (vista ejecutiva) consumen este módulo. **No duplicar** labels o iconos en
 componentes nuevos: extender este archivo.
 
@@ -121,20 +123,20 @@ componentes nuevos: extender este archivo.
 
 ```text
 1. Usuario abre /auditoria
-   └── pages/Auditoria.tsx monta el controlador
+   └── features/auditoria/routes/AuditoriaPage.tsx monta el controlador
        └── useAuditoriaPageController() → tab activo, filtros
 
 2. Tab "Ejecutivo"
-   ├── useAuditoria() ──► services/auditoria/fetchReporteAuditoria()
+   ├── useAuditoria() ──► features/auditoria/services/fetchReporteAuditoria()
    │                       └── RPC reporte_auditoria()  (Supabase)
    ├── useAuditoriaRevisiones() ──► fetchAuditoriaRevisiones()
    └── useAuditoriaEjecutivo()  ──► useMemo: score, distribuciones, MTTR…
        └── <AuditoriaEjecutivoTab data={...} onDrillDown={...} />
-           └── tarjetas en components/auditoria/ejecutivo/*
+           └── tarjetas en features/auditoria/components/ejecutivo/*
 
 3. Drill-down (clic en KPI/barra)
    └── onDrillDown({ severidad | etapa | cliente | soloVencidos })
-       └── pages/Auditoria.tsx cambia tab y aplica filtro
+       └── features/auditoria/routes/AuditoriaPage.tsx cambia tab y aplica filtro
            └── HallazgosTablaPaginada lee el filtro vía useHallazgosTablaState()
 
 4. Acciones (revisar, asignar, snooze, comentar)
@@ -149,13 +151,13 @@ componentes nuevos: extender este archivo.
 
 - **Nueva regla de auditoría**: añadirla al enum `ReglaAuditoria`
   (`types/auditoria.ts`), registrarla en `REGLA_INFO` + `REGLAS_ORDEN`
-  (`lib/ui/auditoriaConfig.ts`) y, si tiene impacto financiero, agregarla a
+  (la configuración de reglas del feature) y, si tiene impacto financiero, agregarla a
   `REGLAS_FINANCIERAS` en `useAuditoriaEjecutivo`.
 - **Nuevo KPI ejecutivo**: derivar el valor en `useAuditoriaEjecutivo`
   (no en el componente), exponerlo en `AuditoriaEjecutivoData` y consumirlo
-  en una tarjeta nueva en `components/auditoria/ejecutivo/`.
+  en una tarjeta nueva en `features/auditoria/components/ejecutivo/`.
 - **Nueva acción de drill-down**: ampliar el tipo `filtro` del prop
-  `onDrillDown` en `AuditoriaEjecutivoTab` y manejarlo en `pages/Auditoria.tsx`.
+  `onDrillDown` en `AuditoriaEjecutivoTab` y manejarlo en `features/auditoria/routes/AuditoriaPage.tsx`.
 - **Cambios visuales del score**: editar `scoreEstadoConfig.ts`. No tocar
   `EjecutivoScoreCard` salvo para layout.
 - **Tests de derivaciones**: van en
@@ -172,7 +174,7 @@ operativos) sigue leyendo columnas **legacy** de `public.embarques`:
 
 - `contenedor` (número del primer contenedor),
 - `tipo_contenedor`,
-- `peso`, `volumen`, `piezas`.
+- `peso_kg`, `volumen_m3`, `piezas`.
 
 Desde la Fase A multi-contenedor (v12.13+) estas columnas se mantienen
 sincronizadas automáticamente vía triggers desde `embarque_contenedores`
@@ -185,7 +187,8 @@ contenedor / tipo dejarán de detectar correctamente. Antes de retirarlos hay
 que migrar la RPC para leer directamente de `embarque_contenedores`
 (agregando por `embarque_id`).
 
-Pendiente registrado en `mem://audit/pendings` bajo "Mejora continua".
+Verificar consumidores y RPC efectiva antes de retirar columnas; esta
+limpieza no cambia el modelo ni declara esa migración necesaria.
 
 ---
 
@@ -193,12 +196,11 @@ Pendiente registrado en `mem://audit/pendings` bajo "Mejora continua".
 
 | Capa | Archivo |
 |------|---------|
-| Tipos | `src/types/auditoria.ts` |
-| Services | `src/services/auditoria/` |
-| Hooks | `src/hooks/auditoria/` (barrel en `index.ts`) |
-| Config visual de reglas | `src/components/shared/utils/auditoriaConfig.ts` |
-| Compositor ejecutivo | `src/components/auditoria/AuditoriaEjecutivoTab.tsx` |
-| Tarjetas ejecutivas | `src/components/auditoria/ejecutivo/` |
-| Tabla operativa | `src/components/auditoria/HallazgosTablaPaginada.tsx` |
-| Página | `src/pages/Auditoria.tsx` |
-
+| Tipos | `src/features/auditoria/types/index.ts` |
+| Services | `src/features/auditoria/services/` |
+| Hooks | `src/features/auditoria/hooks/` (barrel en `index.ts`) |
+| Config visual de reglas | `src/features/auditoria/constants/auditoriaConfig.ts` |
+| Compositor ejecutivo | `src/features/auditoria/components/AuditoriaEjecutivoTab.tsx` |
+| Tarjetas ejecutivas | `src/features/auditoria/components/ejecutivo/` |
+| Tabla operativa | `src/features/auditoria/components/HallazgosTablaPaginada.tsx` |
+| Página | `src/features/auditoria/routes/AuditoriaPage.tsx` |

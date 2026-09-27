@@ -1,105 +1,71 @@
-# Flujo Proforma → Factura → Timbrado → Pago → REP
+# Facturación al cliente e IVA
 
-Documenta el flujo "fiscal" introducido entre las versiones **13.137.0** y
-**13.137.2**, que reemplaza progresivamente al flujo manual previo
-("Marcar facturada") al integrar Facturapi como PAC para emitir CFDI 4.0 y el
-Complemento de Pagos (REP).
+Guía del flujo implementado, revisada el **2026-09-26**.
+No sustituye la revisión fiscal del contador.
 
-## Vista general
+## Flujo
 
-```
-┌────────────┐  Convertir ┌────────────┐  Timbrar  ┌────────────┐
-│  Proforma  │ ─────────▶ │  Factura   │ ────────▶ │   CFDI     │
-│ (aprobada) │            │ (borrador) │           │  (PUE/PPD) │
-└────────────┘            └────────────┘           └────────────┘
-      │ N:1 (fusión)             │                       │ pago
-      ▼                          │                       ▼
-                                 │                  ┌────────────┐
-                                 │     PPD          │    REP     │
-                                 │ ──────────────▶  │ (auto)     │
-                                 │                  └────────────┘
-```
+1. Capturar conceptos de venta del embarque con importe, moneda y tratamiento.
+2. Generar proforma con conceptos elegibles; revisar cliente, moneda y totales.
+3. Obtener/registrar autorización del cliente según su configuración.
+4. Convertir la proforma a factura con la RPC del flujo; conservar snapshot.
+5. Validar datos fiscales, PUE/PPD y forma de pago antes de timbrar.
+6. Emitir en FacturAPI y reconciliar el estado.
+7. Registrar cobros; si corresponde a PPD, emitir REP con validación previa.
+8. Consultar/cancelar/sustituir mediante acciones del flujo, no edición SQL directa.
 
-## Fases del plan
+Documentos históricos/manuales pueden tener otra procedencia.
+No asumir timbrado FacturAPI porque una factura local figure Emitida.
 
-| Fase | Alcance                                                                                | Estado      |
-| ---- | -------------------------------------------------------------------------------------- | ----------- |
-| 1    | Migración SQL: `convertir_proformas_a_factura` + vista `v_proforma_factura_link`.      | ✅ 13.137.0 |
-| 2    | Modal `ConvertirAFacturaDialog` + servicio `convertirAFactura.ts`.                     | ✅ 13.137.0 |
-| 3    | Selección múltiple en `TabProformas` para fusionar N proformas → 1 factura.            | ✅ 13.137.2 |
-| 4    | UX threading: al convertir, `FacturaDetalle` abre auto el diálogo de Timbrado.         | ✅ 13.137.2 |
-| 5    | REP automático tras pago en facturas **PPD** ya timbradas.                             | ✅ 13.137.2 |
-| 6    | Documentación + futuras KPIs (proformas convertibles, REPs pendientes).                | ✅ 13.137.2 |
+## IVA por concepto
 
-## ¿Qué mide cada KPI/bandeja del cockpit `/facturacion`?
+El catálogo de productos/servicios permite configurar tratamiento fiscal.
+Se conserva por renglón en cotización, conceptos, proforma, factura y NC.
 
-Los tres números que verás en la página miden **puntos distintos** del
-embudo — no cuadran entre sí, y ese es el diseño. Alineación aplicada en
-13.213.0:
+| Tratamiento | Regla |
+| --- | --- |
+| IVA 16% / 8% | Tasa y base explícitas; 8% requiere habilitación |
+| Tasa 0% | Gravado a cero, no equivalente a Exento |
+| Exento | Tratamiento explícito, distinto de No objeto |
+| No objeto (SAT 01) | Sin impuestos/retenciones del concepto |
+| Por definir | Bloquea documentos que requieren tratamiento resuelto |
 
-| KPI / Bandeja                | Fuente                                                                                | Qué mide                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| KPI **Proformas por revisar** | `proformas` con `estado_revision = 'pendiente'`                                       | Proformas creadas desde embarques, esperando aprobación **interna**         |
-| KPI **Listas para facturar**  | `proformas` con `estado_cliente='aceptada' AND estado_proforma <> 'facturada' AND factura_id IS NULL` | Aceptadas por el cliente, listas para convertir a CFDI. Cuadra con `/proformas` (badge Aceptada) |
-| Bandeja **Embarques sin factura** | `useHuecoFacturacion` (ETD > hoy − 5d, sin CFDI por expediente)                     | Embarques cerrados que aún no tienen factura (haya o no proforma)           |
-| Bandeja **Proformas listas** | Mismo query que el KPI "Listas para facturar"                                         | Lista accionable con "Convertir a factura" (usa `useConvertirProformaDirecto`) |
-| Bandeja **Por timbrar**      | `facturas` en Borrador post 01/07/2026 sin `facturapi_id`                             | Borradores creados en el sistema pendientes de mandar a FacturApi           |
+No completar ausencias con IVA general, cero o Exento.
+Los totales de encabezado no reemplazan el desglose por concepto.
+Notas de crédito preservan tratamiento/tasa y retenciones de su origen.
 
-> **Nota (13.213.1):** `estado_revision` (aprobación interna previa) **no** forma parte del gate de facturación. El gate real es `estado_cliente='aceptada'` (mismo criterio que `getEstadoUnificado`). Filtrar por `estado_revision` dejaba pasar ~22 filas legacy con `estado_proforma='facturada' AND factura_id IS NULL` (CFDI emitido fuera del sistema en el flujo anterior). Esa data histórica se conserva como referencia y no se auto-limpia.
+PPD es propiedad de la factura. **Mezcla de IVA 16% + No objeto permitida.**
+El REP vigente es estructurado (`complements` tipo `pago`), no XML manual.
+[Contrato y checklist](facturapi-go-live.md).
 
+## Cobro vs timbrado REP
 
+El registro bancario y la emisión fiscal son hitos diferentes.
+`paymentSummary` del proveedor es autoridad previa a emitir el REP.
+Usar `amount` en moneda de la factura y reconciliar saldo/parcialidad local.
+Si falla la validación o hay divergencia, no timbrar ni borrar el dinero cobrado.
 
-## Punto a punto
-
-### 1. Conversión (1:1 o N:1)
-
-- **Origen**: una o varias proformas del **mismo cliente**, no marcadas como
-  `facturada`. La RPC `convertir_proformas_a_factura(uuid[], …)` valida que
-  todas pertenezcan al mismo cliente y misma organización.
-- **Destino**: una factura **borrador** (sin `uuid_fiscal`), lista para
-  timbrar. Los conceptos se copian con su `cantidad/precio_unitario/iva`.
-- **UI**:
-  - Botón individual en `ProformaDetalleCards` (1:1).
-  - Casillas + barra flotante en `TabProformas` (N:1 con verificación de
-    mismo cliente).
-
-### 2. Timbrado (Facturapi)
-
-- `DialogTimbrarFactura` recorre los `buildChecksTimbrado` (RFC/CP/Régimen/Uso
-  CFDI/Forma/Método) y llama a `facturapi-emitir` (edge function).
-- Tras una conversión exitosa, `FacturaDetalle` lee `?accion=timbrar` de la
-  URL y abre automáticamente el diálogo si la factura aún no tiene UUID.
-- Cancelaciones via `DialogCancelarFactura` (motivos SAT 01/02/03/04).
-
-### 3. Pago + REP automático
-
-- `DialogRegistrarPago` registra el pago en `pagos_factura`. Si la factura es
-  **PPD** y ya tiene `uuid_fiscal`, encadena `emitirRep(pagoId)` para timbrar
-  el Complemento de Pagos. Errores de REP no abortan el pago: queda en
-  estado `Pendiente` y puede reintentarse desde el historial
-  (`PagoFacturaRow`).
-- En **PUE** no se genera REP.
+Pendiente/202/timeout requiere recuperar el mismo intento, no emitir otro.
+Una cancelación solicitada no es cancelación aceptada.
+Consultar estado/webhook antes de actuar sobre documentos o saldos.
 
 ## Permisos
 
-- `convertir_proformas_a_factura`: `contador`, `admin_org`, `admin`,
-  `super_admin`.
-- Timbrar/Cancelar factura y REP: roles con `canEdit` (mismos roles + el
-  resto de operadores con permiso en el módulo).
+La fuente de verdad UI está en `src/lib/access/permissionMatrix.finanzas.ts`
+y la validación efectiva en el servidor.
 
-## Servicios y archivos clave
+- Emisión cliente: administradores y contador según `EMITIR_FACTURA_CLIENTE`.
+- Proformas: roles de `PROFORMAS_ESCRITURA`, incluidos coordinador y gerente de operaciones.
+- Cobros: `REGISTRAR_COBRO`; no asumir que todo operador puede cobrar/timbrar.
+- Auxiliar contable captura documentos de proveedor; no hereda emisión cliente.
+- Permiso de ver una pantalla no implica permiso de todas sus acciones.
 
-- `supabase/migrations/*fase_1_trazabilidad.sql` — vista y RPC.
-- `supabase/functions/facturapi-emitir/` y `facturapi-emitir-rep/`.
-- `src/features/proformas/services/convertirAFactura.ts`
-- `src/features/proformas/components/ConvertirAFacturaDialog.tsx`
-- `src/features/facturacion/services/repFacturapi.ts`
-- `src/features/facturacion/components/{DialogTimbrarFactura,DialogRegistrarPago}.tsx`
-- `src/features/facturacion/routes/FacturaDetalle.tsx`
+## Verificación operativa
 
-## Compatibilidad hacia atrás
+Revisar estado local y remoto, folio/UUID, moneda, desglose fiscal, saldo,
+parcialidad, cuenta y fecha del pago. No sumar MXN/USD sin conversión explícita.
+Ante error recopilar request ID/logId y contexto seguro, no API keys ni XML completo.
 
-- El flujo manual (`DialogMarcarFacturada` + folio externo) sigue disponible
-  para datos históricos y proformas que no se vayan a timbrar.
-- El nuevo flujo sólo se aplica a proformas **aprobadas** creadas a partir
-  de 13.137.0.
+Ver [ambientes](facturapi-ambientes.md),
+[pruebas Sandbox](facturapi-sandbox-e2e.md) y
+[sustitución](facturapi-sustitucion.md).

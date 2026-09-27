@@ -1,12 +1,15 @@
 # E2E — Playwright
 
-Smoke tests de los flujos críticos de Libre Carga, pensados como **gate de
-go-live** y regresión semanal. No corren en `bun test` ni en CI por defecto.
+> Revisado el 2026-09-26. No se ejecutó la suite durante la limpieza documental.
+> Provisioning, seed y varios specs crean/modifican registros. Sólo staging autorizado.
+
+Pruebas de navegador de los flujos críticos de Libre Carga, pensados como **gate de
+go-live** y regresión bajo demanda. No corren en `bun test` ni en CI por defecto.
 
 ## Quickstart (3 pasos)
 
 ```bash
-# 1) Plantilla de variables → rellenar SÓLO los mínimos (BASE_URL + admin).
+# 1) Copiar plantilla y configurar destino/credenciales de PRUEBA.
 cp .env.e2e.example .env.e2e
 $EDITOR .env.e2e
 
@@ -18,8 +21,8 @@ bun run e2e:install
 bun run e2e
 ```
 
-> ⚠️ `.env.e2e` contiene credenciales — NO lo commitees. Si no aparece en tu
-> `.gitignore`, agrégalo (`echo .env.e2e >> .gitignore`).
+> `.env.e2e` contiene credenciales y está ignorado: NO lo commitees.
+> Los ejemplos de shell son Bash; en PowerShell usa variables `$env:...`.
 
 ### Scripts disponibles
 
@@ -96,15 +99,17 @@ E2E_MT_B_PASSWORD=********
 E2E_STRICT_FIXTURES=
 ```
 
-> ⚠️ **Nunca** uses credenciales productivas. Provisiona un tenant de staging
+> **Nunca** uses Live fiscal ni cuentas operativas reales. Provisiona un tenant de staging
 > con datos seed determinísticos. Los specs 09–12 **mutan** datos reales y
 > hacen cleanup best-effort; revisar el tenant tras correr.
 
 ## Secrets requeridos en GitHub Actions (CI)
 
-El workflow `.github/workflows/e2e.yml` expone estas variables desde
-`secrets.*`. Si un secret está vacío, el spec correspondiente skipea (a menos
-que actives `strict_fixtures=1` en el dispatch):
+El workflow `.github/workflows/e2e.yml` sólo corre por dispatch manual y usa
+el environment `e2e-staging`. Si faltan credenciales CORE (interno, portal,
+provisioning y Supabase), **falla el guard**, no produce verde vacío.
+Fixtures opcionales pueden saltar specs; `strict_fixtures=1` convierte las
+omisiones soportadas en fallo. Multi-tenant es opcional según su guard.
 
 | Secret | Spec(s) que habilita |
 |---|---|
@@ -128,9 +133,9 @@ Antes de la primera corrida (o cuando necesites resetear el password) ejecuta:
 bun run e2e:provision
 ```
 
-Esto invoca la edge function `e2e-provision-users`, que con `service_role`:
+Esto invoca la edge function `e2e-provision-users` y puede crear/resetear usuarios:
 
-- Crea (o resetea el password de) `E2E_EMAIL` y le asigna rol `admin` +
+- Crea (o resetea el password de) `E2E_EMAIL` y configura su rol interno +
   membresía en `organization_members` de `E2E_ORG_ID` (o la primera org).
 - Crea (o resetea el password de) `E2E_PORTAL_EMAIL`, le asigna rol `cliente`
   y lo vincula vía `client_users` a `E2E_CLIENTE_ID` (o al primer cliente de
@@ -145,8 +150,8 @@ E2E_ORG_ID=<uuid>
 E2E_CLIENTE_ID=<uuid>
 ```
 
-Es idempotente: se puede correr N veces sin duplicar. En CI, agrégalo como
-paso previo al matrix de Playwright (`bun run e2e:provision`).
+El workflow manual ya lo ejecuta antes de los jobs de navegador.
+Repetir puede resetear usuarios; idempotencia no significa ausencia de efectos.
 
 ## Correr
 
@@ -188,9 +193,9 @@ Resultados HTML quedan en `playwright-report/` (ábrelos con `bun run e2e:report
 | 23 | `23-por-cobrar-aging.spec.ts` | Bandeja Por cobrar: la columna "Vence en" no está clampada a "hoy" (regresión 13.300.18). |
 | 24 | `24-auditoria-cache-invalidation.spec.ts` | /auditoria dispara `auditoria_embarques_org` al montar y al pulsar Recalcular (13.300.20). |
 
-Estos specs son **smoke**: validan que la app navega sin crashear y los
-componentes clave montan. Cuando se estabilicen los selectores se pueden
-profundizar a flujos transaccionales (crear embarque, emitir factura, etc.).
+La suite mezcla navegación y pruebas transaccionales. Revisar el spec real
+antes de correrlo: la tabla de ejemplos no sustituye el inventario.
+Mutators se ejecutan en serie; hay guards que exigen tests realmente ejecutados.
 
 ## Convenciones
 

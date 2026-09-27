@@ -24,3 +24,13 @@ recepciones duplicaría captura sin control adicional real.
 Si en el futuro se requiere acuse formal de recepción (p. ej. almacenes con
 conteo físico), se evaluará como módulo nuevo — queda registrado aquí como
 brecha conocida y aceptada.
+
+## Monedas y roles (revisión 2026-09-26)
+
+Comparar documentos/costos después de llevarlos a la moneda correspondiente
+con la paridad del flujo. Un folio vinculado no convierte un costo USD en MXN.
+No ajustar un pago bancario real para hacer cuadrar una captura.
+
+La captura, aprobación y pago tienen capacidades separadas y reglas SoD.
+Ver `src/lib/access/permissionMatrix.finanzas.ts` y las RPCs de aprobación.
+Esta decisión no introduce una tercera entidad de recepción.

@@ -1,95 +1,65 @@
-# Contributing — Libre Carga
+# Contribuir a Libre Carga
 
-Guía corta para colaborar en el repo. Idioma de commits, PRs y comentarios: **español mexicano**.
+Revisado el **2026-09-26**. Leer [arquitectura](ARCHITECTURE.md),
+[guías](docs/README.md) y [CI](docs/ops/ci.md).
 
-## Branch protection requerido en `main`
+## Preparación y cambios
 
-Configurar en GitHub → Settings → Branches → Branch protection rules:
+Node.js ≥22.12.0; Bun 1.4.0 para paridad con CI.
+Instalar con `bun install --frozen-lockfile`. Trabajar en rama/PR de alcance
+explícito y conservar cambios ajenos.
 
-- **Require a pull request before merging** ✓
-  - Require approvals: 1
-  - Dismiss stale reviews on push: ✓
-- **Require status checks to pass before merging** ✓ (los siguientes son **obligatorios**):
-  - `Lint, typecheck, unused code & build` (job `quality` de `ci.yml`)
-  - `Tests (shard X/8)` — los 8 shards
-  - `Coverage merge & report`
-  - `Edge Functions (Deno tests)`
-  - `Analyze (javascript-typescript)` (de `codeql.yml`)
-  - `gitleaks`
-  - `actionlint` (solo si el PR toca `.github/**`)
-  - `Dependency Review`
-- **Require branches to be up to date before merging** ✓
-- **Require conversation resolution before merging** ✓
-- **Do not allow bypassing the above settings** ✓ (incluye admins)
-- **Restrict who can push to matching branches**: nadie (solo merges vía PR)
+No subir contraseñas, service-role keys, `.env.e2e` o documentos fiscales de clientes.
+Local/preview puede apuntar a datos remotos: verificar destino antes de mutar.
 
-## Reglas de diseño en revisión de PR
+Ubicar el feature, mantener UI/estado/I/O/dominio separados y usar sus APIs
+públicas. Reutilizar [tokens/patrones](docs/design-system.md).
+Preservar moneda, impuestos, permisos, estado e idempotencia.
+No relajar guards/strict ni añadir dependencies sin necesidad.
+Aplicar Power of 10 con extracciones cohesivas, no cosméticas.
 
-- `docs/design-system.md` es la fuente única de tokens, tipografía y tablas.
-- **RN-10 (`primary` vs `accent`)**: si el elemento es clickeable o navegable →
-  `primary`; si es iconografía o realce decorativo sobre una superficie →
-  `accent`. Ver la sección "Regla `primary` vs `accent`" del design system.
-- Tipografía: sólo `text-body`, `text-body-sm` y `text-label` (los escalones
-  crudos `text-sm`/`text-xs` están bloqueados por guardrail en features y en
-  `src/components/shared` + `src/components/ui`).
+## Validación proporcional
 
-## Versionado
+```bash
+bun run test -- ruta/al/test.test.ts
+bun run typecheck
+```
 
-Cada cambio funcional debe:
-1. Bumpar `APP_VERSION` en `src/constants/appVersion.ts` (SemVer)
-2. Agregar entrada al inicio de `CHANGELOG.md` con formato:
-   ```
-   ## [X.Y.Z] - YYYY-MM-DD
-   - **tipo(scope)**: descripción breve en una línea.
-   ```
+Elegir pruebas y lint focales durante implementación. Suite completa CI/RLS
+en GitHub Actions; no repetirla tras cada commit en Lovable.
+Knip, coverage, benchmarks y E2E son diagnósticos separados.
 
-## Workflows activos
+UI: 1280×720 y 691×763, claro/oscuro, teclado y modales.
+Docs: rutas, enlaces, comandos existentes y consistencia con el código.
 
-| Workflow | Trigger | Bloquea PR |
-|---|---|---|
-| `ci.yml` | push/PR | sí |
-| `codeql.yml` | weekly + push/PR a main | sí |
-| `gitleaks.yml` | PR | sí |
-| `dependency-review.yml` | PR | sí |
-| `actionlint.yml` | PR (solo `.github/**`) | sí |
-| `rls-tests.yml` | PR/push tocando `supabase/**` | sí |
-| `e2e.yml` | weekly + manual | no |
-| `post-deploy-smoke.yml` | daily + manual | no (abre issue al fallar) |
+## Base de datos
 
-## Secrets necesarios
+Migraciones aplicadas inmutables; corregir con una nueva.
+Actualizar espejos, baseline y manifiesto según
+[higiene SQL](docs/migrations-hygiene.md),
+[baseline](docs/ops/baseline-esquema.md) y
+[RLS](supabase/tests/rls/README.md).
+No ejecutar suites/seeds contra Live. CI verde no prueba deploy backend.
 
-- `CODECOV_TOKEN` (opcional, coverage informativo si falta)
-- `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` (smoke prod)
-- `E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`, `E2E_PORTAL_EMAIL`, `E2E_PORTAL_PASSWORD` (e2e)
+## PR y checks
 
-## Dependabot
+El check estable es **`CI Success (aggregator)`**, junto con gitleaks.
+RLS, actionlint y Dependency Review se activan por sus rutas; CodeQL es
+semanal/manual. Ver YAML para condiciones exactas.
 
-`.github/dependabot.yml` actualiza GitHub Actions semanalmente (grouped). Revisar y mergear los PRs `ci(deps):` cuando los checks pasen.
+Esto no afirma que existan reglas de protección de rama.
+No exigir universalmente un check condicionado por paths: podría no iniciarse.
 
-## Cómo extender (reglas de la auditoría arquitectónica)
+El PR describe alcance, pruebas, omisiones, pendientes y despliegue requerido.
+Un test omitido no es un test aprobado.
 
-Las siguientes 5 reglas son **obligatorias** y bloquean PRs en review.
-Surgieron del plan de remediación 13.56.1 → 13.56.7 y mantienen el baseline
-limpio.
+## Versión y publicación
 
-1. **Componentes ≤200 líneas.** Si crece más, extraer subcomponentes
-   presentacionales puros o hooks (`useXxxController`). Ver `TabPnl`,
-   `TabCierre` y `CosteoRutas` como referencia.
-2. **Sin `SELECT *` en servicios.** Declarar constantes `*_COLUMNS` con las
-   columnas explícitas necesarias. Esto blinda contra crecimiento del esquema
-   y mejora el plan de consulta.
-3. **Tokens semánticos para colores.** Nunca usar `text-emerald-*`,
-   `text-rose-*`, `bg-[#...]`. Usar `text-success`, `text-destructive`,
-   `text-warning`, `bg-card`, `bg-muted`, etc. Para tonos categóricos de
-   tarjetas KPI usar `bg-kpi-{tone}` / `text-kpi-{tone}`.
-4. **Tests por servicio + hook.** Todo módulo nuevo en `src/features/<x>/`
-   debe traer `services/__tests__/*.test.ts` (mockear con
-   `_supabaseChainMock`) y un test de hook con `createWrapper()` cuando
-   exponga estado React Query.
-5. **Cleanup obligatorio en `useEffect`.** Cualquier `useEffect` con canal
-   Supabase, listener, `setTimeout` o `setInterval` debe retornar función
-   de limpieza (`removeChannel`, `removeEventListener`, `clearTimeout`,
-   `clearInterval`). Ver `mem://principles/power-of-10`.
+La versión del producto está en `src/constants/appVersion.ts`, no `package.json`.
+Major/minor/patch depende de compatibilidad y alcance de la release aprobada,
+no de cuántos archivos cambiaron. Actualizar versión y changelog del producto
+de forma coherente sólo cuando corresponda a esa release.
 
-Para deuda técnica futura usar el prefijo `// AUDIT(<id>)` y registrar la
-entrada en `.lovable/audit-todos.md`.
+Docs-only o limpieza histórica no exigen bump ni publicación.
+Publicar en Lovable mediante interfaz o integración autorizada; merge no
+equivale a deploy. Comprobar después web pública y backend implicado.
