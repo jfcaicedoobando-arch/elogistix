@@ -72,7 +72,7 @@ export function EstadoConceptoBadge({ estado }: BadgeProps) {
   }
   return (
     <Badge variant="neutral">
-      <Clock className="h-3 w-3 mr-1" /> Listo para proforma
+      <Clock className="h-3 w-3 mr-1" /> Pendiente de proforma
     </Badge>
   );
 }

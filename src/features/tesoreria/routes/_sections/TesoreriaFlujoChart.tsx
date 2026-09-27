@@ -38,7 +38,7 @@ export function TesoreriaFlujoChart() {
           <ChartSkeleton />
         ) : (
           <Suspense fallback={<ChartSkeleton />}>
-            <GraficoFlujoProyectado semanas={data.semanas} />
+            <GraficoFlujoProyectado semanas={data.semanas} saldoDisponible={data.saldo_inicial_disponible} />
           </Suspense>
         )}
       </CardContent>

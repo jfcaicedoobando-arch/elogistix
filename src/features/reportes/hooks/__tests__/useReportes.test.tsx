@@ -34,6 +34,28 @@ describe('useReportes Hooks', () => {
     isLoading: false,
   };
 
+  it('conserva el nombre completo en el ranking', () => {
+    mockUseRentabilidad.mockReturnValue({ ...mockRentabilidad, clientes: [{ ...clientes[0], cliente_nombre: 'QA Cliente Smoke 2026-09-05' }] });
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    expect(result.current.top10[0].name).toBe('QA Cliente Smoke 2026-09-05');
+  });
+
+  it('restablece periodo y modo de forma atómica, incluso desde un mes futuro', () => {
+    mockUseRentabilidad.mockReturnValue(mockRentabilidad);
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    act(() => result.current.setFechaDesde(new Date(2030, 5, 10)));
+    act(() => result.current.setModo('Terrestre'));
+    notifyWarning.mockClear();
+    act(() => result.current.resetFilters());
+    const hoy = new Date();
+    expect(result.current.fechaDesde.getDate()).toBe(1);
+    expect(result.current.fechaDesde.getMonth()).toBe(hoy.getMonth());
+    expect(result.current.fechaHasta.getMonth()).toBe(hoy.getMonth());
+    expect(result.current.fechaHasta.getFullYear()).toBe(hoy.getFullYear());
+    expect(result.current.modo).toBe('all');
+    expect(notifyWarning).not.toHaveBeenCalled();
+  });
+
   it('useReportesPageController initializes and sorts asc by default', () => {
     mockUseRentabilidad.mockReturnValue(mockRentabilidad);
     const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });

@@ -30,6 +30,7 @@ export default function Reportes() {
     setFechaDesde,
     setFechaHasta,
     setModo,
+    resetFilters,
     kpis,
     isLoading,
     isError,
@@ -92,6 +93,7 @@ export default function Reportes() {
         onFechaDesdeChange={setFechaDesde}
         onFechaHastaChange={setFechaHasta}
         onModoChange={setModo}
+        onResetFilters={resetFilters}
       />
 
       {/* Ramas mutuamente excluyentes: error → contenido. En error no se

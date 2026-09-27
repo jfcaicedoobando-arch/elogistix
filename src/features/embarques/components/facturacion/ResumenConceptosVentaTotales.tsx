@@ -21,6 +21,7 @@ interface Props {
   pendientesCount: number;
   enProformaCount: number;
   facturadosCount: number;
+  ivaPendienteCount?: number;
   gruposConIva: {
     pendiente: boolean;
     enProforma: boolean;
@@ -68,12 +69,12 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
 }
 
 export function ResumenConceptosVentaTotales({
-  totales, pendientesCount, enProformaCount, facturadosCount, gruposConIva,
+  totales, pendientesCount, enProformaCount, facturadosCount, gruposConIva, ivaPendienteCount = 0,
 }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border-t bg-muted/30">
       <ColumnaTotal
-        titulo="Listo para proforma"
+        titulo="Pendientes de proforma"
         count={pendientesCount}
         total={totales.pendiente}
         cardClass="bg-background"
@@ -81,6 +82,7 @@ export function ResumenConceptosVentaTotales({
         icon={<Clock className="h-4 w-4 text-muted-foreground" />}
         emptyText="Sin conceptos por proformar"
         incluyeIva={gruposConIva.pendiente}
+        alcance={ivaPendienteCount > 0 ? `Total provisional · ${ivaPendienteCount} con IVA por confirmar` : undefined}
       />
       <ColumnaTotal
         titulo="Conceptos en proforma"

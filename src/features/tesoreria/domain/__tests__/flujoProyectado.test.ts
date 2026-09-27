@@ -54,6 +54,23 @@ const cuentas: ResumenCuenta[] = [
 ];
 
 describe("calcularFlujoProyectado", () => {
+  it("sin cuentas conserva las obligaciones, pero no afirma liquidez negativa", () => {
+    const cxp: CxpRow[] = [{ id: "x1", folio_proveedor: "179", proveedor_nombre: "Proveedor Monterrey", moneda: "MXN", saldo: 1160, fecha_vencimiento: "2026-09-28" }];
+    const r = calcularFlujoProyectado({ cuentas: [], cobranza: [], cxp, liquidaciones: [], dias: 90, hoy: new Date(2026, 8, 26) });
+    expect(r.saldo_inicial_disponible).toBe(false);
+    expect(r.total_salidas_mxn).toBe(1160);
+    expect(r.alertas_negativas).toBe(0);
+    expect(r.semanas.some((s) => s.flujo_neto_mxn === -1160)).toBe(true);
+  });
+
+  it("una cuenta registrada con saldo cero sí permite proyectar liquidez", () => {
+    const cxp: CxpRow[] = [{ id: "x1", folio_proveedor: "179", proveedor_nombre: "Proveedor Monterrey", moneda: "MXN", saldo: 1160, fecha_vencimiento: "2026-09-28" }];
+    const r = calcularFlujoProyectado({ cuentas: [{ ...cuentas[0], saldo: 0 }], cobranza: [], cxp, liquidaciones: [], dias: 90, hoy: new Date(2026, 8, 26) });
+    expect(r.saldo_inicial_disponible).toBe(true);
+    expect(r.saldo_inicial_mxn).toBe(0);
+    expect(r.saldo_final_mxn).toBe(-1160);
+    expect(r.alertas_negativas).toBeGreaterThan(0);
+  });
   it("genera semanas y calcula saldo proyectado acumulado", () => {
     const hoy = new Date("2026-06-15T00:00:00");
     const cobranza: CobranzaRow[] = [

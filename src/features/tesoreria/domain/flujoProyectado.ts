@@ -31,6 +31,8 @@ export interface SemanaFlujo {
 }
 
 export interface FlujoProyectado {
+  /** Sin cuentas, el acumulado sólo describe flujos; no es un saldo bancario. */
+  saldo_inicial_disponible: boolean;
   saldo_inicial_mxn: number;
   semanas: SemanaFlujo[];
   total_entradas_mxn: number;
@@ -168,10 +170,11 @@ export function calcularFlujoProyectado(args: {
     s.saldo_proyectado_mxn = saldo;
     totalEnt += s.entradas_mxn;
     totalSal += s.salidas_mxn;
-    if (s.saldo_proyectado_mxn < 0) alertas += 1;
+    if (args.cuentas.length > 0 && s.saldo_proyectado_mxn < 0) alertas += 1;
   }
 
   return {
+    saldo_inicial_disponible: args.cuentas.length > 0,
     saldo_inicial_mxn: saldoInicial,
     semanas,
     total_entradas_mxn: totalEnt,

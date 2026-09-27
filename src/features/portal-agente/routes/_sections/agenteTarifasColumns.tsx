@@ -6,6 +6,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
@@ -26,16 +27,17 @@ export function EstadoBadge({ estado }: { estado: string }) {
 
 /** Badge + aviso de vigencia vencida para filas de `AgenteTarifas`. */
 export function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
-  const { advertencia } = resolverEstadoVigenciaTarifa({
+  const { advertencia, programada, estadoCanonico } = resolverEstadoVigenciaTarifa({
     estadoAprobacion: t.estado_aprobacion,
     estado: t.estado,
     vigenteHasta: t.vigente_hasta,
+    vigenteDesde: t.vigente_desde,
     hoy: todayLocalISO(),
   });
-  if (!advertencia) return <EstadoBadge estado={t.estado_aprobacion} />;
+  if (!advertencia) return <EstadoBadge estado={estadoCanonico} />;
   return (
     <div className="flex flex-col gap-0.5">
-      <EstadoBadge estado={t.estado_aprobacion} />
+      {programada ? <Badge variant="neutral" className="w-fit">Programada</Badge> : <EstadoBadge estado={estadoCanonico} />}
       <span className="text-xs text-warning">{advertencia}</span>
     </div>
   );

@@ -26,7 +26,9 @@ export function MiniFlujoCard({ flujo }: Props) {
         <CardTitle>Flujo proyectado 4 semanas</CardTitle>
       </CardHeader>
       <CardContent>
-        {data.length < 2 ? (
+        {!flujo.saldo_inicial_disponible ? (
+          <EmptyStateInline icon={LineChartIcon} message="Saldo inicial no disponible." hint="Registra cuentas bancarias para proyectar el saldo." />
+        ) : data.length < 2 ? (
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 semanas." />
         ) : (
         <div className="h-48">

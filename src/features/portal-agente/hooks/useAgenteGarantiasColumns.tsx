@@ -12,6 +12,7 @@ import type { FilaNaviera } from "@/features/costeo/types/filaNaviera";
 
 export function useAgenteGarantiasColumns(
   onConfigurar: (fila: FilaNaviera) => void,
+  proveedorDisponible = true,
 ): ColumnDef<FilaNaviera, unknown>[] {
   return useMemo(
     () =>
@@ -35,12 +36,12 @@ export function useAgenteGarantiasColumns(
         {
           id: "carta",
           header: "Carta garantía",
-          cell: ({ row }) => (
+          cell: ({ row }) => proveedorDisponible ? (
             <CartaGarantiaBadge
               tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
               vigenteHasta={row.original.condicion?.carta_garantia_vigente_hasta ?? null}
             />
-          ),
+          ) : <p className="text-body-sm text-warning">Requiere proveedor tipo Naviera · solicita vinculación a Operaciones</p>,
         },
         {
           id: "diaslibres",
@@ -58,31 +59,32 @@ export function useAgenteGarantiasColumns(
           cell: ({ row }) => (
             <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" variant="outline" onClick={() => onConfigurar(row.original)}>
-                <Settings2 className="h-4 w-4 mr-1" /> Configurar
+                <Settings2 className="h-4 w-4 mr-1" /> {proveedorDisponible ? "Configurar" : "Ver requisito"}
               </Button>
             </div>
           ),
         },
       ]),
-    [onConfigurar],
+    [onConfigurar, proveedorDisponible],
   );
 }
 
 interface AgenteGarantiaMobileCardProps {
   fila: FilaNaviera;
   onConfigurar: (fila: FilaNaviera) => void;
+  proveedorDisponible?: boolean;
 }
 
-export function AgenteGarantiaMobileCard({ fila, onConfigurar }: AgenteGarantiaMobileCardProps) {
+export function AgenteGarantiaMobileCard({ fila, onConfigurar, proveedorDisponible = true }: AgenteGarantiaMobileCardProps) {
   return (
     <div className="flex items-center justify-between gap-2 min-w-0">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-medium text-body truncate">{fila.naviera_nombre}</div>
         <div className="text-label text-muted-foreground font-mono">{fila.naviera_code}</div>
-        <CartaGarantiaBadge
+        {proveedorDisponible ? <CartaGarantiaBadge
           tieneCarta={fila.condicion?.tiene_carta_garantia ?? false}
           vigenteHasta={fila.condicion?.carta_garantia_vigente_hasta ?? null}
-        />
+        /> : <p className="text-body-sm text-warning">Requiere proveedor tipo Naviera · solicita vinculación a Operaciones</p>}
       </div>
       <Button
         size="sm"
@@ -93,7 +95,7 @@ export function AgenteGarantiaMobileCard({ fila, onConfigurar }: AgenteGarantiaM
           onConfigurar(fila);
         }}
       >
-        <Settings2 className="h-4 w-4 mr-1" /> Configurar
+        <Settings2 className="h-4 w-4 mr-1" /> {proveedorDisponible ? "Configurar" : "Ver requisito"}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Children, cloneElement, isValidElement, ReactNode, useId } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Select, SelectTrigger } from "@/components/ui/select";
 
 /**
  * Wrapper estándar para campos de formulario en wizards.
@@ -31,7 +32,7 @@ interface FormFieldProps {
   children: ReactNode;
 }
 
-type ControlProps = { id?: string; "aria-invalid"?: boolean; "aria-describedby"?: string };
+type ControlProps = { id?: string; "aria-invalid"?: boolean; "aria-describedby"?: string; children?: ReactNode };
 
 export function FormField({
   label,
@@ -45,8 +46,12 @@ export function FormField({
 }: FormFieldProps) {
   const autoId = useId();
   const primero = Children.toArray(children)[0];
+  const selectTrigger = isValidElement<ControlProps>(primero) && primero.type === Select
+    ? Children.toArray(primero.props.children).find((c) => isValidElement(c) && c.type === SelectTrigger)
+    : undefined;
   const idHijo =
-    isValidElement<ControlProps>(primero) ? primero.props.id : undefined;
+    isValidElement<ControlProps>(selectTrigger) ? selectTrigger.props.id
+    : isValidElement<ControlProps>(primero) ? primero.props.id : undefined;
   const controlId = htmlFor ?? idHijo ?? `field-${autoId}`;
   const errorId = `${controlId}-error`;
 
@@ -55,14 +60,23 @@ export function FormField({
     : span === "full" ? "col-span-full"
     : "";
 
-  // Sólo se inyecta el id en el primer hijo elemento y sólo si no trae uno.
+  const asociarControl = (child: React.ReactElement<ControlProps>) => cloneElement(child, {
+    id: controlId,
+    "aria-invalid": error ? true : child.props["aria-invalid"],
+    "aria-describedby": [child.props["aria-describedby"], error ? errorId : undefined].filter(Boolean).join(" ") || undefined,
+  });
+
+  // Radix Select.Root no es un nodo DOM: ligar el label al trigger real.
   const control = Children.map(children, (child, index) => {
     if (index > 0 || !isValidElement<ControlProps>(child)) return child;
-    return cloneElement(child, {
-      id: child.props.id ?? controlId,
-      "aria-invalid": error ? true : child.props["aria-invalid"],
-      "aria-describedby": error ? errorId : child.props["aria-describedby"],
-    });
+    if (child.type === Select) {
+      return cloneElement(child, {
+        children: Children.map(child.props.children, (selectChild) =>
+          isValidElement<ControlProps>(selectChild) && selectChild.type === SelectTrigger
+            ? asociarControl(selectChild) : selectChild),
+      });
+    }
+    return asociarControl(child);
   });
 
   return (

@@ -47,7 +47,8 @@ describe("calcularEstadosConceptos", () => {
 describe("EstadoConceptoBadge", () => {
   it("usa etiquetas inequívocas", () => {
     const { unmount } = render(<EstadoConceptoBadge estado="pendiente" />);
-    expect(screen.getByText("Listo para proforma")).toBeInTheDocument();
+    expect(screen.getByText("Pendiente de proforma")).toBeInTheDocument();
+    expect(screen.queryByText("Listo para proforma")).not.toBeInTheDocument();
     unmount();
     const b = render(<EstadoConceptoBadge estado="pendiente_confirmar" />);
     expect(screen.getByText("Pendiente de confirmar")).toBeInTheDocument();

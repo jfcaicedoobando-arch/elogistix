@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface Props {
   onFechaDesdeChange: (d: Date) => void;
   onFechaHastaChange: (d: Date) => void;
   onModoChange: (m: string) => void;
+  onResetFilters: () => void;
 }
 
 function DateField({ label, value, onChange, fullWidth }: { label: string; value: Date; onChange: (d: Date) => void; fullWidth?: boolean }) {
@@ -64,9 +65,11 @@ function ModoField({ value, onChange, fullWidth }: { value: string; onChange: (m
   );
 }
 
-export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaDesdeChange, onFechaHastaChange, onModoChange }: Props) {
+export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaDesdeChange, onFechaHastaChange, onModoChange, onResetFilters }: Props) {
   const [open, setOpen] = useState(false);
-  const activeCount = modo !== "all" ? 1 : 0;
+  const hoy = new Date();
+  const rangoPersonalizado = !isSameDay(fechaDesde, startOfMonth(hoy)) || !isSameDay(fechaHasta, endOfMonth(hoy));
+  const activeCount = Number(modo !== "all") + Number(rangoPersonalizado);
 
   return (
     <>
@@ -77,13 +80,17 @@ export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaD
           onOpenChange={setOpen}
           title="Filtros de reporte"
           activeCount={activeCount}
-          onClearAll={() => onModoChange("all")}
+          onClearAll={onResetFilters}
           triggerLabel="Filtros de fecha y modo"
         >
           <DateField label={RANGO_DESDE_LABEL} value={fechaDesde} onChange={onFechaDesdeChange} fullWidth />
           <DateField label={RANGO_HASTA_LABEL} value={fechaHasta} onChange={onFechaHastaChange} fullWidth />
           <ModoField value={modo} onChange={onModoChange} fullWidth />
         </MobileFiltersSheet>
+        <p className="mt-2 text-body-sm text-muted-foreground" aria-live="polite">
+          {format(fechaDesde, "dd MMM yyyy", { locale: es })} → {format(fechaHasta, "dd MMM yyyy", { locale: es })}
+          {" · "}{MODOS.find((m) => m.value === modo)?.label ?? modo}
+        </p>
       </div>
       {/* Desktop */}
       <div className="hidden md:flex md:flex-wrap md:gap-3 md:items-end">
