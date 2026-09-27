@@ -29,6 +29,8 @@ interface Props {
   moneda: string;
   /** Totales del documento para contrastar con la suma de las líneas. */
   retenciones?: number | null;
+  iva?: number | null;
+  ieps?: number | null;
   total?: number | null;
   /** Datos para habilitar la edición de conceptos (facturas manuales). */
   edicion?: {
@@ -42,7 +44,7 @@ interface Props {
 }
 
 export function ConceptosFacturaSection({
-  facturaId, moneda, retenciones, total, edicion,
+  facturaId, moneda, iva, ieps, retenciones, total, edicion,
 }: Props) {
   const { data: conceptos = [], isLoading } = useConceptosCfdiFactura(facturaId);
 
@@ -58,6 +60,10 @@ export function ConceptosFacturaSection({
             moneda={moneda}
             folio={edicion.folio}
             subtotal={edicion.subtotal}
+            iva={iva ?? 0}
+            ieps={ieps ?? 0}
+            retenciones={retenciones ?? 0}
+            total={total ?? undefined}
             uuidFiscal={edicion.uuidFiscal}
             archivoXmlUrl={edicion.archivoXmlUrl}
             estado={edicion.estado}
@@ -79,6 +85,8 @@ export function ConceptosFacturaSection({
           conceptos={conceptos}
           moneda={moneda}
           retenciones={retenciones}
+          iva={iva}
+          ieps={ieps}
           total={total}
         />
       )}
@@ -87,11 +95,13 @@ export function ConceptosFacturaSection({
 }
 
 function ConceptosTable({
-  conceptos, moneda, retenciones, total,
+  conceptos, moneda, iva, ieps, retenciones, total,
 }: {
   conceptos: ReadonlyArray<ConceptoCfdiRow>;
   moneda: string;
   retenciones?: number | null;
+  iva?: number | null;
+  ieps?: number | null;
   total?: number | null;
 }) {
   const lineas: LineaConceptoResumen[] = conceptos.map((c) => ({
@@ -100,7 +110,7 @@ function ConceptosTable({
     iva: Number(c.iva) || 0,
     ieps: Number(c.ieps) || 0,
   }));
-  const resumen = calcularResumenConceptos(lineas, { retenciones, total });
+  const resumen = calcularResumenConceptos(lineas, { iva, ieps, retenciones, total });
   const hayIeps = resumen.ieps > 0;
   const totalConImpuestos = lineas.reduce((acc, l) => acc + totalLineaConImpuestos(l), 0);
 

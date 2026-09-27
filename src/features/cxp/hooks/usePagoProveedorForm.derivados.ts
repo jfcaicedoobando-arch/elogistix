@@ -122,12 +122,13 @@ export function usePagoProveedorDerivados(a: DerivadosArgs) {
       monedaPago: a.moneda,
       tcNum: a.tcNum || null,
       bloqueadoPorTc: a.bloqueadoPorTc,
+      requiereCuenta: a.requiereCuenta,
       cuentaEtiqueta: etiquetaCuenta(a.cuenta),
       proveedor: proveedorBase,
     });
   }, [
     factura, a.modo, a.montoOriginalEnMonedaFactura, a.montoEnMonedaFactura,
-    a.montoNum, a.moneda, a.tcNum, a.bloqueadoPorTc, a.cuenta, saldoProveedor.data,
+    a.montoNum, a.moneda, a.tcNum, a.bloqueadoPorTc, a.requiereCuenta, a.cuenta, saldoProveedor.data,
   ]);
 
   return { validacion, impacto, cargandoSaldoProveedor: saldoProveedor.isLoading };

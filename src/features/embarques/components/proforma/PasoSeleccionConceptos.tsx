@@ -110,7 +110,6 @@ export function PasoSeleccionConceptos({
                 ivaActivo={ivaActivo}
                 ivaBloqueado={ivaBloqueado}
                 ivaPendiente={tratamientoIvaPendiente(c)}
-                etiquetaIvaFila={etiquetaIvaFilas([c], tasaIva)}
                 contLabel={contLabel}
                 showGeneralBadge={!c.contenedor_id && contenedores.length >= 2}
                 onToggle={onToggle}

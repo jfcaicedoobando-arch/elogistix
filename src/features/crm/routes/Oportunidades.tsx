@@ -36,7 +36,7 @@ export default function Oportunidades() {
   const clienteIdFiltro = searchParams.get("clienteId");
   // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
   // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
-  const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
+  const { canCrearOportunidad, canGestionarOportunidad, isAdmin } = usePermissions();
   // v13.823.78 — búsqueda, filtros (vista guardada) y pestaña viven en la URL
   // para que "Volver a Oportunidades" recupere el contexto del KAM.
   const urlState = useMemo(() => parseOportunidadesUrl(searchParams), [searchParams]);
@@ -67,7 +67,7 @@ export default function Oportunidades() {
 
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: tc } = useExchangeRates();
-  const { data: usuarios = [] } = useUsuarios();
+  const { data: usuarios = [] } = useUsuarios({ enabled: isAdmin });
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
   const filtrosServidor = useOportunidadesFiltrosServidor(debounced, filtros, clienteIdFiltro);
@@ -113,7 +113,7 @@ export default function Oportunidades() {
         }
       />
 
-      <CrmSubheader context={`${copiaContadorOportunidades(ops.length, totalServidor)}${clienteIdFiltro ? " (filtradas por cliente)" : ""} · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
+      <CrmSubheader context={`${copiaContadorOportunidades(ops.length, totalServidor)}${clienteIdFiltro ? " (filtradas por cliente)" : ""} · total visible ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-muted-foreground">
           Mostrando las primeras {copiaContadorOportunidades(ops.length, totalServidor)} que cumplen los filtros; la exportación CSV incluye todas.

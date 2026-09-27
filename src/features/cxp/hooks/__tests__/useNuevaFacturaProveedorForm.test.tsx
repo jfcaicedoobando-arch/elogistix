@@ -103,8 +103,16 @@ describe("useNuevaFacturaProveedorForm", () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
     // El default de initialValues es 30; seleccionamos proveedor SIN dias_credito.
-    act(() => result.current.handleProveedor("p2", "Contado", 0));
+    act(() => result.current.handleProveedor("p2", "Sin configurar"));
     expect(result.current.values.diasCredito).toBe(30);
+  });
+
+  it("handleProveedor con 0 días significa contado y vence en la emisión", () => {
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(vi.fn()), { wrapper: createWrapper() });
+    act(() => result.current.handleProveedor("p1", "Crédito 15 días", 15));
+    act(() => result.current.handleProveedor("p2", "Contado", 0));
+    expect(result.current.values.diasCredito).toBe(0);
+    expect(result.current.values.vencimiento).toBe(result.current.values.emision);
   });
 
 

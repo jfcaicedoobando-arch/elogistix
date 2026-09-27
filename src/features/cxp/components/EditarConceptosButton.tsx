@@ -15,6 +15,10 @@ interface Props {
   folio: string;
   moneda: string;
   subtotal: number;
+  iva?: number;
+  ieps?: number;
+  retenciones?: number;
+  total?: number;
   uuidFiscal: string | null;
   archivoXmlUrl: string | null;
   estado: string;
@@ -59,6 +63,10 @@ export function EditarConceptosButton(props: Props) {
           folio={props.folio}
           moneda={props.moneda}
           subtotal={props.subtotal}
+          iva={props.iva}
+          ieps={props.ieps}
+          retenciones={props.retenciones}
+          total={props.total}
         />
       )}
     </>

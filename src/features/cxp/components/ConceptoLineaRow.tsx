@@ -4,16 +4,14 @@
  * formatear al salir del campo (12 → 12.00) sin pelearse con el estado padre.
  */
 import { useState } from "react";
-import { Copy, Percent, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, TASA_IVA } from "@/lib/financial/financialUtils";
 import { parseMonto } from "@/lib/format/parseMonto";
 import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { ConceptoLineaAcciones } from "./ConceptoLineaAcciones";
 
 interface Props {
   concepto: ConceptoManual;
@@ -46,6 +44,7 @@ export function ConceptoLineaRow({
   const [cantidadTxt, setCantidadTxt] = useState(String(c.cantidad ?? 1));
   const [importeTxt, setImporteTxt] = useState(fmt2(c.importe ?? 0));
   const [ivaTxt, setIvaTxt] = useState(fmt2(c.iva ?? 0));
+  const [iepsTxt, setIepsTxt] = useState(fmt2(c.ieps ?? 0));
 
   const total = totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad });
 
@@ -53,7 +52,7 @@ export function ConceptoLineaRow({
     // BUG-14: redondeo canónico (half away from zero, igual que Postgres);
     // el modelo CfdiConceptoParsed no guarda tasa por renglón, así que este
     // botón aplica la tasa general declarada en TASA_IVA.
-    const iva = calcularIVA(total, TASA_IVA);
+    const iva = calcularIVA(total + (Number(c.ieps) || 0), TASA_IVA);
     setIvaTxt(fmt2(iva));
     onActualizar(c.key, "iva", iva);
   };
@@ -68,14 +67,14 @@ export function ConceptoLineaRow({
     >
       <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
         <Input
-          className="h-9 w-full md:flex-1"
+          className="h-9 w-full min-w-0 md:flex-1"
           placeholder="Descripción del servicio"
           value={c.descripcion}
           onChange={(e) => onActualizar(c.key, "descripcion", e.target.value)}
           aria-label="Descripción del concepto"
         />
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Cant.</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-16"
@@ -92,7 +91,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Precio</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-24"
@@ -107,7 +106,7 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">IVA</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-20"
@@ -122,7 +121,22 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <label className="flex flex-1 items-center gap-1.5 md:flex-none">
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
+          <span className="text-label text-muted-foreground md:hidden">IEPS</span>
+          <Input
+            className="h-9 w-full text-right tabular-nums md:w-20"
+            inputMode="decimal"
+            value={iepsTxt}
+            onChange={(e) => {
+              setIepsTxt(e.target.value);
+              onActualizar(c.key, "ieps", parseMonto(e.target.value));
+            }}
+            onBlur={() => setIepsTxt(fmt2(parseMonto(iepsTxt)))}
+            aria-label="IEPS del concepto"
+          />
+        </label>
+
+        <label className="flex min-w-[10rem] flex-1 items-center gap-1.5 md:min-w-0 md:flex-none">
           <span className="text-label text-muted-foreground md:hidden">Unidad</span>
           <Input
             className="h-9 w-full md:w-16"
@@ -144,55 +158,11 @@ export function ConceptoLineaRow({
           {formatCurrency(total, moneda)}
         </span>
 
-        <div className="ml-auto flex w-auto items-center justify-end gap-0.5 md:w-16">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
-                onClick={aplicarIva16}
-                aria-label="Aplicar IVA 16% a esta línea"
-              >
-                <Percent className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-body-sm">Calcular IVA 16%</TooltipContent>
-          </Tooltip>
-          {onDuplicar && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
-                  onClick={() => onDuplicar(c.key)}
-                  aria-label="Duplicar concepto"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-body-sm">Duplicar línea</TooltipContent>
-            </Tooltip>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-destructive"
-                onClick={() => onEliminar(c.key)}
-                aria-label="Eliminar concepto"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-body-sm">Eliminar línea</TooltipContent>
-          </Tooltip>
-        </div>
+        <ConceptoLineaAcciones
+          onAplicarIva={aplicarIva16}
+          onDuplicar={onDuplicar ? () => onDuplicar(c.key) : undefined}
+          onEliminar={() => onEliminar(c.key)}
+        />
       </div>
     </div>
   );

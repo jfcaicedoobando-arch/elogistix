@@ -1,10 +1,8 @@
-import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
 import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
-import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
+import { TratamientoIvaProforma } from "./TratamientoIvaProforma";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -52,16 +50,11 @@ export function PasoConfirmacionProforma({
             { id: "sub", header: "Subtotal", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
               cell: ({ row }) => formatCurrency(Number(row.original.cantidad) * Number(row.original.precio_unitario), row.original.moneda) },
             { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-            { id: "iva", header: "IVA", meta: { className: "text-center", headerClassName: "text-center" },
+            { id: "iva", header: "Tratamiento IVA", meta: { className: "text-center", headerClassName: "text-center" },
               cell: ({ row }) => {
                 const c = row.original;
-                if (tratamientoIvaPendiente(c)) return <Badge variant="outline" className="text-body-sm">Por confirmar</Badge>;
-                // R179-01: MXN ya no se marca "Sí" por moneda; se lee su
-                // tratamiento fiscal guardado, el mismo que persiste el RPC.
-                const aplica = c.moneda === "MXN" ? ivaDeFila(c) : !!ivaPorConcepto[c.id];
-                return aplica
-                  ? <Badge variant="success" className="text-body-sm"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
-                  : <Badge variant="secondary" className="text-body-sm">No</Badge>;
+                const aplica = c.moneda === "MXN" ? ivaDeFila(c) : ivaPorConcepto[c.id] ?? ivaDeFila(c);
+                return <TratamientoIvaProforma concepto={c} ivaActivo={aplica} />;
               } },
           ]) as ColumnDef<ConceptoVenta, unknown>[]}
           data={conceptosSeleccionados}

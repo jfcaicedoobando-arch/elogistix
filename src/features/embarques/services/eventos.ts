@@ -3,6 +3,7 @@ import type { Enums } from '@/integrations/supabase/types';
 import { registrarBitacoraEmbarque } from './bitacoraEmbarques';
 import { eventoTrackingSchema } from '@/lib/validation/mutationSchemas.otros';
 import { parseOrThrow } from '@/lib/validation/mutationSchemas';
+import { uuidSchema } from '@/lib/validation/mutationSchemas.shared';
 
 export interface EventoEmbarqueRow {
   id: string;
@@ -36,6 +37,7 @@ export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEm
 }
 
 export async function insertEventoEmbarque(input: {
+  eventoId?: string;
   embarqueId: string;
   tipo: string;
   descripcion: string;
@@ -53,8 +55,10 @@ export async function insertEventoEmbarque(input: {
     ubicacion: input.ubicacion,
     descripcion: input.descripcion,
   }, 'Evento de tracking');
+  const eventoId = input.eventoId === undefined ? crypto.randomUUID() : parseOrThrow(uuidSchema, input.eventoId, 'Evento de tracking');
   const { error } = await supabase.from('eventos_embarque').insert([
     {
+      id: eventoId,
       embarque_id: input.embarqueId,
       tipo: parsed.tipo as Enums<'tipo_evento_tracking'>,
       descripcion: parsed.descripcion,
@@ -67,6 +71,6 @@ export async function insertEventoEmbarque(input: {
   await registrarBitacoraEmbarque({
     accion: "Registró evento de tracking en embarque",
     entidadId: input.embarqueId,
-    detalles: { tipo: parsed.tipo, ubicacion: parsed.ubicacion, fecha: parsed.fecha },
+    detalles: { tipo: parsed.tipo, ubicacion: parsed.ubicacion, fecha: parsed.fecha, eventoId },
   });
 }

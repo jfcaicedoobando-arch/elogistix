@@ -105,7 +105,7 @@ export function SeccionDimensiones({ c }: Props) {
 
 export { SeccionProspecto };
 
-/** Sección Datos Generales + Mercancía + descripción adicional + dimensiones. */
+/** Sección Datos Generales + Mercancía + descripciones propias + dimensiones. */
 export function SeccionDatosYMercancia({ c, tiposContenedor = [] }: PropsConCatalogo) {
   return (
     <>
@@ -117,6 +117,14 @@ export function SeccionDatosYMercancia({ c, tiposContenedor = [] }: PropsConCata
         <Text style={styles.h3}>Mercancía</Text>
         <KeyValueGrid items={buildMercancia(c, tiposContenedor)} columns={3} />
       </View>
+      {c.descripcion_mercancia?.trim() ? (
+        <>
+          <Text style={{ ...styles.label, marginTop: 6 }} minPresenceAhead={24}>Descripción de la mercancía</Text>
+          {c.descripcion_mercancia.split(/\r?\n\r?\n/).map((parrafo, i) => (
+            <Text key={i} style={{ ...styles.paragraph, fontSize: 9 }} wrap>{parrafo}</Text>
+          ))}
+        </>
+      ) : null}
       {c.descripcion_adicional ? (
         <View style={{ marginTop: 6 }} wrap>
           <Text style={styles.label}>Descripción Adicional</Text>

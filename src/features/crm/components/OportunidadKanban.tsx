@@ -90,7 +90,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
     // MEJ-20260908-02: en 1280x720 las columnas arrancaban ~y=530 y no se leía
     // ni la primera tarjeta completa; se compactan las separaciones de arriba.
     <div className="space-y-2">
-      <PipelineResumen oportunidades={oportunidades} />
+      <PipelineResumen oportunidades={oportunidades} etapas={etapas} />
       {huerfanas.length > 0 && (
         <Alert variant="warning">
           <AlertCircle className="h-4 w-4" aria-hidden />

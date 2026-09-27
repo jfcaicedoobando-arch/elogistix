@@ -27,6 +27,7 @@ import QuickCreateActividadDialog, {
   type ActividadQuickDraft,
 } from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
 import { usePermissions } from "@/hooks/shared";
+import { useVolverAgendaActividad } from "@/features/crm/hooks/useVolverAgendaActividad";
 
 export interface QuickAddMenuProps {
   openTrigger?: number;
@@ -53,6 +54,7 @@ function conDatos<T extends object>(draft: T, campos: Array<keyof T>): T | null 
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
+  const volverAgenda = useVolverAgendaActividad();
   const { canCrearLead, canGestionarLeadsEnLote, canCrearOportunidad, canCrearActividad } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [quick, setQuick] = useState<Quick>(null);
@@ -149,7 +151,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
       <QuickCreateActividadDialog
         open={quick === "actividad"}
         onOpenChange={cerrarQuick}
-        onCreated={() => navigate("/crm/actividades")}
+        onCreated={volverAgenda}
         onMore={(draft) => {
           setQuick(null);
           setActDraft(conDatos(draft, ["asunto", "entidadId"]));

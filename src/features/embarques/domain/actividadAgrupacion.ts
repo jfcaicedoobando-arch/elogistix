@@ -4,10 +4,11 @@
  * P2-3: un solo cambio de estado se registra en bitácora, evento y nota, así
  * que la misma hora aparecía tres veces ("Avanzó estado de embarque", "Otro",
  * "Cambio de estado"). Aquí no se borra nada: se elige un evento principal y
- * los demás quedan como `relacionados` (expandibles) sólo cuando comparten
- * minuto Y estado destino, para no colapsar cambios distintos del mismo minuto.
+ * los demás quedan como `relacionados` (expandibles). Notas/eventos usan su
+ * ID exacto; las transiciones conservan minuto Y estado destino como fallback.
  */
 import type { ActividadItem } from '@/features/embarques/domain/actividadFeed';
+import { claveActividadHecho } from './actividadCorrelacion';
 
 const ESTADOS = [
   'Borrador', 'Confirmado', 'En tránsito', 'En puerto', 'En aduana',
@@ -20,6 +21,7 @@ function textoCompleto(item: ActividadItem): string {
 
 /** ¿El registro habla de un cambio de estado del embarque? */
 export function esCambioDeEstado(item: ActividadItem): boolean {
+  if (item.refTipo && item.refTipo !== 'embarque') return false;
   const texto = textoCompleto(item).toLowerCase();
   return (
     /cambio de estado|cambi[oó] (de )?estado|avanz[oó] estado|estado cambiado/.test(texto) ||
@@ -47,6 +49,7 @@ export function estadoDestino(item: ActividadItem): string | null {
 /** Ranking: gana el registro más informativo como evento principal. */
 function utilidad(item: ActividadItem): number {
   return (
+    (claveActividadHecho(item) && (item.tipo === 'nota' || item.tipo === 'evento') ? 1000 : 0) +
     (item.descripcion ? 100 : 0) +
     Math.min(item.titulo.length, 80) +
     (item.detalles ? 40 : 0) +
@@ -55,7 +58,7 @@ function utilidad(item: ActividadItem): number {
 }
 
 /**
- * Colapsa visualmente los registros del mismo cambio de estado.
+ * Colapsa visualmente registros con identidad exacta o transición legacy.
  * Mantiene el orden de entrada y no descarta ningún registro.
  */
 export function agruparHechosNegocio(items: ActividadItem[]): ActividadItem[] {
@@ -63,12 +66,13 @@ export function agruparHechosNegocio(items: ActividadItem[]): ActividadItem[] {
   const salida: ActividadItem[] = [];
 
   for (const item of items) {
-    const destino = esCambioDeEstado(item) ? estadoDestino(item) : null;
-    if (!destino) {
+    const exacta = claveActividadHecho(item);
+    const destino = !exacta && esCambioDeEstado(item) ? estadoDestino(item) : null;
+    const clave = exacta ?? (destino ? `estado|${item.fecha.slice(0, 16)}|${destino.toLowerCase()}` : null);
+    if (!clave) {
       salida.push(item);
       continue;
     }
-    const clave = `estado|${item.fecha.slice(0, 16)}|${destino.toLowerCase()}`;
     const principal = principalPorClave.get(clave);
     if (!principal) {
       const nuevo: ActividadItem = { ...item, relacionados: [] };

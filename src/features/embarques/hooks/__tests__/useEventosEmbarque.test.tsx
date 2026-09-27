@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { queryKeys } from "@/lib/query";
 
 const { mockFetch, mockInsert } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -54,6 +57,19 @@ describe("useEventosEmbarque", () => {
 });
 
 describe("useCreateEventoEmbarque", () => {
+  it("preserva el ID y refresca tracking y actividad al completar el registro", async () => {
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    mockInsert.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useCreateEventoEmbarque({ silent: true }), { wrapper });
+    const input = { eventoId: "22222222-2222-4222-8222-222222222222", embarqueId: "e-1", tipo: "Cambio de ETA", descripcion: "ETA confirmada", ubicacion: "Manzanillo", fecha: "2026-11-20", usuario: "u-1" };
+    await act(async () => { await result.current.mutateAsync(input); });
+    expect(mockInsert).toHaveBeenCalledWith(input);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.eventos("e-1") });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.actividad("e-1") });
+  });
+
   it("llama insertEventoEmbarque con los parámetros correctos", async () => {
     mockInsert.mockResolvedValue({ id: "ev-2" });
     mockFetch.mockResolvedValue([]);

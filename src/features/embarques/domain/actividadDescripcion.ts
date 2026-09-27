@@ -78,7 +78,7 @@ function sinClavesCamel(texto: string): string {
     .trim();
 }
 
-export function descripcionHumana(texto: string | null | undefined): string {
+export function descripcionHumana(texto: string | null | undefined, refTipo?: string): string {
   const limpio = sinClavesCamel(sinUuid((texto ?? "").trim()));
   if (!limpio) return "";
 
@@ -87,10 +87,10 @@ export function descripcionHumana(texto: string | null | undefined): string {
     const prefijo = m[1].trim();
     const resto = m[2].trim();
     if (!esClaveTecnica(resto)) return limpio;
-    const etiqueta = etiquetaEvento(resto);
+    const etiqueta = etiquetaEvento(resto, refTipo);
     return plano(etiqueta).includes(plano(prefijo)) ? etiqueta : `${prefijo}: ${etiqueta}`;
   }
 
-  if (esClaveTecnica(limpio)) return etiquetaEvento(limpio);
+  if (esClaveTecnica(limpio)) return etiquetaEvento(limpio, refTipo);
   return limpio;
 }

@@ -85,6 +85,7 @@ const abrirEdicion = () =>
   fireEvent.click(screen.getByRole("button", { name: /editar costos/i }));
 const guardar = () =>
   fireEvent.click(screen.getByRole("button", { name: /guardar costos/i }));
+const escritorio = () => within(screen.getByRole("table", { name: "Costos de escritorio en MXN" }));
 
 function abrirEdicionYGuardar() {
   abrirEdicion();
@@ -117,7 +118,7 @@ describe("guardado rápido de costos con sello optimista", () => {
     mutateAsync.mockResolvedValue({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } });
     renderSeccion();
     abrirEdicion();
-    fireEvent.change(screen.getByPlaceholderText(/notas/i), { target: { value: "nota nueva" } });
+    fireEvent.change(escritorio().getByLabelText(/notas de flete/i), { target: { value: "nota nueva" } });
     guardar();
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
@@ -187,13 +188,13 @@ describe("guardado rápido de costos con sello optimista", () => {
     abrirEdicion();
     snapshot = { costos: COSTOS_600, updatedAt: S1 };
     rerender(vista());
-    expect(screen.getByLabelText(/costo unitario de flete/i)).toHaveValue(500);
+    expect(escritorio().getByLabelText(/costo unitario de flete/i)).toHaveValue(500);
     fireEvent.click(screen.getByRole("button", { name: /cancelar edición/i }));
     // Fuera de edición hay varios "600" (fila y totales): se comprueba el campo
     // concreto reabriendo la captura.
     await waitFor(() => {
       abrirEdicion();
-      expect(screen.getByLabelText(/costo unitario de flete/i)).toHaveValue(600);
+      expect(escritorio().getByLabelText(/costo unitario de flete/i)).toHaveValue(600);
     });
   });
 
@@ -203,10 +204,10 @@ describe("guardado rápido de costos con sello optimista", () => {
     abrirEdicionYGuardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     abrirEdicion();
-    fireEvent.change(screen.getByPlaceholderText(/notas/i), { target: { value: "cancelar esto" } });
+    fireEvent.change(escritorio().getByLabelText(/notas de flete/i), { target: { value: "cancelar esto" } });
     fireEvent.click(screen.getByRole("button", { name: /cancelar edición/i }));
     abrirEdicion();
-    expect(screen.getByPlaceholderText(/notas/i)).toHaveValue("guardado 1");
+    expect(escritorio().getByLabelText(/notas de flete/i)).toHaveValue("guardado 1");
   });
 
   it("un conflicto real deja un solo aviso y conserva la captura modificada", async () => {
@@ -225,5 +226,40 @@ describe("guardado rápido de costos con sello optimista", () => {
     expect(notifySuccess).not.toHaveBeenCalled();
     // La captura sigue en pantalla (no se rehidrató desde la BD).
     expect(costosEscritorio.getByLabelText(/proveedor de flete/i)).toHaveValue("PROVEEDOR EDITADO");
+  });
+
+  it("edita todos los campos desde tarjetas y guarda por la misma mutación con sello", async () => {
+    mutateAsync.mockResolvedValue({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } });
+    renderSeccion();
+    abrirEdicion();
+    const movil = within(screen.getByRole("list", { name: "Costos móviles en MXN" }));
+    for (const [label, value] of [
+      ["Proveedor de Flete", "Transportes Regiomontanos"],
+      ["Costo unitario de Flete", "600"], ["Venta total de Flete", "850"],
+      ["Notas de Flete", "Entrega en Apodaca"],
+    ]) fireEvent.change(movil.getByLabelText(label), { target: { value } });
+    // Cambiar de layout no crea una segunda captura ni pierde el estado compartido.
+    expect(escritorio().getByLabelText("Costo unitario de Flete")).toHaveValue(600);
+    expect(escritorio().getByLabelText("Venta total de Flete")).toHaveValue(850);
+    guardar();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0][0]).toMatchObject({ expectedUpdatedAt: S0, costos: [{
+      proveedor: "Transportes Regiomontanos", costo_unitario: 600, costo_total: 600,
+      precio_venta: 850, notas: "Entrega en Apodaca", unidad_medida: "contenedor",
+      costeo_tarifa_id: "tar-1", costeo_tarifa_recargo_id: "rec-1",
+    }] });
+  });
+
+  it("cancelar cambios móviles restaura también importes y notas de escritorio", () => {
+    renderSeccion();
+    abrirEdicion();
+    const movil = within(screen.getByRole("list", { name: "Costos móviles en MXN" }));
+    fireEvent.change(movil.getByLabelText("Costo unitario de Flete"), { target: { value: "999" } });
+    fireEvent.change(movil.getByLabelText("Notas de Flete"), { target: { value: "Descartar" } });
+    fireEvent.click(screen.getByRole("button", { name: /cancelar edición/i }));
+    abrirEdicion();
+    expect(movil.getByLabelText("Costo unitario de Flete")).toHaveValue(500);
+    expect(escritorio().getByLabelText("Notas de Flete")).toHaveValue("nota previa");
+    expect(mutateAsync).not.toHaveBeenCalled();
   });
 });

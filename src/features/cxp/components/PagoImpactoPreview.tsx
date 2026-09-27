@@ -1,12 +1,13 @@
 /**
  * Vista previa del impacto del pago (v13.393.0):
  * antes de guardar, muestra cómo queda la factura, el saldo del proveedor
- * y cuánto sale del banco.
+ * y el medio de salida: banco o efectivo, sin anunciar débitos inexistentes.
  */
-import { ArrowRight, Wallet, FileText, Building2 } from "lucide-react";
+import { ArrowRight, FileText, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import type { ImpactoPago } from "@/features/cxp/services/pagoImpactoPreview";
+import { SalidaPagoPreview } from "./SalidaPagoPreview";
 
 interface FilaProps {
   icon: React.ReactNode;
@@ -53,7 +54,7 @@ interface Props {
 export function PagoImpactoPreview({ impacto, proveedorNombre, cargandoProveedor }: Props) {
   if (!impacto) return null;
 
-  const { factura, proveedor, banco } = impacto;
+  const { factura, proveedor, salida } = impacto;
   const moneda = factura.moneda;
 
   return (
@@ -97,23 +98,7 @@ export function PagoImpactoPreview({ impacto, proveedorNombre, cargandoProveedor
           tone={proveedor && proveedor.saldoDespues <= 0.01 ? "success" : "default"}
         />
 
-        <div className="flex items-start justify-between gap-3 py-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Wallet className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
-            <div className="min-w-0">
-              <p className="text-body-sm font-medium">Salida de banco</p>
-              <p className="text-label text-muted-foreground truncate">
-                {banco.cuentaEtiqueta ?? "Sin cuenta seleccionada"}
-                {banco.montoMxn != null && banco.moneda !== "MXN"
-                  ? ` · ≈ ${formatCurrency(banco.montoMxn, "MXN")}`
-                  : ""}
-              </p>
-            </div>
-          </div>
-          <span className="text-body font-semibold tabular-nums shrink-0">
-            {formatCurrency(banco.monto, banco.moneda)}
-          </span>
-        </div>
+        <SalidaPagoPreview salida={salida} />
       </div>
 
       {factura.excede && (

@@ -20,7 +20,8 @@ import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCa
 import { cn } from "@/lib/utils";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
-import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
+import { FechaEventoFactura } from "./FechaEventoFactura";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useHistorialFactura,
@@ -75,7 +76,7 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-muted-foreground mt-0.5">
-        <span>{formatDateTimeShort(ev.ts)}</span>
+        <FechaEventoFactura ev={ev} />
         {ev.actor_email && (
           <>
             <span>·</span>
@@ -143,4 +144,3 @@ export function HistorialFacturaSection({ facturaId }: Props) {
     </DocumentoRailCard>
   );
 }
-

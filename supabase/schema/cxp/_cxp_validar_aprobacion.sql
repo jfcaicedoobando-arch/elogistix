@@ -1,5 +1,5 @@
 -- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260911235329_340f35a8-33b7-4664-83b5-1e3c261939ad.sql
+-- Fuente vigente: 20260927040000_cxp_impuestos_globales_y_base_iva.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
 -- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
@@ -77,13 +77,13 @@ BEGIN
 
   -- FP-000256: "IVA fantasma". El total se deriva de subtotal + IVA + IEPS −
   -- retenciones, así que un IVA imposible (50 sobre un subtotal de 60) infla la
-  -- factura sin ningún renglón que lo respalde. En México el IVA trasladado
-  -- nunca excede el 16% de la base.
-  v_iva_max := COALESCE(v_row.subtotal,0) * 0.16 + 0.02;
+  -- factura sin ningún renglón que lo respalde. Paridad con ivaPlausible.ts:
+  -- incluir el IEPS declarado en la base, sin aflojar el tope ni su tolerancia.
+  v_iva_max := (GREATEST(COALESCE(v_row.subtotal,0),0) + GREATEST(COALESCE(v_row.ieps,0),0)) * 0.16 + 0.02;
   IF COALESCE(v_row.iva,0) > v_iva_max THEN
-    RAISE EXCEPTION 'LC_CXP_IVA_IMPLAUSIBLE: El IVA capturado (%) es mayor al 16%% del subtotal (%). Corrige el IVA de la factura antes de aprobar; el máximo aceptable es %.',
+    RAISE EXCEPTION 'LC_CXP_IVA_IMPLAUSIBLE: El IVA capturado (%) es mayor al 16%% de la base subtotal más IEPS (%). Corrige el IVA de la factura antes de aprobar; el máximo aceptable es %.',
       to_char(COALESCE(v_row.iva,0),      'FM999,999,999,990.00'),
-      to_char(COALESCE(v_row.subtotal,0), 'FM999,999,999,990.00'),
+      to_char(GREATEST(COALESCE(v_row.subtotal,0),0) + GREATEST(COALESCE(v_row.ieps,0),0), 'FM999,999,999,990.00'),
       to_char(v_iva_max,                  'FM999,999,999,990.00');
   END IF;
 

@@ -128,11 +128,12 @@ describe("ci.yml · caché de ESLint aislada", () => {
 
   it("documenta la validación de caché caliente y la comparativa fría", () => {
     const doc = leer("docs/ci-vitest-shards.md");
-    expect(doc).toContain("Cache restored successfully");
+    // La guía conserva el resultado observado, no exige dos variantes del log del proveedor.
+    expect(doc).toMatch(/caché se\s+restauró por `Cache hit for restore-key`/);
     expect(doc).toContain("Cache hit for restore-key");
     expect(doc).toContain("1 m 55 s");
     expect(doc).toContain("2 m 41 s");
-    expect(doc).toContain("caché caliente");
+    expect(doc).toMatch(/corrida caliente \(caché de ESLint activa\)/);
   });
 
   it("usa clave propia por corrida más restore-keys (sin bloqueo del primer escritor)", () => {

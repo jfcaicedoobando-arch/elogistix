@@ -19,6 +19,8 @@ export interface ReemplazarConceptosParams {
   facturaId: string;
   folio?: string | null;
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
+  /** Impuestos globales aún no distribuidos en partidas. Omitir conserva los actuales. */
+  impuestosNoDesglosados?: { iva: number; ieps: number };
 }
 
 export async function reemplazarConceptosFactura(
@@ -36,6 +38,9 @@ export async function reemplazarConceptosFactura(
   const { data, error } = await supabase.rpc("reemplazar_conceptos_factura_proveedor", {
     p_factura_id: params.facturaId,
     p_conceptos: payload,
+    ...(params.impuestosNoDesglosados ? {
+      p_impuestos_no_desglosados: params.impuestosNoDesglosados,
+    } : {}),
   });
   if (error) throw error;
 
@@ -44,7 +49,7 @@ export async function reemplazarConceptosFactura(
     accion: "editar_conceptos_factura",
     entidadId: params.facturaId,
     entidadNombre: params.folio ?? "",
-    detalles: { conceptos: payload.length },
+    detalles: { conceptos: payload.length, impuestos_no_desglosados: params.impuestosNoDesglosados ?? null },
   });
   return Number(data ?? payload.length);
 }

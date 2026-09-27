@@ -9,6 +9,7 @@ import { notaSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { run } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
+import { uuidSchema } from "@/lib/validation/mutationSchemas.shared";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -121,12 +122,14 @@ export async function actualizarFechaLlegadaRealEmbarque(
 export async function actualizarEtaEmbarque(
   embarqueId: string,
   nuevaEta: string,
+  eventoId?: string,
 ): Promise<void> {
+  if (eventoId !== undefined) parseOrThrow(uuidSchema, eventoId, "Evento de tracking");
   await actualizarEmbarqueVerificado(embarqueId, { eta: nuevaEta });
   await registrarBitacoraEmbarque({
     accion: "Actualizó ETA de embarque",
     entidadId: embarqueId,
-    detalles: { etaNueva: nuevaEta },
+    detalles: { etaNueva: nuevaEta, ...(eventoId ? { eventoId } : {}) },
   });
 }
 
@@ -134,10 +137,12 @@ export async function insertarNotaEmbarque(
   embarqueId: string,
   contenido: string,
   usuario: string,
-): Promise<void> {
+): Promise<string> {
   parseOrThrow(notaSchema, { contenido, usuario }, "Nota");
+  const notaId = crypto.randomUUID();
   await run(
     supabase.from('notas_embarque').insert({
+      id: notaId,
       embarque_id: embarqueId,
       contenido,
       tipo: 'nota' as const,
@@ -147,8 +152,9 @@ export async function insertarNotaEmbarque(
   await registrarBitacoraEmbarque({
     accion: "Agregó nota a embarque",
     entidadId: embarqueId,
-    detalles: { usuario },
+    detalles: { usuario, notaId },
   });
+  return notaId;
 }
 
 /**

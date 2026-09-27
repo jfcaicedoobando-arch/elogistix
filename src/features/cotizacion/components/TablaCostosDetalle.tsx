@@ -7,7 +7,7 @@ import {
   Table, TableBody, TableCell, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
@@ -62,8 +62,10 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
               <TableRow>
                 <DetailTableHead className="whitespace-nowrap">Concepto</DetailTableHead>
                 <DetailTableHead className="whitespace-nowrap">Proveedor</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Cantidad</DetailTableHead>
                 <DetailTableHead className="text-right whitespace-nowrap">Costo Unit.</DetailTableHead>
-                <DetailTableHead className="text-right whitespace-nowrap">Venta</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Costo total</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Venta total</DetailTableHead>
                 <DetailTableHead className="text-right whitespace-nowrap">Utilidad</DetailTableHead>
                 <DetailTableHead className="text-right whitespace-nowrap">% Utilidad</DetailTableHead>
               </TableRow>
@@ -84,14 +86,16 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                           <Input value={fila.proveedor} onChange={e => onUpdate(globalIdx, "proveedor", e.target.value)} className="h-8 text-body" placeholder="Proveedor" aria-label={`Proveedor de ${fila.concepto}`} />
                         ) : <span className="text-body">{fila.proveedor || "-"}</span>}
                       </TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(fila.cantidad)}</TableCell>
                       <TableCell className="text-right">
                         {canEdit ? (
                           <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
                         ) : <span className="text-body tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
+                      <TableCell className="text-right whitespace-nowrap text-body tabular-nums">{formatCurrency(costo, moneda)}</TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         {canEdit ? (
-                          <Input type="number" value={fila.venta || ""} onChange={e => onUpdate(globalIdx, "venta", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Venta de ${fila.concepto}`} />
+                          <Input type="number" value={fila.venta || ""} onChange={e => onUpdate(globalIdx, "venta", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Venta total de ${fila.concepto}`} />
                         ) : <span className="text-body tabular-nums">{formatCurrency(fila.venta, moneda)}</span>}
                       </TableCell>
                       <TableCell className={`text-right text-body tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
@@ -101,10 +105,11 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                     </DetailTableRow>
                     {(canEdit || fila.notas) && (
                       <TableRow>
-                        <TableCell colSpan={6} className="pt-0 pb-2 border-t-0">
+                        <TableCell colSpan={8} className="pt-0 pb-2 border-t-0">
                           {canEdit ? (
                             <Textarea
                               placeholder="Notas (opcional)"
+                              aria-label={`Notas de ${fila.concepto}`}
                               value={fila.notas || ""}
                               onChange={e => onUpdate(globalIdx, "notas", e.target.value)}
                               className="text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
@@ -121,7 +126,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
             </TableBody>
             <TableFooter>
               <TableRow className="font-semibold">
-                <TableCell colSpan={2}>Totales</TableCell>
+                <TableCell colSpan={4}>Totales</TableCell>
                 <TableCell className="text-right tabular-nums">{formatCurrency(totales.totalCosto, moneda)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatCurrency(totales.totalVenta, moneda)}</TableCell>
                 <TableCell className={`text-right tabular-nums ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>

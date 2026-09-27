@@ -5,6 +5,21 @@ import {
 } from "../resumenConceptos";
 
 describe("resumenConceptos", () => {
+  it("expone IEPS global sin inventar una partida ni perder el total", () => {
+    const r = calcularResumenConceptos([{ monto: 1000, iva: 172.8, ieps: 0 }],
+      { iva: 172.8, ieps: 80, total: 1252.8 });
+    expect(r.ieps).toBe(0);
+    expect(r.iepsNoDesglosado).toBe(80);
+    expect(r.totalCalculado).toBe(1252.8);
+    expect(r.cuadra).toBe(true);
+  });
+
+  it("distribuir el impuesto elimina el importe global sin duplicarlo", () => {
+    const r = calcularResumenConceptos([{ monto: 1000, iva: 172.8, ieps: 80 }],
+      { iva: 172.8, ieps: 80, total: 1252.8 });
+    expect(r.iepsNoDesglosado).toBe(0);
+    expect(r.totalCalculado).toBe(1252.8);
+  });
   it("suma total de línea con impuestos", () => {
     expect(totalLineaConImpuestos({ monto: 70, cantidad: 1, iva: 11.2 })).toBe(81.2);
     expect(totalLineaConImpuestos({ monto: 10, cantidad: 3, iva: 4.8, ieps: 1 })).toBe(35.8);

@@ -13,9 +13,6 @@ import { useSearchParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
@@ -23,11 +20,11 @@ import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
-  listActividades, ACTIVIDAD_SORTABLE_KEYS,
+  ACTIVIDAD_SORTABLE_KEYS,
   type ActividadSortKey,
 } from "@/features/crm/services/actividades";
+import { listActividadesAgenda } from "@/features/crm/services/actividadEntidades";
 import {
-  ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
 } from "@/features/crm/hooks";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -37,7 +34,8 @@ import { pluralizar } from "@/lib/format/pluralizar";
 import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { ACTIVIDAD_TIPO_LABEL } from "@/features/crm/domain/actividadLabels";
+import { ActividadesFiltros } from "@/features/crm/components/actividades/ActividadesFiltros";
+import { actividadEntidadHref, actividadEntidadNombre } from "@/features/crm/domain/actividadEntidad";
 import { ActividadMobileCard } from "@/features/crm/components/ActividadMobileCard";
 
 
@@ -60,7 +58,7 @@ export default function Actividades() {
     defaultSort: { key: "fecha_programada", dir: "asc" },
     sortableKeys: ACTIVIDAD_SORTABLE_KEYS,
     fetcher: async ({ search, filters, sortKey, sortDir, page, pageSize }) => {
-      const { data, count } = await listActividades({
+      const { data, count } = await listActividadesAgenda({
         search,
         tipo: (filters.tipo as CrmActividadTipo | "todos") ?? "todos",
         // v13.823.49 — `?filtro=vencidas` se resuelve en la consulta: pendientes,
@@ -124,43 +122,20 @@ export default function Actividades() {
         activeCount={list.activeCount}
         onClearAll={list.resetAll}
         primary={
-          <>
-            <Select
-              value={list.filters.tipo}
-              onValueChange={(v) => list.setFilter("tipo", v)}
-            >
-              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los tipos</SelectItem>
-                {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{ACTIVIDAD_TIPO_LABEL[t]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select
-              value={list.filters.estado}
-              onValueChange={(v) => list.setFilter("estado", v)}
-            >
-              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendientes">Pendientes</SelectItem>
-                <SelectItem value="completadas">Completadas</SelectItem>
-                <SelectItem value="todas">Todas</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={list.filters.responsable}
-              onValueChange={(v) => list.setFilter("responsable", v)}
-            >
-              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="mias">Mis actividades</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+          <ActividadesFiltros filters={list.filters} onChange={list.setFilter} />
         }
       />
+      {(list.activeCount > 0 || list.search) && (
+        <p className="text-body-sm text-muted-foreground">Esta vista está filtrada. Las actividades nuevas se mostrarán sólo si coinciden con los filtros.</p>
+      )}
       <Card>
         <CardContent className="p-0">
+          {items.some(a => a.entidad_estado === "error") && (
+            <div role="status" className="flex flex-wrap items-center gap-2 border-b p-3 text-body-sm text-muted-foreground">
+              Algunos nombres no se pudieron consultar. Las actividades siguen disponibles.
+              <Button variant="outline" size="sm" onClick={() => void list.refetch()}>Reintentar nombres</Button>
+            </div>
+          )}
           {list.error ? (
             <ErrorState className="m-4" onRetry={() => void list.refetch()} />
           ) : (
@@ -170,6 +145,8 @@ export default function Actividades() {
             isLoading={list.isLoading || list.isStaleView}
             emptyMessage="Sin actividades"
             rowKey={(a) => a.id}
+            getRowHref={actividadEntidadHref}
+            getRowAriaLabel={a => `Abrir ${actividadEntidadNombre(a)} · ${a.asunto}`}
             density={TABLE_DENSITY.listado}
             sortMode="server"
             controlledSort={list.controlledSort}

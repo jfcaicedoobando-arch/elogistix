@@ -19,6 +19,9 @@ export interface ResumenConceptos {
   subtotal: number;
   iva: number;
   ieps: number;
+  /** Impuestos declarados en cabecera pero no distribuidos en las partidas. */
+  ivaNoDesglosado: number;
+  iepsNoDesglosado: number;
   retenciones: number;
   /** Total calculado a partir de las líneas (subtotal + IVA + IEPS − retenciones). */
   totalCalculado: number;
@@ -45,16 +48,20 @@ export function totalLineaConImpuestos(linea: LineaConceptoResumen): number {
 
 export function calcularResumenConceptos(
   lineas: ReadonlyArray<LineaConceptoResumen>,
-  documento?: { retenciones?: number | null; total?: number | null },
+  documento?: { iva?: number | null; ieps?: number | null; retenciones?: number | null; total?: number | null },
 ): ResumenConceptos {
   const subtotal = sumarConceptos(lineas);
   const iva = lineas.reduce((acc, l) => currency(acc, { precision: 4 }).add(n(l.iva)).value, 0);
   const ieps = lineas.reduce((acc, l) => currency(acc, { precision: 4 }).add(n(l.ieps)).value, 0);
   const retenciones = n(documento?.retenciones);
+  const ivaNoDesglosado = documento?.iva == null ? 0 : currency(Number(documento.iva), { precision: 4 }).subtract(iva).value;
+  const iepsNoDesglosado = documento?.ieps == null ? 0 : currency(Number(documento.ieps), { precision: 4 }).subtract(ieps).value;
 
   const totalCalculado = currency(subtotal, { precision: 4 })
     .add(iva)
     .add(ieps)
+    .add(ivaNoDesglosado)
+    .add(iepsNoDesglosado)
     .subtract(retenciones)
     .value;
 
@@ -68,6 +75,8 @@ export function calcularResumenConceptos(
     subtotal,
     iva,
     ieps,
+    ivaNoDesglosado,
+    iepsNoDesglosado,
     retenciones,
     totalCalculado,
     total: totalDoc ?? totalCalculado,

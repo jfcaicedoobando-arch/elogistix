@@ -159,7 +159,7 @@ export function mapCfdiToValues(
 
 /**
  * Aplica el proveedor elegido a los valores del formulario: hereda sus días de
- * crédito (si trae > 0) y recalcula el vencimiento. Extraído del hook
+ * crédito (incluido contado: 0 días) y recalcula el vencimiento. Extraído del hook
  * controller (v13.343.0) para respetar el techo de 200 líneas.
  */
 export function aplicarProveedorAValues(
@@ -168,7 +168,7 @@ export function aplicarProveedorAValues(
   nombre: string,
   diasCreditoProv?: number,
 ): FacturaFormValues {
-  const nextDias = typeof diasCreditoProv === "number" && diasCreditoProv > 0
+  const nextDias = typeof diasCreditoProv === "number" && Number.isFinite(diasCreditoProv) && diasCreditoProv >= 0
     ? diasCreditoProv
     : prev.diasCredito;
   return {

@@ -62,7 +62,7 @@ export function buildMercancia(
     m.push(['Peso', c.tipo_peso]);
   }
   m.push(['Tipo de Carga', c.tipo_carga || 'Carga General']);
-  m.push(['Sector Económico', c.sector_economico || c.descripcion_mercancia || '-']);
+  m.push(['Sector Económico', c.sector_economico?.trim() || '—']);
   if (!esMaritimo && !esAereo) {
     m.push(['Peso', `${c.peso_kg} kg`]);
     m.push(['Volumen', `${c.volumen_m3} m³`]);
@@ -70,4 +70,3 @@ export function buildMercancia(
   }
   return m;
 }
-
