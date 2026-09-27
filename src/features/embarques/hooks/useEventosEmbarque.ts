@@ -28,6 +28,7 @@ export function useEventosEmbarque(embarqueId: string | undefined) {
 }
 
 interface CreateEventoInput {
+  eventoId?: string;
   embarqueId: string;
   tipo: string;
   descripcion: string;
@@ -48,6 +49,7 @@ export function useCreateEventoEmbarque(options: CreateEventoOptions = {}) {
     mutationFn: (input: CreateEventoInput) => insertEventoEmbarque(input),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.actividad(vars.embarqueId) });
       if (!silent) notifySuccess(undefined, { title: "Evento agregado" });
     },
     onError: (error: Error) => {

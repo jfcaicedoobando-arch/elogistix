@@ -3,6 +3,7 @@
  * Sin dependencias de React: normaliza, deduplica y agrupa por día.
  */
 import { fechaDiaNegocio } from '@/lib/formatters';
+import { claveActividadHecho } from './actividadCorrelacion';
 
 export type ActividadCategoria = 'operacion' | 'comercial' | 'finanzas' | 'riesgo' | 'cierre';
 
@@ -114,9 +115,9 @@ function utilidad(item: ActividadItem): number {
 /**
  * Elimina duplicados de un mismo hecho registrado en varias fuentes
  * (por ejemplo un cambio de estado guardado en nota, evento y bitácora).
- * Con `dedupe_key` el colapso es exacto: se conserva el evento humano más
- * detallado del mismo hecho. Sin key se mantiene la heurística anterior
- * (bitácora prioritaria) para no colapsar hechos distintos del mismo minuto.
+ * Las notas/eventos con ID de origen conservan sus fuentes para el agrupador.
+ * Las claves y cambios de estado legacy mantienen su tratamiento anterior.
+ * Sin correlación, texto y minuto NO prueban duplicidad: sólo el mismo ID.
  */
 export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
   const ganadorPorKey = new Map<string, string>();
@@ -136,6 +137,14 @@ export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
   const vistos = new Set<string>();
   const out: ActividadItem[] = [];
   for (const item of items) {
+    // Nota/evento y sus bitácoras exactas deben llegar completos al agrupador.
+    // Sólo se descarta una repetición del MISMO registro, nunca otro ID.
+    if (claveActividadHecho(item)) {
+      const registro = `registro|${item.id}`;
+      if (!vistos.has(registro)) out.push(item);
+      vistos.add(registro);
+      continue;
+    }
     if (item.dedupeKey) {
       if (ganadorPorKey.get(item.dedupeKey) !== item.id) continue;
       out.push(item);
@@ -146,7 +155,7 @@ export function deduplicarActividad(items: ActividadItem[]): ActividadItem[] {
       (item.accion === 'Cambio de estado' || item.titulo.startsWith('Estado cambiado a')) &&
       clavesBitacora.has(item.fecha.slice(0, 16));
     if (esCambioEstadoAjeno) continue;
-    const clave = `${item.tipo}|${item.titulo}|${item.fecha.slice(0, 16)}`;
+    const clave = `registro|${item.id}`;
     if (vistos.has(clave)) continue;
     vistos.add(clave);
     out.push(item);

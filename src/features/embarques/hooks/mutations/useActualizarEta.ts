@@ -11,6 +11,7 @@ import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback"
 interface Input {
   embarqueId: string;
   nuevaEta: string;
+  eventoId?: string;
 }
 
 interface Options {
@@ -29,8 +30,8 @@ const patchEta = (field: "eta_actual") =>
 export function useActualizarEta(options: Options = {}) {
   const { silent = false } = options;
   return useMutationWithFeedback<unknown, Error, Input>({
-    mutationFn: ({ embarqueId, nuevaEta }: Input) =>
-      actualizarEtaEmbarque(embarqueId, nuevaEta),
+    mutationFn: ({ embarqueId, nuevaEta, eventoId }: Input) =>
+      eventoId !== undefined ? actualizarEtaEmbarque(embarqueId, nuevaEta, eventoId) : actualizarEtaEmbarque(embarqueId, nuevaEta),
     invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEta("eta_actual") },

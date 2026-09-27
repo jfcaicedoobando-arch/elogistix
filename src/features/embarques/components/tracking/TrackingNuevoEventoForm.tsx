@@ -106,8 +106,10 @@ export function TrackingNuevoEventoForm({
           try {
             const etaAnteriorFmt = etaActual ? formatDate(etaActual, "dd/MM/yyyy") : "—";
             const etaNuevaFmt = formatDate(fecha, "dd/MM/yyyy");
-            await actualizarEta.mutateAsync({ embarqueId, nuevaEta: fecha });
+            const eventoId = crypto.randomUUID();
+            await actualizarEta.mutateAsync({ embarqueId, nuevaEta: fecha, eventoId });
             await crearEvento.mutateAsync({
+              eventoId,
               embarqueId,
               tipo: "Cambio de ETA",
               descripcion: `ETA actualizada de ${etaAnteriorFmt} a ${etaNuevaFmt}`,

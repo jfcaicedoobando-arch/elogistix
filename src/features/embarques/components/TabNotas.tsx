@@ -38,7 +38,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
   const handleSubmit = async () => {
     if (!texto.trim() || !embarqueId) return;
     try {
-      await crearNota.mutateAsync({
+      const notaId = await crearNota.mutateAsync({
         embarqueId,
         contenido: texto.trim(),
         usuario: user?.email ?? "",
@@ -48,7 +48,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
         modulo: "embarques",
         entidad_id: embarqueId,
         entidad_nombre: expediente ?? "",
-        detalles: { nota: texto.trim() },
+        detalles: { nota: texto.trim(), notaId },
       });
       setTexto("");
       refetch();

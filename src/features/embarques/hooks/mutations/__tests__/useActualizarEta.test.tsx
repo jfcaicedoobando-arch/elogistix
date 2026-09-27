@@ -97,4 +97,15 @@ describe("useActualizarEta", () => {
     });
     expect(mockSvc).toHaveBeenCalledWith("e-4", "2026-05-01");
   });
+
+  it("propaga el ID de correlación al servicio sin alterar el valor de ETA", async () => {
+    const { wrapper } = makeWrapper();
+    mockSvc.mockResolvedValueOnce(undefined as never);
+    const { result } = renderHook(() => useActualizarEta(), { wrapper });
+    const eventoId = "22222222-2222-4222-8222-222222222222";
+    await act(async () => {
+      await result.current.mutateAsync({ embarqueId: "e-5", nuevaEta: "2026-05-02", eventoId });
+    });
+    expect(mockSvc).toHaveBeenCalledWith("e-5", "2026-05-02", eventoId);
+  });
 });

@@ -31,10 +31,11 @@ function Relacionados({ items }: { items: Item[] }) {
       <ul className="mt-1 space-y-1 pl-3 border-l">
         {items.map((r) => (
           <li key={r.id}>
-            <span className="font-medium">{etiquetaEvento(r.accion)}</span>
+            <span className="font-medium">{etiquetaEvento(r.accion, r.refTipo)}</span>
             {" · "}
             {formatFechaHora(r.fecha, { hour: "2-digit", minute: "2-digit", hour12: false })}
-            {r.titulo && <span className="block break-words">{r.titulo}</span>}
+            {r.titulo && <span className="block break-words">{descripcionHumana(r.titulo, r.refTipo)}</span>}
+            {r.detalles && <ActividadDetalles detalles={r.detalles} />}
           </li>
         ))}
       </ul>
@@ -46,12 +47,12 @@ export function ActividadItem({ item }: Props) {
   const usuario = item.usuario ? nombreDesdeEmail(item.usuario) : "Sistema";
   const monto =
     typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
-  const accion = etiquetaEvento(item.accion);
+  const accion = etiquetaEvento(item.accion, item.refTipo);
   // P2-A: título y descripción también pueden traer la clave técnica dentro
   // del texto ("Factura: factura.borrador_generado"); se humanizan sin tocar
   // las descripciones ya escritas en lenguaje natural.
-  const titulo = item.titulo ? descripcionHumana(item.titulo) : accion;
-  const descripcion = descripcionHumana(item.descripcion);
+  const titulo = item.titulo ? descripcionHumana(item.titulo, item.refTipo) : accion;
+  const descripcion = descripcionHumana(item.descripcion, item.refTipo);
   const relacionados = item.relacionados ?? [];
 
 

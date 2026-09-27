@@ -66,9 +66,10 @@ export function humanizarClave(clave: string): string {
 }
 
 /** Frase principal del evento; nunca una clave snake_case cruda. */
-export function etiquetaEvento(valor: string | undefined | null): string {
+export function etiquetaEvento(valor: string | undefined | null, refTipo?: string): string {
   const clave = (valor ?? '').trim();
   if (!clave) return 'Actividad registrada';
+  if (refTipo === 'cotizacion' && (clave === 'cambiar_estado' || clave === 'avanzar_estado')) return 'Cambio de estado de la cotización';
   return EVENTO_LABEL[clave] ?? humanizarClave(clave);
 }
 
