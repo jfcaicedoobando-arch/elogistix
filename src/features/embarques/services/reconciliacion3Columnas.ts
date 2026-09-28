@@ -28,7 +28,7 @@ import {
 import {
   agruparRealesFacturados,
   buildFilas3C,
-  type DeltaConcepto,
+  obtenerDeltaAplicado,
   type ResultadoReconciliacion3C,
 } from "./reconciliacion3Columnas.helpers";
 
@@ -89,8 +89,7 @@ export async function obtenerReconciliacion3Columnas(
 
   // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
   const interno = await obtenerEmbarqueInterno(embarqueId);
-  const deltaRaw = interno?.tarifa_delta_jsonb as { cambios?: DeltaConcepto[] } | null;
-  const delta = Array.isArray(deltaRaw?.cambios) ? deltaRaw!.cambios : [];
+  const delta = obtenerDeltaAplicado(interno?.tarifa_delta_jsonb);
 
   const filas = buildFilas3C(cotizados, delta, reales, umbrales);
   // Auditoría 2026-08-28 · Hallazgo 3: los totales se normalizan a MXN con el

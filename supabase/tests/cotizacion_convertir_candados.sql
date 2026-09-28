@@ -40,11 +40,14 @@ BEGIN
   BEGIN
     v_desde := pg_get_functiondef(
       'public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb)'::regprocedure);
-    IF v_desde !~ 'mantenida_por_operaciones.\)' THEN
-      RAISE EXCEPTION 'mantenida_por_operaciones dejo de validar la severidad bloqueante de la revalidacion';
+    IF position('ELSIF p_decision = ''mantenida_por_operaciones'' THEN' in v_desde) = 0 THEN
+      RAISE EXCEPTION 'mantenida_por_operaciones dejo de tener un candado propio';
     END IF;
-    IF position('mantenida_por_operaciones' in v_desde) > position('LC_TARIFA_REQUIERE_REVALIDACION' in v_desde) THEN
-      RAISE EXCEPTION 'mantenida_por_operaciones ya no comparte el candado LC_TARIFA_REQUIERE_REVALIDACION';
+    IF position('NOT IN (''sin_cambios'', ''informativa'')' in
+       substring(v_desde from position('ELSIF p_decision = ''mantenida_por_operaciones'' THEN' in v_desde))) = 0
+       OR position('LC_TARIFA_REQUIERE_REVALIDACION' in
+       substring(v_desde from position('ELSIF p_decision = ''mantenida_por_operaciones'' THEN' in v_desde))) = 0 THEN
+      RAISE EXCEPTION 'mantenida_por_operaciones dejo de bloquear revalidaciones severas';
     END IF;
     IF v_desde ~ 'p_decision <> .sin_cambios' THEN
       RAISE EXCEPTION 'la solicitud pendiente vuelve a cerrarse con cualquier decision distinta de sin_cambios';
@@ -70,3 +73,4 @@ BEGIN
 
   RAISE NOTICE 'OK cotizacion_convertir_candados';
 END $$;
+

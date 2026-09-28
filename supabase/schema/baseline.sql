@@ -13446,6 +13446,7 @@ CREATE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id 
     SET search_path TO 'public'
     AS $$
 DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb; v_delta jsonb;
+        v_costos_refrescados jsonb;
         v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
@@ -13479,8 +13480,12 @@ BEGIN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
-  IF p_decision IN ('sin_cambios','mantenida_por_operaciones') THEN
-    IF v_rev->>'severidad' = 'bloqueante' THEN
+  IF p_decision = 'sin_cambios' THEN
+    IF COALESCE(v_rev->>'severidad', '') <> 'sin_cambios' THEN
+      RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
+    END IF;
+  ELSIF p_decision = 'mantenida_por_operaciones' THEN
+    IF COALESCE(v_rev->>'severidad', '') NOT IN ('sin_cambios', 'informativa') THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
     END IF;
   ELSIF p_decision='reaprobada_ventas' THEN
@@ -13523,6 +13528,24 @@ BEGIN
     IF p_decision IN ('refrescada','sustituida') THEN
       PERFORM public._embarque_aplicar_tarifa_decidida(
         v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
+      -- La conciliación usa totales por concepto y moneda, no precios unitarios.
+      SELECT COALESCE(jsonb_agg(jsonb_build_object(
+               'concepto', s.concepto, 'moneda', s.moneda,
+               'monto_actual', s.monto_actual)
+               ORDER BY s.concepto, s.moneda), '[]'::jsonb)
+        INTO v_costos_refrescados
+        FROM (
+          SELECT min(c.concepto) AS concepto, c.moneda::text AS moneda,
+                 round(sum(c.monto), 2) AS monto_actual
+            FROM public.conceptos_costo c
+           WHERE c.embarque_id = v_embarque_id AND c.deleted_at IS NULL
+           GROUP BY lower(btrim(c.concepto)), c.moneda
+        ) s;
+      v_delta := (CASE WHEN jsonb_typeof(v_delta) = 'object'
+                       THEN v_delta ELSE '{}'::jsonb END)
+                 || jsonb_build_object('costos_refrescados', v_costos_refrescados);
+      UPDATE public.embarques SET tarifa_delta_jsonb = v_delta
+       WHERE id = v_embarque_id;
     END IF;
     IF p_decision IN ('reaprobada_ventas','refrescada','sustituida')
        AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN

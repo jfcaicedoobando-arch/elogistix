@@ -1,8 +1,4 @@
-/**
- * Helpers puros de la reconciliación a 3 columnas — sin Supabase.
- * Extraídos de `reconciliacion3Columnas.ts` para respetar el techo de 200
- * líneas por archivo (Power of 10).
- */
+/** Helpers puros de conciliación a 3 columnas; sin Supabase. */
 import type { CostoVersionado } from "@/features/cotizacion/services/versionado";
 import {
   construirFilaReconciliacion,
@@ -17,6 +13,18 @@ export interface DeltaConcepto {
   moneda?: string;
   monto_anterior?: number;
   monto_actual?: number | null;
+}
+
+/**
+ * El snapshot de costos se sella tras aplicar la tarifa y contiene importes
+ * TOTALES con los nombres de la cotización. `cambios` es sólo la comparación
+ * informativa entre tarifas (unitarios y nombres del tarifario).
+ */
+export function obtenerDeltaAplicado(raw: unknown): DeltaConcepto[] {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return [];
+  const payload = raw as { costos_refrescados?: unknown; cambios?: unknown };
+  if (Array.isArray(payload.costos_refrescados)) return payload.costos_refrescados as DeltaConcepto[];
+  return Array.isArray(payload.cambios) ? payload.cambios as DeltaConcepto[] : [];
 }
 
 /**
@@ -187,3 +195,4 @@ export function agruparRealesFacturados(
   }
   return Array.from(map.values());
 }
+

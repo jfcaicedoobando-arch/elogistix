@@ -35,8 +35,13 @@ DECLARE
   v_t_ok   uuid;
   v_cli    uuid;
   v_cot    uuid;
+  v_cot_conversion uuid;
   v_emb    uuid;
+  v_emb_conversion uuid;
   v_delta  jsonb;
+  v_rev    jsonb;
+  v_snapshot jsonb;
+  v_total numeric;
   v_ok     boolean;
   v_msg    text;
 BEGIN
@@ -168,7 +173,79 @@ BEGIN
     RAISE EXCEPTION 'CASO 3 FALLÓ: el delta no refleja el flete real de la tarifa elegida: %', v_delta;
   END IF;
   RAISE NOTICE 'CASO 3 OK: el delta de la sustitución se calcula contra la tarifa elegida';
+
+  -- CASOS 4 y 5: dos contenedores y una tarifa cuyo nombre (Flete base) no
+  -- coincide con el costo aceptado (Flete marítimo). La columna Refrescado
+  -- necesita el TOTAL realmente aplicado, sellado al crear el embarque.
+  INSERT INTO public.cotizaciones
+    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
+     tarifa_id, tipo_contenedor, num_contenedores, conceptos_venta)
+  VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, v_uid,
+          'USD'::public.moneda, 'COT-TSUST-0002',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          v_t_base, 'TST20', 2,
+          jsonb_build_array(jsonb_build_object(
+            'descripcion', 'Flete marítimo', 'cantidad', '2',
+            'precio_unitario', '1500', 'moneda', 'USD', 'total', '3000')))
+  RETURNING id INTO v_cot_conversion;
+  INSERT INTO public.cotizacion_costos
+    (cotizacion_id, organization_id, concepto, moneda, cantidad, costo_unitario,
+     precio_venta, costeo_tarifa_id)
+  VALUES (v_cot_conversion, v_org, 'Flete marítimo', 'USD', 2, 1000, 0, v_t_base);
+
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
+  UPDATE public.costeo_tarifas SET flete_base = 1050 WHERE id = v_t_base;
+  v_ok := false;
+  BEGIN
+    PERFORM public.crear_embarque_borrador_desde_cotizacion(
+      v_cot_conversion, 'sin_cambios', v_t_base, '{}'::jsonb);
+  EXCEPTION WHEN others THEN
+    v_msg := SQLERRM;
+    v_ok := v_msg LIKE '%LC_TARIFA_REQUIERE_REVALIDACION%';
+  END;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'CASO 4 FALLÓ: sin_cambios convirtió sin decisión ante cambio informativo: %', COALESCE(v_msg, 'sin error');
+  END IF;
+  RAISE NOTICE 'CASO 4 OK: un cambio menor exige decisión explícita';
+
+  -- Un cambio superior al umbral no se puede ocultar con la decisión
+  -- "mantenida_por_operaciones"; se requiere re-aprobación o sustitución.
+  UPDATE public.costeo_tarifas SET flete_base = 1100 WHERE id = v_t_base;
+  v_rev := public.revalidar_tarifa_cotizacion(v_cot_conversion);
+  IF v_rev->>'severidad' <> 'bloqueante' THEN
+    RAISE EXCEPTION 'CASO 4B FALLÓ: se esperaba revalidación bloqueante: %', v_rev;
+  END IF;
+  v_ok := false;
+  BEGIN
+    PERFORM public.crear_embarque_borrador_desde_cotizacion(
+      v_cot_conversion, 'mantenida_por_operaciones', v_t_base, '{}'::jsonb);
+  EXCEPTION WHEN others THEN
+    v_msg := SQLERRM;
+    v_ok := v_msg LIKE '%LC_TARIFA_REQUIERE_REVALIDACION%';
+  END;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'CASO 4B FALLÓ: operaciones mantuvo una tarifa con cambio bloqueante: %', COALESCE(v_msg, 'sin error');
+  END IF;
+  RAISE NOTICE 'CASO 4B OK: un cambio bloqueante no se puede mantener sin resolver';
+
+  v_emb_conversion := public.crear_embarque_borrador_desde_cotizacion(
+    v_cot_conversion, 'sustituida', v_t_ok, '{}'::jsonb);
+  SELECT COALESCE(sum(monto), 0) INTO v_total
+    FROM public.conceptos_costo
+   WHERE embarque_id = v_emb_conversion AND deleted_at IS NULL;
+  SELECT tarifa_delta_jsonb->'costos_refrescados' INTO v_snapshot
+    FROM public.embarques WHERE id = v_emb_conversion;
+  IF v_total <> 2400 OR NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements(COALESCE(v_snapshot, '[]'::jsonb)) c
+     WHERE c->>'concepto' = 'Flete marítimo'
+       AND c->>'moneda' = 'USD'
+       AND (c->>'monto_actual')::numeric = 2400
+  ) THEN
+    RAISE EXCEPTION 'CASO 5 FALLÓ: costo aplicado %, snapshot %; se esperaban USD 2400 de Flete marítimo', v_total, v_snapshot;
+  END IF;
+  RAISE NOTICE 'CASO 5 OK: snapshot total por concepto aceptado coincide con costos aplicados';
 END;
 $$;
 
 ROLLBACK;
+

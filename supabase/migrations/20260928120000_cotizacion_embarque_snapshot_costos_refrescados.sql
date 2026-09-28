@@ -1,12 +1,9 @@
--- Fuente canónica. Espejo 1:1 de la migración R201-COT-01/02 (cotización→embarque).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
-CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid, p_decision text DEFAULT 'sin_cambios'::text, p_tarifa_id_aplicada uuid DEFAULT NULL::uuid, p_delta_jsonb jsonb DEFAULT NULL::jsonb)
- RETURNS uuid
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
+-- Snapshot económico autoritativo al convertir cotización a embarque.
+-- Mantiene el cuerpo canónico en supabase/schema/embarques/crear_embarque_borrador_desde_cotizacion.sql.
+CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid, p_decision text DEFAULT 'sin_cambios'::text, p_tarifa_id_aplicada uuid DEFAULT NULL::uuid, p_delta_jsonb jsonb DEFAULT NULL::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $function$
 DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb; v_delta jsonb;
         v_costos_refrescados jsonb;
         v_existente UUID; v_caller_org UUID; v_is_super BOOLEAN;
@@ -14,24 +11,14 @@ BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
-  -- C21: FOR UPDATE serializa dos llamadas concurrentes sobre la misma cotización.
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
-
-  -- C21 (v13.823.380) — Si la cotización YA está vinculada a un embarque vivo,
-  -- esta llamada es un reintento: devolvemos el embarque existente SIN
-  -- revalidar tarifa, sin sellar una decisión tardía y sin reaplicar costos
-  -- (`_embarque_aplicar_tarifa_decidida` toca conceptos_costo pendientes de una
-  -- operación que puede estar Confirmada, En tránsito o Cerrada).
-  -- No es un early return "libre": se repiten los mismos controles de acceso
-  -- que aplica `crear_embarque_borrador_core`.
   SELECT e.id INTO v_existente
     FROM public.embarques e
    WHERE e.deleted_at IS NULL
      AND (e.id = v_cot.embarque_id OR e.cotizacion_id = v_cot.id)
    ORDER BY e.created_at ASC
    LIMIT 1;
-
   IF v_existente IS NOT NULL THEN
     v_caller_org := public.current_user_org_id();
     v_is_super := public.has_role(auth.uid(), 'super_admin'::app_role);
@@ -48,20 +35,10 @@ BEGIN
     END IF;
     RETURN v_existente;
   END IF;
-
-  -- v13.823.316: la vigencia limita la RESPUESTA del cliente, no la ejecución.
-  -- Una cotización ya Aceptada / En operación congeló sus términos al aceptarse
-  -- y debe poder convertirse a embarque aunque la vigencia haya expirado; el
-  -- resto de estados sigue bloqueado por `enforce_cotizacion_vigente`.
   IF v_cot.estado NOT IN ('Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion) THEN
     PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
   END IF;
-
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
-  -- v13.823.349 — `mantenida_por_operaciones` NO es una vía para saltarse la
-  -- re-aprobación: sólo vale cuando la revalidación no es bloqueante. Con
-  -- severidad bloqueante hay que resolver por `reaprobada_ventas` (con
-  -- aprobación vigente) o refrescar/sustituir la tarifa.
   IF p_decision = 'sin_cambios' THEN
     IF COALESCE(v_rev->>'severidad', '') <> 'sin_cambios' THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
@@ -70,7 +47,6 @@ BEGIN
     IF COALESCE(v_rev->>'severidad', '') NOT IN ('sin_cambios', 'informativa') THEN
       RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
     END IF;
-
   ELSIF p_decision='reaprobada_ventas' THEN
     IF COALESCE((v_rev->>'reaprobacion_vigente')::boolean, false) IS NOT TRUE THEN
       RAISE EXCEPTION 'LC_REAPROBACION_NO_VIGENTE: la aprobación de ventas no corresponde al estado económico actual' USING ERRCODE='P0001';
@@ -89,25 +65,17 @@ BEGIN
     END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
-
-  -- v13.823.32: repetir la conversión (el core devuelve el embarque ya
-  -- existente) NO debe pisar el snapshot/decisión histórica de tarifa.
   SELECT tarifa_decision IS NOT NULL INTO v_ya_decidido
     FROM public.embarques WHERE id = v_embarque_id;
-
   IF NOT COALESCE(v_ya_decidido, false) THEN
-    -- v13.823.392 · Auditoría cotización→embarque #4: para 'sustituida' el
-    -- delta económico se calcula EN SERVIDOR contra la tarifa realmente
-    -- elegida; el `p_delta_jsonb` del navegador (comparación vieja contra la
-    -- tarifa original) ya no se guarda como dato autoritativo. Las demás
-    -- decisiones conservan el snapshot recibido.
+    -- v13.823.392 · Auditoría cotización→embarque #4: para 'sustituida' el delta
+    -- económico se calcula EN SERVIDOR contra la tarifa realmente elegida.
     IF p_decision = 'sustituida' THEN
       v_delta := public._embarque_delta_tarifa_sustituida(
         p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
     ELSE
       v_delta := p_delta_jsonb;
     END IF;
-
     UPDATE public.embarques
        SET tarifa_id_original=v_cot.tarifa_id,
            tarifa_id_aplicada=COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
@@ -116,18 +84,10 @@ BEGIN
            tarifa_revalidada_en=now(),
            tarifa_revalidada_por=auth.uid()
      WHERE id=v_embarque_id;
-
-    -- R201-COT-01: refrescar o sustituir la tarifa debe reflejarse en el COSTO
-    -- del embarque; antes sólo se guardaba la etiqueta de la decisión y el
-    -- embarque nacía con los importes viejos. El histórico de la cotización y
-    -- el precio de venta aceptado no se tocan.
     IF p_decision IN ('refrescada','sustituida') THEN
       PERFORM public._embarque_aplicar_tarifa_decidida(
         v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
-
-      -- La conciliación compara TOTALES por concepto y moneda, no precios
-      -- unitarios de la tarifa. Sellamos la foto exacta después de aplicar la
-      -- decisión, antes de cualquier edición posterior del embarque.
+      -- La conciliación usa totales por concepto y moneda, no precios unitarios.
       SELECT COALESCE(jsonb_agg(jsonb_build_object(
                'concepto', s.concepto, 'moneda', s.moneda,
                'monto_actual', s.monto_actual)
@@ -146,16 +106,12 @@ BEGIN
       UPDATE public.embarques SET tarifa_delta_jsonb = v_delta
        WHERE id = v_embarque_id;
     END IF;
-
-    -- v13.823.349 — sólo las decisiones que realmente resuelven el bloqueo
-    -- cierran la solicitud pendiente; `mantenida_por_operaciones` no.
     IF p_decision IN ('reaprobada_ventas','refrescada','sustituida')
        AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
       UPDATE public.cotizaciones
          SET estado_revalidacion='reaprobada', revalidacion_resuelta_en=now(), updated_at=now()
        WHERE id=p_cotizacion_id;
     END IF;
-
     INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
       SELECT v_cot.organization_id, auth.uid(),
         COALESCE((SELECT email FROM auth.users WHERE id=auth.uid()),''),
@@ -165,10 +121,10 @@ BEGIN
           'tarifa_id_aplicada',COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
           'delta',v_delta);
   END IF;
-
   RETURN v_embarque_id;
 END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) TO authenticated, service_role;
+
