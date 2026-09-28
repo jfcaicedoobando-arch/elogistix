@@ -78,7 +78,7 @@ export function SugerirEmbarqueBlock({
             placeholder="Ej. Flete marítimo, Maniobras, Demoras…"
           />
           <p className="text-body-sm text-muted-foreground">
-            Se registrará por el total de la factura y quedará marcado como pagado.
+            Se registrará por el subtotal de la factura, sin impuestos, y quedará pendiente hasta registrar el pago.
           </p>
         </div>
       </div>
