@@ -10,26 +10,9 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
-export const EMPTY_CLIENTE = {
-  nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
-  // O4.6: pre-flight fiscal — capturamos los defaults de pago desde el alta
-  // para que el timbrado nunca se detenga por datos faltantes.
-  regimen_fiscal: "", uso_cfdi_default: "G03", forma_pago_default: "99", metodo_pago_default: "PPD",
-};
-
-/** Único documento indispensable para dar de alta al cliente. */
-export const DOC_CSF = 'Constancia de Situación Fiscal (CSF)';
-
-/** Checklist completo del expediente; sólo la CSF bloquea el alta. */
-export const DOCS_OBLIGATORIOS = [
-  'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
-  'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
-  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Libre Carga',
-  'Estados financieros último corte',
-];
-
-export type ModoAlta = "manual" | "csf";
-export type ClienteForm = typeof EMPTY_CLIENTE;
+import { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE, type ClienteForm, type ModoAlta } from "./useNuevoClienteController.constants";
+export { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE } from "./useNuevoClienteController.constants";
+export type { ClienteForm, ModoAlta } from "./useNuevoClienteController.constants";
 
 /**
  * Controller del diálogo de alta de clientes.

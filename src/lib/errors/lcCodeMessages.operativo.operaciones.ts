@@ -177,4 +177,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Esta cotización ya tiene un embarque vinculado; sus costos no pueden reemplazarse. Ajusta los costos en el embarque.",
   LC_CONDICION_NAVIERA_NO_ENCONTRADA:
     "No encontramos las condiciones de esta naviera o no tienes acceso a ellas. Recarga la página e inténtalo de nuevo.",
+  LC_RECARGO_AJENO_O_INEXISTENTE:
+    "Ese recargo ya no pertenece a la tarifa o fue eliminado. Recarga la tarifa antes de guardar.",
+  LC_RECARGO_COTIZADO_NO_ELIMINABLE:
+    "Este recargo ya se usó en una cotización. Consérvalo o crea una nueva versión de la tarifa.",
+  LC_RECARGO_DUPLICADO:
+    "El mismo recargo aparece dos veces en la edición. Recarga la tarifa y revisa los recargos.",
 };

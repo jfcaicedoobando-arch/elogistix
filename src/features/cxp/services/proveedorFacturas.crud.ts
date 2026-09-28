@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
-import type { Json, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
 import { escapeIlike } from "@/lib/search/ilike";
@@ -32,7 +32,11 @@ export async function crearFacturaProveedor(input: CrearFacturaProveedorInput) {
   const data = vinculosAtomicos?.length
     ? await unwrap(supabase.rpc("crear_factura_proveedor_vinculada_rpc", {
         p_factura: payload,
-        p_lineas: vinculosAtomicos as unknown as Json,
+        p_lineas: vinculosAtomicos.map((linea) => ({
+          concepto_costo_id: linea.concepto_costo_id,
+          descripcion: linea.descripcion,
+          monto: linea.monto,
+        })),
       }))
     : await unwrap(
         supabase.from("proveedor_facturas")
