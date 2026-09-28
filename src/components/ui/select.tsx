@@ -71,7 +71,9 @@ const SelectContent = ({ ref, className, children, position = "popper", ...props
         className={cn(
           "p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] min-w-[var(--radix-select-trigger-width)]",
+            // El trigger puede ser más ancho que el popup (máx. 32rem).
+            // Limitar el mínimo evita que el viewport recorte avisos largos.
+            "h-[var(--radix-select-trigger-height)] min-w-[min(var(--radix-select-trigger-width),90vw,32rem)] max-w-full",
         )}
       >
         {children}
