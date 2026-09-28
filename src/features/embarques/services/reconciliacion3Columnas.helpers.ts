@@ -1,8 +1,4 @@
-/**
- * Helpers puros de la reconciliación a 3 columnas — sin Supabase.
- * Extraídos de `reconciliacion3Columnas.ts` para respetar el techo de 200
- * líneas por archivo (Power of 10).
- */
+/** Helpers puros de conciliación a 3 columnas; sin Supabase. */
 import type { CostoVersionado } from "@/features/cotizacion/services/versionado";
 import {
   construirFilaReconciliacion,
@@ -199,3 +195,4 @@ export function agruparRealesFacturados(
   }
   return Array.from(map.values());
 }
+
