@@ -130,7 +130,9 @@ export async function vincularSafe(params: {
         proveedorId: values.provId,
         proveedorNombre: values.provNombre,
         concepto: embarqueAdHoc.concepto || `Servicios ${values.provNombre}`,
-        monto: total,
+        // Los costos del embarque son netos; IVA/IEPS y retenciones sólo afectan
+        // el total por pagar de la factura, no la base del costo ad hoc.
+        monto: Number(values.subtotal) || 0,
         moneda: values.moneda,
         folio: values.folio.trim(),
         fechaEmision: values.emision,
