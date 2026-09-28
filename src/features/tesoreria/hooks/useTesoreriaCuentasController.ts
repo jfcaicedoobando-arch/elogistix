@@ -40,6 +40,18 @@ export interface CuentaEditable {
   updated_at?: string | null;
 }
 
+function formDesdeCuenta(cuenta: CuentaEditable) {
+  return {
+    banco: cuenta.banco,
+    alias: cuenta.alias,
+    numero: cuenta.numero_cuenta ?? "",
+    clabe: cuenta.clabe ?? "",
+    moneda: cuenta.moneda as Moneda,
+    saldoInicial: Number(cuenta.saldo_inicial) || 0,
+    fechaSaldoInicial: cuenta.fecha_saldo_inicial,
+  };
+}
+
 export function useTesoreriaCuentasController() {
   const { data: cuentas = [], isLoading, isError, refetch } = useCuentasBancarias(false);
   const crear = useCrearCuenta();
@@ -70,15 +82,7 @@ export function useTesoreriaCuentasController() {
   /** Abre el modal en modo edición con los datos actuales de la cuenta. */
   const solicitarEditar = (cuenta: CuentaEditable) => {
     setEditTarget(cuenta);
-    setForm({
-      banco: cuenta.banco,
-      alias: cuenta.alias,
-      numero: cuenta.numero_cuenta ?? "",
-      clabe: cuenta.clabe ?? "",
-      moneda: cuenta.moneda as Moneda,
-      saldoInicial: Number(cuenta.saldo_inicial) || 0,
-      fechaSaldoInicial: cuenta.fecha_saldo_inicial,
-    });
+    setForm(formDesdeCuenta(cuenta));
     setOpen(true);
   };
 
@@ -158,6 +162,7 @@ export function useTesoreriaCuentasController() {
     Number(editTarget.saldo_inicial) !== (Number(form.saldoInicial) || 0) ||
     editTarget.fecha_saldo_inicial !== form.fechaSaldoInicial
   );
+  const isDirty = JSON.stringify(form) !== JSON.stringify(editTarget ? formDesdeCuenta(editTarget) : INITIAL_FORM);
 
   return {
     // P1-1: error + retry en lugar de esqueleto perpetuo.
@@ -168,6 +173,7 @@ export function useTesoreriaCuentasController() {
     open,
     setOpen: handleOpenChange,
     form,
+    isDirty,
     setField,
     submit,
     submitting: crear.isPending || actualizar.isPending,

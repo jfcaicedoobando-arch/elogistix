@@ -3,7 +3,7 @@
  * Funciones puras separadas para que `NuevoClienteFormPieces.tsx` exporte sólo componentes
  * (cumple con la regla react-refresh/only-export-components).
  */
-const RFC_RX = /^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{2,3})$/i;
+const RFC_RX = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i;
 
 /** True si el RFC tiene la forma estructural correcta. */
 export function rfcLooksValid(rfc: string): boolean {

@@ -82,6 +82,13 @@ export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaD
           activeCount={activeCount}
           onClearAll={onResetFilters}
           triggerLabel="Filtros de fecha y modo"
+          snapshot={() => ({ fechaDesde, fechaHasta, modo })}
+          restore={(foto) => {
+            const prev = foto as { fechaDesde: Date; fechaHasta: Date; modo: string };
+            onFechaDesdeChange(prev.fechaDesde);
+            onFechaHastaChange(prev.fechaHasta);
+            onModoChange(prev.modo);
+          }}
         >
           <DateField label={RANGO_DESDE_LABEL} value={fechaDesde} onChange={onFechaDesdeChange} fullWidth />
           <DateField label={RANGO_HASTA_LABEL} value={fechaHasta} onChange={onFechaHastaChange} fullWidth />

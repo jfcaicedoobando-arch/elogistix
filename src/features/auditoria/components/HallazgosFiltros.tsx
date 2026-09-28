@@ -86,6 +86,27 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
           title="Filtros de hallazgos"
           activeCount={activeCount}
           onClearAll={props.limpiar}
+          snapshot={() => ({
+            filtroRegla: props.filtroRegla,
+            filtroSev: props.filtroSev,
+            filtroCliente: props.filtroCliente,
+            filtroRevision: props.filtroRevision,
+            filtroResponsable: props.filtroResponsable,
+            etaDesde: props.etaDesde,
+            etaHasta: props.etaHasta,
+          })}
+          restore={(foto) => {
+            const prev = foto as Pick<HallazgosFiltrosValores,
+              "filtroRegla" | "filtroSev" | "filtroCliente" | "filtroRevision" |
+              "filtroResponsable" | "etaDesde" | "etaHasta">;
+            props.setFiltroRegla(prev.filtroRegla);
+            props.setFiltroSev(prev.filtroSev);
+            props.setFiltroCliente(prev.filtroCliente);
+            props.setFiltroRevision(prev.filtroRevision);
+            props.setFiltroResponsable(prev.filtroResponsable);
+            props.setEtaDesde(prev.etaDesde);
+            props.setEtaHasta(prev.etaHasta);
+          }}
         >
           <div className="space-y-3 [&>*]:!w-full [&_button]:!w-full">
             <HallazgosFiltrosSelects

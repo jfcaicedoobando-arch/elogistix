@@ -27,4 +27,14 @@ describe("useTesoreriaCuentasController — Q-15.8 reset al abrir", () => {
     expect(result.current.form.alias).toBe("");
     expect(result.current.open).toBe(true);
   });
+
+  it("detecta cambios en cualquier campo, no sólo en el alias", () => {
+    const { result } = renderHook(() => useTesoreriaCuentasController());
+    act(() => result.current.setOpen(true));
+    expect(result.current.isDirty).toBe(false);
+    act(() => result.current.setField("banco", "Santander"));
+    expect(result.current.isDirty).toBe(true);
+    act(() => result.current.setField("banco", "BBVA"));
+    expect(result.current.isDirty).toBe(false);
+  });
 });
