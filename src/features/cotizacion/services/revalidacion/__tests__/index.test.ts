@@ -40,11 +40,23 @@ describe("revalidarTarifa", () => {
     expect(out.max_delta_pct).toBe(3);
   });
 
-  it("acepta payloads vacíos sin lanzar", async () => {
+  it("bloquea un payload vacío para no convertirlo en sin_cambios", async () => {
     mock.setRpcResult("revalidar_tarifa_cotizacion", { data: null, error: null });
-    const out = await revalidarTarifa("cot-2");
-    expect(out.severidad).toBe("sin_cambios");
-    expect(out.cambios).toEqual([]);
+    await expect(revalidarTarifa("cot-2")).rejects.toThrow("No se pudo interpretar");
+  });
+
+  it("bloquea una severidad desconocida para exigir revisión explícita", async () => {
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "pendiente", cambios: [] }, error: null,
+    });
+    await expect(revalidarTarifa("cot-2")).rejects.toThrow("estado desconocido");
+  });
+
+  it("bloquea una lista de cambios ausente para no ocultar diferencias", async () => {
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "informativa" }, error: null,
+    });
+    await expect(revalidarTarifa("cot-2")).rejects.toThrow("cambios incompletos");
   });
 
   it("propaga error de la RPC revalidar_tarifa_cotizacion", async () => {

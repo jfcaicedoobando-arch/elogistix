@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.8] - 2026-09-28
+
+- **fix(cotizaciones)**: una revalidación de tarifa vacía, incompleta o con estado desconocido ya no se interpreta como «sin cambios» al convertir a embarque.
+- **fix(tarifas)**: la precarga tardía del buscador no borra los filtros que operaciones ya capturó al sustituir una tarifa.
+
 ## [13.824.7] - 2026-09-27
 
 - **fix(auditoría)**: el panel móvil no cuenta el estado inicial «Pendientes» como filtro activo y conserva los hallazgos seleccionados cuando se cierra sin aplicar cambios.
