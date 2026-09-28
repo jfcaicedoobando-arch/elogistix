@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.6] - 2026-09-27
+
+Correcciones de la auditoría R2 de integridad y experiencia de captura.
+
+- **fix(tarifas marítimas)**: editar notas conserva los IDs de recargos ya vinculados a cotizaciones; la migración protege recargos cotizados y repara enlaces históricos no ambiguos.
+- **fix(clientes y CxP)**: la CSF se guarda en el expediente con reintento sin duplicar el cliente; la factura de proveedor y sus vínculos se crean de forma transaccional, con prevalidación explicable del tope de 5 %.
+- **fix(filtros móviles)**: cerrar filtros sin aplicar revierte la selección en oportunidades, proveedores, reportes y auditoría; «Limpiar» sólo se confirma con «Aplicar».
+- **fix(tesorería)**: crear o editar cuentas bancarias avisa antes de descartar cambios en cualquier campo, también al pulsar «Cancelar».
+- **fix(clientes)**: el alta exige RFC completo y código postal de cinco dígitos antes de avanzar o guardar, igual que la validación visible del formulario.
+
 ## [13.824.5] - 2026-09-25
 
 Pulido visual del ERP: mejor legibilidad y navegación en escritorio HD y pantallas estrechas, sin cambios de lógica de negocio.
