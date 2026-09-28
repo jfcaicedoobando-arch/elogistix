@@ -4,7 +4,7 @@
  * por revisión/responsable.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type {
   AuditoriaRevision,
   HallazgoAuditoria,
@@ -13,6 +13,7 @@ import type {
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1" } }),
 }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
   const actual = await vi.importActual<typeof import("@/features/auditoria/hooks/useAuditoriaRevisiones")>(
     "@/features/auditoria/hooks/useAuditoriaRevisiones",
@@ -142,5 +143,22 @@ describe("useHallazgosTablaState — drill-down", () => {
     ];
     const { result } = renderHook(() => useHallazgosTablaState(datos, false));
     expect(result.current.clientes).toEqual(["Álvarez", "Méndez", "Zapata"]);
+  });
+
+  it("puede recuperar la selección al descartar un filtro móvil provisional", () => {
+    const medio = h({ embarque_id: "medio", severidad: "medio" });
+    const critico = h({ embarque_id: "critico", severidad: "critico" });
+    const { result } = renderHook(() => useHallazgosTablaState([medio, critico], false));
+    act(() => result.current.toggleSelected(revisionKey(medio)));
+    const foto = new Set(result.current.selectedIds);
+
+    act(() => result.current.setFiltroSev("critico"));
+    expect(result.current.selectedIds.size).toBe(0);
+
+    act(() => {
+      result.current.setFiltroSev("todas");
+      result.current.restoreSelection(foto);
+    });
+    expect(result.current.selectedIds).toEqual(new Set([revisionKey(medio)]));
   });
 });

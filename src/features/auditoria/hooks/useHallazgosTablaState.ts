@@ -96,6 +96,7 @@ export function useHallazgosTablaState(
     toggleSelected,
     toggleAllVisible,
     clearSelection,
+    restoreSelection,
   } = useHallazgosSelection(visibles, revisiones);
 
 
@@ -143,6 +144,7 @@ export function useHallazgosTablaState(
     filtroSev,
     filtroCliente,
     filtroRevision,
+    defaultRevision,
     filtroResponsable,
     etaDesde,
     etaHasta,
@@ -163,6 +165,7 @@ export function useHallazgosTablaState(
     toggleSelected,
     toggleAllVisible,
     clearSelection,
+    restoreSelection,
     setSearch: wrap(setSearch),
     setFiltroRegla: wrap(setFiltroRegla),
     setFiltroSev: wrap(setFiltroSev),

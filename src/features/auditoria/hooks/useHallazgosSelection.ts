@@ -27,6 +27,10 @@ export function useHallazgosSelection(
     setSelectedIds((prev) => (prev.size === 0 ? prev : new Set()));
   }, []);
 
+  const restoreSelection = useCallback((ids: ReadonlySet<string>) => {
+    setSelectedIds(new Set(ids));
+  }, []);
+
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -57,5 +61,6 @@ export function useHallazgosSelection(
     toggleSelected,
     toggleAllVisible,
     clearSelection,
+    restoreSelection,
   };
 }
