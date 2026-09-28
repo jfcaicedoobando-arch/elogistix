@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.824.7] - 2026-09-27
+
+- **fix(auditoría)**: el panel móvil no cuenta el estado inicial «Pendientes» como filtro activo y conserva los hallazgos seleccionados cuando se cierra sin aplicar cambios.
+
 ## [13.824.6] - 2026-09-27
 
 Correcciones de la auditoría R2 de integridad y experiencia de captura.

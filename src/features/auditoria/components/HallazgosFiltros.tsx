@@ -25,6 +25,9 @@ export interface HallazgosFiltrosValores {
   filtroSev: SeveridadAuditoria | "todas";
   filtroCliente: string;
   filtroRevision: FiltroRevision;
+  defaultRevision: FiltroRevision;
+  selectedIds: ReadonlySet<string>;
+  restoreSelection: (ids: ReadonlySet<string>) => void;
   filtroResponsable: FiltroResponsable;
   etaDesde: Date | undefined;
   etaHasta: Date | undefined;
@@ -55,12 +58,12 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
     if (props.filtroRegla !== "todas") n++;
     if (props.filtroSev !== "todas") n++;
     if (props.filtroCliente && props.filtroCliente !== "todos") n++;
-    if (props.filtroRevision !== "todos") n++;
+    if (props.filtroRevision !== props.defaultRevision) n++;
     if (props.filtroResponsable !== "todos") n++;
     if (props.etaDesde) n++;
     if (props.etaHasta) n++;
     return n;
-  }, [props.filtroRegla, props.filtroSev, props.filtroCliente, props.filtroRevision, props.filtroResponsable, props.etaDesde, props.etaHasta]);
+  }, [props.filtroRegla, props.filtroSev, props.filtroCliente, props.filtroRevision, props.defaultRevision, props.filtroResponsable, props.etaDesde, props.etaHasta]);
 
   const SearchField = (
     <div className="relative flex-1 min-w-0 md:min-w-[200px] md:max-w-[280px]">
@@ -94,11 +97,12 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
             filtroResponsable: props.filtroResponsable,
             etaDesde: props.etaDesde,
             etaHasta: props.etaHasta,
+            selectedIds: new Set(props.selectedIds),
           })}
           restore={(foto) => {
             const prev = foto as Pick<HallazgosFiltrosValores,
               "filtroRegla" | "filtroSev" | "filtroCliente" | "filtroRevision" |
-              "filtroResponsable" | "etaDesde" | "etaHasta">;
+              "filtroResponsable" | "etaDesde" | "etaHasta" | "selectedIds">;
             props.setFiltroRegla(prev.filtroRegla);
             props.setFiltroSev(prev.filtroSev);
             props.setFiltroCliente(prev.filtroCliente);
@@ -106,6 +110,7 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
             props.setFiltroResponsable(prev.filtroResponsable);
             props.setEtaDesde(prev.etaDesde);
             props.setEtaHasta(prev.etaHasta);
+            props.restoreSelection(prev.selectedIds);
           }}
         >
           <div className="space-y-3 [&>*]:!w-full [&_button]:!w-full">
