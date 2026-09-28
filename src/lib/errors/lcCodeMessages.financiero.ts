@@ -54,6 +54,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El expediente indicado no pertenece a esta organización o fue eliminado.",
   LC_FACTURA_PROVEEDOR_NO_ENCONTRADA: "La factura de proveedor no existe o fue eliminada.",
   LC_CXP_FACTURA_NO_EXISTE: "La factura de proveedor no existe.",
+  LC_CXP_CAPTURA_VINCULADA_INVALIDA:
+    "No se pudo vincular la factura: revisa que cada costo tenga un importe positivo y vuelve a intentar.",
   LC_CXP_EMBARQUE_NO_EXISTE: "El embarque vinculado no existe.",
   LC_CXP_EMBARQUE_ORG_MISMATCH: "El embarque pertenece a otra organización.",
   LC_CXP_EMBARQUE_CANCELADO:

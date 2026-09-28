@@ -8,33 +8,60 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
 import { escapeIlike } from "@/lib/search/ilike";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 
 // folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
 export type NuevaFacturaProveedorPayload =
   Omit<TablesInsert<"proveedor_facturas">, "folio_interno"> & { folio_interno?: string };
 
-export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayload) {
-  const data = await unwrap(
-    supabase
-      .from("proveedor_facturas")
-      .insert(payload as TablesInsert<"proveedor_facturas">)
-      .select()
-      .single(),
-  );
-  await registrarActividad({
-    modulo: "cxp",
-    accion: "crear",
-    entidadId: data.id,
-    entidadNombre: data.folio_interno ?? data.folio_proveedor ?? "",
-    detalles: {
-      proveedor_id: data.proveedor_id,
-      proveedor_nombre: data.proveedor_nombre,
-      folio_proveedor: data.folio_proveedor,
-      total: data.total,
-      moneda: data.moneda,
-    },
-  });
+export interface VinculoFacturaAtomico {
+  concepto_costo_id: string;
+  descripcion: string;
+  monto: number;
+}
+
+export type CrearFacturaProveedorInput = NuevaFacturaProveedorPayload & {
+  vinculosAtomicos?: VinculoFacturaAtomico[];
+};
+
+export async function crearFacturaProveedor(input: CrearFacturaProveedorInput) {
+  const { vinculosAtomicos, ...payload } = input;
+  // La RPC inserta factura y vínculos en una sola transacción. Si el trigger
+  // rechaza uno (tope, proveedor o moneda), tampoco queda la factura huérfana.
+  const data = vinculosAtomicos?.length
+    ? await unwrap(supabase.rpc("crear_factura_proveedor_vinculada_rpc", {
+        p_factura: payload,
+        p_lineas: vinculosAtomicos.map((linea) => ({
+          concepto_costo_id: linea.concepto_costo_id,
+          descripcion: linea.descripcion,
+          monto: linea.monto,
+        })),
+      }))
+    : await unwrap(
+        supabase.from("proveedor_facturas")
+          .insert(payload as TablesInsert<"proveedor_facturas">)
+          .select().single(),
+      );
+  try {
+    await registrarActividad({
+      modulo: "cxp",
+      accion: "crear",
+      entidadId: data.id,
+      entidadNombre: data.folio_interno ?? data.folio_proveedor ?? "",
+      detalles: {
+        proveedor_id: data.proveedor_id,
+        proveedor_nombre: data.proveedor_nombre,
+        folio_proveedor: data.folio_proveedor,
+        total: data.total,
+        moneda: data.moneda,
+      },
+    });
+  } catch (error) {
+    // El insert ya se confirmó: un fallo de bitácora no debe sugerir que es
+    // seguro reintentar la captura y duplicar la factura.
+    reportCaughtError(error, { feature: "cxp", op: "registrar_creacion_factura_proveedor" });
+  }
   return data;
 }
 

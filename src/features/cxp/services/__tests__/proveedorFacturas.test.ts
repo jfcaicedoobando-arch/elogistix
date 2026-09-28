@@ -98,6 +98,39 @@ describe("proveedorFacturas service", () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error create" } });
       await expect(crearFacturaProveedor({} as any)).rejects.toThrow("Error create");
     });
+
+    it("usa una sola RPC para factura y vínculos; no hace insert directo", async () => {
+      mock.tableCalls.length = 0;
+      mock.rpcCalls.length = 0;
+      mock.setRpcResult("crear_factura_proveedor_vinculada_rpc", {
+        data: { id: "factura-vinculada", folio_proveedor: "FP-TEST", total: 700 }, error: null,
+      });
+      const result = await crearFacturaProveedor({
+        folio_proveedor: "FP-TEST",
+        vinculosAtomicos: [{ concepto_costo_id: "costo-1", descripcion: "Flete", monto: 556.8 }],
+      } as any);
+      expect(result.id).toBe("factura-vinculada");
+      expect(mock.rpcCalls).toContainEqual({
+        fn: "crear_factura_proveedor_vinculada_rpc",
+        args: {
+          p_factura: { folio_proveedor: "FP-TEST" },
+          p_lineas: [{ concepto_costo_id: "costo-1", descripcion: "Flete", monto: 556.8 }],
+        },
+      });
+      expect(mock.tableCalls.some((call) => call.table === "proveedor_facturas" && call.ops.includes("insert"))).toBe(false);
+    });
+
+    it("si la RPC rechaza el vínculo, propaga el error sin crear otra factura", async () => {
+      mock.tableCalls.length = 0;
+      mock.setRpcResult("crear_factura_proveedor_vinculada_rpc", {
+        data: null, error: { message: "LC_CXP_VINCULO_SOBREASIGNADO" },
+      });
+      await expect(crearFacturaProveedor({
+        folio_proveedor: "FP-TEST",
+        vinculosAtomicos: [{ concepto_costo_id: "costo-1", descripcion: "Flete", monto: 700 }],
+      } as any)).rejects.toThrow("LC_CXP_VINCULO_SOBREASIGNADO");
+      expect(mock.tableCalls.some((call) => call.table === "proveedor_facturas" && call.ops.includes("insert"))).toBe(false);
+    });
   });
 
   describe("existeFacturaDuplicada", () => {

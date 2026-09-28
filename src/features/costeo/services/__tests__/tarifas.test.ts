@@ -130,9 +130,29 @@ describe("costeo/services/tarifas", () => {
       expect(args.p_recargos[0]).toMatchObject({ concepto: "BAF", lado: "origen", incluido_en_total: true });
     });
 
+    it("conserva el id del recargo al editar sólo las notas de una tarifa", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: null });
+      await updateTarifaConRecargos("t7", {
+        ...baseInput,
+        notas: "Revisión de notas sin cambio económico",
+        recargos: [{ id: "r-baf", concepto: "BAF", lado: "origen", monto: 185 }],
+      });
+      const call = mock.rpcCalls.find((c) => c.fn === "actualizar_tarifa_con_recargos_rpc");
+      expect(call?.args).toMatchObject({
+        p_recargos: [{ id: "r-baf", concepto: "BAF", lado: "origen", monto: 185 }],
+      });
+    });
+
     it("updateTarifaConRecargos propaga el error de actualizar_tarifa_con_recargos_rpc", async () => {
       mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: { message: "boom" } });
       await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toThrow(/boom/);
+    });
+
+    it("explica por qué no puede eliminar un recargo ya cotizado", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", {
+        data: null, error: { message: "LC_RECARGO_COTIZADO_NO_ELIMINABLE" },
+      });
+      await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toThrow(/ya se usó en una cotización/);
     });
   });
 

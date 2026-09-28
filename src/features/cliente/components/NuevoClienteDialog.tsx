@@ -28,6 +28,23 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+function textoGuardar(isSaving: boolean, clienteCreado: boolean): string {
+  if (isSaving) return "Guardando…";
+  return clienteCreado ? "Reintentar constancia" : "Crear cliente";
+}
+
+function descripcionDocumentos(clienteCreado: boolean): string {
+  return clienteCreado
+    ? "El cliente ya se creó. Falta guardar la constancia; reintenta sin crear un duplicado."
+    : "Adjunta la CSF en PDF. Los demás documentos se suben después desde el detalle del cliente.";
+}
+
+function descripcionSalida(clienteCreado: boolean): string {
+  return clienteCreado
+    ? "El cliente ya fue creado, pero su constancia sigue pendiente. Si sales, completa el expediente desde su ficha."
+    : "Perderás los datos capturados y los documentos adjuntos de este formulario.";
+}
+
 export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
   const c = useNuevoClienteController(() => onOpenChange(false));
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,11 +103,11 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         </>
       ) : (
         <>
-          <Button variant="outline" onClick={() => c.setStep(1)}>
+          <Button variant="outline" onClick={() => c.setStep(1)} disabled={c.isSaving || !!c.clienteCreado}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
           </Button>
-          <Button onClick={c.handleSave} disabled={!c.docsRequeridosCompletos} loading={c.isSaving}>
-            {c.isSaving ? "Creando…" : "Crear cliente"}
+          <Button onClick={c.handleSave} disabled={!c.docsRequeridosCompletos || c.isSaving} loading={c.isSaving}>
+            {textoGuardar(c.isSaving, !!c.clienteCreado)}
           </Button>
         </>
       )}
@@ -140,9 +157,10 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
 
       {c.step === 2 && (
         <DocumentChecklist
-          documentos={c.documentos}
+          documentos={c.documentos.filter((d) => d.requerido)}
           onFileChange={c.handleFileChange}
-          descripcion="Sólo la Constancia de Situación Fiscal (CSF) es obligatoria. Los demás documentos son opcionales y puedes subirlos más adelante desde el detalle del cliente."
+          accept=".pdf"
+          descripcion={descripcionDocumentos(!!c.clienteCreado)}
         />
       )}
     </FormDialogShell>
@@ -150,7 +168,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         open={confirmarSalida}
         onOpenChange={setConfirmarSalida}
         title="¿Descartar el alta del cliente?"
-        description="Perderás los datos capturados y los documentos adjuntos de este formulario."
+        description={descripcionSalida(!!c.clienteCreado)}
         confirmLabel="Descartar"
         cancelLabel="Seguir editando"
         variant="destructive"

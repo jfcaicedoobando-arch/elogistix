@@ -8,6 +8,8 @@ import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface TarifaRecargoInput {
+  /** Se conserva al editar para no romper el vínculo de cotizaciones existentes. */
+  id?: string;
   concepto: string;
   lado?: "origen" | "destino";
   monto: number;
@@ -62,6 +64,12 @@ export const MSG_TARIFA_DUPLICADA =
 function traducirErrorTarifa(e: unknown): unknown {
   const code = (e as { code?: string } | null)?.code;
   const msg = (e as { message?: string } | null)?.message ?? "";
+  if (msg.includes("LC_RECARGO_COTIZADO_NO_ELIMINABLE")) {
+    return new ReglaNegocioError(
+      "Este recargo ya se usó en una cotización y no puede eliminarse de la tarifa. " +
+      "Conserva el recargo o crea una nueva versión de la tarifa.",
+    );
+  }
   if (code === "23505" || msg.includes("costeo_tarifas_organization_id_agente_id")) {
     // Sentry JAVASCRIPT-REACT-64: es una validación esperada que la UI ya
     // explica en un toast accionable, no un bug. `ReglaNegocioError` evita que
@@ -76,6 +84,7 @@ function recargosParaRpc(recargos: TarifaRecargoInput[]) {
   return recargos
     .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
     .map((r) => ({
+      ...(r.id ? { id: r.id } : {}),
       concepto: r.concepto.trim(),
       lado: r.lado ?? "origen",
       monto: Number(r.monto) || 0,
@@ -115,8 +124,7 @@ export async function updateTarifaConRecargos(
 ): Promise<void> {
   const { recargos, ...rest } = input;
   const tarifa = sanitizeTarifaDates(rest);
-  // Ola 6 · M7: update de la tarifa + reemplazo de recargos en UNA transacción.
-  // Antes, si el insert de recargos fallaba, la tarifa quedaba sin recargos.
+  // La RPC actualiza recargos existentes por id dentro de la misma transacción.
   const { error } = await supabase.rpc("actualizar_tarifa_con_recargos_rpc", {
     p_id: id,
     p_tarifa: tarifa,

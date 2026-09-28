@@ -40,9 +40,9 @@ export function VincularConceptoAvisos({
         <p className="mt-0.5 flex items-start gap-1 text-label text-destructive">
           <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" aria-hidden />
           <span>
-            El importe asignado supera lo cotizado{equivalente}. Siguiente paso: baja el importe a
-            lo cotizado, o déjalo así si el proveedor realmente cobró más — la diferencia se
-            registrará como ajuste de costo en el embarque al guardar.
+            El importe asignado supera lo cotizado{equivalente}. Hasta 5% de diferencia puede
+            vincularse y generar un ajuste; por encima de ese límite debes ajustar primero el
+            costo del embarque o capturar la factura sin este vínculo para conciliarla después.
           </span>
         </p>
       )}
