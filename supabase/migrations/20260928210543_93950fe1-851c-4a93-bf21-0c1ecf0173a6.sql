@@ -1,0 +1,1 @@
+DO $$ BEGIN RAISE NOTICE 'no-op: regenerar types.ts tras agregar Administrativo a tipo_proveedor'; END $$;
