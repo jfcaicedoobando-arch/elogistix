@@ -9901,10 +9901,6 @@ export type Database = {
         Args: { p_ajustes: Json; p_factura_id: string }
         Returns: Json
       }
-      crear_factura_proveedor_vinculada_rpc: {
-        Args: { p_factura: Json; p_lineas: Json }
-        Returns: Database["public"]["Tables"]["proveedor_facturas"]["Row"]
-      }
       crear_clientes: {
         Args: { p_clientes: Json }
         Returns: {
@@ -9981,6 +9977,61 @@ export type Database = {
           p_request_id?: string
         }
         Returns: Json
+      }
+      crear_factura_proveedor_vinculada_rpc: {
+        Args: { p_factura: Json; p_lineas: Json }
+        Returns: {
+          aprobacion_heredada: boolean
+          aprobada_at: string | null
+          aprobada_por: string | null
+          archivo_pdf_url: string | null
+          archivo_xml_url: string | null
+          cancelada_por: string | null
+          categoria_presupuesto_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
+          estado_captura: string
+          fecha_cancelacion: string | null
+          fecha_emision: string
+          fecha_programada_pago: string | null
+          fecha_vencimiento: string | null
+          folio_interno: string
+          folio_proveedor: string
+          id: string
+          ieps: number
+          iva: number
+          justificacion_sin_vinculo: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          motivo_cancelacion: string | null
+          motivo_rechazo: string | null
+          notas: string
+          organization_id: string
+          origen_carga: string
+          proveedor_id: string
+          proveedor_nombre: string
+          retenciones: number
+          rfc_proveedor: string | null
+          subtotal: number
+          tipo_cambio_usd: number
+          total: number
+          updated_at: string
+          uuid_estatus_sat: string | null
+          uuid_fiscal: string | null
+          uuid_verificado: boolean | null
+          uuid_verificado_fecha: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "proveedor_facturas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       crear_proforma_atomica: {
         Args: {
@@ -11358,7 +11409,11 @@ export type Database = {
         Returns: number
       }
       reemplazar_conceptos_factura_proveedor: {
-        Args: { p_conceptos: Json; p_factura_id: string; p_impuestos_no_desglosados?: Json }
+        Args: {
+          p_conceptos: Json
+          p_factura_id: string
+          p_impuestos_no_desglosados?: Json
+        }
         Returns: number
       }
       reemplazar_demoras_tramos_rpc: {
@@ -12070,6 +12125,7 @@ export type Database = {
         | "Almacenes"
         | "Acondicionamiento de Carga"
         | "Materiales Peligrosos"
+        | "Administrativo"
       tipo_servicio_maritimo: "FCL" | "LCL"
     }
     CompositeTypes: {
@@ -12389,6 +12445,7 @@ export const Constants = {
         "Almacenes",
         "Acondicionamiento de Carga",
         "Materiales Peligrosos",
+        "Administrativo",
       ],
       tipo_servicio_maritimo: ["FCL", "LCL"],
     },
