@@ -3,10 +3,7 @@
  * límite de 200 líneas por archivo — Power of 10).
  */
 import { formatFechaDia } from "@/lib/formatters";
-import type {
-  FilaReconciliacion,
-  FacturaVinculada,
-} from "@/features/embarques/services/reconciliacionCostos";
+import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 
 export type SubtotalPorMoneda = {
   moneda: string;
@@ -102,23 +99,18 @@ export function etiquetaConteos(conAjuste: number, sinFactura: number): string |
 
 export function pagoBadgeClass(estado: string | null): string {
   const v = (estado ?? "").toLowerCase();
-  if (v === "pagada") return "bg-success/15 text-success border-success/30";
-  if (v === "vencida") return "bg-destructive/15 text-destructive border-destructive/30";
-  if (v === "vigente") return "bg-warning/15 text-warning border-warning/30";
+  if (v === "pagado") return "bg-success/15 text-success border-success/30";
+  if (v === "pendiente") return "bg-warning/15 text-warning border-warning/30";
   return "bg-muted text-muted-foreground border-border";
 }
 
-/** Devuelve el "peor" estado de pago cuando hay varias facturas ligadas. */
-export function peorEstadoPago(facturas: FacturaVinculada[]): string | null {
-  if (facturas.length === 0) return null;
-  const orden = ["vencida", "vigente", "pagada"];
-  let peor: string | null = null;
-  for (const f of facturas) {
-    const v = (f.estatus_pago ?? "").toLowerCase();
-    if (!peor) { peor = v; continue; }
-    if (orden.indexOf(v) < orden.indexOf(peor)) peor = v;
-  }
-  return peor ? peor.charAt(0).toUpperCase() + peor.slice(1) : null;
+/** La columna Pago refleja la liquidación calculada con pagos reales, no el estado del documento. */
+export function estadoPagoConcepto(fila: FilaReconciliacion): "Pendiente" | "Pagado" | null {
+  if (fila.facturas.length === 0) return null;
+  const estado = (fila.estado_liquidacion ?? "").toLowerCase();
+  if (estado === "pagado") return "Pagado";
+  if (estado === "pendiente") return "Pendiente";
+  return null;
 }
 
 /** Ola C · UI-04: delega en el formateador canónico; conserva el fallback "s/f". */

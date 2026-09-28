@@ -9,6 +9,7 @@ export interface FacturaVinculada {
   folio_proveedor: string;
   fecha_emision: string | null;
   fecha_vencimiento: string | null;
+  /** Estado de proveedor_facturas, no una medición de pagos; el costo usa estado_liquidacion. */
   estatus_pago: string | null;
   descripcion: string | null;
   /** Monto YA convertido a la moneda del concepto de costo. 0 si `excluida`. */

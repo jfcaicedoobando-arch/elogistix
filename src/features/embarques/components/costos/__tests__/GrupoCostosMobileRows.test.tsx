@@ -55,4 +55,18 @@ describe("GrupoCostosMobileRows", () => {
     expect(within(mobile).getByText("Factura(s)")).toBeInTheDocument();
     expect(screen.getAllByText("MSCU1234567")).toHaveLength(2);
   });
+
+  it("muestra el pago real del costo en desktop y móvil, no el estado Vigente de la factura", () => {
+    renderGrupo(fila({
+      real_facturado: 100, diferencia: 0, estatus_renglon: "conciliado",
+      facturas: [{
+        proveedor_factura_id: "fact-qa", folio_interno: "FP-000006", folio_proveedor: "QA-001",
+        fecha_emision: null, fecha_vencimiento: null, estatus_pago: "Vigente", descripcion: null, monto: 100,
+      }],
+    }));
+
+    expect(within(screen.getByRole("list")).getByText("Pendiente")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Pendiente")).toBeInTheDocument();
+    expect(screen.queryByText("Vigente")).not.toBeInTheDocument();
+  });
 });

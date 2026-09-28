@@ -74,7 +74,7 @@ export function GrupoCostosFacturasCell({ fila }: Props) {
                 )}
                 <div>Emisión: {fecha}</div>
                 {fa.fecha_vencimiento && <div>Vencimiento: {fmtFecha(fa.fecha_vencimiento)}</div>}
-                {fa.estatus_pago && <div>Pago: {fa.estatus_pago}</div>}
+                {fa.estatus_pago && <div>Estado de factura: {fa.estatus_pago}</div>}
                 {fa.descripcion && <div className="text-muted-foreground max-w-xs">{fa.descripcion}</div>}
               </TooltipContent>
             </Tooltip>
@@ -84,4 +84,3 @@ export function GrupoCostosFacturasCell({ fila }: Props) {
     </TooltipProvider>
   );
 }
-

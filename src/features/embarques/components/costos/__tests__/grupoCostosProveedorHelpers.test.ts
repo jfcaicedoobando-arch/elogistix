@@ -5,7 +5,7 @@ import {
   estatusBadgeClass,
   estatusLabel,
   pagoBadgeClass,
-  peorEstadoPago,
+  estadoPagoConcepto,
   fmtFecha,
 } from "../grupoCostosProveedorHelpers";
 import type { FilaReconciliacion, FacturaVinculada } from "@/features/embarques/services/reconciliacionCostos.helpers";
@@ -121,14 +121,11 @@ describe("estatusLabel", () => {
 });
 
 describe("pagoBadgeClass", () => {
-  it("mapea pagada", () => {
-    expect(pagoBadgeClass("pagada")).toContain("success");
+  it("mapea la liquidación pagada", () => {
+    expect(pagoBadgeClass("Pagado")).toContain("success");
   });
-  it("mapea vencida", () => {
-    expect(pagoBadgeClass("vencida")).toContain("destructive");
-  });
-  it("mapea vigente", () => {
-    expect(pagoBadgeClass("VIGENTE")).toContain("warning");
+  it("mapea la liquidación pendiente", () => {
+    expect(pagoBadgeClass("Pendiente")).toContain("warning");
   });
   it("devuelve default para null", () => {
     expect(pagoBadgeClass(null)).toContain("muted");
@@ -138,28 +135,37 @@ describe("pagoBadgeClass", () => {
   });
 });
 
-describe("peorEstadoPago", () => {
-  it("devuelve null sin facturas", () => {
-    expect(peorEstadoPago([])).toBeNull();
+describe("estadoPagoConcepto", () => {
+  it("no muestra pago cuando el costo no tiene factura vinculada", () => {
+    expect(estadoPagoConcepto(fila({ estado_liquidacion: "Pendiente" }))).toBeNull();
   });
 
-  it("devuelve el peor estado con capitalización", () => {
-    const facturas = [
-      factura({ estatus_pago: "pagada" }),
-      factura({ estatus_pago: "vencida" }),
-      factura({ estatus_pago: "vigente" }),
-    ];
-    expect(peorEstadoPago(facturas)).toBe("Vencida");
+  it("muestra Pendiente aunque el documento ligado diga Vigente", () => {
+    expect(estadoPagoConcepto(fila({
+      estado_liquidacion: "Pendiente",
+      facturas: [factura({ estatus_pago: "Vigente" })],
+    }))).toBe("Pendiente");
   });
 
-  it("maneja estatus_pago null: la cadena vacía es falsy y devuelve null", () => {
-    const facturas = [factura({ estatus_pago: null })];
-    const res = peorEstadoPago(facturas);
-    expect(res).toBeNull();
+  it("respeta la liquidación del costo con varias facturas de distinto estado", () => {
+    expect(estadoPagoConcepto(fila({
+      estado_liquidacion: "Pendiente",
+      facturas: [factura({ estatus_pago: "Pagada" }), factura({ proveedor_factura_id: "f2", estatus_pago: "Vigente" })],
+    }))).toBe("Pendiente");
   });
 
-  it("con una sola factura vigente devuelve Vigente", () => {
-    expect(peorEstadoPago([factura({ estatus_pago: "vigente" })])).toBe("Vigente");
+  it("muestra Pagado al liquidarse el costo, independiente de la etiqueta del documento", () => {
+    expect(estadoPagoConcepto(fila({
+      estado_liquidacion: "Pagado",
+      facturas: [factura({ estatus_pago: "Vigente" })],
+    }))).toBe("Pagado");
+  });
+
+  it("no adivina un estado de liquidación desconocido", () => {
+    expect(estadoPagoConcepto(fila({
+      estado_liquidacion: "Desconocido",
+      facturas: [factura({})],
+    }))).toBeNull();
   });
 });
 
