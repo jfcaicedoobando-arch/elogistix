@@ -41,10 +41,12 @@ describe("useTesoreriaCuentasController — edición de cuenta", () => {
     const { result } = renderHook(() => useTesoreriaCuentasController());
 
     act(() => result.current.solicitarEditar(CUENTA));
+    expect(result.current.isDirty).toBe(false);
     expect(result.current.form.alias).toBe("BBVA MXN");
     expect(result.current.form.saldoInicial).toBe(467788.69);
 
     act(() => result.current.setField("saldoInicial", 535548.69));
+    expect(result.current.isDirty).toBe(true);
     expect(result.current.avisoRecalculo).toBe(true);
 
     await act(async () => { await result.current.submit(); });

@@ -79,4 +79,19 @@ describe("alta de cliente con CSF persistida", () => {
     expect(mock.upload).toHaveBeenCalledTimes(2);
     expect(onClose).toHaveBeenCalledOnce();
   });
+
+  it("no avanza ni guarda con RFC incompleto o CP inválido", async () => {
+    const { result } = prepararAlta();
+    act(() => {
+      result.current.handleChange("rfc", "ABC240101AA");
+      result.current.handleChange("cp", "6400");
+    });
+    expect(result.current.isStep1Valid).toBe(false);
+    await act(async () => { await result.current.handleSave(); });
+    expect(mock.create).not.toHaveBeenCalled();
+
+    act(() => result.current.setStep(1));
+    act(() => result.current.handleNext());
+    expect(result.current.step).toBe(1);
+  });
 });

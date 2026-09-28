@@ -66,6 +66,12 @@ export function ProveedoresFiltros(props: Props) {
               activeCount={filtrosActivos.length}
               onClearAll={onLimpiar}
               title="Filtros de proveedores"
+              snapshot={() => ({ origen, tipoFiltro })}
+              restore={(foto) => {
+                const prev = foto as { origen: OrigenFiltro; tipoFiltro: TipoFiltro };
+                onOrigenChange(prev.origen);
+                onTipoChange(prev.tipoFiltro);
+              }}
             >
               {selectsContent}
             </MobileFiltersSheet>

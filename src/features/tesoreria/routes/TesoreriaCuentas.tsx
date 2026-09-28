@@ -7,6 +7,7 @@ import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -20,7 +21,7 @@ import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
 
 export default function TesoreriaCuentas() {
   const {
-    cuentas, isLoading, isError, refetch, open, setOpen, form, setField, submit, submitting,
+    cuentas, isLoading, isError, refetch, open, setOpen, form, isDirty, setField, submit, submitting,
     editTarget, solicitarEditar, monedaBloqueada, avisoRecalculo,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
@@ -102,10 +103,11 @@ export default function TesoreriaCuentas() {
         }
         size="lg"
         // EC-13: cerrar con ESC/clic fuera con captura iniciada pide confirmación.
-        isDirty={!editTarget && form.alias.trim().length > 0}
+        isDirty={isDirty}
+        busy={submitting}
         footer={
           <>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <FormDialogCancelarBoton onCancelar={() => setOpen(false)} disabled={submitting} />
             <Button onClick={submit} loading={submitting}>Guardar</Button>
           </>
         }

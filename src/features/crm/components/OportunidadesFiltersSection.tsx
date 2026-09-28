@@ -55,6 +55,8 @@ export default function OportunidadesFiltersSection({
               title="Filtros de oportunidades"
               activeCount={activos}
               onClearAll={() => onFiltrosChange(FILTROS_DEFAULT)}
+              snapshot={() => filtros}
+              restore={(foto) => onFiltrosChange(foto as OportunidadesFiltros)}
             >
               <OportunidadesFiltersBar
                 etapas={etapas}

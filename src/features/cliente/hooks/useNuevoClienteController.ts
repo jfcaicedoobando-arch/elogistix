@@ -9,7 +9,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
-import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
+import { cpLooksValid, emailLooksValid, rfcLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
 import { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE, type ClienteForm, type ModoAlta } from "./useNuevoClienteController.constants";
 export { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE } from "./useNuevoClienteController.constants";
 export type { ClienteForm, ModoAlta } from "./useNuevoClienteController.constants";
@@ -44,8 +44,8 @@ export function useNuevoClienteController(onClose: () => void) {
   const isStep1Valid = () =>
     Boolean(
       form.nombre.trim() &&
-      form.rfc.trim() &&
-      form.cp.trim() &&
+      rfcLooksValid(form.rfc) &&
+      cpLooksValid(form.cp) &&
       form.regimen_fiscal.trim() &&
       form.uso_cfdi_default.trim() &&
       form.forma_pago_default.trim() &&
@@ -96,7 +96,7 @@ export function useNuevoClienteController(onClose: () => void) {
   };
 
   const handleSave = async () => {
-    if (!docsRequeridosCompletos || !csfFile || isUploading) return;
+    if (!isStep1Valid() || !docsRequeridosCompletos || !csfFile || isUploading) return;
     let cliente = clienteCreado;
     try {
       if (!cliente) {

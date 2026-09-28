@@ -67,9 +67,8 @@ export function MobileFiltersSheet({
     onOpenChange(v);
   };
 
-  /** Limpiar sí persiste: es una acción explícita, no una selección temporal. */
+  /** Limpiar modifica sólo la selección abierta; Aplicar es la confirmación. */
   const limpiar = () => {
-    aplicadoRef.current = true;
     onClearAll();
   };
 

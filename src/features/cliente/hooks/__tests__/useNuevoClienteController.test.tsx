@@ -16,7 +16,7 @@ vi.mock("@/hooks/shared", () => ({
 }));
 
 vi.mock("@/features/cliente/services/csf", () => ({
-  parseCsf: vi.fn().mockResolvedValue({ nombre: "Parsed Org", rfc: "PARS123", cp: "12345" }),
+  parseCsf: vi.fn().mockResolvedValue({ nombre: "Parsed Org", rfc: "PAR240101AB0", cp: "12345" }),
 }));
 
 vi.mock("@/features/cliente/services/clienteDocumentos", () => ({
@@ -34,7 +34,7 @@ describe("useNuevoClienteController", () => {
     
     act(() => {
       result.current.handleChange("nombre", "Cliente Test");
-      result.current.handleChange("rfc", "TEST123456");
+      result.current.handleChange("rfc", "TCL240101ABC");
       result.current.handleChange("cp", "12345");
       result.current.handleChange("regimen_fiscal", "601");
       // B-024: email/teléfono/contacto son obligatorios en paso 1.
@@ -56,7 +56,7 @@ describe("useNuevoClienteController", () => {
 
     act(() => {
       result.current.handleChange("nombre", "Cliente Test");
-      result.current.handleChange("rfc", "TEST123456");
+      result.current.handleChange("rfc", "TCL240101ABC");
       result.current.handleChange("cp", "12345");
       result.current.handleChange("regimen_fiscal", "601");
       result.current.handleChange("email", "test@example.com");
@@ -89,7 +89,7 @@ describe("useNuevoClienteController", () => {
     });
     
     expect(result.current.form.nombre).toBe("PARSED ORG");
-    expect(result.current.form.rfc).toBe("PARS123");
+    expect(result.current.form.rfc).toBe("PAR240101AB0");
   });
 });
 
@@ -97,7 +97,7 @@ describe("useNuevoClienteController — correo del paso 1 (auditoría v13.823.75
   const llenarBase = (r: { handleChange: (k: never, v: never) => void }) => {
     const set = r.handleChange as unknown as (k: string, v: string) => void;
     set("nombre", "Cliente QA");
-    set("rfc", "TEST123456");
+    set("rfc", "TCL240101ABC");
     set("cp", "12345");
     set("regimen_fiscal", "601");
     set("telefono", "5555555555");
