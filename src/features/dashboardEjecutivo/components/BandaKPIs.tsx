@@ -87,7 +87,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
 
   return (
     <>
-      <KpiStrip desktopCols={6}>
+      <KpiStrip desktopCols={4}>
         <KpiCard
           label="Ingresos del periodo"
           value={formatCurrency(kpis.ingresos_mxn, "MXN")}

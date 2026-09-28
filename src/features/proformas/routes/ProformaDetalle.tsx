@@ -24,6 +24,7 @@ import { ProformaRail } from "@/features/proformas/components/detalle/ProformaRa
 import { ProformaDetalleHeader } from "@/features/proformas/components/detalle/ProformaDetalleHeader";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useDocumentTitle } from "@/hooks/shared";
+import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 
 
 export default function ProformaDetalle() {
@@ -68,6 +69,8 @@ interface ContentProps {
 }
 
 function ProformaDetalleContent({ data }: ContentProps) {
+  const { proforma, conceptos } = data;
+  const { autorizacion } = useClienteAutorizacion(proforma.cliente_id ?? null);
   const { descargar, downloadingId } = useDescargarProformaPdf();
   const tasaIva = useTasaIVA();
   const totales = useMemo(
@@ -81,7 +84,6 @@ function ProformaDetalleContent({ data }: ContentProps) {
     [data, tasaIva],
   );
 
-  const { proforma, conceptos } = data;
   const timeline = resolveProformaTimelineFields(proforma);
   const emptyConceptos = proforma.es_consolidada
     ? "Proforma consolidada (ver detalle agregado en el PDF)."
@@ -103,6 +105,7 @@ function ProformaDetalleContent({ data }: ContentProps) {
             estadoProforma={proforma.estado_proforma}
             estadoCliente={timeline.estadoCliente}
             aceptadaPor={timeline.aceptadaPor}
+            requiereAutorizacionProforma={autorizacion.requiereAutorizacionProforma}
             facturas={proforma.facturas_asociadas}
             clienteNombre={proforma.cliente_nombre}
             expediente={proforma.expediente}

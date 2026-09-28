@@ -86,3 +86,48 @@ describe("resumenProforma — pasos omitidos (R170-06)", () => {
     expect(r.pasosOmitidos).toEqual([]);
   });
 });
+
+
+describe("resumenProforma — cliente sin autorización externa (V-11)", () => {
+  it("muestra aprobación interna como paso actual aunque la proforma se hubiera enviado por correo", () => {
+    const r = resumenProforma({
+      estadoCliente: "pendiente",
+      facturada: false,
+      enviadaAt: "2026-09-01",
+      requiereAutorizacion: false,
+    });
+    expect(r.pasos.map((paso) => paso.label)).toEqual(["Emitida", "Aprobación interna", "Facturada"]);
+    expect(r.indiceActual).toBe(1);
+    expect(r.subEtiqueta).toBeNull();
+  });
+
+  it("mantiene la aprobación interna como último paso completado hasta facturar", () => {
+    const r = resumenProforma({
+      estadoCliente: "aceptada",
+      facturada: false,
+      requiereAutorizacion: false,
+    });
+    expect(r.indiceActual).toBe(1);
+    expect(r.pasos[r.indiceActual].label).toBe("Aprobación interna");
+  });
+
+  it("conserva los pasos de cliente para proformas que sí requieren autorización", () => {
+    const r = resumenProforma({
+      estadoCliente: "pendiente",
+      facturada: false,
+      enviadaAt: "2026-09-01",
+      requiereAutorizacion: true,
+    });
+    expect(r.pasos.map((paso) => paso.label)).toEqual(["Emitida", "Enviada", "Aceptada", "Facturada"]);
+    expect(r.subEtiqueta).toBe("Pendiente del cliente");
+  });
+
+  it("no atribuye el rechazo al cliente cuando la aprobación es interna", () => {
+    const r = resumenProforma({
+      estadoCliente: "rechazada",
+      facturada: false,
+      requiereAutorizacion: false,
+    });
+    expect(r.etiquetaTerminal).toBe("Rechazada");
+  });
+});
