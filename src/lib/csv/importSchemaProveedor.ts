@@ -21,6 +21,7 @@ export const TIPOS_PROVEEDOR = [
   "Almacenes",
   "Acondicionamiento de Carga",
   "Materiales Peligrosos",
+  "Administrativo",
 ] as const;
 
 const CATEGORIAS = ["Logistico", "GastoOperativo"] as const;
