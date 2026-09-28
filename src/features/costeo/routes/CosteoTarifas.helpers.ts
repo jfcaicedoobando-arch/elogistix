@@ -39,6 +39,7 @@ type TarifaRow = {
   transit_time_dias: number | null;
   notas: string | null;
   recargos?: Array<{
+    id?: string;
     concepto: string;
     lado: "origen" | "destino" | string | null;
     monto: number | string;
@@ -60,6 +61,7 @@ export function buildInitialFromTarifa(t: TarifaRow): Partial<TarifaInput> {
     transit_time_dias: t.transit_time_dias ?? 0,
     notas: t.notas,
     recargos: (t.recargos ?? []).map((r) => ({
+      id: r.id,
       concepto: r.concepto,
       lado: (r.lado === "origen" || r.lado === "destino") ? r.lado : undefined,
       monto: Number(r.monto),

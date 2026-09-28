@@ -154,6 +154,6 @@ export {
 
   softDeleteFacturaProveedor,
   type NuevaFacturaProveedorPayload,
+  type CrearFacturaProveedorInput,
 } from "./proveedorFacturas.crud";
-
 

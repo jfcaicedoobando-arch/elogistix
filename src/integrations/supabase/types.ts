@@ -9901,6 +9901,10 @@ export type Database = {
         Args: { p_ajustes: Json; p_factura_id: string }
         Returns: Json
       }
+      crear_factura_proveedor_vinculada_rpc: {
+        Args: { p_factura: Json; p_lineas: Json }
+        Returns: Database["public"]["Tables"]["proveedor_facturas"]["Row"]
+      }
       crear_clientes: {
         Args: { p_clientes: Json }
         Returns: {

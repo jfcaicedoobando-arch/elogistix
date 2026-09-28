@@ -24,6 +24,8 @@ import { AgenteTarifaCard } from "./_sections/AgenteTarifaCard";
 import { todayLocalISO } from "@/lib/date/today";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { esTarifaUsableEn } from "@/features/costeo";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 type Filter = "todas" | "borrador" | "vigente" | "rechazada";
 
@@ -37,6 +39,20 @@ interface EditorState {
   modo: "crear" | "editar" | "duplicar";
   tarifaId?: string;
   initial?: Partial<TarifaInput>;
+}
+
+function recargosIniciales(
+  rows: Awaited<ReturnType<typeof fetchRecargosDeTarifa>>,
+  conservarId: boolean,
+): TarifaRecargoInput[] {
+  return rows.map((r) => ({
+    ...(conservarId ? { id: r.id } : {}),
+    concepto: r.concepto,
+    lado: r.lado === "origen" || r.lado === "destino" ? r.lado : undefined,
+    monto: Number(r.monto),
+    moneda: r.moneda ?? "USD",
+    incluido_en_total: r.incluido_en_total ?? true,
+  }));
 }
 
 export default function AgenteTarifas() {
@@ -53,6 +69,18 @@ export default function AgenteTarifas() {
     return tarifas.filter((t) => t.estado_aprobacion === filtro);
   }, [tarifas, filtro, hoy]);
 
+  const handleEditar = useCallback(async (t: AgenteTarifaRow) => {
+    try {
+      const rows = await fetchRecargosDeTarifa(t.id);
+      setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t, recargosIniciales(rows, true)) });
+    } catch (error: unknown) {
+      notifyError(undefined, {
+        title: "No se pudo abrir la tarifa para editar",
+        description: getErrorMessage(error), error, method: "AGENTE_EDITAR_TARIFA",
+      });
+    }
+  }, []);
+
   // B-086: antes de abrir el form de duplicar se traen los recargos reales de
   // la tarifa (BAF/LSS/ISPS...) — la "nueva versión" debe ser fiel. Si la
   // carga falla, se abre sin recargos (comportamiento anterior).
@@ -60,23 +88,17 @@ export default function AgenteTarifas() {
     let recargos: TarifaRecargoInput[] = [];
     try {
       const rows = await fetchRecargosDeTarifa(t.id);
-      recargos = rows.map((r) => ({
-        concepto: r.concepto,
-        lado: r.lado === "origen" || r.lado === "destino" ? r.lado : undefined,
-        monto: Number(r.monto),
-        moneda: r.moneda ?? "USD",
-        incluido_en_total: r.incluido_en_total ?? true,
-      }));
+      recargos = recargosIniciales(rows, false);
     } catch { /* silencioso: el usuario puede recapturar recargos a mano */ }
     setEditor({ open: true, modo: "duplicar", initial: toInitial(t, recargos) });
   }, []);
 
   const columns = useMemo(
     () => buildAgenteTarifasColumns({
-      onEditar: (t) => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) }),
+      onEditar: (t) => { void handleEditar(t); },
       onDuplicar: (t) => { void handleDuplicar(t); },
     }),
-    [handleDuplicar],
+    [handleDuplicar, handleEditar],
   );
 
   return (
@@ -122,7 +144,7 @@ export default function AgenteTarifas() {
         mobileCard={(t) => (
           <AgenteTarifaCard
             t={t}
-            onEditar={(x) => setEditor({ open: true, modo: "editar", tarifaId: x.id, initial: toInitial(x) })}
+            onEditar={(x) => { void handleEditar(x); }}
             onDuplicar={(x) => { void handleDuplicar(x); }}
           />
         )}

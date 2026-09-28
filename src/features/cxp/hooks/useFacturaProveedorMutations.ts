@@ -7,7 +7,7 @@ import {
   actualizarFacturaProveedor,
   SaldoNegativoError,
   type ActualizarFacturaPayload,
-  type NuevaFacturaProveedorPayload,
+  type CrearFacturaProveedorInput,
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -15,7 +15,7 @@ import { getErrorMessage } from "@/lib/errors";
 export function useCrearFacturaProveedor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: NuevaFacturaProveedorPayload) => crearFacturaProveedor(payload),
+    mutationFn: (payload: CrearFacturaProveedorInput) => crearFacturaProveedor(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.

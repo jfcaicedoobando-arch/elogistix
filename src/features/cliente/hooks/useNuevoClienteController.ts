@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateCliente } from "@/features/cliente/hooks/useClientes";
-import { useRegistrarActividad } from "@/hooks/shared";
+import { subirDocumentoCliente } from "@/features/cliente/services/clienteDocumentos";
+import type { Cliente } from "@/features/cliente/types/cliente";
 import { parseCsf } from "@/features/cliente/services/csf";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -37,7 +38,6 @@ export type ClienteForm = typeof EMPTY_CLIENTE;
  */
 export function useNuevoClienteController(onClose: () => void) {
   const createCliente = useCreateCliente();
-  const registrarActividad = useRegistrarActividad();
 
   const [form, setForm] = useState<ClienteForm>(EMPTY_CLIENTE);
   const [step, setStep] = useState<1 | 2>(1);
@@ -45,6 +45,8 @@ export function useNuevoClienteController(onClose: () => void) {
   const [modoAlta, setModoAlta] = useState<ModoAlta>("manual");
   const [parsingCsf, setParsingCsf] = useState(false);
   const [csfFile, setCsfFile] = useState<File | null>(null);
+  const [clienteCreado, setClienteCreado] = useState<Cliente | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleChange = (field: keyof ClienteForm, value: string) =>
     setForm(prev => ({
@@ -85,6 +87,7 @@ export function useNuevoClienteController(onClose: () => void) {
   };
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
+    if (docNombre === DOC_CSF) setCsfFile(file ?? null);
     setDocumentos(prev =>
       prev.map(d => d.nombre === docNombre ? { ...d, archivo: file?.name, adjuntado: !!file } : d)
     );
@@ -101,6 +104,7 @@ export function useNuevoClienteController(onClose: () => void) {
     setDocumentos([]);
     setModoAlta("manual");
     setCsfFile(null);
+    setClienteCreado(null);
   };
 
   const resetAndClose = () => {
@@ -109,22 +113,33 @@ export function useNuevoClienteController(onClose: () => void) {
   };
 
   const handleSave = async () => {
-    if (!docsRequeridosCompletos) return;
+    if (!docsRequeridosCompletos || !csfFile || isUploading) return;
+    let cliente = clienteCreado;
     try {
-      const clienteCreado = await createCliente.mutateAsync(form);
-      registrarActividad.mutate({
-        accion: 'crear', modulo: 'clientes',
-        entidad_id: clienteCreado.id, entidad_nombre: clienteCreado.nombre,
+      if (!cliente) {
+        cliente = await createCliente.mutateAsync(form);
+        setClienteCreado(cliente);
+      }
+      setIsUploading(true);
+      await subirDocumentoCliente({
+        clienteId: cliente.id,
+        organizationId: cliente.organization_id,
+        tipo: "Constancia de situación fiscal",
+        archivo: csfFile,
       });
       notifySuccess(undefined, { title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: unknown) {
       notifyError(undefined, {
-        title: "Error al crear cliente",
-        description: getErrorMessage(error),
+        title: cliente ? "Cliente creado; constancia pendiente" : "Error al crear cliente",
+        description: cliente
+          ? `La constancia no se guardó. Intenta de nuevo: no se creará otro cliente. ${getErrorMessage(error)}`
+          : getErrorMessage(error),
         error: error,
         method: "HANDLE_SAVE",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -181,7 +196,8 @@ export function useNuevoClienteController(onClose: () => void) {
     modoAlta,
     parsingCsf,
     csfFile,
-    isSaving: createCliente.isPending,
+    clienteCreado,
+    isSaving: createCliente.isPending || isUploading,
     isStep1Valid: isStep1Valid(),
     docsRequeridosCompletos,
     setModoAlta,
@@ -194,4 +210,3 @@ export function useNuevoClienteController(onClose: () => void) {
     resetAndClose,
   };
 }
-

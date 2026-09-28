@@ -18,6 +18,9 @@ import {
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 import { getErrorMessage } from "@/lib/errors";
+import { prevalidarVinculosCosto } from "@/features/cxp/services/prevalidarVinculosCosto";
+import type { VincularSafeResult } from "./useNuevaFacturaProveedorForm.sideEffects";
+import type { VinculoFacturaAtomico } from "@/features/cxp/services/proveedorFacturas.crud";
 
 /** Acción "Ver factura" del toast de CFDI duplicado (v13.368.0). */
 function accionVerFactura(f: FacturaExistentePorUuid) {
@@ -88,7 +91,7 @@ interface RunSubmitParams {
   embarqueAdHoc: EmbarqueSeleccionado | null;
   /** v13.820.5 — Embarque del documento del buzón CxP (herencia si no hay vínculos). */
   embarqueOrigenId?: string | null;
-  crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
+  crearMutateAsync: (payload: ReturnType<typeof buildPayload> & { vinculosAtomicos?: VinculoFacturaAtomico[] }) => Promise<{ id?: string } | null | undefined>;
   setFolioError: () => void;
 }
 
@@ -133,11 +136,29 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
     return { ok: false, facturaId: null };
   }
 
+  if (Object.keys(p.vinculos).length > 0) {
+    try {
+      if (!p.organizationId) throw new Error("No se identificó la organización de la factura.");
+      await prevalidarVinculosCosto(p.organizationId, p.values.moneda, p.vinculos);
+    } catch (error: unknown) {
+      notifyError(undefined, {
+        title: "No se pueden vincular esos importes",
+        description: getErrorMessage(error),
+        error, method: "CXP_PREVALIDAR_VINCULOS_COSTO",
+      });
+      return { ok: false, facturaId: null };
+    }
+  }
+
   try {
-    const created = await p.crearMutateAsync(
-      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos, embarqueOrigenId: p.embarqueOrigenId }),
-    );
-    let sideResult = {};
+    const vinculosAtomicos = Object.entries(p.vinculos).map(([concepto_costo_id, v]) => ({
+      concepto_costo_id, descripcion: v.descripcion, monto: v.monto,
+    }));
+    const created = await p.crearMutateAsync({
+      ...buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos, embarqueOrigenId: p.embarqueOrigenId }),
+      vinculosAtomicos,
+    });
+    let sideResult: VincularSafeResult = {};
     if (created?.id) {
       await uploadCfdiSafe({ facturaId: created.id, organizationId: p.organizationId, pendingCfdi: p.pendingCfdi });
       await persistirConceptosCfdiSafe({
@@ -146,6 +167,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
       sideResult = await vincularSafe({
         facturaId: created.id, organizationId: p.organizationId,
         values: p.values, total: p.total, vinculos: p.vinculos, embarqueAdHoc: p.embarqueAdHoc,
+        yaVinculado: vinculosAtomicos.length > 0,
       });
       // v13.415.0: aprendemos cómo se llama el proveedor en SUS documentos para
       // que la próxima factura PDF se empareje sola (facturas sin Tax ID).
@@ -154,10 +176,12 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
         organizationId: p.organizationId, userId: p.userId,
       });
     }
-    notifySuccess(undefined, {
-      title: "Factura de proveedor capturada",
-      description: buildFacturaSuccessDescription(sideResult),
-    });
+    if (!sideResult.vinculoFallido) {
+      notifySuccess(undefined, {
+        title: "Factura de proveedor capturada",
+        description: buildFacturaSuccessDescription(sideResult),
+      });
+    }
     return { ok: true, facturaId: created?.id ?? null };
   } catch (e) {
     await handleSubmitError(e, p.pendingCfdi?.uuid);

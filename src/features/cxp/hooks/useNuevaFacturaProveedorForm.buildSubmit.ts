@@ -14,6 +14,7 @@ import type { ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptosManualesApi } from "./useConceptosManuales";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import type { buildPayload } from "./useNuevaFacturaProveedorForm.helpers";
+import type { VinculoFacturaAtomico } from "@/features/cxp/services/proveedorFacturas.crud";
 import { puedeContinuarSubmit, puedeContinuarTope } from "./useNuevaFacturaProveedorForm.guard";
 
 export interface BuildSubmitDeps {
@@ -32,7 +33,7 @@ export interface BuildSubmitDeps {
   cuadreManual: ResultadoCuadre;
   manuales: ConceptosManualesApi;
   validate: () => boolean;
-  crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
+  crearMutateAsync: (payload: ReturnType<typeof buildPayload> & { vinculosAtomicos?: VinculoFacturaAtomico[] }) => Promise<{ id?: string } | null | undefined>;
   setFolioError: () => void;
   onSuccess: (facturaId?: string | null) => void;
 }

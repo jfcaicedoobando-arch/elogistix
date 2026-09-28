@@ -67,6 +67,8 @@ export interface VincularSafeResult {
   liquidados?: number;
   conceptoAdHocExpediente?: string;
   ajustesCreados?: number;
+  /** La factura existe, pero no debe anunciarse éxito de vinculación. */
+  vinculoFallido?: boolean;
 }
 
 export async function vincularSafe(params: {
@@ -76,6 +78,8 @@ export async function vincularSafe(params: {
   total: number;
   vinculos: Record<string, VinculoLinea>;
   embarqueAdHoc: EmbarqueSeleccionado | null;
+  /** Los vínculos ya fueron insertados junto con la factura en la RPC. */
+  yaVinculado?: boolean;
 }): Promise<VincularSafeResult> {
   const { facturaId, organizationId, values, total, vinculos, embarqueAdHoc } = params;
   if (!organizationId) return {};
@@ -89,12 +93,14 @@ export async function vincularSafe(params: {
 
   if (lineas.length > 0) {
     try {
-      await vincularFacturaAConceptos({
-        facturaId, organizationId,
-        folio: values.folio.trim(),
-        fechaEmision: values.emision,
-        lineas,
-      });
+      if (!params.yaVinculado) {
+        await vincularFacturaAConceptos({
+          facturaId, organizationId,
+          folio: values.folio.trim(),
+          fechaEmision: values.emision,
+          lineas,
+        });
+      }
       // v13.303.97: Reflejar diferencias factura vs devengado como ajustes de costo en el embarque.
       let ajustesCreados = 0;
       if (values.provId) {
@@ -118,7 +124,7 @@ export async function vincularSafe(params: {
       return { liquidados: 0, ajustesCreados };
     } catch (linkErr) {
       notifyBestEffortFallo("Factura guardada, pero el vínculo con embarque falló", linkErr);
-      return {};
+      return { vinculoFallido: true };
     }
   }
 
