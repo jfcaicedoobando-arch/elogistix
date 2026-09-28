@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildFilas3C } from "@/features/embarques/services/reconciliacion3Columnas";
-import { generarCsvReconciliacion3C } from "../reconciliacion3Columnas.helpers";
+import { generarCsvReconciliacion3C, obtenerDeltaAplicado } from "../reconciliacion3Columnas.helpers";
 
 describe("buildFilas3C", () => {
   const cotizados = [
@@ -19,6 +19,17 @@ describe("buildFilas3C", () => {
     const thc = filas.find((f) => f.concepto === "THC")!;
     expect(flete.refrescado).toBe(1100);
     expect(thc.refrescado).toBe(200);
+  });
+
+  it("usa el costo total sellado para dos contenedores aunque la tarifa diga Flete base", () => {
+    const cotizado = [{ ...cotizados[0], concepto: "Flete marítimo", cantidad: 2, costo_total: 2000 }];
+    const delta = obtenerDeltaAplicado({
+      cambios: [{ concepto: "Flete base", moneda: "USD", monto_actual: 1200 }],
+      costos_refrescados: [{ concepto: "Flete marítimo", moneda: "USD", monto_actual: 2400 }],
+    });
+    const filas = buildFilas3C(cotizado, delta, []);
+    expect(filas[0].cotizado).toBe(2000);
+    expect(filas[0].refrescado).toBe(2400);
   });
 
   it("ignora conceptos eliminados en la tarifa vigente (monto_actual=null)", () => {

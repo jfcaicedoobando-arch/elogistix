@@ -20,6 +20,18 @@ export interface DeltaConcepto {
 }
 
 /**
+ * El snapshot de costos se sella tras aplicar la tarifa y contiene importes
+ * TOTALES con los nombres de la cotización. `cambios` es sólo la comparación
+ * informativa entre tarifas (unitarios y nombres del tarifario).
+ */
+export function obtenerDeltaAplicado(raw: unknown): DeltaConcepto[] {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return [];
+  const payload = raw as { costos_refrescados?: unknown; cambios?: unknown };
+  if (Array.isArray(payload.costos_refrescados)) return payload.costos_refrescados as DeltaConcepto[];
+  return Array.isArray(payload.cambios) ? payload.cambios as DeltaConcepto[] : [];
+}
+
+/**
  * Real agregado por (concepto, moneda). `tiene_factura` es fail-closed: si no
  * se informa, el renglón se considera SIN factura y se clasifica `pendiente`.
  */
