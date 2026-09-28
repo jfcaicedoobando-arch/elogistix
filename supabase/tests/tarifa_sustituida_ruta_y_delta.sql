@@ -39,6 +39,7 @@ DECLARE
   v_emb    uuid;
   v_emb_conversion uuid;
   v_delta  jsonb;
+  v_rev    jsonb;
   v_snapshot jsonb;
   v_total numeric;
   v_ok     boolean;
@@ -207,6 +208,26 @@ BEGIN
   END IF;
   RAISE NOTICE 'CASO 4 OK: un cambio menor exige decisión explícita';
 
+  -- Un cambio superior al umbral no se puede ocultar con la decisión
+  -- "mantenida_por_operaciones"; se requiere re-aprobación o sustitución.
+  UPDATE public.costeo_tarifas SET flete_base = 1100 WHERE id = v_t_base;
+  v_rev := public.revalidar_tarifa_cotizacion(v_cot_conversion);
+  IF v_rev->>'severidad' <> 'bloqueante' THEN
+    RAISE EXCEPTION 'CASO 4B FALLÓ: se esperaba revalidación bloqueante: %', v_rev;
+  END IF;
+  v_ok := false;
+  BEGIN
+    PERFORM public.crear_embarque_borrador_desde_cotizacion(
+      v_cot_conversion, 'mantenida_por_operaciones', v_t_base, '{}'::jsonb);
+  EXCEPTION WHEN others THEN
+    v_msg := SQLERRM;
+    v_ok := v_msg LIKE '%LC_TARIFA_REQUIERE_REVALIDACION%';
+  END;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'CASO 4B FALLÓ: operaciones mantuvo una tarifa con cambio bloqueante: %', COALESCE(v_msg, 'sin error');
+  END IF;
+  RAISE NOTICE 'CASO 4B OK: un cambio bloqueante no se puede mantener sin resolver';
+
   v_emb_conversion := public.crear_embarque_borrador_desde_cotizacion(
     v_cot_conversion, 'sustituida', v_t_ok, '{}'::jsonb);
   SELECT COALESCE(sum(monto), 0) INTO v_total
@@ -227,3 +248,4 @@ END;
 $$;
 
 ROLLBACK;
+
