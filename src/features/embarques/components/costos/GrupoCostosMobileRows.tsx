@@ -4,7 +4,7 @@ import type { FilaReconciliacion } from "@/features/embarques/services/reconcili
 import { AjusteChip } from "./AjusteChip";
 import { describirAjuste } from "./ajusteDescripcion";
 import { GrupoCostosFacturasCell } from "./GrupoCostosFacturasCell";
-import { estatusBadgeClass, estatusLabel, pagoBadgeClass, peorEstadoPago } from "./grupoCostosProveedorHelpers";
+import { estatusBadgeClass, estatusLabel, pagoBadgeClass, estadoPagoConcepto } from "./grupoCostosProveedorHelpers";
 
 interface Props {
   filas: FilaReconciliacion[];
@@ -19,7 +19,7 @@ export function GrupoCostosMobileRows({
   return (
     <ul className="divide-y md:hidden">
       {filas.map((fila) => {
-        const pago = peorEstadoPago(fila.facturas);
+        const pago = estadoPagoConcepto(fila);
         const ajuste = describirAjuste(fila.cotizado, fila.real_facturado, fila.moneda, {
           tieneFactura: fila.facturas.length > 0,
           pendienteTc: (fila.vinculos_excluidos ?? 0) > 0,

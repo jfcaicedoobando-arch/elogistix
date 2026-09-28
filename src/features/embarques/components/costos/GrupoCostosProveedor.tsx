@@ -15,7 +15,7 @@ import {
   estatusLabel,
   ordenarFilasPorAjuste,
   pagoBadgeClass,
-  peorEstadoPago,
+  estadoPagoConcepto,
 } from "./grupoCostosProveedorHelpers";
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
@@ -137,7 +137,7 @@ export function GrupoCostosProveedor({
                   tieneFactura: f.facturas.length > 0,
                   pendienteTc: (f.vinculos_excluidos ?? 0) > 0,
                 });
-                const pago = peorEstadoPago(f.facturas);
+                const pago = estadoPagoConcepto(f);
                 return (
                   <TableRow key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
                     <TableCell
