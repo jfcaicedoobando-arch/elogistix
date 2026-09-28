@@ -14,8 +14,21 @@ import type {
 } from "@/features/cotizacion/domain/revalidacionTarifa";
 
 function parseResultado(raw: unknown): ResultadoRevalidacion {
-  const r = (raw ?? {}) as Record<string, unknown>;
-  const cambiosRaw = Array.isArray(r.cambios) ? r.cambios : [];
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("No se pudo interpretar la revalidación de la tarifa. Inténtalo de nuevo.");
+  }
+  const r = raw as Record<string, unknown>;
+  if (
+    r.severidad !== "sin_cambios" &&
+    r.severidad !== "informativa" &&
+    r.severidad !== "bloqueante"
+  ) {
+    throw new Error("La revalidación de la tarifa devolvió un estado desconocido. Inténtalo de nuevo.");
+  }
+  if (!Array.isArray(r.cambios)) {
+    throw new Error("La revalidación de la tarifa devolvió cambios incompletos. Inténtalo de nuevo.");
+  }
+  const cambiosRaw = r.cambios;
   const cambios: CambioTarifa[] = cambiosRaw.map((c) => {
     const x = c as Record<string, unknown>;
     return {
@@ -28,11 +41,7 @@ function parseResultado(raw: unknown): ResultadoRevalidacion {
       motivo: x.motivo === "eliminado" ? "eliminado" : undefined,
     };
   });
-  const severidad = (
-    ["sin_cambios", "informativa", "bloqueante"].includes(String(r.severidad))
-      ? r.severidad
-      : "sin_cambios"
-  ) as SeveridadRevalidacion;
+  const severidad = r.severidad as SeveridadRevalidacion;
   return {
     tarifa_vigente: Boolean(r.tarifa_vigente),
     agente_sin_cupo: Boolean(r.agente_sin_cupo),
