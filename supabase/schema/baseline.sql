@@ -6196,6 +6196,12 @@ CREATE FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa js
 DECLARE
   v_org uuid;
   v_es_agente_dueno boolean := false;
+  v_recargo jsonb;
+  v_id uuid;
+  v_ids uuid[] := ARRAY[]::uuid[];
+  v_concepto text;
+  v_lado text;
+  v_monto numeric;
 BEGIN
   SELECT organization_id INTO v_org
   FROM public.costeo_tarifas WHERE id = p_id
@@ -6245,21 +6251,58 @@ BEGIN
     moneda = 'USD',
     updated_at = now()
   WHERE id = p_id;
-  DELETE FROM public.costeo_tarifa_recargos WHERE tarifa_id = p_id;
-  INSERT INTO public.costeo_tarifa_recargos (
-    tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total
-  )
-  SELECT
-    p_id,
-    v_org,
-    btrim(r->>'concepto'),
-    COALESCE(NULLIF(r->>'lado', ''), 'origen'),
-    (r->>'monto')::numeric,
-    'USD',
-    COALESCE((r->>'incluido_en_total')::boolean, true)
-  FROM jsonb_array_elements(COALESCE(p_recargos, '[]'::jsonb)) AS r
-  WHERE NULLIF(btrim(COALESCE(r->>'concepto', '')), '') IS NOT NULL
-    AND COALESCE((r->>'monto')::numeric, 0) > 0;
+  FOR v_recargo IN SELECT value FROM jsonb_array_elements(COALESCE(p_recargos, '[]'::jsonb))
+  LOOP
+    v_concepto := btrim(COALESCE(v_recargo->>'concepto', ''));
+    v_monto := COALESCE(NULLIF(v_recargo->>'monto', '')::numeric, 0);
+    IF v_concepto = '' OR v_monto <= 0 THEN CONTINUE; END IF;
+    v_lado := COALESCE(NULLIF(v_recargo->>'lado', ''), 'origen');
+    v_id := NULLIF(v_recargo->>'id', '')::uuid;
+    -- Compatibilidad con clientes anteriores que todavía no envían id:
+    -- reutilizar sólo una fila idéntica, sin adivinar ante duplicados.
+    IF v_id IS NULL THEN
+      SELECT r.id INTO v_id
+      FROM public.costeo_tarifa_recargos r
+      WHERE r.tarifa_id = p_id AND r.organization_id = v_org
+        AND r.concepto = v_concepto AND r.lado = v_lado AND r.monto = v_monto
+        AND NOT (r.id = ANY(v_ids))
+      ORDER BY r.created_at, r.id
+      LIMIT 1;
+    END IF;
+    IF v_id IS NOT NULL THEN
+      IF v_id = ANY(v_ids) THEN RAISE EXCEPTION 'LC_RECARGO_DUPLICADO'; END IF;
+      UPDATE public.costeo_tarifa_recargos SET
+        concepto = v_concepto,
+        lado = v_lado,
+        monto = v_monto,
+        moneda = 'USD',
+        incluido_en_total = COALESCE((v_recargo->>'incluido_en_total')::boolean, true)
+      WHERE id = v_id AND tarifa_id = p_id AND organization_id = v_org;
+      IF NOT FOUND THEN RAISE EXCEPTION 'LC_RECARGO_AJENO_O_INEXISTENTE'; END IF;
+    ELSE
+      INSERT INTO public.costeo_tarifa_recargos (
+        tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total
+      ) VALUES (
+        p_id, v_org, v_concepto, v_lado, v_monto, 'USD',
+        COALESCE((v_recargo->>'incluido_en_total')::boolean, true)
+      ) RETURNING id INTO v_id;
+    END IF;
+    v_ids := array_append(v_ids, v_id);
+  END LOOP;
+  -- Una tarifa ya cotizada no puede perder silenciosamente el recargo fuente.
+  -- Crear una versión nueva es más seguro que romper la trazabilidad.
+  IF EXISTS (
+    SELECT 1 FROM public.costeo_tarifa_recargos r
+    JOIN public.cotizacion_costos cc ON cc.costeo_tarifa_recargo_id = r.id
+      AND cc.organization_id = v_org AND cc.deleted_at IS NULL
+    WHERE r.tarifa_id = p_id AND r.organization_id = v_org
+      AND NOT (r.id = ANY(v_ids))
+  ) THEN
+    RAISE EXCEPTION 'LC_RECARGO_COTIZADO_NO_ELIMINABLE';
+  END IF;
+  DELETE FROM public.costeo_tarifa_recargos
+  WHERE tarifa_id = p_id AND organization_id = v_org
+    AND NOT (id = ANY(v_ids));
 END;
 $$;
 CREATE FUNCTION public.actualizar_tc_embarque_dof(_embarque_id uuid, _fecha date DEFAULT CURRENT_DATE) RETURNS jsonb
@@ -13610,6 +13653,68 @@ BEGIN
   v_resp := jsonb_build_object('id', nuevo_id);
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
+END;
+$$;
+CREATE FUNCTION public.crear_factura_proveedor_vinculada_rpc(p_factura jsonb, p_lineas jsonb) RETURNS public.proveedor_facturas
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_factura public.proveedor_facturas;
+  v_linea jsonb;
+BEGIN
+  IF jsonb_typeof(p_factura) IS DISTINCT FROM 'object'
+     OR jsonb_typeof(p_lineas) IS DISTINCT FROM 'array'
+     OR jsonb_array_length(p_lineas) = 0 THEN
+    RAISE EXCEPTION 'LC_CXP_CAPTURA_VINCULADA_INVALIDA: faltan datos de factura o vínculos'
+      USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.proveedor_facturas (
+    proveedor_id, proveedor_nombre, folio_proveedor, fecha_emision,
+    fecha_vencimiento, dias_credito, moneda, tipo_cambio_usd,
+    subtotal, iva, ieps, retenciones, total, estado, notas,
+    categoria_presupuesto_id, created_by, uuid_fiscal, rfc_proveedor,
+    embarque_id, origen_carga
+  ) VALUES (
+    (p_factura->>'proveedor_id')::uuid,
+    p_factura->>'proveedor_nombre',
+    p_factura->>'folio_proveedor',
+    (p_factura->>'fecha_emision')::date,
+    NULLIF(p_factura->>'fecha_vencimiento', '')::date,
+    (p_factura->>'dias_credito')::integer,
+    (p_factura->>'moneda')::public.moneda,
+    (p_factura->>'tipo_cambio_usd')::numeric,
+    (p_factura->>'subtotal')::numeric,
+    (p_factura->>'iva')::numeric,
+    (p_factura->>'ieps')::numeric,
+    (p_factura->>'retenciones')::numeric,
+    (p_factura->>'total')::numeric,
+    (p_factura->>'estado')::public.estado_proveedor_factura,
+    p_factura->>'notas',
+    (p_factura->>'categoria_presupuesto_id')::uuid,
+    NULLIF(p_factura->>'created_by', '')::uuid,
+    p_factura->>'uuid_fiscal',
+    p_factura->>'rfc_proveedor',
+    NULLIF(p_factura->>'embarque_id', '')::uuid,
+    p_factura->>'origen_carga'
+  ) RETURNING * INTO v_factura;
+  FOR v_linea IN SELECT value FROM jsonb_array_elements(p_lineas) LOOP
+    IF NULLIF(v_linea->>'concepto_costo_id', '') IS NULL
+       OR COALESCE((v_linea->>'monto')::numeric, 0) <= 0 THEN
+      RAISE EXCEPTION 'LC_CXP_CAPTURA_VINCULADA_INVALIDA: cada vínculo requiere costo e importe positivo'
+        USING ERRCODE = '22023';
+    END IF;
+    INSERT INTO public.proveedor_facturas_conceptos (
+      organization_id, proveedor_factura_id, concepto_costo_id,
+      descripcion, cantidad, monto
+    ) VALUES (
+      v_factura.organization_id, v_factura.id,
+      (v_linea->>'concepto_costo_id')::uuid,
+      COALESCE(v_linea->>'descripcion', ''), 1,
+      (v_linea->>'monto')::numeric
+    );
+  END LOOP;
+  RETURN v_factura;
 END;
 $$;
 CREATE FUNCTION public.crear_garantia_contenedor() RETURNS trigger
@@ -35877,6 +35982,9 @@ GRANT ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizaci
 REVOKE ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) TO service_role;
 GRANT ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) TO authenticated;
+REVOKE ALL ON FUNCTION public.crear_factura_proveedor_vinculada_rpc(p_factura jsonb, p_lineas jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crear_factura_proveedor_vinculada_rpc(p_factura jsonb, p_lineas jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.crear_factura_proveedor_vinculada_rpc(p_factura jsonb, p_lineas jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.crear_garantia_contenedor() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_garantia_contenedor() TO authenticated;
 GRANT ALL ON FUNCTION public.crear_garantia_contenedor() TO service_role;
