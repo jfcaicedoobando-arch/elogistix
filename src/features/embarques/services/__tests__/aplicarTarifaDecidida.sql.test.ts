@@ -117,6 +117,7 @@ describe("R201-COT-01 — sustituir sin equivalencia segura se rechaza", () => {
 describe("R201-COT-01 — sustitución bloquea recargos ausentes de la cotización", () => {
   it("comprueba recargos del reemplazo contra filas vinculadas a la tarifa original", () => {
     expect(cuerpo).toContain("LC_TARIFA_REQUIERE_RECOTIZACION");
+    expect(cuerpo).toContain("COALESCE(r.monto, 0) > 0");
     expect(cuerpo).toContain("r_origen.tarifa_id = v_tarifa_origen");
     expect(cuerpo).toContain("cc.costeo_tarifa_recargo_id");
     expect(cuerpo).toContain("r_origen.lado IS NOT DISTINCT FROM r.lado");

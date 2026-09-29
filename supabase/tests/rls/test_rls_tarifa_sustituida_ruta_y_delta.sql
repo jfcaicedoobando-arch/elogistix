@@ -258,11 +258,14 @@ BEGIN
 
   INSERT INTO public.cotizaciones
     (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
-     tarifa_id, tipo_contenedor, num_contenedores)
+     tarifa_id, tipo_contenedor, num_contenedores, conceptos_venta)
   VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, v_uid,
           'USD'::public.moneda, 'COT-TSUST-0003',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-          v_t_base, 'TST20', 1)
+          v_t_base, 'TST20', 1,
+          jsonb_build_array(jsonb_build_object(
+            'descripcion', 'Flete marítimo', 'cantidad', '1',
+            'precio_unitario', '1500', 'moneda', 'USD', 'total', '1500')))
   RETURNING id INTO v_cot_extra;
   INSERT INTO public.cotizacion_costos
     (cotizacion_id, organization_id, concepto, moneda, cantidad, costo_unitario,
@@ -291,6 +294,26 @@ BEGIN
     RAISE EXCEPTION 'CASO 6 FALLÓ: la cotización cambió o creó un embarque a pesar del bloqueo';
   END IF;
   RAISE NOTICE 'CASO 6 OK: recargo no cotizado bloquea conversión y revierte todo';
+
+  -- ---------------- CASO 7: recargo no positivo no genera costo --------------
+  DELETE FROM public.costeo_tarifa_recargos WHERE tarifa_id = v_t_extra;
+  INSERT INTO public.costeo_tarifa_recargos
+    (tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total)
+  VALUES (v_t_extra, v_org, 'Cargo no aplicable', 'origen', 0, 'USD', false);
+
+  v_emb_conversion := public.crear_embarque_borrador_desde_cotizacion(
+    v_cot_extra, 'sustituida', v_t_extra, '{}'::jsonb);
+  IF NOT EXISTS (
+    SELECT 1 FROM public.embarques
+     WHERE id = v_emb_conversion AND cotizacion_id = v_cot_extra AND deleted_at IS NULL
+  ) OR EXISTS (
+    SELECT 1 FROM public.conceptos_costo
+     WHERE embarque_id = v_emb_conversion AND concepto ILIKE '%Cargo no aplicable%'
+       AND deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: un recargo con monto 0 bloqueó la conversión o creó un costo';
+  END IF;
+  RAISE NOTICE 'CASO 7 OK: recargos no positivos no bloquean ni generan costos';
 
 END;
 $$;

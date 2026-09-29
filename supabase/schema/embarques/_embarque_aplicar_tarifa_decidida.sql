@@ -109,6 +109,7 @@ BEGIN
       FROM public.costeo_tarifa_recargos r
      WHERE r.tarifa_id = p_tarifa_id_aplicada
        AND r.organization_id = v_org
+       AND COALESCE(r.monto, 0) > 0
        AND NOT EXISTS (
          SELECT 1
            FROM public.cotizacion_costos cc
