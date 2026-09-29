@@ -11,7 +11,7 @@ import {
 import { todayLocalISO } from "@/lib/date/today";
 import { textoBusquedaPuertos } from "@/features/costeo/utils/puertoLabel";
 import {
-  coincideBusqueda, esBorradorAprobable, esTarifaPorVencerEn,
+  coincideBusqueda, esBorradorAprobable, esTarifaPorVencerEn, esTarifaProgramadaEn,
 } from "@/features/costeo/utils/vigenciaTarifa";
 
 export type ViewMode = "agrupada" | "tabla";
@@ -22,7 +22,7 @@ function readViewMode(): ViewMode {
 }
 
 function readAprobacionFromUrl(value: string | null): AprobacionFiltro {
-  return value === "borrador" || value === "vigente" || value === "rechazada" ? value : DEFAULT_APROB;
+  return value === "borrador" || value === "vigente" || value === "programada" || value === "rechazada" ? value : DEFAULT_APROB;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -69,7 +69,11 @@ export function useCosteoTarifasPageState() {
   const tarifasFiltradas = useMemo(() => {
     const hoy = todayLocalISO();
     return tarifas.filter((t) => {
-      if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) return false;
+      if (aprobacion === "programada") {
+        if (!esTarifaProgramadaEn(t, hoy)) return false;
+      } else if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) {
+        return false;
+      }
       if (soloPorVencer && !esTarifaPorVencerEn(t, hoy)) return false;
       // Etapa 2 + P2-6: país/UN/LOCODE; todos los términos, sin contigüidad ni acentos.
       return coincideBusqueda(`${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`, busqueda);
@@ -78,6 +82,10 @@ export function useCosteoTarifasPageState() {
 
   const pendientesCount = useMemo(
     () => { const hoy = todayLocalISO(); return tarifas.filter((t) => esBorradorAprobable(t, hoy)).length; },
+    [tarifas],
+  );
+  const programadasCount = useMemo(
+    () => { const hoy = todayLocalISO(); return tarifas.filter((t) => esTarifaProgramadaEn(t, hoy)).length; },
     [tarifas],
   );
 
@@ -174,6 +182,7 @@ export function useCosteoTarifasPageState() {
     isError,
     refetch,
     pendientesCount,
+    programadasCount,
     // filtros
     estado, setEstado,
     aprobacion, setAprobacion,
