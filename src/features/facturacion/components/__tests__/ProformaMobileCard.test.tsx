@@ -26,7 +26,7 @@ describe("ProformaMobileCard", () => {
     expect(screen.getByText(/Pendiente/i)).toBeInTheDocument();
   });
 
-  it("distingue aprobación interna de una respuesta pendiente del cliente", () => {
+  it("muestra el pendiente interno en la tarjeta móvil", () => {
     render(
       <ProformaMobileCard
         proforma={proforma({
