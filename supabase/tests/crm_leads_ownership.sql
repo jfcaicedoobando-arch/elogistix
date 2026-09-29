@@ -7,7 +7,8 @@
 --      ICP antes del retorno idempotente.
 --   B) crm_tomar_lead: mismo criterio in-org, atomicidad y idempotencia.
 --   C) RLS crm_leads: gestión in-org escribe, vendedor sólo su propio lead,
---      operador/viewer leen pero no escriben, cross-org bloqueado, y ni
+--      operador/viewer leen; gerencia de operaciones lee sólo prospectos
+--      cotizables sin escribir; cross-org bloqueado, y ni
 --      organization_id ni vendedor_id pueden reasignarse a lo propio.
 --   D) Invariantes de definición y ACL de las dos RPCs, y topología exacta
 --      de las policies de crm_leads (separadas por comando en v13.823.61).
@@ -310,6 +311,7 @@ BEGIN
       WHERE polrelid = 'public.crm_leads'::regclass
         AND polpermissive)
     = ARRAY[
+        'Gerencia operaciones lee prospectos cotizables|r',
         'Gestion leads in-org insert crm_leads|a',
         'Gestion leads in-org select crm_leads|r',
         'Gestion leads in-org update crm_leads|w',
@@ -324,16 +326,16 @@ BEGIN
          FROM pg_policy
         WHERE polrelid = 'public.crm_leads'::regclass AND polpermissive)));
 
-  -- Conteo por comando: 4 SELECT, 2 INSERT, 2 UPDATE, 0 DELETE, 0 ALL.
+  -- Conteo por comando: 5 SELECT, 2 INSERT, 2 UPDATE, 0 DELETE, 0 ALL.
   PERFORM pg_temp.assert(
-    (SELECT count(*) FILTER (WHERE polcmd = 'r') = 4
+    (SELECT count(*) FILTER (WHERE polcmd = 'r') = 5
         AND count(*) FILTER (WHERE polcmd = 'a') = 2
         AND count(*) FILTER (WHERE polcmd = 'w') = 2
         AND count(*) FILTER (WHERE polcmd = 'd') = 0
         AND count(*) FILTER (WHERE polcmd = '*') = 0
        FROM pg_policy
       WHERE polrelid = 'public.crm_leads'::regclass AND polpermissive),
-    'D: los comandos permisivos deben ser 4 SELECT / 2 INSERT / 2 UPDATE / 0 DELETE / 0 ALL');
+    'D: los comandos permisivos deben ser 5 SELECT / 2 INSERT / 2 UPDATE / 0 DELETE / 0 ALL');
 
   -- Los nombres previos a la separación por comando no deben reaparecer.
   PERFORM pg_temp.assert(
