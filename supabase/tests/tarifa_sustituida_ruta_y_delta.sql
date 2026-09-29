@@ -250,7 +250,7 @@ BEGIN
   INSERT INTO public.costeo_tarifas
     (organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id, moneda,
      flete_base, vigente_desde, vigente_hasta)
-  VALUES (v_org, v_ag, v_nav2, v_ruta1, v_tc20, 'USD', 1150,
+  VALUES (v_org, v_ag, v_nav1, v_ruta1, v_tc20, 'USD', 1150,
           CURRENT_DATE, CURRENT_DATE + 30) RETURNING id INTO v_t_extra;
   INSERT INTO public.costeo_tarifa_recargos
     (tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total)
