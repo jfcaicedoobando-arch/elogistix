@@ -1,5 +1,4 @@
 
-import { pluralizar } from "@/lib/format/pluralizar";
 import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +31,8 @@ import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+
+import { getClientesPageDescription } from "@/features/cliente/routes/clientesPageDescription";
 
 export default function Clientes() {
   useDocumentTitle("Clientes");
@@ -78,7 +79,7 @@ export default function Clientes() {
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-accent" />}
         title="Clientes"
-        description={`${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
+        description={getClientesPageDescription(isError, isLoading, totalCount)}
         actions={
           canAltaCliente ? (
             <div className="hidden md:flex gap-2">
