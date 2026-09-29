@@ -11,6 +11,7 @@ import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import { useTabFacturacionState } from "@/features/embarques/hooks/useTabFacturacionState";
 import { usePermissions } from "@/hooks/shared";
+import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { contarFacturasEmitidas, facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
 import type { Tables } from "@/types/db";
 
@@ -43,6 +44,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
   // (espejo de las policies RLS). Comercial y ventas siguen viendo el tab en
   // sólo lectura, sin perder sus permisos de costos ni documentos.
   const { canEditarProforma } = usePermissions();
+  const { autorizacion } = useClienteAutorizacion(embarque.cliente_id);
   const s = useTabFacturacionState(embarque, canEditProp && canEditarProforma);
   const {
     embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
@@ -142,6 +144,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         <HistorialProformas
           facturas={facturas}
           proformas={proformas}
+          requiereAutorizacionProforma={autorizacion.requiereAutorizacionProforma}
           canEdit={canEdit}
           isDeleting={eliminarProforma.isPending}
           onDescargar={handleDescargarProforma}

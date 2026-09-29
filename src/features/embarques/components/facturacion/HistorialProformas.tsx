@@ -33,10 +33,13 @@ interface Props {
    * `facturada` en cuanto se convierte).
    */
   facturas?: FacturaEmbarqueLite[];
+  /** false cuando el embarque corresponde a un cliente con aprobación interna. */
+  requiereAutorizacionProforma?: boolean;
 }
 
 export function HistorialProformas({
   proformas, canEdit, isDeleting, onEliminar, facturas = [],
+  requiereAutorizacionProforma = true,
 }: Props) {
   const emitidas = new Set(
     facturas
@@ -77,7 +80,7 @@ export function HistorialProformas({
       meta: { align: "right", className: "tabular-nums" },
       cell: ({ row }) => totalUnico(row.original),
     },
-    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas, facturas) },
+    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas, facturas, requiereAutorizacionProforma) },
     {
       id: "acciones",
       header: "",
