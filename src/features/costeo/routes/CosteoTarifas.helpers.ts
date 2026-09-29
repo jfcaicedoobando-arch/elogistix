@@ -6,7 +6,7 @@ import { diasHastaFecha } from "@/lib/date/dateOnly";
 export const usd = formatUSD;
 
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
-export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
+export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "programada" | "rechazada";
 
 /**
  * VB-38: vigencia en formato único DD/MM/YYYY (antes "18/jul → 15/dic" sin
