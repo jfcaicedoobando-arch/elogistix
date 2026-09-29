@@ -71,7 +71,11 @@ export default function Oportunidades() {
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
   const filtrosServidor = useOportunidadesFiltrosServidor(debounced, filtros, clienteIdFiltro);
-  const { data, isLoading, isError, refetch } = useOportunidades({ ...filtrosServidor, pageSize: PAGE_SIZE });
+  const { data, isLoading, isPlaceholderData, isError, refetch } = useOportunidades({ ...filtrosServidor, pageSize: PAGE_SIZE });
+  // TanStack conserva la página anterior mientras cambia un filtro. Es útil
+  // para evitar parpadeos, pero esa página no debe seguir siendo accionable
+  // bajo los filtros nuevos (en especial el drag-and-drop del Kanban).
+  const actualizandoResultados = Boolean(isPlaceholderData);
   const ops = useMemo(() => data?.data ?? [], [data]);
   const totalServidor = data?.count ?? ops.length;
   const listaTruncada = totalServidor > ops.length;
@@ -109,12 +113,14 @@ export default function Oportunidades() {
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
         actions={
-          <ExportarCsvButton onExport={() => void exportarTodo()} disabled={isLoading || exportando} />
+          <ExportarCsvButton onExport={() => void exportarTodo()} disabled={isLoading || actualizandoResultados || exportando} />
         }
       />
 
-      <CrmSubheader context={`${copiaContadorOportunidades(ops.length, totalServidor)}${clienteIdFiltro ? " (filtradas por cliente)" : ""} · total visible ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
-      {listaTruncada && (
+      <CrmSubheader context={actualizandoResultados
+        ? "Actualizando oportunidades para los filtros seleccionados…"
+        : `${copiaContadorOportunidades(ops.length, totalServidor)}${clienteIdFiltro ? " (filtradas por cliente)" : ""} · total visible ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
+      {!actualizandoResultados && listaTruncada && (
         <p className="text-label text-muted-foreground">
           Mostrando las primeras {copiaContadorOportunidades(ops.length, totalServidor)} que cumplen los filtros; la exportación CSV incluye todas.
         </p>
@@ -136,10 +142,10 @@ export default function Oportunidades() {
         vista={vista}
         onVistaChange={(v) => aplicarUrlState({ vista: v })}
         isError={isError}
-        isLoading={isLoading}
+        isLoading={isLoading || actualizandoResultados}
         refetch={refetch}
         etapas={etapas as CrmEtapaRow[]}
-        ops={ops}
+        ops={actualizandoResultados ? [] : ops}
         onMover={handleMover}
         puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
         onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
