@@ -54,7 +54,7 @@ describe("architecture: papelera no-hard-delete", () => {
     const files = walk(SRC);
     const offenders: string[] = [];
     for (const file of files) {
-      const rel = relative(process.cwd(), file);
+      const rel = relative(process.cwd(), file).replace(/\\/g, "/");
       if (EXCEPTIONS.has(rel)) continue;
       const src = readFileSync(file, "utf8");
       for (const t of SOFT_DELETE_TABLES) {

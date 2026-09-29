@@ -11,6 +11,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 
+const portablePath = (path: string) => path.replace(/\\/g, "/");
+
 /** Recorrido recursivo sin dependencias externas (evita `glob`). */
 function listarRutasDetalle(dir: string): string[] {
   const out: string[] = [];
@@ -22,9 +24,9 @@ function listarRutasDetalle(dir: string): string[] {
       entry.isFile() &&
       entry.name.includes("Detalle") &&
       entry.name.endsWith(".tsx") &&
-      dir.endsWith("/routes")
+      portablePath(dir).endsWith("/routes")
     ) {
-      out.push(full);
+      out.push(portablePath(full));
     }
   }
   return out;
@@ -54,7 +56,7 @@ describe("arquitectura: DetailHeader canónico en páginas de detalle", () => {
   });
 
   it.each(files)("%s no reimplementa el botón Volver con ArrowLeft", (file) => {
-    if (ALLOWLIST.includes(file) || STEP_NAV_PATTERN.test(file)) return;
+    if (ALLOWLIST.includes(portablePath(file)) || STEP_NAV_PATTERN.test(file)) return;
     const src = readFileSync(file, "utf8");
     const usaArrowLeft = /\bArrowLeft\b/.test(src);
     expect(
@@ -91,7 +93,7 @@ describe("arquitectura: DetailHeader canónico en páginas de detalle", () => {
   }
 
   it.each(files)("%s usa DetailHeader (directo o vía su componente de header)", (file) => {
-    if (NO_ES_DETALLE.includes(file) || STEP_NAV_PATTERN.test(file)) return;
+    if (NO_ES_DETALLE.includes(portablePath(file)) || STEP_NAV_PATTERN.test(file)) return;
     expect(
       usaDetailHeader(file),
       `${file} no usa DetailHeader ni delega en un componente que lo use.`,

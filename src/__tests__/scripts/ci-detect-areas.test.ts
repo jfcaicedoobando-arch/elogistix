@@ -8,12 +8,15 @@
  * `write-tree`, `commit-tree`) sobre un repo temporal: nada toca este repo.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const SCRIPT = join(process.cwd(), "scripts/ci/detect-areas.sh");
+// CI runs this integration test on Linux. On Windows, skip only if bash truly
+// is not installed instead of failing the whole local Vitest run with ENOENT.
+const BASH_DISPONIBLE = spawnSync("bash", ["--version"], { stdio: "ignore" }).status === 0;
 
 const IDENTIDAD = {
   GIT_AUTHOR_NAME: "CI",
@@ -79,7 +82,7 @@ afterAll(() => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-describe("scripts/ci/detect-areas.sh", () => {
+describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
   it("Markdown con acentos/ñ no activa frontend", () => {
     const head = commit(
       [".lovable/plan/factura-que-no-timbra-por-la-fecha-del-día-anterior-ñ.md"],
