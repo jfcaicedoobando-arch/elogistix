@@ -27,7 +27,7 @@ const ESPEJO = join(ROOT, "supabase/schema/embarques/_embarque_aplicar_tarifa_de
 // El historial anterior (20260913220010) queda intacto: se compara contra la última aplicada.
 const MIGRACION = join(
   ROOT,
-  "supabase/migrations/20260914220512_d8954432-812f-4f69-9de1-f86dbd62ebae.sql",
+  "supabase/migrations/20260929190000_bloquear_recargos_no_cotizados_tarifa_sustituta.sql",
 );
 
 const espejo = readFileSync(ESPEJO, "utf8");
@@ -111,6 +111,22 @@ describe("R201-COT-01 — sustituir sin equivalencia segura se rechaza", () => {
     const codigos = cuerpo.match(/ERRCODE = 'P0001'/g) ?? [];
     expect(rechazos.length).toBeGreaterThanOrEqual(6);
     expect(codigos.length).toBe(rechazos.length);
+  });
+});
+
+describe("R201-COT-01 — sustitución bloquea recargos ausentes de la cotización", () => {
+  it("comprueba recargos del reemplazo contra filas vinculadas a la tarifa original", () => {
+    expect(cuerpo).toContain("LC_TARIFA_REQUIERE_RECOTIZACION");
+    expect(cuerpo).toContain("COALESCE(r.monto, 0) > 0");
+    expect(cuerpo).toContain("r_origen.tarifa_id = v_tarifa_origen");
+    expect(cuerpo).toContain("cc.costeo_tarifa_recargo_id");
+    expect(cuerpo).toContain("r_origen.lado IS NOT DISTINCT FROM r.lado");
+    expect(cuerpo).toContain("upper(btrim(r_origen.moneda)) = upper(btrim(r.moneda))");
+  });
+
+  it("explica qué recargo falta y pide recotizar antes de crear el embarque", () => {
+    expect(cuerpo).toMatch(/agrega el recargo.*ausente de la cotización aceptada/);
+    expect(cuerpo).toMatch(/Recotiza antes de crear el embarque/);
   });
 });
 
