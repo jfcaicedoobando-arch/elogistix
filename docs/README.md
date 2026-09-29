@@ -1,6 +1,6 @@
 # Documentación de Libre Carga
 
-Índice revisado el **2026-09-26** contra `main`.
+Índice revisado el **2026-09-29** contra `main`.
 Las guías describen código versionado; no certifican el estado de Live.
 
 ## Empezar
@@ -70,6 +70,21 @@ Reportes pueden regenerarse con `audit:report` / `audit:rpc-sync`.
 Los resultados generados no deben trackearse si son snapshots reemplazables.
 Una auditoría que consulta DB debe identificar entorno/fecha y autorización;
 un resultado viejo no certifica Live.
+
+## Revisión del 2026-09-29
+
+Se actualizó la guía de conversión de cotizaciones y la memoria persistente
+de Lovable para documentar que una tarifa sustituta con recargos positivos
+no incluidos en la cotización aceptada bloquea la conversión y exige
+recotización/aprobación. La corrección está en Git; la guía separa ese hecho
+del estado de despliegue de producción.
+
+En el inventario, todas las guías de `docs/` (excepto este propio índice)
+están enlazadas aquí. No aparecieron rutas Markdown rotas en las guías
+revisadas ni documentos actuales sin referencia. **No se eliminó ningún
+archivo**: los changelogs, ADRs y auditorías cerradas son registros históricos,
+y los documentos operativos restantes están referenciados. La limpieza del
+2026-09-26 ya retiró los planes temporales de Lovable.
 
 ## Cómo mantenerla
 
