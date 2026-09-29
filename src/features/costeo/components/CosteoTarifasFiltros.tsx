@@ -28,6 +28,7 @@ interface Props {
   agentes: OpcionId[];
   tipos: OpcionId[];
   pendientesCount: number;
+  programadasCount: number;
   onClearAll: () => void;
   hasActiveFilters: boolean;
   total: number;
@@ -40,7 +41,7 @@ export function CosteoTarifasFiltros({
   aprobacion, onAprobacionChange,
   agenteId, onAgenteChange, tipoId, onTipoChange,
   busqueda, onBusquedaChange,
-  agentes, tipos, pendientesCount, onClearAll, hasActiveFilters,
+  agentes, tipos, pendientesCount, programadasCount, onClearAll, hasActiveFilters,
   total, viewMode, onViewModeChange,
 }: Props) {
   return (
@@ -76,6 +77,7 @@ export function CosteoTarifasFiltros({
           <SelectItem value="todas">Todas</SelectItem>
           <SelectItem value="borrador">Pendientes{pendientesCount > 0 ? ` (${pendientesCount})` : ""}</SelectItem>
           <SelectItem value="vigente">Aprobadas</SelectItem>
+          <SelectItem value="programada">Programadas ({programadasCount})</SelectItem>
           <SelectItem value="rechazada">Rechazadas</SelectItem>
         </SelectContent>
       </Select>
