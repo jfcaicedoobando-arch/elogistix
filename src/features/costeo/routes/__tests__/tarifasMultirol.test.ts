@@ -13,16 +13,16 @@ const columnas = readFileSync(
   join(ROOT, "src/features/costeo/components/_sections/tarifasColumns.tsx"),
   "utf8",
 );
-const tabla = readFileSync(
-  join(ROOT, "src/features/costeo/components/CosteoTarifasTable.tsx"),
-  "utf8",
-);
 const filtros = readFileSync(
   join(ROOT, "src/features/costeo/components/CosteoTarifasFiltros.tsx"),
   "utf8",
 );
 const filaDataTable = readFileSync(
   join(ROOT, "src/components/shared/dataTable/DataTableRow.tsx"),
+  "utf8",
+);
+const contenidoDataTable = readFileSync(
+  join(ROOT, "src/components/shared/dataTable/DataTableContent.tsx"),
   "utf8",
 );
 
@@ -50,15 +50,18 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
     expect(columnas).not.toContain('className: "sticky right-40');
     expect(columnas).not.toContain('headerClassName: "sticky right-40');
   });
-  it("muestra un affordance visible para el desplazamiento horizontal en HD", () => {
-    expect(tabla).toContain("Desplaza horizontalmente para consultar columnas secundarias");
-    expect(tabla).toContain("hasHorizontalOverflow &&");
-    expect(tabla).toContain("onHorizontalOverflowChange={setHasHorizontalOverflow}");
+  it("el DataTable compartido comunica y hace accesible el desplazamiento horizontal", () => {
+    expect(contenidoDataTable).toContain("Desplaza horizontalmente para consultar las demás columnas.");
+    expect(contenidoDataTable).toContain('role="status"');
+    expect(contenidoDataTable).toContain('role={overflowing ? "region" : undefined}');
+    expect(contenidoDataTable).toContain('aria-label={overflowing ? "Tabla con desplazamiento horizontal" : undefined}');
+    expect(contenidoDataTable).toContain("tabIndex={overflowing ? 0 : undefined}");
+    expect(contenidoDataTable).toContain("focus-visible:ring-2");
   });
   it("usa fondos opacos en las celdas fijas para impedir texto superpuesto", () => {
     expect(filaDataTable.match(/bg-inherit/g)).toHaveLength(2);
     expect(filaDataTable).toContain("meta.sticky && STICKY_LEFT");
     expect(filaDataTable).toContain("meta.stickyRight && STICKY_RIGHT");
-    expect(filaDataTable).not.toMatch(/STICKY_(?:LEFT|RIGHT)[\s\S]*?bg-(?:muted|primary)\/[0-9]+/);
+    expect(filaDataTable).not.toMatch(/STICKY_(?:LEFT|RIGHT)[\\s\\S]*?bg-(?:muted|primary)\\/[0-9]+/);
   });
 });
