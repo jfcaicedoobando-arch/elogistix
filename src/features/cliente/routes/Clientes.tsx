@@ -78,7 +78,7 @@ export default function Clientes() {
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-accent" />}
         title="Clientes"
-        description={`${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
+        description={isError ? "No se pudo cargar el listado de clientes" : isLoading ? "Cargando clientes…" : `${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
         actions={
           canAltaCliente ? (
             <div className="hidden md:flex gap-2">
