@@ -4,7 +4,7 @@
  * aprobación rápida inline y highlight de mejor precio.
  * v13.182.0: columnas extraídas a `_sections/tarifasColumns.tsx` (Wave 2).
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
