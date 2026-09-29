@@ -33,6 +33,12 @@ import { useState, useMemo } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
+function getClientesPageDescription(isError: boolean, isLoading: boolean, totalCount: number) {
+  if (isError) return "No se pudo cargar el listado de clientes";
+  if (isLoading) return "Cargando clientes…";
+  return `${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`;
+}
+
 export default function Clientes() {
   useDocumentTitle("Clientes");
   // P0 — alta de clientes: espejo del rol que exige la base de datos.
@@ -78,7 +84,7 @@ export default function Clientes() {
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-accent" />}
         title="Clientes"
-        description={isError ? "No se pudo cargar el listado de clientes" : isLoading ? "Cargando clientes…" : `${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
+        description={getClientesPageDescription(isError, isLoading, totalCount)}
         actions={
           canAltaCliente ? (
             <div className="hidden md:flex gap-2">
