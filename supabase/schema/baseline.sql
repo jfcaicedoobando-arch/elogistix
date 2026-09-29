@@ -3635,7 +3635,8 @@ $$;
 CREATE FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$DECLARE
+    AS $
+DECLARE
   v_org            uuid;
   v_costo          RECORD;
   v_fila           RECORD;
