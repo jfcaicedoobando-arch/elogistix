@@ -56,6 +56,7 @@ export function NuevaTarifaDemoraDialog({
           >
             <SelectTrigger
               id="dem-tipo"
+              aria-required="true"
               aria-invalid={tipoInvalido || undefined}
               aria-describedby={!form.tipo_contenedor_id ? "dem-tipo-hint" : undefined}
               className={tipoInvalido ? "border-destructive" : undefined}
@@ -106,6 +107,7 @@ export function NuevaTarifaDemoraDialog({
           <Label htmlFor="dem-monto">Monto por día (USD) *</Label>
           <MoneyInput
             id="dem-monto"
+            required
             value={form.monto_por_dia_usd}
             currency="USD"
             onChange={(n: number) => setForm({ ...form, monto_por_dia_usd: n })}
