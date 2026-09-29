@@ -27,8 +27,7 @@ interface Props {
   onBusquedaChange: (v: string) => void;
   agentes: OpcionId[];
   tipos: OpcionId[];
-  pendientesCount: number;
-  programadasCount: number;
+  counts: { pendientes: number; programadas: number };
   onClearAll: () => void;
   hasActiveFilters: boolean;
   total: number;
@@ -41,7 +40,7 @@ export function CosteoTarifasFiltros({
   aprobacion, onAprobacionChange,
   agenteId, onAgenteChange, tipoId, onTipoChange,
   busqueda, onBusquedaChange,
-  agentes, tipos, pendientesCount, programadasCount, onClearAll, hasActiveFilters,
+  agentes, tipos, counts, onClearAll, hasActiveFilters,
   total, viewMode, onViewModeChange,
 }: Props) {
   return (
@@ -75,9 +74,9 @@ export function CosteoTarifasFiltros({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todas">Todas</SelectItem>
-          <SelectItem value="borrador">Pendientes{pendientesCount > 0 ? ` (${pendientesCount})` : ""}</SelectItem>
+          <SelectItem value="borrador">Pendientes{counts.pendientes > 0 ? ` (${counts.pendientes})` : ""}</SelectItem>
           <SelectItem value="vigente">Aprobadas</SelectItem>
-          <SelectItem value="programada">Programadas ({programadasCount})</SelectItem>
+          <SelectItem value="programada">Programadas ({counts.programadas})</SelectItem>
           <SelectItem value="rechazada">Rechazadas</SelectItem>
         </SelectContent>
       </Select>
