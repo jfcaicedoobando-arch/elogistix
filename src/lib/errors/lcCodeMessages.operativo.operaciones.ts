@@ -181,6 +181,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Ese recargo ya no pertenece a la tarifa o fue eliminado. Recarga la tarifa antes de guardar.",
   LC_RECARGO_COTIZADO_NO_ELIMINABLE:
     "Este recargo ya se usó en una cotización. Consérvalo o crea una nueva versión de la tarifa.",
+  LC_TARIFA_REQUIERE_RECOTIZACION:
+    "La tarifa sustituta agrega un recargo que no estaba en la cotización aceptada. Recotiza y obtén la aprobación del cliente antes de crear el embarque.",
   LC_RECARGO_DUPLICADO:
     "El mismo recargo aparece dos veces en la edición. Recarga la tarifa y revisa los recargos.",
 };
