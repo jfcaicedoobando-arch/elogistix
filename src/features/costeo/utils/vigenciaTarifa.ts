@@ -56,7 +56,7 @@ export function resolverEstadoVigenciaTarifa(input: VigenciaTarifaInput): Vigenc
       estadoCanonico: "Pendiente",
       vencida,
       advertencia: vencida
-        ? `Pendiente · vigencia vencida el ${formatFechaDia(input.vigenteHasta)}`
+        ? `Vigencia vencida el ${formatFechaDia(input.vigenteHasta)} · edita para renovar antes de aprobar`
         : undefined,
     };
   }
@@ -103,6 +103,17 @@ export function esTarifaUsableEn(t: TarifaVigenciaLike, hoy: string): boolean {
     && t.estado !== "vencida"
     && (t.vigente_desde ?? "") <= hoy
     && t.vigente_hasta >= hoy;
+}
+
+/** Una tarifa aprobada con inicio futuro se clasifica como programada en listas y filtros. */
+export function esTarifaProgramadaEn(t: TarifaVigenciaLike, hoy: string): boolean {
+  return resolverEstadoVigenciaTarifa({
+    estadoAprobacion: t.estado_aprobacion,
+    estado: t.estado,
+    vigenteHasta: t.vigente_hasta,
+    vigenteDesde: t.vigente_desde ?? undefined,
+    hoy,
+  }).programada === true;
 }
 
 /** Suma días a un date-only sin pasar por UTC. */
