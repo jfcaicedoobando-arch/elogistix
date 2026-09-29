@@ -4,7 +4,7 @@ description: Al convertir cotización aceptada en embarque, se revalida la tarif
 type: feature
 ---
 
-> Revisión documental: 2026-09-26. Referencia de implementación; validar configuración/deploy por separado.
+> Revisión documental: 2026-09-29. Referencia de implementación; validar configuración/deploy por separado.
 
 ## Flujo
 
@@ -28,6 +28,18 @@ Crear embarque → revalidar_tarifa_cotizacion(RPC)
 - Precio al cliente intocable salvo decision='reaprobada_ventas'.
 - Severidad bloqueante = tarifa vencida (si `tarifa_revalidacion_bloquea_si_vencida=true`) o cualquier delta_pct > umbral (default 5%).
 - Recargo eliminado en tarifa vigente → siempre bloqueante (delta_pct=100).
+- **Tarifa sustituta con recargo nuevo:** si añade un recargo positivo sin
+  equivalente en los costos aceptados de la cotización (mismo concepto, lado
+  y moneda), la conversión se rechaza con
+  `LC_TARIFA_REQUIERE_RECOTIZACION`. No conservar ni aplicar el costo
+  anterior para esquivar el bloqueo: generar/aceptar nueva versión de la
+  cotización y volver a convertir. La RPC revierte transaccionalmente; cero o
+  negativo no genera costo y no dispara esta regla.
+- Implementación versionada: migración
+  `20260929190000_bloquear_recargos_no_cotizados_tarifa_sustituta.sql`,
+  espejo `supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql`,
+  regresión SQL en `supabase/tests/tarifa_sustituida_ruta_y_delta.sql`.
+  Confirmar deploy DB/UI en el entorno antes de asumir que está activo.
 
 ## Configuración
 

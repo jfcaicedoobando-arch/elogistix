@@ -1,6 +1,6 @@
 # Cotización → aceptación → embarque
 
-Revisado el **2026-09-26**. Fuentes: feature `cotizacion`, portal, servicios
+Revisado el **2026-09-29**. Fuentes: feature `cotizacion`, portal, servicios
 de conversiones/revalidación y RPCs SQL.
 
 ## Flujo vigente
@@ -16,6 +16,20 @@ de conversiones/revalidación y RPCs SQL.
    de revalidación y RPC, no insert manual ni alta libre desvinculada.
 7. Si cambió la tarifa, resolver severidad/decisión antes de convertir.
 8. El vínculo sincroniza estado En operación y trazabilidad del embarque.
+
+## Implementación del bloqueo de recargos (2026-09-29)
+
+La decisión se aplica en la RPC transaccional de conversión, no sólo en la UI.
+El control compara los recargos positivos de la tarifa sustituta con el detalle
+aceptado y devuelve un mensaje accionable; no deja embarque parcial. La
+migración y su espejo son:
+
+- `supabase/migrations/20260929190000_bloquear_recargos_no_cotizados_tarifa_sustituta.sql`
+- `supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql`
+- Mensaje de dominio: `src/lib/errors/lcCodeMessages.operativo.operaciones.ts`
+
+La presencia en Git no certifica que la migración o frontend estén desplegados
+en producción. Verificar ambos despliegues por separado.
 
 ## Portal y notificaciones
 
@@ -35,6 +49,13 @@ Re-cotizar usa motivo y versionado; preservar versión aceptada/histórico.
 - Sin cambios: conversión normal.
 - Diferencia informativa: operaciones decide mantener/refrescar según reglas.
 - Bloqueante: requiere resolución comercial/reaprobación.
+- Si la tarifa sustituta agrega un recargo positivo que no está representado
+  entre los costos aceptados (mismo concepto, lado y moneda), la conversión se
+  rechaza con `LC_TARIFA_REQUIERE_RECOTIZACION`. Hay que emitir y aceptar una
+  nueva versión de la cotización antes de crear el embarque; la RPC revierte la
+  operación completa y conserva la cotización aceptada.
+- Recargos con monto cero o negativo no generan costo operativo y no activan
+  este bloqueo.
 - Precio al cliente no cambia silenciosamente al actualizar costo.
 
 La creación debe ser atómica e idempotente, con control de vínculos/cantidad
