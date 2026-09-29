@@ -35,7 +35,7 @@ BEGIN
     (lead_new, org_a, 'Prospecto no calificado', '', '', '', 'MX',
      'Monterrey', 'Referido', 'Marítimo', 1, 'Nuevo', 'kam@qa.test', ''),
     (lead_other_org, org_b, 'Prospecto de otra organización', '', '', '',
-     'MX', 'Monterrey', 'Referido', 'Marítimo', 80, 'Calificado',
+     'MX', 'Monterrey', 'Referido', 'Marítimo', 5, 'Calificado',
      'kam@qa.test', '');
 
   PERFORM pg_temp.as_user(ops_user);
@@ -67,7 +67,7 @@ BEGIN
       fuente, interes_modo, score, estado, vendedor_email, notas
     ) VALUES (
       lead_insert, org_a, 'Lead no autorizado', '', '', '', 'MX',
-      'Monterrey', 'Referido', 'Marítimo', 50, 'Calificado', 'ops@qa.test', ''
+      'Monterrey', 'Referido', 'Marítimo', 5, 'Calificado', 'ops@qa.test', ''
     );
   EXCEPTION
     WHEN insufficient_privilege OR check_violation THEN
