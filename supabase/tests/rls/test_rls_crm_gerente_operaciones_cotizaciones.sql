@@ -31,9 +31,9 @@ BEGIN
   ) VALUES
     (lead_qualified, org_a, 'Prospecto cotizable', 'Contacto QA',
      'contacto@qa.test', '8180000000', 'MX', 'Monterrey', 'Referido',
-     'Marítimo', 80, 'Calificado', 'kam@qa.test', ''),
+     'Marítimo', 5, 'Calificado', 'kam@qa.test', ''),
     (lead_new, org_a, 'Prospecto no calificado', '', '', '', 'MX',
-     'Monterrey', 'Referido', 'Marítimo', 10, 'Nuevo', 'kam@qa.test', ''),
+     'Monterrey', 'Referido', 'Marítimo', 1, 'Nuevo', 'kam@qa.test', ''),
     (lead_other_org, org_b, 'Prospecto de otra organización', '', '', '',
      'MX', 'Monterrey', 'Referido', 'Marítimo', 80, 'Calificado',
      'kam@qa.test', '');
