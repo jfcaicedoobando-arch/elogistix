@@ -1,5 +1,4 @@
 
-import { pluralizar } from "@/lib/format/pluralizar";
 import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,11 +32,7 @@ import { useState, useMemo } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
-function getClientesPageDescription(isError: boolean, isLoading: boolean, totalCount: number) {
-  if (isError) return "No se pudo cargar el listado de clientes";
-  if (isLoading) return "Cargando clientes…";
-  return `${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`;
-}
+import { getClientesPageDescription } from "@/features/cliente/routes/clientesPageDescription";
 
 export default function Clientes() {
   useDocumentTitle("Clientes");
