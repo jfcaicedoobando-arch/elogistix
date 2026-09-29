@@ -16,7 +16,7 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import {
   getEstadoUnificado,
   rankEstadoUnificado,
-  LABEL_ESTADO_UNIFICADO,
+  etiquetaEstadoUnificado,
 } from "@/lib/domain/estadoUnificado";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -152,7 +152,7 @@ export function buildProformasColumns({
         const label =
           estado === "facturada"
             ? etiquetaProformaConvertida(p.facturas_asociadas ?? [])
-            : LABEL_ESTADO_UNIFICADO[estado];
+            : etiquetaEstadoUnificado(p);
         // v13.681.0 · UI-1: colores desde el statusRegistry (dominio proforma).
         return <StatusBadge domain="proforma" status={estado} label={label} />;
       },

@@ -14,6 +14,10 @@ import type {
   ProformaPendienteConEmbarque,
 } from "./types";
 
+type ProformaListaRow = ProformaConFactura & {
+  cliente_autorizacion?: { requiere_autorizacion_proforma: boolean | null } | null;
+};
+
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
   // M2: boundary de dinero validado (identidad + total/subtotal/iva).
   // D6: mezcla FK inversa + `factura_id` / `factura_secundaria_id` para que el
@@ -80,7 +84,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
  * filtra por estado en la UI. No filtra por `estado_revision`.
  */
 export async function fetchProformasTodas(organizationId: string): Promise<ProformaConFactura[]> {
-  const rows = fromDb<ProformaConFactura[]>(
+  const rows = fromDb<ProformaListaRow[]>(
     await unwrapOr(
       supabase
         .from("proformas")
@@ -95,7 +99,13 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
   // decidir si la conversión ya tiene una factura viva.
   // C30: sumar las facturas vinculadas por `factura_id` / `factura_secundaria_id`
   // (fusión de varias proformas) sin duplicar las que ya llegaron por la FK inversa.
-  return rows.map(mergeFacturasVinculadas);
+  return rows.map(({ cliente_autorizacion, ...proforma }) =>
+    mergeFacturasVinculadas({
+      ...proforma,
+      requiere_autorizacion_proforma:
+        cliente_autorizacion?.requiere_autorizacion_proforma ?? true,
+    }),
+  );
 }
 
 
