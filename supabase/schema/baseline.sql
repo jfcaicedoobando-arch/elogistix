@@ -3635,8 +3635,7 @@ $$;
 CREATE FUNCTION public._embarque_aplicar_tarifa_decidida(p_embarque_id uuid, p_cotizacion_id uuid, p_tarifa_id_aplicada uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
-DECLARE
+    AS $$DECLARE
   v_org            uuid;
   v_costo          RECORD;
   v_fila           RECORD;
@@ -3660,6 +3659,7 @@ DECLARE
   v_cont_nueva     uuid;
   v_nav_nueva      uuid;
   v_nav_nombre     text;
+  v_recargo_no_cotizado text;
   v_actualizados   integer := 0;
 BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
@@ -3700,6 +3700,37 @@ BEGIN
     IF v_tarifa_origen IS NOT NULL AND v_cont_nueva IS DISTINCT FROM v_cont_origen THEN
       RAISE EXCEPTION 'LC_TARIFA_TIPO_INCOMPATIBLE: la tarifa sustituta es de otro tipo de contenedor/servicio que la cotización; selecciona una tarifa del mismo tipo o recotiza.'
         USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  -- Una sustitución puede cambiar el precio de lo cotizado, pero no agregar
+  -- conceptos que el cliente no aceptó. Sólo se considera cubierto el recargo
+  -- sustituto si existe la fila vinculada al recargo equivalente de la tarifa
+  -- original en la cotización aceptada (concepto + lado + moneda).
+  IF v_es_sustitucion THEN
+    SELECT format('%s (%s)', r.concepto, r.lado)
+      INTO v_recargo_no_cotizado
+      FROM public.costeo_tarifa_recargos r
+     WHERE r.tarifa_id = p_tarifa_id_aplicada
+       AND r.organization_id = v_org
+       AND NOT EXISTS (
+         SELECT 1
+           FROM public.cotizacion_costos cc
+           JOIN public.costeo_tarifa_recargos r_origen
+             ON r_origen.id = cc.costeo_tarifa_recargo_id
+            AND r_origen.organization_id = v_org
+            AND r_origen.tarifa_id = v_tarifa_origen
+          WHERE cc.cotizacion_id = p_cotizacion_id
+            AND cc.organization_id = v_org
+            AND cc.deleted_at IS NULL
+            AND lower(btrim(r_origen.concepto)) = lower(btrim(r.concepto))
+            AND r_origen.lado IS NOT DISTINCT FROM r.lado
+            AND upper(btrim(r_origen.moneda)) = upper(btrim(r.moneda))
+       )
+     ORDER BY lower(btrim(r.concepto)), r.id
+     LIMIT 1;
+    IF v_recargo_no_cotizado IS NOT NULL THEN
+      RAISE EXCEPTION 'LC_TARIFA_REQUIERE_RECOTIZACION: la tarifa sustituta agrega el recargo "%", ausente de la cotización aceptada. Recotiza antes de crear el embarque.',
+        v_recargo_no_cotizado USING ERRCODE = 'P0001';
     END IF;
   END IF;
   FOR v_costo IN
