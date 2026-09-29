@@ -4264,7 +4264,8 @@
       "20260927050000_cxp_historial_fecha_pago.sql",
       "20260927060000_preservar_identidad_recargos_tarifa.sql",
       "20260927061000_crear_factura_proveedor_vinculada_atomica.sql",
-      "20260928120000_cotizacion_embarque_snapshot_costos_refrescados.sql"
+      "20260928120000_cotizacion_embarque_snapshot_costos_refrescados.sql",
+      "20260928210543_93950fe1-851c-4a93-bf21-0c1ecf0173a6.sql"
     ]
   }
 }
