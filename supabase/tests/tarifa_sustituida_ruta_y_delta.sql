@@ -1,5 +1,5 @@
 -- =============================================================
--- test_rls_tarifa_sustituida_ruta_y_delta.sql · regresión de negocio
+-- tarifa_sustituida_ruta_y_delta.sql · guard de regresión de negocio
 --
 -- Suite de regresión automática de cotización → embarque:
 --   · CASO 1: sustituir por una tarifa de OTRA ruta ⇒ LC_TARIFA_RUTA_INCOMPATIBLE.
@@ -8,7 +8,7 @@
 --   · CASO 3: el delta de una sustitución se calcula EN SERVIDOR contra la tarifa elegida.
 --   · CASO 6: un recargo nuevo y no cotizado bloquea toda la conversión.
 --
--- Se descubre automáticamente por scripts/ci/run-rls-suites.sh.
+-- Se ejecuta desde supabase/tests/_guards_manifest.txt mediante scripts/ci/run-guards.sh.
 -- =============================================================
 
 BEGIN;
