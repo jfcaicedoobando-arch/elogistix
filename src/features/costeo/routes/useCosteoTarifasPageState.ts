@@ -22,7 +22,9 @@ function readViewMode(): ViewMode {
 }
 
 function readAprobacionFromUrl(value: string | null): AprobacionFiltro {
-  return value === "borrador" || value === "vigente" || value === "programada" || value === "rechazada" ? value : DEFAULT_APROB;
+  return value === "borrador" || value === "vigente" || value === "programada" || value === "rechazada"
+    ? value
+    : DEFAULT_APROB;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,6 +41,10 @@ export function useCosteoTarifasPageState() {
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>(() =>
     readAprobacionFromUrl(searchParams.get("aprobacion")),
   );
+  const cambiarAprobacion = useCallback((valor: AprobacionFiltro) => {
+    setAprobacion(valor);
+    if (valor === "programada") setSoloPorVencer(false);
+  }, []);
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
   const [busqueda, setBusqueda] = useState("");
@@ -185,7 +191,7 @@ export function useCosteoTarifasPageState() {
     programadasCount,
     // filtros
     estado, setEstado,
-    aprobacion, setAprobacion,
+    aprobacion, setAprobacion: cambiarAprobacion,
     agenteId, setAgenteId,
     tipoId, setTipoId,
     busqueda, setBusqueda,
