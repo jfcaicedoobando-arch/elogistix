@@ -20,7 +20,9 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import { crearColumnasDemorasVenta } from "./CosteoDemorasVentaColumns";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Timer } from "lucide-react";
-import { validarTramoDias, validarSinSolape } from "./costeoDemorasVentaValidacion";
+import {
+  camposRequeridosDemoraValidos, validarTramoDias, validarSinSolape,
+} from "./costeoDemorasVentaValidacion";
 
 const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
@@ -47,7 +49,7 @@ export default function CosteoDemorasVenta() {
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
-    if (!form.tipo_contenedor_id || form.monto_por_dia_usd < 0) return;
+    if (!camposRequeridosDemoraValidos(form)) return;
     if (!validarTramoDias(form)) return;
     if (!validarSinSolape(tarifas, form)) return;
     await crear.mutateAsync(form);
@@ -57,6 +59,7 @@ export default function CosteoDemorasVenta() {
   };
 
   const tipoInvalido = intentoEnvio && !form.tipo_contenedor_id;
+  const canSubmit = camposRequeridosDemoraValidos(form);
 
   const columns = useMemo(
     () => crearColumnasDemorasVenta(tipoMap, (id) => setAEliminar(id)),
@@ -99,6 +102,7 @@ export default function CosteoDemorasVenta() {
         setForm={setForm}
         tipos={tipos}
         isPending={crear.isPending}
+        canSubmit={canSubmit}
         tipoInvalido={tipoInvalido}
         onSubmit={handleGuardar}
       />
