@@ -33,9 +33,11 @@ DECLARE
   v_t_ruta uuid;
   v_t_tipo uuid;
   v_t_ok   uuid;
+  v_t_extra uuid;
   v_cli    uuid;
   v_cot    uuid;
   v_cot_conversion uuid;
+  v_cot_extra uuid;
   v_emb    uuid;
   v_emb_conversion uuid;
   v_delta  jsonb;
@@ -244,6 +246,53 @@ BEGIN
     RAISE EXCEPTION 'CASO 5 FALLÓ: costo aplicado %, snapshot %; se esperaban USD 2400 de Flete marítimo', v_total, v_snapshot;
   END IF;
   RAISE NOTICE 'CASO 5 OK: snapshot total por concepto aceptado coincide con costos aplicados';
+  
+  -- ---------------- CASO 6: sustituta agrega un recargo no cotizado ----------
+  INSERT INTO public.costeo_tarifas
+    (organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id, moneda,
+     flete_base, vigente_desde, vigente_hasta)
+  VALUES (v_org, v_ag, v_nav2, v_ruta1, v_tc20, 'USD', 1150,
+          CURRENT_DATE, CURRENT_DATE + 30) RETURNING id INTO v_t_extra;
+  INSERT INTO public.costeo_tarifa_recargos
+    (tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total)
+  VALUES (v_t_extra, v_org, 'Documentación', 'origen', 75, 'USD', true);
+
+  INSERT INTO public.cotizaciones
+    (organization_id, cliente_id, estado, created_by, moneda, folio, modo, tipo,
+     tarifa_id, tipo_contenedor, num_contenedores)
+  VALUES (v_org, v_cli, 'Aceptada'::public.estado_cotizacion, v_uid,
+          'USD'::public.moneda, 'COT-TSUST-0003',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          v_t_base, 'TST20', 1)
+  RETURNING id INTO v_cot_extra;
+  INSERT INTO public.cotizacion_costos
+    (cotizacion_id, organization_id, concepto, moneda, cantidad, costo_unitario,
+     precio_venta, costeo_tarifa_id)
+  VALUES (v_cot_extra, v_org, 'Flete marítimo', 'USD', 1, 1000, 0, v_t_base);
+
+  v_ok := false;
+  BEGIN
+    PERFORM public.crear_embarque_borrador_desde_cotizacion(
+      v_cot_extra, 'sustituida', v_t_extra, '{}'::jsonb);
+  EXCEPTION WHEN others THEN
+    v_msg := SQLERRM;
+    v_ok := v_msg LIKE '%LC_TARIFA_REQUIERE_RECOTIZACION%';
+  END;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: se esperaba bloquear por recargo nuevo, se obtuvo: %', COALESCE(v_msg, 'sin error');
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.embarques
+     WHERE cotizacion_id = v_cot_extra AND deleted_at IS NULL
+  ) OR EXISTS (
+    SELECT 1 FROM public.cotizaciones
+     WHERE id = v_cot_extra
+       AND (embarque_id IS NOT NULL OR estado <> 'Aceptada'::public.estado_cotizacion)
+  ) THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: la cotización cambió o creó un embarque a pesar del bloqueo';
+  END IF;
+  RAISE NOTICE 'CASO 6 OK: recargo no cotizado bloquea conversión y revierte todo';
+
 END;
 $$;
 

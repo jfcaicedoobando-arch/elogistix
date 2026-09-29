@@ -1,3 +1,7 @@
+-- Bloquea la conversión si una tarifa sustituta agrega recargos que no
+-- estaban representados en la cotización aceptada. Espejo de
+-- supabase/schema/embarques/_embarque_aplicar_tarifa_decidida.sql.
+
 -- Fuente canónica de public._embarque_aplicar_tarifa_decidida (R201-COT-01).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 --
