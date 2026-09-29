@@ -6,13 +6,10 @@ import { useCosteoTarifas, useCosteoTarifaMutations } from "@/features/costeo/ho
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import type { CosteoTarifaRow } from "@/features/costeo/types";
 import {
-  buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
+  buildInitialFromTarifa, seleccionarTarifasCatalogo,
+  type EstadoFiltro, type AprobacionFiltro,
 } from "./CosteoTarifas.helpers";
 import { todayLocalISO } from "@/lib/date/today";
-import { textoBusquedaPuertos } from "@/features/costeo/utils/puertoLabel";
-import {
-  coincideBusqueda, esBorradorAprobable, esTarifaPorVencerEn, esTarifaProgramadaEn,
-} from "@/features/costeo/utils/vigenciaTarifa";
 
 export type ViewMode = "agrupada" | "tabla";
 const DEFAULT_APROB: AprobacionFiltro = "todas";
@@ -72,28 +69,11 @@ export function useCosteoTarifasPageState() {
 
   const { data: tarifas = [], isLoading, isError, refetch } = useCosteoTarifas(tarifaFilters);
   const { eliminar } = useCosteoTarifaMutations();
-  const tarifasFiltradas = useMemo(() => {
-    const hoy = todayLocalISO();
-    return tarifas.filter((t) => {
-      if (aprobacion === "programada") {
-        if (!esTarifaProgramadaEn(t, hoy)) return false;
-      } else if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) {
-        return false;
-      }
-      if (soloPorVencer && !esTarifaPorVencerEn(t, hoy)) return false;
-      // Etapa 2 + P2-6: país/UN/LOCODE; todos los términos, sin contigüidad ni acentos.
-      return coincideBusqueda(`${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`, busqueda);
-    });
-  }, [tarifas, aprobacion, busqueda, soloPorVencer]);
-
-  const pendientesCount = useMemo(
-    () => { const hoy = todayLocalISO(); return tarifas.filter((t) => esBorradorAprobable(t, hoy)).length; },
-    [tarifas],
+  const catalogo = useMemo(
+    () => seleccionarTarifasCatalogo(tarifas, { aprobacion, busqueda, soloPorVencer }, todayLocalISO()),
+    [tarifas, aprobacion, busqueda, soloPorVencer],
   );
-  const programadasCount = useMemo(
-    () => { const hoy = todayLocalISO(); return tarifas.filter((t) => esTarifaProgramadaEn(t, hoy)).length; },
-    [tarifas],
-  );
+  const { tarifasFiltradas, pendientesCount, programadasCount } = catalogo;
 
   const hasActiveFilters =
     aprobacion !== DEFAULT_APROB ||
