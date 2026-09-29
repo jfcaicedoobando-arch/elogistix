@@ -4,6 +4,7 @@ import {
   puedeAprobarTarifa,
   esVigenciaVencida,
   esTarifaUsableEn,
+  esTarifaProgramadaEn,
 } from "../vigenciaTarifa";
 
 describe("vigenciaTarifa", () => {
@@ -29,8 +30,28 @@ describe("vigenciaTarifa", () => {
     });
     expect(r.estadoCanonico).toBe("Pendiente");
     expect(r.vencida).toBe(true);
-    expect(r.advertencia).toContain("Pendiente · vigencia vencida el");
+    expect(r.advertencia).toContain("Vigencia vencida el");
+    expect(r.advertencia).toContain("edita para renovar");
     expect(r.advertencia).toContain("06/07/2026");
+    expect(r.advertencia).not.toContain("Pendiente ·");
+  });
+
+  it("identifica como programada una tarifa aprobada cuya vigencia inicia después de hoy", () => {
+    expect(esTarifaProgramadaEn({
+      estado_aprobacion: "vigente",
+      vigente_desde: "2026-10-15",
+      vigente_hasta: "2026-12-31",
+    }, "2026-09-28")).toBe(true);
+  });
+
+  it("no confunde borradores, vencidas ni reemplazadas con programadas", () => {
+    const hoy = "2026-09-28";
+    expect(esTarifaProgramadaEn({
+      estado_aprobacion: "borrador", vigente_desde: "2026-10-15", vigente_hasta: "2026-12-31",
+    }, hoy)).toBe(false);
+    expect(esTarifaProgramadaEn({
+      estado_aprobacion: "vigente", estado: "reemplazada", vigente_desde: "2026-10-15", vigente_hasta: "2026-12-31",
+    }, hoy)).toBe(false);
   });
 
   it("borrador vigente no trae advertencia", () => {
