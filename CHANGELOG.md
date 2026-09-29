@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.10] - 2026-09-28
+
+- **fix(costeo · accesibilidad)**: las tablas con desbordamiento horizontal anuncian cómo desplazarse y permiten enfocar el área con teclado.
+- **fix(tarifas marítimas)**: el filtro de tarifas programadas tiene conteo y deep link por URL; las tarifas pendientes caducadas explican que deben renovarse antes de aprobarse.
+- **fix(demoras · venta)**: los campos requeridos inválidos bloquean el guardado, mientras USD 0 se acepta como tarifa sin cargo y queda explicado.
+- **test(ci)**: guards estáticos manejan rutas y saltos de línea multiplataforma; pruebas que requieren Bash se omiten sólo si no está instalado.
+
 ## [13.824.9] - 2026-09-28
 
 - **fix(cotización → embarque)**: la conciliación «Refrescado» usa el total por concepto y moneda sellado después de aplicar la tarifa, incluso con varios contenedores o nombres distintos entre tarifa y costo cotizado.
