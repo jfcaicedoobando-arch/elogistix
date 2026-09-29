@@ -94,7 +94,7 @@ export default function CosteoTarifas() {
         onBusquedaChange={s.setBusqueda}
         agentes={agentes}
         tipos={tipos}
-        pendientesCount={s.pendientesCount}
+        counts={{ pendientes: s.pendientesCount, programadas: s.programadasCount }}
         onClearAll={s.clearAll}
         hasActiveFilters={s.hasActiveFilters}
         total={s.tarifasFiltradas.length}

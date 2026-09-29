@@ -54,6 +54,14 @@ describe("useCosteoTarifasPageState", () => {
     expect(result.current.s.activeKpi).toBe("pendientes");
   });
 
+  it("Programadas quita el filtro Por vencer", () => {
+    const { result } = setup("/costeo/tarifas");
+    act(() => result.current.s.onFilterPorVencer());
+    act(() => result.current.s.setAprobacion("programada"));
+    expect(result.current.s.aprobacion).toBe("programada");
+    expect(result.current.s.soloPorVencer).toBe(false);
+  });
+
   it("Pendientes → Por vencer quita 'Pendientes'", () => {
     const { result } = setup("/costeo/tarifas");
     act(() => result.current.s.onFilterPendientes());

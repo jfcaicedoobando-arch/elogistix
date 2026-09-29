@@ -4,6 +4,7 @@ import {
   formatVigencia,
   vigenciaHint,
   buildInitialFromTarifa,
+  seleccionarTarifasCatalogo,
 } from "../CosteoTarifas.helpers";
 
 const isoOffset = (days: number): string => {
@@ -12,6 +13,41 @@ const isoOffset = (days: number): string => {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
+
+
+describe("seleccionarTarifasCatalogo", () => {
+  const tarifa = (id: string, estado: string, estadoAprobacion: string, desde: string) => ({
+    id,
+    estado,
+    estado_aprobacion: estadoAprobacion,
+    vigente_desde: desde,
+    vigente_hasta: "2026-12-31",
+    puerto_origen_nombre: "Ningbo",
+    puerto_origen_code: "CNNGB",
+    puerto_origen_country: "China",
+    puerto_destino_nombre: "Manzanillo",
+    puerto_destino_code: "MXZLO",
+    puerto_destino_country: "México",
+    agente_nombre: "Forwarder del Norte",
+    naviera_nombre: "TS Lines",
+  });
+
+  it("filtra programadas aprobadas y conserva conteos del catálogo", () => {
+    const result = seleccionarTarifasCatalogo(
+      [
+        tarifa("programada", "vigente", "vigente", "2026-10-15"),
+        tarifa("vigente", "vigente", "vigente", "2026-09-01"),
+        tarifa("pendiente", "borrador", "borrador", "2026-10-01"),
+      ] as never,
+      { aprobacion: "programada", busqueda: "", soloPorVencer: false },
+      "2026-09-28",
+    );
+
+    expect(result.tarifasFiltradas.map((t) => t.id)).toEqual(["programada"]);
+    expect(result.pendientesCount).toBe(1);
+    expect(result.programadasCount).toBe(1);
+  });
+});
 
 describe("usd", () => {
   it("formatea a USD", () => {

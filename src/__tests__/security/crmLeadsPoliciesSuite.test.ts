@@ -12,7 +12,7 @@ import { resolve } from "node:path";
 const SUITE = readFileSync(
   resolve(process.cwd(), "supabase/tests/crm_leads_ownership.sql"),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
 const ESPERADAS = [
   "Gestion leads in-org insert crm_leads|a",

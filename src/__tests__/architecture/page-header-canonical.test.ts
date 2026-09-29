@@ -22,6 +22,7 @@ const ALLOWLIST = [
   "src/features/portal/components/PortalSinCliente.tsx",
   "src/features/portal/components/dashboard/PortalWelcomeCard.tsx",
 ];
+const portablePath = (file: string) => file.replace(/\\/g, "/");
 
 /** Directorios fuera del alcance: PDF, marketing público y pruebas. */
 const EXCLUIDOS = ["src/pdf", "src/generators", "src/features/marketing", "__tests__"];
@@ -30,7 +31,7 @@ function listarTsx(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (EXCLUIDOS.some((ex) => full.includes(ex))) continue;
+    if (EXCLUIDOS.some((ex) => portablePath(full).includes(ex))) continue;
     if (entry.isDirectory()) out.push(...listarTsx(full));
     else if (entry.isFile() && entry.name.endsWith(".tsx")) out.push(full);
   }
@@ -38,7 +39,7 @@ function listarTsx(dir: string): string[] {
 }
 
 describe("arquitectura: encabezado de página canónico", () => {
-  const archivos = listarTsx("src").filter((f) => !ALLOWLIST.includes(f));
+  const archivos = listarTsx("src").filter((f) => !ALLOWLIST.includes(portablePath(f)));
 
   it("encuentra archivos para auditar", () => {
     expect(archivos.length).toBeGreaterThan(100);

@@ -45,6 +45,23 @@ describe("DataTable — render", () => {
     fireEvent.click(screen.getByText("EMB-002"));
     expect(onRowClick).toHaveBeenCalledWith(embarques[1]);
   });
+
+  it("muestra una pista y enfoca el área cuando hay desplazamiento horizontal", async () => {
+    render(<DataTable columns={embarqueColumns} data={embarques} rowKey={(r) => r.id} />);
+    const scrollArea = screen.getByTestId("datatable-scroll");
+    Object.defineProperties(scrollArea, {
+      scrollWidth: { configurable: true, value: 900 },
+      clientWidth: { configurable: true, value: 400 },
+      scrollLeft: { configurable: true, value: 0 },
+    });
+    fireEvent.scroll(scrollArea);
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Desplaza horizontalmente para consultar las demás columnas.",
+    );
+    expect(scrollArea).toHaveAttribute("role", "region");
+    expect(scrollArea).toHaveAttribute("tabindex", "0");
+  });
 });
 
 describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () => {

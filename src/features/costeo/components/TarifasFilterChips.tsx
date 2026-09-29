@@ -30,6 +30,7 @@ interface Props {
 const aprobLabels: Record<AprobacionFiltro, string> = {
   borrador: "Pendientes",
   vigente: "Aprobadas",
+  programada: "Programadas",
   rechazada: "Rechazadas",
   todas: "Todas",
 };

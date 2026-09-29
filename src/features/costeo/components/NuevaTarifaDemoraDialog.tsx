@@ -20,12 +20,13 @@ interface Props {
   setForm: (f: DemoraVentaTarifaInput) => void;
   tipos: Tipo[];
   isPending: boolean;
+  canSubmit: boolean;
   tipoInvalido: boolean;
   onSubmit: (e: React.FormEvent) => void;
 }
 
 export function NuevaTarifaDemoraDialog({
-  open, onOpenChange, form, setForm, tipos, isPending, tipoInvalido, onSubmit,
+  open, onOpenChange, form, setForm, tipos, isPending, canSubmit, tipoInvalido, onSubmit,
 }: Props) {
   return (
     <FormDialogShell
@@ -40,7 +41,7 @@ export function NuevaTarifaDemoraDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="submit" form="dem-venta-form" disabled={isPending}>
+          <Button type="submit" form="dem-venta-form" disabled={isPending || !canSubmit}>
             Guardar
           </Button>
         </>
@@ -55,7 +56,9 @@ export function NuevaTarifaDemoraDialog({
           >
             <SelectTrigger
               id="dem-tipo"
+              aria-required="true"
               aria-invalid={tipoInvalido || undefined}
+              aria-describedby={!form.tipo_contenedor_id ? "dem-tipo-hint" : undefined}
               className={tipoInvalido ? "border-destructive" : undefined}
             >
               <SelectValue placeholder="Selecciona…" />
@@ -68,6 +71,11 @@ export function NuevaTarifaDemoraDialog({
               ))}
             </SelectContent>
           </Select>
+          {!form.tipo_contenedor_id && (
+            <p id="dem-tipo-hint" className="mt-1 text-label text-muted-foreground">
+              Selecciona un tipo de contenedor para habilitar Guardar.
+            </p>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -96,13 +104,17 @@ export function NuevaTarifaDemoraDialog({
           </div>
         </div>
         <div>
-          <Label htmlFor="dem-monto">Monto por día (USD)</Label>
+          <Label htmlFor="dem-monto">Monto por día (USD) *</Label>
           <MoneyInput
             id="dem-monto"
+            required
             value={form.monto_por_dia_usd}
             currency="USD"
             onChange={(n: number) => setForm({ ...form, monto_por_dia_usd: n })}
           />
+          <p id="dem-monto-hint" className="mt-1 text-label text-muted-foreground">
+            Captura la tarifa diaria. $0.00 significa que ese tramo no genera cargo.
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>

@@ -1,4 +1,9 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import type { CosteoTarifaRow } from "@/features/costeo/types";
+import { textoBusquedaPuertos } from "@/features/costeo/utils/puertoLabel";
+import {
+  coincideBusqueda, esBorradorAprobable, esTarifaPorVencerEn, esTarifaProgramadaEn,
+} from "@/features/costeo/utils/vigenciaTarifa";
 import { formatUSD, formatFechaDia } from "@/lib/formatters";
 import { diasHastaFecha } from "@/lib/date/dateOnly";
 
@@ -6,7 +11,35 @@ import { diasHastaFecha } from "@/lib/date/dateOnly";
 export const usd = formatUSD;
 
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
-export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
+export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "programada" | "rechazada";
+
+export interface TarifasCatalogoResultado {
+  tarifasFiltradas: CosteoTarifaRow[];
+  pendientesCount: number;
+  programadasCount: number;
+}
+
+/** Selecciona el subconjunto visible y mantiene conteos del catálogo sin filtros locales. */
+export function seleccionarTarifasCatalogo(
+  tarifas: CosteoTarifaRow[],
+  filtros: { aprobacion: AprobacionFiltro; busqueda: string; soloPorVencer: boolean },
+  hoy: string,
+): TarifasCatalogoResultado {
+  const pendientesCount = tarifas.filter((t) => esBorradorAprobable(t, hoy)).length;
+  const programadasCount = tarifas.filter((t) => esTarifaProgramadaEn(t, hoy)).length;
+  const tarifasFiltradas = tarifas.filter((t) => {
+    const pasaAprobacion = filtros.aprobacion === "programada"
+      ? esTarifaProgramadaEn(t, hoy)
+      : filtros.aprobacion === "todas" || (t.estado_aprobacion ?? "vigente") === filtros.aprobacion;
+    if (!pasaAprobacion || (filtros.soloPorVencer && !esTarifaPorVencerEn(t, hoy))) return false;
+    return coincideBusqueda(
+      `${textoBusquedaPuertos(t)} ${t.agente_nombre} ${t.naviera_nombre}`,
+      filtros.busqueda,
+    );
+  });
+  return { tarifasFiltradas, pendientesCount, programadasCount };
+}
+
 
 /**
  * VB-38: vigencia en formato único DD/MM/YYYY (antes "18/jul → 15/dic" sin

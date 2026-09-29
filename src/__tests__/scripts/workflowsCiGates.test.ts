@@ -10,7 +10,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const raiz = process.cwd();
-const leer = (rel: string): string => fs.readFileSync(path.join(raiz, rel), "utf8");
+const leer = (rel: string): string =>
+  fs.readFileSync(path.join(raiz, rel), "utf8").replace(/\r\n/g, "\n");
 
 const ci = leer(".github/workflows/ci.yml");
 const e2e = leer(".github/workflows/e2e.yml");

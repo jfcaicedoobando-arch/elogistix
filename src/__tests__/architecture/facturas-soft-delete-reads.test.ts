@@ -69,8 +69,8 @@ function bloquesDeLectura(fuente: string): string[] {
 
 describe("lecturas de facturas excluyen borradas lógicamente", () => {
   const archivos = listarArchivos(SRC)
-    .filter((f) => !f.includes("integrations/supabase/types"))
-    .map((f) => path.relative(ROOT, f));
+    .map((f) => path.relative(ROOT, f).replace(/\\/g, "/"))
+    .filter((f) => !f.includes("integrations/supabase/types"));
 
   it("no hay lecturas de facturas sin filtro de deleted_at", () => {
     const infractores: string[] = [];

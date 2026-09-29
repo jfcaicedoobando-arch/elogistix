@@ -8,6 +8,15 @@ import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasV
 
 type Tarifa = DemoraVentaTarifaInput & { id: string };
 
+/** Los campos mínimos de captura deben ser válidos antes de habilitar Guardar.
+ * Un monto de cero se conserva como válido: significa que ese tramo no genera cargo.
+ */
+export function camposRequeridosDemoraValidos(form: DemoraVentaTarifaInput): boolean {
+  return form.tipo_contenedor_id.trim().length > 0
+    && Number.isFinite(form.monto_por_dia_usd)
+    && form.monto_por_dia_usd >= 0;
+}
+
 /** EC-20: valida que el tramo de días sea coherente (enteros, desde <= hasta). */
 export function validarTramoDias(form: DemoraVentaTarifaInput): boolean {
   if (!Number.isInteger(form.desde_dia) || form.desde_dia < 1) {

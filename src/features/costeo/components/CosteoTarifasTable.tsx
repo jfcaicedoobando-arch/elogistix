@@ -25,8 +25,6 @@ interface Props {
 export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, onEliminar }: Props) {
   const { aprobar, rechazar, reactivar } = useAprobacionTarifa();
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
-  const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
-
   const mejorPorGrupo = useMemo(() => {
     const hoy = todayLocalISO();
     const map = new Map<string, number>();
@@ -54,11 +52,6 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
 
   return (
     <Card>
-      {hasHorizontalOverflow && (
-        <p role="status" className="border-b px-4 py-2 text-label text-muted-foreground">
-          Desplaza horizontalmente para consultar columnas secundarias
-        </p>
-      )}
       <DataTable<TarifaRow>
         columns={columns}
         data={tarifas}
@@ -67,7 +60,6 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
         emptyMessage="Sin tarifas."
         density={TABLE_DENSITY.listado}
         stickyHeader
-        onHorizontalOverflowChange={setHasHorizontalOverflow}
       />
 
       <DialogRechazarTarifa

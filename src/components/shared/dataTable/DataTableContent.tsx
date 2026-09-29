@@ -54,14 +54,23 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
   const showHeader = isLoading || table.getRowModel().rows.length > 0;
 
   return (
-    <div className="relative">
-      <div
-        ref={scrollRef}
-        data-testid="datatable-scroll"
-        /* E-3 (auditoría visual 2026-08-24): colchón derecho para que la última
-           columna (p. ej. ESTADO) no quede a ras del borde bajo el degradado. */
-        className="relative w-full overflow-x-auto rounded-md pr-2 [scrollbar-width:thin]"
-      >
+    <div>
+      {overflowing && (
+        <p role="status" className="border-b px-4 py-2 text-label text-muted-foreground">
+          Desplaza horizontalmente para consultar las demás columnas.
+        </p>
+      )}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          data-testid="datatable-scroll"
+          role={overflowing ? "region" : undefined}
+          aria-label={overflowing ? "Tabla con desplazamiento horizontal" : undefined}
+          tabIndex={overflowing ? 0 : undefined}
+          /* E-3 (auditoría visual 2026-08-24): colchón derecho para que la última
+             columna (p. ej. ESTADO) no quede a ras del borde bajo el degradado. */
+          className="relative w-full overflow-x-auto rounded-md pr-2 [scrollbar-width:thin] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        >
 
         <Table className={tableClassName} wrapperClassName="overflow-visible">
           {showHeader && (
@@ -89,7 +98,8 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
           {showFooter && <TableFooter>{renderedFooter}</TableFooter>}
         </Table>
       </div>
-      <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
+        <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
+      </div>
     </div>
   );
 }
