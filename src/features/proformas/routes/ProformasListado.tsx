@@ -40,7 +40,7 @@ export default function ProformasListado() {
         title={porEmitir ? "Proformas por emitir" : "Proformas"}
         description={
           porEmitir
-            ? "Proformas aceptadas por el cliente que aún no se han convertido en factura."
+            ? "Proformas aprobadas —por el cliente o internamente— que aún no se han convertido en factura."
             : "Listado completo de proformas generadas. Filtra por estado, busca por número/expediente/cliente y convierte a factura."
         }
       />
