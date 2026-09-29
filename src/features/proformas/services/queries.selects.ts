@@ -14,6 +14,8 @@ const FACTURA_LITE = "id, estado, uuid_fiscal, deleted_at";
 
 export const PROFORMA_LISTA_SELECT = [
   "id", "numero", "expediente", "embarque_id", "cliente_id", "cliente_nombre", "operador",
+  // Política usada para distinguir autorización externa de aprobación interna en la lista.
+  "cliente_autorizacion:cliente_id(requiere_autorizacion_proforma)",
   // C25: `es_consolidada` y `estado_revision` los usa `useTabProformasController`
   // para no permitir seleccionar una proforma fuente ya consolidada ni mezclar
   // consolidadas con individuales en una fusión.

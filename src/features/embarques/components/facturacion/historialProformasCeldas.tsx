@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
-import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
+import { etiquetaEstadoUnificado, getEstadoUnificado } from "@/lib/domain/estadoUnificado";
 
 export type FacturaEmbarqueLite = {
   id?: string;
@@ -21,6 +21,7 @@ export function renderEstado(
   p: ProformaConFactura,
   proformas: ProformaConFactura[],
   facturas: FacturaEmbarqueLite[],
+  requiereAutorizacionProforma = true,
 ) {
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
@@ -46,6 +47,16 @@ export function renderEstado(
   if (rev === "consolidada") {
     const num = proformas.find(x => x.id === p.consolidada_en)?.numero;
     return <Badge variant="info" className="w-fit">Consolidada{num ? ` en ${num}` : ""}</Badge>;
+  }
+
+  if (!requiereAutorizacionProforma) {
+    const etiqueta = etiquetaEstadoUnificado({
+      ...p,
+      requiere_autorizacion_proforma: false,
+    });
+    const variant =
+      unificado === "rechazada" ? "destructive" : unificado === "aceptada" ? "success" : "warning";
+    return <Badge variant={variant} className="w-fit">{etiqueta}</Badge>;
   }
 
   // 2. Respuesta del cliente tiene prioridad sobre revisión interna.

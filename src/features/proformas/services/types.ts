@@ -5,6 +5,8 @@ export type ConceptoVentaRow = Tables<"conceptos_venta">;
 export type ProformaConceptoConsolidadoRow = Tables<"proforma_conceptos_consolidados">;
 
 export type ProformaConFactura = ProformaRow & {
+  /** Política del cliente, adjuntada sólo por la consulta del listado general. */
+  requiere_autorizacion_proforma?: boolean | null;
   facturas: { factura_pdf_url: string | null; factura_xml_url: string | null } | null;
   /**
    * R170-01: facturas reales asociadas (FK inversa `facturas.proforma_id`),

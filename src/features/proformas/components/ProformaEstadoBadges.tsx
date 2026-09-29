@@ -48,10 +48,12 @@ function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
 function BadgeCiclo({
   estadoProforma,
   estadoCliente,
+  requiereAutorizacionProforma,
   facturas,
 }: {
   estadoProforma: string | null | undefined;
   estadoCliente: EstadoCliente;
+  requiereAutorizacionProforma: boolean;
   facturas: FacturaCicloLite[];
 }) {
   if (estadoProforma === "facturada") {
@@ -59,9 +61,21 @@ function BadgeCiclo({
     const label = etiquetaProformaConvertida(facturas);
     return <Badge variant={label === "Facturada" ? "success" : "info"}>{label}</Badge>;
   }
-  if (estadoCliente === "rechazada") return <Badge variant="destructive">Rechazada por cliente</Badge>;
-  if (estadoCliente === "aceptada") return <Badge variant="info">Aceptada</Badge>;
-  return <Badge variant="warning">Pendiente cliente</Badge>;
+  if (estadoCliente === "rechazada") {
+    return <Badge variant="destructive">{requiereAutorizacionProforma ? "Rechazada por cliente" : "Rechazada"}</Badge>;
+  }
+  if (estadoCliente === "aceptada") {
+    return (
+      <Badge variant="info">
+        {requiereAutorizacionProforma ? "Aceptada" : "Aprobada internamente"}
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="warning">
+      {requiereAutorizacionProforma ? "Pendiente cliente" : "Pendiente aprobación interna"}
+    </Badge>
+  );
 }
 
 export function EstadoBadges({
@@ -69,20 +83,28 @@ export function EstadoBadges({
   estadoCliente,
   aceptadaPor,
   facturas = [],
+  requiereAutorizacionProforma = true,
 }: {
   estadoProforma?: string | null;
   estadoCliente?: EstadoCliente;
   /** Valor crudo de `proformas.aceptada_por`, se usa para derivar el origen. */
   aceptadaPor?: string | null;
-  /** Facturas generadas desde esta proforma (para distinguir borrador vs emitida). */
+  /** Facturas generadas desde la proforma (para distinguir borrador vs emitida). */
   facturas?: FacturaCicloLite[];
+  /** false for customers whose proformas use an internal approval workflow. */
+  requiereAutorizacionProforma?: boolean;
 }) {
   const ec = estadoCliente ?? "pendiente";
-  const mostrarOrigen = ec === "aceptada";
+  const mostrarOrigen = ec === "aceptada" && requiereAutorizacionProforma;
   const origen = derivarOrigenAceptacion(aceptadaPor);
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <BadgeCiclo estadoProforma={estadoProforma} estadoCliente={ec} facturas={facturas} />
+      <BadgeCiclo
+        estadoProforma={estadoProforma}
+        estadoCliente={ec}
+        requiereAutorizacionProforma={requiereAutorizacionProforma}
+        facturas={facturas}
+      />
       {mostrarOrigen && <BadgeOrigenAceptacion origen={origen} />}
     </div>
   );

@@ -34,6 +34,8 @@ interface Props {
   enviadaAt?: string | null;
   /** true cuando la proforma ya está facturada. */
   facturada: boolean;
+  /** false for house clients whose proformas need internal approval, not client authorization. */
+  requiereAutorizacionProforma?: boolean;
   /** Barra de acciones, renderizada dentro del encabezado (ola 3). */
   actions?: ReactNode;
 }
@@ -49,6 +51,7 @@ export function ProformaDetalleHeader({
   embarqueId,
   enviadaAt,
   facturada,
+  requiereAutorizacionProforma = true,
   actions,
 }: Props) {
   const volver = useVolver("/proformas");
@@ -61,6 +64,7 @@ export function ProformaDetalleHeader({
     estadoCliente,
     enviadaAt,
     facturada,
+    requiereAutorizacion: requiereAutorizacionProforma,
     facturaEmitida: facturasCiclo.length === 0 ? true : emitida,
     etiquetaConversion: facturasCiclo.length > 0 ? etiquetaProformaConvertida(facturasCiclo) : null,
   });
@@ -75,6 +79,7 @@ export function ProformaDetalleHeader({
           estadoProforma={estadoProforma}
           estadoCliente={estadoCliente}
           aceptadaPor={aceptadaPor}
+          requiereAutorizacionProforma={requiereAutorizacionProforma}
           facturas={facturas}
         />
       }

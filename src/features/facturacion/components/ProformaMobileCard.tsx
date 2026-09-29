@@ -5,7 +5,7 @@
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatDate, toTitleCase } from "@/lib/formatters";
-import { getEstadoUnificado, LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
+import { getEstadoUnificado, etiquetaEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
 
@@ -16,7 +16,7 @@ export function ProformaMobileCard({ proforma }: { proforma: ProformaConFactura 
   const label =
     estado === "facturada"
       ? etiquetaProformaConvertida(proforma.facturas_asociadas ?? [])
-      : LABEL_ESTADO_UNIFICADO[estado];
+      : etiquetaEstadoUnificado(proforma);
   return (
     <div className="min-w-0 flex-1 space-y-1">
       <div className="flex items-center justify-between gap-2">

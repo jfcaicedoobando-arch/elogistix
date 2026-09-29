@@ -9,12 +9,12 @@
  * - more: Ver embarque (drilldown al expediente).
  */
 import { useState } from "react";
-import { Receipt } from "lucide-react";
-import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import {
+  buildPrimaryItem,
   buildSecondaryItems,
   buildMoreItems,
 } from "@/features/proformas/components/accionesProformaItems";
+import { DetalleActionBar } from "@/components/shared/DetalleActionBar";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import { AlertaLimiteCreditoDialog } from "@/features/proformas/components/AlertaLimiteCreditoDialog";
@@ -105,10 +105,6 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     ejecutarConversion();
   };
 
-  const primary: DetalleActionItem | null = puedeConvertir
-    ? { id: "convertir", label: "Convertir a factura", icon: Receipt, onClick: onConvertir, loading: convirtiendo }
-    : null;
-
   // v13.624.0 — cliente de casa: aprobación interna en un clic (sin diálogo de
   // "respuesta del cliente", porque no hay respuesta que registrar).
   const puedeAprobarInterna =
@@ -117,17 +113,24 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     readEstadoCliente(proforma) === "pendiente" &&
     canResponderProformaManual;
 
+  const primary = buildPrimaryItem({
+    puedeConvertir,
+    puedeAprobarInterna,
+    convirtiendo,
+    aprobando,
+    onConvertir,
+    onAprobarInterna: () => aprobarInterna(proforma.id),
+  });
+
   const secondary = buildSecondaryItems({
     facturada,
     cargando,
-    aprobando,
     puedeAprobarInterna,
-    puedeResponder,
+    puedeResponder: puedeResponder && !puedeAprobarInterna,
     // VF-20: el vendedor (sólo lectura) no ve la acción de envío.
     puedeEnviar: canEditarProforma,
     onDescargar,
     onEnviar: () => setEnviarOpen(true),
-    onAprobarInterna: () => aprobarInterna(proforma.id),
     onAceptarManual: () => setManualOpen("aceptada"),
     onRechazarManual: () => setManualOpen("rechazada"),
   });
@@ -155,8 +158,8 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
           {autorizacion.requiereAutorizacionProforma
             ? "Para facturar, el cliente debe aceptar la proforma."
             : canResponderProformaManual
-              ? "Este cliente no requiere autorización: aprueba la proforma internamente para facturarla."
-              : "Este cliente no requiere autorización. Pide a un administrador o gerente que la apruebe internamente para poder facturarla."}
+              ? "No hace falta esperar respuesta del cliente. Aprueba internamente para continuar; enviarla por correo es opcional."
+              : "No hace falta esperar respuesta del cliente. Pide a un administrador o gerente que la apruebe internamente para continuar."}
         </p>
       )}
       <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />

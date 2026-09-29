@@ -26,6 +26,30 @@ describe("ProformaMobileCard", () => {
     expect(screen.getByText(/Pendiente/i)).toBeInTheDocument();
   });
 
+  it("muestra el pendiente interno en la tarjeta móvil", () => {
+    render(
+      <ProformaMobileCard
+        proforma={proforma({
+          estado_cliente: "pendiente",
+          requiere_autorizacion_proforma: false,
+        })}
+      />,
+    );
+    expect(screen.getByText("Pendiente aprobación interna")).toBeInTheDocument();
+  });
+
+  it("identifica la aprobación interna cuando la proforma ya está autorizada", () => {
+    render(
+      <ProformaMobileCard
+        proforma={proforma({
+          estado_cliente: "aceptada",
+          requiere_autorizacion_proforma: false,
+        })}
+      />,
+    );
+    expect(screen.getByText("Aprobada internamente")).toBeInTheDocument();
+  });
+
   // R170-01: una proforma convertida cuya única factura sigue en Borrador
   // (sin UUID fiscal) no debe leerse como "Facturada".
   it("no muestra 'Facturada' cuando la única factura asociada está en Borrador", () => {

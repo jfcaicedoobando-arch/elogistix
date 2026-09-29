@@ -27,6 +27,8 @@ export type EstadoUnificadoProforma =
 export interface ProformaEstadoInput {
   estado_proforma?: string | null;
   estado_cliente?: string | null;
+  /** Política del cliente que define quién autoriza la proforma. */
+  requiere_autorizacion_proforma?: boolean | null;
   /**
    * P2 (auditoría v13.823.143 · bug 2): una proforma con factura vinculada ya
    * está facturada aunque `estado_proforma` no se haya sincronizado; sin esto
@@ -62,8 +64,9 @@ export const ESTADOS_UNIFICADOS: EstadoUnificadoProforma[] = [
 ];
 
 export const LABEL_ESTADO_UNIFICADO: Record<EstadoUnificadoProforma, string> = {
-  pendiente: "Pendiente cliente",
-  aceptada: "Aceptada",
+  // Etiquetas neutrales para filtros que agrupan distintos flujos de aprobación.
+  pendiente: "Pendiente",
+  aceptada: "Aprobada",
   rechazada: "Rechazada",
   // R170-01: el grupo "facturada" incluye proformas cuya factura sigue en
   // Borrador (sin timbrar). Llamarlo "Facturada" en filtro, chip y contador
@@ -72,3 +75,18 @@ export const LABEL_ESTADO_UNIFICADO: Record<EstadoUnificadoProforma, string> = {
   // emitida vía `etiquetaProformaConvertida`.
   facturada: "Convertida",
 };
+
+export function etiquetaEstadoUnificado(p: ProformaEstadoInput): string {
+  const estado = getEstadoUnificado(p);
+  if (estado === "pendiente") {
+    return p.requiere_autorizacion_proforma === false
+      ? "Pendiente aprobación interna"
+      : "Pendiente cliente";
+  }
+  if (estado === "aceptada") {
+    return p.requiere_autorizacion_proforma === false
+      ? "Aprobada internamente"
+      : "Aceptada";
+  }
+  return LABEL_ESTADO_UNIFICADO[estado];
+}

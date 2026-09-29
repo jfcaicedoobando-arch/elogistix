@@ -19,9 +19,9 @@ describe("R170-01 · etiqueta del grupo de proformas convertidas", () => {
     expect(LABEL_ESTADO_UNIFICADO.facturada).not.toMatch(/Facturad/);
   });
 
-  it("las demás etiquetas del filtro se conservan", () => {
-    expect(LABEL_ESTADO_UNIFICADO.pendiente).toBe("Pendiente cliente");
-    expect(LABEL_ESTADO_UNIFICADO.aceptada).toBe("Aceptada");
+  it("usa categorías neutrales para filtros que agrupan ambos flujos", () => {
+    expect(LABEL_ESTADO_UNIFICADO.pendiente).toBe("Pendiente");
+    expect(LABEL_ESTADO_UNIFICADO.aceptada).toBe("Aprobada");
     expect(LABEL_ESTADO_UNIFICADO.rechazada).toBe("Rechazada");
   });
 });

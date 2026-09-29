@@ -8,6 +8,11 @@ import { TabFacturacionEmbarque } from "../TabFacturacionEmbarque";
 import type { Tables } from "@/types/db";
 
 vi.mock("@/features/catalogos/hooks", () => ({ useTasaIVA: () => 0.16 }));
+vi.mock("@/features/cliente/hooks/useClienteAutorizacion", () => ({
+  useClienteAutorizacion: () => ({
+    autorizacion: { requiereAutorizacionProforma: true },
+  }),
+}));
 vi.mock("@/features/embarques/hooks", () => ({
   useEmbarqueConceptosVenta: () => ({
     data: [{ id: "c1", estado_facturacion: "pendiente", proforma_id: null }],

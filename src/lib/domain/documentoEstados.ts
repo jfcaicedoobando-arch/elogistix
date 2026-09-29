@@ -4,28 +4,12 @@
  * ninguna regla de negocio, es la fuente del stepper del encabezado.
  */
 
+import { resumenDocumentoBase as resumen } from "@/lib/documentoResumen";
+import type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+
+export type { EstadoDocumentoResumen, PasoDocumento } from "@/lib/documentoResumen";
+
 export type DocumentoDominio = "factura_emitida" | "factura_recibida";
-
-export interface PasoDocumento {
-  id: string;
-  label: string;
-}
-
-export interface EstadoDocumentoResumen {
-  pasos: PasoDocumento[];
-  /** Índice del paso actual; -1 cuando el documento está en un estado terminal. */
-  indiceActual: number;
-  /** true cuando el documento terminó fuera del flujo feliz (cancelada, sustituida). */
-  terminal: boolean;
-  /** Etiqueta a mostrar cuando `terminal` es true. */
-  etiquetaTerminal: string | null;
-  /** Matiz del paso actual (ej. "Parcialmente pagada", "Vencida"). */
-  subEtiqueta?: string | null;
-  /** Tono del matiz: `warning` por defecto, `destructive` cuando hay atraso. */
-  subTono?: "warning" | "destructive";
-  /** IDs de pasos que se omitieron (nunca ocurrieron) y no deben verse como completados. */
-  pasosOmitidos: string[];
-}
 
 const PASOS_EMITIDA: PasoDocumento[] = [
   { id: "borrador", label: "Borrador" },
@@ -75,30 +59,6 @@ function subEtiquetaDe(estado: string): string | null {
   return SUB_ETIQUETAS[estado] ?? null;
 }
 
-interface ResumenOpciones {
-  subEtiqueta?: string | null;
-  subTono?: "warning" | "destructive";
-  pasosOmitidos?: string[];
-}
-
-function resumen(
-  pasos: PasoDocumento[],
-  indiceActual: number,
-  etiquetaTerminal: string | null,
-  opciones: ResumenOpciones = {},
-): EstadoDocumentoResumen {
-  const { subEtiqueta = null, subTono = "warning", pasosOmitidos = [] } = opciones;
-  return {
-    pasos,
-    indiceActual: etiquetaTerminal ? -1 : indiceActual,
-    terminal: !!etiquetaTerminal,
-    etiquetaTerminal,
-    subEtiqueta: etiquetaTerminal ? null : subEtiqueta,
-    subTono,
-    pasosOmitidos: etiquetaTerminal ? [] : pasosOmitidos,
-  };
-}
-
 export function resumenFacturaEmitida(estado: string | null | undefined): EstadoDocumentoResumen {
   const key = estado ?? "";
   const terminal = TERMINALES_EMITIDA[key] ?? null;
@@ -143,51 +103,6 @@ export function resumenDocumento(
     : resumenFacturaRecibida(input);
 }
 
-const PASOS_PROFORMA: PasoDocumento[] = [
-  { id: "emitida", label: "Emitida" },
-  { id: "enviada", label: "Enviada" },
-  { id: "aceptada", label: "Aceptada" },
-  { id: "facturada", label: "Facturada" },
-];
 
-export interface EstadoProformaInput {
-  /** Respuesta del cliente: pendiente | aceptada | rechazada. */
-  estadoCliente: "pendiente" | "aceptada" | "rechazada";
-  /** Fecha en que se envió al cliente, si existe. */
-  enviadaAt?: string | null;
-  /** true cuando la proforma ya generó factura (aunque siga en preparación). */
-  facturada: boolean;
-  /**
-   * B9: true sólo cuando alguna factura de la proforma ya salió de Borrador /
-   * Por timbrar. Si se omite se asume el comportamiento previo (facturada =
-   * emitida), para no cambiar superficies que aún no conocen las facturas.
-   */
-  facturaEmitida?: boolean;
-  /** Matiz a mostrar cuando la conversión aún no se emite. */
-  etiquetaConversion?: string | null;
-}
-
-export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResumen {
-  if (input.estadoCliente === "rechazada") {
-    return resumen(PASOS_PROFORMA, -1, "Rechazada por el cliente");
-  }
-  // Cuando el cliente ya avanzó (aceptó o se facturó) sin que exista
-  // `enviadaAt`, el paso "Enviada" nunca ocurrió: no puede verse como
-  // completado (ej. proformas aprobadas internamente sin envío al cliente).
-  const enviadaOmitida = !input.enviadaAt;
-  const pasosOmitidos = enviadaOmitida ? ["enviada"] : [];
-  if (input.facturada) {
-    const emitida = input.facturaEmitida ?? true;
-    if (emitida) return resumen(PASOS_PROFORMA, 3, null, { pasosOmitidos });
-    // Convertida pero sin emitir: el ciclo se queda en "Aceptada" con matiz.
-    return resumen(PASOS_PROFORMA, 2, null, {
-      subEtiqueta: input.etiquetaConversion ?? "Convertida, sin emitir",
-      pasosOmitidos,
-    });
-  }
-  if (input.estadoCliente === "aceptada") {
-    return resumen(PASOS_PROFORMA, 2, null, { pasosOmitidos });
-  }
-  if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, { subEtiqueta: "Pendiente del cliente" });
-  return resumen(PASOS_PROFORMA, 0, null);
-}
+export { resumenProforma } from "@/lib/proformaEstados";
+export type { EstadoProformaInput } from "@/lib/proformaEstados";
