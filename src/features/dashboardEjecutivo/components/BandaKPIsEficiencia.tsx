@@ -73,7 +73,7 @@ export function BandaKPIsEficiencia({ kpis }: Props) {
           kpis.runway_meses == null
             ? "Utilidad ≥ 0 en el mes"
             : kpis.runway_meses === 0
-              ? "Saldo bancario negativo"
+              ? (kpis.saldo_bancos_mxn < 0 ? "Saldo bancario negativo" : "Saldo bancario en cero")
               : "Bancos ÷ (costos − ingresos)"
         }
         deltaVariant={runwayVariant(kpis.runway_meses)}

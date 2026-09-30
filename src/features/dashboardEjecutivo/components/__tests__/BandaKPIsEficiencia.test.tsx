@@ -37,4 +37,14 @@ describe("BandaKPIsEficiencia", () => {
     expect(screen.getByText("42 días")).toBeInTheDocument();
     expect(screen.getByText("3.5 meses")).toBeInTheDocument();
   });
+
+  it.each([
+    [0, "Saldo bancario en cero", "Saldo bancario negativo"],
+    [-1000, "Saldo bancario negativo", "Saldo bancario en cero"],
+  ])("distingue caja agotada con saldo %s", (saldo, mensaje, incorrecto) => {
+    render(<BandaKPIsEficiencia kpis={{ ...base, saldo_bancos_mxn: saldo, runway_meses: 0 }} />);
+    expect(screen.getByText("Caja agotada")).toBeInTheDocument();
+    expect(screen.getByText(mensaje)).toBeInTheDocument();
+    expect(screen.queryByText(incorrecto)).not.toBeInTheDocument();
+  });
 });

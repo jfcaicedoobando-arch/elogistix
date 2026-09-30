@@ -7,7 +7,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import type { CrmActividadRow } from "@/features/crm/hooks";
-import { formatFechaHora } from "@/lib/formatters/dates";
+import { formatFechaDia, formatFechaHora } from "@/lib/formatters/dates";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Hint } from "@/components/shared/Hint";
 import { ActividadEntidad } from "@/features/crm/components/actividades/ActividadEntidad";
@@ -25,7 +25,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
   },
   {
     id: "asunto", header: "Asunto", meta: { className: "max-w-52 font-medium" },
-    cell: ({ row }) => <Hint label={row.original.asunto}><span className="block truncate">{row.original.asunto}</span></Hint>,
+    cell: ({ row }) => <Hint label={row.original.asunto}><span tabIndex={0} className="block truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{row.original.asunto}</span></Hint>,
   },
   {
     id: "entidad", header: "Entidad", meta: { width: COL_W.nombre, className: "text-body-sm" },
@@ -51,7 +51,12 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
   },
   {
     id: "fecha_programada", header: "Programada", meta: { width: COL_W.estado, className: "text-body-sm" },
-    cell: ({ row }) => row.original.fecha_programada ? formatFechaHora(row.original.fecha_programada) : "—",
+    cell: ({ row }) => row.original.fecha_programada ? (
+      <time dateTime={row.original.fecha_programada} className="block whitespace-nowrap tabular-nums">
+        <span className="block">{formatFechaDia(row.original.fecha_programada)}</span>
+        <span className="block text-muted-foreground">{formatFechaHora(row.original.fecha_programada, { timeStyle: "short" })}</span>
+      </time>
+    ) : "—",
   },
 ]);
 

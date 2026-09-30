@@ -1,12 +1,12 @@
 /**
- * El expediente aún no se asigna al borrador. En el listado se identifica
- * por su ruta y fechas, sin promover un fragmento de UUID como nombre humano.
+ * Identifica borradores sin reservar un folio ni exponer datos comerciales.
+ * Reutiliza la misma referencia corta del listado interno.
  */
+import { labelExpediente } from "@/lib/domain/labelExpediente";
+
 export function etiquetaExpedienteAgente(
   expediente: string | null | undefined,
-  _id: string,
+  id: string,
 ): string {
-  const limpio = String(expediente ?? "").trim();
-  if (limpio) return limpio;
-  return "Borrador de embarque";
+  return labelExpediente(expediente, id);
 }
