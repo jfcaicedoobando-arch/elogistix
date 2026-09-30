@@ -9,7 +9,7 @@ describe("garantías — requisito visible antes de abrir el formulario", () => 
   it("explica el requisito sin prometer configuración cuando no hay proveedores disponibles", () => {
     const onConfigurar = vi.fn();
     render(<AgenteGarantiaMobileCard fila={fila} onConfigurar={onConfigurar} proveedorDisponible={false} />);
-    expect(screen.getByText(/Requiere proveedor tipo Naviera/)).toBeInTheDocument();
+    expect(screen.getByText("Proveedor pendiente")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Ver requisito" }));
     expect(onConfigurar).toHaveBeenCalledWith(fila);
     expect(screen.queryByRole("button", { name: "Configurar" })).not.toBeInTheDocument();
@@ -18,6 +18,12 @@ describe("garantías — requisito visible antes de abrir el formulario", () => 
   it("mantiene la configuración disponible cuando se cumple el requisito", () => {
     render(<AgenteGarantiaMobileCard fila={fila} onConfigurar={vi.fn()} proveedorDisponible />);
     expect(screen.getByRole("button", { name: "Configurar" })).toBeEnabled();
-    expect(screen.queryByText(/Requiere proveedor/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Proveedor pendiente")).not.toBeInTheDocument();
+  });
+
+  it("identifica navieras de las tarifas sin cambiar la acción disponible", () => {
+    render(<AgenteGarantiaMobileCard fila={fila} onConfigurar={vi.fn()} proveedorDisponible={false} enTarifas />);
+    expect(screen.getByText("En tus tarifas")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ver requisito" })).toBeEnabled();
   });
 });

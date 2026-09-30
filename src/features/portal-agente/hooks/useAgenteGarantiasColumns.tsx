@@ -13,6 +13,7 @@ import type { FilaNaviera } from "@/features/costeo/types/filaNaviera";
 export function useAgenteGarantiasColumns(
   onConfigurar: (fila: FilaNaviera) => void,
   proveedorDisponible = true,
+  navierasEnTarifas?: ReadonlySet<string>,
 ): ColumnDef<FilaNaviera, unknown>[] {
   return useMemo(
     () =>
@@ -24,7 +25,11 @@ export function useAgenteGarantiasColumns(
           sortingFn: sortByString((f) => f.naviera_nombre),
           enableSorting: true,
           meta: { sticky: true, className: "font-medium" },
-          cell: ({ row }) => row.original.naviera_nombre,
+          cell: ({ row }) => <div>
+            {row.original.naviera_nombre}
+            {navierasEnTarifas?.has(row.original.naviera_id) &&
+              <p className="text-label text-muted-foreground font-normal">En tus tarifas</p>}
+          </div>,
         },
         {
           id: "scac",
@@ -41,7 +46,7 @@ export function useAgenteGarantiasColumns(
               tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
               vigenteHasta={row.original.condicion?.carta_garantia_vigente_hasta ?? null}
             />
-          ) : <p className="text-body-sm text-warning">Requiere proveedor tipo Naviera · solicita vinculación a Operaciones</p>,
+          ) : <p className="text-body-sm text-muted-foreground">Proveedor pendiente</p>,
         },
         {
           id: "diaslibres",
@@ -65,7 +70,7 @@ export function useAgenteGarantiasColumns(
           ),
         },
       ]),
-    [onConfigurar, proveedorDisponible],
+    [onConfigurar, proveedorDisponible, navierasEnTarifas],
   );
 }
 
@@ -73,18 +78,20 @@ interface AgenteGarantiaMobileCardProps {
   fila: FilaNaviera;
   onConfigurar: (fila: FilaNaviera) => void;
   proveedorDisponible?: boolean;
+  enTarifas?: boolean;
 }
 
-export function AgenteGarantiaMobileCard({ fila, onConfigurar, proveedorDisponible = true }: AgenteGarantiaMobileCardProps) {
+export function AgenteGarantiaMobileCard({ fila, onConfigurar, proveedorDisponible = true, enTarifas = false }: AgenteGarantiaMobileCardProps) {
   return (
     <div className="flex items-center justify-between gap-2 min-w-0">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-medium text-body truncate">{fila.naviera_nombre}</div>
         <div className="text-label text-muted-foreground font-mono">{fila.naviera_code}</div>
+        {enTarifas && <p className="text-label text-muted-foreground">En tus tarifas</p>}
         {proveedorDisponible ? <CartaGarantiaBadge
           tieneCarta={fila.condicion?.tiene_carta_garantia ?? false}
           vigenteHasta={fila.condicion?.carta_garantia_vigente_hasta ?? null}
-        /> : <p className="text-body-sm text-warning">Requiere proveedor tipo Naviera · solicita vinculación a Operaciones</p>}
+        /> : <p className="text-body-sm text-muted-foreground">Proveedor pendiente</p>}
       </div>
       <Button
         size="sm"
