@@ -133,8 +133,10 @@ BEGIN
              p.venta_mxn_from_usd, p.costo_mxn_from_usd,
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
-      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+      FROM embarques_base eb LEFT JOIN profit p ON p.embarque_id = eb.id
+      -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
+      WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
+        AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
       ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 30
     ),
