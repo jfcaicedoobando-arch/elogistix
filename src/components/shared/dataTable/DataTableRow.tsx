@@ -16,9 +16,9 @@ import {
 import "./columnMeta";
 
 const STICKY_LEFT =
-  "sticky left-0 z-sticky bg-inherit border-r border-border/60";
+  "sticky left-0 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted border-r border-border/60";
 const STICKY_RIGHT =
-  "sticky right-0 z-sticky bg-inherit border-l border-border/60";
+  "sticky right-0 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted border-l border-border/60";
 
 interface Props<T> {
   row: Row<T>;
@@ -108,3 +108,4 @@ function DataTableCell<T>({
     </TableCell>
   );
 }
+

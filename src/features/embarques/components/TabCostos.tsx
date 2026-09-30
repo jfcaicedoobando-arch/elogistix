@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { formatCurrency, formatPercent } from "@/lib/formatters";
+import { formatCurrency, formatPercent, formatTipoCambio } from "@/lib/formatters";
 import { claseTonoMargen, UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useReconciliacionEmbarque } from "@/features/embarques/hooks/useReconciliacionEmbarque";
@@ -107,10 +107,10 @@ export function TabCostos({
         <p className="-mt-4 text-body-sm text-muted-foreground" data-testid="tipo-cambio-kpis">
           Conversión a MXN con el tipo de cambio capturado en el embarque:
           {monedasExtranjeras.includes("USD") && Number(tipoCambioUsd) > 1 && (
-            <span className="ml-1 whitespace-nowrap">1 USD = {formatCurrency(Number(tipoCambioUsd), "MXN")}</span>
+            <span className="ml-1 whitespace-nowrap">1 USD = MXN {formatTipoCambio(Number(tipoCambioUsd))}</span>
           )}
           {monedasExtranjeras.includes("EUR") && Number(tipoCambioEur) > 1 && (
-            <span className="ml-1 whitespace-nowrap">1 EUR = {formatCurrency(Number(tipoCambioEur), "MXN")}</span>
+            <span className="ml-1 whitespace-nowrap">1 EUR = MXN {formatTipoCambio(Number(tipoCambioEur))}</span>
           )}
           {montosSinTipoCambio > 0 && <span className="ml-1">Los conceptos sin tasa válida se excluyen.</span>}
         </p>
@@ -133,3 +133,4 @@ export function TabCostos({
 
   );
 }
+

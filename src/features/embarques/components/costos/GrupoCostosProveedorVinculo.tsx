@@ -6,6 +6,7 @@
  * checklist de cierre los reportaba como "sin proveedor asignado" y el buzón de
  * facturas no ofrecía al proveedor. Aquí se distingue el estado y se ofrece la
  * ruta existente para vincularlo de forma explícita (nunca automática).
+ * Quien sólo puede leer costos recibe una instrucción acorde a su permiso.
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { ROUTES } from "@/constants/routes";
 interface Props {
   /** Nombre libre del grupo (tal como se capturó en la cotización). */
   proveedorNombre: string;
-  /** Acción existente para editar los costos y elegir el proveedor del catálogo. */
+  /** Acción permitida para editar los costos y elegir el proveedor del catálogo. */
   onVincular?: () => void;
 }
 
@@ -29,12 +30,14 @@ export function GrupoCostosProveedorVinculo({ proveedorNombre, onVincular }: Pro
         Nombre sin vincular al catálogo
       </Badge>
       <span className="text-muted-foreground min-w-0">
-        «{proveedorNombre}» es sólo un nombre capturado en la cotización. Vincúlalo
-        al proveedor del catálogo antes de subir su factura.
+        «{proveedorNombre}» es sólo un nombre capturado en la cotización.{" "}
+        {onVincular
+          ? "Elige el proveedor del catálogo en la edición de costos antes de subir su factura."
+          : "Solicita a un usuario autorizado para editar costos que lo vincule al catálogo antes de subir su factura."}
       </span>
       {onVincular && (
         <Button size="sm" variant="outline" className="h-7 px-2" onClick={onVincular}>
-          <Link2 className="mr-1 h-3 w-3" /> Vincular proveedor
+          <Link2 className="mr-1 h-3 w-3" /> Editar costos y vincular
         </Button>
       )}
       <a
@@ -43,8 +46,9 @@ export function GrupoCostosProveedorVinculo({ proveedorNombre, onVincular }: Pro
         rel="noreferrer"
         className="inline-flex items-center gap-1 text-primary underline underline-offset-2"
       >
-        Dar de alta en Compras › Proveedores <ExternalLink className="h-3 w-3" />
+        {onVincular ? "Si no existe, dar de alta en Compras › Proveedores" : "Consultar catálogo de proveedores"} <ExternalLink className="h-3 w-3" />
       </a>
     </div>
   );
 }
+
