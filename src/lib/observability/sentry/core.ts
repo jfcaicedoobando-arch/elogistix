@@ -80,8 +80,14 @@ export function initSentry(): void {
     replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0.02),
     replaysOnErrorSampleRate: readRate("VITE_SENTRY_REPLAYS_ON_ERROR_RATE", 1.0),
     tunnel: resolveTunnelUrl(),
-    // 13.312.10: explícito para blindar contra un upgrade del SDK.
-    sendDefaultPii: false,
+    // SDK 11 retiró `sendDefaultPii`; equivalente estricto (sin PII por defecto).
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+    },
     // 13.312.10: payloads RPC de 2-3 niveles (embarque → contenedores → conceptos).
     normalizeDepth: 5,
     // 13.312.10: PostgrestError puede pasar de 500 chars con message+hint+details.
