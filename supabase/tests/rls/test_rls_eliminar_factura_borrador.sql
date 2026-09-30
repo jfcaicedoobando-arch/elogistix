@@ -30,6 +30,7 @@ DECLARE
   v_cf uuid;
   v_sibling uuid;
   v_other uuid;
+  v_snapshot uuid;
   v_error boolean;
 BEGIN
   -- La conversión USD usa el DOF del fixture, nunca un servicio externo.
@@ -129,9 +130,13 @@ BEGIN
     PERFORM pg_temp.as_user(fx.admin_a);
     PERFORM pg_temp.assert_delete_rejected(v_other, 'timbrada');
     PERFORM pg_temp.as_postgres();
-    UPDATE public.facturas SET uuid_fiscal = NULL, snapshot_emision = '{}'::jsonb WHERE id = v_other;
+    -- Un UUID fiscal es de escritura única: el caso snapshot usa otra factura.
+    INSERT INTO public.facturas
+      (organization_id, cliente_id, numero, fecha_vencimiento, snapshot_emision)
+    VALUES (fx.org_a, v_cli, 'BORRADOR-QA-SNAPSHOT', CURRENT_DATE + 30, '{}'::jsonb)
+    RETURNING id INTO v_snapshot;
     PERFORM pg_temp.as_user(fx.admin_a);
-    PERFORM pg_temp.assert_delete_rejected(v_other, 'emisión pendiente');
+    PERFORM pg_temp.assert_delete_rejected(v_snapshot, 'emisión pendiente');
     PERFORM pg_temp.as_postgres();
     PERFORM pg_temp.assert(EXISTS(SELECT 1 FROM public.facturas WHERE id = v_other AND deleted_at IS NULL),
       'Los intentos rechazados no retiran la factura');
