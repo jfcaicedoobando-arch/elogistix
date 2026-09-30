@@ -70,15 +70,24 @@ export function initSentry(): void {
     initialScope: { tags: { is_pwa: isPwa ? "true" : "false" } },
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
-    profilesSampleRate: readRate("VITE_SENTRY_PROFILES_SAMPLE_RATE", 0.1),
+    // SDK 11: `profilesSampleRate` se retiró; equivalente oficial por sesión
+    // con ciclo "trace" (perfila mientras hay spans activos, como antes).
+    profileSessionSampleRate: readRate("VITE_SENTRY_PROFILES_SAMPLE_RATE", 0.1),
+    profileLifecycle: "trace",
     // 13.320.1 (audit Sentry Batch 3): default 0 → 0.02 (2% de sesiones).
     // Replays con PII enmascarada nos dan reproducción visual sin explotar cuota.
     // Override por env `VITE_SENTRY_REPLAYS_SESSION_RATE`.
     replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0.02),
     replaysOnErrorSampleRate: readRate("VITE_SENTRY_REPLAYS_ON_ERROR_RATE", 1.0),
     tunnel: resolveTunnelUrl(),
-    // 13.312.10: explícito para blindar contra un upgrade del SDK.
-    sendDefaultPii: false,
+    // SDK 11 retiró `sendDefaultPii`; equivalente estricto (sin PII por defecto).
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+    },
     // 13.312.10: payloads RPC de 2-3 niveles (embarque → contenedores → conceptos).
     normalizeDepth: 5,
     // 13.312.10: PostgrestError puede pasar de 500 chars con message+hint+details.
@@ -105,7 +114,7 @@ export function initSentry(): void {
     },
     beforeBreadcrumb: scrubBreadcrumb,
     integrations: [
-      Sentry.reactRouterV6BrowserTracingIntegration({
+      Sentry.reactRouterV7BrowserTracingIntegration({
         useEffect,
         useLocation,
         useNavigationType,
