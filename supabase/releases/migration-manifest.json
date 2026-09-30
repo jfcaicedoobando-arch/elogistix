@@ -4271,7 +4271,8 @@
       "20260928210543_93950fe1-851c-4a93-bf21-0c1ecf0173a6.sql",
       "20260929190000_bloquear_recargos_no_cotizados_tarifa_sustituta.sql",
       "20260930001000_eliminar_factura_borrador_soft_delete.sql",
-      "20260930044942_84450397-0de8-4f6f-a592-e625bbcf40a8.sql"
+      "20260930044942_84450397-0de8-4f6f-a592-e625bbcf40a8.sql",
+      "20260930221418_d9c79141-a988-4fb0-8c55-a0f11a7f0636.sql"
     ]
   }
 }
