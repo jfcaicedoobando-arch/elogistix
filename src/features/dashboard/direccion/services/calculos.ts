@@ -2,7 +2,7 @@
  * Cálculos puros del Dashboard Dirección — sin I/O, sin React, testeables.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { HORIZONTE_MESES_DIRECCION, mesMasOffset, mesNegocio, toMxn } from "./mxn";
+import { HORIZONTE_MESES_DIRECCION, mesDeFechaNegocio, mesMasOffset, mesNegocio, toMxn } from "./mxn";
 import type {
   ConceptoCostoRow, ConceptoVentaRow, EmbarqueRow,
 } from "./loaders";
@@ -48,11 +48,12 @@ export function agregarEmbarques(
   const map = new Map<string, EmbarqueAgg>();
   for (const e of embarques) {
     const fecha = e.cerrado_at ?? e.eta;
-    if (!fecha) continue;
+    const mes = mesDeFechaNegocio(fecha);
+    if (!mes) continue;
     map.set(e.id, {
       venta: 0, costo: 0, modo: e.modo ?? "Sin modo",
       cliente_id: e.cliente_id, cliente_nombre: e.cliente_nombre ?? "Sin cliente",
-      mes: fecha.slice(0, 7),
+      mes,
     });
   }
   const tc = mapaTc(embarques);

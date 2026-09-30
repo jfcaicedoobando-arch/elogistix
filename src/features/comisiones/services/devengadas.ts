@@ -4,9 +4,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
-import { CAP_LISTA } from "@/constants/queryCaps";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
-import { buildNombreVendedoraMap, rangoMesMx, aplicarFiltros } from "./devengadas.helpers";
+import { buildNombreVendedoraMap, aplicarFiltros } from "./devengadas.helpers";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -78,37 +77,22 @@ export async function fetchComisionesKpiRows(
 export async function fetchComisionesDevengadas(
   filtros: FetchComisionesFiltros = {},
 ): Promise<ComisionDevengada[]> {
-  let q = supabase
-    .from("comisiones_devengadas")
-    .select(`
+  const crudasRaw = await leerTodasLasPaginas("comisiones.devengadas", (desde, hasta) =>
+    aplicarFiltros(supabase
+      .from("comisiones_devengadas")
+      .select(`
       id, organization_id, pago_factura_id, embarque_id, factura_id, vendedora_id,
       monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado,
       comision_mxn, estado, liquidacion_id, nota, created_at,
       facturas:factura_id ( numero, cliente_nombre, expediente )
     `)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(CAP_LISTA);
-
-  if (filtros.vendedora_id && filtros.vendedora_id !== "todas") {
-    q = q.eq("vendedora_id", filtros.vendedora_id);
-  }
-  if (filtros.estado && filtros.estado !== "todos") {
-    q = q.eq("estado", filtros.estado);
-  }
-  // EC-01 (auditoría 2026-08-18): el periodo se filtra en la base ANTES del
-  // límite de 500 filas; antes se recortaba en memoria y meses viejos salían
-  // vacíos porque el tope ya se había consumido con comisiones recientes.
-  const rango = rangoMesMx(filtros.periodo);
-  if (rango) {
-    q = q.gte("created_at", rango.desde).lt("created_at", rango.hasta);
-  }
-
-  const { data, error } = await q;
-  if (error) throw error;
-
-  // SAFE-CAST: `Joined` modela el shape del embed; Supabase devuelve unknown.
-  const crudas = (data as unknown as Joined[] | null) ?? [];
+      .is("deleted_at", null), filtros)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(desde, hasta),
+  );
+  // SAFE-CAST: el embed de facturas de PostgREST se normaliza en Joined.
+  const crudas = crudasRaw as unknown as Joined[];
   const nombres = await buildNombreVendedoraMap(
     crudas.map((r) => r.vendedora_id).filter((id): id is string => !!id),
   );

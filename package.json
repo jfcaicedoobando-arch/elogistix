@@ -107,6 +107,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "currency.js": "^2.0.4",
+    "decimal.js": "^10.6.0",
     "date-fns": "3.6.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.2",

@@ -6,11 +6,13 @@ describe("roundMoney — motor canónico de redondeo (M3)", () => {
     expect(roundMoney(2.505)).toBe(2.51);
     expect(roundMoney(1.005)).toBe(1.01);
     expect(roundMoney(0.125)).toBe(0.13);
+    expect(roundMoney(10.075)).toBe(10.08);
   });
 
   it("usa half-away-from-zero en negativos (paridad con Postgres ROUND)", () => {
     expect(roundMoney(-2.505)).toBe(-2.51);
     expect(roundMoney(-1.005)).toBe(-1.01);
+    expect(roundMoney(-10.075)).toBe(-10.08);
     expect(Math.round(-2.505 * 100) / 100).toBe(-2.5); // contraste: JS crudo diverge
   });
 

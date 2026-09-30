@@ -1,7 +1,4 @@
--- Espejo canónico de public.calcular_comision_pago
--- Fuente vigente (mayor timestamp): 20260930002000_comisiones_iva_recuperacion.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
-
+-- L-010/L-009: preservar comisiones por recuperar y prorratear pagos sobre subtotal sin IVA.
 CREATE OR REPLACE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -293,3 +290,6 @@ BEGIN
                AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.calcular_comision_pago(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.calcular_comision_pago(uuid) TO authenticated, service_role;

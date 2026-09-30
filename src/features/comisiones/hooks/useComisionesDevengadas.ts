@@ -43,10 +43,21 @@ export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
     staleTime: 30_000,
   });
 
-  const base = useMemo(() => calcularKPIsComisiones(kpiRows.data ?? [], periodo), [kpiRows.data, periodo]);
+  const base = useMemo(
+    () => kpiRows.data ? calcularKPIsComisiones(kpiRows.data, periodo) : null,
+    [kpiRows.data, periodo],
+  );
   const kpis = useMemo(
-    () => ({ ...base, liquidado_mes_mxn: liquidado.data ?? 0 }),
+    () => base && liquidado.data !== undefined
+      ? { ...base, liquidado_mes_mxn: liquidado.data }
+      : null,
     [base, liquidado.data],
   );
-  return { ...q, kpis };
+  return {
+    ...q,
+    kpis,
+    kpisLoading: kpiRows.isPending || liquidado.isPending,
+    kpisError: kpiRows.isError || liquidado.isError,
+    refetchKpis: () => Promise.all([kpiRows.refetch(), liquidado.refetch()]),
+  };
 }

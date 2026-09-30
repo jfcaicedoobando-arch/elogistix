@@ -316,4 +316,69 @@ BEGIN
 END
 $caso5$ LANGUAGE plpgsql;
 
+-- CASO 6/7: IVA 16% no aumenta la comisión al fraccionar el mismo cobro;
+-- recálculos repetidos no borran el importe ya liquidado por recuperar.
+INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo, vendedora_id, tipo_cambio_usd)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000080', 'bb4b4b4b-0000-4000-8000-000000000010',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'Marítimo', 'Importación',
+        'bb4b4b4b-0000-4000-8000-000000000012', 20),
+       ('bb4b4b4b-0000-4000-8000-000000000081', 'bb4b4b4b-0000-4000-8000-000000000010',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'Marítimo', 'Importación',
+        'bb4b4b4b-0000-4000-8000-000000000012', 20);
+
+INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, cantidad, precio_unitario, total, moneda)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000080', 'bb4b4b4b-0000-4000-8000-000000000010', 'Flete IVA 16', 1, 1000, 1000, 'MXN'),
+       ('bb4b4b4b-0000-4000-8000-000000000081', 'bb4b4b4b-0000-4000-8000-000000000010', 'Flete IVA 16 parcial', 1, 1000, 1000, 'MXN');
+INSERT INTO public.conceptos_costo (embarque_id, organization_id, concepto, monto, moneda)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000080', 'bb4b4b4b-0000-4000-8000-000000000010', 'Costo IVA 16', 600, 'MXN'),
+       ('bb4b4b4b-0000-4000-8000-000000000081', 'bb4b4b4b-0000-4000-8000-000000000010', 'Costo IVA 16 parcial', 600, 'MXN');
+INSERT INTO public.facturas (id, organization_id, numero, cliente_id, embarque_id, subtotal, iva, total, moneda, tipo_cambio, estado, fecha_emision)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000082', 'bb4b4b4b-0000-4000-8000-000000000010', 'B4-IVA-1',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000080',
+        1000, 160, 1160, 'MXN', 1, 'Emitida', CURRENT_DATE),
+       ('bb4b4b4b-0000-4000-8000-000000000083', 'bb4b4b4b-0000-4000-8000-000000000010', 'B4-IVA-2',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000081',
+        1000, 160, 1160, 'MXN', 1, 'Emitida', CURRENT_DATE);
+INSERT INTO public.pagos_factura (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000084', 'bb4b4b4b-0000-4000-8000-000000000082',
+        'bb4b4b4b-0000-4000-8000-000000000010', CURRENT_DATE, 1160, 'MXN', 1, 1160),
+       ('bb4b4b4b-0000-4000-8000-000000000085', 'bb4b4b4b-0000-4000-8000-000000000083',
+        'bb4b4b4b-0000-4000-8000-000000000010', CURRENT_DATE, 580, 'MXN', 1, 580),
+       ('bb4b4b4b-0000-4000-8000-000000000086', 'bb4b4b4b-0000-4000-8000-000000000083',
+        'bb4b4b4b-0000-4000-8000-000000000010', CURRENT_DATE, 580, 'MXN', 1, 580);
+
+DO $caso6$
+DECLARE v_unico numeric; v_parciales numeric;
+BEGIN
+  SELECT comision_mxn INTO v_unico FROM public.comisiones_devengadas
+   WHERE pago_factura_id = 'bb4b4b4b-0000-4000-8000-000000000084';
+  SELECT SUM(comision_mxn) INTO v_parciales FROM public.comisiones_devengadas
+   WHERE pago_factura_id IN ('bb4b4b4b-0000-4000-8000-000000000085',
+                             'bb4b4b4b-0000-4000-8000-000000000086');
+  IF v_unico <> 40 OR v_parciales <> 40 THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: pago único=%, parcialidades=%; ambos deben ser 40', v_unico, v_parciales;
+  END IF;
+END
+$caso6$ LANGUAGE plpgsql;
+
+UPDATE public.comisiones_devengadas SET estado = 'Liquidada'
+ WHERE pago_factura_id = 'bb4b4b4b-0000-4000-8000-000000000084';
+SET LOCAL session_replication_role = replica;
+UPDATE public.pagos_factura SET estado_rep = 'Cancelado'
+ WHERE id = 'bb4b4b4b-0000-4000-8000-000000000084';
+SET LOCAL session_replication_role = origin;
+SELECT public.calcular_comision_pago('bb4b4b4b-0000-4000-8000-000000000084')
+  FROM generate_series(1, 100);
+DO $caso7$
+DECLARE v_estado text; v_importe numeric;
+BEGIN
+  SELECT estado::text, comision_mxn INTO v_estado, v_importe
+    FROM public.comisiones_devengadas
+   WHERE pago_factura_id = 'bb4b4b4b-0000-4000-8000-000000000084';
+  IF v_estado <> 'Por recuperar' OR v_importe <> 40 THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: recálculo repetido dejó estado=% importe=%', v_estado, v_importe;
+  END IF;
+END
+$caso7$ LANGUAGE plpgsql;
+
 ROLLBACK;

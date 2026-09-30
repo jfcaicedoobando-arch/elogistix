@@ -8,7 +8,6 @@
 import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
-import { KpiCard } from "@/components/shared/KpiCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -17,13 +16,13 @@ import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
-import { formatCurrency } from "@/lib/formatters";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comisiones/hooks";
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
 import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
 import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
 import { AlertaComisionesPendientes } from "@/features/comisiones/components/AlertaComisionesPendientes";
 import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
+import { ComisionesKpis } from "@/features/comisiones/components/ComisionesKpis";
 import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/services";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
@@ -59,7 +58,7 @@ export default function Comisiones() {
   const setPeriodo = (value: string) => setServer({ m: value || null });
 
   const { data: vendedoras = [] } = useUsuariosVendedores();
-  const { data: comisiones = [], isLoading, isError, refetch, kpis } = useComisionesDevengadas({
+  const { data: comisiones = [], isLoading, isError, refetch, kpis, kpisLoading, kpisError, refetchKpis } = useComisionesDevengadas({
     vendedora_id: server.v as string | "todas",
     estado: server.estado as EstadoComision | "todos",
     periodo: server.m || undefined,
@@ -111,11 +110,12 @@ export default function Comisiones() {
         <TabsContent value="devengadas" className="space-y-4">
           {/* B.1: comisiones que quedaron en 0 por un fallo de cálculo. */}
           <AlertaComisionesPendientes />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <KpiCard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
-            <KpiCard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />
-            <KpiCard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
-          </div>
+          <ComisionesKpis
+            kpis={kpis}
+            loading={kpisLoading}
+            error={kpisError}
+            onRetry={() => { void refetchKpis(); }}
+          />
 
           <UnifiedFiltersBar
             search={paged.search}

@@ -2,15 +2,8 @@
  * Loaders (I/O) del Dashboard Dirección. Sin lógica de cómputo.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { fetchInChunks } from "@/lib/supabase/chunkedIn";
-
-// FIX C3 (S6-06): caps explícitos verificados por assertNotTruncated.
-const LIMITE_EMBARQUES = 3000;
-const LIMITE_FACTURAS = 10000;
-const LIMITE_PAGOS = 20000;
-const LIMITE_NOTAS_CREDITO = 20000;
 
 
 /** Totales por moneda del dashboard de Dirección (jsonb de `direccion_totales`, C3c). */
@@ -63,19 +56,18 @@ export type EmbarqueEstadoRow = { estado: string | null; eta: string | null };
 export async function loadEmbarques(orgId: string | null, desdeIso: string): Promise<{
   embarques: EmbarqueRow[]; ventas: ConceptoVentaRow[]; costos: ConceptoCostoRow[];
 }> {
-  let q = supabase.from("embarques")
-    .select("id, modo, estado, eta, cerrado_at, cliente_id, cliente_nombre, tipo_cambio_usd, tipo_cambio_eur")
-    .is("deleted_at", null)
-    // Ola 4 · N23: el EERR excluye Cancelado; los KPIs de Dirección deben usar
-    // el mismo universo o venta/costo no cuadran entre pantallas.
-    .neq("estado", "Cancelado")
-    .or(`cerrado_at.gte.${desdeIso},eta.gte.${desdeIso}`)
-    .limit(LIMITE_EMBARQUES);
-  if (orgId) q = q.eq("organization_id", orgId);
-  const { data: embarques, error } = await q;
-  if (error) throw error;
-  assertNotTruncated(embarques, LIMITE_EMBARQUES, "direccion.loadEmbarques");
-  const ids = (embarques ?? []).map((e) => e.id);
+  const embarques = await leerTodasLasPaginas<EmbarqueRow>("direccion.loadEmbarques", (desde, hasta) => {
+    let q = supabase.from("embarques")
+      .select("id, modo, estado, eta, cerrado_at, cliente_id, cliente_nombre, tipo_cambio_usd, tipo_cambio_eur")
+      .is("deleted_at", null)
+      .neq("estado", "Cancelado")
+      .or(`cerrado_at.gte.${desdeIso},eta.gte.${desdeIso}`)
+      .order("id", { ascending: true })
+      .range(desde, hasta);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q;
+  });
+  const ids = embarques.map((e) => e.id);
   if (ids.length === 0) return { embarques: [], ventas: [], costos: [] };
   // Ronda YAGNI · defecto 1: antes ambas relaciones se pedían sin paginar, así
   // que PostgREST devolvía como máximo `max-rows` (1000) filas SIN error y
@@ -86,7 +78,7 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
     loadConceptosVenta(ids),
     loadConceptosCosto(ids),
   ]);
-  return { embarques: (embarques ?? []) as EmbarqueRow[], ventas, costos };
+  return { embarques, ventas, costos };
 }
 
 async function loadConceptosVenta(ids: string[]): Promise<ConceptoVentaRow[]> {
@@ -118,21 +110,40 @@ async function loadConceptosCosto(ids: string[]): Promise<ConceptoCostoRow[]> {
 }
 
 export async function loadFacturas(orgId: string | null, desdeIso: string) {
-  let qF = supabase.from("facturas")
-    .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
-    .gte("fecha_emision", desdeIso).is("deleted_at", null).limit(LIMITE_FACTURAS);
-  if (orgId) qF = qF.eq("organization_id", orgId);
-  const { data: facturas, error } = await qF;
-  if (error) throw error;
-  assertNotTruncated(facturas, LIMITE_FACTURAS, "direccion.loadFacturas");
-  const ids = (facturas ?? []).map((f) => f.id);
+  const facturas = await leerTodasLasPaginas<FacturaRow>("direccion.loadFacturas", (desde, hasta) => {
+    let q = supabase.from("facturas")
+      .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
+      .gte("fecha_emision", desdeIso).is("deleted_at", null)
+      .order("id", { ascending: true }).range(desde, hasta);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q;
+  });
+  const ids = facturas.map((f) => f.id);
   if (ids.length === 0) return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[] };
-  const { data: pagos, error: e2 } = await supabase.from("pagos_factura")
-    .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago, estado_rep")
-    .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS);
-  if (e2) throw e2;
-  assertNotTruncated(pagos, LIMITE_PAGOS, "direccion.loadPagos");
-  return { facturas: (facturas ?? []) as FacturaRow[], pagos: (pagos ?? []) as PagoRow[] };
+  const pagos = await loadPagos(ids, "direccion.loadPagos");
+  return { facturas, pagos };
+}
+
+function loadPagos(ids: string[], contexto: string): Promise<PagoRow[]> {
+  return fetchInChunks(ids, (lote) =>
+    leerTodasLasPaginas<PagoRow>(contexto, (desde, hasta) =>
+      supabase.from("pagos_factura")
+        .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago, estado_rep")
+        .in("factura_id", lote).is("deleted_at", null)
+        .order("id", { ascending: true }).range(desde, hasta),
+    ),
+  );
+}
+
+function loadNotasCredito(ids: string[]): Promise<NotaCreditoRow[]> {
+  return fetchInChunks(ids, (lote) =>
+    leerTodasLasPaginas<NotaCreditoRow>("direccion.loadCarteraAbiertaNotasCredito", (desde, hasta) =>
+      supabase.from("factura_notas_credito")
+        .select("factura_id, monto, moneda, tipo_cambio")
+        .in("factura_id", lote).eq("estado", "Aplicada").is("deleted_at", null)
+        .order("id", { ascending: true }).range(desde, hasta),
+    ),
+  );
 }
 
 /**
@@ -146,50 +157,36 @@ const ESTADOS_CARTERA_ABIERTA = ["Emitida", "Vencida", "Parcialmente pagada"] as
 export async function loadCarteraAbierta(orgId: string | null): Promise<{
   facturas: FacturaRow[]; pagos: PagoRow[]; ncs: NotaCreditoRow[];
 }> {
-  let qF = supabase.from("facturas")
-    .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
-    .in("estado", ESTADOS_CARTERA_ABIERTA).is("deleted_at", null).limit(LIMITE_FACTURAS);
-  if (orgId) qF = qF.eq("organization_id", orgId);
-  const { data: facturas, error } = await qF;
-  if (error) throw error;
-  assertNotTruncated(facturas, LIMITE_FACTURAS, "direccion.loadCarteraAbierta");
-  const ids = (facturas ?? []).map((f) => f.id);
+  const facturas = await leerTodasLasPaginas<FacturaRow>("direccion.loadCarteraAbierta", (desde, hasta) => {
+    let q = supabase.from("facturas")
+      .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
+      .in("estado", ESTADOS_CARTERA_ABIERTA).is("deleted_at", null)
+      .order("id", { ascending: true }).range(desde, hasta);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q;
+  });
+  const ids = facturas.map((f) => f.id);
   if (ids.length === 0) {
     return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[], ncs: [] as NotaCreditoRow[] };
   }
   // Canon de Cobranza: saldo = total − pagos − NC APLICADAS (vigentes).
   // Borrador/Aprobada/Timbrada/Cancelada y NC eliminadas no restan.
-  const [pagosRes, ncsRes] = await Promise.all([
-    supabase.from("pagos_factura")
-      .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago, estado_rep")
-      .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS),
-    supabase.from("factura_notas_credito")
-      .select("factura_id, monto, moneda, tipo_cambio")
-      .in("factura_id", ids).eq("estado", "Aplicada").is("deleted_at", null).limit(LIMITE_NOTAS_CREDITO),
+  const [pagos, ncs] = await Promise.all([
+    loadPagos(ids, "direccion.loadCarteraAbiertaPagos"),
+    loadNotasCredito(ids),
   ]);
-  if (pagosRes.error) throw pagosRes.error;
-  if (ncsRes.error) throw ncsRes.error;
-  assertNotTruncated(pagosRes.data, LIMITE_PAGOS, "direccion.loadCarteraAbiertaPagos");
-  assertNotTruncated(ncsRes.data, LIMITE_NOTAS_CREDITO, "direccion.loadCarteraAbiertaNotasCredito");
-  return {
-    facturas: (facturas ?? []) as FacturaRow[],
-    pagos: (pagosRes.data ?? []) as PagoRow[],
-    ncs: (ncsRes.data ?? []) as NotaCreditoRow[],
-  };
+  return { facturas, pagos, ncs };
 }
 
 
 export async function loadEmbarquesActivos(orgId: string | null): Promise<EmbarqueEstadoRow[]> {
-  let q = supabase.from("embarques")
-    .select("estado, eta")
-    .is("deleted_at", null)
-    // Ola 4 · N21: "activos" son embarques en operación. Borrador/Cotización aún
-    // no operan y Por liquidar/Cerrado/EIR ya cerraron: incluirlos inflaba el KPI.
-    .not("estado", "in", '("Cotización","Borrador","Por liquidar","Cerrado","EIR","Entregado","Cancelado")')
-    .limit(LIMITE_EMBARQUES);
-  if (orgId) q = q.eq("organization_id", orgId);
-  const { data, error } = await q;
-  if (error) throw error;
-  assertNotTruncated(data, LIMITE_EMBARQUES, "direccion.loadEmbarquesActivos");
-  return (data ?? []) as EmbarqueEstadoRow[];
+  return leerTodasLasPaginas<EmbarqueEstadoRow>("direccion.loadEmbarquesActivos", (desde, hasta) => {
+    let q = supabase.from("embarques")
+      .select("estado, eta")
+      .is("deleted_at", null)
+      .not("estado", "in", '("Cotización","Borrador","Por liquidar","Cerrado","EIR","Entregado","Cancelado")')
+      .order("id", { ascending: true }).range(desde, hasta);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q;
+  });
 }

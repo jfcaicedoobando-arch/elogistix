@@ -127,11 +127,11 @@ export default function Cartera() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="cartera-from">{rangoLabel("Vencimiento", "desde")}</Label>
-              <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
+              <DatePickerMx id="cartera-from" value={paged.dateFrom} onChange={paged.setDateFrom} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cartera-to">{rangoLabel("Vencimiento", "hasta")}</Label>
-              <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
+              <DatePickerMx id="cartera-to" value={paged.dateTo} onChange={paged.setDateTo} />
             </div>
           </div>
         }

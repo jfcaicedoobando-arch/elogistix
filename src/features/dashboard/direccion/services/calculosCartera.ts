@@ -3,16 +3,18 @@
  * Extraído de `calculos.ts` para respetar el límite de 200 líneas por archivo.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { diaNegocio, mxnFactura, type TcFallbacks } from "./mxn";
+import { diaNegocio, mesDeFechaNegocio, mxnFactura, type TcFallbacks } from "./mxn";
 import { calcularSaldosCarteraMxn } from "./saldoCartera";
 
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
 import type { EmbarqueAgg } from "./calculos";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
 /** Tolerancia de saldo (MXN) para considerar una factura cubierta. */
 const TOLERANCIA_SALDO_MXN = 0.5;
+const ESTADOS_FACTURADOS = new Set<string>(FACTURA_ESTADOS_VIVOS);
 
 
 export function calcularAntiguedad(
@@ -63,7 +65,7 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const vP = prev.reduce((s, a) => s + a.venta, 0);
   const cP = prev.reduce((s, a) => s + a.costo, 0);
   const facturado = facturas
-    .filter((f) => f.estado !== "Cancelada" && f.fecha_emision.slice(0, 7) === mesActual)
+    .filter((f) => ESTADOS_FACTURADOS.has(f.estado) && f.fecha_emision.slice(0, 7) === mesActual)
     .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbacks), 0);
   const saldos = calcularSaldosCarteraMxn(
     facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbacks,
@@ -114,7 +116,7 @@ export function calcularPulso(
       if (est === "En Aduana" && diasRetraso > DIAS_LIBRES_DEMORA) demoras += 1;
     }
   }
-  const cfdi = facturas.filter((f) => f.uuid_fiscal && f.timbrado_en && f.timbrado_en.slice(0, 7) === mesActual).length;
+  const cfdi = facturas.filter((f) => f.uuid_fiscal && mesDeFechaNegocio(f.timbrado_en) === mesActual).length;
   const acuses = facturas.filter((f) => f.estado === "Cancelada" && (f.acuse_cancelacion_status ?? "") !== "aceptado").length;
   return {
     embarques_activos: activos.length,

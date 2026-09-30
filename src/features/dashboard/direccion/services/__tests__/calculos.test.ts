@@ -38,6 +38,13 @@ describe("agregarEmbarques", () => {
     expect(out[0].mes).toBe("2026-03");
   });
 
+  it("asigna al mes local el cierre de la última noche en Monterrey", () => {
+    const out = agregarEmbarques([
+      embarque({ cerrado_at: "2026-10-01T03:00:00Z", eta: "2026-10-12" }),
+    ], [], []);
+    expect(out[0].mes).toBe("2026-09");
+  });
+
   it("aplica fallback 'Sin modo' y 'Sin cliente'", () => {
     const out = agregarEmbarques([embarque({ modo: null, cliente_nombre: null })], [], []);
     expect(out[0].modo).toBe("Sin modo");
@@ -247,10 +254,10 @@ describe("calcularHero", () => {
 
   it("calcula KPIs con facturas vencidas y facturado del mes", () => {
     const facturas: FacturaRow[] = [
-      factura({ id: "f1", estado: "Pendiente", fecha_emision: "2026-01-05", fecha_vencimiento: "2026-01-01", cliente_id: "c1" }),
+      factura({ id: "f1", estado: "Emitida", fecha_emision: "2026-01-05", fecha_vencimiento: "2026-01-01", cliente_id: "c1" }),
       factura({ id: "f2", estado: "Cancelada", fecha_emision: "2026-01-05", fecha_vencimiento: "2020-01-01" }),
       factura({ id: "f3", estado: "Pagada", fecha_emision: "2026-01-05", fecha_vencimiento: "2020-01-01" }),
-      factura({ id: "f4", estado: "Pendiente", fecha_emision: "2026-01-05", fecha_vencimiento: null }),
+      factura({ id: "f4", estado: "Borrador", fecha_emision: "2026-01-05", fecha_vencimiento: null }),
     ];
     const out = calcularHero({
       aggs, facturas, facturasCartera: facturas, antiguedad: [
@@ -263,7 +270,7 @@ describe("calcularHero", () => {
     expect(out.margen_pct_prev).toBeCloseTo(40);
     expect(out.cartera_vencida_mxn).toBe(200);
     expect(out.cartera_vencida_clientes).toBe(1);
-    expect(out.facturado_mes_mxn).toBe(1000 * 3);
+    expect(out.facturado_mes_mxn).toBe(1000 * 2);
   });
 
   it("no cuenta clientes null repetidos (filter Boolean)", () => {
@@ -327,6 +334,12 @@ describe("calcularPulso", () => {
     expect(out.acuses_pendientes).toBe(1);
     expect(out.documentos_vencidos).toBeNull();
     expect(out.embarques_por_estado.find((e) => e.estado === "Sin estado")).toBeDefined();
+  });
+
+  it("cuenta el CFDI timbrado la última noche del mes en CDMX, no en el mes UTC", () => {
+    const facturas = [factura({ timbrado_en: "2026-10-01T03:00:00Z", uuid_fiscal: "u-sep" })];
+    expect(calcularPulso([], facturas, new Date("2026-10-01T03:00:00Z"), "2026-09").cfdi_timbrados_mes).toBe(1);
+    expect(calcularPulso([], facturas, new Date("2026-10-01T03:00:00Z"), "2026-10").cfdi_timbrados_mes).toBe(0);
   });
 
   it("un arribo con ETA hoy SÍ cuenta en arribos_7d (Ola 4 · N21)", () => {

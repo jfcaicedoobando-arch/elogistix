@@ -14,11 +14,15 @@ function builder(tabla: string) {
   const registro = { tabla, filtros };
   llamadas.push(registro);
   const api: Record<string, unknown> = {};
-  for (const op of ["select", "in", "eq", "is", "limit", "order", "neq", "or", "not", "gte"]) {
+  for (const op of ["select", "in", "eq", "is", "limit", "order", "range", "neq", "or", "not", "gte"]) {
     api[op] = (...args: unknown[]) => { filtros.push({ op, args }); return api; };
   }
-  api.then = (resolve: (v: unknown) => unknown) =>
-    Promise.resolve({ data: datosPorTabla.get(tabla) ?? [], error: null }).then(resolve);
+  api.then = (resolve: (v: unknown) => unknown) => {
+    const rango = filtros.find((f) => f.op === "range");
+    const todas = datosPorTabla.get(tabla) ?? [];
+    const data = rango ? todas.slice(Number(rango.args[0]), Number(rango.args[1]) + 1) : todas;
+    return Promise.resolve({ data, error: null }).then(resolve);
+  };
   return api;
 }
 
@@ -53,5 +57,23 @@ describe("loadCarteraAbierta", () => {
       { op: "eq", args: ["estado", "Aplicada"] },
       { op: "is", args: ["deleted_at", null] },
     ]));
+  });
+
+  it("no trunca pagos ni NC por el max_rows de PostgREST", async () => {
+    datosPorTabla.set("facturas", [{ id: "f1", total: 1000, moneda: "MXN", estado: "Emitida" }]);
+    datosPorTabla.set("pagos_factura", Array.from({ length: 10001 }, () => ({
+      factura_id: "f1", monto_aplicado_factura: 1, moneda: "MXN", fecha_pago: "2026-01-05",
+    })));
+    datosPorTabla.set("factura_notas_credito", Array.from({ length: 10001 }, () => ({
+      factura_id: "f1", monto: 1, moneda: "MXN",
+    })));
+    const out = await loadCarteraAbierta("org-1");
+    expect(out.pagos).toHaveLength(10001);
+    expect(out.ncs).toHaveLength(10001);
+    for (const tabla of ["pagos_factura", "factura_notas_credito"]) {
+      const rangos = llamadas.filter((l) => l.tabla === tabla).map((l) => l.filtros.find((f) => f.op === "range")?.args);
+      expect(rangos).toHaveLength(11);
+      expect(rangos.at(-1)).toEqual([10000, 10999]);
+    }
   });
 });

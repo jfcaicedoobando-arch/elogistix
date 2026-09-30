@@ -9487,6 +9487,7 @@ DECLARE
   v_cliente_id uuid;
   v_venta_neta_mxn numeric(14,2);
   v_cobrado_acotado numeric(14,2);
+  v_cobrado_base_mxn numeric(14,2);
 BEGIN
   SELECT * INTO v_pago FROM pagos_factura WHERE id = p_pago_factura_id;
   -- v13.823.287: un pago con REP cancelado esta anulado y se revierte igual
@@ -9494,7 +9495,9 @@ BEGIN
   IF NOT FOUND OR v_pago.deleted_at IS NOT NULL OR v_pago.estado_rep = 'Cancelado' THEN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0
-     WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+     WHERE pago_factura_id = p_pago_factura_id
+       AND estado NOT IN ('Liquidada', 'Por recuperar')
+       AND NOT (estado = 'Cancelada' AND COALESCE(estado_previo_liquidacion = 'Por recuperar', false));
     -- QA-R2 N-07: el pago (respaldo) desaparece pero la comision ya fue
     -- liquidada: no se cancela en silencio, se marca para recuperacion.
     UPDATE comisiones_devengadas
@@ -9523,7 +9526,9 @@ BEGIN
       0, 0, 0, 0, 'Devengada', 'Sin embarque asociado: pendiente de recálculo (ver cola)')
     ON CONFLICT (pago_factura_id) DO UPDATE
       SET nota = EXCLUDED.nota, updated_at = now()
-      WHERE comisiones_devengadas.estado <> 'Liquidada';
+      WHERE comisiones_devengadas.estado NOT IN ('Liquidada', 'Por recuperar')
+        AND NOT (comisiones_devengadas.estado = 'Cancelada'
+                 AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
   SELECT COALESCE(ARRAY_AGG(e.id), ARRAY[]::uuid[]) INTO v_emb_vivos
@@ -9534,7 +9539,9 @@ BEGIN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0,
            nota = 'Embarque excluido de comisión', updated_at = now()
-     WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+     WHERE pago_factura_id = p_pago_factura_id
+       AND estado NOT IN ('Liquidada', 'Por recuperar')
+       AND NOT (estado = 'Cancelada' AND COALESCE(estado_previo_liquidacion = 'Por recuperar', false));
     -- QA-R2 N-07: embarque excluido con comision ya liquidada -> por recuperar.
     UPDATE comisiones_devengadas
        SET estado = 'Por recuperar',
@@ -9603,7 +9610,9 @@ BEGIN
           utilidad_prorrateada_mxn = 0, porcentaje_aplicado = 0,
           comision_mxn = 0, nota = EXCLUDED.nota,
           embarque_id = EXCLUDED.embarque_id, updated_at = now()
-      WHERE comisiones_devengadas.estado <> 'Liquidada';
+      WHERE comisiones_devengadas.estado NOT IN ('Liquidada', 'Por recuperar')
+        AND NOT (comisiones_devengadas.estado = 'Cancelada'
+                 AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
   IF array_length(v_vendedoras, 1) > 1 THEN
@@ -9625,7 +9634,9 @@ BEGIN
           utilidad_prorrateada_mxn = 0, porcentaje_aplicado = 0,
           comision_mxn = 0, nota = EXCLUDED.nota,
           embarque_id = EXCLUDED.embarque_id, updated_at = now()
-      WHERE comisiones_devengadas.estado <> 'Liquidada';
+      WHERE comisiones_devengadas.estado NOT IN ('Liquidada', 'Por recuperar')
+        AND NOT (comisiones_devengadas.estado = 'Cancelada'
+                 AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
   v_vendedora_id := v_vendedoras[1];
@@ -9661,16 +9672,25 @@ BEGIN
              e.id, NULLIF(v_tc_usd, 0), NULLIF(v_tc_eur, 0))), 0)
       INTO v_venta_neta_mxn
       FROM embarques e WHERE e.id = ANY(v_emb_vivos);
-    -- B-4: la nota de crédito debe acotar el NUMERADOR, no sólo el
-    -- denominador. Antes, cobrar el 100% de una factura con NC del 20%
-    -- daba proporción 1 (100/80 acotado a 1) e inflaba la comisión.
-    -- Ahora: min(cobrado, venta neta) / venta bruta -> 80/100 = 0.8.
-    v_cobrado_acotado := LEAST(COALESCE(v_cobrado_mxn, 0),
+    -- El pago incluye IVA y puede incluir retenciones; la venta/utilidad no.
+    -- Convertirlo a base antes del prorrateo hace que un pago unico y varias
+    -- parcialidades del mismo CFDI devenguen la misma comision en total.
+    -- Facturas legadas con subtotal=0 conservan el total como base de respaldo.
+    v_cobrado_base_mxn := CASE
+      WHEN COALESCE(v_factura.total, 0) > 0 THEN
+        ROUND(GREATEST(COALESCE(v_cobrado_mxn, 0), 0)
+              * GREATEST(COALESCE(NULLIF(v_factura.subtotal, 0), v_factura.total), 0)
+              / v_factura.total, 2)
+      ELSE 0
+    END;
+    -- B-4: la nota de crédito sigue acotando la base cobrada; cobrar una
+    -- factura completa con NC no debe pagar sobre venta acreditada.
+    v_cobrado_acotado := LEAST(v_cobrado_base_mxn,
                                GREATEST(COALESCE(v_venta_neta_mxn, 0), 0));
     IF COALESCE(v_ingresos_mxn, 0) > 0 THEN
       v_proporcion := LEAST(v_cobrado_acotado / v_ingresos_mxn, 1);
     ELSIF COALESCE(v_venta_neta_mxn, 0) > 0 THEN
-      v_proporcion := LEAST(COALESCE(v_cobrado_mxn, 0) / v_venta_neta_mxn, 1);
+      v_proporcion := LEAST(v_cobrado_base_mxn / v_venta_neta_mxn, 1);
     ELSE
       v_proporcion := 0;
     END IF;
@@ -9712,7 +9732,9 @@ BEGIN
         embarque_id = EXCLUDED.embarque_id,
         vendedora_id = EXCLUDED.vendedora_id,
         updated_at = now()
-    WHERE comisiones_devengadas.estado <> 'Liquidada';
+    WHERE comisiones_devengadas.estado NOT IN ('Liquidada', 'Por recuperar')
+      AND NOT (comisiones_devengadas.estado = 'Cancelada'
+               AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
 END;
 $$;
 CREATE FUNCTION public.calcular_costo_demoras(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_dias_excedidos integer) RETURNS TABLE(total numeric, moneda text, desglose jsonb)

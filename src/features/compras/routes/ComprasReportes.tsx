@@ -42,7 +42,7 @@ export default function ComprasReportes() {
         title="Reportes de compras"
         description="Analítica de gasto por proveedor y período. Basado en fecha de emisión de la factura."
         actions={
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={topProveedores.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isError || topProveedores.length === 0}>
             <Download className="h-4 w-4 mr-1.5" /> Exportar CSV
           </Button>
         }
@@ -52,11 +52,11 @@ export default function ComprasReportes() {
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="rep-desde">{RANGO_DESDE_LABEL}</Label>
-            <DatePickerMx value={desde} onChange={setDesde} />
+            <DatePickerMx id="rep-desde" value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="rep-hasta">{RANGO_HASTA_LABEL}</Label>
-            <DatePickerMx value={hasta} onChange={setHasta} />
+            <DatePickerMx id="rep-hasta" value={hasta} onChange={setHasta} />
           </div>
         </CardContent>
       </Card>
@@ -65,6 +65,7 @@ export default function ComprasReportes() {
         <ErrorState className="mb-4" onRetry={() => void refetch()} />
       )}
 
+      {!isError && <>
       {/* EC-10: aviso cuando el T/C usado para los equivalentes es de respaldo. */}
       <TipoCambioFallbackBanner />
 
@@ -108,6 +109,7 @@ export default function ComprasReportes() {
           )}
         </CardContent>
       </Card>
+      </>}
     </PageContainer>
   );
 }

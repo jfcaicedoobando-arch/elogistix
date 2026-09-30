@@ -5,7 +5,7 @@
  */
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { tcValido } from "@/lib/financial/tcValido";
-import { roundMoney } from "@/lib/financial/financialUtils";
+import { roundMoney, subtotalLinea } from "@/lib/financial/financialUtils";
 
 /**
  * Mensaje único del bloqueo por cotización mixta (P1-A, 13.823.70).
@@ -41,7 +41,7 @@ function importeSinIva(c: Record<string, unknown>): number {
   const cantidad = Number(c?.cantidad);
   const precio = Number(c?.precio_unitario);
   if (Number.isFinite(cantidad) && Number.isFinite(precio) && precio !== 0) {
-    return roundMoney(cantidad * precio);
+    return subtotalLinea(cantidad, precio);
   }
   // Respaldo para renglones legados sin desglose: `subtotal` ya viene sin IVA.
   const sub = Number(c?.subtotal);

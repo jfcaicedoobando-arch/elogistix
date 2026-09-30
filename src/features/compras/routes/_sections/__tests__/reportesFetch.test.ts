@@ -65,4 +65,30 @@ describe("fetchFacturasReporte", () => {
     expect(call.ops).toContain("gte");
     expect(call.ops).toContain("lte");
   });
+
+  it("lee más de 2,000 facturas sin devolver un reporte parcial", async () => {
+    const fila = (n: number) => ({
+      id: `f-${n}`, fecha_emision: "2026-01-01", subtotal: 1, total: 1,
+      moneda: "MXN", proveedor_id: null, proveedores: null,
+    });
+    mock.setTableResultOnce("proveedor_facturas", {
+      data: Array.from({ length: 1000 }, (_, i) => fila(i)), error: null,
+    });
+    mock.setTableResultOnce("proveedor_facturas", {
+      data: Array.from({ length: 1000 }, (_, i) => fila(i + 1000)), error: null,
+    });
+    mock.setTableResultOnce("proveedor_facturas", { data: [fila(2000)], error: null });
+    const rows = await fetchFacturasReporte("2026-01-01", "2026-12-31");
+    expect(rows).toHaveLength(2001);
+    expect(rows.at(-1)?.id).toBe("f-2000");
+    const ranges = mock.tableCalls.map((call) => call.opArgs[call.ops.indexOf("range")]);
+    expect(ranges).toEqual([[0, 999], [1000, 1999], [2000, 2999]]);
+    expect(mock.tableCalls.every((call) => call.ops.filter((op) => op === "order").length === 2)).toBe(true);
+  });
+
+  it("no suma un reporte parcial si falla una página posterior", async () => {
+    mock.setTableResultOnce("proveedor_facturas", { data: Array.from({ length: 1000 }, (_, i) => ({ id: `f-${i}` })), error: null });
+    mock.setTableResultOnce("proveedor_facturas", { data: null, error: new Error("segunda página") });
+    await expect(fetchFacturasReporte("a", "b")).rejects.toThrow("segunda página");
+  });
 });
