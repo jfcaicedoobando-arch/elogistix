@@ -1,42 +1,22 @@
--- Fuente canónica del cálculo del tablero de dirección.
--- 1:1 con supabase/migrations/20260902008000_ola17_demoras_mx_nc_prov_tc.sql.
--- Ola 5 · RG4-2 (N41/N45): valuación por moneda propia del gasto.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
-CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
+CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
-  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
-  v_dias_libres_fallback int := 7;
-  v_nombre_mes text;
-  v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 BEGIN
-  v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
-
   RETURN (
     WITH embarques_base AS (
-      SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
-             e.estado::text, e.etd, e.eta, e.operador,
-             e.puerto_origen, e.puerto_destino,
-             e.aeropuerto_origen, e.aeropuerto_destino,
-             e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
-             e.naviera, e.organization_id,
-             e.tipo_cambio_usd, e.tipo_cambio_eur,
+      SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
+        e.tipo_cambio_eur,
         CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
           WHEN e.estado = 'Borrador' THEN 'Borrador'
-          -- R221 (ELIMP00353): preservar Cancelado antes de derivar por ETD/ETA.
           WHEN e.estado = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
@@ -49,12 +29,11 @@ BEGIN
           ELSE e.estado::text
         END AS estado_real
       FROM embarques e
-      WHERE e.deleted_at IS NULL              -- FIX C5
+      WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
-    -- AUD-UTIL-MES-TC: TC ponderado de las facturas USD vigentes del embarque;
-    -- en arribos del mes la venta USD se homologa con él para cuadrar con lo facturado.
+    -- AUD-UTIL-MES-TC: TC ponderado de las facturas USD vigentes del embarque.
     tc_factura AS (
       SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
       FROM facturas f
@@ -72,12 +51,184 @@ BEGIN
              p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
       FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
     ),
-    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
-    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
-    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
-    -- contenedor) y días libres reales (override del contenedor → condiciones
-    -- de la naviera → fallback). La ETA sólo se usa como estimación.
+    conteo AS (
+      SELECT jsonb_build_object(
+        'Confirmado', count(*) FILTER (WHERE estado_real = 'Confirmado'),
+        'En Tránsito', count(*) FILTER (WHERE estado_real = 'En Tránsito'),
+        'Arribo', count(*) FILTER (WHERE estado_real = 'Arribo'),
+        'En Aduana', count(*) FILTER (WHERE estado_real = 'En Aduana'),
+        'Entregado', count(*) FILTER (WHERE estado_real = 'Entregado'),
+        'EIR', count(*) FILTER (WHERE estado_real = 'EIR'),
+        'Por liquidar', count(*) FILTER (WHERE estado_real = 'Por liquidar')
+      ) AS val
+      FROM embarques_base
+    ),
+    gastos_op_facturas AS (
+      SELECT COALESCE(SUM(
+        CASE
+          WHEN pf.moneda = 'MXN' THEN pf.subtotal
+          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.subtotal * pf.tipo_cambio_usd
+          WHEN pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn) > 1
+               THEN pf.subtotal * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
+          ELSE NULL
+        END
+      ), 0) AS val
+      FROM proveedor_facturas pf
+      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
+      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
+      LEFT JOIN LATERAL (
+        SELECT d.eur_mxn
+          FROM public.tipos_cambio_dof d
+         WHERE d.fecha <= pf.fecha_emision
+         ORDER BY d.fecha DESC
+         LIMIT 1
+      ) dof ON pf.moneda = 'EUR' AND eb.tipo_cambio_eur IS NULL
+      WHERE pc.tipo_contable IN ('Venta','Administracion')
+        AND pf.deleted_at IS NULL
+        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
+        AND (pf.organization_id = public.org_scope())
+    ),
+    gastos_op_sin_tc AS (
+      SELECT COUNT(*) AS val
+      FROM proveedor_facturas pf
+      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
+      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
+      LEFT JOIN LATERAL (
+        SELECT d.eur_mxn
+          FROM public.tipos_cambio_dof d
+         WHERE d.fecha <= pf.fecha_emision
+         ORDER BY d.fecha DESC
+         LIMIT 1
+      ) dof ON pf.moneda = 'EUR' AND eb.tipo_cambio_eur IS NULL
+      WHERE pc.tipo_contable IN ('Venta','Administracion')
+        AND pf.deleted_at IS NULL
+        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
+        AND (pf.organization_id = public.org_scope())
+        AND pf.moneda <> 'MXN'
+        AND NOT (pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1)
+        AND NOT (pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn, 0) > 1)
+    ),
+    gastos_op_comisiones AS (
+      SELECT COALESCE(SUM(total_mxn), 0) AS val
+      FROM liquidaciones_comision
+      WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
+        AND (organization_id = public.org_scope())
+    ),
+    arribos_mes AS (
+      SELECT jsonb_build_object(
+        'total', count(*),
+        'yaLlegaron', count(*) FILTER (WHERE eb.estado_real IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado')),
+        'enCamino', count(*) FILTER (WHERE eb.estado_real IN ('Confirmado','En Tránsito')),
+        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
+        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
+        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0),
+        'ventaMxnFromUsd', COALESCE(sum(COALESCE(p.venta_mxn_from_usd, 0)), 0),
+        'costoMxnFromUsd', COALESCE(sum(COALESCE(p.costo_mxn_from_usd, 0)), 0),
+        'ventaMxnFromEur', COALESCE(sum(COALESCE(p.venta_mxn_from_eur, 0)), 0),
+        'costoMxnFromEur', COALESCE(sum(COALESCE(p.costo_mxn_from_eur, 0)), 0),
+        'ventaMxnNative', COALESCE(sum(COALESCE(p.venta_mxn_native, 0)), 0),
+        'costoMxnNative', COALESCE(sum(COALESCE(p.costo_mxn_native, 0)), 0),
+        'profitUSD', COALESCE(sum(COALESCE(p.venta_usd, 0) - COALESCE(p.costo_usd, 0)), 0),
+        'gastosOperativosMXN',
+          COALESCE((SELECT val FROM gastos_op_facturas), 0)
+          + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
+        'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
+      ) AS val
+      FROM embarques_base eb
+      LEFT JOIN profit_fx p ON p.embarque_id = eb.id
+      WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
+        AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+    ),
+    resumen_sig AS (
+      SELECT jsonb_build_object(
+        'total', count(*),
+        'ventaUSD', COALESCE(sum(COALESCE(p.venta_usd, 0)), 0),
+        'costoUSD', COALESCE(sum(COALESCE(p.costo_usd, 0)), 0),
+        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
+        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
+        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0)
+      ) AS val
+      FROM activos eb
+      LEFT JOIN profit p ON p.embarque_id = eb.id
+      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_sig AND eb.eta <= v_fin_sig
+    )
+    SELECT jsonb_build_object(
+      'totalActivos', (SELECT count(*) FROM activos),
+      'conteoPorEstado', COALESCE((SELECT val FROM conteo), '{}'::jsonb),
+      'arribosEsteMes', COALESCE((SELECT val FROM arribos_mes), '{}'::jsonb),
+      'resumenMesSiguiente', COALESCE((SELECT val FROM resumen_sig), '{}'::jsonb)
+    )
+  );
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.dashboard_summary_datos() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.dashboard_summary_datos() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
+  v_inicio_mes date := date_trunc('month', v_hoy)::date;
+  v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
+  v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
+  v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
+  v_dias_libres_fallback int := 7;
+  v_nombre_mes text;
+  v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+BEGIN
+  v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
+
+  RETURN (
+    WITH embarques_base AS (
+      SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
+             e.estado::text, e.etd, e.eta, e.operador,
+             e.puerto_origen, e.puerto_destino,
+             e.aeropuerto_origen, e.aeropuerto_destino,
+             e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
+             e.naviera, e.organization_id,
+             e.tipo_cambio_usd, e.tipo_cambio_eur,
+        CASE
+          WHEN e.estado = 'Borrador' THEN 'Borrador'
+          WHEN e.estado = 'Cancelado' THEN 'Cancelado'
+          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
+            CASE
+              WHEN v_hoy < e.etd THEN 'Confirmado'
+              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
+              WHEN v_hoy >= e.eta THEN 'Arribo'
+              ELSE e.estado::text
+            END
+          ELSE e.estado::text
+        END AS estado_real
+      FROM embarques e
+      WHERE e.deleted_at IS NULL
+        AND (e.organization_id = public.org_scope())
+    ),
+    profit AS (SELECT * FROM profit_por_embarque()),
+    tc_factura AS (
+      SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
+      FROM facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.organization_id = public.org_scope()
+        AND f.moneda::text = 'USD' AND f.tipo_cambio > 1 AND f.subtotal > 0
+        AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+      GROUP BY f.embarque_id
+    ),
+    profit_fx AS (
+      SELECT p.embarque_id, p.venta_usd, p.costo_usd, p.costo_mxn,
+             p.costo_mxn_from_usd, p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) AS venta_mxn_from_usd,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
+      FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
+    ),
+    activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
     demoras_ctx AS (
       SELECT a.id,
         (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
@@ -153,11 +304,10 @@ BEGIN
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
       FROM embarques_base eb LEFT JOIN profit_fx p ON p.embarque_id = eb.id
-      -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200  -- AUD-UTIL-MES: la vista "Míos" suma esta lista; 30 truncaba el mes
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -197,10 +347,7 @@ BEGIN
              EXISTS (
                SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL     -- FIX C5
-                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
-                 -- excluirla del flag "facturado" (la definición vigente
-                 -- sólo excluía Cancelada/Borrador).
+                 AND f.deleted_at IS NULL
                  AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
              ) AS facturado_flag
       FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
@@ -278,7 +425,6 @@ BEGIN
       )::int AS val
       FROM activos
     ),
-    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
     embarques_eir AS (
       SELECT jsonb_agg(jsonb_build_object(
         'id', eb.id,
@@ -311,9 +457,5 @@ BEGIN
 END;
 $function$;
 
--- H6: permisos explícitos (idempotente), patrón FIX-H6-12.
-
--- Ola 5 (C9): el cuerpo es interno; la RPC pública `dashboard_details()` lo envuelve
--- y enmascara costos/utilidad según el rol (ver dashboard_rpc_costos.sql).
 REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.dashboard_details_datos() TO service_role;
