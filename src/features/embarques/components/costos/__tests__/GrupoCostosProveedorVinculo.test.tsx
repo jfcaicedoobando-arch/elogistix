@@ -50,9 +50,11 @@ describe("GrupoCostosProveedor · vínculo con el catálogo", () => {
     renderGrupo(false);
     expect(screen.getByTestId("costos-proveedor-sin-vinculo")).toBeInTheDocument();
     expect(screen.getByText(/Nombre sin vincular al catálogo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Solicita a un usuario autorizado para editar costos/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Dar de alta en Compras/i }),
+      screen.getByRole("link", { name: /Consultar catálogo de proveedores/i }),
     ).toHaveAttribute("href", "/compras/proveedores");
+    expect(screen.queryByRole("button", { name: /Editar costos y vincular/i })).toBeNull();
   });
 
   it("no avisa nada cuando el costo ya está vinculado al catálogo", () => {
@@ -63,7 +65,9 @@ describe("GrupoCostosProveedor · vínculo con el catálogo", () => {
   it("ofrece la acción existente para vincular el proveedor", () => {
     const onVincular = vi.fn();
     renderGrupo(false, onVincular);
-    fireEvent.click(screen.getByRole("button", { name: /Vincular proveedor/i }));
+    expect(screen.getByText(/Elige el proveedor del catálogo en la edición de costos/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Editar costos y vincular/i }));
     expect(onVincular).toHaveBeenCalledTimes(1);
   });
 });
+
