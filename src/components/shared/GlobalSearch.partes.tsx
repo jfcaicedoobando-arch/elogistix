@@ -19,7 +19,7 @@ export function TextoResaltado({ texto, termino }: { texto: string; termino: str
         seg.coincide ? (
           <mark
             key={i}
-            className="rounded-sm bg-accent/20 px-0.5 font-semibold text-accent-foreground"
+            className="rounded-sm bg-selection-surface px-0.5 font-semibold text-selection-surface-foreground"
           >
             {seg.texto}
           </mark>

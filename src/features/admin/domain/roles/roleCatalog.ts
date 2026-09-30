@@ -58,20 +58,20 @@ export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
   admin_org: "bg-destructive text-destructive-foreground",
   gerente_operaciones: "bg-warning text-warning-foreground",
-  gerente_visor: "bg-warning/60 text-warning-foreground",
+  gerente_visor: "bg-warning text-warning-foreground",
   gerente_comercial: "bg-accent text-accent-foreground",
   coordinador_logistico: "bg-info text-info-foreground",
   ejecutivo_pricing: "bg-accent text-accent-foreground",
   contador: "bg-success text-success-foreground",
   tesorero: "bg-success text-success-foreground",
-  auxiliar_contable: "bg-success/70 text-success-foreground",
-  ejecutivo_cobranza: "bg-success/70 text-success-foreground",
+  auxiliar_contable: "bg-success text-success-foreground",
+  ejecutivo_cobranza: "bg-success text-success-foreground",
   vendedor: "bg-success text-success-foreground",
   customer_service: "bg-muted text-muted-foreground",
   cliente: "bg-accent text-accent-foreground",
   agente_carga: "bg-info text-info-foreground",
-  admin: "bg-destructive/70 text-destructive-foreground",
-  operador: "bg-info/70 text-info-foreground",
+  admin: "bg-destructive text-destructive-foreground",
+  operador: "bg-info text-info-foreground",
   viewer: "bg-muted text-muted-foreground",
 };
 
@@ -155,5 +155,4 @@ export const rolModernoSugerido = (role: string | null | undefined): AppRole | n
   if (!role) return null;
   return LEGACY_TO_MODERN[role] ?? null;
 };
-
 

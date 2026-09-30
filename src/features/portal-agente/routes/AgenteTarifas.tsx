@@ -23,16 +23,9 @@ import {
 import { AgenteTarifaCard } from "./_sections/AgenteTarifaCard";
 import { todayLocalISO } from "@/lib/date/today";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { esTarifaUsableEn } from "@/features/costeo";
+import { FILTROS_TARIFAS_AGENTE, filtroDeTarifaAgente, type FiltroTarifasAgente } from "./_sections/agenteTarifasFiltros";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
-
-type Filter = "todas" | "borrador" | "vigente" | "rechazada";
-
-/**
- * Misma vigencia de negocio que el catálogo: aprobada y dentro de inicio/fin.
- */
-const esVigenteReal = esTarifaUsableEn;
 
 interface EditorState {
   open: boolean;
@@ -57,17 +50,19 @@ function recargosIniciales(
 
 export default function AgenteTarifas() {
   const { data: tarifas = [], isLoading, isError, refetch } = useAgenteTarifas();
-  const [filtro, setFiltro] = useState<Filter>("todas");
+  const [filtro, setFiltro] = useState<FiltroTarifasAgente>("todas");
   const [editor, setEditor] = useState<EditorState>({ open: false, modo: "crear" });
 
-  // Las programadas y reemplazadas siguen visibles en "Todas", no en vigentes.
   const hoy = todayLocalISO();
+  const clasificadas = useMemo(
+    () => tarifas.map((tarifa) => ({ tarifa, filtro: filtroDeTarifaAgente(tarifa, hoy) })),
+    [tarifas, hoy],
+  );
 
   const filtradas = useMemo(() => {
     if (filtro === "todas") return tarifas;
-    if (filtro === "vigente") return tarifas.filter((t) => esVigenteReal(t, hoy));
-    return tarifas.filter((t) => t.estado_aprobacion === filtro);
-  }, [tarifas, filtro, hoy]);
+    return clasificadas.filter((t) => t.filtro === filtro).map((t) => t.tarifa);
+  }, [tarifas, filtro, clasificadas]);
 
   const handleEditar = useCallback(async (t: AgenteTarifaRow) => {
     try {
@@ -123,12 +118,13 @@ export default function AgenteTarifas() {
         </p>
       </Card>
 
-      <Tabs value={filtro} onValueChange={(v) => setFiltro(v as Filter)}>
-        <TabsList>
-          <TabsTrigger value="todas">Todas ({tarifas.length})</TabsTrigger>
-          <TabsTrigger value="borrador">Borrador ({tarifas.filter((t) => t.estado_aprobacion === "borrador").length})</TabsTrigger>
-          <TabsTrigger value="vigente">Vigente ({tarifas.filter((t) => esVigenteReal(t, hoy)).length})</TabsTrigger>
-          <TabsTrigger value="rechazada">Rechazada ({tarifas.filter((t) => t.estado_aprobacion === "rechazada").length})</TabsTrigger>
+      <Tabs value={filtro} onValueChange={(v) => setFiltro(v as FiltroTarifasAgente)}>
+        <TabsList className="h-auto flex flex-wrap justify-start gap-1">
+          {FILTROS_TARIFAS_AGENTE.map(({ value, label }) => (
+            <TabsTrigger key={value} value={value}>
+              {label} ({value === "todas" ? tarifas.length : clasificadas.filter((t) => t.filtro === value).length})
+            </TabsTrigger>
+          ))}
         </TabsList>
       </Tabs>
 
