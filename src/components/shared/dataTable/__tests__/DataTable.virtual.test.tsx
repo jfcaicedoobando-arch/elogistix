@@ -98,5 +98,9 @@ describe("DataTable — meta visual aplicado al header", () => {
     expect(cls).toContain("w-[120px]");
     expect(cls).toMatch(/text-right|justify-end/);
     expect(cls).toMatch(/sticky/);
+    const stickyCell = screen.getAllByRole("cell")[0];
+    expect(stickyCell.className).toContain("bg-background");
+    expect(stickyCell.className).not.toContain("bg-inherit");
   });
 });
+
