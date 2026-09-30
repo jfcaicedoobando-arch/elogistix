@@ -8,7 +8,6 @@
 import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
-import { KpiCard } from "@/components/shared/KpiCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -17,18 +16,17 @@ import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
-import { formatCurrency } from "@/lib/formatters";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comisiones/hooks";
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
 import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
 import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
 import { AlertaComisionesPendientes } from "@/features/comisiones/components/AlertaComisionesPendientes";
 import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
+import { ComisionesKpis } from "@/features/comisiones/components/ComisionesKpis";
 import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/services";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { ErrorState } from "@/components/shared/states/ErrorState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -112,19 +110,12 @@ export default function Comisiones() {
         <TabsContent value="devengadas" className="space-y-4">
           {/* B.1: comisiones que quedaron en 0 por un fallo de cálculo. */}
           <AlertaComisionesPendientes />
-          {kpisError ? (
-            <ErrorState
-              title="Indicadores de comisiones no disponibles"
-              description="La lista puede estar disponible, pero no se pudieron calcular los importes. Reintenta antes de usarlos."
-              onRetry={() => { void refetchKpis(); }}
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <KpiCard label="Devengado del mes" value={kpis ? formatCurrency(kpis.devengado_mes_mxn, "MXN") : ""} loading={kpisLoading} />
-              <KpiCard label="Pendiente de liquidar" value={kpis ? formatCurrency(kpis.pendiente_liquidar_mxn, "MXN") : ""} loading={kpisLoading} />
-              <KpiCard label="Liquidado del mes" value={kpis ? formatCurrency(kpis.liquidado_mes_mxn, "MXN") : ""} loading={kpisLoading} />
-            </div>
-          )}
+          <ComisionesKpis
+            kpis={kpis}
+            loading={kpisLoading}
+            error={kpisError}
+            onRetry={() => { void refetchKpis(); }}
+          />
 
           <UnifiedFiltersBar
             search={paged.search}

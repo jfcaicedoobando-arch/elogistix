@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas";
 
 const conIva16 = [
   { moneda: "MXN", cantidad: 1, precio_unitario: 1817, total: 2107.72 },

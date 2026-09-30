@@ -20,8 +20,8 @@ describe("calcularTotalMxn (FE-12)", () => {
       1,
       0.16,
     );
-    // 3 × 19.995 se redondea por línea (59.99/59.99) + IVA ≈ 9.60
-    expect(res.mxn).toBeCloseTo(69.6, 2);
+    // 3 × 19.995 = 59.985; se redondea la línea a 59.99 y luego IVA a 9.60.
+    expect(res.mxn).toBe(69.59);
     expect(res.tcFaltante).toBe(false);
   });
 
