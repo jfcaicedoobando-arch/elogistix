@@ -44,4 +44,23 @@ describe("TabCostos · acción «Cargar costos»", () => {
     renderTab(false);
     expect(screen.queryAllByRole("button", { name: /Cargar costos/i })).toHaveLength(0);
   });
+
+  it("muestra la tasa USD usada sin redondearla a dos decimales", () => {
+    render(
+      <MemoryRouter>
+        <TabCostos
+          conceptosCosto={[]}
+          totalVenta={75350.48}
+          totalCosto={64852.59}
+          utilidad={10497.89}
+          margen={13.9}
+          embarqueId="emb-1"
+          tipoCambioUsd={18.071}
+          monedasExtranjeras={["USD"]}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("tipo-cambio-kpis")).toHaveTextContent("1 USD = MXN 18.0710");
+  });
 });
+
