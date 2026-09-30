@@ -38,11 +38,11 @@ BEGIN
     INSERT INTO public.clientes (organization_id, nombre, rfc, email)
     VALUES (fx.org_a, 'Refacciones del Norte QA', '', 'facturas-qa@example.test')
     RETURNING id INTO v_cli;
-    INSERT INTO public.proformas (organization_id, cliente_id, cliente_nombre, numero, expediente)
-    VALUES (fx.org_a, v_cli, 'Refacciones del Norte QA', 'PRO-BAJA-1', 'QA-MTY-01')
+    INSERT INTO public.proformas (organization_id, cliente_id, cliente_nombre, numero, expediente, estado_cliente)
+    VALUES (fx.org_a, v_cli, 'Refacciones del Norte QA', 'PRO-BAJA-1', 'QA-MTY-01', 'aceptada')
     RETURNING id INTO v_pf;
-    INSERT INTO public.proformas (organization_id, cliente_id, cliente_nombre, numero, expediente)
-    VALUES (fx.org_a, v_cli, 'Refacciones del Norte QA', 'PRO-BAJA-2', 'QA-MTY-02')
+    INSERT INTO public.proformas (organization_id, cliente_id, cliente_nombre, numero, expediente, estado_cliente)
+    VALUES (fx.org_a, v_cli, 'Refacciones del Norte QA', 'PRO-BAJA-2', 'QA-MTY-02', 'aceptada')
     RETURNING id INTO v_source;
     INSERT INTO public.facturas (organization_id, cliente_id, numero, fecha_vencimiento, proforma_id)
     VALUES (fx.org_a, v_cli, 'BORRADOR-QA-1', CURRENT_DATE + 30, v_pf)
@@ -71,7 +71,7 @@ BEGIN
       WHERE id = v_cf AND deleted_at IS NOT NULL AND deleted_by = fx.admin_a AND precio_unitario = 1000),
       v_role || ': concepto conservado con su precio y autor de baja');
     PERFORM pg_temp.assert((SELECT count(*) = 2 FROM public.proformas
-      WHERE id IN (v_pf, v_source) AND estado_proforma = 'pendiente'
+      WHERE id IN (v_pf, v_source) AND estado_proforma = 'pendiente' AND estado_cliente = 'aceptada'
         AND factura_id IS NULL AND factura_secundaria_id IS NULL AND fecha_facturacion IS NULL),
       'Libera tanto la proforma directa como el origen consolidado');
     PERFORM pg_temp.assert(EXISTS(SELECT 1 FROM public.bitacora_actividad
