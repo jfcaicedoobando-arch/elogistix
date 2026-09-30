@@ -290,3 +290,6 @@ BEGIN
                AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.calcular_comision_pago(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.calcular_comision_pago(uuid) TO authenticated, service_role;
