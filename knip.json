@@ -17,8 +17,7 @@
     "src/test/**"
   ],
   "ignoreDependencies": [
-    "react-helmet-async",
-    "zod-validation-error"
+    "react-helmet-async"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {
