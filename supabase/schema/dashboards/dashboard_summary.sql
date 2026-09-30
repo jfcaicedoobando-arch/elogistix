@@ -58,14 +58,15 @@ BEGIN
       FROM embarques_base
     ),
     gastos_op_facturas AS (
+      -- AUD-UTIL-MES: base sin IVA (subtotal), igual que la utilidad de embarques.
       -- FIX BL-11: EUR usa el TC del embarque ligado y, si no hay, el TC DOF
       -- vigente a fecha_emision (LEFT JOIN LATERAL sobre tipos_cambio_dof).
       SELECT COALESCE(SUM(
         CASE
-          WHEN pf.moneda = 'MXN' THEN pf.total
-          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.total * pf.tipo_cambio_usd
+          WHEN pf.moneda = 'MXN' THEN pf.subtotal
+          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.subtotal * pf.tipo_cambio_usd
           WHEN pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn) > 1
-               THEN pf.total * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
+               THEN pf.subtotal * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
           ELSE NULL
         END
       ), 0) AS val
@@ -114,8 +115,8 @@ BEGIN
     ),
     -- FIX P1: 'arribos_mes' usaba embarques_base (incluye Borrador), lo que
     -- inflaba 'Arribos este mes' y la utilidad con embarques aun no confirmados.
-    -- Ahora reutiliza el mismo CTE 'activos' que ya excluye Borrador/EIR/
-    -- Por liquidar/Cerrado/Cancelado, unificando la regla de actividad.
+    -- AUD-UTIL-MES (2026-09-30): excluye sólo Borrador/Cancelado. EIR, Por
+    -- liquidar y Cerrado SÍ arribaron en el mes y su utilidad cuenta.
     arribos_mes AS (
       SELECT jsonb_build_object(
         'total', count(*),
@@ -136,9 +137,10 @@ BEGIN
           + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
         'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
       ) AS val
-      FROM activos eb
+      FROM embarques_base eb
       LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+      WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
+        AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
     ),
     resumen_sig AS (
       SELECT jsonb_build_object(
