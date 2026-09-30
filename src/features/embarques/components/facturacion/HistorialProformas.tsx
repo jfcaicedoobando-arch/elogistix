@@ -14,6 +14,7 @@ import type { ProformaConFactura } from "@/features/proformas/services";
 import { facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   renderEstado,
   totalUnico,
@@ -136,7 +137,10 @@ export function HistorialProformas({
         )}
       </CardHeader>
       <CardContent className="p-0">
-        <DataTable
+        {proformas.length === 0 ? (
+          <EmptyStateInline icon={Receipt} density="compact" className="py-4 [&>p]:text-body-sm"
+            message="No hay proformas generadas para este embarque." />
+        ) : <DataTable
           columns={columns}
           data={proformas}
           rowKey={(p) => p.id}
@@ -145,7 +149,7 @@ export function HistorialProformas({
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}
           emptyMessage="No hay proformas generadas para este embarque."
-        />
+        />}
       </CardContent>
     </Card>
   );

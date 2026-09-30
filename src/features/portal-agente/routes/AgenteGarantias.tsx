@@ -7,6 +7,8 @@
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
@@ -27,6 +29,10 @@ import {
   useAgenteGarantiasColumns,
   AgenteGarantiaMobileCard,
 } from "@/features/portal-agente/hooks/useAgenteGarantiasColumns";
+import { useAgenteTarifas } from "@/features/portal-agente/hooks";
+import { todayLocalISO } from "@/lib/date/today";
+import { priorizarNavierasAgente } from "./_sections/agenteGarantiasPrioridad";
+import { AgenteGarantiaRequisitoDialog } from "./_sections/AgenteGarantiaRequisitoDialog";
 
 export default function AgenteGarantias() {
   useDocumentTitle('Carta Garantía y Demoras');
@@ -34,6 +40,7 @@ export default function AgenteGarantias() {
   const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
   // Una consulta compartida con el formulario; nunca una consulta por fila.
   const { data: proveedores = [], isLoading: loadingProv, isError: errorProv, refetch: refetchProv } = useProveedoresNaviera();
+  const { data: tarifas = [], isLoading: loadingTar, isError: errorTar, refetch: refetchTar } = useAgenteTarifas();
   const proveedorDisponible = proveedores.length > 0;
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
   const [busqueda, setBusqueda] = useState("");
@@ -44,9 +51,14 @@ export default function AgenteGarantias() {
     [navieras, condiciones],
   );
 
+  const hoy = todayLocalISO();
+  const prioridad = useMemo(
+    () => priorizarNavierasAgente(filas, errorTar ? [] : tarifas, hoy),
+    [filas, tarifas, hoy, errorTar],
+  );
   const filasFiltradas = useMemo(
-    () => filtrarNavieras(filas, busqueda, estado),
-    [filas, busqueda, estado],
+    () => filtrarNavieras(prioridad.filas, busqueda, estado),
+    [prioridad.filas, busqueda, estado],
   );
 
   const limpiarFiltros = () => {
@@ -54,7 +66,7 @@ export default function AgenteGarantias() {
     setEstado("todos");
   };
 
-  const columns = useAgenteGarantiasColumns(setSeleccion, proveedorDisponible);
+  const columns = useAgenteGarantiasColumns(setSeleccion, proveedorDisponible, prioridad.ids);
 
   return (
     <div className="space-y-6">
@@ -84,12 +96,28 @@ export default function AgenteGarantias() {
         />
       ) : (
         <>
+          {!loadingProv && !proveedorDisponible && (
+            <Alert variant="warning">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Proveedor Naviera pendiente</AlertTitle>
+              <AlertDescription>
+                No hay proveedores tipo Naviera disponibles. Pide a Operaciones que dé de alta
+                y vincule el proveedor correspondiente. Usa «Ver requisito» para identificar la naviera.
+              </AlertDescription>
+            </Alert>
+          )}
           <NavieraFiltrosBar
             busqueda={busqueda}
             onBusquedaChange={setBusqueda}
             estado={estado}
             onEstadoChange={setEstado}
           />
+          <p className="text-body-sm text-muted-foreground">
+            {errorTar ? <>No se pudieron priorizar tus navieras; se muestra el catálogo completo.
+              {" "}<Button variant="link" size="sm" onClick={() => void refetchTar()}>Reintentar tarifas</Button></>
+              : loadingTar ? "Revisando tus tarifas para priorizar navieras…"
+                : `Navieras con tarifas vigentes o programadas: ${prioridad.ids.size} (se muestran primero) · Catálogo completo: ${filas.length}`}
+          </p>
           <ResponsiveDataTable<FilaNaviera>
             columns={columns}
             data={filasFiltradas}
@@ -97,7 +125,7 @@ export default function AgenteGarantias() {
             isLoading={loadingNav || loadingCond || loadingProv}
             onRowClick={(f) => setSeleccion(f)}
             rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
-            mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} proveedorDisponible={proveedorDisponible} />}
+            mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} proveedorDisponible={proveedorDisponible} enTarifas={prioridad.ids.has(f.naviera_id)} />}
             emptyState={
               filas.length === 0 ? (
                 <EmptyStateInline icon={Ship} message="Sin navieras configuradas." />
@@ -113,11 +141,11 @@ export default function AgenteGarantias() {
         </>
       )}
 
-      <NavieraCondicionesDialog
+      {proveedorDisponible ? <NavieraCondicionesDialog
         seleccion={seleccion}
         onOpenChange={(o) => !o && setSeleccion(null)}
         onSaved={() => setSeleccion(null)}
-      />
+      /> : <AgenteGarantiaRequisitoDialog seleccion={seleccion} onOpenChange={(o) => !o && setSeleccion(null)} />}
     </div>
   );
 }

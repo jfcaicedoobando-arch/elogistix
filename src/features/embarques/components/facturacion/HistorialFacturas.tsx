@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { subtotalesVigentesFacturas } from "./historialFacturas.helpers";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Factura {
   id: string;
@@ -86,7 +87,10 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
         )}
       </CardHeader>
       <CardContent className="p-0">
-        <DataTable
+        {facturas.length === 0 ? (
+          <EmptyStateInline icon={Receipt} density="compact" className="py-4 [&>p]:text-body-sm"
+            message="No hay facturas generadas para este embarque." />
+        ) : <DataTable
           columns={columns}
           data={facturas}
           rowKey={(f) => f.id}
@@ -95,7 +99,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}
           emptyMessage="No hay facturas generadas para este embarque."
-        />
+        />}
       </CardContent>
     </Card>
   );
