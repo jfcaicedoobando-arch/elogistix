@@ -64,4 +64,21 @@ describe("eliminar_factura_borrador — Fase C (Bug 3 + H7)", () => {
     expect(body).toMatch(/proformas_revertidas/);
     expect(body).toMatch(/proformas_conservadas_por_sibling/);
   });
+
+  it("da de baja lógica los conceptos antes del padre, sin DELETE físico", () => {
+    expect(body).not.toMatch(/DELETE\s+FROM\s+public\.(?:facturas|conceptos_factura)/i);
+    const conceptos = body.indexOf("UPDATE public.conceptos_factura");
+    const factura = body.indexOf("UPDATE public.facturas");
+    expect(conceptos).toBeGreaterThan(-1);
+    expect(factura).toBeGreaterThan(conceptos);
+    expect(body.slice(conceptos, factura)).toMatch(/deleted_at = now\(\), deleted_by = auth.uid\(\)/);
+    expect(body.slice(factura)).toMatch(/deleted_at = now\(\), deleted_by = auth.uid\(\)/);
+  });
+
+  it("bloquea emisión pendiente y serializa los reintentos del borrador", () => {
+    expect(body).toMatch(/WHERE id = p_factura_id FOR UPDATE/);
+    expect(body).toMatch(/IF v_factura.deleted_at IS NOT NULL THEN\s+RETURN/);
+    expect(body).toContain("v_factura.facturapi_pendiente_id IS NOT NULL");
+    expect(body).toContain("v_factura.snapshot_emision IS NOT NULL");
+  });
 });

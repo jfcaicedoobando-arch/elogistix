@@ -17384,10 +17384,13 @@ DECLARE
   v_pid                    uuid;
   v_tiene_hermano_vivo     boolean;
 BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Sesión requerida' USING ERRCODE = '42501';
+  END IF;
   IF p_factura_id IS NULL THEN
     RAISE EXCEPTION 'factura_id es obligatorio';
   END IF;
-  SELECT * INTO v_factura FROM public.facturas WHERE id = p_factura_id;
+  SELECT * INTO v_factura FROM public.facturas WHERE id = p_factura_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Factura no encontrada';
   END IF;
@@ -17408,11 +17411,19 @@ BEGIN
     RAISE EXCEPTION 'No puedes eliminar borradores de otra organización';
   END IF;
   PERFORM public._assert_writer(v_factura.organization_id);
-  -- Fuente 1: link directo (proformas.factura_id) — reservado a futuro.
+  -- Reintentos seguros: no tocar proformas que ya pudieron reconvertirse.
+  IF v_factura.deleted_at IS NOT NULL THEN
+    RETURN;
+  END IF;
+  IF v_factura.facturapi_pendiente_id IS NOT NULL
+     OR v_factura.snapshot_emision IS NOT NULL THEN
+    RAISE EXCEPTION 'La factura tiene una emisión pendiente o registrada y no puede eliminarse';
+  END IF;
+  -- Fuente 1: vínculos directos (incluye el segundo borrador por moneda).
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[])
     INTO v_candidatas
   FROM public.proformas
-  WHERE factura_id = p_factura_id;
+  WHERE factura_id = p_factura_id OR factura_secundaria_id = p_factura_id;
   -- Fuente 2: link inverso (facturas.proforma_id) — caso 1:1.
   IF v_factura.proforma_id IS NOT NULL THEN
     v_candidatas := array(SELECT DISTINCT unnest(v_candidatas || ARRAY[v_factura.proforma_id]));
@@ -17436,6 +17447,10 @@ BEGIN
     ) AS t(x)
     WHERE x IS NOT NULL
   );
+  -- Bloquear las proformas en orden estable antes de decidir si se liberan.
+  PERFORM id FROM public.proformas
+   WHERE id = ANY(v_candidatas)
+   ORDER BY id FOR UPDATE;
   -- Bug 3: sibling-alive check por proforma.
   -- Sólo revertimos las que NO tienen otra factura viva consumiéndolas
   -- (directamente vía facturas.proforma_id o vía conceptos_factura.proforma_id_origen).
@@ -17449,6 +17464,10 @@ BEGIN
           AND f.estado NOT IN ('Cancelada'::estado_factura, 'Sustituida'::estado_factura)
           AND (
             f.proforma_id = v_pid
+            OR EXISTS (
+              SELECT 1 FROM public.proformas p
+              WHERE p.id = v_pid AND f.id IN (p.factura_id, p.factura_secundaria_id)
+            )
             OR EXISTS (
               SELECT 1
               FROM public.conceptos_factura cf
@@ -17468,13 +17487,28 @@ BEGIN
   IF array_length(v_revertidas, 1) IS NOT NULL THEN
     UPDATE public.proformas
        SET factura_id        = NULL,
+           factura_secundaria_id = NULL,
            estado_proforma   = 'pendiente',
            fecha_facturacion = NULL,
            updated_at        = now()
      WHERE id = ANY(v_revertidas);
   END IF;
-  DELETE FROM public.conceptos_factura WHERE factura_id = p_factura_id;
-  DELETE FROM public.facturas WHERE id = p_factura_id;
+  -- Una proforma compartida conserva su estado y su otra factura.
+  -- Sólo retirar los enlaces al borrador que deja de estar activo.
+  UPDATE public.proformas
+     SET factura_id = CASE WHEN factura_id = p_factura_id THEN NULL ELSE factura_id END,
+         factura_secundaria_id = CASE WHEN factura_secundaria_id = p_factura_id THEN NULL ELSE factura_secundaria_id END,
+         updated_at = now()
+   WHERE id = ANY(v_conservadas)
+     AND (factura_id = p_factura_id OR factura_secundaria_id = p_factura_id);
+  -- Los conceptos deben darse de baja ANTES del padre: su guardia exige
+  -- una factura Borrador activa. No desactivar triggers ni borrar físicamente.
+  UPDATE public.conceptos_factura
+     SET deleted_at = now(), deleted_by = auth.uid()
+   WHERE factura_id = p_factura_id AND deleted_at IS NULL;
+  UPDATE public.facturas
+     SET deleted_at = now(), deleted_by = auth.uid(), updated_at = now()
+   WHERE id = p_factura_id;
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles
   )
@@ -17485,7 +17519,9 @@ BEGIN
     jsonb_build_object(
       'proformas_revertidas', v_revertidas,
       'proformas_conservadas_por_sibling', v_conservadas,
-      'origen', v_factura.origen
+      'origen', v_factura.origen,
+      'baja_logica', true,
+      'total_antes_de_baja', v_factura.total
     )
   );
 END $$;

@@ -33,8 +33,8 @@ export function FacturaDetalleFooterDialogs({
         open={eliminarOpen}
         onOpenChange={setEliminarOpen}
         entityName={`borrador ${numero}`}
-        description="Se eliminará el borrador de factura y la proforma volverá a estar disponible para convertir. Sólo se pueden eliminar borradores sin timbrar."
-        finalDescription="Esta acción es irreversible: se borran conceptos, la factura borrador y se revierte la proforma."
+        description="Se dará de baja el borrador sin timbrar. Las proformas quedarán disponibles para convertir sólo si no tienen otra factura activa."
+        finalDescription="El borrador y sus conceptos dejarán de estar activos, conservando su historial. No se cancela ni se elimina ningún CFDI timbrado."
         isPending={eliminando}
         onConfirm={onEliminar}
       />

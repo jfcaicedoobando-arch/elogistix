@@ -1,7 +1,7 @@
 /**
  * useEliminarBorradorFactura — mutación para eliminar un borrador de factura.
- * Al eliminar el borrador, el RPC revierte las proformas ligadas al estado
- * previo (aceptadas por cliente, sin `factura_id`) para poder re-convertirlas.
+ * La RPC da de baja el borrador y libera sólo las proformas sin otra
+ * factura activa. La aceptación del cliente se conserva.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ export function useEliminarBorradorFactura() {
     onSuccess: () => {
       toast({
         title: "Borrador eliminado",
-        description: "La proforma volvió a estar disponible para convertir.",
+        description: "Se dio de baja el borrador. Las proformas sin otra factura activa quedaron disponibles para convertir.",
       });
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
