@@ -9435,6 +9435,41 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.calcular_comision_pago() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_factura public.facturas%ROWTYPE;
+  v_emb public.embarques%ROWTYPE;
+  v_tc numeric;
+  v_moneda text;
+  v_mxn numeric;
+BEGIN
+  IF NEW.deleted_at IS NOT NULL THEN RETURN NEW; END IF;
+  SELECT * INTO v_factura FROM public.facturas WHERE id = NEW.factura_id;
+  IF NOT FOUND THEN RETURN NEW; END IF;
+  v_moneda := COALESCE(NEW.moneda::text, v_factura.moneda::text, 'MXN');
+  v_tc := NULLIF(NEW.tipo_cambio, 0);
+  -- FIX-R4-12: TC=1 en moneda extranjera es imposible; buscar TC real del embarque.
+  IF v_moneda IN ('USD','EUR') AND (v_tc IS NULL OR v_tc = 1) THEN
+    IF v_factura.embarque_id IS NOT NULL THEN
+      SELECT * INTO v_emb FROM public.embarques WHERE id = v_factura.embarque_id;
+      IF v_moneda = 'USD' THEN v_tc := NULLIF(v_emb.tipo_cambio_usd, 0); END IF;
+      IF v_moneda = 'EUR' THEN v_tc := NULLIF(v_emb.tipo_cambio_eur, 0); END IF;
+    END IF;
+    IF v_tc IS NULL OR v_tc = 1 THEN
+      v_tc := NULLIF(v_factura.tipo_cambio, 0);
+    END IF;
+  END IF;
+  IF v_moneda = 'MXN' THEN
+    v_mxn := COALESCE(NEW.monto, 0);
+  ELSE
+    v_mxn := COALESCE(NEW.monto, 0) * COALESCE(v_tc, 1);
+  END IF;
+  NEW.monto_cobrado_mxn := ROUND(v_mxn, 2);
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -9472,13 +9507,10 @@ BEGIN
      WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
-
   SELECT * INTO v_factura FROM facturas WHERE id = v_pago.factura_id;
   IF NOT FOUND THEN RETURN; END IF;
-
   -- O2.4: embarque directo o embarques del puente consolidado.
   v_emb_ids := COALESCE(public.comision_embarques_de_factura(v_factura.id), ARRAY[]::uuid[]);
-
   IF COALESCE(array_length(v_emb_ids, 1), 0) = 0 THEN
     -- Antes: comisión 0 en silencio. Ahora queda en la cola de recálculo.
     PERFORM public.registrar_comision_pendiente(
@@ -9499,12 +9531,10 @@ BEGIN
                  AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
-
   SELECT COALESCE(ARRAY_AGG(e.id), ARRAY[]::uuid[]) INTO v_emb_vivos
     FROM embarques e
    WHERE e.id = ANY(v_emb_ids)
      AND NOT public.resolver_sin_comision(e.id);
-
   IF COALESCE(array_length(v_emb_vivos, 1), 0) = 0 THEN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0,
@@ -9520,12 +9550,10 @@ BEGIN
      WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
-
   SELECT COALESCE(MAX(NULLIF(e.tipo_cambio_usd, 0)), 0),
          COALESCE(MAX(NULLIF(e.tipo_cambio_eur, 0)), 0)
     INTO v_tc_usd, v_tc_eur
     FROM embarques e WHERE e.id = ANY(v_emb_vivos);
-
   -- Embarque titular: el de mayor venta neta (ancla del renglón devengado).
   SELECT e.id INTO v_embarque_id
     FROM embarques e
@@ -9533,12 +9561,10 @@ BEGIN
    ORDER BY public.venta_embarque_mxn_neta(e.id, NULLIF(v_tc_usd,0), NULLIF(v_tc_eur,0)) DESC,
             e.id
    LIMIT 1;
-
   SELECT COALESCE(ARRAY_AGG(DISTINCT e.vendedora_id), ARRAY[]::uuid[])
     INTO v_vendedoras
     FROM embarques e
    WHERE e.id = ANY(v_emb_vivos) AND e.vendedora_id IS NOT NULL;
-
   BEGIN
     v_tc_factura := NULLIF(v_factura.tipo_cambio, 0);
     IF v_pago.monto_aplicado_factura IS NOT NULL THEN
@@ -9571,7 +9597,6 @@ BEGIN
       v_pago.organization_id, v_pago.id, 'cobrado_mxn',
       'No se pudo valuar lo cobrado a MXN', SQLSTATE, SQLERRM);
   END;
-
   IF COALESCE(array_length(v_vendedoras, 1), 0) = 0 THEN
     INSERT INTO comisiones_devengadas (
       organization_id, pago_factura_id, embarque_id, factura_id, vendedora_id,
@@ -9590,7 +9615,6 @@ BEGIN
                  AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
-
   IF array_length(v_vendedoras, 1) > 1 THEN
     -- Consolidada con vendedoras distintas: no se puede repartir en un solo
     -- renglón; se encola para resolución manual en lugar de grabar 0 mudo.
@@ -9615,12 +9639,10 @@ BEGIN
                  AND COALESCE(comisiones_devengadas.estado_previo_liquidacion = 'Por recuperar', false));
     RETURN;
   END IF;
-
   v_vendedora_id := v_vendedoras[1];
   v_cliente_id := v_factura.cliente_id;
   v_pct := COALESCE(public.resolver_porcentaje_comision(
              v_pago.organization_id, v_vendedora_id, v_cliente_id, v_embarque_id), 0);
-
   BEGIN
     SELECT COALESCE(SUM(public.convertir_a_mxn(
              cv.total, cv.moneda::text,
@@ -9628,14 +9650,12 @@ BEGIN
       INTO v_ingresos_mxn
       FROM conceptos_venta cv
      WHERE cv.embarque_id = ANY(v_emb_vivos) AND cv.deleted_at IS NULL;
-
     SELECT COALESCE(SUM(public.convertir_a_mxn(
              cc.monto, cc.moneda::text,
              NULLIF(v_tc_usd, 0), NULLIF(v_tc_eur, 0))), 0)
       INTO v_costos_mxn
       FROM conceptos_costo cc
      WHERE cc.embarque_id = ANY(v_emb_vivos) AND cc.deleted_at IS NULL;
-
     SELECT COALESCE(bool_or(m.moneda::text = 'USD'), false),
            COALESCE(bool_or(m.moneda::text = 'EUR'), false)
       INTO v_req_usd, v_req_eur
@@ -9646,15 +9666,12 @@ BEGIN
         SELECT moneda FROM conceptos_costo
          WHERE embarque_id = ANY(v_emb_vivos) AND deleted_at IS NULL
       ) m;
-
     v_utilidad := v_ingresos_mxn - v_costos_mxn;
-
     -- O2.1/O2.3: venta de los embarques, neta de notas de crédito.
     SELECT COALESCE(SUM(public.venta_embarque_mxn_neta(
              e.id, NULLIF(v_tc_usd, 0), NULLIF(v_tc_eur, 0))), 0)
       INTO v_venta_neta_mxn
       FROM embarques e WHERE e.id = ANY(v_emb_vivos);
-
     -- El pago incluye IVA y puede incluir retenciones; la venta/utilidad no.
     -- Convertirlo a base antes del prorrateo hace que un pago unico y varias
     -- parcialidades del mismo CFDI devenguen la misma comision en total.
@@ -9666,12 +9683,10 @@ BEGIN
               / v_factura.total, 2)
       ELSE 0
     END;
-
     -- B-4: la nota de crédito sigue acotando la base cobrada; cobrar una
     -- factura completa con NC no debe pagar sobre venta acreditada.
     v_cobrado_acotado := LEAST(v_cobrado_base_mxn,
                                GREATEST(COALESCE(v_venta_neta_mxn, 0), 0));
-
     IF COALESCE(v_ingresos_mxn, 0) > 0 THEN
       v_proporcion := LEAST(v_cobrado_acotado / v_ingresos_mxn, 1);
     ELSIF COALESCE(v_venta_neta_mxn, 0) > 0 THEN
@@ -9679,7 +9694,6 @@ BEGIN
     ELSE
       v_proporcion := 0;
     END IF;
-
     -- QA-R2 N-07: la comision nunca es negativa.
     v_comision_mxn := GREATEST(0, ROUND(v_utilidad * v_proporcion * (v_pct / 100.0), 2));
     v_nota := CASE
@@ -9701,7 +9715,6 @@ BEGIN
       v_pago.organization_id, v_pago.id, 'utilidad_embarque',
       'No se pudo calcular la utilidad del embarque', SQLSTATE, SQLERRM);
   END;
-
   INSERT INTO comisiones_devengadas (
     organization_id, pago_factura_id, embarque_id, factura_id, vendedora_id,
     monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado,
