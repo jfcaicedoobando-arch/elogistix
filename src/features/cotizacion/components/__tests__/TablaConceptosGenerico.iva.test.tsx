@@ -97,4 +97,22 @@ describe("<TablaConceptosGenerico /> etiqueta de IVA", () => {
     expect(screen.getByText("Conceptos en MXN + IVA")).toBeInTheDocument();
     expect(screen.getAllByText("IVA (8%)").length).toBeGreaterThan(0);
   });
+
+  it("desglosa subtotal e IVA también en USD antes del total con impuesto", () => {
+    render(
+      <TablaConceptosGenerico
+        moneda="USD"
+        conceptos={[{ ...concepto(true, 0.16), total: 1160 }]}
+        subtotal={1000}
+        iva={160}
+        total={1160}
+      />,
+    );
+    const tabla = within(screen.getByRole("table", { name: "Conceptos de escritorio en USD" }));
+    expect(tabla.getByRole("columnheader", { name: "Subtotal" })).toBeInTheDocument();
+    expect(tabla.getByRole("columnheader", { name: "IVA (16%)" })).toBeInTheDocument();
+    expect(tabla.getByText("USD 160.00")).toBeInTheDocument();
+    expect(tabla.getByText("USD 1,160.00")).toBeInTheDocument();
+  });
 });
+
