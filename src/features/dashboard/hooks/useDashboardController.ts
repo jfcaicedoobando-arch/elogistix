@@ -9,6 +9,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useDashboardData, ESTADOS_FILTRO } from "@/features/dashboard/hooks";
 import { formatFechaLarga } from "@/lib/formatters/dates";
 import { saludoMx } from "@/lib/ui/saludo";
+import { sumarArribosPropios } from "@/features/dashboard/domain/arribosPropios";
 
 
 export type DashboardScope = "todos" | "mios";
@@ -84,8 +85,10 @@ export function useDashboardController() {
     }
 
 
+    // AUD-UTIL-MES: los importes también se acotan a los embarques propios.
     const arribosScoped = {
       ...data.arribosEsteMes,
+      ...sumarArribosPropios(pf),
       total: pf.length,
       yaLlegaron: pf.filter((e) => (ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,
       enCamino: pf.filter((e) => !(ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,

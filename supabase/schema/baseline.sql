@@ -15525,7 +15525,6 @@ DECLARE
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
   v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -15541,9 +15540,7 @@ BEGIN
              e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
         CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
           WHEN e.estado = 'Borrador' THEN 'Borrador'
-          -- R221 (ELIMP00353): preservar Cancelado antes de derivar por ETD/ETA.
           WHEN e.estado = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
@@ -15556,7 +15553,7 @@ BEGIN
           ELSE e.estado::text
         END AS estado_real
       FROM embarques e
-      WHERE e.deleted_at IS NULL              -- FIX C5
+      WHERE e.deleted_at IS NULL
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
@@ -15635,10 +15632,12 @@ BEGIN
              p.venta_mxn_from_usd, p.costo_mxn_from_usd,
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
-      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+      FROM embarques_base eb LEFT JOIN profit p ON p.embarque_id = eb.id
+      -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
+      WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
+        AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 30
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -15678,7 +15677,7 @@ BEGIN
              EXISTS (
                SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL     -- FIX C5
+                 AND f.deleted_at IS NULL
                  AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
              ) AS facturado_flag
       FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
@@ -16102,7 +16101,6 @@ BEGIN
         e.tipo_cambio_eur,
         CASE
           WHEN e.estado = 'Borrador' THEN 'Borrador'
-          -- R221 (ELIMP00353): preservar Cancelado antes de derivar por ETD/ETA.
           WHEN e.estado = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
@@ -16133,14 +16131,13 @@ BEGIN
       FROM embarques_base
     ),
     gastos_op_facturas AS (
-      -- FIX BL-11: EUR usa el TC del embarque ligado y, si no hay, el TC DOF
-      -- vigente a fecha_emision (LEFT JOIN LATERAL sobre tipos_cambio_dof).
+      -- AUD-UTIL-MES: base sin IVA (subtotal), igual que la utilidad de embarques.
       SELECT COALESCE(SUM(
         CASE
-          WHEN pf.moneda = 'MXN' THEN pf.total
-          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.total * pf.tipo_cambio_usd
+          WHEN pf.moneda = 'MXN' THEN pf.subtotal
+          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.subtotal * pf.tipo_cambio_usd
           WHEN pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn) > 1
-               THEN pf.total * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
+               THEN pf.subtotal * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
           ELSE NULL
         END
       ), 0) AS val
@@ -16185,6 +16182,8 @@ BEGIN
       WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
         AND (organization_id = public.org_scope())
     ),
+    -- AUD-UTIL-MES (2026-09-30): excluye sólo Borrador/Cancelado. EIR, Por
+    -- liquidar y Cerrado SÍ arribaron en el mes y su utilidad cuenta.
     arribos_mes AS (
       SELECT jsonb_build_object(
         'total', count(*),
@@ -16205,9 +16204,10 @@ BEGIN
           + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
         'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
       ) AS val
-      FROM activos eb
+      FROM embarques_base eb
       LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+      WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
+        AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
     ),
     resumen_sig AS (
       SELECT jsonb_build_object(
