@@ -32,6 +32,11 @@ DECLARE
   v_other uuid;
   v_error boolean;
 BEGIN
+  -- La conversión USD usa el DOF del fixture, nunca un servicio externo.
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE, 18, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = EXCLUDED.usd_mxn;
+
   FOREACH v_role IN ARRAY ARRAY['admin_org', 'contador'] LOOP
     PERFORM pg_temp.as_postgres();
     SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('BAJA-' || v_role, v_role);
