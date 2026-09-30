@@ -59,9 +59,11 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
     expect(contenidoDataTable).toContain("focus-visible:ring-2");
   });
   it("usa fondos opacos en las celdas fijas para impedir texto superpuesto", () => {
-    expect(filaDataTable.match(/bg-inherit/g)).toHaveLength(2);
+    expect(filaDataTable.match(/bg-background/g)).toHaveLength(2);
+    expect(filaDataTable).not.toContain("bg-inherit");
     expect(filaDataTable).toContain("meta.sticky && STICKY_LEFT");
     expect(filaDataTable).toContain("meta.stickyRight && STICKY_RIGHT");
     expect(filaDataTable).not.toMatch(/STICKY_(?:LEFT|RIGHT)[\s\S]*?bg-(?:muted|primary)\/[0-9]+/);
   });
 });
+
