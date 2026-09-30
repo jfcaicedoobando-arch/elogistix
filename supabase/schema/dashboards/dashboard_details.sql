@@ -138,7 +138,7 @@ BEGIN
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
         AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 30
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 200  -- AUD-UTIL-MES: la vista "Míos" suma esta lista; 30 truncaba el mes
     ),
     profit_este_mes AS (
       SELECT jsonb_agg(jsonb_build_object(
