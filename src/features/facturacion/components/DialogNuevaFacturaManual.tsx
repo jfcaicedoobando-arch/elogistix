@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { CreditoExcesoConfirmDialog } from "./CreditoExcesoConfirmDialog";
 import { useFacturaManualForm } from "@/features/facturacion/hooks/useFacturaManualForm";
@@ -28,18 +29,23 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
     fiscal, updateFiscal, tasaIva,
     conceptos, setConceptos,
     notas, setNotas,
+    isDirty, reset,
     creditoAlerta, setCreditoAlerta,
     puedeGuardar, puedeTimbrar, faltantesTimbrar,
     handleSubmit, onConfirmarExceso, isPending,
   } = useFacturaManualForm(open, () => onOpenChange(false));
 
   const totales = calcularTotalesConceptos(conceptos, tasaIva);
+  const handleOpenChange = (next: boolean) => {
+    if (!next) reset();
+    onOpenChange(next);
+  };
 
   const footer = (
     <div className="flex w-full flex-wrap items-center gap-2">
       {!puedeTimbrar && <FaltantesHint items={faltantesTimbrar} className="mr-auto" />}
       <div className="ml-auto flex flex-wrap items-center gap-2">
-        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>Cancelar</Button>
+        <FormDialogCancelarBoton onCancelar={() => handleOpenChange(false)} disabled={isPending} />
         <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || isPending}>Guardar borrador</Button>
         <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || isPending}>{isPending ? "Procesando…" : "Crear y timbrar"}</Button>
       </div>
@@ -48,12 +54,13 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
 
   return (
     <FormDialogShell
-      open={open} onOpenChange={onOpenChange} icon={FilePlus2}
+      open={open} onOpenChange={handleOpenChange} icon={FilePlus2}
       title="Nueva factura manual"
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
       size="3xl" footer={footer}
-      // EC-13: con cliente o conceptos capturados, cerrar pide confirmación.
-      isDirty={Boolean(cliente) || conceptos.length > 0}
+      // El concepto vacío inicial no cuenta como captura; Cancelar/X/ESC comparten guarda.
+      isDirty={isDirty}
+      busy={isPending}
     >
       <div className="space-y-5">
         <FormDialogSection flat title="Información del cliente">

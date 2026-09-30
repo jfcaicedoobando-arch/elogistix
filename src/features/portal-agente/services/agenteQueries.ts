@@ -106,7 +106,9 @@ export interface AgenteEmbarqueRow {
   id: string;
   expediente: string;
   modo: string;
+  tipo: string;
   estado: string;
+  fecha_llegada_real: string | null;
   bl_master: string | null;
   puerto_origen: string | null;
   puerto_destino: string | null;
@@ -115,7 +117,7 @@ export interface AgenteEmbarqueRow {
 }
 
 const AGENTE_EMBARQUES_SELECT =
-  "id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta";
+  "id, expediente, modo, tipo, estado, fecha_llegada_real, bl_master, puerto_origen, puerto_destino, etd, eta";
 
 /**
  * Tamaño de lote de lectura. NO es un cap: se piden lotes consecutivos hasta

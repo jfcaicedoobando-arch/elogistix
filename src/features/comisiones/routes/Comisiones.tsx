@@ -28,6 +28,7 @@ import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/se
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -59,7 +60,7 @@ export default function Comisiones() {
   const setPeriodo = (value: string) => setServer({ m: value || null });
 
   const { data: vendedoras = [] } = useUsuariosVendedores();
-  const { data: comisiones = [], isLoading, isError, refetch, kpis } = useComisionesDevengadas({
+  const { data: comisiones = [], isLoading, isError, refetch, kpis, kpisLoading, kpisError, refetchKpis } = useComisionesDevengadas({
     vendedora_id: server.v as string | "todas",
     estado: server.estado as EstadoComision | "todos",
     periodo: server.m || undefined,
@@ -111,11 +112,19 @@ export default function Comisiones() {
         <TabsContent value="devengadas" className="space-y-4">
           {/* B.1: comisiones que quedaron en 0 por un fallo de cálculo. */}
           <AlertaComisionesPendientes />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <KpiCard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
-            <KpiCard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />
-            <KpiCard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
-          </div>
+          {kpisError ? (
+            <ErrorState
+              title="Indicadores de comisiones no disponibles"
+              description="La lista puede estar disponible, pero no se pudieron calcular los importes. Reintenta antes de usarlos."
+              onRetry={() => { void refetchKpis(); }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <KpiCard label="Devengado del mes" value={kpis ? formatCurrency(kpis.devengado_mes_mxn, "MXN") : ""} loading={kpisLoading} />
+              <KpiCard label="Pendiente de liquidar" value={kpis ? formatCurrency(kpis.pendiente_liquidar_mxn, "MXN") : ""} loading={kpisLoading} />
+              <KpiCard label="Liquidado del mes" value={kpis ? formatCurrency(kpis.liquidado_mes_mxn, "MXN") : ""} loading={kpisLoading} />
+            </div>
+          )}
 
           <UnifiedFiltersBar
             search={paged.search}

@@ -10,7 +10,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import {
-  INITIAL_CONCEPTOS, INITIAL_FISCAL, serieForMoneda, useFaltantesTimbrar,
+  INITIAL_CONCEPTOS, INITIAL_FISCAL, facturaManualIsDirty, serieForMoneda, useFaltantesTimbrar,
 } from "@/features/facturacion/hooks/facturaManualFormDefaults";
 
 export { serieForMoneda };
@@ -161,6 +161,8 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     setConceptos,
     notas,
     setNotas,
+    isDirty: facturaManualIsDirty(clienteId, fiscal, conceptos, notas),
+    reset,
     creditoAlerta,
     setCreditoAlerta,
     clienteIncompleto,

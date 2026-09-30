@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
+import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 
 const conIva16 = [
   { moneda: "MXN", cantidad: 1, precio_unitario: 1817, total: 2107.72 },
@@ -31,5 +32,11 @@ describe("derivarSubtotalMoneda — subtotal sin IVA", () => {
   it("usa `subtotal` como respaldo en renglones legados sin desglose", () => {
     const r = derivarSubtotalMoneda([{ moneda: "MXN", subtotal: 1000, total: 1160 }], "MXN");
     expect(r).toEqual({ subtotal: 1000, moneda: "MXN" });
+  });
+
+  it("conserva precisión unitaria y coincide con proforma al multiplicar antes de redondear", () => {
+    const concepto = { id: "c1", moneda: "USD", cantidad: 1000, precio_unitario: 10.075, aplica_iva: false };
+    expect(derivarSubtotalMoneda([concepto], "USD")).toEqual({ subtotal: 10075, moneda: "USD" });
+    expect(calcularTotalesProforma([concepto], 0.16).subtotal_usd).toBe(10075);
   });
 });

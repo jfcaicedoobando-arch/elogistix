@@ -19,6 +19,7 @@ import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosF
 import type { Moneda } from "@/types/db";
 import { useIvaFronteraHabilitada } from "@/features/configuracion";
 import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 
 interface Props {
   conceptos: ConceptoManualInput[];
@@ -65,21 +66,15 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
         Conceptos <span className="text-destructive">*</span>
       </SectionHeading>
       <div className="border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 bg-muted/60 px-3 py-2 text-label font-semibold uppercase tracking-wider text-muted-foreground">
-          <div className="col-span-4">Descripción</div>
-          <div className="col-span-2">Clave SAT</div>
-          <div className="col-span-1">Cant.</div>
-          <div className="col-span-2">P. unitario</div>
-          <div className="col-span-2">IVA</div>
-          <div className="col-span-1 text-right">Importe</div>
-        </div>
         <div className="divide-y">
           {conceptos.map((c, idx) => {
-            const importe = Number(c.cantidad || 0) * Number(c.precio_unitario || 0);
+            const importe = subtotalLinea(Number(c.cantidad || 0), Number(c.precio_unitario || 0));
             return (
-              <div key={idx} className="grid grid-cols-12 gap-2 px-3 py-2.5 items-center">
-                <div className="col-span-4">
+              <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-3 px-3 py-3 items-end">
+                <div className="min-w-0 sm:col-span-8">
+                  <label className="block text-label text-muted-foreground mb-1" htmlFor={`concepto-descripcion-${idx}`}>Descripción</label>
                   <Input
+                    id={`concepto-descripcion-${idx}`}
                     value={c.descripcion}
                     onChange={(e) => update(idx, { descripcion: e.target.value })}
                     placeholder="Ej. Anticipo servicios logísticos"
@@ -87,8 +82,10 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     aria-label={`Descripción del concepto ${idx + 1}`}
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="min-w-0 sm:col-span-4">
+                  <label className="block text-label text-muted-foreground mb-1" htmlFor={`concepto-clave-${idx}`}>Clave SAT</label>
                   <Input
+                    id={`concepto-clave-${idx}`}
                     value={c.clave_sat ?? ""}
                     onChange={(e) => update(idx, { clave_sat: e.target.value })}
                     placeholder="78101800"
@@ -96,29 +93,32 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     aria-label={`Clave SAT del concepto ${idx + 1}`}
                   />
                 </div>
-                <div className="col-span-1">
+                <div className="min-w-0 sm:col-span-2">
+                  <span className="block text-label text-muted-foreground mb-1">Cant.</span>
                   <NumericInput
-                    aria-label="Cantidad"
+                    aria-label={`Cantidad del concepto ${idx + 1}`}
                     value={c.cantidad || 0}
                     onChange={(n) => update(idx, { cantidad: n || 1 })}
                     className="h-9"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="min-w-0 sm:col-span-3">
+                  <span className="block text-label text-muted-foreground mb-1">P. unitario</span>
                   <NumericInput
-                    aria-label="Precio unitario"
+                    aria-label={`Precio unitario del concepto ${idx + 1}`}
                     decimals
                     value={c.precio_unitario || 0}
                     onChange={(n) => update(idx, { precio_unitario: n })}
                     className="h-9"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="min-w-0 sm:col-span-3">
+                  <span className="block text-label text-muted-foreground mb-1">IVA</span>
                   <Select
                     value={c.tipo_iva ?? "gravado_16"}
                     onValueChange={(v) => update(idx, { tipo_iva: v as TipoIvaConcepto })}
                   >
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9" aria-label={`IVA del concepto ${idx + 1}`}><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gravado_16">IVA 16%</SelectItem>
                       <SelectItem
@@ -135,19 +135,22 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                   </Select>
                 </div>
 
-                <div className="col-span-1 flex items-center justify-end gap-1">
-                  <span className="text-body-sm tabular-nums text-muted-foreground truncate">
-                    {formatCurrency(importe, moneda)}
-                  </span>
-                  <Button
-                    type="button" variant="ghost" size="icon"
-                    onClick={() => remove(idx)}
-                    disabled={conceptos.length === 1}
-                    aria-label="Eliminar concepto"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="min-w-0 sm:col-span-4">
+                  <span className="block text-label text-muted-foreground mb-1 text-right">Importe</span>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-body-sm tabular-nums font-medium text-right whitespace-nowrap">
+                      {formatCurrency(importe, moneda)}
+                    </span>
+                    <Button
+                      type="button" variant="ghost" size="icon"
+                      onClick={() => remove(idx)}
+                      disabled={conceptos.length === 1}
+                      aria-label={`Eliminar concepto ${idx + 1}`}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );

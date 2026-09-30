@@ -3,7 +3,7 @@
  */
 import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
-import { CAP_REPORTE } from "@/constants/queryCaps";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 export interface FacturaLite {
   id: string;
@@ -26,20 +26,25 @@ export async function fetchFacturasReporte(
   hasta: string,
   organizationId?: string | null,
 ): Promise<FacturaLite[]> {
-  let q = supabase
-    .from("proveedor_facturas")
-    .select("id, fecha_emision, subtotal, total, moneda, proveedor_id, tipo_cambio_usd, proveedores(nombre)")
-    .is("deleted_at", null)
-    .neq("estado", "Cancelada")
-    .gte("fecha_emision", desde)
-    .lte("fecha_emision", hasta)
-    .order("fecha_emision", { ascending: true })
-    .limit(CAP_REPORTE);
-  if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data, error } = await q;
-  if (error) throw error;
+  const data = await leerTodasLasPaginas(
+    "compras.reportes",
+    (from, to) => {
+      let q = supabase
+        .from("proveedor_facturas")
+        .select("id, fecha_emision, subtotal, total, moneda, proveedor_id, tipo_cambio_usd, proveedores(nombre)")
+        .is("deleted_at", null)
+        .neq("estado", "Cancelada")
+        .gte("fecha_emision", desde)
+        .lte("fecha_emision", hasta)
+        .order("fecha_emision", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to);
+      if (organizationId) q = q.eq("organization_id", organizationId);
+      return q;
+    },
+  );
   // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
-  const raw = (data ?? []) as unknown as Array<{
+  const raw = data as unknown as Array<{
     id: string; fecha_emision: string | null; subtotal: string | number | null; total: string | number;
     moneda: Moneda; proveedor_id: string | null;
     tipo_cambio_usd: number | null;

@@ -60,6 +60,25 @@ describe("devengadas service", () => {
     expect(mock.tableCalls[0].ops).not.toContain("eq");
   });
 
+  it("incluye la comisión 1,001 en la lista y búsqueda cliente", async () => {
+    const fila = (n: number) => ({
+      id: `c-${n}`, created_at: "2025-06-10T12:00:00Z", estado: "Devengada",
+      vendedora_id: null, monto_cobrado_mxn: 100, utilidad_prorrateada_mxn: 50,
+      porcentaje_aplicado: 10, comision_mxn: 5,
+      facturas: { numero: `F-${n}`, cliente_nombre: "Cliente", expediente: null },
+    });
+    mock.setTableResultOnce("comisiones_devengadas", {
+      data: Array.from({ length: 1000 }, (_, i) => fila(i)), error: null,
+    });
+    mock.setTableResultOnce("comisiones_devengadas", { data: [fila(1000)], error: null });
+    const rows = await fetchComisionesDevengadas();
+    expect(rows).toHaveLength(1001);
+    expect(rows.at(-1)?.factura_numero).toBe("F-1000");
+    expect(mock.tableCalls.map((call) => call.opArgs[call.ops.indexOf("range")])).toEqual([
+      [0, 999], [1000, 1999],
+    ]);
+  });
+
   it("calcularKPIsComisiones: suma segun estado y mes", () => {
     const ahora = "2025-06-15T12:00:00Z";
     const mesPasado = "2025-05-15T12:00:00Z";

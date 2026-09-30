@@ -3,7 +3,7 @@
  * FIX C6: la conversión delega en el canon único `src/lib/financial/convertir.ts`.
  */
 import { aMxn } from "@/lib/financial/convertir";
-import { hoyMx, ymMx } from "@/lib/date/mx";
+import { diaMx, hoyMx, ymMx } from "@/lib/date/mx";
 
 /** Tipos de cambio de respaldo POR MONEDA (MXN por 1 unidad de la divisa). */
 export interface TcFallbacks {
@@ -61,6 +61,11 @@ export function mxnFactura(
 /** Mes de negocio (`YYYY-MM`) en America/Mexico_City. */
 export function mesNegocio(hoy: Date = new Date()): string {
   return ymMx(hoy);
+}
+
+/** Timestamp → mes CDMX; date-only conserva su mes de calendario sin zona. */
+export function mesDeFechaNegocio(fecha: string | null | undefined): string | null {
+  return diaMx(fecha)?.slice(0, 7) ?? null;
 }
 
 /**

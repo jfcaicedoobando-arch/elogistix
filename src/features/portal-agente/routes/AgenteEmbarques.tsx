@@ -17,8 +17,13 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import { etiquetaRutaTexto } from "@/features/costeo";
 import { formatFechaDia } from "@/lib/formatters/dates";
 import { etiquetaExpedienteAgente } from "./_sections/agenteEmbarqueLabels";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
+
+function estadoVisible(e: EmbarqueAgente): string {
+  return calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
+}
 
 export default function AgenteEmbarques() {
   useDocumentTitle('Mis Embarques');
@@ -77,7 +82,7 @@ export default function AgenteEmbarques() {
       },
       statusColumn<EmbarqueAgente>({
         domain: "embarque",
-        accessor: (e) => e.estado,
+        accessor: estadoVisible,
       }),
     ]),
     [],
@@ -104,7 +109,7 @@ export default function AgenteEmbarques() {
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <span className="font-medium break-words">{etiquetaExpedienteAgente(e.expediente, e.id)}</span>
-              <StatusBadge domain="embarque" status={e.estado} />
+              <StatusBadge domain="embarque" status={estadoVisible(e)} />
             </div>
             <p className="text-body-sm break-words">{etiquetaRutaTexto(e.puerto_origen, e.puerto_destino)}</p>
             <p className="text-xs text-muted-foreground tabular-nums">

@@ -11,6 +11,7 @@ import { roundMoney } from "@/lib/financial/financialUtils";
 describe("aMxn · redondeo canónico a 2 decimales", () => {
   it("redondea la conversión con tipo de cambio directo", () => {
     expect(aMxn(100.005, "USD", 17.3317).monto).toBe(1733.26);
+    expect(aMxn(0.5, "USD", 20.15).monto).toBe(10.08);
   });
 
   it("redondea también cuando usa el tipo de cambio de respaldo", () => {

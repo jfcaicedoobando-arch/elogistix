@@ -1,4 +1,5 @@
 import currency from "currency.js";
+import Decimal from "decimal.js";
 import type { Moneda } from "@/types/db";
 
 /**
@@ -36,26 +37,29 @@ const ratio = (n: number) => currency(n, { precision: 4 });
 
 /**
  * Redondeo canónico de dinero a 2 decimales. Política: "half away from zero",
- * idéntica a `ROUND(numeric, 2)` de Postgres. NO uses `Math.round(n*100)/100`:
- * en negativos diverge de la BD (Math.round redondea .5 hacia +∞: −2.505→−2.50
- * vs −2.51 en Postgres). El `Number.EPSILON` corrige el error de binario en
- * casos como 1.005 (cuyo double es 1.00499999…).
+ * idéntica a `ROUND(numeric, 2)` de Postgres. Decimal evita que empates como
+ * 10.075 se conviertan en 10.074999… antes de redondear; ROUND_HALF_UP es
+ * "half away from zero" tanto para positivos como para negativos.
  */
 export function roundMoney(n: number): number {
   if (!Number.isFinite(n)) return 0;
-  const abs = Math.abs(n);
-  const redondeado = Math.round((abs + Number.EPSILON) * 100) / 100;
-  return n < 0 ? -redondeado : redondeado;
+  if (n === 0) return 0;
+  return new Decimal(n).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
 }
 
+/** Multiplica con precisión decimal y redondea una sola vez al final. */
+export function multiplyMoney(a: number, b: number): number {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return new Decimal(a).times(b).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
+}
 
 /**
  * Subtotal de una línea (cantidad × precio_unitario) redondeado a 2 decimales
- * con `currency.js`. Usar SIEMPRE en lugar de la multiplicación directa antes
- * de acumular a un total padre, para evitar drift de punto flotante.
+ * después de multiplicar con precisión decimal. El precio unitario puede
+ * tener más de dos decimales; redondearlo antes alteraría el importe.
  */
 export function subtotalLinea(cantidad: number, precioUnitario: number): number {
-  return money(precioUnitario).multiply(cantidad).value;
+  return multiplyMoney(cantidad, precioUnitario);
 }
 
 /** Calcula el subtotal (cantidad × precio unitario) */
@@ -73,12 +77,10 @@ export function sumarSubtotales<T>(
   items: T[],
   get: (item: T) => { cantidad: number; precioUnitario: number },
 ): number {
-  return items
-    .reduce((acc, item) => {
-      const { cantidad, precioUnitario } = get(item);
-      return acc.add(money(precioUnitario).multiply(cantidad));
-    }, currency(0, { precision: 2 }))
-    .value;
+  return items.reduce((acc, item) => {
+    const { cantidad, precioUnitario } = get(item);
+    return acc.plus(subtotalLinea(cantidad, precioUnitario));
+  }, new Decimal(0)).toNumber();
 }
 
 /**

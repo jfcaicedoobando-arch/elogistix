@@ -27,6 +27,18 @@ export const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
   { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800", tipo_iva: "gravado_16" },
 ];
 
+/** El renglón inicial vacío no es captura del usuario. */
+export function facturaManualIsDirty(
+  clienteId: string,
+  fiscal: DatosFiscalesValue,
+  conceptos: ConceptoManualInput[],
+  notas: string,
+): boolean {
+  return Boolean(clienteId || notas)
+    || JSON.stringify(fiscal) !== JSON.stringify(INITIAL_FISCAL)
+    || JSON.stringify(conceptos) !== JSON.stringify(INITIAL_CONCEPTOS);
+}
+
 export function useFaltantesTimbrar(
   cliente: ClienteFiscalOpt | undefined,
   conceptosValidos: boolean,

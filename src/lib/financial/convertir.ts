@@ -13,7 +13,7 @@
  * Prohibido reimplementar esta lógica fuera de `src/lib/financial/`.
  */
 import { tcValido } from "@/lib/financial/tcValido";
-import { roundMoney } from "@/lib/financial/financialUtils";
+import { roundMoney, multiplyMoney } from "@/lib/financial/financialUtils";
 
 export type FuenteConversion = "moneda-local" | "tc-directo" | "tc-fallback" | "sin-tc";
 
@@ -60,10 +60,10 @@ export function aMxn(
   // acumulaba montos crudos y el detalle redondeaba por renglón, así que el
   // mismo embarque se veía con diferencias de centavos entre pantallas.
   const directo = tcConfiable(tipoCambio);
-  if (directo) return { monto: roundMoney(m * directo), tc: directo, fuente: "tc-directo", completo: true };
+  if (directo) return { monto: multiplyMoney(m, directo), tc: directo, fuente: "tc-directo", completo: true };
 
   const fb = tcConfiable(opts?.fallback);
-  if (fb) return { monto: roundMoney(m * fb), tc: fb, fuente: "tc-fallback", completo: true };
+  if (fb) return { monto: multiplyMoney(m, fb), tc: fb, fuente: "tc-fallback", completo: true };
 
   return { monto: 0, tc: null, fuente: "sin-tc", completo: false };
 }
