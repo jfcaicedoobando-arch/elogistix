@@ -90,7 +90,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
       )}
 
       <div className="text-label text-muted-foreground italic border-t pt-1.5">
-        Conversión con TC guardado en cada embarque.
+        Usa los costos presupuestados de cada embarque (no las facturas reales de proveedor) y su TC guardado.
       </div>
     </div>
   );
@@ -138,7 +138,7 @@ export function CoberturaTooltipContent({
         </p>
       )}
       <p className="text-label text-muted-foreground italic">
-        Gastos fijos = facturas con categoría <strong>Indirecto de operación</strong> o <strong>Administración</strong> + comisiones del mes.
+        Gastos fijos = facturas (sin IVA) con categoría <strong>Indirecto de operación</strong> o <strong>Administración</strong> + comisiones del mes.
       </p>
     </div>
   );
