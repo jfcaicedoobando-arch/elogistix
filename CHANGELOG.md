@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.11] - 2026-09-29
+
+- **fix(facturación)**: eliminar un borrador usa baja lógica de factura y conceptos, sin infringir la protección contra borrado físico de CFDI.
+- **fix(proformas)**: la baja libera las proformas sin otra factura activa, conserva las compartidas y retira enlaces al borrador eliminado. Repetir la solicitud no deshace una conversión posterior.
+- **fix(facturación · mensajes)**: la confirmación explica la conservación del historial y no promete liberar una proforma que aún tiene otra factura.
+
 ## [13.824.10] - 2026-09-28
 
 - **fix(costeo · accesibilidad)**: las tablas con desbordamiento horizontal anuncian cómo desplazarse y permiten enfocar el área con teclado.
