@@ -18,7 +18,7 @@ import {
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import { NavieraCondicionesDialog } from "@/features/costeo/components/NavieraCondicionesDialog";
 import { combinarFilasNaviera, type FilaNaviera } from "@/features/costeo/types/filaNaviera";
-import { useDocumentTitle } from "@/hooks/shared";
+import { useDocumentTitle, useIsMobile } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -43,6 +43,10 @@ export default function AgenteGarantias() {
   const { data: tarifas = [], isLoading: loadingTar, isError: errorTar, refetch: refetchTar } = useAgenteTarifas();
   const proveedorDisponible = proveedores.length > 0;
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
+  const isMobile = useIsMobile();
+  // En móvil la tarjeta ya contiene Configurar/Ver requisito. No envolverla
+  // en otro botón; el CTA conserva la navegación por teclado.
+  const seleccionarFila = useMemo(() => isMobile ? undefined : setSeleccion, [isMobile]);
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState<EstadoNavieraFiltro>("todos");
 
@@ -123,7 +127,7 @@ export default function AgenteGarantias() {
             data={filasFiltradas}
             rowKey={(f) => f.naviera_id}
             isLoading={loadingNav || loadingCond || loadingProv}
-            onRowClick={(f) => setSeleccion(f)}
+            onRowClick={seleccionarFila}
             rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
             mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} proveedorDisponible={proveedorDisponible} enTarifas={prioridad.ids.has(f.naviera_id)} />}
             emptyState={
