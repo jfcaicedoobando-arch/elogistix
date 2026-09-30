@@ -36,7 +36,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
   if (conceptos.length === 0) return null;
 
   const esMXN = moneda === "MXN";
-  const mostrarDesgloseIva = esMXN && hayIva;
+  const mostrarDesgloseIva = hayIva;
 
   return (
     <Card>
@@ -143,3 +143,4 @@ function AvisoSinIva({ pendientes }: { pendientes: boolean }) {
     </span>
   );
 }
+
