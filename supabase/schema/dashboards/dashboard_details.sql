@@ -53,6 +53,25 @@ BEGIN
         AND (e.organization_id = public.org_scope())
     ),
     profit AS (SELECT * FROM profit_por_embarque()),
+    -- AUD-UTIL-MES-TC: TC ponderado de las facturas USD vigentes del embarque;
+    -- en arribos del mes la venta USD se homologa con él para cuadrar con lo facturado.
+    tc_factura AS (
+      SELECT f.embarque_id, sum(f.subtotal * f.tipo_cambio) / NULLIF(sum(f.subtotal), 0) AS tc
+      FROM facturas f
+      WHERE f.deleted_at IS NULL
+        AND f.organization_id = public.org_scope()
+        AND f.moneda::text = 'USD' AND f.tipo_cambio > 1 AND f.subtotal > 0
+        AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+      GROUP BY f.embarque_id
+    ),
+    profit_fx AS (
+      SELECT p.embarque_id, p.venta_usd, p.costo_usd, p.costo_mxn,
+             p.costo_mxn_from_usd, p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) AS venta_mxn_from_usd,
+             p.venta_usd * COALESCE(tf.tc, p.tipo_cambio_usd) + p.venta_mxn_from_eur + p.venta_mxn_native AS venta_mxn
+      FROM profit p LEFT JOIN tc_factura tf ON tf.embarque_id = p.embarque_id
+    ),
     -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
     -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
@@ -133,7 +152,7 @@ BEGIN
              p.venta_mxn_from_usd, p.costo_mxn_from_usd,
              p.venta_mxn_from_eur, p.costo_mxn_from_eur,
              p.venta_mxn_native, p.costo_mxn_native
-      FROM embarques_base eb LEFT JOIN profit p ON p.embarque_id = eb.id
+      FROM embarques_base eb LEFT JOIN profit_fx p ON p.embarque_id = eb.id
       -- AUD-UTIL-MES: mismos estados que arribos_mes del resumen.
       WHERE eb.estado_real NOT IN ('Borrador','Cancelado')
         AND eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
