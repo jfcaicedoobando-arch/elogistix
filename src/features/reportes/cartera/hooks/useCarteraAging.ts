@@ -75,13 +75,15 @@ export function useCarteraAging(fechaCorte: string, busqueda: string) {
   return {
     tc,
     tcLoading: tcQuery.isLoading,
+    tcError: tcQuery.isError,
     cxc: useMemo(() => filtrar(bloqueCxc, busqueda), [bloqueCxc, busqueda]),
     cxp: useMemo(() => filtrar(bloqueCxp, busqueda), [bloqueCxp, busqueda]),
-    isLoading: cxc.isLoading || cxp.isLoading,
-    isError: cxc.isError || cxp.isError,
+    isLoading: cxc.isLoading || cxp.isLoading || tcQuery.isLoading,
+    isError: cxc.isError || cxp.isError || tcQuery.isError,
     refetch: () => {
       void cxc.refetch();
       void cxp.refetch();
+      void tcQuery.refetch();
     },
   };
 }

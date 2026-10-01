@@ -158,7 +158,7 @@ export function carteraACsv(
   return toCsv([...ENCABEZADOS_CARTERA], [...filasDetalle, ...filasTotales]);
 }
 
-/** Nombre de archivo: `cartera-antiguedad-<corte>.<ext>`. */
-export function nombreArchivoCartera(fechaCorte: string, ext: "csv" | "pdf"): string {
-  return `cartera-antiguedad-${fechaCorte}.${ext}`;
+/** Distingue una exportación parcial sin incluir texto libre en el nombre. */
+export function nombreArchivoCartera(fechaCorte: string, ext: "csv" | "pdf", filtrado = false): string {
+  return `cartera-antiguedad-${fechaCorte}${filtrado ? "-filtrada" : ""}.${ext}`;
 }

@@ -29,7 +29,7 @@ function armarFilas(bloques: readonly BloqueCartera[]): FilaCarteraExport[] {
   return bloques.flatMap((b) => filasCarteraExport(b.titulo, b.filas));
 }
 
-export function descargarCarteraCsv(fechaCorte: string, bloques: readonly BloqueCartera[]): void {
+export function descargarCarteraCsv(fechaCorte: string, bloques: readonly BloqueCartera[], busqueda = ""): void {
   const detalle = armarFilas(bloques);
   if (detalle.length === 0) {
     notifyWarning(undefined, {
@@ -47,7 +47,7 @@ export function descargarCarteraCsv(fechaCorte: string, bloques: readonly Bloque
       })),
     );
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
-    descargarBlob(blob, nombreArchivoCartera(fechaCorte, "csv"));
+    descargarBlob(blob, nombreArchivoCartera(fechaCorte, "csv", !!busqueda.trim()));
     notifySuccess(undefined, {
       title: "Cartera descargada en CSV",
       description: `${detalle.length} fila(s) de detalle`,
@@ -65,6 +65,7 @@ export async function descargarCarteraPdf(
   fechaCorte: string,
   leyendaTc: string,
   bloques: readonly BloqueCartera[],
+  busqueda = "",
 ): Promise<void> {
   try {
     const [{ descargarPdf }, { ReporteCarteraDocument }] = await Promise.all([
@@ -75,13 +76,14 @@ export async function descargarCarteraPdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
         leyendaTc={leyendaTc}
+        busqueda={busqueda}
         bloques={bloques.map((b) => ({
           titulo: b.titulo,
           totales: filasTotalesExport(b.buckets, b.total, b.titulo),
           facturas: filasCarteraExport(b.titulo, b.filas),
         }))}
       />,
-      nombreArchivoCartera(fechaCorte, "pdf"),
+      nombreArchivoCartera(fechaCorte, "pdf", !!busqueda.trim()),
     );
     notifySuccess(undefined, { title: "Cartera descargada en PDF" });
   } catch (error) {

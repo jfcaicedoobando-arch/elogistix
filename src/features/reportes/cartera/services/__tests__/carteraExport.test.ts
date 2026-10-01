@@ -79,5 +79,7 @@ describe("carteraExport", () => {
   it("nombra el archivo con la fecha de corte", () => {
     expect(nombreArchivoCartera("2026-08-08", "csv")).toBe("cartera-antiguedad-2026-08-08.csv");
     expect(nombreArchivoCartera("2026-08-08", "pdf")).toBe("cartera-antiguedad-2026-08-08.pdf");
+    expect(nombreArchivoCartera("2026-08-08", "pdf", true)).toBe("cartera-antiguedad-2026-08-08-filtrada.pdf");
+    expect(nombreArchivoCartera("2026-08-08", "csv", true)).toBe("cartera-antiguedad-2026-08-08-filtrada.csv");
   });
 });

@@ -44,6 +44,7 @@ export interface BloqueCarteraPdf {
 interface Props {
   fechaCorte: string;
   leyendaTc: string;
+  busqueda?: string;
   bloques: BloqueCarteraPdf[];
   emisor?: { razonSocial?: string };
 }
@@ -74,7 +75,8 @@ const colsFacturas: PdfColumn<FilaFacturaPdf>[] = [
   { key: "dif", title: "Dif. cambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
 ];
 
-export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor }: Props) {
+export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor, busqueda }: Props) {
+  const filtro = busqueda?.trim();
   return (
     <Document title={`Cartera y antigüedad ${fechaCorte}`} author={emisor?.razonSocial ?? "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
@@ -85,6 +87,9 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor 
               Corte: {formatDate(fechaCorte)}
             </Text>
             <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.muted }}>{leyendaTc}</Text>
+            <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.muted }}>
+              {filtro ? `Filtro de búsqueda: ${filtro}. Totales sólo de resultados coincidentes.` : "Alcance: cartera con saldo pendiente, sin filtro de búsqueda."}
+            </Text>
           </View>
         </View>
 
