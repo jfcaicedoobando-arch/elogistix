@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.14] - 2026-10-01
+
+- **fix(cotizaciones · unidad terrestre)**: el alta conserva el tipo de unidad capturado junto con la modalidad de equipo y el punto de carga/descarga. No modifica cotizaciones históricas ni asigna vehículos operativos.
+- **test(cotizaciones)**: regresiones del payload y del alta para Porta Contenedor, unidad vacía y número de contenedores cero.
+- **chore(BD · release)**: manifiesto sincronizado con la migración de Análisis ya incorporada; sin omitir guardias ni relajar CI.
+
 ## [13.824.13] - 2026-10-01
 
 - **fix(proformas · IVA)**: tratamiento fiscal explícito y de sólo lectura al generar; la base rechaza reclasificaciones por interruptor y conceptos incoherentes antes de crear o convertir. No modifica documentos históricos.
