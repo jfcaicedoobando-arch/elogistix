@@ -8756,6 +8756,10 @@ export type Database = {
         Returns: undefined
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
+      _assert_iva_proforma_coherente: {
+        Args: { p_aplica: boolean; p_tasa: number; p_tipo: string }
+        Returns: undefined
+      }
       _assert_medidas_embarque: {
         Args: { p_embarque: Json }
         Returns: undefined

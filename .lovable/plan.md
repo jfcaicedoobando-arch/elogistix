@@ -1,28 +1,23 @@
-# Venta del mes con el tipo de cambio de la factura
+# Auditoría amplia del módulo Análisis
 
-## Qué cambia para ti
-En "Arribos este mes", la venta en dólares de un embarque que ya se facturó se va a convertir a pesos con el tipo de cambio de su factura. Ya no se usa el del embarque. Así la venta coincide en pesos con lo que realmente facturaste.
+Alcance: las 4 pantallas del menú Análisis — Utilidad (/profit), Cierre mensual, Rentabilidad y Cartera y antigüedad. Solo se busca y se reporta; se corrige únicamente lo que confirme la revisión (con tu visto bueno al final de cada lote).
 
-Los embarques sin factura, como ELIMP00388, siguen con el tipo de cambio del embarque, porque todavía no hay otro.
+## Qué se revisa en cada pantalla
 
-Resultado esperado para Elogistix en septiembre: los ~$47K de diferencia por tipo de cambio desaparecen. La única diferencia que queda contra lo facturado es ELIMP00388, que todavía no tiene factura (~$273K).
+1. **Cifras contra la base de datos** — venta, costo, utilidad, cartera y antigüedad se recalculan en SQL directo para la org Elogistix (septiembre 2026) y se comparan con lo que muestra la pantalla.
+2. **Reglas de dinero** — IVA (con/sin, nunca fijo), conversión USD/EUR con TC correcto, redondeo, cancelados/borradores/soft-delete excluidos, notas de crédito y pagos anulados.
+3. **Fechas** — corte de mes en hora de México, sin desfase UTC, meses vacíos.
+4. **Consistencia entre reportes** — Utilidad vs Cierre mensual vs Rentabilidad vs tablero de inicio deben dar lo mismo para el mismo mes; cartera vs Cobranza.
+5. **Seguridad multi-empresa** — cada consulta/RPC filtra por organización; roles sin permiso financiero no ven montos.
+6. **Robustez** — listas truncadas (límites silenciosos), errores de consulta sin mensaje, estados vacíos/carga, filtros y exportaciones (CSV/PDF) que coincidan con lo visible.
+7. **Calidad de código** — archivos >200 líneas, `any`, efectos sin limpieza, consultas sin manejo de `error`.
 
-## Reglas
-- Solo cuentan las facturas vigentes: no las canceladas, borradores ni sustituidas.
-- Si un embarque tiene varias facturas en dólares, se usa su tipo de cambio promedio, pesado por el monto de cada una.
-- Solo cambia la parte en dólares de la **venta**. Lo que ya está en pesos no cambia.
-- El **costo** sigue con el tipo de cambio del embarque. Las facturas de proveedor tienen su propio tipo de cambio y quedan fuera de este cambio.
-- No cambia el P&L del embarque ni otros reportes. Solo cambian la tarjeta de arribos del mes y su lista.
+## Entregable
+
+Lista de hallazgos por severidad (crítico / alto / medio / bajo) con: pantalla, qué está mal, impacto en pesos o en el usuario, y propuesta de corrección. Luego corrijo por lotes los que apruebes.
 
 ## Detalles técnicos
-- **Migración:** `CREATE OR REPLACE` de `dashboard_summary_datos()` y `dashboard_details_datos()`. `profit_por_embarque()` no se toca, porque tiene otros consumidores.
-- **CTE nueva `tc_factura`:**
-  - Por cada `embarque_id`: `sum(subtotal*tipo_cambio)/sum(subtotal)` de sus `facturas` en USD.
-  - Filtros: `deleted_at IS NULL`, `estado NOT IN ('Cancelada','Borrador','Sustituida')` y `tipo_cambio > 1`.
-- **Ajuste en `arribos_mes` y `profit_este_mes_src`:**
-  - `venta_mxn_from_usd = venta_usd × COALESCE(tc_factura, tc_embarque)`.
-  - `venta_mxn` se recalcula como `from_usd + from_eur + native`.
-  - La utilidad se deriva de esos valores.
-- Actualizar los espejos en `supabase/schema/dashboards/` y cerrar con `db:postcheck`.
-- **Verificación:** SQL con los mismos datos. La venta de los 30 embarques facturados de Elogistix debe coincidir con lo facturado (≈ $6.46M).
-- **Pruebas:** focalizadas del tablero. CI y RLS completos quedan para GitHub Actions. No publico ni cambio versión.
+
+- Código: `src/features/profit`, `src/features/reportes` (cartera, cierre, rentabilidad), sus services/RPC y las funciones SQL que consumen.
+- Verificación con lecturas `read_query`, Playwright con el login de auditoría y pruebas focalizadas (`bunx vitest run` sobre carpetas tocadas, `tsgo`, `eslint`).
+- Sin migraciones, publicación, cambio de versión ni CHANGELOG salvo que lo autorices; CI/RLS completos quedan para GitHub Actions.
