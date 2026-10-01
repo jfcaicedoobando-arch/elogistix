@@ -7743,6 +7743,13 @@ BEGIN
     AND nc.deleted_at IS NULL
     AND nc.estado::text IN ('Timbrada','Aplicada')
     AND nc.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+  -- AUD-ANALISIS-7b: devolver al saldo las NC ya descontadas (incluida la fila actual guardada).
+  v_saldo_mxn := v_saldo_mxn + v_ncs_previas_mxn + COALESCE((
+    SELECT public.a_mxn_doc(nc.monto, COALESCE(nc.moneda::text, v_fac.moneda),
+             COALESCE(nc.fecha_emision, v_fac.fecha_emision), nc.tipo_cambio, v_fac.tipo_cambio)
+    FROM public.factura_notas_credito nc
+    WHERE nc.id = NEW.id AND nc.deleted_at IS NULL
+      AND nc.estado::text IN ('Timbrada','Aplicada')), 0);
   v_total_ncs_mxn := v_ncs_previas_mxn + v_nc_nueva_mxn;
   v_tol_mxn := GREATEST(
     0.01,
