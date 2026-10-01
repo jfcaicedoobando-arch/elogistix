@@ -22,6 +22,7 @@ describe("ReporteCarteraDocument", () => {
     expect(text).toContain("Cartera y antigüedad");
     expect(text).toContain("TC DOF USD/MXN 19.5000");
     expect(text).toContain("Sin saldos pendientes");
+    expect(text).toContain("Alcance: cartera con saldo pendiente, sin filtro de búsqueda.");
   });
 
   it("incluye el detalle de facturas con su valuación", () => {
@@ -53,5 +54,14 @@ describe("ReporteCarteraDocument", () => {
     expect(text).toContain("Rango");
     expect(text).toContain("31–60 días");
     expect(text).not.toContain("Sin saldos pendientes");
+  });
+
+  it("identifica el filtro sin presentar sus totales como la cartera completa", () => {
+    const { container } = render(
+      <ReporteCarteraDocument fechaCorte="2026-09-30" leyendaTc="TC DOF USD/MXN 18.0710"
+        busqueda="  FP-000007  " bloques={[]} />,
+    );
+    expect(container).toHaveTextContent("Filtro de búsqueda: FP-000007. Totales sólo de resultados coincidentes.");
+    expect(container).not.toHaveTextContent("sin filtro de búsqueda");
   });
 });

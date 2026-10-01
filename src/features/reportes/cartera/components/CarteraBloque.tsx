@@ -30,11 +30,12 @@ interface Props {
 export function CarteraBloque({
   titulo, etiquetaContraparte, filas, buckets, total, isLoading, isError, onRetry,
 }: Props) {
+  const sinResumen = isLoading || isError;
   return (
     <section className="space-y-3">
       <SectionHeading
         actions={
-          <p className="text-xs text-muted-foreground">
+          !sinResumen && <p className="text-xs text-muted-foreground">
             {total.conteo} factura(s) · {formatCurrency(total.mxnCorte, "MXN")} al corte ·
             {" "}dif. cambiaria {formatCurrency(total.diferencia, "MXN")}
           </p>
@@ -43,7 +44,7 @@ export function CarteraBloque({
         {titulo}
       </SectionHeading>
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+      {!sinResumen && <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
         {buckets.map((b) => (
           <Card key={b.bucket}>
             <CardContent className="p-3">
@@ -62,11 +63,11 @@ export function CarteraBloque({
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div>}
 
       <ResponsiveDataTable
         columns={carteraColumns(etiquetaContraparte)}
-        data={filas}
+        data={sinResumen ? [] : filas}
         rowKey={(f) => f.id}
         density={TABLE_DENSITY.listado}
         striped
