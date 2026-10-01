@@ -8,6 +8,7 @@ import OportunidadCotizacionesList from "@/features/crm/components/OportunidadCo
 import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { MargenAutorizacionCard } from "./MargenAutorizacionCard";
+import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 interface Props {
@@ -44,6 +45,18 @@ export function OportunidadResumenTab({ op, etapaNombre, canEdit }: Props) {
         autorizadoAt={op.margen_autorizado_at ?? null}
         riesgos={op.riesgos_objeciones ?? null}
       />
+      <div className="grid gap-4 md:grid-cols-2">
+        <VinculosCard
+          titulo="Empresas" relacion="empresas-de-oportunidad" duenoId={op.id} rutaBase="/crm/empresas"
+          canEdit={canEdit}
+          edicion={{ tipo: "oportunidad-empresa", objeto: "empresa", par: (otro) => ({ aId: op.id, bId: otro }) }}
+        />
+        <VinculosCard
+          titulo="Contactos" relacion="contactos-de-oportunidad" duenoId={op.id} rutaBase="/crm/contactos"
+          canEdit={canEdit}
+          edicion={{ tipo: "oportunidad-contacto", objeto: "contacto", par: (otro) => ({ aId: op.id, bId: otro }) }}
+        />
+      </div>
       <OportunidadCotizacionesList oportunidadId={op.id} />
     </>
   );

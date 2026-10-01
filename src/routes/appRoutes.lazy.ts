@@ -93,3 +93,7 @@ export const CrmConfiguracion = lazy(() => import("@/features/crm/routes/Configu
 export const CrmHigiene = lazy(() => import("@/features/crm/routes/Higiene"));
 
 export const DireccionDashboard = lazy(() => import("@/features/dashboard/direccion/DireccionDashboard"));
+export const CrmEmpresas = lazy(() => import("@/features/crm/routes/Empresas"));
+export const CrmEmpresaDetalle = lazy(() => import("@/features/crm/routes/EmpresaDetalle"));
+export const CrmContactos = lazy(() => import("@/features/crm/routes/Contactos"));
+export const CrmContactoDetalle = lazy(() => import("@/features/crm/routes/ContactoDetalle"));
