@@ -32,6 +32,9 @@ export function isExpectedBusinessError(err: unknown): boolean {
   if (typeof e.code === "string" && e.code === "23514") return true;
   if (typeof e.name === "string" && BUSINESS_ERROR_NAMES.has(e.name)) return true;
   if (e.status === 504) return true;
+  // Errores ya marcados `expected` (p. ej. FacturapiError por datos del SAT
+  // que el usuario corrige): la UI los explica, no son bugs (JAVASCRIPT-REACT-73).
+  if ((err as { expected?: unknown }).expected === true) return true;
   if (typeof e.message === "string") {
     // Códigos de dominio LC_* (RAISE EXCEPTION) con cualquier ERRCODE.
     if (e.message.startsWith("LC_")) return true;
