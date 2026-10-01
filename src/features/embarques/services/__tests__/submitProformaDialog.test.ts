@@ -10,7 +10,6 @@ function makeParams(overrides: Partial<SubmitProformaParams> = {}): SubmitProfor
     embarque: baseEmbarque,
     conceptosSeleccionados: [{ id: "cv-1", moneda: "USD", cantidad: 1, precio_unitario: 100, aplica_iva: true, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 } as Parameters<typeof submitProformaDialog>[0]["conceptosSeleccionados"][0]],
     seleccionados: new Set(["cv-1"]),
-    ivaPorConcepto: { "cv-1": true },
     notas: "",
     diasCredito: "30",
     filtroContenedor: "todos",
@@ -28,6 +27,28 @@ vi.mock("@/generators/proformaPdf", () => ({
 }));
 
 describe("submitProformaDialog", () => {
+  it.each(["MXN", "USD"])("preserva los cinco tratamientos explícitos en %s", async (moneda) => {
+    const conceptos = [
+      ["gravado_16", 0.16, true], ["gravado_8", 0.08, true],
+      ["tasa_0", 0, true], ["exento", 0, false], ["no_objeto", 0, false],
+    ].map(([tipo, tasa, aplica], i) => ({
+      ...makeParams().conceptosSeleccionados[0], id: `cv-${i}`, moneda,
+      tipo_iva: tipo, tasa_iva_aplicada: tasa, aplica_iva: aplica,
+    })) as SubmitProformaParams["conceptosSeleccionados"];
+    const params = makeParams({ conceptosSeleccionados: conceptos, seleccionados: new Set(conceptos.map(c => c.id)) });
+    await submitProformaDialog(params);
+    expect(params.crearProformaMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+      ivaOverrides: { "cv-0": true, "cv-1": true, "cv-2": false, "cv-3": false, "cv-4": false },
+    }));
+    expect(conceptos.map(c => c.tipo_iva)).toEqual(["gravado_16", "gravado_8", "tasa_0", "exento", "no_objeto"]);
+  });
+
+  it("rechaza gravado con IVA apagado antes de crear, sin inferir No objeto", async () => {
+    const params = makeParams();
+    params.conceptosSeleccionados[0].aplica_iva = false;
+    await expect(submitProformaDialog(params)).rejects.toThrow("Editar embarque");
+    expect(params.crearProformaMutateAsync).not.toHaveBeenCalled();
+  });
   it("llama crearProformaMutateAsync con los parámetros correctos", async () => {
     const params = makeParams();
     await submitProformaDialog(params);

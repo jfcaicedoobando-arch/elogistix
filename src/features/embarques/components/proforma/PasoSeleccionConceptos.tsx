@@ -10,7 +10,6 @@ import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
 import { ListFilter, TriangleAlert } from "lucide-react";
-import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -33,13 +32,11 @@ interface Props {
   filtroContenedor: FiltroContenedor;
   onFiltroContenedorChange: (v: FiltroContenedor) => void;
   seleccionados: Set<string>;
-  ivaPorConcepto: Record<string, boolean>;
   totales: TotalesProforma;
   tasaIva: number;
   notas: string;
   onToggle: (id: string) => void;
   onToggleAll: () => void;
-  onToggleIva: (id: string, moneda: string) => void;
   onNotasChange: (v: string) => void;
   pendientesIva: ConceptoVenta[];
   onEditarConceptos: () => void;
@@ -48,9 +45,9 @@ interface Props {
 export function PasoSeleccionConceptos({
   conceptosPendientes, conceptosVisibles, contenedores,
   filtroContenedor, onFiltroContenedorChange,
-  seleccionados, ivaPorConcepto, totales, tasaIva,
+  seleccionados, totales, tasaIva,
   notas,
-  onToggle, onToggleAll, onToggleIva, onNotasChange,
+  onToggle, onToggleAll, onNotasChange,
   pendientesIva, onEditarConceptos,
 }: Props) {
 
@@ -99,8 +96,7 @@ export function PasoSeleccionConceptos({
             // que el concepto sí lleva IVA.
             // R179-01: el fallback ya NO fuerza IVA por moneda; refleja el
             // tratamiento fiscal guardado de la fila (igual que el RPC/PDF).
-            const ivaActivo = ivaPorConcepto[c.id] ?? ivaDeFila(c);
-            const ivaBloqueado = c.moneda === "MXN";
+            const ivaActivo = ivaDeFila(c);
             const contLabel = c.contenedor_id ? contenedorNumeroById.get(c.contenedor_id) ?? null : null;
             return (
               <ConceptoRow
@@ -108,12 +104,9 @@ export function PasoSeleccionConceptos({
                 c={c}
                 isSelected={isSelected}
                 ivaActivo={ivaActivo}
-                ivaBloqueado={ivaBloqueado}
-                ivaPendiente={tratamientoIvaPendiente(c)}
                 contLabel={contLabel}
                 showGeneralBadge={!c.contenedor_id && contenedores.length >= 2}
                 onToggle={onToggle}
-                onToggleIva={onToggleIva}
               />
             );
           })}
@@ -137,6 +130,10 @@ export function PasoSeleccionConceptos({
         notas={notas}
         onNotasChange={onNotasChange}
       />
+      <p className="text-body-sm text-muted-foreground">
+        El IVA refleja el tratamiento guardado de cada concepto, en cualquier moneda.
+        Para cambiarlo, edita los conceptos de venta del embarque antes de generar.
+      </p>
 
     </div>
   );

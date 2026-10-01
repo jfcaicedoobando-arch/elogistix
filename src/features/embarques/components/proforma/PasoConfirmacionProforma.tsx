@@ -11,15 +11,15 @@ type ConceptoVenta = Tables<"conceptos_venta">;
 
 interface Props {
   conceptosSeleccionados: ConceptoVenta[];
-  ivaPorConcepto: Record<string, boolean>;
   totales: TotalesProforma;
   tasaIva: number;
   notas: string;
   pendientesIva: ConceptoVenta[];
+  numeroCreado?: string;
 }
 
 export function PasoConfirmacionProforma({
-  conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas, pendientesIva,
+  conceptosSeleccionados, totales, tasaIva, notas, pendientesIva, numeroCreado,
 }: Props) {
   const etiquetaIvaMxn = etiquetaIvaFilas(
     conceptosSeleccionados.filter((c) => c.moneda === "MXN"),
@@ -34,7 +34,9 @@ export function PasoConfirmacionProforma({
       )}
       <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-body">
         <p className="[color:hsl(var(--warning))]">
-          <strong>Importante:</strong> Aún no se ha guardado nada. Revisa el resumen y confirma para generar la proforma y descargar el PDF.
+          {numeroCreado
+            ? `Proforma ${numeroCreado} creada. Si la descarga falló, reintenta sólo su PDF; no se generará otra proforma.`
+            : "Aún no se ha guardado nada. Revisa el resumen y confirma para generar la proforma y descargar el PDF."}
         </p>
       </div>
 
@@ -53,7 +55,7 @@ export function PasoConfirmacionProforma({
             { id: "iva", header: "Tratamiento IVA", meta: { className: "text-center", headerClassName: "text-center" },
               cell: ({ row }) => {
                 const c = row.original;
-                const aplica = c.moneda === "MXN" ? ivaDeFila(c) : ivaPorConcepto[c.id] ?? ivaDeFila(c);
+                const aplica = ivaDeFila(c);
                 return <TratamientoIvaProforma concepto={c} ivaActivo={aplica} />;
               } },
           ]) as ColumnDef<ConceptoVenta, unknown>[]}

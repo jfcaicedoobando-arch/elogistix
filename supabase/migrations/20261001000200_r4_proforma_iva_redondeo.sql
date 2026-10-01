@@ -1,0 +1,283 @@
+-- R4-10/07. DDL únicamente: no reclasifica ni recalcula documentos históricos.
+
+CREATE OR REPLACE FUNCTION public._assert_iva_proforma_coherente(p_tipo text, p_tasa numeric, p_aplica boolean)
+RETURNS void LANGUAGE plpgsql IMMUTABLE SET search_path TO 'public' AS $function$
+BEGIN
+  IF p_tipo IS NULL OR p_tipo NOT IN ('gravado_16', 'gravado_8', 'tasa_0', 'exento', 'no_objeto') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_IVA_PENDIENTE: clasifica explícitamente el tratamiento de IVA antes de generar o convertir'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF (p_tipo IN ('gravado_16', 'gravado_8') AND (
+        p_aplica IS FALSE OR (p_tasa IS NULL AND p_aplica IS NOT TRUE)
+        OR (p_tasa IS NOT NULL AND abs(p_tasa - CASE WHEN p_tipo = 'gravado_8' THEN 0.08 ELSE 0.16 END) >= 0.000000001)))
+     OR (p_tipo IN ('tasa_0', 'exento', 'no_objeto') AND (
+        COALESCE(p_tasa, 0) <> 0 OR (p_tipo <> 'tasa_0' AND p_aplica IS TRUE))) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_IVA_INCOHERENTE: tratamiento, tasa y traslado no coinciden; revisa el concepto y la proforma antes de facturar'
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public._assert_iva_proforma_coherente(text, numeric, boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._assert_iva_proforma_coherente(text, numeric, boolean) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.crear_proforma_atomica(p_organization_id uuid, p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_concepto_ids uuid[], p_subtotal_usd numeric, p_iva_usd numeric, p_total_usd numeric, p_subtotal_mxn numeric, p_iva_mxn numeric, p_total_mxn numeric, p_notas text, p_operador text, p_dias_credito integer, p_tasa_iva numeric, p_iva_overrides jsonb DEFAULT '{}'::jsonb)
+ RETURNS proformas
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_numero text;
+  v_proforma public.proformas;
+  v_override record;
+  v_org uuid;
+  v_sub_usd numeric := 0;
+  v_iva_usd numeric := 0;
+  v_sub_mxn numeric := 0;
+  v_iva_mxn numeric := 0;
+  v_tc numeric;
+  v_ocupados int;
+  v_actualizados int;
+  v_ajenos int;
+  v_no_soportados int;
+  v_overrides_fuera int;
+  -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
+  v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
+BEGIN
+  IF p_concepto_ids IS NULL OR array_length(p_concepto_ids, 1) IS NULL THEN
+    RAISE EXCEPTION 'Debe seleccionar al menos un concepto';
+  END IF;
+
+  IF has_role(auth.uid(), 'super_admin'::app_role) THEN
+    v_org := p_organization_id;
+  ELSE
+    v_org := current_user_org_id();
+  END IF;
+  PERFORM public._assert_writer(v_org);
+
+  -- Ola E1 · C5: el embarque debe existir en la organización y coincidir con
+  -- el cliente recibido; antes se confiaba en los argumentos del cliente.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.embarques e
+     WHERE e.id = p_embarque_id
+       AND e.organization_id = v_org
+       AND e.deleted_at IS NULL
+       AND (p_cliente_id IS NULL OR e.cliente_id = p_cliente_id)
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_EMBARQUE_INVALIDO: el embarque no existe en tu organización o no corresponde al cliente indicado'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- Bloquea los conceptos y valida que estén libres antes de crear la proforma.
+  PERFORM 1 FROM public.conceptos_venta
+   WHERE id = ANY(p_concepto_ids) AND organization_id = v_org
+   FOR UPDATE;
+
+  -- Ola E1 · C5: ningún concepto puede venir de otro embarque ni estar borrado.
+  SELECT COUNT(*) INTO v_ajenos
+  FROM unnest(p_concepto_ids) AS s(id)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.conceptos_venta cv
+     WHERE cv.id = s.id
+       AND cv.organization_id = v_org
+       AND cv.embarque_id = p_embarque_id
+       AND cv.deleted_at IS NULL
+  );
+
+  IF v_ajenos > 0 THEN
+    RAISE EXCEPTION 'LC_CONCEPTOS_AJENOS: % concepto(s) no pertenecen a este embarque o fueron eliminados; recarga la pantalla', v_ajenos
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- Ola 2 · A: EUR (o cualquier moneda fuera de MXN/USD) no es soportado en
+  -- venta; antes se proformaba y facturaba en $0 en silencio.
+  SELECT COUNT(*) INTO v_no_soportados
+  FROM public.conceptos_venta
+  WHERE id = ANY(p_concepto_ids)
+    AND organization_id = v_org
+    AND moneda NOT IN ('MXN', 'USD');
+
+  IF v_no_soportados > 0 THEN
+    RAISE EXCEPTION 'LC_MONEDA_VENTA_NO_SOPORTADA: % concepto(s) de venta tienen una moneda no soportada; sólo se puede facturar en MXN o USD', v_no_soportados
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT COUNT(*) INTO v_ocupados
+  FROM public.conceptos_venta
+  WHERE id = ANY(p_concepto_ids)
+    AND organization_id = v_org
+    AND (proforma_id IS NOT NULL OR COALESCE(estado_facturacion, 'pendiente') <> 'pendiente');
+
+  IF v_ocupados > 0 THEN
+    RAISE EXCEPTION 'LC_CONCEPTOS_YA_ASIGNADOS: % concepto(s) ya están en otra proforma o facturados; recarga la pantalla', v_ocupados
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_iva_overrides IS NOT NULL AND p_iva_overrides <> '{}'::jsonb THEN
+    -- Integridad: un override sólo puede tocar conceptos de ESTA selección.
+    -- Antes, el UPDATE no filtraba por p_concepto_ids y podía cambiar
+    -- aplica_iva de cualquier otro concepto del mismo embarque.
+    SELECT COUNT(*) INTO v_overrides_fuera
+    FROM jsonb_object_keys(p_iva_overrides) AS k(id)
+    WHERE NOT (k.id::uuid = ANY(p_concepto_ids));
+
+    IF v_overrides_fuera > 0 THEN
+      RAISE EXCEPTION 'LC_OVERRIDE_FUERA_DE_SELECCION: % ajuste(s) de IVA apuntan a conceptos que no están en esta proforma; recarga la pantalla', v_overrides_fuera
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    FOR v_override IN
+      SELECT key AS concepto_id, (value)::text::boolean AS aplica
+      FROM jsonb_each(p_iva_overrides)
+    LOOP
+      IF EXISTS (
+        SELECT 1 FROM public.conceptos_venta cv
+        WHERE cv.id = v_override.concepto_id::uuid AND cv.organization_id = v_org
+          AND v_override.aplica IS DISTINCT FROM (public._tasa_iva_canonica(cv.tipo_iva, cv.tasa_iva_aplicada, cv.aplica_iva) > 0)
+      ) THEN
+        RAISE EXCEPTION 'LC_PROFORMA_IVA_OVERRIDE: el IVA no se cambia al generar; clasifica explícitamente el concepto de venta'
+          USING ERRCODE = 'P0001';
+      END IF;
+    END LOOP;
+  END IF;
+
+  PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+  FROM public.conceptos_venta WHERE id = ANY(p_concepto_ids) AND organization_id = v_org;
+
+  SELECT
+    COALESCE(SUM(CASE WHEN moneda='USD' THEN ROUND(cantidad*precio_unitario, 2) ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN moneda='USD'
+                      THEN ROUND(ROUND(cantidad*precio_unitario, 2) * public._tasa_iva_canonica(tipo_iva, tasa_iva_aplicada, aplica_iva), 2)
+                      ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN moneda='MXN' THEN ROUND(cantidad*precio_unitario, 2) ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN moneda='MXN'
+                      THEN ROUND(ROUND(cantidad*precio_unitario, 2) * public._tasa_iva_canonica(tipo_iva, tasa_iva_aplicada, aplica_iva), 2)
+                      ELSE 0 END), 0)
+  INTO v_sub_usd, v_iva_usd, v_sub_mxn, v_iva_mxn
+  FROM public.conceptos_venta
+  WHERE id = ANY(p_concepto_ids) AND organization_id = v_org;
+
+  IF v_sub_usd > 0 THEN
+    SELECT tipo_cambio_usd INTO v_tc
+    FROM public.embarques
+    WHERE id = p_embarque_id AND organization_id = v_org;
+
+    IF v_tc IS NULL OR v_tc <= 0 THEN
+      RAISE EXCEPTION 'LC_PROFORMA_TC_REQUERIDO: el embarque no tiene tipo de cambio USD para convertir los conceptos en dólares'
+        USING ERRCODE='P0001';
+    END IF;
+
+    v_sub_mxn := v_sub_mxn + round(v_sub_usd * v_tc, 2);
+    v_iva_mxn := v_iva_mxn + round(v_iva_usd * v_tc, 2);
+  END IF;
+
+  IF ABS(COALESCE(p_iva_usd,0) - v_iva_usd) > 0.01
+     OR ABS(COALESCE(p_iva_mxn,0) - v_iva_mxn) > 0.01 THEN
+    RAISE NOTICE 'crear_proforma_atomica: desfase cliente vs server';
+  END IF;
+
+  v_numero := public.generar_numero_proforma(v_org);
+
+  INSERT INTO public.proformas (
+    numero, embarque_id, cliente_id, cliente_nombre, expediente, bl_master,
+    subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn,
+    notas, operador, dias_credito, organization_id, tasa_iva_aplicada,
+    fecha_emision
+  ) VALUES (
+    v_numero, p_embarque_id, p_cliente_id, p_cliente_nombre, p_expediente, p_bl_master,
+    v_sub_usd, v_iva_usd, v_sub_usd + v_iva_usd,
+    v_sub_mxn, v_iva_mxn, v_sub_mxn + v_iva_mxn,
+    p_notas, p_operador, p_dias_credito, v_org, p_tasa_iva,
+    v_hoy_mx
+  )
+  RETURNING * INTO v_proforma;
+
+  UPDATE public.conceptos_venta
+  SET estado_facturacion = 'en_proforma', proforma_id = v_proforma.id
+  WHERE id = ANY(p_concepto_ids)
+    AND organization_id = v_org
+    AND embarque_id = p_embarque_id
+    AND proforma_id IS NULL
+    AND COALESCE(estado_facturacion, 'pendiente') = 'pendiente';
+
+  GET DIAGNOSTICS v_actualizados = ROW_COUNT;
+  IF v_actualizados <> array_length(p_concepto_ids, 1) THEN
+    RAISE EXCEPTION 'LC_CONCEPTOS_YA_ASIGNADOS: los conceptos cambiaron de estado durante la operación; recarga la pantalla'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN v_proforma;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF p_es_consolidada THEN
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.proforma_conceptos_consolidados
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+    INSERT INTO public.conceptos_factura (
+      factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
+      tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
+    )
+    SELECT p_factura_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
+           pcc.moneda, pcc.total, p_org,
+           COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
+           -- B16: si la línea NO aplica IVA, se persiste exento y tasa NULL sin
+           -- importar que arrastre una tasa legacy (p. ej. 0.16).
+           -- El tipo explícito manda; 'no_objeto' (SAT 01) no es inferible.
+           CASE WHEN pcc.tipo_iva IS NOT NULL THEN pcc.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  pcc.aplica_iva,
+                  CASE WHEN pcc.aplica_iva = false THEN NULL ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16) END)
+           END,
+           -- P1 · Auditoría IVA: la tasa la manda el TRATAMIENTO (canónica);
+           -- una tasa numérica ausente o contradictoria ya no se resuelve al 16%.
+           CASE WHEN pcc.tipo_iva = 'no_objeto' THEN NULL
+                WHEN pcc.aplica_iva = false THEN NULL
+                ELSE public._tasa_iva_canonica(pcc.tipo_iva, pcc.tasa_iva_aplicada, pcc.aplica_iva) END,
+           p.embarque_id, pcc.proforma_id
+    FROM public.proforma_conceptos_consolidados pcc
+    JOIN public.proformas p ON p.id = pcc.proforma_id
+    WHERE pcc.proforma_id = ANY(p_proforma_ids)
+      AND pcc.moneda = p_moneda
+      AND pcc.deleted_at IS NULL;
+  ELSE
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.conceptos_venta
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
+    INSERT INTO public.conceptos_factura (
+      factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
+      tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
+    )
+    SELECT p_factura_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
+           -- BUG-17: el total del renglón se guarda redondeado a 2 decimales,
+           -- igual que en la rama consolidada (pcc.total ya viene redondeado).
+           cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
+           COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
+           CASE WHEN cv.tipo_iva IS NOT NULL THEN cv.tipo_iva
+                ELSE public._tipo_iva_desde_tasa(
+                  cv.aplica_iva,
+                  CASE WHEN cv.aplica_iva = false THEN NULL ELSE COALESCE(cv.tasa_iva_aplicada, 0.16) END)
+           END,
+           CASE WHEN cv.tipo_iva = 'no_objeto' THEN NULL
+                WHEN cv.aplica_iva = false THEN NULL
+                ELSE public._tasa_iva_canonica(cv.tipo_iva, cv.tasa_iva_aplicada, cv.aplica_iva) END,
+           p.embarque_id, cv.proforma_id
+    FROM public.conceptos_venta cv
+    JOIN public.proformas p ON p.id = cv.proforma_id
+    WHERE cv.proforma_id = ANY(p_proforma_ids)
+      AND cv.moneda = p_moneda
+      AND cv.deleted_at IS NULL;
+  END IF;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) TO service_role;

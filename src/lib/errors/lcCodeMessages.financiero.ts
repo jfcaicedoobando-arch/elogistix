@@ -126,6 +126,12 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Algunos conceptos no pertenecen a este embarque o cliente, o fueron eliminados. Vuelve a seleccionarlos.",
   LC_PROFORMA_EMBARQUE_INVALIDO:
     "El embarque de la proforma no es válido o no pertenece a tu organización.",
+  LC_PROFORMA_IVA_PENDIENTE:
+    "Falta definir el tratamiento de IVA de un concepto. Corrígelo en Editar embarque → Conceptos de venta antes de generar la proforma.",
+  LC_PROFORMA_IVA_INCOHERENTE:
+    "El tratamiento de IVA no coincide con la tasa o el indicador del concepto. Corrígelo en Editar embarque → Conceptos de venta antes de continuar.",
+  LC_PROFORMA_IVA_OVERRIDE:
+    "El IVA de la proforma debe conservar el tratamiento fiscal del concepto. Recarga la pantalla; si necesitas cambiarlo, hazlo en Editar embarque → Conceptos de venta.",
   LC_MONEDA_VENTA_NO_SOPORTADA:
     "Los conceptos de venta sólo se pueden facturar en MXN o USD. Cambia la moneda de los conceptos antes de continuar.",
   LC_VENTA_EUR_NO_SOPORTADA:

@@ -26,7 +26,7 @@ export function EntrantesCardHeader({ resumen, sinXml, puedeSubir, canEdit, onSu
           Facturas de proveedor recibidas
         </CardTitle>
         <CardDescription>
-          Adjunta ambos archivos (PDF y XML). No creas la factura: contabilidad la captura.
+          Adjunta PDF y XML si el proveedor es mexicano; para proveedores extranjeros, adjunta el PDF. Contabilidad captura la factura.
         </CardDescription>
         <div className="flex flex-wrap gap-2 pt-1">
           <Badge variant="warning" size="sm">{resumen.porCapturar} por capturar</Badge>

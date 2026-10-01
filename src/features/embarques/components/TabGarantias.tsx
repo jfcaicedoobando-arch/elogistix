@@ -25,11 +25,12 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 interface Props {
   embarqueId: string;
   canEdit: boolean;
+  soloConsulta?: boolean;
   /** Fecha de llegada real del embarque, usada para prellenar fecha_deposito. */
   fechaLlegadaReal?: string | null;
 }
 
-export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
+export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal, soloConsulta = false }: Props) {
   const { data: garantias = [], isLoading } = useGarantiasContenedor(embarqueId);
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId);
 
@@ -75,9 +76,9 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
           <div>
             <CardTitle>Garantías por contenedor</CardTitle>
             <p className="text-body-sm text-muted-foreground mt-1">
-              Los depósitos no son gasto: regresan al devolver el vacío. Si la naviera tiene carta
+              {soloConsulta ? "Depósitos históricos de contenedores, conservados en sólo consulta." : <>Los depósitos no son gasto: regresan al devolver el vacío. Si la naviera tiene carta
               de garantía vigente el monto esperado es 0; si no, captura aquí el monto USD y la
-              referencia bancaria del depósito.
+              referencia bancaria del depósito.</>}
             </p>
           </div>
           {canEdit && rows.some((r) => r.estado === "pendiente") && (
@@ -106,7 +107,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
                 <EmptyState
                   icon={ShieldCheck}
                   title="Sin garantías registradas"
-                  description="Las garantías se crean automáticamente al agregar contenedores al embarque."
+                  description={soloConsulta ? "No hay depósitos históricos registrados." : "Las garantías se crean automáticamente al agregar contenedores al embarque."}
                 />
               </div>
             }

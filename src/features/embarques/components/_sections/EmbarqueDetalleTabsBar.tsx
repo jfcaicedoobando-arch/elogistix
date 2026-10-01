@@ -31,7 +31,7 @@ const TABS = [
  * desplazamiento accesibles (`aria-label`) que sólo aparecen cuando hay algo
  * que desplazar; en lg+ todas las pestañas caben y no se muestran.
  */
-export function EmbarqueDetalleTabsBar() {
+export function EmbarqueDetalleTabsBar({ mostrarGarantias = true, soloHistorico = false }: { mostrarGarantias?: boolean; soloHistorico?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -85,7 +85,7 @@ export function EmbarqueDetalleTabsBar() {
       ro?.disconnect();
       mo?.disconnect();
     };
-  }, []);
+  }, [mostrarGarantias]);
 
   const scrollBy = (delta: number) => scrollRef.current?.scrollBy({ left: delta, behavior: "smooth" });
 
@@ -131,14 +131,14 @@ export function EmbarqueDetalleTabsBar() {
           )}
           data-testid="embarque-detalle-tabs"
         >
-          {TABS.map((tab) => (
+          {TABS.filter((tab) => tab.value !== "garantias" || mostrarGarantias).map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
               data-testid={`tab-${tab.value}`}
               className="whitespace-nowrap"
             >
-              {tab.label}
+              {tab.value === "garantias" && soloHistorico ? "Histórico marítimo" : tab.label}
             </TabsTrigger>
           ))}
         </TabsList>

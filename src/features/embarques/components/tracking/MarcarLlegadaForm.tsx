@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Anchor } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 const llegadaSchema = z.object({
@@ -44,7 +44,7 @@ export function MarcarLlegadaForm({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
-          <Anchor className="h-4 w-4 text-primary" /> Marcar Llegada real
+          <MapPin className="h-4 w-4 text-primary" /> Marcar Llegada real
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -73,12 +73,12 @@ export function MarcarLlegadaForm({
             </p>
           </div>
           <div className="space-y-2">
-            <label htmlFor="marcar-llegada-ubicacion" className="text-body font-medium">Ubicación / Puerto</label>
+            <label htmlFor="marcar-llegada-ubicacion" className="text-body font-medium">Ubicación de llegada</label>
             <Controller
               control={control}
               name="ubicacion"
               render={({ field }) => (
-                <Input id="marcar-llegada-ubicacion" {...field} placeholder="Puerto o punto de arribo" maxLength={120} disabled={isPending} />
+                <Input id="marcar-llegada-ubicacion" {...field} placeholder="Punto de arribo" maxLength={120} disabled={isPending} />
               )}
             />
             {errors.ubicacion && <p className="text-body-sm text-destructive">{errors.ubicacion.message}</p>}
@@ -96,4 +96,3 @@ export function MarcarLlegadaForm({
     </Card>
   );
 }
-

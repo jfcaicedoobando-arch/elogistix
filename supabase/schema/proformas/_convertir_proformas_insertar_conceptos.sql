@@ -1,18 +1,4 @@
--- Fuente canónica de public._convertir_proformas_insertar_conceptos (helper privado).
--- Extraído en Item 3.2 de arquitectura (v13.309.10) para des-duplicar los 4 bloques
--- de inserción de conceptos_factura desde proforma_conceptos_consolidados o conceptos_venta.
--- Defecto 1 (ronda posterior a v13.823.39): la clasificación fiscal del IVA se
--- delega en public._tipo_iva_desde_tasa para que el 8% de frontera no viaje al
--- CFDI como 16%.
--- B16 (v13.823.379): `aplica_iva = false` manda sobre una tasa legacy stale
--- (p. ej. 0.16): la línea se persiste exenta y con tasa NULL.
--- SAT 01 (20260918000100): si el origen trae `tipo_iva` explícito, ése manda;
--- 'no_objeto' NO es inferible desde la tasa y viaja sin tasa de traslado.
--- P1 auditoría (20260918): la tasa persistida sale de public._tasa_iva_canonica,
--- así que 'gravado_8'/'tasa_0'/'exento' con tasa numérica NULL ya no se guardan
--- al 16%. Sólo el renglón legacy SIN tipo_iva conserva el fallback histórico.
--- Ver supabase/schema/README.md.
-
+-- R4: preserva las guardas fiscales y rechaza filas ambiguas antes de insertar.
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
  RETURNS void
  LANGUAGE plpgsql
@@ -21,6 +7,9 @@ CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_fact
 AS $function$
 BEGIN
   IF p_es_consolidada THEN
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.proforma_conceptos_consolidados
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
     INSERT INTO public.conceptos_factura (
       factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
@@ -48,6 +37,9 @@ BEGIN
       AND pcc.moneda = p_moneda
       AND pcc.deleted_at IS NULL;
   ELSE
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.conceptos_venta
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
     INSERT INTO public.conceptos_factura (
       factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
@@ -74,6 +66,5 @@ BEGIN
   END IF;
 END;
 $function$;
-
 REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public._convertir_proformas_insertar_conceptos(uuid, uuid[], uuid, boolean, moneda) TO service_role;

@@ -28,14 +28,14 @@ describe("R179-01 · IVA coherente entre modal y guardado", () => {
   it("no grava un concepto MXN guardado sin IVA", () => {
     const c = fila({ aplica_iva: false });
     expect(ivaDeFila(c)).toBe(false);
-    const totales = calcularTotalesProforma([c], { c1: true }, 0.16);
+    const totales = calcularTotalesProforma([c], 0.16);
     expect(totales.iva_mxn).toBe(0);
     expect(totales.total_mxn).toBe(100);
   });
 
   it("respeta la tasa explícita de la fila MXN gravada", () => {
     const c = fila({ aplica_iva: true, tasa_iva_aplicada: 0.08 });
-    const totales = calcularTotalesProforma([c], {}, 0.16);
+    const totales = calcularTotalesProforma([c], 0.16);
     expect(totales.iva_mxn).toBe(8);
     expect(etiquetaIvaFilas([c], 0.16)).toBe("8%");
   });
@@ -44,14 +44,15 @@ describe("R179-01 · IVA coherente entre modal y guardado", () => {
     expect(etiquetaIvaFilas([fila({ aplica_iva: false })], 0.16)).toBe("0%");
   });
 
-  it("el estado inicial no fuerza IVA por moneda", () => {
+  it("el estado inicial sólo selecciona conceptos; no contiene overrides fiscales", () => {
     const init = buildInitialProformaState([fila({ aplica_iva: false })], "todos");
-    expect(init.ivaPorConcepto.c1).toBe(false);
+    expect(init.seleccionados.has("c1")).toBe(true);
+    expect(init).not.toHaveProperty("ivaPorConcepto");
   });
 
-  it("USD conserva el toggle del usuario", () => {
-    const c = fila({ id: "u1", moneda: "USD", aplica_iva: false, tasa_iva_aplicada: 0.16 });
-    expect(calcularTotalesProforma([c], { u1: true }, 0.16).iva_usd).toBe(16);
-    expect(calcularTotalesProforma([c], { u1: false }, 0.16).iva_usd).toBe(0);
+  it("USD conserva el tratamiento explícito del concepto igual que MXN", () => {
+    const c = fila({ id: "u1", moneda: "USD", aplica_iva: true, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 });
+    expect(calcularTotalesProforma([c], 0.16).iva_usd).toBe(16);
+    expect(calcularTotalesProforma([{ ...c, tipo_iva: "no_objeto", aplica_iva: false, tasa_iva_aplicada: 0 }], 0.16).iva_usd).toBe(0);
   });
 });
