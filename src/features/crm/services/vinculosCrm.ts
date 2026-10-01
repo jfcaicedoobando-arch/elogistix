@@ -23,9 +23,19 @@ export async function ligar(tipo: TipoVinculo, aId: string, bId: string): Promis
 }
 
 export async function desligar(tipo: TipoVinculo, aId: string, bId: string): Promise<void> {
-  const c = CONFIG[tipo];
-  const { error } = await supabase.from(c.tabla).delete().eq(c.a, aId).eq(c.b, bId);
+  const { error } = await borrar(tipo, aId, bId);
   if (error) throw error;
+}
+
+function borrar(tipo: TipoVinculo, aId: string, bId: string) {
+  switch (tipo) {
+    case "empresa-contacto":
+      return supabase.from("crm_empresa_contacto").delete().eq("empresa_id", aId).eq("contacto_id", bId);
+    case "oportunidad-empresa":
+      return supabase.from("crm_oportunidad_empresa").delete().eq("oportunidad_id", aId).eq("empresa_id", bId);
+    case "oportunidad-contacto":
+      return supabase.from("crm_oportunidad_contacto").delete().eq("oportunidad_id", aId).eq("contacto_id", bId);
+  }
 }
 
 type Embebido = { id: string; nombre: string } | null;
@@ -50,9 +60,9 @@ export async function empresasDeContacto(contactoId: string): Promise<RefRow[]> 
 }
 
 export async function oportunidadesDe(tipo: "empresa" | "contacto", id: string): Promise<RefRow[]> {
-  const tabla = tipo === "empresa" ? "crm_oportunidad_empresa" : "crm_oportunidad_contacto";
-  const { data, error } = await supabase.from(tabla)
-    .select("crm_oportunidades(id, nombre)").eq(`${tipo}_id`, id).limit(200);
+  const { data, error } = tipo === "empresa"
+    ? await supabase.from("crm_oportunidad_empresa").select("crm_oportunidades(id, nombre)").eq("empresa_id", id).limit(200)
+    : await supabase.from("crm_oportunidad_contacto").select("crm_oportunidades(id, nombre)").eq("contacto_id", id).limit(200);
   if (error) throw error;
   return aplanar(data as never, "crm_oportunidades");
 }
