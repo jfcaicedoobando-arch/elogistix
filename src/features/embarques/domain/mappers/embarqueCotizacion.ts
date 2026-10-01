@@ -1,14 +1,4 @@
-/**
- * Mappers para vincular/desvincular una cotización a un formulario de embarque.
- *
- * v13.33.0 — Pack B extendido: hereda 7 campos adicionales de la cotización
- *  (tarifa, carta garantía, días libres demoras/almacenaje, seguro, valor
- *  seguro y notas). Las nuevas columnas existen en `embarques` desde la
- *  migración 2026-06-16.
- *
- * v13.30.0 — Pack B: contenedores placeholder + respect-overrides en desvincular.
- * v13.28.0 — Precarga ampliada (rutas, MSDS, modo dirigido).
- */
+/** Vinculación y desvinculación de cotizaciones: carga, ruta, contenedores y opcionales. */
 
 import { resumenDimensionesAereas } from "@/features/cotizacion/domain/medidasAereas";
 import type { DimensionAerea } from "@/features/cotizacion/types";

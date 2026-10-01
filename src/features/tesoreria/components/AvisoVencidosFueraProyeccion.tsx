@@ -3,7 +3,7 @@ import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { formatFechaEs } from "@/lib/formatters/dates";
+import { formatFechaDia } from "@/lib/formatters/dates";
 import type { VencidosFueraProyeccion } from "../domain/vencidosFueraProyeccion";
 
 export function AvisoVencidosFueraProyeccion({ resumen }: { resumen: VencidosFueraProyeccion }) {
@@ -16,7 +16,7 @@ export function AvisoVencidosFueraProyeccion({ resumen }: { resumen: VencidosFue
       <AlertDescription className="space-y-2">
         <p className="font-medium">Vencidos fuera de esta proyección</p>
         <p>
-          Los saldos con fecha anterior al {formatFechaEs(resumen.anteriores_a)} no se incluyen en las semanas ni en los totales.
+          Los saldos con fecha anterior al {formatFechaDia(resumen.anteriores_a)} no se incluyen en las semanas ni en los totales.
           No tienen una nueva fecha de cobro o pago asignada por el sistema.
         </p>
         {resumen.entradas.cantidad > 0 && (
