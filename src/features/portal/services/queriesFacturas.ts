@@ -10,9 +10,8 @@ import {
   PORTAL_PAGO_FACTURA_COLUMNS,
   PORTAL_NOTA_CREDITO_COLUMNS,
 } from "./columns";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+import { FACTURA_ESTADOS_VIVOS, NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 import { PORTAL_LIST_MAX, PORTAL_RELATED_MAX } from "./limits";
-import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 
 export async function fetchPortalFacturas(clienteIds: string[]) {
   if (!clienteIds.length) return [];

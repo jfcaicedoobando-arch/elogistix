@@ -6,13 +6,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+import { FACTURA_ESTADOS_VIVOS, NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 import {
-import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
   mapFacturaRows,
   mapNotaCreditoRows,
   mapProveedorFacturaRows,

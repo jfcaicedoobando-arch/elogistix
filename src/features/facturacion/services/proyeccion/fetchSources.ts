@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { ESTADOS_EMBARQUE_NO_CONTABLES } from "@/features/embarques/domain/estadosContables";
 
 export interface EmbarqueProyeccionRow {
   id: string;
@@ -33,7 +34,7 @@ export async function fetchEmbarquesMes(
     .lte("eta", hasta)
     // Excluir embarques cancelados — alineado con Estado de Resultados
     // para que la proyección no infle ingresos con expedientes cancelados.
-    .neq("estado", "Cancelado")
+    .not("estado", "in", `(${ESTADOS_EMBARQUE_NO_CONTABLES.join(",")})`)
     .order("eta", { ascending: true });
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
