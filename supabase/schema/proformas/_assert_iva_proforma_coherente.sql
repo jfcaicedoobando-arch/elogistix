@@ -15,5 +15,5 @@ BEGIN
   END IF;
 END;
 $function$;
-REVOKE ALL ON FUNCTION public._assert_iva_proforma_coherente(text, numeric, boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public._assert_iva_proforma_coherente(text, numeric, boolean) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._assert_iva_proforma_coherente(text, numeric, boolean) TO service_role;
