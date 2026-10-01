@@ -3018,6 +3018,72 @@ export type Database = {
           },
         ]
       }
+      crm_actividad_contacto: {
+        Row: {
+          actividad_id: string
+          contacto_id: string
+          organization_id: string
+        }
+        Insert: {
+          actividad_id: string
+          contacto_id: string
+          organization_id?: string
+        }
+        Update: {
+          actividad_id?: string
+          contacto_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_actividad_contacto_actividad_id_fkey"
+            columns: ["actividad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_actividad_contacto_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contactos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_actividad_empresa: {
+        Row: {
+          actividad_id: string
+          empresa_id: string
+          organization_id: string
+        }
+        Insert: {
+          actividad_id: string
+          empresa_id: string
+          organization_id?: string
+        }
+        Update: {
+          actividad_id?: string
+          empresa_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_actividad_empresa_actividad_id_fkey"
+            columns: ["actividad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_actividad_empresa_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_actividades: {
         Row: {
           asunto: string
@@ -3033,6 +3099,7 @@ export type Database = {
           fecha_completada: string | null
           fecha_programada: string | null
           id: string
+          oportunidad_id: string | null
           organization_id: string
           responsable_email: string
           responsable_id: string | null
@@ -3055,6 +3122,7 @@ export type Database = {
           fecha_completada?: string | null
           fecha_programada?: string | null
           id?: string
+          oportunidad_id?: string | null
           organization_id?: string
           responsable_email?: string
           responsable_id?: string | null
@@ -3077,6 +3145,7 @@ export type Database = {
           fecha_completada?: string | null
           fecha_programada?: string | null
           id?: string
+          oportunidad_id?: string | null
           organization_id?: string
           responsable_email?: string
           responsable_id?: string | null
@@ -3085,7 +3154,15 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["crm_actividad_tipo"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_actividades_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_comentarios_oportunidad: {
         Row: {
@@ -3126,6 +3203,45 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_contactos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          lead_origen_id: string | null
+          nombre: string
+          organization_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_origen_id?: string | null
+          nombre: string
+          organization_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_origen_id?: string | null
+          nombre?: string
+          organization_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_cuotas_vendedor: {
         Row: {
           anio: number
@@ -3162,6 +3278,75 @@ export type Database = {
           updated_at?: string
           vendedor_email?: string
           vendedor_id?: string
+        }
+        Relationships: []
+      }
+      crm_empresa_contacto: {
+        Row: {
+          contacto_id: string
+          empresa_id: string
+          organization_id: string
+        }
+        Insert: {
+          contacto_id: string
+          empresa_id: string
+          organization_id?: string
+        }
+        Update: {
+          contacto_id?: string
+          empresa_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_empresa_contacto_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_empresa_contacto_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_empresas: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          lead_origen_id: string | null
+          nombre: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          lead_origen_id?: string | null
+          nombre: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          lead_origen_id?: string | null
+          nombre?: string
+          organization_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3573,6 +3758,39 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_oportunidad_contacto: {
+        Row: {
+          contacto_id: string
+          oportunidad_id: string
+          organization_id: string
+        }
+        Insert: {
+          contacto_id: string
+          oportunidad_id: string
+          organization_id?: string
+        }
+        Update: {
+          contacto_id?: string
+          oportunidad_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_oportunidad_contacto_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidad_contacto_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_oportunidad_criterios: {
         Row: {
           created_at: string
@@ -3614,6 +3832,39 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_oportunidad_criterios_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_oportunidad_empresa: {
+        Row: {
+          empresa_id: string
+          oportunidad_id: string
+          organization_id: string
+        }
+        Insert: {
+          empresa_id: string
+          oportunidad_id: string
+          organization_id?: string
+        }
+        Update: {
+          empresa_id?: string
+          oportunidad_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_oportunidad_empresa_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidad_empresa_oportunidad_id_fkey"
             columns: ["oportunidad_id"]
             isOneToOne: false
             referencedRelation: "crm_oportunidades"
@@ -3891,6 +4142,131 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      crm_propiedad_opciones: {
+        Row: {
+          archivada: boolean
+          created_at: string
+          etiqueta: string
+          id: string
+          orden: number
+          propiedad_id: string
+          reemplaza_a: string | null
+        }
+        Insert: {
+          archivada?: boolean
+          created_at?: string
+          etiqueta: string
+          id?: string
+          orden?: number
+          propiedad_id: string
+          reemplaza_a?: string | null
+        }
+        Update: {
+          archivada?: boolean
+          created_at?: string
+          etiqueta?: string
+          id?: string
+          orden?: number
+          propiedad_id?: string
+          reemplaza_a?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_propiedad_opciones_propiedad_id_fkey"
+            columns: ["propiedad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_propiedades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_propiedad_opciones_reemplaza_a_fkey"
+            columns: ["reemplaza_a"]
+            isOneToOne: false
+            referencedRelation: "crm_propiedad_opciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_propiedades: {
+        Row: {
+          archivada: boolean
+          clave: string
+          created_at: string
+          etiqueta: string
+          id: string
+          objeto: string
+          obligatoria: boolean
+          orden: number
+          tipo: string
+        }
+        Insert: {
+          archivada?: boolean
+          clave: string
+          created_at?: string
+          etiqueta: string
+          id?: string
+          objeto: string
+          obligatoria?: boolean
+          orden?: number
+          tipo: string
+        }
+        Update: {
+          archivada?: boolean
+          clave?: string
+          created_at?: string
+          etiqueta?: string
+          id?: string
+          objeto?: string
+          obligatoria?: boolean
+          orden?: number
+          tipo?: string
+        }
+        Relationships: []
+      }
+      crm_valores: {
+        Row: {
+          id: string
+          opcion_ids: string[] | null
+          organization_id: string
+          propiedad_id: string
+          registro_id: string
+          updated_at: string
+          valor_fecha: string | null
+          valor_numero: number | null
+          valor_texto: string | null
+        }
+        Insert: {
+          id?: string
+          opcion_ids?: string[] | null
+          organization_id?: string
+          propiedad_id: string
+          registro_id: string
+          updated_at?: string
+          valor_fecha?: string | null
+          valor_numero?: number | null
+          valor_texto?: string | null
+        }
+        Update: {
+          id?: string
+          opcion_ids?: string[] | null
+          organization_id?: string
+          propiedad_id?: string
+          registro_id?: string
+          updated_at?: string
+          valor_fecha?: string | null
+          valor_numero?: number | null
+          valor_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_valores_propiedad_id_fkey"
+            columns: ["propiedad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_propiedades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cron_locks: {
         Row: {
