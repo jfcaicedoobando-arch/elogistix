@@ -31,7 +31,7 @@ function EtaVencidaBanner({ eta }: { eta: string }) {
       <AlertTriangle className="h-4 w-4" aria-hidden />
       <AlertTitle>ETA vencida</AlertTitle>
       <AlertDescription>
-        La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
+        La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta al transportista y
         actualiza el estado o la fecha de llegada real.
       </AlertDescription>
     </Alert>
@@ -119,6 +119,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
       {formAbierto && (
         <TrackingNuevoEventoForm
           embarqueId={embarqueId}
+          modoTransporte={embarque?.modo}
           estadoActual={embarque?.estado}
           etaActual={embarque?.eta}
           fechaLlegadaRealActual={embarque?.fecha_llegada_real}
@@ -140,4 +141,3 @@ export function TabTracking({ embarqueId, embarque }: Props) {
     </div>
   );
 }
-

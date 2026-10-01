@@ -59,7 +59,7 @@ function PieAcciones({
 }) {
   const texto = search.trim();
   return (
-    <div className="border-t p-1 space-y-1">
+    <div className="shrink-0 border-t p-1 space-y-1">
       {onConceptoLibre && texto.length > 0 && (
         <Button
           type="button"
@@ -131,7 +131,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
           <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0" align="start">
+      <PopoverContent className="flex max-h-[var(--radix-popover-content-available-height)] w-[320px] max-w-[calc(100vw-1rem)] flex-col overflow-hidden p-0" align="start" collisionPadding={8}>
         {creando && organizationId ? (
           <CrearConceptoInlineForm
             organizationId={organizationId}
@@ -140,9 +140,9 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
             onCreado={(p) => { onSelect(p); cerrarYResetear(); }}
           />
         ) : (
-          <Command shouldFilter={!vacio}>
+          <Command shouldFilter={!vacio} className="min-h-0 flex-1">
             <CommandInput placeholder="Buscar producto…" value={search} onValueChange={setSearch} />
-            <CommandList>
+            <CommandList className="min-h-0 flex-1 overflow-y-auto">
               {vacio ? (
                 <EmptyStateInline
                   icon={Package}

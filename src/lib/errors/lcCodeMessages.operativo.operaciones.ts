@@ -117,6 +117,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "La tarifa cambió o venció. Revalida la cotización antes de continuar.",
   LC_TARIFA_APLICADA_INVALIDA:
     "La tarifa seleccionada no es válida para esta operación. Vuelve a seleccionar una tarifa compatible de tu organización.",
+  LC_EMBARQUE_TARIFA_INVALIDA:
+    "La tarifa del embarque no existe o no pertenece a tu organización. Vuelve a seleccionar una tarifa antes de guardar.",
   LC_REAPROBACION_NO_VIGENTE:
     "La aprobación de ventas ya no corresponde a la tarifa actual. Vuelve a revisar los cambios y solicita una nueva aprobación.",
   LC_COT_ESTADO_NO_OPERATIVO:

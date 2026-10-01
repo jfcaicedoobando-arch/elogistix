@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
@@ -16,17 +15,13 @@ interface ConceptoRowProps {
   c: ConceptoVenta;
   isSelected: boolean;
   ivaActivo: boolean;
-  ivaBloqueado: boolean;
-  ivaPendiente: boolean;
   contLabel: string | null;
   showGeneralBadge: boolean;
   onToggle: (id: string) => void;
-  onToggleIva: (id: string, moneda: string) => void;
 }
 
 export function ConceptoRow({
-  c, isSelected, ivaActivo, ivaBloqueado, ivaPendiente, contLabel, showGeneralBadge,
-  onToggle, onToggleIva,
+  c, isSelected, ivaActivo, contLabel, showGeneralBadge, onToggle,
 }: ConceptoRowProps) {
   const sub = Number(c.cantidad) * Number(c.precio_unitario);
   return (
@@ -53,20 +48,6 @@ export function ConceptoRow({
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         <TratamientoIvaProforma concepto={c} ivaActivo={ivaActivo} />
-        {!ivaPendiente && !ivaBloqueado && (
-          <div className="flex items-center gap-2">
-            <Label size="sm" htmlFor={`iva-${c.id}`} className="text-muted-foreground cursor-pointer">
-              IVA
-            </Label>
-            <Switch
-              id={`iva-${c.id}`}
-              aria-label={`Trasladar IVA en proforma: ${c.descripcion}`}
-              checked={ivaActivo}
-              onCheckedChange={() => onToggleIva(c.id, c.moneda)}
-              disabled={!isSelected}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

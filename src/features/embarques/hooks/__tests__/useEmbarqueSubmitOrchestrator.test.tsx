@@ -86,19 +86,21 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     await act(async () => {
       success = await result.current.submit(makeSubmitParams());
     });
-    expect(resolverExpedienteMock).toHaveBeenCalledWith("BL123", "FCL");
+    expect(resolverExpedienteMock).not.toHaveBeenCalled();
+    expect(createEmbarqueMock).toHaveBeenCalledWith(expect.objectContaining({
+      embarque: expect.objectContaining({ estado: "Borrador", expediente: null }),
+    }));
     expect(subirDocsMock).toHaveBeenCalledTimes(1);
     expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
     expect(success).toBe(true);
   });
 
-  it("retorna false y no crea embarque cuando resolverExpediente falla", async () => {
-    resolverExpedienteMock.mockRejectedValueOnce(new Error("expediente no resuelto"));
+  it("retorna false y no crea embarque si falta el expediente existente seleccionado", async () => {
     createEmbarqueMock.mockClear();
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     let success = true;
     await act(async () => {
-      success = await result.current.submit(makeSubmitParams());
+      success = await result.current.submit(makeSubmitParams({ modoExpediente: "existente" }));
     });
     expect(success).toBe(false);
     expect(createEmbarqueMock).not.toHaveBeenCalled();

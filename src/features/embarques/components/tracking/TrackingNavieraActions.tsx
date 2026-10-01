@@ -120,8 +120,8 @@ export function TrackingNavieraActions(props: Props) {
     );
   }
 
-  const carrierLabel = carrier ?? "la naviera";
-  const carrierBtnLabel = carrier ?? "naviera";
+  const carrierLabel = carrier ?? (esMaritimo ? "la naviera" : "la aerolínea");
+  const carrierBtnLabel = carrier ?? (esMaritimo ? "naviera" : "aerolínea");
   const referenciaDisplay = referencia ?? "—";
   const copyLabel = copied ? "Copiado" : `Copiar ${refLabel}`;
   const CopyIcon = copied ? Check : Copy;
@@ -172,7 +172,7 @@ export function TrackingNavieraActions(props: Props) {
         <p className="flex items-start gap-1.5 text-body-sm text-muted-foreground">
           <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
-            Pega el {refLabel} en la página de la naviera, copia el último evento, regresa y regístralo
+            Pega el {refLabel} en la página de {esMaritimo ? "la naviera" : "la aerolínea"}, copia el último evento, regresa y regístralo
             con el botón "Registrar Evento". Actualiza el tracking al menos cada 7 días y siempre
             48&nbsp;h antes del arribo.
           </span>
@@ -182,4 +182,3 @@ export function TrackingNavieraActions(props: Props) {
     </Card>
   );
 }
-

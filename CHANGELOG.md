@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.824.13] - 2026-10-01
+
+- **fix(proformas · IVA)**: tratamiento fiscal explícito y de sólo lectura al generar; la base rechaza reclasificaciones por interruptor y conceptos incoherentes antes de crear o convertir. No modifica documentos históricos.
+- **fix(proformas · PDF)**: después de guardar, un fallo de descarga permite reintentar el mismo PDF sin duplicar la proforma ni incluir conceptos nuevos; protección contra doble clic durante todo el proceso.
+- **fix(proformas · importes)**: subtotal e IVA redondeados por renglón, con la misma política que la factura.
+- **fix(cotización → embarque)**: alta como Borrador, expediente definitivo al confirmar y conservación del TC cotizado, seguro, notas, tarifa y condiciones comerciales en creación y edición.
+- **fix(cotizaciones · captura)**: progreso terrestre acorde con la validación de equipo/ruta, etiquetas de IVA basadas en el tratamiento real, selector con lista desplazable y catálogo actualizado después del alta rápida.
+- **fix(embarques · contexto)**: equipo terrestre cotizado visible en Resumen; seguimiento aéreo y terrestre sin instrucciones marítimas, históricos de demoras/garantías en sólo consulta, fechas comparadas por día de negocio cuando no tienen hora y requisitos PDF/XML explicados por nacionalidad del proveedor.
+- **test(regresión)**: recuperación post-commit, cinco tratamientos fiscales, TC tardío, cronología, caché por organización y guardas SQL con fixtures aislados por rollback.
+
 ## [13.824.12] - 2026-09-30
 
 - **fix(cotizaciones aéreas)**: captura de peso físico independiente del volumétrico y volumen real desde dimensiones. Duplicar o convertir conserva las medidas; los datos históricos sin peso físico no se reinterpretan ni cambian precios.

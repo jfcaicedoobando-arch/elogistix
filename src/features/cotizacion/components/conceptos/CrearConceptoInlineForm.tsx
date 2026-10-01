@@ -4,6 +4,8 @@
  * sin salir del wizard de cotización.
  */
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +23,7 @@ interface Props {
 }
 
 export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCreado, onCancel }: Props) {
+  const queryClient = useQueryClient();
   const fronteraHabilitada = useIvaFronteraHabilitada();
   const [nombre, setNombre] = useState(nombreInicial);
   const [claveSat, setClaveSat] = useState("");
@@ -42,6 +45,11 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
         clave_unidad_sat: claveUnidad.trim(),
         tipo_iva: tipoIva,
       });
+      const key = queryKeys.productosCatalogo(organizationId);
+      queryClient.setQueryData<ProductoCatalogo[]>(key, (prev = []) =>
+        [...prev.filter((p) => p.id !== producto.id), producto].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+      );
+      void queryClient.invalidateQueries({ queryKey: key });
       onCreado(producto);
     } catch (e) {
       notifyError(undefined, {
@@ -55,7 +63,7 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
   };
 
   return (
-    <div className="p-3 space-y-2" data-testid="crear-concepto-inline-form">
+    <div className="min-h-0 overflow-y-auto p-3 space-y-2" data-testid="crear-concepto-inline-form">
       <p className="text-body-sm font-medium">Nuevo producto/servicio</p>
       <div className="space-y-1">
         <Label htmlFor="cci-nombre" className="text-label">Nombre</Label>

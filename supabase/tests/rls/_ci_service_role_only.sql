@@ -29,6 +29,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_padre_misma_org()'),
   -- Ola P1 (P1-4): validación cross-org de cliente/cotización/proveedores.
   ('public._assert_relaciones_embarque(uuid, uuid, uuid, jsonb)'),
+  -- R4: validación fiscal interna, nunca es una RPC del cliente.
+  ('public._assert_iva_proforma_coherente(text, numeric, boolean)'),
 
   -- v15 (M-14): banda de plausibilidad del T/C en pagos CxC/CxP.
   ('public._assert_tc_banda()'),

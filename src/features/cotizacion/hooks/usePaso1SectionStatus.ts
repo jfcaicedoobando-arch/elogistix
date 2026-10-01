@@ -2,6 +2,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import type { CotizacionFormValues, LclFleteManual } from "@/features/cotizacion/types";
 import type { DimensionAerea, DimensionLCL } from "@/features/cotizacion/types/core";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
+import { rutaTerrestreSchema } from "@/features/cotizacion/domain/schemas/wizardPasos";
 
 export interface Paso1SectionStatus {
   cliente: boolean;
@@ -36,6 +37,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       "rutaTexto", "validezPropuesta",
       "numContenedores",
       "lclFleteManual",
+      "modalidadEquipo", "puntoIntermedio",
     ],
   });
 
@@ -50,6 +52,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     rutaTexto, validezPropuesta,
     numContenedores,
     lclFleteManual,
+    modalidadEquipo, puntoIntermedio,
   ] = v as [
     string, boolean, string, string, string,
     string, string, string,
@@ -61,6 +64,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     string, Date | undefined,
     number,
     LclFleteManual | undefined,
+    string | null | undefined, string | null | undefined,
   ];
 
   const modoLower = (modo || "").toLowerCase();
@@ -73,7 +77,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
 
   return {
     cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId, oportunidadId, leadId),
-    operacion: !!modo && !!tipo && !!incoterm,
+    operacion: !!modo && !!tipo && !!incoterm && rutaTerrestreSchema.safeParse({ modo, modalidadEquipo, puntoIntermedio }).success,
     ruta: !!origen?.trim() && !!destino?.trim(),
     mercancia: mercanciaOk({
       tipoCarga, pesoKg, piezas, descripcionMercancia,

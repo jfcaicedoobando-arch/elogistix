@@ -7,6 +7,23 @@ function fase(id: FaseEmbarque["id"], fecha: string | null): FaseEmbarque {
 }
 
 describe("hayFechasFueraDeOrden", () => {
+  it("compara una fecha sin hora con el día de negocio en México, no con medianoche UTC", () => {
+    expect(hayFechasFueraDeOrden([
+      fase("confirmado", "2026-09-30T02:30:00Z"),
+      fase("en_transito", "2026-09-29"),
+    ])).toBe(false);
+    expect(hayFechasFueraDeOrden([
+      fase("confirmado", "2026-09-30T18:30:00Z"),
+      fase("en_transito", "2026-09-29"),
+    ])).toBe(true);
+  });
+
+  it("mantiene precisión horaria cuando ambos hitos contienen hora", () => {
+    expect(hayFechasFueraDeOrden([
+      fase("confirmado", "2026-09-30T18:30:00Z"),
+      fase("en_transito", "2026-09-30T18:00:00Z"),
+    ])).toBe(true);
+  });
   it("devuelve false cuando las fechas están en orden ascendente", () => {
     const fases = [
       fase("confirmado", "2026-01-01"),

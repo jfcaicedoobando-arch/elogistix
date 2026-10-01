@@ -43,6 +43,7 @@ export function useEmbarqueForm() {
    * el formulario se hidrató desde un embarque existente.
    */
   const hidratadoDesdeEmbarque = useRef(false);
+  const tcHeredado = useRef({ usd: false, eur: false });
 
   // Precarga del T/C (DOF preferente) al abrir una captura nueva. Es una
   // sugerencia editable: el usuario puede sobrescribirla antes de guardar.
@@ -52,10 +53,10 @@ export function useEmbarqueForm() {
       // B7 (Ola 7): si el T/C remoto llega DESPUÉS de que el usuario ya lo
       // tecleó, no se sobrescribe su captura (se respeta `dirtyFields`).
       const tocados = methods.formState.dirtyFields;
-      if (!tocados.tipoCambioUSD) {
+      if (!tocados.tipoCambioUSD && !tcHeredado.current.usd && !methods.getValues("tipoCambioUSD")) {
         methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
       }
-      if (tiposDeCambio.eurMxn != null && !tocados.tipoCambioEUR) {
+      if (tiposDeCambio.eurMxn != null && !tocados.tipoCambioEUR && !tcHeredado.current.eur && !methods.getValues("tipoCambioEUR")) {
         methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
       }
     }
@@ -139,6 +140,7 @@ export function useEmbarqueForm() {
 
   const vincularCotizacion = useCallback(
     (cot: CotizacionParaVincular) => {
+      tcHeredado.current = { usd: (cot.tipo_cambio_usd ?? 0) > 0, eur: (cot.tipo_cambio_eur ?? 0) > 0 };
       const opts = { shouldValidate: true, shouldDirty: true } as const;
       const updates = buildVincularCotizacionUpdates(cot);
       for (const [field, value] of updates) {

@@ -17,7 +17,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Anchor } from "lucide-react";
+import { CalendarClock, MapPin } from "lucide-react";
 import { useCreateEventoEmbarque } from "@/features/embarques/hooks";
 import { useActualizarFechaLlegadaReal } from "@/features/embarques/hooks/mutations/useActualizarFechaLlegadaReal";
 import { useActualizarEta } from "@/features/embarques/hooks/mutations/useActualizarEta";
@@ -33,6 +33,7 @@ type Modo = "menu" | "eta" | "llegada";
 
 interface Props {
   embarqueId: string;
+  modoTransporte?: string | null;
   estadoActual?: string | null;
   etaActual?: string | null;
   fechaLlegadaRealActual?: string | null;
@@ -42,6 +43,7 @@ interface Props {
 
 export function TrackingNuevoEventoForm({
   embarqueId,
+  modoTransporte,
   etaActual,
   fechaLlegadaRealActual,
   destinoDefault,
@@ -52,6 +54,7 @@ export function TrackingNuevoEventoForm({
   const actualizarEta = useActualizarEta({ silent: true });
   const actualizarFechaLlegada = useActualizarFechaLlegadaReal({ silent: true });
   const { user } = useAuth();
+  const transportista = modoTransporte === "Marítimo" ? "la naviera" : modoTransporte === "Aéreo" ? "la aerolínea" : "el transportista";
 
   if (modo === "menu") {
     return (
@@ -69,7 +72,7 @@ export function TrackingNuevoEventoForm({
             <div>
               <div className="font-medium text-body">Actualizar ETA</div>
               <div className="text-body-sm text-muted-foreground mt-1">
-                Nueva fecha publicada por la naviera. Se propaga a toda la app.
+                Nueva fecha publicada por {transportista}. Se propaga a toda la app.
               </div>
             </div>
           </button>
@@ -78,11 +81,11 @@ export function TrackingNuevoEventoForm({
             onClick={() => setModo("llegada")}
             className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Anchor className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
               <div className="font-medium text-body">Marcar Llegada real</div>
               <div className="text-body-sm text-muted-foreground mt-1">
-                Fecha en que llegó el contenedor. Avanza el embarque a "Llegada".
+                Fecha en que llegó la carga. Avanza el embarque a "Llegada".
               </div>
             </div>
           </button>

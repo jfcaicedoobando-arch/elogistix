@@ -6,7 +6,7 @@ import { AlertTriangle, Plus } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks";
-import { sumarSubtotales } from "@/lib/financial/financialUtils";
+import { sumarSubtotales, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { etiquetaTasaIva } from "@/lib/financial/etiquetaTasaIva";
 import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
@@ -38,13 +38,13 @@ export default function SeccionConceptosVentaCotizacion({
   totalUSD, subtotalMXN, ivaMXN, totalMXN,
 }: Props) {
   const tasaIva = useTasaIVA();
-  const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
+  const hayIvaUSD = conceptosUSD.some(c => resolverTasaConcepto(c, tasaIva) > 0);
   // P2-6.3: la nota de IVA se calcula con la tasa vigente y sólo se muestra
   // cuando algún concepto realmente causa IVA (antes decía "16%" siempre).
   // R7-FIX2: la etiqueta sale de las tasas reales de las filas (8% frontera,
   // mixtas 8/16%) en lugar de imprimir siempre la tasa global de la org.
   const tasaPctMXN = etiquetaTasaIva(conceptosMXN, tasaIva);
-  const hayIvaMXN = conceptosMXN.some(c => c.aplica_iva) || ivaMXN > 0;
+  const hayIvaMXN = conceptosMXN.some(c => resolverTasaConcepto(c, tasaIva) > 0);
   const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
   // Asersión de paridad fila ↔ bucket: cada bucket impone una moneda objetivo.
@@ -109,7 +109,7 @@ export default function SeccionConceptosVentaCotizacion({
       </WizardSection>
 
       <WizardSection
-        title="Conceptos en MXN + IVA"
+        title="Conceptos en MXN"
         contentClassName="space-y-3"
         actions={
           agregarConceptoPrefill ? (
@@ -148,7 +148,7 @@ export default function SeccionConceptosVentaCotizacion({
           ))}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
             <span className="text-body">Subtotal MXN: {formatCurrency(subtotalMXN, 'MXN')}</span>
-            <span className="text-body">IVA ({tasaPctMXN}): {formatCurrency(ivaMXN, 'MXN')}</span>
+            <span className="text-body">{ivaMXN > 0 ? `IVA trasladado (${tasaPctMXN})` : "IVA trasladado"}: {formatCurrency(ivaMXN, 'MXN')}</span>
             <span className="text-body font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
           </div>
         </>
@@ -157,7 +157,7 @@ export default function SeccionConceptosVentaCotizacion({
 
       <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
-        <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
+        <span className="text-base font-bold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
         {hayIvaMXN && (
           <span className="text-body-sm text-muted-foreground">* Los conceptos en MXN incluyen IVA {tasaPctMXN}</span>
         )}

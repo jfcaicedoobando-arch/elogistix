@@ -64,6 +64,13 @@ describe("usePaso1SectionStatus — cliente", () => {
 });
 
 describe("usePaso1SectionStatus — operacion", () => {
+  it("Terrestre no se marca completo sin el equipo que exige el mismo validador del paso", () => {
+    const base = { modo: "Terrestre", tipo: "Nacional", incoterm: "EXW" };
+    expect(statusFor(base).operacion).toBe(false);
+    expect(statusFor({ ...base, modalidadEquipo: "Caja Seca" }).operacion).toBe(true);
+    expect(statusFor({ ...base, modalidadEquipo: "Porta Contenedor", puntoIntermedio: "" }).operacion).toBe(false);
+    expect(statusFor({ ...base, modalidadEquipo: "Porta Contenedor", puntoIntermedio: "Patio Santa Catarina" }).operacion).toBe(true);
+  });
   it("false si falta modo/tipo/incoterm", () => {
     expect(statusFor({ modo: "", tipo: "Importación", incoterm: "FOB" }).operacion).toBe(false);
     expect(statusFor({ modo: "Marítimo", tipo: "", incoterm: "FOB" }).operacion).toBe(false);

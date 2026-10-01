@@ -85,7 +85,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
                 <Input
                   id="actualizar-eta-fuente"
                   {...field}
-                  placeholder="Ej. Portal Maersk, aviso del agente…"
+                  placeholder="Ej. Portal del transportista, aviso del agente…"
                   maxLength={120}
                 />
               )}

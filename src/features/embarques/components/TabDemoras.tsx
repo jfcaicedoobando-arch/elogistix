@@ -21,9 +21,10 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 interface Props {
   embarqueId: string;
   canEdit: boolean;
+  soloConsulta?: boolean;
 }
 
-export function TabDemoras({ embarqueId, canEdit }: Props) {
+export function TabDemoras({ embarqueId, canEdit, soloConsulta = false }: Props) {
   const { rows, isLoading, drafts, isPending, setDraft, valorActual, guardar } =
     useTabDemorasController(embarqueId);
 
@@ -45,10 +46,10 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         <CardHeader className="pb-2">
           <CardTitle>Demoras por contenedor</CardTitle>
           <p className="text-body-sm text-muted-foreground mt-1">
-            Captura la fecha real de descarga y devolución de cada contenedor para calcular las
+            {soloConsulta ? "Fechas y demoras históricas de contenedores, conservadas en sólo consulta." : <>Captura la fecha real de descarga y devolución de cada contenedor para calcular las
             demoras con el tabulador de la naviera. Si dejas un campo vacío, usamos las fechas del
             timeline del embarque. El campo "Días libres" solo sobreescribe el default de la naviera
-            cuando lo capturas. Al guardar, recalculamos automáticamente los conceptos de demora.
+            cuando lo capturas. Al guardar, recalculamos automáticamente los conceptos de demora.</>}
           </p>
         </CardHeader>
         <CardContent className="p-0">
@@ -63,7 +64,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
                 <EmptyState
                   icon={Clock}
                   title="Sin contenedores"
-                  description="Agrega contenedores al embarque para capturar sus demoras."
+                  description={soloConsulta ? "No hay demoras históricas registradas." : "Agrega contenedores al embarque para capturar sus demoras."}
                 />
               </div>
             }

@@ -44,6 +44,8 @@ export interface CotizacionParaVincular {
   naviera_nombre?: string | null;
   /** LCL: consolidador (proveedor) elegido en la captura manual. */
   lcl_consolidador_id?: string | null;
+  tipo_cambio_usd?: number | null;
+  tipo_cambio_eur?: number | null;
 }
 
 export type DesvincularModo = "limpiar" | "conservar" | "solo-conceptos";
@@ -134,6 +136,8 @@ export function buildRutaUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
 
 export function buildOpcionalUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
   const updates: FieldUpdate[] = [];
+  if (cot.tipo_cambio_usd != null && cot.tipo_cambio_usd > 0) updates.push(["tipoCambioUSD", String(cot.tipo_cambio_usd)]);
+  if (cot.tipo_cambio_eur != null && cot.tipo_cambio_eur > 0) updates.push(["tipoCambioEUR", String(cot.tipo_cambio_eur)]);
   if (cot.msds_archivo) updates.push(["msdsArchivo", cot.msds_archivo]);
   // R215-COT-02: el servicio marítimo (FCL/LCL) ya viene decidido en la
   // cotización (`tipo_embarque`). Sin sembrarlo, el paso 2 quedaba en el

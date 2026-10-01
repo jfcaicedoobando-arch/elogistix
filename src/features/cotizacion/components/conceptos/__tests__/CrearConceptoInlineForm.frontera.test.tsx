@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import type { ReactNode } from "react";
 import { CrearConceptoInlineForm } from "../CrearConceptoInlineForm";
 import { AVISO_IVA_FRONTERA_DESHABILITADO } from "@/lib/financial/ivaFrontera";
 import type { ProductoCatalogo } from "@/features/cotizacion/services/productosCatalogoService";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 const estado = vi.hoisted(() => ({
   habilitada: false,
@@ -39,9 +42,11 @@ const producto: ProductoCatalogo = {
 };
 function preparar(onCreado = vi.fn()) {
   const props = { organizationId: "qa-organizacion", nombreInicial: "  Maniobras mock  ", onCreado, onCancel: vi.fn() };
-  const vista = render(<CrearConceptoInlineForm {...props} />);
+  const wrapper = createWrapper();
+  const { result } = renderHook(() => useQueryClient(), { wrapper });
+  const vista = render(<CrearConceptoInlineForm {...props} />, { wrapper });
   fireEvent.change(screen.getByLabelText("Clave SAT"), { target: { value: " 78101800 " } });
-  return { ...vista, props, onCreado };
+  return { ...vista, props, onCreado, client: result.current };
 }
 beforeEach(() => {
   estado.habilitada = false;
@@ -51,6 +56,19 @@ beforeEach(() => {
 });
 
 describe("Alta rápida de productos: IVA fronterizo", () => {
+  it("actualiza inmediatamente el catálogo de la organización sin afectar otra", async () => {
+    const { client, onCreado } = preparar();
+    const key = queryKeys.productosCatalogo("qa-organizacion");
+    const ajeno = queryKeys.productosCatalogo("otra-organizacion");
+    // El wrapper de pruebas usa gcTime=0; aquí observamos la caché tras el alta.
+    client.setQueryDefaults(key, { gcTime: Infinity });
+    client.setQueryDefaults(ajeno, { gcTime: Infinity });
+    client.setQueryData(ajeno, [{ ...producto, id: "otro" }]);
+    fireEvent.click(screen.getByRole("button", { name: "Crear concepto" }));
+    await waitFor(() => expect(onCreado).toHaveBeenCalledWith(producto));
+    expect(client.getQueryData(key)).toEqual([producto]);
+    expect(client.getQueryData(ajeno)).toEqual([expect.objectContaining({ id: "otro" })]);
+  });
   it("deshabilita el 8% y explica la configuración necesaria", () => {
     preparar();
     expect(screen.getByTestId("opcion-gravado_8")).toBeDisabled();

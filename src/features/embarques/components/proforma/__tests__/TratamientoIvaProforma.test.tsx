@@ -38,8 +38,7 @@ describe("TratamientoIvaProforma", () => {
   });
   it.each(["MXN", "USD"] as const)("selección muestra No objeto en %s", (moneda) => {
     render(<ConceptoRow c={concepto("no_objeto", { moneda })} isSelected ivaActivo={false}
-      ivaBloqueado={moneda === "MXN"} ivaPendiente={false} contLabel={null}
-      showGeneralBadge={false} onToggle={() => {}} onToggleIva={() => {}} />);
+      contLabel={null} showGeneralBadge={false} onToggle={() => {}} />);
     expect(screen.getByText("No objeto")).toBeVisible();
     expect(screen.queryByText("Sin IVA")).not.toBeInTheDocument();
   });
@@ -48,7 +47,7 @@ describe("TratamientoIvaProforma", () => {
     const antes = structuredClone(conceptos);
     const overrides = { gravado_16: true, no_objeto: false };
     const totales = calcularTotalesProforma(conceptos, 0.16, overrides);
-    render(<PasoConfirmacionProforma conceptosSeleccionados={conceptos} ivaPorConcepto={overrides}
+    render(<PasoConfirmacionProforma conceptosSeleccionados={conceptos}
       totales={totales} tasaIva={0.16} notas="" pendientesIva={[]} />);
     expect(screen.getByText("Tratamiento IVA")).toBeVisible();
     expect(screen.getByText("16%")).toBeVisible();

@@ -17,7 +17,8 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/features/embarques/domain/conceptosPorContenedor";
-import { submitProformaDialog, ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
+import { ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
+import { useProformaGeneracion } from "./useProformaGeneracion";
 import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
 import { toast } from "@/hooks/shared";
 import { useProformaTcRecovery, esErrorTcRequerido } from "./useProformaTcRecovery";
@@ -46,10 +47,11 @@ export function useDialogGenerarProformaController(
   const { data: diasCreditoDefault } = useDiasCreditoCliente(embarque.cliente_id, open);
   const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
   const tcRecovery = useProformaTcRecovery(embarque.id);
+  const generacion = useProformaGeneracion();
+  const { reiniciar } = generacion;
 
   const [paso, setPaso] = useState<PasoProformaDialog>("seleccion");
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
-  const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
   const [filtroContenedor, setFiltroContenedor] = useState<FiltroContenedor>("todos");
 
@@ -75,24 +77,23 @@ export function useDialogGenerarProformaController(
       setFiltroContenedor(initialFiltroContenedor);
       const init = buildInitialProformaState(conceptosPendientes, initialFiltroContenedor);
       setSeleccionados(init.seleccionados);
-      setIvaPorConcepto(init.ivaPorConcepto);
       setNotas("");
+      reiniciar();
     } else if (!open && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
-  }, [open, conceptosPendientes, initialFiltroContenedor]);
+  }, [open, conceptosPendientes, initialFiltroContenedor, reiniciar]);
 
   // Cuando cambia el filtro, ajustar selección al conjunto visible
   useEffect(() => {
-    if (!open) return;
+    if (!open || paso !== "seleccion" || generacion.isPending || generacion.creada) return;
     const visibleIds = new Set(conceptosVisibles.map((c) => c.id));
     setSeleccionados((prev) => {
       const next = new Set<string>();
       prev.forEach((id) => { if (visibleIds.has(id)) next.add(id); });
-      if (next.size === 0) visibleIds.forEach((id) => next.add(id));
       return next;
     });
-  }, [open, filtroContenedor, conceptosVisibles]);
+  }, [open, paso, generacion.isPending, generacion.creada, conceptosVisibles]);
 
 
   const toggle = (id: string) => {
@@ -114,11 +115,6 @@ export function useDialogGenerarProformaController(
     });
   };
 
-  const toggleIva = (id: string, moneda: string) => {
-    if (moneda === "MXN") return;
-    setIvaPorConcepto((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const conceptosSeleccionados = useMemo(
     () => conceptosPendientes.filter((c) => seleccionados.has(c.id)),
     [conceptosPendientes, seleccionados],
@@ -130,19 +126,20 @@ export function useDialogGenerarProformaController(
   );
 
   const totales = useMemo(
-    () => calcularTotalesProforma(conceptosSeleccionados, ivaPorConcepto, tasaIva),
-    [conceptosSeleccionados, tasaIva, ivaPorConcepto],
+    () => calcularTotalesProforma(conceptosSeleccionados, tasaIva),
+    [conceptosSeleccionados, tasaIva],
   );
 
   const handleConfirmar = async (embarqueOverride?: EmbarqueRow) => {
     try {
-      await submitProformaDialog({
+      const completada = await generacion.ejecutar({
         embarque: embarqueOverride ?? embarque,
-        conceptosSeleccionados, seleccionados, ivaPorConcepto,
+        conceptosSeleccionados, seleccionados,
         notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
         crearProformaMutateAsync: crearProforma.mutateAsync,
         fetchClienteParaPdfCached,
       });
+      if (!completada) return;
       tcRecovery.limpiar();
       onClose();
     } catch (err) {
@@ -179,9 +176,9 @@ export function useDialogGenerarProformaController(
 
   return {
     paso, setPaso,
-    seleccionados, ivaPorConcepto, notas, diasCredito,
+    seleccionados, notas, diasCredito,
     setNotas,
-    toggle, toggleAll, toggleIva,
+    toggle, toggleAll,
     conceptosSeleccionados, pendientesIva, conceptosVisibles,
     contenedores,
     filtroContenedor, setFiltroContenedor,
@@ -191,7 +188,8 @@ export function useDialogGenerarProformaController(
     tcSugerido: tcRecovery.tcSugerido,
     guardandoTc: tcRecovery.guardando,
     handleGuardarTcYReintentar,
-    isPending: crearProforma.isPending,
+    isPending: generacion.isPending,
+    creada: generacion.creada,
     totalSeleccionados: seleccionados.size,
   };
 }

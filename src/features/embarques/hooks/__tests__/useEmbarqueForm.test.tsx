@@ -1,13 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueForm } from "../useEmbarqueForm";
+
+const remoto = vi.hoisted(() => ({ data: null as { usdMxn: number; eurMxn: number; fecha: string; fuente: string } | null }));
 
 // v13.410.1: el hook precarga el T/C vía `useTcInicial` (DOF preferente), no
 // directamente desde `useExchangeRates`.
 vi.mock("@/features/catalogos/hooks/useTcInicial", () => ({
   useTcInicial: () => ({
-    data: { usdMxn: 20, eurMxn: 22, fecha: "2026-08-04", fuente: "DOF" },
+    data: remoto.data,
     isLoading: false,
   }),
 }));
@@ -21,7 +23,33 @@ vi.mock("@/services/storage/index", () => ({
 // dejaba los tests 2 y 3 apuntando a un cliente ya cancelado.
 const makeWrapper = () => createWrapper();
 
+beforeEach(() => { remoto.data = { usdMxn: 20, eurMxn: 22, fecha: "2026-08-04", fuente: "DOF" }; });
+
 describe("useEmbarqueForm", () => {
+  it("DOF tardío no pisa el TC sellado de la cotización", async () => {
+    remoto.data = null;
+    const { result, rerender } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
+    await act(async () => { result.current.vincularCotizacion({
+      cliente_id: "cli-mock", modo: "Marítimo", tipo: "Importación", incoterm: "FOB",
+      descripcion_mercancia: "Refacciones CNC", tipo_carga: "General", tipo_contenedor: "40HC",
+      peso_kg: 8400, volumen_m3: 18.5, piezas: 12, origen: "Ningbo", destino: "Manzanillo",
+      tipo_cambio_usd: 18.5, tipo_cambio_eur: 21.2,
+    }); });
+    remoto.data = { usdMxn: 18.071, eurMxn: 20, fecha: "2026-09-30", fuente: "DOF" };
+    rerender();
+    expect(result.current.methods.getValues("tipoCambioUSD")).toBe("18.5");
+    expect(result.current.methods.getValues("tipoCambioEUR")).toBe("21.2");
+  });
+
+  it("DOF tardío respeta un borrador restaurado por reset aunque no sea dirty", () => {
+    remoto.data = null;
+    const { result, rerender } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
+    act(() => result.current.methods.reset({ ...result.current.methods.getValues(), tipoCambioUSD: "18.5", tipoCambioEUR: "21.2" }));
+    remoto.data = { usdMxn: 18.071, eurMxn: 20, fecha: "2026-09-30", fuente: "DOF" };
+    rerender();
+    expect(result.current.methods.getValues("tipoCambioUSD")).toBe("18.5");
+    expect(result.current.methods.getValues("tipoCambioEUR")).toBe("21.2");
+  });
   it("inicializa con valores por defecto y sincroniza tipos de cambio", () => {
     const { result } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
     expect(result.current.methods.getValues("tipoCambioUSD")).toBe("20");

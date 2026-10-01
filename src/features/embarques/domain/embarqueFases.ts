@@ -9,6 +9,7 @@
  * y `embarqueEstadoTemporal.ts`; aquí se re-exportan por compatibilidad.
  */
 import { calcularEstadoEmbarque } from "./embarque";
+import { diaMx } from "@/lib/date/mx";
 import { calcularCompletadas, faseIdParaEstado } from "./embarqueFasesCompletitud";
 import type {
   EmbarqueFasesInput,
@@ -159,13 +160,20 @@ export function etiquetaSiguientePaso(
  * el stepper para que se revise la bitácora.
  */
 export function hayFechasFueraDeOrden(fases: FaseEmbarque[]): boolean {
-  let anterior: number | null = null;
+  let anterior: string | null = null;
   for (const fase of fases) {
     if (!fase.fecha) continue;
-    const t = new Date(fase.fecha).getTime();
-    if (Number.isNaN(t)) continue;
-    if (anterior !== null && t < anterior) return true;
-    anterior = t;
+    const dia = diaMx(fase.fecha);
+    if (!dia) continue;
+    if (anterior !== null) {
+      // Si una fase sólo tiene día, no inventar medianoche UTC para ella.
+      const soloDia = /^\d{4}-\d{2}-\d{2}$/;
+      const invertidas = soloDia.test(anterior) || soloDia.test(fase.fecha)
+        ? dia < diaMx(anterior)!
+        : new Date(fase.fecha).getTime() < new Date(anterior).getTime();
+      if (invertidas) return true;
+    }
+    anterior = fase.fecha;
   }
   return false;
 }

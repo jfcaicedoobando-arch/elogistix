@@ -11,14 +11,12 @@ import { TabCostos } from "@/features/embarques/components/TabCostos";
 import { TabFacturacionEmbarque } from "@/features/embarques/components/TabFacturacionEmbarque";
 import { TabNotas } from "@/features/embarques/components/TabNotas";
 import { TabTracking } from "@/features/embarques/components/TabTracking";
-import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 import { TabPnl } from "@/features/embarques/components/TabPnl";
 import { TabPnlContenedor } from "@/features/embarques/components/TabPnlContenedor";
 import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
-import { TabDemoras } from "@/features/embarques/components/TabDemoras";
-import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
+import { GarantiasDemorasContenido } from "./_sections/GarantiasDemorasContenido";
 import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
 import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
@@ -26,13 +24,13 @@ import {
   monedasExtranjerasActivas,
   tieneContenedorOperativo,
 } from "@/features/embarques/domain/pnlPresentacion";
-import { SectionHeading } from "@/components/shared/SectionHeading";
 import type {
   EmbarqueDetalleTabsProps,
   PnlView,
 } from "./_sections/embarqueDetalleTabsTypes";
 import { PnlViewSelector } from "./_sections/PnlViewSelector";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useGarantiasContenedor } from "@/features/embarques/hooks/useGarantiasContenedor";
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
@@ -47,6 +45,9 @@ export function EmbarqueDetalleTabs({
   const { conceptosVenta, conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
     useEmbarqueDetalleTabsData(embarqueId, embarque);
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId);
+  const { data: garantias = [] } = useGarantiasContenedor(embarqueId);
+  const esMaritimo = embarque.modo === "Marítimo";
+  const mostrarGarantias = esMaritimo || contenedores.length > 0 || garantias.length > 0;
   const permitePnlContenedor = tieneContenedorOperativo(contenedores);
   const monedasExtranjeras = monedasExtranjerasActivas(conceptosVenta, conceptosCosto);
   // `created_by_email` no es legible en la tabla `embarques`: viene de la vista
@@ -69,7 +70,7 @@ export function EmbarqueDetalleTabs({
           v13.823.26: la affordance de scroll (degradados + flechas) vive en
           `EmbarqueDetalleTabsBar` para mantener este archivo enfocado en el
           contenido de cada pestaña. */}
-      <EmbarqueDetalleTabsBar />
+      <EmbarqueDetalleTabsBar mostrarGarantias={mostrarGarantias} soloHistorico={!esMaritimo} />
 
       {estadoVisual === "Borrador" && <AlertaBorrador etd={embarque.etd ?? null} />}
 
@@ -122,16 +123,8 @@ export function EmbarqueDetalleTabs({
 
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
       <TabsContent value="garantias" className="space-y-6">
-        <section aria-labelledby="seccion-demoras" className="space-y-3">
-          <SectionHeading id="seccion-demoras">Demoras</SectionHeading>
-          <SeccionDemorasAuto embarqueId={embarqueId} canEdit={canEdit} />
-          <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
-        </section>
-        <Separator />
-        <section aria-labelledby="seccion-garantias" className="space-y-3">
-          <SectionHeading id="seccion-garantias">Garantías</SectionHeading>
-          <TabGarantias embarqueId={embarqueId} canEdit={canEdit} fechaLlegadaReal={embarque.fecha_llegada_real ?? null} />
-        </section>
+        <GarantiasDemorasContenido embarqueId={embarqueId} esMaritimo={esMaritimo}
+          mostrar={mostrarGarantias} canEdit={canEdit} fechaLlegada={embarque.fecha_llegada_real ?? null} />
       </TabsContent>
 
       <TabsContent value="seguros">

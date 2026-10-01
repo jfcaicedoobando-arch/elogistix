@@ -1,12 +1,10 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
+-- Espejo R4: borrador explícito y snapshot comercial, sin backfill histórico.
 CREATE OR REPLACE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_contenedores jsonb DEFAULT '[]'::jsonb)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 DECLARE
   nuevo_id uuid := gen_random_uuid();
   v_org_id uuid; v_resp jsonb;
@@ -24,15 +22,18 @@ BEGIN
     v_cot_id,
     p_conceptos_costo
   );
-  -- R217: el claim de idempotencia va ANTES de la convertibilidad. En un
-  -- reintento del mismo p_request_id la respuesta cacheada/pending se devuelve
-  -- sin volver a evaluar la cotización (que ya tiene el embarque del 1er intento).
   v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  -- Una cotización sólo puede producir un embarque vivo (bloqueo FOR UPDATE).
   PERFORM public._assert_cotizacion_convertible(v_cot_id, v_org_id);
+  IF NULLIF(p_embarque->>'tarifa_id', '') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.costeo_tarifas t
+    WHERE t.id = (p_embarque->>'tarifa_id')::uuid AND t.organization_id = v_org_id
+  ) THEN
+    RAISE EXCEPTION 'LC_EMBARQUE_TARIFA_INVALIDA: la tarifa no pertenece a tu organización'
+      USING ERRCODE = 'P0001';
+  END IF;
   INSERT INTO embarques (
-    id, expediente, cliente_id, cliente_nombre, modo, tipo,
+    id, expediente, estado, cliente_id, cliente_nombre, modo, tipo,
     shipper, consignatario, incoterm, descripcion_mercancia,
     peso_kg, volumen_m3, piezas,
     puerto_origen, puerto_destino, naviera, agente, naviera_id, agente_id,
@@ -41,9 +42,11 @@ BEGIN
     mawb, hawb, ciudad_origen, ciudad_destino,
     transportista, carta_porte, etd, eta,
     tipo_cambio_usd, tipo_cambio_eur,
-    tipo_carga, msds_archivo, operador, organization_id, cotizacion_id
+    tipo_carga, msds_archivo, operador, organization_id, cotizacion_id,
+    tarifa_id, carta_garantia, dias_libres_destino, dias_almacenaje,
+    seguro, valor_seguro_usd, notas
   ) VALUES (
-    nuevo_id, p_embarque->>'expediente', (p_embarque->>'cliente_id')::uuid,
+    nuevo_id, NULLIF(p_embarque->>'expediente', ''), 'Borrador'::estado_embarque, (p_embarque->>'cliente_id')::uuid,
     COALESCE(p_embarque->>'cliente_nombre',''),
     (p_embarque->>'modo')::modo_transporte, (p_embarque->>'tipo')::tipo_operacion,
     COALESCE(p_embarque->>'shipper',''), COALESCE(p_embarque->>'consignatario',''),
@@ -69,15 +72,23 @@ BEGIN
     COALESCE(p_embarque->>'tipo_carga','Carga General'),
     p_embarque->>'msds_archivo', COALESCE(p_embarque->>'operador',''),
     v_org_id,
-    v_cot_id
+    v_cot_id,
+    NULLIF(p_embarque->>'tarifa_id', '')::uuid,
+    COALESCE((p_embarque->>'carta_garantia')::boolean, false),
+    COALESCE((p_embarque->>'dias_libres_destino')::integer, 0),
+    COALESCE((p_embarque->>'dias_almacenaje')::integer, 0),
+    COALESCE((p_embarque->>'seguro')::boolean, false),
+    NULLIF(p_embarque->>'valor_seguro_usd', '')::numeric,
+    NULLIF(p_embarque->>'notas', '')
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
-                                 aplica_iva, tasa_iva_aplicada, organization_id)
+                                 aplica_iva, tasa_iva_aplicada, tipo_iva, organization_id)
     VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::numeric, (cv->>'precio_unitario')::numeric,
             (cv->>'moneda')::moneda, (cv->>'total')::numeric,
             COALESCE((cv->>'aplica_iva')::boolean, false),
             COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+            NULLIF(cv->>'tipo_iva', ''),
             v_org_id);
   END LOOP;
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
@@ -114,4 +125,6 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$$;
+$function$;
+REVOKE ALL ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) TO authenticated, service_role;

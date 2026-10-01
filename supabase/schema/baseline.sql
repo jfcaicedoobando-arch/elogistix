@@ -646,6 +646,25 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._assert_iva_proforma_coherente(p_tipo text, p_tasa numeric, p_aplica boolean) RETURNS void
+    LANGUAGE plpgsql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF p_tipo IS NULL OR p_tipo NOT IN ('gravado_16', 'gravado_8', 'tasa_0', 'exento', 'no_objeto') THEN
+    RAISE EXCEPTION 'LC_PROFORMA_IVA_PENDIENTE: clasifica explícitamente el tratamiento de IVA antes de generar o convertir'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF (p_tipo IN ('gravado_16', 'gravado_8') AND (
+        p_aplica IS FALSE OR (p_tasa IS NULL AND p_aplica IS NOT TRUE)
+        OR (p_tasa IS NOT NULL AND abs(p_tasa - CASE WHEN p_tipo = 'gravado_8' THEN 0.08 ELSE 0.16 END) >= 0.000000001)))
+     OR (p_tipo IN ('tasa_0', 'exento', 'no_objeto') AND (
+        COALESCE(p_tasa, 0) <> 0 OR (p_tipo <> 'tasa_0' AND p_aplica IS TRUE))) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_IVA_INCOHERENTE: tratamiento, tasa y traslado no coinciden; revisa el concepto y la proforma antes de facturar'
+      USING ERRCODE = 'P0001';
+  END IF;
+END;
+$$;
 CREATE FUNCTION public._assert_medidas_embarque(p_embarque jsonb) RETURNS void
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
@@ -2041,6 +2060,9 @@ CREATE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid
     AS $$
 BEGIN
   IF p_es_consolidada THEN
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.proforma_conceptos_consolidados
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
     INSERT INTO public.conceptos_factura (
       factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
@@ -2068,6 +2090,9 @@ BEGIN
       AND pcc.moneda = p_moneda
       AND pcc.deleted_at IS NULL;
   ELSE
+    PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+      FROM public.conceptos_venta
+     WHERE proforma_id = ANY(p_proforma_ids) AND deleted_at IS NULL;
     INSERT INTO public.conceptos_factura (
       factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
@@ -5870,6 +5895,13 @@ BEGIN
   );
   v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+  IF NULLIF(p_embarque->>'tarifa_id', '') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.costeo_tarifas t
+    WHERE t.id = (p_embarque->>'tarifa_id')::uuid AND t.organization_id = v_org_id
+  ) THEN
+    RAISE EXCEPTION 'LC_EMBARQUE_TARIFA_INVALIDA: la tarifa no pertenece a tu organización'
+      USING ERRCODE = 'P0001';
+  END IF;
   UPDATE embarques SET
     cliente_id = COALESCE((p_embarque->>'cliente_id')::uuid, cliente_id),
     cliente_nombre = COALESCE(p_embarque->>'cliente_nombre', cliente_nombre),
@@ -5909,6 +5941,13 @@ BEGIN
     tipo_cambio_usd = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0), tipo_cambio_usd),
     tipo_cambio_eur = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0), tipo_cambio_eur),
     msds_archivo = CASE WHEN p_embarque ? 'msds_archivo' THEN p_embarque->>'msds_archivo' ELSE msds_archivo END,
+    tarifa_id = CASE WHEN p_embarque ? 'tarifa_id' THEN NULLIF(p_embarque->>'tarifa_id', '')::uuid ELSE tarifa_id END,
+    carta_garantia = CASE WHEN p_embarque ? 'carta_garantia' THEN COALESCE((p_embarque->>'carta_garantia')::boolean, false) ELSE carta_garantia END,
+    dias_libres_destino = CASE WHEN p_embarque ? 'dias_libres_destino' THEN COALESCE((p_embarque->>'dias_libres_destino')::integer, 0) ELSE dias_libres_destino END,
+    dias_almacenaje = CASE WHEN p_embarque ? 'dias_almacenaje' THEN COALESCE((p_embarque->>'dias_almacenaje')::integer, 0) ELSE dias_almacenaje END,
+    seguro = CASE WHEN p_embarque ? 'seguro' THEN COALESCE((p_embarque->>'seguro')::boolean, false) ELSE seguro END,
+    valor_seguro_usd = CASE WHEN p_embarque ? 'valor_seguro_usd' THEN NULLIF(p_embarque->>'valor_seguro_usd', '')::numeric ELSE valor_seguro_usd END,
+    notas = CASE WHEN p_embarque ? 'notas' THEN NULLIF(p_embarque->>'notas', '') ELSE notas END,
     updated_at = now()
   WHERE id = p_embarque_id;
   v_incoming_venta_ids := ARRAY(
@@ -13706,15 +13745,18 @@ BEGIN
     v_cot_id,
     p_conceptos_costo
   );
-  -- R217: el claim de idempotencia va ANTES de la convertibilidad. En un
-  -- reintento del mismo p_request_id la respuesta cacheada/pending se devuelve
-  -- sin volver a evaluar la cotización (que ya tiene el embarque del 1er intento).
   v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  -- Una cotización sólo puede producir un embarque vivo (bloqueo FOR UPDATE).
   PERFORM public._assert_cotizacion_convertible(v_cot_id, v_org_id);
+  IF NULLIF(p_embarque->>'tarifa_id', '') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.costeo_tarifas t
+    WHERE t.id = (p_embarque->>'tarifa_id')::uuid AND t.organization_id = v_org_id
+  ) THEN
+    RAISE EXCEPTION 'LC_EMBARQUE_TARIFA_INVALIDA: la tarifa no pertenece a tu organización'
+      USING ERRCODE = 'P0001';
+  END IF;
   INSERT INTO embarques (
-    id, expediente, cliente_id, cliente_nombre, modo, tipo,
+    id, expediente, estado, cliente_id, cliente_nombre, modo, tipo,
     shipper, consignatario, incoterm, descripcion_mercancia,
     peso_kg, volumen_m3, piezas,
     puerto_origen, puerto_destino, naviera, agente, naviera_id, agente_id,
@@ -13723,9 +13765,11 @@ BEGIN
     mawb, hawb, ciudad_origen, ciudad_destino,
     transportista, carta_porte, etd, eta,
     tipo_cambio_usd, tipo_cambio_eur,
-    tipo_carga, msds_archivo, operador, organization_id, cotizacion_id
+    tipo_carga, msds_archivo, operador, organization_id, cotizacion_id,
+    tarifa_id, carta_garantia, dias_libres_destino, dias_almacenaje,
+    seguro, valor_seguro_usd, notas
   ) VALUES (
-    nuevo_id, p_embarque->>'expediente', (p_embarque->>'cliente_id')::uuid,
+    nuevo_id, NULLIF(p_embarque->>'expediente', ''), 'Borrador'::estado_embarque, (p_embarque->>'cliente_id')::uuid,
     COALESCE(p_embarque->>'cliente_nombre',''),
     (p_embarque->>'modo')::modo_transporte, (p_embarque->>'tipo')::tipo_operacion,
     COALESCE(p_embarque->>'shipper',''), COALESCE(p_embarque->>'consignatario',''),
@@ -13751,7 +13795,14 @@ BEGIN
     COALESCE(p_embarque->>'tipo_carga','Carga General'),
     p_embarque->>'msds_archivo', COALESCE(p_embarque->>'operador',''),
     v_org_id,
-    v_cot_id
+    v_cot_id,
+    NULLIF(p_embarque->>'tarifa_id', '')::uuid,
+    COALESCE((p_embarque->>'carta_garantia')::boolean, false),
+    COALESCE((p_embarque->>'dias_libres_destino')::integer, 0),
+    COALESCE((p_embarque->>'dias_almacenaje')::integer, 0),
+    COALESCE((p_embarque->>'seguro')::boolean, false),
+    NULLIF(p_embarque->>'valor_seguro_usd', '')::numeric,
+    NULLIF(p_embarque->>'notas', '')
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
@@ -14011,22 +14062,26 @@ BEGIN
       SELECT key AS concepto_id, (value)::text::boolean AS aplica
       FROM jsonb_each(p_iva_overrides)
     LOOP
-      UPDATE public.conceptos_venta
-      SET aplica_iva = v_override.aplica
-      WHERE id = v_override.concepto_id::uuid
-        AND organization_id = v_org
-        AND embarque_id = p_embarque_id
-        AND id = ANY(p_concepto_ids);
+      IF EXISTS (
+        SELECT 1 FROM public.conceptos_venta cv
+        WHERE cv.id = v_override.concepto_id::uuid AND cv.organization_id = v_org
+          AND v_override.aplica IS DISTINCT FROM (public._tasa_iva_canonica(cv.tipo_iva, cv.tasa_iva_aplicada, cv.aplica_iva) > 0)
+      ) THEN
+        RAISE EXCEPTION 'LC_PROFORMA_IVA_OVERRIDE: el IVA no se cambia al generar; clasifica explícitamente el concepto de venta'
+          USING ERRCODE = 'P0001';
+      END IF;
     END LOOP;
   END IF;
+  PERFORM public._assert_iva_proforma_coherente(tipo_iva, tasa_iva_aplicada, aplica_iva)
+  FROM public.conceptos_venta WHERE id = ANY(p_concepto_ids) AND organization_id = v_org;
   SELECT
-    COALESCE(SUM(CASE WHEN moneda='USD' THEN cantidad*precio_unitario ELSE 0 END), 0),
-    COALESCE(SUM(CASE WHEN moneda='USD' AND aplica_iva
-                      THEN cantidad*precio_unitario*COALESCE(tasa_iva_aplicada, p_tasa_iva)
+    COALESCE(SUM(CASE WHEN moneda='USD' THEN ROUND(cantidad*precio_unitario, 2) ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN moneda='USD'
+                      THEN ROUND(ROUND(cantidad*precio_unitario, 2) * public._tasa_iva_canonica(tipo_iva, tasa_iva_aplicada, aplica_iva), 2)
                       ELSE 0 END), 0),
-    COALESCE(SUM(CASE WHEN moneda='MXN' THEN cantidad*precio_unitario ELSE 0 END), 0),
-    COALESCE(SUM(CASE WHEN moneda='MXN' AND aplica_iva
-                      THEN cantidad*precio_unitario*COALESCE(tasa_iva_aplicada, p_tasa_iva)
+    COALESCE(SUM(CASE WHEN moneda='MXN' THEN ROUND(cantidad*precio_unitario, 2) ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN moneda='MXN'
+                      THEN ROUND(ROUND(cantidad*precio_unitario, 2) * public._tasa_iva_canonica(tipo_iva, tasa_iva_aplicada, aplica_iva), 2)
                       ELSE 0 END), 0)
   INTO v_sub_usd, v_iva_usd, v_sub_mxn, v_iva_mxn
   FROM public.conceptos_venta
@@ -35568,6 +35623,8 @@ GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_r
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_iva_proforma_coherente(p_tipo text, p_tasa numeric, p_aplica boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_iva_proforma_coherente(p_tipo text, p_tasa numeric, p_aplica boolean) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_medidas_embarque(p_embarque jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_medidas_embarque(p_embarque jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_medidas_embarque(p_embarque jsonb) TO service_role;

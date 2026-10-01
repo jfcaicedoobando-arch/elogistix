@@ -3,6 +3,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTiposContenedor } from "@/features/catalogos/hooks/useTiposContenedor";
 import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
+import { DatosTerrestresCotizados } from "./DatosTerrestresCotizados";
 
 const PLACEHOLDER = "—";
 
@@ -78,6 +79,7 @@ export function RutaTerrestre({ e }: { e: EmbarqueRow }) {
       <DetailRow label="Ciudad Destino" value={e.ciudad_destino || PLACEHOLDER} />
       <DetailRow label="Transportista" value={e.transportista || PLACEHOLDER} />
       <DetailRow label="Carta Porte" value={e.carta_porte || PLACEHOLDER} />
+      {e.cotizacion_id && <DatosTerrestresCotizados cotizacionId={e.cotizacion_id} />}
     </>
   );
 }

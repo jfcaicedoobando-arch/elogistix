@@ -23,11 +23,9 @@ import {
   type CotizacionRow,
 } from "@/features/cotizacion/hooks";
 import {
-  resolverExpediente,
   subirDocumentosEmbarque,
 } from "@/features/embarques/services";
 import {
-  resolveExpedienteForSubmit,
   buildBitacoraDetalles,
 } from "@/features/embarques/domain/embarqueWizard";
 import {
@@ -37,6 +35,7 @@ import {
 } from "./useEmbarqueSubmitOrchestrator.helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
+import { expedienteBorrador, payloadBorrador } from "./useEmbarqueSubmitOrchestrator.payload";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
@@ -80,25 +79,21 @@ export function useEmbarqueSubmitOrchestrator() {
 
   const submit = useCallback(
     async (p: SubmitOrchestratorParams): Promise<boolean> => {
-      // Fase 1: resolver expediente
+      // Un nuevo expediente definitivo se asigna al confirmar, no al capturar
+      // un borrador. El requestId mantiene estable la carpeta de documentos.
       let expediente: string;
       try {
-        expediente = await resolveExpedienteForSubmit({
-          modoExpediente: p.modoExpediente,
-          expedienteSeleccionado: p.expedienteSeleccionado,
-          blMaster: p.values.blMaster,
-          tipo: p.values.tipo,
-          resolverNuevo: resolverExpediente,
-        });
-      } catch (err: unknown) {
-        return reportPhaseError(toast, "Error: generación de expediente", err);
+        expediente = expedienteBorrador(p);
+      } catch (err) {
+        return reportPhaseError(toast, "Selecciona el expediente existente", err);
       }
+      const carpetaDocumentos = expediente || `borrador-${reqId.get()}`;
 
       // Fase 2: subir documentos
       let docPayload;
       try {
         docPayload = await subirDocumentosEmbarque(
-          expediente,
+          carpetaDocumentos,
           p.getDocumentosChecklist(p.values.modo),
           p.documentosArchivos,
         );
@@ -109,11 +104,7 @@ export function useEmbarqueSubmitOrchestrator() {
       // Fase 3: crear embarque
       let embarqueCreadoId: string | null = null;
       try {
-        const embarquePayload = {
-          expediente,
-          ...p.buildEmbarquePayload(p.contactos, p.selectedClienteNombre, user?.email || ""),
-          ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
-        };
+        const embarquePayload = payloadBorrador(p, expediente, user?.email);
         const created = await createEmbarque.mutateAsync({
           embarque: embarquePayload,
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
@@ -172,7 +163,7 @@ export function useEmbarqueSubmitOrchestrator() {
 
       notifySuccess(undefined, {
         title: "Embarque creado",
-        description: `Expediente ${expediente}: registrado correctamente.`,
+        description: "Borrador registrado. Completa los datos operativos y confirma para iniciar el seguimiento.",
       });
       navigate("/embarques");
       return true;

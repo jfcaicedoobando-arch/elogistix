@@ -11,6 +11,7 @@ import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
 import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
 import { tratamientoIvaPendiente, MSG_PROFORMA_IVA_PENDIENTE } from "@/lib/financial/etiquetaTratamientoFila";
+import { clasificarCoherenciaIva } from "@/lib/financial/coherenciaIva";
 
 /**
  * Error de pre-validación esperada (ej. FCL sin peso/volumen).
@@ -40,7 +41,6 @@ export interface SubmitProformaParams {
   embarque: EmbarqueRow;
   conceptosSeleccionados: ConceptoVenta[];
   seleccionados: Set<string>;
-  ivaPorConcepto: Record<string, boolean>;
   notas: string;
   diasCredito: string;
   filtroContenedor: FiltroContenedor;
@@ -49,6 +49,27 @@ export interface SubmitProformaParams {
   tasaIva: number;
   crearProformaMutateAsync: (args: CrearProformaArgs) => Promise<Tables<"proformas">>;
   fetchClienteParaPdfCached: (clienteId: string) => Promise<ClienteParaPdf>;
+  /** Se ejecuta inmediatamente después del commit, antes de cualquier I/O del PDF. */
+  onCreada?: (creada: ProformaCreadaParaPdf) => void;
+}
+
+export interface ProformaCreadaParaPdf {
+  proforma: Tables<"proformas">;
+  embarque: EmbarqueRow;
+  conceptos: ConceptoVenta[];
+  tasaIva: number;
+  totales: TotalesProforma;
+  notas: string;
+}
+
+/** Reintento post-commit: descarga el mismo documento, nunca vuelve a crearlo. */
+export async function descargarProformaCreada(
+  creada: ProformaCreadaParaPdf,
+  fetchCliente: SubmitProformaParams["fetchClienteParaPdfCached"],
+): Promise<void> {
+  const cliente = await fetchCliente(creada.embarque.cliente_id);
+  const { generarPdfProforma } = await import("@/generators/proformaPdf");
+  await generarPdfProforma({ ...creada, cliente });
 }
 
 function construirNotasFinales(
@@ -72,7 +93,7 @@ function construirNotasFinales(
 
 export async function submitProformaDialog(params: SubmitProformaParams): Promise<void> {
   const {
-    embarque, conceptosSeleccionados, seleccionados, ivaPorConcepto,
+    embarque, conceptosSeleccionados, seleccionados,
     notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
     crearProformaMutateAsync, fetchClienteParaPdfCached,
   } = params;
@@ -85,6 +106,12 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
       `${MSG_PROFORMA_IVA_PENDIENTE}${nombres ? ` Pendientes: ${nombres}.` : ""}`,
     );
   }
+  for (const c of conceptosSeleccionados) {
+    const coherencia = clasificarCoherenciaIva(c);
+    if (coherencia.estado !== "ok") {
+      throw new ProformaValidationError(`${c.descripcion || "Concepto"}: ${coherencia.motivo}. Revisa su tratamiento en Editar embarque → Conceptos de venta.`);
+    }
+  }
 
   // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.
   const validacion = validarContenedoresFCL(embarque, contenedores);
@@ -94,14 +121,9 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     );
   }
 
-  // R179-01: ya NO se fuerza `true` para MXN. El RPC escribe `aplica_iva` con
-  // estos overrides antes de recalcular desde BD; forzarlo convertía un
-  // concepto exento en gravado y el total guardado dejaba de coincidir con el
-  // revisado en pantalla. MXN toma su propio tratamiento fiscal guardado.
-  const ivaOverrides: Record<string, boolean> = {};
-  conceptosSeleccionados.forEach((c) => {
-    ivaOverrides[c.id] = c.moneda === "MXN" ? ivaDeFila(c) : !!ivaPorConcepto[c.id];
-  });
+  // R4-10: la proforma no reclasifica IVA con un booleano. Cualquier cambio
+  // fiscal se captura explícitamente en los conceptos de venta del embarque.
+  const ivaOverrides = Object.fromEntries(conceptosSeleccionados.map((c) => [c.id, ivaDeFila(c)]));
 
   const notasFinal = construirNotasFinales(notas, filtroContenedor, contenedores);
 
@@ -124,17 +146,10 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     ivaOverrides,
   });
 
-  const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
-  const conceptosParaPdf = conceptosSeleccionados.map((c) => ({
-    ...c,
-    aplica_iva: ivaOverrides[c.id],
-  }));
-  const { generarPdfProforma } = await import("@/generators/proformaPdf");
-  await generarPdfProforma({
-    proforma,
-    embarque,
-    conceptos: conceptosParaPdf,
-    cliente,
-    tasaIva,
-  });
+  const creada: ProformaCreadaParaPdf = {
+    proforma, embarque, conceptos: conceptosSeleccionados.map((c) => ({ ...c })),
+    tasaIva, totales, notas: notasFinal ?? "",
+  };
+  params.onCreada?.(creada);
+  await descargarProformaCreada(creada, fetchClienteParaPdfCached);
 }
