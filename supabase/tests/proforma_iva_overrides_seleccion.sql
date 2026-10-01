@@ -1,6 +1,8 @@
 -- =============================================================
 -- proforma_iva_overrides_seleccion.sql · P1/P2 integridad 2026-09-10
 --
+-- R4: los overrides no reclasifican IVA. El caso válido confirma el dato
+-- fiscal explícito; el intento de cambiarlo por booleano se rechaza.
 -- Invariante: en `crear_proforma_atomica`, un ajuste de IVA
 -- (p_iva_overrides) sólo puede tocar conceptos incluidos en
 -- p_concepto_ids. Antes el UPDATE no filtraba por la selección y
@@ -53,16 +55,16 @@ BEGIN
   -- Dos conceptos del mismo embarque, ambos con IVA.
   INSERT INTO public.conceptos_venta
     (id, organization_id, embarque_id, descripcion, cantidad,
-     precio_unitario, total, moneda, aplica_iva, tasa_iva_aplicada)
+     precio_unitario, total, moneda, aplica_iva, tasa_iva_aplicada, tipo_iva)
   VALUES
     ('bbbb5555-5555-5555-5555-55555555bbbb',
      'bbbb1111-1111-1111-1111-11111111bbbb',
      'bbbb4444-4444-4444-4444-44444444bbbb',
-     'Flete seleccionado', 1, 1000, 1000, 'MXN'::public.moneda, true, 0.16),
+     'Flete seleccionado', 1, 1000, 1000, 'MXN'::public.moneda, true, 0.16, 'gravado_16'),
     ('bbbb6666-6666-6666-6666-66666666bbbb',
      'bbbb1111-1111-1111-1111-11111111bbbb',
      'bbbb4444-4444-4444-4444-44444444bbbb',
-     'Maniobras NO seleccionado', 1, 500, 500, 'MXN'::public.moneda, true, 0.16);
+     'Maniobras NO seleccionado', 1, 500, 500, 'MXN'::public.moneda, true, 0.16, 'gravado_16');
 
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub', 'bbbb2222-2222-2222-2222-22222222bbbb')::text, true);
@@ -115,29 +117,61 @@ END
 $caso1$ LANGUAGE plpgsql;
 
 -- -------------------------------------------------------------
--- CASO 2: override sobre el concepto SÍ seleccionado se aplica
--- y el no seleccionado queda intacto.
+-- CASO 2: un booleano no puede apagar el IVA del concepto seleccionado.
+-- El rechazo debe ser atómico: conserva fila y no deja proforma parcial.
 -- -------------------------------------------------------------
 DO $caso2$
 DECLARE
+  v_msg text;
+BEGIN
+  BEGIN
+    PERFORM public.crear_proforma_atomica(
+      'bbbb1111-1111-1111-1111-11111111bbbb',
+      'bbbb4444-4444-4444-4444-44444444bbbb',
+      'bbbb3333-3333-3333-3333-33333333bbbb',
+      'Cliente IVA Overrides', 'ELOVR0001', NULL,
+      ARRAY['bbbb5555-5555-5555-5555-55555555bbbb'::uuid],
+      0, 0, 0, 1000, 0, 1000, NULL, 'tester', 30, 0.16,
+      jsonb_build_object('bbbb5555-5555-5555-5555-55555555bbbb', false)
+    );
+  EXCEPTION WHEN OTHERS THEN
+    v_msg := SQLERRM;
+  END;
+  IF v_msg IS NULL OR v_msg NOT LIKE 'LC_PROFORMA_IVA_OVERRIDE%' THEN
+    RAISE EXCEPTION 'LC_TEST_FALLA: reclasificación por booleano no rechazada: %', v_msg;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.proformas WHERE organization_id='bbbb1111-1111-1111-1111-11111111bbbb')
+     OR EXISTS (SELECT 1 FROM public.conceptos_venta WHERE id='bbbb5555-5555-5555-5555-55555555bbbb'
+       AND (aplica_iva IS DISTINCT FROM true OR tipo_iva <> 'gravado_16' OR proforma_id IS NOT NULL)) THEN
+    RAISE EXCEPTION 'LC_TEST_FALLA: rechazo de cambio fiscal no fue atómico';
+  END IF;
+END
+$caso2$ LANGUAGE plpgsql;
+
+-- CASO 3: confirmación del IVA guardado del concepto seleccionado.
+-- No cambia el tratamiento; el no seleccionado queda intacto.
+-- -------------------------------------------------------------
+DO $caso3$
+DECLARE
   v_aplica_sel boolean;
   v_aplica_otro boolean;
+  v_proforma public.proformas;
 BEGIN
-  PERFORM public.crear_proforma_atomica(
+  v_proforma := public.crear_proforma_atomica(
     'bbbb1111-1111-1111-1111-11111111bbbb',
     'bbbb4444-4444-4444-4444-44444444bbbb',
     'bbbb3333-3333-3333-3333-33333333bbbb',
     'Cliente IVA Overrides', 'ELOVR0001', NULL,
     ARRAY['bbbb5555-5555-5555-5555-55555555bbbb'::uuid],
-    0, 0, 0, 1000, 0, 1000,
+    0, 0, 0, 1000, 160, 1160,
     NULL, 'tester', 30, 0.16,
-    jsonb_build_object('bbbb5555-5555-5555-5555-55555555bbbb', false)
+    jsonb_build_object('bbbb5555-5555-5555-5555-55555555bbbb', true)
   );
 
   SELECT aplica_iva INTO v_aplica_sel FROM public.conceptos_venta
    WHERE id = 'bbbb5555-5555-5555-5555-55555555bbbb';
-  IF v_aplica_sel IS DISTINCT FROM false THEN
-    RAISE EXCEPTION 'LC_TEST_FALLA: el override válido no se aplicó al concepto seleccionado';
+  IF v_aplica_sel IS DISTINCT FROM true OR v_proforma.iva_mxn <> 160 OR v_proforma.total_mxn <> 1160 THEN
+    RAISE EXCEPTION 'LC_TEST_FALLA: la confirmación válida alteró el IVA o los importes';
   END IF;
 
   SELECT aplica_iva INTO v_aplica_otro FROM public.conceptos_venta
@@ -146,6 +180,6 @@ BEGIN
     RAISE EXCEPTION 'LC_TEST_FALLA: el concepto no seleccionado cambió durante una proforma válida';
   END IF;
 END
-$caso2$ LANGUAGE plpgsql;
+$caso3$ LANGUAGE plpgsql;
 
 ROLLBACK;

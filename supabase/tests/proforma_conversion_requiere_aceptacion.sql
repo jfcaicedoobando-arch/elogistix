@@ -75,10 +75,10 @@ BEGIN
 
   INSERT INTO public.conceptos_venta
     (organization_id, embarque_id, proforma_id, descripcion, cantidad,
-     precio_unitario, total, moneda, aplica_iva, tasa_iva_aplicada)
+     precio_unitario, total, moneda, aplica_iva, tasa_iva_aplicada, tipo_iva)
   SELECT 'cccc1111-1111-1111-1111-11111111cccc',
          'cccc8888-8888-8888-8888-88888888cccc', p, 'Flete', 1, 1000, 1000,
-         'MXN'::public.moneda, true, 0.16
+         'MXN'::public.moneda, true, 0.16, 'gravado_16'
   FROM unnest(ARRAY[
     'cccc4444-4444-4444-4444-44444444cccc'::uuid,
     'cccc5555-5555-5555-5555-55555555cccc'::uuid,
