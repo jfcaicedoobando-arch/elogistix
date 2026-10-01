@@ -22,6 +22,10 @@ export async function fetchHistorialFacturaEmitida(
     p_limite: limite,
   });
 
+  // P0002 = la factura ya no existe o no es visible (p. ej. se eliminó mientras
+  // el detalle seguía abierto): no hay historial que mostrar, no es una falla
+  // (JAVASCRIPT-REACT-6Z / 70 / 71).
+  if (error?.code === "P0002") return [];
   if (error) throw error;
 
   return (data ?? []).map((row) => ({

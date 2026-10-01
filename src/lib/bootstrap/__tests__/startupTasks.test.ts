@@ -61,11 +61,11 @@ describe("registerChunkRecoveryListeners", () => {
     ]);
   });
 
-  it("vite:preloadError siempre previene el default y recupera", () => {
+  it("vite:preloadError recupera sin prevenir el default (el import debe rechazar)", () => {
     const { handlers, recover } = registrar(() => false);
     const preventDefault = vi.fn();
     handlers.get("vite:preloadError")!({ preventDefault });
-    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(preventDefault).not.toHaveBeenCalled();
     expect(recover).toHaveBeenCalledTimes(1);
   });
 

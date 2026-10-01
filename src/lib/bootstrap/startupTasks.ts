@@ -58,8 +58,10 @@ export function registerChunkRecoveryListeners(deps: ChunkRecoveryDeps = {}): vo
   const esChunk = deps.isChunkError ?? isDynamicImportError;
   const recuperar = deps.recover ?? (() => void tryReloadForChunkError());
 
-  target.addEventListener("vite:preloadError", (event) => {
-    event.preventDefault();
+  // Sin preventDefault: si se previene, Vite resuelve el import() con
+  // `undefined` y el código que desestructura truena (JAVASCRIPT-REACT-74).
+  // Dejamos que el import() rechace con su error real y sólo recuperamos.
+  target.addEventListener("vite:preloadError", () => {
     recuperar();
   });
 
