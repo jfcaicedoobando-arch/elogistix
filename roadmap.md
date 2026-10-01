@@ -25,3 +25,12 @@ Merge, pruebas, deploy backend y publicación se registran por separado.
 
 Retirar un plan Markdown no demuestra que se hayan corregido todos sus
 datos ni autoriza aplicar migraciones/ajustes propuestos.
+
+## CRM por objetos (plan aprobado 2026-10-01)
+- [x] Fase 1: base de objetos, vínculos, propiedades y migración de datos (preparada, se aplica al aceptar el draft)
+- [ ] Fase 2: pantallas de Empresas, Contactos, Oportunidades, Actividades
+- [ ] Fase 3: módulo de Propiedades (super admin) + propiedades iniciales
+- [ ] Fase 4: embudo de 7 etapas
+- [ ] Fase 5: solicitud a Pricing
+- [ ] Fase 6: puntaje A/B/C
+- [ ] Fase 7: reportes dinámicos
