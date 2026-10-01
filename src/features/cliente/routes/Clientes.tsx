@@ -54,7 +54,10 @@ export default function Clientes() {
     resetAll,
   } = useTableFilters({ defaultFilters: {}, defaultPageSize: 50 });
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // `?nuevo=1` abre el alta directo (lo usa el CRM al ganar una oportunidad).
+  const [dialogOpen, setDialogOpen] = useState(
+    () => canAltaCliente && new URLSearchParams(window.location.search).get("nuevo") === "1",
+  );
   const [importOpen, setImportOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);

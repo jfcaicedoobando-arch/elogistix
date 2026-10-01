@@ -10,15 +10,17 @@ import { DatosComercialesCard } from "./DatosComercialesCard";
 import { MargenAutorizacionCard } from "./MargenAutorizacionCard";
 import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
+import { SugerirClienteCard } from "./SugerirClienteCard";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 interface Props {
   op: CrmOportunidadRow;
   etapaNombre?: string;
+  etapaTipo?: string | null;
   canEdit: boolean;
 }
 
-export function OportunidadResumenTab({ op, etapaNombre, canEdit }: Props) {
+export function OportunidadResumenTab({ op, etapaNombre, etapaTipo, canEdit }: Props) {
   const fields = [
     { label: "Vendedor", value: op.vendedor_email },
     { label: "Modo", value: op.modo },
@@ -33,6 +35,7 @@ export function OportunidadResumenTab({ op, etapaNombre, canEdit }: Props) {
 
   return (
     <>
+      <SugerirClienteCard etapaTipo={etapaTipo} clienteId={op.cliente_id} />
       <CriteriosSalidaCard
         oportunidadId={op.id}
         etapaId={op.etapa_id}

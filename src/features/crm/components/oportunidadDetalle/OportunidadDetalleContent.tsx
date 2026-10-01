@@ -111,7 +111,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4 space-y-4">
-          <OportunidadResumenTab op={op} etapaNombre={etapa?.nombre} canEdit={canEdit} />
+          <OportunidadResumenTab op={op} etapaNombre={etapa?.nombre} etapaTipo={etapa?.tipo} canEdit={canEdit} />
         </TabsContent>
 
 
