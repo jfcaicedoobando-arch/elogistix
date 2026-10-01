@@ -43,7 +43,7 @@ describe("loadCarteraAbierta", () => {
     expect(out).toEqual({ facturas: [], pagos: [], ncs: [] });
   });
 
-  it("consulta NC sólo con estado Aplicada y sin eliminar", async () => {
+  it("consulta NC sólo con estado Timbrada o Aplicada y sin eliminar", async () => {
     datosPorTabla.set("facturas", [{ id: "f1", total: 1000, moneda: "MXN", estado: "Emitida" }]);
     datosPorTabla.set("pagos_factura", [{ factura_id: "f1", monto_aplicado_factura: 200, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }]);
     datosPorTabla.set("factura_notas_credito", [{ factura_id: "f1", monto: 300, moneda: "MXN", tipo_cambio: null }]);
@@ -54,7 +54,7 @@ describe("loadCarteraAbierta", () => {
 
     const nc = llamadas.find((l) => l.tabla === "factura_notas_credito")!;
     expect(nc.filtros).toEqual(expect.arrayContaining([
-      { op: "eq", args: ["estado", "Aplicada"] },
+      { op: "in", args: ["estado", ["Timbrada", "Aplicada"]] },
       { op: "is", args: ["deleted_at", null] },
     ]));
   });
