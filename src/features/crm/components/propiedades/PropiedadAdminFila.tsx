@@ -8,13 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useActualizarPropiedad } from "@/features/crm/hooks/usePropiedadesCrm";
-import type { PropiedadCrm, TipoPropiedad } from "@/features/crm/services/propiedadesCrm";
+import { ETIQUETA_TIPO } from "./etiquetasTipo";
+import type { PropiedadCrm } from "@/features/crm/services/propiedadesCrm";
 import { OpcionesEditor } from "./OpcionesEditor";
 
-export const ETIQUETA_TIPO: Record<TipoPropiedad, string> = {
-  seleccion: "Lista (una opción)", multiseleccion: "Lista (varias opciones)",
-  numero: "Número", fecha: "Fecha", texto: "Texto libre",
-};
 
 interface Props {
   prop: PropiedadCrm;

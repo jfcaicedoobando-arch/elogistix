@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useCrearPropiedad, usePropiedadesCrm } from "@/features/crm/hooks/usePropiedadesCrm";
 import type { ObjetoCrm, TipoPropiedad } from "@/features/crm/services/propiedadesCrm";
-import { ETIQUETA_TIPO, PropiedadAdminFila } from "./PropiedadAdminFila";
+import { PropiedadAdminFila } from "./PropiedadAdminFila";
+import { ETIQUETA_TIPO } from "./etiquetasTipo";
 
 export function ListaPropiedadesAdmin({ objeto }: { objeto: ObjetoCrm }) {
   const q = usePropiedadesCrm(objeto);

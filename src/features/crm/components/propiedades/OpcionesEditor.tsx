@@ -43,7 +43,7 @@ export function OpcionesEditor({ prop }: { prop: PropiedadCrm }) {
       ))}
       <div className="flex items-center gap-2">
         <Input
-          value={nueva} onChange={(e) => setNueva(e.target.value)} placeholder="Nueva opción"
+          value={nueva} onChange={(e) => setNueva(e.target.value)} placeholder="Nueva opción" aria-label="Nueva opción"
           className="h-8 max-w-xs" maxLength={120}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }}
         />
