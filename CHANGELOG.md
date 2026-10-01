@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.12] - 2026-09-30
+
+- **fix(cotizaciones aéreas)**: captura de peso físico independiente del volumétrico y volumen real desde dimensiones. Duplicar o convertir conserva las medidas; los datos históricos sin peso físico no se reinterpretan ni cambian precios.
+- **fix(tesorería · flujo)**: aviso de vencidos anteriores a la ventana, desglosados por moneda original y separados de los totales proyectados, con acceso a su revisión.
+- **fix(tesorería · cuentas)**: estados de carga, error y ausencia de cuentas diferenciados; guía por permisos y traspasos bloqueados cuando faltan dos cuentas activas.
+- **fix(navegación)**: títulos de pestaña propios para flujo, cuentas, estado de cuenta y pagos programados.
+
 ## [13.824.11] - 2026-09-29
 
 - **fix(facturación)**: eliminar un borrador usa baja lógica de factura y conceptos, sin infringir la protección contra borrado físico de CFDI.

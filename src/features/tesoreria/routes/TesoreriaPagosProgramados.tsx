@@ -1,3 +1,4 @@
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ import { buildPagosProgramadosColumns, filtrarProgramables, type FiltroBandeja }
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 export default function TesoreriaPagosProgramados() {
+  useDocumentTitle("Pagos programados");
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
   // `cxp_por_pagar` ocultaba captura/Borrador/por aprobar con fecha).
   const { data = [], isLoading, isError, refetch } = useQuery({

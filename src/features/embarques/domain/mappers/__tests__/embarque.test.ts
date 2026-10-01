@@ -117,6 +117,7 @@ describe("embarqueMappers", () => {
       tipo_carga: "Carga General",
       tipo_contenedor: "40HC",
       peso_kg: 500,
+      peso_fisico_kg: 500,
       volumen_m3: 5,
       piezas: 10,
       origen: "MEX",

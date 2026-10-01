@@ -69,6 +69,8 @@ export interface CreateCotizacionInput {
   incoterm: string;
   descripcion_mercancia: string;
   peso_kg: number;
+  /** Peso físico aéreo explícito; null significa que no fue capturado. */
+  peso_fisico_kg?: number | null;
   volumen_m3: number;
   piezas: number;
   origen: string;

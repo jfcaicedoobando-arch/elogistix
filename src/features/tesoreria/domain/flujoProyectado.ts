@@ -3,6 +3,7 @@
  * Ver `./resumen.ts` para contexto del refactor (Auditoría Paso 4).
  * Aplicadores extraídos a `./flujoProyectado.aplicadores.ts`.
  */
+import { resumirVencidosFueraProyeccion, type VencidosFueraProyeccion } from "./vencidosFueraProyeccion";
 import { parseDateOnlyLocal, formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { aMxn } from "@/lib/financial/convertir";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta, TasasCambio } from "./resumen";
@@ -33,6 +34,7 @@ export interface SemanaFlujo {
 export interface FlujoProyectado {
   /** Sin cuentas, el acumulado sólo describe flujos; no es un saldo bancario. */
   saldo_inicial_disponible: boolean;
+  vencidos_fuera_proyeccion: VencidosFueraProyeccion;
   saldo_inicial_mxn: number;
   semanas: SemanaFlujo[];
   total_entradas_mxn: number;
@@ -175,6 +177,7 @@ export function calcularFlujoProyectado(args: {
 
   return {
     saldo_inicial_disponible: args.cuentas.length > 0,
+    vencidos_fuera_proyeccion: resumirVencidosFueraProyeccion(inicioSemana(hoy), args.cobranza, args.cxp, args.liquidaciones),
     saldo_inicial_mxn: saldoInicial,
     semanas,
     total_entradas_mxn: totalEnt,

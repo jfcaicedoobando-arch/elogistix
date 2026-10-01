@@ -2711,6 +2711,7 @@ export type Database = {
           organization_id: string
           origen: string
           origen_portal: boolean
+          peso_fisico_kg: number | null
           peso_kg: number
           piezas: number
           prospecto_contacto: string
@@ -2803,6 +2804,7 @@ export type Database = {
           organization_id?: string
           origen?: string
           origen_portal?: boolean
+          peso_fisico_kg?: number | null
           peso_kg?: number
           piezas?: number
           prospecto_contacto?: string
@@ -2895,6 +2897,7 @@ export type Database = {
           organization_id?: string
           origen?: string
           origen_portal?: boolean
+          peso_fisico_kg?: number | null
           peso_kg?: number
           piezas?: number
           prospecto_contacto?: string

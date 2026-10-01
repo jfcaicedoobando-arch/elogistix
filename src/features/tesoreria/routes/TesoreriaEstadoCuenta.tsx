@@ -1,3 +1,4 @@
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 /**
  * Tesorería › Estado de cuenta bancario (v13.450.0).
  *
@@ -5,7 +6,11 @@
  * saldo corrido, filtros por fecha/concepto/tipo y exportación a CSV/PDF.
  */
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { CuentasBancariasEmptyState } from "@/features/tesoreria/components/CuentasBancariasEmptyState";
 import { Landmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -27,8 +32,15 @@ import { EstadoCuentaToolbar } from "./_sections/EstadoCuentaToolbar";
 import { EstadoCuentaResumen } from "./_sections/EstadoCuentaResumen";
 import { EstadoCuentaExportButtons } from "./_sections/EstadoCuentaExportButtons";
 
+function cuentasListas(cargando: boolean, error: boolean, cantidad: number) {
+  return !cargando && !error && cantidad > 0;
+}
+
 export default function TesoreriaEstadoCuenta() {
-  const { data: cuentas = [] } = useCuentasBancarias();
+  useDocumentTitle("Estado de cuenta");
+  const { data: cuentas = [], isLoading: cargandoCuentas, isError: errorCuentas, refetch: recargarCuentas } = useCuentasBancarias();
+  const { canAdminCuentasBancarias } = usePermissions();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [cuentaId, setCuentaIdState] = useState<string>(searchParams.get("cuenta") ?? "");
   const [rango, setRango] = useState<RangoFechas>(() => rangoMes());
@@ -67,6 +79,17 @@ export default function TesoreriaEstadoCuenta() {
         }
       />
 
+      {!cuentasListas(cargandoCuentas, errorCuentas, cuentas.length) ? (
+        <AsyncBoundary isLoading={cargandoCuentas} isError={errorCuentas} onRetry={recargarCuentas}
+          skeleton={<KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />}
+          errorTitle="No se pudieron cargar las cuentas bancarias">
+          <Card><CardContent density="compact">
+            <CuentasBancariasEmptyState puedeAdministrar={canAdminCuentasBancarias}
+              onAdministrar={() => navigate("/tesoreria/cuentas")} />
+          </CardContent></Card>
+        </AsyncBoundary>
+      ) : (
+        <>
       <EstadoCuentaToolbar
         cuentas={cuentas}
         cuentaId={cuentaId}
@@ -115,6 +138,9 @@ export default function TesoreriaEstadoCuenta() {
             />
 
           </div>
+        </>
+      )}
+
         </>
       )}
 

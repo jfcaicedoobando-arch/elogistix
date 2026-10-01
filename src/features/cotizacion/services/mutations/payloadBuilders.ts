@@ -27,6 +27,7 @@ function partesMercanciaInsert(input: CreateCotizacionInput) {
     incoterm: input.incoterm as CotizacionInsert["incoterm"],
     descripcion_mercancia: input.descripcion_mercancia,
     peso_kg: input.peso_kg,
+    peso_fisico_kg: input.peso_fisico_kg ?? null,
     volumen_m3: input.volumen_m3,
     piezas: input.piezas,
     origen: input.origen,

@@ -1,15 +1,7 @@
-/**
- * Mappers para vincular/desvincular una cotización a un formulario de embarque.
- *
- * v13.33.0 — Pack B extendido: hereda 7 campos adicionales de la cotización
- *  (tarifa, carta garantía, días libres demoras/almacenaje, seguro, valor
- *  seguro y notas). Las nuevas columnas existen en `embarques` desde la
- *  migración 2026-06-16.
- *
- * v13.30.0 — Pack B: contenedores placeholder + respect-overrides en desvincular.
- * v13.28.0 — Precarga ampliada (rutas, MSDS, modo dirigido).
- */
+/** Vinculación y desvinculación de cotizaciones: carga, ruta, contenedores y opcionales. */
 
+import { resumenDimensionesAereas } from "@/features/cotizacion/domain/medidasAereas";
+import type { DimensionAerea } from "@/features/cotizacion/types";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
 import {
   crearContenedorVacio,
@@ -25,6 +17,8 @@ export interface CotizacionParaVincular {
   tipo_carga: string;
   tipo_contenedor: string | null;
   peso_kg: number;
+  peso_fisico_kg?: number | null;
+  dimensiones_aereas?: DimensionAerea[];
   volumen_m3: number;
   piezas: number;
   origen: string;
@@ -115,8 +109,8 @@ export function buildMercanciaUpdates(cot: CotizacionParaVincular): FieldUpdate[
     ["descripcionMercancia", cot.descripcion_mercancia],
     ["tipoCarga", cot.tipo_carga || "Carga General"],
     ["tipoContenedor", cot.tipo_contenedor || ""],
-    ["pesoKg", String(cot.peso_kg || "")],
-    ["volumenM3", String(cot.volumen_m3 || "")],
+    ["pesoKg", String((esModoAereo(cot.modo) ? cot.peso_fisico_kg : cot.peso_kg) || "")],
+    ["volumenM3", String((esModoAereo(cot.modo) ? resumenDimensionesAereas(cot.dimensiones_aereas ?? []).volumenM3 : cot.volumen_m3) || "")],
     ["piezas", String(cot.piezas || "")],
   ];
 }

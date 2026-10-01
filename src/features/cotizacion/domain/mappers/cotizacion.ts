@@ -1,3 +1,4 @@
+import { resumenDimensionesAereas } from "../medidasAereas";
 import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import type { ConceptoVentaCotizacion } from '@/features/cotizacion/types';
@@ -30,11 +31,10 @@ function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
     return { peso: 0, volumen: 0, piezas: 0 };
   }
   if (v.modo === "Aéreo") {
-    return {
-      peso: v.dimensionesAereas.reduce((s, d) => s + d.peso_volumetrico_kg, 0),
-      volumen: 0,
-      piezas: v.dimensionesAereas.reduce((s, d) => s + d.piezas, 0),
-    };
+    const medidas = resumenDimensionesAereas(v.dimensionesAereas);
+    // peso_kg conserva su significado histórico en cotizaciones aéreas.
+    // El peso físico viaja separado para no reinterpretar registros antiguos.
+    return { peso: medidas.pesoVolumetricoKg, volumen: medidas.volumenM3, piezas: medidas.piezas };
   }
   return { peso: v.pesoKg, volumen: v.volumenM3, piezas: v.piezas };
 }

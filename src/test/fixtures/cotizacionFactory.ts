@@ -28,6 +28,7 @@ const BASE_COTIZACION_ROW = {
   destino: "USLAX",
   descripcion_mercancia: "Mercancía de prueba",
   peso_kg: 1000,
+  peso_fisico_kg: null,
   volumen_m3: 10,
   piezas: 1,
   subtotal: 1000,
