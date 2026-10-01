@@ -23864,7 +23864,7 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
     SELECT current_user_org_id() AS org,
            has_role(auth.uid(), 'super_admin'::app_role) AS is_super
   ),
-  ventas AS (
+  facturada AS (
     SELECT v.embarque_id,
       SUM(v.venta_doc) FILTER (WHERE v.moneda = 'USD') AS venta_usd_raw,
       SUM(v.venta_doc) FILTER (WHERE v.moneda = 'EUR') AS venta_eur_raw,
@@ -23873,6 +23873,25 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
       SUM(v.venta_mxn) FILTER (WHERE v.moneda = 'EUR') AS venta_eur_mxn
     FROM public._venta_facturada_por_embarque(public.org_scope()) v
     GROUP BY v.embarque_id
+  ),
+  pactada AS (
+    SELECT cv.embarque_id,
+      SUM(cv.total) FILTER (WHERE cv.moneda::text = 'USD') AS venta_usd_raw,
+      SUM(cv.total) FILTER (WHERE cv.moneda::text = 'EUR') AS venta_eur_raw,
+      SUM(cv.total) FILTER (WHERE cv.moneda::text = 'MXN') AS venta_mxn_raw,
+      SUM(cv.total * COALESCE(e1.tipo_cambio_usd, 0)) FILTER (WHERE cv.moneda::text = 'USD') AS venta_usd_mxn,
+      SUM(cv.total * COALESCE(e1.tipo_cambio_eur, 0)) FILTER (WHERE cv.moneda::text = 'EUR') AS venta_eur_mxn
+    FROM conceptos_venta cv
+    JOIN embarques e1 ON e1.id = cv.embarque_id
+    WHERE cv.deleted_at IS NULL
+      AND e1.organization_id = public.org_scope()
+      AND NOT EXISTS (SELECT 1 FROM facturada f WHERE f.embarque_id = cv.embarque_id)
+    GROUP BY cv.embarque_id
+  ),
+  ventas AS (
+    SELECT * FROM facturada
+    UNION ALL
+    SELECT * FROM pactada
   ),
   costos AS (
     SELECT
@@ -23889,9 +23908,7 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
   )
   SELECT
     e.id AS embarque_id,
-    COALESCE(v.venta_usd_mxn, 0)
-      + COALESCE(v.venta_eur_mxn, 0)
-      + COALESCE(v.venta_mxn_raw, 0) AS venta_mxn,
+    COALESCE(v.venta_usd_mxn, 0) + COALESCE(v.venta_eur_mxn, 0) + COALESCE(v.venta_mxn_raw, 0) AS venta_mxn,
     COALESCE(c.costo_usd_raw, 0) * COALESCE(e.tipo_cambio_usd, 0)
       + COALESCE(c.costo_eur_raw, 0) * COALESCE(e.tipo_cambio_eur, 0)
       + COALESCE(c.costo_mxn_raw, 0) AS costo_mxn,
