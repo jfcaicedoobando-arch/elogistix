@@ -5080,6 +5080,53 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._venta_facturada_por_embarque(p_org uuid) RETURNS TABLE(embarque_id uuid, moneda text, venta_doc numeric, venta_mxn numeric)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  WITH f AS (
+    SELECT f.id, f.embarque_id AS emb_directo, f.moneda::text AS moneda, f.tipo_cambio,
+           f.subtotal * (1 - LEAST(COALESCE(public._nc_aplicadas_moneda_factura(f.id), 0)
+                                   / NULLIF(f.total, 0), 1)) AS neto_doc
+    FROM public.facturas f
+    WHERE f.deleted_at IS NULL
+      AND f.organization_id = p_org
+      AND f.estado IN ('Emitida'::estado_factura, 'Pagada'::estado_factura,
+                       'Parcialmente pagada'::estado_factura, 'Vencida'::estado_factura)
+  ),
+  por_concepto AS (
+    SELECT cf.factura_id, cf.embarque_id, SUM(COALESCE(cf.total, 0)) AS w
+    FROM public.conceptos_factura cf JOIN f ON f.id = cf.factura_id
+    WHERE cf.deleted_at IS NULL AND cf.embarque_id IS NOT NULL
+    GROUP BY 1, 2
+  ),
+  por_vinculo AS (
+    SELECT fe.factura_id, fe.embarque_id, 1::numeric AS w
+    FROM public.factura_embarques fe JOIN f ON f.id = fe.factura_id
+    WHERE fe.activa IS TRUE
+      AND NOT EXISTS (SELECT 1 FROM por_concepto pc WHERE pc.factura_id = fe.factura_id)
+  ),
+  directo AS (
+    SELECT f.id AS factura_id, f.emb_directo AS embarque_id, 1::numeric AS w
+    FROM f
+    WHERE f.emb_directo IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM por_concepto pc WHERE pc.factura_id = f.id)
+      AND NOT EXISTS (SELECT 1 FROM por_vinculo pv WHERE pv.factura_id = f.id)
+  ),
+  reparto AS (
+    SELECT x.factura_id, x.embarque_id,
+           x.w / NULLIF(SUM(x.w) OVER (PARTITION BY x.factura_id), 0) AS parte
+    FROM (SELECT * FROM por_concepto UNION ALL SELECT * FROM por_vinculo
+          UNION ALL SELECT * FROM directo) x
+  )
+  SELECT r.embarque_id, f.moneda,
+         SUM(f.neto_doc * COALESCE(r.parte, 0)) AS venta_doc,
+         SUM(CASE WHEN f.moneda = 'MXN' THEN f.neto_doc * COALESCE(r.parte, 0)
+                  WHEN COALESCE(f.tipo_cambio, 0) > 1 THEN f.neto_doc * COALESCE(r.parte, 0) * f.tipo_cambio
+             END) AS venta_mxn
+  FROM reparto r JOIN f ON f.id = r.factura_id
+  GROUP BY r.embarque_id, f.moneda;
+$$;
 CREATE FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) RETURNS numeric
     LANGUAGE sql IMMUTABLE
     SET search_path TO 'public'
@@ -16573,10 +16620,10 @@ BEGIN
       AND e.organization_id = public.org_scope()
   ),
   ventas AS (
-    SELECT cv.moneda::text AS moneda, SUM(cv.total) AS total
-    FROM conceptos_venta cv
-    WHERE cv.deleted_at IS NULL AND cv.embarque_id IN (SELECT id FROM emb)
-    GROUP BY cv.moneda
+    SELECT v.moneda, SUM(v.venta_doc) AS total
+    FROM public._venta_facturada_por_embarque(public.org_scope()) v
+    WHERE v.embarque_id IN (SELECT id FROM emb)
+    GROUP BY v.moneda
   ),
   costos AS (
     SELECT cc.moneda::text AS moneda, SUM(cc.monto) AS total
@@ -17075,21 +17122,10 @@ BEGIN
         AND EXTRACT(year FROM e.eta) = p_year
     ),
     ing AS (
-      SELECT em.mes,
-        SUM(
-          CASE UPPER(COALESCE(cv.moneda::text, 'MXN'))
-            WHEN 'USD' THEN CASE WHEN em.tc_usd IS NOT NULL THEN COALESCE(cv.total, 0) * em.tc_usd END
-            WHEN 'EUR' THEN CASE WHEN em.tc_eur IS NOT NULL THEN COALESCE(cv.total, 0) * em.tc_eur END
-            ELSE COALESCE(cv.total, 0)
-          END
-        ) AS total,
-        COUNT(*) FILTER (
-          WHERE (UPPER(COALESCE(cv.moneda::text, 'MXN')) = 'USD' AND em.tc_usd IS NULL)
-             OR (UPPER(COALESCE(cv.moneda::text, 'MXN')) = 'EUR' AND em.tc_eur IS NULL)
-        ) AS sin_tc
-      FROM public.conceptos_venta cv
-      JOIN emb em ON em.id = cv.embarque_id
-      WHERE cv.deleted_at IS NULL
+      SELECT em.mes, SUM(v.venta_mxn) AS total,
+        COUNT(*) FILTER (WHERE v.venta_mxn IS NULL) AS sin_tc
+      FROM public._venta_facturada_por_embarque(v_org) v
+      JOIN emb em ON em.id = v.embarque_id
       GROUP BY em.mes
     ),
     cst AS (
@@ -23775,37 +23811,13 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
       AND (e.organization_id = public.org_scope())
   ),
   ventas AS (
-    SELECT
-      cv.embarque_id,
-      SUM(public.a_mxn(cv.total, cv.moneda::text, b.tc_usd, b.tc_eur)) AS venta_mxn,
-      COUNT(*) FILTER (
-        WHERE public.a_mxn(cv.total, cv.moneda::text, b.tc_usd, b.tc_eur) IS NULL
-      ) AS venta_sin_tc
-    FROM public.conceptos_venta cv
-    JOIN base b ON b.id = cv.embarque_id
-    WHERE cv.deleted_at IS NULL
-    GROUP BY cv.embarque_id
+    SELECT v.embarque_id, SUM(v.venta_mxn) AS venta_mxn,
+      COUNT(*) FILTER (WHERE v.venta_mxn IS NULL) AS venta_sin_tc
+    FROM public._venta_facturada_por_embarque(public.org_scope()) v
+    JOIN base b ON b.id = v.embarque_id
+    GROUP BY v.embarque_id
   ),
-  ncs AS (
-    SELECT
-      fe.embarque_id,
-      SUM(
-        COALESCE(
-          public.a_mxn(
-            public.nc_aplicadas_en_moneda_factura(f.id),
-            f.moneda::text, b.tc_usd, b.tc_eur
-          ), 0)
-      ) AS nc_mxn
-    FROM public.factura_embarques fe
-    JOIN base b ON b.id = fe.embarque_id
-    JOIN public.facturas f ON f.id = fe.factura_id
-    WHERE fe.activa IS TRUE
-      AND f.deleted_at IS NULL
-      -- AUD-ANALISIS-3: sólo CFDI vigentes (fuera Canceladas y Sustituidas).
-      AND f.estado IN ('Emitida'::estado_factura, 'Pagada'::estado_factura,
-                       'Parcialmente pagada'::estado_factura, 'Vencida'::estado_factura)
-    GROUP BY fe.embarque_id
-  ),
+  ncs AS (SELECT NULL::uuid AS embarque_id, 0::numeric AS nc_mxn WHERE false),
   costos AS (
     SELECT
       cc.embarque_id,
@@ -23853,17 +23865,14 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
            has_role(auth.uid(), 'super_admin'::app_role) AS is_super
   ),
   ventas AS (
-    SELECT
-      cv.embarque_id,
-      SUM(CASE WHEN cv.moneda = 'USD' THEN cv.total ELSE 0 END) AS venta_usd_raw,
-      SUM(CASE WHEN cv.moneda = 'EUR' THEN cv.total ELSE 0 END) AS venta_eur_raw,
-      SUM(CASE WHEN cv.moneda = 'MXN' THEN cv.total ELSE 0 END) AS venta_mxn_raw
-    FROM conceptos_venta cv
-    JOIN embarques e0 ON e0.id = cv.embarque_id
-    CROSS JOIN orgs
-    WHERE cv.deleted_at IS NULL
-      AND (orgs.is_super OR e0.organization_id = orgs.org)
-    GROUP BY cv.embarque_id
+    SELECT v.embarque_id,
+      SUM(v.venta_doc) FILTER (WHERE v.moneda = 'USD') AS venta_usd_raw,
+      SUM(v.venta_doc) FILTER (WHERE v.moneda = 'EUR') AS venta_eur_raw,
+      SUM(v.venta_doc) FILTER (WHERE v.moneda = 'MXN') AS venta_mxn_raw,
+      SUM(v.venta_mxn) FILTER (WHERE v.moneda = 'USD') AS venta_usd_mxn,
+      SUM(v.venta_mxn) FILTER (WHERE v.moneda = 'EUR') AS venta_eur_mxn
+    FROM public._venta_facturada_por_embarque(public.org_scope()) v
+    GROUP BY v.embarque_id
   ),
   costos AS (
     SELECT
@@ -23880,15 +23889,15 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
   )
   SELECT
     e.id AS embarque_id,
-    COALESCE(v.venta_usd_raw, 0) * COALESCE(e.tipo_cambio_usd, 0)
-      + COALESCE(v.venta_eur_raw, 0) * COALESCE(e.tipo_cambio_eur, 0)
+    COALESCE(v.venta_usd_mxn, 0)
+      + COALESCE(v.venta_eur_mxn, 0)
       + COALESCE(v.venta_mxn_raw, 0) AS venta_mxn,
     COALESCE(c.costo_usd_raw, 0) * COALESCE(e.tipo_cambio_usd, 0)
       + COALESCE(c.costo_eur_raw, 0) * COALESCE(e.tipo_cambio_eur, 0)
       + COALESCE(c.costo_mxn_raw, 0) AS costo_mxn,
-    COALESCE(v.venta_usd_raw, 0) * COALESCE(e.tipo_cambio_usd, 0) AS venta_mxn_from_usd,
+    COALESCE(v.venta_usd_mxn, 0) AS venta_mxn_from_usd,
     COALESCE(c.costo_usd_raw, 0) * COALESCE(e.tipo_cambio_usd, 0) AS costo_mxn_from_usd,
-    COALESCE(v.venta_eur_raw, 0) * COALESCE(e.tipo_cambio_eur, 0) AS venta_mxn_from_eur,
+    COALESCE(v.venta_eur_mxn, 0) AS venta_mxn_from_eur,
     COALESCE(c.costo_eur_raw, 0) * COALESCE(e.tipo_cambio_eur, 0) AS costo_mxn_from_eur,
     COALESCE(v.venta_mxn_raw, 0) AS venta_mxn_native,
     COALESCE(c.costo_mxn_raw, 0) AS costo_mxn_native,
@@ -31508,6 +31517,14 @@ CREATE FUNCTION public.venta_embarque_mxn_neta(p_embarque_id uuid, p_tc_usd nume
         AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')), 0)
   , 0)::numeric;
 $$;
+CREATE FUNCTION public.venta_facturada_embarques(p_embarque_ids uuid[]) RETURNS TABLE(embarque_id uuid, moneda text, venta_doc numeric, venta_mxn numeric)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT v.embarque_id, v.moneda, v.venta_doc, v.venta_mxn
+  FROM public._venta_facturada_por_embarque(public.org_scope()) v
+  WHERE v.embarque_id = ANY(p_embarque_ids);
+$$;
 CREATE FUNCTION public.vincular_anticipo_embarque(p_id uuid, p_embarque_id uuid DEFAULT NULL::uuid) RETURNS public.anticipos_proveedor
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -35880,6 +35897,8 @@ GRANT ALL ON FUNCTION public._trg_reversar_movimiento_rep_cancelado() TO service
 REVOKE ALL ON FUNCTION public._validar_cronologia_evento_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO service_role;
+REVOKE ALL ON FUNCTION public._venta_facturada_por_embarque(p_org uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._venta_facturada_por_embarque(p_org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO service_role;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO authenticated;
@@ -37258,6 +37277,9 @@ GRANT ALL ON FUNCTION public.validate_cotizacion_informativa() TO authenticated;
 GRANT ALL ON FUNCTION public.validate_cotizacion_informativa() TO service_role;
 REVOKE ALL ON FUNCTION public.venta_embarque_mxn_neta(p_embarque_id uuid, p_tc_usd numeric, p_tc_eur numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.venta_embarque_mxn_neta(p_embarque_id uuid, p_tc_usd numeric, p_tc_eur numeric) TO service_role;
+REVOKE ALL ON FUNCTION public.venta_facturada_embarques(p_embarque_ids uuid[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.venta_facturada_embarques(p_embarque_ids uuid[]) TO authenticated;
+GRANT ALL ON FUNCTION public.venta_facturada_embarques(p_embarque_ids uuid[]) TO service_role;
 REVOKE ALL ON FUNCTION public.vincular_anticipo_embarque(p_id uuid, p_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.vincular_anticipo_embarque(p_id uuid, p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.vincular_anticipo_embarque(p_id uuid, p_embarque_id uuid) TO service_role;
