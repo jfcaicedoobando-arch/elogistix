@@ -65,31 +65,17 @@ BEGIN
     CURRENT_DATE - 5, CURRENT_DATE + 10
   ) ON CONFLICT (id) DO NOTHING;
 
-  -- AUD-ANALISIS-8: la venta del embarque N7 sale de su factura timbrada
-  -- (USD 300 sin IVA, TC 18), no de los conceptos de venta.
-  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
-  VALUES (CURRENT_DATE, 18, 'manual') ON CONFLICT DO NOTHING;
-  INSERT INTO public.facturas (
-    id, organization_id, cliente_id, cliente_nombre, numero, expediente, embarque_id,
-    moneda, subtotal, iva, total, tipo_cambio, estado, fecha_emision, fecha_vencimiento
-  ) VALUES (
-    'c8888888-8888-8888-8888-888888888888', v_org, 'c7777777-7777-7777-7777-777777777777',
-    'Cliente Ola4 N8', 'OLA4-N7-01', 'ELNSA001', v_emb,
-    'USD'::public.moneda, 300, 0, 300, 18, 'Emitida'::public.estado_factura,
-    CURRENT_DATE, CURRENT_DATE + 30
-  ) ON CONFLICT (id) DO NOTHING;
-
-  -- AUD-ANALISIS-8: N8 ahora se mide sobre la factura del embarque sin TC.
-  INSERT INTO public.facturas (
-    id, organization_id, cliente_id, cliente_nombre, numero, expediente, embarque_id,
-    moneda, subtotal, iva, total, tipo_cambio, estado, fecha_emision, fecha_vencimiento
-  ) VALUES (
-    'c9999999-9999-9999-9999-999999999999', v_org, 'c7777777-7777-7777-7777-777777777777',
-    'Cliente Ola4 N8', 'OLA4-N8-01', 'ELNSB001', 'c4444444-4444-4444-4444-444444444444',
-    'USD'::public.moneda, 500, 0, 500, 18, 'Emitida'::public.estado_factura,
-    CURRENT_DATE, CURRENT_DATE + 30
-  ) ON CONFLICT (id) DO NOTHING;
-  -- Se simula una factura histórica sin TC confiable (sin disparar triggers).
+  -- AUD-ANALISIS-8: la venta sale de la factura timbrada (N7: USD 300, TC 18;
+  -- N8: factura histórica sin TC confiable, simulada sin disparar triggers).
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen) VALUES (CURRENT_DATE, 18, 'manual') ON CONFLICT DO NOTHING;
+  INSERT INTO public.facturas (id, organization_id, cliente_id, cliente_nombre, numero, expediente, embarque_id,
+    moneda, subtotal, iva, total, tipo_cambio, estado, fecha_emision, fecha_vencimiento)
+  VALUES ('c8888888-8888-8888-8888-888888888888', v_org, 'c7777777-7777-7777-7777-777777777777', 'Cliente Ola4 N8',
+          'OLA4-N7-01', 'ELNSA001', v_emb, 'USD', 300, 0, 300, 18, 'Emitida', CURRENT_DATE, CURRENT_DATE + 30),
+         ('c9999999-9999-9999-9999-999999999999', v_org, 'c7777777-7777-7777-7777-777777777777', 'Cliente Ola4 N8',
+          'OLA4-N8-01', 'ELNSB001', 'c4444444-4444-4444-4444-444444444444', 'USD', 500, 0, 500, 18, 'Emitida',
+          CURRENT_DATE, CURRENT_DATE + 30)
+  ON CONFLICT (id) DO NOTHING;
   ALTER TABLE public.facturas DISABLE TRIGGER USER;
   UPDATE public.facturas SET tipo_cambio = 1 WHERE id = 'c9999999-9999-9999-9999-999999999999';
   ALTER TABLE public.facturas ENABLE TRIGGER USER;
