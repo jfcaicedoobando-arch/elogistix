@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck } from "lucide-react";
+import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -15,6 +15,8 @@ const TABS = [
   { to: "/crm", label: "Resumen", icon: LayoutDashboard, end: true },
   { to: "/crm/leads", label: "Leads", icon: Users, end: false },
   { to: "/crm/prospectos", label: "Prospectos", icon: UserCheck, end: false },
+  { to: "/crm/empresas", label: "Empresas", icon: Building2, end: false },
+  { to: "/crm/contactos", label: "Contactos", icon: UserRound, end: false },
   { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false },
   { to: "/crm/actividades", label: "Actividades", icon: Activity, end: false },
   { to: "/crm/higiene", label: "Higiene", icon: ShieldCheck, end: false },
