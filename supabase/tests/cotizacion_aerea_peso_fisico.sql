@@ -10,8 +10,8 @@ BEGIN
     VALUES ('TEST N01 AEREO', 'TNA000000XX0', 'basico', true) RETURNING id INTO v_org;
   INSERT INTO auth.users (id, email) VALUES (v_uid, 'n01-aereo@example.invalid');
   INSERT INTO public.organization_members (organization_id, user_id, role)
-    VALUES (v_org, v_uid, 'operador'::public.app_role);
-  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'operador'::public.app_role);
+    VALUES (v_org, v_uid, 'admin_org'::public.app_role);
+  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin_org'::public.app_role);
   INSERT INTO public.clientes (organization_id, nombre, rfc, email)
     VALUES (v_org, 'Refacciones CNC Monterrey', '', 'cnc@example.invalid') RETURNING id INTO v_cli;
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
