@@ -158,4 +158,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
    ('public.tg_bloquear_financiero_embarque_cerrado()'),
    -- v13.823.392: helper interno que calcula el delta autoritativo de una tarifa
    -- sustituida en el flujo cotización→embarque. Sólo lo usan RPCs DEFINER.
-   ('public._embarque_delta_tarifa_sustituida(uuid, uuid)');
+   ('public._embarque_delta_tarifa_sustituida(uuid, uuid)'),
+   -- AUD-ANALISIS-8: venta facturada neta por embarque; recibe la org como
+   -- parámetro, así que sólo la invocan RPCs DEFINER ya acotadas a org_scope().
+   ('public._venta_facturada_por_embarque(uuid)');

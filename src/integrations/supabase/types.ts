@@ -8963,6 +8963,15 @@ export type Database = {
         Args: { _aplica_iva: boolean; _tasa: number }
         Returns: string
       }
+      _venta_facturada_por_embarque: {
+        Args: { p_org: string }
+        Returns: {
+          embarque_id: string
+          moneda: string
+          venta_doc: number
+          venta_mxn: number
+        }[]
+      }
       a_mxn: {
         Args: {
           p_eur_mxn: number
@@ -11920,6 +11929,15 @@ export type Database = {
       venta_embarque_mxn_neta: {
         Args: { p_embarque_id: string; p_tc_eur: number; p_tc_usd: number }
         Returns: number
+      }
+      venta_facturada_embarques: {
+        Args: { p_embarque_ids: string[] }
+        Returns: {
+          embarque_id: string
+          moneda: string
+          venta_doc: number
+          venta_mxn: number
+        }[]
       }
       vincular_anticipo_embarque: {
         Args: { p_embarque_id?: string; p_id: string }

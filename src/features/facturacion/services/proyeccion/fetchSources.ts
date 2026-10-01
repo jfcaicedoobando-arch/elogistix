@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { fetchVentaFacturadaEmbarques } from "@/features/facturacion/services/shared/ventaFacturada";
 import { ESTADOS_EMBARQUE_NO_CONTABLES } from "@/features/embarques/domain/estadosContables";
 
 export interface EmbarqueProyeccionRow {
@@ -52,15 +53,8 @@ export async function fetchConceptosYFacturas(
   // AUD-ANALISIS-4: lectura por páginas; un mes con >1000 renglones ya no se
   // trunca en silencio.
   const [ventas, costos, facturas] = await Promise.all([
-    leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
-      supabase
-        .from("conceptos_venta")
-        .select("id, embarque_id, total, moneda")
-        .in("embarque_id", ids)
-        .is("deleted_at", null)
-        .order("id")
-        .range(ini, fin),
-    ),
+    // AUD-ANALISIS-8: venta = facturas timbradas vigentes − notas de crédito.
+    fetchVentaFacturadaEmbarques(ids),
     leerTodasLasPaginas("cierre.costos", (ini, fin) =>
       supabase
         .from("conceptos_costo")
