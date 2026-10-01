@@ -23759,6 +23759,8 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
       ) AS tc_eur
     FROM public.embarques e
     WHERE e.deleted_at IS NULL
+      -- AUD-ANALISIS-1: alineado con Utilidad/Tablero/Cierre.
+      AND e.estado NOT IN ('Cotización'::estado_embarque, 'Borrador'::estado_embarque, 'Cancelado'::estado_embarque)
       AND (_fecha_desde IS NULL OR e.eta >= _fecha_desde)
       AND (_fecha_hasta IS NULL OR e.eta <= _fecha_hasta)
       AND (_modo IS NULL OR e.modo::text = _modo)
@@ -23777,9 +23779,6 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     WHERE cv.deleted_at IS NULL
     GROUP BY cv.embarque_id
   ),
-  -- M1 residual: notas de crédito aplicadas por embarque, convertidas a MXN
-  -- con el mismo TC resuelto del embarque. Canon único:
-  -- nc_aplicadas_en_moneda_factura (delegación a _nc_aplicadas_moneda_factura).
   ncs AS (
     SELECT
       fe.embarque_id,
@@ -23795,7 +23794,9 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     JOIN public.facturas f ON f.id = fe.factura_id
     WHERE fe.activa IS TRUE
       AND f.deleted_at IS NULL
-      AND f.estado <> 'Cancelada'::estado_factura
+      -- AUD-ANALISIS-3: sólo CFDI vigentes (fuera Canceladas y Sustituidas).
+      AND f.estado IN ('Emitida'::estado_factura, 'Pagada'::estado_factura,
+                       'Parcialmente pagada'::estado_factura, 'Vencida'::estado_factura)
     GROUP BY fe.embarque_id
   ),
   costos AS (
@@ -23812,10 +23813,7 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
   ),
   neto AS (
     SELECT
-      b.id,
-      b.cliente_id,
-      b.cliente_nombre,
-      b.tc_usd,
+      b.id, b.cliente_id, b.cliente_nombre, b.tc_usd,
       GREATEST(COALESCE(v.venta_mxn, 0) - COALESCE(nc.nc_mxn, 0), 0) AS venta_mxn,
       COALESCE(c.costo_mxn, 0) AS costo_mxn,
       COALESCE(v.venta_sin_tc, 0) AS venta_sin_tc,
@@ -23829,20 +23827,12 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     n.cliente_id,
     MAX(n.cliente_nombre) AS cliente_nombre,
     COUNT(DISTINCT n.id) AS total_embarques,
-    COALESCE(SUM(
-      CASE WHEN COALESCE(n.tc_usd, 0) > 0
-        THEN round(n.venta_mxn / n.tc_usd, 4) END
-    ), 0) AS venta_usd,
-    COALESCE(SUM(
-      CASE WHEN COALESCE(n.tc_usd, 0) > 0
-        THEN round(n.costo_mxn / n.tc_usd, 4) END
-    ), 0) AS costo_usd,
+    COALESCE(SUM(CASE WHEN COALESCE(n.tc_usd, 0) > 0 THEN round(n.venta_mxn / n.tc_usd, 4) END), 0) AS venta_usd,
+    COALESCE(SUM(CASE WHEN COALESCE(n.tc_usd, 0) > 0 THEN round(n.costo_mxn / n.tc_usd, 4) END), 0) AS costo_usd,
     COALESCE(SUM(n.venta_mxn), 0) AS venta_mxn,
     COALESCE(SUM(n.costo_mxn), 0) AS costo_mxn,
     COUNT(DISTINCT n.id) FILTER (
-      WHERE COALESCE(n.tc_usd, 0) <= 0
-         OR n.venta_sin_tc > 0
-         OR n.costo_sin_tc > 0
+      WHERE COALESCE(n.tc_usd, 0) <= 0 OR n.venta_sin_tc > 0 OR n.costo_sin_tc > 0
     ) AS embarques_sin_tc
   FROM neto n
   GROUP BY n.cliente_id;

@@ -4,6 +4,7 @@
 import { rangoMes, type FilaProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { fetchEmbarquesMes, fetchConceptosYFacturas } from "./fetchSources";
 import { indexarPorEmbarque, buildFilasProyeccion } from "./buildFilas";
+import { tcUsdFacturaPorExpediente } from "@/features/facturacion/services/shared/fetchFacturas";
 
 export interface ProyeccionMesParams {
   organizationId: string | null;
@@ -31,6 +32,8 @@ export async function fetchProyeccionMes({
   const facturadosSet = new Set<string>(
     facturas.map((f) => f.expediente).filter((x): x is string => !!x),
   );
+  // AUD-ANALISIS-5: la venta se valúa con el TC de la factura (como el Tablero).
+  const tcFactura = tcUsdFacturaPorExpediente(facturas);
 
-  return buildFilasProyeccion(embarques, ventasMap, costosMap, facturadosSet);
+  return buildFilasProyeccion(embarques, ventasMap, costosMap, facturadosSet, tcFactura);
 }

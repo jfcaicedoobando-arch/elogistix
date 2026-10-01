@@ -36,6 +36,7 @@ export function buildFilasProyeccion(
   ventasMap: Map<string, ConceptoAgg[]>,
   costosMap: Map<string, ConceptoAgg[]>,
   facturadosSet: Set<string>,
+  tcFacturaPorExpediente: ReadonlyMap<string, number> = new Map(),
 ): FilaProyeccion[] {
   return embarques.map<FilaProyeccion>((e) => {
     // Ola 5 · M5: sin TC capturado NO se asume 1 MXN = 1 USD/EUR. Se marca la
@@ -44,6 +45,10 @@ export function buildFilasProyeccion(
     const tcEurRaw = Number(e.tipo_cambio_eur ?? 0);
     const tcUsd = tcUsdRaw > 0 ? tcUsdRaw : 0;
     const tcEur = tcEurRaw > 0 ? tcEurRaw : 0;
+    // AUD-ANALISIS-5: la venta usa el TC de la factura vigente (alineado con el
+    // Tablero); sin factura USD conserva el TC del embarque. El costo sigue con
+    // el TC del embarque.
+    const tcVentaUsd = (e.expediente && tcFacturaPorExpediente.get(e.expediente)) || tcUsd;
     const v = ventasMap.get(e.id) ?? [];
     const c = costosMap.get(e.id) ?? [];
     // RG14 (Ola 3): el badge "Sin TC" sólo aplica si hay conceptos en moneda
@@ -63,8 +68,8 @@ export function buildFilasProyeccion(
       sin_tc: (requiereUsd && tcUsd === 0) || (requiereEur && tcEur === 0),
       tiene_proforma: !!e.tiene_proforma,
       tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
-      venta_mxn: sumarConceptosEnMxn(v, tcUsd, tcEur),
-      venta_usd: sumarConceptosEnUsd(v, tcUsd, tcEur),
+      venta_mxn: sumarConceptosEnMxn(v, tcVentaUsd, tcEur),
+      venta_usd: sumarConceptosEnUsd(v, tcVentaUsd, tcEur),
       costo_mxn: sumarConceptosEnMxn(c, tcUsd, tcEur),
       costo_usd: sumarConceptosEnUsd(c, tcUsd, tcEur),
     };
