@@ -1,6 +1,8 @@
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 /**
  * Flujo de caja proyectado a 90 días.
  */
+import { AvisoVencidosFueraProyeccion } from "@/features/tesoreria/components/AvisoVencidosFueraProyeccion";
 import { lazy, Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -25,6 +27,7 @@ const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/Tab
 
 
 export default function TesoreriaFlujo() {
+  useDocumentTitle("Flujo de caja proyectado");
   const { data, isLoading, error, refetch } = useFlujoProyectado(90);
   const volver = useVolver("/tesoreria");
 
@@ -81,6 +84,8 @@ export default function TesoreriaFlujo() {
               </AlertDescription>
             </Alert>
           )}
+
+          <AvisoVencidosFueraProyeccion resumen={data.vencidos_fuera_proyeccion} />
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <KpiCard label="Saldo hoy (MXN aprox)" value={data.saldo_inicial_disponible ? formatCurrency(data.saldo_inicial_mxn, "MXN") : "No disponible"} />

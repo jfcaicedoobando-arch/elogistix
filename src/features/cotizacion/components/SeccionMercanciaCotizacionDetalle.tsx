@@ -15,6 +15,7 @@ interface Props {
     descripcion_mercancia: string;
     descripcion_adicional: string;
     peso_kg: number;
+    peso_fisico_kg?: number | null;
     volumen_m3: number;
     piezas: number;
     msds_archivo: string | null;
@@ -57,7 +58,7 @@ export default function SeccionMercanciaCotizacionDetalle({ cotizacion }: Props)
         )}
 
         {esAereo && dimensionesAereas.length > 0 && (
-          <DimensionesAereasTable dimensiones={dimensionesAereas} totalPiezas={cotizacion.piezas} pesoTotal={cotizacion.peso_kg} />
+          <DimensionesAereasTable dimensiones={dimensionesAereas} totalPiezas={cotizacion.piezas} pesoFisico={cotizacion.peso_fisico_kg} />
         )}
       </CardContent>
     </Card>

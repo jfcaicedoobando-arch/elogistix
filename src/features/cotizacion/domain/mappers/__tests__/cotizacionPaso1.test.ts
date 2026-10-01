@@ -40,7 +40,7 @@ describe("cotizacion · buildPaso1Data", () => {
       "op@x",
     );
     expect(out.peso_kg).toBe(75);
-    expect(out.volumen_m3).toBe(0);
+    expect(out.volumen_m3).toBe(0.003);
     expect(out.piezas).toBe(3);
   });
 

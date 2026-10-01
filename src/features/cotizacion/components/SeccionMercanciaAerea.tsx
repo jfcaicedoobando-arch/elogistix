@@ -1,4 +1,6 @@
 import { useFormContext } from "react-hook-form";
+import { Label } from "@/components/ui/label";
+import { resumenDimensionesAereas } from "@/features/cotizacion/domain/medidasAereas";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ function calcularPesoVolumetrico(d: DimensionAerea): number {
 export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   const dimensiones = watch("dimensionesAereas");
+  const pesoFisico = watch("pesoKg");
 
   const actualizarDimension = (index: number, campo: keyof DimensionAerea, valor: number) => {
     const copia = [...dimensiones];
@@ -41,11 +44,20 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
     setValue("dimensionesAereas", dimensiones.filter((_, i) => i !== index));
   };
 
-  const totalPiezas = dimensiones.reduce((sum, d) => sum + d.piezas, 0);
-  const totalPesoVolumetrico = dimensiones.reduce((sum, d) => sum + d.peso_volumetrico_kg, 0);
+  const medidas = resumenDimensionesAereas(dimensiones);
 
   return (
     <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
+      <div className="space-y-1.5">
+        <Label htmlFor="aereo-peso-fisico">Peso físico total (kg)</Label>
+        <NumericInput id="aereo-peso-fisico" value={pesoFisico}
+          onChange={(n) => setValue("pesoKg", n, { shouldDirty: true })}
+          decimals aria-describedby="aereo-peso-ayuda" className="max-w-xs" />
+        <p id="aereo-peso-ayuda" className="text-body-sm text-muted-foreground">
+          Peso real de la mercancía. Se heredará al embarque; no cambia las cantidades ni los precios cotizados.
+          Si no lo conoces, quedará pendiente de captura.
+        </p>
+      </div>
       <Card className="bg-muted/40 border-dashed">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -98,9 +110,10 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
               </TableBody>
             </Table>
           </div>
-          <div className="flex justify-end gap-6 mt-2 text-body font-semibold">
-            <span>Total piezas: {totalPiezas}</span>
-            <span>Peso volumétrico total: {totalPesoVolumetrico.toFixed(2)} kg</span>
+          <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 mt-2 text-body font-semibold">
+            <span>Total piezas: {medidas.piezas}</span>
+            <span>Peso volumétrico total: {medidas.pesoVolumetricoKg.toFixed(2)} kg</span>
+            <span>Volumen total: {medidas.volumenM3.toFixed(2)} m³</span>
           </div>
         </CardContent>
       </Card>

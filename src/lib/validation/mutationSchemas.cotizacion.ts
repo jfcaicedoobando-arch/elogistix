@@ -72,6 +72,10 @@ const cotizacionBaseSchema = z.object({
     .nonnegative("Peso (kg): no puede ser negativo.")
     .optional()
     .nullable(),
+  peso_fisico_kg: z.number()
+    .finite("Peso físico (kg): debe ser un número válido.")
+    .nonnegative("Peso físico (kg): no puede ser negativo.")
+    .optional().nullable(),
   volumen_m3: z
     .number()
     .finite("Volumen (m³): debe ser un número válido.")

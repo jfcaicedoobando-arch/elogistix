@@ -4,6 +4,8 @@
  * La operación genera atómicamente el cargo (origen), abono (destino) y
  * comisión opcional en `bbva_movimientos`, todos auto-conciliados.
  */
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cuentasActivasParaTraspaso } from "@/features/tesoreria/domain/cuentasTraspaso";
 import { useEffect } from "react";
 import { ArrowRightLeft } from "lucide-react";
 
@@ -37,10 +39,12 @@ interface DialogTraspasoCuentasProps {
 const FORM_ID = "form-traspaso-cuentas";
 
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
+  const cuentasActivas = cuentasActivasParaTraspaso(cuentas);
+  const faltanCuentas = cuentasActivas.length < 2;
   const {
     state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error,
     fechaTcDof, tcEsManual, fechaInicial,
-  } = useTraspasoForm(open, cuentas);
+  } = useTraspasoForm(open, cuentasActivas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
   // OLA A (A.1) + MNY: la clave se liga al CONTENIDO del traspaso. Reintentar
@@ -55,7 +59,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   // BL-04: la RPC recibe el multiplicador origen→destino. El usuario captura
   // la cotización a la mexicana (pesos por dólar) y aquí se deriva el factor.
   const tipoCambioFinal = mismoMoneda ? 1 : (factorOrigenDestino ?? 0);
-  const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
+  const bloqueado = faltanCuentas || !!error || isPending || !(tipoCambioFinal > 0);
 
   // YG-04: hay datos capturados que se perderían al cerrar el modal.
   // MNY P2.4: incluye la fecha si el usuario la movió respecto a la de apertura.
@@ -109,19 +113,23 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         />
       }
     >
+      {faltanCuentas && <Alert><AlertDescription>
+        Se necesitan al menos dos cuentas bancarias activas para registrar un traspaso.
+        Solicita su registro o activación a un administrador o a Tesorería.
+      </AlertDescription></Alert>}
       <FormDialogSection title="Cuentas" description="Selecciona la cuenta de origen y destino.">
 
         <TraspasoCuentaSelect
           id="traspaso-origen"
           label="Cuenta origen"
-          cuentas={cuentas}
+          cuentas={cuentasActivas}
           value={state.origenId}
           onChange={(v) => setField("origenId", v)}
         />
         <TraspasoCuentaSelect
           id="traspaso-destino"
           label="Cuenta destino"
-          cuentas={cuentas}
+          cuentas={cuentasActivas}
           value={state.destinoId}
           onChange={(v) => setField("destinoId", v)}
         />

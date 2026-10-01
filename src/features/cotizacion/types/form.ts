@@ -137,6 +137,7 @@ export interface CotizacionInitialData {
   dimensiones_lcl: DimensionLCL[];
   dimensiones_aereas: DimensionAerea[];
   peso_kg: number;
+  peso_fisico_kg?: number | null;
   volumen_m3: number;
   piezas: number;
   tipo_unidad: string | null;

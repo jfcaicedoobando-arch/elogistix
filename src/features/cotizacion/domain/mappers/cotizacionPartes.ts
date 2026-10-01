@@ -66,6 +66,7 @@ export function partesMercancia(v: CotizacionFormValues) {
     descripcion_adicional: v.descripcionAdicional,
     sector_economico: v.sectorEconomico,
     dimensiones_aereas: (esAereo ? v.dimensionesAereas : []) as DimensionAerea[],
+    peso_fisico_kg: esAereo && v.pesoKg > 0 ? v.pesoKg : null,
     // BL-COT-04: fuera del marítimo no hay contenedores; antes se persistía el
     // 1 que inventaba el formulario y llegaba al embarque como hijo vacío.
     num_contenedores: v.modo === "Marítimo" ? v.numContenedores : 0,

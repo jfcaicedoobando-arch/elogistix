@@ -1,3 +1,4 @@
+import { resumenDimensionesAereas } from "@/features/cotizacion/domain/medidasAereas";
 import { View, Text } from "@react-pdf/renderer";
 import { styles } from "../theme/styles";
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/features/cotizacion/types";
@@ -83,6 +84,7 @@ export function SeccionDimensiones({ c }: Props) {
   if (esAereo) {
     const a: DimensionAerea[] = Array.isArray(c.dimensiones_aereas) ? c.dimensiones_aereas : [];
     if (a.length === 0) return null;
+    const medidas = resumenDimensionesAereas(a);
     const cols: PdfColumn<DimensionAerea>[] = [
       { key: "piezas", title: "Piezas", cellStyle: styles.cellQty, render: (r) => String(r.piezas) },
       { key: "alto_cm", title: "Alto (cm)", cellStyle: styles.cellNum, render: (r) => String(r.alto_cm) },
@@ -95,7 +97,7 @@ export function SeccionDimensiones({ c }: Props) {
         <Text style={styles.h4}>Dimensiones</Text>
         <DataTable columns={cols} rows={a} />
         <Text style={{ ...styles.paragraph, textAlign: "right", fontSize: 9 }}>
-          Total piezas: {c.piezas}   ·   Peso volumétrico total: {c.peso_kg} kg
+          Total piezas: {c.piezas}   ·   Peso volumétrico total: {medidas.pesoVolumetricoKg.toFixed(2)} kg   ·   Volumen total: {medidas.volumenM3.toFixed(2)} m³
         </Text>
       </>
     );

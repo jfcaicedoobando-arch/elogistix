@@ -62,6 +62,9 @@ export function buildMercancia(
   }
   m.push(['Tipo de Carga', c.tipo_carga || 'Carga General']);
   m.push(['Sector Económico', c.sector_economico?.trim() || '—']);
+  if (esAereo) {
+    m.push(['Peso físico', c.peso_fisico_kg != null && c.peso_fisico_kg > 0 ? `${c.peso_fisico_kg} kg` : 'No capturado']);
+  }
   if (!esMaritimo && !esAereo) {
     m.push(['Peso', `${c.peso_kg} kg`]);
     m.push(['Volumen', `${c.volumen_m3} m³`]);

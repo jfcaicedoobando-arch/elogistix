@@ -18,7 +18,7 @@ const semana = (over: Partial<SemanaFlujo> = {}): SemanaFlujo => ({
 });
 
 const flujo = (saldoFinal: number, semanas: SemanaFlujo[] = []): FlujoProyectado => ({
-  saldo_inicial_mxn: 0,
+  vencidos_fuera_proyeccion: { anteriores_a: "2026-09-28", entradas: { cantidad: 0, por_moneda: {} }, salidas: { cantidad: 0, por_moneda: {} } }, saldo_inicial_mxn: 0,
   saldo_inicial_disponible: true,
   semanas,
   total_entradas_mxn: 0,

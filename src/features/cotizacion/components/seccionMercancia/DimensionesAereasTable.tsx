@@ -1,5 +1,6 @@
 // Tabla estática de detalle de mercancía (read-only, sin sort/paginación). No requiere DataTable.
 // Exenta de no-restricted-imports vía eslint.config.js allowlist.
+import { resumenDimensionesAereas } from "@/features/cotizacion/domain/medidasAereas";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import type { DimensionAerea } from "@/features/cotizacion/hooks";
@@ -7,10 +8,11 @@ import type { DimensionAerea } from "@/features/cotizacion/hooks";
 interface Props {
   dimensiones: DimensionAerea[];
   totalPiezas: number;
-  pesoTotal: number;
+  pesoFisico?: number | null;
 }
 
-export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoTotal }: Props) {
+export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoFisico }: Props) {
+  const medidas = resumenDimensionesAereas(dimensiones);
   return (
     <div>
       <span className="text-body text-muted-foreground font-semibold">Dimensiones</span>
@@ -38,9 +40,11 @@ export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoTotal }: 
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-end gap-6 mt-2 text-body font-semibold">
+      <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 mt-2 text-body font-semibold">
         <span>Total piezas: {totalPiezas}</span>
-        <span>Peso volumétrico total: {pesoTotal} kg</span>
+        <span>Peso físico: {pesoFisico != null && pesoFisico > 0 ? `${pesoFisico} kg` : "No capturado"}</span>
+        <span>Peso volumétrico total: {medidas.pesoVolumetricoKg.toFixed(2)} kg</span>
+        <span>Volumen total: {medidas.volumenM3.toFixed(2)} m³</span>
       </div>
     </div>
   );

@@ -43,8 +43,8 @@ export function EstadoCuentaToolbar({
       <CardContent density="compact" className="flex flex-wrap items-end gap-3">
         <div className="min-w-[220px]">
           <p className="text-body-sm text-muted-foreground mb-1">Cuenta</p>
-          <Select value={cuentaId} onValueChange={onCuentaChange}>
-            <SelectTrigger><SelectValue placeholder="Selecciona una cuenta" /></SelectTrigger>
+          <Select value={cuentaId} onValueChange={onCuentaChange} disabled={cuentas.length === 0}>
+            <SelectTrigger aria-label="Cuenta bancaria"><SelectValue placeholder={cuentas.length ? "Selecciona una cuenta" : "Sin cuentas activas"} /></SelectTrigger>
             <SelectContent>
               {cuentas.map((c) => (
                 <SelectItem key={c.id} value={c.id}>

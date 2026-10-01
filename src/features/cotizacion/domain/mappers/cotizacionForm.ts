@@ -71,7 +71,7 @@ function partesMercanciaMedidas(d: CotizacionInitialData) {
   return {
     dimensionesLCL: dimsLcl.length ? dimsLcl : [DEFAULT_DIM_LCL],
     dimensionesAereas: dimsAer.length ? dimsAer : [DEFAULT_DIM_AEREA],
-    pesoKg: d.peso_kg ?? 0,
+    pesoKg: d.modo === "Aéreo" ? (d.peso_fisico_kg ?? 0) : (d.peso_kg ?? 0),
     volumenM3: d.volumen_m3 ?? 0,
     piezas: d.piezas ?? 0,
     tipoUnidad: d.tipo_unidad ?? "",

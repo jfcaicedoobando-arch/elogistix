@@ -1,5 +1,7 @@
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
+import { cuentasActivasParaTraspaso } from "@/features/tesoreria/domain/cuentasTraspaso";
 import { useState } from "react";
-import { Landmark, Plus, ArrowRightLeft } from "lucide-react";
+import { Landmark, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,10 +18,12 @@ import { useSaldosCuentas } from "@/features/tesoreria/hooks/useTesoreriaCuentas
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { CuentaBancariaCard } from "./_sections/CuentaBancariaCard";
 import { NuevaCuentaFormFields } from "./_sections/NuevaCuentaFormFields";
+import { TraspasoCuentasAction, AvisoTraspasoRequisitos } from "./_sections/TraspasoCuentasAction";
 import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
 
 
 export default function TesoreriaCuentas() {
+  useDocumentTitle("Cuentas bancarias");
   const {
     cuentas, isLoading, isError, refetch, open, setOpen, form, isDirty, setField, submit, submitting,
     editTarget, solicitarEditar, monedaBloqueada, avisoRecalculo,
@@ -30,6 +34,9 @@ export default function TesoreriaCuentas() {
   const { canAdminCuentasBancarias, canCapturarMovimientoBancario } = usePermissions();
   const { data: saldos = [] } = useSaldosCuentas();
   const [openTraspaso, setOpenTraspaso] = useState(false);
+  const cuentasTraspaso = cuentasActivasParaTraspaso(cuentas);
+  const traspasoProps = { cantidad: cuentasTraspaso.length, cargando: isLoading, error: isError,
+    puedeAdministrar: canAdminCuentasBancarias, onAbrir: () => setOpenTraspaso(true) };
 
   return (
     <PageContainer>
@@ -43,9 +50,7 @@ export default function TesoreriaCuentas() {
         actions={
           <div className="flex items-center gap-2">
             {canCapturarMovimientoBancario && (
-              <Button variant="outline" onClick={() => setOpenTraspaso(true)}>
-                <ArrowRightLeft className="h-4 w-4 mr-2" /> Traspaso entre cuentas
-              </Button>
+              <TraspasoCuentasAction {...traspasoProps} />
             )}
             {canAdminCuentasBancarias ? (
               <Button onClick={() => setOpen(true)}>
@@ -57,6 +62,7 @@ export default function TesoreriaCuentas() {
       />
 
 
+      {canCapturarMovimientoBancario && <AvisoTraspasoRequisitos {...traspasoProps} />}
       {isLoading || isError ? (
         <AsyncBoundary
           isLoading={isLoading}
@@ -72,7 +78,7 @@ export default function TesoreriaCuentas() {
           <EmptyStateInline
             icon={Landmark}
             message={canAdminCuentasBancarias ? "Aún no hay cuentas." : "Aún no hay cuentas registradas."}
-            hint={canAdminCuentasBancarias ? "Crea la primera cuenta bancaria para comenzar la conciliación." : undefined}
+            hint={canAdminCuentasBancarias ? "Crea la primera cuenta bancaria para comenzar la conciliación." : "Solicita a un administrador o a Tesorería que registre una cuenta bancaria."}
             action={canAdminCuentasBancarias ? { label: "Nueva cuenta", onClick: () => setOpen(true) } : undefined}
           />
         </CardContent></Card>
@@ -126,7 +132,7 @@ export default function TesoreriaCuentas() {
       <DialogTraspasoCuentas
         open={openTraspaso}
         onOpenChange={setOpenTraspaso}
-        cuentas={cuentas}
+        cuentas={cuentasTraspaso}
       />
 
       <ConfirmDeleteAlert
