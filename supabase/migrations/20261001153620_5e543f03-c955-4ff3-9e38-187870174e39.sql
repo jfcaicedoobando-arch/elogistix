@@ -97,3 +97,7 @@ AS $function$
   FROM neto n
   GROUP BY n.cliente_id;
 $function$;
+
+-- Declarar los permisos vigentes también en el replay; no ampliar el acceso.
+REVOKE ALL ON FUNCTION public.profit_por_cliente(date, date, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.profit_por_cliente(date, date, text, uuid) TO authenticated, service_role;
