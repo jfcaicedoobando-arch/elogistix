@@ -14,13 +14,14 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { listarNotasCreditoPorFactura } from "@/features/facturacion/services/notasCredito";
 import { fetchSaldoFacturaServidor } from "@/features/facturacion/services/saldoFacturaServidor";
+import { esNcClienteVigente } from "@/lib/domain/estadosFactura";
 
 export function useNotasCreditoAplicadas(facturaId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.facturas.notasCredito(facturaId ?? ""),
     queryFn: async () => {
       const notas = await listarNotasCreditoPorFactura(facturaId as string);
-      return notas.filter((n) => !n.deleted_at && n.estado === "Aplicada");
+      return notas.filter((n) => !n.deleted_at && esNcClienteVigente(n.estado));
     },
     enabled: !!facturaId,
     staleTime: 60_000,

@@ -5,8 +5,8 @@
  * Extraído de `estadoResultadosDevengado.ts` (límite Power-of-10 de 200 líneas).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr } from "@/lib/supabase/response";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+import { unwrap } from "@/lib/supabase/response";
+import { FACTURA_ESTADOS_VIVOS, NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
@@ -26,14 +26,13 @@ import {
 
 export async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
   if (ids.length === 0) return [];
-  const data = await unwrapOr(
+  const data = (await unwrap(
     supabase
       .from("embarques")
       .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
       .in("id", ids)
       .is("deleted_at", null),
-    [],
-  );
+  )) ?? [];
   return mapEmbarqueERRows(data);
 }
 
@@ -48,7 +47,7 @@ export async function loadEmbarquesPorExpedientes(
     .in("expediente", exps)
     .is("deleted_at", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
-  const data = await unwrapOr(q, []);
+  const data = (await unwrap(q)) ?? [];
   const map = new Map<string, EmbarqueER>();
   const duplicados = new Set<string>();
   for (const e of mapEmbarqueERConExpediente(data)) {
@@ -119,12 +118,12 @@ export async function fetchNotasCreditoMes(orgId: string | null, desde: string, 
     // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
     // viene de `rangoMes`, igual que facturas.
     .select("monto, moneda, factura_id, fecha_emision, tipo_cambio")
-    .eq("estado", "Aplicada")
+    .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  return mapNotaCreditoRows(await unwrapOr(q, []));
+  return mapNotaCreditoRows((await unwrap(q)) ?? []);
 }
 
 export async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
@@ -140,7 +139,7 @@ export async function fetchProveedorFacturasMes(orgId: string | null, desde: str
     .neq("estado_aprobacion", "rechazada")
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  return mapProveedorFacturaRows(await unwrapOr(q, []));
+  return mapProveedorFacturaRows((await unwrap(q)) ?? []);
 }
 
 /**
@@ -160,7 +159,7 @@ export async function fetchProveedorNotasCreditoMes(
     .lte("fecha", hasta)
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  return mapProveedorNotaCreditoRows(await unwrapOr(q, []));
+  return mapProveedorNotaCreditoRows((await unwrap(q)) ?? []);
 }
 
 /** `proveedor_factura_id` → `embarque_id` para ubicar el modo de cada NC. */
@@ -169,14 +168,13 @@ export async function loadEmbarqueIdsPorFacturaProveedor(
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   if (ids.length === 0) return out;
-  const data = await unwrapOr(
+  const data = (await unwrap(
     supabase
       .from("proveedor_facturas")
       .select("id, embarque_id")
       .in("id", ids)
       .is("deleted_at", null),
-    [],
-  );
+  )) ?? [];
   for (const row of (data ?? []) as { id: string; embarque_id: string | null }[]) {
     if (row.embarque_id) out.set(row.id, row.embarque_id);
   }

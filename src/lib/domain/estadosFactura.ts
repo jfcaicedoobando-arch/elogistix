@@ -39,3 +39,14 @@ export function resolverEstadoFacturaCliente(
 }
 
 
+
+/**
+ * AUD-ANALISIS-7: estados en que una nota de crédito de CLIENTE ya resta
+ * (CFDI timbrado ante el SAT). Mismo criterio que la base de datos.
+ * Las NC de proveedor siguen contando sólo en "Aplicada".
+ */
+export const NC_CLIENTE_ESTADOS_VIGENTES = ["Timbrada", "Aplicada"] as const;
+
+export function esNcClienteVigente(estado: string | null | undefined): boolean {
+  return NC_CLIENTE_ESTADOS_VIGENTES.includes(estado as never);
+}

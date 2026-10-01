@@ -23,8 +23,8 @@ describe("fetchEmbarquesMes", () => {
     await fetchEmbarquesMes("org-1", "2026-07-01", "2026-07-31");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "embarques");
     expect(call).toBeDefined();
-    const neqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "neq");
-    expect(neqCalls).toContainEqual(["estado", "Cancelado"]);
+    const neqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "not");
+    expect(neqCalls).toContainEqual(["estado", "in", "(Cotización,Borrador,Cancelado)"]);
     const eqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "eq");
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
@@ -33,7 +33,7 @@ describe("fetchEmbarquesMes", () => {
     mockRef.current!.setTableResult("embarques", { data: [], error: null });
     await fetchEmbarquesMes(null, "2026-07-01", "2026-07-31");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "embarques");
-    const neqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "neq");
-    expect(neqCalls).toContainEqual(["estado", "Cancelado"]);
+    const neqCalls = call!.opArgs.filter((_, i) => call!.ops[i] === "not");
+    expect(neqCalls).toContainEqual(["estado", "in", "(Cotización,Borrador,Cancelado)"]);
   });
 });
