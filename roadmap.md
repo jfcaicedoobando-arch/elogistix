@@ -30,7 +30,7 @@ datos ni autoriza aplicar migraciones/ajustes propuestos.
 - [x] Fase 1: base de objetos, vínculos, propiedades y migración de datos (preparada, se aplica al aceptar el draft)
 - [x] Fase 2: pantallas de Empresas y Contactos + vínculos en Oportunidad (actividades sin vínculo desde ficha aún)
 - [x] Fase 3: módulo de Propiedades (super admin) + propiedades iniciales + captura en fichas
-- [ ] Fase 4: embudo de 7 etapas
+- [x] Fase 4: embudo de 7 etapas
 - [ ] Fase 5: solicitud a Pricing
 - [ ] Fase 6: puntaje A/B/C
 - [ ] Fase 7: reportes dinámicos
