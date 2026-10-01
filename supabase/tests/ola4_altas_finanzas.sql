@@ -67,6 +67,8 @@ BEGIN
 
   -- AUD-ANALISIS-8: la venta del embarque N7 sale de su factura timbrada
   -- (USD 300 sin IVA, TC 18), no de los conceptos de venta.
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE, 18, 'manual') ON CONFLICT DO NOTHING;
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, numero, expediente, embarque_id,
     moneda, subtotal, iva, total, tipo_cambio, estado, fecha_emision, fecha_vencimiento
