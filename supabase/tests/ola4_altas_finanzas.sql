@@ -141,9 +141,6 @@ BEGIN
 END
 $n9$ LANGUAGE plpgsql;
 
-
-
-
 -- -------------------------------------------------------------
 -- CASO N10: embarque en 'Borrador' con ETD/ETA futuros no cuenta como
 -- activo ni se deriva a 'Confirmado' en dashboard_summary().
@@ -177,7 +174,6 @@ BEGIN
   );
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid_n10)::text, true);
-
 
   v_resumen := public.dashboard_summary();
   v_total_activos := (v_resumen->>'totalActivos')::int;
