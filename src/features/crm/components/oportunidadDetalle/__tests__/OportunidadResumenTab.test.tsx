@@ -12,6 +12,12 @@ const fieldsByLabel = new Map<string, string | null>();
 vi.mock("@/features/crm/components/OportunidadCotizacionesList", () => ({
   default: () => <div data-testid="cotizaciones-list" />,
 }));
+vi.mock("@/features/crm/components/objetos/PropiedadesCard", () => ({
+  PropiedadesCard: () => <div data-testid="propiedades" />,
+}));
+vi.mock("@/features/crm/components/objetos/VinculosCard", () => ({
+  VinculosCard: () => <div data-testid="vinculos" />,
+}));
 vi.mock("../CriteriosSalidaCard", () => ({
   CriteriosSalidaCard: () => <div data-testid="criterios-salida" />,
 }));
