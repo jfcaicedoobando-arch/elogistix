@@ -4292,7 +4292,7 @@ CREATE FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) RETURNS n
   JOIN public.factura_notas_credito nc
     ON nc.factura_id = f.id
    AND nc.deleted_at IS NULL
-   AND nc.estado = 'Aplicada'
+   AND nc.estado IN ('Timbrada','Aplicada')
   WHERE f.id = p_factura_id;
 $$;
 CREATE FUNCTION public._nc_cliente_recalcular_comisiones() RETURNS trigger
@@ -4304,9 +4304,9 @@ DECLARE
   v_contaba boolean;
   v_cuenta boolean;
 BEGIN
-  v_cuenta  := (NEW.estado::text = 'Aplicada' AND NEW.deleted_at IS NULL);
+  v_cuenta  := (NEW.estado::text IN ('Timbrada','Aplicada') AND NEW.deleted_at IS NULL);
   v_contaba := (TG_OP = 'UPDATE'
-                AND OLD.estado::text = 'Aplicada'
+                AND OLD.estado::text IN ('Timbrada','Aplicada')
                 AND OLD.deleted_at IS NULL);
   IF NOT v_cuenta AND NOT v_contaba THEN
     RETURN NEW;
@@ -4789,7 +4789,7 @@ BEGIN
   FROM public.factura_notas_credito nc
   WHERE nc.factura_id = p_factura_id
     AND nc.deleted_at IS NULL
-    AND nc.estado = 'Aplicada';
+    AND nc.estado IN ('Timbrada','Aplicada');
   RETURN COALESCE(v_total, 0) - COALESCE(v_pagos, 0) - COALESCE(v_ncs, 0);
 END;
 $$;
@@ -7698,7 +7698,7 @@ DECLARE
   v_total_ncs_mxn numeric;
   v_tol_mxn numeric;
 BEGIN
-  IF NEW.deleted_at IS NOT NULL OR NEW.estado::text NOT IN ('Aplicada','Emitida') THEN
+  IF NEW.deleted_at IS NOT NULL OR NEW.estado::text NOT IN ('Timbrada','Aplicada') THEN
     RETURN NEW;
   END IF;
   SELECT f.moneda::text AS moneda, f.tipo_cambio, f.fecha_emision
@@ -7741,7 +7741,7 @@ BEGIN
   FROM public.factura_notas_credito nc
   WHERE nc.factura_id = NEW.factura_id
     AND nc.deleted_at IS NULL
-    AND nc.estado::text IN ('Aplicada','Emitida')
+    AND nc.estado::text IN ('Timbrada','Aplicada')
     AND nc.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
   v_total_ncs_mxn := v_ncs_previas_mxn + v_nc_nueva_mxn;
   v_tol_mxn := GREATEST(
@@ -10453,7 +10453,7 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
         FROM public.factura_notas_credito nc
         WHERE nc.factura_id = f.id
           AND nc.deleted_at IS NULL
-          AND nc.estado = 'Aplicada'
+          AND nc.estado IN ('Timbrada','Aplicada')
       ), 0) AS nc_aplicadas
     FROM public.facturas f
     WHERE f.deleted_at IS NULL
@@ -10493,7 +10493,7 @@ CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
           FROM public.factura_notas_credito nc
           WHERE nc.factura_id = f.id
             AND nc.deleted_at IS NULL
-            AND nc.estado = 'Aplicada'
+            AND nc.estado IN ('Timbrada','Aplicada')
         ), 0)
     ) > 0.005
 $$;
@@ -11041,7 +11041,7 @@ CREATE FUNCTION public.clientes_listado(p_organization_id uuid DEFAULT NULL::uui
     SELECT n.factura_id, COALESCE(SUM(n.monto),0) AS nc_aplicada
     FROM factura_notas_credito n
     WHERE n.deleted_at IS NULL
-      AND n.estado = 'Aplicada'
+      AND n.estado IN ('Timbrada','Aplicada')
       AND n.factura_id IN (SELECT id FROM facturas_vivas)
     GROUP BY n.factura_id
   ),
@@ -15289,7 +15289,7 @@ BEGIN
              ncf.monto, ncf.moneda::text, ncf.tipo_cambio, f.moneda::text, f.tipo_cambio)), 0) AS aplicado
     FROM public.factura_notas_credito ncf
     JOIN public.facturas f ON f.id = ncf.factura_id AND f.deleted_at IS NULL
-    WHERE ncf.estado = 'Aplicada' AND ncf.deleted_at IS NULL
+    WHERE ncf.estado IN ('Timbrada','Aplicada') AND ncf.deleted_at IS NULL
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY ncf.factura_id
   ),
@@ -17165,7 +17165,7 @@ BEGIN
       FROM public.factura_notas_credito ncf
       WHERE ncf.deleted_at IS NULL
         AND ncf.organization_id = v_org
-        AND ncf.estado = 'Aplicada'
+        AND ncf.estado IN ('Timbrada','Aplicada')
         AND ncf.fecha_emision IS NOT NULL
         AND EXTRACT(year FROM ncf.fecha_emision) = p_year
         -- Ola 14 · borrado logico estricto: la NC de una factura eliminada no
@@ -18833,7 +18833,7 @@ BEGIN
     LEFT JOIN LATERAL (
       SELECT SUM(n.monto) AS notas
       FROM factura_notas_credito n
-      WHERE n.factura_id = f.id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
+      WHERE n.factura_id = f.id AND n.deleted_at IS NULL AND n.estado IN ('Timbrada','Aplicada')
     ) nc ON true
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida', 'Pagada')
@@ -23036,7 +23036,7 @@ BEGIN
            f.moneda AS moneda
     FROM public.factura_notas_credito n
     JOIN f ON f.id = n.factura_id
-    WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
+    WHERE n.deleted_at IS NULL AND n.estado::text IN ('Timbrada','Aplicada')
   ),
   f_neto AS (
     SELECT f.id, f.moneda, f.estado, f.tc_doc,
@@ -23249,7 +23249,7 @@ BEGIN
              n.monto, n.moneda::text, n.tipo_cambio, v_moneda, v_tc)), 0) AS monto,
            COUNT(*)::int AS n
     FROM public.factura_notas_credito n
-    WHERE n.factura_id = p_factura_id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
+    WHERE n.factura_id = p_factura_id AND n.deleted_at IS NULL AND n.estado IN ('Timbrada','Aplicada')
   )
   SELECT COALESCE(v_total, 0), p.monto, nc.monto,
          CASE WHEN v_estado IN ('Cancelada','Sustituida') THEN 0
@@ -31369,7 +31369,7 @@ BEGIN
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
         WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
       COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
-        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado='Aplicada')),0) AS notas_credito,
+        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada'))),0) AS notas_credito,
       COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
     FROM facturas f
     WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
