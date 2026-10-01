@@ -41,6 +41,25 @@ describe("CotizacionDocument — IVA real y notas internas", () => {
     const text = render(<CotizacionDocument cotizacion={c} tasaIva={0.16} />).container.textContent ?? "";
     expect(text).toContain("Conceptos en MXN + IVA");
     expect(text).toContain("IVA (8%) MXN");
+    expect(text).toContain("El IVA se aplica según el tratamiento fiscal de cada concepto.");
+    expect(text).not.toContain("cargos en destino");
+  });
+
+  it("USD/MXN mixtos: explica el IVA por concepto, sin universalizar tasa ni destino", () => {
+    const c = makeCotizacionRow({
+      conceptos_venta: [
+        concepto({ descripcion: "BAF (origen)", moneda: "USD", aplica_iva: true, tasa_iva_aplicada: 0.16 }),
+        concepto({ descripcion: "Gasto sin IVA", moneda: "USD" }),
+        concepto({ descripcion: "Maniobras", aplica_iva: true, tasa_iva_aplicada: 0.08 }),
+      ] as never,
+    });
+    const text = render(<CotizacionDocument cotizacion={c} />).container.textContent ?? "";
+    expect(text).toContain("BAF (origen)");
+    expect(text).toContain("Gasto sin IVA");
+    expect(text).toContain("IVA (16%) USD");
+    expect(text).toContain("IVA (8%) MXN");
+    expect(text).toContain("El IVA se aplica según el tratamiento fiscal de cada concepto.");
+    expect(text).not.toContain("cargos en destino");
   });
 
   it("no imprime notas internas de renglón ni residuos de QA", () => {

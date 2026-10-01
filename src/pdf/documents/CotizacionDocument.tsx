@@ -31,6 +31,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
   const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
+  const hayIva = [hayIvaUsd, hayIvaMxn].some(Boolean);
   const notasCliente = notasParaCliente(cotizacion.notas);
   const nombre = cotizacion.es_prospecto
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
@@ -96,7 +97,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
 
         <TotalesBox
           bloques={bloques}
-          nota={hayIvaUsd ? "* Los cargos en destino incluyen IVA" : undefined}
+          nota={hayIva ? "* El IVA se aplica según el tratamiento fiscal de cada concepto." : undefined}
         />
 
         {/* v13.823.341: sólo las notas dirigidas al cliente llegan al PDF. */}

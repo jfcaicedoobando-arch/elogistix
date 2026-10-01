@@ -37,6 +37,14 @@ const base: Partial<CotizacionRow> = {
 };
 
 describe("buildDatosGenerales", () => {
+  it("muestra el TC de referencia sin remitir a un total inexistente", () => {
+    const rows = buildDatosGenerales({ ...base, tipo_cambio_usd: 18.071 } as CotizacionRow);
+    expect(rows).toContainEqual([
+      "Tipo de cambio USD/MXN", "18.0710 (referencia; importes en moneda original)",
+    ]);
+    expect(rows.flat().join(" ")).not.toContain("total del encabezado");
+  });
+
   it("incluye campos base siempre", () => {
     const rows = buildDatosGenerales(base as CotizacionRow);
     const keys = rows.map(([k]) => k);
