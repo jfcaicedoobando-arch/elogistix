@@ -9,6 +9,7 @@ import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactura";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
+import { esNcClienteVigente } from "@/lib/domain/estadosFactura";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];
@@ -139,7 +140,7 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
     (p) => !p.deleted_at && !esPagoAnulado(p),
   );
   const notasActivas = (f.factura_notas_credito ?? []).filter(
-    (n) => !n.deleted_at && n.estado === "Aplicada",
+    (n) => !n.deleted_at && esNcClienteVigente(n.estado),
   );
   const total = Number(f.total);
   // A1: canon único `@/lib/financial/saldoFactura` (no reimplementar).

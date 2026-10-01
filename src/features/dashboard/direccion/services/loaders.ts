@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { fetchInChunks } from "@/lib/supabase/chunkedIn";
+import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 
 
 /** Totales por moneda del dashboard de Dirección (jsonb de `direccion_totales`, C3c). */
@@ -140,7 +141,7 @@ function loadNotasCredito(ids: string[]): Promise<NotaCreditoRow[]> {
     leerTodasLasPaginas<NotaCreditoRow>("direccion.loadCarteraAbiertaNotasCredito", (desde, hasta) =>
       supabase.from("factura_notas_credito")
         .select("factura_id, monto, moneda, tipo_cambio")
-        .in("factura_id", lote).eq("estado", "Aplicada").is("deleted_at", null)
+        .in("factura_id", lote).in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES]).is("deleted_at", null)
         .order("id", { ascending: true }).range(desde, hasta),
     ),
   );

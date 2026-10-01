@@ -12,6 +12,7 @@ import {
 } from "./columns";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import { PORTAL_LIST_MAX, PORTAL_RELATED_MAX } from "./limits";
+import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 
 export async function fetchPortalFacturas(clienteIds: string[]) {
   if (!clienteIds.length) return [];
@@ -91,7 +92,7 @@ export async function fetchPortalNotasCreditoFactura(facturaId: string) {
       .from("factura_notas_credito")
       .select(PORTAL_NOTA_CREDITO_COLUMNS)
       .eq("factura_id", facturaId)
-      .eq("estado", "Aplicada")
+      .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
       // Fase Q.1: ocultar registros borrados al cliente.
       .is("deleted_at", null)
       .order("fecha_emision", { ascending: false })

@@ -12,6 +12,7 @@ import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 import {
+import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
   mapFacturaRows,
   mapNotaCreditoRows,
   mapProveedorFacturaRows,
@@ -119,7 +120,7 @@ export async function fetchNotasCreditoMes(orgId: string | null, desde: string, 
     // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
     // viene de `rangoMes`, igual que facturas.
     .select("monto, moneda, factura_id, fecha_emision, tipo_cambio")
-    .eq("estado", "Aplicada")
+    .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .is("deleted_at", null);
