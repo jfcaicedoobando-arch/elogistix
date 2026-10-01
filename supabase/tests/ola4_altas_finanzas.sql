@@ -65,6 +65,18 @@ BEGIN
     CURRENT_DATE - 5, CURRENT_DATE + 10
   ) ON CONFLICT (id) DO NOTHING;
 
+  -- AUD-ANALISIS-8: la venta del embarque N7 sale de su factura timbrada
+  -- (USD 300 sin IVA, TC 18), no de los conceptos de venta.
+  INSERT INTO public.facturas (
+    id, organization_id, cliente_id, cliente_nombre, numero, expediente, embarque_id,
+    moneda, subtotal, iva, total, tipo_cambio, estado, fecha_emision, fecha_vencimiento
+  ) VALUES (
+    'c8888888-8888-8888-8888-888888888888', v_org, 'c7777777-7777-7777-7777-777777777777',
+    'Cliente Ola4 N8', 'OLA4-N7-01', 'ELNSA001', v_emb,
+    'USD'::public.moneda, 300, 0, 300, 18, 'Emitida'::public.estado_factura,
+    CURRENT_DATE, CURRENT_DATE + 30
+  ) ON CONFLICT (id) DO NOTHING;
+
   -- La sesión se fija AL FINAL: sembrar embarques con claims de 'contador'
   -- dispara el guard "requiere cotización Aceptada" (tarifa-first).
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
