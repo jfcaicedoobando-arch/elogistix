@@ -8,6 +8,7 @@ import OportunidadCotizacionesList from "@/features/crm/components/OportunidadCo
 import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { MargenAutorizacionCard } from "./MargenAutorizacionCard";
+import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
@@ -39,6 +40,7 @@ export function OportunidadResumenTab({ op, etapaNombre, canEdit }: Props) {
         canEdit={canEdit}
       />
       <DatosComercialesCard fields={fields} />
+      <PropiedadesCard objeto="oportunidad" registroId={op.id} canEdit={canEdit} />
       <MargenAutorizacionCard
         oportunidadId={op.id}
         margenPct={op.margen_pct != null ? Number(op.margen_pct) : null}

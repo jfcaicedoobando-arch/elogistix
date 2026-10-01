@@ -7,6 +7,7 @@ import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { useContactoCrm } from "@/features/crm/hooks/useObjetosCrm";
+import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 
 export default function CrmContactoDetalle() {
@@ -32,7 +33,8 @@ export default function CrmContactoDetalle() {
   return (
     <PageContainer>
       <PageHeader icon={<UserRound className="h-6 w-6 text-primary" />} title={data.nombre} description={datos} />
-      <div className="grid gap-4 md:grid-cols-2">
+      <PropiedadesCard objeto="contacto" registroId={id} canEdit={canEditCrm} />
+      <div className="grid gap-4 md:grid-cols-2 mt-4">
         <VinculosCard
           titulo="Empresas" relacion="empresas-de-contacto" duenoId={id} rutaBase="/crm/empresas"
           canEdit={canEditCrm}

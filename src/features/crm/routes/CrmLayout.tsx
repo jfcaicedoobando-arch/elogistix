@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound } from "lucide-react";
+import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -27,7 +27,7 @@ export default function CrmLayout() {
   const { data: vencidas = 0 } = useActividadesVencidasCount();
   const {
     canConfigurarCrm, canCrearLead, canCrearOportunidad, canCrearActividad,
-    canGestionarLeadsEnLote,
+    canGestionarLeadsEnLote, isSuperAdmin,
   } = usePermissions();
   // El botón "Nuevo" sólo existe si al menos un alta es realmente posible.
   const puedeAlgunaAlta =
@@ -95,6 +95,21 @@ export default function CrmLayout() {
             {/* Ola 6 (O6.3): el ícono de configuración sigue el mismo permiso
                 que la ruta /crm/configuracion (admin del tenant + gerente
                 comercial), no el permiso amplio de edición del CRM. */}
+            {isSuperAdmin && (
+              <NavLink
+                to="/crm/propiedades"
+                className={({ isActive }) =>
+                  cn(
+                    "inline-flex items-center justify-center w-9 h-9 rounded-md text-body transition-colors",
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )
+                }
+                title="Propiedades del CRM"
+                aria-label="Propiedades"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </NavLink>
+            )}
             {canConfigurarCrm && (
               <NavLink
                 to="/crm/configuracion"

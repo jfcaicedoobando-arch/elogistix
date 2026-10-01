@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { formatFechaDia } from "@/lib/formatters/dates";
 import { useEmpresaCrm } from "@/features/crm/hooks/useObjetosCrm";
+import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 
 export default function CrmEmpresaDetalle() {
@@ -38,7 +39,8 @@ export default function CrmEmpresaDetalle() {
         description={`Alta: ${formatFechaDia(data.created_at)}`}
         subHeader={data.cliente_id ? <Badge variant="secondary">Cliente</Badge> : <Badge variant="outline">Prospecto</Badge>}
       />
-      <div className="grid gap-4 md:grid-cols-2">
+      <PropiedadesCard objeto="empresa" registroId={id} canEdit={canEditCrm} />
+      <div className="grid gap-4 md:grid-cols-2 mt-4">
         <VinculosCard
           titulo="Contactos" relacion="contactos-de-empresa" duenoId={id} rutaBase="/crm/contactos"
           canEdit={canEditCrm}
