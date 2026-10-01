@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 import {
@@ -74,7 +75,10 @@ function corre(fecha: string, dias: number): string {
 }
 
 export async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
-  let q = supabase
+  // AUD-ANALISIS-4: lectura por páginas; sin ella un mes >1000 facturas se
+  // truncaba en silencio.
+  const crudas = await leerTodasLasPaginas("profit.facturasMes", (ini, fin) => {
+    let q = supabase
     .from("facturas")
     // BL-06: `subtotal` (sin IVA) en lugar de `total` (con IVA).
     .select("id, expediente, subtotal, moneda, fecha_emision, timbrado_en, tipo_cambio")
@@ -88,14 +92,17 @@ export async function fetchFacturasMes(orgId: string | null, desde: string, hast
     // timbrado dentro del mes; el filtro en memoria por fecha fiscal decide.
     .or(
       `and(fecha_emision.gte.${corre(desde, -HOLGURA_DIAS)},fecha_emision.lte.${corre(hasta, HOLGURA_DIAS)}),` +
-        `and(timbrado_en.gte.${desde}T00:00:00Z,timbrado_en.lte.${hasta}T23:59:59.999Z)`,
+        // AUD-ANALISIS-6: fronteras del timbre en hora de México (UTC-6), no UTC.
+        `and(timbrado_en.gte.${desde}T00:00:00-06:00,timbrado_en.lte.${hasta}T23:59:59.999-06:00)`,
     )
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
     // deben sumar en el EERR devengado. Ref: FACTURA_ESTADOS_VIVOS.
     .in("estado", [...FACTURA_ESTADOS_VIVOS])
     .is("deleted_at", null);
-  if (orgId) q = q.eq("organization_id", orgId);
-  const filas = mapFacturaRows(await unwrapOr(q, []));
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q.order("id").range(ini, fin);
+  });
+  const filas = mapFacturaRows(crudas);
   return filas.filter((f) => {
     const fecha = fechaFiscalFactura(f);
     return fecha >= desde && fecha <= hasta;
