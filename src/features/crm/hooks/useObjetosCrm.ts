@@ -6,7 +6,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
-  type NuevoContactoInput,
+  type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
 } from "@/features/crm/services/objetosCrm";
 import {
   contactosDeEmpresa, contactosDeOportunidad, desligar, empresasDeContacto, empresasDeOportunidad,
@@ -27,6 +27,16 @@ export function useContactosCrm(busqueda: string, pagina: number) {
   return useQuery({
     queryKey: [...BASE, "contactos", busqueda, pagina],
     queryFn: () => fetchContactos(busqueda, pagina),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Lista paginada de un objeto (una sola consulta según `objeto`). */
+export function useListaObjetosCrm(objeto: "empresa" | "contacto", busqueda: string, pagina: number) {
+  return useQuery({
+    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina],
+    queryFn: (): Promise<Pagina<EmpresaRow | ContactoRow>> =>
+      objeto === "empresa" ? fetchEmpresas(busqueda, pagina) : fetchContactos(busqueda, pagina),
     placeholderData: keepPreviousData,
   });
 }

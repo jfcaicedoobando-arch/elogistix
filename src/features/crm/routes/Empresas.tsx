@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { formatFechaDia } from "@/lib/formatters/dates";
-import { useEmpresasCrm } from "@/features/crm/hooks/useObjetosCrm";
 import { ListaObjetosCrm, type Columna } from "@/features/crm/components/objetos/ListaObjetosCrm";
 import { NuevoObjetoCrmDialog } from "@/features/crm/components/objetos/NuevoObjetoCrmDialog";
 import type { EmpresaRow } from "@/features/crm/services/objetosCrm";
@@ -30,7 +29,7 @@ export default function CrmEmpresas() {
         description="Empresas del CRM con sus contactos y oportunidades."
         actions={canEditCrm && <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> Nueva empresa</Button>}
       />
-      <ListaObjetosCrm placeholder="Buscar empresa…" rutaBase="/crm/empresas" columnas={COLUMNAS} usarDatos={useEmpresasCrm} />
+      <ListaObjetosCrm placeholder="Buscar empresa…" rutaBase="/crm/empresas" columnas={COLUMNAS} objeto="empresa" />
       <NuevoObjetoCrmDialog objeto="empresa" open={open} onOpenChange={setOpen} />
     </PageContainer>
   );

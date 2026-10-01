@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useDebounce } from "@/hooks/shared";
 import { OBJETOS_PAGE_SIZE, type Pagina } from "@/features/crm/services/objetosCrm";
 import type { UseQueryResult } from "@tanstack/react-query";
+import { useListaObjetosCrm } from "@/features/crm/hooks/useObjetosCrm";
 
 export interface Columna<T> { titulo: string; celda: (fila: T) => ReactNode }
 
@@ -18,15 +19,16 @@ interface Props<T extends { id: string }> {
   placeholder: string;
   rutaBase: string;
   columnas: Columna<T>[];
-  usarDatos: (busqueda: string, pagina: number) => UseQueryResult<Pagina<T>>;
+  objeto: "empresa" | "contacto";
 }
 
-export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBase, columnas, usarDatos }: Props<T>) {
+export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBase, columnas, objeto }: Props<T>) {
   const navigate = useNavigate();
   const [texto, setTexto] = useState("");
   const [pagina, setPagina] = useState(0);
   const busqueda = useDebounce(texto, 300);
-  const q = usarDatos(busqueda, pagina);
+  // SAFE-CAST: `objeto` determina el tipo de fila que devuelve el servicio.
+  const q = useListaObjetosCrm(objeto, busqueda, pagina) as UseQueryResult<Pagina<T>>;
   const total = q.data?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / OBJETOS_PAGE_SIZE));
 

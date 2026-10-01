@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle, usePermissions } from "@/hooks/shared";
-import { useContactosCrm } from "@/features/crm/hooks/useObjetosCrm";
 import { ListaObjetosCrm, type Columna } from "@/features/crm/components/objetos/ListaObjetosCrm";
 import { NuevoObjetoCrmDialog } from "@/features/crm/components/objetos/NuevoObjetoCrmDialog";
 import type { ContactoRow } from "@/features/crm/services/objetosCrm";
@@ -28,7 +27,7 @@ export default function CrmContactos() {
         description="Personas del CRM y las empresas donde trabajan."
         actions={canEditCrm && <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> Nuevo contacto</Button>}
       />
-      <ListaObjetosCrm placeholder="Buscar por nombre o correo…" rutaBase="/crm/contactos" columnas={COLUMNAS} usarDatos={useContactosCrm} />
+      <ListaObjetosCrm placeholder="Buscar por nombre o correo…" rutaBase="/crm/contactos" columnas={COLUMNAS} objeto="contacto" />
       <NuevoObjetoCrmDialog objeto="contacto" open={open} onOpenChange={setOpen} />
     </PageContainer>
   );
