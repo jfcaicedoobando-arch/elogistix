@@ -11,12 +11,13 @@ BEGIN
   INSERT INTO auth.users (id, email) VALUES (v_uid, 'n01-aereo@example.invalid');
   INSERT INTO public.organization_members (organization_id, user_id, role)
     VALUES (v_org, v_uid, 'admin_org'::public.app_role);
-  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin_org'::public.app_role);
+  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin_org'::public.app_role)
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   INSERT INTO public.clientes (organization_id, nombre, rfc, email)
     VALUES (v_org, 'Refacciones CNC Monterrey', '', 'cnc@example.invalid') RETURNING id INTO v_cli;
-  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
-
   FOR i IN 1..2 LOOP
+    -- Sembrar el fixture antes de asumir la identidad que ejecuta las RPC.
+    PERFORM set_config('request.jwt.claims', '{}', true);
     v_fisico := CASE WHEN i = 1 THEN 600 ELSE NULL END;
     INSERT INTO public.cotizaciones
       (organization_id, cliente_id, cliente_nombre, estado, created_by, moneda, folio, modo, tipo,
@@ -30,6 +31,7 @@ BEGIN
     INSERT INTO public.cotizacion_costos
       (cotizacion_id, organization_id, concepto, moneda, unidad_medida, cantidad, costo_unitario, precio_venta)
     VALUES (v_cot, v_org, 'Flete aéreo', 'USD', 'KGM', 600, 3.10, 3.75);
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
     v_dup := public.duplicar_cotizacion(v_cot);
     SELECT peso_fisico_kg INTO v_copia FROM public.cotizaciones WHERE id = v_dup;
     IF v_copia IS DISTINCT FROM v_fisico THEN RAISE EXCEPTION 'N01: duplicar perdió peso físico'; END IF;
