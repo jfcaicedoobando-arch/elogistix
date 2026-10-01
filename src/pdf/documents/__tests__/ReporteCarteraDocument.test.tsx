@@ -50,6 +50,8 @@ describe("ReporteCarteraDocument", () => {
     );
     const text = container.textContent ?? "";
     expect(text).toContain("CLIENTE VENCIDO SA");
+    expect(text).toContain("Rango");
+    expect(text).toContain("31–60 días");
     expect(text).not.toContain("Sin saldos pendientes");
   });
 });

@@ -131,7 +131,7 @@ function BreadcrumbsBase() {
     let acc = "";
     const trail = parts.map((part) => {
       acc += `/${part}`;
-      const known = SEGMENT_LABELS[part];
+      const known = acc === "/reportes/cartera" ? "Cartera y antigüedad" : SEGMENT_LABELS[part];
       const dynamic = dynamicLabels[part];
       // Para UUIDs aún no resueltos, mostrar "…" en vez del UUID truncado
       // (evita el flash visual de "009ba3b0-ab4b-…" mientras carga el detalle).

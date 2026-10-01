@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { TopProveedoresCard } from "./_sections/TopProveedoresCard";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { CHART, CHART_TICK, CHART_AXIS_STROKE, CHART_LEGEND_STYLE, CHART_BAR_RADIUS } from "@/lib/chartTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
@@ -29,7 +31,7 @@ import { useComprasReportesController } from "../hooks/useComprasReportesControl
 
 export default function ComprasReportes() {
   const {
-    desde, setDesde, hasta, setHasta,
+    desde, setDesde, hasta, setHasta, errorRango,
     isLoading, isError, refetch,
     numFacturas, totalMxn, totalUsd, totalEur,
     topProveedores, evolucion, handleExport,
@@ -42,7 +44,7 @@ export default function ComprasReportes() {
         title="Reportes de compras"
         description="Analítica de gasto por proveedor y período. Basado en fecha de emisión de la factura."
         actions={
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={isError || topProveedores.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={!!errorRango || isLoading || isError || topProveedores.length === 0}>
             <Download className="h-4 w-4 mr-1.5" /> Exportar CSV
           </Button>
         }
@@ -56,20 +58,20 @@ export default function ComprasReportes() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="rep-hasta">{RANGO_HASTA_LABEL}</Label>
-            <DatePickerMx id="rep-hasta" value={hasta} onChange={setHasta} />
+            <DatePickerMx id="rep-hasta" value={hasta} onChange={setHasta} errorText={errorRango} />
           </div>
         </CardContent>
       </Card>
 
-      {isError && (
+      {!errorRango && isError && (
         <ErrorState className="mb-4" onRetry={() => void refetch()} />
       )}
 
-      {!isError && <>
+      {!errorRango && !isError && <>
       {/* EC-10: aviso cuando el T/C usado para los equivalentes es de respaldo. */}
       <TipoCambioFallbackBanner />
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
         <KpiCard label="Subtotal MXN (sin IVA)" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
         <KpiCard label="Subtotal USD (sin IVA)" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
@@ -91,18 +93,17 @@ export default function ComprasReportes() {
             <div className="w-full h-[280px]">
               <ResponsiveContainer>
                 <BarChart data={evolucion}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="mes" fontSize={11} />
-                  <YAxis fontSize={11} />
-                  <RTooltip
-                    formatter={(v: number, name: string) =>
-                      [formatCurrency(v, name === "usd" ? "USD" : name === "eur" ? "EUR" : "MXN"), name.toUpperCase()]
-                    }
+                  <CartesianGrid stroke={CHART.border} strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="mes" tick={CHART_TICK} stroke={CHART_AXIS_STROKE} />
+                  <YAxis tick={CHART_TICK} stroke={CHART_AXIS_STROKE} />
+                  <Tooltip
+                    cursor={{ fill: CHART.border, fillOpacity: 0.15 }}
+                    content={<ChartTooltip formatValue={(valor, serie) => formatCurrency(valor, serie.toUpperCase())} />}
                   />
-                  <Legend />
-                  <Bar dataKey="mxn" name="MXN" fill="hsl(var(--primary))" />
-                  <Bar dataKey="usd" name="USD" fill="hsl(var(--accent))" />
-                  <Bar dataKey="eur" name="EUR" fill="hsl(var(--warning))" />
+                  <Legend wrapperStyle={CHART_LEGEND_STYLE} formatter={(label) => <span className="text-foreground">{label}</span>} />
+                  <Bar dataKey="mxn" name="MXN" fill={CHART.primary} radius={CHART_BAR_RADIUS} />
+                  <Bar dataKey="usd" name="USD" fill={CHART.success} radius={CHART_BAR_RADIUS} />
+                  <Bar dataKey="eur" name="EUR" fill={CHART.warning} radius={CHART_BAR_RADIUS} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

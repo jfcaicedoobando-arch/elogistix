@@ -28,12 +28,15 @@ export function useComprasReportesController() {
   const [desde, setDesde] = useState<string>(firstOfYear());
   const [hasta, setHasta] = useState<string>(todayLocalISO());
   const { organizationId, orgListo } = useOrgFilter();
+  const errorRango = !desde || !hasta
+    ? "Selecciona las fechas Desde y Hasta."
+    : desde > hasta ? "La fecha Desde no puede ser posterior a Hasta." : null;
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.reportes({ desde, hasta }, organizationId),
     queryFn: () => fetchFacturasReporte(desde, hasta, organizationId),
     // N-3: no consultar hasta que el contexto de organización resolvió.
-    enabled: orgListo,
+    enabled: orgListo && !errorRango,
   });
 
   const { data: rates } = useQuery({
@@ -59,6 +62,7 @@ export function useComprasReportesController() {
   const evolucion = useMemo(() => agruparEvolucionMensual(rows), [rows]);
 
   const handleExport = () => {
+    if (errorRango || isLoading || isError || topProveedores.length === 0) return;
     try {
       const csv = toCSV(
         topProveedores.map((p) => ({
@@ -89,6 +93,7 @@ export function useComprasReportesController() {
 
   return {
     desde, setDesde, hasta, setHasta,
+    errorRango,
     isLoading, isError, refetch,
     numFacturas: rows.length,
     totalMxn, totalUsd, totalEur,
