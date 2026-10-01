@@ -110,6 +110,8 @@ export interface CreateCotizacionInput {
   valor_seguro_usd?: number;
   carta_garantia?: boolean;
   num_contenedores?: number;
+  /** Descripción de la unidad cotizada para transporte terrestre. */
+  tipo_unidad?: string | null;
   modalidad_equipo?: string | null;
   punto_intermedio?: string | null;
   tarifa_id?: string | null;
