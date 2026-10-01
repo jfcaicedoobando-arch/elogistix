@@ -52,9 +52,20 @@ export async function fetchConceptosYFacturas(
   // con `estadoResultados` y evitar descuadre Proyección vs EERR.
   // AUD-ANALISIS-4: lectura por páginas; un mes con >1000 renglones ya no se
   // trunca en silencio.
-  const [ventas, costos, facturas] = await Promise.all([
+  const [facturadas, proyectadas, costos, facturas] = await Promise.all([
     // AUD-ANALISIS-8: venta = facturas timbradas vigentes − notas de crédito.
     fetchVentaFacturadaEmbarques(ids),
+    // AUD-ANALISIS-9: Cierre mensual ES una proyección; los embarques aún sin
+    // factura usan su venta proyectada (conceptos) en "Pendiente de facturar".
+    leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
+      supabase
+        .from("conceptos_venta")
+        .select("id, embarque_id, total, moneda")
+        .in("embarque_id", ids)
+        .is("deleted_at", null)
+        .order("id")
+        .range(ini, fin),
+    ),
     leerTodasLasPaginas("cierre.costos", (ini, fin) =>
       supabase
         .from("conceptos_costo")
@@ -66,5 +77,10 @@ export async function fetchConceptosYFacturas(
     ),
     fetchFacturasPorExpedientes(expedientes, organizationId),
   ]);
+  const conFactura = new Set(facturadas.map((v) => v.embarque_id));
+  const ventas = [
+    ...facturadas,
+    ...proyectadas.filter((v) => !conFactura.has(v.embarque_id)),
+  ];
   return { ventas, costos, facturas };
 }
