@@ -19,7 +19,7 @@ const actividad: CrmActividadRow = {
   responsable_email: "comercial@example.com", responsable_id: null,
   organization_id: "org1", created_at: "2026-09-24T00:00:00Z", updated_at: "2026-09-24T00:00:00Z",
   created_by: null, deleted_at: null, deleted_by: null, duracion_min: null,
-  contacto_efectivo: false, reunion_calificada: false,
+  contacto_efectivo: false, reunion_calificada: false, oportunidad_id: null,
 };
 
 beforeEach(() => {
