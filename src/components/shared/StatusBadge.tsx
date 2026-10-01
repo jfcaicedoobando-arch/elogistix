@@ -41,6 +41,9 @@ export function StatusBadge({
         className={cn(
           "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label font-medium whitespace-nowrap",
           visual.badgeClass,
+          // El fondo y borde conservan el tono del estado; el texto necesita
+          // contraste también sobre filas alternadas en ambos temas.
+          "text-foreground",
           className,
         )}
         data-domain={domain}
