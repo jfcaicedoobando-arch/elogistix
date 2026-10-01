@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { fetchInChunks } from "@/lib/supabase/chunkedIn";
 import { NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
+import { fetchVentaFacturadaEmbarques } from "@/features/facturacion/services/shared/ventaFacturada";
 
 
 /** Totales por moneda del dashboard de Dirección (jsonb de `direccion_totales`, C3c). */
@@ -82,18 +83,9 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
   return { embarques, ventas, costos };
 }
 
+/** AUD-ANALISIS-8: venta = facturas timbradas vigentes − notas de crédito. */
 async function loadConceptosVenta(ids: string[]): Promise<ConceptoVentaRow[]> {
-  return fetchInChunks(ids, (lote) =>
-    leerTodasLasPaginas<ConceptoVentaRow>("direccion.conceptosVenta", (desde, hasta) =>
-      supabase
-        .from("conceptos_venta")
-        .select("embarque_id, total, moneda")
-        .in("embarque_id", lote)
-        .is("deleted_at", null)
-        .order("id", { ascending: true })
-        .range(desde, hasta),
-    ),
-  );
+  return fetchVentaFacturadaEmbarques(ids);
 }
 
 async function loadConceptosCosto(ids: string[]): Promise<ConceptoCostoRow[]> {

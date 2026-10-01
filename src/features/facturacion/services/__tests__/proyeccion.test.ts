@@ -4,6 +4,11 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+// AUD-ANALISIS-8: la venta viene de facturas timbradas − NC (RPC); aquí se simula.
+const venta = vi.hoisted(() => ({ filas: [] as Array<{ embarque_id: string; total: number; moneda: string }> }));
+vi.mock("@/features/facturacion/services/shared/ventaFacturada", () => ({
+  fetchVentaFacturadaEmbarques: async () => venta.filas,
+}));
 
 import { fetchProyeccionMes } from "@/features/facturacion/services/proyeccion";
 
@@ -30,10 +35,7 @@ describe("fetchProyeccionMes", () => {
       ],
       error: null,
     });
-    mock.setTableResult("conceptos_venta", {
-      data: [{ embarque_id: "e1", total: 100, moneda: "USD" }],
-      error: null,
-    });
+    venta.filas = [{ embarque_id: "e1", total: 100, moneda: "USD" }];
     mock.setTableResult("conceptos_costo", {
       data: [{ embarque_id: "e1", monto: 50, moneda: "USD" }],
       error: null,
@@ -60,14 +62,11 @@ describe("fetchProyeccionMes", () => {
       ],
       error: null,
     });
-    mock.setTableResult("conceptos_venta", {
-      data: [
+    venta.filas = [
         { embarque_id: "e1", total: 10, moneda: "USD" },
         { embarque_id: "e1", total: 5, moneda: "USD" },
         { embarque_id: "e2", total: 7, moneda: "USD" },
-      ],
-      error: null,
-    });
+    ];
     mock.setTableResult("conceptos_costo", { data: [], error: null });
     mock.setTableResult("facturas", { data: [], error: null });
     const rows = await fetchProyeccionMes({ organizationId: null, year: 2026, month: 5 });

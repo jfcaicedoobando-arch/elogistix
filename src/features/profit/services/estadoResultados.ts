@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
+import { fetchVentaFacturadaEmbarques } from "@/features/facturacion/services/shared/ventaFacturada";
 import { ESTADOS_EMBARQUE_NO_CONTABLES } from "@/features/embarques/domain/estadosContables";
 import {
   buildEstadoResultados,
@@ -69,15 +70,9 @@ export async function fetchEstadoResultadosMes(p: Params): Promise<EstadoResulta
     return buildEstadoResultados([], [], []);
   }
 
-  const ventas = await leerTodosLosLotes<ConceptoVentaER>(() =>
-    supabase
-      .from("conceptos_venta")
-      .select("embarque_id, descripcion, total, moneda")
-      .in("embarque_id", ids)
-      .is("deleted_at", null)
-      // SAFE-CAST: el select literal devuelve exactamente ConceptoVentaER.
-      .order("id", { ascending: true }) as unknown as Builder<ConceptoVentaER>,
-  );
+  // AUD-ANALISIS-8: venta = facturas timbradas vigentes − notas de crédito
+  // (sin IVA); un embarque sin factura no aporta venta.
+  const ventas: ConceptoVentaER[] = await fetchVentaFacturadaEmbarques(ids);
 
   const costos = await leerTodosLosLotes<ConceptoCostoER>(() =>
     supabase

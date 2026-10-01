@@ -25,14 +25,20 @@ BEGIN
   IF v_def IS NULL THEN
     RAISE EXCEPTION 'M1-res FAIL: no existe profit_por_cliente';
   END IF;
-  IF v_def NOT ILIKE '%nc_aplicadas_en_moneda_factura%' THEN
-    RAISE EXCEPTION 'M1-res REGRESIÓN: profit_por_cliente no descuenta notas de crédito (canon ausente)';
+  -- AUD-ANALISIS-8: la venta sale del canon de venta facturada, que ya
+  -- descuenta las NC timbradas de facturas vigentes.
+  IF v_def NOT ILIKE '%_venta_facturada_por_embarque%' THEN
+    RAISE EXCEPTION 'M1-res REGRESIÓN: profit_por_cliente no usa la venta facturada neta de NC';
+  END IF;
+  SELECT pg_get_functiondef('public._venta_facturada_por_embarque(uuid)'::regprocedure) INTO v_def;
+  IF v_def NOT ILIKE '%_nc_aplicadas_moneda_factura%' THEN
+    RAISE EXCEPTION 'M1-res REGRESIÓN: la venta facturada no descuenta notas de crédito (canon ausente)';
   END IF;
   IF v_def NOT ILIKE '%factura_embarques%' THEN
-    RAISE EXCEPTION 'M1-res REGRESIÓN: profit_por_cliente no liga las NC por factura_embarques';
+    RAISE EXCEPTION 'M1-res REGRESIÓN: la venta facturada no liga facturas por factura_embarques';
   END IF;
-  IF v_def NOT ILIKE '%Cancelada%' THEN
-    RAISE EXCEPTION 'M1-res REGRESIÓN: profit_por_cliente no excluye facturas canceladas';
+  IF v_def NOT ILIKE '%Vencida%' OR v_def ILIKE '%''Cancelada''::estado_factura,%' THEN
+    RAISE EXCEPTION 'M1-res REGRESIÓN: la venta facturada no se limita a facturas vigentes';
   END IF;
 
   -- N6 residual

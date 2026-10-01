@@ -44,6 +44,11 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+// AUD-ANALISIS-8: la venta viene de facturas timbradas − NC (RPC); aquí se simula.
+vi.mock("@/features/facturacion/services/shared/ventaFacturada", () => ({
+  fetchVentaFacturadaEmbarques: async () => [],
+}));
+
 const { fetchEstadoResultadosMes } = await import("../estadoResultados");
 
 function generar(n: number, over: (i: number) => Partial<EmbFila> = () => ({})): EmbFila[] {

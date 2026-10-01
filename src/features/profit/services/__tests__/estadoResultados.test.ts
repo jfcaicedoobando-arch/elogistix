@@ -4,6 +4,11 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+// AUD-ANALISIS-8: la venta viene de facturas timbradas − NC (RPC); aquí se simula.
+vi.mock("@/features/facturacion/services/shared/ventaFacturada", () => ({
+  fetchVentaFacturadaEmbarques: async () => [],
+}));
+
 
 vi.mock("@/features/profit/domain/estadoResultados", () => ({
   buildEstadoResultados: vi.fn((emb, v, c) => ({ emb, v, c }))
@@ -22,13 +27,12 @@ describe("estadoResultados service", () => {
     expect(res).toMatchObject({ emb: [] });
   });
 
-  it("busca conceptos_venta y conceptos_costo si hay embarques", async () => {
+  it("busca venta facturada y conceptos_costo si hay embarques", async () => {
     mock.setTableResult("embarques", { data: [{ id: "e1", modo: "Marítimo" }], error: null });
-    mock.setTableResult("conceptos_venta", { data: [], error: null });
     mock.setTableResult("conceptos_costo", { data: [], error: null });
     
     await fetchEstadoResultadosMes({ organizationId: "o1", year: 2024, month: 1 });
-    expect(mock.tableCalls.some(c => c.table === "conceptos_venta")).toBe(true);
+    expect(mock.tableCalls.some(c => c.table === "conceptos_venta")).toBe(false);
     expect(mock.tableCalls.some(c => c.table === "conceptos_costo")).toBe(true);
   });
 
