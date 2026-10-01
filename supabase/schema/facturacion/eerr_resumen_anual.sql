@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text)
  RETURNS TABLE(mes integer, ingresos_mxn numeric, costos_mxn numeric, excluidos_sin_tc integer)
  LANGUAGE plpgsql
- STABLE
+ STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
 DECLARE
