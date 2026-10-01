@@ -92,4 +92,32 @@ describe("buildCotizacionInsertPayload", () => {
     expect(r.operador).toBe("ana");
     expect(r.dias_libres_destino).toBe(7);
   });
+
+  it("conserva equipo, unidad y punto intermedio de Porta Contenedor en el INSERT", () => {
+    const r = buildCotizacionInsertPayload(
+      {
+        ...baseInput,
+        modo: "Terrestre",
+        tipo: "Nacional",
+        incoterm: "N/A",
+        num_contenedores: 0,
+        modalidad_equipo: "Porta Contenedor",
+        tipo_unidad: "Tractocamión sencillo con chasis 40 HC",
+        punto_intermedio: "Santa Catarina, Nuevo León",
+      },
+      "COT-PC",
+      "2026-10-16",
+    );
+    expect(r.tipo_unidad).toBe("Tractocamión sencillo con chasis 40 HC");
+    expect(r.modalidad_equipo).toBe("Porta Contenedor");
+    expect(r.punto_intermedio).toBe("Santa Catarina, Nuevo León");
+    expect(r.num_contenedores).toBe(0);
+  });
+
+  it.each([undefined, null])("normaliza unidad ausente (%s) a null", (tipo_unidad) => {
+    const r = buildCotizacionInsertPayload(
+      { ...baseInput, tipo_unidad }, "COT-SIN-UNIDAD", "2026-10-16",
+    );
+    expect(r.tipo_unidad).toBeNull();
+  });
 });

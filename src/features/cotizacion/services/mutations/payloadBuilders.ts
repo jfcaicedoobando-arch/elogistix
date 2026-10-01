@@ -20,6 +20,15 @@ function partesClienteInsert(input: CreateCotizacionInput) {
   };
 }
 
+function partesEquipoInsert(input: CreateCotizacionInput) {
+  return {
+    num_contenedores: input.num_contenedores ?? 1,
+    tipo_unidad: input.tipo_unidad ?? null,
+    modalidad_equipo: input.modalidad_equipo ?? null,
+    punto_intermedio: input.punto_intermedio ?? null,
+  };
+}
+
 function partesMercanciaInsert(input: CreateCotizacionInput) {
   return {
     modo: input.modo as CotizacionInsert["modo"],
@@ -46,9 +55,7 @@ function partesMercanciaInsert(input: CreateCotizacionInput) {
     sector_economico: input.sector_economico || "",
     dimensiones_lcl: toDbJson(input.dimensiones_lcl || []),
     dimensiones_aereas: toDbJson(input.dimensiones_aereas || []),
-    num_contenedores: input.num_contenedores ?? 1,
-    modalidad_equipo: input.modalidad_equipo ?? null,
-    punto_intermedio: input.punto_intermedio ?? null,
+    ...partesEquipoInsert(input),
   };
 }
 

@@ -75,6 +75,26 @@ describe("crearCotizacion", () => {
     await expect(crearCotizacion(baseInput)).rejects.toThrow();
   });
 
+  it("envía la unidad terrestre al INSERT sin perderla en el boundary de creación", async () => {
+    mock.setTableResult("cotizaciones", { data: { id: "cot-pc" }, error: null });
+    await crearCotizacion({
+      ...baseInput,
+      modo: "Terrestre",
+      tipo: "Nacional",
+      incoterm: "N/A",
+      num_contenedores: 0,
+      modalidad_equipo: "Porta Contenedor",
+      tipo_unidad: "Tractocamión sencillo con chasis 40 HC",
+      punto_intermedio: "Santa Catarina, Nuevo León",
+    });
+    expect(mock.getMutationPayload("cotizaciones")).toMatchObject({
+      tipo_unidad: "Tractocamión sencillo con chasis 40 HC",
+      modalidad_equipo: "Porta Contenedor",
+      punto_intermedio: "Santa Catarina, Nuevo León",
+      num_contenedores: 0,
+    });
+  });
+
   it("falla si la RPC devuelve payload vacío o no-string", async () => {
     mock.setRpcResult("siguiente_folio_cotizacion", { data: null, error: null });
     await expect(crearCotizacion(baseInput)).rejects.toThrow(/folio/i);
