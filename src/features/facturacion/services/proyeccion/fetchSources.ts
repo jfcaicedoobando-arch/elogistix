@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 export interface EmbarqueProyeccionRow {
   id: string;
@@ -47,24 +48,28 @@ export async function fetchConceptosYFacturas(
 ) {
   // Fase 3 (alta #10): filtramos conceptos soft-eliminados para consistencia
   // con `estadoResultados` y evitar descuadre Proyección vs EERR.
-  const [ventasRes, costosRes, facturas] = await Promise.all([
-    supabase
-      .from("conceptos_venta")
-      .select("embarque_id, total, moneda")
-      .in("embarque_id", ids)
-      .is("deleted_at", null),
-    supabase
-      .from("conceptos_costo")
-      .select("embarque_id, monto, moneda")
-      .in("embarque_id", ids)
-      .is("deleted_at", null),
+  // AUD-ANALISIS-4: lectura por páginas; un mes con >1000 renglones ya no se
+  // trunca en silencio.
+  const [ventas, costos, facturas] = await Promise.all([
+    leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
+      supabase
+        .from("conceptos_venta")
+        .select("id, embarque_id, total, moneda")
+        .in("embarque_id", ids)
+        .is("deleted_at", null)
+        .order("id")
+        .range(ini, fin),
+    ),
+    leerTodasLasPaginas("cierre.costos", (ini, fin) =>
+      supabase
+        .from("conceptos_costo")
+        .select("id, embarque_id, monto, moneda")
+        .in("embarque_id", ids)
+        .is("deleted_at", null)
+        .order("id")
+        .range(ini, fin),
+    ),
     fetchFacturasPorExpedientes(expedientes, organizationId),
   ]);
-  if (ventasRes.error) throw ventasRes.error;
-  if (costosRes.error) throw costosRes.error;
-  return {
-    ventas: ventasRes.data ?? [],
-    costos: costosRes.data ?? [],
-    facturas,
-  };
+  return { ventas, costos, facturas };
 }
