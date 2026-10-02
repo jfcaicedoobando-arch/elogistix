@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePuntajeDetalle } from "../scoringCrm";
 import { validarCortes, validarRegla } from "../reglasScoringCrm";
-import { describirCondicion } from "@/features/crm/components/scoring/ReglaScoringFila";
+import { armarRegla, describirCondicion, FORMA_VACIA } from "../describirRegla";
 import type { ReglaScoring } from "../reglasScoringCrm";
 
 const base: ReglaScoring = {
@@ -29,6 +29,12 @@ describe("puntaje", () => {
     expect(validarRegla({ ...base, min: 10, max: 5 })).toMatch(/mínimo/);
     expect(validarRegla({ ...base, puntos: 101 })).toMatch(/0 a 100/);
     expect(validarRegla({ ...base, fuente: "etapa", propiedad_id: null, valor_texto: "" })).toMatch(/etapa/);
+  });
+  it("arma la regla desde el formulario", () => {
+    const r = armarRegla({ ...FORMA_VACIA, criterio: "TEUs", propId: "p1", min: "3", max: "" }, { objeto: "empresa", orden: 2, conOpciones: false, conRango: true });
+    expect(r).toMatchObject({ propiedad_id: "p1", opcion_id: null, min: 3, max: null, puntos: 10, orden: 2 });
+    expect(armarRegla({ ...FORMA_VACIA, fuente: "etapa", etapa: "Calificado" }, { objeto: "oportunidad", orden: 1, conOpciones: false, conRango: false }))
+      .toMatchObject({ propiedad_id: null, valor_texto: "Calificado" });
   });
   it("describe la condición en español", () => {
     expect(describirCondicion({ ...base, min: 250000, max: 1000000 })).toBe("250,000 a menos de 1,000,000");

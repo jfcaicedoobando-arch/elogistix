@@ -6,20 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useActualizarRegla, useEliminarRegla } from "@/features/crm/hooks/useScoringCrm";
-import { ETIQUETA_FUENTE, type ReglaScoring } from "@/features/crm/services/scoring/reglasScoringCrm";
-
-const num = (n: number) => n.toLocaleString("es-MX");
-
-/** Texto de la condición, p. ej. "250,000 a menos de 1,000,000". */
-export function describirCondicion(r: ReglaScoring, etiquetaOpcion?: string): string {
-  if (r.fuente === "etapa") return `Etapa = ${r.valor_texto ?? ""}`;
-  if (r.fuente === "contacto_ligado" || r.fuente === "pricing_respondida") return ETIQUETA_FUENTE[r.fuente];
-  if (r.opcion_id) return `Opción: ${etiquetaOpcion ?? "(archivada)"}`;
-  if (r.min !== null && r.max !== null) return `${num(r.min)} a menos de ${num(r.max)}`;
-  if (r.min !== null) return `${num(r.min)} o más`;
-  if (r.max !== null) return `Menos de ${num(r.max)}`;
-  return "Capturado";
-}
+import type { ReglaScoring } from "@/features/crm/services/scoring/reglasScoringCrm";
+import { describirCondicion } from "@/features/crm/services/scoring/describirRegla";
 
 interface Props { regla: ReglaScoring; etiquetaOpcion?: string }
 
