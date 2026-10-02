@@ -55,7 +55,7 @@ export function useCrearTablero() {
   return useMutation({
     mutationFn: (nombre: string) => crearTablero(nombre),
     onSuccess: () => {
-      notifySuccess("Tablero creado");
+      notifySuccess(undefined, { title: "Tablero creado" });
       invalidar();
     },
     onError: alFallar("crear el tablero"),
@@ -67,7 +67,7 @@ export function useRenombrarTablero() {
   return useMutation({
     mutationFn: ({ id, nombre }: { id: string; nombre: string }) => renombrarTablero(id, nombre),
     onSuccess: () => {
-      notifySuccess("Tablero renombrado");
+      notifySuccess(undefined, { title: "Tablero renombrado" });
       invalidar();
     },
     onError: alFallar("renombrar el tablero"),
@@ -79,7 +79,7 @@ export function useEliminarTablero() {
   return useMutation({
     mutationFn: (id: string) => eliminarTablero(id),
     onSuccess: () => {
-      notifySuccess("Tablero eliminado");
+      notifySuccess(undefined, { title: "Tablero eliminado" });
       invalidar();
     },
     onError: alFallar("eliminar el tablero"),
@@ -92,7 +92,7 @@ export function useGuardarReporte() {
     mutationFn: ({ id, tableroId, input }: { id?: string; tableroId: string; input: ReporteInput }) =>
       id ? actualizarReporte(id, input) : crearReporte(tableroId, input),
     onSuccess: () => {
-      notifySuccess("Reporte guardado");
+      notifySuccess(undefined, { title: "Reporte guardado" });
       invalidar();
     },
     onError: alFallar("guardar el reporte"),
@@ -104,7 +104,7 @@ export function useEliminarReporte() {
   return useMutation({
     mutationFn: (id: string) => eliminarReporte(id),
     onSuccess: () => {
-      notifySuccess("Reporte eliminado");
+      notifySuccess(undefined, { title: "Reporte eliminado" });
       invalidar();
     },
     onError: alFallar("eliminar el reporte"),
