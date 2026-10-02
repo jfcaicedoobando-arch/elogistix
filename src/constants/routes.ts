@@ -80,6 +80,7 @@ export const ROUTES = {
   COSTEO_AGENTES: "/costeo/agentes",
   COSTEO_NAVIERAS: "/costeo/navieras",
   COSTEO_DEMORAS_VENTA: "/costeo/demoras-venta",
+  COSTEO_SOLICITUDES_PRICING: "/costeo/solicitudes",
 
   // Profit
   PROFIT: "/profit",

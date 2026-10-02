@@ -15,12 +15,11 @@ import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 interface Props {
   op: CrmOportunidadRow;
-  etapaNombre?: string;
-  etapaTipo?: string | null;
+  etapa?: { nombre: string; tipo: string | null } | null;
   canEdit: boolean;
 }
 
-export function OportunidadResumenTab({ op, etapaNombre, etapaTipo, canEdit }: Props) {
+export function OportunidadResumenTab({ op, etapa, canEdit }: Props) {
   const fields = [
     { label: "Vendedor", value: op.vendedor_email },
     { label: "Modo", value: op.modo },
@@ -35,11 +34,11 @@ export function OportunidadResumenTab({ op, etapaNombre, etapaTipo, canEdit }: P
 
   return (
     <>
-      <SugerirClienteCard etapaTipo={etapaTipo} clienteId={op.cliente_id} />
+      <SugerirClienteCard etapaTipo={etapa?.tipo} clienteId={op.cliente_id} />
       <CriteriosSalidaCard
         oportunidadId={op.id}
         etapaId={op.etapa_id}
-        etapaNombre={etapaNombre}
+        etapaNombre={etapa?.nombre}
         canEdit={canEdit}
       />
       <DatosComercialesCard fields={fields} />

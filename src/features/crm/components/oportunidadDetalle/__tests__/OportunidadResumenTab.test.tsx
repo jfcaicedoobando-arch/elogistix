@@ -56,7 +56,7 @@ describe("OportunidadResumenTab", () => {
       fecha_meta_cierre: "2026-09-20",
     } as CrmOportunidadRow;
 
-    render(<OportunidadResumenTab op={op} etapaNombre="Calificado" canEdit={false} />);
+    render(<OportunidadResumenTab op={op} etapa={{ nombre: "Calificado", tipo: "abierta" }} canEdit={false} />);
     expect(screen.getByTestId("datos-comerciales")).toBeInTheDocument();
 
     const estimada = fieldsByLabel.get("Cierre estimado");
@@ -80,7 +80,7 @@ describe("OportunidadResumenTab", () => {
       monto_meta: null,
     } as CrmOportunidadRow;
 
-    render(<OportunidadResumenTab op={op} etapaNombre="Calificado" canEdit={false} />);
+    render(<OportunidadResumenTab op={op} etapa={{ nombre: "Calificado", tipo: "abierta" }} canEdit={false} />);
 
     expect(fieldsByLabel.get("Cierre estimado")).toBe("—");
     expect(fieldsByLabel.get("Fecha meta de cierre")).toBe("—");

@@ -31,6 +31,6 @@ datos ni autoriza aplicar migraciones/ajustes propuestos.
 - [x] Fase 2: pantallas de Empresas y Contactos + vínculos en Oportunidad (actividades sin vínculo desde ficha aún)
 - [x] Fase 3: módulo de Propiedades (super admin) + propiedades iniciales + captura en fichas
 - [x] Fase 4: embudo de 7 etapas
-- [ ] Fase 5: solicitud a Pricing
+- [x] Fase 5 — Solicitud a Pricing
 - [ ] Fase 6: puntaje A/B/C
 - [ ] Fase 7: reportes dinámicos
