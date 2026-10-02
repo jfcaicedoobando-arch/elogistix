@@ -84,10 +84,7 @@ export function derivarEstadoPago(a: {
   tcManual?: string;
 }): DerivadosPago {
   const montoNum = Number(a.monto) || 0;
-  const manual = tcManualValido(a.tcManual);
-  const usaManual = manual !== undefined && a.monedaPago !== a.monedaFactura;
-  const tcDof = tcParaPago(a.monedaPago, a.monedaFactura, a.rates);
-  const tcPago = usaManual ? (manual ?? null) : tcDof;
+  const { tcPago, usaManual } = resolverTc(a.monedaPago, a.monedaFactura, a.rates, a.tcManual);
   // El equivalente en pantalla se calcula con el MISMO TC que guardará la BD
   // (pesos por divisa), así el "Equivalente" coincide con el monto aplicado real.
   const montoAplicado = aplicarTcPago(montoNum, a.monedaPago, a.monedaFactura, tcPago);
@@ -101,7 +98,7 @@ export function derivarEstadoPago(a: {
   // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
   // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
   // un error fiscal, no sólo de visualización.
-  const tcRespaldo = !usaManual && a.monedaPago !== a.monedaFactura && a.rates?.esFallback === true;
+  const tcRespaldo = !usaManual && a.monedaPago !== a.monedaFactura && esRespaldo(a.rates);
   // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
   const cruceNoSoportado =
     a.monedaPago !== a.monedaFactura && a.monedaPago !== "MXN" && a.monedaFactura !== "MXN";
@@ -141,4 +138,15 @@ export function tcManualValido(v: string | undefined): number | null | undefined
 export function tcCuadreExacto(montoMxn: number, saldo: number): number | null {
   if (!(montoMxn > 0) || !(saldo > 0)) return null;
   return Math.round((montoMxn / saldo) * 10000) / 10000;
+}
+
+function esRespaldo(r: RatesTc | undefined): boolean {
+  return r?.esFallback === true;
+}
+
+/** TC convenido (si hay y aplica) o DOF de la fecha. */
+function resolverTc(mp: string, mf: string, rates: RatesTc | undefined, tcManual?: string) {
+  const manual = tcManualValido(tcManual);
+  const usaManual = manual !== undefined && mp !== mf;
+  return { usaManual, tcPago: usaManual ? manual : tcParaPago(mp, mf, rates) };
 }

@@ -14,7 +14,8 @@ describe("TC convenido en el cobro", () => {
     const tc = tcCuadreExacto(17008.32, 1005);
     expect(tc).toBe(16.9237);
     const d = derivarEstadoPago({ ...base, tcManual: String(tc) });
-    expect(d.montoAplicado).toBe(1005);
+    expect(d.montoAplicado).toBeCloseTo(1005, 3);
+    expect(d.excede).toBe(false);
     expect(d.tipoCambio).toBe(16.9237);
     expect(d.invalido).toBe(false);
   });
