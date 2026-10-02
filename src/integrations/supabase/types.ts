@@ -4143,6 +4143,129 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_pricing_opciones: {
+        Row: {
+          agente: string | null
+          carta_garantia: boolean | null
+          created_at: string
+          created_by: string | null
+          id: string
+          naviera_id: string | null
+          of_moneda: string | null
+          of_tarifa: number | null
+          of_unidad: string | null
+          orden: number
+          organization_id: string
+          origen_moneda: string | null
+          origen_tarifa: number | null
+          origen_unidad: string | null
+          otros_concepto: string | null
+          otros_moneda: string | null
+          otros_tarifa: number | null
+          otros_unidad: string | null
+          recoleccion_moneda: string | null
+          recoleccion_tarifa: number | null
+          recoleccion_unidad: string | null
+          ruta: string | null
+          solicitud_id: string
+          tarifa_id: string | null
+          transito: string | null
+          updated_at: string
+        }
+        Insert: {
+          agente?: string | null
+          carta_garantia?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          naviera_id?: string | null
+          of_moneda?: string | null
+          of_tarifa?: number | null
+          of_unidad?: string | null
+          orden?: number
+          organization_id: string
+          origen_moneda?: string | null
+          origen_tarifa?: number | null
+          origen_unidad?: string | null
+          otros_concepto?: string | null
+          otros_moneda?: string | null
+          otros_tarifa?: number | null
+          otros_unidad?: string | null
+          recoleccion_moneda?: string | null
+          recoleccion_tarifa?: number | null
+          recoleccion_unidad?: string | null
+          ruta?: string | null
+          solicitud_id: string
+          tarifa_id?: string | null
+          transito?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agente?: string | null
+          carta_garantia?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          naviera_id?: string | null
+          of_moneda?: string | null
+          of_tarifa?: number | null
+          of_unidad?: string | null
+          orden?: number
+          organization_id?: string
+          origen_moneda?: string | null
+          origen_tarifa?: number | null
+          origen_unidad?: string | null
+          otros_concepto?: string | null
+          otros_moneda?: string | null
+          otros_tarifa?: number | null
+          otros_unidad?: string | null
+          recoleccion_moneda?: string | null
+          recoleccion_tarifa?: number | null
+          recoleccion_unidad?: string | null
+          ruta?: string | null
+          solicitud_id?: string
+          tarifa_id?: string | null
+          transito?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_pricing_opciones_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pricing_opciones_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pricing_opciones_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "crm_solicitudes_pricing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pricing_opciones_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pricing_opciones_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_propiedad_opciones: {
         Row: {
           archivada: boolean
@@ -4223,6 +4346,129 @@ export type Database = {
           tipo?: string
         }
         Relationships: []
+      }
+      crm_solicitudes_pricing: {
+        Row: {
+          cantidad: number | null
+          cliente: string | null
+          commodity: string | null
+          complejidad: string
+          container_size: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          delivery: string | null
+          destino: string | null
+          dimensiones: string | null
+          enviada_at: string | null
+          estado: string
+          estibable: boolean | null
+          fecha: string
+          fecha_tentativa_carga: string | null
+          folio: string
+          id: string
+          imo: boolean | null
+          incoterm: string | null
+          notas: string | null
+          oportunidad_id: string
+          organization_id: string
+          origen: string | null
+          peso: string | null
+          pod: string | null
+          pol: string | null
+          respondida_at: string | null
+          servicio: string | null
+          solicitante_id: string
+          tipo_carga: string | null
+          updated_at: string
+          vence_at: string | null
+        }
+        Insert: {
+          cantidad?: number | null
+          cliente?: string | null
+          commodity?: string | null
+          complejidad?: string
+          container_size?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          delivery?: string | null
+          destino?: string | null
+          dimensiones?: string | null
+          enviada_at?: string | null
+          estado?: string
+          estibable?: boolean | null
+          fecha?: string
+          fecha_tentativa_carga?: string | null
+          folio: string
+          id?: string
+          imo?: boolean | null
+          incoterm?: string | null
+          notas?: string | null
+          oportunidad_id: string
+          organization_id: string
+          origen?: string | null
+          peso?: string | null
+          pod?: string | null
+          pol?: string | null
+          respondida_at?: string | null
+          servicio?: string | null
+          solicitante_id: string
+          tipo_carga?: string | null
+          updated_at?: string
+          vence_at?: string | null
+        }
+        Update: {
+          cantidad?: number | null
+          cliente?: string | null
+          commodity?: string | null
+          complejidad?: string
+          container_size?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          delivery?: string | null
+          destino?: string | null
+          dimensiones?: string | null
+          enviada_at?: string | null
+          estado?: string
+          estibable?: boolean | null
+          fecha?: string
+          fecha_tentativa_carga?: string | null
+          folio?: string
+          id?: string
+          imo?: boolean | null
+          incoterm?: string | null
+          notas?: string | null
+          oportunidad_id?: string
+          organization_id?: string
+          origen?: string | null
+          peso?: string | null
+          pod?: string | null
+          pol?: string | null
+          respondida_at?: string | null
+          servicio?: string | null
+          solicitante_id?: string
+          tipo_carga?: string | null
+          updated_at?: string
+          vence_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_solicitudes_pricing_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_solicitudes_pricing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_valores: {
         Row: {
@@ -9228,6 +9474,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
       _crm_vincular_cotizacion_core: {
         Args: {
           p_actor_email?: string
@@ -10554,6 +10801,10 @@ export type Database = {
       }
       crm_backfill_cotizaciones_sin_oportunidad: { Args: never; Returns: Json }
       crm_calificar_prospecto: { Args: { p_lead_id: string }; Returns: Json }
+      crm_cancelar_solicitud_pricing: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       crm_criterios_avance: {
         Args: { p_oportunidad_ids: string[] }
         Returns: {
@@ -10578,6 +10829,7 @@ export type Database = {
           valor: number
         }[]
       }
+      crm_enviar_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
       crm_higiene_oportunidades: {
         Args: never
         Returns: {
@@ -10641,7 +10893,16 @@ export type Database = {
         }
         Returns: Json
       }
+      crm_responder_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
       crm_tomar_lead: { Args: { p_lead_id: string }; Returns: Json }
+      crm_usuarios_org: {
+        Args: never
+        Returns: {
+          nombre: string
+          role: string
+          user_id: string
+        }[]
+      }
       crm_vincular_cotizacion: {
         Args: {
           p_cotizacion_id: string
