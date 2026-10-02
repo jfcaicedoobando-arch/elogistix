@@ -33,4 +33,4 @@ datos ni autoriza aplicar migraciones/ajustes propuestos.
 - [x] Fase 4: embudo de 7 etapas
 - [x] Fase 5 — Solicitud a Pricing
 - [x] Fase 6 — Puntaje A/B/C
-- [ ] Fase 7: reportes dinámicos
+- [x] Fase 7: reportes dinámicos
