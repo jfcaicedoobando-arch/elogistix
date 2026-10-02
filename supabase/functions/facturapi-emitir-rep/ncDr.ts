@@ -39,6 +39,8 @@ function convertir(
   return 0;
 }
 
+const NC_VIGENTES = new Set(["Timbrada", "Aplicada"]);
+
 /**
  * Suma de notas de crédito aplicadas (opcionalmente hasta una fecha) expresada
  * en la moneda de la factura.
@@ -53,7 +55,9 @@ export function ncAplicadasEnMonedaFactura(
   let total = 0;
   for (const nc of ncs ?? []) {
     if (nc.deleted_at) continue;
-    if (String(nc.estado ?? "") !== "Aplicada") continue;
+    // Una NC timbrada ya existe ante el SAT y reduce el saldo aunque aún no
+    // se marque como "Aplicada" (REACT-77: FacturAPI la descuenta).
+    if (!NC_VIGENTES.has(String(nc.estado ?? ""))) continue;
     if (corte && nc.fecha_emision && String(nc.fecha_emision).slice(0, 10) > corte) continue;
     const monto = Number(nc.monto ?? 0);
     if (!Number.isFinite(monto) || monto <= 0) continue;
