@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { calcularReloj } from "../relojPricing";
-import { mensajeErrorPricing, OPCION_VACIA } from "../tiposPricing";
+import { mensajeErrorPricing, OPCION_VACIA, solicitudCompleta } from "../tiposPricing";
 import { opcionDesdeTarifa } from "../tarifasParaPricing";
 import { esRolPricing } from "../permisosPricing";
-import { solicitudCompleta } from "@/features/crm/components/pricing/SolicitudPricingDialog";
 
 const enviada = "2026-10-01T10:00:00Z";
 const vence = "2026-10-01T18:00:00Z"; // 8 h
@@ -31,8 +30,8 @@ describe("reglas de Pricing", () => {
     expect(mensajeErrorPricing(new Error("otra cosa"))).toBe("No se pudo completar la acción.");
   });
   it("solicitud completa = servicio + origen/POL + destino/POD", () => {
-    expect(solicitudCompleta({ solicitante_id: "u", servicio: "Marítimo", pol: "CNSHA", destino: "Manzanillo" })).toBe(true);
-    expect(solicitudCompleta({ solicitante_id: "u", servicio: "Marítimo", pol: " ", destino: "Manzanillo" })).toBe(false);
+    expect(solicitudCompleta({ servicio: "Marítimo", pol: "CNSHA", destino: "Manzanillo" })).toBe(true);
+    expect(solicitudCompleta({ servicio: "Marítimo", pol: " ", destino: "Manzanillo" })).toBe(false);
   });
   it("copiar tarifa llena flete y conserva otros cargos", () => {
     const base = { ...OPCION_VACIA, recoleccion_tarifa: 500 };

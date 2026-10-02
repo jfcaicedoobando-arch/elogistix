@@ -74,7 +74,7 @@ export const CosteoRutas = lazy(() => import("@/features/costeo/routes/CosteoRut
 export const CosteoAgentes = lazy(() => import("@/features/costeo/routes/CosteoAgentes"));
 export const CosteoNavieras = lazy(() => import("@/features/costeo/routes/CosteoNavieras"));
 export const CosteoDemorasVenta = lazy(() => import("@/features/costeo/routes/CosteoDemorasVenta"));
-export const CosteoSolicitudesPricing = lazy(() => import("@/features/costeo/routes/CosteoSolicitudesPricing"));
+export const CosteoSolicitudesPricing = lazy(() => import("@/features/crm/routes/SolicitudesPricing"));
 
 export const Usuarios = lazy(() => import("@/features/admin/routes/admin-org/Usuarios"));
 export const Configuracion = lazy(() => import("@/features/admin/routes/admin-org/Configuracion"));

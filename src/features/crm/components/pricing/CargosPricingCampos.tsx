@@ -1,8 +1,8 @@
 /**
  * Los 4 cargos de una opción de Pricing: tarifa + moneda + unidad cada uno.
  */
-import { CARGOS_PRICING, MONEDAS_PRICING, type ClaveCargo, type OpcionPricingForm } from "@/features/crm/services/pricing/tiposPricing";
-import { aNumero, CampoLista, CampoTexto } from "./CamposPricing";
+import { aNumero, CARGOS_PRICING, MONEDAS_PRICING, type ClaveCargo, type OpcionPricingForm } from "@/features/crm/services/pricing/tiposPricing";
+import { CampoLista, CampoTexto } from "./CamposPricing";
 
 interface Props {
   idBase: string;

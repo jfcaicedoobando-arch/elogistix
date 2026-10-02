@@ -5,8 +5,9 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
 import {
   ETIQUETA_COMPLEJIDAD, INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
+  aNumero,
 } from "@/features/crm/services/pricing/tiposPricing";
-import { aNumero, CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
+import { CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
 
 export type DatosSolicitud = Omit<SolicitudPricingInsert, "folio" | "organization_id" | "oportunidad_id">;
 

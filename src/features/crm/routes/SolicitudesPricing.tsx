@@ -18,7 +18,7 @@ const ESTADOS = [
   { value: "cancelada", label: "Canceladas" }, { value: "todos", label: "Todas" },
 ];
 
-export default function CosteoSolicitudesPricing() {
+export default function SolicitudesPricing() {
   useDocumentTitle("Solicitudes de pricing");
   const [params, setParams] = useSearchParams();
   const estado = params.get("estado") ?? "enviada";

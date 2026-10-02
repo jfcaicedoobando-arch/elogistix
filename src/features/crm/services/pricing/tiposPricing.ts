@@ -60,3 +60,17 @@ export function mensajeErrorPricing(err: unknown): string {
   const clave = Object.keys(mapa).find((k) => msg.includes(k));
   return clave ? mapa[clave] : "No se pudo completar la acción.";
 }
+
+/** Convierte texto de input numérico a número o null (sin NaN). */
+export function aNumero(v: string): number | null {
+  if (v.trim() === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Mismo criterio que la RPC de envío: servicio + origen/POL + destino/POD. */
+export function solicitudCompleta(d: {
+  servicio?: string | null; origen?: string | null; pol?: string | null; destino?: string | null; pod?: string | null;
+}): boolean {
+  return !!d.servicio && !!(d.origen?.trim() || d.pol?.trim()) && !!(d.destino?.trim() || d.pod?.trim());
+}

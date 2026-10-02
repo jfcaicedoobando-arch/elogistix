@@ -51,10 +51,3 @@ export function CampoSiNo({ id, label, value, onChange, disabled }: Base & {
       onChange={(v) => onChange(v == null ? null : v === "si")} />
   );
 }
-
-/** Convierte texto de input numérico a número o null (sin NaN). */
-export function aNumero(v: string): number | null {
-  if (v.trim() === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}

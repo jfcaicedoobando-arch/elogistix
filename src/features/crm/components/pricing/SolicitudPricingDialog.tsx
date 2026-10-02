@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { hoyMx } from "@/lib/date/mx";
 import { useGuardarSolicitud } from "@/features/crm/hooks/usePricingCrm";
-import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
+import { solicitudCompleta, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { SolicitudPricingCampos, type DatosSolicitud } from "./SolicitudPricingCampos";
 
 interface Props {
@@ -29,11 +29,6 @@ function inicial(userId: string, cliente: string | null | undefined, s?: Solicit
     return resto;
   }
   return { solicitante_id: userId, fecha: hoyMx(), cliente: cliente ?? null, complejidad: "media" };
-}
-
-/** Mismo criterio que la RPC de envío: servicio + origen/POL + destino/POD. */
-export function solicitudCompleta(d: DatosSolicitud): boolean {
-  return !!d.servicio && !!(d.origen?.trim() || d.pol?.trim()) && !!(d.destino?.trim() || d.pod?.trim());
 }
 
 export function SolicitudPricingDialog({ open, onOpenChange, oportunidadId, clienteNombre, solicitud }: Props) {
