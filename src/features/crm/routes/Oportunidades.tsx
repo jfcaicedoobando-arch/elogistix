@@ -24,7 +24,8 @@ import { useVendedoresDisponibles } from "@/features/crm/hooks/useOportunidadesF
 import { useOportunidadesFiltrosServidor, useExportarOportunidades } from "./useOportunidadesFiltrosServidor";
 
 import { useUsuarios } from "@/features/admin/hooks/usuario";
-import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "./oportunidadesTable";
+import { oportunidadesColumns, siguienteActividadColumn, puntajeColumn, activosFiltros } from "./oportunidadesTable";
+import { usePuntajes } from "@/features/crm/hooks/useScoringCrm";
 import { useProximasActividades } from "@/features/crm/hooks/useProximasActividades";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -89,13 +90,12 @@ export default function Oportunidades() {
   });
 
 
-  const { data: proximas } = useProximasActividades(
-    "oportunidad",
-    useMemo(() => ops.map((o) => o.id), [ops]),
-  );
+  const idsOps = useMemo(() => ops.map((o) => o.id), [ops]);
+  const { data: proximas } = useProximasActividades("oportunidad", idsOps);
+  const { data: puntajes } = usePuntajes("oportunidad", idsOps);
   const columnas = useMemo(
-    () => [...oportunidadesColumns, siguienteActividadColumn(proximas ?? new Map())],
-    [proximas],
+    () => [...oportunidadesColumns, puntajeColumn(puntajes ?? new Map()), siguienteActividadColumn(proximas ?? new Map())],
+    [proximas, puntajes],
   );
 
   const { exportando, exportarTodo } = useExportarOportunidades(filtrosServidor);

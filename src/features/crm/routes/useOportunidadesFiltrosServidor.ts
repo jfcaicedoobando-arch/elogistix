@@ -23,8 +23,9 @@ export function useOportunidadesFiltrosServidor(debounced: string, filtros: Opor
       cierreHasta: filtros.cierreHasta,
       montoMin: montoMin !== null && Number.isFinite(montoMin) ? montoMin : null,
       clienteId: clienteId ?? null,
+      letra: filtros.letra,
     }),
-    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin, clienteId],
+    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin, clienteId, filtros.letra],
   );
   return filtrosServidor;
 }

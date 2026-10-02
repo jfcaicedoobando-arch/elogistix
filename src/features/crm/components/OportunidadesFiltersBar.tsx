@@ -2,6 +2,7 @@
  * Filtros avanzados para Oportunidades (cliente-side sobre el dataset ya cargado).
  */
 import { X } from "lucide-react";
+import { FiltroLetraSelect } from "@/features/crm/components/scoring/FiltroLetraSelect";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -29,10 +30,11 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
     value.vendedorId !== "todos" ||
     value.cierreDesde !== "" ||
     value.cierreHasta !== "" ||
-    value.montoMin !== "";
+    value.montoMin !== "" ||
+    value.letra !== "todas";
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+    <div className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
       <div className="space-y-1">
         <Label>Etapa</Label>
         <Select value={value.etapaId} onValueChange={(v) => set("etapaId", v)}>
@@ -70,6 +72,10 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
           onChange={(e) => set("montoMin", e.target.value)}
           placeholder="0"
         />
+      </div>
+      <div className="space-y-1">
+        <Label>Puntaje</Label>
+        <FiltroLetraSelect value={value.letra} onChange={(v) => set("letra", v)} />
       </div>
       <div>
         <Button

@@ -28,6 +28,7 @@ const K = {
   desde: "desde",
   hasta: "hasta",
   montoMin: "montoMin",
+  letra: "puntaje",
   vista: "vista",
 } as const;
 
@@ -47,6 +48,7 @@ export function parseOportunidadesUrl(params: URLSearchParams): OportunidadesUrl
       cierreDesde: params.get(K.desde) ?? "",
       cierreHasta: params.get(K.hasta) ?? "",
       montoMin: params.get(K.montoMin) ?? "",
+      letra: ["A", "B", "C"].includes(params.get(K.letra) ?? "") ? params.get(K.letra)! : FILTROS_DEFAULT.letra,
     },
     vista: vistaParam === "tabla" ? "tabla" : "kanban",
   };
@@ -71,6 +73,7 @@ export function serializeOportunidadesUrl(
   set(K.desde, state.filtros.cierreDesde, "");
   set(K.hasta, state.filtros.cierreHasta, "");
   set(K.montoMin, state.filtros.montoMin, "");
+  set(K.letra, state.filtros.letra, FILTROS_DEFAULT.letra);
   set(K.vista, state.vista, "kanban");
   return next;
 }

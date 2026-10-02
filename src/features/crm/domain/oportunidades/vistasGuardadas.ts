@@ -71,7 +71,8 @@ export function detectarVistaActiva(
       v.filtros.vendedorId === filtros.vendedorId &&
       v.filtros.cierreDesde === filtros.cierreDesde &&
       v.filtros.cierreHasta === filtros.cierreHasta &&
-      v.filtros.montoMin === filtros.montoMin,
+      v.filtros.montoMin === filtros.montoMin &&
+      v.filtros.letra === filtros.letra,
   );
   return match?.id ?? null;
 }
