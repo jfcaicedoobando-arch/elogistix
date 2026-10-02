@@ -114,7 +114,9 @@ export async function cargarDatosPago(
     .order("created_at", { ascending: true });
   if (ppErr) return etapaCorte(json({ error: "pagos_query_failed", detail: ppErr.message }, 500));
 
-  // Ola E3 · N1 — notas de crédito aplicadas antes de este pago.
+  // Ola E3 · N1 — notas de crédito timbradas al momento de emitir el REP.
+  // Sin corte por fecha de pago: el SAT/FacturAPI descuentan toda NC ya
+  // timbrada (p. ej. pronto pago emitida después del depósito, REACT-77).
   const { data: ncsFactura, error: ncErr } = await supabase
     .from("factura_notas_credito")
     .select("monto, moneda, tipo_cambio, estado, fecha_emision, deleted_at")
@@ -125,7 +127,6 @@ export async function cargarDatosPago(
     ncsFactura,
     String(factura.moneda ?? "MXN"),
     Number(factura.tipo_cambio ?? 1),
-    typeof pago.fecha_pago === "string" ? pago.fecha_pago : null,
   );
 
   const parcialidad = calcularParcialidad(

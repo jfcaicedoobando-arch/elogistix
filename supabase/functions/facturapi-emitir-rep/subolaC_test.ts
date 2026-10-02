@@ -72,3 +72,8 @@ Deno.test("N1: parcialidad resta pagos previos y notas de crédito", () => {
   assertEquals(info.saldoAnt, 5000);
   assertEquals(info.saldoInsoluto, 4000);
 });
+
+Deno.test("REACT-77: NC timbrada (no 'Aplicada') reduce el saldo anterior", () => {
+  const ncs = [{ monto: 403.32, moneda: "USD", tipo_cambio: 16.956, estado: "Timbrada", fecha_emision: "2026-09-29" }];
+  assertEquals(ncAplicadasEnMonedaFactura(ncs, "USD", 17), 403.32);
+});
