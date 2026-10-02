@@ -7,7 +7,7 @@ interface Props { value: string; onChange: (v: string) => void }
 export function FiltroLetraSelect({ value, onChange }: Props) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-40" aria-label="Filtrar por puntaje"><SelectValue /></SelectTrigger>
+      <SelectTrigger className="w-48" aria-label="Filtrar por puntaje"><SelectValue /></SelectTrigger>
       <SelectContent>
         <SelectItem value="todas">Todos los puntajes</SelectItem>
         {LETRAS_PUNTAJE.map((l) => <SelectItem key={l} value={l}>Puntaje {l}</SelectItem>)}
