@@ -4349,6 +4349,72 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_reportes: {
+        Row: {
+          agrupacion: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          filtro: Json
+          id: string
+          medida: string
+          nombre: string
+          objeto: string
+          organization_id: string
+          posicion: number
+          tablero_id: string
+          tipo_grafica: string
+          updated_at: string
+        }
+        Insert: {
+          agrupacion: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          filtro?: Json
+          id?: string
+          medida?: string
+          nombre: string
+          objeto: string
+          organization_id?: string
+          posicion?: number
+          tablero_id: string
+          tipo_grafica?: string
+          updated_at?: string
+        }
+        Update: {
+          agrupacion?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          filtro?: Json
+          id?: string
+          medida?: string
+          nombre?: string
+          objeto?: string
+          organization_id?: string
+          posicion?: number
+          tablero_id?: string
+          tipo_grafica?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_reportes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_reportes_tablero_id_fkey"
+            columns: ["tablero_id"]
+            isOneToOne: false
+            referencedRelation: "crm_tableros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_scoring_cortes: {
         Row: {
           created_at: string
@@ -4555,6 +4621,47 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_solicitudes_pricing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tableros: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          nombre: string
+          orden: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          nombre: string
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          nombre?: string
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tableros_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -10996,6 +11103,13 @@ export type Database = {
           id: string
           letra: string
           puntaje: number
+        }[]
+      }
+      crm_reporte_datos: {
+        Args: { p_reporte_id: string }
+        Returns: {
+          etiqueta: string
+          valor: number
         }[]
       }
       crm_responder_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
