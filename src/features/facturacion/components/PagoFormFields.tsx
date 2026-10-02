@@ -9,6 +9,7 @@ import {
 import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { AvisoFechaPreviaCorte } from "@/components/shared/AvisoFechaPreviaCorte";
+import { CampoTipoCambio, type CampoTcProps } from "./CampoTipoCambio";
 
 export interface PagoFormValues {
   fecha: string;
@@ -19,6 +20,8 @@ export interface PagoFormValues {
   notas: string;
   /** Cuenta donde entró el dinero (opcional). "" = no registrar en banco. */
   cuentaBancariaId: string;
+  /** TC convenido (MXN por divisa). "" o ausente = DOF de la fecha. */
+  tipoCambioManual?: string;
 }
 
 export interface CuentaCobro {
@@ -33,11 +36,12 @@ interface Props {
   values: PagoFormValues;
   onChange: <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) => void;
   cuentas?: CuentaCobro[];
+  tc?: Omit<CampoTcProps, "values" | "onChange">;
 }
 
 const SIN_CUENTA = "sin-cuenta";
 
-export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
+export function PagoFormFields({ values, onChange, cuentas = [], tc }: Props) {
   // C4: sólo cuentas en la MISMA moneda del cobro. Antes se listaban todas y un
   // cobro en USD podía abonarse a una cuenta MXN con la cifra en dólares.
   const cuentasCompatibles = cuentas.filter((c) => c.moneda === values.moneda);
@@ -87,6 +91,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           </SelectContent>
         </Select>
       </div>
+      {tc && <CampoTipoCambio values={values} onChange={onChange} {...tc} />}
 
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="cobro-cuenta">Cuenta donde entró el dinero (opcional)</Label>

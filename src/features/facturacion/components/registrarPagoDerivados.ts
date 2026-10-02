@@ -80,9 +80,14 @@ export function derivarEstadoPago(a: {
   rates: RatesTc | undefined;
   /** B-4: método de pago de la factura; `PUE` exige liquidar en una exhibición. */
   metodoPagoFactura?: string | null;
+  /** TC convenido con el cliente (Guía REP, EquivalenciaDR). "" = usar DOF. */
+  tcManual?: string;
 }): DerivadosPago {
   const montoNum = Number(a.monto) || 0;
-  const tcPago = tcParaPago(a.monedaPago, a.monedaFactura, a.rates);
+  const manual = tcManualValido(a.tcManual);
+  const usaManual = manual !== undefined && a.monedaPago !== a.monedaFactura;
+  const tcDof = tcParaPago(a.monedaPago, a.monedaFactura, a.rates);
+  const tcPago = usaManual ? (manual ?? null) : tcDof;
   // El equivalente en pantalla se calcula con el MISMO TC que guardará la BD
   // (pesos por divisa), así el "Equivalente" coincide con el monto aplicado real.
   const montoAplicado = aplicarTcPago(montoNum, a.monedaPago, a.monedaFactura, tcPago);
@@ -96,11 +101,11 @@ export function derivarEstadoPago(a: {
   // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
   // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
   // un error fiscal, no sólo de visualización.
-  const tcRespaldo = a.monedaPago !== a.monedaFactura && a.rates?.esFallback === true;
+  const tcRespaldo = !usaManual && a.monedaPago !== a.monedaFactura && a.rates?.esFallback === true;
   // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
   const cruceNoSoportado =
     a.monedaPago !== a.monedaFactura && a.monedaPago !== "MXN" && a.monedaFactura !== "MXN";
-  const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
+  const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null || (cruceNoSoportado === false && usaManual && manual === null);
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
   // B-4 (v14-2): PUE no admite abonos — el cobro debe liquidar el saldo
@@ -119,4 +124,21 @@ export function derivarEstadoPago(a: {
     pueIncompleto,
     invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null || pueIncompleto,
   };
+}
+
+/** Banda de `_assert_tc_banda()` en BD (MXN por USD/EUR). */
+export const TC_MIN = 5;
+export const TC_MAX = 40;
+
+/** undefined = sin captura manual; null = capturado pero fuera de banda. */
+export function tcManualValido(v: string | undefined): number | null | undefined {
+  if (!v || !v.trim()) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= TC_MIN && n <= TC_MAX ? n : null;
+}
+
+/** TC que deja el saldo en ceros: pesos ÷ saldo, 4 decimales (redondeo FIX). */
+export function tcCuadreExacto(montoMxn: number, saldo: number): number | null {
+  if (!(montoMxn > 0) || !(saldo > 0)) return null;
+  return Math.round((montoMxn / saldo) * 10000) / 10000;
 }
