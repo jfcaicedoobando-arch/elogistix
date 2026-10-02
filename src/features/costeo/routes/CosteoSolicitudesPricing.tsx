@@ -1,0 +1,75 @@
+/**
+ * Bandeja de Pricing: solicitudes enviadas desde el CRM, ordenadas por
+ * vencimiento. `?id=` abre una solicitud (lo usa el aviso de la campanita).
+ */
+import { useSearchParams } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDocumentTitle } from "@/hooks/shared";
+import { useBandejaPricing, useSolicitudPricing } from "@/features/crm/hooks/usePricingCrm";
+import { PAGINA_PRICING } from "@/features/crm/services/pricing/pricingCrm";
+import { ETIQUETA_ESTADO_PRICING } from "@/features/crm/services/pricing/tiposPricing";
+import { RelojPricing } from "@/features/crm/components/pricing/RelojPricing";
+import { SolicitudPricingDetalle } from "@/features/crm/components/pricing/SolicitudPricingDetalle";
+
+const ESTADOS = [
+  { value: "enviada", label: "Por responder" }, { value: "respondida", label: "Respondidas" },
+  { value: "cancelada", label: "Canceladas" }, { value: "todos", label: "Todas" },
+];
+
+export default function CosteoSolicitudesPricing() {
+  useDocumentTitle("Solicitudes de pricing");
+  const [params, setParams] = useSearchParams();
+  const estado = params.get("estado") ?? "enviada";
+  const pagina = Number(params.get("p") ?? "0") || 0;
+  const id = params.get("id");
+  const { data, isLoading, error } = useBandejaPricing(estado, pagina);
+  const detalle = useSolicitudPricing(id);
+  const cambiar = (k: string, v: string | null) => {
+    const n = new URLSearchParams(params);
+    if (v == null) n.delete(k); else n.set(k, v);
+    if (k === "estado") n.delete("p");
+    setParams(n, { replace: true });
+  };
+  const total = data?.total ?? 0;
+  const paginas = Math.max(1, Math.ceil(total / PAGINA_PRICING));
+
+  return (
+    <div className="space-y-4 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-h2 font-semibold">Solicitudes de pricing</h1>
+          <p className="text-body-sm text-muted-foreground">Baja 8 h · Media 24 h · Alta 48 h para responder.</p>
+        </div>
+        <Select value={estado} onValueChange={(v) => cambiar("estado", v)}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>{ESTADOS.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      {error && <p className="text-body-sm text-destructive">No se pudieron cargar las solicitudes.</p>}
+      {isLoading && <p className="text-body-sm text-muted-foreground">Cargando…</p>}
+      {!isLoading && !error && total === 0 && <p className="text-body-sm text-muted-foreground">No hay solicitudes.</p>}
+      <div className="space-y-2">
+        {(data?.filas ?? []).map((s) => (
+          <button key={s.id} type="button" onClick={() => cambiar("id", id === s.id ? null : s.id)}
+            className="flex w-full flex-wrap items-center gap-3 rounded-lg border bg-card p-3 text-left hover:bg-muted/50">
+            <span className="font-medium">{s.folio}</span>
+            <Badge variant="outline">{ETIQUETA_ESTADO_PRICING[s.estado] ?? s.estado}</Badge>
+            <span className="text-body-sm">{s.cliente ?? "Sin cliente"}</span>
+            <span className="text-body-sm text-muted-foreground">{[s.servicio, s.origen ?? s.pol, s.destino ?? s.pod].filter(Boolean).join(" · ")}</span>
+            <span className="ml-auto"><RelojPricing enviadaAt={s.enviada_at} venceAt={s.vence_at} respondidaAt={s.respondida_at} /></span>
+          </button>
+        ))}
+      </div>
+      {paginas > 1 && (
+        <div className="flex items-center justify-end gap-2 text-body-sm">
+          <Button variant="outline" size="sm" disabled={pagina === 0} onClick={() => cambiar("p", String(pagina - 1))}>Anterior</Button>
+          <span>Página {pagina + 1} de {paginas}</span>
+          <Button variant="outline" size="sm" disabled={pagina + 1 >= paginas} onClick={() => cambiar("p", String(pagina + 1))}>Siguiente</Button>
+        </div>
+      )}
+      {detalle.data && <SolicitudPricingDetalle solicitud={detalle.data} />}
+    </div>
+  );
+}
