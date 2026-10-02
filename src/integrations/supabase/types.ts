@@ -4376,7 +4376,7 @@ export type Database = {
           medida?: string
           nombre: string
           objeto: string
-          organization_id: string
+          organization_id?: string
           posicion?: number
           tablero_id: string
           tipo_grafica?: string
@@ -4646,7 +4646,7 @@ export type Database = {
           id?: string
           nombre: string
           orden?: number
-          organization_id: string
+          organization_id?: string
           updated_at?: string
         }
         Update: {
