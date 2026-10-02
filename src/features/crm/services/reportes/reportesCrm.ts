@@ -40,9 +40,9 @@ export async function listTableros(): Promise<CrmTableroRow[]> {
 }
 
 export async function crearTablero(nombre: string): Promise<string> {
-  const row = unwrap(
-    await supabase.from("crm_tableros").insert({ nombre }).select("id").single(),
-  ) as { id: string };
+  const row = (await unwrap(
+    supabase.from("crm_tableros").insert({ nombre }).select("id").single(),
+  )) as { id: string };
   return row.id;
 }
 
