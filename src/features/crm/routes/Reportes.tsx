@@ -7,13 +7,12 @@ import { useMemo, useState } from "react";
 import { BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmptyState from "@/components/empty/EmptyState";
 import { useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { useReportesDeTablero, useTablerosCrm } from "@/features/crm/hooks/useReportesCrm";
 import type { CrmReporteRow } from "@/features/crm/services/reportes/tiposReportes";
-import { TarjetaReporte } from "@/features/crm/components/reportes/TarjetaReporte";
 import { TableroAcciones } from "@/features/crm/components/reportes/TableroAcciones";
+import { TableroContenido } from "@/features/crm/components/reportes/TableroContenido";
 import { ReportesDialogs, type DlgReporteState, type DlgTableroState } from "@/features/crm/components/reportes/ReportesDialogs";
 
 export default function CrmReportes() {
