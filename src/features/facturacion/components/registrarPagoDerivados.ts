@@ -105,7 +105,7 @@ export function derivarEstadoPago(a: {
   // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
   const cruceNoSoportado =
     a.monedaPago !== a.monedaFactura && a.monedaPago !== "MXN" && a.monedaFactura !== "MXN";
-  const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null || (cruceNoSoportado === false && usaManual && manual === null);
+  const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
   // B-4 (v14-2): PUE no admite abonos — el cobro debe liquidar el saldo
