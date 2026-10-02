@@ -63,34 +63,15 @@ export default function CrmReportes() {
       )}
 
       {tableros.length > 0 && (
-        <>
-          <Tabs value={activoId ?? undefined} onValueChange={setTableroId}>
-            <TabsList>
-              {tableros.map((t) => (
-                <TabsTrigger key={t.id} value={t.id}>{t.nombre}</TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          {reportes.length === 0 ? (
-            <EmptyState
-              icon={BarChart3}
-              title="Este tablero no tiene reportes"
-              description={isSuperAdmin ? "Agrega el primero con el botón de arriba." : "Pide al administrador que agregue reportes."}
-            />
-          ) : (
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {reportes.map((r) => (
-                <TarjetaReporte
-                  key={r.id}
-                  reporte={r}
-                  canEdit={isSuperAdmin}
-                  onEditar={(rep) => setDlgReporte({ open: true, reporte: rep })}
-                  onEliminar={setBorrarReporte}
-                />
-              ))}
-            </div>
-          )}
-        </>
+        <TableroContenido
+          tableros={tableros}
+          activoId={activoId}
+          reportes={reportes}
+          isSuperAdmin={isSuperAdmin}
+          onSeleccionarTablero={setTableroId}
+          onEditarReporte={(rep) => setDlgReporte({ open: true, reporte: rep })}
+          onEliminarReporte={setBorrarReporte}
+        />
       )}
 
       <ReportesDialogs
