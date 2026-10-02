@@ -106,7 +106,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       fechaEmision: factura.fechaEmision,
       saldo,
       rates,
-      metodoPagoFactura: factura.metodoPago,
+      metodoPagoFactura: factura.metodoPago, tcManual: values.tipoCambioManual,
     });
 
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
@@ -117,7 +117,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       [k]: v,
       // C4: al cambiar la moneda del cobro, la cuenta elegida deja de ser
       // válida (el banco sólo acepta abonos en su propia moneda).
-      ...(k === "moneda" ? { cuentaBancariaId: "" } : null),
+      ...(k === "moneda" ? { cuentaBancariaId: "", tipoCambioManual: "" } : null),
     }));
 
   const handleGuardar = (e?: React.FormEvent) => {
@@ -175,7 +175,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       {/* v13.550.0 — `<form>` real: Enter en cualquier campo guarda el pago
           (el botón del footer envía este formulario vía `form={FORM_ID}`). */}
       <form id={FORM_ID} onSubmit={handleGuardar} className="space-y-5">
-        <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} />
+        <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} tc={{ monedaFactura: factura.moneda, saldo, rates }} />
         <NotasPago
           esPpdTimbrada={esPpdTimbrada}
           monedaPago={values.moneda}
