@@ -2744,6 +2744,23 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_reportes_guard() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_org uuid;
+BEGIN
+  SELECT organization_id INTO v_org FROM public.crm_tableros WHERE id = NEW.tablero_id AND deleted_at IS NULL;
+  IF v_org IS NULL OR v_org <> NEW.organization_id THEN
+    RAISE EXCEPTION 'LC_REPORTE_TABLERO_INVALIDO' USING ERRCODE = 'P0001';
+  END IF;
+  IF TG_OP = 'UPDATE' AND (NEW.tablero_id <> OLD.tablero_id OR NEW.organization_id <> OLD.organization_id) THEN
+    RAISE EXCEPTION 'LC_REPORTE_INMUTABLE' USING ERRCODE = 'P0001';
+  END IF;
+  IF TG_OP = 'INSERT' THEN NEW.created_by := auth.uid(); END IF;
+  NEW.updated_at := now();
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_sol_pricing_before_ins() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2823,6 +2840,14 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_tableros_touch() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_validar_motivo_perdida() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -15204,6 +15229,92 @@ CREATE FUNCTION public.crm_puntajes(p_objeto text, p_ids uuid[]) RETURNS TABLE(i
     CROSS JOIN LATERAL (SELECT public.crm_puntaje_detalle(p_objeto, x) AS d) l
    WHERE d IS NOT NULL;
 $$;
+CREATE FUNCTION public.crm_reporte_datos(p_reporte_id uuid) RETURNS TABLE(etiqueta text, valor numeric)
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  r public.crm_reportes%ROWTYPE;
+  v_desde date; v_hasta date;
+  v_usd numeric; v_eur numeric;
+BEGIN
+  SELECT * INTO r FROM public.crm_reportes WHERE id = p_reporte_id AND deleted_at IS NULL;
+  IF r.id IS NULL OR r.organization_id IS DISTINCT FROM public.org_scope() THEN
+    RAISE EXCEPTION 'LC_REPORTE_NO_ENCONTRADO' USING ERRCODE = 'P0001';
+  END IF;
+  v_desde := nullif(r.filtro->>'desde', '')::date;
+  v_hasta := nullif(r.filtro->>'hasta', '')::date;
+  SELECT t.usd_mxn, t.eur_mxn INTO v_usd, v_eur
+    FROM public.tipos_cambio_dof t WHERE t.usd_mxn > 0 ORDER BY t.fecha DESC LIMIT 1;
+  IF r.objeto = 'empresa' THEN
+    RETURN QUERY
+      SELECT coalesce(k.llave, 'Sin dato'), count(*)::numeric
+      FROM (
+        SELECT CASE r.agrupacion
+          WHEN 'puntaje' THEN e.letra_empresa_crm
+          WHEN 'mes' THEN to_char(date_trunc('month', e.created_at), 'YYYY-MM')
+        END AS llave
+        FROM public.crm_empresas e
+        WHERE e.organization_id = r.organization_id AND e.deleted_at IS NULL
+          AND (v_desde IS NULL OR e.created_at::date >= v_desde)
+          AND (v_hasta IS NULL OR e.created_at::date <= v_hasta)
+      ) k GROUP BY 1 ORDER BY 1;
+  ELSIF r.objeto = 'oportunidad' THEN
+    RETURN QUERY
+      SELECT coalesce(k.llave, 'Sin dato'),
+        CASE WHEN r.medida = 'suma_monto_usd' THEN coalesce(sum(k.monto_usd), 0) ELSE count(*)::numeric END
+      FROM (
+        SELECT CASE r.agrupacion
+          WHEN 'etapa' THEN ep.nombre
+          WHEN 'vendedor' THEN o.vendedor_email
+          WHEN 'modo' THEN o.modo
+          WHEN 'puntaje' THEN o.letra_oportunidad_crm
+          WHEN 'mes' THEN to_char(date_trunc('month', o.created_at), 'YYYY-MM')
+        END AS llave,
+        CASE
+          WHEN coalesce(o.moneda, 'USD') = 'USD' THEN o.monto_estimado
+          WHEN o.moneda = 'MXN' AND v_usd > 0 THEN o.monto_estimado / v_usd
+          WHEN o.moneda = 'EUR' AND v_usd > 0 AND v_eur > 0 THEN o.monto_estimado * v_eur / v_usd
+        END AS monto_usd
+        FROM public.crm_oportunidades o
+        LEFT JOIN public.crm_etapas_pipeline ep ON ep.id = o.etapa_id
+        WHERE o.organization_id = r.organization_id AND o.deleted_at IS NULL
+          AND (v_desde IS NULL OR o.created_at::date >= v_desde)
+          AND (v_hasta IS NULL OR o.created_at::date <= v_hasta)
+          AND (nullif(r.filtro->>'etapa_id', '') IS NULL OR o.etapa_id = nullif(r.filtro->>'etapa_id', '')::uuid)
+          AND (nullif(r.filtro->>'vendedor', '') IS NULL OR o.vendedor_email = r.filtro->>'vendedor')
+      ) k GROUP BY 1 ORDER BY 1;
+  ELSIF r.objeto = 'actividad' THEN
+    RETURN QUERY
+      SELECT coalesce(k.llave, 'Sin dato'), count(*)::numeric
+      FROM (
+        SELECT CASE r.agrupacion
+          WHEN 'tipo' THEN a.tipo::text
+          WHEN 'responsable' THEN nullif(a.responsable_email, '')
+          WHEN 'mes' THEN to_char(date_trunc('month', a.created_at), 'YYYY-MM')
+        END AS llave
+        FROM public.crm_actividades a
+        WHERE a.organization_id = r.organization_id AND a.deleted_at IS NULL
+          AND (v_desde IS NULL OR a.created_at::date >= v_desde)
+          AND (v_hasta IS NULL OR a.created_at::date <= v_hasta)
+      ) k GROUP BY 1 ORDER BY 1;
+  ELSE -- solicitud_pricing
+    RETURN QUERY
+      SELECT coalesce(k.llave, 'Sin dato'), count(*)::numeric
+      FROM (
+        SELECT CASE r.agrupacion
+          WHEN 'estado' THEN s.estado
+          WHEN 'complejidad' THEN s.complejidad
+          WHEN 'servicio' THEN s.servicio
+          WHEN 'mes' THEN to_char(date_trunc('month', s.created_at), 'YYYY-MM')
+        END AS llave
+        FROM public.crm_solicitudes_pricing s
+        WHERE s.organization_id = r.organization_id AND s.deleted_at IS NULL
+          AND (v_desde IS NULL OR s.created_at::date >= v_desde)
+          AND (v_hasta IS NULL OR s.created_at::date <= v_hasta)
+      ) k GROUP BY 1 ORDER BY 1;
+  END IF;
+END $$;
 CREATE FUNCTION public.crm_responder_solicitud_pricing(p_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -32812,6 +32923,27 @@ CREATE TABLE public.crm_propiedades (
     CONSTRAINT crm_propiedades_objeto_check CHECK ((objeto = ANY (ARRAY['empresa'::text, 'contacto'::text, 'oportunidad'::text, 'actividad'::text]))),
     CONSTRAINT crm_propiedades_tipo_check CHECK ((tipo = ANY (ARRAY['seleccion'::text, 'multiseleccion'::text, 'numero'::text, 'fecha'::text, 'texto'::text])))
 );
+CREATE TABLE public.crm_reportes (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
+    tablero_id uuid NOT NULL,
+    nombre text NOT NULL,
+    objeto text NOT NULL,
+    medida text DEFAULT 'conteo'::text NOT NULL,
+    agrupacion text NOT NULL,
+    filtro jsonb DEFAULT '{}'::jsonb NOT NULL,
+    tipo_grafica text DEFAULT 'barras'::text NOT NULL,
+    posicion integer DEFAULT 0 NOT NULL,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT crm_reportes_check CHECK ((((objeto = 'empresa'::text) AND (agrupacion = ANY (ARRAY['puntaje'::text, 'mes'::text]))) OR ((objeto = 'oportunidad'::text) AND (agrupacion = ANY (ARRAY['etapa'::text, 'vendedor'::text, 'modo'::text, 'puntaje'::text, 'mes'::text]))) OR ((objeto = 'actividad'::text) AND (agrupacion = ANY (ARRAY['tipo'::text, 'responsable'::text, 'mes'::text]))) OR ((objeto = 'solicitud_pricing'::text) AND (agrupacion = ANY (ARRAY['estado'::text, 'complejidad'::text, 'servicio'::text, 'mes'::text]))))),
+    CONSTRAINT crm_reportes_check1 CHECK (((medida = 'conteo'::text) OR (objeto = 'oportunidad'::text))),
+    CONSTRAINT crm_reportes_medida_check CHECK ((medida = ANY (ARRAY['conteo'::text, 'suma_monto_usd'::text]))),
+    CONSTRAINT crm_reportes_objeto_check CHECK ((objeto = ANY (ARRAY['empresa'::text, 'oportunidad'::text, 'actividad'::text, 'solicitud_pricing'::text]))),
+    CONSTRAINT crm_reportes_tipo_grafica_check CHECK ((tipo_grafica = ANY (ARRAY['barras'::text, 'linea'::text, 'pastel'::text, 'numero'::text, 'tabla'::text])))
+);
 CREATE TABLE public.crm_scoring_cortes (
     objeto text NOT NULL,
     min_a integer NOT NULL,
@@ -32886,6 +33018,16 @@ CREATE TABLE public.crm_solicitudes_pricing (
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
     CONSTRAINT crm_solicitudes_pricing_incoterm_check CHECK ((incoterm = ANY (ARRAY['EXW'::text, 'FAS'::text, 'FCA'::text, 'FOB'::text, 'CFR'::text, 'CIF'::text, 'DAP'::text, 'DDP'::text, 'DPU'::text]))),
     CONSTRAINT crm_solicitudes_pricing_servicio_check CHECK ((servicio = ANY (ARRAY['Marítimo'::text, 'Terrestre'::text, 'Aéreo'::text])))
+);
+CREATE TABLE public.crm_tableros (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
+    nombre text NOT NULL,
+    orden integer DEFAULT 0 NOT NULL,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
 );
 CREATE TABLE public.crm_valores (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -34085,6 +34227,8 @@ ALTER TABLE ONLY public.crm_propiedades
     ADD CONSTRAINT crm_propiedades_objeto_clave_key UNIQUE (objeto, clave);
 ALTER TABLE ONLY public.crm_propiedades
     ADD CONSTRAINT crm_propiedades_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.crm_reportes
+    ADD CONSTRAINT crm_reportes_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.crm_scoring_cortes
     ADD CONSTRAINT crm_scoring_cortes_pkey PRIMARY KEY (objeto);
 ALTER TABLE ONLY public.crm_scoring_reglas
@@ -34093,6 +34237,8 @@ ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_organization_id_folio_key UNIQUE (organization_id, folio);
 ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.crm_tableros
+    ADD CONSTRAINT crm_tableros_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.crm_valores
     ADD CONSTRAINT crm_valores_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.crm_valores
@@ -34311,6 +34457,7 @@ CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_co
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
+CREATE INDEX crm_reportes_tablero_idx ON public.crm_reportes USING btree (tablero_id);
 CREATE INDEX crm_scoring_reglas_objeto_idx ON public.crm_scoring_reglas USING btree (objeto, criterio) WHERE activa;
 CREATE INDEX crm_solicitudes_pricing_estado_idx ON public.crm_solicitudes_pricing USING btree (organization_id, estado);
 CREATE INDEX crm_solicitudes_pricing_op_idx ON public.crm_solicitudes_pricing USING btree (oportunidad_id);
@@ -34787,9 +34934,11 @@ CREATE TRIGGER trg_crm_oportunidad_requiere_origen BEFORE INSERT OR UPDATE OF le
 CREATE TRIGGER trg_crm_pricing_opcion_guard BEFORE INSERT OR DELETE OR UPDATE ON public.crm_pricing_opciones FOR EACH ROW EXECUTE FUNCTION public._crm_pricing_opcion_guard();
 CREATE TRIGGER trg_crm_probabilidad_terminal BEFORE INSERT OR UPDATE OF etapa_id, probabilidad ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_probabilidad_terminal();
 CREATE TRIGGER trg_crm_registrar_cambio_etapa BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_registrar_cambio_etapa();
+CREATE TRIGGER trg_crm_reportes_guard BEFORE INSERT OR UPDATE ON public.crm_reportes FOR EACH ROW EXECUTE FUNCTION public._crm_reportes_guard();
 CREATE TRIGGER trg_crm_sol_pricing_ins BEFORE INSERT ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_ins();
 CREATE TRIGGER trg_crm_sol_pricing_upd BEFORE UPDATE ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_upd();
 CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
+CREATE TRIGGER trg_crm_tableros_touch BEFORE UPDATE ON public.crm_tableros FOR EACH ROW EXECUTE FUNCTION public._crm_tableros_touch();
 CREATE TRIGGER trg_crm_validar_motivo_perdida BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_validar_motivo_perdida();
 CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._cuenta_bancaria_guard_baja();
 CREATE TRIGGER trg_cuentas_bancarias_moneda_guard BEFORE UPDATE OF moneda ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public.guard_cuenta_bancaria_moneda();
@@ -35278,6 +35427,10 @@ ALTER TABLE ONLY public.crm_propiedad_opciones
     ADD CONSTRAINT crm_propiedad_opciones_propiedad_id_fkey FOREIGN KEY (propiedad_id) REFERENCES public.crm_propiedades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_propiedad_opciones
     ADD CONSTRAINT crm_propiedad_opciones_reemplaza_a_fkey FOREIGN KEY (reemplaza_a) REFERENCES public.crm_propiedad_opciones(id);
+ALTER TABLE ONLY public.crm_reportes
+    ADD CONSTRAINT crm_reportes_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.crm_reportes
+    ADD CONSTRAINT crm_reportes_tablero_id_fkey FOREIGN KEY (tablero_id) REFERENCES public.crm_tableros(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.crm_scoring_reglas
     ADD CONSTRAINT crm_scoring_reglas_opcion_id_fkey FOREIGN KEY (opcion_id) REFERENCES public.crm_propiedad_opciones(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_scoring_reglas
@@ -35286,6 +35439,8 @@ ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_oportunidad_id_fkey FOREIGN KEY (oportunidad_id) REFERENCES public.crm_oportunidades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.crm_tableros
+    ADD CONSTRAINT crm_tableros_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_valores
     ADD CONSTRAINT crm_valores_propiedad_id_fkey FOREIGN KEY (propiedad_id) REFERENCES public.crm_propiedades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.documentos_embarque
@@ -36093,6 +36248,10 @@ CREATE POLICY crm_propiedades_admin ON public.crm_propiedades TO authenticated U
 CREATE POLICY crm_propiedades_leer ON public.crm_propiedades FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
   WHERE (om.user_id = auth.uid())))));
+ALTER TABLE public.crm_reportes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY crm_reportes_escribir ON public.crm_reportes TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+CREATE POLICY crm_reportes_leer ON public.crm_reportes FOR SELECT TO authenticated USING (public.rls_tenant_scope_ok(organization_id));
+CREATE POLICY crm_reportes_tenant_restrictive ON public.crm_reportes AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_scoring_cortes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY crm_scoring_cortes_borrar ON public.crm_scoring_cortes FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
 CREATE POLICY crm_scoring_cortes_crear ON public.crm_scoring_cortes FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
@@ -36112,6 +36271,10 @@ CREATE POLICY crm_sol_pricing_editar ON public.crm_solicitudes_pricing FOR UPDAT
 CREATE POLICY crm_sol_pricing_leer ON public.crm_solicitudes_pricing FOR SELECT TO authenticated USING ((organization_id = public.org_scope()));
 ALTER TABLE public.crm_solicitudes_pricing ENABLE ROW LEVEL SECURITY;
 CREATE POLICY crm_solicitudes_pricing_tenant_restrictive ON public.crm_solicitudes_pricing AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
+ALTER TABLE public.crm_tableros ENABLE ROW LEVEL SECURITY;
+CREATE POLICY crm_tableros_escribir ON public.crm_tableros TO authenticated USING ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((public.rls_tenant_scope_ok(organization_id) AND public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+CREATE POLICY crm_tableros_leer ON public.crm_tableros FOR SELECT TO authenticated USING (public.rls_tenant_scope_ok(organization_id));
+CREATE POLICY crm_tableros_tenant_restrictive ON public.crm_tableros AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
 ALTER TABLE public.crm_valores ENABLE ROW LEVEL SECURITY;
 CREATE POLICY crm_valores_org ON public.crm_valores TO authenticated USING ((organization_id = public.current_user_org_id())) WITH CHECK ((organization_id = public.current_user_org_id()));
 CREATE POLICY crm_valores_tenant_restrictive ON public.crm_valores AS RESTRICTIVE TO authenticated USING (public.rls_tenant_scope_ok(organization_id)) WITH CHECK (public.rls_tenant_scope_ok(organization_id));
@@ -36374,6 +36537,9 @@ GRANT ALL ON FUNCTION public._crm_probabilidad_terminal() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_registrar_cambio_etapa() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_reportes_guard() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_reportes_guard() TO authenticated;
+GRANT ALL ON FUNCTION public._crm_reportes_guard() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_sol_pricing_before_ins() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_ins() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_ins() TO service_role;
@@ -36381,6 +36547,8 @@ GRANT ALL ON FUNCTION public._crm_sol_pricing_before_upd() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_upd() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_sync_oportunidad_desde_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_sync_oportunidad_desde_cotizacion() TO service_role;
+GRANT ALL ON FUNCTION public._crm_tableros_touch() TO authenticated;
+GRANT ALL ON FUNCTION public._crm_tableros_touch() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_validar_motivo_perdida() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO service_role;
@@ -36924,6 +37092,9 @@ GRANT ALL ON FUNCTION public.crm_puntaje_detalle(p_objeto text, p_id uuid) TO se
 REVOKE ALL ON FUNCTION public.crm_puntajes(p_objeto text, p_ids uuid[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_puntajes(p_objeto text, p_ids uuid[]) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_puntajes(p_objeto text, p_ids uuid[]) TO service_role;
+REVOKE ALL ON FUNCTION public.crm_reporte_datos(p_reporte_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_reporte_datos(p_reporte_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_reporte_datos(p_reporte_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_responder_solicitud_pricing(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_responder_solicitud_pricing(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_responder_solicitud_pricing(p_id uuid) TO service_role;
@@ -38063,12 +38234,16 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_propiedad_opciones TO auth
 GRANT ALL ON TABLE public.crm_propiedad_opciones TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_propiedades TO authenticated;
 GRANT ALL ON TABLE public.crm_propiedades TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_reportes TO authenticated;
+GRANT ALL ON TABLE public.crm_reportes TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_scoring_cortes TO authenticated;
 GRANT ALL ON TABLE public.crm_scoring_cortes TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_scoring_reglas TO authenticated;
 GRANT ALL ON TABLE public.crm_scoring_reglas TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_solicitudes_pricing TO authenticated;
 GRANT ALL ON TABLE public.crm_solicitudes_pricing TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_tableros TO authenticated;
+GRANT ALL ON TABLE public.crm_tableros TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_valores TO authenticated;
 GRANT ALL ON TABLE public.crm_valores TO service_role;
 GRANT ALL ON TABLE public.cron_locks TO service_role;
