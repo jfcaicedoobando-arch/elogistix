@@ -109,6 +109,7 @@ export default function CrmLayout() {
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </NavLink>
+            )}
             
             {isSuperAdmin && (
               <NavLink
