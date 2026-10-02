@@ -66,7 +66,7 @@ export function useGuardarSolicitud() {
       return id;
     },
     onSuccess: (_id, v) => { notifySuccess(undefined, { title: v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado" }); void invalidar(); },
-    onError,
+    onError: onError,
   });
 }
 
@@ -80,7 +80,7 @@ export function useAccionSolicitud() {
       notifySuccess(undefined, { title: t[v.accion] });
       void invalidar();
     },
-    onError,
+    onError: onError,
   });
 }
 
@@ -89,11 +89,11 @@ export function useGuardarOpcion() {
   return useMutation({
     mutationFn: guardarOpcion,
     onSuccess: () => { notifySuccess(undefined, { title: "Opción guardada" }); void invalidar(); },
-    onError,
+    onError: onError,
   });
 }
 
 export function useEliminarOpcion() {
   const invalidar = useInvalidar();
-  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError });
+  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError: onError });
 }
