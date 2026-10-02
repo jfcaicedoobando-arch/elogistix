@@ -76,15 +76,15 @@ export function ReportesDialogs(p: Props) {
         confirmLabel="Eliminar"
         variant="destructive"
         isPending={mBorrarTablero.isPending}
-        onConfirm={() =>
-          p.activoId &&
+        onConfirm={() => {
+          if (!p.activoId) return;
           mBorrarTablero.mutate(p.activoId, {
             onSuccess: () => {
               p.setBorrarTablero(false);
               p.onTableroEliminado();
             },
-          })
-        }
+          });
+        }}
       />
       <ConfirmActionDialog
         open={p.borrarReporte !== null}
@@ -94,9 +94,10 @@ export function ReportesDialogs(p: Props) {
         confirmLabel="Eliminar"
         variant="destructive"
         isPending={mBorrarReporte.isPending}
-        onConfirm={() =>
-          p.borrarReporte && mBorrarReporte.mutate(p.borrarReporte.id, { onSuccess: () => p.setBorrarReporte(null) })
-        }
+        onConfirm={() => {
+          if (!p.borrarReporte) return;
+          mBorrarReporte.mutate(p.borrarReporte.id, { onSuccess: () => p.setBorrarReporte(null) });
+        }}
       />
     </>
   );
