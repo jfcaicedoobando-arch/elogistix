@@ -116,6 +116,7 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
   { title: "Navieras (condiciones)", url: "/costeo/navieras", icon: Anchor },
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
+  { title: "Solicitudes de pricing", url: "/costeo/solicitudes", icon: Inbox },
 ];
 
 /**

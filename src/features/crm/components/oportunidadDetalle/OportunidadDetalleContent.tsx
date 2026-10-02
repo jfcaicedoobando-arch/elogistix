@@ -15,6 +15,7 @@ import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
 import { OportunidadDetalleAcciones } from "./OportunidadDetalleAcciones";
 import { OportunidadResumenTab } from "./OportunidadResumenTab";
+import { PricingOportunidadTab } from "@/features/crm/components/pricing/PricingOportunidadTab";
 
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
@@ -106,6 +107,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
       <Tabs defaultValue="resumen">
         <TabsList>
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="comunicacion">Comunicación</TabsTrigger>
           <TabsTrigger value="trazabilidad">Trazabilidad</TabsTrigger>
         </TabsList>
@@ -129,6 +131,10 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
           )}
           <ComentariosOportunidad oportunidadId={op.id} canEdit={canEdit} />
           <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
+        </TabsContent>
+
+        <TabsContent value="pricing" className="mt-4">
+          <PricingOportunidadTab oportunidadId={op.id} clienteNombre={op.cliente_nombre} canEdit={canEdit} />
         </TabsContent>
 
         <TabsContent value="trazabilidad" className="mt-4">

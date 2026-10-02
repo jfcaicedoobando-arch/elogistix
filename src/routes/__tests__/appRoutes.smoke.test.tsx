@@ -91,7 +91,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/tesoreria", "/tesoreria/cuentas", "/tesoreria/conciliacion", "/tesoreria/flujo",
     "/comisiones",
     "/costeo", "/costeo/tarifas", "/costeo/buscar", "/costeo/rutas",
-    "/costeo/agentes", "/costeo/navieras", "/costeo/demoras-venta",
+    "/costeo/agentes", "/costeo/navieras", "/costeo/demoras-venta", "/costeo/solicitudes",
     "/profit", "/profit/dashboard", "/profit/proyeccion",
     "/profit/estado-resultados", "/profit/presupuesto",
     "/clientes", "/clientes/:id",
