@@ -28,6 +28,7 @@ describe("oportunidadesUrlState", () => {
         cierreDesde: "2026-09-01",
         cierreHasta: "2026-09-30",
         montoMin: "1000",
+        letra: "todas",
       },
       vista: "tabla",
     });

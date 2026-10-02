@@ -15,6 +15,7 @@ vi.mock("@/features/crm/components/OportunidadCotizacionesList", () => ({
 vi.mock("@/features/crm/components/objetos/PropiedadesCard", () => ({
   PropiedadesCard: () => <div data-testid="propiedades" />,
 }));
+vi.mock("@/features/crm/components/scoring/DesglosePuntajeCard", () => ({ DesglosePuntajeCard: () => null }));
 vi.mock("@/features/crm/components/objetos/VinculosCard", () => ({
   VinculosCard: () => <div data-testid="vinculos" />,
 }));
