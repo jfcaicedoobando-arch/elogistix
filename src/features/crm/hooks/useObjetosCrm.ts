@@ -32,11 +32,11 @@ export function useContactosCrm(busqueda: string, pagina: number) {
 }
 
 /** Lista paginada de un objeto (una sola consulta según `objeto`). */
-export function useListaObjetosCrm(objeto: "empresa" | "contacto", busqueda: string, pagina: number) {
+export function useListaObjetosCrm(objeto: "empresa" | "contacto", busqueda: string, pagina: number, letra = "todas") {
   return useQuery({
-    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina],
+    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina, letra],
     queryFn: (): Promise<Pagina<EmpresaRow | ContactoRow>> =>
-      objeto === "empresa" ? fetchEmpresas(busqueda, pagina) : fetchContactos(busqueda, pagina),
+      objeto === "empresa" ? fetchEmpresas(busqueda, pagina, letra) : fetchContactos(busqueda, pagina),
     placeholderData: keepPreviousData,
   });
 }

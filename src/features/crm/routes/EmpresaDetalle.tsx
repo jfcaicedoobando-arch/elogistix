@@ -11,6 +11,7 @@ import { formatFechaDia } from "@/lib/formatters/dates";
 import { useEmpresaCrm } from "@/features/crm/hooks/useObjetosCrm";
 import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
+import { DesglosePuntajeCard } from "@/features/crm/components/scoring/DesglosePuntajeCard";
 
 export default function CrmEmpresaDetalle() {
   const { id = "" } = useParams<{ id: string }>();
@@ -39,7 +40,10 @@ export default function CrmEmpresaDetalle() {
         description={`Alta: ${formatFechaDia(data.created_at)}`}
         subHeader={data.cliente_id ? <Badge variant="secondary">Cliente</Badge> : <Badge variant="outline">Prospecto</Badge>}
       />
-      <PropiedadesCard objeto="empresa" registroId={id} canEdit={canEditCrm} />
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <PropiedadesCard objeto="empresa" registroId={id} canEdit={canEditCrm} />
+        <DesglosePuntajeCard objeto="empresa" registroId={id} />
+      </div>
       <div className="grid gap-4 md:grid-cols-2 mt-4">
         <VinculosCard
           titulo="Contactos" relacion="contactos-de-empresa" duenoId={id} rutaBase="/crm/contactos"

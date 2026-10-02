@@ -24,7 +24,7 @@ function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => { if (ok) toast.success(ok); void qc.invalidateQueries({ queryKey: BASE }); },
+    onSuccess: () => { if (ok) toast.success(ok); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: ["crm", "scoring"] }); },
     onError: (e: Error) => toast.error(e.message || "No se pudo guardar"),
   });
 }
