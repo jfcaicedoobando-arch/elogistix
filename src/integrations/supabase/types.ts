@@ -3325,7 +3325,7 @@ export type Database = {
           nombre: string
           organization_id: string
           updated_at: string
-          letra_crm: string | null
+          letra_empresa_crm: string | null
         }
         Insert: {
           cliente_id?: string | null
@@ -3923,7 +3923,7 @@ export type Database = {
           vendedor_email: string
           vendedor_id: string | null
           volumen: string | null
-          letra_crm: string | null
+          letra_oportunidad_crm: string | null
         }
         Insert: {
           aduana_puerto?: string | null
@@ -11735,21 +11735,18 @@ export type Database = {
       is_org_member: { Args: { p_org: string }; Returns: boolean }
       is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
-      letra_crm:
-        | {
-            Args: { "": Database["public"]["Tables"]["crm_empresas"]["Row"] }
-            Returns: {
-              error: true
-            } & "the function public.letra_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
-          }
-        | {
-            Args: {
-              "": Database["public"]["Tables"]["crm_oportunidades"]["Row"]
-            }
-            Returns: {
-              error: true
-            } & "the function public.letra_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
-          }
+      letra_empresa_crm: {
+        Args: { "": Database["public"]["Tables"]["crm_empresas"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.letra_empresa_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      letra_oportunidad_crm: {
+        Args: { "": Database["public"]["Tables"]["crm_oportunidades"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.letra_oportunidad_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
       liberar_claim_facturapi_huerfano: {
         Args: { p_factura_id: string; p_min_edad_minutos?: number }
         Returns: boolean
