@@ -28,6 +28,7 @@ describe("oportunidadesUrlState", () => {
         cierreDesde: "2026-09-01",
         cierreHasta: "2026-09-30",
         montoMin: "1000",
+        letra: "todas",
       },
       vista: "tabla",
     });
@@ -40,7 +41,7 @@ describe("oportunidadesUrlState", () => {
   it("serializa ida y vuelta sin perder información", () => {
     const state = {
       search: "cliente sur",
-      filtros: { etapaId: "e2", vendedorId: "u9", cierreDesde: "", cierreHasta: "", montoMin: "50000" },
+      filtros: { etapaId: "e2", vendedorId: "u9", cierreDesde: "", cierreHasta: "", montoMin: "50000", letra: "A" },
       vista: "tabla" as const,
     };
     expect(parseOportunidadesUrl(serializeOportunidadesUrl(state))).toEqual(state);

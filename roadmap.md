@@ -32,5 +32,5 @@ datos ni autoriza aplicar migraciones/ajustes propuestos.
 - [x] Fase 3: módulo de Propiedades (super admin) + propiedades iniciales + captura en fichas
 - [x] Fase 4: embudo de 7 etapas
 - [x] Fase 5 — Solicitud a Pricing
-- [ ] Fase 6: puntaje A/B/C
+- [x] Fase 6 — Puntaje A/B/C
 - [ ] Fase 7: reportes dinámicos

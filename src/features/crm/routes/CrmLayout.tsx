@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal } from "lucide-react";
+import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -108,6 +108,21 @@ export default function CrmLayout() {
                 aria-label="Propiedades"
               >
                 <SlidersHorizontal className="h-4 w-4" />
+              </NavLink>
+            )}
+            {isSuperAdmin && (
+              <NavLink
+                to="/crm/puntaje"
+                className={({ isActive }) =>
+                  cn(
+                    "inline-flex items-center justify-center w-9 h-9 rounded-md text-body transition-colors",
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )
+                }
+                title="Puntaje A/B/C"
+                aria-label="Puntaje"
+              >
+                <Gauge className="h-4 w-4" />
               </NavLink>
             )}
             {canConfigurarCrm && (

@@ -10,6 +10,7 @@ export interface OportunidadesFiltros {
   cierreDesde: string;    // "" | yyyy-mm-dd
   cierreHasta: string;
   montoMin: string;       // "" o número como string
+  letra: string;          // "todas" | "A" | "B" | "C" (puntaje)
 }
 
 export const FILTROS_DEFAULT: OportunidadesFiltros = {
@@ -18,4 +19,5 @@ export const FILTROS_DEFAULT: OportunidadesFiltros = {
   cierreDesde: "",
   cierreHasta: "",
   montoMin: "",
+  letra: "todas",
 };

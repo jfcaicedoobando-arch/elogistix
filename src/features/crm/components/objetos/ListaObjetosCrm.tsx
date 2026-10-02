@@ -1,7 +1,7 @@
 /**
  * Lista paginada (servidor) con búsqueda para Empresas o Contactos del CRM.
  */
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,9 @@ import { useDebounce } from "@/hooks/shared";
 import { OBJETOS_PAGE_SIZE, type Pagina } from "@/features/crm/services/objetosCrm";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useListaObjetosCrm } from "@/features/crm/hooks/useObjetosCrm";
+import { usePuntajes } from "@/features/crm/hooks/useScoringCrm";
+import { FiltroLetraSelect } from "@/features/crm/components/scoring/FiltroLetraSelect";
+import { InsigniaPuntaje } from "@/features/crm/components/scoring/InsigniaPuntaje";
 
 export interface Columna<T> { titulo: string; celda: (fila: T) => ReactNode }
 
@@ -26,9 +29,16 @@ export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBas
   const navigate = useNavigate();
   const [texto, setTexto] = useState("");
   const [pagina, setPagina] = useState(0);
+  const [letra, setLetra] = useState("todas");
   const busqueda = useDebounce(texto, 300);
   // SAFE-CAST: `objeto` determina el tipo de fila que devuelve el servicio.
-  const q = useListaObjetosCrm(objeto, busqueda, pagina) as UseQueryResult<Pagina<T>>;
+  const q = useListaObjetosCrm(objeto, busqueda, pagina, letra) as UseQueryResult<Pagina<T>>;
+  const conPuntaje = objeto === "empresa";
+  const ids = useMemo(() => (conPuntaje ? q.data?.filas.map((f) => f.id) ?? [] : []), [conPuntaje, q.data]);
+  const { data: puntajes } = usePuntajes("empresa", ids);
+  const cols: Columna<T>[] = conPuntaje
+    ? [...columnas, { titulo: "Puntaje", celda: (f) => <InsigniaPuntaje letra={puntajes?.get(f.id)?.letra} puntaje={puntajes?.get(f.id)?.puntaje} /> }]
+    : columnas;
   const total = q.data?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / OBJETOS_PAGE_SIZE));
 
@@ -38,7 +48,8 @@ export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBas
 
   return (
     <div className="space-y-3">
-      <div className="relative max-w-sm">
+      <div className="flex flex-wrap items-center gap-2">
+      <div className="relative w-full max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-8" placeholder={placeholder} value={texto}
@@ -46,21 +57,23 @@ export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBas
           aria-label={placeholder}
         />
       </div>
+      {conPuntaje && <FiltroLetraSelect value={letra} onChange={(v) => { setLetra(v); setPagina(0); }} />}
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>{columnas.map((c) => <TableHead key={c.titulo}>{c.titulo}</TableHead>)}</TableRow>
+            <TableRow>{cols.map((c) => <TableHead key={c.titulo}>{c.titulo}</TableHead>)}</TableRow>
           </TableHeader>
           <TableBody>
             {q.isLoading && (
-              <TableRow><TableCell colSpan={columnas.length} className="text-muted-foreground">Cargando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={cols.length} className="text-muted-foreground">Cargando…</TableCell></TableRow>
             )}
             {!q.isLoading && q.data?.filas.length === 0 && (
-              <TableRow><TableCell colSpan={columnas.length} className="text-muted-foreground">Sin resultados.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={cols.length} className="text-muted-foreground">Sin resultados.</TableCell></TableRow>
             )}
             {q.data?.filas.map((f) => (
               <TableRow key={f.id} className="cursor-pointer" onClick={() => navigate(`${rutaBase}/${f.id}`)}>
-                {columnas.map((c) => <TableCell key={c.titulo}>{c.celda(f)}</TableCell>)}
+                {cols.map((c) => <TableCell key={c.titulo}>{c.celda(f)}</TableCell>)}
               </TableRow>
             ))}
           </TableBody>

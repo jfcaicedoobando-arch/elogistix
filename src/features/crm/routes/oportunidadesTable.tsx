@@ -9,6 +9,8 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import type { ProximaActividad } from "@/features/crm/hooks/useProximasActividades";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { Hint } from "@/components/shared/Hint";
+import { InsigniaPuntaje } from "@/features/crm/components/scoring/InsigniaPuntaje";
+import type { PuntajeFila } from "@/features/crm/services/scoring/scoringCrm";
 
 /** Celda truncada con el texto completo accesible vía Hint + aria-label. */
 function celdaTruncada(texto: string) {
@@ -93,6 +95,20 @@ export function siguienteActividadColumn(
   } as ColumnDef<CrmOportunidadRow, unknown>;
 }
 
+/** Columna "Puntaje" (A/B/C calculado en servidor para las filas visibles). */
+export function puntajeColumn(puntajes: Map<string, PuntajeFila>): ColumnDef<CrmOportunidadRow, unknown> {
+  return {
+    id: "puntaje",
+    header: "Puntaje",
+    accessorFn: (r: CrmOportunidadRow) => puntajes.get(r.id)?.puntaje ?? -1,
+    meta: { width: COL_W.tiny, className: "text-body-sm whitespace-nowrap" },
+    cell: ({ row }) => {
+      const p = puntajes.get(row.original.id);
+      return <InsigniaPuntaje letra={p?.letra} puntaje={p?.puntaje} />;
+    },
+  } as ColumnDef<CrmOportunidadRow, unknown>;
+}
+
 export function activosFiltros(f: OportunidadesFiltros): number {
   let n = 0;
   if (f.etapaId !== "todas") n++;
@@ -100,5 +116,6 @@ export function activosFiltros(f: OportunidadesFiltros): number {
   if (f.cierreDesde) n++;
   if (f.cierreHasta) n++;
   if (f.montoMin) n++;
+  if (f.letra !== "todas") n++;
   return n;
 }

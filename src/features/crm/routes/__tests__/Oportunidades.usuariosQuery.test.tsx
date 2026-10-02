@@ -21,6 +21,7 @@ vi.mock("@/features/crm/hooks", () => ({ useEtapasPipeline: () => ({ data: [] })
 vi.mock("@/features/crm/hooks/useOportunidadesFiltrado", () => ({ useVendedoresDisponibles: () => [] }));
 vi.mock("@/features/crm/hooks/useMoverOportunidadEtapa", () => ({ useMoverOportunidadEtapa: () => ({}) }));
 vi.mock("@/features/crm/hooks/useProximasActividades", () => ({ useProximasActividades: () => ({ data: new Map() }) }));
+vi.mock("@/features/crm/hooks/useScoringCrm", () => ({ usePuntajes: () => ({ data: new Map() }) }));
 vi.mock("../useOportunidadesFiltrosServidor", () => ({ useOportunidadesFiltrosServidor: () => ({}), useExportarOportunidades: () => ({ exportando: false, exportarTodo: vi.fn() }) }));
 vi.mock("../OportunidadesTabsView", () => ({ default: ({ ops, isLoading }: { ops: Array<{ id: string }>; isLoading: boolean }) => <div data-testid="oportunidades-tabs-props">{JSON.stringify({ ops, isLoading })}</div> }));
 vi.mock("@/features/crm/components/OportunidadesFiltersSection", () => ({ default: () => null }));

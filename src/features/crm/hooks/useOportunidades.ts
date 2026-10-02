@@ -34,6 +34,9 @@ export interface OportunidadFiltros {
   cierreDesde?: string;
   cierreHasta?: string;
   montoMin?: number | null;
+  /** Cliente 360 ("Ver todas") y puntaje A/B/C; antes `clienteId` se perdía aquí. */
+  clienteId?: string | null;
+  letra?: string;
   page?: number;
   pageSize?: number;
 }
@@ -41,10 +44,10 @@ export interface OportunidadFiltros {
 export function useOportunidades(f: OportunidadFiltros = {}) {
   const {
     search = "", etapaId = "todas", vendedorId = "todos",
-    cierreDesde = "", cierreHasta = "", montoMin = null,
+    cierreDesde = "", cierreHasta = "", montoMin = null, clienteId = null, letra = "todas",
     page = 0, pageSize = 50,
   } = f;
-  const params = { search, etapaId, vendedorId, cierreDesde, cierreHasta, montoMin, page, pageSize };
+  const params = { search, etapaId, vendedorId, cierreDesde, cierreHasta, montoMin, clienteId, letra, page, pageSize };
   return useQuery({
     queryKey: queryKeys.crm.oportunidades.list(params),
     placeholderData: keepPreviousData,

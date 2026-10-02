@@ -99,3 +99,4 @@ export const CrmEmpresaDetalle = lazy(() => import("@/features/crm/routes/Empres
 export const CrmContactos = lazy(() => import("@/features/crm/routes/Contactos"));
 export const CrmContactoDetalle = lazy(() => import("@/features/crm/routes/ContactoDetalle"));
 export const CrmPropiedades = lazy(() => import("@/features/crm/routes/Propiedades"));
+export const CrmPuntaje = lazy(() => import("@/features/crm/routes/Puntaje"));
