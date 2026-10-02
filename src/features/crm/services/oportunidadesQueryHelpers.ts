@@ -18,7 +18,7 @@ export interface FiltrosOportunidades {
   montoMin?: number | null;
   /** Filtro directo por cliente, usado desde Cliente 360 ("Ver todas"). */
   clienteId?: string | null;
-  /** Puntaje A/B/C (columna calculada `letra_crm` en servidor). */
+  /** Puntaje A/B/C (columna calculada `letra_oportunidad_crm` en servidor). */
   letra?: string;
 }
 
@@ -42,6 +42,6 @@ export function aplicarFiltrosOportunidades<T extends {
   if (typeof p.montoMin === "number" && Number.isFinite(p.montoMin)) {
     out = out.gte("monto_estimado", p.montoMin);
   }
-  if (p.letra && p.letra !== "todas") out = out.eq("letra_crm", p.letra);
+  if (p.letra && p.letra !== "todas") out = out.eq("letra_oportunidad_crm", p.letra);
   return out;
 }

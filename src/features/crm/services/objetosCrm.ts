@@ -21,7 +21,7 @@ function limpiarBusqueda(texto: string): string {
   return texto.trim().replace(/[%,()]/g, " ");
 }
 
-/** `letra` filtra por la columna calculada `letra_crm` (puntaje A/B/C en servidor). */
+/** `letra` filtra por la columna calculada `letra_empresa_crm` (puntaje A/B/C en servidor). */
 export async function fetchEmpresas(busqueda: string, pagina: number, letra = "todas"): Promise<Pagina<EmpresaRow>> {
   const [desde, hasta] = rango(pagina);
   let q = supabase.from("crm_empresas")
@@ -29,7 +29,7 @@ export async function fetchEmpresas(busqueda: string, pagina: number, letra = "t
     .is("deleted_at", null).order("nombre").range(desde, hasta);
   const term = limpiarBusqueda(busqueda);
   if (term) q = q.ilike("nombre", `%${term}%`);
-  if (letra !== "todas") q = q.eq("letra_crm", letra);
+  if (letra !== "todas") q = q.eq("letra_empresa_crm", letra);
   const { data, error, count } = await q;
   if (error) throw error;
   return { filas: data ?? [], total: count ?? 0 };
