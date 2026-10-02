@@ -3325,6 +3325,7 @@ export type Database = {
           nombre: string
           organization_id: string
           updated_at: string
+          letra_crm: string | null
         }
         Insert: {
           cliente_id?: string | null
@@ -3922,6 +3923,7 @@ export type Database = {
           vendedor_email: string
           vendedor_id: string | null
           volumen: string | null
+          letra_crm: string | null
         }
         Insert: {
           aduana_puerto?: string | null
@@ -4346,6 +4348,96 @@ export type Database = {
           tipo?: string
         }
         Relationships: []
+      }
+      crm_scoring_cortes: {
+        Row: {
+          created_at: string
+          min_a: number
+          min_b: number
+          objeto: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          min_a: number
+          min_b: number
+          objeto: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          min_a?: number
+          min_b?: number
+          objeto?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_scoring_reglas: {
+        Row: {
+          activa: boolean
+          created_at: string
+          criterio: string
+          fuente: string
+          id: string
+          max: number | null
+          min: number | null
+          objeto: string
+          opcion_id: string | null
+          orden: number
+          propiedad_id: string | null
+          puntos: number
+          updated_at: string
+          valor_texto: string | null
+        }
+        Insert: {
+          activa?: boolean
+          created_at?: string
+          criterio: string
+          fuente: string
+          id?: string
+          max?: number | null
+          min?: number | null
+          objeto: string
+          opcion_id?: string | null
+          orden?: number
+          propiedad_id?: string | null
+          puntos: number
+          updated_at?: string
+          valor_texto?: string | null
+        }
+        Update: {
+          activa?: boolean
+          created_at?: string
+          criterio?: string
+          fuente?: string
+          id?: string
+          max?: number | null
+          min?: number | null
+          objeto?: string
+          opcion_id?: string | null
+          orden?: number
+          propiedad_id?: string | null
+          puntos?: number
+          updated_at?: string
+          valor_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_scoring_reglas_opcion_id_fkey"
+            columns: ["opcion_id"]
+            isOneToOne: false
+            referencedRelation: "crm_propiedad_opciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_scoring_reglas_propiedad_id_fkey"
+            columns: ["propiedad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_propiedades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_solicitudes_pricing: {
         Row: {
@@ -9475,6 +9567,7 @@ export type Database = {
         Returns: undefined
       }
       _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
+      _crm_opcion_vigente: { Args: { p_id: string }; Returns: string }
       _crm_vincular_cotizacion_core: {
         Args: {
           p_actor_email?: string
@@ -10893,6 +10986,18 @@ export type Database = {
         }
         Returns: Json
       }
+      crm_puntaje_detalle: {
+        Args: { p_id: string; p_objeto: string }
+        Returns: Json
+      }
+      crm_puntajes: {
+        Args: { p_ids: string[]; p_objeto: string }
+        Returns: {
+          id: string
+          letra: string
+          puntaje: number
+        }[]
+      }
       crm_responder_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
       crm_tomar_lead: { Args: { p_lead_id: string }; Returns: Json }
       crm_usuarios_org: {
@@ -11630,6 +11735,21 @@ export type Database = {
       is_org_member: { Args: { p_org: string }; Returns: boolean }
       is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
+      letra_crm:
+        | {
+            Args: { "": Database["public"]["Tables"]["crm_empresas"]["Row"] }
+            Returns: {
+              error: true
+            } & "the function public.letra_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+          }
+        | {
+            Args: {
+              "": Database["public"]["Tables"]["crm_oportunidades"]["Row"]
+            }
+            Returns: {
+              error: true
+            } & "the function public.letra_crm with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+          }
       liberar_claim_facturapi_huerfano: {
         Args: { p_factura_id: string; p_min_edad_minutos?: number }
         Returns: boolean
