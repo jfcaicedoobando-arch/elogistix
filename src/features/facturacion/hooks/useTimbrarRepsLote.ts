@@ -28,6 +28,7 @@ export function useTimbrarRepsLote() {
       if (res.fallos.length > 0) {
         notifyWarning(undefined, {
           title: titulo,
+          method: "REP_TIMBRADO_LOTE_PARCIAL", context: { fallos: res.fallos },
           description: `Los pagos con error siguen en la bandeja "REP pendientes" para reintentar. Primer error: ${res.fallos[0].mensaje}`,
         });
       } else {

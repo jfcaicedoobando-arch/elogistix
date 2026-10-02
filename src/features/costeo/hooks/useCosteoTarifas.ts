@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast, useMutationWithFeedback } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getErrorMessage } from "@/lib/errors";
 import {
@@ -107,9 +107,10 @@ export function useCosteoTarifaMutations(organizationIdOverride?: string | null)
           method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_5",
         });
       } else {
-        toast({
+        notifyWarning(undefined, {
           title: `Se crearon ${exitos.length} de ${exitos.length + fallos.length} tarifas`,
           description: `Fallaron ${fallos.length}. Revisa las rutas restantes.`,
+          method: "COSTEO_TARIFAS_LOTE", context: { exitos: exitos.length, fallos },
         });
       }
     },

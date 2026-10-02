@@ -57,15 +57,15 @@ describe("appFeedback (sonner)", () => {
     notifyError(undefined, { title: "Falló", description: "x", method: "RECHAZAR_DOC_EMBARQUE" });
     expect(m.error).toHaveBeenCalledWith(
       "Falló",
-      expect.objectContaining({ id: "err-RECHAZAR_DOC_EMBARQUE" }),
+      expect.objectContaining({ id: expect.stringMatching(/^err-RECHAZAR_DOC_EMBARQUE-/) }),
     );
   });
 
-  it("notifyError prioriza errorCode sobre method para el id", () => {
+  it("notifyError prioriza operación para no colapsar el mismo código entre flujos", () => {
     notifyError(undefined, { title: "Falló", description: "x", errorCode: "LC_PRUEBA", method: "M" });
     expect(m.error).toHaveBeenCalledWith(
       "Falló",
-      expect.objectContaining({ id: "err-LC_PRUEBA" }),
+      expect.objectContaining({ id: expect.stringMatching(/^err-M-/) }),
     );
   });
 
@@ -139,8 +139,8 @@ describe("appFeedback (sonner)", () => {
   });
 
   // v13.792.1 — errores de dominio esperados (`expected: true`, p. ej.
-  // BuzonDuplicadoError): aviso amable, sin "Ver detalles" y sin Sentry.
-  it("notifyError con error expected:true emite warning amable sin detalles ni Sentry", () => {
+  // BuzonDuplicadoError): aviso amable con reporte, sin Sentry.
+  it("notifyError con expected:true conserva detalles sin enviar a Sentry", () => {
     const err = Object.assign(
       new Error("Este archivo ya fue capturado como factura de proveedor."),
       { expected: true },
@@ -155,7 +155,7 @@ describe("appFeedback (sonner)", () => {
       "No se pudo subir la factura",
       expect.objectContaining({
         description: "Este archivo ya fue capturado como factura de proveedor.",
-        action: undefined,
+        action: expect.objectContaining({ label: "Ver detalles" }),
       }),
     );
     expect(reportCaughtErrorMock).not.toHaveBeenCalled();

@@ -12,24 +12,23 @@
  *     `error?`, `context?`, `method?`, `payload?`, `requestId?`,
  *     `showDetails?`. Si viene cualquiera de esos campos, el toast lleva
  *     acción **"Ver detalles"** que abre `ErrorDetailsDialog` con reporte
- *     copiable. Sin esos campos, se mantiene el toast minimalista.
+ *     copiable. Los avisos y errores siempre permiten abrir el JSON.
  *
  * Estándar:
- *   - error     → sonner.error (persistente + "Ver detalles", siempre)
- *   - warning   → sonner.warning ("Ver detalles" si hay debug)
+ *   - error     → sonner.error (8s + "Ver detalles", siempre; recuperación en memoria)
+ *   - warning   → sonner.warning ("Ver detalles", siempre)
  *   - success   → sonner.success ("Ver detalles" si hay debug)
- *   - info      → sonner ("Ver detalles" si hay debug)
+ *   - info      → sonner.info ("Ver detalles" si hay debug)
  */
 import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardConstants";
 import { buildErrorReport } from "./errorReport";
-import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
+import { openErrorReport, rememberErrorReport, offerErrorRecovery } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { shouldAttachDetails } from "./appFeedback.details";
 import { notifyWarning } from "./appFeedback.notices";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
-import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
+import { errorToastIdentity, resetToastDedupeState } from "./appFeedback.dedupe";
 import type { AnyToastFn, ErrorNotifyOptions } from "./appFeedback.types";
 
 
@@ -53,7 +52,7 @@ function tituloPorDefecto(step: number | undefined, phase: string | undefined): 
 }
 
 
-/** Emisión del toast de error (id estable, dedupe y acción "Ver detalles").
+/** Emisión del toast de error (id estable y acción "Ver detalles").
  *  Extraída de `notifyError` para respetar el tope de complejidad. */
 function emitirToastError(args: {
   opts: ErrorNotifyOptions;
@@ -62,25 +61,24 @@ function emitirToastError(args: {
   debug: ReturnType<typeof buildErrorReport>;
 }) {
   const { opts, computedTitle, description, debug } = args;
-  const { phase, error, context, errorCode, method, payload, requestId, action } = opts;
-  // P-05 / FIX-R3: id por código → fase → `method`; con fallback fijo "generic"
-  // dos errores sin código en <8 s se reemplazaban entre sí.
-  const errorToastId = `err-${errorCode ?? phase ?? method ?? "generic"}`;
-  const dedupeKey = computeToastDedupeKey("error", computedTitle, description);
-  if (shouldSuppressDuplicateToast(dedupeKey)) return;
+  const { action } = opts;
+  // Identity includes operation/entity; repeated failures update their report.
+  const errorToastId = errorToastIdentity(opts, computedTitle);
+  // Updating a toast keeps the newest report instead of suppressing it.
+  rememberErrorReport(debug);
   ERROR_TOAST_IDS.add(errorToastId);
-  // "Ver detalles" sólo si hay algo que mostrar (no un botón muerto).
-  const hayDetalle = shouldAttachDetails({ title: computedTitle, error, context, errorCode, method, payload, requestId });
-  const detallesAction = hayDetalle ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined;
+  // Validation also has route/version/message and can be shared as JSON.
+  const detallesAction = { label: "Ver detalles", onClick: () => openErrorReport(debug) };
   sonnerToast.error(computedTitle, {
     description,
-    // P-05: dedupe por código de error (reemplaza en vez de apilar) y
-    // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
+    // Replace the same operation without suppressing its newest diagnostic.
     id: errorToastId,
     duration: 8000,
     // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
     action: action ?? detallesAction,
     cancel: action ? detallesAction : undefined,
+    onDismiss: () => { ERROR_TOAST_IDS.delete(errorToastId); offerErrorRecovery(debug); },
+    onAutoClose: () => { ERROR_TOAST_IDS.delete(errorToastId); offerErrorRecovery(debug); },
   });
 }
 
@@ -96,12 +94,13 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
 
   // v13.792.1 — Errores de dominio ESPERADOS (`expected: true`, p. ej.
   // `BuzonDuplicadoError` del buzón CxP): no son fallas, son validaciones de
-  // negocio. Se muestran como aviso amable con el mensaje del error, SIN
-  // "Ver detalles" (no hay nada que depurar) y SIN reporte a Sentry.
+  // negocio. Aviso amable CON reporte copiable, pero SIN enviarlo a Sentry.
   if ((error as { expected?: unknown } | null | undefined)?.expected === true) {
     notifyWarning(undefined, {
+      ...opts,
       title: sanitizeToastText(title) ?? "Aviso",
       description: description ?? (error instanceof Error ? sanitizeToastText(error.message) : undefined),
+      showDetails: true,
     });
     return;
   }
@@ -119,6 +118,9 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     context,
     errorCode,
     method,
+    requestId,
+    payload,
+    errors,
   });
 
   emitirToastError({ opts, computedTitle, description, debug });
@@ -155,4 +157,6 @@ export { notifyWarning, notifySuccess, notifyInfo } from "./appFeedback.notices"
 export function dismissAllToasts() {
   for (const id of ERROR_TOAST_IDS) sonnerToast.dismiss(id);
   ERROR_TOAST_IDS.clear();
+  resetToastDedupeState();
+  offerErrorRecovery();
 }

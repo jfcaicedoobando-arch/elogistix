@@ -56,7 +56,6 @@ function parseAllowlist(): string[] {
     "src/hooks/shared/useToast.ts",
     "src/hooks/shared/useCopyText.ts",
     "src/components/ui/sonner.tsx",
-    "src/components/ui/ErrorDetailsDialog.tsx",
   ];
   return [...new Set([...paths, ...wrappers])].sort();
 }

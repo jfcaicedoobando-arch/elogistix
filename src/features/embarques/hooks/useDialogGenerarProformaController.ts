@@ -20,7 +20,7 @@ import {
 import { ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
 import { useProformaGeneracion } from "./useProformaGeneracion";
 import { tratamientoIvaPendiente } from "@/lib/financial/etiquetaTratamientoFila";
-import { toast } from "@/hooks/shared";
+import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { useProformaTcRecovery, esErrorTcRequerido } from "./useProformaTcRecovery";
 import {
   calcularTotalesProforma,
@@ -157,12 +157,10 @@ export function useDialogGenerarProformaController(
       if (esTc) tcRecovery.activar();
       // El hook crearProforma ya toasteó este caso, evitamos duplicar.
       if (!isMutationError && !esTc) {
-        toast({ title: message, variant: isValidation ? "warning" : "destructive" });
-      }
-      if (!isValidation && !isMutationError) {
-        void import("@sentry/react").then(({ captureException }) =>
-          captureException(err, { tags: { feature: "proforma_generate" } }),
-        ).catch(() => undefined);
+        const options = { title: "No se pudo generar la proforma", description: message,
+          error: err, method: "GENERAR_PROFORMA", context: { embarqueId: embarque.id } };
+        if (isValidation) notifyWarning(undefined, options);
+        else notifyError(undefined, options);
       }
     }
   };

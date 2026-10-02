@@ -29,6 +29,9 @@ export function useConsultarFacturapi(facturaId: string | null | undefined) {
       notifyError(undefined, {
         title: "No se pudo consultar FacturApi",
         description: getErrorMessage(err),
+        error: err,
+        method: "CONSULTAR_ESTADO_FACTURAPI",
+        context: { facturaId },
       }),
   });
 }

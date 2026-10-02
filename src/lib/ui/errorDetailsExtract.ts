@@ -14,10 +14,10 @@
  */
 import type { ErrorReport } from "./errorReport";
 import { findZodError, type MaybeZodError } from "./errorDetailsExtract.internal";
+import { safeReportRecord, safeReportJson } from "@/lib/diagnostics/safeReportValue";
 
 type Details = ErrorReport["errorDetails"];
 
-;
 import type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
 export { deriveErrorCode } from "./errorCodeDerive";
 
@@ -59,23 +59,10 @@ function mapValidationIssues(zod: MaybeZodError): ValidationIssue[] {
   });
 }
 
-function fromErrorInstance(err: Error): Details {
-  const anyErr = err as Error & MaybePostgrestError;
-  return {
-    message: err.message,
-    name: err.name,
-    stack: err.stack,
-    code: codeOr(anyErr.code),
-    status: statusOr(anyErr.status),
-    details: strOr(anyErr.details),
-    hint: strOr(anyErr.hint),
-  };
-}
-
 function fromObject(err: unknown): Details {
   const e = err as MaybePostgrestError;
   return {
-    message: strOr(e.message) ?? JSON.stringify(err),
+    message: strOr(e.message) ?? safeReportJson(err),
     name: strOr(e.name),
     code: codeOr(e.code),
     status: statusOr(e.status),
@@ -116,9 +103,10 @@ export function extractErrorDetails(err: unknown): Details {
   if (err == null) return {};
   if (typeof err === "string") return { message: err };
 
+  const normalized = safeReportRecord(err);
   let base: Details;
-  if (err instanceof Error) base = fromErrorInstance(err);
-  else if (typeof err === "object") base = fromObject(err);
+  if (err instanceof Error) base = fromObject({ ...normalized, name: normalized?.name ?? "Error" });
+  else if (typeof err === "object") base = fromObject(normalized ?? { message: "[No se pudo extraer el error]" });
   else return { message: String(err) };
 
   const zod = findZodError(err);
@@ -126,7 +114,15 @@ export function extractErrorDetails(err: unknown): Details {
     base.validationErrors = mapValidationIssues(zod);
     if (!base.name || base.name === "Error") base.name = "ZodError";
   }
-  const cause = extractCause(err);
+  const cause = extractCause(normalized);
   if (cause) base.cause = cause;
+  if (normalized) {
+    base.codigoSat = codeOr(normalized.codigoSat);
+    base.detallesSat = safeReportRecord(normalized.detallesSat);
+    base.logId = strOr(normalized.logId);
+    base.retryAfter = codeOr(normalized.retryAfter);
+    if (typeof normalized.expected === "boolean") base.expected = normalized.expected;
+    if (typeof normalized.transient === "boolean") base.transient = normalized.transient;
+  }
   return base;
 }

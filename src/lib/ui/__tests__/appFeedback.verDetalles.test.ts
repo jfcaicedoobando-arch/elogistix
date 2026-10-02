@@ -1,6 +1,5 @@
 /**
- * VF-02 — `notifyError` sólo adjunta "Ver detalles" cuando hay detalle técnico
- * real; en validaciones de captura el botón abría un reporte vacío.
+ * Every error, including capture validation, has a useful copyable report.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { toast as sonnerToast } from "sonner";
@@ -23,10 +22,10 @@ describe("notifyError · acción Ver detalles", () => {
     errorSpy.mockClear();
   });
 
-  it("no adjunta la acción cuando es una validación sin detalle", () => {
+  it("adjunta reporte también a una validación sin excepción", () => {
     notifyError(undefined, { title: "Selecciona un cliente" });
     expect(errorSpy).toHaveBeenCalled();
-    expect(ultimaAccion()).toBeUndefined();
+    expect(ultimaAccion()?.label).toBe("Ver detalles");
   });
 
   it("adjunta la acción cuando hay un error real", () => {

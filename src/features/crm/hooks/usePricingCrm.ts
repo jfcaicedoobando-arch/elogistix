@@ -2,7 +2,7 @@
  * Hooks de la Solicitud a Pricing (CRM Fase 5). Llaves bajo ['crm','pricing'].
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   actualizarSolicitud, cancelarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
   guardarOpcion, listarBandejaPricing, listarOpciones, listarSolicitudesOportunidad,
@@ -16,7 +16,8 @@ function useInvalidar() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: BASE });
 }
-const onError = (e: unknown) => toast.error(mensajeErrorPricing(e));
+const onError = (error: unknown, variables: unknown) => notifyError(undefined, { title: "No se pudo actualizar la solicitud de Pricing",
+  description: mensajeErrorPricing(error), error, method: "CRM_PRICING_MUTACION", context: { variables } });
 
 export function useSolicitudesOportunidad(oportunidadId: string) {
   return useQuery({
@@ -64,7 +65,7 @@ export function useGuardarSolicitud() {
       if (input.enviar) await enviarSolicitud(id);
       return id;
     },
-    onSuccess: (_id, v) => { toast.success(v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado"); void invalidar(); },
+    onSuccess: (_id, v) => { notifySuccess(undefined, { title: v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado" }); void invalidar(); },
     onError,
   });
 }
@@ -76,7 +77,7 @@ export function useAccionSolicitud() {
       accion === "enviar" ? enviarSolicitud(id) : accion === "responder" ? responderSolicitud(id) : cancelarSolicitud(id),
     onSuccess: (_d, v) => {
       const t = { enviar: "Solicitud enviada", responder: "Respuesta enviada al solicitante", cancelar: "Solicitud cancelada" };
-      toast.success(t[v.accion]);
+      notifySuccess(undefined, { title: t[v.accion] });
       void invalidar();
     },
     onError,
@@ -87,7 +88,7 @@ export function useGuardarOpcion() {
   const invalidar = useInvalidar();
   return useMutation({
     mutationFn: guardarOpcion,
-    onSuccess: () => { toast.success("Opción guardada"); void invalidar(); },
+    onSuccess: () => { notifySuccess(undefined, { title: "Opción guardada" }); void invalidar(); },
     onError,
   });
 }

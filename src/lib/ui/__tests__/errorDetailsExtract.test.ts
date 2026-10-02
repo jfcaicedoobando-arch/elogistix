@@ -41,7 +41,7 @@ describe("extractErrorDetails", () => {
 
   it("objeto sin message hace JSON.stringify como fallback", () => {
     const out = extractErrorDetails({ foo: "bar" });
-    expect(out.message).toBe(JSON.stringify({ foo: "bar" }));
+    expect(JSON.parse(out.message ?? "null")).toEqual({ foo: "bar" });
   });
 
   it("primitivo no-string vía String()", () => {

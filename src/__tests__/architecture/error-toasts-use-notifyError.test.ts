@@ -12,18 +12,35 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import fg from "fast-glob";
 import path from "node:path";
+import { errorToastViolations } from "../../../scripts/lib/errorToastGuard";
 
 const ROOT = path.resolve(__dirname, "../../..");
 
 const ALLOWLIST = new Set<string>([
   "src/components/shared/utils/appFeedback.ts",
   "src/hooks/shared/useToast.ts",
-  "src/components/ui/ErrorDetailsDialog.tsx",
   "src/components/ui/sonner.tsx",
   "src/lib/observability/reportCaughtError.ts",
+  "src/lib/ui/appFeedback.ts",
+  "src/lib/ui/appFeedback.notices.ts",
+  "src/hooks/shared/useCopyText.ts",
 ]);
 
 describe("Error toasts deben usar notifyError", () => {
+  it("detecta alias de Sonner y variantes destructivas condicionales", () => {
+    expect(errorToastViolations('import { toast as feedback } from "sonner"; feedback.error("falló");')).not.toEqual([]);
+    expect(errorToastViolations('import * as notifications from "sonner";')).not.toEqual([]);
+    expect(errorToastViolations('toast({variant: isValidation ? "warning" : "destructive"});')).not.toEqual([]);
+    expect(errorToastViolations('notifyError(undefined, { title: "Falló" });')).toEqual([]);
+  });
+  it("emisores de features no evitan el contrato de diagnóstico", async () => {
+    const files = await fg(["src/**/*.ts", "src/**/*.tsx"], {
+      cwd: ROOT, ignore: ["src/**/__tests__/**", "src/**/*.test.*", "src/**/*.spec.*"],
+    });
+    const violations = files.filter((rel) => !ALLOWLIST.has(rel))
+      .flatMap((rel) => errorToastViolations(readFileSync(path.join(ROOT, rel), "utf8")).map((reason) => `${rel}: ${reason}`));
+    expect(violations).toEqual([]);
+  });
   it("nadie llama a toast.error(...) directo", async () => {
     const files = await fg(["src/**/*.ts", "src/**/*.tsx"], {
       cwd: ROOT,

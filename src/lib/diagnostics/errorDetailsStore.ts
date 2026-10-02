@@ -6,9 +6,9 @@
 import { useSyncExternalStore } from "react";
 import type { ErrorReport } from "@/lib/diagnostics/errorReportTypes";
 
-type State = { report: ErrorReport | null };
+type State = { report: ErrorReport | null; latest: ErrorReport | null; recoverable: boolean };
 
-let state: State = { report: null };
+let state: State = { report: null, latest: null, recoverable: false };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -16,13 +16,35 @@ function emit() {
 }
 
 export function openErrorReport(report: ErrorReport): void {
-  state = { report };
+  state = { ...state, report, recoverable: false };
   emit();
 }
 
 export function closeErrorReport(): void {
-  state = { report: null };
+  state = { ...state, report: null, recoverable: state.latest !== null };
   emit();
+}
+
+/** One report in memory only; not persisted to storage or the database. */
+export function rememberErrorReport(report: ErrorReport): void {
+  state = { ...state, latest: report, recoverable: false };
+  emit();
+}
+
+export function offerErrorRecovery(report?: ErrorReport): void {
+  if (report && state.latest !== report) return;
+  state = { ...state, recoverable: state.latest !== null };
+  emit();
+}
+
+export function clearErrorReports(): void {
+  state = { report: null, latest: null, recoverable: false };
+  emit();
+}
+
+export function useRecoverableErrorReport(): ErrorReport | null {
+  const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return current.recoverable ? current.latest : null;
 }
 
 function subscribe(cb: () => void) {
