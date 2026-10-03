@@ -28,4 +28,14 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_CRM,
   ...LC_CODE_MESSAGES_CLIENTES,
   ...LC_CODE_MESSAGES_PORTAL,
+  LC_ANTICIPO_APLICACION_INCONSISTENTE:
+    "No se pudo confirmar la aplicación del anticipo. Revisa el vínculo entre factura, pago y anticipo antes de continuar.",
+  LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE:
+    "El origen de tesorería del anticipo no es consistente. Revisa el cargo original o su registro en efectivo; no generes otro cargo.",
+  LC_ANTICIPO_SIN_NUEVO_CARGO:
+    "Esta aplicación de anticipo usa la salida original y no admite otro cargo bancario. Revisa el movimiento del anticipo.",
+  LC_NC_PROV_TC_INVALIDO:
+    "El tipo de cambio debe ser un número válido mayor a cero. Captura una paridad válida o deja el campo vacío para consultar DOF.",
+  LC_PAGO_ANTICIPO_NO_EDITABLE:
+    "Este pago aplica un anticipo y no se puede editar directamente. Usa «Revertir aplicación de anticipo» y vuelve a aplicarlo; el cargo original se conserva.",
 };
