@@ -3,7 +3,6 @@ import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/features/cotizacion/hooks/mutations/usePortalCotizacionMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { formatFechaHoraTexto } from "@/lib/formatters/dates";
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";
 
@@ -45,8 +44,9 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
           notifyError(undefined, {
             title: "Error",
             description: getErrorMessage(err),
-            method: "ON_ERROR",
-            errorCode: ERROR_CODES.VALIDATION_FAILED,
+            error: err,
+            method: "PORTAL_RESPONDER_COTIZACION",
+            context: { cotizacionId, respuesta: confirmAction },
           });
           reset();
         },

@@ -13,7 +13,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 export function useAdminOrgInfo(id: string | undefined) {
   const queryClient = useQueryClient();
@@ -50,7 +49,8 @@ export function useAdminOrgInfo(id: string | undefined) {
       setEditing(false);
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo actualizar la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo actualizar la organización", description: getErrorMessage(error),
+        error, method: "UPDATE_ORGANIZATION", context: { organizationId: id } });
     },
   });
 
@@ -62,7 +62,8 @@ export function useAdminOrgInfo(id: string | undefined) {
       notifySuccess(undefined, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo cambiar el estado de la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo cambiar el estado de la organización", description: getErrorMessage(error),
+        error, method: "TOGGLE_ORGANIZATION_ACTIVE", context: { organizationId: id } });
     },
   });
 
@@ -74,7 +75,8 @@ export function useAdminOrgInfo(id: string | undefined) {
       navigate("/admin/organizaciones");
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo eliminar la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo eliminar la organización", description: getErrorMessage(error),
+        error, method: "DELETE_ORGANIZATION", context: { organizationId: id } });
     },
   });
 

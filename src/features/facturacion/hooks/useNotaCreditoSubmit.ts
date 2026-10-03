@@ -16,7 +16,6 @@ import { useTimbrarNotaCredito } from "@/features/facturacion/hooks/useNotaCredi
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { logger } from "@/lib/observability/logger";
 
 interface Params {
@@ -70,8 +69,9 @@ export function useNotaCreditoSubmit(p: Params): NotaCreditoSubmit {
         notifyError(undefined, {
           title: "No se pudo crear la nota de crédito",
           description: getErrorMessage(err),
-          method: "ON_ERROR",
-          errorCode: ERROR_CODES.VALIDATION_FAILED,
+          error: err,
+          method: "FACTURACION_CREAR_NOTA_CREDITO",
+          context: { facturaId: p.facturaId },
         });
         return;
       }

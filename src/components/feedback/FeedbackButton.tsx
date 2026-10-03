@@ -31,8 +31,8 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
       const form = await feedback.createForm();
       form.appendToDom();
       form.open();
-    } catch {
-      notifyError(undefined, { title: "No se pudo abrir el formulario", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_2" });
+    } catch (error) {
+      notifyError(undefined, { title: "No se pudo abrir el formulario", error, method: "OPEN_USER_FEEDBACK_FORM" });
     }
   };
 

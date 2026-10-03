@@ -45,7 +45,8 @@ beforeEach(() => {
 
 describe("useCapturaEntranteWiring — fallo al marcar como capturado", () => {
   it("conserva el id, no cierra el diálogo y avisa con reintento", async () => {
-    capturarMutateAsync.mockRejectedValueOnce(new Error("red caída"));
+    const error = Object.assign(new Error("red caída"), { requestId: "backend-captura-1" });
+    capturarMutateAsync.mockRejectedValueOnce(error);
     const onCerrar = vi.fn();
     const { result } = renderHook(() =>
       useCapturaEntranteWiring({ entrante: ENTRANTE, onCerrar, onCapturada: vi.fn() }),
@@ -60,6 +61,11 @@ describe("useCapturaEntranteWiring — fallo al marcar como capturado", () => {
     expect(onCerrar).not.toHaveBeenCalled();
     expect(result.current.facturaIdPendiente).toBe("fac-1");
     expect(notifyError).toHaveBeenCalled();
+    expect(notifyError.mock.calls[0][1]).toMatchObject({
+      error, method: "CXP_CAPTURA_ENTRANTE_MARCAR",
+      context: { facturaId: "fac-1", entranteId: "doc-1", organizationId: "org-1" },
+      action: { label: "Reintentar" },
+    });
   });
 
   it("el reintento reutiliza la misma factura y cierra al tener éxito", async () => {

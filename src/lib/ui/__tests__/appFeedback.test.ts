@@ -94,6 +94,20 @@ describe("appFeedback (sonner)", () => {
     expect(ids[0]).toBe("ok-registrar_pago");
   });
 
+  it("notifySuccess sin diagnóstico suprime duplicados sólo si no llevan acción", () => {
+    notifySuccess(undefined, { title: "Guardado" });
+    notifySuccess(undefined, { title: "Guardado" });
+    expect(m.success).toHaveBeenCalledTimes(1);
+    const primero = vi.fn();
+    const segundo = vi.fn();
+    notifySuccess(undefined, { title: "Guardado", action: { label: "Deshacer", onClick: primero } });
+    notifySuccess(undefined, { title: "Guardado", action: { label: "Deshacer", onClick: segundo } });
+    expect(m.success).toHaveBeenCalledTimes(3);
+    m.success.mock.calls.at(-1)![1].action.onClick();
+    expect(segundo).toHaveBeenCalledTimes(1);
+    expect(primero).not.toHaveBeenCalled();
+  });
+
   it("notifyWarning con persistent:true emite duration Infinity", () => {
     notifyWarning(undefined, { title: "Persistente", persistent: true });
     expect(m.warning).toHaveBeenCalledWith(

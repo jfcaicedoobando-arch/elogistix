@@ -10,7 +10,6 @@ import { FileText, FileCode2, Loader2 } from "lucide-react";
 import { descargarCfdiFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 interface Props {
@@ -32,8 +31,9 @@ export function PortalRepDownloadButtons({ pagoId, tienePdf, tieneXml }: Props) 
       notifyError(undefined, {
         title: `No se pudo descargar el REP ${tipo.toUpperCase()}`,
         description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: err,
+        method: "PORTAL_DESCARGAR_REP",
+        context: { pagoId, tipo },
       });
     } finally {
       setDescargando(null);

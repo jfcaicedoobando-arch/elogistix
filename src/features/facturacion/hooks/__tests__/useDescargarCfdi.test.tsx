@@ -34,6 +34,7 @@ vi.mock("@/lib/observability/reportCaughtError", () => ({
 }));
 
 import { useDescargarCfdi } from "../useDescargarCfdi";
+import { buildErrorReport } from "@/lib/ui/errorReport";
 
 beforeEach(() => {
   openFacturaInNewTab.mockReset();
@@ -107,5 +108,22 @@ describe("useDescargarCfdi", () => {
     expect(reportCaughtError).toHaveBeenCalled();
     expect(notifyError).toHaveBeenCalledTimes(1);
     expect(notifyError.mock.calls[0]![1].title).toContain("XML");
+  });
+
+  it("el JSON conserva diagnóstico del proveedor sin convertir una caída de servicio en validación", async () => {
+    const error = Object.assign(new Error("Proveedor no disponible"), {
+      status: 503, requestId: "backend-download-123", logId: "provider-log-123",
+    });
+    descargarCfdiFacturapi.mockRejectedValue(error);
+    const { result } = renderHook(() => useDescargarCfdi("fac-5"));
+    await act(async () => { await result.current(null, "pdf"); });
+    const options = notifyError.mock.calls[0]![1];
+    expect(options.error).toBe(error);
+    expect(options.errorCode).toBeUndefined();
+    expect(buildErrorReport(options)).toMatchObject({
+      requestId: "backend-download-123", errorCode: "SERVER_ERROR", method: "FACTURACION_DESCARGAR_CFDI",
+      context: { facturaId: "fac-5", tipo: "pdf" },
+      errorDetails: { status: 503, logId: "provider-log-123" },
+    });
   });
 });

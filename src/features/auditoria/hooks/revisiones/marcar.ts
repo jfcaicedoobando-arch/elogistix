@@ -64,7 +64,7 @@ export function useMarcarRevisado() {
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       notifySuccess(undefined, { title: "Hallazgo marcado como revisado" });
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, vars) => {
       logger.error("[useMarcarRevisado] error:", err);
       const e = err as { code?: string; message?: string };
       const isPermiso =
@@ -73,7 +73,8 @@ export function useMarcarRevisado() {
           ? "No tienes permisos para marcar revisado"
           : "Error al marcar revisado", description: isPermiso
             ? "Tu rol en esta organización no permite esta acción. Contacta a un administrador."
-            : e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_MARCAR_1" });
+            : e?.message ?? "Error desconocido", error: err, method: "AUDITORIA_MARCAR_REVISADO",
+        context: { organizationId, embarqueId: vars.hallazgo.embarque_id, regla: vars.hallazgo.regla } });
     },
   });
 }

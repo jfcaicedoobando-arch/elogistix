@@ -78,12 +78,14 @@ export function useAsignarResponsable() {
         title: vars.tomar ? "Hallazgo tomado" : vars.responsableId ? "Responsable asignado" : "Asignación removida",
       });
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, vars) => {
       logger.error("[useAsignarResponsable] error:", err);
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
-      notifyError(undefined, { title: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable", description: e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_ASIGNAR_1" });
+      notifyError(undefined, { title: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable",
+        description: e?.message ?? "Error desconocido", error: err, method: "AUDITORIA_ASIGNAR_RESPONSABLE",
+        context: { organizationId, embarqueId: vars.hallazgo.embarque_id, regla: vars.hallazgo.regla } });
     },
   });
 }

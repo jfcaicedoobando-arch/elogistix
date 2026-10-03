@@ -1,4 +1,3 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState, useCallback } from "react";
 import { createDocumentoSignedUrl } from "@/features/search/services";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -23,8 +22,9 @@ export function usePortalDocumentDownload() {
       } catch {
         window.open(signedUrl, "_blank");
       }
-    } catch {
-      notifyError(undefined, { title: "Error al descargar", method: "USE_PORTAL_DOCUMENT_DOWNLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    } catch (error) {
+      notifyError(undefined, { title: "Error al descargar", error,
+        method: "USE_PORTAL_DOCUMENT_DOWNLOAD", context: { documentoId: docId } });
     } finally {
       setDownloadingId(null);
     }

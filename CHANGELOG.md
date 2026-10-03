@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.20] - 2026-10-03
+
+- **fix(toasts · diagnóstico)**: 27 avisos conservan la excepción original, la operación y los identificadores relevantes sin incluir credenciales ni documentos. Los errores de servicio, permisos o proveedor ya no se etiquetan automáticamente como validación; también se corrige esta clasificación en carga MSDS y alta de proveedores.
+- **fix(CRM · Deshacer)**: acciones consecutivas con el mismo mensaje actualizan el aviso y su botón a la acción más reciente, sin conservar el callback de una operación anterior ni apilar duplicados.
+- **test(toasts)**: regresiones de ambos helpers de Deshacer, diagnósticos de descarga CFDI, reintento idempotente del buzón y guardia de conservación de excepciones en catch/onError. Sin cambios de base de datos, timbrado ni pagos.
+
 ## [13.824.19] - 2026-10-03
 
 - **fix(CxP – notas de crédito)**: conserva el TC positivo capturado, incluidos 0.5 y 1. El campo vacío consulta DOF, muestra la equivalencia con el mismo redondeo de la base y bloquea el registro mientras falta un TC válido.

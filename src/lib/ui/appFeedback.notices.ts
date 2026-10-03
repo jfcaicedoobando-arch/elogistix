@@ -61,7 +61,8 @@ export function notifySuccess(
   const controls = acciones(opts);
   const descripcionSaneada = sanitizeToastText(opts.description);
   const dedupeKey = noticeKey("success", opts, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey) && !shouldAttachDetails(opts)) return;
+  // An actionable notice must replace its callback, even when its text is unchanged.
+  if (!opts.action && !shouldAttachDetails(opts) && shouldSuppressDuplicateToast(dedupeKey)) return;
   sonnerToast.success(sanitizeToastText(opts.title) ?? "Operación completada", {
     description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
@@ -78,7 +79,8 @@ export function notifyInfo(
   const controls = acciones(opts);
   const descripcionSaneada = sanitizeToastText(opts.description);
   const dedupeKey = noticeKey("info", opts, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey) && !shouldAttachDetails(opts)) return;
+  // Keep the latest action (e.g. Undo); the stable ID prevents stacking duplicates.
+  if (!opts.action && !shouldAttachDetails(opts) && shouldSuppressDuplicateToast(dedupeKey)) return;
   sonnerToast.info(sanitizeToastText(opts.title) ?? "Información", {
     description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,

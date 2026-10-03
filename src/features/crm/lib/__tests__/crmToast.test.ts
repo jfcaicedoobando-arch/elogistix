@@ -14,6 +14,7 @@ vi.mock("sonner", () => {
 
 import { toast } from "sonner";
 import { crmToast } from "../crmToast";
+import { resetToastDedupeState } from "@/lib/ui/appFeedback.dedupe";
 
 const toastFn = toast as unknown as ReturnType<typeof vi.fn> & {
   success: ReturnType<typeof vi.fn>;
@@ -22,6 +23,7 @@ const toastFn = toast as unknown as ReturnType<typeof vi.fn> & {
 };
 
 beforeEach(() => {
+  resetToastDedupeState();
   toastFn.mockClear();
   toastFn.success.mockClear();
   toastFn.error.mockClear();
@@ -78,5 +80,17 @@ describe("crmToast", () => {
     expect(opts.action.label).toBe("Deshacer");
     opts.action.onClick();
     expect(cb).toHaveBeenCalled();
+  });
+
+  it("undo con el mismo título reemplaza la acción y no conserva la anterior", () => {
+    const anterior = vi.fn();
+    const actual = vi.fn();
+    crmToast.undo("Eliminado", anterior);
+    crmToast.undo("Eliminado", actual);
+    expect(toastFn.info).toHaveBeenCalledTimes(2);
+    const opciones = toastFn.info.mock.calls.at(-1)![1];
+    opciones.action.onClick();
+    expect(actual).toHaveBeenCalledTimes(1);
+    expect(anterior).not.toHaveBeenCalled();
   });
 });
