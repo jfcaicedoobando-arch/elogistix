@@ -72,7 +72,9 @@ describe("HTTP capture ownership", () => {
   it.each(["REST", "Edge"] as const)("%s 500 retries produce one terminal Query/UI event", async (kind) => {
     await expect(queryClient.fetchQuery({
       queryKey: ["mock", kind], retry: 2, retryDelay: 0, queryFn: () => request(kind),
-    })).rejects.toBeDefined();
+    })).rejects.toMatchObject(kind === "REST"
+      ? { code: "XX000", message: "mock unexpected upstream failure" }
+      : { name: "FunctionsHttpError", message: "Edge Function returned a non-2xx status code" });
     await vi.waitFor(() => expect(envelopes).toHaveLength(1));
     await Sentry.flush(1000);
     expect(attempts).toBe(3);

@@ -163,6 +163,17 @@ El mínimo Deno del SDK 11 es 2.8.3; el CLI local/CI no certifica el runtime
 gestionado de Lovable. La existencia de `SENTRY_DSN_EDGE` tampoco certifica ingesta.
 No crear un endpoint público de errores para comprobarlo.
 
+Comprobación Edge 2026-10-03: el canal existente `client-error-log` recibió
+una única solicitud de diagnóstico sin registros financieros; Sentry recibió
+el evento `636c1587c1644de78a03fc2bea371c63`, SDK Deno **11.4.0**, con
+request ID `db0f577e-824a-4019-b715-0a985e2ef5f1` y release de deployment.
+El contexto remoto identifica **supabase-edge-runtime-1.77.0 (compatible with
+Deno v2.1.4)**: la captura funciona en esta prueba, pero queda por debajo del
+mínimo oficialmente soportado del SDK 11. No equiparar ingesta comprobada
+con compatibilidad general certificada ni cambiar a ciegas el runtime gestionado.
+El SDK normaliza el tag `runtime`; verificar Edge por `fn`, request ID y
+`sentry.javascript.deno`, no sólo por el tag literal `runtime:deno-edge`.
+
 - Confirmar DSN/release/dist del deploy; Debug IDs/maps sólo si existe build token.
 - Verificar trace front→edge, tenant/rol del usuario actual y ninguno anterior al logout.
 - Probar feedback/screenshot y Replay; túnel conserva bytes y expone Retry-After /
