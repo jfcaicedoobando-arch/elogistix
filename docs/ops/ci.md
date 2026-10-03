@@ -38,6 +38,13 @@ mínimo **2.8.3** de Sentry 11. Ambos comandos `deno test` mantienen
 defaults y la actualización no debe relajar la detección de fugas.
 Se conserva typecheck, sin `--no-check`, y `--node-modules-dir=none`.
 
+Los pasos Deno fijan `DENO_NO_PACKAGE_JSON=1` para no auto-resolver el
+`package.json` del frontend. Las Edge usan imports explícitos `npm:`/HTTP;
+las plantillas de correo mantienen React 18 y no deben heredar React 19
+de la aplicación. Reproducir las pruebas focales locales con la misma variable.
+Esto no omite pruebas ni cambia las dependencias del frontend. Ver
+[variable oficial de Deno](https://docs.deno.com/runtime/reference/env_variables/).
+
 Esto instala el canal **estable**, no el canal LTS. Ver
 [releases de Deno](https://docs.deno.com/runtime/fundamentals/stability_and_releases/),
 [sanitizers](https://docs.deno.com/runtime/test/sanitizers/) y
@@ -47,7 +54,9 @@ Supabase/Lovable administra el runtime de las Edge Functions desplegadas.
 Actualizar el CLI de Actions **no cambia ni certifica su versión remota**.
 Para comprobarla, revisar un log de arranque del entorno correspondiente que
 identifique Edge Runtime y compatibilidad Deno; no inferirla del YAML ni de
-la versión de la CLI Supabase. Un smoke aprobado prueba contratos HTTP,
+la versión de la CLI Supabase. Si el log sólo dice `booted` y no expone
+versión, solicitar confirmación al proveedor: ese log no la certifica.
+Un smoke aprobado prueba contratos HTTP,
 no la versión exacta del runtime remoto.
 
 ## Otros workflows

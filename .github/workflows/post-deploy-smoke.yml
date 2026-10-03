@@ -87,6 +87,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ env.SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ env.ANON_KEY }}
+          DENO_NO_PACKAGE_JSON: "1"
         run: |
           deno test \
             --sanitize-ops \

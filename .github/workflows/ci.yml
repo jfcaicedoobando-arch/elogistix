@@ -177,6 +177,9 @@ jobs:
 
       - name: Deno tests (con typecheck, excluye smoke)
         if: needs.detector.outputs.edge == 'true'
+        # No mezclar React 19 del frontend con React 18 de plantillas Edge.
+        env:
+          DENO_NO_PACKAGE_JSON: "1"
         # SIN `--no-check`: `deno test` valida también los tipos de las edges.
         # Deno >=2.8 cambió defaults: mantener detección de fugas explícita.
         run: |

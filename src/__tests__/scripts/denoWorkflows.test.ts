@@ -25,4 +25,13 @@ describe("Deno workflows · runtime compatible y sanitizers explícitos", () => 
     expect(command).not.toContain("--no-check");
     expect(command).not.toContain("--no-sanitize");
   });
+
+  it.each(workflows)("%s aísla las dependencias Edge del package.json del frontend", (name) => {
+    const workflow = readWorkflow(name);
+    const denoStep = workflow.split(/\n(?= {6}- )/)
+      .find((step) => /^\s+deno test \\$/m.test(step));
+    expect(denoStep).toBeDefined();
+    expect(denoStep).toMatch(/^ {8}env:\n(?: {10}[^\n]+\n)* {10}DENO_NO_PACKAGE_JSON: "1"$/m);
+    expect(workflow.match(/DENO_NO_PACKAGE_JSON/g)).toHaveLength(1);
+  });
 });
