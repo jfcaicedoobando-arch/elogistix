@@ -12,9 +12,11 @@ export function useEnviarFacturaEmail(facturaId: string | undefined) {
       if (res.estado === "enviado") {
         notifySuccess(undefined, { title: "Factura enviada por correo" });
       } else if (res.estado === "parcial") {
-        notifyWarning(undefined, { title: "Algunos correos no pudieron enviarse" });
+        notifyWarning(undefined, { title: "Algunos correos no pudieron enviarse", method: "FACTURA_EMAIL_PARCIAL",
+          context: { facturaId, resultados: res.resultados, envioId: res.envio_id } });
       } else {
-        notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_FACTURACION_HOOKS_MUTATIONS_USEENVIARFACTURAEMAIL_1" });
+        notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_FACTURACION_HOOKS_MUTATIONS_USEENVIARFACTURAEMAIL_1",
+          context: { facturaId, resultados: res.resultados, envioId: res.envio_id } });
       }
       if (facturaId) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });

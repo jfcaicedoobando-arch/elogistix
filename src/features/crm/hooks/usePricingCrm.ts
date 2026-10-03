@@ -2,8 +2,7 @@
  * Hooks de la Solicitud a Pricing (CRM Fase 5). Llaves bajo ['crm','pricing'].
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { listarTarifasParaPricing } from "@/features/crm/services/pricing/tarifasParaPricing";
 import {
   actualizarSolicitud, cancelarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
@@ -18,9 +17,8 @@ function useInvalidar() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: BASE });
 }
-const alFallar = (error: unknown) => notifyError(undefined, {
-  title: "No se pudo completar la operación de pricing", description: mensajeErrorPricing(error), error, method: "CRM_PRICING",
-});
+const onError = (error: unknown, variables: unknown) => notifyError(undefined, { title: "No se pudo actualizar la solicitud de Pricing",
+  description: mensajeErrorPricing(error), error, method: "CRM_PRICING_MUTACION", context: { variables } });
 
 export function useTarifasPricing(enabled: boolean) {
   return useQuery({ queryKey: [...BASE, "tarifas"], queryFn: listarTarifasParaPricing, enabled });
@@ -72,8 +70,8 @@ export function useGuardarSolicitud() {
       if (input.enviar) await enviarSolicitud(id);
       return id;
     },
-    onSuccess: (_id, v) => { toast.success(v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado"); void invalidar(); },
-    onError: alFallar,
+    onSuccess: (_id, v) => { notifySuccess(undefined, { title: v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado" }); void invalidar(); },
+    onError: onError,
   });
 }
 
@@ -84,10 +82,10 @@ export function useAccionSolicitud() {
       accion === "enviar" ? enviarSolicitud(id) : accion === "responder" ? responderSolicitud(id) : cancelarSolicitud(id),
     onSuccess: (_d, v) => {
       const t = { enviar: "Solicitud enviada", responder: "Respuesta enviada al solicitante", cancelar: "Solicitud cancelada" };
-      toast.success(t[v.accion]);
+      notifySuccess(undefined, { title: t[v.accion] });
       void invalidar();
     },
-    onError: alFallar,
+    onError: onError,
   });
 }
 
@@ -95,12 +93,12 @@ export function useGuardarOpcion() {
   const invalidar = useInvalidar();
   return useMutation({
     mutationFn: guardarOpcion,
-    onSuccess: () => { toast.success("Opción guardada"); void invalidar(); },
-    onError: alFallar,
+    onSuccess: () => { notifySuccess(undefined, { title: "Opción guardada" }); void invalidar(); },
+    onError: onError,
   });
 }
 
 export function useEliminarOpcion() {
   const invalidar = useInvalidar();
-  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError: alFallar });
+  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError: onError });
 }

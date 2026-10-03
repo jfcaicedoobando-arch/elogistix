@@ -3,6 +3,7 @@
  * Extraído para mantener complejidad <15 en `formatReportMarkdown`.
  */
 import type { ErrorReport } from "@/lib/diagnostics/errorReportTypes";
+import { safeReportJson } from "@/lib/diagnostics/safeReportValue";
 
 export function fmtHeader(r: ErrorReport): string[] {
   const lines = [
@@ -12,6 +13,9 @@ export function fmtHeader(r: ErrorReport): string[] {
   if (r.description) lines.push(`- Descripción: ${r.description}`);
   if (r.phase) lines.push(`- Fase: ${r.phase}`);
   if (typeof r.step === "number") lines.push(`- Paso: ${r.step}`);
+  lines.push(`- Request ID (${r.requestIdSource ?? "no especificado"}): ${r.requestId}`);
+  if (r.clientReportId) lines.push(`- ID del reporte local: ${r.clientReportId}`);
+  if (r.method) lines.push(`- Operación: ${r.method}`);
   lines.push(`- Versión: ${r.version}`);
   lines.push(`- Fecha: ${r.timestampIso} (${r.timezone})`);
   lines.push(`- Ruta: ${r.route}`);
@@ -37,7 +41,7 @@ export function fmtErrorBlock(ed: ErrorReport["errorDetails"]): string[] {
 
 export function fmtContextBlock(context: ErrorReport["context"]): string[] {
   if (!context || Object.keys(context).length === 0) return [];
-  return ["", "**Contexto**", "```json", JSON.stringify(context, null, 2), "```"];
+  return ["", "**Contexto**", "```json", safeReportJson(context), "```"];
 }
 
 export function fmtStackBlock(stack: string | undefined): string[] {
