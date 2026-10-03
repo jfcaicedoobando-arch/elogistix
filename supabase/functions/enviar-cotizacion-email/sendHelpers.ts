@@ -5,10 +5,13 @@
  * Contiene el saneado del body, la resolución server-side del PDF (W-02) y del
  * ejecutivo desde la sesión (W-04).
  */
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { isEmail } from './emailValidation.ts';
 
 export const BUCKET_PDF = 'cotizaciones-pdf';
+
+/** Cliente con service role compartido por index/handlers/helpers. */
+export type AdminClient = SupabaseClient;
 
 export interface Destinatario { email: string; nombre?: string }
 
@@ -20,6 +23,7 @@ export interface Cotizacion {
   /** v13.823.355 — necesarios para el candado de envío (prospecto/CRM). */
   es_prospecto?: boolean | null;
   oportunidad_id?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface Ejecutivo { nombre?: string; email?: string; telefono?: string }
