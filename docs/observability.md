@@ -1,6 +1,6 @@
 # Observabilidad — mapa y diagnóstico
 
-Revisado el **2026-10-02**. SDK Sentry alineado en **11.4.0**. Implementación en
+Revisado el **2026-10-03**. SDK Sentry alineado en **11.4.0**. Implementación en
 `src/lib/observability/sentry/`, `src/lib/query/`,
 `src/lib/ui/appFeedback.ts` y `supabase/functions/_shared/sentry.ts`.
 [Runbook Sentry](sentry-runbook.md).
@@ -13,6 +13,8 @@ para no reemplazar/remontar formularios al terminar la inicialización;
 usa túnel Supabase para ingesta cuando está configurado.
 Edge usa `SENTRY_DSN_EDGE` y wrappers comunes.
 Capturas esperan un init compartido y deduplican por identidad de error.
+El runtime sólo expone un SDK habilitado con transporte; un ID generado no
+certifica recepción remota. Sin cliente activo, feedback conserva «Copiar detalles».
 React 19 tiene callbacks de raíz; rutas instrumentadas sin remount al activar Sentry.
 DSN público no concede lectura de eventos; tokens administrativos son secretos.
 
@@ -35,6 +37,15 @@ del repo con reglas/retención del dashboard remoto.
 
 Un error esperado de dominio debe mantener feedback accionable sin inundar
 telemetría. No descartar todos los errores de una ruta para ocultar un bug.
+Los rechazos de promesa con texto útil son reportables, aunque no sean `Error`.
+Sólo los rechazos serializados realmente vacíos se descartan por esa condición.
+
+REST y Edge de Supabase tienen un único dueño de captura: Query/UI o
+`reportCaughtError` al manejar la operación. Query reporta el fallo terminal,
+no cada reintento. Las llamadas fuera de Query deben reportar su fallo por el
+wrapper; un error devuelto y descartado intencionalmente no genera un evento
+HTTP automático. Auth, storage y recursos de la app conservan captura 5xx
+automática (`HTTP_FAILURE_TARGETS`). Breadcrumbs y trazas no se eliminan.
 
 ## Investigación
 

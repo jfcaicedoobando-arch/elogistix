@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.17] - 2026-10-03
+
+- **fix(Sentry · errores)**: rechazos de promesa con información útil ya no se descartan por no ser objetos Error; se conserva el filtro preciso de rechazos serializados vacíos.
+- **fix(Sentry · duplicados)**: REST y Edge de Supabase se reportan por Query/UI después de reintentos; la captura HTTP automática conserva auth, storage y recursos de la app, sin eliminar breadcrumbs ni trazas.
+- **fix(Sentry · diagnóstico)**: capturas y feedback requieren un cliente habilitado; sin SDK activo no se genera un ID engañoso. Un ID de prueba se presenta como generado, no como recepción confirmada.
+- **test(Sentry)**: regresiones del SDK real con transporte en memoria, captura única tras reintentos y cliente ausente/deshabilitado/cerrado; sin nuevos servicios ni dependencias.
+
 ## [13.824.16] - 2026-10-03
 
 - **fix(toasts · cierre contable)**: el reporte copiable conserva el error original y el contexto de fecha y organización, sin incluir el texto libre del motivo.

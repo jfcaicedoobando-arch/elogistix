@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   captureException: vi.fn<(error: unknown, context?: unknown) => string>(() => "mock-event-id"),
   initSentry: vi.fn(),
+  isEnabled: vi.fn(() => true),
 }));
 vi.mock("@sentry/react", () => mocks);
-vi.mock("../core", () => ({ initSentry: mocks.initSentry }));
+vi.mock("../core", () => ({ initSentry: mocks.initSentry, isSentryReady: () => true }));
 vi.mock("@/lib/ui/appFeedback", async () => {
   const { reportCaughtError } = await import("../../reportCaughtError");
   return { notifyError: (_: unknown, options: { error: unknown }) =>

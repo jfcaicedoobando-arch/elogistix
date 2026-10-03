@@ -3,7 +3,7 @@
 Documento de gobierno para la implementación de Sentry (front + edge functions).
 Fuente de la verdad para on-call y para futuras auditorías.
 
-> Revisión documental: 2026-10-02. React/Core, Deno y bundler plugins: 11.4.0.
+> Revisión documental: 2026-10-03. React/Core, Deno y bundler plugins: 11.4.0.
 > Describe código/configurable; no certifica
 > alertas, destinatarios, retención o crons activos en el dashboard remoto.
 
@@ -42,6 +42,10 @@ Fuente de la verdad para on-call y para futuras auditorías.
 Se usa `@sentry/bundler-plugins/vite`; release coincide con runtime.
 Sin token no se generan maps de producción. `BUILD_SOURCEMAPS=false` también
 los desactiva; verificar subida real antes de prometer stack legible.
+Lovable Build Secrets requiere Enterprise; los secretos de Cloud son de
+runtime Edge, no de build. En el plan Pro, sin token de build, se acepta el
+stack minificado como limitación conocida, no como un mapa verificado.
+No instalar otro pipeline de publicación sólo para obtener sourcemaps.
 
 ## 3. Envolturas obligatorias
 
@@ -63,7 +67,7 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 ## 4. Trazas distribuidas front → edge
 
 - El front adjunta `sentry-trace` + `baggage` a fetches que caen en
-  `TRACE_PROPAGATION_TARGETS` (functions/rest de Supabase, librecarga.com).
+  `TRACE_PROPAGATION_TARGETS` (functions de Supabase, librecarga.com).
 - `corsHeaders` permite ambos headers (ver `supabase/functions/_shared/cors.ts`).
 - `wrapEdgeHandler` crea isolation scope por request, continúa la traza y
   abre `http.server` con fn/request ID/status; también traza requests sin padre.
@@ -76,6 +80,14 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 
 - `IGNORE_ERRORS` bloquea sólo ruido conocido (auth esperada, extensiones, ResizeObserver).
   ChunkLoadError agotado, online Failed to fetch, React queue y 5xx son reportables.
+  No filtrar todos los `Non-Error promise rejection`: pueden contener el motivo
+  útil de un fallo. El filtro de serialización vacía sigue siendo preciso.
+- REST/Edge de Supabase: Query/UI/`reportCaughtError` es el único dueño de
+  captura. Reportar explícitamente fallos de operaciones fuera de Query;
+  no descartar el `{ error }` inesperado. Query captura después de reintentos.
+  Auth/storage y recursos de la app conservan HttpClient 5xx automático.
+  Todos mantienen breadcrumbs/tracing; no agregar REST/Edge a
+  `HTTP_FAILURE_TARGETS` sin resolver primero la doble captura.
 - `DENY_URLS` bloquea extensiones y GTM.
 - `scrubEventPii` redacta `email`, `rfc`, `tax_id`, `phone` en `message`,
   `breadcrumbs`, `request.url`.
@@ -144,7 +156,14 @@ no se filtran errores de producción para esconder fallos simulados de CI.
 
 ## 11. Validación operativa pendiente de dashboard/despliegue
 
-- Confirmar DSN/release/dist del deploy, Debug IDs/maps subidos y stack simbolizado.
+Para cerrar la integración básica: confirmar un evento frontend del deploy
+actual y uno Edge, sin PII, y que las alertas tengan destinatario operativo.
+Un ID retornado por `captureException` no demuestra recepción en Sentry.
+El mínimo Deno del SDK 11 es 2.8.3; el CLI local/CI no certifica el runtime
+gestionado de Lovable. La existencia de `SENTRY_DSN_EDGE` tampoco certifica ingesta.
+No crear un endpoint público de errores para comprobarlo.
+
+- Confirmar DSN/release/dist del deploy; Debug IDs/maps sólo si existe build token.
 - Verificar trace front→edge, tenant/rol del usuario actual y ninguno anterior al logout.
 - Probar feedback/screenshot y Replay; túnel conserva bytes y expone Retry-After /
   X-Sentry-Rate-Limits, con timeout de upstream de 5 s y body máximo de 1 MiB.
@@ -152,3 +171,9 @@ no se filtran errores de producción para esconder fallos simulados de CI.
   ni muestreo a ciegas, especialmente en una oficina con IP compartida.
 - El contrato Deno usa SDK real y transporte falso: valida aislamiento, privacidad,
   trazas/check-ins; no demuestra que secretos/alertas del servicio remoto estén configurados.
+
+Referencias: [Lovable Build Secrets](https://docs.lovable.dev/features/build-secrets),
+[Sentry en Edge](https://supabase.com/docs/guides/functions/examples/sentry-monitoring)
+y [compatibilidad SDK 11](https://github.com/getsentry/sentry-javascript/blob/11.4.0/MIGRATION.md).
+Replay, profiling, trazas y crons son capacidades existentes/opcionales; su
+validación avanzada no exige ampliar la integración básica.
