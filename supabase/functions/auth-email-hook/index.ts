@@ -22,7 +22,15 @@ const FROM_DOMAIN = "librecarga.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // Template mapping for preview mode
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<Record<string, never>>> = {
+type EmailTemplateComponent =
+  | typeof SignupEmail
+  | typeof InviteEmail
+  | typeof MagicLinkEmail
+  | typeof RecoveryEmail
+  | typeof EmailChangeEmail
+  | typeof ReauthenticationEmail
+
+const EMAIL_TEMPLATES: Record<string, EmailTemplateComponent> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -112,7 +120,9 @@ async function handlePreview(req: Request): Promise<Response> {
   }
 
   const sampleData = SAMPLE_DATA[type] || {}
-  const html = await renderAsync(React.createElement(EmailTemplate, sampleData))
+  const html = await renderAsync(
+    React.createElement(EmailTemplate as React.ComponentType<object>, sampleData),
+  )
 
   return new Response(html, {
     status: 200,
