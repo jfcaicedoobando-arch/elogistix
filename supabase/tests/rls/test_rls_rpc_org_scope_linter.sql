@@ -116,7 +116,8 @@ DECLARE
     -- el linter dejó de considerarla candidata.
 
     'recalcular_cobro_embarques',
-    'recalcular_estado_liquidacion_concepto',
+    -- Auditoría 02: recalcular_estado_liquidacion_concepto valida el tenant;
+    -- esa deuda por-ID ya no requiere excepción.
     'recalcular_estado_liquidacion_factura',
     'recompute_embarque_tiene_proforma',
     'resolver_sin_comision',

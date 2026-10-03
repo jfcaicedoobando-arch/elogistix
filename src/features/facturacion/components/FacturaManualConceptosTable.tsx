@@ -97,8 +97,10 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                   <span className="block text-label text-muted-foreground mb-1">Cant.</span>
                   <NumericInput
                     aria-label={`Cantidad del concepto ${idx + 1}`}
+                    decimals
+                    maxDecimals={6}
                     value={c.cantidad || 0}
-                    onChange={(n) => update(idx, { cantidad: n || 1 })}
+                    onChange={(n) => update(idx, { cantidad: n })}
                     className="h-9"
                   />
                 </div>

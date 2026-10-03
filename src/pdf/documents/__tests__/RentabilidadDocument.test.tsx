@@ -45,4 +45,13 @@ describe("RentabilidadDocument", () => {
     expect(text).toContain("Beta SA");
     expect(text).not.toContain("No hay datos");
   });
+
+  it("usa separador soportado y distingue identidad configurada de fallback", () => {
+    const { container, rerender } = render(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} emisor={{ razonSocial: "Empresa" }} />);
+    expect(container).toHaveTextContent("Período: 2026-09-01 - 2026-09-30");
+    expect(container).toHaveTextContent("Documento generado electrónicamente");
+    expect(container).not.toHaveTextContent("EMPRESA");
+    rerender(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} emisor={{ razonSocial: "Organización sintética SA" }} />);
+    expect(container).toHaveTextContent("ORGANIZACIÓN SINTÉTICA SA");
+  });
 });

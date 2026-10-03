@@ -12,6 +12,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import { COLORS } from "@/pdf/theme/tokens";
+import { nombreEmisorReporte, reporteHeaderTextStyle } from "./reporteLayout";
 
 export interface FilaFacturaPdf {
   contraparte: string;
@@ -57,33 +58,34 @@ const COL_CORTA = { width: 58, flexGrow: 0, flexShrink: 0 } as const;
 const colsTotales: PdfColumn<FilaTotalPdf>[] = [
   { key: "etiqueta", title: "Antigüedad", cellStyle: styles.cellDesc, render: (r) => r.etiqueta },
   { key: "conteo", title: "#", cellStyle: styles.cellQty, render: (r) => r.conteo },
-  { key: "hist", title: "MXN histórico", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnHistorico) },
-  { key: "corte", title: "MXN al corte", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnCorte) },
-  { key: "dif", title: "Dif. cambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
+  { key: "hist", title: "MXN\nhistórico", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnHistorico) },
+  { key: "corte", title: "MXN\nal corte", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnCorte) },
+  { key: "dif", title: "Dif.\ncambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
 ];
 
 const colsFacturas: PdfColumn<FilaFacturaPdf>[] = [
   { key: "contraparte", title: "Cliente / Proveedor", cellStyle: styles.cellDesc, render: (r) => r.contraparte },
   { key: "folio", title: "Folio", cellStyle: COL_CORTA, render: (r) => r.folio },
-  { key: "exp", title: "Expediente", cellStyle: COL_CORTA, render: (r) => r.expediente },
+  { key: "exp", title: "Exp.", cellStyle: COL_CORTA, render: (r) => r.expediente },
   { key: "venc", title: "Vence", cellStyle: COL_CORTA, render: (r) => r.vencimiento },
   { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => r.dias },
   { key: "bucket", title: "Rango", cellStyle: COL_CORTA, render: (r) => r.bucket },
   { key: "saldo", title: "Saldo", cellStyle: styles.cellNumWide, render: (r) => money(r.saldo, r.moneda) },
-  { key: "hist", title: "MXN histórico", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnHistorico) },
-  { key: "corte", title: "MXN al corte", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnCorte) },
-  { key: "dif", title: "Dif. cambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
+  { key: "hist", title: "MXN\nhistórico", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnHistorico) },
+  { key: "corte", title: "MXN\nal corte", cellStyle: styles.cellNumWide, render: (r) => money(r.mxnCorte) },
+  { key: "dif", title: "Dif.\ncambiaria", cellStyle: styles.cellNumWide, render: (r) => money(r.diferencia) },
 ];
 
 export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor, busqueda }: Props) {
   const filtro = busqueda?.trim();
+  const empresaNombre = nombreEmisorReporte(emisor);
   return (
-    <Document title={`Cartera y antigüedad ${fechaCorte}`} author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title={`Cartera y antigüedad ${fechaCorte}`} author={empresaNombre ?? "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.h1}>Cartera y antigüedad</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
+            <Text style={[styles.h1, { lineHeight: 1.2 }]}>Cartera y antigüedad</Text>
+            <Text style={{ marginTop: 6, fontSize: 10, lineHeight: 1.3, color: COLORS.muted }}>
               Corte: {formatDate(fechaCorte)}
             </Text>
             <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.muted }}>{leyendaTc}</Text>
@@ -96,18 +98,18 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor,
         {bloques.map((b) => (
           <View key={b.titulo}>
             <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
-            <DataTable columns={colsTotales} rows={b.totales} />
+            <DataTable columns={colsTotales} rows={b.totales} headerTextStyle={reporteHeaderTextStyle} />
 
             <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas</Text>
             {b.facturas.length === 0 ? (
               <Text style={styles.paragraph}>Sin saldos pendientes.</Text>
             ) : (
-              <DataTable columns={colsFacturas} rows={b.facturas} />
+              <DataTable columns={colsFacturas} rows={b.facturas} headerTextStyle={reporteHeaderTextStyle} />
             )}
           </View>
         ))}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer empresaNombre={empresaNombre} />
       </Page>
     </Document>
   );

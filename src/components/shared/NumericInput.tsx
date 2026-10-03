@@ -6,6 +6,8 @@ interface NumericInputProps {
   value: number;
   onChange: (n: number) => void;
   decimals?: boolean;
+  /** Precisión fraccionaria del campo; los conceptos fiscales admiten hasta 6. */
+  maxDecimals?: number;
   className?: string;
   disabled?: boolean;
   placeholder?: string;
@@ -25,7 +27,7 @@ interface NumericInputProps {
  * - Al perder foco normaliza (`01` → `1`, `""` → `0`, `.5` → `0.5`).
  */
 const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
-  ({ value, onChange, decimals = false, className, disabled, placeholder, ...rest }, ref) => {
+  ({ value, onChange, decimals = false, maxDecimals = 4, className, disabled, placeholder, ...rest }, ref) => {
     const toText = (n: number): string => (n === 0 ? "" : String(n));
     const [text, setText] = useState<string>(toText(value));
     // Ref al último `text` para leer el valor actual dentro del efecto sin
@@ -40,9 +42,9 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       if (current !== value) setText(toText(value));
     }, [value]);
 
-    // EC-11: acotar dígitos enteros (12) y decimales (4) para que `Number()`
-    // no pierda precisión en silencio (p. ej. 99999999999999999999 → 1e20).
-    const regex = decimals ? /^\d{0,12}(\.\d{0,4})?$/ : /^\d{0,12}$/;
+    // EC-11: acotar dígitos enteros (12) y decimales según el contrato del campo.
+    // Evita enteros sin límite que `Number()` convertiría en silencio a 1e20.
+    const regex = decimals ? new RegExp(`^\\d{0,12}(\\.\\d{0,${maxDecimals}})?$`) : /^\d{0,12}$/;
 
     return (
       <Input

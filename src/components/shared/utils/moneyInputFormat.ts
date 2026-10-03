@@ -29,32 +29,71 @@ export const sanitizeMoneyText = (raw: string, allowNegative = false): string =>
   const signo = negativo ? "-" : "";
   const s = raw.replace(/[^\d.,]/g, "");
 
-  const conDecimal = (entero: string, decimal: string): string =>
-    `${signo}${entero}${decimal === "" ? "" : `.${decimal.slice(0, 2)}`}`;
-
   if (s.includes(".")) {
     const sinMiles = s.replace(/,/g, "");
     const [entero, ...resto] = sinMiles.split(".");
-    // EC-06: heurística simétrica a la de la coma — en es-MX es común pegar
-    // montos con punto de miles ("50.000" = 50,000). Un único "." seguido de
-    // exactamente 3 dígitos y sin otra marca decimal se trata como separador
-    // de miles; de otro modo sigue siendo punto decimal.
-    if (resto.length === 1 && resto[0].length === 3 && !s.includes(",") && entero !== "") {
-      return `${signo}${entero}${resto[0]}`;
-    }
+    // El punto siempre es decimal según el contrato es-MX. La antigua
+    // inferencia de punto-miles multiplicaba por 1,000 capturas con 3 decimales.
     return `${signo}${entero}.${resto.join("").slice(0, 2)}`;
   }
+
+  // Sólo las comas con grupos completos de miles son agrupación. Un entero
+  // de 4+ dígitos seguido de coma y 3 decimales sigue siendo un monto decimal.
+  if (/^\d{1,3}(,\d{3})+$/.test(s)) return `${signo}${s.replace(/,/g, "")}`;
 
   const ultimaComa = s.lastIndexOf(",");
   if (ultimaComa >= 0) {
     const cola = s.slice(ultimaComa + 1).replace(/,/g, "");
     const cabeza = s.slice(0, ultimaComa).replace(/,/g, "");
-    // Coma seguida de ≤2 dígitos = decimal; si trae más, era separador de miles.
-    if (cola.length <= 2) return `${signo}${cabeza}${s.endsWith(",") ? "." : `.${cola}`}`;
-    return conDecimal(cabeza + cola, "");
+    return `${signo}${cabeza}.${cola.slice(0, 2)}`;
   }
 
   return `${signo}${s}`;
+};
+
+/**
+ * Al editar el texto formateado, sus comas existentes siguen siendo miles.
+ * Sólo el tramo insertado puede aportar una coma decimal nueva.
+ */
+export const sanitizeMoneyEditText = (
+  raw: string, anterior: string, allowNegative = false,
+): string => {
+  let inicio = 0;
+  while (inicio < anterior.length && inicio < raw.length && anterior[inicio] === raw[inicio]) inicio++;
+  let final = 0;
+  while (
+    final < anterior.length - inicio && final < raw.length - inicio
+    && anterior[anterior.length - final - 1] === raw[raw.length - final - 1]
+  ) final++;
+  const antes = raw.slice(0, inicio).replace(/,/g, "");
+  const insertado = raw.slice(inicio, raw.length - final);
+  const despues = raw.slice(raw.length - final).replace(/,/g, "");
+  return sanitizeMoneyText(antes + insertado + despues, allowNegative);
+};
+
+export interface MoneyTextSelection {
+  value: string;
+  start: number;
+  end: number;
+}
+
+/**
+ * Un pegado parcial conserva las agrupaciones del importe anterior. El texto
+ * insertado tiene su propia notación; reemplazar toda la selección equivale
+ * a capturar un importe nuevo. Sin una selección compatible no se infiere.
+ */
+export const sanitizeMoneyReplacementText = (
+  raw: string, selection?: MoneyTextSelection | null, allowNegative = false,
+): string => {
+  if (!selection) return sanitizeMoneyText(raw, allowNegative);
+  const antes = selection.value.slice(0, selection.start);
+  const despues = selection.value.slice(selection.end);
+  if (!raw.startsWith(antes) || !raw.endsWith(despues)
+    || raw.length < antes.length + despues.length) {
+    return sanitizeMoneyText(raw, allowNegative);
+  }
+  const insertado = sanitizeMoneyText(raw.slice(antes.length, raw.length - despues.length), allowNegative);
+  return sanitizeMoneyText(antes.replace(/,/g, "") + insertado + despues.replace(/,/g, ""), allowNegative);
 };
 
 /** Formatea una cadena limpia para mostrarla con miles, preservando lo tecleado. */

@@ -104,6 +104,9 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
     <>
       <Card>
         <CardContent className="p-4 space-y-3">
+          <p className="text-body-sm text-muted-foreground">
+            Historial de facturas de todos los estados, incluidos borradores y por timbrar.
+          </p>
           <div className="flex flex-wrap gap-3 items-start">
             <div className="flex-1 min-w-[240px]">
               <UnifiedFiltersBar
@@ -139,7 +142,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
           <div className="text-body-sm text-muted-foreground">
             {/* El listado es server-side: lo visible es la página (menos los
                 filtros cliente/fecha, que sólo aplican a esa página). */}
-            <strong className="text-foreground">{t.facturasFiltradas.length}</strong> resultados visibles
+            <strong className="text-foreground">{t.facturasFiltradas.length}</strong> filas visibles
             {" · "}{t.totalFacturas} facturas en total (servidor)
           </div>
         </CardContent>

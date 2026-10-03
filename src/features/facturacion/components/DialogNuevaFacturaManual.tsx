@@ -123,7 +123,6 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               <span className="text-base font-medium">Total</span>
               <span className="text-kpi tabular-nums">
                 {formatCurrency(totales.total, fiscal.moneda)}
-                <span className="text-body-sm font-normal opacity-70 ml-1">{fiscal.moneda}</span>
               </span>
             </div>
           </div>

@@ -19,6 +19,8 @@ import { DialogPagoLoteRenglones } from "./DialogPagoLoteRenglones";
 import { DialogPagoLoteResumen } from "./DialogPagoLoteResumen";
 import { formatCurrency } from "@/lib/formatters";
 import { type FacturaLoteCandidata } from "@/features/cxp/services/pagoProveedorLote";
+import { usePagoLotePreflight } from "../hooks/usePagoLotePreflight";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Props {
   open: boolean;
@@ -32,12 +34,15 @@ interface Props {
 }
 
 export function DialogPagoLoteProveedor(p: Props) {
+  const preflight = usePagoLotePreflight(p.open, p.facturas, p.proveedorId, p.moneda);
   const s = usePagoLoteState({
     open: p.open,
     proveedorId: p.proveedorId,
     proveedorOrigen: p.proveedorOrigen,
     moneda: p.moneda,
-    facturas: p.facturas,
+    facturas: preflight.facturas,
+    preflightPendiente: preflight.pendiente,
+    preflightError: preflight.error,
     onOpenChange: p.onOpenChange,
     onDone: p.onDone,
   });
@@ -74,7 +79,7 @@ export function DialogPagoLoteProveedor(p: Props) {
       }
       stickyBottom={
         <DialogPagoLoteResumen
-          facturas={p.facturas}
+          facturas={preflight.facturas}
           renglones={s.renglones}
           moneda={p.moneda}
           totalRepartido={s.totalRepartido}
@@ -84,6 +89,10 @@ export function DialogPagoLoteProveedor(p: Props) {
       }
       footer={footer}
     >
+      {preflight.error && <Alert variant="warning"><AlertDescription>
+        {preflight.error}
+        {preflight.fallo && <Button variant="outline" size="sm" onClick={() => void preflight.reintentar()}>Reintentar</Button>}
+      </AlertDescription></Alert>}
       <DialogPagoLoteDatos
         moneda={p.moneda}
         proveedorOrigen={p.proveedorOrigen}
@@ -111,7 +120,7 @@ export function DialogPagoLoteProveedor(p: Props) {
         description="Se paga primero lo que vence antes. Puedes ajustar cada importe."
       >
         <DialogPagoLoteRenglones
-          facturas={p.facturas}
+          facturas={preflight.facturas}
           renglones={s.renglones}
           moneda={p.moneda}
           onMontoChange={s.setMonto}

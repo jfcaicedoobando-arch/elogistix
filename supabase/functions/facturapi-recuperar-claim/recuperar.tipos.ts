@@ -11,4 +11,5 @@ export interface FapiInvoice {
   external_id?: string;
   status?: string;
   date?: string;
+  use?: unknown;
 }

@@ -7,6 +7,7 @@ export const facturacion = {
     ['facturacion', 'proyeccion', organizationId, mesKey] as const,
   clienteFiscal: (clienteId?: string | null) => ['cliente_fiscal', clienteId] as const,
   clienteDefaults: (clienteId?: string | null) => ['cliente_defaults_facturacion', clienteId] as const,
+  ambienteEmision: (organizationId?: string | null) => ['facturapi_credenciales', organizationId, 'ambiente'] as const,
   clientesFiscalOpts: (organizationId?: string | null) => ['clientes_fiscal_opts', organizationId] as const,
   emisorEmpresa: ['emisor-empresa'] as const,
   /** Prefijo de todas las bandejas (invalidación por dominio). */

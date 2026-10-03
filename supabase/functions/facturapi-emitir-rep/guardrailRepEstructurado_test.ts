@@ -11,8 +11,9 @@
  * resuelve fuera de Supabase.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { fileURLToPath } from "node:url";
 
-const DIR = new URL(".", import.meta.url).pathname;
+const DIR = fileURLToPath(new URL(".", import.meta.url));
 
 async function fuente(nombre: string): Promise<string> {
   return await Deno.readTextFile(`${DIR}${nombre}`);

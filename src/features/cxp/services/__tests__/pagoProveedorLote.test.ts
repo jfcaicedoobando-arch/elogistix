@@ -8,6 +8,13 @@ const F = [
 ];
 
 describe("repartirFifo (CxP · pago proveedor en lote)", () => {
+  it("no reparte dinero a una factura pendiente o sin aprobación verificada", () => {
+    const facturas = [{ ...F[0], estado_aprobacion: "pendiente" }, { ...F[1], estado_aprobacion: "aprobada" }];
+    const { renglones, sobrante } = repartirFifo(facturas, 400);
+    expect(renglones.find((r) => r.factura_id === "b")?.monto).toBe(0);
+    expect(sobrante).toBe(100);
+    expect(validarLote(facturas, [{ factura_id: "a", monto: 12.5 }, { factura_id: "b", monto: 12.5 }], 25, { requiereCuenta: false, cuentaId: null, monedaCuenta: null, moneda: "MXN", fecha: todayLocalISO() }).error).toMatch(/aprobadas/);
+  });
   it("liquida primero la factura que vence antes", () => {
     const { renglones, sobrante } = repartirFifo(F, 400);
     expect(renglones[0]).toEqual({ factura_id: "a", monto: 300 });

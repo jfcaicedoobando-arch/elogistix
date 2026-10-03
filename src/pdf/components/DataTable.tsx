@@ -16,6 +16,8 @@ export interface PdfColumn<T> {
 interface Props<T> {
   columns: PdfColumn<T>[];
   rows: T[];
+  /** Ajuste de tipografía del encabezado sin alterar los anchos de columnas. */
+  headerTextStyle?: Style;
   /** Renderiza una fila adicional (nota) debajo de cada row. */
   renderSubrow?: (row: T) => string | null;
   /**
@@ -40,7 +42,7 @@ interface Props<T> {
  *   serán empujadas ni comprimidas por una celda `cellDesc` con texto largo.
  * - `cellDesc` usa `minWidth: 0` para garantizar wrap real en flex.
  */
-export function DataTable<T>({ columns, rows, renderSubrow, cellStyleForRow }: Props<T>) {
+export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cellStyleForRow }: Props<T>) {
   return (
     <View style={styles.table}>
       {/*
@@ -51,7 +53,7 @@ export function DataTable<T>({ columns, rows, renderSubrow, cellStyleForRow }: P
       */}
       <View style={styles.tableHeader} fixed>
         {columns.map((col) => (
-          <Text key={col.key} style={[styles.th, ...flat(col.cellStyle)]}>
+          <Text key={col.key} style={[styles.th, ...flat(headerTextStyle), ...flat(col.cellStyle)]}>
             {sanitizePdfText(col.title)}
           </Text>
         ))}
