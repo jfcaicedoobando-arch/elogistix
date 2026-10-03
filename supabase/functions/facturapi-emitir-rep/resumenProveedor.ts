@@ -54,7 +54,7 @@ export const MSG_REP_RESUMEN_NO_DISPONIBLE =
 export const TIMEOUT_RESUMEN_MS = 30_000;
 
 async function conTimeout<T>(promesa: Promise<T>, ms = TIMEOUT_RESUMEN_MS): Promise<T> {
-  let timer = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       promesa,
@@ -63,7 +63,7 @@ async function conTimeout<T>(promesa: Promise<T>, ms = TIMEOUT_RESUMEN_MS): Prom
       }),
     ]);
   } finally {
-    clearTimeout(timer);
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 

@@ -171,12 +171,14 @@ jobs:
         if: needs.detector.outputs.edge == 'true'
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
-          # Paridad con el runtime real de las Edge Functions (Deno 2).
-          deno-version: v2.6.x
+          # CLI estable fijado; compatible con Sentry 11 (Deno >=2.8.3).
+          # Supabase/Lovable administra el runtime desplegado por separado.
+          deno-version: v2.9.7
 
       - name: Deno tests (con typecheck, excluye smoke)
         if: needs.detector.outputs.edge == 'true'
         # SIN `--no-check`: `deno test` valida también los tipos de las edges.
+        # Deno >=2.8 cambió defaults: mantener detección de fugas explícita.
         run: |
           set -uo pipefail
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
@@ -185,6 +187,8 @@ jobs:
             exit 1
           fi
           deno test \
+            --sanitize-ops \
+            --sanitize-resources \
             --node-modules-dir=none \
             --allow-env \
             --allow-net \

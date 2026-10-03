@@ -1,7 +1,7 @@
 # CI de Libre Carga
 
 Fuente de verdad: `.github/workflows/` y `.github/actions/`.
-Revisado el **2026-09-26**. Esta guía no configura protección de rama.
+Revisado el **2026-10-03**. Esta guía no configura protección de rama.
 
 ## CI principal
 
@@ -22,13 +22,33 @@ correr en paralelo.
 
 - Frontend: typecheck, build, límites de bundle y sourcemaps.
 - DB: manifiesto, schema, schema-functions, migraciones, replay-mirror y rpc-sync.
-- Edge: Deno **2.6.x**, `*_test.ts` salvo smoke; typecheck habilitado.
+- Edge: Deno **2.9.7 estable fijado**, `*_test.ts` salvo smoke; typecheck habilitado.
 - Vitest: `bun run test -- --shard=N/5`, **sin coverage, retry ni blobs**.
   Scripts de coverage optativos no describen el CI principal.
 
 Bun **1.4.0** vía `setup-bun`. Cada job tiene instalación/caché propia;
 `node_modules` no se comparte en memoria entre runners.
 Sin caché: lockfile congelado, `--ignore-scripts`.
+
+### Deno: CLI de pruebas vs. runtime desplegado
+
+`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**, por encima del
+mínimo **2.8.3** de Sentry 11. Ambos comandos `deno test` mantienen
+`--sanitize-ops` y `--sanitize-resources`: desde Deno 2.8 cambiaron sus
+defaults y la actualización no debe relajar la detección de fugas.
+Se conserva typecheck, sin `--no-check`, y `--node-modules-dir=none`.
+
+Esto instala el canal **estable**, no el canal LTS. Ver
+[releases de Deno](https://docs.deno.com/runtime/fundamentals/stability_and_releases/),
+[sanitizers](https://docs.deno.com/runtime/test/sanitizers/) y
+[compatibilidad de Sentry 11](https://github.com/getsentry/sentry-javascript/blob/11.4.0/MIGRATION.md).
+
+Supabase/Lovable administra el runtime de las Edge Functions desplegadas.
+Actualizar el CLI de Actions **no cambia ni certifica su versión remota**.
+Para comprobarla, revisar un log de arranque del entorno correspondiente que
+identifique Edge Runtime y compatibilidad Deno; no inferirla del YAML ni de
+la versión de la CLI Supabase. Un smoke aprobado prueba contratos HTTP,
+no la versión exacta del runtime remoto.
 
 ## Otros workflows
 
