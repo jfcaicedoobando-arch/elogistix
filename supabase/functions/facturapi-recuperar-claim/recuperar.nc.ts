@@ -5,7 +5,7 @@
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
-import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
+import { FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
 import { type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
 import { MIN_EDAD_LIBERACION_MINUTOS } from "../_shared/timbradoPendiente.ts";
