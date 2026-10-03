@@ -13,6 +13,21 @@ const MSG_OPORTUNIDAD_INEXISTENTE =
   "La oportunidad ya no existe o pertenece a otra organización.";
 
 export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
+  LC_SCORING_OBJETO_INVALIDO: "El puntaje sólo puede calcularse para empresas u oportunidades del CRM.",
+  LC_PRICING_ESTADO_INVALIDO: "La solicitud no está en un estado válido para esta acción. Actualiza la bandeja.",
+  LC_PRICING_ESTADO_SOLO_RPC: "Cambia el estado desde las acciones de la solicitud de pricing.",
+  LC_PRICING_INCOMPLETA: "Completa los datos obligatorios de la solicitud antes de enviarla a pricing.",
+  LC_PRICING_INMUTABLE: "Una solicitud enviada no puede cambiar de organización u oportunidad.",
+  LC_PRICING_NO_EDITABLE: "La solicitud ya fue enviada o cerrada y no se puede editar como borrador.",
+  LC_PRICING_NO_ENCONTRADA: "La solicitud de pricing no existe o ya no está disponible. Actualiza la bandeja.",
+  LC_PRICING_OPORTUNIDAD_INVALIDA: "Selecciona una oportunidad vigente de tu organización para solicitar pricing.",
+  LC_PRICING_ORG: "La solicitud y sus opciones deben pertenecer a la misma organización.",
+  LC_PRICING_SIN_OPCIONES: "Agrega al menos una opción de tarifa antes de marcar la solicitud como respondida.",
+  LC_PRICING_SIN_PERMISO: "Tu rol no tiene permiso para realizar esta acción de pricing.",
+  LC_PRICING_SOLICITANTE_INVALIDO: "El solicitante debe ser un usuario activo de la organización.",
+  LC_REPORTE_INMUTABLE: "El reporte no puede cambiar de organización o tablero. Crea otro reporte si necesitas moverlo.",
+  LC_REPORTE_NO_ENCONTRADO: "El reporte ya no está disponible. Actualiza el tablero.",
+  LC_REPORTE_TABLERO_INVALIDO: "Selecciona un tablero disponible de tu organización.",
   LC_OPORTUNIDAD_INEXISTENTE: MSG_OPORTUNIDAD_INEXISTENTE,
   LC_SIN_PERMISO_AUTORIZAR_MARGEN:
     "Sólo gerencia comercial o administración pueden autorizar el margen de una oportunidad.",

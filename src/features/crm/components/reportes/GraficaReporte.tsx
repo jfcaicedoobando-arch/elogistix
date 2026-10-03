@@ -4,15 +4,11 @@
  */
 import { Bar, BarChart, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { MedidaReporte, ReporteDato, TipoGrafica } from "@/features/crm/services/reportes/tiposReportes";
-
-const COLORES_PASTEL = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 210 40% 60%))",
-  "hsl(var(--chart-3, 150 40% 50%))",
-  "hsl(var(--chart-4, 30 80% 55%))",
-  "hsl(var(--chart-5, 340 60% 55%))",
-  "hsl(var(--muted-foreground))",
-];
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { CHART, CHART_SERIES, CHART_TICK, CHART_BAR_RADIUS } from "@/lib/chartTokens";
 
 interface Props {
   tipo: TipoGrafica;
@@ -29,13 +25,13 @@ function formatoValor(v: number, medida: MedidaReporte): string {
 
 export function GraficaReporte({ tipo, datos, medida }: Props) {
   if (datos.length === 0) {
-    return <p className="py-8 text-center text-body text-muted-foreground">Sin datos con ese filtro.</p>;
+    return <EmptyStateInline message="Sin datos con ese filtro." />;
   }
 
   if (tipo === "numero") {
     const total = datos.reduce((acc, d) => acc + d.valor, 0);
     return (
-      <p className="py-6 text-center text-4xl font-bold tabular-nums text-foreground">
+      <p className="py-6 text-center text-kpi font-bold tabular-nums text-foreground">
         {formatoValor(total, medida)}
       </p>
     );
@@ -43,22 +39,12 @@ export function GraficaReporte({ tipo, datos, medida }: Props) {
 
   if (tipo === "tabla") {
     return (
-      <table className="w-full text-body">
-        <thead>
-          <tr className="border-b text-left text-muted-foreground">
-            <th className="py-1.5 font-medium">Grupo</th>
-            <th className="py-1.5 text-right font-medium">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {datos.map((d) => (
-            <tr key={d.etiqueta} className="border-b border-border/50 last:border-0">
-              <td className="py-1.5 pr-2">{d.etiqueta}</td>
-              <td className="py-1.5 text-right tabular-nums">{formatoValor(d.valor, medida)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable data={datos} rowKey={(d) => d.etiqueta} density={TABLE_DENSITY.embebida}
+        tableClassName="w-full" columns={defineColumns<ReporteDato>([
+          { id: "grupo", header: "Grupo", accessorFn: (d) => d.etiqueta },
+          { id: "valor", header: "Valor", accessorFn: (d) => d.valor,
+            cell: ({ row }) => formatoValor(row.original.valor, medida), meta: { align: "right", className: "tabular-nums" } },
+        ])} />
     );
   }
 
@@ -68,10 +54,10 @@ export function GraficaReporte({ tipo, datos, medida }: Props) {
         <PieChart>
           <Pie data={datos} dataKey="valor" nameKey="etiqueta" innerRadius={45} outerRadius={80} label={(p) => p.name}>
             {datos.map((d, i) => (
-              <Cell key={d.etiqueta} fill={COLORES_PASTEL[i % COLORES_PASTEL.length]} />
+              <Cell key={d.etiqueta} fill={CHART_SERIES[i % CHART_SERIES.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(v) => formatoValor(Number(v), medida)} />
+          <Tooltip content={<ChartTooltip formatValue={(v) => formatoValor(v, medida)} />} />
         </PieChart>
       </ResponsiveContainer>
     );
@@ -81,10 +67,10 @@ export function GraficaReporte({ tipo, datos, medida }: Props) {
     return (
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={datos} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-          <XAxis dataKey="etiqueta" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} width={48} />
-          <Tooltip formatter={(v) => formatoValor(Number(v), medida)} />
-          <Line type="monotone" dataKey="valor" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+          <XAxis dataKey="etiqueta" tick={CHART_TICK} />
+          <YAxis tick={CHART_TICK} width={48} />
+          <Tooltip content={<ChartTooltip formatValue={(v) => formatoValor(v, medida)} />} />
+          <Line name="Valor" type="monotone" dataKey="valor" stroke={CHART.primary} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     );
@@ -93,10 +79,10 @@ export function GraficaReporte({ tipo, datos, medida }: Props) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={datos} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-        <XAxis dataKey="etiqueta" tick={{ fontSize: 11 }} />
-        <YAxis tick={{ fontSize: 11 }} width={48} />
-        <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.4)" }} formatter={(v) => formatoValor(Number(v), medida)} />
-        <Bar dataKey="valor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        <XAxis dataKey="etiqueta" tick={CHART_TICK} />
+        <YAxis tick={CHART_TICK} width={48} />
+        <Tooltip content={<ChartTooltip formatValue={(v) => formatoValor(v, medida)} />} />
+        <Bar name="Valor" dataKey="valor" fill={CHART.primary} radius={CHART_BAR_RADIUS} />
       </BarChart>
     </ResponsiveContainer>
   );

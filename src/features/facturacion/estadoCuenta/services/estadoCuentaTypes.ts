@@ -1,9 +1,7 @@
 /**
  * Tipos y utilidades puras del Estado de Cuenta por cliente.
  *
- * Se separan del servicio (`estadoCuenta.ts`) para respetar el límite de
- * tamaño de archivo (Power of 10) y poder testear las funciones puras
- * (`diasVencido`, `calcularEstatus`) sin tocar la capa de datos.
+ * Contratos de datos y mapeo puro, sin acceso a la base de datos.
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactura";

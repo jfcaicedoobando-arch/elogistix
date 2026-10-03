@@ -4,6 +4,7 @@
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
   type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
@@ -78,7 +79,7 @@ export function useCrearEmpresaCrm() {
   return useMutation({
     mutationFn: crearEmpresa,
     onSuccess: () => { toast.success("Empresa creada"); void invalidar(); },
-    onError: (e: Error) => toast.error(e.message || "No se pudo crear la empresa"),
+    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo crear la empresa", error, method: "CRM_CREAR_EMPRESA" }),
   });
 }
 
@@ -87,7 +88,7 @@ export function useCrearContactoCrm() {
   return useMutation({
     mutationFn: (input: NuevoContactoInput) => crearContacto(input),
     onSuccess: () => { toast.success("Contacto creado"); void invalidar(); },
-    onError: (e: Error) => toast.error(e.message || "No se pudo crear el contacto"),
+    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo crear el contacto", error, method: "CRM_CREAR_CONTACTO" }),
   });
 }
 
@@ -99,6 +100,6 @@ export function useVinculoCrm() {
     mutationFn: ({ tipo, aId, bId, quitar }: VinculoInput) =>
       quitar ? desligar(tipo, aId, bId) : ligar(tipo, aId, bId),
     onSuccess: (_d, v) => { toast.success(v.quitar ? "Vínculo quitado" : "Registro ligado"); void invalidar(); },
-    onError: () => toast.error("No se pudo actualizar el vínculo"),
+    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo actualizar el vínculo", error, method: "CRM_VINCULO" }),
   });
 }

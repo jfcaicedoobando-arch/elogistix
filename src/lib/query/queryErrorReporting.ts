@@ -164,11 +164,8 @@ export const opOf = (k: unknown): string | undefined => {
 export { rootOf };
 
 /**
- * v13.303.75 · Notifica al usuario cuando una query falla. Antes sólo se
- * reportaba a Sentry y la UI mostraba un empty-state falso ("Sin resultados")
- * cuando en realidad falló la red. Ahora emitimos un toast con `id` estable
- * por queryKey para deduplicar cascadas y respetamos `meta.silentError` para
- * queries que ya manejan su propio feedback.
+ * Notifica las cargas fallidas; respeta `meta.silentError` cuando la pantalla
+ * ya muestra su propio feedback y permite reintentar sin abandonar la vista.
  */
 export function notifyQueryFailure(
   err: unknown,
