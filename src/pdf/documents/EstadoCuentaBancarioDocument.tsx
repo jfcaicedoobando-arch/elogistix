@@ -32,6 +32,13 @@ interface Props {
   moneda: string;
   resumen: ResumenPdf;
   filas: FilaEstadoCuentaExport[];
+  alcance?: {
+    filtro: string;
+    movimientosVisibles: number;
+    movimientosPeriodo: number;
+    entradas: string;
+    salidas: string;
+  };
   emisor?: { razonSocial?: string };
 }
 
@@ -49,7 +56,7 @@ const cols: PdfColumn<FilaEstadoCuentaExport>[] = [
 ];
 
 export function EstadoCuentaBancarioDocument({
-  cuenta, banco, moneda, resumen, filas, emisor,
+  cuenta, banco, moneda, resumen, filas, alcance, emisor,
 }: Props) {
   return (
     <Document
@@ -69,7 +76,8 @@ export function EstadoCuentaBancarioDocument({
           </View>
         </View>
 
-        <View style={{ flexDirection: "row", gap: 16, marginBottom: 10 }}>
+        <Text style={styles.h3}>Resumen de todo el periodo</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16, marginBottom: 10 }}>
           <Text style={{ fontSize: 9, color: COLORS.muted }}>
             Saldo inicial: {resumen.saldoInicial}
           </Text>
@@ -83,6 +91,19 @@ export function EstadoCuentaBancarioDocument({
             Saldo final: {resumen.saldoFinal}
           </Text>
         </View>
+
+        {alcance && (
+          <View style={{ marginBottom: 10 }} wrap={false}>
+            <Text style={styles.h3}>Detalle exportado: {alcance.movimientosVisibles} de {alcance.movimientosPeriodo} movimientos</Text>
+            <Text style={{ fontSize: 9, color: COLORS.muted }}>{alcance.filtro}</Text>
+            <Text style={{ fontSize: 9, color: COLORS.muted, marginTop: 3 }}>
+              Entradas visibles: {alcance.entradas} | Salidas visibles: {alcance.salidas}
+            </Text>
+            <Text style={{ fontSize: 8, color: COLORS.subtle, marginTop: 3 }}>
+              El saldo de cada fila es el saldo corrido real de la cuenta; incluye movimientos del periodo ocultos por los filtros.
+            </Text>
+          </View>
+        )}
 
         {filas.length === 0 ? (
           <Text style={styles.paragraph}>

@@ -95,7 +95,7 @@ export default function ProfitEstadoResultados() {
         <Info className="h-3 w-3" />
         {c.fuente === "facturas"
           ? "Fuente devengada: facturas emitidas (CxC) por fecha de emisión, menos NC aplicadas, contra facturas de proveedor (CxP) y sus NC del mismo mes."
-          : "Fuente operativa: conceptos del embarque cuya ETA cae en el mes. Excluye Cancelados y Multimodal."}
+          : "Fuente operativa: ventas facturadas netas de NC aplicadas contra conceptos de costo, por ETA del embarque en el mes. Excluye Cancelados y Multimodal."}
         {" "}Montos en MXN sin IVA.
 
       </p>

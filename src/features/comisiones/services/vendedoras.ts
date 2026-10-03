@@ -1,56 +1,36 @@
 /**
  * Servicio para vendedoras: config de % y catálogo de usuarios con rol vendedor.
- * Nombres/emails vía edge function `user-management` action `list` (no hay tabla profiles).
+ * Identidad vía catálogos existentes de `user-management`, según permisos.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { unwrapOr, run } from "@/lib/supabase/response";
-import { fetchNombresUsuarios } from "@/features/admin/services/usuario/availableUsers";
-import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
+import { cargarIdentidadesVendedoras, type IdentidadVendedora } from "./vendedorasIdentidad";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type VendedoraConfigRow = Tables<"vendedora_config">;
 
-export interface VendedoraConfig extends VendedoraConfigRow {
-  nombre: string | null;
-  email: string | null;
-}
+export interface VendedoraConfig extends VendedoraConfigRow, IdentidadVendedora {}
 
-export interface UsuarioVendedor { id: string; nombre: string; email: string }
-
-/** Mapa id → nombre (no hay email disponible desde `list-nombres`). */
-async function buildNombreMap(ids: string[]): Promise<Record<string, string>> {
-  if (ids.length === 0) return {};
-  try {
-    const users = await fetchNombresUsuarios();
-    const map: Record<string, string> = {};
-    for (const u of users) {
-      if (ids.includes(u.id) && u.full_name) map[u.id] = u.full_name;
-    }
-    return map;
-  } catch {
-    return {};
-  }
-}
+export interface UsuarioVendedor extends IdentidadVendedora { id: string }
 
 // v13.56.1 — Columnas explícitas (evita SELECT * en tablas financieras).
 const VENDEDORA_CONFIG_COLUMNS =
   "id, organization_id, user_id, porcentaje_default, activa, fecha_alta, created_at, updated_at";
 
-export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
+export async function fetchVendedorasConfig(conCorreos = false, organizationId?: string | null): Promise<VendedoraConfig[]> {
+  const query = supabase.from("vendedora_config").select(VENDEDORA_CONFIG_COLUMNS);
+  if (organizationId) query.eq("organization_id", organizationId);
   const configs = (await unwrapOr(
-    supabase
-      .from("vendedora_config")
-      .select(VENDEDORA_CONFIG_COLUMNS)
+    query
       .order("created_at", { ascending: false })
       .limit(200),
     [],
   )) as VendedoraConfigRow[];
-  const map = await buildNombreMap(configs.map((c) => c.user_id));
+  const map = await cargarIdentidadesVendedoras(configs.map((c) => c.user_id), conCorreos);
   return configs.map((c) => ({
     ...c,
-    nombre: map[c.user_id] ?? UNRESOLVED_EMAIL,
-    email: map[c.user_id] ?? UNRESOLVED_EMAIL,
+    ...map.get(c.user_id)!,
   }));
 }
 
@@ -87,19 +67,20 @@ export async function updateVendedoraConfig(
 }
 
 /** Usuarios de la org con rol vendedor o admin (candidatos a vendedora). */
-export async function fetchUsuariosVendedores(): Promise<UsuarioVendedor[]> {
+export async function fetchUsuariosVendedores(conCorreos = false, organizationId?: string | null): Promise<UsuarioVendedor[]> {
+  const query = supabase.from("organization_members").select("user_id, role");
+  if (organizationId) query.eq("organization_id", organizationId);
   const data = await unwrapOr(
-    supabase.from("organization_members").select("user_id, role"),
+    query,
     [],
   );
   const rows = (data as Array<{ user_id: string; role: string }>)
     .filter((r) => r.role === "vendedor" || r.role === "admin");
   const ids = Array.from(new Set(rows.map((r) => r.user_id)));
-  const map = await buildNombreMap(ids);
+  const map = await cargarIdentidadesVendedoras(ids, conCorreos);
   return ids.map((id) => ({
     id,
-    nombre: map[id] ?? UNRESOLVED_EMAIL,
-    email: map[id] ?? UNRESOLVED_EMAIL,
+    ...map.get(id)!,
   })).sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 

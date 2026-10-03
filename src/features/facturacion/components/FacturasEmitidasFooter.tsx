@@ -21,7 +21,8 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
   const { data: tc } = useExchangeRates();
   const fallbackUsdMxn = tc?.usdMxn ?? null;
   const r = sumarFacturasPorMoneda(facturas, { fallbackUsdMxn });
-  if (r.conteo === 0 && r.conteoCanceladas === 0) return null;
+  if (facturas.length === 0) return null;
+  const preparacion = facturas.length - r.conteo - r.conteoCanceladas;
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -37,18 +38,31 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[300px] text-body-sm">
                 Suma de los resultados VISIBLES (la página actual con los
-                filtros aplicados), separada por moneda y excluyendo las
-                canceladas. No incluye las demás páginas del servidor. El <strong>MXN equivalente</strong> usa el tipo
+                filtros aplicados), separada por moneda y excluyendo borradores,
+                por timbrar y canceladas. No incluye las demás páginas del servidor. El <strong>MXN equivalente</strong> usa el tipo
                 de cambio de cada factura o el TC del día como fallback — es el
-                número que cuadra contra "Facturado mes" del header.
+                importe comparable con "Facturado mes" cuando la página contiene
+                todas las facturas del mismo mes.
               </TooltipContent>
             </Tooltip>
           </div>
 
           <div className="flex flex-col">
-            <span className="text-overline">Resultados visibles</span>
+            <span className="text-overline">Filas visibles</span>
+            <span className="font-semibold tabular-nums">{facturas.length}</span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-overline">Facturas incluidas en totales</span>
             <span className="font-semibold tabular-nums">{r.conteo}</span>
           </div>
+
+          {preparacion > 0 && (
+            <div className="flex flex-col">
+              <span className="text-overline">Borrador / por timbrar (excluidas)</span>
+              <span className="font-semibold tabular-nums text-muted-foreground">{preparacion}</span>
+            </div>
+          )}
 
           <div className="flex flex-col">
             <span className="text-overline">Subtotal MXN</span>

@@ -78,7 +78,10 @@ describe("liberación de claims con ventana segura", () => {
     });
 
     it(`${rel} limpia las columnas del intento pendiente al promover`, () => {
-      expect(leer(rel)).toMatch(/pendiente_id:\s*null/);
+      const fuente = rel.endsWith("recuperar.ts")
+        ? leer("supabase/functions/facturapi-recuperar-claim/promoverFactura.ts")
+        : leer(rel);
+      expect(fuente).toMatch(/pendiente_id:\s*null/);
     });
   }
 });

@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mock, mockNombresUsuarios } = await vi.hoisted(async () => {
+const { mock, mockNombresUsuarios, mockAvailableUsers } = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
   return {
     mock: createSupabaseMock(),
     mockNombresUsuarios: vi.fn(),
+    mockAvailableUsers: vi.fn(),
   };
 });
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 vi.mock("@/features/admin/services/usuario/availableUsers", () => ({
   fetchNombresUsuarios: mockNombresUsuarios,
+  fetchAvailableUsers: mockAvailableUsers,
 }));
 
 import { 
@@ -28,6 +30,7 @@ describe("vendedoras service", () => {
     mock.tableCalls.length = 0;
     mock.resetResults();
     mockNombresUsuarios.mockReset();
+    mockAvailableUsers.mockReset();
   });
 
   it("fetchVendedorasConfig: mezcla con nombres y maneja errores de usuarios", async () => {
@@ -36,6 +39,8 @@ describe("vendedoras service", () => {
     mockNombresUsuarios.mockResolvedValueOnce([{ id: "u1", full_name: "Ana Uno" }]);
     const res = await fetchVendedorasConfig();
     expect(res[0].nombre).toBe("Ana Uno");
+    expect(res[0].email).toBeNull();
+    expect(res[0].estadoIdentidad).toBe("resuelta");
 
     // 2. buildNombreMap empty ids
     mock.setTableResult("vendedora_config", { data: [], error: null });
@@ -46,6 +51,30 @@ describe("vendedoras service", () => {
     mockNombresUsuarios.mockRejectedValueOnce(new Error("fail"));
     const resFail = await fetchVendedorasConfig();
     expect(resFail[0].nombre).toBe(UNRESOLVED_EMAIL);
+    expect(resFail[0].estadoIdentidad).toBe("error_consulta");
+  });
+
+  it("admin usa correo autorizado si falta full_name, sin convertir nombre en email", async () => {
+    mock.setTableResult("organization_members", { data: [{ user_id: "u1", role: "vendedor" }], error: null });
+    mockAvailableUsers.mockResolvedValue([{ id: "u1", full_name: null, email: "vendedora@example.test" }]);
+    const [v] = await fetchUsuariosVendedores(true, "org-prueba");
+    expect(v).toMatchObject({ nombre: "vendedora@example.test", email: "vendedora@example.test", identidadResuelta: true, estadoIdentidad: "resuelta" });
+    expect(mockNombresUsuarios).not.toHaveBeenCalled();
+    expect(mock.tableCalls[0].opArgs).toContainEqual(["organization_id", "org-prueba"]);
+  });
+
+  it("list-nombres sin nombre distingue ausencia de fallo y no pide correos privados", async () => {
+    mock.setTableResult("organization_members", { data: [{ user_id: "u1", role: "vendedor" }], error: null });
+    mockNombresUsuarios.mockResolvedValue([{ id: "u1", full_name: null }]);
+    const [v] = await fetchUsuariosVendedores();
+    expect(v).toMatchObject({ nombre: "Nombre no capturado", email: null, identidadResuelta: false, estadoIdentidad: "sin_nombre" });
+    expect(mockAvailableUsers).not.toHaveBeenCalled();
+  });
+
+  it("deshabilita etiquetas repetidas sin un correo distinguible", async () => {
+    mock.setTableResult("organization_members", { data: [{ user_id: "u1", role: "vendedor" }, { user_id: "u2", role: "vendedor" }], error: null });
+    mockNombresUsuarios.mockResolvedValue([{ id: "u1", full_name: "Ana" }, { id: "u2", full_name: "Ana" }]);
+    expect((await fetchUsuariosVendedores()).every((v) => !v.identidadResuelta)).toBe(true);
   });
 
   it("upsertVendedoraConfig: hace upsert", async () => {

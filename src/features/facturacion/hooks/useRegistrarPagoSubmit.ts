@@ -13,8 +13,6 @@ import { emitirRep, esRepYaTimbrado } from "@/features/facturacion/services/repF
 import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { invalidarTrasRep } from "./invalidarRep";
 import { useRegistrarPagoFactura } from "@/features/facturacion/hooks";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { formatCurrency } from "@/lib/formatters";
 
 import type { Moneda } from "@/types/db";
 
@@ -39,7 +37,6 @@ interface SubmitArgs {
 export function useRegistrarPagoSubmit(onSuccess: () => void) {
   const qc = useQueryClient();
   const registrar = useRegistrarPagoFactura();
-  const registrarActividad = useRegistrarActividad();
   const [timbrandoRep, setTimbrandoRep] = useState(false);
 
   const intentarTimbrarRep = async (pagoId: string, facturaId: string) => {
@@ -121,12 +118,8 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         cuenta_bancaria_id: args.cuentaBancariaId ?? null,
         client_request_id: args.clientRequestId ?? null,
       });
-      registrarActividad.mutate({
-        accion: "crear",
-        modulo: "facturas",
-        entidad_id: args.facturaId,
-        entidad_nombre: `Pago ${formatCurrency(args.monto, args.moneda)} factura ${args.facturaNumero}`,
-      });
+      // registrarPagoFactura ya registra el evento registrar_pago. Emitir
+      // "crear/facturas" aquí duplicaba el cobro y lo describía como factura.
       notifySuccess(undefined, { title: "Pago registrado" });
       // RG15: el pago quedó, pero el abono al banco no se generó (cuenta de
       // otra moneda sin TC oficial, o fallo de inserción). Antes pasaba

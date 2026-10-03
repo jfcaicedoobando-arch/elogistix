@@ -23,13 +23,23 @@ describe("sanitizeMoneyText", () => {
     expect(sanitizeMoneyText("1234,")).toBe("1234.");
   });
 
-  it("trata la coma como miles cuando le siguen más de 2 dígitos", () => {
+  it("conserva la agrupación válida de miles con comas", () => {
     expect(sanitizeMoneyText("1,234")).toBe("1234");
+    expect(sanitizeMoneyText("1,234,567")).toBe("1234567");
+    expect(sanitizeMoneyText("50,000.75")).toBe("50000.75");
   });
 
-  it("trata el punto como miles cuando le siguen exactamente 3 dígitos", () => {
-    expect(sanitizeMoneyText("50.000")).toBe("50000");
-    expect(sanitizeMoneyText("1.234")).toBe("1234");
+  it.each([
+    ["1234.567", "1234.56"],
+    ["1234.5678", "1234.56"],
+    ["1,234.567", "1234.56"],
+    ["50.000", "50.00"],
+    ["1.234", "1.23"],
+    ["0.123", "0.12"],
+    ["1234,567", "1234.56"],
+    ["1234,5678", "1234.56"],
+  ])("mantiene la magnitud de %s al limitar a centavos", (raw, expected) => {
+    expect(sanitizeMoneyText(raw)).toBe(expected);
   });
 
   it("conserva el punto decimal en los demás casos", () => {
@@ -45,6 +55,7 @@ describe("sanitizeMoneyText", () => {
   it("sólo permite negativo cuando se habilita", () => {
     expect(sanitizeMoneyText("-50")).toBe("50");
     expect(sanitizeMoneyText("-50", true)).toBe("-50");
+    expect(sanitizeMoneyText("-1234.567", true)).toBe("-1234.56");
   });
 });
 

@@ -6,6 +6,7 @@ import type { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocum
 
 const mocks = vi.hoisted(() => ({ pdf: vi.fn(), csv: vi.fn() }));
 vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: mocks.pdf }));
+vi.mock("@/pdf/emisor", () => ({ cargarEmisorEmpresa: () => Promise.resolve({ razonSocial: "Organización sintética SA" }) }));
 vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: mocks.csv }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 
@@ -24,6 +25,7 @@ describe("Cartera — contrato de descarga filtrada", () => {
     const [documento, nombre] = mocks.pdf.mock.calls[0] as [ReactElement<ComponentProps<typeof ReporteCarteraDocument>>, string];
     expect(nombre).toBe("cartera-antiguedad-2026-09-30-filtrada.pdf");
     expect(documento.props.busqueda).toBe(" FP-000007 ");
+    expect(documento.props.emisor?.razonSocial).toBe("Organización sintética SA");
     expect(documento.props.bloques[0].facturas[0]).toMatchObject({ folio: "FP-000007", saldo: "700.00", mxnCorte: "12649.70", diferencia: "399.70" });
   });
 

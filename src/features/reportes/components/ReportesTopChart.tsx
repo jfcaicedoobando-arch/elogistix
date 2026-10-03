@@ -1,12 +1,12 @@
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters";
-import { CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
+import { CHART, CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
 import { topChartHeightClass } from "@/features/reportes/domain/topChartHeight";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
       return <EmptyStateInline icon={BarChart3} message="Sin utilidad registrada en el periodo seleccionado" />;
     }
     if (data.length === 1) {
-      return <div className="flex h-full items-center justify-between gap-4 rounded-md border bg-muted/20 p-4"><p className="min-w-0 break-words font-medium">{data[0].name}</p><p className="shrink-0 text-kpi tabular-nums">{formatCurrency(data[0].profit, "USD")}</p></div>;
+      return <div className="flex h-full items-center justify-between gap-4 rounded-md border bg-muted/20 p-4"><p className="min-w-0 break-words font-medium">{data[0].name}</p><p className={cn("shrink-0 text-kpi tabular-nums", data[0].profit < 0 && "text-destructive")}>{formatCurrency(data[0].profit, "USD")}</p></div>;
     }
     return (
       <ResponsiveContainer width="100%" height="100%">
@@ -37,7 +37,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
               <XAxis
                 type="number"
                 tickCount={5}
-                domain={[0, "dataMax"]}
+                domain={([min, max]: [number, number]) => [Math.min(0, min), Math.max(0, max)]}
                 allowDecimals={false}
                 tickFormatter={(v) => formatCurrencyCompact(Number(v) || 0, "USD")}
                 tick={{ fontSize: 11 }}
@@ -51,9 +51,10 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
                 tickFormatter={(v: string) => (v && v.length > 30 ? v.slice(0, 29) + "…" : v)}
               />
               <Tooltip content={<ChartTooltip formatValue={(v) => formatCurrency(v, "USD")} />} />
+              <ReferenceLine x={0} stroke={CHART.border} />
               <Bar dataKey="profit" radius={[0, 4, 4, 0]}>
-                {data.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                {data.map((row, i) => (
+                  <Cell key={i} fill={row.profit < 0 ? CHART.destructive : CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Bar>
         </BarChart>

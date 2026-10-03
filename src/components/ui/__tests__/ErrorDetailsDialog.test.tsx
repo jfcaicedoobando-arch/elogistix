@@ -36,6 +36,9 @@ describe("ErrorDetailsDialog", () => {
     render(<ErrorDetailsDialog />);
     const next = report();
     act(() => { rememberErrorReport(next); offerErrorRecovery(next); });
+    // El recuperador permanece por debajo de los modales z-50, fuera del
+    // centro donde viven Cancelar/Guardar en formularios estrechos.
+    expect(screen.getByRole("button", { name: "Ver último error" })).toHaveClass("left-4", "z-40");
     fireEvent.click(screen.getByRole("button", { name: "Ver último error" }));
     expect(screen.getByRole("dialog")).toBeVisible();
     act(() => setAuthSnapshot({ userId: "nuevo", email: null, organizationId: "otra", organizationName: null, role: null, effectiveRole: null }));

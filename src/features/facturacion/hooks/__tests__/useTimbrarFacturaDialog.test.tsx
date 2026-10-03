@@ -107,10 +107,12 @@ describe("useTimbrarFacturaDialog", () => {
     const onClose = vi.fn();
     const mutate = setupTimbrar();
     const { result } = renderHook(
-      () => useTimbrarFacturaDialog(factura, null, null, onClose),
+      () => useTimbrarFacturaDialog(factura, null, null, onClose, { emailDestino: "fiscal@example.invalid" }),
       { wrapper: makeWrapper() },
     );
 
+    expect(result.current.enviarEmail).toBe(false);
+    act(() => result.current.setEnviarEmail(true));
     await act(async () => {
       await result.current.onConfirm();
     });
@@ -127,7 +129,7 @@ describe("useTimbrarFacturaDialog", () => {
       forma_pago_default: "01",
       metodo_pago_default: "PUE",
     });
-    expect(mockEnviar).toHaveBeenCalledWith("f-1");
+    expect(mockEnviar).toHaveBeenCalledWith("f-1", "fiscal@example.invalid");
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -173,5 +175,41 @@ describe("useTimbrarFacturaDialog", () => {
     });
     expect(mockActualizar).not.toHaveBeenCalled();
     expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("no envía sin destinatario explícito aunque se marque la opción", async () => {
+    setupTimbrar();
+    const { result } = renderHook(() => useTimbrarFacturaDialog(factura, null, null, vi.fn()), { wrapper: makeWrapper() });
+    act(() => result.current.setEnviarEmail(true));
+    await act(async () => { await result.current.onConfirm(); });
+    await waitFor(() => expect(mockGuardar).toHaveBeenCalled());
+    expect(mockEnviar).not.toHaveBeenCalled();
+  });
+
+  it("202 pendiente no envía correo ni guarda preferencias aunque exista consentimiento", async () => {
+    setupTimbrar({ mutate: vi.fn((_id, opts?: { onSuccess?: (res: unknown) => void | Promise<void> }) => {
+      void opts?.onSuccess?.({ pendiente: true, message: "Timbrado en proceso" });
+    }) });
+    const onClose = vi.fn();
+    const { result } = renderHook(() => useTimbrarFacturaDialog(factura, null, null, onClose, { emailDestino: "fiscal@example.invalid" }), { wrapper: makeWrapper() });
+    act(() => result.current.setEnviarEmail(true));
+    await act(async () => { await result.current.onConfirm(); });
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(mockEnviar).not.toHaveBeenCalled();
+    expect(mockGuardar).not.toHaveBeenCalled();
+  });
+
+  it("reinicia el consentimiento al reabrir o cambiar factura/destinatario", () => {
+    setupTimbrar();
+    const { result, rerender } = renderHook(
+      ({ id, email, open }) => useTimbrarFacturaDialog({ ...factura, id }, null, null, vi.fn(), { emailDestino: email, open }),
+      { initialProps: { id: "f-1", email: "uno@example.invalid", open: true }, wrapper: makeWrapper() },
+    );
+    act(() => result.current.setEnviarEmail(true));
+    rerender({ id: "f-1", email: "uno@example.invalid", open: false });
+    expect(result.current.enviarEmail).toBe(false);
+    act(() => result.current.setEnviarEmail(true));
+    rerender({ id: "f-2", email: "dos@example.invalid", open: true });
+    expect(result.current.enviarEmail).toBe(false);
   });
 });

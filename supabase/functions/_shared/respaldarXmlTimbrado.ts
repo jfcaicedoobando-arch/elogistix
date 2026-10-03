@@ -9,6 +9,7 @@
  * Ola 3 · Item 5 — extendido a NC y REP (v13.192.0).
  */
 import { FACTURAPI_BASE, basicAuthHeader } from "./facturapiAuth.ts";
+import { usoCfdiDesdeXml } from "./usoCfdiEfectivo.ts";
 
 // Cliente storage tipado mínimo — evita acoplarnos al createClient del caller.
 interface StorageClient {
@@ -29,6 +30,8 @@ export interface RespaldoResult {
   path: string | null;
   status: "ok" | "skipped" | "error";
   error?: string;
+  /** Valor fiscal del XML emitido, únicamente si su UUID coincide. */
+  usoCfdi?: string | null;
 }
 
 /** EF-08: timeout defensivo — este fetch va ENTRE el timbrado y el persist.
@@ -60,6 +63,8 @@ export async function respaldarXmlTimbrado(params: {
       return { path: null, status: "error", error: `facturapi_${res.status}` };
     }
     const bytes = new Uint8Array(await res.arrayBuffer());
+    const usoCfdi = params.folder === "emitidas"
+      ? usoCfdiDesdeXml(new TextDecoder().decode(bytes), params.uuid) : null;
     const path = `${params.organizationId}/${params.folder}/${params.uuid}.xml`;
     const { error } = await params.supabase.storage.from("facturas").upload(path, bytes, {
       contentType: "application/xml",
@@ -67,9 +72,9 @@ export async function respaldarXmlTimbrado(params: {
     });
     if (error) {
       const msg = (error as { message?: string }).message ?? "upload_error";
-      return { path: null, status: "error", error: msg };
+      return { path: null, status: "error", error: msg, ...(usoCfdi ? { usoCfdi } : {}) };
     }
-    return { path, status: "ok" };
+    return { path, status: "ok", ...(usoCfdi ? { usoCfdi } : {}) };
   } catch (e) {
     return { path: null, status: "error", error: (e as Error).message };
   }

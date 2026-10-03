@@ -22,9 +22,10 @@
  *   bun run audit:soft-delete -- --update # regenera la baseline
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(import.meta.dir, "..");
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = resolve(ROOT, "src");
 const BASELINE_PATH = resolve(ROOT, "scripts/audit-soft-delete-baseline.json");
 
@@ -171,7 +172,7 @@ export function auditarLecturas(): Hallazgo[] {
 }
 
 export function claveDe(h: Hallazgo): string {
-  return `${h.archivo}::${h.tabla}`;
+  return `${h.archivo.replace(/\\/g, "/")}::${h.tabla}`;
 }
 
 export function leerBaseline(): string[] {

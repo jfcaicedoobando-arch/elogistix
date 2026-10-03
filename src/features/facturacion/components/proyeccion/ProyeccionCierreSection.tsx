@@ -26,9 +26,10 @@ interface Kpis {
 interface Props {
   k: Kpis;
   mesLabel: string;
+  filtrado?: boolean;
 }
 
-export function ProyeccionCierreSection({ k, mesLabel }: Props) {
+export function ProyeccionCierreSection({ k, mesLabel, filtrado = false }: Props) {
   const profitTone = claseTonoMargen(k.margenProyPct, { umbrales: UMBRAL_MARGEN_OPERATIVO });
   return (
     <Card>
@@ -43,7 +44,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
             </Badge>
           }
         >
-          Cierre {mesLabel}
+          Cierre {mesLabel}{filtrado ? " - filtros aplicados" : ""}
         </SectionHeading>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -70,7 +71,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
           <CierreCard
             tone="info"
             icon={TrendingUp}
-            titulo="Proyectado (total del mes)"
+            titulo={filtrado ? "Proyectado (resultados filtrados)" : "Proyectado (total del mes)"}
             embarques={k.totalExpedientes}
             lineas={[
               { label: "Venta USD", value: formatCurrency(k.ventaProyUsd, "USD") },

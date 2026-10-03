@@ -9,6 +9,7 @@
 
 import { mapReceiptCancellationStatus } from "./receiptCancelacion.ts";
 import { uuidFiscalValido } from "../_shared/timbradoPendiente.ts";
+import { patchUsoCfdiEfectivo } from "../_shared/usoCfdiEfectivo.ts";
 
 
 export type FacturapiEventType =
@@ -43,6 +44,7 @@ interface EventCtx {
   status: string | null;
   uuid: string | null;
   cancellationStatus: string | null;
+  use?: unknown;
 }
 
 function extractCtx(ev: FacturapiWebhookEvent): EventCtx | null {
@@ -52,6 +54,7 @@ function extractCtx(ev: FacturapiWebhookEvent): EventCtx | null {
     facturapi_id: obj.id,
     status: typeof obj.status === "string" ? obj.status : null,
     uuid: typeof obj.uuid === "string" ? obj.uuid : null,
+    use: obj.use,
     cancellationStatus: typeof obj.cancellation_status === "string"
       ? obj.cancellation_status.toLowerCase()
       : null,
@@ -94,6 +97,7 @@ function mapInvoiceStatusUpdated(ctx: EventCtx): MappedUpdate | null {
     // perdía para siempre). El valor correcto es 'Emitida', igual que el
     // timbrado local en facturapi-emitir/emitir.ts.
     patch.estado = "Emitida";
+    if (uuidFiscalValido(ctx.uuid)) Object.assign(patch, patchUsoCfdiEfectivo(ctx));
   }
   if (Object.keys(patch).length === 0) return null;
   return {

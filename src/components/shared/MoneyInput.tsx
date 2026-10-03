@@ -15,6 +15,7 @@ import {
   normalizeMoneyText,
   parseMoneyText,
   posicionCursor,
+  sanitizeMoneyEditText,
   sanitizeMoneyText,
   valorANumeroTexto,
 } from "@/components/shared/utils/moneyInputFormat";
@@ -64,6 +65,9 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     const [text, setText] = useState<string>(() => valorANumeroTexto(value));
     const textRef = useRef(text);
     textRef.current = text;
+    // El valor esperado del pegado permite reconocerlo también en navegadores
+    // cuyo evento `input` no expone `inputType`.
+    const pasteValueRef = useRef<string | null>(null);
 
     // Sincroniza cuando el valor cambia desde fuera (reset del formulario, etc.).
     useEffect(() => {
@@ -76,7 +80,14 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const el = e.currentTarget;
       const caret = el.selectionStart ?? el.value.length;
-      const clean = sanitizeMoneyText(el.value, allowNegative);
+      const inputType = (e.nativeEvent as InputEvent).inputType ?? "";
+      const nuevaCaptura = pasteValueRef.current === el.value
+        || inputType.startsWith("insertFromPaste")
+        || inputType === "insertFromDrop" || inputType === "insertReplacementText";
+      pasteValueRef.current = null;
+      const clean = nuevaCaptura
+        ? sanitizeMoneyText(el.value, allowNegative)
+        : sanitizeMoneyEditText(el.value, textRef.current, allowNegative);
       const parsed = parseMoneyText(clean) ?? 0;
 
       // EC-11 — El tope se aplica también al teclear (antes sólo en blur): un
@@ -125,6 +136,13 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           disabled={disabled}
           placeholder={placeholder ?? "0.00"}
           onFocus={(e) => e.currentTarget.select()}
+          onPaste={(e) => {
+            const el = e.currentTarget;
+            const inicio = el.selectionStart ?? 0;
+            const final = el.selectionEnd ?? el.value.length;
+            pasteValueRef.current = el.value.slice(0, inicio)
+              + e.clipboardData.getData("text") + el.value.slice(final);
+          }}
           onChange={handleChange}
           onBlur={handleBlur}
           className={cn("text-right tabular-nums", currency && "pr-12", className)}
