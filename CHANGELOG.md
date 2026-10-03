@@ -1,12 +1,5 @@
 # Changelog
 
-## [13.824.19] - 2026-10-03
-
-- **fix(Sentry · Edge)**: SDK Deno 10.76.0 compatible con el runtime gestionado observado (Deno 2.1.4); frontend/bundler permanecen en 11.4.0 y el CLI local/CI en Deno 2.9.7.
-- **fix(Sentry · aislamiento)**: scopes manuales por solicitud con AsyncLocalStorage, sin instrumentar Deno.serve ni reemplazar el proveedor OpenTelemetry de Lovable; respuesta, excepción y check-in terminal conservados.
-- **fix(Sentry · privacidad)**: limpieza del formato de spans/transactions de SDK 10 y del nombre en sampling metadata; los identificadores técnicos válidos de traza no se confunden con teléfonos.
-- **test(Sentry)**: contratos con SDK real y transporte ficticio aprobados en Deno 2.1.4 y 2.9.7, incluyendo concurrencia, ausencia de DSN, privacidad, propagación y monitores. Despliegue Edge y recepción remota se verifican por separado.
-
 ## [13.824.18] - 2026-10-03
 
 - **fix(CxP y captura)**: conserva el pago parcial al cambiar el tipo de cambio, liquida costos con el saldo en moneda de la factura y acepta cantidades decimales sin reinterpretar puntos decimales como miles.
