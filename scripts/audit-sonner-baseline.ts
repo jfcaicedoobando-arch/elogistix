@@ -15,8 +15,10 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { sonnerLegacyPaths } from "./lib/sonnerLegacyPaths.ts";
 
-const ROOT = resolve(import.meta.dir, "..");
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const SONNER_IMPORT = /from\s+['"]sonner['"]/;
 
@@ -44,11 +46,7 @@ function parseAllowlist(): string[] {
   const cfg = readFileSync(resolve(ROOT, "eslint.config.js"), "utf8");
   // Sólo nos interesa la sección SONNER-LEGACY del bloque `no-raw-table-and-sonner`
   // (arriba de esa marca hay exclusiones de `no-raw-table` que no aplican a sonner).
-  const marker = cfg.indexOf("SONNER-LEGACY");
-  if (marker < 0) throw new Error("marker SONNER-LEGACY no encontrado en eslint.config.js");
-  const blockEnd = cfg.indexOf("\n    },\n", marker);
-  const block = cfg.slice(marker, blockEnd > 0 ? blockEnd : cfg.length);
-  const paths = [...block.matchAll(/"(src\/[^"*]+)"/g)].map((m) => m[1]);
+  const paths = sonnerLegacyPaths(cfg);
   // Wrappers autorizados adicionales (siempre válidos).
   const wrappers = [
     "src/lib/ui/appFeedback.ts",

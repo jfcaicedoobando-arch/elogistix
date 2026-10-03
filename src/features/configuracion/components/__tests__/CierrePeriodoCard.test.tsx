@@ -91,9 +91,11 @@ describe("CierrePeriodoCard", () => {
 
   it("error del servidor muestra el mensaje traducido en español", async () => {
     valorGuardado = "2026-01-31";
-    actualizarCierrePeriodo.mockRejectedValue(
+    const errorOriginal = Object.assign(
       new Error("LC_CIERRE_MOTIVO_REQUERIDO: para reabrir o retroceder..."),
+      { code: "P0001", requestId: "cierre-test-01" },
     );
+    actualizarCierrePeriodo.mockRejectedValue(errorOriginal);
     renderCard();
 
     fireEvent.click(screen.getByRole("button", { name: /Reabrir periodo/i }));
@@ -105,5 +107,9 @@ describe("CierrePeriodoCard", () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     const [, opts] = notifyError.mock.calls[0];
     expect(opts.description).toMatch(/mínimo 10 caracteres/i);
+    expect(opts.error).toBe(errorOriginal);
+    expect(opts.method).toBe("actualizarCierrePeriodo");
+    expect(opts.context).toEqual({ organizationId: "org-1", fechaCierre: null });
+    expect(opts.context).not.toHaveProperty("motivo");
   });
 });
