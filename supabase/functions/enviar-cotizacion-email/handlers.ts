@@ -28,7 +28,7 @@ import { jsonResponse } from "../_shared/response.ts";
 export { isEmail };
 
 export async function handlePrepare(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   pdfPath: string,
   cors: Record<string, string>,
   userId: string,
@@ -99,7 +99,7 @@ function buildEstadoEnvio(anyOk: boolean, anyFail: boolean): string {
 }
 
 async function updateCotizacionEstado(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   cot: Cotizacion,
   anyOk: boolean,
   marcarEnviada: boolean
@@ -118,7 +118,7 @@ async function updateCotizacionEstado(
 }
 
 export interface SendParams {
-  admin: ReturnType<typeof createClient>;
+  admin: AdminClient;
   supabaseUrl: string;
   supabaseServiceKey: string;
   cot: Cotizacion;
@@ -133,7 +133,7 @@ export interface SendParams {
 
 
 interface PersistParams {
-  admin: ReturnType<typeof createClient>;
+  admin: AdminClient;
   cot: Cotizacion;
   userId: string;
   userEmail: string;
@@ -183,7 +183,7 @@ async function persistEnvioAndLog(params: PersistParams): Promise<string | null>
  * rechazo o `null` si puede continuar.
  */
 async function validarEnvio(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   cot: Cotizacion,
   userId: string,
   parsed: SendBodyParsed,

@@ -71,7 +71,7 @@ export function parseSendBody(body: Record<string, unknown>): SendBodyParsed {
  * así que es imposible firmar un archivo ajeno.
  */
 export async function resolverPdfPath(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   cot: Cotizacion,
 ): Promise<string | null> {
   const prefijo = `${cot.organization_id}/${cot.id}`;
@@ -85,7 +85,7 @@ export async function resolverPdfPath(
 
 /** W-04: datos del ejecutivo desde la sesión (no del body, evita suplantación). */
 export async function resolverEjecutivo(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   userId: string,
   userEmail: string,
 ): Promise<Ejecutivo> {

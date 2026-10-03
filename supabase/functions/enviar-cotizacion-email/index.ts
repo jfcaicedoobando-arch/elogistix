@@ -40,7 +40,7 @@ async function authenticateRequest(req: Request, url: string, anon: string, json
 }
 
 async function loadCotizacion(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   cotizacionId: string,
   userId: string,
   json: JsonFn,
