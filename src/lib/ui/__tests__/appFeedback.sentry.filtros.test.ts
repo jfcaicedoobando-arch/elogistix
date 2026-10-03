@@ -5,7 +5,8 @@
  * - JAVASCRIPT-REACT-5V / 1D: CfdiUploadError en fase de red del dispositivo
  *   → no se reporta; fase `response` (gateway respondió error) sí.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 import {
   isExpectedBusinessRule,
   isTransientCfdiUploadNetwork,
@@ -13,13 +14,13 @@ import {
 } from "../appFeedback.sentry";
 import { CfdiUploadError } from "@/features/cxp/services";
 
-function cfdiError(phase: "preflight" | "request" | "response"): CfdiUploadError {
+function cfdiError(phase: "preflight" | "request" | "response", online = true): CfdiUploadError {
   return new CfdiUploadError(
     "No pudimos contactar al servidor desde este dispositivo.",
     {
       attemptCount: 3,
       latencyMs: 4700,
-      online: true,
+      online,
       xmlSize: 1024,
       xmlName: "factura.xml",
       lastStatus: null,
@@ -55,13 +56,15 @@ describe("shouldReportToSentry — reglas de negocio esperadas", () => {
 });
 
 describe("shouldReportToSentry — CfdiUploadError de red", () => {
-  it("filtra fase request (red del dispositivo)", () => {
-    expect(isTransientCfdiUploadNetwork(cfdiError("request"))).toBe(true);
-    expect(shouldReportToSentry(cfdiError("request"))).toBe(false);
+  it("filtra request sólo con evidencia de dispositivo offline", () => {
+    expect(isTransientCfdiUploadNetwork(cfdiError("request", false))).toBe(true);
+    expect(shouldReportToSentry(cfdiError("request", false))).toBe(false);
+    expect(shouldReportToSentry(cfdiError("request"))).toBe(true);
   });
 
-  it("filtra fase preflight (CORS/origen)", () => {
-    expect(shouldReportToSentry(cfdiError("preflight"))).toBe(false);
+  it("conserva preflight online; CORS mal configurado es reportable", () => {
+    expect(shouldReportToSentry(cfdiError("preflight"))).toBe(true);
+    expect(shouldReportToSentry(cfdiError("preflight", false))).toBe(false);
   });
 
   it("mantiene reportable la fase response (gateway respondió error)", () => {

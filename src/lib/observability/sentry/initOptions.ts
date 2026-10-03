@@ -4,6 +4,7 @@
  * inmutables y funciones sin side-effects que consume `initSentry()`.
  */
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
+import { scrubTelemetryData } from "../scrubTelemetryData";
 
 /** Lee un sample rate opcional de env, clamp a [0,1]. */
 export function readRate(key: string, fallback: number): number {
@@ -37,12 +38,6 @@ export const DENY_URLS: Array<string | RegExp> = [
 
 // Patrones de mensajes de error que jamás queremos reportar.
 export const IGNORE_ERRORS: Array<string | RegExp> = [
-  /Failed to fetch dynamically imported module/i,
-  /Importing a module script failed/i,
-  /error loading dynamically imported module/i,
-  /Loading chunk \d+ failed/i,
-  /ChunkLoadError/i,
-  /Should have a queue\. This is likely a bug in React/i,
   /Invalid Refresh Token: Refresh Token Not Found/i,
   /AbortError: Lock broken by another request/i,
   /Lock broken by another request with the 'steal' option/i,
@@ -50,13 +45,8 @@ export const IGNORE_ERRORS: Array<string | RegExp> = [
   /ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i,
   /Non-Error promise rejection captured/i,
   /Object Not Found Matching Id/i,
-  /^Load failed$/i,
-  /NetworkError when attempting to fetch resource/i,
   /Extension context invalidated/i,
   /The operation was aborted/i,
-  // 13.733.0 (Sentry JAVASCRIPT-REACT-5F): extensiones/traductores mueven
-  // nodos bajo React y rompen el commit del DOM. No es código nuestro.
-  /Failed to execute '(insertBefore|removeChild)' on 'Node'/i,
   /is known to be weak and easy to guess/i,
 ];
 
@@ -89,5 +79,6 @@ export function scrubBreadcrumb<T extends {
   if (typeof breadcrumb.message === "string") {
     breadcrumb.message = scrubPii(breadcrumb.message);
   }
+  breadcrumb.data = scrubTelemetryData(breadcrumb.data) as typeof breadcrumb.data;
   return breadcrumb;
 }

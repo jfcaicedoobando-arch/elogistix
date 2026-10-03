@@ -3,7 +3,8 @@
  * de PII sobre eventos. Separado de sentry.ts para mantener archivos ≤200 líneas.
  */
 import type * as Sentry from "@sentry/react";
-import { scrubPii, scrubUrl } from "@/lib/observability/piiScrub";
+import { scrubUrl } from "@/lib/observability/piiScrub";
+import { scrubTelemetryData, scrubTelemetryText } from "../scrubTelemetryData";
 
 /** Detecta si un error proviene de React Refresh / HMR de Vite.
  *  Ocurre cuando un bundle stale intenta re-renderizar y referencia
@@ -64,8 +65,9 @@ function scrubBreadcrumb(b: { data?: unknown; message?: unknown }): void {
     }
   }
   if (typeof b.message === "string") {
-    b.message = scrubPii(b.message);
+    b.message = scrubTelemetryText(b.message);
   }
+  if (data) b.data = scrubTelemetryData(data);
 }
 
 export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
@@ -77,18 +79,22 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   }
   scrubHeaders(event.request?.headers as Record<string, unknown> | undefined);
   if (typeof event.message === "string") {
-    event.message = scrubPii(event.message);
+    event.message = scrubTelemetryText(event.message);
   }
   const values = event.exception?.values;
   if (values) {
     for (const v of values) {
-      if (typeof v.value === "string") v.value = scrubPii(v.value);
+      if (typeof v.value === "string") v.value = scrubTelemetryText(v.value);
     }
   }
   // F5: limpiar URLs sensibles en breadcrumbs (navigation / ui.click / fetch / xhr).
   if (Array.isArray(event.breadcrumbs)) {
     for (const b of event.breadcrumbs) scrubBreadcrumb(b);
   }
+  event.extra = scrubTelemetryData(event.extra) as typeof event.extra;
+  event.contexts = scrubTelemetryData(event.contexts) as typeof event.contexts;
+  event.tags = scrubTelemetryData(event.tags) as typeof event.tags;
+  event.request = scrubTelemetryData(event.request) as typeof event.request;
   return event;
 }
 
@@ -105,8 +111,9 @@ export function computePostgrestFingerprint(
   exc: unknown,
   routePath: string | undefined,
 ): string[] | null {
-  const err = exc as { code?: unknown; name?: unknown } | undefined;
-  const code = typeof err?.code === "string" ? err.code : null;
+  const err = exc as { code?: unknown; name?: unknown; cause?: { code?: unknown } } | undefined;
+  const rawCode = err?.code ?? err?.cause?.code;
+  const code = typeof rawCode === "string" ? rawCode : null;
   if (!code) return null;
   // Filtro barato: sólo códigos SQLSTATE (5 chars alfanuméricos) o PostgREST.
   if (!/^[A-Z0-9]{5}$/.test(code) && !code.startsWith("PGRST")) return null;
@@ -121,14 +128,14 @@ const SAMPLE_RULES: ReadonlyArray<{ pattern: RegExp; rate: number }> = [
   { pattern: /^\/(legal|recursos)(\/|$)/i, rate: 0 },
   { pattern: /^\/dev(\/|$)/i, rate: 0 },
   // 100% — flujos críticos de negocio
-  { pattern: /\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i, rate: 1.0 },
+  { pattern: /^\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturacion\/[^/]+|conciliacion)(\/|$)/i, rate: 1.0 },
   { pattern: /^\/(compras|costeo)/i, rate: 1.0 },
   { pattern: /^\/crm\/(leads|oportunidades)\//i, rate: 1.0 },
   { pattern: /^\/portal\/(embarques|cotizaciones|facturas)\/[^/]+/i, rate: 1.0 },
   // 50% — financieros / reportes / portal cliente / CRM general
   { pattern: /^\/crm/i, rate: 0.5 },
   { pattern: /^\/reportes/i, rate: 0.5 },
-  { pattern: /^\/(profit|tesoreria|comisiones|cxc|cxp|cartera|proformas)/i, rate: 0.5 },
+  { pattern: /^\/(profit|tesoreria|comisiones|cxc|cxp|cartera|proformas|facturacion)/i, rate: 0.5 },
   { pattern: /^\/portal/i, rate: 0.5 },
   // 30% — auditoría / admin
   { pattern: /^\/(auditoria|admin)/i, rate: 0.3 },
@@ -146,16 +153,12 @@ export function sampleByRoute(ctx: {
   name?: string;
   attributes?: Record<string, unknown>;
   location?: { pathname?: string };
+  inheritOrSampleWith?: (rate: number) => number;
+  parentSampled?: boolean;
 }): number {
-  const path =
-    ctx.location?.pathname ??
-    (typeof window !== "undefined" ? window.location.pathname : "") ??
-    "";
-
-  for (const rule of SAMPLE_RULES) {
-    if (rule.pattern.test(path)) return rule.rate;
-  }
-  return 0.1;
+  const namedRoute = ctx.name?.startsWith("/") ? ctx.name : undefined;
+  const path = ctx.location?.pathname ?? namedRoute ??
+    (typeof window !== "undefined" ? window.location.pathname : "");
+  const rate = SAMPLE_RULES.find((rule) => rule.pattern.test(path))?.rate ?? 0.1;
+  return ctx.inheritOrSampleWith?.(rate) ?? (ctx.parentSampled == null ? rate : Number(ctx.parentSampled));
 }
-
-

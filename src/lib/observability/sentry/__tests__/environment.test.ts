@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const sentryMock = vi.hoisted(() => ({
   init: vi.fn(),
+  getClient: vi.fn(() => ({})),
   setTag: vi.fn(),
   reactRouterV7BrowserTracingIntegration: vi.fn(() => ({ name: "tracing" })),
   replayIntegration: vi.fn(() => ({ name: "replay" })),
@@ -23,6 +24,9 @@ const sentryMock = vi.hoisted(() => ({
 
 
 vi.mock("@sentry/react", () => sentryMock);
+vi.mock("@sentry/react/react-router", () => ({
+  reactRouterBrowserTracingIntegration: () => ({ name: "tracing" }),
+}));
 
 async function freshInit() {
   vi.resetModules();
@@ -112,5 +116,20 @@ describe("TRACE_PROPAGATION_TARGETS", () => {
     expect(matches("https://librecarga.com/dashboard")).toBe(true);
     // Negativo: cualquier otro origen NO debe matchear.
     expect(matches("https://google.com/")).toBe(false);
+  });
+});
+
+describe("SDK 11 initialization", () => {
+  it("retries failed initialization and only signals readiness after success", async () => {
+    vi.resetModules();
+    sentryMock.init.mockImplementationOnce(() => { throw new Error("mock initialization failure"); });
+    const mod = await import("../core");
+    expect(() => mod.initSentry()).toThrow("mock initialization failure");
+    expect(mod.isSentryReady()).toBe(false);
+    mod.initSentry();
+    expect(mod.isSentryReady()).toBe(true);
+    const options = sentryMock.init.mock.calls.at(-1)?.[0];
+    expect(options.beforeSendSpan).toBeTypeOf("function");
+    expect(options).not.toHaveProperty("beforeSendTransaction");
   });
 });

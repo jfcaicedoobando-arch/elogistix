@@ -8,8 +8,9 @@ import { AuthProvider } from "./lib/contexts/AuthContext";
 import { OrganizationProvider } from "./lib/contexts/OrganizationContext";
 import { ThemeProvider } from "./lib/contexts/ThemeContext";
 import { queryClient } from "./lib/query/queryClient";
-import { renderBootstrapFallback } from "./lib/bootstrap/renderBootstrapFallback";
 import { startServices } from "./lib/bootstrap/startServices";
+import { reactErrorHandlers } from "./lib/bootstrap/reactErrorHandlers";
+import { registerEarlyErrorCapture } from "./lib/bootstrap/earlyErrorCapture";
 import {
   registerChunkRecoveryListeners,
   syncAppVersion,
@@ -17,14 +18,15 @@ import {
 
 syncAppVersion();
 registerChunkRecoveryListeners();
-startServices(queryClient);
+const removeEarlyListeners = registerEarlyErrorCapture();
+void startServices(queryClient).finally(removeEarlyListeners);
 
 // Red de seguridad de arranque: si el montaje raíz lanza antes del primer
 // render (p. ej. un proveedor de contexto que falla al inicializar), el DOM
 // quedaría vacío = pantalla en blanco sin explicación. Aquí lo convertimos en
 // una pantalla de recuperación con botón "Recargar".
 try {
-  createRoot(document.getElementById("root")!).render(
+  createRoot(document.getElementById("root")!, reactErrorHandlers).render(
     <StrictMode>
       {/* QueryClientProvider debe envolver a AuthProvider: el perfil de usuario
           se resuelve con TanStack Query (M9). */}
@@ -40,5 +42,5 @@ try {
     </StrictMode>
   );
 } catch (error) {
-  renderBootstrapFallback(error);
+  reactErrorHandlers.onUncaughtError(error, {});
 }

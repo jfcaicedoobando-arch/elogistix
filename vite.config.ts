@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from "@sentry/bundler-plugins/vite";
 import { readAppVersion } from "./scripts/lib/readAppVersion";
 import { verificarHtmlBundle, type SalidaBundle } from "./scripts/lib/verifyHtmlBundle";
 
@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => {
       org: "elogistix",
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+      telemetry: false,
       // Empata con `release` runtime en src/lib/observability/sentry/core.ts.
       release: { name: `libre-carga@${readAppVersion(__dirname)}` },
       sourcemaps: {
@@ -147,5 +148,3 @@ export default defineConfig(({ mode }) => {
   },
   };
 });
-
-

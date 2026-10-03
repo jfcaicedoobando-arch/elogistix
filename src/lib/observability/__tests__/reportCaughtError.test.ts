@@ -101,12 +101,13 @@ describe("reportCaughtError", () => {
     const call = calls[calls.length - 1];
     expect(call[0]).toBeInstanceOf(Error);
     expect((call[0] as Error).message).toBe('invalid input syntax for type date: ""');
-    expect(call[1].extra.original).toBe(pgError);
+    expect(call[1].extra.original).toEqual(pgError);
   });
 
   it("descarta violaciones 23514 (validaciones de negocio esperadas)", async () => {
     const pgError = {
       code: "23514",
+      expected: true,
       message: "Tu rol requiere vincular una cotización Aceptada.",
       hint: "Selecciona una cotización en el paso 1.",
     };
@@ -138,4 +139,3 @@ describe("reportCaughtError", () => {
     expect(mocks.captureException).toHaveBeenCalledTimes(1);
   });
 });
-

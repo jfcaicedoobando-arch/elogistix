@@ -38,7 +38,7 @@ describe("syncAppVersion", () => {
 /** Registro de listeners en un target falso, sin tocar `window`. */
 function registrar(isChunkError: (e: unknown) => boolean) {
   const handlers = new Map<string, (event: unknown) => void>();
-  const recover = vi.fn();
+  const recover = vi.fn(() => true);
   registerChunkRecoveryListeners({
     target: {
       addEventListener: ((tipo: string, h: (event: unknown) => void) => {

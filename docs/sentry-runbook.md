@@ -3,14 +3,17 @@
 Documento de gobierno para la implementación de Sentry (front + edge functions).
 Fuente de la verdad para on-call y para futuras auditorías.
 
-> Revisión documental: 2026-09-26. Describe código/configurable; no certifica
+> Revisión documental: 2026-10-02. React/Core, Deno y bundler plugins: 11.4.0.
+> Describe código/configurable; no certifica
 > alertas, destinatarios, retención o crons activos en el dashboard remoto.
 
 ## 1. Piezas y dónde viven
 
 | Capa | Archivo | Función |
 | --- | --- | --- |
-| Init front | `src/lib/observability/sentry/core.ts` | Boot dinámico (idle callback), integrations, `beforeSend` |
+| Init front | `src/lib/observability/sentry/core.ts` | Boot dinámico inmediato; `runtime.ts` comparte readiness |
+| Spans SDK 11 | `src/lib/observability/sentry/spanPrivacy.ts` | `beforeSendSpan`, formato streamed |
+| Captura única | `src/lib/observability/captureExceptionOnce.ts` | Query/UI/React comparten la identidad del fallo |
 | Helpers puros | `src/lib/observability/sentry/helpers.ts` | `sampleByRoute`, `scrubEventPii`, `computePostgrestFingerprint` |
 | Drop/env | `src/lib/observability/sentry/dropPredicate.ts` | Filtros de eventos ruidosos |
 | User scope | `src/lib/observability/sentry/user.ts` | `syncSentryUser`, `syncSentryActiveOrg` |
@@ -31,6 +34,14 @@ Fuente de la verdad para on-call y para futuras auditorías.
 **Edge (Deno):**
 - `SENTRY_DSN_EDGE` — DSN del proyecto. Sin él, todo el wrapper es no-op.
 - `DENO_ENV` / `SUPABASE_ENV` — determina `environment`.
+- `SENTRY_RELEASE_EDGE` — commit/build de despliegue; alternativa `DENO_DEPLOYMENT_ID`.
+  Sin ambos se etiqueta `release_versioned=false`; no confundirlo con una release verificable.
+- `SENTRY_CRON_MONITOR_SLUG` — allowlist de slugs separados por comas; vacío desactiva check-ins.
+
+**Build:** `SENTRY_AUTH_TOKEN` es secreto de build, nunca `VITE_*`.
+Se usa `@sentry/bundler-plugins/vite`; release coincide con runtime.
+Sin token no se generan maps de producción. `BUILD_SOURCEMAPS=false` también
+los desactiva; verificar subida real antes de prometer stack legible.
 
 ## 3. Envolturas obligatorias
 
@@ -45,30 +56,38 @@ El test `src/__tests__/architecture/sentry-edge-wrapping.test.ts` bloquea CI si
 faltas al contrato. Cuando agregues una función crítica nueva, agrégala al array
 `CRITICAL` del test.
 
-Para funciones programadas usar `withCronMonitor(fn, slug, handler, cfg)` en
-lugar de `wrapEdgeHandler` — genera check-ins automáticos en Sentry Crons.
+Para funciones programadas usar `withCronMonitor(fn, slug, handler, cfg)` y
+habilitar su slug por env. Envía check-in inicial/final y hace flush después
+del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 
 ## 4. Trazas distribuidas front → edge
 
 - El front adjunta `sentry-trace` + `baggage` a fetches que caen en
   `TRACE_PROPAGATION_TARGETS` (functions/rest de Supabase, librecarga.com).
 - `corsHeaders` permite ambos headers (ver `supabase/functions/_shared/cors.ts`).
-- `wrapEdgeHandler` llama a `Sentry.continueTrace()` cuando detecta los headers,
-  así el span del edge cuelga de la transaction del browser.
+- `wrapEdgeHandler` crea isolation scope por request, continúa la traza y
+  abre `http.server` con fn/request ID/status; también traza requests sin padre.
+- El frontend envuelve `Routes` con `wrapReactRouterRouting` y re-renderiza
+  tras init sin remount de formularios. Los nombres usan patrones de ruta.
 - Verificar en Sentry → Performance → una transaction del front debe mostrar
   span hijo con `fn: <edge-function>`.
 
 ## 5. Filtrado de ruido y PII
 
-- `IGNORE_ERRORS` en `initOptions.ts` bloquea familia de errores conocidos
-  (ChunkLoadError, Refresh Token, ResizeObserver, Load failed…).
+- `IGNORE_ERRORS` bloquea sólo ruido conocido (auth esperada, extensiones, ResizeObserver).
+  ChunkLoadError agotado, online Failed to fetch, React queue y 5xx son reportables.
 - `DENY_URLS` bloquea extensiones y GTM.
 - `scrubEventPii` redacta `email`, `rfc`, `tax_id`, `phone` en `message`,
   `breadcrumbs`, `request.url`.
 - `beforeBreadcrumb` recorta bodies de fetch/xhr contra `isSensitiveApiUrl`.
 - Replay: `maskAllText`, `maskAllInputs`, `blockAllMedia` (v13.310.0).
-- Edge extras: `scrubExtraDeep` redacta claves con `password`, `token`,
-  `authorization`, `apikey`, `cookie`, `bearer`.
+- Front y Edge comparten `supabase/functions/_shared/piiScrub.ts` y
+  `scrubTelemetryData.ts`: extra/context/cause/query keys/spans, claves camelCase
+  y credenciales/PII en texto. Traversal acotado; ciclos y exceso se truncan.
+- SQLSTATE 23514/23505/P0001 ni un prefijo LC_ genérico prueban que sea esperado.
+  Usar `expected=true` en validaciones comprobadas; `expected=false` fuerza reporte.
+- Logout limpia usuario, tenant, rol y organización activa; tags para eventos
+  y `setAttributes` para spans SDK 11. No transmitir email como user metadata.
 
 **Regla:** si agregas un campo con PII (RFC, email, teléfono, CURP, dirección),
 verifica que `scrubEventPii` lo cubre antes de mergear.
@@ -108,8 +127,8 @@ verifica que `scrubEventPii` lo cubre antes de mergear.
       (que ya rutea a Sentry con contexto), no `captureException` directo.
 - [ ] Campo PII nuevo → cubrir en `scrubEventPii` + regex en `piiScrub.ts`.
 - [ ] Cron nuevo → `withCronMonitor` con schedule real (no `interval` genérico).
-- [ ] Error dominio (409/422 esperado) → agregar a `IGNORE_ERRORS` o retornar
-      antes del throw.
+- [ ] Error de dominio esperado → `expected=true` explícito o regla de dominio
+      precisa en `expectedTelemetryError.ts`; nunca filtrar una familia SQL entera.
 
 ## 10. Referencias internas
 
@@ -117,3 +136,14 @@ verifica que `scrubEventPii` lo cubre antes de mergear.
   fiscal services), `sentry/__tests__/*` (unit).
 - Cerrar issues después de verificar la corrección y su despliegue; mantener
   evidencia de versión/ruta, no ocultar eventos para simular cierre.
+
+## 11. Validación operativa pendiente de dashboard/despliegue
+
+- Confirmar DSN/release/dist del deploy, Debug IDs/maps subidos y stack simbolizado.
+- Verificar trace front→edge, tenant/rol del usuario actual y ninguno anterior al logout.
+- Probar feedback/screenshot y Replay; túnel conserva bytes y expone Retry-After /
+  X-Sentry-Rate-Limits, con timeout de upstream de 5 s y body máximo de 1 MiB.
+- Medir descartes/rate limiting del túnel (60 requests/min/IP); no ampliar cuota
+  ni muestreo a ciegas, especialmente en una oficina con IP compartida.
+- El contrato Deno usa SDK real y transporte falso: valida aislamiento, privacidad,
+  trazas/check-ins; no demuestra que secretos/alertas del servicio remoto estén configurados.

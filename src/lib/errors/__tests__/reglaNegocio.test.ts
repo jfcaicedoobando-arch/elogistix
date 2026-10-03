@@ -14,7 +14,7 @@ describe("ReglaNegocioError", () => {
     expect(isExpectedBusinessError(err)).toBe(true);
   });
 
-  it("los códigos LC_* son esperados con cualquier ERRCODE (22023, no sólo P0001)", () => {
+  it("la regla conocida de moneda CRM es esperada con cualquier ERRCODE", () => {
     expect(
       isExpectedBusinessError({ code: "22023", message: "LC_CRM_MONEDA_INCOMPATIBLE: …" }),
     ).toBe(true);
@@ -22,7 +22,11 @@ describe("ReglaNegocioError", () => {
 
   it("un error técnico real sigue reportándose", () => {
     expect(
-      isExpectedBusinessError({ code: "42501", message: "permission denied for function foo" }),
+      isExpectedBusinessError({ code: "42501", expected: false, message: "permission denied for function foo" }),
     ).toBe(false);
+  });
+
+  it("un LC_* desconocido no se supone validación de negocio", () => {
+    expect(isExpectedBusinessError({ code: "P0001", message: "LC_NEW_UNEXPECTED_FAILURE" })).toBe(false);
   });
 });

@@ -18,6 +18,7 @@ const ALLOWLIST = new Set<string>([
   // Núcleo del wrapper.
   "src/lib/observability/logger.ts",
   "src/lib/observability/reportCaughtError.ts",
+  "src/lib/observability/captureExceptionOnce.ts",
   "src/lib/observability/sentry/core.ts",
   "src/lib/observability/sentry/helpers.ts",
   "src/lib/observability/sentry/user.ts",
