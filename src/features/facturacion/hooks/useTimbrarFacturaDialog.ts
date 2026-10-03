@@ -2,11 +2,7 @@
  * useTimbrarFacturaDialog — extrae el estado + efecto + handler de
  * `DialogTimbrarFactura` para mantener el componente por debajo de las
  * 200 líneas (Power of 10).
- *
- * v13.269.0: migrado a React Query para estandarizar mutaciones. Los tres
- * side-effects imperativos (actualizar datos fiscales previo al timbrado,
- * persistir defaults del cliente, enviar CFDI por email) viven ahora como
- * `useMutation` con `mutationKey` estable e invalidación de caches.
+ * Las mutaciones separan guardar datos, timbrar y enviar el CFDI confirmado.
  */
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,6 +21,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
 import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
+import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 
 interface FacturaLike {
   id: string;
@@ -65,6 +62,7 @@ export function useTimbrarFacturaDialog(
   cliente: ClienteFiscalRow | null | undefined,
   defaults: DefaultsFacturacionCliente | null | undefined,
   onClose: () => void,
+  { emailDestino, open = true }: { emailDestino?: string | null; open?: boolean } = {},
 ) {
   const qc = useQueryClient();
   const timbrar = useTimbrarFactura();
@@ -73,7 +71,7 @@ export function useTimbrarFacturaDialog(
   const [usoCfdi, setUsoCfdi] = useState(initial.usoCfdi);
   const [formaPago, setFormaPago] = useState(initial.formaPago);
   const [metodoPago, setMetodoPago] = useState(initial.metodoPago);
-  const [enviarEmail, setEnviarEmail] = useState(true);
+  const [enviarEmail, setEnviarEmail] = useState(false);
   const [modoExpandido, setModoExpandido] = useState(false);
 
   // Mutación 1 — persiste los datos fiscales elegidos antes del timbrado.
@@ -114,7 +112,7 @@ export function useTimbrarFacturaDialog(
   // Mutación 3 — envío del CFDI por email tras timbrado exitoso.
   const enviarCfdi = useMutation({
     mutationKey: queryKeys.facturacion.enviarCfdiEmail,
-    mutationFn: (facturaId: string) => enviarCfdiFactura(facturaId),
+    mutationFn: (v: { facturaId: string; email: string }) => enviarCfdiFactura(v.facturaId, v.email),
     onSuccess: (r) => {
       toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
     },
@@ -137,6 +135,8 @@ export function useTimbrarFacturaDialog(
   const defaultsFormaPago = defaults?.forma_pago;
   const defaultsMetodoPago = defaults?.metodo_pago;
 
+  useEffect(() => { setEnviarEmail(false); }, [facturaId, open, emailDestino]);
+
   useEffect(() => {
     if (!facturaId) return;
     const usoCfdi = facturaUsoCfdi ?? defaultsUsoCfdi ?? clienteUsoCfdi ?? "G03";
@@ -157,7 +157,9 @@ export function useTimbrarFacturaDialog(
       facturaId: factura.id, uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
     });
     timbrar.mutate(factura.id, {
-      onSuccess: async () => {
+      onSuccess: async (res) => {
+        // Un 202 aún no es CFDI timbrado: no autoriza enviar correo.
+        if (esPendiente(res)) { onClose(); return; }
         if (factura.cliente_id) {
           await guardarDefaults.mutateAsync({
             clienteId: factura.cliente_id,
@@ -166,8 +168,8 @@ export function useTimbrarFacturaDialog(
             metodo_pago_default: metodoPago,
           }).catch(() => undefined);
         }
-        if (enviarEmail) {
-          await enviarCfdi.mutateAsync(factura.id).catch(() => undefined);
+        if (enviarEmail && emailDestino) {
+          await enviarCfdi.mutateAsync({ facturaId: factura.id, email: emailDestino }).catch(() => undefined);
         }
         onClose();
       },

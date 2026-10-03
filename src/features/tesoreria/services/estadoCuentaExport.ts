@@ -5,6 +5,7 @@
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { toCsv } from "@/lib/csv/serializeCsv";
 import type { EstadoCuentaBancario, MovimientoEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
+import { totalesVisibles, type FiltrosEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
 
 export interface FilaEstadoCuentaExport {
   fecha: string;
@@ -63,6 +64,26 @@ export function resumenEstadoCuenta(estado: EstadoCuentaBancario): {
     entradas: formatCurrency(estado.total_entradas, m),
     salidas: formatCurrency(estado.total_salidas, m),
     saldoFinal: formatCurrency(estado.saldo_final, m),
+  };
+}
+
+/** Alcance de la tabla exportada; el saldo corrido sigue siendo el de la cuenta. */
+export function alcanceEstadoCuentaExport(
+  estado: EstadoCuentaBancario,
+  movimientos: readonly MovimientoEstadoCuenta[],
+  filtros: FiltrosEstadoCuenta,
+): { filtro: string; movimientosVisibles: number; movimientosPeriodo: number; entradas: string; salidas: string } {
+  const totales = totalesVisibles(movimientos);
+  const etiquetas = [
+    filtros.texto.trim() ? `Búsqueda: ${filtros.texto.trim()}` : "",
+    filtros.tipo === "entradas" ? "Tipo: entradas" : filtros.tipo === "salidas" ? "Tipo: salidas" : "",
+  ].filter(Boolean);
+  return {
+    filtro: etiquetas.length ? etiquetas.join(" | ") : "Sin filtros de búsqueda o tipo",
+    movimientosVisibles: movimientos.length,
+    movimientosPeriodo: estado.movimientos.length,
+    entradas: formatCurrency(totales.entradas, estado.moneda),
+    salidas: formatCurrency(totales.salidas, estado.moneda),
   };
 }
 

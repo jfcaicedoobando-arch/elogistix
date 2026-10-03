@@ -15,8 +15,11 @@ import {
   normalizeMoneyText,
   parseMoneyText,
   posicionCursor,
+  sanitizeMoneyEditText,
+  sanitizeMoneyReplacementText,
   sanitizeMoneyText,
   valorANumeroTexto,
+  type MoneyTextSelection,
 } from "@/components/shared/utils/moneyInputFormat";
 
 export interface MoneyInputProps {
@@ -64,6 +67,13 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     const [text, setText] = useState<string>(() => valorANumeroTexto(value));
     const textRef = useRef(text);
     textRef.current = text;
+    // El valor esperado del pegado permite reconocerlo también en navegadores
+    // cuyo evento `input` no expone `inputType`.
+    const pasteRef = useRef<{ raw: string; selection: MoneyTextSelection } | null>(null);
+    const selectionRef = useRef<MoneyTextSelection | null>(null);
+    const readSelection = (el: HTMLInputElement): MoneyTextSelection => ({
+      value: el.value, start: el.selectionStart ?? 0, end: el.selectionEnd ?? el.value.length,
+    });
 
     // Sincroniza cuando el valor cambia desde fuera (reset del formulario, etc.).
     useEffect(() => {
@@ -76,7 +86,18 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const el = e.currentTarget;
       const caret = el.selectionStart ?? el.value.length;
-      const clean = sanitizeMoneyText(el.value, allowNegative);
+      const inputType = (e.nativeEvent as InputEvent).inputType ?? "";
+      const pegado = pasteRef.current?.raw === el.value ? pasteRef.current : null;
+      const nuevaCaptura = !!pegado
+        || inputType.startsWith("insertFromPaste")
+        || inputType === "insertFromDrop" || inputType === "insertReplacementText";
+      pasteRef.current = null;
+      const seleccion = pegado?.selection ?? selectionRef.current;
+      const clean = nuevaCaptura
+        ? sanitizeMoneyReplacementText(
+          el.value, seleccion?.value === textRef.current ? seleccion : null, allowNegative,
+        )
+        : sanitizeMoneyEditText(el.value, textRef.current, allowNegative);
       const parsed = parseMoneyText(clean) ?? 0;
 
       // EC-11 — El tope se aplica también al teclear (antes sólo en blur): un
@@ -125,6 +146,16 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           disabled={disabled}
           placeholder={placeholder ?? "0.00"}
           onFocus={(e) => e.currentTarget.select()}
+          onSelect={(e) => { selectionRef.current = readSelection(e.currentTarget); }}
+          onBeforeInput={(e) => { selectionRef.current = readSelection(e.currentTarget); }}
+          onPaste={(e) => {
+            const selection = readSelection(e.currentTarget);
+            pasteRef.current = {
+              selection,
+              raw: selection.value.slice(0, selection.start)
+                + e.clipboardData.getData("text") + selection.value.slice(selection.end),
+            };
+          }}
           onChange={handleChange}
           onBlur={handleBlur}
           className={cn("text-right tabular-nums", currency && "pr-12", className)}

@@ -16,6 +16,7 @@ import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFa
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
 import { DialogTimbrarFacturaFooter } from "./DialogTimbrarFacturaFooter";
 import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
+import { TimbradoResumen } from "./TimbradoConfirmacion";
 
 interface Props {
   facturaId: string | null;
@@ -24,8 +25,8 @@ interface Props {
 }
 
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
-  const { factura, cliente, defaults } = useTimbradoContext(facturaId);
-  const dlg = useTimbrarFacturaDialog(factura, cliente, defaults, () => onOpenChange(false));
+  const { factura, cliente, defaults, ambiente, emailDestino } = useTimbradoContext(facturaId);
+  const dlg = useTimbrarFacturaDialog(factura, cliente, defaults, () => onOpenChange(false), { emailDestino, open });
   // P1 · Auditoría IVA — se necesitan los conceptos para detectar PPD + No objeto.
   const { data: conceptos } = useConceptosFactura(facturaId ?? undefined);
 
@@ -40,6 +41,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
 
   const mostrarCompacto = esFastPath && !dlg.modoExpandido;
+  const ambienteDisponible = ambiente === "sandbox" || ambiente === "live";
 
   return (
     <FormDialogShell
@@ -56,7 +58,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       footer={
         <DialogTimbrarFacturaFooter
           mostrarCompacto={mostrarCompacto}
-          puedeTimbrar={puedeTimbrar}
+          puedeTimbrar={puedeTimbrar && ambienteDisponible}
           timbrando={dlg.timbrarPending}
           onExpandir={() => dlg.setModoExpandido(true)}
           onCancelar={() => onOpenChange(false)}
@@ -64,6 +66,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
         />
       }
     >
+      <TimbradoResumen ambiente={ambiente} cliente={factura.cliente_nombre ?? "Cliente no disponible"} rfc={cliente?.rfc ?? factura.rfc_cliente} total={Number(factura.total)} moneda={factura.moneda} />
       {mostrarCompacto ? (
         <TimbrarCompacto
           usoCfdi={dlg.usoCfdi}
@@ -71,6 +74,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           metodoPago={dlg.metodoPago}
           enviarEmail={dlg.enviarEmail}
           setEnviarEmail={dlg.setEnviarEmail}
+          emailDestino={emailDestino}
         />
       ) : (
         <TimbrarCompleto
@@ -83,6 +87,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           setMetodoPago={dlg.setMetodoPago}
           enviarEmail={dlg.enviarEmail}
           setEnviarEmail={dlg.setEnviarEmail}
+          emailDestino={emailDestino}
           puedeTimbrar={puedeTimbrar}
         />
       )}

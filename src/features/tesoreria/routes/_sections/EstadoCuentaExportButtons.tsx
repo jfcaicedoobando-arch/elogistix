@@ -12,16 +12,18 @@ import {
   filasEstadoCuentaExport,
   nombreArchivoEstadoCuenta,
   resumenEstadoCuenta,
+  alcanceEstadoCuentaExport,
 } from "@/features/tesoreria/services/estadoCuentaExport";
-import type { EstadoCuentaBancario, MovimientoEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
+import type { EstadoCuentaBancario, MovimientoEstadoCuenta, FiltrosEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
 
 interface Props {
   estado: EstadoCuentaBancario;
   /** Movimientos visibles (ya filtrados en pantalla). */
   movimientos: MovimientoEstadoCuenta[];
+  filtros: FiltrosEstadoCuenta;
 }
 
-export function EstadoCuentaExportButtons({ estado, movimientos }: Props) {
+export function EstadoCuentaExportButtons({ estado, movimientos, filtros }: Props) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const sinDatos = movimientos.length === 0;
   const filas = filasEstadoCuentaExport(movimientos, estado.moneda);
@@ -54,6 +56,7 @@ export function EstadoCuentaExportButtons({ estado, movimientos }: Props) {
           banco={estado.banco}
           moneda={estado.moneda}
           resumen={resumenEstadoCuenta(estado)}
+          alcance={alcanceEstadoCuentaExport(estado, movimientos, filtros)}
           filas={filas}
         />,
         nombreArchivoEstadoCuenta(estado.alias, estado.desde, estado.hasta, "pdf"),

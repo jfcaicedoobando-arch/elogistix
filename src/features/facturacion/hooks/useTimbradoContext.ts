@@ -13,6 +13,8 @@ import {
   type DefaultsFacturacionCliente,
 } from "@/features/facturacion/services";
 import { queryKeys } from "@/lib/query";
+import { fetchAmbienteEmision } from "@/features/facturacion/services/datosFiscalesCliente";
+import { useContactosClienteParaEnvio } from "./useContactosClienteParaEnvio";
 
 export function useTimbradoContext(facturaId: string | null) {
   const { data: factura } = useFactura(facturaId ?? undefined);
@@ -30,5 +32,13 @@ export function useTimbradoContext(facturaId: string | null) {
     staleTime: 30_000,
   });
 
-  return { factura, cliente, defaults };
+  const ambienteQuery = useQuery({
+    queryKey: queryKeys.facturacion.ambienteEmision(factura?.organization_id),
+    enabled: !!factura?.organization_id,
+    queryFn: () => fetchAmbienteEmision(factura!.organization_id),
+    staleTime: 0,
+  });
+  const { data: envio } = useContactosClienteParaEnvio(factura?.cliente_id ?? undefined);
+
+  return { factura, cliente, defaults, ambiente: ambienteQuery.data, emailDestino: envio?.emailSugerido ?? null };
 }

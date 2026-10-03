@@ -15,8 +15,9 @@ import { DialogCancelarLiquidacion } from "./DialogCancelarLiquidacion";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
 import type { LiquidacionRow } from "@/features/comisiones/services";
+import type { UsuarioVendedor } from "../services/vendedoras";
 
-interface VendedoraOpt { id: string; nombre: string }
+type VendedoraOpt = UsuarioVendedor;
 
 export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   const { data: liquidaciones = [], isLoading } = useLiquidaciones();

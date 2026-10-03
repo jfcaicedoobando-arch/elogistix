@@ -15,6 +15,15 @@ export interface ClienteFiscalRow {
   uso_cfdi_default: string | null;
 }
 
+/** Mismo ambiente por organización que resuelve la edge; no lee credenciales. */
+export async function fetchAmbienteEmision(organizationId: string): Promise<string | null> {
+  const row = await unwrap(
+    supabase.from("facturapi_credenciales").select("ambiente")
+      .eq("organization_id", organizationId).maybeSingle(),
+  );
+  return row?.ambiente ?? null;
+}
+
 export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFiscalRow | null> {
   return unwrap(
     supabase

@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { useDirtyHistoryGuard } from "./useDirtyHistoryGuard";
 
 /** ¿El clic corresponde a una navegación interna que debemos interceptar? */
 function destinoInterno(e: MouseEvent): string | null {
@@ -36,7 +37,7 @@ function destinoInterno(e: MouseEvent): string | null {
   return href === actual ? null : href;
 }
 
-export function useDirtyGuard(isDirty: boolean) {
+export function useDirtyGuard(isDirty: boolean, guardHistory = false) {
   const navigate = useNavigate();
   const [destino, setDestino] = useState<string | null>(null);
   // RFE-05: salida programática en espera de confirmación (no pasa por un <a>).
@@ -99,6 +100,8 @@ export function useDirtyGuard(isDirty: boolean) {
     },
     [isDirty],
   );
+
+  useDirtyHistoryGuard(isDirty && guardHistory, confirmarSalida);
 
   const guardDialog = (
     <ConfirmActionDialog

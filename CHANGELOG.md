@@ -1,11 +1,19 @@
 # Changelog
 
-## [13.824.18] - 2026-10-03
+## [13.824.19] - 2026-10-03
 
 - **fix(Sentry · Edge)**: SDK Deno 10.76.0 compatible con el runtime gestionado observado (Deno 2.1.4); frontend/bundler permanecen en 11.4.0 y el CLI local/CI en Deno 2.9.7.
 - **fix(Sentry · aislamiento)**: scopes manuales por solicitud con AsyncLocalStorage, sin instrumentar Deno.serve ni reemplazar el proveedor OpenTelemetry de Lovable; respuesta, excepción y check-in terminal conservados.
 - **fix(Sentry · privacidad)**: limpieza del formato de spans/transactions de SDK 10 y del nombre en sampling metadata; los identificadores técnicos válidos de traza no se confunden con teléfonos.
 - **test(Sentry)**: contratos con SDK real y transporte ficticio aprobados en Deno 2.1.4 y 2.9.7, incluyendo concurrencia, ausencia de DSN, privacidad, propagación y monitores. Despliegue Edge y recepción remota se verifican por separado.
+
+## [13.824.18] - 2026-10-03
+
+- **fix(CxP y captura)**: conserva el pago parcial al cambiar el tipo de cambio, liquida costos con el saldo en moneda de la factura y acepta cantidades decimales sin reinterpretar puntos decimales como miles.
+- **fix(facturación)**: separa notas de crédito borrador y aplicadas en caché, usa pagos vigentes para el indicador Cobrado, confirma ambiente/cliente/total antes del timbrado y sincroniza el UsoCFDI efectivo del XML. El envío de correo requiere selección explícita y un CFDI emitido.
+- **fix(tesorería y flujos)**: avisa antes de descartar un anticipo capturado, valida facturas aprobadas antes del pago en lote y conserva el acceso a Cancelar al abrir detalles de error. La identidad de comisiones distingue datos faltantes y fallos de consulta.
+- **fix(reportes)**: identifica el alcance de filtros y borradores, representa pérdidas en los gráficos y mejora encabezados y fechas de los PDF financieros. REP no aplicable y moneda se muestran sin mensajes contradictorios o duplicados.
+- **test(auditoría financiera)**: regresiones de captura, saldos, timbrado, navegación y reportes; guardas SQL de liquidación multimoneda y seguridad por organización. No modifica documentos ni movimientos históricos.
 
 ## [13.824.17] - 2026-10-03
 

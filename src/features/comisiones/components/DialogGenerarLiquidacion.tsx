@@ -10,8 +10,11 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
 import { ymMx } from "@/lib/date/mx";
+import type { UsuarioVendedor } from "../services/vendedoras";
+import { etiquetaVendedora } from "../services/vendedorasIdentidad";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface VendedoraOpt { id: string; nombre: string }
+type VendedoraOpt = UsuarioVendedor;
 
 export function DialogGenerarLiquidacion({
   open, onOpenChange, vendedoras,
@@ -20,10 +23,12 @@ export function DialogGenerarLiquidacion({
   const [vendedoraId, setVendedoraId] = useState("");
   const [periodo, setPeriodo] = useState(ymMx());
   const gen = useGenerarLiquidacion();
+  const seleccionada = vendedoras.find((v) => v.id === vendedoraId);
+  const puedeGenerar = Boolean(seleccionada?.identidadResuelta && periodo && organizationId);
 
   // 13.85.10 — Toasts viven en `useGenerarLiquidacion`. Aquí sólo cerramos el dialog.
   const submit = () => {
-    if (!vendedoraId || !periodo || !organizationId) return;
+    if (!puedeGenerar || !organizationId) return;
     gen.mutate(
       { vendedora_id: vendedoraId, periodo, organization_id: organizationId },
       { onSuccess: () => onOpenChange(false) },
@@ -41,7 +46,7 @@ export function DialogGenerarLiquidacion({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={!vendedoraId} loading={gen.isPending}>
+          <Button onClick={submit} disabled={!puedeGenerar} loading={gen.isPending}>
             Generar
           </Button>
         </>
@@ -53,10 +58,15 @@ export function DialogGenerarLiquidacion({
           <Select value={vendedoraId} onValueChange={setVendedoraId}>
             <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
             <SelectContent>
-              {vendedoras.map((v) => <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>)}
+              {vendedoras.map((v) => <SelectItem key={v.id} value={v.id} disabled={!v.identidadResuelta}>{etiquetaVendedora(v)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+        {vendedoras.some((v) => !v.identidadResuelta) && (
+          <Alert variant="warning"><AlertDescription>
+            Hay vendedoras sin una identidad distinguible. Completa su nombre o consulta el directorio antes de generar una liquidación.
+          </AlertDescription></Alert>
+        )}
         <div className="space-y-1">
           <Label>Periodo</Label>
           <MonthPickerMx value={periodo} onChange={setPeriodo} />

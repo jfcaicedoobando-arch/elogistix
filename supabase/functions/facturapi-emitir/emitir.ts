@@ -4,29 +4,24 @@
  * La carga del contexto fiscal vive en `contexto.ts`.
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
-import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { validarTotalPositivo, validarLimiteCredito } from "./credito.ts";
 import { validarTcFiscal } from "../_shared/tcBanda.ts";
-import {
-  FACTURAPI_BASE, buildFacturapiPayload,
-  type FacturaContext,
-} from "./helpers.ts";
+import { buildFacturapiPayload } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
-import { esTimbradoPendiente, esIdempotencyKeyEnUso } from "../_shared/timbradoPendiente.ts";
-import { exigirInvoices, esContratoSdkError, cuerpoContratoSdk } from "../_shared/facturapiSdk.ts";
-import { esRateLimitFacturapi, respuestaRateLimit } from "../_shared/facturapiRateLimit.ts";
+import { esTimbradoPendiente } from '../_shared/timbradoPendiente.ts';
 
 
-import { registrarFacturaPendiente, respuestaIdempotencyEnUso } from "./pendiente.ts";
-import { FACTURA_COLUMNS, type Claim, type FacturaRow, type UserIdentity } from "./types.ts";
+import { registrarFacturaPendiente } from "./pendiente.ts";
+import { FACTURA_COLUMNS, type Claim, type FacturaRow, type EmitirInput } from "./types.ts";
+
+import { createInvoiceInFacturapi } from './crear.ts';
+import { parseInvoiceResult, persistirFacturaTimbrada } from './persistencia.ts';
 
 export { hoyMx, realinearFechaEmision } from "./fechaEmision.ts";
 export type { Claim, FacturaRow } from "./types.ts";
 export { cargarContexto } from "./contexto.ts";
 
-interface EmitirInput { supabase: SupabaseClient; facturapi: FacturapiClient; apiKey: string; ambiente: string; ctx: FacturaContext; factura: FacturaRow; facturaId: string; user: UserIdentity; claim: Claim }
 
 /**
  * Ola 3 · B — Estados de factura realmente timbrables en el flujo actual:
@@ -130,150 +125,6 @@ export async function resolverSustitucion(supabase: SupabaseClient, factura: Fac
   return prev.uuid_fiscal as string;
 }
 
-
-interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string; status?: string }
-
-async function createInvoiceInFacturapi(
-  input: EmitirInput,
-  payload: ReturnType<typeof buildFacturapiPayload>,
-): Promise<FapiInvoice | Response> {
-  const { supabase, factura, facturaId, user, claim } = input;
-  // P2-C: el cast del SDK vive centralizado en `_shared/facturapiSdk.ts`
-  // (antes cada edge function repetía su propio cast anónimo). Si el SDK no
-  // cumple el contrato NO se libera el claim ni se reintenta solo.
-  let facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } };
-  try {
-    facturapi = { invoices: exigirInvoices(input.facturapi, "create") };
-  } catch (err) {
-    if (!esContratoSdkError(err)) throw err;
-    const r = cuerpoContratoSdk(err, claim.claimTag);
-    return jsonResponse(r.body, r.status);
-  }
-
-  const meta = {
-    supabase, facturaId, organizationId: factura.organization_id, numero: factura.numero ?? null,
-    claimTag: claim.claimTag, usuarioId: user.id, usuarioEmail: user.email,
-  };
-  try {
-    // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
-    // de dejar la Edge Function ocupada 150 s.
-    // El cliente del SDK llega como objeto opaco (sus typings no se resuelven
-    // desde `npm:` en Deno): el adaptador `_shared/facturapiSdk.ts` lo tipa y
-    // valida en runtime la operación que se va a usar.
-    return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
-
-
-  } catch (err) {
-    if (err instanceof FacturapiTimeoutError) {
-      // EF-02 (auditoría): en timeout NO liberamos el claim. Si FacturApi sí
-      // timbró, el tag PENDING:<uuid> (external_id + idempotency_key) es la
-      // única correlación que permite a facturapi-recuperar-claim adoptar el
-      // CFDI; liberarlo aquí convertía un timeout benigno en un duplicado.
-      await registrarBitacoraEdge(supabase, {
-        organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
-        accion: "facturapi_emitir_timeout", entidadId: facturaId, entidadNombre: factura.numero ?? "",
-        detalles: { op: err.op, timeout_ms: err.timeoutMs },
-      });
-      return jsonResponse({ error: "facturapi_timeout", message: `${err.message}. No reintentes el timbrado: usa 'Recuperar timbrado' para sincronizar el intento en curso.`, timeout_ms: err.timeoutMs }, 504);
-    }
-    const { status, detail } = describeFacturapiError(err);
-    // P0-B.4: la llave de idempotencia en uso NO autoriza otro CFDI.
-    if (esIdempotencyKeyEnUso(detail, status)) return await respuestaIdempotencyEnUso(meta);
-    // P2-B: 429 = el proveedor rechazó la petición ANTES de timbrar. Se libera
-    // el claim para que el operador reintente cuando pase la espera, y se
-    // responde 429 accionable (nunca un reintento automático).
-    if (esRateLimitFacturapi(status, detail)) {
-      await claim.release();
-      await registrarBitacoraEdge(supabase, {
-        organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
-        accion: "facturapi_emitir_rate_limited", entidadId: facturaId, entidadNombre: factura.numero ?? "",
-        detalles: {
-          status, retry_after_segundos: detail.retryAfterSegundos ?? null,
-          request_id: detail.requestId ?? null, log_id: detail.logId ?? null,
-        },
-      });
-      return respuestaRateLimit(detail);
-    }
-    // Error definitivo de FacturApi (no timbró): sí liberamos para reintentar.
-    await claim.release();
-
-    await registrarBitacoraEdge(supabase, {
-      organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
-      accion: "facturapi_emitir_failed", entidadId: facturaId, entidadNombre: factura.numero ?? "",
-      detalles: { status, response: detail },
-    });
-    const message = extractFacturapiMessage(detail, status);
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
-  }
-}
-
-interface TimbradoResultado {
-  facturapiId: string;
-  uuid: string;
-  folio: number;
-  serie: string;
-  numero: string;
-  pdfUrl: string;
-  xmlUrl: string;
-}
-
-function parseInvoiceResult(invoice: FapiInvoice, ctx: FacturaContext): TimbradoResultado {
-  const facturapiId = invoice.id;
-  const uuid = invoice.uuid;
-  const folio = invoice.folio_number ?? invoice.folio ?? 0;
-  const serie = invoice.series ?? ctx.serie ?? "";
-  const numero = `${serie}${folio}`;
-  const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
-  const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
-  return { facturapiId, uuid, folio, serie, numero, pdfUrl, xmlUrl };
-}
-
-async function persistirFacturaTimbrada(
-  input: EmitirInput,
-  resultado: TimbradoResultado,
-  respaldo: Awaited<ReturnType<typeof respaldarXmlEmitido>>,
-): Promise<Response | null> {
-  const { supabase, factura, facturaId, user, claim } = input;
-  const { facturapiId, uuid, folio, serie, numero, pdfUrl, xmlUrl } = resultado;
-
-  const { error: updErr, data: updRow } = await supabase
-    .from("facturas")
-    .update({
-      numero, facturapi_id: facturapiId, facturapi_claim_at: null, uuid_fiscal: uuid,
-      // P0 correctivo: limpiar cualquier intento pendiente heredado.
-      facturapi_pendiente_id: null, facturapi_pendiente_at: null,
-      folio_fiscal: folio, serie, factura_pdf_url: pdfUrl, factura_xml_url: xmlUrl,
-      factura_xml_backup_path: respaldo.path, estado: "Emitida", ambiente: input.ambiente,
-      timbrado_en: new Date().toISOString(), timbrado_por: user.id,
-    })
-    .eq("id", facturaId)
-    .eq("facturapi_id", claim.claimTag)
-    .select("id")
-    .maybeSingle();
-
-  if (updErr) return jsonResponse({ error: "db_update_failed", message: "El CFDI se timbró pero no se pudo guardar en el sistema. Usa 'Recuperar timbrado' para sincronizarlo.", detail: updErr.message }, 500);
-  if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
-
-  // Al timbrar una SUSTITUTA, dejar la relación bidireccional en la original.
-  // Sin esto, cuando la original se cancela asíncronamente vía cron
-  // (facturapi-reconciliar-cancelaciones) no se detecta que es sustitución
-  // y se limpia la proforma incorrectamente (ver bug histórico PRO-2026-0970).
-  if (factura.sustituye_a) {
-    await supabase
-      .from("facturas")
-      .update({ sustituida_por: facturaId })
-      .eq("id", factura.sustituye_a)
-      .is("sustituida_por", null);
-  }
-
-  await registrarBitacoraEdge(supabase, {
-    organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
-    accion: "facturapi_emitida", entidadId: facturaId, entidadNombre: numero,
-    detalles: { uuid, folio, serie, facturapi_id: facturapiId, xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null } },
-  });
-
-  return null;
-}
 
 export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   const { supabase, apiKey, ctx, factura, facturaId } = input;

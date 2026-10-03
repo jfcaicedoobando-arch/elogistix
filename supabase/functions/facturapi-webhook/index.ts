@@ -34,6 +34,7 @@ interface FacturaLocal {
   cancellation_status: string | null;
   /** P0 correctivo: CAS del claim al escribir (evita pisar una recaptura). */
   facturapi_id: string | null;
+  uuid_fiscal?: string | null;
 }
 
 interface PagoLocal {
@@ -114,7 +115,7 @@ async function handleFacturaEvent(
   // + id remoto del intento); el evento `valid` la resuelve.
   const localizada = await localizarFila<FacturaLocal>({
     supabase, tabla: "facturas", orgId, cols: COLS_FACTURA,
-    select: "id, organization_id, estado, sustituida_por, cancellation_status, facturapi_id",
+    select: "id, organization_id, estado, sustituida_por, cancellation_status, facturapi_id, uuid_fiscal",
     remoteId: mapped.facturapi_id, externalId: externalIdDeEvento(event),
   });
   if (!localizada) return jsonResponse({ ok: true, ignored: "factura_not_found" });

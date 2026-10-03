@@ -13,6 +13,7 @@ interface FacturaLocalMin {
   estado?: string | null;
   sustituida_por?: string | null;
   cancellation_status?: string | null;
+  uuid_fiscal?: string | null;
 }
 
 /** Estados en los que un evento `valid` tardío sí puede fijar "Emitida". */
@@ -23,6 +24,9 @@ export function sanearPatchFactura(
   factura: FacturaLocalMin,
 ): Record<string, unknown> {
   const patch: Record<string, unknown> = { ...mapped.patch };
+  // Una factura ya timbrada puede tener el valor efectivo leído del XML.
+  // Un evento tardío no debe reemplazarlo por el dato solicitado del proveedor.
+  if (factura.uuid_fiscal) delete patch.uso_cfdi;
 
   // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
   // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar

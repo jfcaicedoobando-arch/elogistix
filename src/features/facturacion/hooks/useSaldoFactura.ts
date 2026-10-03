@@ -19,10 +19,10 @@ import { esNcClienteVigente } from "@/lib/domain/estadosFactura";
 export function useNotasCreditoAplicadas(facturaId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.facturas.notasCredito(facturaId ?? ""),
-    queryFn: async () => {
-      const notas = await listarNotasCreditoPorFactura(facturaId as string);
-      return notas.filter((n) => !n.deleted_at && esNcClienteVigente(n.estado));
-    },
+    queryFn: () => listarNotasCreditoPorFactura(facturaId as string),
+    // La caché conserva TODOS los documentos; el filtro pertenece sólo a este
+    // observador. La lista de detalle usa la misma clave e incluye borradores.
+    select: (notas) => notas.filter((n) => !n.deleted_at && esNcClienteVigente(n.estado)),
     enabled: !!facturaId,
     staleTime: 60_000,
   });

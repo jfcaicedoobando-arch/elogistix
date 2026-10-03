@@ -4,8 +4,8 @@
  * Antes cada módulo limpiaba los separadores a su manera
  * (`replace(/,/g,"")`, `Number(v.replace(...))`, doble limpieza en
  * `useNumericField`), así que "1,200.50" se interpretaba distinto según la
- * pantalla. Este módulo es la ÚNICA forma permitida de quitar separadores de
- * miles, espacios duros y símbolos de moneda antes de convertir a número.
+ * pantalla. Este módulo centraliza el parseo numérico y conserva la precisión
+ * de tasas/cantidades; MoneyInput aplica su límite de dos decimales.
  */
 
 /** Espacios (incl. no-rompibles / finos) y símbolo de moneda. */
@@ -20,13 +20,9 @@ export function limpiarSeparadoresMiles(raw: string): string {
 }
 
 /**
- * EC-06 (canon `MoneyInput.sanitizeMoneyText`): en es-MX se pegan montos con
- * punto de miles ("50.000" = 50,000). Un único "." seguido de EXACTAMENTE 3
- * dígitos y sin coma en el texto se interpreta como separador de miles; de
- * otro modo sigue siendo punto decimal ("50.00" = 50, "1.2345" = 1.2345).
- * Antes `parseMonto("50.000")` devolvía 50 mientras MoneyInput registraba
- * 50,000 — el mismo texto valía 1000× distinto según el campo
- * (frontend_hunter P2, parsers de dinero divergentes).
+ * Compatibilidad para orígenes que declaren explícitamente punto de miles.
+ * La captura es-MX usa siempre punto decimal: inferir miles sólo por tener
+ * tres decimales multiplicaba por 1,000 importes válidos como "1234.567".
  */
 const PUNTO_DE_MILES_RE = /^(\d+)\.(\d{3})$/;
 
@@ -34,24 +30,24 @@ const PUNTO_DE_MILES_RE = /^(\d+)\.(\d{3})$/;
  * Convierte un monto tecleado a número finito. Devuelve `fallback` cuando el
  * texto no es interpretable (`""`, `"."`, `"abc"`, `"1.2.3"`).
  *
- * RG5 (Ola 3): en México se teclea coma decimal ("19,55"). Cuando queda una
- * sola coma y ningún punto, se interpreta como separador decimal; "1,250.50" y
- * "15,000" siguen tratándose como miles.
+ * El punto siempre es decimal. Las comas sólo agrupan miles si forman grupos
+ * completos ("15,000"); una coma restante sin punto es decimal ("1234,567").
  *
- * EC-06: "50.000" (punto de miles pegado desde Excel/PDF) se alinea al canon
- * de MoneyInput → 50,000.
+ * Se conserva toda la precisión; este parser no limita los importes a centavos.
  */
 export function parseMonto(
   raw: string,
   fallback = 0,
-  opciones?: { /** `false` para valores que NO son dinero (p. ej. tipo de cambio con 3 decimales). */ puntoDeMiles?: boolean },
+  opciones?: { /** Sólo `true` cuando el origen declara punto de miles; por defecto el punto es decimal. */ puntoDeMiles?: boolean },
 ): number {
-  let limpio = limpiarSeparadoresMiles(raw);
-  const comas = (limpio.match(/,/g) ?? []).length;
-  if (comas === 1 && !limpio.includes(".")) limpio = limpio.replace(",", ".");
-  // EC-06: igual que MoneyInput, la heurística del punto de miles sólo aplica
-  // cuando el texto original NO traía coma ("1,234.567" sí es 1234.567).
-  if ((opciones?.puntoDeMiles ?? true) && !raw.includes(",")) {
+  let limpio = raw.replace(RUIDO_RE, "");
+  if (limpio.includes(".") || /^[+-]?\d{1,3}(,\d{3})+$/.test(limpio)) {
+    limpio = limpio.replace(/,/g, "");
+  } else if ((limpio.match(/,/g) ?? []).length === 1) {
+    limpio = limpio.replace(",", ".");
+  }
+  // La compatibilidad es opt-in y no se aplica a formatos con coma.
+  if (opciones?.puntoDeMiles === true && !raw.includes(",")) {
     const puntoMiles = limpio.match(PUNTO_DE_MILES_RE);
     if (puntoMiles) limpio = `${puntoMiles[1]}${puntoMiles[2]}`;
   }

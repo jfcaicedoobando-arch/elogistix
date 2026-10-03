@@ -51,12 +51,12 @@ export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados"
           <div>
             <div className="font-semibold">Embarques (Operativa)</div>
             <p className="text-muted-foreground text-xs">
-              Suma conceptos de venta y costo de embarques cuya <strong>ETA</strong> cae en el mes.
-              Refleja la utilidad real del negocio operado, sin importar cuándo se factura.
+              Suma ventas facturadas de embarques cuya <strong>ETA</strong> cae en el mes,
+              menos notas de crédito aplicadas, contra sus conceptos de costo.
+              El mes lo determina la ETA, no la fecha de emisión de la factura.
               <span className="block mt-1">
-                <strong>Notas de crédito:</strong> no se restan aquí porque el
-                ingreso operativo se calcula sobre conceptos de embarque, no
-                sobre folios fiscales.
+                <strong>Notas de crédito:</strong> reducen la venta facturada del
+                embarque. Los conceptos de venta aún no facturados no son ingreso de esta fuente.
               </span>
             </p>
           </div>
