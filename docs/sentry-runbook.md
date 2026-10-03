@@ -122,6 +122,11 @@ verifica que `scrubEventPii` lo cubre antes de mergear.
 
 ## 9. Checklist al agregar código nuevo
 
+Vitest y benchmarks no envían telemetría al proyecto real: `core.ts` no inicia
+el cliente en modo `test` y `vitest.shared.ts` vacía `VITE_SENTRY_DSN` en todos
+los forks. Los contratos del SDK usan un DSN ficticio y transporte en memoria;
+no se filtran errores de producción para esconder fallos simulados de CI.
+
 - [ ] Edge function crítica → agregar al array `CRITICAL` del test de wrapping.
 - [ ] Mutation nueva → si captura errores manualmente, usar `notifyError`
       (que ya rutea a Sentry con contexto), no `captureException` directo.

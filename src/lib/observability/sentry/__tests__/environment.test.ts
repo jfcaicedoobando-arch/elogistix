@@ -120,6 +120,15 @@ describe("TRACE_PROPAGATION_TARGETS", () => {
 });
 
 describe("SDK 11 initialization", () => {
+  it.each(["test", "development"])("does not start a client in %s, even with a DSN", async (mode) => {
+    vi.stubEnv("MODE", mode);
+    vi.resetModules();
+    const mod = await import("../core");
+    mod.initSentry();
+    expect(sentryMock.init).not.toHaveBeenCalled();
+    expect(mod.isSentryReady()).toBe(false);
+  });
+
   it("retries failed initialization and only signals readiness after success", async () => {
     vi.resetModules();
     sentryMock.init.mockImplementationOnce(() => { throw new Error("mock initialization failure"); });
