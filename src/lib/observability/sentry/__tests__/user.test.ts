@@ -26,6 +26,9 @@ vi.mock("@sentry/react", () => ({
   getCurrentScope: sentryMocks.getCurrentScope,
 }));
 
+// Scope synchronization is independent of DSN/production init; core has its own contracts.
+vi.mock("../core", () => ({ initSentry: vi.fn() }));
+
 beforeEach(() => {
   sentryMocks.setUser.mockClear();
   sentryMocks.setTags.mockClear();

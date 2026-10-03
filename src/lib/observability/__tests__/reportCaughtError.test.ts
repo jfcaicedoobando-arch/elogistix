@@ -13,6 +13,7 @@ import {
 
 const mocks = vi.hoisted(() => ({ captureException: vi.fn() }));
 vi.mock("@sentry/react", () => mocks);
+vi.mock("../sentry/core", () => ({ initSentry: vi.fn() }));
 
 import { reportCaughtError } from "../reportCaughtError";
 
