@@ -4,10 +4,12 @@
  * service completo.
  */
 import type { Tables } from "@/integrations/supabase/types";
+import type { AplicacionAnticipoOrigen } from "../domain/pagoAnticipoOrigen";
 
 export type PagoProveedor = Tables<"pagos_proveedor">;
 
 export type PagoProveedorConMov = PagoProveedor & {
+  anticipos_aplicaciones?: AplicacionAnticipoOrigen[] | null;
   bbva_movimientos: Array<{
     id: string;
     fecha: string;

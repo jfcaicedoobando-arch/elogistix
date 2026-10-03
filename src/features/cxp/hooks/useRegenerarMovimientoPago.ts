@@ -10,14 +10,14 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useRegenerarMovimientoPago() {
   const qc = useQueryClient();
-  return useMutation<string, Error, string>({
+  return useMutation<string | null, Error, string>({
     mutationFn: regenerarMovimientoPagoProveedor,
-    onSuccess: () => {
+    onSuccess: (movimientoId) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       notifySuccess(undefined, {
-        title: "Movimiento bancario generado",
-        description: "El pago ya aparece en el estado de cuenta y quedó conciliado.",
+        title: movimientoId ? "Movimiento bancario verificado" : "Anticipo en efectivo verificado",
+        description: movimientoId ? "El movimiento de tesorería está disponible." : "La aplicación del anticipo en efectivo no genera movimiento bancario.",
       });
     },
     onError: (error) => {
