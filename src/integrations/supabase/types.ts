@@ -9733,6 +9733,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _movimiento_original_anticipo_aplicado: {
+        Args: { p_pago_id: string }
+        Returns: string
+      }
       _nc_aplicadas_moneda_factura: {
         Args: { p_factura_id: string }
         Returns: number
