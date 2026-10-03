@@ -276,18 +276,26 @@ DECLARE
   v_concepto   text;
   v_mov_id     uuid;
 BEGIN
+  SELECT * INTO v_pago
+    FROM public.pagos_proveedor
+   WHERE id = p_pago_id AND deleted_at IS NULL
+   FOR UPDATE;
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
+  END IF;
+  -- Auditoría 23: antes de cualquier lookup/INSERT por pago, reconocer la
+  -- aplicación y reutilizar su origen. Nunca reparar un vínculo con dinero.
+  IF v_pago.es_anticipo_aplicado
+     OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.pago_proveedor_id = p_pago_id AND aa.deleted_at IS NULL) THEN
+    RETURN public._movimiento_original_anticipo_aplicado(p_pago_id);
+  END IF;
   SELECT id INTO v_mov_id
     FROM public.bbva_movimientos
    WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL
    LIMIT 1;
   IF v_mov_id IS NOT NULL THEN
     RETURN v_mov_id;
-  END IF;
-  SELECT * INTO v_pago
-    FROM public.pagos_proveedor
-   WHERE id = p_pago_id AND deleted_at IS NULL;
-  IF v_pago.id IS NULL THEN
-    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
   END IF;
   IF v_pago.cuenta_bancaria_id IS NULL THEN
     RETURN NULL; -- pago sin cuenta bancaria: no hay salida de efectivo que registrar
@@ -4235,6 +4243,47 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._guard_movimiento_anticipo_aplicado() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.pago_proveedor_id IS NOT NULL
+     AND (EXISTS (SELECT 1 FROM public.pagos_proveedor pp
+                  WHERE pp.id = NEW.pago_proveedor_id AND pp.es_anticipo_aplicado)
+          OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                     WHERE aa.pago_proveedor_id = NEW.pago_proveedor_id AND aa.deleted_at IS NULL)) THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_SIN_NUEVO_CARGO: una aplicación de anticipo utiliza la salida original; no puede vincular otro cargo bancario'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._guard_pago_anticipo_aplicado_edicion() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF (OLD.es_anticipo_aplicado
+      OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                 WHERE aa.pago_proveedor_id = OLD.id AND aa.deleted_at IS NULL))
+     AND (NEW.proveedor_factura_id IS DISTINCT FROM OLD.proveedor_factura_id
+          OR NEW.organization_id IS DISTINCT FROM OLD.organization_id
+          OR NEW.fecha_pago IS DISTINCT FROM OLD.fecha_pago
+          OR NEW.monto IS DISTINCT FROM OLD.monto
+          OR NEW.moneda IS DISTINCT FROM OLD.moneda
+          OR NEW.tipo_cambio_usd IS DISTINCT FROM OLD.tipo_cambio_usd
+          OR NEW.metodo_pago IS DISTINCT FROM OLD.metodo_pago
+          OR NEW.referencia IS DISTINCT FROM OLD.referencia
+          OR NEW.cuenta_bancaria_id IS DISTINCT FROM OLD.cuenta_bancaria_id
+          OR NEW.notas IS DISTINCT FROM OLD.notas
+          OR NEW.es_anticipo_aplicado IS DISTINCT FROM OLD.es_anticipo_aplicado) THEN
+    RAISE EXCEPTION 'LC_PAGO_ANTICIPO_NO_EDITABLE: el pago proviene de un anticipo; usa Revertir aplicación y vuelve a aplicar el anticipo'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._guard_soft_delete() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -4354,6 +4403,91 @@ BEGIN
       NULL, auth.uid());
   END IF;
   RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._movimiento_original_anticipo_aplicado(p_pago_id uuid) RETURNS uuid
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_pago public.pagos_proveedor;
+  v_ap public.anticipos_aplicaciones;
+  v_ant public.anticipos_proveedor;
+  v_fact public.proveedor_facturas;
+  v_mov public.bbva_movimientos;
+  v_org uuid;
+  v_cantidad integer;
+BEGIN
+  SELECT * INTO v_pago FROM public.pagos_proveedor
+  WHERE id = p_pago_id AND deleted_at IS NULL;
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_APLICACION_INCONSISTENTE: el pago no existe o fue eliminado'
+      USING ERRCODE = '23514';
+  END IF;
+  IF auth.uid() IS NOT NULL OR auth.role() = 'authenticated' THEN
+    v_org := public.org_scope();
+    IF v_org IS NULL OR v_org IS DISTINCT FROM v_pago.organization_id THEN
+      RAISE EXCEPTION 'LC_ORG_MISMATCH: el pago no pertenece a la organización activa'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  SELECT count(*) INTO v_cantidad FROM public.anticipos_aplicaciones
+  WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL;
+  IF NOT v_pago.es_anticipo_aplicado OR v_cantidad <> 1 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_APLICACION_INCONSISTENTE: se requiere una sola aplicación vigente vinculada al pago; revisa el anticipo'
+      USING ERRCODE = '23514';
+  END IF;
+  SELECT * INTO v_ap FROM public.anticipos_aplicaciones
+  WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL;
+  SELECT * INTO v_ant FROM public.anticipos_proveedor WHERE id = v_ap.anticipo_id;
+  SELECT * INTO v_fact FROM public.proveedor_facturas WHERE id = v_pago.proveedor_factura_id;
+  IF v_ant.id IS NULL OR v_ant.deleted_at IS NOT NULL OR v_ant.estado = 'cancelado'
+     OR v_fact.id IS NULL OR v_fact.deleted_at IS NOT NULL OR v_fact.estado = 'Cancelada'
+     OR v_ap.organization_id IS DISTINCT FROM v_pago.organization_id
+     OR v_ant.organization_id IS DISTINCT FROM v_pago.organization_id
+     OR v_fact.organization_id IS DISTINCT FROM v_pago.organization_id
+     OR v_ap.proveedor_factura_id IS DISTINCT FROM v_pago.proveedor_factura_id
+     OR v_fact.proveedor_id IS DISTINCT FROM v_ant.proveedor_id
+     OR v_ap.monto_aplicado IS DISTINCT FROM v_pago.monto
+     OR v_ap.moneda_aplicada IS DISTINCT FROM v_pago.moneda
+     OR v_ant.moneda IS DISTINCT FROM v_pago.moneda
+     OR v_ap.fecha_aplicacion IS DISTINCT FROM v_pago.fecha_pago
+     OR v_ant.cuenta_bancaria_id IS DISTINCT FROM v_pago.cuenta_bancaria_id THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_APLICACION_INCONSISTENTE: la aplicación no coincide con el pago, la factura o el anticipo original; revisa el vínculo antes de continuar'
+      USING ERRCODE = '23514';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.bbva_movimientos
+             WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL) THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE: existe un movimiento adicional vinculado a la aplicación; revisa tesorería sin regenerar otro cargo'
+      USING ERRCODE = '23514';
+  END IF;
+  IF v_ant.cuenta_bancaria_id IS NULL THEN
+    IF COALESCE(v_ant.metodo_pago, '') <> 'Efectivo'
+       OR EXISTS (SELECT 1 FROM public.bbva_movimientos
+                  WHERE anticipo_proveedor_id = v_ant.id AND deleted_at IS NULL) THEN
+      RAISE EXCEPTION 'LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE: el anticipo sin cuenta no tiene un origen en efectivo consistente'
+        USING ERRCODE = '23514';
+    END IF;
+    RETURN NULL;
+  END IF;
+  SELECT count(*) INTO v_cantidad FROM public.bbva_movimientos
+  WHERE anticipo_proveedor_id = v_ant.id AND deleted_at IS NULL
+    AND cargo > 0 AND COALESCE(abono, 0) = 0;
+  IF v_cantidad <> 1 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE: falta el cargo original del anticipo o hay más de uno; revisa tesorería sin generar otro cargo'
+      USING ERRCODE = '23514';
+  END IF;
+  SELECT * INTO v_mov FROM public.bbva_movimientos
+  WHERE anticipo_proveedor_id = v_ant.id AND deleted_at IS NULL
+    AND cargo > 0 AND COALESCE(abono, 0) = 0;
+  IF v_mov.organization_id IS DISTINCT FROM v_pago.organization_id
+     OR v_mov.cuenta_bancaria_id IS DISTINCT FROM v_ant.cuenta_bancaria_id
+     OR abs(v_mov.cargo - v_ant.monto) > 0.01
+     OR v_mov.pago_proveedor_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE: el cargo original no coincide con el anticipo; revisa cuenta, organización e importe'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN v_mov.id;
 END;
 $$;
 CREATE FUNCTION public._nc_alerta_retenciones_pagadas() RETURNS trigger
@@ -4481,7 +4615,11 @@ BEGIN
       NEW.moneda, v_moneda_factura, v_moneda_factura
       USING ERRCODE = '22023';
   END IF;
-  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
+  IF NEW.tipo_cambio IS NOT NULL THEN
+    IF NEW.tipo_cambio <= 0 OR NEW.tipo_cambio::text IN ('NaN', 'Infinity', '-Infinity') THEN
+      RAISE EXCEPTION 'LC_NC_PROV_TC_INVALIDO: el tipo de cambio capturado debe ser finito y mayor a cero'
+        USING ERRCODE = '22023';
+    END IF;
     RETURN NEW;
   END IF;
   v_moneda_ext := CASE WHEN NEW.moneda::text = 'MXN' THEN v_moneda_factura ELSE NEW.moneda::text END;
@@ -4492,7 +4630,7 @@ BEGIN
          END
     INTO v_tc
   FROM public.tc_dof_vigente(v_fecha) d;
-  IF COALESCE(v_tc, 0) <= 1 THEN
+  IF v_tc IS NULL OR v_tc <= 0 OR v_tc::text IN ('NaN', 'Infinity', '-Infinity') THEN
     RAISE EXCEPTION 'LC_NC_PROV_TC_REQUERIDO: falta tipo de cambio DOF para % al %; captúralo antes de registrar la nota de crédito',
       v_moneda_ext, v_fecha
       USING ERRCODE = '22023';
@@ -6375,6 +6513,14 @@ BEGIN
         ARRAY['tesorero','contador','admin','admin_org','super_admin']::app_role[]) THEN
     RAISE EXCEPTION 'LC_PAGO_SIN_PERMISO: se requiere permiso de tesorería para editar el pago'
       USING ERRCODE = '42501';
+  END IF;
+  -- Auditoría 23: una aplicación pertenece al flujo de anticipos. Rechazar
+  -- ANTES de modificar pago, cuenta o movimientos, incluso con flag legacy.
+  IF v_pago.es_anticipo_aplicado
+     OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.pago_proveedor_id = p_pago_id AND aa.deleted_at IS NULL) THEN
+    RAISE EXCEPTION 'LC_PAGO_ANTICIPO_NO_EDITABLE: el pago proviene de un anticipo; usa Revertir aplicación y vuelve a aplicar el anticipo'
+      USING ERRCODE = '23514';
   END IF;
   -- Bloqueo de la factura: el guard recalcula el saldo con ella tomada.
   PERFORM 1 FROM public.proveedor_facturas
@@ -11524,6 +11670,9 @@ DECLARE
   v_actualizadas int := 0;
   v_facturas jsonb := '[]'::jsonb;
   v_incidencias jsonb := '[]'::jsonb;
+  v_incidencias_pagos jsonb := '[]'::jsonb;
+  v_origenes_anticipos jsonb := '[]'::jsonb;
+  v_movimiento_anticipo uuid;
   v_proveedores jsonb := '[]'::jsonb;
   r record;
   v_estado_antes text;
@@ -11557,6 +11706,35 @@ BEGIN
       v_actualizadas := v_actualizadas + 1;
     END IF;
   END LOOP;
+  -- Auditoría 23: validar las aplicaciones contra la salida ORIGINAL.
+  -- Una aplicación parcial no se compara con el cargo total del anticipo.
+  -- La inconsistencia se reporta para revisión y nunca propone otro cargo.
+  FOR r IN
+    SELECT pp.*, COALESCE(NULLIF(pf.folio_proveedor,''), pf.folio_interno) AS folio
+    FROM public.pagos_proveedor pp
+    JOIN public.proveedor_facturas pf ON pf.id = pp.proveedor_factura_id
+    WHERE pf.organization_id = v_org AND pp.organization_id = v_org
+      AND pp.deleted_at IS NULL AND pf.deleted_at IS NULL
+      AND (p_factura_id IS NULL OR pf.id = p_factura_id)
+      AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
+      AND (pp.es_anticipo_aplicado
+           OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                      WHERE aa.pago_proveedor_id = pp.id AND aa.deleted_at IS NULL))
+  LOOP
+    BEGIN
+      v_movimiento_anticipo := public._movimiento_original_anticipo_aplicado(r.id);
+      IF v_movimiento_anticipo IS NOT NULL THEN
+        v_origenes_anticipos := v_origenes_anticipos || jsonb_build_array(jsonb_build_object(
+          'factura_id', r.proveedor_factura_id, 'movimiento_id', v_movimiento_anticipo));
+      END IF;
+    EXCEPTION WHEN check_violation THEN
+      v_incidencias := v_incidencias || jsonb_build_array(jsonb_build_object(
+        'pago_id', r.id, 'factura_id', r.proveedor_factura_id, 'folio', r.folio,
+        'fecha_pago', r.fecha_pago, 'monto', ROUND(r.monto, 2), 'moneda', r.moneda::text,
+        'monto_esperado_mxn', 0, 'cargo_mxn', 0,
+        'tipo', 'anticipo_inconsistente', 'motivo', SQLERRM));
+    END;
+  END LOOP;
   -- 2) Detalle por factura con los importes recalculados.
   SELECT COALESCE(jsonb_agg(x ORDER BY x->>'folio'), '[]'::jsonb) INTO v_facturas
   FROM (
@@ -11576,6 +11754,9 @@ BEGIN
                               WHERE pp2.proveedor_factura_id = pf.id
                                 AND pp2.deleted_at IS NULL
                                 AND bm.deleted_at IS NULL)
+                            + (SELECT count(DISTINCT origen->>'movimiento_id')
+                               FROM jsonb_array_elements(v_origenes_anticipos) origen
+                               WHERE origen->>'factura_id' = pf.id::text)
            ) AS x
     FROM public.proveedor_facturas pf
     JOIN public.v_proveedor_facturas_saldo s ON s.proveedor_factura_id = pf.id
@@ -11585,7 +11766,7 @@ BEGIN
       AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
   ) q;
   -- 3) Incidencias: pagos sin movimiento de tesorería o con importe distinto.
-  SELECT COALESCE(jsonb_agg(x ORDER BY x->>'fecha_pago'), '[]'::jsonb) INTO v_incidencias
+  SELECT COALESCE(jsonb_agg(x ORDER BY x->>'fecha_pago'), '[]'::jsonb) INTO v_incidencias_pagos
   FROM (
     SELECT jsonb_build_object(
              'pago_id', pp.id,
@@ -11608,6 +11789,9 @@ BEGIN
     WHERE pf.organization_id = v_org
       AND pp.deleted_at IS NULL
       AND pf.deleted_at IS NULL
+      AND NOT pp.es_anticipo_aplicado
+      AND NOT EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                      WHERE aa.pago_proveedor_id = pp.id AND aa.deleted_at IS NULL)
       AND (p_factura_id IS NULL OR pf.id = p_factura_id)
       AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
       AND (
@@ -11618,6 +11802,7 @@ BEGIN
                   ELSE pp.monto END)) > 0.01)
       )
   ) q2;
+  v_incidencias := v_incidencias || v_incidencias_pagos;
   -- 4) Saldo pendiente del proveedor por moneda (facturas vivas y no canceladas).
   SELECT COALESCE(jsonb_agg(x ORDER BY x->>'moneda'), '[]'::jsonb) INTO v_proveedores
   FROM (
@@ -27039,14 +27224,11 @@ CREATE FUNCTION public.regenerar_movimiento_pago_proveedor(p_pago_id uuid) RETUR
 DECLARE
   v_pago         public.pagos_proveedor;
   v_org          uuid;
-  v_cuenta_mon   text;
-  v_cargo        numeric;
-  v_concepto     text;
-  v_mov_id       uuid;
 BEGIN
   SELECT * INTO v_pago
   FROM public.pagos_proveedor
-  WHERE id = p_pago_id AND deleted_at IS NULL;
+  WHERE id = p_pago_id AND deleted_at IS NULL
+  FOR UPDATE;
   IF v_pago.id IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado'
       USING ERRCODE = 'P0001';
@@ -27068,58 +27250,19 @@ BEGIN
     RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_PERMISO: se requiere permiso de tesorería para regenerar el movimiento bancario'
       USING ERRCODE = 'P0001';
   END IF;
+  -- Auditoría 23: el helper reconoce el origen del anticipo antes de crear
+  -- nada. El lock del pago serializa reintentos y comparte la ruta idempotente
+  -- con el registro/edición normal. Efectivo aplicado válido devuelve NULL.
+  IF v_pago.es_anticipo_aplicado
+     OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.pago_proveedor_id = p_pago_id AND aa.deleted_at IS NULL) THEN
+    RETURN public._movimiento_original_anticipo_aplicado(p_pago_id);
+  END IF;
   IF v_pago.cuenta_bancaria_id IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: el pago no tiene cuenta bancaria, no hay movimiento que generar'
       USING ERRCODE = 'P0001';
   END IF;
-  IF EXISTS (
-    SELECT 1 FROM public.bbva_movimientos
-    WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL
-  ) THEN
-    RAISE EXCEPTION 'LC_MOVIMIENTO_YA_EXISTE: el pago ya tiene un movimiento bancario vigente'
-      USING ERRCODE = 'P0001';
-  END IF;
-  SELECT moneda::text INTO v_cuenta_mon
-  FROM public.cuentas_bancarias
-  WHERE id = v_pago.cuenta_bancaria_id AND deleted_at IS NULL;
-  IF v_cuenta_mon IS NULL THEN
-    RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: la cuenta bancaria del pago no existe o está dada de baja'
-      USING ERRCODE = 'P0001';
-  END IF;
-  -- El movimiento SIEMPRE se registra en la moneda de la cuenta.
-  v_cargo := v_pago.monto;
-  IF v_cuenta_mon IS DISTINCT FROM v_pago.moneda::text THEN
-    -- Ola 11 · RBD-07 (clase BL-04): nunca 1:1 silencioso cross-moneda.
-    IF COALESCE(v_pago.tipo_cambio_usd, 0) <= 0 THEN
-      RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: el pago es en % y la cuenta en %, pero el pago no tiene tipo de cambio registrado; captura el TC en el pago antes de regenerar el movimiento',
-        v_pago.moneda, v_cuenta_mon
-        USING ERRCODE = 'P0001';
-    END IF;
-    IF v_pago.moneda::text = 'USD' AND v_cuenta_mon = 'MXN' THEN
-      v_cargo := v_pago.monto * v_pago.tipo_cambio_usd;
-    ELSIF v_pago.moneda::text = 'MXN' AND v_cuenta_mon = 'USD' THEN
-      v_cargo := v_pago.monto / v_pago.tipo_cambio_usd;
-    END IF;
-  END IF;
-  SELECT 'Pago prov. '
-         || COALESCE(NULLIF(pf.folio_proveedor, ''), NULLIF(pf.folio_interno, ''), 's/folio')
-         || ' — ' || COALESCE(pr.nombre, pf.proveedor_nombre, 'proveedor')
-    INTO v_concepto
-  FROM public.proveedor_facturas pf
-  LEFT JOIN public.proveedores pr ON pr.id = pf.proveedor_id
-  WHERE pf.id = v_pago.proveedor_factura_id;
-  INSERT INTO public.bbva_movimientos (
-    organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
-    cargo, abono, hash_dedupe, estado_conciliacion, pago_proveedor_id,
-    conciliado_por, conciliado_at, importado_por
-  ) VALUES (
-    v_pago.organization_id, v_pago.cuenta_bancaria_id, v_pago.fecha_pago,
-    COALESCE(v_concepto, 'Pago a proveedor'), COALESCE(v_pago.referencia, ''),
-    ROUND(v_cargo, 2), 0, 'pago-' || p_pago_id::text, 'Conciliado', p_pago_id,
-    auth.uid(), now(), auth.uid()
-  )
-  RETURNING id INTO v_mov_id;
-  RETURN v_mov_id;
+  RETURN public._asegurar_movimiento_pago_proveedor(p_pago_id);
 END;
 $$;
 CREATE FUNCTION public.registrar_anticipo_proveedor(p_proveedor_id uuid, p_monto numeric, p_moneda public.moneda, p_fecha_anticipo date DEFAULT CURRENT_DATE, p_tipo_cambio_usd numeric DEFAULT NULL::numeric, p_metodo_pago text DEFAULT NULL::text, p_referencia text DEFAULT NULL::text, p_cuenta_bancaria_id uuid DEFAULT NULL::uuid, p_notas text DEFAULT NULL::text, p_embarque_id uuid DEFAULT NULL::uuid, p_request_id uuid DEFAULT NULL::uuid) RETURNS public.anticipos_proveedor
@@ -34838,6 +34981,8 @@ CREATE TRIGGER notificar_cotizacion_enviada AFTER UPDATE OF estado ON public.cot
 CREATE TRIGGER pagos_proveedor_requiere_aprobacion BEFORE INSERT ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_pagos_proveedor_requiere_aprobacion();
 CREATE TRIGGER set_proformas_updated_at BEFORE UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER set_updated_at_proveedor_documentos BEFORE UPDATE ON public.proveedor_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_00_movimiento_anticipo_aplicado BEFORE INSERT OR UPDATE OF pago_proveedor_id, cuenta_bancaria_id, cargo, abono ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._guard_movimiento_anticipo_aplicado();
+CREATE TRIGGER trg_00_pago_anticipo_aplicado_edicion BEFORE UPDATE OF proveedor_factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio_usd, metodo_pago, referencia, cuenta_bancaria_id, notas, es_anticipo_aplicado ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._guard_pago_anticipo_aplicado_edicion();
 CREATE TRIGGER trg_agentes_propaga_nombre AFTER UPDATE OF nombre ON public.costeo_agentes FOR EACH ROW EXECUTE FUNCTION public.trg_agentes_propaga_nombre();
 CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.anticipos_aplicaciones FOR EACH ROW EXECUTE FUNCTION public.tg_anticipo_saldo();
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -36594,6 +36739,10 @@ GRANT ALL ON FUNCTION public._garantia_historial_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_historial_trg() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_movimiento_anticipo_aplicado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_movimiento_anticipo_aplicado() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_pago_anticipo_aplicado_edicion() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_pago_anticipo_aplicado_edicion() TO service_role;
 REVOKE ALL ON FUNCTION public._guard_soft_delete() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
@@ -36611,6 +36760,9 @@ GRANT ALL ON FUNCTION public._log_role_change_om() TO service_role;
 REVOKE ALL ON FUNCTION public._log_role_change_ur() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO authenticated;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO service_role;
+REVOKE ALL ON FUNCTION public._movimiento_original_anticipo_aplicado(p_pago_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._movimiento_original_anticipo_aplicado(p_pago_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._movimiento_original_anticipo_aplicado(p_pago_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._nc_alerta_retenciones_pagadas() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._nc_alerta_retenciones_pagadas() TO service_role;
 REVOKE ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) FROM PUBLIC;

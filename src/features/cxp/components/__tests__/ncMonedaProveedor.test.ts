@@ -31,6 +31,11 @@ describe("ncMonedaProveedor", () => {
     expect(montoNcEnMonedaFactura(1850, "MXN", "USD", 18.5)).toBeCloseTo(100, 6);
   });
 
+  it("respeta los cuatro decimales de la valuación canónica antes de mostrar centavos", () => {
+    expect(montoNcEnMonedaFactura(1, "MXN", "USD", 18.1903)).toBe(0.055);
+    expect(montoNcEnMonedaFactura(1, "USD", "MXN", 0.05495)).toBe(0.055);
+  });
+
   it("devuelve el monto tal cual cuando la moneda coincide", () => {
     expect(montoNcEnMonedaFactura(500, "USD", "USD", null)).toBe(500);
   });
@@ -40,5 +45,7 @@ describe("ncMonedaProveedor", () => {
     expect(montoNcEnMonedaFactura(100, "USD", "MXN", 0)).toBeNull();
     expect(montoNcEnMonedaFactura(100, "USD", "EUR", 18.5)).toBeNull();
     expect(montoNcEnMonedaFactura(Number.NaN, "USD", "MXN", 18.5)).toBeNull();
+    expect(montoNcEnMonedaFactura(Number.MAX_VALUE, "USD", "MXN", Number.MAX_VALUE)).toBeNull();
+    expect(montoNcEnMonedaFactura(Number.MAX_VALUE, "MXN", "USD", Number.MIN_VALUE)).toBeNull();
   });
 });

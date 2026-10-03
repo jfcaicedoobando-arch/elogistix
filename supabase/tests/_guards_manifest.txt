@@ -9,6 +9,8 @@
 #   - Líneas vacías y las que empiezan con `#` se ignoran.
 supabase/tests/schema-invariants.sql
 supabase/tests/cxp_guard_sobrepago.sql
+supabase/tests/nc_proveedor_tc_explicito.sql
+supabase/tests/anticipo_aplicado_sin_cargo_duplicado.sql
 supabase/tests/cxp_guard_aprobacion_directa.sql
 supabase/tests/fix45_anon_execute_whitelist.sql
 supabase/tests/yg02_comisiones_auth.sql
