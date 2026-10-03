@@ -2,25 +2,20 @@
  * Inicialización de Sentry (errores + feedback widget + screenshots).
  * El DSN es público — Sentry está diseñado para que viva en el bundle del front.
  *
- * IMPORTANTE: este módulo se importa de forma DINÁMICA desde main.tsx
- * (dentro de requestIdleCallback) para que `@sentry/react` y todas sus
- * integraciones queden en `sentry-vendor` y NO en el chunk crítico.
+ * Se carga dinámicamente desde el bootstrap. Replay/feedback no deben
+ * bloquear el primer render; los errores de arranque se encolan aparte.
  *
  * Constantes y helpers puros viven en `initOptions.ts` para respetar el
  * límite Power-of-10 de 200 líneas.
  */
 import * as Sentry from "@sentry/react";
-import { useEffect } from "react";
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from "react-router-dom";
+import { reactRouterBrowserTracingIntegration } from "@sentry/react/react-router";
 import { APP_VERSION } from "@/constants/appVersion";
 import { sampleByRoute, scrubEventPii, computePostgrestFingerprint } from "./helpers";
 import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
+import { scrubSpanPii } from "./spanPrivacy";
+import { markSentryReady } from "./runtimeState";
 import {
   readRate,
   resolveTunnelUrl,
@@ -56,7 +51,6 @@ export function initSentry(): void {
     return;
   }
   if (import.meta.env.MODE === "development") return;
-  initialized = true;
   const buildHash = (import.meta.env.VITE_BUILD_HASH as string | undefined) ?? undefined;
   const isPwa =
     typeof window !== "undefined" &&
@@ -87,6 +81,10 @@ export function initSentry(): void {
       httpHeaders: false,
       httpBodies: [],
       urlQueryParams: false,
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      queues: false,
+      graphQL: { document: false, variables: false },
     },
     // 13.312.10: payloads RPC de 2-3 niveles (embarque → contenedores → conceptos).
     normalizeDepth: 5,
@@ -104,23 +102,10 @@ export function initSentry(): void {
       if (fp) event.fingerprint = fp;
       return scrubEventPii(event);
     },
-    // 13.114.19: las transactions también pueden traer PII en `request.url`
-    // (query strings con `?email=`, `?rfc=`, etc.).
-    beforeSendTransaction(event) {
-      // SAFE-CAST: TransactionEvent y ErrorEvent comparten la forma scrubbeable
-      // (request, breadcrumbs, user). `scrubEventPii` sólo lee/escribe campos
-      // comunes; el doble cast evita duplicar la lógica de redacción.
-      return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
-    },
+    beforeSendSpan: scrubSpanPii,
     beforeBreadcrumb: scrubBreadcrumb,
     integrations: [
-      Sentry.reactRouterV7BrowserTracingIntegration({
-        useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes,
-      }),
+      reactRouterBrowserTracingIntegration(),
       Sentry.browserProfilingIntegration(),
       // 13.312.10 (audit Sentry PR-C): captura `Error.cause` y propiedades
       // enumerables (útil para `PostgrestError` que trae `code/hint/details`
@@ -146,9 +131,11 @@ export function initSentry(): void {
       Sentry.feedbackIntegration(FEEDBACK_INTEGRATION_OPTIONS),
     ],
   });
+  initialized = Boolean(Sentry.getClient());
+  if (initialized) markSentryReady();
 }
 
-/** True una vez `initSentry()` se ha invocado al menos una vez. */
+/** True only when initialization successfully created a client. */
 export function isSentryReady(): boolean {
   return initialized;
 }

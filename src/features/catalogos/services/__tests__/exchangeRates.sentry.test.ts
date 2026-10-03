@@ -18,6 +18,7 @@ vi.mock("@sentry/react", () => ({
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke: mocks.invoke } },
 }));
+vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn() }));
 
 import { fetchExchangeRates } from "../index";
 

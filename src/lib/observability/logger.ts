@@ -11,6 +11,8 @@
  * Reemplaza llamadas directas a `console.warn|error` en código productivo.
  */
 import { logClientError } from "@/services/observability/logClientError";
+import { captureExceptionOnce } from "./captureExceptionOnce";
+import { scrubTelemetryData } from "./scrubTelemetryData";
 
 const isProd =
   typeof import.meta !== "undefined" && import.meta.env?.MODE === "production";
@@ -22,16 +24,10 @@ function fmt(scope: string, args: unknown[]): unknown[] {
 /** Reporta a Sentry en producción, perezosamente (no añade peso al chunk crítico). */
 function reportToSentry(scope: string, err: Error, extra?: Record<string, string>): void {
   if (!isProd) return;
-  void import("@sentry/react")
-    .then((Sentry) => {
-      Sentry.captureException(err, {
-        tags: { scope, source: "logger" },
-        ...(extra && Object.keys(extra).length > 0 ? { extra } : {}),
-      });
-    })
-    .catch(() => {
-      // Sentry es best-effort; un fallo al cargarlo no debe romper la app.
-    });
+  void captureExceptionOnce(err, {
+    tags: { scope, source: "logger" },
+    extra: scrubTelemetryData(extra) as Record<string, unknown> | undefined,
+  });
 }
 
 interface ErrorPlanoLike {
@@ -112,7 +108,8 @@ export const logger = {
       const message =
         firstError?.message ?? plano?.message ?? String(args[0] ?? "unknown error");
       // Conservar stack: si no vino Error, sintetizar uno para Sentry.
-      const errForSentry = firstError ?? new Error(message);
+      const original = args.find((arg) => describirErrorPlano(arg) !== null);
+      const errForSentry = firstError ?? new Error(message, { cause: original });
       logClientError({
         message: `[${scope}] ${message}`,
         stack: errForSentry.stack,
@@ -124,4 +121,3 @@ export const logger = {
     }
   },
 };
-

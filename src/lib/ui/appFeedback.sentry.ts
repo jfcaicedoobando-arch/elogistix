@@ -1,8 +1,11 @@
 /** Filtros de Sentry para notifyError. */
+import { isExpectedTelemetryError, isOfflineTelemetryError } from "../observability/expectedTelemetryError";
 
 /** Decide si un error debe llegar a Sentry. */
 export function shouldReportToSentry(error: unknown): boolean {
   if (error === undefined || error === null) return false;
+  if ((error as { expected?: unknown }).expected === false) return true;
+  if (isExpectedTelemetryError(error)) return false;
   if (isExpectedValidation(error)) return false;
   if (isAuthorizationError(error)) return false;
   if (isAuthRateLimit(error)) return false;
@@ -36,7 +39,8 @@ export function isTransientCfdiUploadNetwork(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
   if ((err as { name?: unknown }).name !== "CfdiUploadError") return false;
   const phase = (err as { context?: { phase?: unknown } }).context?.phase;
-  return phase === "preflight" || phase === "request";
+  const online = (err as { context?: { online?: unknown } }).context?.online;
+  return (phase === "preflight" || phase === "request") && online === false;
 }
 
 /**
@@ -64,7 +68,7 @@ export function isAuthRateLimit(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
   const e = err as { code?: unknown; message?: unknown; status?: unknown };
   if (e.code === "over_email_send_rate_limit") return true;
-  if (e.status === 429) return true;
+  if (e.status === 429 && (err as { name?: unknown }).name === "AuthApiError") return true;
   const msg = typeof e.message === "string" ? e.message : "";
   return /for security purposes, you can only request this after|email rate limit exceeded/i
     .test(msg);
@@ -108,6 +112,5 @@ export function isTransientFacturapiNetwork(err: unknown): boolean {
   if ((err as { transient?: unknown }).transient !== true) return false;
   const msg = (err as { message?: unknown }).message;
   if (typeof msg !== "string") return false;
-  return /failed to send a request to the edge function|networkerror|failed to fetch|load failed/i
-    .test(msg);
+  return isOfflineTelemetryError(err) && /failed to send a request to the edge function|networkerror|failed to fetch|load failed/i.test(msg);
 }

@@ -43,7 +43,8 @@ describe("sampleByRoute — sampling dinámico por ruta", () => {
     expect(sampleByRoute(at("/embarques/nuevo"))).toBe(1.0);
     expect(sampleByRoute(at("/embarques/abc-123/editar"))).toBe(1.0);
     expect(sampleByRoute(at("/cotizaciones/nueva"))).toBe(1.0);
-    expect(sampleByRoute(at("/facturas/nueva"))).toBe(1.0);
+    expect(sampleByRoute(at("/facturacion/nueva"))).toBe(1.0);
+    expect(sampleByRoute(at("/facturacion/00000000-0000-0000-0000-000000000001"))).toBe(1);
     expect(sampleByRoute(at("/conciliacion"))).toBe(1.0);
   });
   it("módulos financieros → 0.5", () => {
@@ -60,6 +61,13 @@ describe("sampleByRoute — sampling dinámico por ruta", () => {
     // F5 (13.65.0): /admin se elevó a 0.3, /reportes a 0.5. Probar paths neutros.
     expect(sampleByRoute(at("/configuracion"))).toBe(0.1);
     expect(sampleByRoute(at("/perfil"))).toBe(0.1);
+  });
+  it("usa el nombre de ruta del SDK y respeta sampling heredado", () => {
+    expect(sampleByRoute({ name: "/facturacion/:id" })).toBe(1);
+    const inherit = (rate: number) => rate / 2;
+    expect(sampleByRoute({ name: "/facturacion/:id", inheritOrSampleWith: inherit })).toBe(0.5);
+    expect(sampleByRoute({ name: "/facturacion/:id", parentSampled: false })).toBe(0);
+    expect(sampleByRoute({ name: "/perfil", parentSampled: true })).toBe(1);
   });
 });
 
