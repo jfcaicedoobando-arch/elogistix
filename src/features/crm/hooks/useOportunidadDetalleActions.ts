@@ -87,6 +87,8 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
         notifyInfo(undefined, {
           title: `Cotización creada · ${result.folio}`,
           description: `La etapa de la oportunidad no se pudo actualizar: ${result.avisoEtapa}. Muévela manualmente.`,
+          method: "CRM_COTIZACION_ETAPA_PARCIAL", showDetails: true,
+          context: { folio: result.folio, avisoEtapa: result.avisoEtapa },
           duration: 5000,
         });
       } else {

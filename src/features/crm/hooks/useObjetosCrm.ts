@@ -3,8 +3,7 @@
  * Todas las llaves cuelgan de ['crm','objetos'] para invalidar en bloque.
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
   type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
@@ -78,8 +77,8 @@ export function useCrearEmpresaCrm() {
   const invalidar = useInvalidarObjetos();
   return useMutation({
     mutationFn: crearEmpresa,
-    onSuccess: () => { toast.success("Empresa creada"); void invalidar(); },
-    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo crear la empresa", error, method: "CRM_CREAR_EMPRESA" }),
+    onSuccess: () => { notifySuccess(undefined, { title: "Empresa creada" }); void invalidar(); },
+    onError: (error: Error) => notifyError(undefined, { title: "No se pudo crear la empresa", description: error.message, error, method: "CRM_CREAR_EMPRESA" }),
   });
 }
 
@@ -87,8 +86,8 @@ export function useCrearContactoCrm() {
   const invalidar = useInvalidarObjetos();
   return useMutation({
     mutationFn: (input: NuevoContactoInput) => crearContacto(input),
-    onSuccess: () => { toast.success("Contacto creado"); void invalidar(); },
-    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo crear el contacto", error, method: "CRM_CREAR_CONTACTO" }),
+    onSuccess: () => { notifySuccess(undefined, { title: "Contacto creado" }); void invalidar(); },
+    onError: (error: Error) => notifyError(undefined, { title: "No se pudo crear el contacto", description: error.message, error, method: "CRM_CREAR_CONTACTO" }),
   });
 }
 
@@ -99,7 +98,7 @@ export function useVinculoCrm() {
   return useMutation({
     mutationFn: ({ tipo, aId, bId, quitar }: VinculoInput) =>
       quitar ? desligar(tipo, aId, bId) : ligar(tipo, aId, bId),
-    onSuccess: (_d, v) => { toast.success(v.quitar ? "Vínculo quitado" : "Registro ligado"); void invalidar(); },
-    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo actualizar el vínculo", error, method: "CRM_VINCULO" }),
+    onSuccess: (_d, v) => { notifySuccess(undefined, { title: v.quitar ? "Vínculo quitado" : "Registro ligado" }); void invalidar(); },
+    onError: (error, context) => notifyError(undefined, { title: "No se pudo actualizar el vínculo", error, context: { ...context }, method: "CRM_ACTUALIZAR_VINCULO" }),
   });
 }

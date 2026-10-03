@@ -32,6 +32,7 @@ export async function verificarCostosOAvisar(cotizacionId: string): Promise<bool
     if (err instanceof CandadoCostosNoVerificableError) {
       notifyWarning(undefined, {
         title: "No pudimos verificar los costos",
+        error: err, method: "COTIZACION_CANDADO_COSTOS", context: { cotizacionId },
         description:
           "No se pudo comprobar si la cotización tiene costos cargados. Revisa tu conexión e inténtalo de nuevo.",
       });

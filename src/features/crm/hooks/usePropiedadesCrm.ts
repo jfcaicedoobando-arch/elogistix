@@ -2,8 +2,7 @@
  * Hooks de propiedades configurables y sus valores (Fase 3).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   actualizarPropiedad, archivarOpcion, crearOpcion, crearPropiedad, fetchPropiedades, renombrarOpcion,
   type CambioPropiedad, type NuevaPropiedad, type ObjetoCrm, type OpcionCrm,
@@ -25,8 +24,9 @@ function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => { if (ok) toast.success(ok); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: ["crm", "scoring"] }); },
-    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo guardar la propiedad", error, method: "CRM_PROPIEDADES" }),
+    onSuccess: () => { if (ok) notifySuccess(undefined, { title: ok }); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: ["crm", "scoring"] }); },
+    onError: (error: Error, variables) => notifyError(undefined, { title: "No se pudo guardar la propiedad", description: error.message,
+      error, method: "CRM_PROPIEDADES_MUTACION", context: { variables } }),
   });
 }
 
