@@ -110,7 +110,9 @@ export function commonTest({ exclude }: CommonTestOptions) {
     clearMocks: false,
     // Fija TZ para todos los tests: CI y locales en otra zona dan el mismo
     // resultado en `addDays`, `todayLocalISO`, `parseLocalMx`.
-    env: { TZ: "America/Mexico_City" },
+    // Never inherit the real project's DSN from .env into a test fork.
+    // SDK contract tests supply their own mock DSN and in-memory transport.
+    env: { TZ: "America/Mexico_City", VITE_SENTRY_DSN: "" },
     exclude,
     testTimeout: 15_000,
     hookTimeout: 15_000,

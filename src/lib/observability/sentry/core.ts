@@ -43,6 +43,8 @@ let initialized = false;
 
 export function initSentry(): void {
   if (initialized) return;
+  // Unit/benchmark failures must never reach the project's real DSN.
+  if (import.meta.env.MODE === "development" || import.meta.env.MODE === "test") return;
   if (!DSN) {
     if (import.meta.env.MODE !== "development") {
        
@@ -50,7 +52,6 @@ export function initSentry(): void {
     }
     return;
   }
-  if (import.meta.env.MODE === "development") return;
   const buildHash = (import.meta.env.VITE_BUILD_HASH as string | undefined) ?? undefined;
   const isPwa =
     typeof window !== "undefined" &&

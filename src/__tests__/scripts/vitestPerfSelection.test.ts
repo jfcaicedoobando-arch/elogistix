@@ -15,6 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   esArchivoPerf,
+  commonTest,
   NORMAL_EXCLUDE,
   PERF_EXCLUDE,
   PERF_GLOBS_JSDOM,
@@ -122,6 +123,12 @@ describe("vitest.perf.config.ts", () => {
 });
 
 describe("suite normal", () => {
+  it.each([{ exclude: NORMAL_EXCLUDE }, { exclude: PERF_EXCLUDE }])("isolates telemetry for each shared test configuration", ({ exclude }) => {
+    const options = commonTest({ exclude });
+    expect(options.env.VITE_SENTRY_DSN).toBe("");
+    expect(options.env.TZ).toBe("America/Mexico_City");
+  });
+
   it("excluye los tres patrones de benchmark", () => {
     expect(NORMAL_EXCLUDE).toContain("src/**/*.perf.ts");
     expect(NORMAL_EXCLUDE).toContain("src/**/*.perf.tsx");
