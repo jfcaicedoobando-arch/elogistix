@@ -17,7 +17,7 @@ export const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 días
 
 import {
   BUCKET_PDF, buildTemplateData, parseSendBody, resolverEjecutivo, resolverPdfPath,
-  type Cotizacion, type Destinatario, type SendBodyParsed,
+  type AdminClient, type Cotizacion, type Destinatario, type SendBodyParsed,
 } from './sendHelpers.ts';
 
 

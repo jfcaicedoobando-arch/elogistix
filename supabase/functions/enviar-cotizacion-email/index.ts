@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { handlePrepare, handleSend } from './handlers.ts';
+import type { AdminClient, Cotizacion } from './sendHelpers.ts';
 
 function makeJson(cors: Record<string, string>) {
   return (data: Record<string, unknown>, status = 200): Response =>
@@ -45,11 +46,13 @@ async function loadCotizacion(
   userId: string,
   json: JsonFn,
 ) {
-  const { data: cot, error } = await admin
+  const { data, error } = await admin
     .from('cotizaciones')
     .select('id, folio, organization_id, cliente_id, cliente_nombre, origen, destino, incoterm, modo, fecha_vigencia, estado, deleted_at, es_prospecto, oportunidad_id')
     .eq('id', cotizacionId)
     .maybeSingle();
+  // El cliente sin tipos devuelve campos `unknown`: se fija la forma esperada.
+  const cot = data as Cotizacion | null;
   if (error || !cot) return { res: json({ error: 'Cotización no encontrada' }, 404) };
   if (cot.deleted_at) return { res: json({ error: 'Cotización eliminada' }, 400) };
 
