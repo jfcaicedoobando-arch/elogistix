@@ -11,7 +11,6 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { formatCurrency } from "@/lib/formatters";
 import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveedor";
-import { useNcProveedorTipoCambio } from "@/features/cxp/hooks/useNcProveedorTipoCambio";
 import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
@@ -49,11 +48,11 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const { organizationId } = useOrgFilter();
 
   const montoNum = Number(monto);
-  const conversion = useNcProveedorTipoCambio({ open, fecha, moneda, monedaFactura, tipoCambio });
+  const tcNum = tipoCambio.trim() ? Number(tipoCambio) : null;
   const cruceInvalido = esCruceNoConvertible(moneda, monedaFactura);
-  const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, conversion.tipoCambio);
+  const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, tcNum);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
-  const valido = Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
+  const valido = Boolean(folio.trim()) && Boolean(fecha) && montoNum > 0 && !excede && !cruceInvalido;
 
   // YG-04: hay datos capturados que se perderían al cerrar el modal.
   const isDirty =
@@ -91,14 +90,13 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   };
 
   const onSubmit = async () => {
-    if (!valido || crear.isPending) return;
     const payload = {
       proveedor_factura_id: facturaId,
       folio_nc: folio.trim(),
       fecha,
       monto: montoNum,
       moneda,
-      tipo_cambio: conversion.tipoCambio,
+      tipo_cambio: tcNum,
       motivo,
       descripcion,
       estado: "Borrador" as const,
@@ -187,9 +185,9 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
         cruceInvalido={cruceInvalido}
         moneda={moneda}
         monedaFactura={monedaFactura}
+        montoNum={montoNum}
         montoEnFactura={montoEnFactura}
         excede={excede}
-        conversion={conversion}
       />
     </FormDialogShell>
   );

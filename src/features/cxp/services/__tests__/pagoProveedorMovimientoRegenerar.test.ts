@@ -42,9 +42,4 @@ describe("regenerarMovimientoPagoProveedor", () => {
     });
     expect(registrarActividad).not.toHaveBeenCalled();
   });
-  it("preserva NULL para una aplicación de anticipo en efectivo sin inventar id bancario", async () => {
-    rpc.mockResolvedValue({ data: null, error: null });
-    await expect(regenerarMovimientoPagoProveedor("pago-efectivo-fixture")).resolves.toBeNull();
-    expect(registrarActividad).toHaveBeenCalledWith(expect.objectContaining({ detalles: { movimientoId: null } }));
-  });
 });

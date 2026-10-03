@@ -1,12 +1,5 @@
 # Changelog
 
-## [13.824.19] - 2026-10-03
-
-- **fix(CxP – notas de crédito)**: conserva el TC positivo capturado, incluidos 0.5 y 1. El campo vacío consulta DOF, muestra la equivalencia con el mismo redondeo de la base y bloquea el registro mientras falta un TC válido.
-- **fix(tesorería – anticipos)**: aplicar un anticipo reutiliza su cargo original y no permite crear una segunda salida ni editar la aplicación como un pago ordinario. Las inconsistencias de origen requieren revisión explícita; efectivo y devolución del remanente conservan sus flujos.
-- **fix(tesorería – detalle)**: estados del anticipo con etiquetas compartidas y cargo original en su moneda, incluidos anticipos USD.
-- **test(auditoría financiera)**: regresiones de TC, borrado y blur, origen bancario, parcialidad, devolución, idempotencia y seguridad por organización; sin reparación de movimientos históricos.
-
 ## [13.824.18] - 2026-10-03
 
 - **fix(CxP y captura)**: conserva el pago parcial al cambiar el tipo de cambio, liquida costos con el saldo en moneda de la factura y acepta cantidades decimales sin reinterpretar puntos decimales como miles.

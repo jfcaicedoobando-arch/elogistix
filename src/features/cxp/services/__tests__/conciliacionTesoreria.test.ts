@@ -87,13 +87,6 @@ describe("mensajeConciliacion", () => {
 });
 
 describe("mapReporteConciliacion", () => {
-  it("conserva la incidencia de anticipo como no regenerable y no la presenta cuadrada", () => {
-    const r = mapReporteConciliacion({ incidencias: [{ tipo: "anticipo_inconsistente", pago_id: "pago-fixture", motivo: "LC_ANTICIPO_MOVIMIENTO_INCONSISTENTE: el cargo original está duplicado" }] });
-    expect(r.incidencias[0]).toMatchObject({ tipo: "anticipo_inconsistente", motivo: "el cargo original está duplicado" });
-    expect(resumenConciliacion(r).cuadrado).toBe(false);
-    expect(mensajeConciliacion(r)).toMatch(/aplicación de anticipo.*por revisar/);
-    expect(mensajeConciliacion(r)).not.toMatch(/Todo cuadra/);
-  });
   it("normaliza el jsonb de la RPC", () => {
     const r = mapReporteConciliacion({
       facturas_revisadas: 2,

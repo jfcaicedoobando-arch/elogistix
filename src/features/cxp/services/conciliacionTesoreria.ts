@@ -21,7 +21,7 @@ export interface FacturaConciliada {
   movimientos: number;
 }
 
-export type TipoIncidencia = "sin_movimiento" | "descuadre" | "anticipo_inconsistente";
+export type TipoIncidencia = "sin_movimiento" | "descuadre";
 
 export interface IncidenciaConciliacion {
   pagoId: string;
@@ -33,7 +33,6 @@ export interface IncidenciaConciliacion {
   montoEsperadoMxn: number;
   cargoMxn: number;
   tipo: TipoIncidencia;
-  motivo?: string;
 }
 
 export interface SaldoProveedorConciliado {
@@ -88,8 +87,7 @@ function mapIncidencia(i: Raw): IncidenciaConciliacion {
     moneda: str(i.moneda),
     montoEsperadoMxn: num(i.monto_esperado_mxn),
     cargoMxn: num(i.cargo_mxn),
-    tipo: i.tipo === "anticipo_inconsistente" ? "anticipo_inconsistente" : i.tipo === "descuadre" ? "descuadre" : "sin_movimiento",
-    motivo: str(i.motivo).replace(/^LC_[A-Z_]+:\s*/, ""),
+    tipo: i.tipo === "descuadre" ? "descuadre" : "sin_movimiento",
   };
 }
 

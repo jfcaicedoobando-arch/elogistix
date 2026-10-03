@@ -40,15 +40,6 @@ beforeEach(() => {
 });
 
 describe("actualizarPagoProveedor · RPC atómica (D5)", () => {
-  it.each([
-    { es_anticipo_aplicado: true, anticipos_aplicaciones: [] },
-    { es_anticipo_aplicado: false, anticipos_aplicaciones: [{ id: "app-fixture", deleted_at: null }] },
-  ])("bloquea edición genérica de aplicaciones antes de mutar: %j", async (origen) => {
-    mock.setTableResult("pagos_proveedor", { data: { id: "pago-1", deleted_at: null, ...origen }, error: null });
-    await expect(actualizarPagoProveedor(INPUT, "user-1")).rejects.toThrow(/LC_PAGO_ANTICIPO_NO_EDITABLE/);
-    expect(mock.rpcCalls).toHaveLength(0);
-    expect(registrarActividad).not.toHaveBeenCalled();
-  });
   it("cambio de cuenta/importe exitoso: una sola RPC y sin UPDATE directo", async () => {
     mock.setRpcResult("actualizar_pago_proveedor_atomico", {
       data: { pago_id: "pago-1", movimiento_id: "mov-1", movimiento_creado: true },

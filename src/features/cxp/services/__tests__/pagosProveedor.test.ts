@@ -19,11 +19,6 @@ describe("pagosProveedor service", () => {
     await listarPagosProveedor("f1");
     const call = mock.tableCalls.find(c => c.table === "pagos_proveedor");
     expect(call?.ops).toContain("eq");
-    expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("es_anticipo_aplicado");
-    expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("anticipos_aplicaciones_pago_proveedor_id_fkey");
-    expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("bbva_movimientos_anticipo_proveedor_id_fkey");
-    expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("estado, moneda, metodo_pago");
-    expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("referencia, cargo, abono, deleted_at");
   });
 
   it("v13.823.32: registrarPagoProveedor delega en la RPC atómica y devuelve el pago creado", async () => {

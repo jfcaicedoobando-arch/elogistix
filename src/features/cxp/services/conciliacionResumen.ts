@@ -24,7 +24,7 @@ export function resumenConciliacion(r: ReporteConciliacion | null): ResumenConci
   }
   const sinMovimiento = r.incidencias.filter((i) => i.tipo === "sin_movimiento").length;
   const descuadres = r.incidencias.filter((i) => i.tipo === "descuadre").length;
-  const cuadrado = r.incidencias.length === 0;
+  const cuadrado = sinMovimiento === 0 && descuadres === 0;
 
   const mapa = new Map<string, { saldo: number; facturasAbiertas: number }>();
   for (const p of r.proveedores) {
@@ -49,7 +49,6 @@ function plural(n: number, singular: string, plural_: string): string {
 export function mensajeConciliacion(r: ReporteConciliacion): string {
   const sinMovimiento = r.incidencias.filter((i) => i.tipo === "sin_movimiento").length;
   const descuadres = r.incidencias.filter((i) => i.tipo === "descuadre").length;
-  const anticipos = r.incidencias.filter((i) => i.tipo === "anticipo_inconsistente").length;
   const partes: string[] = [];
   if (r.facturasActualizadas > 0) {
     partes.push(`se corrigió el estatus de ${plural(r.facturasActualizadas, "factura", "facturas")}`);
@@ -60,7 +59,6 @@ export function mensajeConciliacion(r: ReporteConciliacion): string {
   if (descuadres > 0) {
     partes.push(`${plural(descuadres, "pago", "pagos")} con importe distinto al banco`);
   }
-  if (anticipos > 0) partes.push(`${plural(anticipos, "aplicación de anticipo", "aplicaciones de anticipo")} por revisar`);
   if (partes.length === 0) {
     return `Todo cuadra: ${plural(r.facturasRevisadas, "factura revisada", "facturas revisadas")}.`;
   }

@@ -13,8 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
 import { Hint } from "@/components/shared/Hint";
-import { PagoAnticipoBancoCell } from "./PagoAnticipoBancoCell";
-import type { OrigenPagoAnticipo } from "../domain/pagoAnticipoOrigen";
 
 interface MovimientoVinculado {
   id: string;
@@ -31,15 +29,9 @@ interface Props {
   cuentaBancariaId: string | null;
   movimiento: MovimientoVinculado | null;
   disabled?: boolean;
-  origenAnticipo?: OrigenPagoAnticipo | null;
 }
 
-export function ConciliacionPagoCell({ origenAnticipo, ...props }: Props) {
-  if (origenAnticipo) return <PagoAnticipoBancoCell origen={origenAnticipo} />;
-  return <ConciliacionPagoBancarioCell {...props} />;
-}
-
-function ConciliacionPagoBancarioCell({
+export function ConciliacionPagoCell({
   pagoId, fechaPago, monto, cuentaBancariaId, movimiento, disabled,
 }: Props) {
   const { open, setOpen, candidatos, vincular, desvincular } =

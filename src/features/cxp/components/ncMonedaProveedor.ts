@@ -4,7 +4,6 @@
  * de cambio se expresa en la convención mexicana, MXN por 1 unidad de moneda
  * extranjera. Sin tipo de cambio devuelve `null` — nunca 1:1 silencioso.
  */
-import Decimal from "decimal.js";
 import type { MonedaNotaCreditoProveedor as MonedaNC } from "@/features/cxp/types";
 
 /** `true` cuando el cruce no es convertible (USD↔EUR: no hay TC cruzado). */
@@ -37,8 +36,6 @@ export function montoNcEnMonedaFactura(
   if (esCruceNoConvertible(monedaNc, monedaFactura)) return null;
   const tc = Number(tipoCambio ?? 0);
   if (!Number.isFinite(tc) || tc <= 0) return null;
-  // El servidor valúa el cruce con ROUND(numeric, 4) antes de mostrar centavos.
-  const convertido = monedaNc === "MXN" ? new Decimal(monto).div(tc) : new Decimal(monto).times(tc);
-  const valuado = convertido.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toNumber();
-  return Number.isFinite(valuado) ? valuado : null;
+  // MXN → extranjera: se divide; extranjera → MXN: se multiplica.
+  return monedaNc === "MXN" ? monto / tc : monto * tc;
 }

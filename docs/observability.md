@@ -1,8 +1,6 @@
 # Observabilidad — mapa y diagnóstico
 
-Revisado el **2026-10-03**. Sentry frontend/bundler **11.4.0** y Edge
-**10.76.0**: versiones deliberadamente separadas por compatibilidad con el
-runtime gestionado observado (Deno 2.1.4). CLI local/CI: Deno **2.9.7**. Implementación en
+Revisado el **2026-10-03**. SDK Sentry alineado en **11.4.0**. Implementación en
 `src/lib/observability/sentry/`, `src/lib/query/`,
 `src/lib/ui/appFeedback.ts` y `supabase/functions/_shared/sentry.ts`.
 [Runbook Sentry](sentry-runbook.md).
@@ -13,9 +11,7 @@ Frontend inicializa la configuración/integraciones de forma dinámica con
 `VITE_SENTRY_DSN`; el adaptador de rutas importa el SDK base estáticamente
 para no reemplazar/remontar formularios al terminar la inicialización;
 usa túnel Supabase para ingesta cuando está configurado.
-Edge usa `SENTRY_DSN_EDGE` y wrappers comunes. `sentryRequestScope.ts`
-conserva scopes manuales por solicitud con AsyncLocalStorage; no instala
-instrumentación automática ni reemplaza el proveedor OpenTelemetry del runtime.
+Edge usa `SENTRY_DSN_EDGE` y wrappers comunes.
 Capturas esperan un init compartido y deduplican por identidad de error.
 El runtime sólo expone un SDK habilitado con transporte; un ID generado no
 certifica recepción remota. Sin cliente activo, feedback conserva «Copiar detalles».
@@ -31,10 +27,7 @@ disponibles cuando faltó token o build los desactivó.
 PII scrub en `piiScrub.ts`, filtros en `sentry/initOptions.ts` /
 `dropPredicate.ts`, contexto en `errorContextStore.ts`.
 La política pura de privacidad vive en `supabase/functions/_shared/` y se
-reexporta al frontend; `beforeSendSpan` limpia el formato streamed de SDK 11
-en frontend y el formato estático de SDK 10 en Edge. `beforeSendTransaction`
-limpia también la raíz y su nombre en sampling metadata; sólo los IDs técnicos
-válidos de `contexts.trace` se preservan sin aplicar heurísticas de teléfono.
+reexporta al frontend; `beforeSendSpan` limpia el formato streamed de SDK 11.
 Replays enmascaran entradas/textos/media según configuración vigente.
 No registrar claves, contraseñas, XML completo ni bodies sensibles.
 

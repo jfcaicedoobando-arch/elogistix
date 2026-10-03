@@ -12,13 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 /** Devuelve el id del movimiento bancario creado. Lanza si la RPC rechaza. */
-export async function regenerarMovimientoPagoProveedor(pagoId: string): Promise<string | null> {
+export async function regenerarMovimientoPagoProveedor(pagoId: string): Promise<string> {
   const { data, error } = await supabase.rpc("regenerar_movimiento_pago_proveedor", {
     p_pago_id: pagoId,
   });
   if (error) throw error;
 
-  const movimientoId = typeof data === "string" ? data : null;
+  const movimientoId = typeof data === "string" ? data : "";
   await registrarActividad({
     modulo: "tesoreria",
     accion: "regenerar_movimiento_bancario_pago",

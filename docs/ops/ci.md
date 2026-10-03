@@ -32,8 +32,8 @@ Sin caché: lockfile congelado, `--ignore-scripts`.
 
 ### Deno: CLI de pruebas vs. runtime desplegado
 
-`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. Edge usa Sentry
-**10.76.0**, no SDK 11 (éste requiere Deno ≥2.8.3). Ambos comandos mantienen
+`ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**, por encima del
+mínimo **2.8.3** de Sentry 11. Ambos comandos `deno test` mantienen
 `--sanitize-ops` y `--sanitize-resources`: desde Deno 2.8 cambiaron sus
 defaults y la actualización no debe relajar la detección de fugas.
 Se conserva typecheck, sin `--no-check`, y `--node-modules-dir=none`.
@@ -58,11 +58,6 @@ la versión de la CLI Supabase. Si el log sólo dice `booted` y no expone
 versión, solicitar confirmación al proveedor: ese log no la certifica.
 Un smoke aprobado prueba contratos HTTP,
 no la versión exacta del runtime remoto.
-
-El runtime observado el 2026-10-03 fue Edge Runtime 1.77.0 / Deno 2.1.4;
-los contratos Sentry también se ejecutaron localmente en ese Deno antiguo.
-Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
-[runbook y evidencia histórica](../sentry-runbook.md#11-validación-operativa-pendiente-de-dashboarddespliegue).
 
 ## Otros workflows
 

@@ -34,15 +34,12 @@ export interface ActualizarPagoProveedorInput {
 async function leerPagoActual(id: string) {
   const { data, error } = await supabase
     .from("pagos_proveedor")
-    .select("id, organization_id, monto, moneda, cuenta_bancaria_id, deleted_at, es_anticipo_aplicado, anticipos_aplicaciones!anticipos_aplicaciones_pago_proveedor_id_fkey(id, deleted_at)")
+    .select("id, organization_id, monto, moneda, cuenta_bancaria_id, deleted_at")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   if (!data || data.deleted_at) {
     throw Object.assign(new Error("El pago ya no existe o fue eliminado."), { code: "NOT_FOUND" });
-  }
-  if (data.es_anticipo_aplicado || (data.anticipos_aplicaciones ?? []).some((a) => !a.deleted_at)) {
-    throw new Error("LC_PAGO_ANTICIPO_NO_EDITABLE: Revierte la aplicación y vuelve a aplicar el anticipo; su cargo original se conserva.");
   }
   return data;
 }

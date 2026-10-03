@@ -135,7 +135,7 @@ export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
           <div className="space-y-1.5 mt-3">
             <Label htmlFor="nc-tc">Tipo de cambio (MXN por 1 {monedaExtranjera})</Label>
             <Input
-              id="nc-tc" type="text" inputMode="decimal"
+              id="nc-tc" type="number" step="0.0001" min="0"
               value={tipoCambio} onChange={(e) => onTipoCambioChange(e.target.value)}
               placeholder="Ej. 18.5000"
             />
