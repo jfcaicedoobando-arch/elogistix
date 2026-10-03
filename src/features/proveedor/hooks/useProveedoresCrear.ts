@@ -4,7 +4,6 @@ import { useProveedorMutations } from "@/features/proveedor/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { ProveedorDuplicadoError } from "@/features/proveedor/services";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 /**
@@ -44,8 +43,7 @@ export function useProveedoresCrear() {
       }
       notifyError(undefined, {
         title: "Error al crear proveedor",
-        method: "HANDLE_ADD",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        method: "CREAR_PROVEEDOR",
         // R-03: sin `error` el toast mostraba "undefined" y ocultaba la causa real.
         error: err,
       });

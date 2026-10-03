@@ -34,8 +34,9 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
       };
       notifySuccess(undefined, { title: etiquetas[llave] ?? "Copiado al portapapeles", duration: 2000 });
       setTimeout(() => setCopiado((c) => (c === llave ? null : c)), 1500);
-    } catch {
-      notifyError(undefined, { title: "No se pudo copiar al portapapeles" });
+    } catch (error) {
+      notifyError(undefined, { title: "No se pudo copiar al portapapeles", error,
+        method: "COPY_AGENT_CREDENTIALS", context: { campo: llave } });
     }
   };
 

@@ -65,8 +65,9 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         notifyError(undefined, {
           title: "Pago registrado, pero el REP falló",
           description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
-          method: "ON_ERROR",
-          errorCode: ERROR_CODES.VALIDATION_FAILED,
+          error: err,
+          method: "FACTURACION_TIMBRAR_REP_TRAS_PAGO",
+          context: { facturaId, pagoId },
         });
       }
     } finally {
@@ -139,8 +140,9 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
       notifyError(undefined, {
         title: "Error al registrar pago",
         description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: err,
+        method: "FACTURACION_REGISTRAR_PAGO",
+        context: { facturaId: args.facturaId, cuentaBancariaId: args.cuentaBancariaId },
       });
     }
   };

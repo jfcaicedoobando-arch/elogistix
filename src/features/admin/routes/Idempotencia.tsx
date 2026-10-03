@@ -55,8 +55,9 @@ export default function Idempotencia() {
     try {
       await navigator.clipboard.writeText(k);
       toast({ title: "requestId copiado" });
-    } catch {
-      notifyError(undefined, { title: "No se pudo copiar", method: "PAGES_ADMIN_IDEMPOTENCIA_1" });
+    } catch (error) {
+      notifyError(undefined, { title: "No se pudo copiar", error,
+        method: "COPY_IDEMPOTENCY_REQUEST_ID", context: { idempotencyKey: k } });
     }
   };
 

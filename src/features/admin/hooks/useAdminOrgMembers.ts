@@ -12,7 +12,6 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 export type MemberRow = OrgMemberRow;
 
@@ -32,8 +31,9 @@ export function useAdminOrgMembers(id: string | undefined) {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
       notifySuccess(undefined, { title: "Rol actualizado" });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo actualizar el rol", description: getErrorMessage(error), method: "UPDATE_ORG_MEMBER_ROLE", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    onError: (error: Error, vars) => {
+      notifyError(undefined, { title: "No se pudo actualizar el rol", description: getErrorMessage(error),
+        error, method: "UPDATE_ORG_MEMBER_ROLE", context: { organizationId: id, memberId: vars.memberId } });
     },
   });
 
@@ -44,8 +44,9 @@ export function useAdminOrgMembers(id: string | undefined) {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgCountMembers(id!) });
       notifySuccess(undefined, { title: "Miembro eliminado de la organización" });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo eliminar el miembro", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    onError: (error: Error, memberId) => {
+      notifyError(undefined, { title: "No se pudo eliminar el miembro", description: getErrorMessage(error),
+        error, method: "REMOVE_ORG_MEMBER", context: { organizationId: id, memberId } });
     },
   });
 

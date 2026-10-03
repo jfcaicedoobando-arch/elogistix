@@ -16,7 +16,6 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { useContactosClienteParaEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
 import { ContactosClienteList } from "@/features/facturacion/components/ContactosClienteList";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors/index";
 
 interface Props {
@@ -89,8 +88,9 @@ export function DialogEnviarCfdi({
       notifyError(undefined, {
         title: "No se pudo enviar el CFDI",
         description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: err,
+        method: "FACTURACION_CFDI_EMAIL",
+        context: { facturaId, pagoId, notaCreditoId },
       });
     } finally {
       setEnviando(false);

@@ -93,13 +93,15 @@ export function useCapturaEntranteWiring({
         notifyError(undefined, {
           title: "La factura se creó, pero no se marcó como capturada en el buzón",
           description: `${getErrorMessage(e)} La factura NO se duplicará: al reintentar se reutiliza la ya creada.`,
+          error: e,
           method: "CXP_CAPTURA_ENTRANTE_MARCAR",
+          context: { facturaId, entranteId: entrante?.id, organizationId },
           action: { label: "Reintentar", onClick: () => { void ejecutarCierre(facturaId); } },
         });
         return false;
       }
     },
-    [cerrarCiclo, onCerrar],
+    [cerrarCiclo, onCerrar, entrante?.id, organizationId],
   );
 
   /** Botón "Guardar" del diálogo cuando hay una factura pendiente de cerrar. */

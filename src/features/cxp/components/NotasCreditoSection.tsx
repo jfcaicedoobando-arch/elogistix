@@ -33,8 +33,9 @@ async function openStoredFile(path: string | null | undefined) {
   try {
     const url = await getFacturaSignedUrl(path);
     window.open(url, "_blank", "noopener,noreferrer");
-  } catch {
-    notifyError(undefined, { message: "No se pudo generar la liga de descarga del archivo.", method: "openStoredFile" });
+  } catch (error) {
+    notifyError(undefined, { message: "No se pudo generar la liga de descarga del archivo.",
+      error, method: "CXP_NOTA_CREDITO_DOWNLOAD_FILE" });
   }
 }
 

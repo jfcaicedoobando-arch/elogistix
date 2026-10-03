@@ -17,7 +17,6 @@ import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactur
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
 import { formaPagoParaMetodo } from "@/lib/financial/formaMetodoPago";
@@ -81,12 +80,13 @@ export function useTimbrarFacturaDialog(
       actualizarDatosTimbradoFactura(v.facturaId, {
         uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
       }),
-    onError: (err) => {
+    onError: (err, vars) => {
       notifyError(undefined, {
         title: "No se pudieron guardar los datos fiscales",
         description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: err,
+        method: "FACTURACION_GUARDAR_DATOS_TIMBRADO",
+        context: { facturaId: vars.facturaId },
       });
     },
   });
@@ -116,12 +116,13 @@ export function useTimbrarFacturaDialog(
     onSuccess: (r) => {
       toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
     },
-    onError: (err) => {
+    onError: (err, vars) => {
       notifyError(undefined, {
         title: "Factura timbrada, pero no se envió el email",
         description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: err,
+        method: "FACTURACION_ENVIAR_EMAIL_TRAS_TIMBRADO",
+        context: { facturaId: vars.facturaId },
       });
     },
   });

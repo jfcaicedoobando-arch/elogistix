@@ -1,4 +1,3 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
@@ -40,7 +39,8 @@ export function useUpdateConfiguracionGlobal() {
       notifySuccess(undefined, { title: "Configuración global guardada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error),
+        error, method: "UPDATE_GLOBAL_CONFIGURATION" });
     },
   });
 }

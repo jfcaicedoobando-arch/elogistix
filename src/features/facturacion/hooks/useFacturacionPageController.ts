@@ -8,7 +8,6 @@ import { usePermissions } from "@/hooks/shared";
 
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { todayLocalISO } from "@/lib/date/today";
 /**
  * Controller para la página de Facturación.
@@ -120,8 +119,9 @@ export function useFacturacionPageController(opts?: {
         entidad_nombre: `Layout contable (${filtered.length} facturas)`,
       });
       notifySuccess(undefined, { title: "Layout contable generado" });
-    } catch {
-      notifyError(undefined, { title: "Error al generar layout contable", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    } catch (error) {
+      notifyError(undefined, { title: "Error al generar layout contable", error,
+        method: "FACTURACION_EXPORTAR_LAYOUT_CONTABLE", context: { cantidadFacturas: filtered.length } });
     }
   }, [filtered, registrarActividad]);
 

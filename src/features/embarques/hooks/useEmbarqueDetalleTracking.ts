@@ -4,7 +4,6 @@ import { esTrackingLinkVigente, fetchTrackingLinks, TRACKING_LINK_VIGENCIA_DIAS 
 import type { Tables } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Encapsula la creación/reuso, revocación y copiado al portapapeles del
  * enlace público de tracking para un embarque dado.
@@ -42,8 +41,9 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
       const url = `${window.location.origin}/tracking/${link.token}`;
       await navigator.clipboard.writeText(url);
       notifySuccess(undefined, { title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
-    } catch {
-      notifyError(undefined, { title: "Error al generar enlace", method: "HANDLE_COMPARTIR_TRACKING", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    } catch (error) {
+      notifyError(undefined, { title: "Error al generar enlace", error,
+        method: "HANDLE_COMPARTIR_TRACKING", context: { embarqueId } });
     }
   };
 

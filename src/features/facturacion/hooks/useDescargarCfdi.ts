@@ -8,7 +8,6 @@ import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 export function useDescargarCfdi(facturaId: string | undefined) {
@@ -26,8 +25,9 @@ export function useDescargarCfdi(facturaId: string | undefined) {
         notifyError(undefined, {
           title: `No se pudo abrir el ${tipo.toUpperCase()}`,
           description: getErrorMessage(err),
-          method: "ON_ERROR",
-          errorCode: ERROR_CODES.VALIDATION_FAILED,
+          error: err,
+          method: "FACTURACION_DESCARGAR_CFDI",
+          context: { facturaId, tipo },
         });
       }
     },
