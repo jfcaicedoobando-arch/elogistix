@@ -11,9 +11,9 @@ import {
   __resetErrorContextForTests,
 } from "../errorContextStore";
 
-const mocks = vi.hoisted(() => ({ captureException: vi.fn() }));
+const mocks = vi.hoisted(() => ({ captureException: vi.fn(), isEnabled: () => true }));
 vi.mock("@sentry/react", () => mocks);
-vi.mock("../sentry/core", () => ({ initSentry: vi.fn() }));
+vi.mock("../sentry/core", () => ({ initSentry: vi.fn(), isSentryReady: () => true }));
 
 import { reportCaughtError } from "../reportCaughtError";
 

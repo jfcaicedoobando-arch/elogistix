@@ -18,6 +18,7 @@ const sentryMocks = vi.hoisted(() => {
 });
 
 vi.mock("@sentry/react", () => ({
+  isEnabled: () => true,
   setUser: sentryMocks.setUser,
   setTags: sentryMocks.setTags,
   setTag: sentryMocks.setTag,
@@ -27,7 +28,7 @@ vi.mock("@sentry/react", () => ({
 }));
 
 // Scope synchronization is independent of DSN/production init; core has its own contracts.
-vi.mock("../core", () => ({ initSentry: vi.fn() }));
+vi.mock("../core", () => ({ initSentry: vi.fn(), isSentryReady: () => true }));
 
 beforeEach(() => {
   sentryMocks.setUser.mockClear();

@@ -67,12 +67,12 @@ function handleTestError() {
     new Error(`Error de prueba — Sentry Diagnóstico (${new Date().toISOString()})`),
     { tags: { source: "sentry-diagnostico-ui" } },
   );
-  toast({ title: "Error de prueba enviado", description: `Sentry event ID: ${id}.` });
+  toast({ title: "Error de prueba generado", description: `Busca este ID en Sentry para confirmar recepción: ${id}.` });
 }
 
 function handleTestMessage() {
   const id = Sentry.captureMessage("Mensaje de prueba — Sentry Diagnóstico", "info");
-  toast({ title: "Mensaje de prueba enviado", description: `Sentry event ID: ${id}.` });
+  toast({ title: "Mensaje de prueba generado", description: `Busca este ID en Sentry para confirmar recepción: ${id}.` });
 }
 
 function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryInfo> }) {

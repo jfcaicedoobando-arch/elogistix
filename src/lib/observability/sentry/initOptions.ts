@@ -23,6 +23,15 @@ export const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
+/** REST/Edge operations are reported by Query/UI with business context, once
+ * after retries. Keep automatic 5xx coverage for auth, storage and app assets.
+ * Do not add data endpoints here: two capture owners cannot share identity. */
+export const HTTP_FAILURE_TARGETS: Array<string | RegExp> = [
+  /^https:\/\/[^/]+\.supabase\.co\/(?!rest\/v1(?:\/|\?|$)|functions\/v1(?:\/|\?|$))/i,
+  /librecarga\.com/,
+  /^\/(api|functions)\//,
+];
+
 // 13.312.10 (audit Sentry PR-C): orígenes de código ajeno a la app que jamás
 // deben producir eventos. Extensiones del navegador y scripts de terceros
 // inyectados por hosting / analytics generan errores que no podemos corregir.
@@ -43,7 +52,6 @@ export const IGNORE_ERRORS: Array<string | RegExp> = [
   /Lock broken by another request with the 'steal' option/i,
   /Invalid login credentials/i,
   /ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i,
-  /Non-Error promise rejection captured/i,
   /Object Not Found Matching Id/i,
   /Extension context invalidated/i,
   /The operation was aborted/i,
