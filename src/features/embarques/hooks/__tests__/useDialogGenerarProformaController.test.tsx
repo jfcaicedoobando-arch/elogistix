@@ -6,7 +6,8 @@ import { ProformaValidationError } from "@/features/embarques/services/submitPro
 
 const hoisted = vi.hoisted(() => ({
   submitMock: vi.fn(),
-  toastMock: vi.fn(),
+  errorMock: vi.fn(),
+  warningMock: vi.fn(),
   captureMock: vi.fn(),
 }));
 
@@ -37,13 +38,14 @@ vi.mock("@/features/embarques/services/submitProformaDialog", async () => {
   };
 });
 
-vi.mock("@/hooks/shared", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>("@/hooks/shared");
-  return { ...actual, toast: (...args: unknown[]) => hoisted.toastMock(...args) };
-});
+vi.mock("sonner", () => ({ toast: {
+  error: (...args: unknown[]) => hoisted.errorMock(...args),
+  warning: (...args: unknown[]) => hoisted.warningMock(...args),
+  success: vi.fn(), info: vi.fn(), dismiss: vi.fn(),
+} }));
 
-vi.mock("@sentry/react", () => ({
-  captureException: (...args: unknown[]) => hoisted.captureMock(...args),
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: (...args: unknown[]) => hoisted.captureMock(...args),
 }));
 
 const mockEmbarque = { id: "emb-1", cliente_id: "cli-1" } as any;
@@ -60,7 +62,8 @@ describe("useDialogGenerarProformaController", () => {
   beforeEach(() => {
     wrapper = createWrapper();
     hoisted.submitMock.mockReset();
-    hoisted.toastMock.mockReset();
+    hoisted.errorMock.mockReset();
+    hoisted.warningMock.mockReset();
     hoisted.captureMock.mockReset();
   });
   it("inicializa correctamente al abrir", () => {
@@ -124,16 +127,15 @@ describe("useDialogGenerarProformaController", () => {
 
     await act(async () => { await result.current.handleConfirmar(); });
 
-    expect(hoisted.toastMock).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Falta peso/volumen", variant: "warning" }),
+    expect(hoisted.warningMock).toHaveBeenCalledWith(
+      "No se pudo generar la proforma",
+      expect.objectContaining({ description: "Falta peso/volumen", action: expect.objectContaining({ label: "Ver detalles" }) }),
     );
     expect(onClose).not.toHaveBeenCalled();
-    // captureException se hace lazy; damos un microtick y verificamos
-    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).not.toHaveBeenCalled();
   });
 
-  it("muestra toast destructive y reporta a Sentry en error genérico", async () => {
+  it("muestra error con JSON y reporta a Sentry una sola vez en error genérico", async () => {
     hoisted.submitMock.mockRejectedValueOnce(new Error("PDF blew up"));
     const onClose = vi.fn();
     const { result } = renderHook(
@@ -143,14 +145,16 @@ describe("useDialogGenerarProformaController", () => {
 
     await act(async () => { await result.current.handleConfirmar(); });
 
-    expect(hoisted.toastMock).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "PDF blew up", variant: "destructive" }),
+    expect(hoisted.errorMock).toHaveBeenCalledWith(
+      "No se pudo generar la proforma",
+      expect.objectContaining({ description: "PDF blew up", action: expect.objectContaining({ label: "Ver detalles" }) }),
     );
     expect(onClose).not.toHaveBeenCalled();
-    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ tags: { feature: "proforma_generate" } }),
+      expect.objectContaining({ feature: "ui_notify", op: "GENERAR_PROFORMA" }),
+      expect.objectContaining({ embarqueId: "emb-1" }),
     );
+    expect(hoisted.captureMock).toHaveBeenCalledTimes(1);
   });
 });

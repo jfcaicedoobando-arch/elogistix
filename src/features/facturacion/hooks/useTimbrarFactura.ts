@@ -115,6 +115,7 @@ export function useCancelarFactura() {
           description: getErrorMessage(err),
           duration: 15000,
           method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_TRANSIENT",
+          error: err, context: { facturaId: vars.facturaId },
           action: {
             label: "Reintentar",
             onClick: () => {

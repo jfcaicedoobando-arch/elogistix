@@ -32,7 +32,7 @@ function walk(dir: string, acc: string[] = []): string[] {
 function listFilesImportingSonner(): string[] {
   return walk(resolve(ROOT, "src"))
     .filter((f) => SONNER_IMPORT.test(readFileSync(f, "utf8")))
-    .map((f) => relative(ROOT, f))
+    .map((f) => relative(ROOT, f).replace(/\\/g, "/"))
     .filter(
       (f) =>
         !f.includes("__tests__") && !f.endsWith(".test.ts") && !f.endsWith(".test.tsx"),
@@ -56,7 +56,6 @@ function parseAllowlist(): string[] {
     "src/hooks/shared/useToast.ts",
     "src/hooks/shared/useCopyText.ts",
     "src/components/ui/sonner.tsx",
-    "src/components/ui/ErrorDetailsDialog.tsx",
   ];
   return [...new Set([...paths, ...wrappers])].sort();
 }

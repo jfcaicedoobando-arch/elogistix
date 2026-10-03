@@ -14,7 +14,7 @@ import {
   aprobarFacturaProveedor,
   AprobacionFacturaError,
 } from "@/features/cxp/services/aprobacionFactura";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 export interface ResultadoLote {
@@ -63,8 +63,9 @@ function avisarResultado(
     return;
   }
   if (exitos.length > 0) {
-    notifySuccess(undefined, {
+    notifyWarning(undefined, {
       title: `${exitos.length} aprobada(s), ${fallos.length} con error`,
+      method: "CXP_APROBAR_FACTURAS_PARCIAL", context: { exitos: exitos.length, fallos },
       description: "Revisa las facturas que fallaron para reintentar manualmente.",
     });
     return;
@@ -83,6 +84,7 @@ function avisarResultado(
     error: esValidacionNegocio(primero) ? undefined : new Error(primero),
     errorCode: primerCodigo,
     method: "USE_APROBAR_FACTURAS_LOTE",
+    context: { exitos: exitos.length, fallos },
   });
 }
 

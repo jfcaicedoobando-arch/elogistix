@@ -1,74 +1,31 @@
 import { Toaster as SonnerToaster } from "sonner";
+import { toast as sonnerToast } from "sonner";
+import { useEffect } from "react";
+import { useTheme } from "@/lib/contexts/ThemeContext";
+import { subscribeErrorReportScope } from "@/lib/diagnostics/errorReportScope";
+import "./toast.css";
 
-/**
- * Toaster global de la app (Sonner).
- *
- * v13.301.61 — **Colores unificados**. Se retiró `richColors` para que TODOS
- * los toasts compartan la misma superficie (`bg-card`) y la severidad se
- * comunique sólo por:
- *  - icono a color (Sonner lo pinta automáticamente por `data-type`),
- *  - un borde izquierdo de 4 px con el token semántico (`destructive`,
- *    `success`, `warning`, `info` / `muted`),
- *  - jerarquía tipográfica del título.
- *
- * Ventajas: elimina el choque visual entre toasts de distinta severidad al
- * encolar avisos (antes: fondos rojo/verde/ámbar/azul/blanco simultáneos),
- * respeta la identidad "Apple-like minimal" del proyecto y mantiene 3
- * canales de accesibilidad para severidad (icono + borde + texto).
- *
- * v13.67.2 — Tap targets ≥44px y swipe-to-dismiss ajustado (se conservan).
- */
+/** Sonner handles lifecycle/animation; one scoped stylesheet owns the layout. */
 export function Toaster() {
+  const { theme } = useTheme();
+  useEffect(() => subscribeErrorReportScope(() => { sonnerToast.dismiss(); }), []);
   return (
     <SonnerToaster
-      position="top-right"
-      // VB-35: con 72px el toast tapaba el bloque de título + indicador de
-      // pasos de los wizards de página completa (el paso "Resumen" se leía
-      // "Resu…"). 112px libera esa franja sin alejar demasiado el aviso del
-      // punto de acción en las pantallas normales.
-      offset={{ top: "112px", right: "16px" }}
-
-      // R-15.5: el header sticky (z-40) capturaba los clics sobre "Ver
-      // detalles" y abría el org-switcher. Los toasts van por encima.
-      className="!z-toast pointer-events-auto"
+      theme={theme}
+      position="bottom-right"
+      offset={{ bottom: "96px", right: "16px" }}
+      mobileOffset={{ bottom: "96px", left: "16px", right: "16px" }}
+      className="lc-toaster !z-toast"
+      containerAriaLabel="Notificaciones"
+      customAriaLabel="Notificaciones de LibreCarga"
       closeButton
       expand
       duration={4000}
       swipeDirections={["right"]}
       toastOptions={{
-        // @ts-expect-error sonner permite estas keys en runtime aunque el d.ts las marca a nivel <Toaster>
-        swipeThreshold: 80,
-        classNames: {
-          toast: [
-            // pr-12: el botón de cerrar flota a la derecha (right-2 + w-8 =
-            // 40px); sin este margen el texto largo queda tapado por la "×".
-            "group toast rounded-lg pl-4 pr-12 py-3 gap-3 backdrop-blur-sm shadow-xl",
-            "bg-card text-card-foreground border border-border",
-            // Ancho mínimo consistente + rejilla icono | contenido | acciones.
-            "!min-w-[360px] !grid !grid-cols-[auto_1fr] !items-start !gap-x-2",
-            // Borde izquierdo semántico por severidad (Sonner emite data-type).
-            "data-[type=error]:border-l-4 data-[type=error]:border-l-destructive",
-            "data-[type=success]:border-l-4 data-[type=success]:border-l-[hsl(var(--success))]",
-            "data-[type=warning]:border-l-4 data-[type=warning]:border-l-[hsl(var(--warning))]",
-            "data-[type=info]:border-l-4 data-[type=info]:border-l-[hsl(var(--info))]",
-          ].join(" "),
-          title: "text-body font-semibold leading-tight text-foreground",
-          description: "text-body-sm text-muted-foreground leading-snug mt-0.5",
-          // Icono coloreado por severidad (sin fondo tintado).
-          icon: [
-            "shrink-0",
-            "group-data-[type=error]:text-destructive",
-            "group-data-[type=success]:text-[hsl(var(--success))]",
-            "group-data-[type=warning]:text-[hsl(var(--warning))]",
-            "group-data-[type=info]:text-[hsl(var(--info))]",
-          ].join(" "),
-          actionButton:
-            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-body !font-medium !rounded-md",
-          cancelButton:
-            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
-          closeButton:
-            "!opacity-100 !h-8 !w-8 !left-auto !right-2 !top-1/2 !-translate-y-1/2 !bg-card !border !border-border !text-muted-foreground hover:!text-foreground hover:!bg-muted !transition-colors",
-        },
+        unstyled: true,
+        closeButtonAriaLabel: "Cerrar notificación",
+        classNames: { toast: "lc-toast" },
       }}
     />
   );

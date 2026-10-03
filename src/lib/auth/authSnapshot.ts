@@ -5,6 +5,8 @@
  * el contexto sin necesidad de hooks. Sólo lectura desde el resto del código.
  */
 
+import { clearErrorReports } from "@/lib/diagnostics/errorDetailsStore";
+
 export interface AuthSnapshot {
   userId: string | null;
   email: string | null;
@@ -24,6 +26,8 @@ let current: AuthSnapshot = {
 };
 
 export function setAuthSnapshot(next: AuthSnapshot): void {
+  if (next.userId !== current.userId || next.organizationId !== current.organizationId
+    || next.effectiveRole !== current.effectiveRole) clearErrorReports();
   current = next;
 }
 
