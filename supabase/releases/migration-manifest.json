@@ -4306,7 +4306,8 @@
       "20261002015540_55613468-98c9-4034-bc53-b6d687134dbe.sql",
       "20261002020022_137cc164-a155-4112-a548-79f5271801fc.sql",
       "20261003010000_eerr_resumen_anual_replay.sql",
-      "20261003011000_crm_hygiene_replay.sql"
+      "20261003011000_crm_hygiene_replay.sql",
+      "20261003022500_crm_pricing_preservar_gerencia.sql"
     ]
   }
 }
