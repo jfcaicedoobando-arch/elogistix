@@ -46,12 +46,12 @@ export function PropiedadAdminFila({ prop, anterior, siguiente }: Props) {
         </label>
         <div className="ml-auto flex items-center gap-1">
           <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Subir" disabled={!anterior || ocupado}
-            onClick={() => anterior && intercambiar(anterior)}><ArrowUp className="h-4 w-4" /></Button>
+            onClick={() => anterior && intercambiar(anterior)}><ArrowUp className="size-4" /></Button>
           <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Bajar" disabled={!siguiente || ocupado}
-            onClick={() => siguiente && intercambiar(siguiente)}><ArrowDown className="h-4 w-4" /></Button>
+            onClick={() => siguiente && intercambiar(siguiente)}><ArrowDown className="size-4" /></Button>
           <Button size="sm" variant="ghost" disabled={ocupado}
             onClick={() => actualizar.mutate({ id: prop.id, cambio: { archivada: !prop.archivada } })}>
-            {prop.archivada ? <><ArchiveRestore className="h-4 w-4" /> Restaurar</> : <><Archive className="h-4 w-4" /> Archivar</>}
+            {prop.archivada ? <><ArchiveRestore className="size-4" /> Restaurar</> : <><Archive className="size-4" /> Archivar</>}
           </Button>
         </div>
       </div>

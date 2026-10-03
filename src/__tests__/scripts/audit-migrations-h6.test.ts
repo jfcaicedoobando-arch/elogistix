@@ -134,3 +134,38 @@ describe("audit-migrations H6 · alias de tipos", () => {
     expect(scan(sql)).toEqual([]);
   });
 });
+
+describe("audit-migrations · ACL agrupada y triggers privados", () => {
+  const fn = (name: string, returns = "void") => `CREATE OR REPLACE FUNCTION public.${name}()
+    RETURNS ${returns} LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN RETURN NULL; END; $$;`;
+  it("reconoce cada firma de REVOKE/GRANT agrupados, no sólo la primera", () => {
+    const sql = fn("primera") + fn("segunda") + `
+      REVOKE ALL ON FUNCTION public.primera(), public.segunda() FROM PUBLIC, anon;
+      GRANT EXECUTE ON FUNCTION public.primera(), public.segunda() TO authenticated;`;
+    expect(scan(sql)).toEqual([]);
+    expect(scan(sql.replace("TO authenticated", "TO PUBLIC"))
+      .filter((v) => v.detail.includes("TO PUBLIC (prohibido)"))).toHaveLength(2);
+  });
+  it("no confunde una firma parecida ni ACL comentadas", () => {
+    const sql = fn("segunda") + `
+      REVOKE ALL ON FUNCTION public.segunda_extra() FROM PUBLIC;
+      -- GRANT EXECUTE ON FUNCTION public.segunda() TO authenticated;`;
+    expect(scan(sql)).toHaveLength(2);
+  });
+  it("acepta un trigger explícitamente cerrado a PUBLIC, anon y authenticated", () => {
+    expect(scan(fn("privado", "trigger") +
+      "REVOKE ALL ON FUNCTION public.privado() FROM PUBLIC, anon, authenticated;")).toEqual([]);
+  });
+  it("no exceptúa una RPC normal cerrada ni un trigger que conserve permisos cliente", () => {
+    const acl = "REVOKE ALL ON FUNCTION public.privado() FROM PUBLIC, anon, authenticated;";
+    expect(scan(fn("privado") + acl)).toHaveLength(1);
+    expect(scan(fn("privado", "trigger") + acl.replace(", authenticated", ""))).toHaveLength(1);
+    expect(scan(fn("privado", "trigger") + acl +
+      "GRANT EXECUTE ON FUNCTION public.privado() TO anon;")).toHaveLength(1);
+  });
+  it("reconoce cada tabla de GRANT agrupado sin aceptar tablas no incluidas", () => {
+    const sql = "CREATE TABLE public.a(id uuid); CREATE TABLE public.b(id uuid);";
+    expect(scanFile(FILE, sql + "GRANT SELECT ON public.a, public.b TO authenticated;")).toEqual([]);
+    expect(scanFile(FILE, sql + "GRANT SELECT ON public.a TO authenticated;")).toHaveLength(1);
+  });
+});

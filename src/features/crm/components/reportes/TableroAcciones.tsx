@@ -20,18 +20,18 @@ export function TableroAcciones({ tableroActivo, onNuevoTablero, onRenombrar, on
       {tableroActivo && (
         <>
           <Button variant="outline" size="sm" onClick={onRenombrar}>
-            <Pencil className="mr-1.5 h-4 w-4" /> Renombrar
+            <Pencil className="mr-1.5 size-4" /> Renombrar
           </Button>
           <Button variant="outline" size="sm" onClick={onEliminar}>
-            <Trash2 className="mr-1.5 h-4 w-4" /> Eliminar
+            <Trash2 className="mr-1.5 size-4" /> Eliminar
           </Button>
           <Button size="sm" onClick={onAgregarReporte}>
-            <Plus className="mr-1.5 h-4 w-4" /> Agregar reporte
+            <Plus className="mr-1.5 size-4" /> Agregar reporte
           </Button>
         </>
       )}
       <Button variant={tableroActivo ? "outline" : "default"} size="sm" onClick={onNuevoTablero}>
-        <Plus className="mr-1.5 h-4 w-4" /> Nuevo tablero
+        <Plus className="mr-1.5 size-4" /> Nuevo tablero
       </Button>
     </div>
   );

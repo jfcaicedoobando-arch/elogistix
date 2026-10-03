@@ -4,7 +4,11 @@
  */
 import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PageHeader } from "@/components/shared/PageHeader";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useBandejaPricing, useSolicitudPricing } from "@/features/crm/hooks/usePricingCrm";
@@ -24,7 +28,7 @@ export default function SolicitudesPricing() {
   const estado = params.get("estado") ?? "enviada";
   const pagina = Number(params.get("p") ?? "0") || 0;
   const id = params.get("id");
-  const { data, isLoading, error } = useBandejaPricing(estado, pagina);
+  const { data, isLoading, error, refetch } = useBandejaPricing(estado, pagina);
   const detalle = useSolicitudPricing(id);
   const cambiar = (k: string, v: string | null) => {
     const n = new URLSearchParams(params);
@@ -36,20 +40,15 @@ export default function SolicitudesPricing() {
   const paginas = Math.max(1, Math.ceil(total / PAGINA_PRICING));
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-h2 font-semibold">Solicitudes de pricing</h1>
-          <p className="text-body-sm text-muted-foreground">Baja 8 h · Media 24 h · Alta 48 h para responder.</p>
-        </div>
+    <PageContainer>
+      <PageHeader title="Solicitudes de pricing" description="Baja 8 h · Media 24 h · Alta 48 h para responder." />
         <Select value={estado} onValueChange={(v) => cambiar("estado", v)}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>{ESTADOS.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}</SelectContent>
         </Select>
-      </div>
-      {error && <p className="text-body-sm text-destructive">No se pudieron cargar las solicitudes.</p>}
-      {isLoading && <p className="text-body-sm text-muted-foreground">Cargando…</p>}
-      {!isLoading && !error && total === 0 && <p className="text-body-sm text-muted-foreground">No hay solicitudes.</p>}
+      {error && <ErrorStateInline message="No se pudieron cargar las solicitudes." onRetry={() => void refetch()} />}
+      {isLoading && <EmptyStateInline loading message="Cargando solicitudes…" />}
+      {!isLoading && !error && total === 0 && <EmptyStateInline message="No hay solicitudes." />}
       <div className="space-y-2">
         {(data?.filas ?? []).map((s) => (
           <button key={s.id} type="button" onClick={() => cambiar("id", id === s.id ? null : s.id)}
@@ -62,14 +61,9 @@ export default function SolicitudesPricing() {
           </button>
         ))}
       </div>
-      {paginas > 1 && (
-        <div className="flex items-center justify-end gap-2 text-body-sm">
-          <Button variant="outline" size="sm" disabled={pagina === 0} onClick={() => cambiar("p", String(pagina - 1))}>Anterior</Button>
-          <span>Página {pagina + 1} de {paginas}</span>
-          <Button variant="outline" size="sm" disabled={pagina + 1 >= paginas} onClick={() => cambiar("p", String(pagina + 1))}>Siguiente</Button>
-        </div>
-      )}
+      {!isLoading && !error && <PaginationControls page={pagina} totalPages={paginas} total={total} pageSize={PAGINA_PRICING}
+        onPageChange={(p) => cambiar("p", String(p))} />}
       {detalle.data && <SolicitudPricingDetalle solicitud={detalle.data} />}
-    </div>
+    </PageContainer>
   );
 }

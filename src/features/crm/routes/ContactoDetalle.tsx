@@ -1,7 +1,7 @@
 /** /crm/contactos/:id — Ficha de contacto con empresas y oportunidades ligadas. */
 import { useParams } from "react-router-dom";
 import { UserRound } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -16,23 +16,14 @@ export default function CrmContactoDetalle() {
   const { canEditCrm } = usePermissions();
   useDocumentTitle(data ? `Contacto · ${data.nombre}` : "Contacto");
 
-  if (isLoading) return <LoadingState label="Cargando contacto…" />;
-  if (isError || !data) {
-    return (
-      <PageContainer>
-        <ErrorState
-          title={isError ? "No se pudo cargar el contacto" : "Contacto no encontrado"}
-          description="Revisa el enlace o vuelve a la lista."
-          onRetry={isError ? () => void refetch() : undefined}
-        />
-      </PageContainer>
-    );
-  }
-
-  const datos = [data.email, data.telefono].filter(Boolean).join(" · ") || "Sin correo ni teléfono";
+  const datos = data ? [data.email, data.telefono].filter(Boolean).join(" · ") || "Sin correo ni teléfono" : undefined;
   return (
     <PageContainer>
-      <PageHeader icon={<UserRound className="h-6 w-6 text-primary" />} title={data.nombre} description={datos} />
+      <DetailHeader backTo="/crm/contactos" icon={<UserRound className="size-6 text-accent" />} title={data?.nombre ?? "Contacto"} subtitle={datos} />
+      {isLoading ? <LoadingState label="Cargando contacto…" /> : isError || !data ? (
+        <ErrorState title={isError ? "No se pudo cargar el contacto" : "Contacto no encontrado"}
+          description="Revisa el enlace o vuelve a la lista." onRetry={isError ? () => void refetch() : undefined} />
+      ) : <>
       <PropiedadesCard objeto="contacto" registroId={id} canEdit={canEditCrm} />
       <div className="grid gap-4 md:grid-cols-2 mt-4">
         <VinculosCard
@@ -45,6 +36,7 @@ export default function CrmContactoDetalle() {
           rutaBase="/crm/oportunidades" canEdit={false}
         />
       </div>
+      </>}
     </PageContainer>
   );
 }

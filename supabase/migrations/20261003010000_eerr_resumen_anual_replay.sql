@@ -1,3 +1,6 @@
+-- Materializa la definición vigente tras AUD-ANALISIS-7/8 y SECURITY DEFINER.
+-- No cambia reglas: venta facturada neta, NC cliente Timbrada/Aplicada, NC proveedor Aplicada.
+-- Evita que el replay dependa sólo de parches dinámicos invisibles al guard estático.
 -- Fuente canónica de public.eerr_resumen_anual.
 CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text)
  RETURNS TABLE(mes integer, ingresos_mxn numeric, costos_mxn numeric, excluidos_sin_tc integer)

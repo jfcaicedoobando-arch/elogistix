@@ -3,6 +3,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   actualizarPropiedad, archivarOpcion, crearOpcion, crearPropiedad, fetchPropiedades, renombrarOpcion,
   type CambioPropiedad, type NuevaPropiedad, type ObjetoCrm, type OpcionCrm,
@@ -25,7 +26,7 @@ function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {
   return useMutation({
     mutationFn: fn,
     onSuccess: () => { if (ok) toast.success(ok); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: ["crm", "scoring"] }); },
-    onError: (e: Error) => toast.error(e.message || "No se pudo guardar"),
+    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo guardar la propiedad", error, method: "CRM_PROPIEDADES" }),
   });
 }
 

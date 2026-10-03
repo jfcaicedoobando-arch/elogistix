@@ -3,6 +3,8 @@
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { listarTarifasParaPricing } from "@/features/crm/services/pricing/tarifasParaPricing";
 import {
   actualizarSolicitud, cancelarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
   guardarOpcion, listarBandejaPricing, listarOpciones, listarSolicitudesOportunidad,
@@ -16,7 +18,13 @@ function useInvalidar() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: BASE });
 }
-const onError = (e: unknown) => toast.error(mensajeErrorPricing(e));
+const alFallar = (error: unknown) => notifyError(undefined, {
+  title: "No se pudo completar la operación de pricing", description: mensajeErrorPricing(error), error, method: "CRM_PRICING",
+});
+
+export function useTarifasPricing(enabled: boolean) {
+  return useQuery({ queryKey: [...BASE, "tarifas"], queryFn: listarTarifasParaPricing, enabled });
+}
 
 export function useSolicitudesOportunidad(oportunidadId: string) {
   return useQuery({
@@ -65,7 +73,7 @@ export function useGuardarSolicitud() {
       return id;
     },
     onSuccess: (_id, v) => { toast.success(v.enviar ? "Solicitud enviada a Pricing" : "Borrador guardado"); void invalidar(); },
-    onError,
+    onError: alFallar,
   });
 }
 
@@ -79,7 +87,7 @@ export function useAccionSolicitud() {
       toast.success(t[v.accion]);
       void invalidar();
     },
-    onError,
+    onError: alFallar,
   });
 }
 
@@ -88,11 +96,11 @@ export function useGuardarOpcion() {
   return useMutation({
     mutationFn: guardarOpcion,
     onSuccess: () => { toast.success("Opción guardada"); void invalidar(); },
-    onError,
+    onError: alFallar,
   });
 }
 
 export function useEliminarOpcion() {
   const invalidar = useInvalidar();
-  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError });
+  return useMutation({ mutationFn: eliminarOpcion, onSuccess: () => void invalidar(), onError: alFallar });
 }

@@ -17,7 +17,7 @@ export function CotizacionesSinRespuestaCard({ items, isError = false, onRetry }
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <MailQuestion className="h-4 w-4 text-primary" /> Cotizaciones sin respuesta (&gt; 5 días)
+          <MailQuestion className="size-4 text-primary" /> Cotizaciones sin respuesta (&gt; 5 días)
         </CardTitle>
       </CardHeader>
       <CardContent>

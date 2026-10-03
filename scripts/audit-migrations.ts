@@ -30,13 +30,21 @@
  *          {authenticated, service_role, postgres}. Prohibido `TO PUBLIC`.
  *      Excepción: comentario `-- audit:allow-no-grants` justo antes del
  *      `CREATE OR REPLACE FUNCTION` (helpers privados sin exposición externa).
+ *      También válido: RETURNS trigger cerrado explícitamente a PUBLIC,
+ *      anon y authenticated, sin GRANT posterior a roles cliente.
  *      La regla `GRANT EXECUTE ... TO PUBLIC` sobre SECURITY DEFINER es dura
  *      y aplica siempre (aun a legacy pre-baseline).
+ *  Reparaciones históricas: H4 índices y H6 ACL ausente sólo se cierran con
+ *  reemisión COMPLETA e idéntica posterior (IF NOT EXISTS / ACL válida).
+ *  No se mueve BASELINE ni se omite GRANT EXECUTE TO PUBLIC.
  *
  * Salida: exit 0 si limpio, 1 si hay violaciones (con listado agrupado).
  */
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { indexReplayRepairs, scanNonIdempotentIndexes, functionReplayRepairs,
+  isFunctionReplayRepair } from "./lib/audit-hygiene-replay";
 import {
   scanSecurityDefiner,
   scanBackfillTenantGuard,
@@ -265,7 +273,8 @@ export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
 export type { Violation };
 
-export function scanFile(file: string, body: string, auditPostBaseline = true): Violation[] {
+export function scanFile(file: string, body: string, auditPostBaseline = true,
+  repairedIndexes: ReadonlyMap<string, string> = new Map()): Violation[] {
   const out: Violation[] = [];
 
   // H2 — CREATE TABLE public.X requiere GRANT ... public.X
@@ -273,7 +282,7 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   const tables = new Set<string>();
   for (const m of body.matchAll(createTableRe)) tables.add(m[1].toLowerCase());
   for (const t of tables) {
-    const grantRe = new RegExp(`grant\\s+[^;]+on\\s+(?:table\\s+)?public\\.${t}\\b`, "i");
+    const grantRe = new RegExp(`grant\\s+[^;]+on\\s+(?:table\\s+)?[^;]*?\\bpublic\\.${t}\\b[^;]*\\bto\\b`, "i");
     if (!grantRe.test(body)) {
       out.push({ file, check: "H2", detail: `public.${t} sin GRANT en el mismo archivo` });
     }
@@ -303,11 +312,7 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   // H4a — CREATE INDEX sin IF NOT EXISTS
   // Se ignoran los comentarios de línea (`-- ...`): una migración puede
   // documentar en prosa por qué NO crea un índice sin ser una violación.
-  const bodySinComentarios = body.replace(/--[^\n]*/g, "");
-  const idxRe = /create\s+(?:unique\s+)?index\s+(?!if\s+not\s+exists)([a-z0-9_]+)/gi;
-  for (const m of bodySinComentarios.matchAll(idxRe)) {
-    out.push({ file, check: "H4", detail: `CREATE INDEX ${m[1]} sin IF NOT EXISTS` });
-  }
+  out.push(...scanNonIdempotentIndexes(file, body, repairedIndexes));
 
   // H4b — CREATE POLICY sin DROP POLICY previa (idempotencia PG<16)
   const policyRe = /create\s+policy\s+"([^"]+)"\s+on\s+(public\.[a-z0-9_]+)/gi;
@@ -373,6 +378,9 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
 
 function main() {
   const all = fs.readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort();
+  const bodies = new Map(all.map((file) => [file, fs.readFileSync(path.join(MIG_DIR, file), "utf8")]));
+  const repairedIndexes = indexReplayRepairs(bodies);
+  const repairedFunctions = functionReplayRepairs(new Map([...bodies].filter(([file]) => file >= BASELINE)));
   const violations: Violation[] = [];
   const badNames: string[] = [];
 
@@ -398,7 +406,8 @@ function main() {
       continue;
     }
     const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-    violations.push(...scanFile(f, body, true));
+    violations.push(...scanFile(f, body, true, repairedIndexes).filter(
+      (v) => !isFunctionReplayRepair(f, body, v, repairedFunctions)));
   }
 
   const total = badNames.length + violations.length;
@@ -431,6 +440,6 @@ function main() {
   process.exit(1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   main();
 }
