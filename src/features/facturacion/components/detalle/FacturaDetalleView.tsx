@@ -46,6 +46,7 @@ interface FacturaDetalleViewProps {
   volverLabel: string;
   dialogs: DialogsBundle;
   saldo?: number;
+  totalPagado?: number;
   /** P1: falló la lectura de pagos o notas de crédito (saldo no confiable). */
   saldoError?: boolean;
   onRetrySaldo?: () => void;
@@ -77,7 +78,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   return (
     <PageContainer>
       <DocumentoDetalleShell
-        kpis={buildKpisFactura(factura, props.saldo)}
+        kpis={buildKpisFactura(factura, props.saldo, props.totalPagado)}
         header={
           <FacturaDetalleHeader
             volverHref={volverHref}

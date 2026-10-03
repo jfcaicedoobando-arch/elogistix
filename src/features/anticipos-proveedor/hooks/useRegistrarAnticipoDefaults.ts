@@ -18,7 +18,9 @@ import {
 } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
 import type { RegistrarAnticipoFormInput } from "@/features/anticipos-proveedor/components/registrarAnticipo.schema";
 
-const SET_OPTS = { shouldValidate: true, shouldDirty: true } as const;
+// Una sugerencia automática al abrir no es captura del usuario. Los cambios
+// de moneda/fecha/método ya marcan sus propios campos como modificados.
+const SET_OPTS = { shouldValidate: true, shouldDirty: false } as const;
 
 interface Params {
   open: boolean;

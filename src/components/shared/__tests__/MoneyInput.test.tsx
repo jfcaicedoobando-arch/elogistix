@@ -58,6 +58,30 @@ describe("MoneyInput", () => {
     expect(input).toHaveValue("1,234.50");
   });
 
+  it.each(["1234.567", "1,234.567", "1234,567"])(
+    "conserva el importe al insertar %s y salir del campo",
+    (raw) => {
+      render(<Harness />);
+      const input = screen.getByLabelText("Importe");
+      escribir(input, raw);
+      expect(input).toHaveValue("1,234.56");
+      expect(screen.getByText("1234.56")).toBeInTheDocument();
+      fireEvent.blur(input);
+      expect(input).toHaveValue("1,234.56");
+      expect(screen.getByText("1234.56")).toBeInTheDocument();
+    },
+  );
+
+  it("el tercer decimal tecleado no cambia el entero", () => {
+    render(<Harness />);
+    const input = screen.getByLabelText("Importe");
+    for (const raw of ["1234", "1,234.", "1,234.5", "1,234.56", "1,234.567"]) {
+      escribir(input, raw);
+    }
+    expect(input).toHaveValue("1,234.56");
+    expect(screen.getByText("1234.56")).toBeInTheDocument();
+  });
+
   it("ignora letras y símbolos", () => {
     render(<Harness />);
     const input = screen.getByLabelText("Importe");

@@ -14,19 +14,30 @@ import {
 } from "@/features/comisiones/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { puedeConsultarCorreoVendedoras } from "../services/vendedorasIdentidad";
 
 export function useVendedorasConfig() {
+  const { effectiveRole } = useAuth();
+  const { organizationId } = useOrganization();
+  const conCorreos = puedeConsultarCorreoVendedoras(effectiveRole);
   return useQuery({
-    queryKey: queryKeys.comisiones.vendedorasConfig(),
-    queryFn: fetchVendedorasConfig,
+    queryKey: queryKeys.comisiones.vendedorasConfig({ organizationId, conCorreos }),
+    queryFn: () => fetchVendedorasConfig(conCorreos, organizationId),
+    enabled: Boolean(organizationId && effectiveRole),
     staleTime: 60_000,
   });
 }
 
 export function useUsuariosVendedores() {
+  const { effectiveRole } = useAuth();
+  const { organizationId } = useOrganization();
+  const conCorreos = puedeConsultarCorreoVendedoras(effectiveRole);
   return useQuery({
-    queryKey: queryKeys.comisiones.usuariosVendedores(),
-    queryFn: fetchUsuariosVendedores,
+    queryKey: queryKeys.comisiones.usuariosVendedores({ organizationId, conCorreos }),
+    queryFn: () => fetchUsuariosVendedores(conCorreos, organizationId),
+    enabled: Boolean(organizationId && effectiveRole),
     staleTime: 5 * 60_000,
   });
 }

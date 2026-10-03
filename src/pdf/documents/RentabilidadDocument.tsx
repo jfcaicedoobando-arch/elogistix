@@ -4,6 +4,7 @@ import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { COLORS } from "@/pdf/theme/tokens";
+import { nombreEmisorReporte, reporteHeaderTextStyle } from "./reporteLayout";
 
 export interface RentabilidadClienteRow {
   cliente_nombre: string;
@@ -32,7 +33,7 @@ interface Props {
 
 const cols: PdfColumn<RentabilidadClienteRow>[] = [
   { key: "cliente", title: "Cliente", cellStyle: styles.cellDesc, render: (r) => r.cliente_nombre },
-  { key: "emb", title: "Embarques", cellStyle: styles.cellQty, render: (r) => String(r.total_embarques) },
+  { key: "emb", title: "Embarques", cellStyle: [styles.cellQty, { width: 65 }], render: (r) => String(r.total_embarques) },
   { key: "venta", title: "Venta", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.venta_usd, "USD") },
   { key: "costo", title: "Costo", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.costo_usd, "USD") },
   { key: "profit", title: "Utilidad", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.profit_usd, "USD") },
@@ -41,14 +42,15 @@ const cols: PdfColumn<RentabilidadClienteRow>[] = [
 
 export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes, emisor }: Props) {
   const rows = [...clientes].sort((a, b) => b.profit_usd - a.profit_usd);
+  const empresaNombre = nombreEmisorReporte(emisor);
   return (
-    <Document title="Rentabilidad por cliente" author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title="Rentabilidad por cliente" author={empresaNombre ?? "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.h1}>Rentabilidad por cliente</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
-              Período: {fechaDesde} → {fechaHasta}
+            <Text style={[styles.h1, { lineHeight: 1.2 }]}>Rentabilidad por cliente</Text>
+            <Text style={{ marginTop: 6, fontSize: 10, lineHeight: 1.3, color: COLORS.muted }}>
+              Período: {fechaDesde} - {fechaHasta}
               {modo && modo !== "all" ? `   ·   Modo: ${modo}` : ""}
             </Text>
           </View>
@@ -73,10 +75,10 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
         {rows.length === 0 ? (
           <Text style={styles.paragraph}>No hay datos en el período seleccionado.</Text>
         ) : (
-          <DataTable columns={cols} rows={rows} />
+          <DataTable columns={cols} rows={rows} headerTextStyle={reporteHeaderTextStyle} />
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer empresaNombre={empresaNombre} />
       </Page>
     </Document>
   );

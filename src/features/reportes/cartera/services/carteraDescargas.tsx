@@ -4,6 +4,7 @@
  * límite de tamaño de componentes.
  */
 import { descargarBlob } from "@/lib/downloadBlob";
+import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import {
   carteraACsv,
@@ -68,15 +69,17 @@ export async function descargarCarteraPdf(
   busqueda = "",
 ): Promise<void> {
   try {
-    const [{ descargarPdf }, { ReporteCarteraDocument }] = await Promise.all([
+    const [{ descargarPdf }, { ReporteCarteraDocument }, emisor] = await Promise.all([
       import("@/pdf/render/descargarPdf"),
       import("@/pdf/documents/ReporteCarteraDocument"),
+      cargarEmisorEmpresa(),
     ]);
     await descargarPdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
         leyendaTc={leyendaTc}
         busqueda={busqueda}
+        emisor={emisor}
         bloques={bloques.map((b) => ({
           titulo: b.titulo,
           totales: filasTotalesExport(b.buckets, b.total, b.titulo),

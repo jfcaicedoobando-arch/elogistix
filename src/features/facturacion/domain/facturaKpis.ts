@@ -7,14 +7,17 @@ import type { DocumentoKpi } from "@/components/shared/documento/DocumentoKpiStr
 import { buildKpisDocumento } from "@/lib/domain/documentoKpis";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
-export function buildKpisFactura(factura: FacturaDetalle, saldo?: number): DocumentoKpi[] {
+type FacturaKpisInput = Pick<FacturaDetalle, "total" | "estado" | "moneda" | "fecha_vencimiento" | "dias_credito">;
+
+export function buildKpisFactura(factura: FacturaKpisInput, saldo?: number, cobrado = 0): DocumentoKpi[] {
   const total = Number(factura.total ?? 0);
   const saldoNum = typeof saldo === "number" ? saldo : total;
   const cancelada = factura.estado === "Cancelada";
 
   return buildKpisDocumento({
     total,
-    pagado: Math.max(total - saldoNum, 0),
+    // Una nota de crédito reduce saldo, pero no representa dinero cobrado.
+    pagado: Math.max(cobrado, 0),
     saldo: saldoNum,
     moneda: factura.moneda,
     cancelada,

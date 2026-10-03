@@ -4,20 +4,18 @@ import { Check, X } from "lucide-react";
  * Power of 10 (≤200 líneas por archivo productivo).
  */
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { TimbradoEmail, type TimbradoEmailProps } from "./TimbradoConfirmacion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 
-interface CompactoProps {
+interface CompactoProps extends TimbradoEmailProps {
   usoCfdi: string;
   formaPago: string;
   metodoPago: string;
-  enviarEmail: boolean;
-  setEnviarEmail: (v: boolean) => void;
 }
 
-export function TimbrarCompacto({ usoCfdi, formaPago, metodoPago, enviarEmail, setEnviarEmail }: CompactoProps) {
+export function TimbrarCompacto({ usoCfdi, formaPago, metodoPago, ...emailProps }: CompactoProps) {
   return (
     <>
       <div className="text-body text-muted-foreground">
@@ -27,15 +25,12 @@ export function TimbrarCompacto({ usoCfdi, formaPago, metodoPago, enviarEmail, s
         {" · "}
         <span className="font-medium text-foreground">Método:</span> {metodoPago}
       </div>
-      <label className="flex items-center gap-2 text-body cursor-pointer">
-        <Checkbox checked={enviarEmail} onCheckedChange={(c) => setEnviarEmail(c === true)} />
-        <span>Enviar el CFDI por email al cliente tras timbrar</span>
-      </label>
+      <TimbradoEmail {...emailProps} />
     </>
   );
 }
 
-interface CompletoProps {
+interface CompletoProps extends TimbradoEmailProps {
   checks: { ok: boolean; label: string }[];
   usoCfdi: string;
   setUsoCfdi: (v: string) => void;
@@ -43,8 +38,6 @@ interface CompletoProps {
   setFormaPago: (v: string) => void;
   metodoPago: string;
   setMetodoPago: (v: string) => void;
-  enviarEmail: boolean;
-  setEnviarEmail: (v: boolean) => void;
   puedeTimbrar: boolean;
 }
 
@@ -54,7 +47,7 @@ export function TimbrarCompleto(props: CompletoProps) {
     usoCfdi, setUsoCfdi,
     formaPago, setFormaPago,
     metodoPago, setMetodoPago,
-    enviarEmail, setEnviarEmail,
+    enviarEmail, setEnviarEmail, emailDestino,
     puedeTimbrar,
   } = props;
   return (
@@ -98,10 +91,7 @@ export function TimbrarCompleto(props: CompletoProps) {
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-body cursor-pointer">
-        <Checkbox checked={enviarEmail} onCheckedChange={(c) => setEnviarEmail(c === true)} />
-        <span>Enviar el CFDI por email al cliente tras timbrar</span>
-      </label>
+      <TimbradoEmail enviarEmail={enviarEmail} setEnviarEmail={setEnviarEmail} emailDestino={emailDestino} />
 
       {!puedeTimbrar && (
         <Alert variant="destructive">

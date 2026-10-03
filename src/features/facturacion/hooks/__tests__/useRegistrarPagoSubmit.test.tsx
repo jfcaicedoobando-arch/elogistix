@@ -76,7 +76,7 @@ beforeEach(() => {
 });
 
 describe("useRegistrarPagoSubmit", () => {
-  it("happy path PUE: registra pago, registra actividad y llama onSuccess sin timbrar REP", async () => {
+  it("PUE: registra pago sin duplicar el evento canónico del servicio", async () => {
     mutateAsync.mockResolvedValue({ pagoId: "pago-1", movimientoBancario: "no_aplica" });
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
@@ -91,12 +91,7 @@ describe("useRegistrarPagoSubmit", () => {
       moneda: "MXN",
       forma_pago: "03",
     }));
-    expect(registrarActividadMutate).toHaveBeenCalledWith(expect.objectContaining({
-      accion: "crear",
-      modulo: "facturas",
-      entidad_id: "fac-1",
-      entidad_nombre: expect.stringContaining("MXN 1000"),
-    }));
+    expect(registrarActividadMutate).not.toHaveBeenCalled();
     expect(notifySuccess).toHaveBeenCalledWith(undefined, { title: "Pago registrado" });
     expect(emitirRep).not.toHaveBeenCalled();
     expect(onSuccess).toHaveBeenCalledTimes(1);

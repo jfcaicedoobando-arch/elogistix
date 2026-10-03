@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface UserOption {
   id: string;
   email: string;
+  full_name?: string | null;
 }
 
 export async function fetchAvailableUsers(): Promise<UserOption[]> {
