@@ -1,7 +1,7 @@
 /** /crm/empresas/:id — Ficha de empresa con contactos y oportunidades ligadas. */
 import { useParams } from "react-router-dom";
 import { Building2 } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -19,27 +19,19 @@ export default function CrmEmpresaDetalle() {
   const { canEditCrm } = usePermissions();
   useDocumentTitle(data ? `Empresa · ${data.nombre}` : "Empresa");
 
-  if (isLoading) return <LoadingState label="Cargando empresa…" />;
-  if (isError || !data) {
-    return (
-      <PageContainer>
-        <ErrorState
-          title={isError ? "No se pudo cargar la empresa" : "Empresa no encontrada"}
-          description="Revisa el enlace o vuelve a la lista."
-          onRetry={isError ? () => void refetch() : undefined}
-        />
-      </PageContainer>
-    );
-  }
-
   return (
     <PageContainer>
-      <PageHeader
-        icon={<Building2 className="h-6 w-6 text-primary" />}
-        title={data.nombre}
-        description={`Alta: ${formatFechaDia(data.created_at)}`}
-        subHeader={data.cliente_id ? <Badge variant="secondary">Cliente</Badge> : <Badge variant="outline">Prospecto</Badge>}
+      <DetailHeader
+        backTo="/crm/empresas"
+        icon={<Building2 className="size-6 text-accent" />}
+        title={data?.nombre ?? "Empresa"}
+        subtitle={data ? `Alta: ${formatFechaDia(data.created_at)}` : undefined}
+        badge={data ? <Badge variant={data.cliente_id ? "secondary" : "outline"}>{data.cliente_id ? "Cliente" : "Prospecto"}</Badge> : undefined}
       />
+      {isLoading ? <LoadingState label="Cargando empresa…" /> : isError || !data ? (
+        <ErrorState title={isError ? "No se pudo cargar la empresa" : "Empresa no encontrada"}
+          description="Revisa el enlace o vuelve a la lista." onRetry={isError ? () => void refetch() : undefined} />
+      ) : <>
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <PropiedadesCard objeto="empresa" registroId={id} canEdit={canEditCrm} />
         <DesglosePuntajeCard objeto="empresa" registroId={id} />
@@ -55,6 +47,7 @@ export default function CrmEmpresaDetalle() {
           rutaBase="/crm/oportunidades" canEdit={false}
         />
       </div>
+      </>}
     </PageContainer>
   );
 }

@@ -3,18 +3,17 @@
  * de Costeo o a mano. Sólo editable mientras la solicitud está enviada.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { NavieraSelect } from "@/features/catalogos";
-import { useEliminarOpcion, useGuardarOpcion } from "@/features/crm/hooks/usePricingCrm";
+import { useEliminarOpcion, useGuardarOpcion, useTarifasPricing } from "@/features/crm/hooks/usePricingCrm";
 import {
   OPCION_VACIA, type OpcionPricingForm, type OpcionPricingRow,
 } from "@/features/crm/services/pricing/tiposPricing";
 import {
-  etiquetaTarifa, listarTarifasParaPricing, opcionDesdeTarifa,
+  etiquetaTarifa, opcionDesdeTarifa,
 } from "@/features/crm/services/pricing/tarifasParaPricing";
 import { CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
 import { CargosPricingCampos } from "./CargosPricingCampos";
@@ -38,7 +37,7 @@ export function OpcionPricingEditor({ solicitudId, organizationId, orden, opcion
   const [datos, setDatos] = useState<OpcionPricingForm>(() => aForm(opcion));
   const guardar = useGuardarOpcion();
   const eliminar = useEliminarOpcion();
-  const tarifas = useQuery({ queryKey: ["crm", "pricing", "tarifas"], queryFn: listarTarifasParaPricing, enabled: editable });
+  const tarifas = useTarifasPricing(editable);
   const set = (c: Partial<OpcionPricingForm>) => setDatos((p) => ({ ...p, ...c }));
   const idBase = `op-${opcion?.id ?? "nueva"}`;
   const off = !editable || guardar.isPending;
@@ -53,7 +52,7 @@ export function OpcionPricingEditor({ solicitudId, organizationId, orden, opcion
         {editable && opcion && (
           <Button type="button" size="icon" variant="ghost" aria-label="Quitar opción"
             disabled={eliminar.isPending} onClick={() => eliminar.mutate(opcion.id)}>
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="size-4" />
           </Button>
         )}
       </CardHeader>

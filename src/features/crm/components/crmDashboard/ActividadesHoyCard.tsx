@@ -43,7 +43,7 @@ export function ActividadesHoyCard({ items, isError = false, onRetry }: Props) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary" /> Mis actividades de hoy
+          <Clock className="size-4 text-primary" /> Mis actividades de hoy
         </CardTitle>
       </CardHeader>
       <CardContent>

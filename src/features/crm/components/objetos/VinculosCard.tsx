@@ -62,7 +62,7 @@ export function VinculosCard({ titulo, relacion, duenoId, rutaBase, edicion, can
                   disabled={vinculo.isPending}
                   onClick={() => vinculo.mutate({ tipo: edicion.tipo, ...edicion.par(r.id), quitar: true })}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-4" />
                 </Button>
               )}
             </li>

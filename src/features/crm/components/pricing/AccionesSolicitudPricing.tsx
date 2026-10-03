@@ -4,6 +4,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { useAccionSolicitud } from "@/features/crm/hooks/usePricingCrm";
 import { ETIQUETA_ESTADO_PRICING, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { RelojPricing } from "./RelojPricing";
@@ -30,9 +31,12 @@ export function AccionesSolicitudPricing({ solicitud: s, puedeCancelar, puedeRes
               onClick={() => accion.mutate({ id: s.id, accion: "cancelar" })}>Cancelar solicitud</Button>
           )}
           {puedeResponder && (
-            <Button size="sm" disabled={accion.isPending || sinOpciones}
-              title={sinOpciones ? "Agrega al menos una opción" : undefined}
-              onClick={() => accion.mutate({ id: s.id, accion: "responder" })}>Marcar respondida</Button>
+            <Hint label={sinOpciones ? "Agrega al menos una opción" : undefined}>
+              <span tabIndex={sinOpciones ? 0 : undefined} aria-label={sinOpciones ? "Agrega al menos una opción para responder" : undefined}>
+                <Button size="sm" disabled={accion.isPending || sinOpciones}
+                  onClick={() => accion.mutate({ id: s.id, accion: "responder" })}>Marcar respondida</Button>
+              </span>
+            </Hint>
           )}
         </div>
       </CardContent>

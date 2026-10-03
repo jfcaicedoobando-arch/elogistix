@@ -29,7 +29,7 @@ export function BuscadorObjetoCrm({ objeto, excluir, onElegir, disabled }: Props
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button size="sm" variant="outline" disabled={disabled}>
-          <Plus className="h-4 w-4" /> Ligar {objeto}
+          <Plus className="size-4" /> Ligar {objeto}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-72" align="end">

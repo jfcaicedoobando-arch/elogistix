@@ -43,7 +43,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       )}
       {editable && !agregando && (
         <Button variant="outline" onClick={() => setAgregando(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Agregar opción
+          <Plus className="mr-1 size-4" /> Agregar opción
         </Button>
       )}
     </div>

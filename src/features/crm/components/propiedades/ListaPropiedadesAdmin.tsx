@@ -39,7 +39,7 @@ export function ListaPropiedadesAdmin({ objeto }: { objeto: ObjetoCrm }) {
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={agregar} disabled={!etiqueta.trim() || crear.isPending}><Plus className="h-4 w-4" /> Crear propiedad</Button>
+        <Button onClick={agregar} disabled={!etiqueta.trim() || crear.isPending}><Plus className="size-4" /> Crear propiedad</Button>
       </div>
       {q.isLoading && <p className="text-body-sm text-muted-foreground">Cargando…</p>}
       {lista.map((p, i) => (

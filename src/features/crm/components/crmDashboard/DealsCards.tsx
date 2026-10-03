@@ -42,7 +42,7 @@ export function CerrandoSemanaCard({ items, isError = false, onRetry }: { items:
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Target className="h-4 w-4 text-primary" /> Cerrando esta semana
+          <Target className="size-4 text-primary" /> Cerrando esta semana
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -88,7 +88,7 @@ export function LeadsSinContactarCard({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-destructive" /> Leads sin contactar (&gt;{" "}
+          <AlertTriangle className="size-4 text-destructive" /> Leads sin contactar (&gt;{" "}
           {SEMANA_LEAD_SIN_CONTACTAR_DIAS} días)
         </CardTitle>
         <p className="text-caption text-muted-foreground">

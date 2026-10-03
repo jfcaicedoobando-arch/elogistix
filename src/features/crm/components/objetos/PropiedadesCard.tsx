@@ -4,6 +4,8 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { useGuardarValorCrm, usePropiedadesCrm, useValoresCrm } from "@/features/crm/hooks/usePropiedadesCrm";
 import type { ObjetoCrm } from "@/features/crm/services/propiedadesCrm";
 import { CampoPropiedad } from "./CampoPropiedad";
@@ -21,14 +23,14 @@ export function PropiedadesCard({ objeto, registroId, canEdit }: Props) {
     <Card>
       <CardHeader className="pb-2"><CardTitle className="text-body font-semibold">Propiedades</CardTitle></CardHeader>
       <CardContent>
-        {cargando && <p className="text-body-sm text-muted-foreground">Cargando…</p>}
+        {cargando && <EmptyStateInline loading message="Cargando propiedades…" density="compact" />}
         {(props.isError || valores.isError) && (
-          <p className="text-body-sm text-destructive">No se pudieron cargar las propiedades.</p>
+          <ErrorStateInline message="No se pudieron cargar las propiedades." onRetry={() => { void props.refetch(); void valores.refetch(); }} />
         )}
-        {!cargando && visibles.length === 0 && (
-          <p className="text-body-sm text-muted-foreground">Aún no hay propiedades para este objeto.</p>
+        {!cargando && !props.isError && !valores.isError && visibles.length === 0 && (
+          <EmptyStateInline message="Aún no hay propiedades para este objeto." density="compact" />
         )}
-        {!cargando && !valores.isError && (
+        {!cargando && !props.isError && !valores.isError && (
           <div className="grid gap-3 md:grid-cols-2">
             {visibles.map((p) => (
               <div key={p.id} className="space-y-1.5">

@@ -26,10 +26,10 @@ export function TarjetaReporte({ reporte, canEdit, onEditar, onEliminar }: Props
         {canEdit && (
           <div className="flex shrink-0 items-center gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditar(reporte)} aria-label="Editar reporte">
-              <Pencil className="h-4 w-4" />
+              <Pencil className="size-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEliminar(reporte)} aria-label="Eliminar reporte">
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </Button>
           </div>
         )}
