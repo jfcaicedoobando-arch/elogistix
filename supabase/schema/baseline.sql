@@ -14904,12 +14904,12 @@ BEGIN
     vence_at = now() + make_interval(hours => v_horas) WHERE id = p_id;
   PERFORM set_config('lc.pricing_rpc', '', true);
   INSERT INTO public.notificaciones_internas (organization_id, usuario_id, tipo, titulo, mensaje, enlace, entidad_tipo, entidad_id)
-  SELECT v.organization_id, om.user_id, 'crm_pricing_solicitud', 'Nueva solicitud de pricing ' || v.folio,
+  SELECT DISTINCT v.organization_id, om.user_id, 'crm_pricing_solicitud', 'Nueva solicitud de pricing ' || v.folio,
          coalesce(v.cliente, 'Sin cliente') || ' · ' || coalesce(v.origen, v.pol, '') || ' → ' || coalesce(v.destino, v.pod, '')
            || ' · responder en ' || v_horas || ' h',
          '/costeo/solicitudes?id=' || v.id, 'crm_solicitud_pricing', v.id
     FROM public.organization_members om
-   WHERE om.organization_id = v.organization_id AND om.role = 'ejecutivo_pricing';
+   WHERE om.organization_id = v.organization_id AND om.role IN ('ejecutivo_pricing','gerente_operaciones');
   RETURN jsonb_build_object('id', v.id, 'ya_enviada', false);
 END $$;
 CREATE FUNCTION public.crm_higiene_oportunidades() RETURNS TABLE(id uuid, nombre text, cliente_nombre text, etapa_id uuid, etapa_nombre text, vendedor_email text, monto_estimado numeric, moneda text, probabilidad numeric, fecha_estimada_cierre date, ultimo_movimiento_at timestamp with time zone, dias_sin_movimiento integer, sla_dias integer, estado_higiene text, registro_completo boolean, proxima_actividad_at timestamp with time zone, actividad_vencida boolean)
