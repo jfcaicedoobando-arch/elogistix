@@ -11,11 +11,13 @@ import { queryClient } from "./lib/query/queryClient";
 import { startServices } from "./lib/bootstrap/startServices";
 import { reactErrorHandlers } from "./lib/bootstrap/reactErrorHandlers";
 import { registerEarlyErrorCapture } from "./lib/bootstrap/earlyErrorCapture";
+import { registerDirtyHistoryGuard } from "./lib/bootstrap/dirtyHistoryGuard";
 import {
   registerChunkRecoveryListeners,
   syncAppVersion,
 } from "./lib/bootstrap/startupTasks";
 
+registerDirtyHistoryGuard();
 syncAppVersion();
 registerChunkRecoveryListeners();
 const removeEarlyListeners = registerEarlyErrorCapture();

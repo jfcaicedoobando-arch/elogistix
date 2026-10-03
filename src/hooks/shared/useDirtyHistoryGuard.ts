@@ -1,5 +1,6 @@
 /** Protege Atrás/Adelante de BrowserRouter antes de que cambie la ruta. */
 import { useEffect } from "react";
+import { subscribeDirtyHistoryGuard } from "@/lib/bootstrap/dirtyHistoryGuard";
 
 function historyIndex(state: unknown): number | null {
   if (!state || typeof state !== "object" || !("idx" in state)) return null;
@@ -31,14 +32,13 @@ export function useDirtyHistoryGuard(
       }
       const delta = nextIndex - initialIndex;
       if (!delta) return;
-      // Capture corre antes del listener de BrowserRouter: el formulario no
-      // se desmonta durante la restauración de la entrada actual.
+      // El dispatcher de arranque corre antes del listener de BrowserRouter:
+      // el formulario no se desmonta mientras se restaura la entrada actual.
       event.stopImmediatePropagation();
       if (restoringDelta !== null) return;
       restoringDelta = delta;
       window.history.go(-delta);
     };
-    window.addEventListener("popstate", onPopState, true);
-    return () => window.removeEventListener("popstate", onPopState, true);
+    return subscribeDirtyHistoryGuard(onPopState);
   }, [enabled, confirmarSalida]);
 }

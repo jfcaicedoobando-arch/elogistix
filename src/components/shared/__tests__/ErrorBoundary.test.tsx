@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@sentry/react", () => ({
+  isEnabled: () => true,
   withScope: mocks.withScope,
   captureException: mocks.captureException,
   getFeedback: mocks.getFeedback,
@@ -34,7 +35,7 @@ vi.mock("@sentry/react", () => ({
 }));
 
 vi.mock("@/services/observability", () => ({ logClientError: mocks.logClientError }));
-vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn() }));
+vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn(), isSentryReady: () => true }));
 vi.mock("@/services/observability/logClientError", () => ({ logClientError: mocks.logClientError }));
 
 import { ErrorBoundary } from "../ErrorBoundary";

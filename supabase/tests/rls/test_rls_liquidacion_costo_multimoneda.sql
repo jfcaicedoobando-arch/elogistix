@@ -25,7 +25,7 @@ BEGIN
   INSERT INTO public.clientes(id, organization_id, nombre, email)
   VALUES (v_cli, v_orgs.org_b, 'AUD02 CLIENTE B', 'audit02-rls@test.local');
   INSERT INTO public.embarques(id, organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_emb, v_orgs.org_b, v_cli, 'AUD02-RLS-' || gen_random_uuid(), 'Marítimo', 'Importación');
+  VALUES (v_emb, v_orgs.org_b, v_cli, NULL, 'Marítimo', 'Importación');
   INSERT INTO public.conceptos_costo(
     id, organization_id, embarque_id, proveedor_id, concepto, monto, moneda,
     tasa_iva_aplicada, origen

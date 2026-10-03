@@ -6,11 +6,16 @@ export function loadInitializedSentry(): Promise<typeof import("@sentry/react") 
     loading = Promise.all([import("@sentry/react"), import("./core")])
       .then(([sdk, core]) => {
         core.initSentry();
-        return sdk;
+        return core.isSentryReady() ? sdk : null;
       }).catch(() => {
         loading = null;
         return null;
       });
   }
-  return loading;
+  return loading.then((sdk) => {
+    if (sdk?.isEnabled()) return sdk;
+    // Allow a later successful bootstrap; never expose a disabled/closed SDK.
+    loading = null;
+    return null;
+  });
 }

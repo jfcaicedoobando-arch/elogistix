@@ -16,9 +16,9 @@ DECLARE
   v_factura uuid;
 BEGIN
   INSERT INTO public.clientes(organization_id, nombre, email)
-  VALUES (p_org, 'AUD02 CLIENTE', 'audit02@test.local') RETURNING id INTO v_cliente;
+  VALUES (p_org, 'AUD02 CLIENTE', 'audit02-' || gen_random_uuid() || '@test.local') RETURNING id INTO v_cliente;
   INSERT INTO public.embarques(organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (p_org, v_cliente, 'AUD02-' || gen_random_uuid(), 'Marítimo', 'Importación')
+  VALUES (p_org, v_cliente, NULL, 'Marítimo', 'Importación')
   RETURNING id INTO v_embarque;
   INSERT INTO public.conceptos_costo(
     organization_id, embarque_id, proveedor_id, concepto, monto, moneda,

@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { useDirtyGuard } from "../useDirtyGuard";
+import { registerDirtyHistoryGuard } from "@/lib/bootstrap/dirtyHistoryGuard";
+
+// Same bootstrap order as src/main.tsx, before BrowserRouter installs its listener.
+registerDirtyHistoryGuard();
 
 function Captura() {
   const [monto, setMonto] = useState("25");

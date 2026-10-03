@@ -96,7 +96,7 @@ Deno.test("v13.821.6: si NO se pudo persistir verifying, persisted=false (el ind
 });
 
 Deno.test("R4EF-06/facturas: el index llama al helper ANTES de responder (estructural)", async () => {
-  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const src = (await Deno.readTextFile(new URL("./index.ts", import.meta.url))).replace(/\r\n/g, "\n");
   assertStringIncludes(src, 'import { marcarTimeoutCancelacion } from "./timeoutCancelacion.ts";');
   const iRama = src.indexOf("err instanceof FacturapiTimeoutError");
   const iHelper = src.indexOf("marcarTimeoutCancelacion({", iRama);

@@ -1,12 +1,19 @@
 # Changelog
 
-## [13.824.17] - 2026-10-03
+## [13.824.18] - 2026-10-03
 
 - **fix(CxP y captura)**: conserva el pago parcial al cambiar el tipo de cambio, liquida costos con el saldo en moneda de la factura y acepta cantidades decimales sin reinterpretar puntos decimales como miles.
 - **fix(facturación)**: separa notas de crédito borrador y aplicadas en caché, usa pagos vigentes para el indicador Cobrado, confirma ambiente/cliente/total antes del timbrado y sincroniza el UsoCFDI efectivo del XML. El envío de correo requiere selección explícita y un CFDI emitido.
 - **fix(tesorería y flujos)**: avisa antes de descartar un anticipo capturado, valida facturas aprobadas antes del pago en lote y conserva el acceso a Cancelar al abrir detalles de error. La identidad de comisiones distingue datos faltantes y fallos de consulta.
 - **fix(reportes)**: identifica el alcance de filtros y borradores, representa pérdidas en los gráficos y mejora encabezados y fechas de los PDF financieros. REP no aplicable y moneda se muestran sin mensajes contradictorios o duplicados.
 - **test(auditoría financiera)**: regresiones de captura, saldos, timbrado, navegación y reportes; guardas SQL de liquidación multimoneda y seguridad por organización. No modifica documentos ni movimientos históricos.
+
+## [13.824.17] - 2026-10-03
+
+- **fix(Sentry · errores)**: rechazos de promesa con información útil ya no se descartan por no ser objetos Error; se conserva el filtro preciso de rechazos serializados vacíos.
+- **fix(Sentry · duplicados)**: REST y Edge de Supabase se reportan por Query/UI después de reintentos; la captura HTTP automática conserva auth, storage y recursos de la app, sin eliminar breadcrumbs ni trazas.
+- **fix(Sentry · diagnóstico)**: capturas y feedback requieren un cliente habilitado; sin SDK activo no se genera un ID engañoso. Un ID de prueba se presenta como generado, no como recepción confirmada.
+- **test(Sentry)**: regresiones del SDK real con transporte en memoria, captura única tras reintentos y cliente ausente/deshabilitado/cerrado; sin nuevos servicios ni dependencias.
 
 ## [13.824.16] - 2026-10-03
 
