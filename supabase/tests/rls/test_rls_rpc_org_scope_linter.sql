@@ -6,7 +6,7 @@
 --   organization_id · organization_members · current_user_org_id ·
 --   default_user_org_id · has_role_in_org · has_any_role_in_org(_exact) ·
 --   current_agente_org · current_agente_id · current_user_client_ids ·
---   client_users · agente_users
+--   client_users · agente_users · llamada a org_scope()
 -- (mismo criterio de anclas que test_rls_policy_linter.sql, más los helpers
 -- de identidad por org/agente que envuelven esas tablas).
 --
@@ -52,6 +52,7 @@ DECLARE
   flagged text[];
   fuera text[];
   muertas text[];
+  anclas text := '(organization_id|organization_members|current_user_org_id|default_user_org_id|has_role_in_org|has_any_role_in_org|current_agente_org|current_agente_id|current_user_client_ids|client_users|agente_users|\morg_scope[[:space:]]*\()';
   whitelist text[] := ARRAY[
     -- ── A. Helpers de rol/plataforma: el rol de plataforma vive en
     --    user_roles por diseño (super_admin está PROHIBIDO en
@@ -131,6 +132,15 @@ DECLARE
     'dashboard_details'
   ];
 BEGIN
+  -- Regresión: reconocer el helper oficial, no un nombre parecido ni una RPC sin ancla.
+  IF 'SELECT public.org_scope()' !~* anclas
+     OR 'SELECT public.org_scope ()' !~* anclas
+     OR 'SELECT public.fake_org_scope()' ~* anclas
+     OR 'SELECT public.org_scope_backup()' ~* anclas
+     OR 'SELECT * FROM public.facturas WHERE id = p_id' ~* anclas THEN
+    RAISE EXCEPTION 'RPC ORG-SCOPE LINTER FAIL: regresión en la detección de anclas';
+  END IF;
+
   -- Funciones SECURITY DEFINER ejecutables por authenticated SIN ancla tenant.
   SELECT array_agg(p.proname ORDER BY p.proname)
     INTO flagged
@@ -141,7 +151,7 @@ BEGIN
      AND p.prokind = 'f'
      AND p.prorettype <> 'pg_catalog.trigger'::regtype
      AND has_function_privilege('authenticated', p.oid, 'EXECUTE')
-     AND p.prosrc !~* '(organization_id|organization_members|current_user_org_id|default_user_org_id|has_role_in_org|has_any_role_in_org|current_agente_org|current_agente_id|current_user_client_ids|client_users|agente_users)';
+     AND p.prosrc !~* anclas;
 
   -- 1) Nuevas sin ancla y fuera de la whitelist → FAIL.
   SELECT array_agg(f ORDER BY f)
