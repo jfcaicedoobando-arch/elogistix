@@ -2,8 +2,25 @@ import { assert, assertEquals, assertRejects } from "https://deno.land/std@0.224
 import { captureEdgeMessage, wrapEdgeHandler, withCronMonitor } from "./sentry.ts";
 import { loadSentryEdge } from "./sentryRuntime.ts";
 
-Deno.test("SDK 11: isolated requests, redaction, spans and terminal cron check-ins", async () => {
+Deno.test("No DSN: preserve responses and exceptions without telemetry", async () => {
+  const previous = Deno.env.get("SENTRY_DSN_EDGE");
+  Deno.env.delete("SENTRY_DSN_EDGE");
+  try {
+    assertEquals(await loadSentryEdge(), null);
+    await captureEdgeMessage("no transport", "info", { fn: "no-dsn" });
+    const response = await withCronMonitor("no-dsn", "disabled", () => new Response("ok", { status: 202 }),
+      { schedule: { type: "interval", value: 1, unit: "hour" } })(new Request("https://mock.invalid/"));
+    assertEquals(response.status, 202);
+    await assertRejects(() => wrapEdgeHandler("no-dsn", () => { throw new Error("unchanged"); })(
+      new Request("https://mock.invalid/")), Error, "unchanged");
+  } finally {
+    if (previous !== undefined) Deno.env.set("SENTRY_DSN_EDGE", previous);
+  }
+});
+
+Deno.test("SDK 10: isolated manual reports, redaction, spans and terminal cron check-ins", async () => {
   const fetchOriginal = globalThis.fetch;
+  const serveOriginal = Deno.serve;
   const envelopes: string[] = [];
   Deno.env.set("SENTRY_DSN_EDGE", "https://mock@mock.invalid/1");
   Deno.env.set("SENTRY_RELEASE_EDGE", "mock-contract");
@@ -15,6 +32,9 @@ Deno.test("SDK 11: isolated requests, redaction, spans and terminal cron check-i
   };
   const sdk = await loadSentryEdge();
   assert(sdk);
+  assertEquals(sdk.SDK_VERSION, "10.76.0");
+  assertEquals(Deno.serve, serveOriginal);
+  assertEquals(sdk.getClient<InstanceType<typeof sdk.DenoClient>>()!.getOptions().skipOpenTelemetrySetup, true);
   sdk.getClient()!.getOptions().tracesSampleRate = 1;
   const incoming = "0123456789abcdef0123456789abcdef-0123456789abcdef-1";
   try {
@@ -44,16 +64,27 @@ Deno.test("SDK 11: isolated requests, redaction, spans and terminal cron check-i
       assert(event, `missing ${name} event`);
       assertEquals(event.tags.fn, name);
       assertEquals(event.tags.request_id, name);
+      assertEquals(event.contexts.trace.trace_id, "0123456789abcdef0123456789abcdef");
+      const transaction = events.find((item) => item.type === "transaction" && item.transaction === name);
+      assert(transaction, `missing ${name} transaction`);
+      assertEquals(transaction.tags.fn, name);
+      assertEquals(transaction.tags.request_id, name);
+      assertEquals(transaction.contexts.trace.trace_id, event.contexts.trace.trace_id);
     }
+    const privacySpan = sdk.startInactiveSpan({ name: "Bearer MOCK_SPAN", attributes: {
+      customerEmail: "mock@example.invalid", note: "RFC XAXX010101000", accessToken: "MOCK_ACCESS",
+    } });
+    privacySpan.end();
+    await sdk.flush(2000);
+    const privacyJson = envelopes.join("\n");
+    assert(!/MOCK_SPAN|mock@example.invalid|XAXX010101000|MOCK_ACCESS/.test(privacyJson),
+      privacyJson.match(/.{0,70}(?:MOCK_SPAN|mock@example.invalid|XAXX010101000|MOCK_ACCESS).{0,70}/)?.[0]);
     assert(json.includes("http.server"));
     assert(json.includes("0123456789abcdef0123456789abcdef"));
     // The final monitor envelope must have reached transport before the wrapper returns.
     assert(envelopes.some((text) => text.includes('"status":"error"')));
   } finally {
     await sdk.close(2000);
-    // SDK streaming schedules unref'ed 500 ms segment flushes. Deno 2.6's
-    // leak detector still tracks them; drain them, keeping sanitizers enabled.
-    await new Promise((resolve) => setTimeout(resolve, 550));
     globalThis.fetch = fetchOriginal;
     for (const key of ["SENTRY_DSN_EDGE", "SENTRY_RELEASE_EDGE", "SENTRY_CRON_MONITOR_SLUG"]) Deno.env.delete(key);
   }

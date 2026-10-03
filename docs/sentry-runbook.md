@@ -3,7 +3,8 @@
 Documento de gobierno para la implementación de Sentry (front + edge functions).
 Fuente de la verdad para on-call y para futuras auditorías.
 
-> Revisión documental: 2026-10-03. React/Core, Deno y bundler plugins: 11.4.0.
+> Revisión documental: 2026-10-03. React/Core y bundler: 11.4.0;
+> Edge Deno: 10.76.0, por compatibilidad con Lovable Cloud.
 > Describe código/configurable; no certifica
 > alertas, destinatarios, retención o crons activos en el dashboard remoto.
 
@@ -21,6 +22,7 @@ Fuente de la verdad para on-call y para futuras auditorías.
 | Error Boundary | `src/components/shared/ErrorBoundary.tsx` | Captura React + widget de feedback |
 | React Query hook | `src/lib/query/queryClient.ts` | `QueryCache.onError` + `MutationCache.onError` |
 | Edge wrapper | `supabase/functions/_shared/sentry.ts` | `wrapEdgeHandler`, `withCronMonitor`, `captureEdgeException` |
+| Scope Edge | `supabase/functions/_shared/sentryRequestScope.ts` | AsyncLocalStorage para reportes manuales; sin parchear el runtime |
 
 ## 2. Variables de entorno
 
@@ -69,8 +71,12 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 - El front adjunta `sentry-trace` + `baggage` a fetches que caen en
   `TRACE_PROPAGATION_TARGETS` (functions de Supabase, librecarga.com).
 - `corsHeaders` permite ambos headers (ver `supabase/functions/_shared/cors.ts`).
-- `wrapEdgeHandler` crea isolation scope por request, continúa la traza y
-  abre `http.server` con fn/request ID/status; también traza requests sin padre.
+- `wrapEdgeHandler` crea span/scope de forma síncrona con APIs públicas y
+  conserva el scope propio por request en AsyncLocalStorage. Continúa la traza
+  y abre `http.server` con fn/request ID/status; también traza requests sin padre.
+  SDK 10 con `defaultIntegrations: false` no instala aislamiento asíncrono:
+  no usar `withIsolationScope` alrededor de callbacks asíncronos en este modo.
+  No instrumentar `Deno.serve` ni sustituir el proveedor OpenTelemetry de Cloud.
 - El frontend envuelve `Routes` con `wrapReactRouterRouting` y re-renderiza
   tras init sin remount de formularios. Los nombres usan patrones de ruta.
 - Verificar en Sentry → Performance → una transaction del front debe mostrar
@@ -96,6 +102,9 @@ del final. Un HTTP 5xx marca error sin alterar la respuesta HTTP del handler.
 - Front y Edge comparten `supabase/functions/_shared/piiScrub.ts` y
   `scrubTelemetryData.ts`: extra/context/cause/query keys/spans, claves camelCase
   y credenciales/PII en texto. Traversal acotado; ciclos y exceso se truncan.
+- Edge SDK 10 usa spans estáticos: `beforeSendSpan` limpia hijos;
+  `beforeSendTransaction` limpia raíz/sampling metadata. Se conservan únicamente
+  los IDs de traza/span con formato hexadecimal válido para correlación técnica.
 - SQLSTATE 23514/23505/P0001 ni un prefijo LC_ genérico prueban que sea esperado.
   Usar `expected=true` en validaciones comprobadas; `expected=false` fuerza reporte.
 - Logout limpia usuario, tenant, rol y organización activa; tags para eventos
@@ -173,6 +182,12 @@ mínimo oficialmente soportado del SDK 11. No equiparar ingesta comprobada
 con compatibilidad general certificada ni cambiar a ciegas el runtime gestionado.
 El SDK normaliza el tag `runtime`; verificar Edge por `fn`, request ID y
 `sentry.javascript.deno`, no sólo por el tag literal `runtime:deno-edge`.
+
+Decisión posterior: fijar únicamente Edge en **10.76.0**, rama mantenida y
+compatible con Deno 2.x, conservando frontend/bundler en 11.4.0 y CLI/CI en
+2.9.7. Contratos locales aprobados en **2.1.4** y **2.9.7**, con typecheck y
+sanitizers. La evidencia anterior es histórica del SDK 11, no prueba el
+despliegue de SDK 10: confirmar nueva recepción remota y su versión tras deploy.
 
 - Confirmar DSN/release/dist del deploy; Debug IDs/maps sólo si existe build token.
 - Verificar trace front→edge, tenant/rol del usuario actual y ninguno anterior al logout.
