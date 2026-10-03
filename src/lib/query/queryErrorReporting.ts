@@ -141,8 +141,11 @@ export function notifyQueryFailure(
   const meta = query.meta as { silentError?: boolean } | undefined;
   if (meta?.silentError) return;
   const root = rootOf(query.queryKey) ?? "data";
-  // La operación + queryKey identifican el aviso: una repetición actualiza
-  // el JSON sin suprimir el error más reciente ni mezclar consultas distintas.
+  // v13.308.7 · migra a notifyError para incluir "Ver detalles" (payload
+  // copiable con queryKey + stack). Nota: notifyError NO respeta `id` de
+  // dedupe (sonner ignora `id` en `toast.error` con action). Aceptamos que
+  // cascadas de queries fallidas puedan encolar varios toasts — el usuario
+  // los descarta con "close all" y a cambio ve el error real.
   notifyError(undefined, {
     title: "No pudimos cargar la información",
     description: "Revisa tu conexión e intenta de nuevo.",

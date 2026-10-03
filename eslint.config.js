@@ -825,8 +825,9 @@ export default tseslint.config(
       "src/lib/ui/__tests__/**",
       "src/hooks/shared/useToast.ts",
       "src/hooks/shared/useCopyText.ts",
-      // Toaster primitive. El diálogo usa feedback inline, no Sonner directo.
+      // shadcn Toaster primitive + diálogo de error usa `toast()` directo.
       "src/components/ui/sonner.tsx",
+      "src/components/ui/ErrorDetailsDialog.tsx",
       // ── SONNER-LEGACY (Ola B · burn-down completo v13.320.15) ─────────────
       // Baseline vacía: todos los call sites migrados a `notify*` de
       // `@/lib/ui/appFeedback`. La regla se mantiene para bloquear regresiones.

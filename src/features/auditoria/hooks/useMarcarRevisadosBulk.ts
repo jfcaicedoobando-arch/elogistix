@@ -101,11 +101,9 @@ export function useMarcarRevisadosBulk() {
           title: "No se pudo marcar ningún hallazgo",
           description: `${res.fail} con error`,
           method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_2",
-          context: { errores: res.errores },
         });
       } else {
-        notifyWarning(undefined, { title: `${res.ok} revisado${res.ok === 1 ? "" : "s"}, ${res.fail} con error`,
-          method: "AUDITORIA_REVISION_PARCIAL", context: { errores: res.errores } });
+        notifyWarning(undefined, { title: `${res.ok} revisado${res.ok === 1 ? "" : "s"}, ${res.fail} con error` });
       }
     },
     onError: (err) => {
@@ -114,7 +112,6 @@ export function useMarcarRevisadosBulk() {
         title: "Error al marcar hallazgos",
         description: getErrorMessage(err),
         method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_1",
-        error: err,
       });
     },
   });

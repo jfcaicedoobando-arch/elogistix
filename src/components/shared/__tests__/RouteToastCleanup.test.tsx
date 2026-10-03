@@ -44,7 +44,7 @@ describe("RouteToastCleanup", () => {
   it("descarta los toasts de error al cambiar de ruta", () => {
     notifyError(undefined, { title: "Falló la carga", errorCode: "TEST" });
     renderConNavegacion();
-    expect(dismiss).toHaveBeenCalledWith(expect.stringMatching(/^err-TEST-/));
+    expect(dismiss).toHaveBeenCalledWith("err-TEST");
   });
 
   it("no descarta los toasts de éxito", () => {

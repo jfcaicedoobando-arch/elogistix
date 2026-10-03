@@ -14,7 +14,6 @@ export function avisarMovimientoNoCreado(res: ResultadoMovimientoPago): boolean 
       "Usa “Regenerar movimiento” en la conciliación de tesorería de la factura para completarlo. " +
       (res.error ?? ""),
     duration: 10000,
-    method: "CXP_MOVIMIENTO_BANCARIO_PARCIAL", context: { resultado: res },
   });
   return false;
 }

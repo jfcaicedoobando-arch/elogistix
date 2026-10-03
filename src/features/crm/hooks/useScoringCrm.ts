@@ -1,6 +1,7 @@
 /** Hooks del puntaje A/B/C (Fase 6). Llave base ['crm','scoring']. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { fetchPuntajeDetalle, fetchPuntajes, type ObjetoPuntaje } from "@/features/crm/services/scoring/scoringCrm";
 import {
   actualizarRegla, crearRegla, eliminarRegla, guardarCortes, listarCortes, listarReglas,
@@ -37,9 +38,8 @@ function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => { if (ok) notifySuccess(undefined, { title: ok }); void qc.invalidateQueries({ queryKey: SCORING_KEY }); },
-    onError: (error: Error, variables) => notifyError(undefined, { title: "No se pudo guardar la regla de puntaje", description: error.message,
-      error, method: "CRM_SCORING_MUTACION", context: { variables } }),
+    onSuccess: () => { if (ok) toast.success(ok); void qc.invalidateQueries({ queryKey: SCORING_KEY }); },
+    onError: (error: unknown) => notifyError(undefined, { title: "No se pudo guardar la configuración de puntaje", error, method: "CRM_SCORING" }),
   });
 }
 

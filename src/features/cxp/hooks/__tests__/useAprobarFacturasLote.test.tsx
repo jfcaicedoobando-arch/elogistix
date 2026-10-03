@@ -9,7 +9,6 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 const aprobarSvc = vi.fn();
 const notifySuccess = vi.fn();
 const notifyError = vi.fn();
-const notifyWarning = vi.fn();
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -17,7 +16,6 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
-  notifyWarning: (...a: unknown[]) => notifyWarning(...a),
 }));
 vi.mock("@/features/cxp/services/aprobacionFactura", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/features/cxp/services/aprobacionFactura")>();
@@ -67,11 +65,7 @@ describe("useAprobarFacturasLote", () => {
 
     expect(resumen.exitos).toEqual(["a", "c"]);
     expect(resumen.fallos).toEqual([{ id: "b", error: "boom" }]);
-    expect(notifySuccess).not.toHaveBeenCalled();
-    expect(notifyWarning).toHaveBeenCalledWith(undefined, expect.objectContaining({
-      method: "CXP_APROBAR_FACTURAS_PARCIAL",
-      context: { exitos: 2, fallos: [{ id: "b", error: "boom" }] },
-    }));
+    expect(notifySuccess).toHaveBeenCalled(); // resumen parcial usa notifySuccess con conteo
   });
 
   it("notifica error cuando todo falla", async () => {

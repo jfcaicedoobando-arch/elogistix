@@ -35,9 +35,6 @@ export interface ErrorNotifyOptions {
 
 /** Opciones comunes para success/warning/info (todas con debug opcional). */
 export interface InfoNotifyOptions {
-  phase?: string;
-  step?: number;
-  errors?: Record<string, string>;
   title: string;
   description?: string;
   duration?: number;
@@ -56,7 +53,7 @@ export interface InfoNotifyOptions {
   /** Toast persistente (no auto-dismiss). Equivale a `duration: Infinity`. */
   persistent?: boolean;
   /**
-   * Acción custom (label + onClick). Los detalles se conservan como secundaria.
+   * Acción custom (label + onClick). Si viene, se prioriza sobre "Ver detalles".
    * Usar para flujos donde el toast necesita CTA explícito (p.ej. "Reintentar").
    */
   action?: { label: string; onClick: () => void };

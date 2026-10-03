@@ -51,7 +51,6 @@ export function useProgramarPagoLote() {
       } else {
         notifyWarning(undefined, {
           title: `${exitos.length} programada(s), ${fallos.length} con error`,
-          method: "CXP_PROGRAMAR_PAGO_PARCIAL", context: { exitos: exitos.length, fallos },
           description: "Revisa las facturas que fallaron para reintentar manualmente.",
         });
       }

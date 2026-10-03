@@ -54,7 +54,6 @@ export function usePagoClienteLote() {
       if (rep && rep.fallos.length > 0) {
         notifyWarning(undefined, {
           title: `${base} — ${resumenRepLote(rep)}`,
-          method: "COBRO_REP_LOTE_PARCIAL", context: { fallos: rep.fallos },
           description: `Los pagos con error quedaron en la bandeja "REP pendientes" para reintentar. Primer error: ${rep.fallos[0].mensaje}`,
         });
         return;

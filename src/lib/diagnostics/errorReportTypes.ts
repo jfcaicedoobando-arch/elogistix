@@ -21,15 +21,10 @@ export interface ErrorReportInput {
   errorCode?: AppErrorCode | string;
   method?: string;
   requestId?: string;
-  payload?: unknown;
-  errors?: Record<string, string>;
 }
 
 export interface ErrorReport {
   requestId: string;
-  /** Compatibilidad: requestId puede ser local; esta propiedad aclara su origen. */
-  requestIdSource?: "backend" | "client";
-  clientReportId?: string;
   errorCode: AppErrorCode | string;
   method?: string;
   title: string;
@@ -60,12 +55,6 @@ export interface ErrorReport {
     details?: string;
     hint?: string;
     stack?: string;
-    codigoSat?: string | number;
-    detallesSat?: Record<string, unknown>;
-    logId?: string;
-    retryAfter?: string | number;
-    expected?: boolean;
-    transient?: boolean;
     validationErrors?: ValidationIssue[];
     cause?: {
       name?: string;
@@ -75,6 +64,4 @@ export interface ErrorReport {
     };
   };
   context?: Record<string, unknown>;
-  payload?: unknown;
-  errors?: Record<string, string>;
 }

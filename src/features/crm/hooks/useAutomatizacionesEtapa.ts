@@ -55,7 +55,6 @@ export function useMoverEtapaConAutomatizacion() {
           title: "Etapa actualizada; no se pudo completar el seguimiento automático",
           description: `Revisa actividades. ${getErrorMessage(e)}`,
           method: "MOVE_ETAPA_AUTOMATIZACIONES",
-          error: e,
         });
       }
       return { id: params.id, updated_at: updatedAt, automatizacionesOk };

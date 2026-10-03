@@ -1,8 +1,7 @@
 /** Helpers para construir la acción "Ver detalles" en toasts. */
 import { buildErrorReport } from "./errorReport";
-import { openErrorReport, rememberErrorReport, offerErrorRecovery } from "@/lib/diagnostics/errorDetailsStore";
+import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import type { InfoNotifyOptions } from "./appFeedback.types";
-import { scopedReportAction } from "@/lib/diagnostics/errorReportScope";
 
 export function shouldAttachDetails(opts: InfoNotifyOptions): boolean {
   return Boolean(
@@ -12,10 +11,7 @@ export function shouldAttachDetails(opts: InfoNotifyOptions): boolean {
     || opts.method
     || opts.payload !== undefined
     || opts.requestId
-    || opts.errorCode
-    || opts.phase
-    || opts.step !== undefined
-    || opts.errors,
+    || opts.errorCode,
   );
 }
 
@@ -28,16 +24,9 @@ export function buildDetailsAction(opts: InfoNotifyOptions & { titleFinal: strin
     context: opts.context,
     errorCode: opts.errorCode,
     method: opts.method,
-    requestId: opts.requestId,
-    payload: opts.payload,
-    step: opts.step,
-    errors: opts.errors,
   });
-  if (opts.error !== undefined || opts.showDetails) rememberErrorReport(debug);
   return {
     label: "Ver detalles",
     onClick: () => openErrorReport(debug),
-    onToastClose: () => offerErrorRecovery(debug),
-    scopeAction: (action: () => void) => scopedReportAction(debug, action),
   };
 }

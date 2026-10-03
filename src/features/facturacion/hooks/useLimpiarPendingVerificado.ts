@@ -35,9 +35,6 @@ export function useLimpiarPendingVerificado(facturaId: string | null | undefined
       notifyError(undefined, {
         title: "No se pudo limpiar el estado",
         description: getErrorMessage(err),
-        error: err,
-        method: "LIMPIAR_PENDING_VERIFICADO",
-        context: { facturaId },
       }),
   });
 }

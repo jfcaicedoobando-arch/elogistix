@@ -40,7 +40,6 @@ export function useCrearEmbarqueBorradorHandlers(cotizacion: CotizacionRow | und
         setShowConfirmarConvertir(false);
         notifyWarning(undefined, {
           title: "No pudimos verificar los costos",
-          error: err, method: "COTIZACION_VERIFICAR_COSTOS", context: { cotizacionId, accion },
           description: "No se pudo comprobar si la cotización tiene costos cargados. Revisa tu conexión e inténtalo de nuevo.",
         });
         return false;

@@ -30,9 +30,6 @@ vi.mock("@/lib/observability/reportCaughtError", () => ({
 }));
 vi.mock("@/lib/diagnostics/errorDetailsStore", () => ({
   openErrorReport: vi.fn(),
-  rememberErrorReport: vi.fn(),
-  offerErrorRecovery: vi.fn(),
-  clearErrorReports: vi.fn(),
 }));
 
 import { CambiarPasswordDialog } from "../CambiarPasswordDialog";

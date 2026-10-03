@@ -5,11 +5,10 @@
  */
 import { useSyncExternalStore } from "react";
 import type { ErrorReport } from "@/lib/diagnostics/errorReportTypes";
-import { invalidateErrorReportScopes, isCurrentErrorReport } from "./errorReportScope";
 
-type State = { report: ErrorReport | null; latest: ErrorReport | null; recoverable: boolean };
+type State = { report: ErrorReport | null };
 
-let state: State = { report: null, latest: null, recoverable: false };
+let state: State = { report: null };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -17,38 +16,13 @@ function emit() {
 }
 
 export function openErrorReport(report: ErrorReport): void {
-  if (!isCurrentErrorReport(report)) return;
-  state = { ...state, report, recoverable: false };
+  state = { report };
   emit();
 }
 
 export function closeErrorReport(): void {
-  state = { ...state, report: null, recoverable: state.latest !== null };
+  state = { report: null };
   emit();
-}
-
-/** One report in memory only; not persisted to storage or the database. */
-export function rememberErrorReport(report: ErrorReport): void {
-  if (!isCurrentErrorReport(report)) return;
-  state = { ...state, latest: report, recoverable: false };
-  emit();
-}
-
-export function offerErrorRecovery(report?: ErrorReport): void {
-  if (report && state.latest !== report) return;
-  state = { ...state, recoverable: state.latest !== null };
-  emit();
-}
-
-export function clearErrorReports(): void {
-  invalidateErrorReportScopes();
-  state = { report: null, latest: null, recoverable: false };
-  emit();
-}
-
-export function useRecoverableErrorReport(): ErrorReport | null {
-  const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return current.recoverable ? current.latest : null;
 }
 
 function subscribe(cb: () => void) {

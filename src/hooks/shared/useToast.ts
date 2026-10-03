@@ -20,9 +20,7 @@
 
 import { toast as sonnerToast } from "sonner";
 import type { ReactNode } from "react";
-import { openErrorReport, rememberErrorReport } from "@/lib/diagnostics/errorDetailsStore";
-import { buildErrorReport } from "@/lib/ui/errorReport";
-import { sanitizeToastText } from "@/lib/ui/sanitizeToastText";
+import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import type { ErrorReport } from "@/lib/ui/errorReport";
 
 type Variant = "default" | "destructive" | "warning" | "success";
@@ -47,17 +45,14 @@ function toReactString(node: ReactNode): string | undefined {
 
 function toast(props: LegacyToastProps) {
   const { title, description, variant = "default", duration, debug } = props;
-  const t = sanitizeToastText(toReactString(title)) ?? "";
-  const d = sanitizeToastText(toReactString(description));
-  const report = debug ?? (variant === "destructive"
-    ? buildErrorReport({ title: t, description: d, method: "LEGACY_TOAST" }) : undefined);
-  if (report) rememberErrorReport(report);
+  const t = toReactString(title) ?? "";
+  const d = toReactString(description);
 
-  const action = report
-    ? { label: "Ver detalles", onClick: () => openErrorReport(report) }
+  const action = debug
+    ? { label: "Ver detalles", onClick: () => openErrorReport(debug) }
     : undefined;
 
-  const base = { description: d, duration: report ? Infinity : duration, action };
+  const base = { description: d, duration: debug ? Infinity : duration, action };
 
   let id: string | number;
   switch (variant) {

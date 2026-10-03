@@ -4,11 +4,9 @@ vi.mock("sonner", () => {
   const fn = vi.fn() as unknown as ((msg: string, opts?: unknown) => void) & {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
-    info: ReturnType<typeof vi.fn>;
   };
   fn.success = vi.fn();
   fn.error = vi.fn();
-  fn.info = vi.fn();
   return { toast: fn };
 });
 
@@ -18,14 +16,12 @@ import { crmToast } from "../crmToast";
 const toastFn = toast as unknown as ReturnType<typeof vi.fn> & {
   success: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
-  info: ReturnType<typeof vi.fn>;
 };
 
 beforeEach(() => {
   toastFn.mockClear();
   toastFn.success.mockClear();
   toastFn.error.mockClear();
-  toastFn.info.mockClear();
 });
 
 describe("crmToast", () => {
@@ -62,9 +58,9 @@ describe("crmToast", () => {
     }));
   });
 
-  it("info dispara toast informativo 2s", () => {
+  it("info dispara toast base 2s", () => {
     crmToast.info("hola");
-    expect(toastFn.info).toHaveBeenCalledWith(
+    expect(toastFn).toHaveBeenCalledWith(
       "hola",
       expect.objectContaining({ duration: 2000, id: "info-hola" }),
     );
@@ -73,7 +69,7 @@ describe("crmToast", () => {
   it("undo invoca el callback al hacer click", () => {
     const cb = vi.fn();
     crmToast.undo("Eliminado", cb);
-    const [, opts] = toastFn.info.mock.calls.at(-1) as [string, { duration: number; action: { label: string; onClick: () => void } }];
+    const [, opts] = toastFn.mock.calls.at(-1) as [string, { duration: number; action: { label: string; onClick: () => void } }];
     expect(opts.duration).toBe(5000);
     expect(opts.action.label).toBe("Deshacer");
     opts.action.onClick();

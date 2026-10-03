@@ -23,10 +23,7 @@ vi.mock("sonner", () => ({
 }));
 
 vi.mock("@/lib/observability/reportCaughtError", () => ({ reportCaughtError: vi.fn() }));
-vi.mock("@/lib/diagnostics/errorDetailsStore", () => ({
-  openErrorReport: vi.fn(), rememberErrorReport: vi.fn(),
-  offerErrorRecovery: vi.fn(), clearErrorReports: vi.fn(),
-}));
+vi.mock("@/lib/diagnostics/errorDetailsStore", () => ({ openErrorReport: vi.fn() }));
 
 import { OrgInfoCard } from "../OrgInfoCard";
 

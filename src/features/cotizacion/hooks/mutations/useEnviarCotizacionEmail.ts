@@ -20,11 +20,9 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       if (res.estado === "enviado") {
         notifySuccess(undefined, { title: "Cotización enviada por correo" });
       } else if (res.estado === "parcial") {
-        notifyWarning(undefined, { title: "Algunos correos no pudieron enviarse", method: "COTIZACION_EMAIL_PARCIAL",
-          context: { cotizacionId, resultados: res.resultados, envioId: res.envio_id } });
+        notifyWarning(undefined, { title: "Algunos correos no pudieron enviarse" });
       } else {
-        notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1",
-          context: { cotizacionId, resultados: res.resultados, envioId: res.envio_id } });
+        notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
       }
       if (cotizacionId) {
         qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });

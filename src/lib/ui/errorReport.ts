@@ -13,8 +13,6 @@ import { APP_VERSION } from "@/constants/appVersion";
 import { getAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { extractErrorDetails, deriveErrorCode } from "./errorDetailsExtract";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { safeReportRecord, safeReportValue, safeReportJson } from "@/lib/diagnostics/safeReportValue";
-import { trackErrorReportScope } from "@/lib/diagnostics/errorReportScope";
 import {
   fmtHeader,
   fmtErrorBlock,
@@ -33,13 +31,6 @@ function generateRequestId(): string {
   return `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function reportCorrelation(input: ErrorReportInput, source: Record<string, unknown> | undefined) {
-  const clientReportId = generateRequestId();
-  const backendId = input.requestId ?? (typeof source?.requestId === "string" ? source.requestId : undefined);
-  return { requestId: backendId ?? clientReportId, clientReportId,
-    requestIdSource: backendId ? "backend" as const : "client" as const };
-}
-
 export function buildErrorReport(input: ErrorReportInput): ErrorReport {
   const auth = getAuthSnapshot();
   const now = new Date();
@@ -51,14 +42,11 @@ export function buildErrorReport(input: ErrorReportInput): ErrorReport {
     ? `${window.innerWidth}x${window.innerHeight}`
     : "";
 
-  const source = safeReportRecord(input.error);
-  const normalizedError = source ?? input.error;
-  const errorDetails = extractErrorDetails(normalizedError);
-  if (!errorDetails.message) errorDetails.message = input.description ?? input.title;
-  const errorCode = input.errorCode ?? (input.errors ? ERROR_CODES.VALIDATION_FAILED : deriveErrorCode(normalizedError));
+  const errorDetails = extractErrorDetails(input.error);
+  const errorCode = input.errorCode ?? deriveErrorCode(input.error) ?? ERROR_CODES.UNKNOWN;
 
-  return trackErrorReportScope({
-    ...reportCorrelation(input, source),
+  return {
+    requestId: input.requestId ?? generateRequestId(),
     errorCode,
     method: input.method,
     title: input.title ?? "Error",
@@ -82,10 +70,8 @@ export function buildErrorReport(input: ErrorReportInput): ErrorReport {
       devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : 1,
     },
     errorDetails,
-    context: safeReportRecord(input.context),
-    payload: safeReportValue(input.payload),
-    errors: input.errors,
-  });
+    context: input.context,
+  };
 }
 
 export function formatReportMarkdown(r: ErrorReport): string {
@@ -94,14 +80,9 @@ export function formatReportMarkdown(r: ErrorReport): string {
     ...fmtErrorBlock(r.errorDetails),
     ...fmtContextBlock(r.context),
     ...fmtStackBlock(r.errorDetails.stack),
-    "",
-    "**Diagnóstico completo (JSON)**",
-    "```json",
-    formatReportJson(r),
-    "```",
   ].join("\n");
 }
 
 export function formatReportJson(r: ErrorReport): string {
-  return safeReportJson(r);
+  return JSON.stringify(r, null, 2);
 }

@@ -134,8 +134,6 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
       if (movimientoBancario === "fallido") {
         notifyWarning(undefined, {
           title: "Pago registrado, pero no se generó el movimiento bancario",
-          method: "PAGO_MOVIMIENTO_BANCARIO_PARCIAL",
-          context: { pagoId, facturaId: args.facturaId, cuentaBancariaId: args.cuentaBancariaId },
           description:
             "La cuenta destino es de otra moneda y no hay tipo de cambio oficial, o el abono falló. Registra el movimiento manualmente en Tesorería.",
         });

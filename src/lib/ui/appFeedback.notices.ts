@@ -10,8 +10,6 @@ import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
 import { sanitizeToastText } from "./sanitizeToastText";
 import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
 import type { AnyToastFn, InfoNotifyOptions } from "./appFeedback.types";
-import { safeReportJson } from "@/lib/diagnostics/safeReportValue";
-import { errorToastIdentity } from "./appFeedback.dedupe";
 
 /**
  * Ola 17 · Higiene de toasts: id estable para deduplicar toasts de
@@ -21,19 +19,16 @@ import { errorToastIdentity } from "./appFeedback.dedupe";
  */
 function idDedupe(opts: InfoNotifyOptions, prefijo: string): string | number | undefined {
   if (opts.id !== undefined) return opts.id;
-  if (opts.context || opts.requestId) return errorToastIdentity(opts, opts.title).replace(/^err-/, `${prefijo}-`);
   const base = opts.method ?? opts.errorCode ?? opts.title;
   return base ? `${prefijo}-${base}` : undefined;
 }
 
 /** Acción "Ver detalles" cuando hay payload de debug (o la del call site). */
-function acciones(opts: InfoNotifyOptions) {
-  const details = shouldAttachDetails(opts)
-    ? buildDetailsAction({ ...opts, titleFinal: opts.title }) : undefined;
-  const action = opts.action && details
-    ? { ...opts.action, onClick: details.scopeAction(opts.action.onClick) } : opts.action ?? details;
-  return { action, cancel: opts.action ? details : undefined,
-    onDismiss: details?.onToastClose, onAutoClose: details?.onToastClose };
+function accionDetalles(opts: InfoNotifyOptions) {
+  return opts.action
+    ?? (shouldAttachDetails(opts)
+      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+      : undefined);
 }
 
 /** Emite un toast de advertencia (no bloquea). Puede llevar "Ver detalles". */
@@ -41,15 +36,15 @@ export function notifyWarning(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  // All warnings can represent a blocked/partial workflow, even without an exception.
-  const controls = acciones({ ...opts, showDetails: true });
+  const action = accionDetalles(opts);
   const descripcionSaneada = sanitizeToastText(opts.description);
-  // Stable ID replaces repeated warnings but always refreshes their JSON.
-  sonnerToast.warning(sanitizeToastText(opts.title) ?? "Aviso", {
+  const dedupeKey = computeToastDedupeKey("warning", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
+  sonnerToast.warning(opts.title, {
     description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "warn"),
-    ...controls,
+    action,
   });
 }
 
@@ -58,15 +53,15 @@ export function notifySuccess(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  const controls = acciones(opts);
+  const action = accionDetalles(opts);
   const descripcionSaneada = sanitizeToastText(opts.description);
-  const dedupeKey = noticeKey("success", opts, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey) && !shouldAttachDetails(opts)) return;
-  sonnerToast.success(sanitizeToastText(opts.title) ?? "Operación completada", {
+  const dedupeKey = computeToastDedupeKey("success", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
+  sonnerToast.success(opts.title, {
     description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "ok"),
-    ...controls,
+    action,
   });
 }
 
@@ -75,19 +70,14 @@ export function notifyInfo(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  const controls = acciones(opts);
+  const action = accionDetalles(opts);
   const descripcionSaneada = sanitizeToastText(opts.description);
-  const dedupeKey = noticeKey("info", opts, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey) && !shouldAttachDetails(opts)) return;
-  sonnerToast.info(sanitizeToastText(opts.title) ?? "Información", {
+  const dedupeKey = computeToastDedupeKey("info", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
+  sonnerToast(opts.title, {
     description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "info"),
-    ...controls,
+    action,
   });
-}
-
-function noticeKey(kind: string, opts: InfoNotifyOptions, description?: string) {
-  return computeToastDedupeKey(kind, opts.title, description,
-    safeReportJson({ method: opts.method, requestId: opts.requestId, context: opts.context }));
 }

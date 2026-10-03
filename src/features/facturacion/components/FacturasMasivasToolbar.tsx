@@ -127,7 +127,6 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
           title: `${ok} enviadas · ${errores.length} con error`,
           description: errores.slice(0, 3).join(" · "),
           method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_REENVIAR_PARTIAL",
-          context: { errores },
         });
       }
     } finally {

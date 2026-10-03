@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const toastMock = vi.hoisted(() => vi.fn());
-vi.mock("sonner", () => ({ toast: { info: toastMock } }));
+vi.mock("sonner", () => ({ toast: toastMock }));
 
 import { showUndoToast } from "../useUndoToast";
 

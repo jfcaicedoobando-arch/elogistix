@@ -1,13 +1,5 @@
 # Changelog
 
-## [13.824.15] - 2026-10-02
-
-- **fix(toasts · diagnóstico)**: todos los errores y avisos permiten abrir y copiar JSON, incluidas validaciones, errores esperados y resultados parciales. Se conservan el requestId del backend, el error original, los detalles SAT y el contexto de la operación; las validaciones no se reportan a Sentry.
-- **fix(toasts · recuperación)**: «Ver detalles» convive con «Reintentar» y el último error sigue accesible tras cerrar el toast, sin historial en base de datos. El reporte se limpia al cambiar de usuario, organización o rol.
-- **fix(toasts · visual)**: layout compartido responsive, cierre sin superposición, colores semánticos y tema oscuro alineado con el ERP. El diálogo muestra JSON seleccionable y una alternativa manual si falla el portapapeles.
-- **test(toasts)**: contrato de reportes copiables, serialización segura con datos circulares, identificación de operaciones y guardas contra emisores que evaden el diagnóstico.
-- **fix(toasts · revisión PR)**: acciones y reportes antiguos invalidados al cambiar de sesión/empresa/rol; mensajes originales sin el recorte del aviso; listas acotadas con conteo explícito de omisiones; mensajes Zod legibles y reporte Markdown con el diagnóstico completo.
-
 ## [13.824.14] - 2026-10-01
 
 - **fix(cotizaciones · unidad terrestre)**: el alta conserva el tipo de unidad capturado junto con la modalidad de equipo y el punto de carga/descarga. No modifica cotizaciones históricas ni asigna vehículos operativos.

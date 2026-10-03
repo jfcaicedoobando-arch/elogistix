@@ -14,10 +14,10 @@
  */
 import type { ErrorReport } from "./errorReport";
 import { findZodError, type MaybeZodError } from "./errorDetailsExtract.internal";
-import { safeReportRecord, safeReportJson } from "@/lib/diagnostics/safeReportValue";
 
 type Details = ErrorReport["errorDetails"];
 
+;
 import type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
 export { deriveErrorCode } from "./errorCodeDerive";
 
@@ -59,10 +59,23 @@ function mapValidationIssues(zod: MaybeZodError): ValidationIssue[] {
   });
 }
 
+function fromErrorInstance(err: Error): Details {
+  const anyErr = err as Error & MaybePostgrestError;
+  return {
+    message: err.message,
+    name: err.name,
+    stack: err.stack,
+    code: codeOr(anyErr.code),
+    status: statusOr(anyErr.status),
+    details: strOr(anyErr.details),
+    hint: strOr(anyErr.hint),
+  };
+}
+
 function fromObject(err: unknown): Details {
   const e = err as MaybePostgrestError;
   return {
-    message: strOr(e.message) ?? safeReportJson(err),
+    message: strOr(e.message) ?? JSON.stringify(err),
     name: strOr(e.name),
     code: codeOr(e.code),
     status: statusOr(e.status),
@@ -99,36 +112,21 @@ function extractCause(err: unknown): Details["cause"] | undefined {
   return undefined;
 }
 
-function addValidationDetails(base: Details, zod: MaybeZodError): void {
-  base.validationErrors = mapValidationIssues(zod);
-  if (!base.message || base.message === "[Accesor omitido]") {
-    base.message = base.validationErrors.map((issue) =>
-      `${issue.path.join(".") || "Datos"}: ${issue.message}`).join("\n");
-  }
-  if (!base.name || base.name === "Error") base.name = "ZodError";
-}
-
 export function extractErrorDetails(err: unknown): Details {
   if (err == null) return {};
   if (typeof err === "string") return { message: err };
 
-  const normalized = safeReportRecord(err);
   let base: Details;
-  if (err instanceof Error) base = fromObject({ ...normalized, name: normalized?.name ?? "Error" });
-  else if (typeof err === "object") base = fromObject(normalized ?? { message: "[No se pudo extraer el error]" });
+  if (err instanceof Error) base = fromErrorInstance(err);
+  else if (typeof err === "object") base = fromObject(err);
   else return { message: String(err) };
 
   const zod = findZodError(err);
-  if (zod) addValidationDetails(base, zod);
-  const cause = extractCause(normalized);
-  if (cause) base.cause = cause;
-  if (normalized) {
-    base.codigoSat = codeOr(normalized.codigoSat);
-    base.detallesSat = safeReportRecord(normalized.detallesSat);
-    base.logId = strOr(normalized.logId);
-    base.retryAfter = codeOr(normalized.retryAfter);
-    if (typeof normalized.expected === "boolean") base.expected = normalized.expected;
-    if (typeof normalized.transient === "boolean") base.transient = normalized.transient;
+  if (zod) {
+    base.validationErrors = mapValidationIssues(zod);
+    if (!base.name || base.name === "Error") base.name = "ZodError";
   }
+  const cause = extractCause(err);
+  if (cause) base.cause = cause;
   return base;
 }

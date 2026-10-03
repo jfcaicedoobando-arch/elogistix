@@ -48,9 +48,6 @@ export function useTimbrarRep(facturaId?: string) {
         notifyInfo(undefined, {
           title: "REP timbrado, pero no se pudo auto-enviar por correo",
           description: getErrorMessage(err),
-          error: err,
-          method: "REP_AUTOENVIAR_CORREO",
-          context: { pagoId, facturaId },
         });
       });
     },
@@ -61,9 +58,6 @@ export function useTimbrarRep(facturaId?: string) {
         notifyInfo(undefined, {
           title: "Este pago ya tenía su REP timbrado",
           description: `${getErrorMessage(err)} Se actualizó la pantalla con el folio real.`,
-          error: err,
-          method: "REP_YA_TIMBRADO",
-          context: { facturaId },
         });
         return;
       }
