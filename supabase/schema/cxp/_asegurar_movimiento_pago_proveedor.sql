@@ -15,18 +15,26 @@ DECLARE
   v_concepto   text;
   v_mov_id     uuid;
 BEGIN
+  SELECT * INTO v_pago
+    FROM public.pagos_proveedor
+   WHERE id = p_pago_id AND deleted_at IS NULL
+   FOR UPDATE;
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
+  END IF;
+  -- Auditoría 23: antes de cualquier lookup/INSERT por pago, reconocer la
+  -- aplicación y reutilizar su origen. Nunca reparar un vínculo con dinero.
+  IF v_pago.es_anticipo_aplicado
+     OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.pago_proveedor_id = p_pago_id AND aa.deleted_at IS NULL) THEN
+    RETURN public._movimiento_original_anticipo_aplicado(p_pago_id);
+  END IF;
   SELECT id INTO v_mov_id
     FROM public.bbva_movimientos
    WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL
    LIMIT 1;
   IF v_mov_id IS NOT NULL THEN
     RETURN v_mov_id;
-  END IF;
-  SELECT * INTO v_pago
-    FROM public.pagos_proveedor
-   WHERE id = p_pago_id AND deleted_at IS NULL;
-  IF v_pago.id IS NULL THEN
-    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
   END IF;
   IF v_pago.cuenta_bancaria_id IS NULL THEN
     RETURN NULL; -- pago sin cuenta bancaria: no hay salida de efectivo que registrar

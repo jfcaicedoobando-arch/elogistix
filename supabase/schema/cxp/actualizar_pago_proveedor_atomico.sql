@@ -54,6 +54,15 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  -- Auditoría 23: una aplicación pertenece al flujo de anticipos. Rechazar
+  -- ANTES de modificar pago, cuenta o movimientos, incluso con flag legacy.
+  IF v_pago.es_anticipo_aplicado
+     OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.pago_proveedor_id = p_pago_id AND aa.deleted_at IS NULL) THEN
+    RAISE EXCEPTION 'LC_PAGO_ANTICIPO_NO_EDITABLE: el pago proviene de un anticipo; usa Revertir aplicación y vuelve a aplicar el anticipo'
+      USING ERRCODE = '23514';
+  END IF;
+
   -- Bloqueo de la factura: el guard recalcula el saldo con ella tomada.
   PERFORM 1 FROM public.proveedor_facturas
    WHERE id = v_pago.proveedor_factura_id FOR UPDATE;

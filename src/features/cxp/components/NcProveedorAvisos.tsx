@@ -6,23 +6,24 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import type { MonedaNotaCreditoProveedor as MonedaNC } from "@/features/cxp/types";
+import type { TipoCambioNcProveedor } from "@/features/cxp/hooks/useNcProveedorTipoCambio";
 
 interface Props {
   cruceInvalido: boolean;
   moneda: MonedaNC;
   monedaFactura: MonedaNC;
-  montoNum: number;
   montoEnFactura: number | null;
   excede: boolean;
+  conversion: TipoCambioNcProveedor;
 }
 
 export function NcProveedorAvisos({
   cruceInvalido,
   moneda,
   monedaFactura,
-  montoNum,
   montoEnFactura,
   excede,
+  conversion,
 }: Props) {
   const otraMoneda = !cruceInvalido && moneda !== monedaFactura;
   return (
@@ -36,17 +37,18 @@ export function NcProveedorAvisos({
         </Alert>
       )}
 
-      {otraMoneda && montoEnFactura === null && montoNum > 0 && (
+      {otraMoneda && conversion.aviso && (
         <Alert variant="warning" className="px-3 py-2">
           <AlertDescription className="text-body-sm">
-            Al guardar se aplicará el tipo de cambio del DOF de la fecha de la NC para valuarla en{" "}
-            {monedaFactura}.
+            {conversion.aviso}
           </AlertDescription>
         </Alert>
       )}
 
       {otraMoneda && montoEnFactura !== null && (
         <div className="rounded-md border bg-muted/30 px-3 py-2 text-body-sm text-muted-foreground">
+          TC {conversion.tipoCambio} MXN por 1 {moneda === "MXN" ? monedaFactura : moneda}{" "}
+          ({conversion.fuente === "dof" ? `DOF publicado el ${conversion.fechaDof}` : "capturado"}).{" "}
           Equivale a {formatCurrency(montoEnFactura, monedaFactura)} contra el saldo de la factura.
         </div>
       )}

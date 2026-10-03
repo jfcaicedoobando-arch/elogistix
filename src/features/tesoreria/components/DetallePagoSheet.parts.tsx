@@ -47,7 +47,11 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">{TIPO_PAGO_DETALLE_LABELS[pago.tipo]}</Badge>
         {pago.es_ajuste ? <Badge variant="outline">Ajuste</Badge> : null}
-        {pago.estado ? <Badge variant="outline">{pago.estado}</Badge> : null}
+        {pago.estado ? (
+          pago.tipo === "anticipo"
+            ? <StatusBadge domain="anticipo_proveedor" status={pago.estado} />
+            : <Badge variant="outline">{pago.estado}</Badge>
+        ) : null}
       </div>
       <div className="rounded-md border p-3">
         <p className="text-2xs uppercase tracking-wide text-muted-foreground">

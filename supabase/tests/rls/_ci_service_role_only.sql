@@ -36,6 +36,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_tc_banda()'),
   -- Trigger de tesorería: impide dar de baja cuentas con movimientos.
   ('public._cuenta_bancaria_guard_baja()'),
+  -- Auditoría 23: triggers privados de integridad de aplicaciones/tesorería.
+  ('public._guard_movimiento_anticipo_aplicado()'),
+  ('public._guard_pago_anticipo_aplicado_edicion()'),
   -- v13.823.51 · candados multiempresa CRM + probabilidad terminal.
   ('public._cotizacion_oportunidad_misma_org()'),
   ('public._crm_actividad_entidad_misma_org()'),

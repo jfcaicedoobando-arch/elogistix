@@ -2,6 +2,7 @@
 import { loadSentryEdge } from "./sentryRuntime.ts";
 import { applyEdgeContext, cleanEdgeException, type EdgeErrorContext } from "./sentryContext.ts";
 import { scrubTelemetryText } from "./scrubTelemetryData.ts";
+import { getEdgeScope, runWithEdgeScope } from "./sentryRequestScope.ts";
 
 export type { EdgeErrorContext } from "./sentryContext.ts";
 export const scrubExceptionMessage = scrubTelemetryText;
@@ -18,7 +19,7 @@ export async function captureEdgeException(error: unknown, ctx: EdgeErrorContext
   const sdk = await loadSentryEdge();
   if (!sdk) return;
   try {
-    sdk.withScope((scope) => {
+    sdk.withScope(getEdgeScope(), (scope) => {
       applyEdgeContext(scope, ctx);
       sdk.captureException(cleanEdgeException(error));
     });
@@ -34,7 +35,7 @@ export async function captureEdgeMessage(
   const sdk = await loadSentryEdge();
   if (!sdk) return;
   try {
-    sdk.withScope((scope) => {
+    sdk.withScope(getEdgeScope(), (scope) => {
       applyEdgeContext(scope, ctx);
       scope.setLevel(level);
       sdk.captureMessage(scrubTelemetryText(message));
@@ -60,22 +61,28 @@ export function wrapEdgeHandler(
       }
     };
     if (!sdk) return run();
-    return sdk.withIsolationScope(async (scope) => {
+    // SDK 10 has no async isolation when automatic integrations are disabled.
+    // Create the span synchronously, then retain its scope in our own ALS.
+    const { scope, span } = sdk.continueTrace({
+      sentryTrace: req.headers.get("sentry-trace") ?? undefined,
+      baggage: req.headers.get("baggage") ?? undefined,
+    }, () => sdk.startSpanManual({ name: fnName, op: "http.server",
+      attributes: { "http.request.method": req.method, fn: fnName, request_id: requestId } }, (span) => {
+      const scope = sdk.getCurrentScope();
       applyEdgeContext(scope, { fn: fnName, request_id: requestId });
-      sdk.setAttributes({ fn: fnName, request_id: requestId });
+      return { scope: scope.clone(), span };
+    }));
+    return runWithEdgeScope(scope, async () => {
       try {
-        return await sdk.continueTrace({
-          sentryTrace: req.headers.get("sentry-trace") ?? undefined,
-          baggage: req.headers.get("baggage") ?? undefined,
-        }, () => sdk.startSpan({ name: fnName, op: "http.server",
-          attributes: { "http.request.method": req.method } }, async (span) => {
-          const response = await run();
-          span.setAttribute("http.response.status_code", response.status);
-          if (response.status >= 500) span.setStatus({ code: 2 });
-          return response;
-        }));
+        const response = await run();
+        span.setAttribute("http.response.status_code", response.status);
+        if (response.status >= 500) span.setStatus({ code: 2 });
+        return response;
+      } catch (error) {
+        span.setStatus({ code: 2, message: "internal_error" });
+        throw error;
       } finally {
-        // Includes the finished request span, not only captured exceptions.
+        span.end();
         await sdk.flush(2000).catch(() => undefined);
       }
     });
@@ -99,18 +106,17 @@ export function withCronMonitor(
     // Comma-separated allowlist: opt in by actual slug, never create all monitors.
     const enabled = (Deno.env.get("SENTRY_CRON_MONITOR_SLUG") ?? "").split(",").map((s) => s.trim());
     if (!sdk || !enabled.includes(monitorSlug)) return wrapped(req);
-    return sdk.withIsolationScope(async () => {
-      const id = sdk.captureCheckIn({ monitorSlug, status: "in_progress" }, monitorConfig);
-      let status: "ok" | "error" = "error";
-      try {
-        const response = await wrapped(req);
-        status = response.status >= 500 ? "error" : "ok";
-        return response;
-      } finally {
-        // Preserve HTTP responses and exceptions; observability does not rewrite the workflow.
-        sdk.captureCheckIn({ checkInId: id, monitorSlug, status });
-        await sdk.flush(2000).catch(() => undefined);
-      }
-    });
+    const id = sdk.withScope(getEdgeScope(), () =>
+      sdk.captureCheckIn({ monitorSlug, status: "in_progress" }, monitorConfig));
+    let status: "ok" | "error" = "error";
+    try {
+      const response = await wrapped(req);
+      status = response.status >= 500 ? "error" : "ok";
+      return response;
+    } finally {
+      // Preserve HTTP responses and exceptions; observability does not rewrite the workflow.
+      sdk.withScope(getEdgeScope(), () => sdk.captureCheckIn({ checkInId: id, monitorSlug, status }));
+      await sdk.flush(2000).catch(() => undefined);
+    }
   };
 }
