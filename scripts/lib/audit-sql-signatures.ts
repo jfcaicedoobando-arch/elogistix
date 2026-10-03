@@ -105,10 +105,11 @@ export function findSecurityDefinerFunctions(body: string): Array<{
   name: string;
   argTypes: string;
   allowNoGrants: boolean;
+  returnsTrigger: boolean;
 }> {
   const clean = stripSqlComments(body);
   const headerRe = /create\s+or\s+replace\s+function\s+public\.([a-z0-9_]+)\s*\(/gi;
-  const found: Array<{ name: string; argTypes: string; allowNoGrants: boolean }> = [];
+  const found: ReturnType<typeof findSecurityDefinerFunctions> = [];
   for (const m of clean.matchAll(headerRe)) {
     const name = m[1].toLowerCase();
     const openIdx = (m.index ?? 0) + m[0].length - 1;
@@ -121,7 +122,8 @@ export function findSecurityDefinerFunctions(body: string): Array<{
     const rawIdx = body.indexOf(m[0]);
     const prev = rawIdx > 0 ? body.slice(Math.max(0, rawIdx - 200), rawIdx) : "";
     const allowNoGrants = /audit:allow-no-grants/i.test(prev);
-    found.push({ name, argTypes: normalizeArgTypes(parsed.args), allowNoGrants });
+    found.push({ name, argTypes: normalizeArgTypes(parsed.args), allowNoGrants,
+      returnsTrigger: /^\)\s*returns\s+trigger\b/i.test(post) });
   }
   return found;
 }
@@ -146,23 +148,24 @@ export function scanSecurityDefiner(
   auditPostBaseline: boolean,
 ): Violation[] {
   const out: Violation[] = [];
-  for (const { name: fnName, argTypes, allowNoGrants } of findSecurityDefinerFunctions(body)) {
+  const clean = stripSqlComments(body);
+  for (const { name: fnName, argTypes, allowNoGrants, returnsTrigger } of findSecurityDefinerFunctions(body)) {
     const sigForRe = buildSignatureRe(argTypes);
 
     const revokeRe = new RegExp(
-      `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
+      `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+[^;]*?\\bpublic\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
       "i",
     );
     const grantOkRe = new RegExp(
-      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\b(authenticated|service_role|postgres)\\b`,
+      `grant\\s+execute\\s+on\\s+function\\s+[^;]*?\\bpublic\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\b(authenticated|service_role|postgres)\\b`,
       "i",
     );
     const grantPublicRe = new RegExp(
-      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\bpublic\\b`,
+      `grant\\s+execute\\s+on\\s+function\\s+[^;]*?\\bpublic\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\bpublic\\b`,
       "i",
     );
 
-    if (grantPublicRe.test(body)) {
+    if (grantPublicRe.test(clean)) {
       out.push({
         file,
         check: "H6",
@@ -172,14 +175,19 @@ export function scanSecurityDefiner(
 
     if (!auditPostBaseline || allowNoGrants) continue;
 
-    if (!revokeRe.test(body)) {
+    if (!revokeRe.test(clean)) {
       out.push({
         file,
         check: "H6",
         detail: `public.${fnName}(${argTypes}) SECURITY DEFINER sin REVOKE ALL ... FROM PUBLIC`,
       });
     }
-    if (!grantOkRe.test(body)) {
+    // Un trigger cerrado a todos los roles cliente no necesita exposición por RPC.
+    // No se exceptúan funciones normales ni triggers que conserven EXECUTE cliente.
+    const clientGrant = new RegExp(`grant\\s+execute\\s+on\\s+function\\s+[^;]*?\\bpublic\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\b(public|anon|authenticated)\\b`, "i").test(clean);
+    const privateTrigger = returnsTrigger && !clientGrant && ["public", "anon", "authenticated"].every((role) =>
+      new RegExp(`revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+[^;]*?\\bpublic\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\b${role}\\b`, "i").test(clean));
+    if (!grantOkRe.test(clean) && !privateTrigger) {
       out.push({
         file,
         check: "H6",

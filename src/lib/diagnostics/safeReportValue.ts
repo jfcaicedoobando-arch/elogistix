@@ -9,22 +9,35 @@ function objectValue(value: object, depth: number, ancestors: WeakSet<object>): 
   if (depth >= MAX_DEPTH) return "[Profundidad limitada]";
   ancestors.add(value);
   const result = Array.isArray(value)
-    ? value.slice(0, MAX_ITEMS).map((item) => normalize(item, depth + 1, ancestors))
+    ? arrayValue(value, depth, ancestors)
     : properties(value, depth, ancestors);
   ancestors.delete(value);
+  return result;
+}
+
+function truncation(kind: "array" | "object", total: number, included: number) {
+  return { __diagnosticTruncation: { kind, total, included, omitted: total - included } };
+}
+
+function arrayValue(value: unknown[], depth: number, ancestors: WeakSet<object>) {
+  const included = value.length > MAX_ITEMS ? MAX_ITEMS - 1 : value.length;
+  const result = value.slice(0, included).map((item) => normalize(item, depth + 1, ancestors));
+  if (included < value.length) result.push(truncation("array", value.length, included));
   return result;
 }
 
 function properties(value: object, depth: number, ancestors: WeakSet<object>) {
   const result: Record<string, unknown> = {};
   if (value instanceof Error) result.name = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(value), "name")?.value ?? "Error";
-  const names = Object.getOwnPropertyNames(value).slice(0, MAX_ITEMS);
+  const allNames = Object.getOwnPropertyNames(value);
+  const names = allNames.slice(0, allNames.length > MAX_ITEMS ? MAX_ITEMS - 1 : MAX_ITEMS);
   for (const key of names) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     // Do not invoke getters or custom serialization on diagnostic objects.
     const next = diagnosticProperty(value, key, descriptor);
     result[key] = SENSITIVE_KEY.test(key) ? "[REDACTADO]" : normalize(next, depth + 1, ancestors);
   }
+  if (names.length < allNames.length) Object.assign(result, truncation("object", allNames.length, names.length));
   return result;
 }
 

@@ -29,6 +29,7 @@ import { notifyWarning } from "./appFeedback.notices";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
 import { errorToastIdentity, resetToastDedupeState } from "./appFeedback.dedupe";
+import { scopedReportAction } from "@/lib/diagnostics/errorReportScope";
 import type { AnyToastFn, ErrorNotifyOptions } from "./appFeedback.types";
 
 
@@ -75,22 +76,25 @@ function emitirToastError(args: {
     id: errorToastId,
     duration: 8000,
     // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
-    action: action ?? detallesAction,
+    action: action ? { ...action, onClick: scopedReportAction(debug, action.onClick) } : detallesAction,
     cancel: action ? detallesAction : undefined,
     onDismiss: () => { ERROR_TOAST_IDS.delete(errorToastId); offerErrorRecovery(debug); },
     onAutoClose: () => { ERROR_TOAST_IDS.delete(errorToastId); offerErrorRecovery(debug); },
   });
 }
 
+function originalDescription(opts: ErrorNotifyOptions): string | undefined {
+  return opts.description ?? opts.message ?? (opts.errors ? Object.values(opts.errors)[0] : undefined);
+}
+
 export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOptions) {
   const {
-    step, phase, errors, message, description: descOpt, title, error, context,
+    step, phase, errors, title, error, context,
     errorCode, method, payload, requestId,
   } = opts;
   // R-07: nunca imprimimos HTML crudo (páginas de error de proxy) en el toast.
-  const description = sanitizeToastText(
-    descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined),
-  );
+  const fullDescription = originalDescription(opts);
+  const description = sanitizeToastText(fullDescription);
 
   // v13.792.1 — Errores de dominio ESPERADOS (`expected: true`, p. ej.
   // `BuzonDuplicadoError` del buzón CxP): no son fallas, son validaciones de
@@ -98,8 +102,8 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   if ((error as { expected?: unknown } | null | undefined)?.expected === true) {
     notifyWarning(undefined, {
       ...opts,
-      title: sanitizeToastText(title) ?? "Aviso",
-      description: description ?? (error instanceof Error ? sanitizeToastText(error.message) : undefined),
+      title: title ?? "Aviso",
+      description: fullDescription ?? (error instanceof Error ? error.message : undefined),
       showDetails: true,
     });
     return;
@@ -110,8 +114,8 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     sanitizeToastText(title) ?? tituloPorDefecto(step, phase);
 
   const debug = buildErrorReport({
-    title: computedTitle,
-    description,
+    title: title ?? computedTitle,
+    description: fullDescription,
     phase,
     step,
     error,

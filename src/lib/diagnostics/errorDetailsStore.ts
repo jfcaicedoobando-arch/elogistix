@@ -5,6 +5,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { ErrorReport } from "@/lib/diagnostics/errorReportTypes";
+import { invalidateErrorReportScopes, isCurrentErrorReport } from "./errorReportScope";
 
 type State = { report: ErrorReport | null; latest: ErrorReport | null; recoverable: boolean };
 
@@ -16,6 +17,7 @@ function emit() {
 }
 
 export function openErrorReport(report: ErrorReport): void {
+  if (!isCurrentErrorReport(report)) return;
   state = { ...state, report, recoverable: false };
   emit();
 }
@@ -27,6 +29,7 @@ export function closeErrorReport(): void {
 
 /** One report in memory only; not persisted to storage or the database. */
 export function rememberErrorReport(report: ErrorReport): void {
+  if (!isCurrentErrorReport(report)) return;
   state = { ...state, latest: report, recoverable: false };
   emit();
 }
@@ -38,6 +41,7 @@ export function offerErrorRecovery(report?: ErrorReport): void {
 }
 
 export function clearErrorReports(): void {
+  invalidateErrorReportScopes();
   state = { report: null, latest: null, recoverable: false };
   emit();
 }

@@ -2,6 +2,7 @@
 import { buildErrorReport } from "./errorReport";
 import { openErrorReport, rememberErrorReport, offerErrorRecovery } from "@/lib/diagnostics/errorDetailsStore";
 import type { InfoNotifyOptions } from "./appFeedback.types";
+import { scopedReportAction } from "@/lib/diagnostics/errorReportScope";
 
 export function shouldAttachDetails(opts: InfoNotifyOptions): boolean {
   return Boolean(
@@ -37,5 +38,6 @@ export function buildDetailsAction(opts: InfoNotifyOptions & { titleFinal: strin
     label: "Ver detalles",
     onClick: () => openErrorReport(debug),
     onToastClose: () => offerErrorRecovery(debug),
+    scopeAction: (action: () => void) => scopedReportAction(debug, action),
   };
 }

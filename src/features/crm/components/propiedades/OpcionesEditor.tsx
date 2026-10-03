@@ -37,7 +37,7 @@ export function OpcionesEditor({ prop }: { prop: PropiedadCrm }) {
             aria-label={o.archivada ? `Restaurar ${o.etiqueta}` : `Archivar ${o.etiqueta}`}
             onClick={() => accion.mutate({ tipo: "archivar", id: o.id, archivada: !o.archivada })}
           >
-            {o.archivada ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+            {o.archivada ? <ArchiveRestore className="size-4" /> : <Archive className="size-4" />}
           </Button>
         </div>
       ))}
@@ -48,7 +48,7 @@ export function OpcionesEditor({ prop }: { prop: PropiedadCrm }) {
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }}
         />
         <Button size="sm" variant="outline" onClick={agregar} disabled={!nueva.trim() || accion.isPending}>
-          <Plus className="h-4 w-4" /> Agregar
+          <Plus className="size-4" /> Agregar
         </Button>
         <Button size="sm" variant="link" onClick={() => setVerArchivadas((v) => !v)}>
           {verArchivadas ? "Ocultar archivadas" : "Ver archivadas"}

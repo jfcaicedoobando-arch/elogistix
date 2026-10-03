@@ -5,6 +5,7 @@ import { buildErrorReport, formatReportJson, formatReportMarkdown } from "../err
 import { resetToastDedupeState } from "../appFeedback.dedupe";
 import { clearErrorReports } from "@/lib/diagnostics/errorDetailsStore";
 import { safeReportJson } from "@/lib/diagnostics/safeReportValue";
+import { z } from "zod";
 
 const mocks = vi.hoisted(() => ({
   error: vi.fn(), warning: vi.fn(), info: vi.fn(), success: vi.fn(), dismiss: vi.fn(), sentry: vi.fn(), open: vi.fn(),
@@ -23,6 +24,45 @@ function readReport(kind: "error" | "warning" | "info" = "error") {
 }
 
 describe("Copyable error report contract", () => {
+  it("keeps the original long text in JSON while shortening only the visible toast", () => {
+    const description = "MOCK " + "x".repeat(300) + " FINAL";
+    notifyError(undefined, { title: "No se guardó", description });
+    expect(controls("error").description.length).toBeLessThan(description.length);
+    expect(readReport()).toMatchObject({ description, errorDetails: { message: description } });
+    notifyError(undefined, { title: "Aviso esperado", description,
+      error: Object.assign(new Error(description), { expected: true }) });
+    expect(readReport("warning").description).toBe(description);
+  });
+  it("copies complete diagnostics in Markdown as well as JSON", () => {
+    const report = buildErrorReport({ title: "MOCK", errors: { campo: "MOCK_CAMPO" },
+      payload: { fallos: ["MOCK_FALLO"] }, error: Object.assign(new Error("MOCK"),
+        { codigoSat: "MOCK_SAT", logId: "MOCK_LOG", retryAfter: 10 }) });
+    expect(formatReportMarkdown(report)).toContain(formatReportJson(report));
+    for (const value of ["MOCK_CAMPO", "MOCK_FALLO", "MOCK_SAT", "MOCK_LOG", "retryAfter"]) {
+      expect(formatReportMarkdown(report)).toContain(value);
+    }
+  });
+  it("gives real Zod validation a readable message without invoking its message getter", () => {
+    const result = z.object({ cliente: z.string() }).safeParse({ cliente: 123 });
+    if (result.success) throw new Error("Expected invalid mock");
+    const report = buildErrorReport({ error: result.error });
+    expect(report.errorDetails.message).toContain("cliente");
+    expect(report.errorDetails.message).not.toContain("[Accesor omitido]");
+    expect(report.errorDetails.validationErrors?.[0].path).toEqual(["cliente"]);
+    expect(report.errorCode).toBe("VALIDATION_FAILED");
+  });
+  it("bounds large batches with explicit, stable omission counts", () => {
+    const fallos = Array.from({ length: 120 }, (_, id) => ({ id, mensaje: "MOCK" }));
+    const report = buildErrorReport({ context: { fallos } });
+    const json = JSON.parse(formatReportJson(report));
+    expect(json.context.fallos).toHaveLength(100);
+    expect(json.context.fallos.at(-1)).toEqual({ __diagnosticTruncation:
+      { kind: "array", total: 120, included: 99, omitted: 21 } });
+    expect(JSON.parse(safeReportJson(json))).toEqual(json);
+    const object = Object.fromEntries(Array.from({ length: 120 }, (_, id) => [id, id]));
+    expect(JSON.parse(safeReportJson(object)).__diagnosticTruncation).toEqual(
+      { kind: "object", total: 120, included: 99, omitted: 21 });
+  });
   it("validation without exception has JSON with complete validation messages", () => {
     notifyError(undefined, { title: "Revisa los datos", errors: { cliente: "Falta cliente", puerto: "Falta puerto" } });
     expect(readReport().errors).toEqual({ cliente: "Falta cliente", puerto: "Falta puerto" });

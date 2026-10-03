@@ -1,292 +1,87 @@
-/**
- * Wrapper de Sentry para edge functions (Deno).
- *
- * Diseño:
- *  - No-op si `SENTRY_DSN_EDGE` no está configurado (no rompe deploys ni tests).
- *  - Inicialización perezosa, una sola vez por isolate.
- *  - No envía payloads del request, sólo metadatos (fn, request_id, status, latency).
- *  - `captureEdgeException` hace `flush(2000)` para garantizar envío antes de
- *    que el isolate se duerma (entornos serverless).
- *
- * Uso típico en cada edge function:
- *
- *   import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
- *   initSentryEdge("parse-cfdi-xml");
- *
- *   Deno.serve(async (req) => {
- *     try { ... } catch (err) {
- *       await captureEdgeException(err, { fn: "parse-cfdi-xml", request_id });
- *       throw err;
- *     }
- *   });
- */
-// deno-lint-ignore-file no-explicit-any
+/** Scoped, bounded Sentry reporting for Supabase Edge. No DSN = no-op. */
+import { loadSentryEdge } from "./sentryRuntime.ts";
+import { applyEdgeContext, cleanEdgeException, type EdgeErrorContext } from "./sentryContext.ts";
+import { scrubTelemetryText } from "./scrubTelemetryData.ts";
 
-type SentryMod = typeof import("npm:@sentry/deno@8");
+export type { EdgeErrorContext } from "./sentryContext.ts";
+export const scrubExceptionMessage = scrubTelemetryText;
 
-/** RTC-01: forma mínima del scope de Sentry que usan estos helpers. */
-interface ScopeMin {
-  setTag: (k: string, v: string) => void;
-  setUser: (u: { id: string }) => void;
-  setExtra: (k: string, v: unknown) => void;
-  setContext: (k: string, v: Record<string, unknown>) => void;
+export function initSentryEdge(_fnName: string): void {
+  void loadSentryEdge();
 }
 
-let sentryPromise: Promise<SentryMod | null> | null = null;
-let initializedFor: string | null = null;
-
-const DSN = Deno.env.get("SENTRY_DSN_EDGE");
-const ENV = Deno.env.get("DENO_ENV") ?? Deno.env.get("SUPABASE_ENV") ?? "production";
-
-async function loadSentry(): Promise<SentryMod | null> {
-  if (!DSN) return null;
-  if (!sentryPromise) {
-    sentryPromise = (async () => {
-      try {
-        const mod = await import("npm:@sentry/deno@8");
-        return mod;
-      } catch (err) {
-        console.error(JSON.stringify({ level: "warn", fn: "sentry-edge", msg: "load_failed", error: String(err) }));
-        return null;
-      }
-    })();
-  }
-  return sentryPromise;
-}
-
-export function initSentryEdge(fnName: string): void {
-  if (!DSN) return;
-  if (initializedFor === fnName) return;
-  initializedFor = fnName;
-  // fire-and-forget; las llamadas posteriores hacen await del mismo promise
-  void loadSentry().then((Sentry) => {
-    if (!Sentry) return;
-    try {
-      Sentry.init({
-        dsn: DSN,
-        environment: ENV,
-        release: `libre-carga-edge@${fnName}`,
-        tracesSampleRate: 0.1,
-        defaultIntegrations: false,
-      });
-      Sentry.setTag("fn", fnName);
-      Sentry.setTag("runtime", "deno-edge");
-    } catch (err) {
-      console.error(JSON.stringify({ level: "warn", fn: "sentry-edge", msg: "init_failed", error: String(err) }));
-    }
-  });
-}
-
-export interface EdgeErrorContext {
-  fn: string;
-  request_id?: string | null;
-  user_id?: string | null;
-  organization_id?: string | null;
-  status_code?: number | null;
-  latency_ms?: number | null;
-  extra?: Record<string, unknown>;
-}
-
-/** F5 (13.65.0): límite duro para `extra` y evitar 413 en Sentry (cap ~128 KB
- *  por evento). Si el payload se serializa por encima de este umbral lo
- *  recortamos a un placeholder; los detalles relevantes deberían ir en `tags`. */
-const MAX_EXTRA_BYTES = 32_000;
-
-/** 13.114.18: lista negra de claves cuyo valor se redacta antes de enviar a
- *  Sentry. Coincide case-insensitive y por substring para cubrir variantes
- *  comunes (`api_key`, `apiKey`, `accessToken`, etc.). */
-const SENSITIVE_KEY_PATTERNS = [
-  /password/i,
-  /secret/i,
-  /token/i,
-  /apikey/i,
-  /api[_-]key/i,
-  /authorization/i,
-  /cookie/i,
-  /bearer/i,
-];
-
-function isSensitiveKey(key: string): boolean {
-  return SENSITIVE_KEY_PATTERNS.some((re) => re.test(key));
-}
-
-function scrubExtraDeep(value: unknown, depth = 0): unknown {
-  if (depth > 6 || value === null || typeof value !== "object") return value;
-  if (Array.isArray(value)) return value.map((v) => scrubExtraDeep(v, depth + 1));
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-    out[k] = isSensitiveKey(k) ? "[Filtered]" : scrubExtraDeep(v, depth + 1);
-  }
-  return out;
-}
-
-/**
- * EF-13: scrubExtraDeep cubre ctx.extra, pero el MENSAJE de la excepción no se
- * redactaba — errores de red que interpolan URLs con query params sensibles
- * (`?token=`, `?api_key=`, `Bearer …`) llegaban crudos a Sentry.
- */
-const SENSITIVE_VALUE_PATTERNS = [
-  /([?&](?:token|api[_-]?key|key|secret|password|signature)=)[^&\s]+/gi,
-  /(bearer\s+)[a-z0-9._~+/=-]+/gi,
-];
-
-export function scrubExceptionMessage(msg: string): string {
-  let out = msg;
-  for (const re of SENSITIVE_VALUE_PATTERNS) out = out.replace(re, "$1[Filtered]");
-  return out;
-}
-
-function truncatedExtra(extra: Record<string, unknown>): Record<string, unknown> {
-  const scrubbed = scrubExtraDeep(extra) as Record<string, unknown>;
-  try {
-    const serialized = JSON.stringify(scrubbed);
-    if (serialized.length <= MAX_EXTRA_BYTES) return scrubbed;
-    return {
-      _truncated: true,
-      _original_bytes: serialized.length,
-      preview: serialized.slice(0, 2000),
-    };
-  } catch {
-    return { _unserializable: true };
-  }
-}
-
-/**
- * 13.543.3 — ¿Vale la pena reportar este status a Sentry?
- *
- * Analogía: el guardia de la puerta rechazando a alguien sin credencial NO es
- * una falla del edificio; es su trabajo. Los 401 (falta token / token inválido
- * o expirado) son rechazos ESPERADOS y sólo generan ruido que esconde bugs
- * reales. Se siguen registrando en los logs de la función (`log.finish`).
- */
 export function debeReportarStatus(status: number): boolean {
-  if (status === 401) return false;
-  return status >= 400;
+  return status !== 401 && status >= 400;
 }
 
-
-/**
- * Captura un error en Sentry con tags estructurados y hace flush para garantizar
- * el envío antes de que el isolate termine. No relanza — el caller decide.
- */
-export async function captureEdgeException(err: unknown, ctx: EdgeErrorContext): Promise<void> {
-  if (!DSN) return;
-  const Sentry = await loadSentry();
-  if (!Sentry) return;
+export async function captureEdgeException(error: unknown, ctx: EdgeErrorContext): Promise<void> {
+  const sdk = await loadSentryEdge();
+  if (!sdk) return;
   try {
-    Sentry.withScope((scope: { setTag: (k: string, v: string) => void; setUser: (u: { id: string }) => void; setExtra: (k: string, v: unknown) => void; setContext: (k: string, v: Record<string, unknown>) => void }) => {
-      scope.setTag("fn", ctx.fn);
-      if (ctx.request_id) scope.setTag("request_id", ctx.request_id);
-      if (ctx.user_id) scope.setUser({ id: ctx.user_id });
-      if (ctx.organization_id) scope.setTag("organization_id", ctx.organization_id);
-      if (ctx.status_code != null) scope.setTag("status_code", String(ctx.status_code));
-      if (ctx.latency_ms != null) scope.setExtra("latency_ms", ctx.latency_ms);
-      if (ctx.extra) scope.setContext("edge", truncatedExtra(ctx.extra));
-      // EF-13: redactar el mensaje antes de enviarlo (conserva name/stack).
-      if (err instanceof Error) {
-        const scrubbed = new Error(scrubExceptionMessage(err.message));
-        scrubbed.name = err.name;
-        scrubbed.stack = err.stack;
-        Sentry.captureException(scrubbed);
-      } else {
-        Sentry.captureException(err);
-      }
+    sdk.withScope((scope) => {
+      applyEdgeContext(scope, ctx);
+      sdk.captureException(cleanEdgeException(error));
     });
-    await Sentry.flush(2000);
-  } catch (e) {
-    console.error(JSON.stringify({ level: "warn", fn: "sentry-edge", msg: "capture_failed", error: String(e) }));
+    await sdk.flush(2000);
+  } catch {
+    console.warn("[sentry-edge] capture failed");
   }
 }
 
-/**
- * Fase 7 · Observabilidad. Envía un mensaje (no un error) a Sentry con tags
- * estructurados. Útil para señales tipo "webhook duplicado", "cron sin datos",
- * etc. — algo que queremos vigilar pero que no es una excepción.
- */
 export async function captureEdgeMessage(
-  message: string,
-  level: "info" | "warning" | "error",
-  ctx: EdgeErrorContext,
+  message: string, level: "info" | "warning" | "error", ctx: EdgeErrorContext,
 ): Promise<void> {
-  if (!DSN) return;
-  const Sentry = await loadSentry();
-  if (!Sentry) return;
+  const sdk = await loadSentryEdge();
+  if (!sdk) return;
   try {
-    // RTC-01: `setLevel` del SDK exige el union `SeverityLevel`; el callback se
-    // describe con la forma mínima que usamos y se adapta al tipo del SDK.
-    const withScopeLevel = Sentry.withScope as unknown as (
-      cb: (scope: ScopeMin & { setLevel: (l: string) => void }) => void,
-    ) => void;
-    withScopeLevel((scope) => {
+    sdk.withScope((scope) => {
+      applyEdgeContext(scope, ctx);
       scope.setLevel(level);
-      scope.setTag("fn", ctx.fn);
-      if (ctx.request_id) scope.setTag("request_id", ctx.request_id);
-      if (ctx.organization_id) scope.setTag("organization_id", ctx.organization_id);
-      if (ctx.extra) scope.setContext("edge", truncatedExtra(ctx.extra));
-      Sentry.captureMessage(message);
+      sdk.captureMessage(scrubTelemetryText(message));
     });
-    await Sentry.flush(2000);
-  } catch (e) {
-    console.error(JSON.stringify({ level: "warn", fn: "sentry-edge", msg: "capture_msg_failed", error: String(e) }));
+    await sdk.flush(2000);
+  } catch {
+    console.warn("[sentry-edge] message capture failed");
   }
 }
 
-/**
- * Envuelve un handler de `Deno.serve` agregando captura automática de errores
- * no controlados. Re-lanza el error original para que el caller mantenga su
- * flujo de respuesta existente.
- */
 export function wrapEdgeHandler(
-  fnName: string,
-  handler: (req: Request) => Promise<Response> | Response,
+  fnName: string, handler: (req: Request) => Promise<Response> | Response,
 ): (req: Request) => Promise<Response> {
   initSentryEdge(fnName);
-  return async (req: Request): Promise<Response> => {
-    const request_id =
-      req.headers.get("x-request-id") ??
-      req.headers.get("x-correlation-id") ??
-      null;
-    // 13.320.1 (audit Sentry Batch 2) — Trace continuity front→edge.
-    // Si el front adjuntó `sentry-trace` + `baggage`, continuamos la traza para
-    // que el error/span del edge quede como hijo de la transaction del browser.
-    const sentryTrace = req.headers.get("sentry-trace") ?? undefined;
-    const baggage = req.headers.get("baggage") ?? undefined;
-    const runHandler = async () => {
-      try {
-        return await handler(req);
-      } catch (err) {
-        await captureEdgeException(err, { fn: fnName, request_id });
-        throw err;
+  return async (req) => {
+    const sdk = await loadSentryEdge();
+    const requestId = req.headers.get("x-request-id") ?? req.headers.get("x-correlation-id") ?? crypto.randomUUID();
+    const run = async () => {
+      try { return await handler(req); }
+      catch (error) {
+        await captureEdgeException(error, { fn: fnName, request_id: requestId });
+        throw error;
       }
     };
-    if (!DSN || (!sentryTrace && !baggage)) return runHandler();
-    const Sentry = await loadSentry();
-    if (!Sentry || typeof (Sentry as unknown as { continueTrace?: unknown }).continueTrace !== "function") {
-      return runHandler();
-    }
-    return await (Sentry as unknown as {
-      continueTrace: <T>(ctx: { sentryTrace?: string; baggage?: string }, cb: () => Promise<T>) => Promise<T>;
-    }).continueTrace({ sentryTrace, baggage }, runHandler);
+    if (!sdk) return run();
+    return sdk.withIsolationScope(async (scope) => {
+      applyEdgeContext(scope, { fn: fnName, request_id: requestId });
+      sdk.setAttributes({ fn: fnName, request_id: requestId });
+      try {
+        return await sdk.continueTrace({
+          sentryTrace: req.headers.get("sentry-trace") ?? undefined,
+          baggage: req.headers.get("baggage") ?? undefined,
+        }, () => sdk.startSpan({ name: fnName, op: "http.server",
+          attributes: { "http.request.method": req.method } }, async (span) => {
+          const response = await run();
+          span.setAttribute("http.response.status_code", response.status);
+          if (response.status >= 500) span.setStatus({ code: 2 });
+          return response;
+        }));
+      } finally {
+        // Includes the finished request span, not only captured exceptions.
+        await sdk.flush(2000).catch(() => undefined);
+      }
+    });
   };
 }
 
-/**
- * 13.320.0 (audit Sentry Batch 1.a) — Sentry Crons Monitoring.
- *
- * Envuelve un handler de edge function programado (cron / pg_cron) con
- * check-ins de Sentry Crons. Si el job no manda check-in en la ventana
- * esperada, Sentry dispara una alerta "missed check-in".
- *
- * Opt-in por función vía env `SENTRY_CRON_MONITOR_SLUG` — si no está seteada,
- * el wrapper se comporta idéntico a `wrapEdgeHandler` (no-op de monitoreo).
- *
- * Uso típico:
- *   Deno.serve(withCronMonitor("rep-retry-nocturno", "rep-retry-nocturno", handler, {
- *     schedule: { type: "crontab", value: "0 12 * * *" },
- *     checkinMargin: 5,   // minutos
- *     maxRuntime: 30,     // minutos
- *   }));
- */
 export interface CronMonitorConfig {
   schedule: { type: "crontab"; value: string } | { type: "interval"; value: number; unit: "minute" | "hour" | "day" };
   checkinMargin?: number;
@@ -295,20 +90,27 @@ export interface CronMonitorConfig {
 }
 
 export function withCronMonitor(
-  fnName: string,
-  monitorSlug: string,
-  handler: (req: Request) => Promise<Response> | Response,
+  fnName: string, monitorSlug: string, handler: (req: Request) => Promise<Response> | Response,
   monitorConfig: CronMonitorConfig,
 ): (req: Request) => Promise<Response> {
-  initSentryEdge(fnName);
   const wrapped = wrapEdgeHandler(fnName, handler);
-  return async (req: Request): Promise<Response> => {
-    if (!DSN) return wrapped(req);
-    const Sentry = await loadSentry();
-    if (!Sentry) return wrapped(req);
-    // `withMonitor` maneja check-in de inicio, éxito y error automáticamente.
-    return await (Sentry as unknown as {
-      withMonitor: <T>(slug: string, cb: () => Promise<T>, cfg: CronMonitorConfig) => Promise<T>;
-    }).withMonitor(monitorSlug, () => Promise.resolve(wrapped(req)), monitorConfig);
+  return async (req) => {
+    const sdk = await loadSentryEdge();
+    // Comma-separated allowlist: opt in by actual slug, never create all monitors.
+    const enabled = (Deno.env.get("SENTRY_CRON_MONITOR_SLUG") ?? "").split(",").map((s) => s.trim());
+    if (!sdk || !enabled.includes(monitorSlug)) return wrapped(req);
+    return sdk.withIsolationScope(async () => {
+      const id = sdk.captureCheckIn({ monitorSlug, status: "in_progress" }, monitorConfig);
+      let status: "ok" | "error" = "error";
+      try {
+        const response = await wrapped(req);
+        status = response.status >= 500 ? "error" : "ok";
+        return response;
+      } finally {
+        // Preserve HTTP responses and exceptions; observability does not rewrite the workflow.
+        sdk.captureCheckIn({ checkInId: id, monitorSlug, status });
+        await sdk.flush(2000).catch(() => undefined);
+      }
+    });
   };
 }

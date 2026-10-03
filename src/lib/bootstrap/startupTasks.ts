@@ -44,7 +44,7 @@ export function syncAppVersion(deps: VersionSyncDeps = {}): boolean {
 export interface ChunkRecoveryDeps {
   target?: Pick<Window, "addEventListener">;
   isChunkError?: (error: unknown) => boolean;
-  recover?: () => void;
+  recover?: () => boolean;
 }
 
 /**
@@ -56,24 +56,27 @@ export interface ChunkRecoveryDeps {
 export function registerChunkRecoveryListeners(deps: ChunkRecoveryDeps = {}): void {
   const target = deps.target ?? window;
   const esChunk = deps.isChunkError ?? isDynamicImportError;
-  const recuperar = deps.recover ?? (() => void tryReloadForChunkError());
+  const recuperar = deps.recover ?? tryReloadForChunkError;
+  const recoverError = (error: unknown): boolean => {
+    const recovering = recuperar();
+    if (recovering && error instanceof Error) Object.assign(error, { expected: true });
+    return recovering;
+  };
 
   // Sin preventDefault: si se previene, Vite resuelve el import() con
   // `undefined` y el código que desestructura truena (JAVASCRIPT-REACT-74).
   // Dejamos que el import() rechace con su error real y sólo recuperamos.
-  target.addEventListener("vite:preloadError", () => {
-    recuperar();
+  target.addEventListener("vite:preloadError", (event) => {
+    recoverError((event as Event & { payload?: unknown }).payload);
   });
 
   target.addEventListener("unhandledrejection", (event) => {
     if (!esChunk(event.reason)) return;
-    event.preventDefault();
-    recuperar();
+    if (recoverError(event.reason)) event.preventDefault();
   });
 
   target.addEventListener("error", (event) => {
     if (!esChunk(event.error ?? event.message)) return;
-    event.preventDefault();
-    recuperar();
+    if (recoverError(event.error ?? event.message)) event.preventDefault();
   });
 }

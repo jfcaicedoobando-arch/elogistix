@@ -30,7 +30,9 @@ function idDedupe(opts: InfoNotifyOptions, prefijo: string): string | number | u
 function acciones(opts: InfoNotifyOptions) {
   const details = shouldAttachDetails(opts)
     ? buildDetailsAction({ ...opts, titleFinal: opts.title }) : undefined;
-  return { action: opts.action ?? details, cancel: opts.action ? details : undefined,
+  const action = opts.action && details
+    ? { ...opts.action, onClick: details.scopeAction(opts.action.onClick) } : opts.action ?? details;
+  return { action, cancel: opts.action ? details : undefined,
     onDismiss: details?.onToastClose, onAutoClose: details?.onToastClose };
 }
 

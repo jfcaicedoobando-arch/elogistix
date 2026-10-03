@@ -14,6 +14,7 @@ import { getAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { extractErrorDetails, deriveErrorCode } from "./errorDetailsExtract";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { safeReportRecord, safeReportValue, safeReportJson } from "@/lib/diagnostics/safeReportValue";
+import { trackErrorReportScope } from "@/lib/diagnostics/errorReportScope";
 import {
   fmtHeader,
   fmtErrorBlock,
@@ -56,7 +57,7 @@ export function buildErrorReport(input: ErrorReportInput): ErrorReport {
   if (!errorDetails.message) errorDetails.message = input.description ?? input.title;
   const errorCode = input.errorCode ?? (input.errors ? ERROR_CODES.VALIDATION_FAILED : deriveErrorCode(normalizedError));
 
-  return {
+  return trackErrorReportScope({
     ...reportCorrelation(input, source),
     errorCode,
     method: input.method,
@@ -84,7 +85,7 @@ export function buildErrorReport(input: ErrorReportInput): ErrorReport {
     context: safeReportRecord(input.context),
     payload: safeReportValue(input.payload),
     errors: input.errors,
-  };
+  });
 }
 
 export function formatReportMarkdown(r: ErrorReport): string {
@@ -93,6 +94,11 @@ export function formatReportMarkdown(r: ErrorReport): string {
     ...fmtErrorBlock(r.errorDetails),
     ...fmtContextBlock(r.context),
     ...fmtStackBlock(r.errorDetails.stack),
+    "",
+    "**Diagnóstico completo (JSON)**",
+    "```json",
+    formatReportJson(r),
+    "```",
   ].join("\n");
 }
 

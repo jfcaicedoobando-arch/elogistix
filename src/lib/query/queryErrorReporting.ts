@@ -1,47 +1,11 @@
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { Query } from "@tanstack/react-query";
+import { isExpectedTelemetryError } from "@/lib/observability/expectedTelemetryError";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
-/**
- * Errores esperados que NO deben generar un issue en Sentry:
- * - Postgres `P0001`: RAISE EXCEPTION de reglas de negocio (permisos, guards).
- * - Clases de dominio (`AprobacionFacturaError`, `CreditLimitError`, etc.):
- *   validaciones controladas que la UI ya presenta con `notifyError`.
- * - Timeouts de gateway (504 / "upstream request timeout"): infra, no bug.
- * - Validaciones de captura conocidas ("Debe seleccionar…").
- * Ver mem plan Sentry 13.302.7.
- */
-const BUSINESS_ERROR_NAMES = new Set<string>([
-  "AprobacionFacturaError",
-  "CreditLimitError",
-  "ValidationError",
-  "ZodError",
-  "ReglaNegocioError",
-]);
-
-const BUSINESS_ERROR_MESSAGE_HINTS = [
-  "debe seleccionar al menos",
-  "upstream request timeout",
-];
 
 export function isExpectedBusinessError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const e = err as { code?: unknown; name?: unknown; message?: unknown; status?: unknown };
-  if (typeof e.code === "string" && e.code === "P0001") return true;
-  // 13.338.0 — 23514 (check constraint) son guardas de negocio: "Embarque
-  // cerrado: edición bloqueada". La UI ya lo explica. Ver Sentry -40.
-  if (typeof e.code === "string" && e.code === "23514") return true;
-  if (typeof e.name === "string" && BUSINESS_ERROR_NAMES.has(e.name)) return true;
-  if (e.status === 504) return true;
-  // Errores ya marcados `expected` (p. ej. FacturapiError por datos del SAT
-  // que el usuario corrige): la UI los explica, no son bugs (JAVASCRIPT-REACT-73).
-  if ((err as { expected?: unknown }).expected === true) return true;
-  if (typeof e.message === "string") {
-    // Códigos de dominio LC_* (RAISE EXCEPTION) con cualquier ERRCODE.
-    if (e.message.startsWith("LC_")) return true;
-    const msg = e.message.toLowerCase();
-    if (BUSINESS_ERROR_MESSAGE_HINTS.some((h) => msg.includes(h))) return true;
-  }
-  return false;
+  return isExpectedTelemetryError(err);
 }
 
 /**
@@ -87,20 +51,22 @@ function normalizeForSentry(
   if ((err instanceof Error && !sinMensaje) || !err || typeof err !== "object") {
     return { error: err, pgTags: {} };
   }
-  const e = err as { code?: unknown; message?: unknown; status?: unknown };
+  const e = err as { code?: unknown; message?: unknown; status?: unknown; expected?: unknown };
   const pgTags: Record<string, string> = {};
   if (typeof e.code === "string") pgTags.pg_code = e.code;
   if (typeof e.status === "number") pgTags.http_status = String(e.status);
 
   const mensajeOriginal = typeof e.message === "string" ? e.message : "";
   if (mensajeOriginal.length > 0) {
-    return { error: new Error(mensajeOriginal, { cause: err }), pgTags };
+    return { error: Object.assign(new Error(mensajeOriginal, { cause: err }),
+      { code: e.code, expected: e.expected }), pgTags };
   }
 
   const clasificado = describirErrorSinMensaje(rootKey, e.status);
   pgTags.error_kind = clasificado.kind;
   const message = clasificado.message;
-  return { error: new Error(message, { cause: err }), pgTags };
+  return { error: Object.assign(new Error(message, { cause: err }),
+    { code: e.code, expected: e.expected }), pgTags };
 }
 
 
@@ -137,14 +103,10 @@ export function reportQueryError(
     return;
   }
   const { error: normalized, pgTags } = normalizeForSentry(err, rootKey);
-  const tags: Record<string, string> = { feature: "react_query", kind, ...pgTags };
+  const tags: Record<string, string> & { feature: string } = { feature: "react_query", kind, ...pgTags };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
-  void import("@sentry/react")
-    .then(({ captureException }) =>
-      captureException(normalized, { tags, extra: meta }),
-    )
-    .catch(() => undefined);
+  reportCaughtError(normalized, tags, meta);
 }
 
 const rootOf = (k: unknown): string | undefined => {

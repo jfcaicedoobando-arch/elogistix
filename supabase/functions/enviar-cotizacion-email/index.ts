@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { handlePrepare, handleSend } from './handlers.ts';
+import type { AdminClient, Cotizacion } from './sendHelpers.ts';
 
 function makeJson(cors: Record<string, string>) {
   return (data: Record<string, unknown>, status = 200): Response =>
@@ -17,6 +18,11 @@ function makeJson(cors: Record<string, string>) {
 
 type JsonFn = ReturnType<typeof makeJson>;
 
+// Uniones discriminadas explícitas: sin ellas TS infiere `res?: undefined` y
+// el manejador parece poder devolver `undefined`.
+type AuthResult = { res: Response } | { userId: string; userEmail: string };
+type LoadResult = { res: Response } | { cot: Cotizacion };
+
 async function loadEnv(json: JsonFn): Promise<{ url: string; anon: string; service: string } | Response> {
   const url = Deno.env.get('SUPABASE_URL');
   const anon = Deno.env.get('SUPABASE_ANON_KEY');
@@ -25,7 +31,7 @@ async function loadEnv(json: JsonFn): Promise<{ url: string; anon: string; servi
   return { url, anon, service };
 }
 
-async function authenticateRequest(req: Request, url: string, anon: string, json: JsonFn) {
+async function authenticateRequest(req: Request, url: string, anon: string, json: JsonFn): Promise<AuthResult> {
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.toLowerCase().startsWith('bearer ')) {
     return { res: json({ error: 'Missing authorization' }, 401) };
@@ -40,16 +46,18 @@ async function authenticateRequest(req: Request, url: string, anon: string, json
 }
 
 async function loadCotizacion(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   cotizacionId: string,
   userId: string,
   json: JsonFn,
-) {
-  const { data: cot, error } = await admin
+): Promise<LoadResult> {
+  const { data, error } = await admin
     .from('cotizaciones')
     .select('id, folio, organization_id, cliente_id, cliente_nombre, origen, destino, incoterm, modo, fecha_vigencia, estado, deleted_at, es_prospecto, oportunidad_id')
     .eq('id', cotizacionId)
     .maybeSingle();
+  // El cliente sin tipos devuelve campos `unknown`: se fija la forma esperada.
+  const cot = data as Cotizacion | null;
   if (error || !cot) return { res: json({ error: 'Cotización no encontrada' }, 404) };
   if (cot.deleted_at) return { res: json({ error: 'Cotización eliminada' }, 400) };
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { logClientError } from "@/services/observability";
-import { logger } from "@/lib/observability/logger";
+import { captureExceptionOnce } from "@/lib/observability/captureExceptionOnce";
 import {
   isDynamicImportError,
   tryReloadForChunkError,
@@ -52,10 +52,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error("ErrorBoundary", error, { componentStack: errorInfo.componentStack });
-
-    if (isDynamicImportError(error)) {
-      tryReloadForChunkError();
+    if (isDynamicImportError(error) && tryReloadForChunkError()) {
+      Object.assign(error, { expected: true });
       return;
     }
 
@@ -67,20 +65,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
       timestamp,
     });
 
-    void import("@sentry/react").then((Sentry) => {
-      let eventId: string | null = null;
-      Sentry.withScope((scope) => {
-        scope.setTag("source", "react-error-boundary");
-        if (typeof window !== "undefined") {
-          scope.setTag("crashed_route", window.location.pathname || "/");
-        }
-        scope.setTag("app_version", APP_VERSION);
-        if (errorInfo.componentStack) {
-          scope.setContext("react", { componentStack: errorInfo.componentStack });
-        }
-        eventId = Sentry.captureException(error);
-      });
-      this.setState({ eventId });
+    void captureExceptionOnce(error, {
+      tags: { source: "react-error-boundary", app_version: APP_VERSION,
+        crashed_route: typeof window !== "undefined" ? window.location.pathname : "/" },
+      contexts: { react: { componentStack: errorInfo.componentStack } },
+    }).then((eventId) => {
+      if (this.state.error === error) this.setState({ eventId: eventId ?? null });
     });
 
     logClientError({

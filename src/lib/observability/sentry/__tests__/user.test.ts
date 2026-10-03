@@ -14,20 +14,28 @@ const sentryMocks = vi.hoisted(() => {
   const setTags = vi.fn();
   const setTag = vi.fn();
   const getCurrentScope = vi.fn(() => ({ setTag }));
-  return { setUser, setTags, setTag, getCurrentScope };
+  return { setUser, setTags, setTag, getCurrentScope, setAttribute: vi.fn(), setAttributes: vi.fn() };
 });
 
 vi.mock("@sentry/react", () => ({
   setUser: sentryMocks.setUser,
   setTags: sentryMocks.setTags,
+  setTag: sentryMocks.setTag,
+  setAttribute: sentryMocks.setAttribute,
+  setAttributes: sentryMocks.setAttributes,
   getCurrentScope: sentryMocks.getCurrentScope,
 }));
+
+// Scope synchronization is independent of DSN/production init; core has its own contracts.
+vi.mock("../core", () => ({ initSentry: vi.fn() }));
 
 beforeEach(() => {
   sentryMocks.setUser.mockClear();
   sentryMocks.setTags.mockClear();
   sentryMocks.setTag.mockClear();
   sentryMocks.getCurrentScope.mockClear();
+  sentryMocks.setAttribute.mockClear();
+  sentryMocks.setAttributes.mockClear();
 });
 
 afterEach(() => {
@@ -40,7 +48,7 @@ async function flushImport() {
   // macrotask, así que esperamos hasta ver la primera interacción con Sentry.
   const visto = () =>
     sentryMocks.setUser.mock.calls.length > 0 ||
-    sentryMocks.getCurrentScope.mock.calls.length > 0;
+    sentryMocks.setTag.mock.calls.length > 0;
   for (let i = 0; i < 200 && !visto(); i++) {
     await new Promise<void>((r) => setTimeout(r, 5));
   }
@@ -48,7 +56,7 @@ async function flushImport() {
 }
 
 describe("syncSentryUser", () => {
-  it("propaga el usuario con id, email, organization_id y effective_role", async () => {
+  it("propaga id, tenant y rol sin transmitir email", async () => {
     const { syncSentryUser } = await import("../user");
     syncSentryUser({
       userId: "u-123",
@@ -59,12 +67,12 @@ describe("syncSentryUser", () => {
     await flushImport();
     expect(sentryMocks.setUser).toHaveBeenCalledWith({
       id: "u-123",
-      email: "test@librecarga.com",
     });
     expect(sentryMocks.setTags).toHaveBeenCalledWith({
       organization_id: "org-1",
       effective_role: "admin_org",
       auth_status: "authenticated",
+      active_organization_id: "none",
     });
   });
 
@@ -78,7 +86,10 @@ describe("syncSentryUser", () => {
     });
     await flushImport();
     expect(sentryMocks.setUser).toHaveBeenCalledWith(null);
-    expect(sentryMocks.setTags).not.toHaveBeenCalled();
+    const cleared = { organization_id: "none", effective_role: "none",
+      active_organization_id: "none", auth_status: "anonymous" };
+    expect(sentryMocks.setTags).toHaveBeenCalledWith(cleared);
+    expect(sentryMocks.setAttributes).toHaveBeenCalledWith(cleared);
   });
 
   it("ante llamadas concurrentes el último valor es el que termina aplicado", async () => {
@@ -90,7 +101,7 @@ describe("syncSentryUser", () => {
     // (El SDK puede recibir 1-2 llamadas porque ambos .then se encolan; el
     // contrato del wrapper es "latest-wins sobre el valor", no "1 sola llamada").
     const lastCall = sentryMocks.setUser.mock.calls[sentryMocks.setUser.mock.calls.length - 1];
-    expect(lastCall?.[0]).toEqual({ id: "u-2", email: "b@x.com" });
+    expect(lastCall?.[0]).toEqual({ id: "u-2" });
   });
 });
 

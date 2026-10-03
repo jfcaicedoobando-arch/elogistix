@@ -11,6 +11,7 @@ const sentryMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@sentry/react", () => sentryMock);
+vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn() }));
 
 import { reportQueryError } from "../queryErrorReporting";
 
@@ -56,12 +57,13 @@ describe("reportQueryError — errores sin mensaje", () => {
   });
 
   it("conserva el mensaje real cuando existe", async () => {
-    reportQueryError({ message: "permission denied for table facturas", code: "42501" }, "query", "facturas");
+    // A routine permission denial is silent; this fixture is an explicit regression.
+    reportQueryError({ message: "permission denied for table facturas", code: "42501", expected: false }, "query", "facturas");
     await flush();
 
     const [error, opciones] = sentryMock.captureException.mock.calls[0];
     expect((error as Error).message).toBe("permission denied for table facturas");
     expect(opciones.tags.pg_code).toBe("42501");
-    expect(opciones.tags.error_kind).toBeUndefined();
+    expect(opciones.tags.error_kind).toBe("db_error");
   });
 });

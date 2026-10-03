@@ -3,6 +3,7 @@
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { listarTarifasParaPricing } from "@/features/crm/services/pricing/tarifasParaPricing";
 import {
   actualizarSolicitud, cancelarSolicitud, crearSolicitud, eliminarOpcion, enviarSolicitud,
   guardarOpcion, listarBandejaPricing, listarOpciones, listarSolicitudesOportunidad,
@@ -18,6 +19,10 @@ function useInvalidar() {
 }
 const onError = (error: unknown, variables: unknown) => notifyError(undefined, { title: "No se pudo actualizar la solicitud de Pricing",
   description: mensajeErrorPricing(error), error, method: "CRM_PRICING_MUTACION", context: { variables } });
+
+export function useTarifasPricing(enabled: boolean) {
+  return useQuery({ queryKey: [...BASE, "tarifas"], queryFn: listarTarifasParaPricing, enabled });
+}
 
 export function useSolicitudesOportunidad(oportunidadId: string) {
   return useQuery({

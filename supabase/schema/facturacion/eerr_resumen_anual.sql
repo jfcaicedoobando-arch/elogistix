@@ -31,21 +31,10 @@ BEGIN
         AND EXTRACT(year FROM e.eta) = p_year
     ),
     ing AS (
-      SELECT em.mes,
-        SUM(
-          CASE UPPER(COALESCE(cv.moneda::text, 'MXN'))
-            WHEN 'USD' THEN CASE WHEN em.tc_usd IS NOT NULL THEN COALESCE(cv.total, 0) * em.tc_usd END
-            WHEN 'EUR' THEN CASE WHEN em.tc_eur IS NOT NULL THEN COALESCE(cv.total, 0) * em.tc_eur END
-            ELSE COALESCE(cv.total, 0)
-          END
-        ) AS total,
-        COUNT(*) FILTER (
-          WHERE (UPPER(COALESCE(cv.moneda::text, 'MXN')) = 'USD' AND em.tc_usd IS NULL)
-             OR (UPPER(COALESCE(cv.moneda::text, 'MXN')) = 'EUR' AND em.tc_eur IS NULL)
-        ) AS sin_tc
-      FROM public.conceptos_venta cv
-      JOIN emb em ON em.id = cv.embarque_id
-      WHERE cv.deleted_at IS NULL
+      SELECT em.mes, SUM(v.venta_mxn) AS total,
+        COUNT(*) FILTER (WHERE v.venta_mxn IS NULL) AS sin_tc
+      FROM public._venta_facturada_por_embarque(v_org) v
+      JOIN emb em ON em.id = v.embarque_id
       GROUP BY em.mes
     ),
     cst AS (
@@ -129,7 +118,7 @@ BEGIN
       FROM public.factura_notas_credito ncf
       WHERE ncf.deleted_at IS NULL
         AND ncf.organization_id = v_org
-        AND ncf.estado = 'Aplicada'
+        AND ncf.estado IN ('Timbrada','Aplicada')
         AND ncf.fecha_emision IS NOT NULL
         AND EXTRACT(year FROM ncf.fecha_emision) = p_year
         -- Ola 14 · borrado logico estricto: la NC de una factura eliminada no

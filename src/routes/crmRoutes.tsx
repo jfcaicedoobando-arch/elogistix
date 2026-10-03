@@ -37,7 +37,6 @@ export const crmChildRoutes = (
     <Route path="higiene" element={<CrmHigiene />} />
     <Route path="analitica" element={<AnaliticaCrm />} />
     <Route path="forecast" element={<Navigate to="/crm/analitica" replace />} />
-    <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
     {/* V-02 (auditoría visual 2026-08-21): `/crm/pipeline` daba 404; el Kanban
         vive en `/crm/oportunidades`. */}
     <Route path="pipeline" element={<Navigate to="/crm/oportunidades" replace />} />

@@ -25,7 +25,7 @@ export function NextBestActionsCard({ items, isLoading, isError = false, onRetry
     <Card className="border-primary/30">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> Qué hacer ahora
+          <Sparkles className="size-4 text-primary" /> Qué hacer ahora
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -48,13 +48,13 @@ export function NextBestActionsCard({ items, isLoading, isError = false, onRetry
                   className="flex items-center justify-between gap-3 py-2 px-2 -mx-2 rounded-md hover:bg-muted/50"
                 >
                   <div className="flex items-start gap-3 min-w-0">
-                    <Icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                    <Icon className="size-4 mt-0.5 text-primary shrink-0" />
                     <div className="min-w-0">
                       <p className="text-body font-medium truncate">{it.titulo}</p>
                       <p className="text-body-sm text-muted-foreground truncate">{it.subtitulo}</p>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                  <ArrowRight className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
                 </DrilldownRow>
               );
             })}

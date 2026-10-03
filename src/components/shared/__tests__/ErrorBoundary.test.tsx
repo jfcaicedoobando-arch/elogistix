@@ -34,6 +34,8 @@ vi.mock("@sentry/react", () => ({
 }));
 
 vi.mock("@/services/observability", () => ({ logClientError: mocks.logClientError }));
+vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn() }));
+vi.mock("@/services/observability/logClientError", () => ({ logClientError: mocks.logClientError }));
 
 import { ErrorBoundary } from "../ErrorBoundary";
 
@@ -86,10 +88,13 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    await waitFor(() => expect(mocks.withScope).toHaveBeenCalled());
-    expect(mocks.setTag).toHaveBeenCalledWith("crashed_route", "/embarques/123");
-    expect(mocks.setTag).toHaveBeenCalledWith("source", "react-error-boundary");
-    expect(mocks.captureException).toHaveBeenCalledWith(expect.objectContaining({ message: "ui-explota" }));
+    await waitFor(() => expect(mocks.captureException).toHaveBeenCalled());
+    expect(mocks.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "ui-explota" }),
+      expect.objectContaining({ tags: expect.objectContaining({
+        crashed_route: "/embarques/123", source: "react-error-boundary",
+      }) }),
+    );
   });
 
   it("también persiste el error vía logClientError (doble reporte)", () => {

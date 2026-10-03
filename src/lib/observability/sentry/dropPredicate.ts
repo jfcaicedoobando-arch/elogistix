@@ -3,8 +3,8 @@
  * Extraído de `core.ts` para mantener el archivo bajo el límite de 200 líneas.
  */
 import type * as Sentry from "@sentry/react";
-import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { isReactRefreshHmrError, isReactRefreshStackTrace } from "./helpers";
+import { isExpectedTelemetryError } from "../expectedTelemetryError";
 import {
   isBusinessRuleViolation,
   isNetworkConnectivityNoise,
@@ -14,16 +14,12 @@ import {
 } from "./dropFiltersNegocio";
 
 
-/** Detecta errores de chunk/HMR que se auto-recuperan con reload. */
+/** Development HMR is noise; exhausted chunk recovery is not. */
 function isRecoverableLoadError(
   event: Sentry.ErrorEvent,
   exc: Error | undefined,
-  originalMsg: string | undefined,
 ): boolean {
-  if (isDynamicImportErrorMessage(originalMsg)) return true;
-  if (isDynamicImportErrorMessage(event.message)) return true;
   const values = event.exception?.values;
-  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
   if (exc && isReactRefreshHmrError(exc)) return true;
   if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
   return false;
@@ -47,10 +43,10 @@ function isPostgresRlsDenied(
   exc: unknown,
 ): boolean {
   const code = (exc as { code?: unknown } | undefined)?.code;
-  if (typeof code === "string" && code === "42501") return true;
+  if (typeof code === "string" && code === "42501") return isExpectedTelemetryError(exc);
   const extra = event.extra as { __serialized__?: { code?: unknown } } | undefined;
   const serializedCode = extra?.__serialized__?.code;
-  return typeof serializedCode === "string" && serializedCode === "42501";
+  return serializedCode === "42501" && isExpectedTelemetryError(extra?.__serialized__);
 }
 
 /**
@@ -72,10 +68,7 @@ function isHostingAnalyticsNoise(
 }
 
 /**
- * `TypeError: Converting circular structure to JSON` originado desde
- * `<anonymous>` (extensiones del navegador que monkey-parchean `appendChild`
- * y stringifican el DOM). No es código nuestro y no rompe la UI.
- * Ver Sentry JAVASCRIPT-REACT-2F/2G.
+ * Circular JSON is only extension noise when frames prove an extension origin.
  */
 function isBrowserExtensionCircularJson(
   event: Sentry.ErrorEvent,
@@ -89,53 +82,20 @@ function isBrowserExtensionCircularJson(
     return false;
   }
   const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
-  // Si al menos un frame vive en `<anonymous>` (extensión) lo tratamos como ruido.
-  return frames.some((f) => (f.filename ?? "").includes("<anonymous>"));
+  return frames.some((f) => /^(?:chrome|moz|safari.*)-extension:\/\//i.test(f.filename ?? ""));
 }
 
-/**
- * Ruido de infraestructura: el servidor devolvió una página HTML (error 1033
- * de Cloudflare Tunnel, 502/504 del proxy, portal cautivo) en vez de JSON.
- * El cliente serializa el doctype como excepción. No es un bug de la app.
- * Ver Sentry JAVASCRIPT-REACT-3N/3P/3R/3Z.
- */
-function isHtmlGatewayNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
-  const candidates: unknown[] = [
-    (exc as { message?: unknown } | undefined)?.message,
-    typeof exc === "string" ? exc : undefined,
-    event.exception?.values?.[0]?.value,
-    event.message,
-  ];
-  return candidates.some((c) => {
-    if (typeof c !== "string") return false;
-    const head = c.trim().slice(0, 400).toLowerCase();
-    if (head.startsWith("<!doctype html") || head.startsWith("<html")) return true;
-    return head.includes("error 1033") || head.includes("cloudflare tunnel error");
-  });
-}
 
 /**
- * Ruido de túnel de Cloudflare estructurado: el error viaja en `cause` con
- * `cloudflare_error: true` / `error_code: 1033` / `status: 530`, y el mensaje
- * queda como "unknown error" o "Failed to fetch". No es un bug de la app.
- * Ver Sentry JAVASCRIPT-REACT-44/45/47/48/49.
+ * Ephemeral developer tunnels are noise, not production Cloudflare failures.
  */
-function hasCloudflareCause(raw: unknown): boolean {
-  if (!raw || typeof raw !== "object") return false;
-  const c = raw as { cloudflare_error?: unknown; error_code?: unknown; status?: unknown };
-  return c.cloudflare_error === true || c.error_code === 1033 || c.status === 530;
-}
 
 function isEphemeralTunnelUrl(event: Sentry.ErrorEvent): boolean {
   const url = event.request?.url ?? (typeof window !== "undefined" ? window.location?.href : "");
   return typeof url === "string" && url.includes(".trycloudflare.com");
 }
 
-function isCloudflareTunnelNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
-  if (hasCloudflareCause((exc as { cause?: unknown } | undefined)?.cause)) return true;
-  if (hasCloudflareCause((event.contexts?.Error as { cause?: unknown } | undefined)?.cause)) {
-    return true;
-  }
+function isCloudflareTunnelNoise(event: Sentry.ErrorEvent): boolean {
   return isEphemeralTunnelUrl(event);
 }
 
@@ -145,9 +105,11 @@ function isCloudflareTunnelNoise(event: Sentry.ErrorEvent, exc: unknown): boolea
  * RLS (permiso denegado, no bug) seguían llegando. Ver JAVASCRIPT-REACT-3S.
  */
 function isRlsDeniedFromTags(event: Sentry.ErrorEvent): boolean {
-  if (event.tags?.pg_code === "42501") return true;
   const extra = event.extra as { original?: { code?: unknown } } | undefined;
-  return extra?.original?.code === "42501";
+  if (extra?.original?.code === "42501") return isExpectedTelemetryError(extra.original);
+  return event.tags?.pg_code === "42501" && isExpectedTelemetryError({
+    code: "42501", message: event.exception?.values?.[0]?.value ?? event.message,
+  });
 }
 
 /** Filtros de ruido que reciben `(event, originalException)`. */
@@ -155,7 +117,6 @@ const NOISE_FILTERS: ReadonlyArray<(event: Sentry.ErrorEvent, exc: unknown) => b
   isPostgresRlsDenied,
   isHostingAnalyticsNoise,
   isBrowserExtensionCircularJson,
-  isHtmlGatewayNoise,
   isCloudflareTunnelNoise,
   isBusinessRuleViolation,
   isNetworkConnectivityNoise,
@@ -171,10 +132,10 @@ export function shouldDropSentryEvent(
   hint: Sentry.EventHint | undefined,
 ): boolean {
   const exc = hint?.originalException as Error | undefined;
-  const originalMsg =
-    exc?.message ??
-    (typeof hint?.originalException === "string" ? hint.originalException : undefined);
-  if (isRecoverableLoadError(event, exc, originalMsg)) return true;
+  const intent = exc as { expected?: unknown; cause?: { expected?: unknown } } | undefined;
+  if (intent?.expected === false || intent?.cause?.expected === false) return false;
+  if (isExpectedTelemetryError(exc)) return true;
+  if (isRecoverableLoadError(event, exc)) return true;
   if (isZodValidationError(exc)) return true;
   if (isRlsDeniedFromTags(event)) return true;
   return NOISE_FILTERS.some((fn) => fn(event, hint?.originalException));

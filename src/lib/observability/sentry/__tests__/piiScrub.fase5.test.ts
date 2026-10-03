@@ -23,9 +23,9 @@ describe("scrubEventPii — F5 nuevos campos", () => {
     } as unknown as Sentry.ErrorEvent;
     const out = scrubEventPii(evt);
     const h = out.request!.headers as Record<string, string>;
-    expect(h.Authorization).toBe("[Filtered]");
-    expect(h.cookie).toBe("[Filtered]");
-    expect(h.ApiKey).toBe("[Filtered]");
+    expect(h.Authorization).toBe("[REDACTED]");
+    expect(h.cookie).toBe("[REDACTED]");
+    expect(h.ApiKey).toBe("[REDACTED]");
     expect(h["x-supabase-auth"]).toBe("[Filtered]");
     expect(h["x-trace-id"]).toBe("ok-keep");
   });

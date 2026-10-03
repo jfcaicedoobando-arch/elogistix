@@ -1,15 +1,19 @@
 # Observabilidad — mapa y diagnóstico
 
-Revisado el **2026-09-26**. Implementación en
+Revisado el **2026-10-02**. SDK Sentry alineado en **11.4.0**. Implementación en
 `src/lib/observability/sentry/`, `src/lib/query/`,
 `src/lib/ui/appFeedback.ts` y `supabase/functions/_shared/sentry.ts`.
 [Runbook Sentry](sentry-runbook.md).
 
 ## Arquitectura
 
-Frontend inicializa Sentry de forma dinámica con `VITE_SENTRY_DSN`;
+Frontend inicializa la configuración/integraciones de forma dinámica con
+`VITE_SENTRY_DSN`; el adaptador de rutas importa el SDK base estáticamente
+para no reemplazar/remontar formularios al terminar la inicialización;
 usa túnel Supabase para ingesta cuando está configurado.
 Edge usa `SENTRY_DSN_EDGE` y wrappers comunes.
+Capturas esperan un init compartido y deduplican por identidad de error.
+React 19 tiene callbacks de raíz; rutas instrumentadas sin remount al activar Sentry.
 DSN público no concede lectura de eventos; tokens administrativos son secretos.
 
 Versión/dist y contexto permiten correlacionar un fallo con su deploy.
@@ -20,6 +24,8 @@ disponibles cuando faltó token o build los desactivó.
 
 PII scrub en `piiScrub.ts`, filtros en `sentry/initOptions.ts` /
 `dropPredicate.ts`, contexto en `errorContextStore.ts`.
+La política pura de privacidad vive en `supabase/functions/_shared/` y se
+reexporta al frontend; `beforeSendSpan` limpia el formato streamed de SDK 11.
 Replays enmascaran entradas/textos/media según configuración vigente.
 No registrar claves, contraseñas, XML completo ni bodies sensibles.
 

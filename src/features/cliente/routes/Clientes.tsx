@@ -3,7 +3,7 @@ import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useClientesPaginados } from "@/features/cliente/hooks";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDebounce, useOrgFilter, useRegistrarActividad, useDocumentTitle } from "@/hooks/shared";
 import NuevoClienteDialog from "@/features/cliente/components/NuevoClienteDialog";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -11,17 +11,14 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
-import { useDebounce } from "@/hooks/shared";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { CLIENTE_TEMPLATE_HEADERS, mapClienteRows } from "@/lib/csv/importSchemas";
-import { useOrgFilter } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createClientesLote } from "@/features/cliente/services";
 import { notifySuccess } from "@/lib/ui/appFeedback";
-import { useRegistrarActividad } from "@/hooks/shared";
 import {
   buildClientesColumns,
   type ClienteRow,
@@ -29,7 +26,6 @@ import {
 import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
-import { useDocumentTitle } from "@/hooks/shared";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 import { getClientesPageDescription } from "@/features/cliente/routes/clientesPageDescription";

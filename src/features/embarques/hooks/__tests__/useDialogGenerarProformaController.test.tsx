@@ -44,8 +44,8 @@ vi.mock("sonner", () => ({ toast: {
   success: vi.fn(), info: vi.fn(), dismiss: vi.fn(),
 } }));
 
-vi.mock("@sentry/react", () => ({
-  captureException: (...args: unknown[]) => hoisted.captureMock(...args),
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: (...args: unknown[]) => hoisted.captureMock(...args),
 }));
 
 const mockEmbarque = { id: "emb-1", cliente_id: "cli-1" } as any;
@@ -132,8 +132,6 @@ describe("useDialogGenerarProformaController", () => {
       expect.objectContaining({ description: "Falta peso/volumen", action: expect.objectContaining({ label: "Ver detalles" }) }),
     );
     expect(onClose).not.toHaveBeenCalled();
-    // captureException se hace lazy; damos un microtick y verificamos
-    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).not.toHaveBeenCalled();
   });
 
@@ -152,11 +150,10 @@ describe("useDialogGenerarProformaController", () => {
       expect.objectContaining({ description: "PDF blew up", action: expect.objectContaining({ label: "Ver detalles" }) }),
     );
     expect(onClose).not.toHaveBeenCalled();
-    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ tags: expect.objectContaining({ feature: "ui_notify", op: "GENERAR_PROFORMA" }),
-        extra: expect.objectContaining({ embarqueId: "emb-1" }) }),
+      expect.objectContaining({ feature: "ui_notify", op: "GENERAR_PROFORMA" }),
+      expect.objectContaining({ embarqueId: "emb-1" }),
     );
     expect(hoisted.captureMock).toHaveBeenCalledTimes(1);
   });

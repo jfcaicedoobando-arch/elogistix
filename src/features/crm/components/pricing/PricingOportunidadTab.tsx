@@ -28,7 +28,7 @@ export function PricingOportunidadTab({ oportunidadId, clienteNombre, canEdit }:
         <p className="text-body-sm text-muted-foreground">Pide tarifas a Pricing sin salir de la oportunidad.</p>
         {canEdit && (
           <Button size="sm" onClick={() => setDialogo({ open: true, solicitud: null })}>
-            <Plus className="mr-1 h-4 w-4" /> Nueva solicitud
+            <Plus className="mr-1 size-4" /> Nueva solicitud
           </Button>
         )}
       </div>

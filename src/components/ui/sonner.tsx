@@ -1,10 +1,14 @@
 import { Toaster as SonnerToaster } from "sonner";
+import { toast as sonnerToast } from "sonner";
+import { useEffect } from "react";
 import { useTheme } from "@/lib/contexts/ThemeContext";
+import { subscribeErrorReportScope } from "@/lib/diagnostics/errorReportScope";
 import "./toast.css";
 
 /** Sonner handles lifecycle/animation; one scoped stylesheet owns the layout. */
 export function Toaster() {
   const { theme } = useTheme();
+  useEffect(() => subscribeErrorReportScope(() => { sonnerToast.dismiss(); }), []);
   return (
     <SonnerToaster
       theme={theme}

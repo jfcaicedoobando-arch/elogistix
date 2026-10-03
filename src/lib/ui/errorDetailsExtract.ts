@@ -99,6 +99,15 @@ function extractCause(err: unknown): Details["cause"] | undefined {
   return undefined;
 }
 
+function addValidationDetails(base: Details, zod: MaybeZodError): void {
+  base.validationErrors = mapValidationIssues(zod);
+  if (!base.message || base.message === "[Accesor omitido]") {
+    base.message = base.validationErrors.map((issue) =>
+      `${issue.path.join(".") || "Datos"}: ${issue.message}`).join("\n");
+  }
+  if (!base.name || base.name === "Error") base.name = "ZodError";
+}
+
 export function extractErrorDetails(err: unknown): Details {
   if (err == null) return {};
   if (typeof err === "string") return { message: err };
@@ -110,10 +119,7 @@ export function extractErrorDetails(err: unknown): Details {
   else return { message: String(err) };
 
   const zod = findZodError(err);
-  if (zod) {
-    base.validationErrors = mapValidationIssues(zod);
-    if (!base.name || base.name === "Error") base.name = "ZodError";
-  }
+  if (zod) addValidationDetails(base, zod);
   const cause = extractCause(normalized);
   if (cause) base.cause = cause;
   if (normalized) {
