@@ -67,7 +67,7 @@ DECLARE
     'can_admin_tenant',
     'can_view_financials',
     'puede_escribir_cotizaciones',
-    'rls_tenant_scope_ok',
+    -- rls_tenant_scope_ok usa org_scope(): ya no necesita excepción.
     -- ── B. Portal/token público: identidad por token firmado, no por org
     --    (mismo criterio que la whitelist anon de FIX-45).
     'portal_obtener_proforma_por_token',
