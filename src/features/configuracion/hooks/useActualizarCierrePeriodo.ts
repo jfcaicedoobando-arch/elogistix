@@ -31,8 +31,12 @@ export function useActualizarCierrePeriodo({ organizationId, motivo, onExito }: 
       notifySuccess(undefined, { title: "Cierre de periodo actualizado" });
       onExito();
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error) });
+    onError: (error: Error, nuevaFecha) => {
+      notifyError(undefined, {
+        title: "Error al guardar", description: getErrorMessage(error), error,
+        method: "actualizarCierrePeriodo",
+        context: { organizationId, fechaCierre: nuevaFecha || null },
+      });
     },
   });
 }

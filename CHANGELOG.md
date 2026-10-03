@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.16] - 2026-10-03
+
+- **fix(toasts · cierre contable)**: el reporte copiable conserva el error original y el contexto de fecha y organización, sin incluir el texto libre del motivo.
+- **fix(ci · Sonner)**: guard compatible con Windows y saltos de línea LF/CRLF, sin ampliar la lista de excepciones; regresiones para el parser y el reporte del cierre.
+
 ## [13.824.15] - 2026-10-02
 
 - **fix(toasts · diagnóstico)**: todos los errores y avisos permiten abrir y copiar JSON, incluidas validaciones, errores esperados y resultados parciales. Se conservan el requestId del backend, el error original, los detalles SAT y el contexto de la operación; las validaciones no se reportan a Sentry.
