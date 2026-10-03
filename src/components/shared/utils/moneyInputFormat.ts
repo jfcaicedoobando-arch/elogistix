@@ -53,8 +53,7 @@ export const sanitizeMoneyText = (raw: string, allowNegative = false): string =>
 
 /**
  * Al editar el texto formateado, sus comas existentes siguen siendo miles.
- * Sólo el tramo insertado puede aportar una coma decimal nueva. Los pegados
- * se normalizan como capturas nuevas mediante `sanitizeMoneyText`.
+ * Sólo el tramo insertado puede aportar una coma decimal nueva.
  */
 export const sanitizeMoneyEditText = (
   raw: string, anterior: string, allowNegative = false,
@@ -70,6 +69,31 @@ export const sanitizeMoneyEditText = (
   const insertado = raw.slice(inicio, raw.length - final);
   const despues = raw.slice(raw.length - final).replace(/,/g, "");
   return sanitizeMoneyText(antes + insertado + despues, allowNegative);
+};
+
+export interface MoneyTextSelection {
+  value: string;
+  start: number;
+  end: number;
+}
+
+/**
+ * Un pegado parcial conserva las agrupaciones del importe anterior. El texto
+ * insertado tiene su propia notación; reemplazar toda la selección equivale
+ * a capturar un importe nuevo. Sin una selección compatible no se infiere.
+ */
+export const sanitizeMoneyReplacementText = (
+  raw: string, selection?: MoneyTextSelection | null, allowNegative = false,
+): string => {
+  if (!selection) return sanitizeMoneyText(raw, allowNegative);
+  const antes = selection.value.slice(0, selection.start);
+  const despues = selection.value.slice(selection.end);
+  if (!raw.startsWith(antes) || !raw.endsWith(despues)
+    || raw.length < antes.length + despues.length) {
+    return sanitizeMoneyText(raw, allowNegative);
+  }
+  const insertado = sanitizeMoneyText(raw.slice(antes.length, raw.length - despues.length), allowNegative);
+  return sanitizeMoneyText(antes.replace(/,/g, "") + insertado + despues.replace(/,/g, ""), allowNegative);
 };
 
 /** Formatea una cadena limpia para mostrarla con miles, preservando lo tecleado. */

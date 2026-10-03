@@ -24,13 +24,30 @@ function sqlConcatenado(): string {
 
 describe("limpieza de timbrado pendiente", () => {
   it.each([
-    ["factura", `${FN}/facturapi-emitir/emitir.ts`, "facturapi_pendiente_id: null"],
+    ["factura", `${FN}/facturapi-emitir/persistencia.ts`, "facturapi_pendiente_id: null"],
     ["nota de crédito", `${FN}/facturapi-emitir-nota-credito/index.ts`, "facturapi_pendiente_id: null"],
     ["REP", `${FN}/facturapi-emitir-rep/persistir.ts`, "facturapi_rep_pendiente_id: null"],
   ])("la persistencia exitosa de %s limpia el intento pendiente", (_n, archivo, marca) => {
     const src = leer(archivo);
     expect(src).toContain(marca);
     expect(src).toContain(marca.replace("_id: null", "_at: null"));
+  });
+
+  it("la factura delega la limpieza en la persistencia Emitida protegida por CAS", () => {
+    const emitir = leer(`${FN}/facturapi-emitir/emitir.ts`);
+    expect(emitir).toMatch(/import\s*\{[^}]*\bpersistirFacturaTimbrada\b[^}]*\}\s*from\s*["']\.\/persistencia\.ts["']/);
+    expect(emitir).toMatch(/const persistError = await persistirFacturaTimbrada\(input, resultado, respaldo\);\s*if \(persistError\) return persistError;/);
+    const pendiente = emitir.indexOf("if (esTimbradoPendiente(invoice))");
+    expect(pendiente).toBeGreaterThan(-1);
+    expect(emitir.indexOf("await persistirFacturaTimbrada(input, resultado, respaldo)")).toBeGreaterThan(pendiente);
+
+    const persistencia = leer(`${FN}/facturapi-emitir/persistencia.ts`);
+    const actualizacion = persistencia.match(/\.from\("facturas"\)\s*\.update\(\{([\s\S]*?)\}\)\s*\.eq\("id", facturaId\)\s*\.eq\("facturapi_id", claim\.claimTag\)\s*\.select\("id"\)\s*\.maybeSingle\(\)/);
+    expect(actualizacion).not.toBeNull();
+    const patch = actualizacion?.[1] ?? "";
+    expect(patch).toContain('estado: "Emitida"');
+    expect(patch).toContain("facturapi_pendiente_id: null");
+    expect(patch).toContain("facturapi_pendiente_at: null");
   });
 
   it("la liberación de claim de la nota de crédito limpia el pendiente", () => {
