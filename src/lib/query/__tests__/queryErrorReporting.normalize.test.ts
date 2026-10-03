@@ -8,10 +8,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const sentryMock = vi.hoisted(() => ({
   captureException: vi.fn(),
   addBreadcrumb: vi.fn(),
+  isEnabled: () => true,
 }));
 
 vi.mock("@sentry/react", () => sentryMock);
-vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn() }));
+vi.mock("@/lib/observability/sentry/core", () => ({ initSentry: vi.fn(), isSentryReady: () => true }));
 
 import { reportQueryError } from "../queryErrorReporting";
 

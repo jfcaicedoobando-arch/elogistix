@@ -6,6 +6,8 @@ export const cxp = {
   factura: (id?: string | null) => ["cxp", "factura", id] as const,
   facturaEditRow: (id?: string | null) => ["cxp", "factura-edit-row", id] as const,
   pagos: (facturaId: string) => ["cxp", "pagos", facturaId] as const,
+  pagoLotePreflight: (ids: string[], organizationId?: string | null) =>
+    ["cxp", "pago-lote-preflight", organizationId ?? null, ids] as const,
   notasCredito: (facturaId: string) => ["cxp", "notas-credito", facturaId] as const,
   historial: (facturaId?: string | null) => ["cxp", "historial", facturaId ?? null] as const,
   /** Prefijo por fecha: `useCerrarFacturaSinPago` invalida con esta tupla. */

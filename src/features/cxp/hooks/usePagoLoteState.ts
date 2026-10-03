@@ -20,6 +20,8 @@ interface Args {
   proveedorOrigen: OrigenProveedor;
   moneda: string;
   facturas: FacturaLoteCandidata[];
+  preflightPendiente?: boolean;
+  preflightError?: string | null;
   onOpenChange: (o: boolean) => void;
   onDone: () => void;
 }
@@ -45,7 +47,7 @@ export function usePagoLoteState(a: Args) {
   const registrar = usePagoProveedorLote();
 
   const saldoTotal = useMemo(
-    () => round2(a.facturas.reduce((s, f) => s + Number(f.saldo || 0), 0)),
+    () => round2(a.facturas.reduce((s, f) => s + (f.estado_aprobacion === undefined || f.estado_aprobacion === "aprobada" ? Number(f.saldo || 0) : 0), 0)),
     [a.facturas],
   );
 
@@ -76,7 +78,7 @@ export function usePagoLoteState(a: Args) {
       inicializadoRef.current = false;
       return;
     }
-    if (inicializadoRef.current) return;
+    if (inicializadoRef.current || a.preflightPendiente) return;
     inicializadoRef.current = true;
     setFecha(todayLocalISO());
     setTotal(String(saldoTotal));
@@ -86,7 +88,7 @@ export function usePagoLoteState(a: Args) {
     setNotas("");
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
     setRequestId(crypto.randomUUID());
-  }, [a.open, a.facturas, a.proveedorOrigen, saldoTotal]);
+  }, [a.open, a.facturas, a.proveedorOrigen, a.preflightPendiente, saldoTotal]);
 
   const { tcDof, tcAplicable, tcBloqueado } = useTcLotePago(a.open, a.moneda, fecha);
 
@@ -102,9 +104,9 @@ export function usePagoLoteState(a: Args) {
     moneda: a.moneda,
     fecha,
   });
-  const error = tcBloqueado
+  const error = a.preflightError ?? (tcBloqueado
     ? `Sin tipo de cambio DOF ${a.moneda}/MXN para esta fecha: no se puede registrar el pago en lote.`
-    : errorLote;
+    : errorLote);
   const sinAsignar = round2(totalNum - totalRepartido);
 
 

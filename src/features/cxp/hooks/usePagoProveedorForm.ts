@@ -38,7 +38,7 @@ export function usePagoProveedorForm(
   const modo: "crear" | "editar" = pagoEditar ? "editar" : "crear";
 
   const {
-    fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
+    fecha, setFecha, monto, setMonto, setMontoManual, montoCapturado, moneda, setMoneda, tc, setTc,
     metodo, setMetodo, referencia, setReferencia, notas, setNotas,
     diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId, valoresIniciales,
   } = usePagoProveedorCampos(factura, open, today, pagoEditar);
@@ -73,13 +73,13 @@ export function usePagoProveedorForm(
 
   // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
   // recalcular el prefill del monto para saldar exactamente en MXN.
-  // En edición NO se reescribe el monto capturado por el usuario.
+  // En edición o después de captura manual se conserva el monto del usuario.
   const facturaId = factura?.id;
   const facturaSaldo = factura?.saldo;
   const facturaMoneda = factura?.moneda;
   usePrefillMontoPago({
     open, facturaId, facturaSaldo, facturaMoneda, moneda,
-    esUsdPagadoEnMxn, tcNum, pagoEditarId, setMonto,
+    esUsdPagadoEnMxn, tcNum, pagoEditarId, montoCapturado, setMonto,
   });
 
   // Monto expresado en la moneda de la factura (para validar contra saldo).
@@ -153,7 +153,7 @@ export function usePagoProveedorForm(
 
 
   return {
-    fecha, setFecha, monto, setMonto, moneda, setMoneda,
+    fecha, setFecha, monto, setMonto: setMontoManual, moneda, setMoneda,
     tc, setTc: setTcUi, metodo, setMetodo, referencia, setReferencia,
     notas, setNotas, diffMxn, setDiffMxn: setDiffUi,
     metodosDisponibles, montoNum, saldoRestante, saldoDisponible,

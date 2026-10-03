@@ -6,6 +6,7 @@
 import { logger } from "@/lib/observability/logger";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { APP_VERSION } from "@/constants/appVersion";
+import { loadInitializedSentry } from "@/lib/observability/sentry/runtime";
 
 export interface ErrorBoundarySnapshot {
   error: Error | null;
@@ -41,6 +42,7 @@ export function ensureEventId(
   snap: ErrorBoundarySnapshot,
   Sentry: typeof import("@sentry/react"),
 ): string | null {
+  if (!Sentry.isEnabled()) return null;
   if (snap.eventId) return snap.eventId;
   try {
     const id = Sentry.captureMessage(
@@ -57,7 +59,15 @@ export async function openReportFeedback(
   snap: ErrorBoundarySnapshot,
   onEventId: (id: string) => void,
 ): Promise<void> {
-  const Sentry = await import("@sentry/react");
+  const Sentry = await loadInitializedSentry();
+  if (!Sentry) {
+    notifyError(undefined, {
+      title: "El reporte a Sentry no está disponible",
+      description: "Usa «Copiar detalles» para compartir el diagnóstico con soporte.",
+      method: "ErrorBoundary.openReportFeedback",
+    });
+    return;
+  }
   const eventId = ensureEventId(snap, Sentry) ?? undefined;
   if (eventId && eventId !== snap.eventId) onEventId(eventId);
 

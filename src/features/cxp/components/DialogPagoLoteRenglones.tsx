@@ -26,13 +26,15 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
 
           {facturas.map((f, i) => {
             const monto = montoDe(f.factura_id);
+            const aprobada = f.estado_aprobacion === undefined || f.estado_aprobacion === "aprobada";
             const queda = Math.max(0, Math.round((f.saldo - monto) * 100) / 100);
             const liquidada = monto > 0 && queda <= 0.005;
             const parcial = monto > 0 && !liquidada;
             return (
               <TableRow key={f.factura_id} className={cn("border-t", i % 2 === 1 && "bg-muted/20")}>
                 <TableCell className="font-mono text-body-sm">
-                  {toTitleCase(f.folio_proveedor ?? "") || "—"}
+                  {toTitleCase(f.folio_proveedor ?? "") || "-"}
+                  {!aprobada && <Badge variant="warning" size="sm">Requiere aprobación</Badge>}
                 </TableCell>
                 <TableCell className="text-body-sm text-muted-foreground">
                   {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
@@ -45,6 +47,7 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
                     className="ml-auto h-9 w-full max-w-[150px] text-right"
                     value={monto === 0 ? null : monto}
                     currency={moneda}
+                    disabled={!aprobada}
                     aria-label={`Importe aplicado a la factura ${f.folio_proveedor ?? ""}`}
                     onChange={(n: number) => onMontoChange(f.factura_id, n)}
                   />

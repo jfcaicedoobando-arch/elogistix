@@ -59,7 +59,8 @@ export function useCuentaPagoSeleccionada<T extends CuentaLike>(args: {
 /**
  * Prefill del monto: al saldar en MXN una factura extranjera usa el TC;
  * si la moneda del pago coincide con la de la factura, usa el saldo tal cual.
- * En edición no se reescribe el monto capturado.
+ * Sólo sugiere el saldo mientras el usuario no haya capturado un monto.
+ * Cambiar TC, moneda o saldo no debe convertir un pago parcial en uno total.
  */
 export function usePrefillMontoPago(args: {
   open: boolean;
@@ -70,15 +71,16 @@ export function usePrefillMontoPago(args: {
   esUsdPagadoEnMxn: boolean;
   tcNum: number | null;
   pagoEditarId: string | null;
+  montoCapturado: boolean;
   setMonto: (v: string) => void;
 }) {
   const {
     open, facturaId, facturaSaldo, facturaMoneda, moneda,
-    esUsdPagadoEnMxn, tcNum, pagoEditarId, setMonto,
+    esUsdPagadoEnMxn, tcNum, pagoEditarId, montoCapturado, setMonto,
   } = args;
 
   useEffect(() => {
-    if (!open || facturaId == null || facturaSaldo == null || pagoEditarId) return;
+    if (!open || facturaId == null || facturaSaldo == null || pagoEditarId || montoCapturado) return;
     if (esUsdPagadoEnMxn && tcNum) {
       // EC-12: redondeo hacia ARRIBA al centavo. `toFixed` (al más cercano)
       // podía dejar un residuo de ≤ $0.01 en la moneda de la factura que
@@ -91,6 +93,6 @@ export function usePrefillMontoPago(args: {
     }
   }, [
     esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open,
-    pagoEditarId, setMonto,
+    pagoEditarId, montoCapturado, setMonto,
   ]);
 }

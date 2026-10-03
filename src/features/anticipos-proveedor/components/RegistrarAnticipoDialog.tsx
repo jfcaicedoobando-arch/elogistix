@@ -4,8 +4,9 @@ import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { HandCoins } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { useRegistrarAnticipoDefaults } from "@/features/anticipos-proveedor/hooks/useRegistrarAnticipoDefaults";
 import { equivalenteMxnAnticipo } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
@@ -34,7 +35,7 @@ export function RegistrarAnticipoDialog({
   const requestId = usePayloadRequestId();
   const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
 
-  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
+  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors, isDirty } } =
     useForm<RegistrarAnticipoFormInput, unknown, RegistrarAnticipoFormValues>({
       resolver: zodResolver(registrarAnticipoSchema),
       defaultValues: {
@@ -47,6 +48,8 @@ export function RegistrarAnticipoDialog({
         embarqueId: null, embarqueExpediente: null,
       },
     });
+
+  const { guardDialog } = useDirtyGuard(open && isDirty && !registrar.isPending, true);
 
   const moneda = watch("moneda");
   const fechaAnticipo = watch("fechaAnticipo");
@@ -139,15 +142,17 @@ export function RegistrarAnticipoDialog({
   );
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={registrar.isPending}>Cancelar</Button>
-      <Button onClick={onSubmit} loading={registrar.isPending}>
-        {registrar.isPending ? "Guardando…" : "Registrar anticipo"}
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => handleOpenChange(false)}
+      onConfirm={onSubmit}
+      loading={registrar.isPending}
+      confirmLabel={registrar.isPending ? "Guardando…" : "Registrar anticipo"}
+    />
   );
 
   return (
+    <>
+    {guardDialog}
     <FormDialogShell
       open={open}
       onOpenChange={handleOpenChange}
@@ -160,6 +165,8 @@ export function RegistrarAnticipoDialog({
       }
       size="lg"
       footer={footer}
+      isDirty={isDirty}
+      busy={registrar.isPending}
     >
       <RegistrarAnticipoFields
         control={control}
@@ -179,5 +186,6 @@ export function RegistrarAnticipoDialog({
         onEmbarqueChange={handleEmbarqueChange}
       />
     </FormDialogShell>
+    </>
   );
 }

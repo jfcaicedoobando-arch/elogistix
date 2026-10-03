@@ -2,7 +2,7 @@
  * Estado crudo del formulario de pago a proveedor (campos + precarga).
  * Extraído v13.395.0 para mantener la complejidad del hook principal baja.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrigenProveedor = Database["public"]["Enums"]["origen_proveedor"] | null;
@@ -31,6 +31,11 @@ export function usePagoProveedorCampos(
 ) {
   const [fecha, setFecha] = useState(hoy);
   const [monto, setMonto] = useState("");
+  const [montoCapturado, setMontoCapturado] = useState(false);
+  const setMontoManual = useCallback((valor: string) => {
+    setMontoCapturado(true);
+    setMonto(valor);
+  }, []);
   const [moneda, setMoneda] = useState<Moneda>("MXN");
   const [tc, setTc] = useState("");
   const [metodo, setMetodo] = useState<string>("Transferencia");
@@ -62,10 +67,12 @@ export function usePagoProveedorCampos(
   useEffect(() => {
     if (!factura || !open || !initKey) {
       initializedForRef.current = null;
+      setMontoCapturado(false);
       return;
     }
     if (initializedForRef.current === initKey) return;
     initializedForRef.current = initKey;
+    setMontoCapturado(false);
     const pago = pagoEditarRef.current;
     const v = pago
       ? valoresInicialesEdicion(pago)
@@ -83,7 +90,7 @@ export function usePagoProveedorCampos(
   }, [factura, open, hoy, pagoEditarId, initKey]);
 
   return {
-    fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
+    fecha, setFecha, monto, setMonto, setMontoManual, montoCapturado, moneda, setMoneda, tc, setTc,
     metodo, setMetodo, referencia, setReferencia, notas, setNotas,
     diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId, valoresIniciales,
   };

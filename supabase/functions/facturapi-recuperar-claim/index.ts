@@ -111,6 +111,7 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
   if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverFactura({
       supabase, factura, match: busqueda.invoice, claimTag, user, ambiente: resolved.data.ambiente,
+      apiKey: resolved.data.apiKey,
     });
   }
   // P0-A.5: con un intento pendiente registrado jamás se libera el claim.

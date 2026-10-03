@@ -20,6 +20,7 @@ export function TabProyeccion() {
   const c = useTabProyeccionController();
   const navigate = useNavigate();
   const k = c.kpis;
+  const filtrado = c.filtroCliente !== "todos" || c.filtroOperador !== "todos" || c.filtroEstado !== "todos";
 
   return (
     <div className="space-y-4">
@@ -65,7 +66,8 @@ export function TabProyeccion() {
           <div className="flex-1" />
 
           <div className="text-body-sm text-muted-foreground hidden md:block">
-            {c.kpisGlobales.totalExpedientes} expedientes con ETA en {c.mesActual.label}
+            {filtrado ? `${k.totalExpedientes} de ${c.kpisGlobales.totalExpedientes}` : c.kpisGlobales.totalExpedientes} expedientes con ETA en {c.mesActual.label}
+            {filtrado ? " (filtros aplicados)" : ""}
           </div>
 
           <Button variant="outline" onClick={c.exportarCsv} disabled={c.grupos.length === 0}>
@@ -83,7 +85,7 @@ export function TabProyeccion() {
       )}
 
       {/* Bloque "Cierre [Mes Año]" */}
-      <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} />
+      <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} filtrado={filtrado} />
 
       {/* Nota de moneda */}
       <p className="text-body-sm text-muted-foreground flex items-center gap-1.5 px-1">

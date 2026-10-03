@@ -15,6 +15,12 @@ vi.mock('@/features/comisiones/services', () => ({
   registrarPagoLiquidacion: mockRegistrar,
   fetchVendedorasConfig: mockFetchVendedoras,
 }));
+vi.mock('@/lib/contexts/AuthContext', () => ({
+  useAuth: () => ({ effectiveRole: 'contador' }),
+}));
+vi.mock('@/lib/contexts/OrganizationContext', () => ({
+  useOrganization: () => ({ organizationId: 'org-prueba' }),
+}));
 
 import { useLiquidaciones, useGenerarLiquidacion, useRegistrarPagoLiquidacion } from '../useLiquidaciones';
 import { useVendedorasConfig } from '../useVendedoras';

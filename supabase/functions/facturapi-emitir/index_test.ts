@@ -11,6 +11,7 @@ const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.ur
 // v13.303.3: la lógica de load/emit se extrajo a `emitir.ts`. El handler
 // (`index.ts`) sólo orquesta; el SDK real vive en `emitir.ts`.
 const emitirSource = await Deno.readTextFile(new URL("./emitir.ts", import.meta.url));
+const crearSource = await Deno.readTextFile(new URL("./crear.ts", import.meta.url));
 
 Deno.test("facturapi-emitir: rechaza método != POST (405)", () => {
   // GET con body abierto sería un vector de cache poisoning.
@@ -65,8 +66,9 @@ Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → em
   if (loadIdx <= 0 || rolIdx <= loadIdx) {
     throw new Error(`Orden inválido en prepararEmision: load=${loadIdx} rol=${rolIdx}`);
   }
-  // Y la llamada real al SDK debe vivir sólo en emitir.ts (nunca inline en index).
-  assertStringIncludes(emitirSource, "facturapi.invoices.create");
+  // El adaptador de emisión delega en crear.ts; el handler no llama al SDK.
+  assertStringIncludes(emitirSource, "createInvoiceInFacturapi(input, payload)");
+  assertStringIncludes(crearSource, "facturapi.invoices.create");
 });
 
 Deno.test("facturapi-emitir: wrapped en Sentry", () => {

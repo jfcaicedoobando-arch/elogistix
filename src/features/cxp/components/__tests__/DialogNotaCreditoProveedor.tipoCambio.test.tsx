@@ -71,6 +71,24 @@ describe("Preview y payload de la NC usan el mismo TC", () => {
     await waitFor(() => expect(guardar).toHaveBeenCalledWith(expect.objectContaining({ tipo_cambio: 18.1903, monto: 1, moneda: "MXN" })));
   });
 
+  it("borrar el TC manual y salir del campo mantiene vacío y vuelve al DOF antes de registrar", async () => {
+    consultar.mockResolvedValue({ usdMxn: 18.1903, eurMxn: null, fecha: "2026-10-02", exacto: false });
+    abrir();
+    await elegirMxn();
+    const campo = screen.getByLabelText(/Tipo de cambio/);
+    fireEvent.focus(campo);
+    fireEvent.change(campo, { target: { value: "0.5" } });
+    expect(screen.getByText(/Equivale a/)).toHaveTextContent("TC 0.5 MXN por 1 USD (capturado)");
+    fireEvent.change(campo, { target: { value: "" } });
+    fireEvent.blur(campo);
+    expect(campo).toHaveDisplayValue("");
+    await waitFor(() => expect(screen.getByText(/Equivale a/)).toHaveTextContent("TC 18.1903 MXN por 1 USD (DOF publicado el 2026-10-02)"));
+    expect(screen.getByText(/Equivale a/)).toHaveTextContent("0.06");
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    await waitFor(() => expect(guardar).toHaveBeenCalledWith(expect.objectContaining({ tipo_cambio: 18.1903, monto: 1, moneda: "MXN" })));
+  });
+
   it.each(["0", "-0.5"])("TC %s impide enviar y no promete aplicar DOF", async (tc) => {
     abrir();
     await elegirMxn();

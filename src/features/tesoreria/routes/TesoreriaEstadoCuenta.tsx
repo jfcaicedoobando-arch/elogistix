@@ -75,7 +75,7 @@ export default function TesoreriaEstadoCuenta() {
         title="Estado de cuenta"
         description="Historial de entradas y salidas con saldo corrido, como el extracto del banco"
         actions={
-          estado ? <EstadoCuentaExportButtons estado={estado} movimientos={visibles} /> : undefined
+          estado ? <EstadoCuentaExportButtons estado={estado} movimientos={visibles} filtros={{ texto, tipo }} /> : undefined
         }
       />
 

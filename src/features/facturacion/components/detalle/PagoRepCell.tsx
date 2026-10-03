@@ -33,6 +33,10 @@ export function PagoRepCell({
   const timbrar = useTimbrarRep(facturaId);
   const consultar = useConsultarRep(facturaId);
 
+  if (estadoRep === "NoAplica") {
+    return <span className="text-body text-muted-foreground">REP no aplica</span>;
+  }
+
   if (enTramite && !repCancelado) {
     return (
       <div className="flex items-center gap-1.5">

@@ -22,6 +22,7 @@ import {
   scrubBreadcrumb,
   DENY_URLS,
   IGNORE_ERRORS,
+  HTTP_FAILURE_TARGETS,
   TRACE_PROPAGATION_TARGETS,
 } from "./initOptions";
 
@@ -112,15 +113,11 @@ export function initSentry(): void {
       // enumerables (útil para `PostgrestError` que trae `code/hint/details`
       // como campos, no como parte del stack). Depth 5 alineado a normalizeDepth.
       Sentry.extraErrorDataIntegration({ depth: 5, captureErrorCause: true }),
-      // F2 (13.65.0): captura automática de respuestas 5xx en fetch/XHR.
-      // Empezamos en 500-599 para no inflar la cuota.
+      // Query/UI owns REST/Edge errors after retries; automatic capture remains
+      // for other HTTP failures. Breadcrumbs/tracing still cover all requests.
       Sentry.httpClientIntegration({
         failedRequestStatusCodes: [[500, 599]],
-        failedRequestTargets: [
-          /\.supabase\.co\//,
-          /librecarga\.com/,
-          /^\/(api|functions)\//,
-        ],
+        failedRequestTargets: HTTP_FAILURE_TARGETS,
       }),
       Sentry.replayIntegration({
         maskAllText: true,
@@ -132,11 +129,11 @@ export function initSentry(): void {
       Sentry.feedbackIntegration(FEEDBACK_INTEGRATION_OPTIONS),
     ],
   });
-  initialized = Boolean(Sentry.getClient());
+  initialized = Sentry.isEnabled();
   if (initialized) markSentryReady();
 }
 
-/** True only when initialization successfully created a client. */
+/** A client object/event ID alone does not prove transport is enabled. */
 export function isSentryReady(): boolean {
-  return initialized;
+  return initialized && Sentry.isEnabled();
 }

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import { errorFechaLote } from "@/features/facturacion/services/cobroLoteValidaciones";
+import { verificarAprobacionLote } from "./pagoProveedorLotePreflight";
 
 
 export interface FacturaLoteCandidata {
@@ -20,6 +21,7 @@ export interface FacturaLoteCandidata {
   /** Desempata el FIFO cuando dos facturas vencen el mismo día. */
   fecha_emision?: string | null;
   saldo: number;
+  estado_aprobacion?: string | null;
 }
 
 export interface RenglonLote {
@@ -65,6 +67,10 @@ export function repartirFifo(
   const renglones: RenglonLote[] = [];
 
   for (const f of orden) {
+    if (f.estado_aprobacion !== undefined && f.estado_aprobacion !== "aprobada") {
+      renglones.push({ factura_id: f.factura_id, monto: 0 });
+      continue;
+    }
     if (restante <= 0) {
       renglones.push({ factura_id: f.factura_id, monto: 0 });
       continue;
@@ -100,6 +106,9 @@ function errorRenglonesLote(
     }
     vistos.add(r.factura_id);
     const f = facturas.find((x) => x.factura_id === r.factura_id);
+    if (!f || (f.estado_aprobacion !== undefined && f.estado_aprobacion !== "aprobada")) {
+      return "Todas las facturas del reparto deben estar aprobadas antes de registrar pagos.";
+    }
     if (f && r.monto > round2(f.saldo) + 0.005) {
       return `El importe asignado a la factura ${f.folio_proveedor ?? ""} excede su saldo.`;
     }
@@ -168,6 +177,7 @@ export function validarLote(
 
 /** Registra el lote de forma atómica (N pagos + 1 movimiento bancario). */
 export async function registrarPagoProveedorLote(input: RegistrarPagoLoteInput): Promise<string> {
+  await verificarAprobacionLote(input.renglones.filter((r) => r.monto > 0).map((r) => r.factura_id), input.proveedor_id, input.moneda);
   const payload = {
     ...input,
     // Ola 11 · RNF-05: la RPC valida que el reparto cuadre con la transferencia.
