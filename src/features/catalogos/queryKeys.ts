@@ -12,6 +12,7 @@ export const puertos = {
 
 export const exchangeRates = {
   all: ['exchange-rates'] as const,
+  dofFecha: (fecha: string) => ['exchange-rates', 'dof-fecha', fecha] as const,
 } as const;
 
 export const navieras = {

@@ -18,6 +18,10 @@ const FALLBACK = "No se pudo registrar el pago. Inténtalo de nuevo.";
 type Regla = (e: ErrorLike) => string | null;
 
 const REGLAS: Regla[] = [
+  (e) => e.message?.includes("LC_PAGO_ANTICIPO_NO_EDITABLE")
+    ? "Revierte la aplicación y vuelve a aplicar el anticipo. Su cargo original se conserva." : null,
+  (e) => e.message && /LC_ANTICIPO_(APLICACION|MOVIMIENTO)_INCONSISTENTE/.test(e.message)
+    ? "Revisa la aplicación y el movimiento original del anticipo antes de continuar." : null,
   (e) =>
     e.message && e.message.includes("LC_LOTE_FECHA_FUTURA")
       ? "La fecha del pago no puede ser futura."

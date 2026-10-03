@@ -21,6 +21,7 @@ interface Props {
 const ETIQUETA: Record<IncidenciaConciliacion["tipo"], string> = {
   sin_movimiento: "Sin movimiento en banco",
   descuadre: "Importe distinto al banco",
+  anticipo_inconsistente: "Aplicación de anticipo por revisar",
 };
 
 export function ConciliacionIncidencias({ incidencias, monedaFactura }: Props) {
@@ -53,6 +54,9 @@ export function ConciliacionIncidencias({ incidencias, monedaFactura }: Props) {
                 {formatCurrency(i.montoEsperadoMxn, "MXN")}
               </span>
             )}
+            {i.tipo === "anticipo_inconsistente" && <span className="text-body-sm text-muted-foreground">
+              {i.motivo || "Revisa la aplicación y el movimiento original del anticipo."} Conserva el cargo original; esta aplicación no genera otro cargo bancario.
+            </span>}
             {i.tipo === "sin_movimiento" && (
               <Button
                 variant="outline"
