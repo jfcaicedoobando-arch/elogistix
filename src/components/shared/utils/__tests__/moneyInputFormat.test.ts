@@ -5,6 +5,7 @@ import {
   normalizeMoneyText,
   parseMoneyText,
   posicionCursor,
+  sanitizeMoneyReplacementText,
   sanitizeMoneyText,
   valorANumeroTexto,
 } from "../moneyInputFormat";
@@ -56,6 +57,29 @@ describe("sanitizeMoneyText", () => {
     expect(sanitizeMoneyText("-50")).toBe("50");
     expect(sanitizeMoneyText("-50", true)).toBe("-50");
     expect(sanitizeMoneyText("-1234.567", true)).toBe("-1234.56");
+  });
+});
+
+describe("sanitizeMoneyReplacementText", () => {
+  it.each([
+    ["1,5000", "1,000", 2, 2, "15000"],
+    ["1500", "1,000", 1, 3, "1500"],
+    ["1,234,56", "1,000", 2, 5, "1234.56"],
+    ["12,345,000", "1,000", 0, 1, "12345000"],
+    ["1234.567", "1,000", 0, 5, "1234.56"],
+    ["1234,56", "1,000", 0, 5, "1234.56"],
+    ["", "1,000", 0, 5, ""],
+  ])("conserva el importe de %s tras reemplazar la selección %s (%s..%s)", (raw, value, start, end, esperado) => {
+    expect(sanitizeMoneyReplacementText(raw, { value, start, end })).toBe(esperado);
+  });
+
+  it("no atribuye comas a un texto anterior incompatible", () => {
+    expect(sanitizeMoneyReplacementText("1234,56", { value: "1,000", start: 2, end: 2 })).toBe("1234.56");
+  });
+
+  it("respeta negativos permitidos al pegar en medio", () => {
+    expect(sanitizeMoneyReplacementText("-1,5000.25", { value: "-1,000.25", start: 3, end: 3 }, true))
+      .toBe("-15000.25");
   });
 });
 

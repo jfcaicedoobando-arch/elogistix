@@ -3,15 +3,81 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { MoneyInput } from "../MoneyInput";
 
-function Harness({ inicial = 0 }: { inicial?: number }) {
+function Harness({ inicial = 0, allowNegative = false }: { inicial?: number; allowNegative?: boolean }) {
   const [monto, setMonto] = useState(inicial);
   return <>
-    <MoneyInput aria-label="Importe" value={monto} onChange={setMonto} />
+    <MoneyInput aria-label="Importe" value={monto} onChange={setMonto} allowNegative={allowNegative} />
     <output aria-label="Monto capturado">{monto}</output>
   </>;
 }
 
 describe("MoneyInput - edición de separadores automáticos", () => {
+  it.each(["insertFromPaste", "insertText", ""])(
+    "conserva los miles al pegar un dígito junto a una coma existente (%s)",
+    (inputType) => {
+      render(<Harness inicial={1000} />);
+      const input = screen.getByLabelText("Importe") as HTMLInputElement;
+      input.setSelectionRange(2, 2);
+      fireEvent.paste(input, { clipboardData: { getData: () => "5" } });
+      fireEvent.input(input, { target: { value: "1,5000", selectionStart: 3 }, inputType });
+      expect(input).toHaveValue("15,000");
+      expect(screen.getByLabelText("Monto capturado")).toHaveTextContent("15000");
+      fireEvent.blur(input);
+      expect(input).toHaveValue("15,000.00");
+    },
+  );
+
+  it.each([
+    [1, 3, "5", "1500", 1500],
+    [2, 5, "234,56", "1,234,56", 1234.56],
+    [0, 1, "12,345", "12,345,000", 12345000],
+  ])("pega sobre una selección parcial %s..%s preservando el resto del importe", (inicio, final, pegado, raw, esperado) => {
+    render(<Harness inicial={1000} />);
+    const input = screen.getByLabelText("Importe") as HTMLInputElement;
+    input.setSelectionRange(inicio, final);
+    fireEvent.paste(input, { clipboardData: { getData: () => pegado } });
+    fireEvent.input(input, { target: { value: raw }, inputType: "insertFromPaste" });
+    expect(screen.getByLabelText("Monto capturado")).toHaveTextContent(String(esperado));
+  });
+
+  it.each(["insertFromPaste", "insertFromDrop", "insertReplacementText"])(
+    "usa la selección previa para %s aunque no llegue clipboardData",
+    (inputType) => {
+      render(<Harness inicial={1000} />);
+      const input = screen.getByLabelText("Importe") as HTMLInputElement;
+      input.focus();
+      input.setSelectionRange(2, 2);
+      fireEvent.select(input);
+      fireEvent.input(input, { target: { value: "1,5000" }, inputType });
+      expect(input).toHaveValue("15,000");
+      expect(screen.getByLabelText("Monto capturado")).toHaveTextContent("15000");
+    },
+  );
+
+  it("conserva el signo y la parte decimal al pegar dentro de un importe negativo", () => {
+    render(<Harness inicial={-1000.25} allowNegative />);
+    const input = screen.getByLabelText("Importe") as HTMLInputElement;
+    input.setSelectionRange(3, 3);
+    fireEvent.paste(input, { clipboardData: { getData: () => "5" } });
+    fireEvent.input(input, { target: { value: "-1,5000.25" }, inputType: "insertFromPaste" });
+    expect(input).toHaveValue("-15,000.25");
+    expect(screen.getByLabelText("Monto capturado")).toHaveTextContent("-15000.25");
+  });
+
+  it.each(["1234.567", "1234,56", "1,234,567"])(
+    "interpreta %s como importe nuevo al reemplazar toda la selección",
+    (pegado) => {
+      render(<Harness inicial={1000} />);
+      const input = screen.getByLabelText("Importe") as HTMLInputElement;
+      input.setSelectionRange(0, input.value.length);
+      fireEvent.paste(input, { clipboardData: { getData: () => pegado } });
+      fireEvent.input(input, { target: { value: pegado }, inputType: "insertText" });
+      expect(screen.getByLabelText("Monto capturado")).toHaveTextContent(
+        pegado === "1,234,567" ? "1234567" : "1234.56",
+      );
+    },
+  );
+
   it.each([
     ["12345", "12,345.00"],
     ["123456", "123,456.00"],
