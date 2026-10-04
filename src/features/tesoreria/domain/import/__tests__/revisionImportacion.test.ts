@@ -28,6 +28,21 @@ describe("Revisión sin mutaciones del estado de cuenta", () => {
     expect(moverDiaImportacion("2026-10-01", -3)).toBe("2026-09-28");
     expect(clasificarRevisionImportacion([fila()], new Set(), [espejo({ fecha: "2026-09-30" })]).vinculables).toBe(1);
   });
+  it.each([
+    ["2026-03-10", "2026-03-07", "2026-03-06"],
+    ["2026-11-03", "2026-10-31", "2026-10-30"],
+    ["2028-03-02", "2028-02-28", "2028-02-27"],
+    ["2027-01-02", "2026-12-30", "2026-12-29"],
+  ])("la ventana civil incluye tres días y excluye cuatro alrededor de %s", (fecha, limite, fuera) => {
+    const movimiento = { ...fila(), fecha };
+    expect(clasificarRevisionImportacion([movimiento], new Set(), [espejo({ fecha: limite })]).vinculables).toBe(1);
+    expect(clasificarRevisionImportacion([movimiento], new Set(), [espejo({ fecha: fuera })]).vinculables).toBe(0);
+    expect(moverDiaImportacion(fecha, -3)).toBe(limite);
+    expect(moverDiaImportacion(limite, 3)).toBe(fecha);
+  });
+  it("una fecha ausente bloquea la preparación del rango en lugar de producir un día inválido", () => {
+    expect(() => moverDiaImportacion("", -3)).toThrow("fecha del movimiento");
+  });
   it("la huella de revisión cambia si el mismo candidato cambia de pago o fecha", () => {
     const firma = firmaRevisionImportacion(clasificarRevisionImportacion([fila()], new Set(), [espejo()]));
     expect(firmaRevisionImportacion(clasificarRevisionImportacion([fila()], new Set(), [espejo({ pago_factura_id: "p2" })]))).not.toBe(firma);

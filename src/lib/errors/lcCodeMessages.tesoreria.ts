@@ -94,6 +94,10 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
 
 
   // ── Estado de cuenta bancario ──────────────────────────────────────────
+  LC_IMPORTACION_REVISION_CAMBIO:
+    "Los datos bancarios cambiaron desde la revisión. Cancela y carga el archivo de nuevo para revisar las coincidencias antes de confirmar.",
+  LC_IMPORTACION_REVISION_INVALIDA:
+    "No se pudo validar la revisión del archivo. Cancela y vuelve a cargarlo antes de confirmar la importación.",
   LC_CUENTA_NO_ENCONTRADA: "La cuenta bancaria no existe o fue eliminada.",
   LC_ESTADO_CUENTA_PARAMS:
     "Faltan datos para generar el estado de cuenta (cuenta y rango de fechas).",

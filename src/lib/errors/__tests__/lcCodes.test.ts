@@ -7,6 +7,10 @@ describe("lcCodes", () => {
     expect(translateLcCode("PGRST: LC_CXP_DESCUADRE detalle")).toMatch(/no suman el subtotal/);
     expect(translateLcCode("LC_NO_EXISTE_XYZ")).toBeNull();
   });
+  it("una revisión bancaria cambiada o inválida indica cargar el archivo antes de confirmar", () => {
+    expect(translateLcCode("LC_IMPORTACION_REVISION_CAMBIO")).toMatch(/datos bancarios cambiaron.*carga el archivo/i);
+    expect(translateLcCode("LC_IMPORTACION_REVISION_INVALIDA")).toMatch(/validar la revisión.*vuelve a cargarlo/i);
+  });
 
   it("stripLcCode limpia tokens LC_*", () => {
     expect(stripLcCode("LC_FOO_BAR: mensaje humano")).toBe("mensaje humano");

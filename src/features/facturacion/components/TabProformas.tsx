@@ -1,14 +1,12 @@
-import { Download, Receipt, X } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController, type FiltroEstadoProforma } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
 import ProformasFiltros from "./ProformasFiltros";
-import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
@@ -18,8 +16,8 @@ import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
 import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
-import { avisoFusionSeleccion, puedeFusionarSeleccion } from "@/features/facturacion/domain/avisoFusionProformas";
 import { useProformasListadoTable } from "@/features/facturacion/hooks/useProformasListadoTable";
+import { ProformasFusionToolbar } from "./ProformasFusionToolbar";
 
 export function TabProformas({ isInRange, estadoInicial }: {
   isInRange?: (fecha: string | null | undefined) => boolean;
@@ -27,7 +25,6 @@ export function TabProformas({ isInRange, estadoInicial }: {
 }) {
   const c = useTabProformasController({ isInRange, estadoInicial });
   const { canEmitirFactura } = usePermissions();
-  const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
   // v13.823.278 — quien no puede emitir facturas (vendedor, gerente comercial)
   // ya no ve la casilla de selección: antes podía seleccionar y quedaba con el
@@ -50,15 +47,6 @@ export function TabProformas({ isInRange, estadoInicial }: {
   const listado = useProformasListadoTable({
     data: c.filtered, columns, page: c.page, pageSize: c.pageSize, onPageChange: c.setPage,
   });
-
-  const seleccionados = canEmitirFactura ? c.selectedProformas.length : 0;
-  // C25 (v13.823.380) — además del mismo cliente, la fusión exige proformas del
-  // mismo tipo (consolidada vs individual) y con el mismo plazo de crédito.
-  const avisoFusion = seleccionados > 0 ? avisoFusionSeleccion(c.fusionInfo) : null;
-  const puedeFusionar = puedeFusionarSeleccion(seleccionados, c.fusionInfo);
-
-
-
 
   return (
     <CargaGuard
@@ -119,44 +107,10 @@ export function TabProformas({ isInRange, estadoInicial }: {
       </Card>
 
 
-      {seleccionados > 0 && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="p-3 flex flex-wrap items-center gap-3">
-            <div className="text-body flex-1 min-w-[240px]">
-              <strong>{seleccionados}</strong> proforma{seleccionados === 1 ? "" : "s"} seleccionada{seleccionados === 1 ? "" : "s"}
-              {c.fusionInfo.clienteNombre && <> · {c.fusionInfo.clienteNombre}</>}
-            </div>
-            {avisoFusion && (
-              <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-body-sm">{avisoFusion}</AlertDescription>
-              </Alert>
-            )}
-
-
-            <Button variant="ghost" size="sm" onClick={c.clearSelected}>
-              <X className="h-4 w-4 mr-1" /> Limpiar
-            </Button>
-            <Button
-              size="sm"
-              disabled={!puedeFusionar || convirtiendo}
-              loading={convirtiendo}
-              onClick={() => {
-                if (!c.fusionInfo.organizationId) return;
-                convertir(
-                  {
-                    proformaIds: c.selectedProformas.map((p) => p.id),
-                    organizationId: c.fusionInfo.organizationId,
-                    diasCredito: c.fusionInfo.diasCredito,
-                  },
-                  { onSuccess: () => c.clearSelected() },
-                );
-              }}
-            >
-              {!convirtiendo && <Receipt className="h-4 w-4 mr-1" />}
-              {seleccionados === 1 ? "Convertir a factura" : `Fusionar ${seleccionados} en una factura`}
-            </Button>
-          </CardContent>
-        </Card>
+      {canEmitirFactura && c.selectedProformas.length > 0 && (
+        <ProformasFusionToolbar selection={{
+          selectedProformas: c.selectedProformas, fusionInfo: c.fusionInfo, clearSelected: c.clearSelected,
+        }} />
       )}
 
       <Card>

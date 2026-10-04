@@ -1,5 +1,6 @@
 import type { MovimientoParseado } from "./bbva";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { addDaysIso, diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface EspejoImportacion {
   id: string;
@@ -28,9 +29,11 @@ export interface ResumenRevisionImportacion {
   hasta: string;
 }
 
-export const diaCivilImportacion = (fecha: string): number => Date.parse(`${fecha}T00:00:00Z`) / 86_400_000;
-export const moverDiaImportacion = (fecha: string, dias: number): string =>
-  new Date((diaCivilImportacion(fecha) + dias) * 86_400_000).toISOString().slice(0, 10);
+export function moverDiaImportacion(fecha: string, dias: number): string {
+  const movida = addDaysIso(fecha, dias);
+  if (!movida) throw new Error("La fecha del movimiento bancario no es válida para revisar el archivo.");
+  return movida;
+}
 
 /** Simula el consumo secuencial de espejos del canon SQL, sin guardar nada. */
 export function clasificarRevisionImportacion(
@@ -43,7 +46,7 @@ export function clasificarRevisionImportacion(
     hashesVistos.add(movimiento.hash_dedupe);
     const matches = espejos.filter((e) => !consumidos.has(e.id) && e.pago_factura_id && e.hash_dedupe.startsWith("cobro-")
       && roundMoney(e.cargo) === roundMoney(movimiento.cargo) && roundMoney(e.abono) === roundMoney(movimiento.abono)
-      && Math.abs(diaCivilImportacion(e.fecha) - diaCivilImportacion(movimiento.fecha)) <= 3);
+      && Math.abs(diffDiasCalendario(e.fecha, movimiento.fecha)) <= 3);
     if (matches.length === 1) {
       consumidos.add(matches[0].id);
       return { movimiento, estado: "Vinculable", espejo: matches[0], coincidencias: 1 };

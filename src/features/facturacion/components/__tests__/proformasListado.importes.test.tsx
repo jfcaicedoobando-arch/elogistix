@@ -5,7 +5,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { buildProformasColumns } from "../proformasColumns";
 import { ProformaMobileCard } from "../ProformaMobileCard";
 import { proformaFixture } from "./fixtures/proforma";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain";
 
 const totals = calcularTotalesProforma([
   { id: "c1", cantidad: 1, precio_unitario: 1533.33, moneda: "MXN", aplica_iva: true },

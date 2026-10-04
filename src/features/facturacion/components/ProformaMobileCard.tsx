@@ -8,7 +8,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoUnificado, etiquetaEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
-import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
+import { totalesListadoProforma } from "@/features/proformas/domain";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 export function ProformaMobileCard({ proforma }: { proforma: ProformaConFactura }) {

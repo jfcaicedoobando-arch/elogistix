@@ -10,7 +10,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useProformas, type ProformaConFactura, type ProformaRow } from "@/features/embarques/hooks/useProformas";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
-import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
+import { totalesListadoProforma } from "@/features/proformas/domain";
 
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;

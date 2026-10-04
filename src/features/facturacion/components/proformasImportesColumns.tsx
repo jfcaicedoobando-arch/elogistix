@@ -3,7 +3,7 @@ import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatNumber } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
-import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
+import { totalesListadoProforma } from "@/features/proformas/domain";
 import { Hint } from "@/components/shared/Hint";
 
 /** Cada moneda se ordena en su propia columna, sin sumar nominales. */
