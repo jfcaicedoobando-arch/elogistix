@@ -50,9 +50,10 @@ export default function ComprasConciliacion() {
         <KpiCard label="Sin facturar" value={kpis.sinFacturar} icon={AlertTriangle} variant="destructive" />
         <KpiCard label="Parciales" value={kpis.parcial} icon={Clock} variant="warning" />
         <KpiCard label="Conciliadas" value={kpis.completa} icon={CheckCircle2} variant="success" />
-        <KpiCard label="Pendiente MXN" value={formatCurrency(kpis.pendienteMxn, "MXN")} />
-        <KpiCard label="Pendiente USD" value={formatCurrency(kpis.pendienteUsd, "USD")} />
-        <KpiCard label="Pendiente EUR" value={formatCurrency(kpis.pendienteEur, "EUR")} />
+        <KpiCard label="Pendiente de TC" value={kpis.pendienteTc} icon={AlertTriangle} variant="warning" />
+        <KpiCard label="Por facturar MXN (comparable)" value={formatCurrency(kpis.pendienteMxn, "MXN")} />
+        <KpiCard label="Por facturar USD (comparable)" value={formatCurrency(kpis.pendienteUsd, "USD")} />
+        <KpiCard label="Por facturar EUR (comparable)" value={formatCurrency(kpis.pendienteEur, "EUR")} />
 
       </div>
 
@@ -68,6 +69,7 @@ export default function ComprasConciliacion() {
                   <SelectItem value="sin_facturar">Sin facturar</SelectItem>
                   <SelectItem value="parcial">Parcial</SelectItem>
                   <SelectItem value="completa">Conciliadas</SelectItem>
+                  <SelectItem value="no_comparable">Pendiente de TC</SelectItem>
                 </SelectContent>
               </Select>
             </div>

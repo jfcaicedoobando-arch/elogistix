@@ -60,6 +60,7 @@ export function useComprasNotasCreditoController() {
     .reduce((a, r) => a + r.monto, 0);
 
   const handleExport = () => {
+    if (isError || isLoading) return;
     try {
       const csv = toCSV(
         rows.map((r) => ({
@@ -72,6 +73,10 @@ export function useComprasNotasCreditoController() {
           estado: r.estado,
           moneda: r.moneda,
           monto: r.monto,
+          tipo_cambio_nc: r.tipo_cambio ?? "",
+          moneda_factura: r.factura_moneda ?? "",
+          tipo_cambio_factura: r.factura_tipo_cambio ?? "",
+          equivalente_moneda_factura: r.monto_en_moneda_factura ?? "",
           descripcion: r.descripcion ?? "",
         })),
       );

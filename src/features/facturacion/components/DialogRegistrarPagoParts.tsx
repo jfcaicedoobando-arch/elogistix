@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 
 export function ResumenSaldo({
   total, pagado, saldo, moneda,
@@ -24,9 +25,10 @@ export function FooterAcciones({
   /** id del `<form>` del cuerpo: permite enviar con Enter y con este botón. */
   formId: string;
 }) {
+  const cerrar = useFormDialogCerrar();
   return (
     <>
-      <Button type="button" variant="outline" onClick={onCancel} disabled={ocupado}>Cancelar</Button>
+      <Button type="button" variant="outline" onClick={cerrar ?? onCancel} disabled={ocupado}>Cancelar</Button>
       <Button type="submit" form={formId} disabled={invalido} loading={ocupado}>
         {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
       </Button>

@@ -9,12 +9,17 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
 import { orIlike } from "@/lib/search/ilike";
+import { equivalenteNotaCredito, type ContextoFacturaNotaCredito } from "@/lib/financial/notaCreditoEquivalente";
 
 export interface NotaCreditoRow {
   id: string;
   folio_nc: string | null;
   fecha: string;
   monto: number;
+  tipo_cambio: number | null;
+  factura_moneda: string | null;
+  factura_tipo_cambio: number | null;
+  monto_en_moneda_factura: number | null;
   moneda: Tables<"proveedor_notas_credito">["moneda"];
   motivo: Tables<"proveedor_notas_credito">["motivo"];
   estado: Tables<"proveedor_notas_credito">["estado"];
@@ -44,6 +49,18 @@ export interface PaginaNotasCredito {
   count: number;
 }
 
+function mapMonedas(
+  nota: { monto: number; moneda: string; tipo_cambio: number | null },
+  factura: ContextoFacturaNotaCredito | null,
+) {
+  return {
+    tipo_cambio: nota.tipo_cambio == null ? null : Number(nota.tipo_cambio),
+    factura_moneda: factura?.moneda ?? null,
+    factura_tipo_cambio: factura?.tipo_cambio_usd == null ? null : Number(factura.tipo_cambio_usd),
+    monto_en_moneda_factura: equivalenteNotaCredito(nota, factura),
+  };
+}
+
 /** P2-9 (v13.821.7): página real con `count` exacto en vez del tope duro de PostgREST. */
 export async function listarNotasCreditoGlobalPagina(
   filtros: ListarNotasFiltros = {},
@@ -54,10 +71,10 @@ export async function listarNotasCreditoGlobalPagina(
     .from("proveedor_notas_credito")
     .select(
       `
-      id, folio_nc, fecha, monto, moneda, motivo, estado, descripcion,
+      id, folio_nc, fecha, monto, moneda, tipo_cambio, motivo, estado, descripcion,
       proveedor_factura_id,
       proveedor_facturas!inner(
-        folio_interno, folio_proveedor, proveedor_id,
+        folio_interno, folio_proveedor, proveedor_id, moneda, tipo_cambio_usd,
         proveedores(nombre)
       )
       `,
@@ -92,6 +109,7 @@ export async function listarNotasCreditoGlobalPagina(
     folio_nc: string | null;
     fecha: string;
     monto: string | number;
+    tipo_cambio: number | null;
     moneda: NotaCreditoRow["moneda"];
     motivo: NotaCreditoRow["motivo"];
     estado: NotaCreditoRow["estado"];
@@ -101,6 +119,8 @@ export async function listarNotasCreditoGlobalPagina(
       folio_interno: string | null;
       folio_proveedor: string | null;
       proveedor_id: string | null;
+      moneda: string;
+      tipo_cambio_usd: number | null;
       proveedores: { nombre: string | null } | null;
     } | null;
   }>;
@@ -110,6 +130,10 @@ export async function listarNotasCreditoGlobalPagina(
     folio_nc: r.folio_nc,
     fecha: r.fecha,
     monto: Number(r.monto ?? 0),
+    ...mapMonedas(
+      { monto: Number(r.monto ?? 0), moneda: r.moneda, tipo_cambio: r.tipo_cambio },
+      r.proveedor_facturas,
+    ),
     moneda: r.moneda,
     motivo: r.motivo,
     estado: r.estado,

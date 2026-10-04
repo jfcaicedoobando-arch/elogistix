@@ -23,6 +23,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import {
   useComprasNotasCreditoController,
+  ESTADOS_FILTRO,
   type EstadoFiltro,
   type MonedaFiltro,
 } from "../hooks/useComprasNotasCreditoController";
@@ -44,16 +45,16 @@ export default function ComprasNotasCredito() {
         title="Notas de crédito de proveedor"
         description="Listado global de notas de crédito. Sólo las Aplicadas reducen el saldo a pagar."
         actions={
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={rows.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={rows.length === 0 || isError || isLoading}>
             <Download className="h-4 w-4 mr-1.5" /> Exportar CSV
           </Button>
         }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <KpiCard label="NC en el período" value={String(rows.length)} icon={ListFilter} />
-        <KpiCard label="Aplicadas MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} variant="success" />
-        <KpiCard label="Aplicadas USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} variant="success" />
+        <KpiCard label="NC en el período" value={isError ? "No disponible" : String(rows.length)} loading={isLoading} icon={ListFilter} />
+        <KpiCard label="Aplicadas MXN" value={isError ? "No disponible" : formatCurrency(totalMxn, "MXN")} loading={isLoading} icon={Banknote} variant="success" />
+        <KpiCard label="Aplicadas USD" value={isError ? "No disponible" : formatCurrency(totalUsd, "USD")} loading={isLoading} icon={Coins} variant="success" />
       </div>
 
       <Card>
@@ -82,10 +83,9 @@ export default function ComprasNotasCredito() {
             <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="Emitida">Emitida</SelectItem>
-                <SelectItem value="Aplicada">Aplicada</SelectItem>
-                <SelectItem value="Cancelada">Cancelada</SelectItem>
+                {ESTADOS_FILTRO.map((opcion) => (
+                  <SelectItem key={opcion} value={opcion}>{opcion === "todos" ? "Todos" : opcion}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -2,11 +2,11 @@
  * Reglas de negocio de la edición de facturas de proveedor.
  * Extraído de `proveedorFacturas.update.ts` (Power of 10 #4: ≤200 líneas).
  */
-import { supabase } from "@/integrations/supabase/client";
 import type { ProveedorFacturaRow } from "./proveedorFacturas";
 import type { ActualizarFacturaPayload } from "./proveedorFacturas.update.types";
-import { sumarPagosEnMonedaFactura } from "./proveedorFacturas.helpers";
+import { fetchSaldosProveedorFacturas } from "./saldosProveedorFactura";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
@@ -61,29 +61,30 @@ export function calcularTotal(payload: ActualizarFacturaPayload): number {
   );
 }
 
-/**
- * Ola 9 · A6: ignora pagos borrados (soft-delete) y descuenta las notas de
- * crédito aplicadas; si no, el "total pagado" se infla y bloquea ediciones
- * legítimas. Tolerancia de 1 centavo por redondeos.
- * RG4 (Ola 3): los pagos se suman en la MONEDA DE LA FACTURA
- * (`monto_en_moneda_factura`), igual que el listado; sumar `monto` crudo
- * inflaba ~17× cuando la factura es USD y el pago se hizo en MXN.
+/** Pagos y NC aplicadas en moneda de factura según la vista canónica con RLS.
+ * Excluye borrados/NC sin aplicar y conserva la tolerancia de un centavo.
  */
 export async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number): Promise<void> {
-  const { data: pagos, error: errPagos } = await supabase
-    .from("pagos_proveedor")
-    .select("monto, monto_en_moneda_factura, deleted_at")
-    .eq("proveedor_factura_id", id)
-    .is("deleted_at", null);
-  if (errPagos) throw errPagos;
-  const { data: notas, error: errNotas } = await supabase
-    .from("proveedor_notas_credito")
-    .select("monto")
-    .eq("proveedor_factura_id", id)
-    .in("estado", ["Aplicada"])
-    .is("deleted_at", null);
-  if (errNotas) throw errNotas;
-  const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
-  const totalPagado = sumarPagosEnMonedaFactura(pagos ?? []) + totalNotas;
+  const saldo = (await fetchSaldosProveedorFacturas([id])).get(id);
+  if (!saldo) throw new Error("No se pudo verificar el saldo de la factura. Recarga e intenta de nuevo.");
+  const totalPagado = saldo.pagado + saldo.notas_credito;
   if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
+}
+
+/** Una moneda nueva requiere reprocesar aplicaciones; no se reescribe el pasado. */
+export class CambioMonedaConAplicacionesError extends Error {
+  code = "CAMBIO_MONEDA_CON_APLICACIONES" as const;
+  constructor() {
+    super("No se puede cambiar la moneda de una factura con pagos o notas de crédito aplicadas. Conserva la moneda actual.");
+  }
+}
+
+export async function validarCambioMonedaSinAplicaciones(id: string): Promise<void> {
+  const { data: pagos, error: errorPagos } = await supabase.from("pagos_proveedor")
+    .select("id").eq("proveedor_factura_id", id).is("deleted_at", null).limit(1);
+  if (errorPagos) throw errorPagos;
+  const { data: notas, error: errorNotas } = await supabase.from("proveedor_notas_credito")
+    .select("id").eq("proveedor_factura_id", id).eq("estado", "Aplicada").is("deleted_at", null).limit(1);
+  if (errorNotas) throw errorNotas;
+  if (pagos?.length || notas?.length) throw new CambioMonedaConAplicacionesError();
 }

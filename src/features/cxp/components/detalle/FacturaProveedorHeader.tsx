@@ -3,7 +3,7 @@
  * expediente enlazado, stepper de ciclo de vida y acciones contextuales.
  */
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ReceiptText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
@@ -19,7 +19,11 @@ interface Props {
 }
 
 export function FacturaProveedorHeader({ factura: f, actions }: Props) {
-  const volver = useVolver("/compras/facturas");
+  const { state } = useLocation();
+  const origen = (state as { from?: unknown } | null)?.from;
+  const desdeTesoreria = typeof origen === "string"
+    && origen.split("?")[0] === "/tesoreria/pagos-programados";
+  const volver = useVolver(desdeTesoreria ? origen : "/compras/facturas");
   const resumen = resumenFacturaRecibida({
     estado: f.estado,
     estadoAprobacion: f.estado_aprobacion,
@@ -30,7 +34,7 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
   return (
     <DetailHeader
       backTo={volver}
-      backLabel="Volver a Facturas de proveedor"
+      backLabel={desdeTesoreria ? "Volver a Pagos programados" : "Volver a Facturas de proveedor"}
       icon={<ReceiptText className="h-6 w-6 shrink-0 text-accent" />}
       title={<span className="font-mono tabular-nums">{f.folio_interno}</span>}
       badge={<EstadoFacturaCxPCell factura={f} variant="detalle" />}

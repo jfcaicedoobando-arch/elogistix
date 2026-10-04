@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.24] - Unreleased
+
+- **fix(CxP y notas de crédito)**: la edición valida saldos en moneda de factura; las notas de crédito explican sus tasas históricas y equivalentes en ficha, lista y CSV. Los filtros usan estados válidos y distinguen errores de consulta de resultados vacíos.
+- **fix(historial de facturas)**: los eventos conservan los valores registrados en bitácora y todas las aprobaciones reales; se identifica la información histórica no disponible y se guardan snapshots de moneda para eventos futuros, sin reconstruir ni reparar el pasado.
+- **fix(conciliación y navegación)**: facturado se obtiene de vínculos de facturas, separado de pagos; las líneas fiscales con asociación válida no se cuentan como huérfanas. La categoría se explica como clasificación presupuestaria. Programar pago abre la sección fiscal y enfoca la fecha; Cancelar un cobro respeta el aviso de descarte.
+- **fix(traspasos)**: se bloquea y explica un abono que redondea a cero antes de enviar; vista previa y validación comparten el cálculo a centavos.
+- **test(auditoría financiera 55-64)**: regresiones de moneda, historial, navegación, descarte y conciliación; sin cambios de datos históricos, pagos, correos ni despliegue implícito.
+
 ## [13.824.23] - Unreleased
 
 - **fix(saldos del cliente)**: KPI y PDF usan el saldo neto de pagos y notas de crédito; el PDF comparte el corte filtrado de la tabla y CSV, incluidas facturas parcialmente pagadas.

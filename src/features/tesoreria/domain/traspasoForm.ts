@@ -6,10 +6,11 @@
  * archivo (Power of 10). Sin React ni red.
  */
 import type { Tables } from "@/integrations/supabase/types";
-import { roundMoney } from "@/lib/financial/financialUtils";
+import { multiplyMoney, roundMoney } from "@/lib/financial/financialUtils";
 import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
 import { hoyMx } from "@/lib/date/mx";
 import type { MonedaTc } from "@/features/tesoreria/domain/tcPar";
+import { multiplicadorOrigenDestino } from "@/features/tesoreria/domain/tcPar";
 import { fechaMinimaTraspaso, validarFechaTraspaso } from "./traspasoFecha";
 
 type Cuenta = Tables<"cuentas_bancarias">;
@@ -63,6 +64,22 @@ export function validarImportesTraspaso(montoOrigen: number, comision: number): 
   return null;
 }
 
+/** Mismo abono a centavos que ROUND(monto_origen * tipo_cambio, 2) en la RPC. */
+export function calcularMontoDestinoTraspaso(montoOrigen: number, tipoCambio: number | null): number {
+  if (!Number.isFinite(montoOrigen) || montoOrigen <= 0 ||
+    tipoCambio === null || !Number.isFinite(tipoCambio) || tipoCambio <= 0) return 0;
+  return multiplyMoney(montoOrigen, tipoCambio);
+}
+
+export function validarMontoDestinoTraspaso(montoOrigen: number, tipoCambio: number): string | null {
+  const montoDestino = calcularMontoDestinoTraspaso(montoOrigen, tipoCambio);
+  if (!Number.isFinite(montoDestino)) return "El importe de destino no es válido. Revisa el monto y el tipo de cambio.";
+  if (montoDestino <= 0) {
+    return "El importe de destino queda en 0.00 después del redondeo. Aumenta el monto para abonar al menos 0.01 en la cuenta destino.";
+  }
+  return null;
+}
+
 export function validarTraspaso(
   state: TraspasoFormState,
   origen: Cuenta | undefined,
@@ -77,11 +94,15 @@ export function validarTraspaso(
   if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
   const errorFecha = validarFechaTraspaso(state.fecha, fechaMinimaTraspaso(origen, destino));
   if (errorFecha) return errorFecha;
-  if (mismoMoneda) return null;
-  if (!state.tcQuote || state.tcQuote <= 0) {
+  if (mismoMoneda) return validarMontoDestinoTraspaso(state.montoOrigen, 1);
+  if (!Number.isFinite(state.tcQuote) || state.tcQuote <= 0) {
     return "Captura el tipo de cambio para cuentas de distinta moneda.";
   }
-  return validarTcPar(par, state.tcQuote);
+  const errorTc = validarTcPar(par, state.tcQuote);
+  if (errorTc) return errorTc;
+  const factor = multiplicadorOrigenDestino(par, origen.moneda, state.tcQuote);
+  if (factor === null) return "Captura un tipo de cambio válido para las monedas de ambas cuentas.";
+  return validarMontoDestinoTraspaso(state.montoOrigen, factor);
 }
 
 /**

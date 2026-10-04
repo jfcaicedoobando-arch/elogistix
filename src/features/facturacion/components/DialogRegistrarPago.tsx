@@ -171,6 +171,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       size="md"
       footer={footer}
       isDirty={isDirty}
+      busy={ocupado}
     >
       {/* v13.550.0 — `<form>` real: Enter en cualquier campo guarda el pago
           (el botón del footer envía este formulario vía `form={FORM_ID}`). */}

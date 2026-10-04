@@ -91,6 +91,11 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
           Motivo: {motivo}
         </p>
       )}
+      {ev.detalles?.snapshot_historico_disponible === false && (
+        <p className="text-body-sm text-muted-foreground mt-1">
+          Importe o moneda de este evento no disponibles.
+        </p>
+      )}
     </li>
   );
 }

@@ -158,6 +158,7 @@ supabase/tests/tolerancia_conciliacion_por_moneda.sql
 supabase/tests/venta_conceptos_facturados_solo_emitidas.sql
 supabase/tests/cxp_impuestos_globales_y_base_iva.sql
 supabase/tests/cxp_historial_fecha_pago.sql
+supabase/tests/cxp_historial_eventos_reales.sql
 supabase/tests/cotizacion_aerea_peso_fisico.sql
 supabase/tests/r4_embarque_proforma_regresiones.sql
 supabase/tests/audit25_pue_saldo_neto.sql

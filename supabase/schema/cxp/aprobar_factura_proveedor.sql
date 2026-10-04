@@ -130,6 +130,8 @@ BEGIN
       jsonb_build_object(
         'motivo', p_motivo,
         'total', v_row.total,
+        'moneda', v_row.moneda,
+        'tipo_cambio_usd', v_row.tipo_cambio_usd,
         'aprobada', p_aprobar,
         'justificacion_sin_vinculo', v_row.justificacion_sin_vinculo
       ) || v_desvinculo

@@ -91,6 +91,7 @@ export interface PFCRow {
     fecha_emision?: string | null;
     fecha_vencimiento?: string | null;
     estado?: string | null;
+    estado_aprobacion?: string | null;
     moneda?: string | null;
     tipo_cambio_usd?: number | string | null;
     deleted_at: string | null;

@@ -69,7 +69,9 @@ export function CategoriaContableSection({
         ) : (
           <p className="text-label text-muted-foreground">
             Un mismo proveedor puede emitir facturas para distintas categorías (COGS, gastos
-            operativos, OpEx). Si la cambias, esta factura deja de contar como costo del embarque.
+            operativos, OpEx). La categoría clasifica la factura para el presupuesto.
+            Cambiarla a Administración no desvincula los costos existentes del embarque
+            ni excluye la factura del Estado de Resultados devengado. Revisa esos vínculos por separado.
           </p>
         )}
 

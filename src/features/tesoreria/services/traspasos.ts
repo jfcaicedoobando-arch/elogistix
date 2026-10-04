@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
-import { validarImportesTraspaso } from "@/features/tesoreria/domain/traspasoForm";
+import { validarImportesTraspaso, validarMontoDestinoTraspaso } from "@/features/tesoreria/domain/traspasoForm";
 
 export type TraspasoBancario = Tables<"traspasos_bancarios">;
 
@@ -79,6 +79,8 @@ export async function registrarTraspaso(
   if (!Number.isFinite(input.tipoCambio) || input.tipoCambio <= 0) {
     throw new Error("Captura el tipo de cambio del traspaso.");
   }
+  const errorDestino = validarMontoDestinoTraspaso(input.montoOrigen, input.tipoCambio);
+  if (errorDestino) throw new Error(errorDestino);
   const { data, error } = await supabase.rpc("registrar_traspaso_bancario", {
     p_cuenta_origen_id: input.cuentaOrigenId,
     p_cuenta_destino_id: input.cuentaDestinoId,

@@ -20,6 +20,7 @@ const estado = {
   filas: [] as Fila[],
   rangos: [] as Array<[number, number]>,
   errorEnLote: null as number | null,
+  facturados: new Set<string>(),
 };
 
 function toJoined(f: Fila) {
@@ -34,30 +35,38 @@ function toJoined(f: Fila) {
 }
 
 /** Mock que simula el servidor: ordena por `id` y corta por rango como Postgres. */
-function builder(): Record<string, unknown> {
+function builder(table: string): Record<string, unknown> {
   const b: Record<string, unknown> = {};
   let rango: [number, number] = [0, 999];
+  let ids: string[] = [];
   const chain = (nombre: string) => (...args: unknown[]) => {
     if (nombre === "range") {
       rango = [args[0] as number, args[1] as number];
-      estado.rangos.push(rango);
+      if (table === "conceptos_costo") estado.rangos.push(rango);
     }
+    if (nombre === "in") ids = args[1] as string[];
     return b;
   };
-  for (const m of ["select", "is", "eq", "order", "range"]) b[m] = chain(m);
+  for (const m of ["select", "is", "eq", "in", "order", "range"]) b[m] = chain(m);
   b.then = (resolve: (v: unknown) => unknown) => {
     const loteIdx = estado.rangos.length - 1;
-    if (estado.errorEnLote === loteIdx) {
+    if (table === "conceptos_costo" && estado.errorEnLote === loteIdx) {
       return resolve({ data: null, error: { message: "lote roto" } });
     }
     const ordenadas = [...estado.filas].sort((a, z) => a.id.localeCompare(z.id));
+    if (table === "proveedor_facturas_conceptos") return resolve({
+      data: ordenadas.filter((f) => ids.includes(f.id) && estado.facturados.has(f.id)).map((f) => ({
+        monto: f.monto, concepto_costo_id: f.id,
+        proveedor_facturas: { id: `f-${f.id}`, folio_proveedor: "F", estado_aprobacion: "aprobada", moneda: f.moneda, deleted_at: null },
+      })).slice(rango[0], rango[1] + 1), error: null,
+    });
     const page = ordenadas.slice(rango[0], rango[1] + 1).map(toJoined);
     return resolve({ data: page, error: null });
   };
   return b;
 }
 
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => builder() } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: (table: string) => builder(table) } }));
 
 const { listarConciliacionEmbarques } = await import("../conciliacionEmbarques");
 const { ResultadoTruncadoError } = await import("@/lib/supabase/assertNotTruncated");
@@ -77,6 +86,7 @@ beforeEach(() => {
   estado.filas = [];
   estado.rangos = [];
   estado.errorEnLote = null;
+  estado.facturados.clear();
 });
 
 describe("listarConciliacionEmbarques — lectura completa por lotes", () => {
@@ -91,12 +101,12 @@ describe("listarConciliacionEmbarques — lectura completa por lotes", () => {
     expect(totalPresupuestado).toBeCloseTo(5200 * 100, 2);
   });
 
-  it("marca como Pagado y calcula cobertura correctamente sobre el conjunto completo", async () => {
-    estado.filas = generar(5200, (i) => (i >= 5100 ? { estado_liquidacion: "Pagado" } : {}));
+  it("calcula facturación impagada correctamente después del primer lote", async () => {
+    estado.filas = generar(5200);
+    estado.facturados = new Set(estado.filas.slice(5100).map((fila) => fila.id));
     const rows = await listarConciliacionEmbarques({});
-    const totalPagado = rows.reduce((a, r) => a + r.pagado, 0);
-    // Las últimas 100 filas (posteriores al primer lote de 1000) están pagadas.
-    expect(totalPagado).toBeCloseTo(100 * 100, 2);
+    const totalFacturado = rows.reduce((a, r) => a + r.facturado, 0);
+    expect(totalFacturado).toBeCloseTo(100 * 100, 2);
   });
 
   it("falla explícitamente con ResultadoTruncadoError al superar el tope duro", async () => {

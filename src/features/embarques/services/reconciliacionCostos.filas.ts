@@ -95,6 +95,7 @@ export function buildFilasReconciliacion(
     // v13.505.0 — una factura Cancelada (p. ej. cancelada ante el SAT) no
     // cuenta como facturada: el concepto vuelve a quedar "sin factura".
     if ((v.proveedor_facturas.estado ?? "").toLowerCase() === "cancelada") continue;
+    if (v.proveedor_facturas.estado_aprobacion === "rechazada") continue;
     const arr = porConcepto.get(v.concepto_costo_id) ?? [];
     arr.push(v);
     porConcepto.set(v.concepto_costo_id, arr);

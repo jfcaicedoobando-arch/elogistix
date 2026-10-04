@@ -3,12 +3,16 @@
  * Lógica pura en `./reconciliacionCostos.helpers` (matemática + clasificación).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchInChunks } from "@/lib/supabase/chunkedIn";
+import { chunkIds } from "@/lib/supabase/chunkedIn";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { CAP_LOTES_DURO } from "@/constants/queryCaps";
+import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
+import { fetchVinculosReconciliacion } from "./reconciliacionCostos.lecturas";
+import { contarPartidasHuerfanas, type PartidaParaHuerfanas } from "./reconciliacionCostos.huerfanas";
 import {
   buildFilasReconciliacion,
   type CCRow,
   type FilaReconciliacion,
-  type PFCRow,
 } from "./reconciliacionCostos.helpers";
 
 export * from "./reconciliacionCostos.helpers";
@@ -17,62 +21,50 @@ export async function fetchReconciliacionEmbarque(
   embarqueId: string,
 ): Promise<FilaReconciliacion[]> {
   if (!embarqueId) return [];
-  const { data: cc, error: errCc } = await supabase
-    .from("conceptos_costo")
-    .select("id, concepto, proveedor_nombre, moneda, monto, estado_liquidacion")
-    .eq("embarque_id", embarqueId)
-    .is("deleted_at", null);
-  if (errCc) throw errCc;
+  const cc = await leerTodasLasPaginas("embarques.costosReconciliacion", (ini, fin) => supabase
+      .from("conceptos_costo")
+      .select("id, concepto, proveedor_nombre, moneda, monto, estado_liquidacion")
+      .eq("embarque_id", embarqueId)
+      .is("deleted_at", null)
+      .order("id").range(ini, fin));
   // SAFE-CAST: shape modelado por CCRow a partir del select explícito de columnas arriba.
   const conceptos = (cc ?? []) as unknown as CCRow[];
   if (conceptos.length === 0) return [];
 
   const ids = conceptos.map((c) => c.id);
-  // O5.9: lotes de IDs para no reventar la longitud de la URL de PostgREST.
-  const pfc = await fetchInChunks(ids, async (lote) => {
-    const { data, error } = await supabase
-      .from("proveedor_facturas_conceptos")
-      // MNY-NEW-03: moneda y TC de la factura para convertir antes de comparar.
-      .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_interno, folio_proveedor, fecha_emision, fecha_vencimiento, estado, moneda, tipo_cambio_usd, deleted_at)")
-      .in("concepto_costo_id", lote);
-    if (error) throw error;
-    // SAFE-CAST: shape modelado por PFCRow a partir del select con embed.
-    return (data ?? []) as unknown as PFCRow[];
-  });
+  const pfc = await fetchVinculosReconciliacion(ids);
   return buildFilasReconciliacion(conceptos, pfc);
 }
 
 /**
  * Cuenta partidas de proveedor "huérfanas" para un embarque: PFC ligadas a
- * una factura de este embarque, pero cuyo `concepto_costo_id` es NULL o apunta
- * a un concepto de OTRO embarque (data drift).
+ * una factura vigente de este embarque sin vínculo operativo válido. Una línea
+ * fiscal NULL es legítima si su factura tiene un costo activo vinculado aquí.
+ * Los vínculos a otro embarque, eliminados o invisibles sí son huérfanos.
  */
 export async function fetchPartidasHuerfanasCount(embarqueId: string): Promise<number> {
   if (!embarqueId) return 0;
-  const { data: facturas, error: errFa } = await supabase
+  const facturas = await leerTodasLasPaginas("embarques.facturasParaHuerfanas", (ini, fin) => supabase
     .from("proveedor_facturas")
     .select("id")
     .eq("embarque_id", embarqueId)
-    .is("deleted_at", null);
-  if (errFa) throw errFa;
+    .is("deleted_at", null)
+    .neq("estado", "Cancelada")
+    .neq("estado_aprobacion", "rechazada")
+    .order("id").range(ini, fin));
   const fids = (facturas ?? []).map((f) => f.id).filter((x): x is string => Boolean(x));
   if (fids.length === 0) return 0;
 
-  type Row = { concepto_costo_id: string | null; conceptos_costo: { embarque_id: string | null } | null };
-  // O5.9: lotes de IDs de factura para acotar la longitud de la petición.
-  const rows = await fetchInChunks(fids, async (lote) => {
-    const { data, error } = await supabase
+  const rows: PartidaParaHuerfanas[] = [];
+  for (const lote of chunkIds(fids)) {
+    const data = await leerTodasLasPaginas("embarques.partidasParaHuerfanas", (ini, fin) => supabase
       .from("proveedor_facturas_conceptos")
-      .select("concepto_costo_id, conceptos_costo(embarque_id)")
-      .in("proveedor_factura_id", lote);
-    if (error) throw error;
-    // SAFE-CAST: embed de conceptos_costo(embarque_id) modelado localmente por Row.
-    return (data ?? []) as unknown as Row[];
-  });
-  let huerfanas = 0;
-  for (const r of rows) {
-    if (!r.concepto_costo_id) { huerfanas += 1; continue; }
-    if (!r.conceptos_costo || r.conceptos_costo.embarque_id !== embarqueId) huerfanas += 1;
+      .select("proveedor_factura_id, concepto_costo_id, conceptos_costo(embarque_id, deleted_at)")
+      .in("proveedor_factura_id", lote)
+      .order("id").range(ini, fin));
+    // SAFE-CAST: columnas y embed corresponden a PartidaParaHuerfanas.
+    rows.push(...data as unknown as PartidaParaHuerfanas[]);
+    if (rows.length >= CAP_LOTES_DURO) throw new ResultadoTruncadoError("embarques.partidasParaHuerfanas", CAP_LOTES_DURO);
   }
-  return huerfanas;
+  return contarPartidasHuerfanas(rows, embarqueId);
 }

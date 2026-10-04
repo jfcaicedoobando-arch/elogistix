@@ -3,10 +3,12 @@
  *
  * Agrega los `conceptos_costo` por embarque y calcula:
  *  - `presupuestado`  = suma de montos de conceptos activos (no borrados).
- *  - `pagado`         = suma de montos con `estado_liquidacion = 'Pagado'`.
- *  - `pendiente`      = presupuestado − pagado.
- *  - `cobertura`      = pagado / presupuestado (0..1).
- *  - `conceptos_pendientes` = # de conceptos con `estado_liquidacion = 'Pendiente'`.
+ *  - `facturado`      = vínculos de facturas vigentes, sin impuestos, convertidos
+ *                       a la moneda del costo con el mismo cálculo del detalle.
+ *  - `pendiente`      = presupuestado - facturado (no es saldo por pagar).
+ *  - `cobertura`      = facturado / presupuestado.
+ *  - `conceptos_pendientes` = conceptos sin factura o con facturación parcial.
+ *  - `pendientes_tc`  = conceptos con vínculos no convertibles; no son cero real.
  *
  * Reglas:
  *  - Ignora conceptos con `deleted_at IS NOT NULL`.
@@ -24,8 +26,10 @@ import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
 import { CAP_LOTES_DURO } from "@/constants/queryCaps";
 import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
+import { buildFilasReconciliacion, type CCRow, type FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos.helpers";
+import { fetchVinculosReconciliacion } from "@/features/embarques/services/reconciliacionCostos.lecturas";
 
-export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa";
+export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa" | "no_comparable";
 
 export interface EmbarqueConciliacion {
   embarque_id: string;
@@ -34,11 +38,12 @@ export interface EmbarqueConciliacion {
   estado: string | null;
   moneda: Moneda;
   presupuestado: number;
-  pagado: number;
+  facturado: number;
   pendiente: number;
   cobertura: number;
   conceptos_total: number;
   conceptos_pendientes: number;
+  pendientes_tc: number;
   estado_conciliacion: EstadoConciliacion;
 }
 
@@ -49,8 +54,7 @@ export interface FiltrosConciliacion {
   organizationId?: string | null;
 }
 
-interface RowConcepto {
-  id: string;
+interface RowConcepto extends CCRow {
   embarque_id: string;
   monto: string | number;
   moneda: Moneda;
@@ -65,8 +69,9 @@ interface RowConcepto {
 /** Tamaño de lote de lectura; NO es un cap — se pide en lotes hasta agotar. */
 const LOTE = 1000;
 
-function clasificar(cobertura: number, pagado: number): EstadoConciliacion {
-  if (pagado <= 0) return "sin_facturar";
+function clasificar(cobertura: number, facturado: number, pendientes: number): EstadoConciliacion {
+  if (facturado <= 0) return "sin_facturar";
+  if (pendientes > 0) return "parcial";
   if (cobertura >= 0.99) return "completa";
   return "parcial";
 }
@@ -79,17 +84,19 @@ function initAcc(r: RowConcepto): EmbarqueConciliacion {
     estado: r.embarques?.estado ?? null,
     moneda: r.moneda,
     presupuestado: 0,
-    pagado: 0,
+    facturado: 0,
     pendiente: 0,
     cobertura: 0,
     conceptos_total: 0,
     conceptos_pendientes: 0,
+    pendientes_tc: 0,
     estado_conciliacion: "sin_facturar",
   };
 }
 
-function agrupar(rows: RowConcepto[]): EmbarqueConciliacion[] {
+function agrupar(rows: RowConcepto[], filas: FilaReconciliacion[]): EmbarqueConciliacion[] {
   const map = new Map<string, EmbarqueConciliacion>();
+  const porId = new Map(filas.map((fila) => [fila.concepto_costo_id, fila]));
   for (const r of rows) {
     const monto = Number(r.monto ?? 0);
     const key = `${r.embarque_id}|${r.moneda}`;
@@ -97,18 +104,21 @@ function agrupar(rows: RowConcepto[]): EmbarqueConciliacion[] {
     if (!acc) { acc = initAcc(r); map.set(key, acc); }
     acc.presupuestado += monto;
     acc.conceptos_total += 1;
-    if (r.estado_liquidacion === "Pagado") acc.pagado += monto;
-    // B-18: sólo se cuentan como "pendientes" los conceptos con ese estado
-    // explícito, no cualquier estado distinto de "Pagado" (alinea con el docstring).
-    if (r.estado_liquidacion === "Pendiente") acc.conceptos_pendientes += 1;
+    const fila = porId.get(r.id)!;
+    acc.facturado += fila.real_facturado;
+    if (fila.estatus_renglon === "sin_match" || fila.estatus_renglon === "parcial") acc.conceptos_pendientes += 1;
+    if (fila.estatus_renglon === "no_comparable") acc.pendientes_tc += 1;
   }
   return Array.from(map.values());
 }
 
 function derivarMetricas(a: EmbarqueConciliacion): EmbarqueConciliacion {
-  const pendiente = Math.max(0, a.presupuestado - a.pagado);
-  const cobertura = a.presupuestado > 0 ? a.pagado / a.presupuestado : 0;
-  return { ...a, pendiente, cobertura, estado_conciliacion: clasificar(cobertura, a.pagado) };
+  const pendiente = Math.max(0, a.presupuestado - a.facturado);
+  const cobertura = a.presupuestado > 0 ? a.facturado / a.presupuestado : 0;
+  const estado_conciliacion = a.pendientes_tc > 0
+    ? "no_comparable"
+    : clasificar(cobertura, a.facturado, a.conceptos_pendientes);
+  return { ...a, pendiente, cobertura, estado_conciliacion };
 }
 
 function aplicarFiltrosCliente(
@@ -142,7 +152,7 @@ async function leerTodosLosConceptos(filtros: FiltrosConciliacion): Promise<RowC
     let q = supabase
       .from("conceptos_costo")
       .select(
-        "id, embarque_id, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
+        "id, embarque_id, concepto, proveedor_nombre, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
       )
       .is("deleted_at", null)
       .order("id", { ascending: true })
@@ -169,7 +179,8 @@ export async function listarConciliacionEmbarques(
   filtros: FiltrosConciliacion = {},
 ): Promise<EmbarqueConciliacion[]> {
   const rows = await leerTodosLosConceptos(filtros);
-  const agregados = agrupar(rows).map(derivarMetricas);
+  const vinculos = await fetchVinculosReconciliacion(rows.map((row) => row.id), filtros.organizationId);
+  const agregados = agrupar(rows, buildFilasReconciliacion(rows, vinculos)).map(derivarMetricas);
   const filtrados = aplicarFiltrosCliente(agregados, filtros);
   filtrados.sort((a, b) => b.pendiente - a.pendiente);
   return filtrados;

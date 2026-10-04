@@ -5,7 +5,8 @@
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { defineColumns } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
+import { NotaCreditoImporte } from "@/components/shared/NotaCreditoImporte";
 import type { NotaCreditoRow } from "@/features/compras/services/notasCreditoGlobal";
 
 const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
@@ -76,9 +77,13 @@ export function buildNotasCreditoColumns() {
       header: "Monto",
       accessorFn: (r) => r.monto,
       cell: ({ row }) => (
-        <span className="tabular-nums font-medium">
-          {formatCurrency(row.original.monto, row.original.moneda)}
-        </span>
+        <NotaCreditoImporte
+          nota={row.original}
+          factura={row.original.factura_moneda ? {
+            moneda: row.original.factura_moneda, tipo_cambio_usd: row.original.factura_tipo_cambio,
+          } : null}
+          estado={row.original.estado}
+        />
       ),
       meta: { align: "right" },
     },
