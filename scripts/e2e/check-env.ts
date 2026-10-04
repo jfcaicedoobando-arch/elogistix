@@ -22,7 +22,7 @@ if (existsSync(envFile)) {
 
 const has = (name: string) => Boolean(process.env[name] && process.env[name] !== "");
 
-const REQUIRED = ["E2E_BASE_URL", "E2E_EMAIL", "E2E_PASSWORD"] as const;
+const REQUIRED = ["E2E_BASE_URL", "E2E_EMAIL", "E2E_PASSWORD", "VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"] as const;
 
 type Group = {
   label: string;
@@ -49,8 +49,11 @@ const OPTIONAL_GROUPS: readonly Group[] = [
   {
     label: "Flujo fiscal (FacturApi)",
     vars: ["E2E_FISCAL", "E2E_PROFORMA_NUMERO"],
-    enables: "specs 08, 25",
+    enables: "spec 08 (proforma nueva por corrida)",
   },
+  { label: "Sustitución CFDI Sandbox", vars: ["E2E_FISCAL", "E2E_SUSTITUCION_FACTURA_UUID"], enables: "spec 25" },
+  { label: "Rechazo PAC simulado", vars: ["E2E_FACTURA_BORRADOR_ID"], enables: "spec 30" },
+  { label: "Hidratación marítima", vars: ["E2E_EMBARQUE_EDITAR_ID"], enables: "spec 32" },
   {
     label: "Cierre embarque",
     vars: ["E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID"],
@@ -64,7 +67,7 @@ const OPTIONAL_GROUPS: readonly Group[] = [
   },
   {
     label: "CXP mutadores",
-    vars: ["E2E_PROVEEDOR_ID", "E2E_EMBARQUE_PARA_CXP_ID"],
+    vars: ["E2E_PROVEEDOR_ID", "E2E_EMBARQUE_PARA_CXP_ID", "E2E_CONCEPTO_CXP_ID", "E2E_CATEGORIA_CXP_ID"],
     enables: "spec 12",
   },
   {

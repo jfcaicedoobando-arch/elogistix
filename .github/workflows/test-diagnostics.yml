@@ -1,0 +1,61 @@
+name: PDF and visual diagnostics (on demand)
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Suite aislada, sin credenciales ni datos del ERP
+        type: choice
+        options: [both, pdf, visual]
+        default: both
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: test-diagnostics-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pdf:
+    if: inputs.suite == 'both' || inputs.suite == 'pdf'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - run: node node_modules/typescript/bin/tsc -p tsconfig.test-tooling.json
+      - run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - run: bun run test:pdf
+      - name: Render pages for review
+        if: always()
+        run: |
+          for pdf in reports/pdf-smoke/*.pdf; do
+            [ -f "$pdf" ] || continue
+            pdftoppm -scale-to 1100 -png "$pdf" "${pdf%.pdf}"
+          done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: pdf-smoke
+          path: reports/pdf-smoke/
+          retention-days: 14
+  visual:
+    if: inputs.suite == 'both' || inputs.suite == 'visual'
+    # Baselines reviewed on Windows with the pinned Playwright Chromium build.
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - run: bunx playwright install chromium
+      - run: bun run test:visual
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: visual-diagnostics
+          path: |
+            reports/visual/
+            test-results/visual/
+          retention-days: 14

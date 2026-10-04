@@ -38,9 +38,9 @@ export async function emitirRepYPersistir(args: ArgsEmision): Promise<Response> 
   const { claimTag, releaseClaim } = reserva;
 
   // EF-01: `external_id` correlaciona el claim para facturapi-recuperar-claim.
-  const payload = Object.assign(buildRepPayload(ctx), {
+  const payload: Record<string, unknown> = { ...buildRepPayload(ctx),
     external_id: claimTag, idempotency_key: claimTag,
-  });
+  };
   // El complemento SIEMPRE viaja estructurado (`complements[].type = "pago"`);
   // el ObjetoImpDR se declara en `related_documents[].taxability`.
   const resultado = await timbrarRep({

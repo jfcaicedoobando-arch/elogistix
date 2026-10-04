@@ -65,10 +65,12 @@ BEGIN
     v_org, v_prov, v_emb, 'A-CM-MXN01', v_cat, 2000, 2000,
     'MXN'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf_mxn;
+  UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1
+  WHERE id IN (v_pf_usd, v_pf_mxn);
 
   INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
-  VALUES (v_org, v_pf_mxn, 2000, 'MXN'::public.moneda, NULL);
+    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)
+  VALUES (v_org, v_pf_mxn, 2000, 'MXN'::public.moneda, NULL, public.fecha_negocio_mx());
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
   v_resultado := public.validar_cierre_embarque(v_emb);

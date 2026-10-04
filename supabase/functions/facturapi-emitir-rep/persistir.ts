@@ -6,6 +6,7 @@
 import { FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 interface FapiInvoice {
   id: string;
@@ -16,8 +17,7 @@ interface FapiInvoice {
 }
 
 interface Params {
-  // SAFE-CAST: cliente de Supabase creado en index.ts.
-  supabase: ReturnType<typeof import("https://esm.sh/@supabase/supabase-js@2.45.0").createClient>;
+  supabase: SupabaseClient;
   invoice: FapiInvoice;
   apiKey: string;
   ambiente: string;

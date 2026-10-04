@@ -59,8 +59,8 @@ BEGIN
 
   -- Caso 1: pago de 500 MXN con TC 19 => 26.32 USD, no cubre los 500 USD.
   INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
-  VALUES (v_org, v_pf, 500, 'MXN'::public.moneda, 19)
+    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)
+  VALUES (v_org, v_pf, 500, 'MXN'::public.moneda, 19, public.fecha_negocio_mx())
   RETURNING id INTO v_pago;
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);

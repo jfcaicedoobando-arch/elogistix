@@ -1,6 +1,6 @@
 # E2E — Playwright
 
-> Revisado el 2026-09-26. No se ejecutó la suite durante la limpieza documental.
+> Revisado el 2026-10-03. La suite visual aislada sí se ejecutó; flujos conectados requieren fixtures explícitas.
 > Provisioning, seed y varios specs crean/modifican registros. Sólo staging autorizado.
 
 Pruebas de navegador de los flujos críticos de Libre Carga, pensados como **gate de
@@ -100,16 +100,19 @@ E2E_STRICT_FIXTURES=
 ```
 
 > **Nunca** uses Live fiscal ni cuentas operativas reales. Provisiona un tenant de staging
-> con datos seed determinísticos. Los specs 09–12 **mutan** datos reales y
-> hacen cleanup best-effort; revisar el tenant tras correr.
+> con datos seed determinísticos. Los specs 08–12, 25, 28 y 30 escriben y
+> están serializados. 08/25 conservan evidencia fiscal Sandbox; requieren documentos
+> nuevos por corrida. 11 revierte sólo su embarque mediante el RPC canónico.
 
 ## Secrets requeridos en GitHub Actions (CI)
 
 El workflow `.github/workflows/e2e.yml` sólo corre por dispatch manual y usa
 el environment `e2e-staging`. Si faltan credenciales CORE (interno, portal,
 provisioning y Supabase), **falla el guard**, no produce verde vacío.
-Fixtures opcionales pueden saltar specs; `strict_fixtures=1` convierte las
-omisiones soportadas en fallo. Multi-tenant es opcional según su guard.
+`required_flows` selecciona los mutadores que se ejecutarán (default `08,11,12,25`).
+Su gate exige que TODOS sus pasos pasen: un skip o fallo no se satisface con tests
+verdes de otro flujo. `strict_fixtures=1` exige además fixtures opcionales de los
+otros lanes; el default `0` conserva sus skips explícitos. Multi-tenant sigue opcional.
 
 | Secret | Spec(s) que habilita |
 |---|---|
@@ -117,13 +120,41 @@ omisiones soportadas en fallo. Multi-tenant es opcional según su guard.
 | `E2E_PORTAL_EMAIL`, `E2E_PORTAL_PASSWORD` | 05, 18 |
 | `E2E_CROSS_ORG_EMBARQUE_ID`, `E2E_CROSS_ORG_FACTURA_ID`, `E2E_CROSS_ORG_COTIZACION_ID` | 06 (sin ellos degrada a UUID dummy) |
 | `E2E_HAS_SEED` | 07 |
-| `E2E_FISCAL`, `E2E_PROFORMA_NUMERO` | 08, 25 (requieren FacturApi sandbox) |
+| `E2E_FISCAL`, `E2E_PROFORMA_NUMERO` | 08 (proforma mock nueva, monomoneda, aceptada; cliente fiscal válido; Sandbox comprobado) |
+| `E2E_FISCAL`, `E2E_SUSTITUCION_FACTURA_UUID` | 25 (ID interno de factura Emitida mock propia; no el UUID SAT) |
 | `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID`, `E2E_ADMIN_ORG` | 09 |
 | `E2E_HAS_AUDIT_DATA` | 10 |
 | `E2E_COTIZACION_ACEPTADA_ID` | 11 |
-| `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID` | 12 |
+| `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID`, `E2E_CONCEPTO_CXP_ID`, `E2E_CATEGORIA_CXP_ID` | 12 (costo propio MXN >=1000 y embarque confirmado; proveedor activo) |
+| `E2E_FACTURA_BORRADOR_ID` | 30 (borrador propio sin UUID; PAC interceptado, no emisión real) |
+| `E2E_EMBARQUE_EDITAR_ID` | 32 (marítimo propio completo con naviera/agente IDs, BL master/house, ETD/ETA; sólo lectura) |
 | `E2E_MT_A_*`, `E2E_MT_B_*` | 26 (job `multi-tenant`) |
 | `E2E_PROVISION_SECRET` | Job `provision-users` y `multi-tenant` |
+
+## PDF y regresión visual aislados
+
+`PDF and visual diagnostics (on demand)` corre únicamente por dispatch. No pide
+credenciales, no timbra ni escribe en Supabase. No agrega renderer real, browsers
+o coverage al CI habitual de 5 shards / 2 workers.
+
+- `bun run test:pdf`: renderer real sin el alias/stub de la suite rápida.
+  Requiere Poppler (`pdfinfo`, `pdftotext`); `PDF_PYTHON` permite usar Python con
+  pypdf en local. Genera cotización, proforma, proforma de 60 líneas y tesorería
+  con contenido/importes comprobados en `reports/pdf-smoke/`. Revisión renderizada
+  adicional; aprobar texto no certifica ausencia de recortes visuales.
+- `bun run test:visual`: componentes compartidos reales en un entry local sin
+  App/auth/Sentry. Baselines revisados de shell/tabla/modal, 1280×720 y 691×763,
+  claro/oscuro, Chromium de Playwright en Windows. No cubre permisos ni cada módulo.
+  Ocho PNG versionados en `e2e/visual/baselines/`; no actualizar automáticamente
+  en CI. Un cambio aprobado se regenera con `--update-snapshots`, se revisa y se
+  vuelve a ejecutar SIN ese flag antes de guardar el baseline.
+- `node node_modules/typescript/bin/tsc -p tsconfig.test-tooling.json` valida E2E,
+  fixtures, harness visual y smoke PDF, antes fuera del typecheck del frontend.
+
+Las pruebas financieras SQL se ejecutan sólo en el Postgres efímero de Actions:
+un único manifiesto bloqueante incluye las 13 suites recuperadas del antiguo radar.
+El cobro atómico se verifica por efectos (retry/conflicto/rollback) y por dos
+conexiones realmente contendiendo. Ninguna de estas pruebas envía CFDI al PAC.
 
 ## Provisionar usuarios E2E
 
