@@ -6,9 +6,15 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { formatDate } from "@/lib/formatters";
+import { hoyMx } from "@/lib/date/mx";
 
 interface TraspasoImportesProps {
   fecha: string;
+  fechaMinima?: string;
+  corteOrigen?: string;
+  corteDestino?: string;
+  errorFecha?: string | null;
   montoOrigen: number;
   comision: number;
   monedaOrigen?: string;
@@ -20,7 +26,7 @@ interface TraspasoImportesProps {
 }
 
 export function TraspasoImportes({
-  fecha, montoOrigen, comision, monedaOrigen,
+  fecha, fechaMinima, corteOrigen, corteDestino, errorFecha, montoOrigen, comision, monedaOrigen,
   onFechaChange, onMontoChange, onComisionChange, onCaptura, capturasNegativas,
 }: TraspasoImportesProps) {
   // El raw y MoneyInput se procesan en el mismo evento change. Capturar input
@@ -32,7 +38,13 @@ export function TraspasoImportes({
     <FormDialogSection title="Importes y fecha">
       <div className="space-y-1.5">
         <Label htmlFor="traspaso-fecha">Fecha</Label>
-        <DatePickerMx id="traspaso-fecha" value={fecha} onChange={onFechaChange} />
+        <DatePickerMx id="traspaso-fecha" value={fecha} onChange={onFechaChange}
+          min={fechaMinima} max={hoyMx()} errorText={errorFecha} />
+        {fechaMinima && <div className="text-body-sm text-muted-foreground" aria-live="polite">
+          {corteOrigen && <p>Corte de cuenta origen: {formatDate(corteOrigen)}.</p>}
+          {corteDestino && <p>Corte de cuenta destino: {formatDate(corteDestino)}.</p>}
+          <p>Fecha mínima permitida: {formatDate(fechaMinima)} (inclusive).</p>
+        </div>}
       </div>
       <div className="space-y-1.5" onChangeCapture={(e) => capturar("montoOrigen", e.target)}>
         <Label htmlFor="traspaso-monto">Monto a transferir</Label>

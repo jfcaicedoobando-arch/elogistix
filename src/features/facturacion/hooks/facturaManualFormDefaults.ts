@@ -7,6 +7,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import type { ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
+import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
 /**
  * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
@@ -50,9 +51,10 @@ export function useFaltantesTimbrar(
         !cliente && "cliente",
         !conceptosValidos && "conceptos válidos",
         fiscal.tipoCambio <= 0 && "tipo de cambio",
+        validarFormaMetodoPago(fiscal.formaPago, fiscal.metodoPago).length > 0 && "forma y método de pago compatibles",
         cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal) &&
           "datos fiscales del cliente (RFC · CP · régimen)",
       ].filter((x): x is string => !!x),
-    [cliente, conceptosValidos, fiscal.tipoCambio],
+    [cliente, conceptosValidos, fiscal.tipoCambio, fiscal.formaPago, fiscal.metodoPago],
   );
 }

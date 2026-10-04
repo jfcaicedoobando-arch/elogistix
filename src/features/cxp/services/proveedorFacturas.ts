@@ -16,6 +16,7 @@ import {
 } from "./proveedorFacturas.helpers";
 import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
 import { fetchSaldosProveedorFacturas } from "./saldosProveedorFactura";
+import { todayLocalISO } from "@/lib/date/today";
 
 export type {
   ProveedorFacturaRow,
@@ -108,12 +109,13 @@ async function leerTodosLosLotes(filtros: FetchCxPFiltros): Promise<Joined[]> {
   }
 }
 
-export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
+export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}, hoyIso = todayLocalISO()): Promise<FacturaCxP[]> {
   const crudas = await leerTodosLosLotes(filtros);
   // N1: el saldo (pagos + notas de crédito convertidas a la moneda de la
   // factura) lo calcula el servidor; aquí sólo se mapea.
   const saldos = await fetchSaldosProveedorFacturas(crudas.map((r) => r.id));
-  const rows = crudas.map((r) => mapJoinedRow(r, saldos.get(r.id)));
+  // Corte capturado antes del I/O: todos los lotes y sus filtros usan el mismo día.
+  const rows = crudas.map((r) => mapJoinedRow(r, saldos.get(r.id), hoyIso));
   // Los filtros derivados (estatus/origen) se aplican sobre el conjunto
   // completo, no sobre el primer lote.
   return aplicarFiltrosCliente(rows, filtros);
@@ -156,4 +158,3 @@ export {
   type NuevaFacturaProveedorPayload,
   type CrearFacturaProveedorInput,
 } from "./proveedorFacturas.crud";
-

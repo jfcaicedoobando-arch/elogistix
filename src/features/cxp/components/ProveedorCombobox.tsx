@@ -21,9 +21,11 @@ interface Props {
   onChange: (id: string, nombre: string, diasCredito?: number) => void;
   placeholder?: string;
   className?: string;
+  id?: string;
+  invalid?: boolean;
 }
 
-export function ProveedorCombobox({ value, onChange, placeholder = "Selecciona proveedor", className }: Props) {
+export function ProveedorCombobox({ value, onChange, placeholder = "Selecciona proveedor", className, id, invalid }: Props) {
   const [open, setOpen] = useState(false);
   const { data: items = [] } = useProveedoresLite();
   const selected = items.find((i) => i.id === value);
@@ -32,7 +34,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = "Selecciona p
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline" role="combobox"
+          id={id} aria-invalid={invalid} variant="outline" role="combobox"
           className={cn("justify-between font-normal", className)}
         >
           {selected ? selected.nombre : placeholder}

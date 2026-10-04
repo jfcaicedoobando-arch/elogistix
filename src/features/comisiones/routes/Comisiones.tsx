@@ -1,9 +1,7 @@
 /**
  * Comisiones — devengadas + liquidaciones + config.
  *
- * Devengadas usa `useClientPagedList` + `<UnifiedFiltersBar />`; los filtros
- * server (vendedora, estado, periodo) viven en la URL vía `nuqs` y se propagan
- * al RPC, más búsqueda, orden por columna y paginación 10/20/50/100.
+ * Filtros server en la URL (nuqs), con búsqueda, orden y paginación cliente.
  */
 import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -30,7 +28,6 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { useDocumentTitle } from "@/hooks/shared";
-
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada", "Por recuperar"] as const;
 type EstadoUrl = typeof ESTADO_VALUES[number];
@@ -78,7 +75,11 @@ export default function Comisiones() {
     sorters: {
       factura: (a, b) => (a.factura_numero ?? "").localeCompare(b.factura_numero ?? ""),
       cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
-      cobrado: (a, b) => a.monto_cobrado_mxn - b.monto_cobrado_mxn,
+      cobrado: (a, b) => {
+        if (a.monto_cobrado_mxn === null) return b.monto_cobrado_mxn === null ? 0 : 1;
+        if (b.monto_cobrado_mxn === null) return -1;
+        return a.monto_cobrado_mxn - b.monto_cobrado_mxn;
+      },
       utilidad: (a, b) => a.utilidad_prorrateada_mxn - b.utilidad_prorrateada_mxn,
       porcentaje: (a, b) => a.porcentaje_aplicado - b.porcentaje_aplicado,
       comision: (a, b) => a.comision_mxn - b.comision_mxn,

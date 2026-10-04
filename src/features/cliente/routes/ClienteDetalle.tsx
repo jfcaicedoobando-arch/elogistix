@@ -61,6 +61,19 @@ function mapFormulario(cliente: ClienteRow) {
   };
 }
 
+/** Sin datos confirmados nunca se muestra deuda cero, tampoco durante un reintento. */
+function mapFinancialSummary(
+  financials: ReturnType<typeof useClienteDetalleController>["financials"],
+) {
+  return {
+    facturadoMXN: financials?.facturadoMXN ?? null,
+    pendienteMXN: financials?.pendienteMXN ?? null,
+    profitMXN: financials?.profitMXN ?? null,
+    facturasSinTc: financials?.facturasSinTc ?? 0,
+    embarquesSinTc: financials?.embarquesSinTc ?? 0,
+  };
+}
+
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
   const {
@@ -76,6 +89,7 @@ export default function ClienteDetalle() {
     cotizacionesCliente,
     loadingCotizaciones,
     financials,
+    errorFinancials, refetchFinancials, fetchingFinancials,
     canEdit,
     isContactSaving,
     isClientSaving,
@@ -115,15 +129,19 @@ export default function ClienteDetalle() {
         onEdit={() => setEditClienteOpen(true)}
       />
 
+      {errorFinancials && (
+        <ErrorStateInline
+          title={financials ? "No pudimos actualizar los datos financieros" : "No pudimos cargar los datos financieros"}
+          message={`${financials ? "Se muestran los últimos importes disponibles. " : ""}${getErrorMessage(errorFinancials)}`}
+          onRetry={() => void refetchFinancials()}
+          retrying={fetchingFinancials}
+        />
+      )}
       <ClienteSummaryCards
         embarques={embarquesCliente.length}
         cotizaciones={cotizacionesCliente.length}
         contactos={contarContactos(contactos.length, cliente.contacto)}
-        facturadoMXN={financials?.facturadoMXN ?? 0}
-        pendienteMXN={financials?.pendienteMXN ?? 0}
-        profitMXN={financials?.profitMXN ?? 0}
-        facturasSinTc={financials?.facturasSinTc ?? 0}
-        embarquesSinTc={financials?.embarquesSinTc ?? 0}
+        {...mapFinancialSummary(financials)}
       />
 
       <ClienteDetalleTabs

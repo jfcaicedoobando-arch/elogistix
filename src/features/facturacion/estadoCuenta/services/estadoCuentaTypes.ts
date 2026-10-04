@@ -1,12 +1,12 @@
 /**
  * Tipos y utilidades puras del Estado de Cuenta por cliente.
- *
- * Contratos de datos y mapeo puro, sin acceso a la base de datos.
+ * Contratos y mapeo puro, sin acceso a la base de datos.
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactura";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
+import { notasCreditoMonedaFactura } from "@/lib/financial/notasCreditoMonedaFactura";
 import { esNcClienteVigente } from "@/lib/domain/estadosFactura";
 
 export type FacturaRow = Tables<"facturas">;
@@ -39,6 +39,8 @@ export interface FacturaEstadoCuenta {
   expediente: string;
   moneda: Moneda;
   total: number;
+  /** TC histórico de la factura; ausente en snapshots anteriores. */
+  tipo_cambio?: number | null;
   pagado: number;
   notas_credito_aplicadas: number;
   saldo: number;
@@ -97,6 +99,8 @@ export type RawNota = {
   folio: string | null;
   fecha_emision: string;
   monto: number;
+  moneda: string;
+  tipo_cambio: number | null;
   estado: string;
   deleted_at: string | null;
 };
@@ -106,6 +110,7 @@ export type RawFactura = Pick<
   | "id" | "numero" | "cliente_id" | "cliente_nombre" | "expediente"
   | "moneda" | "total" | "fecha_emision" | "fecha_vencimiento" | "estado"
 > & {
+  tipo_cambio?: number | null;
   pagos_factura: RawPago[] | null;
   factura_notas_credito: RawNota[] | null;
 };
@@ -131,26 +136,24 @@ export function calcularEstatus(
 
 /** Mapea una fila cruda (con joins embebidos) al shape de UI. */
 export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
-  // v13.823.295 — los pagos con REP cancelado están anulados: no suman a
-  // cobrado ni aparecen en la cartera del cliente (el antecedente fiscal vive
-  // en el detalle de la factura).
+  // Los REP cancelados no suman a cobrado ni reducen el saldo.
   const pagosActivos = (f.pagos_factura ?? []).filter(
     (p) => !p.deleted_at && !esPagoAnulado(p),
   );
-  const notasActivas = (f.factura_notas_credito ?? []).filter(
-    (n) => !n.deleted_at && esNcClienteVigente(n.estado),
+  const { notas: notasActivas, total: credito } = notasCreditoMonedaFactura(
+    (f.factura_notas_credito ?? []).filter((n) => !n.deleted_at && esNcClienteVigente(n.estado)),
+    f.moneda, f.tipo_cambio,
   );
-  const total = Number(f.total);
+  const total = Number(f.total ?? 0);
   // A1: canon único `@/lib/financial/saldoFactura` (no reimplementar).
   const { saldo, pagado, notasCredito: nc_aplicadas } = calcularSaldoFactura(
     total,
     pagosActivos,
-    notasActivas,
+    [{ monto: credito }],
     f.estado,
   );
 
   const dias = diasVencido(f.fecha_vencimiento);
-
   return {
     id: f.id,
     numero: f.numero,
@@ -159,6 +162,7 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
     expediente: f.expediente,
     moneda: f.moneda,
     total,
+    tipo_cambio: f.tipo_cambio,
     pagado,
     notas_credito_aplicadas: nc_aplicadas,
     saldo,
@@ -171,9 +175,7 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
       id: p.id,
       fecha_pago: p.fecha_pago,
       monto_aplicado: Number(p.monto_aplicado_factura),
-      // B-077: `monto` está en moneda del PAGO y `monto_aplicado_factura`
-      // en moneda de la FACTURA — restarlos directo inventa saldos a favor
-      // (factura USD pagada en MXN mostraba "USD 175,000 a favor").
+      // B-077: convertir moneda del pago antes de restar el aplicado.
       // Convención (la misma de DialogRegistrarPago): `tipo_cambio`
       // convierte moneda del pago → moneda de la factura; el excedente
       // queda expresado en moneda de la factura. Sin TC confiable → 0.
@@ -190,7 +192,6 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
     })),
   };
 }
-
 function montoNoAplicado(p: RawPago, monedaFactura: Moneda): number {
   const tc = Number(p.tipo_cambio);
   const factor = p.moneda === monedaFactura ? 1 : Number.isFinite(tc) && tc > 0 ? tc : 0;

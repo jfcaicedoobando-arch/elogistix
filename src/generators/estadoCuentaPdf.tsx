@@ -1,7 +1,8 @@
 /**
  * Estado de cuenta PDF por cliente (adaptador thin).
  *
- * Carga facturas emitidas/vencidas + emisor, calcula aging (Por vencer,
+ * Usa el mismo corte de la tabla/CSV (o carga facturas con saldo) + emisor,
+ * calcula aging (Por vencer,
  * 1-30, 31-60, 61-90, +90 días) y totales por moneda, y delega el render a
  * `EstadoCuentaDocument` (@react-pdf/renderer) con descarga directa vía
  * `descargarPdf`. Reemplaza el flujo legacy `window.open + print`
@@ -9,10 +10,13 @@
  * de impresión del navegador.
  */
 import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
+import type { EstadoCuentaFactura } from "@/features/facturacion/services/exports";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { withOrgPrefix, slugifyOrg } from "@/lib/filenames";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { todayLocalISO } from "@/lib/date/today";
+import { sumarMontos } from "@/lib/financial/financialUtils";
 import type {
   EstadoCuentaBucketTotal,
   EstadoCuentaCliente,
@@ -40,15 +44,15 @@ function bucketFor(diasVencido: number): string {
 
 export async function generarEstadoCuentaPdf(
   cliente: EstadoCuentaCliente & { id: string },
+  snapshot?: readonly EstadoCuentaFactura[],
 ): Promise<void> {
   const [facturas, emisor, { EstadoCuentaDocument }] = await Promise.all([
-    fetchEstadoCuentaFacturas(cliente.id),
+    snapshot ?? fetchEstadoCuentaFacturas(cliente.id),
     cargarEmisorEmpresa(),
     // P12: el Document se carga dinámicamente para no arrastrar @react-pdf al bundle inicial.
     import("@/pdf/documents/EstadoCuentaDocument"),
   ]);
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  const hoy = todayLocalISO();
 
   const rows: EstadoCuentaRow[] = facturas.map((f) => {
     const dias = diasVencidos(f.fecha_vencimiento, hoy);
@@ -60,9 +64,9 @@ export async function generarEstadoCuentaPdf(
     const fs = rows.filter((r) => r.moneda === m);
     const buckets: EstadoCuentaBucketTotal[] = BUCKETS.map((b) => ({
       label: b.label,
-      total: fs.filter((r) => r.bucket === b.label).reduce((s, r) => s + Number(r.total), 0),
+      total: sumarMontos(fs.filter((r) => r.bucket === b.label).map((r) => r.saldo)),
     }));
-    return { moneda: m, total: fs.reduce((s, r) => s + Number(r.total), 0), buckets };
+    return { moneda: m, total: sumarMontos(fs.map((r) => r.saldo)), buckets };
   });
 
   const nombre = await withOrgPrefix(`estado-de-cuenta-${slugifyOrg(cliente.nombre)}`);

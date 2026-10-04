@@ -81,6 +81,7 @@ export function MonedaImportesSection({
               onChange={(n) => onChange("tc", fromNum(n))}
               decimals
               aria-label="Tipo de cambio a MXN"
+              aria-invalid={!!errors.tc}
             />
             <TcOrigenHint origen={tcOrigen} fechaAplicada={tcFechaAplicada} />
             <FieldError msg={errors.tc} />
@@ -91,22 +92,25 @@ export function MonedaImportesSection({
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="space-y-1">
           <Label>Subtotal<RequiredMark /></Label>
-          <NumericInput value={toNum(values.subtotal)} onChange={(n) => onChange("subtotal", fromNum(n))} decimals aria-label="Subtotal" />
+          <NumericInput value={toNum(values.subtotal)} onChange={(n) => onChange("subtotal", fromNum(n))} decimals aria-label="Subtotal" aria-invalid={!!errors.subtotal} />
+          <FieldError msg={errors.subtotal} />
         </div>
         <div className="space-y-1">
           <Label>IVA</Label>
-          <NumericInput value={toNum(values.iva)} onChange={(n) => onChange("iva", fromNum(n))} decimals aria-label="IVA" />
+          <NumericInput value={toNum(values.iva)} onChange={(n) => onChange("iva", fromNum(n))} decimals aria-label="IVA" aria-invalid={!!errors.iva} />
+          <FieldError msg={errors.iva} />
         </div>
         <div className="space-y-1">
           <Label>IEPS</Label>
-          <NumericInput value={toNum(values.ieps)} onChange={(n) => onChange("ieps", fromNum(n))} decimals aria-label="IEPS" />
+          <NumericInput value={toNum(values.ieps)} onChange={(n) => onChange("ieps", fromNum(n))} decimals aria-label="IEPS" aria-invalid={!!errors.ieps} />
+          <FieldError msg={errors.ieps} />
         </div>
         <div className="space-y-1">
           <Label>Retenciones</Label>
-          <NumericInput value={toNum(values.retenciones)} onChange={(n) => onChange("retenciones", fromNum(n))} decimals aria-label="Retenciones" />
+          <NumericInput value={toNum(values.retenciones)} onChange={(n) => onChange("retenciones", fromNum(n))} decimals aria-label="Retenciones" aria-invalid={!!errors.retenciones} />
+          <FieldError msg={errors.retenciones} />
         </div>
       </div>
-      <FieldError msg={errors.subtotal} />
     </FormSection>
   );
 }

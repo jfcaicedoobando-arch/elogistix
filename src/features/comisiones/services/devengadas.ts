@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { buildNombreVendedoraMap, aplicarFiltros } from "./devengadas.helpers";
+import { cobroSinEmbarqueMxn, comisionSinEmbarque, type PagoCobrado } from "../domain/cobroSinEmbarque";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -21,7 +22,7 @@ export interface ComisionDevengada {
   factura_numero: string | null;
   cliente_nombre: string | null;
   expediente: string | null;
-  monto_cobrado_mxn: number;
+  monto_cobrado_mxn: number | null;
   utilidad_prorrateada_mxn: number;
   porcentaje_aplicado: number;
   comision_mxn: number;
@@ -38,7 +39,8 @@ export interface FetchComisionesFiltros {
 }
 
 type Joined = ComisionDevengadaRow & {
-  facturas: { numero: string; cliente_nombre: string; expediente: string | null } | null;
+  facturas: { numero: string; cliente_nombre: string; expediente: string | null; moneda: string } | null;
+  pago: PagoCobrado | null;
 };
 
 /** Fila mínima para KPIs: sólo lo que `calcularKPIsComisiones` necesita. */
@@ -84,7 +86,8 @@ export async function fetchComisionesDevengadas(
       id, organization_id, pago_factura_id, embarque_id, factura_id, vendedora_id,
       monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado,
       comision_mxn, estado, liquidacion_id, nota, created_at,
-      facturas:factura_id ( numero, cliente_nombre, expediente )
+      facturas:factura_id ( numero, cliente_nombre, expediente, moneda ),
+      pago:pago_factura_id ( monto, moneda, monto_aplicado_factura, deleted_at, estado_rep )
     `)
       .is("deleted_at", null), filtros)
       .order("created_at", { ascending: false })
@@ -108,13 +111,15 @@ export async function fetchComisionesDevengadas(
     factura_numero: r.facturas?.numero ?? null,
     cliente_nombre: r.facturas?.cliente_nombre ?? null,
     expediente: r.facturas?.expediente ?? null,
-    monto_cobrado_mxn: Number(r.monto_cobrado_mxn),
+    monto_cobrado_mxn: comisionSinEmbarque(r)
+      ? cobroSinEmbarqueMxn(r.pago, r.facturas?.moneda)
+      : Number(r.monto_cobrado_mxn),
     utilidad_prorrateada_mxn: Number(r.utilidad_prorrateada_mxn),
     porcentaje_aplicado: Number(r.porcentaje_aplicado),
     comision_mxn: Number(r.comision_mxn),
     estado: r.estado,
     liquidacion_id: r.liquidacion_id,
-    nota: r.nota,
+    nota: comisionSinEmbarque(r) ? "Sin embarque asociado: comisión no calculada" : r.nota,
     created_at: r.created_at,
   }));
 

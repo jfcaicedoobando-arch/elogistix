@@ -42,8 +42,8 @@ describe("calcularKPIsCxP", () => {
 
   it("acumula vencidas y cuenta facturas", () => {
     const k = calcularKPIsCxP([
-      f({ saldo: 200, moneda: "MXN", estatus: "Vencida", dias_vencido: 5 }),
-      f({ saldo: 300, moneda: "USD", estatus: "Vencida", dias_vencido: 1 }),
+      f({ saldo: 200, moneda: "MXN", estatus: "Vencida", dias_vencido: 5, fecha_vencimiento: "2026-06-21" }),
+      f({ saldo: 300, moneda: "USD", estatus: "Vencida", dias_vencido: 1, fecha_vencimiento: "2026-06-25" }),
       f({ saldo: 50, moneda: "MXN", estatus: "Vigente" }),
     ]);
     expect(k.vencido_mxn).toBe(200);

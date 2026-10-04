@@ -83,3 +83,15 @@ describe("carteraExport", () => {
     expect(nombreArchivoCartera("2026-08-08", "csv", true)).toBe("cartera-antiguedad-2026-08-08-filtrada.csv");
   });
 });
+
+
+describe("CSV cartera: negativos numéricos y texto no ejecutable", () => {
+  it("mantiene -171.92 en detalle/totales sin apóstrofo y neutraliza fórmulas", () => {
+    const filas = construirFilasCartera([{ ...facturas[0], saldo: 95, tipoCambio: 20, contraparte: "=SUM(1,2)" }], "2026-08-08", { ...tc, usdMxn: 18.190315789473683 });
+    const detalle = filasCarteraExport("CxP", filas);
+    const csv = carteraACsv(detalle, [{ bloque: "CxP", filas: filasTotalesExport(totalesPorBucket(filas), totalCartera(filas), "CxP") }]);
+    expect(csv).toContain(",95.00,1900.00,1728.08,-171.92");
+    expect(csv).not.toContain("'-171.92");
+    expect(csv).toContain("'=SUM(1,2)");
+  });
+});

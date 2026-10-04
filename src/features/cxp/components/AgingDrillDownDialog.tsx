@@ -34,13 +34,13 @@ interface Props {
   cubetaInicial?: CubetaAging | "todas";
 }
 
-export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInicial = "todas" }: Props) {
+function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "todas" }: Props) {
   const [cubeta, setCubeta] = useState<CubetaAging | "todas">(cubetaInicial);
   const { data: facturas = [], isLoading } = useFacturasCxP(
-    proveedor ? { proveedor_id: proveedor.proveedor_id } : {},
+    proveedor ? { proveedor_id: proveedor.proveedor_id, moneda: proveedor.moneda } : {},
   );
 
-  const abiertas = useMemo(() => facturas.filter((f) => f.saldo > 0), [facturas]);
+  const abiertas = useMemo(() => facturas.filter((f) => f.saldo > 0 && f.moneda === proveedor?.moneda), [facturas, proveedor?.moneda]);
   const filtradas = useMemo(() => {
     if (cubeta === "todas") return abiertas;
     return abiertas.filter((f) => bucketDeDias(f.dias_vencido) === cubeta);
@@ -114,7 +114,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
               </DialogTitle>
               {proveedor && (
                 <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-body-sm font-mono font-semibold uppercase tracking-wider border">
-                  {proveedor.num_facturas} factura{proveedor.num_facturas === 1 ? "" : "s"}
+                  {filtradas.length} factura{filtradas.length === 1 ? "" : "s"}
                 </span>
               )}
             </div>
@@ -168,4 +168,10 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
       </Dialog>
     </TooltipProvider>
   );
+}
+
+/** Cada apertura/proveedor/moneda comienza en la cubeta solicitada, sin filtro heredado. */
+export function AgingDrillDownDialog(props: Props) {
+  const identity = `${props.proveedor?.proveedor_id}:${props.proveedor?.moneda}:${props.open}:${props.cubetaInicial ?? "todas"}`;
+  return <AgingDrillDownBody key={identity} {...props} />;
 }

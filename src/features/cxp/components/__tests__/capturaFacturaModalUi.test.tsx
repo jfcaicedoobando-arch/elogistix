@@ -44,13 +44,14 @@ describe("pendientesDeCaptura", () => {
     expect(pendientesDeCaptura({ values, total: 0 })).toEqual([
       "Falta el proveedor",
       "Falta el folio del proveedor",
+      "Falta la categoría contable",
       "Falta el importe de la factura",
     ]);
   });
 
   it("exige tipo de cambio en moneda extranjera", () => {
     const usd: FacturaFormValues = {
-      ...values, provId: "p1", folio: "A-1", moneda: "USD", subtotal: "100",
+      ...values, provId: "p1", folio: "A-1", moneda: "USD", subtotal: "100", categoriaId: "cat-1",
     };
     expect(pendientesDeCaptura({ values: usd, total: 116 })).toEqual([
       "Falta el tipo de cambio",
@@ -58,7 +59,7 @@ describe("pendientesDeCaptura", () => {
   });
 
   it("sin pendientes devuelve lista vacía", () => {
-    const ok: FacturaFormValues = { ...values, provId: "p1", folio: "A-1" };
+    const ok: FacturaFormValues = { ...values, provId: "p1", folio: "A-1", categoriaId: "cat-1" };
     expect(pendientesDeCaptura({ values: ok, total: 116 })).toEqual([]);
   });
 });

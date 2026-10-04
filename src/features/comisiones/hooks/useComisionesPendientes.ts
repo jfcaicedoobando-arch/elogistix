@@ -28,7 +28,7 @@ export function useReprocesarComisionesPendientes() {
         notifyWarning(undefined, {
           title: "Ninguna comisión se pudo recalcular",
           description:
-            "Revisa los tipos de cambio y los costos del embarque; el recálculo sigue dando cero.",
+            "Revisa el motivo de cada pendiente. Una factura sin embarque asociado requiere revisión de Administración antes de calcular una comisión.",
         });
         return;
       }

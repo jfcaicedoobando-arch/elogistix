@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.23] - Unreleased
+
+- **fix(saldos del cliente)**: KPI y PDF usan el saldo neto de pagos y notas de crédito; el PDF comparte el corte filtrado de la tabla y CSV, incluidas facturas parcialmente pagadas.
+- **fix(CxP)**: detalle/CSV de antigüedad respetan moneda y cubeta; importes, conteos y etiquetas usan el día de negocio de Ciudad de México. La captura normaliza precios antes de calcular/guardar y dirige los errores obligatorios al paso visible.
+- **fix(cobros y tesorería)**: prevalidación PUE/99 antes de crear y timbrar; pago único PUE alineado con la tolerancia de cierre existente, sin perdonar ni reescribir saldos históricos. Traspasos advierten la fecha mínima de ambas cuentas antes del envío.
+- **fix(reportes y comisiones)**: CSV de cartera preserva negativos numéricos y protege texto de fórmulas; comisiones distingue cobro conocido de cálculo no disponible y explica la ausencia de embarque.
+- **test(auditoría financiera 45–54)**: regresiones de moneda, corte horario, saldos netos, precisión, prevalidación y tolerancias; migración nueva y espejo, sin reparación de fixtures ni despliegue implícito.
+
 ## [13.824.22] - 2026-10-04
 
 - **fix(CxP · moneda bancaria)**: la fila de un pago conciliado muestra el cargo en la moneda de su cuenta bancaria, conservando la moneda del pago. Si la cuenta no está disponible, identifica la moneda faltante sin asumir MXN. Pruebas MXN/USD y de lectura, sin modificar importes ni registros.

@@ -3,6 +3,8 @@
  * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
  */
 
+import { normalizarConceptoPersistible } from "../utils/conceptosPersistibles";
+import { puedePersistirFactura } from "./useNuevaFacturaProveedorForm.guard";
 import { buscarFacturaDuplicadaFolio } from "@/features/cxp/services";
 import {
   buscarCfdiDuplicado, describirFacturaExistente, type FacturaExistentePorUuid,
@@ -103,16 +105,8 @@ export interface ResultadoSubmit {
 
 /** Devuelve `ok: true` y el id creado si la operación fue exitosa. */
 export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
-  // P0-2 (R5): defensa en profundidad — `categoria_presupuesto_id` es NOT NULL en BD;
-  // si el string llega vacío, el INSERT falla con 23502 y el toast confunde al usuario.
-  if (!p.values.categoriaId) {
-    notifyError(undefined, {
-      title: "Falta la categoría contable",
-      description: "Selecciona la categoría de presupuesto antes de guardar la factura.",
-      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CATEGORIA_PRE",
-    });
-    return { ok: false, facturaId: null };
-  }
+  const conceptos = p.cfdiConceptos.map(normalizarConceptoPersistible);
+  if (!puedePersistirFactura(p.values, conceptos)) return { ok: false, facturaId: null };
   try {
     const dup = await buscarFacturaDuplicadaFolio(p.values.provId, p.values.folio, p.values.emision);
     if (dup) {
@@ -162,7 +156,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
     if (created?.id) {
       await uploadCfdiSafe({ facturaId: created.id, organizationId: p.organizationId, pendingCfdi: p.pendingCfdi });
       await persistirConceptosCfdiSafe({
-        facturaId: created.id, organizationId: p.organizationId, conceptos: p.cfdiConceptos,
+        facturaId: created.id, organizationId: p.organizationId, conceptos,
       });
       sideResult = await vincularSafe({
         facturaId: created.id, organizationId: p.organizationId,

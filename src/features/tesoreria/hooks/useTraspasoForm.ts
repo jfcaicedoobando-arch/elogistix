@@ -8,6 +8,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { multiplicadorOrigenDestino, parTc } from "@/features/tesoreria/domain/tcPar";
+import { fechaMinimaTraspaso, validarFechaTraspaso } from "@/features/tesoreria/domain/traspasoFecha";
 import {
   ESTADO_INICIAL, hoyIso, sugerirTcQuote, validarTraspaso,
 } from "@/features/tesoreria/domain/traspasoForm";
@@ -61,6 +62,8 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
 
   const origen = useMemo(() => cuentas.find((c) => c.id === state.origenId), [cuentas, state.origenId]);
   const destino = useMemo(() => cuentas.find((c) => c.id === state.destinoId), [cuentas, state.destinoId]);
+  const fechaMinima = fechaMinimaTraspaso(origen, destino);
+  const errorFecha = validarFechaTraspaso(state.fecha, fechaMinima);
   const mismoMoneda = origen && destino && origen.moneda === destino.moneda;
   const par = useMemo(() => parTc(origen?.moneda, destino?.moneda), [origen?.moneda, destino?.moneda]);
 
@@ -119,6 +122,10 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     tcSugerido,
     tcEsManual,
     fechaInicial,
+    fechaMinima,
+    errorFecha,
+    corteOrigen: origen?.fecha_saldo_inicial,
+    corteDestino: destino?.fecha_saldo_inicial,
     fechaTcDof: tcDof?.fecha ?? null,
   };
 }

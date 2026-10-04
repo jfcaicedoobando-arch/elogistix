@@ -7,8 +7,9 @@
  * no se puede convertir por falta de TC se cuenta aparte en vez de sumarse mal.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+import { fetchEstadoCuenta, type FacturaEstadoCuenta } from "@/features/facturacion/services";
 import { aMxn } from "@/lib/financial/convertir";
+import { sumarMontos } from "@/lib/financial/financialUtils";
 
 export interface ClienteFinancials {
   facturadoMXN: number;
@@ -27,19 +28,10 @@ interface ProfitRow {
   embarques_sin_tc: number | null;
 }
 
-const FACTURA_COLS = "total, moneda, estado, tipo_cambio, embarque_id" as const;
-
-interface FacturaFila {
-  total: number | null;
-  moneda: string;
-  tipo_cambio: number | null;
-  estado: string;
-}
-
 /** Suma facturado/pendiente en MXN y cuenta las facturas sin TC confiable. */
-function totalizarFacturas(filas: readonly FacturaFila[]) {
-  let facturadoMXN = 0;
-  let pendienteMXN = 0;
+function totalizarFacturas(filas: readonly FacturaEstadoCuenta[]) {
+  const facturado: number[] = [];
+  const pendiente: number[] = [];
   let facturasSinTc = 0;
   for (const f of filas) {
     const conv = aMxn(f.total ?? 0, f.moneda, f.tipo_cambio);
@@ -47,29 +39,22 @@ function totalizarFacturas(filas: readonly FacturaFila[]) {
       facturasSinTc += 1;
       continue;
     }
-    facturadoMXN += conv.monto;
-    if (f.estado === "Emitida" || f.estado === "Vencida") {
-      pendienteMXN += conv.monto;
-    }
+    facturado.push(conv.monto);
+    // El saldo ya descuenta pagos vigentes y NC con el mismo canon que tabla/CSV.
+    pendiente.push(aMxn(f.saldo, f.moneda, f.tipo_cambio).monto);
   }
-  return { facturadoMXN, pendienteMXN, facturasSinTc };
+  return {
+    facturadoMXN: sumarMontos(facturado),
+    pendienteMXN: sumarMontos(pendiente),
+    facturasSinTc,
+  };
 }
 
 export async function fetchClienteFinancials(clienteId: string): Promise<ClienteFinancials> {
-  // Filtra Cancelada y Sustituida server-side: no forman parte del facturado
-  // vigente al cliente. Ref: FACTURA_ESTADOS_VIVOS.
-  const { data: facturas, error: errF } = await supabase
-    .from("facturas")
-    .select(FACTURA_COLS)
-    .eq("cliente_id", clienteId)
-    .in("estado", [...FACTURA_ESTADOS_VIVOS])
-    .is("deleted_at", null);
-  if (errF) throw errF;
-
-  const { facturadoMXN, pendienteMXN, facturasSinTc } = totalizarFacturas(
-    (facturas ?? []) as FacturaFila[],
-  );
-
+  // Una sola lectura con pagos/NC: comparte estados vivos, saldo neto y guarda
+  // anti-truncamiento con el estado de cuenta en pantalla y sus exportaciones.
+  const facturas = await fetchEstadoCuenta({ clienteIds: [clienteId] });
+  const { facturadoMXN, pendienteMXN, facturasSinTc } = totalizarFacturas(facturas);
 
   // Perf: la RPC se filtra por cliente para no recalcular toda la organización
   // (antes provocaba statement timeout 57014 en la ficha del cliente).

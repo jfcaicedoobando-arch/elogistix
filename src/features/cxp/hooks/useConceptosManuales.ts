@@ -8,6 +8,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { normalizarConceptoPersistible } from "../utils/conceptosPersistibles";
 import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface ConceptoManual extends CfdiConceptoParsed {
@@ -60,7 +61,7 @@ export function useConceptosManuales(): ConceptosManualesApi {
 
   const actualizar = useCallback(
     <K extends keyof CfdiConceptoParsed>(key: string, campo: K, valor: CfdiConceptoParsed[K]) => {
-      setConceptos((prev) => prev.map((c) => (c.key === key ? { ...c, [campo]: valor } : c)));
+      setConceptos((prev) => prev.map((c) => (c.key === key ? normalizarConceptoPersistible({ ...c, [campo]: valor }) : c)));
     },
     [],
   );
@@ -93,7 +94,7 @@ export function useConceptosManuales(): ConceptosManualesApi {
   const limpiar = useCallback(() => setConceptos((prev) => (prev.length === 0 ? prev : [])), []);
 
   const reemplazar = useCallback((lista: ReadonlyArray<CfdiConceptoParsed>) => {
-    setConceptos(lista.map((c) => ({ ...c, key: nextKey() })));
+    setConceptos(lista.map((c) => ({ ...normalizarConceptoPersistible(c), key: nextKey() })));
   }, []);
 
   // Identidad estable del objeto devuelto: se consume como dependencia de

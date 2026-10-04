@@ -31,7 +31,8 @@ export function useClienteDetalleController() {
   const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
   const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
   const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
-  const { data: financials } = useClienteFinancials(id);
+  const { data: financials, error: errorFinancials, refetch: refetchFinancials,
+    isFetching: fetchingFinancials } = useClienteFinancials(id);
 
   // Mutations
   const createContacto = useCreateContacto();
@@ -66,6 +67,7 @@ export function useClienteDetalleController() {
     cotizacionesCliente,
     loadingCotizaciones,
     financials,
+    errorFinancials, refetchFinancials, fetchingFinancials,
     canEdit,
     isContactSaving: createContacto.isPending || updateContacto.isPending,
     isClientSaving: updateCliente.isPending,

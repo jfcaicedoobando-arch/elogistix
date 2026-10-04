@@ -16,6 +16,7 @@ import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidate
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 import { getErrorMessage } from "@/lib/errors";
+import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -27,6 +28,11 @@ export function useCrearFacturaManual() {
   return useMutation({
     mutationKey: queryKeys.facturacion.facturaManual,
     mutationFn: async (vars: CrearFacturaManualVars) => {
+      // Validar antes de cualquier INSERT: un rechazo fiscal no debe dejar un borrador residual.
+      if (vars.timbrarAlGuardar) {
+        const issues = validarFormaMetodoPago(vars.input.formaPago, vars.input.metodoPago);
+        if (issues.length > 0) throw new Error(issues.map((issue) => issue.message).join(" "));
+      }
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {
         const res = await emitirFacturapi(facturaId);

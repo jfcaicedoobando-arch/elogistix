@@ -13,6 +13,7 @@ import { Hint } from "@/components/shared/Hint";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 import { RefreshCcw, Loader2 } from "lucide-react";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
@@ -50,6 +51,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
     if (tc && tc > 0) onChange({ tipoCambio: tc });
   }, value.fechaEmision);
   const requiereTc = value.moneda !== "MXN";
+  const errorFormaMetodo = validarFormaMetodoPago(value.formaPago, value.metodoPago)[0]?.message;
   const monedas: MonedaManual[] = ["MXN", "USD", "EUR"];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -103,18 +105,22 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>Forma de pago</Label>
-        <Select value={value.formaPago} onValueChange={(v) => onChange({ formaPago: v })}>
-          <SelectTrigger ><SelectValue /></SelectTrigger>
+        <Label htmlFor="factura-manual-forma-pago">Forma de pago</Label>
+        <Select value={value.formaPago} onValueChange={(v) => onChange({ formaPago: v })} disabled={value.metodoPago === "PPD"}>
+          <SelectTrigger id="factura-manual-forma-pago" aria-invalid={!!errorFormaMetodo} aria-describedby={errorFormaMetodo ? "factura-manual-forma-error" : undefined}>
+            <SelectValue placeholder="Elige la forma de pago real" />
+          </SelectTrigger>
           <SelectContent>
-            {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+            {FORMAS_PAGO_SAT.filter((f) => value.metodoPago !== "PUE" || f.value !== "99")
+              .map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        {errorFormaMetodo && <p id="factura-manual-forma-error" role="alert" className="text-label text-destructive">{errorFormaMetodo}</p>}
       </div>
       <div className="space-y-1.5">
-        <Label>Método de pago</Label>
+        <Label htmlFor="factura-manual-metodo-pago">Método de pago</Label>
         <Select value={value.metodoPago} onValueChange={(v) => onChange({ metodoPago: v })}>
-          <SelectTrigger ><SelectValue /></SelectTrigger>
+          <SelectTrigger id="factura-manual-metodo-pago"><SelectValue /></SelectTrigger>
           <SelectContent>
             {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
           </SelectContent>

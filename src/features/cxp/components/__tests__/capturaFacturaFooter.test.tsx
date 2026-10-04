@@ -16,6 +16,7 @@ function pasosMock(paso: 1 | 2 | 3, extra: Partial<CapturaPasos> = {}): CapturaP
     irA: vi.fn(),
     siguiente: vi.fn(),
     anterior: vi.fn(),
+    revisarDatos: vi.fn().mockReturnValue(true), solicitudFoco: 0,
     pendientesPorPaso: { documento: [], datos: [], vinculacion: [] },
     pendientesDeOtrosPasos: [],
     ...extra,

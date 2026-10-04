@@ -25,15 +25,15 @@ describe("useTotalesConceptosCaptura — adopción explícita", () => {
     expect(result.current.totales.difiere).toBe(false);
     expect(calcularCuadreConceptos(100, conceptos.map((c) => ({ monto: c.importe, cantidad: c.cantidad }))).puedeAprobar).toBe(true);
   });
-  it("conserva precisión de precios netos/cantidades y suma impuestos sin inventar tasas", () => {
+  it("normaliza precios a centavos antes de proponer y conserva cantidades fraccionarias", () => {
     const lineas = [
       { descripcion: "Prorrateo neto", cantidad: 3, importe: 0.3333, iva: 0.16, ieps: 0.02 },
       { descripcion: "Exento neto", cantidad: 0.5, importe: 10, iva: 0, ieps: 0 },
     ];
     const { result } = renderHook(() => useHarness({ manual: true, guardando: false, conceptos: lineas }, "0.01"));
     act(() => result.current.totales.aplicar());
-    expect(result.current.values).toMatchObject({ subtotal: "6.00", iva: "0.16", ieps: "0.02", retenciones: "0.01" });
-    expect(result.current.total).toBe(6.17);
+    expect(result.current.values).toMatchObject({ subtotal: "5.99", iva: "0.16", ieps: "0.02", retenciones: "0.01" });
+    expect(result.current.total).toBe(6.16);
     expect(lineas[0].importe).toBe(0.3333);
     expect(calcularCuadreConceptos(6, lineas.map((c) => ({ monto: c.importe, cantidad: c.cantidad }))).puedeAprobar).toBe(true);
   });

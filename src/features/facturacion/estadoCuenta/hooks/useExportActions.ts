@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { toEstadoCuentaFacturas } from "../../services/exports";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 const CSV_COLUMNS = [
@@ -58,7 +59,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     setBusy("pdf");
     try {
       const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
-      await generarEstadoCuentaPdf(data);
+      await generarEstadoCuentaPdf(data, toEstadoCuentaFacturas(rows));
       notifySuccess(undefined, { title: "Estado de cuenta PDF descargado" });
     } catch (err) {
       notifyError(undefined, {
@@ -69,7 +70,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     } finally {
       setBusy(null);
     }
-  }, [clienteIds, soloUnCliente, rows.length]);
+  }, [clienteIds, soloUnCliente, rows]);
 
   const onCsv = useCallback(() => {
     if (rows.length === 0) {

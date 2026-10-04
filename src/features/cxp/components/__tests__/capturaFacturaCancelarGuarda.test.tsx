@@ -24,6 +24,7 @@ function pasos(paso: 1 | 3 = 1): CapturaPasos {
     paso, totalPasos: 3, etiquetas: ["Documento", "Datos", "Vinculación"],
     esUltimo: paso === 3, esPrimero: paso === 1,
     irA: vi.fn(), siguiente: vi.fn(), anterior: vi.fn(),
+    revisarDatos: vi.fn().mockReturnValue(true), solicitudFoco: 0,
     pendientesPorPaso: { documento: [], datos: [], vinculacion: [] },
     pendientesDeOtrosPasos: [],
   };

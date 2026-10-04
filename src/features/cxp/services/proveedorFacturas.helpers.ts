@@ -4,6 +4,7 @@
  * Sin Supabase, sin React: testeables en aislamiento.
  */
 import type { FacturaCxP, EstatusCxP, FetchCxPFiltros } from "./proveedorFacturas";
+import { todayLocalISO } from "@/lib/date/today";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/lib/domain/vencimiento";
 import type {
@@ -43,9 +44,9 @@ export function sumarNotasCreditoAplicadas(ncs: NotaCreditoCxpParcial[] | null):
 
 
 
-export function diasVencido(fechaVenc: string | null): number {
+export function diasVencido(fechaVenc: string | null, hoyIso = todayLocalISO()): number {
   if (!fechaVenc) return 0;
-  return diasVencidos(fechaVenc.slice(0, 10));
+  return diasVencidos(fechaVenc.slice(0, 10), hoyIso);
 }
 
 /**
@@ -132,10 +133,10 @@ function resolverSaldo(f: Joined, servidor?: SaldoServidorCxP) {
   return { total, pagado, nc, saldo: Math.max(0, total - pagado - nc) };
 }
 
-export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP): FacturaCxP {
+export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP, hoyIso = todayLocalISO()): FacturaCxP {
   const { total, pagado, nc, saldo } = resolverSaldo(f, saldoServidor);
   const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
-  const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
+  const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento, hoyIso);
   return {
     id: f.id,
     proveedor_id: f.proveedor_id,

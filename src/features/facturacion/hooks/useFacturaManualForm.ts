@@ -17,6 +17,7 @@ export { serieForMoneda };
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
+import { formaPagoParaMetodo, validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
@@ -59,6 +60,9 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
       if (patch.moneda && patch.moneda !== prev.moneda) {
         next.serie = serieForMoneda(patch.moneda);
       }
+      if (patch.metodoPago && patch.metodoPago !== prev.metodoPago) {
+        next.formaPago = formaPagoParaMetodo(patch.metodoPago, next.formaPago);
+      }
       return next;
     });
 
@@ -74,7 +78,8 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const tcFueraDeBanda = fiscal.moneda === "MXN" ? null : validarTcMxn(fiscal.tipoCambio);
   const puedeGuardar =
     !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0 && !tcFueraDeBanda;
-  const puedeTimbrar = puedeGuardar && !clienteIncompleto;
+  const errorFormaMetodo = validarFormaMetodoPago(fiscal.formaPago, fiscal.metodoPago)[0]?.message;
+  const puedeTimbrar = puedeGuardar && !clienteIncompleto && !errorFormaMetodo;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
 
 
@@ -106,6 +111,7 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   };
 
   const ejecutarSubmit = (timbrarAlGuardar: boolean) => {
+    if (timbrarAlGuardar && errorFormaMetodo) return;
     const payload = buildInput();
     if (!payload) return;
     crear.mutate({ input: payload.input, timbrarAlGuardar }, { onSuccess: () => { reset(); onClose?.(); } });
@@ -113,6 +119,7 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
 
   const handleSubmit = async (timbrarAlGuardar: boolean) => {
     if (!cliente || !organizationId) return;
+    if (timbrarAlGuardar && errorFormaMetodo) return;
     const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
     if (totalMxn.tcFaltante) {
       // FIX C6: sin TC confiable no se puede validar el crédito en MXN.

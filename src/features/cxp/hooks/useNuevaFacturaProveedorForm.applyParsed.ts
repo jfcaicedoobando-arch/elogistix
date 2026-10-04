@@ -4,6 +4,7 @@
  * Extraído (v13.317.9) para respetar Power of 10 #1 (≤200 líneas).
  */
 
+import { normalizarConceptoPersistible, cantidadesCapturaValidas } from "../utils/conceptosPersistibles";
 import type { Dispatch, SetStateAction, MutableRefObject } from "react";
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import type { FacturaFormValues, TcOrigen } from "@/features/cxp/types";
@@ -46,7 +47,7 @@ function applyResult(deps: ParsedApplyDeps, result: {
   deps.setValues(result.values);
   deps.setErrors({});
   deps.setPendingCfdi(result.pendingCfdi);
-  deps.setCfdiConceptos(result.conceptos);
+  deps.setCfdiConceptos(result.conceptos.map(normalizarConceptoPersistible));
   deps.setAskCrearProv(result.askCrearProv);
   deps.setTcOrigen(result.tcOrigen);
   deps.setTcFechaAplicada(result.tcFechaAplicada);
@@ -76,6 +77,12 @@ export async function aplicarPdfIaParsed(
   data: CfdiParsedResponse,
   files: { pdf: File },
 ): Promise<boolean> {
+  if (!cantidadesCapturaValidas(data.cfdi.conceptos ?? [])) {
+    notifyError(undefined, { title: "Revisa las cantidades del PDF",
+      description: "Cada concepto requiere cantidad mínima de 0.000001 (hasta 6 decimales).",
+      method: "CXP_PDF_CANTIDAD_INVALIDA" });
+    return false;
+  }
   const result = await procesarPdfIaParsed(data, files, deps.organizationId);
   applyResult(deps, result);
   // v13.415.0: muchas facturas internacionales no imprimen Tax ID, así que el

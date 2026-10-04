@@ -51,7 +51,7 @@ export function ConceptosManualesSection({
     >
       <p className="-mt-1 text-body-sm text-muted-foreground">
         El precio es <strong>unitario</strong>: el total de línea es precio × cantidad y la suma debe
-        cuadrar con el subtotal. Sin conceptos la factura no se puede aprobar ni pagar.
+        cuadrar con el subtotal. Los precios e impuestos se redondean a 2 decimales. Sin conceptos la factura no se puede aprobar ni pagar.
         {" "}IVA e IEPS son los importes totales del renglón, no tasas ni importes unitarios.
       </p>
 

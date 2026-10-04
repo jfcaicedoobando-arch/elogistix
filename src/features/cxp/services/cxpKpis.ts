@@ -4,6 +4,7 @@
  */
 import type { FacturaCxP } from "./proveedorFacturas";
 import { esFacturaPorPagar } from "./cxpPorPagarFiltro";
+import { todayLocalISO } from "@/lib/date/today";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { esVencidoPorDias, estaPorVencer } from "@/lib/domain/vencimiento";
 
@@ -36,12 +37,7 @@ function cubetaDe(moneda: string | null | undefined): Cubeta {
   return "mxn";
 }
 
-function diasVencido(fechaVenc: string | null): number {
-  if (!fechaVenc) return 0;
-  return diasVencidos(fechaVenc.slice(0, 10));
-}
-
-export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
+export function calcularKPIsCxP(filas: FacturaCxP[], hoyIso: string = todayLocalISO()): KPIsCxP {
   const k: KPIsCxP = {
     por_pagar_mxn: 0, por_pagar_usd: 0, por_pagar_eur: 0,
     vencido_mxn: 0, vencido_usd: 0, vencido_eur: 0,
@@ -57,16 +53,15 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
     k[`por_pagar_${cubeta}`] += f.saldo;
     // B-020 (v13.320.39): KPI Vencido considera días vencidos reales,
     // no el estatus derivado (una factura "Por aprobar" vencida sigue siendo deuda).
-    if (esVencidoPorDias(f.dias_vencido)) {
+    const dv = f.fecha_vencimiento ? diasVencidos(f.fecha_vencimiento.slice(0, 10), hoyIso) : null;
+    if (dv !== null && esVencidoPorDias(dv)) {
       k.facturas_vencidas++;
       k[`vencido_${cubeta}`] += f.saldo;
     }
     // Ventana "Por vencer" = canon único `DIAS_POR_VENCER_CXC` (7 días). Antes
     // CxP usaba 5 días mientras la tarjeta rotulaba "7 d" y CxC sí sumaba 7.
-    if ((f.dias_vencido ?? 0) === 0 && f.fecha_vencimiento) {
-      if (estaPorVencer(diasVencido(f.fecha_vencimiento))) {
-        k[`por_vencer_7d_${cubeta}`] += f.saldo;
-      }
+    if (dv !== null && estaPorVencer(dv)) {
+      k[`por_vencer_7d_${cubeta}`] += f.saldo;
     }
   }
 
