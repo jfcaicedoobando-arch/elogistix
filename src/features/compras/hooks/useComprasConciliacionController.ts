@@ -15,7 +15,7 @@ import {
   type EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
 
-export const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa", "no_comparable"] as const;
+export const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa", "no_comparable", "ajuste"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & (EstadoConciliacion | "todos");
 export const MONEDAS_FILTRO = ["todas", "MXN", "USD", "EUR"] as const;
 export type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
@@ -47,7 +47,7 @@ export function useComprasConciliacionController() {
     const parcial = rows.filter((r) => r.estado_conciliacion === "parcial").length;
     const completa = rows.filter((r) => r.estado_conciliacion === "completa").length;
     const pendienteTc = rows.filter((r) => r.pendientes_tc > 0).length;
-    const comparables = rows.filter((r) => r.pendientes_tc === 0);
+    const comparables = rows.filter((r) => r.pendientes_tc === 0 && r.estado_conciliacion !== "ajuste");
     const pendienteMxn = comparables.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.pendiente, 0);
     const pendienteUsd = comparables.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.pendiente, 0);
     const pendienteEur = comparables.filter((r) => r.moneda === "EUR").reduce((a, r) => a + r.pendiente, 0);

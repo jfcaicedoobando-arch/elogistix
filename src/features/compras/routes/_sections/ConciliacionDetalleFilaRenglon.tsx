@@ -24,8 +24,13 @@ function motivoVariacionNoDisponible(
   fila: FilaReconciliacion,
   pendienteTc: boolean,
 ): "N/D" | "Sin factura" | null {
+  if (fila.ajuste_presupuestario) return null;
   if (pendienteTc) return "N/D";
   return fila.facturas.some((f) => !f.excluida) ? null : "Sin factura";
+}
+
+function valorRealFacturado(fila: FilaReconciliacion): string {
+  return fila.ajuste_presupuestario ? "No aplica" : formatCurrency(fila.real_facturado, fila.moneda);
 }
 
 export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
@@ -58,19 +63,22 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
         </TableCell>
         <TableCell className="align-top">
           <div className="font-medium">{fila.concepto}</div>
-          <div className="text-2xs text-muted-foreground">{fila.proveedor_nombre || "—"}</div>
+          <div className="text-2xs text-muted-foreground">{fila.proveedor_nombre || "-"}</div>
+          {fila.ajuste_presupuestario && (
+            <div className="text-label text-muted-foreground">Ajusta sólo el presupuesto y no agrega importe facturado.</div>
+          )}
         </TableCell>
         <TableCell className="text-right tabular-nums align-top">
           {formatCurrency(fila.cotizado, fila.moneda)}
         </TableCell>
         <TableCell className="text-right tabular-nums align-top">
-          {formatCurrency(fila.real_facturado, fila.moneda)}
+          {valorRealFacturado(fila)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${dCls}`}>
           {nd ?? formatCurrency(fila.diferencia, fila.moneda)}
         </TableCell>
         <TableCell className={`p-2 text-right tabular-nums align-top ${pCls}`}>
-          {nd ?? formatPercent(fila.desviacion_pct)}
+          {fila.ajuste_presupuestario ? "N/D" : nd ?? formatPercent(fila.desviacion_pct)}
         </TableCell>
         <TableCell className="align-top">
           <Badge variant={meta.variant} className="gap-1 text-2xs">

@@ -70,6 +70,7 @@ export default function ComprasConciliacion() {
                   <SelectItem value="parcial">Parcial</SelectItem>
                   <SelectItem value="completa">Conciliadas</SelectItem>
                   <SelectItem value="no_comparable">Pendiente de TC</SelectItem>
+                  <SelectItem value="ajuste">Ajustes de presupuesto</SelectItem>
                 </SelectContent>
               </Select>
             </div>

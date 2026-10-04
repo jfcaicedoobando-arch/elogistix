@@ -176,11 +176,13 @@ export function agruparRealesFacturados(
     concepto: string;
     moneda: string;
     real_facturado: number;
+    ajuste_presupuestario?: boolean;
     facturas: ReadonlyArray<{ excluida?: boolean }>;
   }>,
 ): RealPorConcepto[] {
   const map = new Map<string, RealPorConcepto>();
   for (const f of filas) {
+    if (f.ajuste_presupuestario) continue;
     // REC-02: la moneda se normaliza igual que el concepto; "USD", "usd" y
     // " USD " deben caer en el mismo renglón. La etiqueta original se conserva
     // para mostrar.

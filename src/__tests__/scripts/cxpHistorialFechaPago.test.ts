@@ -4,7 +4,8 @@ import path from "node:path";
 
 const leer = (rel: string) => fs.readFileSync(path.join(process.cwd(), rel), "utf8");
 const espejo = leer("supabase/schema/cxp/historial_proveedor_factura.sql");
-const migracion = leer("supabase/migrations/20260927050000_cxp_historial_fecha_pago.sql");
+// AUD-57 reemplaza el RPC y conserva el contrato DATE/timestamp de AUD-F05.
+const migracion = leer("supabase/migrations/20261004055700_cxp_historial_eventos_reales.sql");
 const baseline = leer("supabase/schema/baseline.sql");
 const cuerpo = (sql: string) => sql.match(/(?:CREATE (?:OR REPLACE )?FUNCTION public\.historial_proveedor_factura)[\s\S]*?AS (\$[\w]*\$)([\s\S]*?)\1;/)?.[2]?.replace(/\s+/g, " ").trim();
 
@@ -23,8 +24,8 @@ describe("AUD-F05 · contrato de fechas del historial CxP", () => {
   it("no cambia autorización ni amplía el acceso público", () => {
     expect(espejo).toContain("IF v_uid IS NULL");
     expect(espejo).toContain("om.organization_id = v_org AND om.user_id = v_uid");
-    expect(migracion).toContain("FROM PUBLIC;");
-    expect(migracion).toContain("TO authenticated, service_role;");
+    expect(migracion).toContain("REVOKE ALL ON FUNCTION public.historial_proveedor_factura(uuid) FROM PUBLIC, anon;");
+    expect(migracion).toContain("GRANT EXECUTE ON FUNCTION public.historial_proveedor_factura(uuid) TO authenticated, service_role;");
   });
   it("el guard conductual está en el manifiesto y compara UTC/CDMX con rollback", () => {
     expect(leer("supabase/tests/_guards_manifest.txt")).toContain("supabase/tests/cxp_historial_fecha_pago.sql");

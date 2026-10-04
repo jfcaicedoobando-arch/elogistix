@@ -626,6 +626,7 @@ export type Database = {
           detalles: Json | null
           entidad_id: string | null
           entidad_nombre: string | null
+          fuente_evento: string | null
           id: string
           modulo: string
           organization_id: string | null
@@ -638,6 +639,7 @@ export type Database = {
           detalles?: Json | null
           entidad_id?: string | null
           entidad_nombre?: string | null
+          fuente_evento?: string | null
           id?: string
           modulo: string
           organization_id?: string | null
@@ -650,6 +652,7 @@ export type Database = {
           detalles?: Json | null
           entidad_id?: string | null
           entidad_nombre?: string | null
+          fuente_evento?: string | null
           id?: string
           modulo?: string
           organization_id?: string | null

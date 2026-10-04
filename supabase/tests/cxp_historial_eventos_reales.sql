@@ -29,9 +29,9 @@ BEGIN
     VALUES (v_org, 'Proveedor TEST historial', 'Logistico', 'Naviera') RETURNING id INTO v_prov;
   INSERT INTO public.proveedor_facturas
     (organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id, subtotal, iva, total,
-     moneda, tipo_cambio_usd, fecha_emision, estado, estado_aprobacion, created_at, aprobada_at, aprobada_por)
+     moneda, tipo_cambio_usd, fecha_emision, estado, estado_aprobacion, created_at, aprobada_at, aprobada_por, created_by)
     VALUES (v_org, v_prov, 'TEST-HISTORIAL', v_cat, 100, 16, 116,
-      'USD', 20, v_fecha, 'Vigente', 'aprobada', v_captura, v_aprobacion2, v_uid) RETURNING id INTO v_pf;
+      'USD', 20, v_fecha, 'Vigente', 'aprobada', v_captura, v_aprobacion2, v_uid, v_uid) RETURNING id INTO v_pf;
   INSERT INTO public.bitacora_actividad
     (organization_id, usuario_id, usuario_email, entidad_id, modulo, accion, detalles, created_at)
     VALUES
@@ -53,31 +53,52 @@ BEGIN
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid, 'role', 'authenticated')::text, true);
 
   SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf) WHERE tipo = 'creada';
-  IF v_evento.monto IS DISTINCT FROM 116::numeric OR v_evento.moneda IS DISTINCT FROM 'MXN' THEN
-    RAISE EXCEPTION 'FAIL captura no conserva snapshot MXN116: % %', v_evento.monto, v_evento.moneda;
+  IF v_evento.monto IS NOT NULL OR v_evento.moneda IS NOT NULL THEN
+    RAISE EXCEPTION 'FAIL captura genérica se convirtió en importe canónico: % %', v_evento.monto, v_evento.moneda;
   END IF;
-  IF v_evento.ts IS DISTINCT FROM v_captura OR v_evento.actor_email IS DISTINCT FROM 'captura-original@test.local'
-    OR v_evento.detalles->>'folio' IS DISTINCT FROM 'FOLIO-ORIGINAL' THEN
-    RAISE EXCEPTION 'FAIL captura alteró timestamp, actor o folio original';
+  IF v_evento.ts IS DISTINCT FROM v_captura OR v_evento.actor_email IS DISTINCT FROM 'historial-real@test.local' THEN
+    RAISE EXCEPTION 'FAIL captura alteró timestamp o actor persistidos';
+  END IF;
+  SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
+    WHERE tipo = 'actividad' AND detalles->>'accion_registrada' = 'crear';
+  IF NOT FOUND OR v_evento.monto IS NOT NULL OR v_evento.moneda IS NOT NULL
+    OR v_evento.detalles->>'total' IS DISTINCT FROM '116'
+    OR v_evento.detalles->>'moneda' IS DISTINCT FROM 'MXN'
+    OR v_evento.detalles->>'folio_proveedor' IS DISTINCT FROM 'FOLIO-ORIGINAL'
+    OR v_evento.detalles->>'procedencia_verificada' IS DISTINCT FROM 'false'
+    OR v_evento.detalles->>'snapshot_historico_disponible' IS DISTINCT FROM 'false' THEN
+    RAISE EXCEPTION 'FAIL perdió datos declarados originales o certificó captura legacy';
   END IF;
   SELECT count(*) INTO v_n FROM public.historial_proveedor_factura(v_pf) WHERE tipo = 'creada';
   IF v_n <> 1 THEN RAISE EXCEPTION 'FAIL captura duplicada: %', v_n; END IF;
   SELECT count(*) INTO v_n FROM public.historial_proveedor_factura(v_pf) WHERE tipo = 'aprobada';
-  IF v_n <> 2 THEN RAISE EXCEPTION 'FAIL perdió aprobaciones o duplicó el fallback: %', v_n; END IF;
+  IF v_n <> 1 THEN RAISE EXCEPTION 'FAIL promovió aprobaciones legacy o duplicó última decisión: %', v_n; END IF;
   SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
-    WHERE tipo = 'aprobada' AND ts = v_aprobacion1;
-  IF NOT FOUND OR v_evento.moneda IS NOT NULL OR v_evento.monto IS DISTINCT FROM 116::numeric
-    OR v_evento.detalles->>'snapshot_historico_disponible' IS DISTINCT FROM 'false' THEN
-    RAISE EXCEPTION 'FAIL aprobación antigua ausente o moneda inferida';
+    WHERE tipo = 'actividad' AND ts = v_aprobacion2
+      AND detalles->>'accion_registrada' = 'aprobar_factura_proveedor';
+  IF NOT FOUND OR v_evento.actor_email IS DISTINCT FROM 'segunda-aprobacion@test.local'
+    OR v_evento.monto IS NOT NULL OR v_evento.moneda IS NOT NULL
+    OR v_evento.detalles->>'total' IS DISTINCT FROM '116'
+    OR v_evento.detalles->>'moneda' IS DISTINCT FROM 'USD'
+    OR v_evento.detalles->>'procedencia_verificada' IS DISTINCT FROM 'false' THEN
+    RAISE EXCEPTION 'FAIL ocultó la actividad legacy coincidente con la última decisión persistida';
   END IF;
   SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
-    WHERE tipo = 'rechazada' AND ts = v_aprobacion1 + interval '1 minute';
+    WHERE tipo = 'actividad' AND ts = v_aprobacion1;
+  IF NOT FOUND OR v_evento.moneda IS NOT NULL OR v_evento.monto IS NOT NULL
+    OR v_evento.detalles->>'snapshot_historico_disponible' IS DISTINCT FROM 'false'
+    OR v_evento.detalles->>'procedencia_verificada' IS DISTINCT FROM 'false'
+    OR v_evento.detalles->>'total' IS DISTINCT FROM '116' THEN
+    RAISE EXCEPTION 'FAIL aprobación antigua ausente o certificada sin procedencia';
+  END IF;
+  SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
+    WHERE tipo = 'actividad' AND ts = v_aprobacion1 + interval '1 minute';
   IF NOT FOUND OR v_evento.ts IS DISTINCT FROM v_aprobacion1 + interval '1 minute'
     OR v_evento.detalles->>'motivo_rechazo' IS DISTINCT FROM 'Factura ilegible' THEN
     RAISE EXCEPTION 'FAIL perdió rechazo o motivo histórico';
   END IF;
   SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
-    WHERE tipo = 'rechazada' AND ts = v_aprobacion1 + interval '2 minutes';
+    WHERE tipo = 'actividad' AND ts = v_aprobacion1 + interval '2 minutes';
   IF NOT FOUND OR v_evento.detalles->>'motivo_rechazo' IS DISTINCT FROM 'Motivo original' THEN
     RAISE EXCEPTION 'FAIL sobrescribió motivo_rechazo histórico con NULL';
   END IF;
@@ -86,10 +107,11 @@ BEGIN
   END IF;
   UPDATE public.proveedor_facturas SET folio_proveedor = 'FOLIO-ACTUAL', total = 232, subtotal = 200, iva = 32,
     moneda = 'EUR', tipo_cambio_usd = 22 WHERE id = v_pf;
-  SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf) WHERE tipo = 'creada';
-  IF v_evento.monto IS DISTINCT FROM 116::numeric OR v_evento.moneda IS DISTINCT FROM 'MXN'
-    OR v_evento.detalles->>'folio' IS DISTINCT FROM 'FOLIO-ORIGINAL' THEN
-    RAISE EXCEPTION 'FAIL edición cambió el pasado';
+  SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf)
+    WHERE tipo = 'actividad' AND detalles->>'accion_registrada' = 'crear';
+  IF v_evento.detalles->>'total' IS DISTINCT FROM '116' OR v_evento.detalles->>'moneda' IS DISTINCT FROM 'MXN'
+    OR v_evento.detalles->>'folio_proveedor' IS DISTINCT FROM 'FOLIO-ORIGINAL' THEN
+    RAISE EXCEPTION 'FAIL edición cambió los datos originales declarados';
   END IF;
 
   INSERT INTO public.proveedor_facturas
@@ -129,7 +151,9 @@ BEGIN
   PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba');
   SELECT count(*) INTO v_n FROM public.historial_proveedor_factura(v_futura)
     WHERE tipo = 'aprobada' AND monto = 116 AND moneda IN ('MXN', 'USD')
-      AND (detalles->>'tipo_cambio_usd')::numeric = 20;
+      AND (detalles->>'tipo_cambio_usd')::numeric = 20
+      AND detalles->>'procedencia_verificada' = 'true'
+      AND detalles->>'fuente_evento' = 'rpc_aprobar_factura_proveedor';
   IF v_n <> 2 THEN RAISE EXCEPTION 'FAIL RPC no conservó moneda/TC de ambas decisiones futuras: %', v_n; END IF;
   IF (SELECT count(DISTINCT moneda) FROM public.historial_proveedor_factura(v_futura) WHERE tipo = 'aprobada') <> 2 THEN
     RAISE EXCEPTION 'FAIL una moneda actual reemplazó las decisiones futuras';

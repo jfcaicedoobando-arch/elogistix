@@ -118,7 +118,7 @@ BEGIN
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
-      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
+      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, fuente_evento)
     VALUES (
       v_row.organization_id,
       v_uid,
@@ -134,7 +134,8 @@ BEGIN
         'tipo_cambio_usd', v_row.tipo_cambio_usd,
         'aprobada', p_aprobar,
         'justificacion_sin_vinculo', v_row.justificacion_sin_vinculo
-      ) || v_desvinculo
+      ) || v_desvinculo,
+      'rpc_aprobar_factura_proveedor'
     );
   EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'bitacora_actividad insert failed in aprobar_factura_proveedor: % %', SQLSTATE, SQLERRM;

@@ -29,7 +29,7 @@ import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
 import { buildFilasReconciliacion, type CCRow, type FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos.helpers";
 import { fetchVinculosReconciliacion } from "@/features/embarques/services/reconciliacionCostos.lecturas";
 
-export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa" | "no_comparable";
+export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa" | "no_comparable" | "ajuste";
 
 export interface EmbarqueConciliacion {
   embarque_id: string;
@@ -68,15 +68,16 @@ interface RowConcepto extends CCRow {
 
 /** Tamaño de lote de lectura; NO es un cap — se pide en lotes hasta agotar. */
 const LOTE = 1000;
+interface AcumConciliacion extends EmbarqueConciliacion { sin_factura: number }
 
-function clasificar(cobertura: number, facturado: number, pendientes: number): EstadoConciliacion {
-  if (facturado <= 0) return "sin_facturar";
-  if (pendientes > 0) return "parcial";
+function clasificar(cobertura: number, conFactura: number, sinFactura: number): EstadoConciliacion {
+  if (conFactura === 0) return "sin_facturar";
+  if (sinFactura > 0) return "parcial";
   if (cobertura >= 0.99) return "completa";
   return "parcial";
 }
 
-function initAcc(r: RowConcepto): EmbarqueConciliacion {
+function initAcc(r: RowConcepto): AcumConciliacion {
   return {
     embarque_id: r.embarque_id,
     expediente: r.embarques?.expediente ?? r.embarque_id.slice(0, 8),
@@ -91,34 +92,42 @@ function initAcc(r: RowConcepto): EmbarqueConciliacion {
     conceptos_pendientes: 0,
     pendientes_tc: 0,
     estado_conciliacion: "sin_facturar",
+    sin_factura: 0,
   };
 }
 
-function agrupar(rows: RowConcepto[], filas: FilaReconciliacion[]): EmbarqueConciliacion[] {
-  const map = new Map<string, EmbarqueConciliacion>();
+function agrupar(rows: RowConcepto[], filas: FilaReconciliacion[]): AcumConciliacion[] {
+  const map = new Map<string, AcumConciliacion>();
   const porId = new Map(filas.map((fila) => [fila.concepto_costo_id, fila]));
   for (const r of rows) {
+    const fila = porId.get(r.id);
+    if (!fila) continue; // Ajustes conocidos de facturas que ya no están vigentes.
     const monto = Number(r.monto ?? 0);
     const key = `${r.embarque_id}|${r.moneda}`;
     let acc = map.get(key);
     if (!acc) { acc = initAcc(r); map.set(key, acc); }
     acc.presupuestado += monto;
-    acc.conceptos_total += 1;
-    const fila = porId.get(r.id)!;
+    if (!fila.ajuste_presupuestario) acc.conceptos_total += 1;
     acc.facturado += fila.real_facturado;
     if (fila.estatus_renglon === "sin_match" || fila.estatus_renglon === "parcial") acc.conceptos_pendientes += 1;
+    if (fila.estatus_renglon === "sin_match") acc.sin_factura += 1;
     if (fila.estatus_renglon === "no_comparable") acc.pendientes_tc += 1;
   }
   return Array.from(map.values());
 }
 
-function derivarMetricas(a: EmbarqueConciliacion): EmbarqueConciliacion {
-  const pendiente = Math.max(0, a.presupuestado - a.facturado);
-  const cobertura = a.presupuestado > 0 ? a.facturado / a.presupuestado : 0;
-  const estado_conciliacion = a.pendientes_tc > 0
+function derivarMetricas(a: AcumConciliacion): EmbarqueConciliacion {
+  const { sin_factura, ...row } = a;
+  // Defensa de costos negativos legacy sin perder el signo de la asignación.
+  const saldoPorFacturar = (a.presupuestado - a.facturado) * (a.presupuestado < 0 ? -1 : 1);
+  const pendiente = a.conceptos_total === 0 ? 0 : Math.max(0, saldoPorFacturar);
+  const conFactura = a.conceptos_total - sin_factura;
+  const cobertura = a.presupuestado !== 0 ? a.facturado / a.presupuestado : conFactura > 0 && a.facturado === 0 ? 1 : 0;
+  const estado_conciliacion = a.conceptos_total === 0 ? "ajuste" : a.pendientes_tc > 0
     ? "no_comparable"
-    : clasificar(cobertura, a.facturado, a.conceptos_pendientes);
-  return { ...a, pendiente, cobertura, estado_conciliacion };
+    : clasificar(cobertura, conFactura, sin_factura);
+  const conceptos_pendientes = estado_conciliacion === "completa" ? 0 : a.conceptos_pendientes;
+  return { ...row, pendiente, cobertura, estado_conciliacion, conceptos_pendientes };
 }
 
 function aplicarFiltrosCliente(
@@ -126,6 +135,7 @@ function aplicarFiltrosCliente(
   filtros: FiltrosConciliacion,
 ): EmbarqueConciliacion[] {
   let out = rows;
+  if (filtros.moneda) out = out.filter((r) => r.moneda === filtros.moneda);
   if (filtros.estado && filtros.estado !== "todos") {
     out = out.filter((r) => r.estado_conciliacion === filtros.estado);
   }
@@ -152,14 +162,15 @@ async function leerTodosLosConceptos(filtros: FiltrosConciliacion): Promise<RowC
     let q = supabase
       .from("conceptos_costo")
       .select(
-        "id, embarque_id, concepto, proveedor_nombre, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
+        "id, embarque_id, concepto, proveedor_nombre, monto, moneda, origen, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
       )
       .is("deleted_at", null)
       .order("id", { ascending: true })
       .range(offset, offset + LOTE - 1);
 
     if (filtros.organizationId) q = q.eq("organization_id", filtros.organizationId);
-    if (filtros.moneda) q = q.eq("moneda", filtros.moneda);
+    // La moneda se filtra al final: un ajuste y su asignación real pueden estar
+    // en monedas distintas y deben leerse juntos para verificar su procedencia.
 
     const { data, error } = await q;
     // El error de cualquier lote se propaga: nunca se devuelve un resultado

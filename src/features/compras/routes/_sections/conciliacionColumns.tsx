@@ -22,6 +22,7 @@ export const CONCILIACION_ESTADO_LABELS: Record<EstadoConciliacion, {
   parcial: { label: "Parcial", variant: "secondary", icon: Clock },
   completa: { label: "Conciliada", variant: "default", icon: CheckCircle2 },
   no_comparable: { label: "Pendiente de TC", variant: "outline", icon: AlertTriangle },
+  ajuste: { label: "Ajuste de presupuesto", variant: "outline", icon: Clock },
 };
 
 export function buildConciliacionColumns() {
@@ -55,7 +56,7 @@ export function buildConciliacionColumns() {
       header: "Facturado",
       accessorFn: (r) => r.facturado,
       cell: ({ row }) => (
-        <span>{formatCurrency(row.original.facturado, row.original.moneda)}{row.original.pendientes_tc > 0 ? " (parcial)" : ""}</span>
+        <span>{row.original.estado_conciliacion === "ajuste" ? "No aplica" : formatCurrency(row.original.facturado, row.original.moneda)}{row.original.pendientes_tc > 0 ? " (parcial)" : ""}</span>
       ),
     },
     {
@@ -64,7 +65,7 @@ export function buildConciliacionColumns() {
       accessorFn: (r) => r.pendiente,
       cell: ({ row }) => (
         <span className={row.original.pendiente > 0 ? "font-medium text-destructive" : ""}>
-          {row.original.pendientes_tc > 0 ? "N/D" : formatCurrency(row.original.pendiente, row.original.moneda)}
+          {row.original.pendientes_tc > 0 || row.original.estado_conciliacion === "ajuste" ? "N/D" : formatCurrency(row.original.pendiente, row.original.moneda)}
         </span>
       ),
     },
@@ -72,7 +73,7 @@ export function buildConciliacionColumns() {
       id: "cobertura",
       header: "Cobertura",
       accessorFn: (r) => r.cobertura,
-      cell: ({ row }) => row.original.pendientes_tc > 0 ? "N/D" : (
+      cell: ({ row }) => row.original.pendientes_tc > 0 || row.original.estado_conciliacion === "ajuste" ? "N/D" : (
         <div className="flex items-center gap-2 min-w-[120px]">
           <Progress value={Math.round(row.original.cobertura * 100)} className="h-1.5" />
           <span className="text-xs tabular-nums w-8 text-right">

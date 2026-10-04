@@ -24,6 +24,10 @@ BEGIN
   RETURN QUERY
   WITH bitacora AS (
     SELECT b.*,
+      CASE WHEN jsonb_typeof(b.detalles) = 'object' THEN b.detalles
+        ELSE jsonb_build_object('datos_originales', b.detalles) END AS datos_registrados,
+      COALESCE(b.fuente_evento = 'rpc_aprobar_factura_proveedor'
+        AND b.accion IN ('aprobar_factura_proveedor', 'rechazar_factura_proveedor'), false) AS evento_verificado,
       CASE WHEN length(b.detalles->>'total') <= 64
         AND b.detalles->>'total' ~ '^-?[0-9]+(\.[0-9]+)?$'
         THEN (b.detalles->>'total')::numeric END AS total_historico,
@@ -31,21 +35,15 @@ BEGIN
         THEN b.detalles->>'moneda' END AS moneda_historica
     FROM public.bitacora_actividad b
     WHERE b.entidad_id = p_id AND b.modulo = 'cxp' AND b.organization_id = v_org
-  ), captura AS (
-    SELECT b.* FROM bitacora b WHERE b.accion = 'crear'
-    ORDER BY b.created_at, b.id LIMIT 1
   ), eventos AS (
     SELECT pf.created_at AS ev_ts, 'creada'::text AS ev_tipo,
       'Factura capturada'::text AS ev_descripcion,
-      COALESCE(b.usuario_email, u.email, '')::text AS ev_actor_email,
-      b.total_historico AS ev_monto, b.moneda_historica AS ev_moneda,
-      COALESCE(b.detalles, '{}'::jsonb) || jsonb_build_object(
-        'folio', b.detalles->>'folio_proveedor', 'origen', CASE WHEN b.id IS NULL THEN 'registro_factura' ELSE 'bitacora' END,
-        'snapshot_historico_disponible', b.total_historico IS NOT NULL AND b.moneda_historica IS NOT NULL
-      ) AS ev_detalles
+      COALESCE(u.email, '')::text AS ev_actor_email,
+      NULL::numeric AS ev_monto, NULL::text AS ev_moneda,
+      jsonb_build_object('origen', 'registro_factura', 'snapshot_historico_disponible', false,
+        'procedencia_verificada', true) AS ev_detalles
     FROM public.proveedor_facturas pf
     LEFT JOIN auth.users u ON u.id = pf.created_by
-    LEFT JOIN captura b ON true
     WHERE pf.id = p_id AND pf.organization_id = v_org
 
     UNION ALL
@@ -57,13 +55,13 @@ BEGIN
         ELSE 'Factura rechazada' END,
       COALESCE(u.email, '')::text, NULL::numeric, NULL::text,
       jsonb_build_object('motivo_rechazo', pf.motivo_rechazo,
-        'origen', 'registro_factura', 'snapshot_historico_disponible', false)
+        'origen', 'registro_factura', 'snapshot_historico_disponible', false, 'procedencia_verificada', true)
     FROM public.proveedor_facturas pf
     LEFT JOIN auth.users u ON u.id = pf.aprobada_por
     WHERE pf.id = p_id AND pf.organization_id = v_org AND pf.aprobada_at IS NOT NULL
       AND pf.estado_aprobacion::text IN ('aprobada', 'rechazada')
       AND NOT EXISTS (
-        SELECT 1 FROM bitacora b WHERE b.created_at = pf.aprobada_at
+        SELECT 1 FROM bitacora b WHERE b.evento_verificado AND b.created_at = pf.aprobada_at
           AND b.accion = CASE pf.estado_aprobacion::text
             WHEN 'aprobada' THEN 'aprobar_factura_proveedor' ELSE 'rechazar_factura_proveedor' END
       )
@@ -101,22 +99,28 @@ BEGIN
     UNION ALL
 
     SELECT b.created_at,
-      CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'aprobada'
-        WHEN 'rechazar_factura_proveedor' THEN 'rechazada' ELSE b.accion END::text,
-      CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'Factura aprobada'
-        WHEN 'rechazar_factura_proveedor' THEN 'Factura rechazada'
-        WHEN 'editar' THEN 'Factura editada' ELSE COALESCE(b.entidad_nombre, b.accion) END::text,
+      CASE WHEN b.evento_verificado THEN
+        CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'aprobada' ELSE 'rechazada' END
+        ELSE 'actividad' END::text,
+      CASE WHEN b.evento_verificado THEN
+        CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'Factura aprobada' ELSE 'Factura rechazada' END
+        ELSE CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'Aprobación registrada en bitácora'
+          WHEN 'rechazar_factura_proveedor' THEN 'Rechazo registrado en bitácora'
+          WHEN 'crear' THEN 'Captura registrada en bitácora'
+          WHEN 'editar' THEN 'Edición registrada en bitácora'
+          ELSE 'Actividad registrada: ' || COALESCE(NULLIF(b.entidad_nombre, ''), b.accion) END END::text,
       COALESCE(b.usuario_email, '')::text,
-      CASE WHEN b.accion IN ('editar', 'aprobar_factura_proveedor', 'rechazar_factura_proveedor')
+      CASE WHEN b.evento_verificado
         THEN b.total_historico END,
-      CASE WHEN b.accion IN ('editar', 'aprobar_factura_proveedor', 'rechazar_factura_proveedor')
+      CASE WHEN b.evento_verificado
         THEN b.moneda_historica END,
-      COALESCE(b.detalles, '{}'::jsonb) || jsonb_build_object(
-        'bitacora_id', b.id, 'origen', 'bitacora', 'motivo_rechazo', COALESCE(b.detalles->>'motivo_rechazo', b.detalles->>'motivo')
-      ) || CASE WHEN b.accion IN ('editar', 'aprobar_factura_proveedor', 'rechazar_factura_proveedor')
-        THEN jsonb_build_object('snapshot_historico_disponible',
-          b.total_historico IS NOT NULL AND b.moneda_historica IS NOT NULL) ELSE '{}'::jsonb END
-    FROM bitacora b WHERE b.accion <> 'crear'
+      b.datos_registrados || jsonb_build_object(
+        'bitacora_id', b.id, 'origen', 'bitacora', 'fuente_evento', b.fuente_evento,
+        'procedencia_verificada', b.evento_verificado,
+        'accion_registrada', b.accion, 'motivo_rechazo', COALESCE(b.detalles->>'motivo_rechazo', b.detalles->>'motivo'),
+        'snapshot_historico_disponible', b.evento_verificado AND b.total_historico IS NOT NULL AND b.moneda_historica IS NOT NULL
+      )
+    FROM bitacora b
   )
   SELECT e.ev_ts, e.ev_tipo, e.ev_descripcion, e.ev_actor_email, e.ev_monto, e.ev_moneda, e.ev_detalles
   FROM eventos e WHERE e.ev_ts IS NOT NULL ORDER BY e.ev_ts ASC;

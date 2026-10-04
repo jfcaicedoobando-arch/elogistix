@@ -15,15 +15,15 @@ export function NotaCreditoImporte({ nota, factura, estado }: Props) {
     <div className="flex flex-col tabular-nums">
       <span className="font-medium">{formatCurrency(nota.monto, nota.moneda)}</span>
       {nota.tipo_cambio != null && (
-        <span className="text-xs text-muted-foreground">TC NC: {tc(nota.tipo_cambio)}</span>
+        <span className="text-label text-muted-foreground">TC NC: {tc(nota.tipo_cambio)}</span>
       )}
       {distintaMoneda && (
         <>
-          {factura && <span className="text-xs text-muted-foreground">Factura: {factura.moneda}</span>}
+          {factura && <span className="text-label text-muted-foreground">Factura: {factura.moneda}</span>}
           {factura?.moneda !== "MXN" && factura?.tipo_cambio_usd != null && (
-            <span className="text-xs text-muted-foreground">TC factura (referencia): {tc(factura.tipo_cambio_usd)}</span>
+            <span className="text-label text-muted-foreground">TC factura (referencia): {tc(factura.tipo_cambio_usd)}</span>
           )}
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             {equivalente == null || !factura
               ? "Equivalente no disponible: revisa la moneda y el TC guardados."
               : `${estado === "Aplicada" ? "Aplicado" : "Equivalente"}: ${formatCurrency(equivalente, factura.moneda)}`}

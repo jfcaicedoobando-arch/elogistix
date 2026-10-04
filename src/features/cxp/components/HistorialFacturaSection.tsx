@@ -22,6 +22,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 import { formatCurrency } from "@/lib/formatters";
 import { FechaEventoFactura } from "./FechaEventoFactura";
+import { DatosDeclaradosBitacora } from "./HistorialDatosBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useHistorialFactura,
@@ -96,6 +97,12 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
           Importe o moneda de este evento no disponibles.
         </p>
       )}
+      {ev.detalles?.procedencia_verificada === false && (
+        <p className="text-body-sm text-muted-foreground mt-1">
+          Datos de bitácora; procedencia no verificable.
+        </p>
+      )}
+      <DatosDeclaradosBitacora detalles={ev.detalles} />
     </li>
   );
 }

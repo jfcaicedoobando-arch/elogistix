@@ -23,19 +23,27 @@ function evento(overrides: Partial<EventoHistorialFactura>): EventoHistorialFact
 describe("HistorialFacturaSection: snapshots históricos", () => {
   beforeEach(() => { state.eventos = []; });
 
-  it("conserva MXN en la captura y muestra las dos aprobaciones después de una edición USD", () => {
+  it("separa datos declarados MXN de una decisión verificada USD y conserva la actividad legacy", () => {
     state.eventos = [
-      evento({ detalles: { snapshot_historico_disponible: true } }),
-      evento({ tipo: "aprobada", descripcion: "Factura aprobada", moneda: null,
-        detalles: { snapshot_historico_disponible: false } }),
-      evento({ tipo: "editar", descripcion: "Factura editada", moneda: "USD" }),
-      evento({ tipo: "aprobada", descripcion: "Factura aprobada", moneda: "USD" }),
+      evento({ monto: null, moneda: null,
+        detalles: { procedencia_verificada: true, snapshot_historico_disponible: false } }),
+      evento({ tipo: "actividad", descripcion: "Captura registrada en bitácora", monto: null, moneda: null,
+        detalles: { total: 116, moneda: "MXN", procedencia_verificada: false, snapshot_historico_disponible: false } }),
+      evento({ tipo: "actividad", descripcion: "Aprobación registrada en bitácora", monto: null, moneda: null,
+        detalles: { total: 116, procedencia_verificada: false, snapshot_historico_disponible: false } }),
+      evento({ tipo: "actividad", descripcion: "Edición registrada en bitácora", monto: null, moneda: null,
+        detalles: { total: 116, moneda: "USD", procedencia_verificada: false, snapshot_historico_disponible: false } }),
+      evento({ tipo: "aprobada", descripcion: "Factura aprobada", moneda: "USD",
+        detalles: { procedencia_verificada: true, snapshot_historico_disponible: true } }),
     ];
     render(<HistorialFacturaSection facturaId="fixture" />);
-    expect(screen.getByText(formatCurrency(116, "MXN"))).toBeVisible();
-    expect(screen.getAllByText(formatCurrency(116, "USD"))).toHaveLength(2);
-    expect(screen.getAllByText("Factura aprobada")).toHaveLength(2);
-    expect(screen.getAllByText("Importe o moneda de este evento no disponibles.")).toHaveLength(1);
+    expect(screen.getByText(`Importe declarado en bitácora: ${formatCurrency(116, "MXN")}.`)).toBeVisible();
+    expect(screen.getByText(`Importe declarado en bitácora: ${formatCurrency(116, "USD")}.`)).toBeVisible();
+    expect(screen.getByText(formatCurrency(116, "USD"))).toBeVisible();
+    expect(screen.getAllByText("Factura aprobada")).toHaveLength(1);
+    expect(screen.getByText("Aprobación registrada en bitácora")).toBeVisible();
+    expect(screen.getAllByText("Datos de bitácora; procedencia no verificable.")).toHaveLength(3);
+    expect(screen.getAllByText("Importe o moneda de este evento no disponibles.")).toHaveLength(4);
   });
 
   it("no presenta el valor actual como importe de una captura sin snapshot", () => {
@@ -48,11 +56,12 @@ describe("HistorialFacturaSection: snapshots históricos", () => {
   });
 
   it("no deduce MXN para una aprobación cuyo payload antiguo carece de moneda", () => {
-    state.eventos = [evento({ tipo: "aprobada", descripcion: "Factura aprobada", moneda: null,
-      detalles: { total: 116, snapshot_historico_disponible: false } })];
+    state.eventos = [evento({ tipo: "actividad", descripcion: "Aprobación registrada en bitácora", monto: null, moneda: null,
+      detalles: { total: 116, procedencia_verificada: false, snapshot_historico_disponible: false } })];
     render(<HistorialFacturaSection facturaId="legacy" />);
     expect(screen.queryByText(formatCurrency(116, "MXN"))).not.toBeInTheDocument();
     expect(screen.getByText("Importe o moneda de este evento no disponibles.")).toBeVisible();
+    expect(screen.getByText(/Importe declarado en bitácora:.*moneda no registrada/)).toBeVisible();
   });
 
   it("conserva el motivo histórico del rechazo", () => {
@@ -68,5 +77,27 @@ describe("HistorialFacturaSection: snapshots históricos", () => {
     render(<HistorialFacturaSection facturaId="fixture" />);
     expect(screen.getByText("Fecha de pago: 03/10/2026")).toBeVisible();
     expect(screen.queryByText("Importe o moneda de este evento no disponibles.")).not.toBeInTheDocument();
+  });
+
+  it("mantiene separado el fallback persistido y la actividad legacy de la misma fecha", () => {
+    state.eventos = [
+      evento({ tipo: "actividad", descripcion: "Aprobación registrada en bitácora", monto: null, moneda: null,
+        detalles: { total: 999, moneda: "USD", procedencia_verificada: false, snapshot_historico_disponible: false } }),
+      evento({ tipo: "aprobada", descripcion: "Factura aprobada", monto: null, moneda: null,
+        detalles: { origen: "registro_factura", procedencia_verificada: true, snapshot_historico_disponible: false } }),
+    ];
+    render(<HistorialFacturaSection facturaId="fixture" />);
+    expect(screen.getAllByText("Factura aprobada")).toHaveLength(1);
+    expect(screen.getByText("Aprobación registrada en bitácora")).toBeVisible();
+    expect(screen.queryByText(formatCurrency(999, "USD"))).not.toBeInTheDocument();
+    expect(screen.getByText(`Importe declarado en bitácora: ${formatCurrency(999, "USD")}.`)).toBeVisible();
+  });
+
+  it.each([null, "ilegible", [], {}, Number.NaN, Number.POSITIVE_INFINITY])("no convierte datos genéricos inválidos en importe declarado (%j)", (total) => {
+    state.eventos = [evento({ tipo: "actividad", descripcion: "Registro legacy", monto: null, moneda: null,
+      detalles: { total, procedencia_verificada: false, snapshot_historico_disponible: false } })];
+    render(<HistorialFacturaSection facturaId="fixture" />);
+    expect(screen.getByText("Datos de bitácora; procedencia no verificable.")).toBeVisible();
+    expect(screen.queryByText(/Importe declarado en bitácora:/)).not.toBeInTheDocument();
   });
 });

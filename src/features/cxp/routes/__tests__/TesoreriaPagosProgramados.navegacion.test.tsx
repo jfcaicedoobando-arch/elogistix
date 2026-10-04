@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DocumentoTabs } from "@/components/shared/documento/DocumentoTabs";
-import { FacturaProveedorHeader } from "@/features/cxp/components/detalle/FacturaProveedorHeader";
-import { InfoFacturaSection } from "@/features/cxp/components/InfoFacturaSection";
+import { FacturaProveedorHeader } from "../../components/detalle/FacturaProveedorHeader";
+import { InfoFacturaSection } from "../../components/InfoFacturaSection";
 import type { FacturaCxP } from "@/features/cxp/services";
-import TesoreriaPagosProgramados from "../TesoreriaPagosProgramados";
+import TesoreriaPagosProgramados from "@/features/tesoreria/routes/TesoreriaPagosProgramados";
 
 const mocks = vi.hoisted(() => ({ programar: vi.fn(), pagar: vi.fn(), verificar: vi.fn() }));
 vi.mock("@/features/tesoreria/services/pagosProgramados", () => ({ fetchPagosProgramables: async () => facturas }));
