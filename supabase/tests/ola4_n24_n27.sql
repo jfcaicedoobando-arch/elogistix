@@ -42,6 +42,23 @@ BEGIN
   INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, precio_unitario, total, moneda)
   VALUES (v_emb1, v_org, 'Venta 1', 100, 100, 'USD'), (v_emb2, v_org, 'Venta 2', 200, 200, 'USD');
 
+  -- El reporte usa venta FACTURADA, no venta cotizada. Mantener el mismo
+  -- 100 + 200 esperado con documentos/conceptos reales del modelo vigente.
+  INSERT INTO public.facturas (id, organization_id, numero, cliente_id, cliente_nombre,
+    embarque_id, subtotal, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado)
+  VALUES
+    ('d7777777-7777-7777-7777-777777777771', v_org, 'N24-FAC-1', v_cli, 'ACME SA',
+     v_emb1, 100, 100, 'USD', 18, CURRENT_DATE - 1, CURRENT_DATE + 30, 'Borrador'),
+    ('d7777777-7777-7777-7777-777777777772', v_org, 'N24-FAC-2', v_cli, 'Acme S.A.',
+     v_emb2, 200, 200, 'USD', 18, CURRENT_DATE - 1, CURRENT_DATE + 30, 'Borrador');
+  INSERT INTO public.conceptos_factura (factura_id, organization_id, embarque_id,
+    descripcion, cantidad, precio_unitario, total, moneda)
+  VALUES
+    ('d7777777-7777-7777-7777-777777777771', v_org, v_emb1, 'Flete Ningbo–Manzanillo', 1, 100, 100, 'USD'),
+    ('d7777777-7777-7777-7777-777777777772', v_org, v_emb2, 'Flete Shanghai–Lázaro Cárdenas', 1, 200, 200, 'USD');
+  UPDATE public.facturas SET estado = 'Emitida'
+  WHERE id IN ('d7777777-7777-7777-7777-777777777771', 'd7777777-7777-7777-7777-777777777772');
+
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 END
 $fixture$ LANGUAGE plpgsql;

@@ -4,7 +4,7 @@
 -- debe incluir la moneda con saldo (USD).
 BEGIN;
 
-DO $
+DO $$
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();

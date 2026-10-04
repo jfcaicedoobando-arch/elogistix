@@ -3,7 +3,7 @@
 -- cantidad/precio negativos y tasa de IVA fuera de rango.
 BEGIN;
 
-DO $
+DO $$
 DECLARE
   v_res record;
   v_sqlstate text;

@@ -6,7 +6,7 @@
 --   3) Control positivo: pago 9500 MXN @19 (= 500 USD) -> cxp_pagada.ok=true.
 BEGIN;
 
-DO $
+DO $$
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();

@@ -4,7 +4,7 @@
 -- el saldo/estado del anticipo se recalculen y la factura vuelva a 'Vigente'.
 BEGIN;
 
-DO $
+DO $$
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();

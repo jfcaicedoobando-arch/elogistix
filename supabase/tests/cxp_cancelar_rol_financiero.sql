@@ -4,7 +4,7 @@
 -- organización debe recibir LC_CXP_CANCELAR_FORBIDDEN (42501).
 BEGIN;
 
-DO $
+DO $$
 DECLARE
   v_org uuid;
   v_uid_venta uuid := gen_random_uuid();
