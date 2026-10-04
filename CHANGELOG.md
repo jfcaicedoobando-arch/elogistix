@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.824.22] - 2026-10-04
+
+- **fix(CxP · moneda bancaria)**: la fila de un pago conciliado muestra el cargo en la moneda de su cuenta bancaria, conservando la moneda del pago. Si la cuenta no está disponible, identifica la moneda faltante sin asumir MXN. Pruebas MXN/USD y de lectura, sin modificar importes ni registros.
+
 ## [13.824.21] - 2026-10-04
 
 - **fix(facturación y reportes)**: PUE admite el cobro único del saldo neto de notas de crédito aplicadas; factura manual, proformas y CSV comparten el redondeo por línea. Estado de resultados descuenta la base de las notas de crédito y muestra un error si falta su desglose. La descarga CFDI distingue autorización, red y documento, y cancela operaciones al cambiar de usuario u organización.

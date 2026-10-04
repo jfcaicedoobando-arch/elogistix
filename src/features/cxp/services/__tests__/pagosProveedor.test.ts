@@ -26,6 +26,23 @@ describe("pagosProveedor service", () => {
     expect(String(call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0])).toContain("referencia, cargo, abono, deleted_at");
   });
 
+  it.each(["MXN", "USD"])("lee la moneda %s de la cuenta del movimiento sin convertir el pago", async (monedaBanco) => {
+    const pago = {
+      id: "pago-fixture", moneda: monedaBanco === "USD" ? "MXN" : "USD", monto: 20,
+      bbva_movimientos: [{ id: "mov-fixture", cargo: "1", cuentas_bancarias: { moneda: monedaBanco } }],
+    };
+    mock.setTableResult("pagos_proveedor", { data: [pago], error: null });
+    const resultado = await listarPagosProveedor("factura-fixture");
+    expect(resultado).toEqual([pago]);
+    const call = mock.tableCalls.find(c => c.table === "pagos_proveedor");
+    const columnas = call?.opArgs.find((_, index) => call.ops[index] === "select")?.[0];
+    expect(columnas).toContain("cuentas_bancarias!bbva_movimientos_cuenta_bancaria_id_fkey(moneda)");
+    expect(call?.ops).not.toEqual(expect.arrayContaining(["insert"]));
+    expect(call?.ops).not.toEqual(expect.arrayContaining(["update"]));
+    expect(call?.ops).not.toEqual(expect.arrayContaining(["delete"]));
+    expect(mock.rpcCalls).toHaveLength(0);
+  });
+
   it("v13.823.32: registrarPagoProveedor delega en la RPC atómica y devuelve el pago creado", async () => {
     // MNY: el pago leído debe corresponder al payload enviado (misma factura,
     // fecha, monto y moneda); si no, el servicio avisa conflicto de llave.
