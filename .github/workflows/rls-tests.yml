@@ -186,6 +186,11 @@ jobs:
         # compitiendo por la misma oportunidad. El script limpia su fixture.
         run: bash scripts/ci/concurrencia-cotizacion-ganadora.sh
 
+      - name: Concurrencia de dos sesiones — cobro bancario idempotente
+        env:
+          ISOLATED_QA_DB: '1'
+        run: bash scripts/ci/concurrencia-cobro.sh
+
       - name: Subir logs y diff (sólo al fallar)
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

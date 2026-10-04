@@ -1,6 +1,8 @@
 -- BUG-11: public.cotizacion_totales_conceptos(jsonb) rechaza monedas no
 -- soportadas (antes un concepto EUR sumaba 0 en silencio) y sigue validando
 -- cantidad/precio negativos y tasa de IVA fuera de rango.
+BEGIN;
+
 DO $$
 DECLARE
   v_res record;
@@ -87,3 +89,5 @@ BEGIN
 
   RAISE NOTICE 'cotizacion_totales_moneda_no_soportada: PASS';
 END $$;
+
+ROLLBACK;

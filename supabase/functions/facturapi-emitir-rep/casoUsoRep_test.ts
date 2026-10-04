@@ -4,10 +4,8 @@
  * de `paymentSummary` ANTES del claim, claim ya tomado (409), timbrado
  * pendiente (202 sin marcar Timbrado) y éxito con persistencia.
  *
- * Límite conocido del runner: no se importa `casoUso.ts` porque arrastra
- * `timbrar.ts → _shared/facturapiClient.ts`, que hace el import estático de
- * `npm:facturapi` (no resuelve fuera de Supabase). Se prueban las mismas etapas
- * que el caso de uso encadena, en el mismo orden.
+ * Son unitarios de ETAPAS, no del orden de orquestación. La ejecución del caso
+ * de uso real se comprueba en `casoUso_orquestacion_test.ts` con Deno y SDK npm.
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { construirPagoContext, validarPagoContext } from "./etapaContexto.ts";

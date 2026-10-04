@@ -2,6 +2,8 @@
 -- Verifica que al eliminar un pago que aplicó un anticipo, en la MISMA
 -- transacción se revierta la aplicación (anticipos_aplicaciones.deleted_at),
 -- el saldo/estado del anticipo se recalculen y la factura vuelva a 'Vigente'.
+BEGIN;
+
 DO $$
 DECLARE
   v_org uuid;
@@ -43,7 +45,7 @@ BEGIN
 
   INSERT INTO public.anticipos_proveedor (
     organization_id, proveedor_id, fecha_anticipo, monto, moneda, saldo_disponible, estado
-  ) VALUES (v_org, v_prov, current_date, 1000, 'MXN'::public.moneda, 1000, 'disponible')
+  ) VALUES (v_org, v_prov, public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, 1000, 'disponible')
   RETURNING id INTO v_ant;
 
   INSERT INTO public.proveedor_facturas (
@@ -53,13 +55,14 @@ BEGIN
     v_org, v_prov, 'A-ANTREV01', v_cat, 'FP-ANTREV01', 1000, 1000,
     'MXN'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
+  UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1 WHERE id = v_pf;
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
   INSERT INTO public.pagos_proveedor (
     organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
     monto_en_moneda_factura, es_anticipo_aplicado
-  ) VALUES (v_org, v_pf, current_date, 1000, 'MXN'::public.moneda, 1000, true)
+  ) VALUES (v_org, v_pf, public.fecha_negocio_mx(), 1000, 'MXN'::public.moneda, 1000, true)
   RETURNING id INTO v_pago;
 
   INSERT INTO public.anticipos_aplicaciones (
@@ -106,21 +109,9 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
-  DELETE FROM public.anticipos_aplicaciones WHERE organization_id = v_org;
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.anticipos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  DELETE FROM public.user_roles WHERE user_id = v_uid;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN
-    NULL;
-  END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'OK: eliminar_pago_proveedor revierte el anticipo y el estado de la factura (BUG-07).';
 END $$;
+
+ROLLBACK;

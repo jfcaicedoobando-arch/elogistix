@@ -3,7 +3,7 @@
  * activa en el header `x-organization-id` (no en el multipart), para que la
  * edge function autorice antes de bufferar el PDF de hasta 10 MB.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 
 const { invokeMock, ensureFreshSessionMock } = vi.hoisted(() => ({
@@ -23,6 +23,19 @@ import { parsePdfInvoice } from "../parsePdfInvoice";
 const ORG_PRINCIPAL = "00000000-0000-0000-0000-000000000001";
 const pdf = () => new File(["%PDF-1.4"], "factura.pdf", { type: "application/pdf" });
 
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => vi.useRealTimers());
+
+/** Mantiene el backoff real de producción, avanza sólo el reloj del test. */
+async function sinEsperas<T>(promise: Promise<T>): Promise<T> {
+  // Capturar rechazo antes de avanzar evita un unhandled rejection artificial.
+  const settled = promise.then(value => ({ value }), error => ({ error }));
+  await vi.runAllTimersAsync();
+  const result = await settled;
+  if ("error" in result) throw result.error;
+  return result.value;
+}
+
 describe("parsePdfInvoice", () => {
   beforeEach(() => {
     invokeMock.mockReset();
@@ -34,7 +47,7 @@ describe("parsePdfInvoice", () => {
     const payload = { cfdi: { uuid: "" }, ai: { categoria_id: null, notas: "" } };
     invokeMock.mockResolvedValue({ data: payload, error: null });
 
-    const result = await parsePdfInvoice(pdf(), [{ id: "c1", nombre: "Fletes" }], ORG_PRINCIPAL);
+    const result = await sinEsperas(parsePdfInvoice(pdf(), [{ id: "c1", nombre: "Fletes" }], ORG_PRINCIPAL));
 
     expect(result).toEqual(payload);
     const opciones = invokeMock.mock.calls[0][1];
@@ -49,7 +62,7 @@ describe("parsePdfInvoice", () => {
   it("no invoca la función si no hay sesión alguna", async () => {
     ensureFreshSessionMock.mockResolvedValue(null);
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toThrow(
       /Debes iniciar sesión para procesar la factura PDF/,
     );
     expect(invokeMock).not.toHaveBeenCalled();
@@ -65,7 +78,7 @@ describe("parsePdfInvoice", () => {
       })
       .mockResolvedValueOnce({ data: payload, error: null });
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).resolves.toEqual(payload);
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).resolves.toEqual(payload);
     expect(ensureFreshSessionMock.mock.calls).toEqual([
       [false, undefined],
       [true, "token-1"],
@@ -80,7 +93,7 @@ describe("parsePdfInvoice", () => {
       error: new FunctionsHttpError(new Response(JSON.stringify({ error: "Token inválido" }), { status: 401 })),
     });
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toThrow(
       /No pudimos validar tu sesión en este momento/,
     );
     expect(invokeMock).toHaveBeenCalledTimes(1);
@@ -95,7 +108,7 @@ describe("parsePdfInvoice", () => {
       })
       .mockResolvedValueOnce({ data: payload, error: null });
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).resolves.toEqual(payload);
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).resolves.toEqual(payload);
     expect(ensureFreshSessionMock.mock.calls).toEqual([
       [false, undefined],
       [false, undefined],
@@ -121,7 +134,7 @@ describe("parsePdfInvoice — mensajes de falla", () => {
       error: new FunctionsFetchError(new TypeError("Failed to fetch")),
     });
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toThrow(
       /No pudimos contactar al servidor desde este dispositivo/,
     );
   }, 15000);
@@ -132,6 +145,6 @@ describe("parsePdfInvoice — mensajes de falla", () => {
       error: new FunctionsHttpError(new Response(JSON.stringify({ error: "PDF ilegible" }), { status: 400 })),
     });
 
-    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(/PDF ilegible/);
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toThrow(/PDF ilegible/);
   }, 15000);
 });

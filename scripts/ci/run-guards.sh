@@ -26,7 +26,7 @@ fi
 mkdir -p "$LOG_DIR"
 rm -f "$LOG_DIR"/*.log "$LOG_DIR"/*.status 2>/dev/null || true
 
-mapfile -t SUITES < <(grep -vE '^\s*(#|$)' "$MANIFEST")
+mapfile -t SUITES < <(tr -d '\r' < "$MANIFEST" | grep -vE '^\s*(#|$)')
 
 if [ "${#SUITES[@]}" -eq 0 ]; then
   echo "::error::El manifiesto $MANIFEST no lista ninguna suite"

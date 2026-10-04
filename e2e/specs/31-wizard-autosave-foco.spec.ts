@@ -10,6 +10,7 @@
  */
 import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { draftValue } from "../fixtures/draft";
 
 test.describe("Flujo 31 — Wizard cotización: autosave sin remontaje", () => {
   test("el campo conserva foco y valor tras el autosave (×4)", async ({ page }) => {
@@ -21,18 +22,16 @@ test.describe("Flujo 31 — Wizard cotización: autosave sin remontaje", () => {
     if (await descartar.isVisible().catch(() => false)) await descartar.click();
 
     // Primer campo de texto libre del wizard (notas/observaciones o similar).
-    const campo = page
-      .locator("input[type='text']:not([readonly]), textarea:not([readonly])")
-      .first();
+    const campo = page.locator("#cot-notas");
     await expect(campo).toBeVisible({ timeout: 20_000 });
 
     for (let intento = 1; intento <= 4; intento += 1) {
-      const valor = `R4 autosave ${intento}`;
+      const valor = `Refacciones industriales, Ningbo–Manzanillo; revisión ${intento}`;
       await campo.click();
       await campo.fill(valor);
 
       // Esperar el debounce del autosave (800 ms) con margen.
-      await page.waitForTimeout(2_000);
+      await expect.poll(() => draftValue(page, "notas")).toBe(valor);
 
       await expect(campo, `valor tras autosave (intento ${intento})`).toHaveValue(valor);
       const sigueEnfocado = await campo.evaluate((el) => el === document.activeElement);

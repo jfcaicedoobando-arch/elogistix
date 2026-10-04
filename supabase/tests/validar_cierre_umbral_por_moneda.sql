@@ -2,6 +2,8 @@
 -- moneda. Con una factura de proveedor USD con saldo pendiente y una
 -- situación MXN saldada, el check debe venir ok=false y detalle.por_moneda
 -- debe incluir la moneda con saldo (USD).
+BEGIN;
+
 DO $$
 DECLARE
   v_org uuid;
@@ -63,10 +65,12 @@ BEGIN
     v_org, v_prov, v_emb, 'A-CM-MXN01', v_cat, 2000, 2000,
     'MXN'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf_mxn;
+  UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1
+  WHERE id IN (v_pf_usd, v_pf_mxn);
 
   INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
-  VALUES (v_org, v_pf_mxn, 2000, 'MXN'::public.moneda, NULL);
+    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)
+  VALUES (v_org, v_pf_mxn, 2000, 'MXN'::public.moneda, NULL, public.fecha_negocio_mx());
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
   v_resultado := public.validar_cierre_embarque(v_emb);
@@ -96,17 +100,9 @@ BEGIN
 
   RAISE NOTICE '✓ cxp_pagada.ok=false y por_moneda incluye USD con saldo: %', v_por_moneda;
 
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN NULL; END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'validar_cierre_umbral_por_moneda: PASS';
 END $$;
+
+ROLLBACK;

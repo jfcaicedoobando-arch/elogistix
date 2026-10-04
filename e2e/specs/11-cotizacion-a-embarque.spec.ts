@@ -22,21 +22,9 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
   test.afterEach(async ({ page }, testInfo) => {
     if (!nuevoEmbarqueId) return;
     const id = nuevoEmbarqueId;
-    // Borrar en orden FK-safe: hijos primero, luego el embarque.
-    await bestEffortCleanup(testInfo, "borrar tracking_eventos", async () => {
-      await supabaseRest(page).delete("eventos_embarque", { embarque_id: id });
-    });
-    await bestEffortCleanup(testInfo, "borrar embarque_contenedores", async () => {
-      await supabaseRest(page).delete("embarque_contenedores", { embarque_id: id });
-    });
-    await bestEffortCleanup(testInfo, "borrar conceptos_costo", async () => {
-      await supabaseRest(page).delete("conceptos_costo", { embarque_id: id });
-    });
-    await bestEffortCleanup(testInfo, "borrar conceptos_venta", async () => {
-      await supabaseRest(page).delete("conceptos_venta", { embarque_id: id });
-    });
-    await bestEffortCleanup(testInfo, "borrar embarque borrador E2E", async () => {
-      await supabaseRest(page).delete("embarques", { id });
+    // Mismo caso de uso que la UI: conserva auditoría y libera la cotización.
+    await bestEffortCleanup(testInfo, "baja canónica del embarque propio", async () => {
+      await supabaseRest(page).rpc("eliminar_embarque_completo", { p_embarque_id: id });
     });
     nuevoEmbarqueId = null;
   });
@@ -51,6 +39,10 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
       .getByRole("button", { name: /convertir.*embarque|crear embarque/i })
       .first();
     await expect(btnConvertir).toBeVisible({ timeout: 10_000 });
+    const rpcPending = page.waitForResponse(
+      (r) => /\/rpc\/crear_embarque_borrador_desde_cotizacion/i.test(r.url()) && r.ok(),
+      { timeout: 20_000 },
+    );
     await btnConvertir.click();
 
     // Confirmación del diálogo.
@@ -59,11 +51,7 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
       await dialog.getByRole("button", { name: /confirmar|convertir|crear/i }).click();
     }
 
-    const rpcResp = await page.waitForResponse(
-      (r) =>
-        /\/rpc\/crear_embarque_borrador_desde_cotizacion/i.test(r.url()) && r.ok(),
-      { timeout: 20_000 },
-    );
+    const rpcResp = await rpcPending;
     const body = (await rpcResp.json().catch(() => null)) as
       | { id?: string }
       | string

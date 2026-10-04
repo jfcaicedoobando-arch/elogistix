@@ -57,10 +57,10 @@ BEGIN
   INSERT INTO public.proveedor_facturas (
     id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
     categoria_presupuesto_id, moneda, tipo_cambio_usd, subtotal, iva, total,
-    estado, estado_aprobacion
+    estado, estado_aprobacion, fecha_emision
   ) VALUES (
     'c4444444-4444-4444-4444-444444444444', v_org, v_prov, 'Test Prov', 'OLA4-N31-01',
-    v_cat, 'MXN'::public.moneda, 0, 200, 0, 200, 'Borrador', 'aprobada'
+    v_cat, 'MXN'::public.moneda, 0, 200, 0, 200, 'Borrador', 'aprobada', public.fecha_negocio_mx() - 1
   ) ON CONFLICT (id) DO NOTHING;
 
   -- N37: cliente + embarque + proforma con factura ligada CANCELADA.
@@ -106,13 +106,13 @@ BEGIN
   PERFORM public.aplicar_anticipo_a_factura(
     'c8888888-8888-8888-8888-888888888888'::uuid,
     'c4444444-4444-4444-4444-444444444444'::uuid,
-    60);
+    60, (now() AT TIME ZONE 'America/Mexico_City')::date);
 
   BEGIN
     PERFORM public.aplicar_anticipo_a_factura(
       'c8888888-8888-8888-8888-888888888888'::uuid,
       'c4444444-4444-4444-4444-444444444444'::uuid,
-      60);
+      60, (now() AT TIME ZONE 'America/Mexico_City')::date);
     RAISE EXCEPTION 'TEST FAIL: N31 - se aplicó un segundo monto que excede el saldo disponible';
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE '%LC_ANTICIPO_SIN_SALDO%' THEN
@@ -128,7 +128,7 @@ BEGIN
   IF v_saldo_final <> 40 THEN
     RAISE EXCEPTION 'TEST FAIL: N31 - saldo_disponible esperado 40, obtuvo %', v_saldo_final;
   END IF;
-  RAISE NOTICE '✓ N31: doble aplicación concurrente rechazada, saldo_disponible=% (>= 0)', v_saldo_final;
+  RAISE NOTICE '✓ N31: segundo abono rechazado, saldo_disponible=% (>= 0)', v_saldo_final;
 END
 $n31$ LANGUAGE plpgsql;
 

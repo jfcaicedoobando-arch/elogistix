@@ -4,6 +4,8 @@
 --   2) Fail-closed: pago 9500 MXN SIN tipo de cambio -> se excluye del pagado,
 --      pagos_sin_tipo_cambio=1 y el cierre sigue bloqueado.
 --   3) Control positivo: pago 9500 MXN @19 (= 500 USD) -> cxp_pagada.ok=true.
+BEGIN;
+
 DO $$
 DECLARE
   v_org uuid;
@@ -53,11 +55,12 @@ BEGIN
     v_org, v_prov, v_emb, 'A-CC-USD01', v_cat, 500, 500,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
+  UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1 WHERE id = v_pf;
 
   -- Caso 1: pago de 500 MXN con TC 19 => 26.32 USD, no cubre los 500 USD.
   INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd)
-  VALUES (v_org, v_pf, 500, 'MXN'::public.moneda, 19)
+    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)
+  VALUES (v_org, v_pf, 500, 'MXN'::public.moneda, 19, public.fecha_negocio_mx())
   RETURNING id INTO v_pago;
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
@@ -111,17 +114,9 @@ BEGIN
   END IF;
   RAISE NOTICE '✓ caso 3: pago 9500 MXN @19 salda la factura de 500 USD';
 
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN NULL; END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'validar_cierre_cxp_conversion_moneda: PASS';
 END $$;
+
+ROLLBACK;
