@@ -18,6 +18,8 @@ import { BandejaShell } from "./BandejaShell";
 import { buildRepsHistoricoColumns, estadoRepHistorico } from "./bandejaRepsHistoricoColumns";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
 
 export function BandejaRepsHistorico() {
   const { data, isLoading, isError, refetch } = useRepsHistorico();
@@ -26,19 +28,21 @@ export function BandejaRepsHistorico() {
 
 
   const descargar = useCallback(async (pagoId: string, tipo: "pdf" | "xml") => {
+    const scope = captureAuthOperationScope();
     setDescargando(`${pagoId}:${tipo}`);
     try {
       await descargarCfdiFacturapi({ tipo, pagoId });
     } catch (err) {
+      if (!scope.isCurrent() || err instanceof AuthOperationChangedError) return;
       // UIA-13: el detalle técnico va al log/Sentry; al usuario se le dice qué hacer.
       notifyError(undefined, {
         title: tipo === "pdf" ? "No se pudo descargar el PDF" : "No se pudo descargar el XML",
-        description: "Revisa tu conexión a internet e inténtalo de nuevo. Si continúa, avisa a soporte.",
+        description: mensajeDescargaCfdi(err),
         error: err,
         method: "FEATURES_FACTURACION_COMPONENTS_BANDEJAREPSHISTORICO_1",
       });
     } finally {
-      setDescargando(null);
+      if (scope.isCurrent()) setDescargando(null);
     }
   }, []);
 

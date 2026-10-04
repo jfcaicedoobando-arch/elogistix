@@ -55,13 +55,13 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
   }
 
   // CxP vencidas — conteo sobre universo completo (B2 fix).
-  const acreedoresVencidosCount = input.tesoreria.cxp_vencidas_count;
-  if (acreedoresVencidosCount > 0) {
+  const facturasVencidasCount = input.tesoreria.cxp_vencidas_count;
+  if (facturasVencidasCount > 0) {
     const top = input.tesoreria.top_acreedores[0];
     alertas.push({
       id: "cxp-vencidas",
       severidad: "warning",
-      titulo: `${acreedoresVencidosCount} proveedor(es) con pagos vencidos`,
+      titulo: `${facturasVencidasCount} factura${facturasVencidasCount === 1 ? "" : "s"} con pagos vencidos`,
       descripcion: top
         ? `Top: ${top.nombre} (${formatCurrency(top.saldo, top.moneda)})`
         : "Ver detalle en Compras",

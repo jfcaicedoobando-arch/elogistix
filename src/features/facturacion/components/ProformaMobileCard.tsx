@@ -4,13 +4,16 @@
  * cliente, fecha y estado unificado para decidir sin scroll horizontal.
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { formatDate, toTitleCase } from "@/lib/formatters";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoUnificado, etiquetaEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
+import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 export function ProformaMobileCard({ proforma }: { proforma: ProformaConFactura }) {
   const estado = getEstadoUnificado(proforma);
+  const totales = totalesListadoProforma(proforma);
   // R170-01: mismo criterio que la tabla de escritorio — dentro del bucket
   // "facturada" distingue borrador/por-timbrar/emitida.
   const label =
@@ -27,8 +30,15 @@ export function ProformaMobileCard({ proforma }: { proforma: ProformaConFactura 
         {toTitleCase(proforma.cliente_nombre ?? "") || "—"}
       </div>
       <div className="text-label text-muted-foreground">
-        {proforma.fecha_emision ? formatDate(proforma.fecha_emision) : "—"}
+        {labelExpediente(proforma.expediente, proforma.embarque_id)} · {proforma.fecha_emision ? formatDate(proforma.fecha_emision) : "-"}
       </div>
+      <div className="flex flex-wrap justify-between gap-2 text-body-sm tabular-nums">
+        <span>{formatCurrency(totales.total_mxn, "MXN")}</span>
+        <span>{formatCurrency(totales.total_usd, "USD")}</span>
+      </div>
+      {proforma.totales_origen === "encabezado_sin_detalle" && (
+        <div className="text-label text-muted-foreground">Importe guardado · Detalle de conceptos no disponible</div>
+      )}
     </div>
   );
 }

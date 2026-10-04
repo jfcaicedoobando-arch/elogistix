@@ -19,6 +19,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
 import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
 import { avisoFusionSeleccion, puedeFusionarSeleccion } from "@/features/facturacion/domain/avisoFusionProformas";
+import { useProformasListadoTable } from "@/features/facturacion/hooks/useProformasListadoTable";
 
 export function TabProformas({ isInRange, estadoInicial }: {
   isInRange?: (fecha: string | null | undefined) => boolean;
@@ -46,6 +47,9 @@ export function TabProformas({ isInRange, estadoInicial }: {
     ),
     [canEmitirFactura, c.selectedIds, c.toggleSelected, c.isConvertible],
   );
+  const listado = useProformasListadoTable({
+    data: c.filtered, columns, page: c.page, pageSize: c.pageSize, onPageChange: c.setPage,
+  });
 
   const seleccionados = canEmitirFactura ? c.selectedProformas.length : 0;
   // C25 (v13.823.380) — además del mismo cliente, la fusión exige proformas del
@@ -160,7 +164,10 @@ export function TabProformas({ isInRange, estadoInicial }: {
           <ResponsiveDataTable
             key={c.filtroEstado}
             columns={columns}
-            data={c.paginated}
+            data={listado.data}
+            sortMode="server"
+            controlledSort={listado.controlledSort}
+            onSortChange={listado.onSortChange}
             isLoading={c.isLoading}
             emptyMessage={mensajeVacioProformas(c.search, c.filtroEstado)}
             emptyState={

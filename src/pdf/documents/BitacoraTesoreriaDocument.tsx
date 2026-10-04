@@ -7,6 +7,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { FilaBitacoraExport } from "@/features/cxp/services";
+import { ENCABEZADOS_BITACORA_EXPORT } from "@/features/cxp/services/bitacoraTesoreriaExport";
 import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
@@ -26,7 +27,7 @@ const cols: PdfColumn<FilaBitacoraExport>[] = [
   { key: "fecha", title: "Fecha", cellStyle: COL_FECHA, render: (r) => r.fecha },
   { key: "mov", title: "Movimiento", cellStyle: COL_MOV, render: (r) => r.movimiento },
   { key: "monto", title: "Monto", cellStyle: styles.cellNumWide, render: (r) => r.monto },
-  { key: "cargo", title: "Cargo MXN", cellStyle: styles.cellNumWide, render: (r) => r.cargoMxn },
+  { key: "cargo", title: ENCABEZADOS_BITACORA_EXPORT[3], cellStyle: styles.cellNumWide, render: (r) => r.cargoMxn },
   { key: "cuenta", title: "Cuenta", cellStyle: styles.cellDesc, render: (r) => r.cuenta },
   { key: "estado", title: "Estado", cellStyle: COL_ESTADO, render: (r) => r.estadoMovimiento },
   { key: "usuario", title: "Usuario", cellStyle: styles.cellDesc, render: (r) => r.usuario },

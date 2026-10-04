@@ -153,7 +153,9 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   LC_PAGO_PUE_EXHIBICION_UNICA:
     "Esta factura es PUE (una sola exhibición) y ya tiene un pago registrado. Cancela el pago previo si fue un error.",
   LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL:
-    "Esta factura es PUE: registra el cobro por el total en una sola exhibición. Si el cliente abona, cambia la factura a PPD.",
+    "Esta factura es PUE: registra en una sola exhibición el saldo neto pendiente, considerando las notas de crédito vigentes.",
+  LC_CONCILIACION_ALCANCE_INVALIDO:
+    "La factura no pertenece al proveedor y organización indicados. Revisa el alcance de la conciliación.",
   // ── Ola E4 · candados de inmutabilidad bancaria y de comisiones ──
   LC_MOVIMIENTO_INMUTABLE:
     "El importe, la fecha y la cuenta de un movimiento bancario no se pueden editar. Cancela el movimiento y captúralo de nuevo.",

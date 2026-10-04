@@ -43,7 +43,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   const faltanCuentas = cuentasActivas.length < 2;
   const {
     state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error,
-    fechaTcDof, tcEsManual, fechaInicial,
+    fechaTcDof, tcEsManual, fechaInicial, revisarCaptura, capturasNegativas,
   } = useTraspasoForm(open, cuentasActivas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
@@ -63,7 +63,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
 
   // YG-04: hay datos capturados que se perderían al cerrar el modal.
   // MNY P2.4: incluye la fecha si el usuario la movió respecto a la de apertura.
-  const isDirty = traspasoSucio(state, fechaInicial);
+  const isDirty = traspasoSucio(state, fechaInicial) || capturasNegativas?.montoOrigen || capturasNegativas?.comision;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -143,10 +143,13 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         onFechaChange={(v) => setField("fecha", v)}
         onMontoChange={(v) => setField("montoOrigen", v)}
         onComisionChange={(v) => setField("comision", v)}
+        onCaptura={revisarCaptura}
+        capturasNegativas={capturasNegativas}
       />
 
       {origen && destino && (
         <TraspasoConversion
+          cuentaOrigenId={origen.id}
           monedaOrigen={origen.moneda}
           monedaDestino={destino.moneda}
           mismoMoneda={!!mismoMoneda}

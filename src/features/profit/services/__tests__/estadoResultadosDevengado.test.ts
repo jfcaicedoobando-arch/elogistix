@@ -59,7 +59,7 @@ describe("estadoResultadosDevengado service", () => {
     });
     // nc1: nota de crédito -> bucket ventas, modo Marítimo, tc=1
     mock.setTableResult("factura_notas_credito", { 
-      data: [{ factura_id: "f1", monto: 100, moneda: "USD", updated_at: "2024-01-05" }], 
+      data: [{ factura_id: "f1", monto: 100, conceptos: [{ cantidad: 1, precio_unitario: 100 }], moneda: "USD", updated_at: "2024-01-05" }],
       error: null 
     });
     // pf1: sin embarque_id -> fallback Marítimo, tc=1 (porque tipo_cambio_usd=null)
@@ -86,7 +86,7 @@ describe("estadoResultadosDevengado service", () => {
       error: null,
     });
     mock.setTableResult("factura_notas_credito", {
-      data: [{ factura_id: "f1", monto: 100, moneda: "EUR", updated_at: "2024-01-05" }],
+      data: [{ factura_id: "f1", monto: 100, conceptos: [{ cantidad: 1, precio_unitario: 100 }], moneda: "EUR", updated_at: "2024-01-05" }],
       error: null,
     });
     mock.setTableResult("proveedor_facturas", {
@@ -132,6 +132,10 @@ describe("estadoResultadosDevengado service", () => {
     expect(gteIdx).toBeGreaterThanOrEqual(0);
     expect((ncCall!.opArgs[gteIdx] as [string, string])[0]).toBe("fecha_emision");
     expect((ncCall!.opArgs[lteIdx] as [string, string])[0]).toBe("fecha_emision");
+    const selectIndex = ncCall!.ops.indexOf("select");
+    expect(ncCall!.opArgs[selectIndex][0]).toContain("conceptos");
+    const stateIndex = ncCall!.ops.indexOf("in");
+    expect(ncCall!.opArgs[stateIndex]).toEqual(["estado", ["Timbrada", "Aplicada"]]);
   });
 
   it("EERR-TC: el TC de la factura manda sobre el TC del embarque", async () => {

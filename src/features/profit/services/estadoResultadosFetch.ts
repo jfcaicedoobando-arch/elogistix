@@ -117,7 +117,7 @@ export async function fetchNotasCreditoMes(orgId: string | null, desde: string, 
     // otro mes y las fronteras naive T00:00:00/T23:59:59 se interpretaban en
     // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
     // viene de `rangoMes`, igual que facturas.
-    .select("monto, moneda, factura_id, fecha_emision, tipo_cambio")
+    .select("monto, conceptos, moneda, factura_id, fecha_emision, tipo_cambio")
     .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)

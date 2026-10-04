@@ -12,6 +12,7 @@ DECLARE
   v_pago_org uuid;
   v_pago_moneda text;
   v_pago_monto numeric;
+  v_pago_tc numeric;
   v_cuenta_moneda text;
   v_vinculos int;
   v_mov numeric;
@@ -78,8 +79,8 @@ BEGIN
   END IF;
 
   IF NEW.pago_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text, COALESCE(monto,0)
-      INTO v_pago_org, v_pago_moneda, v_pago_monto
+    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd
+      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc
     FROM public.pagos_proveedor
     WHERE id = NEW.pago_proveedor_id AND deleted_at IS NULL;
 
@@ -93,10 +94,19 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
+    -- AUD42: comparar en la moneda de la cuenta, igual que _asegurar_movimiento_pago_proveedor.
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del pago (%) no coincide con la cuenta bancaria (%)',
-        v_pago_moneda, v_cuenta_moneda
-        USING ERRCODE = 'P0001';
+      IF NOT ((v_pago_moneda = 'USD' AND v_cuenta_moneda = 'MXN')
+              OR (v_pago_moneda = 'MXN' AND v_cuenta_moneda = 'USD')) THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: no hay conversión compatible entre pago (%) y cuenta (%)',
+          v_pago_moneda, v_cuenta_moneda USING ERRCODE = 'P0001';
+      END IF;
+      IF COALESCE(v_pago_tc, 0) <= 0 OR v_pago_tc::text IN ('NaN','Infinity','-Infinity') THEN
+        RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: falta tipo de cambio para comparar el pago en % con la cuenta en %',
+          v_pago_moneda, v_cuenta_moneda USING ERRCODE = 'P0001';
+      END IF;
+      v_pago_monto := ROUND(CASE WHEN v_pago_moneda = 'USD' THEN v_pago_monto * v_pago_tc
+                               ELSE v_pago_monto / v_pago_tc END, 2);
     END IF;
 
     -- N5: un pago a proveedor sale de la cuenta (cargo), nunca entra.

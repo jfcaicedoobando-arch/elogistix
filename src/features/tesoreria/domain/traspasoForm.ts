@@ -56,6 +56,12 @@ function validarTcPar(par: ParTcLocal, tcQuote: number): string | null {
 }
 
 /** Validación pura del traspaso. Extraída del `useMemo` (complejidad ≤16). */
+export function validarImportesTraspaso(montoOrigen: number, comision: number): string | null {
+  if (!Number.isFinite(montoOrigen) || montoOrigen <= 0) return "El monto debe ser mayor a cero; no se admiten importes negativos.";
+  if (!Number.isFinite(comision) || comision < 0) return "La comisión no puede ser negativa.";
+  return null;
+}
+
 export function validarTraspaso(
   state: TraspasoFormState,
   origen: Cuenta | undefined,
@@ -65,7 +71,8 @@ export function validarTraspaso(
 ): string | null {
   if (!state.origenId || !state.destinoId) return "Selecciona ambas cuentas.";
   if (state.origenId === state.destinoId) return "La cuenta origen y destino deben ser distintas.";
-  if (!state.montoOrigen || state.montoOrigen <= 0) return "El monto debe ser mayor a cero.";
+  const errorImportes = validarImportesTraspaso(state.montoOrigen, state.comision);
+  if (errorImportes) return errorImportes;
   if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
   // FE-07: fecha del traspaso obligatoria y nunca futura.
   if (!state.fecha) return "Captura la fecha del traspaso.";
@@ -102,8 +109,8 @@ export function sugerirTcQuote(
  */
 export function traspasoSucio(state: TraspasoFormState, fechaInicial?: string): boolean {
   const señales = [
-    !!state.origenId, !!state.destinoId, state.montoOrigen > 0,
-    state.comision > 0, state.concepto.trim() !== "", state.referencia.trim() !== "",
+    !!state.origenId, !!state.destinoId, state.montoOrigen !== 0,
+    state.comision !== 0, state.concepto.trim() !== "", state.referencia.trim() !== "",
     !!fechaInicial && state.fecha !== fechaInicial,
   ];
   return señales.some(Boolean);

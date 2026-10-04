@@ -22,6 +22,7 @@ import { editarConceptoIa, eliminarConceptoIa } from "@/features/cxp/utils/conce
 import { useFacturaFormState } from "./useNuevaFacturaProveedorForm.state";
 import { crearSubmit } from "./useNuevaFacturaProveedorForm.buildSubmit";
 import { initialValues } from "./useNuevaFacturaProveedorForm.helpers";
+import { useTotalesConceptosCaptura } from "./useTotalesConceptosCaptura";
 
 export function useNuevaFacturaProveedorForm(
   /** `false` = el ciclo posterior falló: el formulario NO se limpia (reintento). */
@@ -42,6 +43,11 @@ export function useNuevaFacturaProveedorForm(
     tcOrigen, setTcOrigen, tcFechaAplicada, setTcFechaAplicada,
     tcDof, total,
   } = s;
+  const totalesManuales = useTotalesConceptosCaptura({
+    manual: mode === "manual" && !pendingCfdi && cfdiConceptos.length === 0,
+    guardando: crear.isPending, conceptos: manuales.conceptos, values, setValues,
+    onAplicar: () => setErrors((e) => ({ ...e, subtotal: undefined, iva: undefined, ieps: undefined })),
+  });
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
     setValues((prev) => {
@@ -171,7 +177,7 @@ export function useNuevaFacturaProveedorForm(
     editarConceptoIa: editarConceptoIaLinea, eliminarConceptoIa: eliminarConceptoIaLinea,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos,
-    conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
+    conceptosManuales: manuales, totalesManuales, cuadreManual, cfdiDuplicado, topeVinculacion,
     // Bloqueo de guardado: CFDI capturado, mutación en curso o tope excedido.
     puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
     embarqueAdHoc, setEmbarqueAdHoc,

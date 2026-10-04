@@ -2,21 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProformaMobileCard } from "../ProformaMobileCard";
-import type { ProformaConFactura } from "@/features/embarques/hooks";
-
-function proforma(overrides: Partial<ProformaConFactura> = {}): ProformaConFactura {
-  return {
-    id: "p1",
-    numero: "P-0001",
-    expediente: "EXP-1",
-    cliente_nombre: "cliente dos",
-    operador: null,
-    fecha_emision: "2024-01-05",
-    estado_proforma: "pendiente",
-    estado_cliente: "pendiente",
-    ...overrides,
-  } as unknown as ProformaConFactura;
-}
+import { proformaFixture as proforma } from "./fixtures/proforma";
 
 describe("ProformaMobileCard", () => {
   it("muestra folio, cliente, fecha y estado", () => {

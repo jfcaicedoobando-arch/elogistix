@@ -59,7 +59,7 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={f.isPending}>
             Volver
           </Button>
-          <Button onClick={() => void f.handleConfirm()} disabled={f.isPending}>
+          <Button onClick={() => void f.handleConfirm()} disabled={f.isPending || !f.cuentaValida}>
             {f.isPending ? "Registrando…" : "Registrar devolución"}
           </Button>
         </>
@@ -107,6 +107,11 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              {f.otraCuenta ? "Elegiste una cuenta distinta de la salida original. Confirma que aquí se recibió la devolución."
+                : f.cuentaOriginal ? "Se propone la cuenta de la salida original. Puedes elegir otra si ahí entró el depósito."
+                  : "La cuenta original no está disponible en esta moneda. Elige explícitamente dónde entró la devolución."}
+            </p>
             {f.cuentasDeMoneda.length === 0 && (
               <p className="text-xs text-destructive">
                 No hay cuentas bancarias activas en {f.moneda}. Regístrala en Tesorería antes de

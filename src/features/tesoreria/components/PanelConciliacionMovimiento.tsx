@@ -15,9 +15,7 @@ import type { SugerenciasResultado } from "@/features/tesoreria/services/sugerir
 import { notifyError } from "@/lib/ui/appFeedback";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
 import { refPagoDeMovimiento } from "@/features/tesoreria/domain/pagoDetalle";
-import {
-  EstadoConciliado, EstadoIgnorado, ListaCandidatos,
-} from "@/features/tesoreria/components/PanelConciliacionEstados";
+import { EstadoPanelConciliacion } from "@/features/tesoreria/components/PanelConciliacionEstados";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 interface Props {
   movimiento: MovimientoBBVA | null;
@@ -31,9 +29,13 @@ function desempacarSugerencias(s: SugerenciasResultado | undefined) {
   return { candidatos: s?.candidatos ?? [], truncado: s?.truncado ?? false };
 }
 
+function movimientoParaCandidatos(movimiento: MovimientoBBVA | null) {
+  return movimiento?.traspaso_id ? null : movimiento;
+}
+
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
-  const { data: sugerencias, isLoading } = useSugerirCandidatos(movimiento);
+  const { data: sugerencias, isLoading } = useSugerirCandidatos(movimientoParaCandidatos(movimiento));
   const { candidatos, truncado } = desempacarSugerencias(sugerencias);
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
@@ -102,16 +104,8 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
           )}
         </KpiCard>
 
-        {movimiento.estado_conciliacion === "Conciliado" ? (
-          <EstadoConciliado
-            tienePago={!!refPago}
-            onVerPago={() => setVerPago(true)}
-            onDesconciliar={onDesconciliar}
-          />
-        ) : movimiento.estado_conciliacion === "Ignorado" ? (
-          <EstadoIgnorado motivo={movimiento.motivo_ignorar} onReactivar={onDesconciliar} />
-        ) : (
-          <ListaCandidatos
+        <EstadoPanelConciliacion movimiento={movimiento} refPago={refPago}
+            onVerPago={() => setVerPago(true)} onDesconciliar={onDesconciliar}
             candidatos={candidatos}
             truncado={truncado}
             isLoading={isLoading}
@@ -119,7 +113,6 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
             onConciliar={onConciliar}
             onIgnorar={() => setOpenIgnorar(true)}
           />
-        )}
 
         {puedeCapturar && esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (
           <Button

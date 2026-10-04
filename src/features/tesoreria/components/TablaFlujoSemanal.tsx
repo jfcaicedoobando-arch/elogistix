@@ -12,7 +12,7 @@ import { Table, TableHeader, TableBody, TableCell } from "@/components/ui/table"
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
-import type { SemanaFlujo } from "@/features/tesoreria/services";
+import type { DetalleFlujo, SemanaFlujo } from "@/features/tesoreria/services";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/utils";
@@ -113,7 +113,7 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
           <ul className="space-y-0.5">
             {s.detalle_entradas.map((d) => (
               <li key={d.id} className="flex justify-between border-b last:border-0 py-0.5">
-                <span className="truncate flex-1 mr-2">{d.concepto}</span>
+                <span className="min-w-0 flex-1 mr-2"><DetalleDocumento d={d} /></span>
                 <span className="tabular-nums">{formatCurrency(d.monto_mxn, "MXN")}</span>
               </li>
             ))}
@@ -130,7 +130,7 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
           <ul className="space-y-0.5">
             {s.detalle_salidas.map((d) => (
               <li key={d.id} className="flex justify-between border-b last:border-0 py-0.5">
-                <span className="truncate flex-1 mr-2">{d.concepto}</span>
+                <span className="min-w-0 flex-1 mr-2"><DetalleDocumento d={d} /></span>
                 <span className="tabular-nums">{formatCurrency(d.monto_mxn, "MXN")}</span>
               </li>
             ))}
@@ -138,5 +138,22 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
         )}
       </div>
     </div>
+  );
+}
+
+function DetalleDocumento({ d }: { d: DetalleFlujo }) {
+  const montoOriginal = d.monto_original;
+  const tcDocumento = d.tipo_cambio_aplicado;
+  const conversion = d.moneda.toUpperCase() !== "MXN"
+    && montoOriginal !== undefined && tcDocumento != null && tcDocumento > 0;
+  return (
+    <span className="block">
+      <span className="block truncate">{d.concepto}</span>
+      {conversion && (
+        <span className="block text-caption text-muted-foreground">
+          {formatCurrency(montoOriginal, d.moneda)} × TC documento {d.moneda}/MXN {tcDocumento.toFixed(4)}
+        </span>
+      )}
+    </span>
   );
 }

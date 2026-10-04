@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { syncSentryActiveOrg } from "@/lib/observability/sentry/user";
 import { useSuperAdminOrgs } from "@/lib/contexts/organization/useSuperAdminOrgs";
 import type { Organization } from "@/lib/contexts/organization/types";
+import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 
 
 
@@ -46,13 +47,15 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   const setActiveOrganization = useCallback((id: string) => {
     if (!isSuperAdmin) return;
+    syncActiveOrganizationScope({ userId: user?.id ?? null, organizationId: id });
     sa.cambiarTenant(id);
-  }, [isSuperAdmin, sa]);
+  }, [isSuperAdmin, sa, user?.id]);
 
   const clearActiveOrganization = useCallback(() => {
     if (!isSuperAdmin) return;
+    syncActiveOrganizationScope({ userId: user?.id ?? null, organizationId: null });
     sa.cambiarTenant(null);
-  }, [isSuperAdmin, sa]);
+  }, [isSuperAdmin, sa, user?.id]);
 
   const value = useMemo<OrganizationContextType>(() => {
     if (isSuperAdmin) {
@@ -98,8 +101,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   // impersonando otro tenant o usuario regular cargando su org). Sin esto, los
   // eventos posteriores al cambio quedarían tagueados con el org anterior.
   useEffect(() => {
+    syncActiveOrganizationScope({ userId: user?.id ?? null, organizationId: value.organizationId });
     syncSentryActiveOrg(value.organizationId);
-  }, [value.organizationId]);
+  }, [value.organizationId, user?.id]);
 
   return (
     <OrganizationContext.Provider value={value}>

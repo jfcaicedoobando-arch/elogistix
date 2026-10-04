@@ -1,7 +1,8 @@
 /**
  * Pruebas de la lógica pura de resumen de conciliación de tesorería.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 import {
   mensajeConciliacion,
   resumenConciliacion,

@@ -119,17 +119,17 @@ describe("calcularAlertas", () => {
     expect(r.some((a) => a.id === "cartera-vencida-alta")).toBe(false);
   });
 
-  it("detecta CxP vencidas", () => {
+  it("identifica dos facturas vencidas del mismo proveedor sin contarlas como proveedores", () => {
     const r = calcularAlertas({
       flujo: flujo(0),
       tesoreria: tesoreria({
-        cxp_vencidas_count: 1,
+        cxp_vencidas_count: 2,
         cxp_vencidas_total_mxn: 50_000,
         top_acreedores: [{ nombre: "Naviera X", saldo: 50_000, moneda: "USD", dias: 10 }],
       }),
       presupuesto: presupuesto(),
     });
-    expect(r.some((a) => a.id === "cxp-vencidas")).toBe(true);
+    expect(r.find((a) => a.id === "cxp-vencidas")?.titulo).toBe("2 facturas con pagos vencidos");
   });
 
   it("detecta categoría con cumplimiento >110%", () => {

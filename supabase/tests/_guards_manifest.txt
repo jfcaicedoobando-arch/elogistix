@@ -160,3 +160,7 @@ supabase/tests/cxp_impuestos_globales_y_base_iva.sql
 supabase/tests/cxp_historial_fecha_pago.sql
 supabase/tests/cotizacion_aerea_peso_fisico.sql
 supabase/tests/r4_embarque_proforma_regresiones.sql
+supabase/tests/audit25_pue_saldo_neto.sql
+supabase/tests/audit26_redondeo_linea.sql
+supabase/tests/importacion_espejos_revisados.sql
+supabase/tests/audit42_43_conciliacion_moneda_proveedor.sql

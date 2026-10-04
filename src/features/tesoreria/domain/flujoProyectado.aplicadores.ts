@@ -30,6 +30,7 @@ export function aplicarCobranza(rows: CobranzaRow[], inWindow: InWindow, exclusi
     sem.detalle_entradas.push({
       id: f.id, concepto: `${f.numero} · ${f.cliente_nombre}`,
       monto_mxn: conv.monto, fecha_vencimiento: f.fecha_vencimiento!, moneda: f.moneda,
+      monto_original: f.saldo, tipo_cambio_aplicado: f.tipo_cambio,
     });
   }
 }
@@ -46,6 +47,7 @@ export function aplicarCxp(rows: CxpRow[], inWindow: InWindow, exclusiones: Excl
     sem.detalle_salidas.push({
       id: c.id, concepto: `${c.folio_proveedor} · ${c.proveedor_nombre}`,
       monto_mxn: conv.monto, fecha_vencimiento: fechaEfectiva, moneda: c.moneda,
+      monto_original: c.saldo, tipo_cambio_aplicado: c.tipo_cambio_usd,
     });
   }
 }

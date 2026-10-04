@@ -11,6 +11,7 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_org uuid;
+  v_proveedor_saldo uuid;
   v_revisadas int := 0;
   v_actualizadas int := 0;
   v_facturas jsonb := '[]'::jsonb;
@@ -30,6 +31,20 @@ BEGIN
 
   v_org := public.current_user_org_id();
   PERFORM public._assert_writer(v_org);
+
+  -- El recálculo sigue limitado a la factura; su resumen cubre al proveedor.
+  v_proveedor_saldo := p_proveedor_id;
+  IF p_factura_id IS NOT NULL THEN
+    SELECT pf.proveedor_id INTO v_proveedor_saldo
+    FROM public.proveedor_facturas pf
+    WHERE pf.id = p_factura_id AND pf.organization_id = v_org
+      AND pf.deleted_at IS NULL
+      AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id);
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'LC_CONCILIACION_ALCANCE_INVALIDO: la factura no pertenece al proveedor y organización indicados'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
 
   -- 1) Recalcular estado/etapa de captura de cada factura en el alcance.
   FOR r IN
@@ -131,14 +146,36 @@ BEGIN
                CASE WHEN pp.moneda::text = 'MXN' THEN pp.monto
                     WHEN COALESCE(pp.tipo_cambio_usd,0) > 0 THEN pp.monto * pp.tipo_cambio_usd
                     ELSE pp.monto END, 2),
-             'cargo_mxn', ROUND(COALESCE(m.cargo, 0), 2),
+             'cargo_mxn', ROUND(CASE WHEN cb.moneda::text = 'MXN' THEN m.cargo
+               WHEN cb.moneda::text = 'USD' AND pp.tipo_cambio_usd > 0
+                 AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity') THEN m.cargo * pp.tipo_cambio_usd END, 2),
+             'moneda_cuenta', cb.moneda::text,
+             'cargo_cuenta', ROUND(COALESCE(m.cargo, 0), 2),
+             'monto_esperado_cuenta', ROUND(e.cargo, 2),
+             'motivo', CASE WHEN m.id IS NOT NULL AND e.cargo IS NULL THEN
+               'No se puede comparar el importe: falta la moneda de cuenta o un tipo de cambio compatible.' END,
              'tipo', CASE WHEN m.id IS NULL THEN 'sin_movimiento' ELSE 'descuadre' END
            ) AS x, pp.fecha_pago
     FROM public.pagos_proveedor pp
     JOIN public.proveedor_facturas pf ON pf.id = pp.proveedor_factura_id
     LEFT JOIN public.bbva_movimientos m
-           ON m.pago_proveedor_id = pp.id AND m.deleted_at IS NULL
+           ON m.pago_proveedor_id = pp.id AND m.deleted_at IS NULL AND m.organization_id = v_org
+    LEFT JOIN public.cuentas_bancarias cb
+           ON cb.id = COALESCE(m.cuenta_bancaria_id, pp.cuenta_bancaria_id)
+          AND cb.organization_id = v_org AND cb.deleted_at IS NULL
+    CROSS JOIN LATERAL (
+      SELECT CASE
+        WHEN cb.moneda::text = pp.moneda::text THEN pp.monto
+        WHEN pp.moneda::text = 'USD' AND cb.moneda::text = 'MXN' AND pp.tipo_cambio_usd > 0
+          AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity')
+          THEN pp.monto * pp.tipo_cambio_usd
+        WHEN pp.moneda::text = 'MXN' AND cb.moneda::text = 'USD' AND pp.tipo_cambio_usd > 0
+          AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity')
+          THEN pp.monto / pp.tipo_cambio_usd
+      END AS cargo
+    ) e
     WHERE pf.organization_id = v_org
+      AND pp.organization_id = v_org
       AND pp.deleted_at IS NULL
       AND pf.deleted_at IS NULL
       AND NOT pp.es_anticipo_aplicado
@@ -148,15 +185,12 @@ BEGIN
       AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
       AND (
         (m.id IS NULL AND pp.cuenta_bancaria_id IS NOT NULL)
-        OR (m.id IS NOT NULL AND abs(COALESCE(m.cargo,0) - (
-             CASE WHEN pp.moneda::text = 'MXN' THEN pp.monto
-                  WHEN COALESCE(pp.tipo_cambio_usd,0) > 0 THEN pp.monto * pp.tipo_cambio_usd
-                  ELSE pp.monto END)) > 0.01)
+        OR (m.id IS NOT NULL AND (e.cargo IS NULL OR abs(COALESCE(m.cargo,0) - ROUND(e.cargo, 2)) > 0.01))
       )
   ) q2;
   v_incidencias := v_incidencias || v_incidencias_pagos;
 
-  -- 4) Saldo pendiente del proveedor por moneda (facturas vivas y no canceladas).
+  -- 4) Proveedor completo en la organización: aprobadas, todos los meses, por moneda.
   SELECT COALESCE(jsonb_agg(x ORDER BY x->>'moneda'), '[]'::jsonb) INTO v_proveedores
   FROM (
     SELECT jsonb_build_object(
@@ -170,8 +204,8 @@ BEGIN
     WHERE pf.organization_id = v_org
       AND pf.deleted_at IS NULL
       AND pf.estado::text NOT IN ('Cancelada','Borrador')
-      AND (p_proveedor_id IS NOT NULL OR pf.id = p_factura_id)
-      AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
+      AND pf.estado_aprobacion = 'aprobada'
+      AND pf.proveedor_id = v_proveedor_saldo
     GROUP BY pf.proveedor_id, pf.moneda
   ) q3;
 

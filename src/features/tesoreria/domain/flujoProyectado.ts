@@ -17,6 +17,9 @@ export interface DetalleFlujo {
   monto_mxn: number;
   fecha_vencimiento: string;
   moneda: string;
+  /** Saldo del documento y TC realmente usado; no se sustituyen por DOF actual. */
+  monto_original?: number;
+  tipo_cambio_aplicado?: number | null;
 }
 
 export interface SemanaFlujo {
@@ -47,9 +50,9 @@ export interface FlujoProyectado {
   saldo_incompleto: boolean;
   /** Q-06: montos nominales (sin convertir) excluidos, agrupados por moneda. */
   excluido_por_moneda: Record<string, number>;
-  /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
+  /** TC DOF USD→MXN del saldo bancario inicial; los documentos usan su propio TC. */
   tipo_cambio_usd?: number | null;
-  /** P1-7: TC EUR→MXN vigente usado para convertir (si lo hubo). */
+  /** TC DOF EUR→MXN del saldo bancario inicial. */
   tipo_cambio_eur?: number | null;
   /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado. */
   tipo_cambio_fecha?: string | null;

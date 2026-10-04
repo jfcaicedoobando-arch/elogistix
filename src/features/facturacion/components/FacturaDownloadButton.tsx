@@ -5,6 +5,8 @@ import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/s
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Hint } from "@/components/shared/Hint";
+import { DescargaCfdiError, esAutenticacionDescarga, mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 interface Props {
   stored: string | null;
   kind: "pdf" | "xml";
@@ -23,9 +25,8 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
   const colorClass = kind === "pdf" ? "text-destructive" : "text-info";
   const label = kind === "pdf" ? "Descargar PDF" : "Descargar XML";
 
-  const onClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const descargar = async (scope = captureAuthOperationScope()) => {
+    if (!scope.isCurrent()) return;
     try {
       const usarProxy = (!stored || esUrlFacturapi(stored)) && (facturaId || pagoId || notaCreditoId);
       if (usarProxy) {
@@ -36,18 +37,23 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
         throw new Error("Archivo no disponible");
       }
     } catch (err) {
-      // UIA-13: el detalle técnico ("Failed to fetch") va al log/Sentry; al
-      // usuario se le dice qué hacer, en español.
-      const esFaltante = (err as Error)?.message === "Archivo no disponible";
+      if (!scope.isCurrent() || err instanceof AuthOperationChangedError) return;
       notifyError(undefined, {
         title: kind === "pdf" ? "No se pudo abrir el PDF" : "No se pudo abrir el XML",
-        description: esFaltante
-          ? "Este comprobante todavía no tiene archivo disponible. Vuelve a intentarlo cuando esté timbrado."
-          : "Revisa tu conexión a internet e inténtalo de nuevo. Si continúa, avisa a soporte.",
+        description: mensajeDescargaCfdi(err),
         error: err,
         method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1",
+        context: { facturaId, pagoId, notaCreditoId, tipo: kind, originalRequestId: err instanceof DescargaCfdiError ? err.originalRequestId : undefined },
+        requestId: err instanceof DescargaCfdiError ? err.requestId : undefined,
+        action: esAutenticacionDescarga(err) ? { label: "Reintentar descarga", onClick: () => { void descargar(scope); } } : undefined,
       });
     }
+  };
+
+  const onClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    void descargar();
   };
 
 

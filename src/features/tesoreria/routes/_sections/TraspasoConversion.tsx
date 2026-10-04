@@ -12,6 +12,7 @@ import { TraspasoResumen } from "./TraspasoResumen";
 import { etiquetaTc, type MonedaTc } from "@/features/tesoreria/domain/tcPar";
 
 interface Props {
+  cuentaOrigenId: string;
   monedaOrigen: string;
   monedaDestino: string;
   mismoMoneda: boolean;
@@ -27,12 +28,13 @@ interface Props {
 }
 
 export function TraspasoConversion({
-  monedaOrigen, monedaDestino, mismoMoneda, par, tcQuote, onTcQuoteChange,
+  cuentaOrigenId, monedaOrigen, monedaDestino, mismoMoneda, par, tcQuote, onTcQuoteChange,
   montoOrigen, comision, montoDestino, fechaTcDof, tcEsManual = false,
 }: Props) {
 
   const resumen = (
     <TraspasoResumen
+      cuentaOrigenId={cuentaOrigenId}
       monedaOrigen={monedaOrigen}
       monedaDestino={monedaDestino}
       montoOrigen={montoOrigen}

@@ -15,10 +15,11 @@ interface Props {
   onFechaChange: (fecha: string) => void;
   /** id único del date picker (accesibilidad). */
   idFecha: string;
+  fechaLabel?: string;
 }
 
 export function AgingMonedaFechaBar({
-  monedas, monedaActiva, onMonedaChange, fecha, onFechaChange, idFecha,
+  monedas, monedaActiva, onMonedaChange, fecha, onFechaChange, idFecha, fechaLabel = "Fecha de corte",
 }: Props) {
   const monedasVisibles = monedas.length > 0 ? monedas : ["MXN"];
   return (
@@ -41,11 +42,11 @@ export function AgingMonedaFechaBar({
       </div>
       <div className="w-[200px]">
         <label className="text-body-sm text-muted-foreground mb-1 block" htmlFor={idFecha}>
-          Fecha de corte
+          {fechaLabel}
         </label>
         <DatePickerMx
           id={idFecha}
-          title="Fecha de corte"
+          title={fechaLabel}
           value={fecha}
           onChange={(v: string) => onFechaChange(v || todayLocalISO())}
         />

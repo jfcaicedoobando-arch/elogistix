@@ -4,11 +4,10 @@
  *
  * Extraído de `facturaManual.ts` (límite Power-of-10 de 200 líneas).
  */
-import { subtotalLinea } from "@/lib/financial/financialUtils";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
-import { TASA_IVA_FRONTERA } from "@/features/facturacion/services/conceptosFacturaShared";
 import { addDaysIso } from "@/lib/date/dateOnly";
-import { parseCantidadFiscal } from "@/lib/domain/facturaConceptos";
+import { calcularImportesManual } from "@/features/facturacion/domain/facturaManualCalculo";
+export { tasaAplicada } from "@/features/facturacion/domain/facturaManualCalculo";
 
 export interface ConceptoManualInput {
   descripcion: string;
@@ -42,14 +41,6 @@ export function vencimiento(yyyyMmDd: string, days: number): string {
   return iso;
 }
 
-export function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: number): number | null {
-  const t = tipo ?? "gravado_16";
-  if (t === "gravado_16") return tasaGlobal;
-  if (t === "gravado_8") return TASA_IVA_FRONTERA;
-  if (t === "tasa_0") return 0;
-  return null; // exento y no objeto de impuesto (SAT 01)
-}
-
 /**
  * FIX-17 — folio borrador con entropía (Date + UUID) para evitar colisión
  * bajo carga concurrente. El prefijo `BORRADOR-` sigue siendo el marcador
@@ -79,11 +70,8 @@ export function construirLineasManuales(
     }
     // BL-1 — se conservan decimales (1.5 ton se timbra como 1.5, no como 2).
     // Misma normalización fiscal que la ruta de `conceptosFacturaCrud`.
-    const cantidadFiscal = parseCantidadFiscal(cantidad);
-    const totalLinea = subtotalLinea(cantidadFiscal, precio);
     const tipo_iva: TipoIvaConcepto = c.tipo_iva ?? "gravado_16";
-    const tasaFila = tasaAplicada(tipo_iva, tasa);
-    const ivaLinea = tasaFila != null ? subtotalLinea(totalLinea, tasaFila) : 0;
+    const { cantidad: cantidadFiscal, totalLinea, ivaLinea, tasaFila } = calcularImportesManual(c, tasa);
     // α.1 — clave SAT obligatoria; se elimina el fallback silencioso "81141601".
     const clave = c.clave_sat?.trim();
     if (!clave) {

@@ -29,6 +29,7 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
    * mover la fecha, quedaba la tasa de otro día con la fecha nueva en pantalla.
    */
   const [tcEsManual, setTcEsManual] = useState(false);
+  const [capturasNegativas, setCapturasNegativas] = useState({ montoOrigen: false, comision: false });
 
   useEffect(() => {
     if (!open) return;
@@ -36,6 +37,7 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     setState({ ...ESTADO_INICIAL, fecha: hoy });
     setFechaInicial(hoy);
     setTcEsManual(false);
+    setCapturasNegativas({ montoOrigen: false, comision: false });
   }, [open]);
 
   /**
@@ -91,9 +93,15 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   }, [state.montoOrigen, factorOrigenDestino]);
 
   const error = useMemo(
-    () => validarTraspaso(state, origen, destino, !!mismoMoneda, par),
-    [state, origen, destino, mismoMoneda, par],
+    () => capturasNegativas.montoOrigen || capturasNegativas.comision
+      ? "Corrige los importes negativos: el monto debe ser mayor a cero y la comisión no puede ser negativa."
+      : validarTraspaso(state, origen, destino, !!mismoMoneda, par),
+    [state, origen, destino, mismoMoneda, par, capturasNegativas],
   );
+
+  const revisarCaptura = (campo: "montoOrigen" | "comision", raw: string) => {
+    setCapturasNegativas((prev) => ({ ...prev, [campo]: /[-−]/.test(raw) || /^\s*\(.*\)\s*$/.test(raw) }));
+  };
 
   return {
     state,
@@ -105,6 +113,8 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     factorOrigenDestino,
     montoDestino,
     error,
+    revisarCaptura,
+    capturasNegativas,
     tcSugerido,
     tcEsManual,
     fechaInicial,

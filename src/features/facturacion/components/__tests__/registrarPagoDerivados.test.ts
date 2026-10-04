@@ -57,6 +57,16 @@ describe("derivarEstadoPago (cross-moneda)", () => {
     rates: RATES,
   };
 
+  it.each([{ monto: "58", incompleto: false }, { monto: "57", incompleto: true }])("AUD25: PUE total116/NC58 liquida saldo canónico58 con $monto", ({ monto, incompleto }) => {
+    // `saldo_factura` entrega58 después de una NC efectiva58 sobre total116.
+    // El formulario valida ese saldo RPC, que no se sustituye por el total bruto.
+    const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "MXN", saldo: 58, metodoPagoFactura: "PUE" });
+    expect(d.montoAplicado).toBe(Number(monto));
+    expect(d.excede).toBe(false);
+    expect(d.pueIncompleto).toBe(incompleto);
+    expect(d.invalido).toBe(incompleto);
+  });
+
   it("no marca sobrepago cuando el pago en pesos salda la factura en USD", () => {
     const d = derivarEstadoPago({
       ...base,

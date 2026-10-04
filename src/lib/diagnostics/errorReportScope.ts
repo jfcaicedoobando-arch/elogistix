@@ -4,6 +4,12 @@ let generation = 0;
 const reportGenerations = new WeakMap<ErrorReport, number>();
 const listeners = new Set<() => void>();
 
+/** Captura el ámbito al iniciar trabajo asíncrono, antes de crear su reporte. */
+export function captureErrorReportScope(): () => boolean {
+  const started = generation;
+  return () => started === generation;
+}
+
 /** Scope stays in memory, never in the JSON shared with support. */
 export function trackErrorReportScope(report: ErrorReport): ErrorReport {
   reportGenerations.set(report, generation);

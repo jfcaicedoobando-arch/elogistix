@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { FileText, FileCode2, Loader2 } from "lucide-react";
 import { descargarCfdiFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors/index";
+import { mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 interface Props {
@@ -23,20 +24,22 @@ export function PortalRepDownloadButtons({ pagoId, tienePdf, tieneXml }: Props) 
   if (!tienePdf && !tieneXml) return null;
 
   const descargar = async (tipo: "pdf" | "xml") => {
+    const scope = captureAuthOperationScope();
     setDescargando(tipo);
     try {
       await descargarCfdiFacturapi({ tipo, pagoId });
     } catch (err) {
+      if (!scope.isCurrent() || err instanceof AuthOperationChangedError) return;
       reportCaughtError(err, { feature: "portal", op: "descargar_rep", tipo }, { pagoId });
       notifyError(undefined, {
         title: `No se pudo descargar el REP ${tipo.toUpperCase()}`,
-        description: getErrorMessage(err),
+        description: mensajeDescargaCfdi(err),
         error: err,
         method: "PORTAL_DESCARGAR_REP",
         context: { pagoId, tipo },
       });
     } finally {
-      setDescargando(null);
+      if (scope.isCurrent()) setDescargando(null);
     }
   };
 

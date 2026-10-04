@@ -16,6 +16,7 @@ import {
   BloquePago,
 } from "./DetallePagoSheet.parts";
 import { BloqueAplicaciones } from "./DetallePagoAplicaciones";
+import { DetalleTraspasoSheet } from "./DetalleTraspasoSheet";
 
 interface Props {
   /** Pago a mostrar; `null` cierra el panel. */
@@ -24,6 +25,11 @@ interface Props {
 }
 
 export function DetallePagoSheet({ ref_pago, onOpenChange }: Props) {
+  if (ref_pago?.tipo === "traspaso") return <DetalleTraspasoSheet referencia={ref_pago} onOpenChange={onOpenChange} />;
+  return <DetallePagoConvencional ref_pago={ref_pago} onOpenChange={onOpenChange} />;
+}
+
+function DetallePagoConvencional({ ref_pago, onOpenChange }: Props) {
   const { data, isLoading, isError, error, refetch } = usePagoDetalle(ref_pago);
 
   return (

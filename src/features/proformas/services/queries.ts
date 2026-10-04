@@ -2,6 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { esUuid } from "@/lib/esUuid";
 import { fromDb, fromDbChecked } from "@/lib/supabase/cast";
 import { proformaRowsDbSchema } from "@/features/cotizacion/services/readSchemas";
+import type { ConceptoVentaLite } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProformaConRespaldo } from "@/features/proformas/domain/proformaListado";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { mergeProformaDetalle, mergeFacturasVinculadas } from "./queries.helpers";
@@ -16,6 +19,8 @@ import type {
 
 type ProformaListaRow = ProformaConFactura & {
   cliente_autorizacion?: { requiere_autorizacion_proforma: boolean | null } | null;
+  conceptos_lista?: Array<ConceptoVentaLite & { deleted_at?: string | null }>;
+  consolidados_lista?: Array<ConceptoVentaLite & { deleted_at?: string | null }>;
 };
 
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
@@ -91,6 +96,8 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
         .select(PROFORMA_LISTA_SELECT)
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
+        .is("conceptos_lista.deleted_at", null)
+        .is("consolidados_lista.deleted_at", null)
         .order("created_at", { ascending: false }),
       [],
     ),
@@ -99,13 +106,19 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
   // decidir si la conversión ya tiene una factura viva.
   // C30: sumar las facturas vinculadas por `factura_id` / `factura_secundaria_id`
   // (fusión de varias proformas) sin duplicar las que ya llegaron por la FK inversa.
-  return rows.map(({ cliente_autorizacion, ...proforma }) =>
-    mergeFacturasVinculadas({
+  return rows.map(({ cliente_autorizacion, conceptos_lista, consolidados_lista, ...proforma }) => {
+    const conceptos = (proforma.es_consolidada ? consolidados_lista : conceptos_lista)
+      ?.filter((c) => !c.deleted_at) ?? [];
+    const calculo = calcularTotalesProformaConRespaldo(proforma, conceptos, TASA_IVA);
+    return mergeFacturasVinculadas({
       ...proforma,
+      // Un snapshot legacy ausente no demuestra que el importe histórico sea cero.
+      totales_calculados: calculo.origen === "conceptos" ? calculo.totales : undefined,
+      totales_origen: calculo.origen,
       requiere_autorizacion_proforma:
         cliente_autorizacion?.requiere_autorizacion_proforma ?? true,
-    }),
-  );
+    });
+  });
 }
 
 

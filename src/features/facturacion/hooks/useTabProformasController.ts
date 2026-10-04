@@ -10,6 +10,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useProformas, type ProformaConFactura, type ProformaRow } from "@/features/embarques/hooks/useProformas";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
+import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
 
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;
@@ -106,8 +107,7 @@ export function useTabProformasController(opts?: {
   const csvRows = () => filtered.map((p) => ({
     numero: p.numero, expediente: p.expediente, cliente: p.cliente_nombre,
     operador: p.operador ?? "", dias_credito: p.dias_credito ?? "",
-    subtotal_usd: Number(p.subtotal_usd), iva_usd: Number(p.iva_usd), total_usd: Number(p.total_usd),
-    subtotal_mxn: Number(p.subtotal_mxn), iva_mxn: Number(p.iva_mxn), total_mxn: Number(p.total_mxn),
+    ...totalesListadoProforma(p),
     fecha: p.fecha_emision, estado: p.estado_proforma ?? "pendiente",
     folio_factura: p.folio_factura_externa ?? "", fecha_facturacion: p.fecha_facturacion ?? "",
   }));

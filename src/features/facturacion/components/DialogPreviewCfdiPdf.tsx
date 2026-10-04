@@ -15,6 +15,8 @@ import {
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crearUrlPdf } from "@/lib/pdf/blobPdfUrl";
 import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
 
 interface Props {
   open: boolean;
@@ -43,25 +45,27 @@ export function DialogPreviewCfdiPdf({
   useEffect(() => {
     if (!open) return;
     let revoked = false;
+    const scope = captureAuthOperationScope();
     let currentUrl: string | null = null;
     setLoading(true);
     fetchCfdiFacturapi({ tipo: "pdf", facturaId, pagoId, notaCreditoId })
       .then(({ blob }) => {
-        if (revoked) return;
+        if (revoked || !scope.isCurrent()) return;
         currentUrl = crearUrlPdf(blob);
         setBlobUrl(currentUrl);
       })
       .catch((err) => {
+        if (revoked || !scope.isCurrent() || err instanceof AuthOperationChangedError) return;
         notifyError(undefined, {
           title: "No se pudo previsualizar el PDF",
-          description: (err as Error).message,
+          description: mensajeDescargaCfdi(err),
           error: err,
           method: "DIALOG_PREVIEW_CFDI_PDF",
         });
         onOpenChange(false);
       })
       .finally(() => {
-        if (!revoked) setLoading(false);
+        if (!revoked && scope.isCurrent()) setLoading(false);
       });
     return () => {
       revoked = true;
@@ -71,12 +75,14 @@ export function DialogPreviewCfdiPdf({
   }, [open, facturaId, pagoId, notaCreditoId, onOpenChange]);
 
   const handleDescargar = async () => {
+    const scope = captureAuthOperationScope();
     try {
       await descargarCfdiFacturapi({ tipo: "pdf", facturaId, pagoId, notaCreditoId });
     } catch (err) {
+      if (!scope.isCurrent() || err instanceof AuthOperationChangedError) return;
       notifyError(undefined, {
         title: "No se pudo descargar el PDF",
-        description: (err as Error).message,
+        description: mensajeDescargaCfdi(err),
         error: err,
         method: "DIALOG_PREVIEW_CFDI_PDF_DOWNLOAD",
       });
