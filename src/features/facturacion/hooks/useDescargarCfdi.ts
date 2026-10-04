@@ -7,12 +7,14 @@ import { useCallback } from "react";
 import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors/index";
+import { mensajeDescargaCfdi } from "@/features/facturacion/domain/descargaCfdiError";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 export function useDescargarCfdi(facturaId: string | undefined) {
   return useCallback(
     async (stored: string | null, tipo: "pdf" | "xml") => {
+      const scope = captureAuthOperationScope();
       try {
         const usarProxy = !stored || esUrlFacturapi(stored);
         if (usarProxy && facturaId) {
@@ -21,10 +23,11 @@ export function useDescargarCfdi(facturaId: string | undefined) {
           await openFacturaInNewTab(stored);
         }
       } catch (err) {
+        if (!scope.isCurrent() || err instanceof AuthOperationChangedError) return;
         reportCaughtError(err, { feature: "facturacion", op: "descargar_cfdi", tipo }, { facturaId });
         notifyError(undefined, {
           title: `No se pudo abrir el ${tipo.toUpperCase()}`,
-          description: getErrorMessage(err),
+          description: mensajeDescargaCfdi(err),
           error: err,
           method: "FACTURACION_DESCARGAR_CFDI",
           context: { facturaId, tipo },

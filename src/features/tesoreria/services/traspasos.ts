@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
+import { validarImportesTraspaso } from "@/features/tesoreria/domain/traspasoForm";
 
 export type TraspasoBancario = Tables<"traspasos_bancarios">;
 
@@ -73,6 +74,8 @@ async function buscarTraspasoPorClave(
 export async function registrarTraspaso(
   input: RegistrarTraspasoInput,
 ): Promise<RegistrarTraspasoResult> {
+  const errorImportes = validarImportesTraspaso(input.montoOrigen, input.comision ?? 0);
+  if (errorImportes) throw new Error(errorImportes);
   if (!Number.isFinite(input.tipoCambio) || input.tipoCambio <= 0) {
     throw new Error("Captura el tipo de cambio del traspaso.");
   }

@@ -23,6 +23,7 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Link } from "react-router-dom";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { Hint } from "@/components/shared/Hint";
+import { buildProformaImportesColumns } from "./proformasImportesColumns";
 
 
 
@@ -84,8 +85,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.expediente,
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
-      // Oculto en tableta (<xl) — visible desde el # Proforma sticky y detalle.
-      meta: { width: COL_W.folio, className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "whitespace-nowrap" },
       // P1 (auditoría v13.823.143 · bug 1): las proformas de embarques sin folio
       // dejaban la celda vacía. Se muestra el fallback canónico y se enlaza al
       // embarque vinculado cuando existe.
@@ -130,9 +130,10 @@ export function buildProformasColumns({
       accessorFn: (p) => p.fecha_emision,
       enableSorting: true,
       sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
-      meta: { width: COL_W.fecha, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
+    ...buildProformaImportesColumns(),
     {
       id: "estado",
       header: "Estado",

@@ -16,6 +16,7 @@
  * cuyo modo real es desconocido.
  */
 import { fallbackTC, type TcFallback } from "./estadoResultadosTc";
+import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 import type {
   EmbarqueER,
   ConceptoVentaER,
@@ -79,8 +80,12 @@ export function ingresosDeNotas(
    */
   modoPorFactura: ReadonlyMap<string, string> = new Map(),
 ): void {
-  for (const nc of ncs) {
-    const id = `nc-${nc.factura_id}`;
+  const invalidas = ncs
+    .filter((nc) => nc.subtotal === null || !Number.isFinite(nc.subtotal))
+    .map(({ id, folio }) => ({ id, folio }));
+  if (invalidas.length) throw new NotaCreditoSinDesgloseError(invalidas);
+  for (const [indice, nc] of ncs.entries()) {
+    const id = `nc-${nc.factura_id}-${indice}`;
     // Ola 9 · M6: usar el TC de la nota de crédito cuando exista; sólo caer al
     // TC del mes si la NC no lo tiene capturado.
     out.embarques.push({
@@ -92,7 +97,7 @@ export function ingresosDeNotas(
     out.ventas.push({
       embarque_id: id,
       descripcion: "Notas de crédito",
-      total: -Math.abs(Number(nc.monto)),
+      total: -Math.abs(Number(nc.subtotal)),
       moneda: String(nc.moneda),
     });
   }

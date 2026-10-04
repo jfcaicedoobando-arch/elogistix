@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.21] - 2026-10-04
+
+- **fix(facturación y reportes)**: PUE admite el cobro único del saldo neto de notas de crédito aplicadas; factura manual, proformas y CSV comparten el redondeo por línea. Estado de resultados descuenta la base de las notas de crédito y muestra un error si falta su desglose. La descarga CFDI distingue autorización, red y documento, y cancela operaciones al cambiar de usuario u organización.
+- **fix(CxP y bandejas)**: captura por moneda sin mezclar nominales, totales opcionales desde conceptos, borradores con referencia identificable y saldo del proveedor calculado sobre todas sus facturas aprobadas. Se aclaran el alcance del aging y el tipo de cambio documental del flujo.
+- **fix(tesorería)**: traspasos muestran saldo inicial y proyectado y rechazan negativos explícitamente; la importación bancaria exige revisar y confirmar antes de guardar. Los movimientos identifican el origen traspaso y las fechas civiles conservan su día. Conciliación compara importes en la moneda de la cuenta, con controles de tipo de cambio y permisos.
+- **fix(anticipos y claridad)**: devolver un anticipo propone su cuenta de origen disponible y conserva la elección explícita de otra cuenta. Monedas, conteos de vencidos y listado de proformas presentan unidades e identificación coherentes.
+- **test(auditoría financiera 24–44)**: regresiones de importes, sesión, revisión de importación, redondeo, PUE y seguridad por organización; cuatro migraciones y espejos de funciones, sin modificar documentos ni movimientos históricos.
+
 ## [13.824.20] - 2026-10-03
 
 - **fix(toasts · diagnóstico)**: 27 avisos conservan la excepción original, la operación y los identificadores relevantes sin incluir credenciales ni documentos. Los errores de servicio, permisos o proveedor ya no se etiquetan automáticamente como validación; también se corrige esta clasificación en carga MSDS y alta de proveedores.

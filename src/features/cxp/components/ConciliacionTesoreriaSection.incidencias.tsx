@@ -9,7 +9,7 @@ import { RefreshCw } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import type { IncidenciaConciliacion } from "@/features/cxp/services/conciliacionTesoreria";
 import { useRegenerarMovimientoPago } from "@/features/cxp/hooks/useRegenerarMovimientoPago";
 
@@ -43,15 +43,17 @@ export function ConciliacionIncidencias({ incidencias, monedaFactura }: Props) {
               {ETIQUETA[i.tipo]}
             </Badge>
             <span className="text-body-sm text-muted-foreground">
-              {formatDateTimeShort(i.fechaPago)}
+              {formatFechaDia(i.fechaPago)}
             </span>
             <span className="text-body tabular-nums">
               Pago {formatCurrency(i.monto, i.moneda || monedaFactura)}
             </span>
             {i.tipo === "descuadre" && (
               <span className="text-body-sm text-muted-foreground tabular-nums">
-                Banco {formatCurrency(i.cargoMxn, "MXN")} · esperado{" "}
-                {formatCurrency(i.montoEsperadoMxn, "MXN")}
+                {i.montoEsperadoCuenta === null ? i.motivo : <>
+                  Banco {formatCurrency(i.cargoCuenta ?? i.cargoMxn, i.monedaCuenta || "MXN")} · esperado{" "}
+                  {formatCurrency(i.montoEsperadoCuenta ?? i.montoEsperadoMxn, i.monedaCuenta || "MXN")}
+                </>}
               </span>
             )}
             {i.tipo === "anticipo_inconsistente" && <span className="text-body-sm text-muted-foreground">

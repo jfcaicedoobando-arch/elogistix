@@ -808,34 +808,30 @@ CREATE FUNCTION public._assert_pago_pue_exhibicion_unica() RETURNS trigger
     AS $$
 DECLARE
   v_metodo text;
-  v_total  numeric;
-  v_otros  integer;
+  v_total numeric;
+  v_otros integer;
 BEGIN
-  SELECT f.metodo_pago, f.total
-    INTO v_metodo, v_total
-    FROM public.facturas f
-   WHERE f.id = NEW.factura_id;
-  IF NOT FOUND OR v_metodo IS DISTINCT FROM 'PUE' THEN
-    RETURN NEW;
-  END IF;
-  -- v13.823.287: un pago con REP cancelado esta anulado y no ocupa la
-  -- unica exhibicion de una factura PUE.
-  SELECT count(*) INTO v_otros
-    FROM public.pagos_factura p
-   WHERE p.factura_id = NEW.factura_id
-     AND p.deleted_at IS NULL
-     AND COALESCE(p.estado_rep, '') <> 'Cancelado'
-     AND p.id IS DISTINCT FROM NEW.id;
+  SELECT f.metodo_pago, f.total INTO v_metodo, v_total
+  FROM public.facturas f WHERE f.id = NEW.factura_id
+  FOR UPDATE OF f;
+  IF NOT FOUND OR v_metodo IS DISTINCT FROM 'PUE' THEN RETURN NEW; END IF;
+  -- Canon: sólo Timbrada/Aplicada, sin soft-delete, convertidas a moneda factura.
+  v_total := GREATEST(COALESCE(v_total, 0) - public._nc_aplicadas_moneda_factura(NEW.factura_id), 0);
+  -- El bloqueo de factura serializa intentos; el propio pago se excluye en UPDATE.
+  SELECT count(*) INTO v_otros FROM public.pagos_factura p
+  WHERE p.factura_id = NEW.factura_id AND p.deleted_at IS NULL
+    AND COALESCE(p.estado_rep, '') <> 'Cancelado'
+    AND p.id IS DISTINCT FROM NEW.id;
   IF v_otros > 0 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
       USING ERRCODE = 'P0001';
   END IF;
   IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.05 THEN
-    RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: la factura es PUE; registra el cobro por el total (%) en una sola exhibición. Si el cliente abona, cambia la factura a PPD.', v_total
+    RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: registra el cobro por el saldo neto pendiente (%) en una sola exhibición, considerando las notas de crédito vigentes.', v_total
       USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
-END
+END;
 $$;
 CREATE FUNCTION public._assert_periodo_abierto() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -5475,8 +5471,20 @@ CREATE FUNCTION public.absorber_espejos_importacion(p_cuenta_bancaria_id uuid, p
 DECLARE
   v_org uuid;
   v_fila jsonb;
+  v_plan jsonb;
+  v_planes jsonb := '[]'::jsonb;
+  v_huella jsonb;
+  v_mov public.bbva_movimientos;
   v_cand uuid;
+  v_esperado uuid;
+  v_usados uuid[] := ARRAY[]::uuid[];
+  v_hashes text[] := ARRAY[]::text[];
+  v_hash text;
   v_cuantos int;
+  v_total int;
+  v_con_revision int;
+  v_revisado boolean;
+  v_actualizados int;
   v_absorbidos int := 0;
 BEGIN
   SELECT organization_id INTO v_org
@@ -5487,36 +5495,121 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
   PERFORM public._assert_writer(v_org);
-  FOR v_fila IN SELECT * FROM jsonb_array_elements(COALESCE(p_filas, '[]'::jsonb))
+  IF p_filas IS NOT NULL AND jsonb_typeof(p_filas) <> 'array' THEN
+    RAISE EXCEPTION 'LC_IMPORTACION_REVISION_INVALIDA: las filas deben ser un arreglo'
+      USING ERRCODE = '22023';
+  END IF;
+  SELECT count(*), count(*) FILTER (WHERE value ? 'espejo_revisado_id')
+    INTO v_total, v_con_revision
+    FROM jsonb_array_elements(COALESCE(p_filas, '[]'::jsonb));
+  IF v_con_revision <> 0 AND v_con_revision <> v_total THEN
+    RAISE EXCEPTION 'LC_IMPORTACION_REVISION_INVALIDA: todas las filas deben pertenecer a la misma revisión'
+      USING ERRCODE = '22023';
+  END IF;
+  v_revisado := v_con_revision > 0;
+  -- Serializar importaciones de esta cuenta. El lock también bloquea nuevas
+  -- referencias FK a la cuenta durante la validación y absorción.
+  PERFORM 1 FROM public.cuentas_bancarias
+   WHERE id = p_cuenta_bancaria_id AND organization_id = v_org AND deleted_at IS NULL
+   FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_IMPORTACION_REVISION_CAMBIO: la cuenta cambió; vuelve a revisar el archivo'
+      USING ERRCODE = '23514';
+  END IF;
+  -- Estabilizar ediciones/restauraciones existentes; ningún lock global ni
+  -- escritura en otras cuentas. Orden estable para importaciones concurrentes.
+  PERFORM m.id FROM public.bbva_movimientos m
+   WHERE m.cuenta_bancaria_id = p_cuenta_bancaria_id
+   ORDER BY m.id FOR UPDATE;
+  FOR v_fila IN
+    SELECT value FROM jsonb_array_elements(COALESCE(p_filas, '[]'::jsonb))
+      WITH ORDINALITY AS filas(value, orden) ORDER BY orden
   LOOP
-    -- Idempotencia: si la línea del archivo ya está guardada, no se toca nada.
+    v_hash := v_fila->>'hash_dedupe';
+    IF jsonb_typeof(v_fila) <> 'object' OR NULLIF(v_hash, '') IS NULL
+       OR v_fila->>'fecha' IS NULL THEN
+      RAISE EXCEPTION 'LC_IMPORTACION_REVISION_INVALIDA: una fila no contiene fecha o huella bancaria válida'
+        USING ERRCODE = '22023';
+    END IF;
+    -- Reintentos y filas idénticas no consumen otro espejo.
+    CONTINUE WHEN v_hash = ANY(v_hashes);
+    v_hashes := array_append(v_hashes, v_hash);
     PERFORM 1 FROM public.bbva_movimientos
-      WHERE cuenta_bancaria_id = p_cuenta_bancaria_id
-        AND hash_dedupe = v_fila->>'hash_dedupe'
-        AND deleted_at IS NULL;
+     WHERE cuenta_bancaria_id = p_cuenta_bancaria_id
+       AND hash_dedupe = v_hash AND deleted_at IS NULL;
     CONTINUE WHEN FOUND;
-    -- Candidato: espejo de COBRO de cliente (hash 'cobro-<pago_id>'), mismo
-    -- importe exacto al centavo y fecha dentro de ±3 días. Los espejos de pago
-    -- a proveedor, anticipos y devoluciones NO se absorben (su hash forma parte
-    -- de los candados de sentido).
-    SELECT count(*), min(id) INTO v_cuantos, v_cand
+    -- Sólo COBROS de cliente; nunca pagos, anticipos o devoluciones.
+    -- Cada espejo se consume una vez, en el orden revisado del archivo.
+    SELECT count(*), (array_agg(m.id ORDER BY m.id))[1] INTO v_cuantos, v_cand
       FROM public.bbva_movimientos m
      WHERE m.cuenta_bancaria_id = p_cuenta_bancaria_id
-       AND m.deleted_at IS NULL
-       AND m.hash_dedupe LIKE 'cobro-%'
-       AND m.pago_factura_id IS NOT NULL
-       AND round(COALESCE(m.cargo, 0), 2) = round(COALESCE((v_fila->>'cargo')::numeric, 0), 2)
-       AND round(COALESCE(m.abono, 0), 2) = round(COALESCE((v_fila->>'abono')::numeric, 0), 2)
+       AND m.organization_id = v_org AND m.deleted_at IS NULL
+       AND m.hash_dedupe LIKE 'cobro-%' AND m.pago_factura_id IS NOT NULL
+       AND NOT (m.id = ANY(v_usados))
+       AND round(m.cargo, 2) = round(COALESCE((v_fila->>'cargo')::numeric, 0), 2)
+       AND round(m.abono, 2) = round(COALESCE((v_fila->>'abono')::numeric, 0), 2)
        AND abs(m.fecha - (v_fila->>'fecha')::date) <= 3;
-    -- Nunca se fusionan coincidencias ambiguas.
-    CONTINUE WHEN COALESCE(v_cuantos, 0) <> 1;
+    IF v_revisado THEN
+      IF jsonb_typeof(v_fila->'espejo_revisado_id') NOT IN ('null', 'string') THEN
+        RAISE EXCEPTION 'LC_IMPORTACION_REVISION_INVALIDA: el identificador revisado no es válido'
+          USING ERRCODE = '22023';
+      END IF;
+      v_esperado := (v_fila->>'espejo_revisado_id')::uuid;
+      IF v_esperado IS NULL THEN
+        IF v_cuantos = 1 THEN
+          RAISE EXCEPTION 'LC_IMPORTACION_REVISION_CAMBIO: apareció una coincidencia no revisada; vuelve a revisar el archivo'
+            USING ERRCODE = '23514';
+        END IF;
+        CONTINUE;
+      END IF;
+      IF v_cuantos <> 1 OR v_cand IS DISTINCT FROM v_esperado THEN
+        RAISE EXCEPTION 'LC_IMPORTACION_REVISION_CAMBIO: la coincidencia revisada cambió o es ambigua; vuelve a revisar el archivo'
+          USING ERRCODE = '23514';
+      END IF;
+      v_huella := v_fila->'espejo_revisado_huella';
+      IF v_huella IS NULL OR jsonb_typeof(v_huella) <> 'object'
+         OR NOT (v_huella ?& ARRAY['cuenta_bancaria_id','hash_dedupe','pago_factura_id','fecha','cargo','abono']) THEN
+        RAISE EXCEPTION 'LC_IMPORTACION_REVISION_INVALIDA: falta la huella del espejo revisado'
+          USING ERRCODE = '22023';
+      END IF;
+      SELECT * INTO v_mov FROM public.bbva_movimientos WHERE id = v_cand;
+      IF v_mov.cuenta_bancaria_id IS DISTINCT FROM (v_huella->>'cuenta_bancaria_id')::uuid
+         OR v_mov.hash_dedupe IS DISTINCT FROM v_huella->>'hash_dedupe'
+         OR v_mov.pago_factura_id IS DISTINCT FROM (v_huella->>'pago_factura_id')::uuid
+         OR v_mov.fecha IS DISTINCT FROM (v_huella->>'fecha')::date
+         OR v_mov.cargo IS DISTINCT FROM (v_huella->>'cargo')::numeric
+         OR v_mov.abono IS DISTINCT FROM (v_huella->>'abono')::numeric THEN
+        RAISE EXCEPTION 'LC_IMPORTACION_REVISION_CAMBIO: el espejo ya no coincide con los datos revisados; vuelve a revisar el archivo'
+          USING ERRCODE = '23514';
+      END IF;
+    ELSE
+      CONTINUE WHEN v_cuantos <> 1;
+    END IF;
+    v_usados := array_append(v_usados, v_cand);
+    v_planes := v_planes || jsonb_build_array(jsonb_build_object('id', v_cand, 'fila', v_fila));
+  END LOOP;
+  -- TODAS las precondiciones están comprobadas. Aplicar sólo IDs planificados
+  -- sin buscar un candidato alternativo ni modificar el vínculo con el pago.
+  FOR v_plan IN
+    SELECT value FROM jsonb_array_elements(v_planes)
+      WITH ORDINALITY AS planes(value, orden) ORDER BY orden
+  LOOP
+    v_fila := v_plan->'fila';
+    v_cand := (v_plan->>'id')::uuid;
     UPDATE public.bbva_movimientos
        SET hash_dedupe = v_fila->>'hash_dedupe',
            fecha = (v_fila->>'fecha')::date,
            concepto = COALESCE(NULLIF(v_fila->>'concepto', ''), concepto),
            referencia = COALESCE(NULLIF(v_fila->>'referencia', ''), referencia),
            saldo = COALESCE((v_fila->>'saldo')::numeric, saldo)
-     WHERE id = v_cand;
+     WHERE id = v_cand AND organization_id = v_org
+       AND cuenta_bancaria_id = p_cuenta_bancaria_id AND deleted_at IS NULL
+       AND hash_dedupe LIKE 'cobro-%' AND pago_factura_id IS NOT NULL;
+    GET DIAGNOSTICS v_actualizados = ROW_COUNT;
+    IF v_actualizados <> 1 THEN
+      RAISE EXCEPTION 'LC_IMPORTACION_REVISION_CAMBIO: no se pudo conservar el espejo revisado; vuelve a revisar el archivo'
+        USING ERRCODE = '23514';
+    END IF;
     v_absorbidos := v_absorbidos + 1;
     PERFORM public.registrar_bitacora(
       'tesoreria', 'absorber_espejo_cobro_importacion', v_cand,
@@ -7784,6 +7877,7 @@ DECLARE
   v_pago_org uuid;
   v_pago_moneda text;
   v_pago_monto numeric;
+  v_pago_tc numeric;
   v_cuenta_moneda text;
   v_vinculos int;
   v_mov numeric;
@@ -7841,8 +7935,8 @@ BEGIN
     END IF;
   END IF;
   IF NEW.pago_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text, COALESCE(monto,0)
-      INTO v_pago_org, v_pago_moneda, v_pago_monto
+    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd
+      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc
     FROM public.pagos_proveedor
     WHERE id = NEW.pago_proveedor_id AND deleted_at IS NULL;
     IF v_pago_org IS NULL THEN
@@ -7853,10 +7947,19 @@ BEGIN
       RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el pago de proveedor pertenece a otra organización'
         USING ERRCODE = 'P0001';
     END IF;
+    -- AUD42: comparar en la moneda de la cuenta, igual que _asegurar_movimiento_pago_proveedor.
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
-      RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del pago (%) no coincide con la cuenta bancaria (%)',
-        v_pago_moneda, v_cuenta_moneda
-        USING ERRCODE = 'P0001';
+      IF NOT ((v_pago_moneda = 'USD' AND v_cuenta_moneda = 'MXN')
+              OR (v_pago_moneda = 'MXN' AND v_cuenta_moneda = 'USD')) THEN
+        RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: no hay conversión compatible entre pago (%) y cuenta (%)',
+          v_pago_moneda, v_cuenta_moneda USING ERRCODE = 'P0001';
+      END IF;
+      IF COALESCE(v_pago_tc, 0) <= 0 OR v_pago_tc::text IN ('NaN','Infinity','-Infinity') THEN
+        RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: falta tipo de cambio para comparar el pago en % con la cuenta en %',
+          v_pago_moneda, v_cuenta_moneda USING ERRCODE = 'P0001';
+      END IF;
+      v_pago_monto := ROUND(CASE WHEN v_pago_moneda = 'USD' THEN v_pago_monto * v_pago_tc
+                               ELSE v_pago_monto / v_pago_tc END, 2);
     END IF;
     -- N5: un pago a proveedor sale de la cuenta (cargo), nunca entra.
     IF COALESCE(NEW.cargo, 0) <= 0 OR COALESCE(NEW.abono, 0) <> 0 THEN
@@ -11666,6 +11769,7 @@ CREATE FUNCTION public.conciliar_tesoreria_proveedor(p_proveedor_id uuid DEFAULT
     AS $$
 DECLARE
   v_org uuid;
+  v_proveedor_saldo uuid;
   v_revisadas int := 0;
   v_actualizadas int := 0;
   v_facturas jsonb := '[]'::jsonb;
@@ -11684,6 +11788,19 @@ BEGIN
   END IF;
   v_org := public.current_user_org_id();
   PERFORM public._assert_writer(v_org);
+  -- El recálculo sigue limitado a la factura; su resumen cubre al proveedor.
+  v_proveedor_saldo := p_proveedor_id;
+  IF p_factura_id IS NOT NULL THEN
+    SELECT pf.proveedor_id INTO v_proveedor_saldo
+    FROM public.proveedor_facturas pf
+    WHERE pf.id = p_factura_id AND pf.organization_id = v_org
+      AND pf.deleted_at IS NULL
+      AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id);
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'LC_CONCILIACION_ALCANCE_INVALIDO: la factura no pertenece al proveedor y organización indicados'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
   -- 1) Recalcular estado/etapa de captura de cada factura en el alcance.
   FOR r IN
     SELECT pf.id, pf.estado::text AS estado, pf.estado_captura
@@ -11779,14 +11896,36 @@ BEGIN
                CASE WHEN pp.moneda::text = 'MXN' THEN pp.monto
                     WHEN COALESCE(pp.tipo_cambio_usd,0) > 0 THEN pp.monto * pp.tipo_cambio_usd
                     ELSE pp.monto END, 2),
-             'cargo_mxn', ROUND(COALESCE(m.cargo, 0), 2),
+             'cargo_mxn', ROUND(CASE WHEN cb.moneda::text = 'MXN' THEN m.cargo
+               WHEN cb.moneda::text = 'USD' AND pp.tipo_cambio_usd > 0
+                 AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity') THEN m.cargo * pp.tipo_cambio_usd END, 2),
+             'moneda_cuenta', cb.moneda::text,
+             'cargo_cuenta', ROUND(COALESCE(m.cargo, 0), 2),
+             'monto_esperado_cuenta', ROUND(e.cargo, 2),
+             'motivo', CASE WHEN m.id IS NOT NULL AND e.cargo IS NULL THEN
+               'No se puede comparar el importe: falta la moneda de cuenta o un tipo de cambio compatible.' END,
              'tipo', CASE WHEN m.id IS NULL THEN 'sin_movimiento' ELSE 'descuadre' END
            ) AS x, pp.fecha_pago
     FROM public.pagos_proveedor pp
     JOIN public.proveedor_facturas pf ON pf.id = pp.proveedor_factura_id
     LEFT JOIN public.bbva_movimientos m
-           ON m.pago_proveedor_id = pp.id AND m.deleted_at IS NULL
+           ON m.pago_proveedor_id = pp.id AND m.deleted_at IS NULL AND m.organization_id = v_org
+    LEFT JOIN public.cuentas_bancarias cb
+           ON cb.id = COALESCE(m.cuenta_bancaria_id, pp.cuenta_bancaria_id)
+          AND cb.organization_id = v_org AND cb.deleted_at IS NULL
+    CROSS JOIN LATERAL (
+      SELECT CASE
+        WHEN cb.moneda::text = pp.moneda::text THEN pp.monto
+        WHEN pp.moneda::text = 'USD' AND cb.moneda::text = 'MXN' AND pp.tipo_cambio_usd > 0
+          AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity')
+          THEN pp.monto * pp.tipo_cambio_usd
+        WHEN pp.moneda::text = 'MXN' AND cb.moneda::text = 'USD' AND pp.tipo_cambio_usd > 0
+          AND pp.tipo_cambio_usd::text NOT IN ('NaN','Infinity','-Infinity')
+          THEN pp.monto / pp.tipo_cambio_usd
+      END AS cargo
+    ) e
     WHERE pf.organization_id = v_org
+      AND pp.organization_id = v_org
       AND pp.deleted_at IS NULL
       AND pf.deleted_at IS NULL
       AND NOT pp.es_anticipo_aplicado
@@ -11796,14 +11935,11 @@ BEGIN
       AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
       AND (
         (m.id IS NULL AND pp.cuenta_bancaria_id IS NOT NULL)
-        OR (m.id IS NOT NULL AND abs(COALESCE(m.cargo,0) - (
-             CASE WHEN pp.moneda::text = 'MXN' THEN pp.monto
-                  WHEN COALESCE(pp.tipo_cambio_usd,0) > 0 THEN pp.monto * pp.tipo_cambio_usd
-                  ELSE pp.monto END)) > 0.01)
+        OR (m.id IS NOT NULL AND (e.cargo IS NULL OR abs(COALESCE(m.cargo,0) - ROUND(e.cargo, 2)) > 0.01))
       )
   ) q2;
   v_incidencias := v_incidencias || v_incidencias_pagos;
-  -- 4) Saldo pendiente del proveedor por moneda (facturas vivas y no canceladas).
+  -- 4) Proveedor completo en la organización: aprobadas, todos los meses, por moneda.
   SELECT COALESCE(jsonb_agg(x ORDER BY x->>'moneda'), '[]'::jsonb) INTO v_proveedores
   FROM (
     SELECT jsonb_build_object(
@@ -11817,8 +11953,8 @@ BEGIN
     WHERE pf.organization_id = v_org
       AND pf.deleted_at IS NULL
       AND pf.estado::text NOT IN ('Cancelada','Borrador')
-      AND (p_proveedor_id IS NOT NULL OR pf.id = p_factura_id)
-      AND (p_proveedor_id IS NULL OR pf.proveedor_id = p_proveedor_id)
+      AND pf.estado_aprobacion = 'aprobada'
+      AND pf.proveedor_id = v_proveedor_saldo
     GROUP BY pf.proveedor_id, pf.moneda
   ) q3;
   RETURN jsonb_build_object(
@@ -20954,7 +21090,7 @@ BEGIN
     count(*),
     COALESCE(SUM(ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)), 0),
     COALESCE(SUM(ROUND(
-        COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0)
+        ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)
         * COALESCE(c.tasa_iva_aplicada,
                    CASE WHEN c.tipo_iva = 'gravado_16' THEN 0.16
                         WHEN c.tipo_iva = 'gravado_8'  THEN 0.08
@@ -26087,7 +26223,7 @@ BEGIN
     count(*),
     COALESCE(SUM(ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)), 0),
     COALESCE(SUM(ROUND(
-        COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0)
+        ROUND(COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0), 2)
         * COALESCE(c.tasa_iva_aplicada,
                    CASE WHEN c.tipo_iva = 'gravado_16' THEN 0.16 ELSE 0 END),
         2)), 0),

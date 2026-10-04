@@ -20,7 +20,7 @@ vi.mock("@/components/shared/dataTable/ResponsiveDataTable", () => ({
   ResponsiveDataTable: () => <div data-testid="tabla" />,
 }));
 vi.mock("../ProformasFiltros", () => ({ default: () => <div /> }));
-vi.mock("@/features/proformas/hooks/useConvertirProformaDirecto", () => ({
+vi.mock("@/features/proformas/hooks", () => ({
   useConvertirProformaDirecto: () => ({ convertir: vi.fn(), isPending: false }),
 }));
 

@@ -13,6 +13,7 @@ import { saveAs } from "file-saver";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { fetchCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { mapWithConcurrency } from "@/lib/async/mapWithConcurrency";
+import { AuthOperationChangedError, captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf" | "xml"): Promise<ArrayBuffer | null> {
   if (!stored && !facturaId) return null;
@@ -55,9 +56,11 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   };
 
   const descargarZip = async () => {
+    const scope = captureAuthOperationScope();
     setBusy("zip");
     try {
       const data = await fetchFacturasParaZip(ids);
+      scope.assertCurrent();
       const zip = new JSZip();
       const folder = zip.folder("facturas")!;
       const facturas = data ?? [];
@@ -67,22 +70,27 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
         facturas,
         4,
         async (f) => {
+          scope.assertCurrent();
           const [pdf, xml] = await Promise.all([
             obtenerBytes(f.factura_pdf_url, f.id, "pdf").catch(() => null),
             obtenerBytes(f.factura_xml_url, f.id, "xml").catch(() => null),
           ]);
+          scope.assertCurrent();
           if (pdf) folder.file(`${f.numero}.pdf`, pdf);
           if (xml) folder.file(`${f.numero}.xml`, xml);
           return pdf != null;
         },
-        avanzarProgreso,
+        (hechas, total) => { if (scope.isCurrent()) avanzarProgreso(hechas, total); },
       );
+      scope.assertCurrent();
       const count = ok.filter((r) => r.value).length;
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      scope.assertCurrent();
       saveAs(blob, `facturas-${todayLocalISO()}.zip`);
       notifySuccess(undefined, { title: `${count} factura(s) descargadas` });
 
     } catch (e) {
+      if (!scope.isCurrent() || e instanceof AuthOperationChangedError) return;
       notifyError(undefined, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });
       reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { total: ids.length });
     } finally {

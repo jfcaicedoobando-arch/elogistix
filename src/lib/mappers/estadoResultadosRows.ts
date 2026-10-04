@@ -6,6 +6,7 @@
  * quede libre de `as Tables<X>` / `as X[]`.
  */
 import { num, str } from "./_helpers";
+import { baseNotaCreditoSinImpuestos } from "@/lib/financial/baseNotaCredito";
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 
 export interface FacturaRow {
@@ -22,7 +23,11 @@ export interface FacturaRow {
 
 
 export interface NotaCreditoRow {
+  id: string;
+  folio: string | null;
   monto: number;
+  /** Base del desglose; null si no permite un reporte homogéneo sin impuestos. */
+  subtotal: number | null;
   moneda: string;
   factura_id: string;
   /** BL-10: fecha de negocio inmutable (DATE) para ubicar la NC en el mes;
@@ -77,7 +82,10 @@ export function mapFacturaRows(data: unknown): FacturaRow[] {
 
 export function mapNotaCreditoRows(data: unknown): NotaCreditoRow[] {
   return ((data ?? []) as RawRow[]).map((r) => ({
+    id: str(r.id),
+    folio: nullableStr(r.folio),
     monto: num(r.monto),
+    subtotal: baseNotaCreditoSinImpuestos(r.conceptos),
     moneda: str(r.moneda),
     factura_id: str(r.factura_id),
     fecha_emision: str(r.fecha_emision),

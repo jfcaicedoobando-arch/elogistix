@@ -29,7 +29,7 @@ export const ENCABEZADOS_BITACORA_EXPORT = [
   "Fecha",
   "Movimiento",
   "Monto",
-  "Cargo MXN",
+  "Equivalente MXN",
   "Cuenta bancaria",
   "Estado del movimiento",
   "Usuario",

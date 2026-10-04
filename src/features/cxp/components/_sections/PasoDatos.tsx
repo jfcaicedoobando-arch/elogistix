@@ -7,6 +7,7 @@ import type { CategoriaPresupuestoLite, EntranteParaCaptura } from "@/features/c
 import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
 import { FacturaProveedorFormFields } from "../FacturaProveedorFormFields";
 import { AvisoMontoDeclarado } from "../AvisoMontoDeclarado";
+import { TotalesDesdeConceptos } from "../TotalesDesdeConceptos";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
 
@@ -42,6 +43,7 @@ export function PasoDatos({ ctl, categorias, entrante, categoriaCogs }: Props) {
         dofLoading={ctl.dofLoading}
         categoriaCogs={categoriaCogs}
       />
+      <TotalesDesdeConceptos totales={ctl.totalesManuales} moneda={ctl.values.moneda} />
     </div>
   );
 }

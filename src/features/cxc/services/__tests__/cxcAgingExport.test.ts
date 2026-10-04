@@ -73,11 +73,12 @@ describe("exportarCxcAgingCsv", () => {
 
     const lineas = csvGenerado.split("\n");
     expect(lineas[0]).toBe(
-      "Cliente,Moneda,Facturas,Vigente,1-30 d,31-60 d,61-90 d,+90 d,Total",
+      "Cliente,Moneda,Facturas,Vigente,1-30 d,31-60 d,61-90 d,+90 d,Total,Fecha para antigüedad,Alcance del saldo",
     );
     expect(lineas[1]).toContain('"Cliente ""Dos"""');
     expect(lineas[1]).toContain("MXN");
     expect(lineas[1]).toContain("1000");
+    expect(lineas[1]).toContain("2026-08-09,Cartera actual clasificada a esta fecha");
 
     globalThis.Blob = OriginalBlob;
     clickSpy.mockRestore();

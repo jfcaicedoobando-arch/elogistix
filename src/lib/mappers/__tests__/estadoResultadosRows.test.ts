@@ -36,13 +36,18 @@ describe("mapFacturaRows", () => {
 describe("mapNotaCreditoRows", () => {
   it("mapea filas básicas", () => {
     const out = mapNotaCreditoRows([
-      { monto: 25, moneda: "MXN", factura_id: "f1", fecha_emision: "2026-06-10" },
+      { id: "nc1", folio: "NC-001", monto: 25, moneda: "MXN", factura_id: "f1", fecha_emision: "2026-06-10" },
     ]);
     expect(out).toHaveLength(1);
     expect(out[0].monto).toBe(25);
     expect(out[0].factura_id).toBe("f1");
+    expect(out[0].id).toBe("nc1");
+    expect(out[0].folio).toBe("NC-001");
     // BL-10: se usa fecha_emision (inmutable), no updated_at.
     expect(out[0].fecha_emision).toBe("2026-06-10");
+  });
+  it("conserva ID aunque el folio no esté asignado", () => {
+    expect(mapNotaCreditoRows([{ id: "nc-sin-folio", folio: null }])[0]).toMatchObject({ id: "nc-sin-folio", folio: null });
   });
 });
 

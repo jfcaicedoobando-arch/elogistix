@@ -74,7 +74,7 @@ export function BitacoraTesoreriaFila({
       )}
       {cargoMxn !== null && moneda !== "MXN" && (
         <span className="text-body-sm text-muted-foreground tabular-nums">
-          Cargo {formatCurrency(cargoMxn, "MXN")}
+          Equivalente {formatCurrency(cargoMxn, "MXN")}
         </span>
       )}
       {cuentaId && (

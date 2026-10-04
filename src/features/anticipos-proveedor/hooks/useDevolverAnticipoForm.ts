@@ -5,7 +5,7 @@
  * líneas por archivo (Power of 10): el componente sólo pinta; aquí viven el
  * formulario, las sugerencias automáticas y las validaciones previas a la RPC.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDevolverAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
@@ -27,17 +27,22 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
   const [cuentaId, setCuentaId] = useState("");
   const [referencia, setReferencia] = useState("");
   const [motivo, setMotivo] = useState("");
+  const sesionRef = useRef<string | null>(null);
+  const cuentaElegidaRef = useRef(false);
 
   const disponible = anticipo?.disponible ?? 0;
   const moneda = anticipo?.moneda ?? "MXN";
   const cuentasDeMoneda = useMemo(
-    () => cuentas.filter((c) => c.moneda === moneda),
+    () => cuentas.filter((c) => c.moneda === moneda && c.activa && !c.deleted_at),
     [cuentas, moneda],
   );
 
   // Al abrir se propone devolver todo el saldo con fecha de hoy.
   useEffect(() => {
-    if (!open || !anticipo) return;
+    if (!open) { sesionRef.current = null; return; }
+    if (!anticipo || sesionRef.current === anticipo.id) return;
+    sesionRef.current = anticipo.id;
+    cuentaElegidaRef.current = false;
     setMonto(anticipo.disponible > 0 ? anticipo.disponible : null);
     setFecha(hoyMx());
     setCuentaId("");
@@ -45,12 +50,16 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
     setMotivo("");
   }, [open, anticipo]);
 
-  // La cuenta se sugiere aparte porque el catálogo puede llegar después de
-  // abrir el diálogo; sólo se rellena si el usuario aún no eligió una.
+  const cuentaOriginal = cuentasDeMoneda.find((c) => c.id === anticipo?.cuenta_bancaria_id);
+  // El catálogo puede llegar después. Sólo se propone la cuenta de salida
+  // original, nunca la primera del catálogo ni otra tras una elección manual.
   useEffect(() => {
-    if (!open) return;
-    setCuentaId((actual) => actual || (cuentasDeMoneda[0]?.id ?? ""));
-  }, [open, cuentasDeMoneda]);
+    if (!open || cuentaElegidaRef.current || !cuentaOriginal) return;
+    setCuentaId((actual) => actual || cuentaOriginal.id);
+  }, [open, cuentaOriginal, anticipo?.id]);
+
+  const elegirCuenta = (id: string) => { cuentaElegidaRef.current = true; setCuentaId(id); };
+  const cuentaValida = cuentasDeMoneda.some((c) => c.id === cuentaId);
 
   // F2 (decisión 2026-08-29): sólo devolución TOTAL. El monto queda fijo al
   // saldo disponible; una parcial haría desaparecer el remanente sin asiento.
@@ -58,7 +67,7 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
   const esParcial = (monto ?? 0) < disponible - 0.01;
 
   const handleConfirm = async () => {
-    if (!anticipo) return;
+    if (!anticipo || devolver.isPending) return;
     if (!monto || monto <= 0 || excede || esParcial) {
       notifyWarning(undefined, {
         title: "Revisa el monto",
@@ -70,7 +79,7 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
       notifyWarning(undefined, { title: "Falta la fecha", description: "Indica cuándo entró el depósito." });
       return;
     }
-    if (!cuentaId) {
+    if (!cuentaValida) {
       notifyWarning(undefined, {
         title: "Falta la cuenta",
         description: "Selecciona la cuenta bancaria donde entró el dinero.",
@@ -101,7 +110,10 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
     fecha,
     setFecha,
     cuentaId,
-    setCuentaId,
+    setCuentaId: elegirCuenta,
+    cuentaOriginal,
+    cuentaValida,
+    otraCuenta: cuentaValida && cuentaId !== anticipo?.cuenta_bancaria_id,
     referencia,
     setReferencia,
     motivo,

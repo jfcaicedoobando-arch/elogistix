@@ -3,3 +3,4 @@ export * from "./proforma";
 export * from "./proformaAgrupacion";
 export * from "./proformaClienteEstado";
 export * from "./proformaDetalleHelpers";
+export * from "./proformaListado";

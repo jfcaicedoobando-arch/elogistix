@@ -11,6 +11,7 @@
 
 /** Embed reducido de una factura vinculada (etiqueta del ciclo documental). */
 const FACTURA_LITE = "id, estado, uuid_fiscal, deleted_at";
+const CONCEPTO_TOTALES = "id, cantidad, precio_unitario, moneda, aplica_iva, tasa_iva_aplicada, tipo_iva, deleted_at";
 
 export const PROFORMA_LISTA_SELECT = [
   "id", "numero", "expediente", "embarque_id", "cliente_id", "cliente_nombre", "operador",
@@ -22,6 +23,9 @@ export const PROFORMA_LISTA_SELECT = [
   "es_consolidada", "estado_revision",
   "dias_credito", "organization_id",
   "subtotal_usd", "iva_usd", "total_usd", "subtotal_mxn", "iva_mxn", "total_mxn",
+  // 38: cálculo BL-12 por línea para lista y CSV, sin lecturas por cada fila.
+  "conceptos_lista:conceptos_venta(" + CONCEPTO_TOTALES + ")",
+  "consolidados_lista:proforma_conceptos_consolidados(" + CONCEPTO_TOTALES + ")",
   "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",
   "fecha_facturacion", "factura_id", "factura_secundaria_id", "created_at",
   "facturas:factura_id(factura_pdf_url, factura_xml_url)",

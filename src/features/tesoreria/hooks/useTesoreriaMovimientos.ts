@@ -12,6 +12,7 @@ import {
   type FiltrosMovimientos, type MovimientoBBVA, type MovimientoManualPayload,
 } from "@/features/tesoreria/services";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
+import type { FilaRevisionImportacion } from "@/features/tesoreria/domain/import/revisionImportacion";
 import { useMutationWithFeedback } from "@/hooks/shared";
 
 export function useMovimientos(filtros: FiltrosMovimientos | null) {
@@ -41,8 +42,8 @@ export function useImportarMovimientos() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutationWithFeedback({
-    mutationFn: ({ cuentaId, movimientos }: { cuentaId: string; movimientos: MovimientoParseado[] }) =>
-      importarMovimientos(cuentaId, movimientos, user?.id ?? null),
+    mutationFn: ({ cuentaId, movimientos, revision }: { cuentaId: string; movimientos: MovimientoParseado[]; revision?: FilaRevisionImportacion[] }) =>
+      importarMovimientos(cuentaId, movimientos, user?.id ?? null, revision),
     invalidate: queryKeys.tesoreria.all,
     // MNY: `silent` — el aviso (éxito y error, con el detalle de guardados y
     // faltantes) lo da `useImportarEstadoCuenta`. Antes salían dos toasts

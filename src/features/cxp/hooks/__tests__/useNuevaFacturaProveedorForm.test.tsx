@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
+import type { CfdiParsedResponse } from "@/features/cxp/services";
 
 const mutateAsync = vi.fn();
 const findProveedor = vi.fn();
@@ -245,6 +246,45 @@ describe("useNuevaFacturaProveedorForm", () => {
 });
 
 describe("useNuevaFacturaProveedorForm · conceptos manuales (Q-02)", () => {
+  it("adopta totales manuales bajo acción y conserva validación de cuadre posterior", async () => {
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(vi.fn()), { wrapper: createWrapper() });
+    act(() => {
+      result.current.handleProveedor("p1", "ACME");
+      result.current.handleChange("folio", "MANUAL-31");
+      result.current.handleChange("categoriaId", "cat-1");
+      result.current.conceptosManuales.reemplazar([{ descripcion: "Servicio", cantidad: 1, importe: 100, iva: 16, ieps: 0 }]);
+    });
+    expect(result.current.values.subtotal).toBe("");
+    act(() => result.current.totalesManuales.aplicar());
+    expect(result.current.total).toBe(116);
+    expect(result.current.cuadreManual.puedeAprobar).toBe(true);
+    const key = result.current.conceptosManuales.conceptos[0].key;
+    act(() => result.current.conceptosManuales.actualizar(key, "importe", 200));
+    expect(result.current.total).toBe(116);
+    expect(result.current.totalesManuales.difiere).toBe(true);
+    await act(async () => { await result.current.submit(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("la carga XML protege cifras importadas aunque queden conceptos manuales previos", async () => {
+    findProveedor.mockResolvedValueOnce(null);
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(vi.fn()), { wrapper: createWrapper() });
+    act(() => result.current.conceptosManuales.reemplazar([{ descripcion: "Previo", cantidad: 1, importe: 100, iva: 16, ieps: 0 }]));
+    const parsed: CfdiParsedResponse = {
+      cfdi: { uuid: "XML-31", serie: "A", folio: "31", fecha: "2026-10-03", moneda: "MXN",
+        tipo_cambio: 1, subtotal: 500, total: 570, iva_trasladado: 80, ieps_trasladado: 0, retenciones: 10,
+        tipo_comprobante: "I", emisor: { rfc: "XAXX010101000", nombre: "Proveedor XML", regimen: "601" },
+        receptor: { rfc: "XAXX010101000", nombre: "Prueba" },
+        conceptos: [{ descripcion: "Del XML", cantidad: 1, importe: 500, iva: 80, ieps: 0 }] },
+      ai: { categoria_id: null, notas: "" },
+    };
+    await act(async () => { await result.current.handleCfdiParsed(parsed, { xml: new File(["xml"], "prueba.xml"), pdf: null }); });
+    act(() => result.current.totalesManuales.aplicar());
+    expect(result.current.totalesManuales.visible).toBe(false);
+    expect(result.current.values).toMatchObject({ subtotal: "500", iva: "80", retenciones: "10" });
+    expect(result.current.total).toBe(570);
+  });
+
   it("bloquea el submit sin conceptos y sin vínculos", async () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });

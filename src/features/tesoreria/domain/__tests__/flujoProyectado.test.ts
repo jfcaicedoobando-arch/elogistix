@@ -54,6 +54,22 @@ const cuentas: ResumenCuenta[] = [
 ];
 
 describe("calcularFlujoProyectado", () => {
+  it("expone el saldo nativo y TC del documento sin sustituirlo por el DOF del saldo bancario", () => {
+    const cxp: CxpRow[] = [{
+      id: "fp8", folio_proveedor: "FP8", proveedor_nombre: "Agente", moneda: "USD",
+      saldo: 95, tipo_cambio_usd: 20, fecha_vencimiento: "2026-10-05",
+    }];
+    const r = calcularFlujoProyectado({
+      cuentas: [{ id: "usd", alias: "USD", banco: "Banorte", moneda: "USD", saldo: 100 }],
+      cobranza: [], cxp, liquidaciones: [], dias: 14,
+      hoy: new Date(2026, 9, 3), tipoCambioUsd: 18.1903,
+    });
+    expect(r.saldo_inicial_mxn).toBeCloseTo(1819.03, 2);
+    expect(r.total_salidas_mxn).toBe(1900);
+    expect(r.semanas.flatMap((s) => s.detalle_salidas)[0]).toMatchObject({
+      moneda: "USD", monto_original: 95, tipo_cambio_aplicado: 20, monto_mxn: 1900,
+    });
+  });
   it("sin cuentas conserva las obligaciones, pero no afirma liquidez negativa", () => {
     const cxp: CxpRow[] = [{ id: "x1", folio_proveedor: "179", proveedor_nombre: "Proveedor Monterrey", moneda: "MXN", saldo: 1160, fecha_vencimiento: "2026-09-28" }];
     const r = calcularFlujoProyectado({ cuentas: [], cobranza: [], cxp, liquidaciones: [], dias: 90, hoy: new Date(2026, 8, 26) });

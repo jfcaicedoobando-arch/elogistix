@@ -1,10 +1,15 @@
 import type { Tables } from "@/integrations/supabase/types";
+import type { TotalesProforma } from "@/features/proformas/domain/proforma";
 
 export type ProformaRow = Tables<"proformas">;
 export type ConceptoVentaRow = Tables<"conceptos_venta">;
 export type ProformaConceptoConsolidadoRow = Tables<"proforma_conceptos_consolidados">;
 
 export type ProformaConFactura = ProformaRow & {
+  /** Totales BL-12 de los conceptos vivos, compartidos por listado y CSV. */
+  totales_calculados?: TotalesProforma;
+  /** Si faltan conceptos, conserva el importe histórico sin inventar un desglose. */
+  totales_origen?: "conceptos" | "encabezado_sin_detalle";
   /** Política del cliente, adjuntada sólo por la consulta del listado general. */
   requiere_autorizacion_proforma?: boolean | null;
   facturas: { factura_pdf_url: string | null; factura_xml_url: string | null } | null;

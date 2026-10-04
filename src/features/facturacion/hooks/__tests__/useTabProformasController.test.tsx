@@ -63,6 +63,15 @@ describe("useTabProformasController", () => {
     expect(rows[0].estado).toBe("pendiente");
   });
 
+  it("38: CSV exporta BL-12 y preserva contexto en lugar de los campos crudos", () => {
+    mockUseProformas.mockReturnValue({ data: [proforma({
+      iva_mxn: 490.6656, total_mxn: 3557.3256,
+      totales_calculados: { subtotal_mxn: 3066.66, iva_mxn: 490.66, total_mxn: 3557.32, subtotal_usd: 0, iva_usd: 0, total_usd: 0 },
+    })], isLoading: false } as never);
+    const { result } = renderHook(() => useTabProformasController(), { wrapper: makeWrapper() });
+    expect(result.current.csvRows()[0]).toMatchObject({ numero: "P-001", expediente: "EXP-001", fecha: "2024-01-15", subtotal_mxn: 3066.66, iva_mxn: 490.66, total_mxn: 3557.32 });
+  });
+
   it("setSearch filtra proformas correctamente", () => {
     const p2 = proforma({ id: "p2", numero: "P-002", expediente: "EXP-002", cliente_nombre: "Beta Corp" });
     mockUseProformas.mockReturnValue({ data: [proforma(), p2], isLoading: false } as never);

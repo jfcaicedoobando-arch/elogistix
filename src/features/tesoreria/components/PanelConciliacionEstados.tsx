@@ -13,13 +13,17 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { Candidato } from "@/features/tesoreria/services/sugerirCandidatos";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import type { RefPago, TipoPagoDetalle } from "@/features/tesoreria/domain/pagoDetalle";
+import type { MovimientoBBVA } from "@/features/tesoreria/services/conciliacion";
 
 export function EstadoConciliado({
   tienePago,
+  tipo,
   onVerPago,
   onDesconciliar,
 }: {
   tienePago: boolean;
+  tipo?: TipoPagoDetalle;
   onVerPago: () => void;
   onDesconciliar: () => void;
 }) {
@@ -29,16 +33,18 @@ export function EstadoConciliado({
       {tienePago ? (
         <Button variant="outline" size="sm" onClick={onVerPago} className="w-full">
           <Eye className="h-4 w-4 mr-2" />
-          Ver detalle del pago
+          {tipo === "traspaso" ? "Ver detalle del traspaso" : "Ver detalle del pago"}
         </Button>
       ) : (
         <p className="text-body-sm text-muted-foreground">
           Este movimiento está conciliado, pero no guarda el pago con el que se amarró.
         </p>
       )}
-      <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
+      {tipo === "traspaso" ? <p className="text-body-sm text-muted-foreground">
+        Movimiento de un traspaso entre cuentas propias. La salida, entrada y comisión se consultan en su detalle.
+      </p> : <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
         Desconciliar
-      </Button>
+      </Button>}
     </>
   );
 }
@@ -131,4 +137,18 @@ export function ListaCandidatos({
       </Button>
     </>
   );
+}
+
+interface EstadoPanelProps extends ListaCandidatosProps {
+  movimiento: MovimientoBBVA;
+  refPago: RefPago | null;
+  onVerPago: () => void;
+  onDesconciliar: () => void;
+}
+
+export function EstadoPanelConciliacion({ movimiento, refPago, onVerPago, onDesconciliar, ...candidatos }: EstadoPanelProps) {
+  if (movimiento.estado_conciliacion === "Conciliado") return <EstadoConciliado
+    tienePago={!!refPago} tipo={refPago?.tipo} onVerPago={onVerPago} onDesconciliar={onDesconciliar} />;
+  if (movimiento.estado_conciliacion === "Ignorado") return <EstadoIgnorado motivo={movimiento.motivo_ignorar} onReactivar={onDesconciliar} />;
+  return <ListaCandidatos {...candidatos} />;
 }

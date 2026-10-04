@@ -34,6 +34,7 @@ import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { CxcAgingMobileCard } from "@/features/cxc/components/CxcAgingMobileCard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Link } from "react-router-dom";
+import { CXC_AGING_ALCANCE, CXC_AGING_DESCRIPCION, CXC_AGING_FECHA_LABEL } from "../domain/agingScope";
 
 interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
@@ -81,7 +82,7 @@ export default function CxcAging() {
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
         title="Antigüedad de saldos"
-        description={`Saldos por cliente agrupados por días de vencimiento (${monedaActiva}).`}
+        description={`Saldos actuales por cliente agrupados por días de vencimiento (${monedaActiva}).`}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -108,7 +109,11 @@ export default function CxcAging() {
         fecha={fecha}
         onFechaChange={setFecha}
         idFecha="aging-cxc-corte"
+        fechaLabel={CXC_AGING_FECHA_LABEL}
       />
+      <p className="text-body-sm text-muted-foreground">
+        <strong>{CXC_AGING_ALCANCE}.</strong> {CXC_AGING_DESCRIPCION}
+      </p>
 
       <CargaGuard
         isLoading={isLoading}

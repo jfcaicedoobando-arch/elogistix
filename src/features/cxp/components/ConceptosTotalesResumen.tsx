@@ -37,15 +37,15 @@ export function ConceptosTotalesResumen({ resumen, moneda }: Props) {
   return (
     <div className="flex justify-end">
       <div className="w-full sm:w-72 overflow-hidden rounded-md border">
-        <Fila label={`Subtotal ${moneda}`} valor={resumen.subtotal} moneda={moneda} />
-        <Fila label={`IVA ${moneda}`} valor={resumen.iva} moneda={moneda} />
-        {resumen.ieps > 0 && <Fila label={`IEPS ${moneda}`} valor={resumen.ieps} moneda={moneda} />}
+        <Fila label="Subtotal" valor={resumen.subtotal} moneda={moneda} />
+        <Fila label="IVA" valor={resumen.iva} moneda={moneda} />
+        {resumen.ieps > 0 && <Fila label="IEPS" valor={resumen.ieps} moneda={moneda} />}
         {!!resumen.ivaNoDesglosado && <Fila label="IVA global sin desglose" valor={resumen.ivaNoDesglosado} moneda={moneda} />}
         {!!resumen.iepsNoDesglosado && <Fila label="IEPS global sin desglose" valor={resumen.iepsNoDesglosado} moneda={moneda} />}
         {resumen.retenciones > 0 && (
-          <Fila label={`Retenciones ${moneda}`} valor={resumen.retenciones} moneda={moneda} negativo />
+          <Fila label="Retenciones" valor={resumen.retenciones} moneda={moneda} negativo />
         )}
-        <Fila label={`Total ${moneda}`} valor={resumen.total} moneda={moneda} fuerte />
+        <Fila label="Total" valor={resumen.total} moneda={moneda} fuerte />
         {(!!resumen.ivaNoDesglosado || !!resumen.iepsNoDesglosado) && (
           <p className="bg-muted/30 px-3 py-2 text-label text-muted-foreground">
             Hay impuestos globales no distribuidos en partidas. Se muestran por separado y se conservan al editar conceptos.

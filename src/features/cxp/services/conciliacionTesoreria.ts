@@ -32,6 +32,9 @@ export interface IncidenciaConciliacion {
   moneda: string;
   montoEsperadoMxn: number;
   cargoMxn: number;
+  monedaCuenta?: string;
+  montoEsperadoCuenta?: number | null;
+  cargoCuenta?: number;
   tipo: TipoIncidencia;
   motivo?: string;
 }
@@ -88,6 +91,9 @@ function mapIncidencia(i: Raw): IncidenciaConciliacion {
     moneda: str(i.moneda),
     montoEsperadoMxn: num(i.monto_esperado_mxn),
     cargoMxn: num(i.cargo_mxn),
+    monedaCuenta: str(i.moneda_cuenta) || undefined,
+    montoEsperadoCuenta: i.monto_esperado_cuenta === null ? null : i.monto_esperado_cuenta === undefined ? undefined : num(i.monto_esperado_cuenta),
+    cargoCuenta: i.cargo_cuenta === undefined ? undefined : num(i.cargo_cuenta),
     tipo: i.tipo === "anticipo_inconsistente" ? "anticipo_inconsistente" : i.tipo === "descuadre" ? "descuadre" : "sin_movimiento",
     motivo: str(i.motivo).replace(/^LC_[A-Z_]+:\s*/, ""),
   };

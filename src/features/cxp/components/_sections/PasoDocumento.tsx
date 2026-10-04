@@ -15,6 +15,7 @@ import { ProveedorNoEncontradoAlert } from "../ProveedorNoEncontradoAlert";
 import { CfdiConceptosPreview } from "../CfdiConceptosPreview";
 import { MonedaDetectadaIaCard } from "../MonedaDetectadaIaCard";
 import { ConceptosManualesSection } from "../ConceptosManualesSection";
+import { TotalesDesdeConceptos } from "../TotalesDesdeConceptos";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
 type Autocarga = ReturnType<typeof useAutocargaEntrante>;
@@ -141,6 +142,7 @@ export function PasoDocumento({
         onDuplicar={ctl.conceptosManuales.duplicar}
       />
 
+      <TotalesDesdeConceptos totales={ctl.totalesManuales} moneda={ctl.values.moneda} />
       <AvisoSinPartidas visible={sinPartidas && (enBuzon || ctl.mode !== "manual")} />
 
     </div>

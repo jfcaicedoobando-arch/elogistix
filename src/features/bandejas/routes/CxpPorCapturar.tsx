@@ -22,6 +22,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { referenciaCxpEmbarque } from "../domain/cxpReferenciaEmbarque";
 
 // Mapeo entre ColumnDef.id de DataTable y los OrdenarPor del hook de filtros.
 const COL_TO_SORT: Record<string, OrdenarPor> = {
@@ -47,7 +48,7 @@ export default function CxpPorCapturar() {
   const handleCapturar = (row: RowData) => {
     setPicked({
       embarqueId: row.embarque_id,
-      expediente: row.expediente ?? row.embarque_id.slice(0, 8),
+      expediente: referenciaCxpEmbarque(row),
       concepto: "Servicios proveedor",
     });
   };
@@ -148,7 +149,7 @@ export default function CxpPorCapturar() {
               controlledSort={controlledSort}
               onSortChange={handleSortChange}
               getRowHref={(r) => `/embarques/${r.embarque_id}`}
-              getRowAriaLabel={(r) => `Ver embarque ${r.expediente ?? ""}`}
+              getRowAriaLabel={(r) => `Ver embarque ${referenciaCxpEmbarque(r)}`}
               stickyHeader
               emptyMessage="Ningún embarque coincide con los filtros"
               emptyState={

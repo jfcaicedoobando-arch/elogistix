@@ -21,11 +21,58 @@ import {
   fetchConceptosConsolidados,
 } from "../queries";
 import type { ProformaFacturaAsociadaLite } from "../types";
+import { totalesListadoProforma } from "@/features/proformas/domain/proformaListado";
+import { proformaFixture } from "@/features/facturacion/components/__tests__/fixtures/proforma";
 
 describe("proformas queries", () => {
   beforeEach(() => {
     mock.resetResults();
     mock.tableCalls.length = 0;
+  });
+
+  it.each([
+    { es_consolidada: true, detalle: undefined }, { es_consolidada: true, detalle: [] },
+    { es_consolidada: false, detalle: undefined }, { es_consolidada: false, detalle: [] },
+  ])("38: sin detalle preserva encabezado histórico y señala su origen ($es_consolidada/$detalle)", async ({ es_consolidada, detalle }) => {
+    mock.setTableResult("proformas", { data: [{
+      ...proformaFixture({ es_consolidada, subtotal_mxn: 100, iva_mxn: 16, total_mxn: 116, subtotal_usd: 50, iva_usd: 8, total_usd: 58 }),
+      conceptos_lista: detalle, consolidados_lista: detalle,
+    }], error: null });
+    const [row] = await fetchProformasTodas("org");
+    expect(row.totales_calculados).toBeUndefined();
+    expect(row.totales_origen).toBe("encabezado_sin_detalle");
+    expect(totalesListadoProforma(row)).toEqual({ subtotal_mxn: 100, iva_mxn: 16, total_mxn: 116, subtotal_usd: 50, iva_usd: 8, total_usd: 58 });
+    expect(row.total_mxn).toBe(116); expect(row.total_usd).toBe(58);
+  });
+
+  it("38: lista y CSV reciben los mismos totales por línea que el detalle", async () => {
+    const concepto = { cantidad: 1, precio_unitario: 1533.33, moneda: "MXN", tipo_iva: "gravado_16", aplica_iva: true, tasa_iva_aplicada: 0.16, deleted_at: null };
+    mock.setTableResult("proformas", { data: [{
+      id: "p1", total_mxn: 3557.3256, subtotal_mxn: 3066.66, iva_mxn: 490.6656,
+      conceptos_lista: [{ ...concepto, id: "l1" }, { ...concepto, id: "l2" }, { ...concepto, id: "papelera", deleted_at: "2026-10-04" }],
+      consolidados_lista: [],
+    }], error: null });
+    const rows = await fetchProformasTodas("org");
+    expect(rows[0].total_mxn).toBe(3557.3256); // Sin reparar el encabezado histórico.
+    expect(rows[0].totales_calculados).toEqual({ subtotal_mxn: 3066.66, iva_mxn: 490.66, total_mxn: 3557.32, subtotal_usd: 0, iva_usd: 0, total_usd: 0 });
+    const call = mock.tableCalls[0];
+    expect(call.opArgs[call.ops.indexOf("select")][0]).toContain("conceptos_lista:conceptos_venta");
+    expect(call.opArgs).toContainEqual(["conceptos_lista.deleted_at", null]);
+    expect(call.opArgs).toContainEqual(["consolidados_lista.deleted_at", null]);
+    expect(mock.tableCalls).toHaveLength(1);
+  });
+
+  it("38: consolidadas usan el snapshot, por moneda y tratamiento", async () => {
+    mock.setTableResult("proformas", { data: [{
+      id: "p2", es_consolidada: true,
+      conceptos_lista: [{ id: "fuente", cantidad: 1, precio_unitario: 999, moneda: "MXN", tipo_iva: "gravado_16" }],
+      consolidados_lista: [
+        { id: "usd", cantidad: 0.5, precio_unitario: 100, moneda: "USD", tipo_iva: "gravado_8", aplica_iva: true },
+        { id: "mxn", cantidad: 1, precio_unitario: 100, moneda: "MXN", tipo_iva: "no_objeto", aplica_iva: true },
+      ],
+    }], error: null });
+    const rows = await fetchProformasTodas("org");
+    expect(rows[0].totales_calculados).toEqual({ subtotal_usd: 50, iva_usd: 4, total_usd: 54, subtotal_mxn: 100, iva_mxn: 0, total_mxn: 100 });
   });
 
   it("fetchProformasEmbarque devuelve filas y filtra por embarque_id", async () => {

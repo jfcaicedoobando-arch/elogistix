@@ -22,13 +22,14 @@ import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePdfExport } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 // EC-10: el EERR devengado valúa filas sin embarque con `tcFallbackDof`
 // (estadoResultadosTc), que puede caer al TC de respaldo 17.25/18.5.
 import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
-  const data = c.data;
+  const data = c.isError ? undefined : c.data;
   const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({
     successTitle: "Reporte PDF descargado",
     method: "PROFIT_ESTADO_RESULTADOS_EXPORT_PDF",
@@ -103,7 +104,7 @@ export default function ProfitEstadoResultados() {
       <Card>
         <CardContent className="p-0">
           {c.isError ? (
-            <ErrorState className="m-4" onRetry={() => void c.refetch()} />
+            <ErrorState className="m-4" description={c.error instanceof NotaCreditoSinDesgloseError ? c.error.message : undefined} onRetry={() => void c.refetch()} />
           ) : c.isLoading ? (
             <div className="p-6"><ListSkeleton rows={4} /></div>
           ) : sinDatos || !data ? (

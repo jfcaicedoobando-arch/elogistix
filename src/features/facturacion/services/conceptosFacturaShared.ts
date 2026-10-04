@@ -4,11 +4,12 @@
  * líneas por archivo (Power of 10).
  */
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { TASA_IVA_FRONTERA_MX, type TipoIvaSat } from "@/lib/financial/tipoIvaSat";
 
-export type TipoIvaConcepto = "gravado_16" | "gravado_8" | "tasa_0" | "exento" | "no_objeto";
+export type TipoIvaConcepto = TipoIvaSat;
 
 /** Tasa de IVA de la región fronteriza (N17). */
-export const TASA_IVA_FRONTERA = 0.08;
+export const TASA_IVA_FRONTERA = TASA_IVA_FRONTERA_MX;
 
 export function resolverTasa(tipo: TipoIvaConcepto): number | null {
   if (tipo === "gravado_16") return TASA_IVA;

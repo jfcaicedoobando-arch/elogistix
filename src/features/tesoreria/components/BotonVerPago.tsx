@@ -50,7 +50,7 @@ export function BotonVerPago({ movimiento, onVerPago }: Props) {
       }}
     >
       <Receipt className="h-3.5 w-3.5" aria-hidden />
-      Ver pago
+      {ref.tipo === "traspaso" ? "Ver traspaso" : "Ver pago"}
     </Button>
   );
 }

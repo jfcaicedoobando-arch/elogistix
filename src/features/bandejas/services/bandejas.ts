@@ -1,9 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { fetchInChunks } from "@/lib/supabase/chunkedIn";
 
 export interface CxpPorCapturarRow {
   embarque_id: string;
   expediente: string | null;
+  estado_embarque?: string | null;
+  cotizacion_folio?: string | null;
   cliente_nombre: string | null;
   presupuestado_mxn: number;
   presupuestado_usd: number;
@@ -60,7 +63,21 @@ export async function fetchCxpPorCapturar(): Promise<CxpPorCapturarRow[]> {
   if (error) throw error;
   // Ola 4 · N43: la RPC lleva LIMIT 500; sin esto los KPIs mentían en silencio.
   assertNotTruncated(data, 500, "bandejas.cxpPorCapturar");
-  return (data ?? []) as CxpPorCapturarRow[];
+  const rows = (data ?? []) as CxpPorCapturarRow[];
+  const referencias = await fetchInChunks(rows.map((r) => r.embarque_id), async (ids) => {
+    const resultado = await supabase.from("embarques")
+      .select("id, expediente, estado, cotizacion:cotizaciones!embarques_cotizacion_id_fkey(folio, deleted_at)")
+      .in("id", ids).is("deleted_at", null);
+    if (resultado.error) throw resultado.error;
+    return resultado.data ?? [];
+  });
+  const porId = new Map(referencias.map((r) => [r.id, r]));
+  return rows.map((row) => {
+    const ref = porId.get(row.embarque_id);
+    return { ...row, expediente: ref?.expediente ?? row.expediente,
+      estado_embarque: ref?.estado ?? null,
+      cotizacion_folio: ref?.cotizacion?.deleted_at == null ? ref?.cotizacion?.folio ?? null : null };
+  });
 }
 
 export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {

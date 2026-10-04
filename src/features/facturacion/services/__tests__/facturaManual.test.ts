@@ -8,6 +8,9 @@ const { from, deleteEq, rpc } = vi.hoisted(() => ({
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from, rpc } }));
 
 import { crearFacturaManual } from "../facturaManual";
+import { construirLineasManuales } from "../facturaManualLineas";
+import { calcularTotalesConceptos } from "@/features/facturacion/utils/totalesConceptos";
+import { recalcularTotalesConceptos } from "../../../../../supabase/functions/facturapi-emitir/cuadreFiscal.ts";
 
 const baseInput = {
   organizationId: "org",
@@ -80,6 +83,33 @@ describe("crearFacturaManual", () => {
     const p = insertPayload as Record<string, string>;
     expect(p.fecha_vencimiento).toBe("2026-07-01");
   });
+
+  it("26: .3 × .11 muestra y persiste .03, con IVA redondeado a cero", async () => {
+    const conceptos = [{ descripcion: "Prorrateo", cantidad: 0.3, precio_unitario: 0.11, clave_sat: "78101800" }];
+    expect(calcularTotalesConceptos(conceptos, 0.16)).toEqual({ subtotal: 0.03, iva: 0, total: 0.03 });
+    await crearFacturaManual({ ...baseInput, conceptos });
+    expect(insertPayload).toMatchObject({ subtotal: 0.03, iva: 0, total: 0.03 });
+    expect(conceptosPayload).toMatchObject([{ cantidad: 0.3, precio_unitario: 0.11, total: 0.03 }]);
+  });
+
+  it.each(["gravado_16", "gravado_8", "tasa_0", "exento", "no_objeto"] as const)(
+    "26: preview, persistencia y preflight coinciden con fracciones y %s", async (tipo_iva) => {
+      const conceptos = [
+        { descripcion: "Fracción", cantidad: 0.3, precio_unitario: 0.11, clave_sat: "78101800", tipo_iva },
+        { descripcion: "Dos líneas", cantidad: 2, precio_unitario: 1533.33, clave_sat: "78101800", tipo_iva },
+        { descripcion: "Precisión fiscal", cantidad: 0.3333333, precio_unitario: 11.005, clave_sat: "78101800", tipo_iva },
+      ];
+      const preview = calcularTotalesConceptos(conceptos, 0.16);
+      await crearFacturaManual({ ...baseInput, conceptos });
+      expect(insertPayload).toMatchObject(preview);
+      const lineas = construirLineasManuales(conceptos, 0.16);
+      const preflight = recalcularTotalesConceptos(lineas.map((l) => ({
+        descripcion: l.descripcion, cantidad: l.cantidad, precio_unitario: l.precio,
+        tipo_iva: l.tipo_iva, tasa_iva: l.tasaFila,
+      })));
+      expect(preflight).toMatchObject({ subtotal: preview.subtotal, iva_trasladado: preview.iva, total: preview.total });
+    },
+  );
 
   it("α.1 — rechaza concepto sin clave SAT (ya no hay fallback silencioso)", async () => {
     await expect(

@@ -76,7 +76,7 @@ export function crearMovimientoColumns(
   },
     {
       id: "acciones",
-      header: "Pago",
+      header: "Origen",
       enableSorting: false,
       meta: { width: "w-[104px]", align: "right" },
       cell: ({ row }) => <BotonVerPago movimiento={row.original} onVerPago={onVerPago} />,

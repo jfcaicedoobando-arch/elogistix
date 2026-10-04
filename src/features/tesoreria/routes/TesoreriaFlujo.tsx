@@ -55,13 +55,17 @@ export default function TesoreriaFlujo() {
       ) : (
         <>
           {data.tipo_cambio_usd ? (
-            <div className="flex justify-end">
+            <div className="flex flex-col gap-1 sm:items-end">
               <Badge variant="info">
-                TC DOF ${data.tipo_cambio_usd.toFixed(4)}
+                TC DOF saldo inicial USD/MXN {data.tipo_cambio_usd.toFixed(4)}
                 {data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""}
               </Badge>
             </div>
           ) : null}
+          <p className="text-body-sm text-muted-foreground">
+            El TC DOF convierte los saldos bancarios iniciales en moneda extranjera.
+            Cada entrada y salida usa el tipo de cambio de su documento; el detalle muestra esa conversión.
+          </p>
 
           {!data.saldo_inicial_disponible && (
             <Alert>

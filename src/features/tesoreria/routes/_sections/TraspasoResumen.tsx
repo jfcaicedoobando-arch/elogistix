@@ -6,8 +6,10 @@ import { ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { resumenTraspaso } from "@/features/tesoreria/domain/traspasoResumen";
 import type { MonedaTc } from "@/features/tesoreria/domain/tcPar";
+import { TraspasoSaldoOrigen } from "./TraspasoSaldoOrigen";
 
 interface Props {
+  cuentaOrigenId: string;
   monedaOrigen: string;
   monedaDestino: string;
   montoOrigen: number;
@@ -30,7 +32,7 @@ function Renglon({ label, value, muted }: { label: string; value: string; muted?
 }
 
 export function TraspasoResumen({
-  monedaOrigen, monedaDestino, montoOrigen, comision, montoDestino, par, tcQuote,
+  cuentaOrigenId, monedaOrigen, monedaDestino, montoOrigen, comision, montoDestino, par, tcQuote,
 }: Props) {
   const r = resumenTraspaso({ montoOrigen, comision, montoDestino });
   const conversion = !!par && tcQuote > 0;
@@ -48,6 +50,7 @@ export function TraspasoResumen({
           />
         </>
       )}
+      <TraspasoSaldoOrigen cuentaId={cuentaOrigenId} moneda={monedaOrigen} cargo={r.totalCargoOrigen} />
 
       {conversion && (
         <Renglon

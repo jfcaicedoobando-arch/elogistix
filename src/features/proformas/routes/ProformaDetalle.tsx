@@ -14,7 +14,6 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useProformaDetalle } from "@/features/proformas/hooks/useProformaDetalle";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { resolveProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
 import { AccionesProforma } from "@/features/proformas/components/ProformaDetalleCards";
 import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
@@ -25,6 +24,7 @@ import { ProformaDetalleHeader } from "@/features/proformas/components/detalle/P
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
+import { calcularTotalesProformaConRespaldo } from "@/features/proformas/domain/proformaListado";
 
 
 export default function ProformaDetalle() {
@@ -73,19 +73,21 @@ function ProformaDetalleContent({ data }: ContentProps) {
   const { autorizacion } = useClienteAutorizacion(proforma.cliente_id ?? null);
   const { descargar, downloadingId } = useDescargarProformaPdf();
   const tasaIva = useTasaIVA();
-  const totales = useMemo(
-    () =>
+  const calculo = useMemo(
+    () => {
+      const filas = proforma.es_consolidada ? data.conceptosConsolidados : data.conceptos;
       // B-08: pasamos los totales persistidos para que el dominio advierta
       // (console.warn) si el cálculo difiere del total guardado.
-      calcularTotalesProforma(data.conceptos, tasaIva, {}, {
-        total_usd: data.proforma?.total_usd ?? null,
-        total_mxn: data.proforma?.total_mxn ?? null,
-      }),
-    [data, tasaIva],
+      return calcularTotalesProformaConRespaldo(proforma, filas, tasaIva, true);
+    },
+    [data, proforma, tasaIva],
   );
+  const totales = calculo.totales;
 
   const timeline = resolveProformaTimelineFields(proforma);
-  const emptyConceptos = proforma.es_consolidada
+  const emptyConceptos = calculo.origen === "encabezado_sin_detalle"
+    ? "Detalle de conceptos no disponible. Se conserva el importe guardado."
+    : proforma.es_consolidada
     ? "Proforma consolidada (ver detalle agregado en el PDF)."
     : "Sin conceptos.";
 

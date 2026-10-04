@@ -51,7 +51,7 @@ export function useEstadoResultados() {
     if (indiceMes < mesesDisponibles.length - 1) setMesKey(mesesDisponibles[indiceMes + 1].key);
   }, [indiceMes, mesesDisponibles, setMesKey]);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.profit.estadoResultados(organizationId, mesActual.key, fuente),
     queryFn: () => {
       const p = { organizationId: organizationId ?? null, year: mesActual.year, month: mesActual.month };
@@ -77,6 +77,7 @@ export function useEstadoResultados() {
     data,
     isLoading,
     isError,
+    error,
     refetch,
     fuente,
     setFuente,

@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OrganizationProvider, useOrganization } from "../OrganizationContext";
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { buildErrorReport } from "@/lib/ui/errorReport";
+import { isCurrentErrorReport } from "@/lib/diagnostics/errorReportScope";
 
 const orgs = [
   { id: "org-a", nombre: "Alfa Logistics", rfc: "AAA", logo_url: null, plan: "basic", activo: true },
@@ -45,11 +49,28 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("OrganizationContext · super admin sin organización", () => {
   beforeEach(() => {
+    setAuthSnapshot({ userId: "sa-1", email: null, organizationId: null, organizationName: null, role: "super_admin", effectiveRole: "super_admin" });
     getItem.mockReset();
     getItem.mockReturnValue(null);
     setItem.mockReset();
     removeItem.mockReset();
     setSuperAdminOrg.mockClear();
+  });
+
+  it("35: cambio efectivo invalida descarga y reporte antes del roundtrip al servidor", async () => {
+    getItem.mockReturnValue("org-a");
+    const { result } = renderHook(() => useOrganization(), { wrapper });
+    await waitFor(() => expect(result.current.organizationId).toBe("org-a"));
+    const scope = captureAuthOperationScope(); const report = buildErrorReport({ error: new Error("descarga NC original") });
+    act(() => {
+      result.current.setActiveOrganization("org-b");
+      expect(scope.isCurrent()).toBe(false);
+      expect(isCurrentErrorReport(report)).toBe(false);
+    });
+    await waitFor(() => expect(result.current.organizationId).toBe("org-b"));
+    const next = captureAuthOperationScope();
+    act(() => result.current.setActiveOrganization("org-b"));
+    expect(next.isCurrent()).toBe(true);
   });
 
   it("no auto-selecciona ninguna organización", async () => {

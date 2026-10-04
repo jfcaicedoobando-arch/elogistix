@@ -21,7 +21,9 @@ describe("CfdiConceptosPreview · conciliación con la cabecera", () => {
         totalDocumento={1100}
       />,
     );
-    expect(screen.getByText("Retenciones MXN")).toBeInTheDocument();
+    expect(screen.getByText("Retenciones", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText(/^[-\u2212]MXN\s100\.00$/)).toBeInTheDocument();
+    expect(screen.queryByText("Retenciones MXN")).toBeNull();
     expect(screen.queryByText(/difiere en/i)).toBeNull();
   });
 

@@ -99,7 +99,9 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
 
         {resumen.saldoPorMoneda.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 text-body">
-            <span className="text-muted-foreground text-body-sm">Saldo pendiente del proveedor</span>
+            <span className="text-muted-foreground text-body-sm">Saldo pendiente del proveedor
+              <span className="block text-caption">Facturas aprobadas de esta organización · todos los meses · por moneda</span>
+            </span>
             {resumen.saldoPorMoneda.map((s) => (
               <span key={s.moneda} className="tabular-nums">
                 {formatCurrency(s.saldo, s.moneda)}

@@ -28,6 +28,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useFiltroUrl } from "@/hooks/shared/useFiltroUrl";
 import { useImportarEstadoCuenta } from "@/features/tesoreria/hooks/useImportarEstadoCuenta";
 import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
+import { ImportacionRevisionDialog } from "@/features/tesoreria/components/ImportacionRevisionDialog";
 
 const ESTADOS_MOVIMIENTO = ["Pendiente", "Conciliado", "Ignorado", "todos"] as const;
 
@@ -68,7 +69,7 @@ export default function TesoreriaConciliacion() {
   const { data: saldos = [] } = useSaldosCuentas();
   const conciliarPago = useConciliarPago();
   const registrarManual = useRegistrarMovimientoManual();
-  const { fileRef, handleFile, importando } = useImportarEstadoCuenta(cuentaId);
+  const importacion = useImportarEstadoCuenta(cuentaId);
   const monedaCuenta = cuentas.find((c) => c.id === cuentaId)?.moneda ?? "MXN";
   const columns = useMemo(() => crearMovimientoColumns(setRefPago, monedaCuenta), [monedaCuenta]);
   const { isAutoConciliando, handleConciliarExactos } = useAutoConciliarExactos(movs, conciliarPago.mutateAsync);
@@ -127,9 +128,9 @@ export default function TesoreriaConciliacion() {
         isAutoConciliando={isAutoConciliando}
         onConciliarExactos={handleConciliarExactos}
         onAbrirManual={abrirModalManual}
-        fileRef={fileRef}
-        onFile={handleFile}
-        importando={importando}
+        fileRef={importacion.fileRef}
+        onFile={importacion.handleFile}
+        importando={importacion.importando}
         puedeCapturar={canCapturarMovimientoBancario}
       />
 
@@ -182,6 +183,8 @@ export default function TesoreriaConciliacion() {
         onGuardar={handleGuardarManual}
         isPending={registrarManual.isPending}
       />
+      <ImportacionRevisionDialog revision={importacion.revision} confirmando={importacion.confirmando}
+        onConfirm={() => void importacion.confirmarRevision()} onCancel={importacion.cancelarRevision} />
 
       {refPago ? (
         <DetallePagoSheet

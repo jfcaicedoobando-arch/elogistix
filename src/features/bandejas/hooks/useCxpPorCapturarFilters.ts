@@ -10,6 +10,7 @@
 import { useCallback, useMemo } from "react";
 import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import type { CxpPorCapturarRow } from "@/features/bandejas/services/bandejas";
+import { referenciaCxpEmbarque } from "../domain/cxpReferenciaEmbarque";
 
 export type EstatusFiltro = "todos" | "sin" | "parcial" | "completo";
 export type AntiguedadFiltro = "todos" | "sin_captura" | "gt7" | "gt30";
@@ -44,9 +45,9 @@ export function estatusDeFila(row: CxpPorCapturarRow): EstatusFiltro {
 
 function coincideQuery(r: CxpPorCapturarRow, q: string): boolean {
   if (!q) return true;
-  const exp = (r.expediente ?? "").toLowerCase();
+  const exp = referenciaCxpEmbarque(r).toLowerCase();
   const cli = (r.cliente_nombre ?? "").toLowerCase();
-  return exp.includes(q) || cli.includes(q);
+  return exp.includes(q) || cli.includes(q) || (r.cotizacion_folio ?? "").toLowerCase().includes(q);
 }
 
 function coincideAntiguedad(r: CxpPorCapturarRow, a: AntiguedadFiltro): boolean {
@@ -75,7 +76,7 @@ export function aplicarFiltros(
   return [...filtradas].sort((a, b) => {
     switch (f.ordenarPor) {
       case "expediente":
-        return ((a.expediente ?? "") > (b.expediente ?? "") ? 1 : -1) * dir;
+        return referenciaCxpEmbarque(a).localeCompare(referenciaCxpEmbarque(b)) * dir;
       case "monto": {
         // Suma ambas monedas como proxy para ordenamiento (no para display).
         const totalA = (Number(a.presupuestado_mxn) || 0) + (Number(a.presupuestado_usd) || 0);

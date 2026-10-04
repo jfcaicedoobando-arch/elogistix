@@ -4,16 +4,17 @@
  */
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { estatusDeFila } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Hint } from "@/components/shared/Hint";
+import { CxpAvanceCaptura } from "./CxpAvanceCaptura";
+import { referenciaCxpEmbarque } from "../domain/cxpReferenciaEmbarque";
 
 const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
   sin: "Sin captura",
@@ -38,10 +39,16 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     {
       id: "expediente",
       header: "Expediente",
-      accessorFn: (r) => r.expediente ?? "",
+      accessorFn: referenciaCxpEmbarque,
       enableSorting: true,
-      meta: { width: COL_W.monto, className: "font-mono text-sm whitespace-nowrap" },
-      cell: ({ row }) => row.original.expediente ?? "—",
+      meta: { width: COL_W.ruta, className: "text-sm" },
+      cell: ({ row }) => <div className="space-y-0.5">
+        <span className="font-mono whitespace-nowrap">{referenciaCxpEmbarque(row.original)}</span>
+        {row.original.estado_embarque === "Borrador" &&
+          <p className="text-label text-muted-foreground">Operación no confirmada</p>}
+        {row.original.cotizacion_folio &&
+          <p className="text-label text-muted-foreground">Cotización {row.original.cotizacion_folio}</p>}
+      </div>,
     },
     {
       id: "cliente",
@@ -58,36 +65,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       id: "avance",
       header: "Avance",
       meta: { width: COL_W.texto },
-      cell: ({ row }) => {
-        const presupMxn = Number(row.original.presupuestado_mxn) || 0;
-        const presupUsd = Number(row.original.presupuestado_usd) || 0;
-        const factMxn = Number(row.original.facturado_mxn) || 0;
-        const factUsd = Number(row.original.facturado_usd) || 0;
-        // Barra: porcentaje de la moneda con mayor presupuesto (no se pueden mezclar).
-        const dominante = presupUsd > presupMxn
-          ? { presup: presupUsd, fact: factUsd }
-          : { presup: presupMxn, fact: factMxn };
-        const pct = dominante.presup > 0
-          ? Math.min(100, Math.round((dominante.fact / dominante.presup) * 100))
-          : 0;
-        return (
-          <div>
-            <div className="flex items-center gap-2">
-              <Progress value={pct} className="h-2 flex-1" />
-              <span className="text-xs tabular-nums text-muted-foreground w-9 text-right">{pct}%</span>
-            </div>
-            <div className="text-label text-muted-foreground tabular-nums mt-0.5 space-y-0.5">
-              {presupMxn > 0 && (
-                <div>{formatCurrency(factMxn, "MXN")} / {formatCurrency(presupMxn, "MXN")}</div>
-              )}
-              {presupUsd > 0 && (
-                <div>{formatCurrency(factUsd, "USD")} / {formatCurrency(presupUsd, "USD")}</div>
-              )}
-              {presupMxn <= 0 && presupUsd <= 0 && <div>—</div>}
-            </div>
-          </div>
-        );
-      },
+      cell: ({ row }) => <CxpAvanceCaptura row={row.original} />,
     },
     hideEstatus ? null : {
       id: "estatus",
@@ -139,7 +117,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
                 variant="ghost"
                 className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0"
                 onClick={() => onCapturar(row.original)}
-                aria-label={`Capturar factura del embarque ${row.original.expediente ?? row.original.embarque_id}`}
+                aria-label={`Capturar factura del embarque ${referenciaCxpEmbarque(row.original)}`}
               >
                 <FilePlus2 className="h-4 w-4" />
               </Button>
