@@ -5,6 +5,7 @@
  * la categoría se fija en el costo directo de embarque (COGS) y el selector se
  * muestra bloqueado, con un enlace discreto para cambiarla en casos raros.
  */
+import { useId } from "react";
 import { FileText, Lock } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,13 @@ interface Props {
 export function CategoriaContableSection({
   value, onChange, categorias, error, bloqueada = false, motivo, onDesbloquear, avisoSinCogs,
 }: Props) {
+  const id = useId();
   return (
     <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
       <div className="space-y-1">
-        <Label>Categoría contable<RequiredMark /></Label>
+        <Label htmlFor={id}>Categoría contable<RequiredMark /></Label>
         <Select value={value || ""} onValueChange={onChange} disabled={bloqueada}>
-          <SelectTrigger aria-required="true">
+          <SelectTrigger id={id} aria-required="true" aria-invalid={!!error} aria-describedby={error ? `${id}-error` : undefined}>
             <SelectValue placeholder="Selecciona la categoría contable de esta factura" />
           </SelectTrigger>
           <SelectContent>
@@ -75,7 +77,7 @@ export function CategoriaContableSection({
           <p className="text-label text-warning">{avisoSinCogs}</p>
         )}
 
-        <FieldError msg={error} />
+        <div id={`${id}-error`} role={error ? "alert" : undefined}><FieldError msg={error} /></div>
       </div>
     </FormSection>
   );

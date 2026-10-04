@@ -9,6 +9,7 @@
  * v8.205.0 — P0.4 auditoría arquitectónica.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fetchEstadoCuenta, type FacturaEstadoCuenta } from "../estadoCuenta/services/estadoCuenta";
 
 export interface LayoutContableRow {
   numero: string;
@@ -56,7 +57,8 @@ export async function fetchLayoutContableData(facturaIds: string[]): Promise<Lay
     const { data: clientes, error: cErr } = await supabase
       .from("clientes")
       .select("id, rfc")
-      .in("id", clienteIds);
+      .in("id", clienteIds)
+      .is("deleted_at", null);
     if (cErr) throw cErr;
     for (const c of clientes ?? []) {
       if (c.rfc) rfcByClienteId.set(c.id, c.rfc);
@@ -71,23 +73,28 @@ export interface EstadoCuentaFactura {
   fecha_emision: string;
   fecha_vencimiento: string;
   total: number;
+  saldo: number;
   moneda: string;
   estado: string;
   expediente: string;
 }
 
-/**
- * Devuelve las facturas Emitidas/Vencidas de un cliente, ordenadas por
- * fecha de emisión ascendente, listas para el generador de estado de cuenta.
- */
+/** Conserva el saldo del mismo corte que alimenta la tabla y el CSV. */
+export function toEstadoCuentaFacturas(rows: readonly FacturaEstadoCuenta[]): EstadoCuentaFactura[] {
+  return rows.map((f) => ({
+    numero: f.numero,
+    fecha_emision: f.fecha_emision,
+    fecha_vencimiento: f.fecha_vencimiento,
+    total: f.total,
+    saldo: f.saldo,
+    moneda: f.moneda,
+    estado: f.estado_factura,
+    expediente: f.expediente,
+  })).sort((a, b) => a.fecha_emision.localeCompare(b.fecha_emision));
+}
+
+/** Facturas vivas y saldo neto; incluye pagos parciales y excluye saldadas. */
 export async function fetchEstadoCuentaFacturas(clienteId: string): Promise<EstadoCuentaFactura[]> {
-  const { data, error } = await supabase
-    .from("facturas")
-    .select("numero, fecha_emision, fecha_vencimiento, total, moneda, estado, expediente")
-    .eq("cliente_id", clienteId)
-    .in("estado", ["Emitida", "Vencida"])
-    .is("deleted_at", null)
-    .order("fecha_emision", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as EstadoCuentaFactura[];
+  const rows = await fetchEstadoCuenta({ clienteIds: [clienteId] });
+  return toEstadoCuentaFacturas(rows).filter((f) => f.saldo > 0);
 }

@@ -109,7 +109,7 @@ function DialogNuevaFacturaProveedorForm({
     sinVinculos: modoBuzon && Object.keys(ctl.vinculos).length === 0,
   });
 
-  const pasos = useCapturaFacturaPasos({ abierto: open, pendientes });
+  const pasos = useCapturaFacturaPasos({ abierto: open, pendientes, validarDatos: ctl.validate });
 
   const footer = (
     <CapturaFacturaFooter
@@ -120,7 +120,7 @@ function DialogNuevaFacturaProveedorForm({
       // Con una factura ya creada y pendiente de marcarse como capturada,
       // "Guardar" reintenta sólo ese paso (nunca vuelve a insertar la factura).
       onGuardar={() =>
-        wiring.facturaIdPendiente ? wiring.reintentar() : void ctl.submit()
+        wiring.facturaIdPendiente ? wiring.reintentar() : pasos.revisarDatos() && void ctl.submit()
       }
     />
   );

@@ -16,7 +16,8 @@ describe("fetchClienteFinancials", () => {
     mock.setTableResult("facturas", {
       data: [
         { total: 100, moneda: "USD", tipo_cambio: 18, estado: "Emitida", embarque_id: "e1" },
-        { total: 200, moneda: "MXN", tipo_cambio: null, estado: "Pagada", embarque_id: "e2" },
+        { total: 200, moneda: "MXN", tipo_cambio: null, estado: "Pagada", embarque_id: "e2",
+          pagos_factura: [{ monto_aplicado_factura: 200, deleted_at: null }] },
         { total: 50, moneda: "USD", tipo_cambio: 20, estado: "Vencida", embarque_id: "e3" },
       ],
       error: null,

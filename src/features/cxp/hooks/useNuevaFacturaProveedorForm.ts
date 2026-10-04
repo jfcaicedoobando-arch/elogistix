@@ -15,7 +15,7 @@ import { addDays, validateFactura, aplicarProveedorAValues } from "./useNuevaFac
 import { isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedorForm.applyParsed";
 import { useConceptosManuales } from "./useConceptosManuales";
-import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
+import { calcularCuadreCaptura, normalizarConceptoPersistible } from "../utils/conceptosPersistibles";
 import { calcularTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
 import { detectarCfdiDuplicado } from "./useNuevaFacturaProveedorForm.dup";
 import { editarConceptoIa, eliminarConceptoIa } from "@/features/cxp/utils/conceptosIa";
@@ -85,10 +85,11 @@ export function useNuevaFacturaProveedorForm(
   // v13.823.21 — Corrección de los conceptos que propuso la IA sobre un PDF
   // (sólo origen `pdf_ia`; el desglose del XML CFDI no se toca).
   const sincronizarConceptosIa = (conceptos: CfdiConceptoParsed[]) => {
-    setCfdiConceptos(conceptos);
-    const subtotal = calcularCuadreConceptos(
+    const normalizados = conceptos.map(normalizarConceptoPersistible);
+    setCfdiConceptos(normalizados);
+    const subtotal = calcularCuadreCaptura(
       0,
-      conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
+      normalizados.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
     ).suma;
     setValues((prev) => ({ ...prev, subtotal: subtotal === 0 ? "" : String(subtotal) }));
   };
@@ -152,7 +153,7 @@ export function useNuevaFacturaProveedorForm(
   };
   // v13.339.0 (Q-02): si no hay CFDI, se persisten los conceptos capturados a mano.
   const conceptosAPersistir = cfdiConceptos.length > 0 ? cfdiConceptos : manuales.conceptos;
-  const cuadreManual = calcularCuadreConceptos(Number(values.subtotal) || 0,
+  const cuadreManual = calcularCuadreCaptura(Number(values.subtotal) || 0,
     manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })));
   // Tope: lo vinculado a conceptos de embarque no puede exceder el subtotal.
   const topeVinculacion = calcularTopeVinculacion(Number(values.subtotal) || 0, vinculos as VinculosState);
@@ -181,7 +182,7 @@ export function useNuevaFacturaProveedorForm(
     // Bloqueo de guardado: CFDI capturado, mutación en curso o tope excedido.
     puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
     embarqueAdHoc, setEmbarqueAdHoc,
-    reset, submit, isPending: crear.isPending, organizationId,
+    reset, submit, validate, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
 }

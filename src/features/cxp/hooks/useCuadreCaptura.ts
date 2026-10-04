@@ -4,8 +4,8 @@
  * (archivos productivos <= 200 líneas). Sin cambios de lógica.
  */
 import { useMemo } from "react";
+import { calcularCuadreCaptura } from "../utils/conceptosPersistibles";
 import {
-  calcularCuadreConceptos,
   type ConceptoParaCuadre,
 } from "@/features/cxp/utils/cuadreConceptos";
 import {
@@ -34,7 +34,7 @@ export function useCuadreCaptura({ subtotal, cfdiConceptos, conceptosManuales, v
   );
 
   const cuadre = useMemo(
-    () => calcularCuadreConceptos(subtotal, conceptosParaCuadre),
+    () => calcularCuadreCaptura(subtotal, conceptosParaCuadre),
     [subtotal, conceptosParaCuadre],
   );
 

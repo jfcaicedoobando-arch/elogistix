@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+import type { CrearFacturaManualInput } from "@/features/facturacion/services/facturaManual";
+import { MSG_PUE_REQUIERE_FORMA_REAL } from "@/lib/financial/formaMetodoPago";
 
 const crearFacturaManual = vi.fn();
 const emitirFacturapi = vi.fn();
@@ -33,7 +35,12 @@ function wrapper(qc: QueryClient) {
   );
 }
 
-const fakeInput = { foo: "bar" } as never;
+const fakeInput: CrearFacturaManualInput = {
+  organizationId: "org-1", clienteId: "cliente-1", clienteNombre: "Cliente de prueba",
+  rfcCliente: "XAXX010101000", serie: "A", usoCfdi: "G03", formaPago: "99", metodoPago: "PPD",
+  diasCredito: 0, fechaEmision: "2026-10-04", moneda: "MXN", tipoCambio: 1, tasaIva: 0.16,
+  conceptos: [{ descripcion: "Servicio", cantidad: 1, precio_unitario: 100, clave_sat: "78101800", tipo_iva: "gravado_16" }],
+};
 
 beforeEach(() => {
   crearFacturaManual.mockReset();
@@ -43,6 +50,51 @@ beforeEach(() => {
 });
 
 describe("useCrearFacturaManual", () => {
+  it("AUD51: rechaza PUE/99 antes de crear factura, conceptos o timbrar", async () => {
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCrearFacturaManual(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ input: { ...fakeInput, metodoPago: "PUE" }, timbrarAlGuardar: true });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(crearFacturaManual).not.toHaveBeenCalled();
+    expect(emitirFacturapi).not.toHaveBeenCalled();
+    expect(result.current.error?.message).toBe(MSG_PUE_REQUIERE_FORMA_REAL);
+    qc.clear();
+  });
+
+  it.each([
+    { metodoPago: "PUE", formaPago: "03" },
+    { metodoPago: "PPD", formaPago: "99" },
+  ])("AUD51: permite crear y timbrar $metodoPago/$formaPago", async (pareja) => {
+    crearFacturaManual.mockResolvedValue("fac-valida");
+    emitirFacturapi.mockResolvedValue({ uuid: "UUID-VALIDO", folio: 1 });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCrearFacturaManual(), { wrapper: wrapper(qc) });
+    const input = { ...fakeInput, ...pareja };
+
+    result.current.mutate({ input, timbrarAlGuardar: true });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(crearFacturaManual).toHaveBeenCalledWith(input);
+    expect(emitirFacturapi).toHaveBeenCalledWith("fac-valida");
+    qc.clear();
+  });
+
+  it("AUD51: guardar sólo borrador permite completar los datos fiscales después", async () => {
+    crearFacturaManual.mockResolvedValue("fac-borrador");
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCrearFacturaManual(), { wrapper: wrapper(qc) });
+    const input = { ...fakeInput, metodoPago: "PUE", formaPago: "" };
+
+    result.current.mutate({ input, timbrarAlGuardar: false });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(crearFacturaManual).toHaveBeenCalledWith(input);
+    expect(emitirFacturapi).not.toHaveBeenCalled();
+    qc.clear();
+  });
+
   it("timbrarAlGuardar=true: crea + emite, toast con UUID y resultado timbrada=true", async () => {
     crearFacturaManual.mockResolvedValue("fac-99");
     emitirFacturapi.mockResolvedValue({ uuid: "UUID9999-rest", folio: 991 });

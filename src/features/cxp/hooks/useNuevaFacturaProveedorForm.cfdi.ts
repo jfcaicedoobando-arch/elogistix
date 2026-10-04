@@ -7,6 +7,7 @@
  * proveedor por RFC y calcula los valores a inyectar. La UI decide cómo
  * reaccionar al resultado (mostrar error, pedir crear proveedor, etc.).
  */
+import { normalizarConceptoPersistible, cantidadesCapturaValidas, calcularCuadreCaptura } from "../utils/conceptosPersistibles";
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import { validarCuadreCfdi } from "@/features/cxp/services";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
@@ -35,8 +36,16 @@ export async function procesarCfdiParsed(
 
   // Validación fiscal: el desglose de IVA/IEPS por concepto debe cuadrar
   // contra los totales declarados en el CFDI antes de registrar el gasto.
-  const cuadre = validarCuadreCfdi(c);
-  if (!cuadre.ok) return { ok: false, cuadreError: cuadre.errores.join(" ") };
+  const conceptos = (c.conceptos ?? []).map(normalizarConceptoPersistible);
+  if (!cantidadesCapturaValidas(conceptos)) {
+    return { ok: false, cuadreError: "Cada concepto requiere cantidad mínima de 0.000001 (hasta 6 decimales)." };
+  }
+  const cuadre = validarCuadreCfdi({ ...c, conceptos });
+  if (!cuadre.ok) return { ok: false, cuadreError: `La captura usa precios a 2 decimales. ${cuadre.errores.join(" ")}` };
+  const subtotalPersistible = calcularCuadreCaptura(c.subtotal, conceptos.map((linea) => ({ monto: linea.importe, cantidad: linea.cantidad })));
+  if (!subtotalPersistible.puedeAprobar) {
+    return { ok: false, cuadreError: "Los conceptos normalizados a 2 decimales no cuadran con el subtotal (tolerancia 0.01)." };
+  }
 
   let provId = "";
   let provNombre = c.emisor.nombre;
@@ -62,6 +71,6 @@ export async function procesarCfdiParsed(
     tcOrigen: usaTcCfdi ? "cfdi" : "vacio",
     tcFechaAplicada: usaTcCfdi ? c.fecha : undefined,
     askCrearProv,
-    conceptos: c.conceptos ?? [],
+    conceptos,
   };
 }

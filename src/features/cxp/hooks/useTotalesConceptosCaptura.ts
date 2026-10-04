@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import { importesConceptosEditados } from "../utils/impuestosConceptos";
+import { normalizarConceptoPersistible } from "../utils/conceptosPersistibles";
 import { roundMoney } from "@/lib/financial/financialUtils";
 
 /** Adopción explícita para captura manual; nunca recalcula documentos importados. */
@@ -15,11 +16,13 @@ export function useTotalesConceptosCaptura(args: {
 }) {
   const { manual, guardando, conceptos, values, setValues } = args;
   const retenciones = Number(values.retenciones || 0);
+  const normalizados = conceptos.map(normalizarConceptoPersistible);
   const datosValidos = conceptos.length > 0 && conceptos.every((c) =>
     c.descripcion.trim() !== "" && Number.isFinite(c.cantidad ?? 1) && (c.cantidad ?? 1) > 0 &&
-    [c.importe, c.iva, c.ieps].every((n) => Number.isFinite(n) && n >= 0));
+    [c.importe, c.iva, c.ieps].every((n) => Number.isFinite(n) && n >= 0)) &&
+    normalizados.every((c) => (c.cantidad ?? 1) > 0);
   const propuesta = manual && datosValidos && Number.isFinite(retenciones) && retenciones >= 0
-    ? importesConceptosEditados(conceptos.map((c) => ({ ...c, monto: c.importe })), { iva: 0, ieps: 0 }, retenciones)
+    ? importesConceptosEditados(normalizados.map((c) => ({ ...c, monto: c.importe })), { iva: 0, ieps: 0 }, retenciones)
     : null;
   const difiere = propuesta != null && values.subtotal !== "" &&
     (["subtotal", "iva", "ieps"] as const).some((k) => roundMoney(Number(values[k] || 0) - propuesta[k]) !== 0);

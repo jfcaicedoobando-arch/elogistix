@@ -32,6 +32,7 @@ export function pendientesDeCaptura({
   const faltan: string[] = [];
   if (!values.provId) faltan.push("Falta el proveedor");
   if (!values.folio.trim()) faltan.push("Falta el folio del proveedor");
+  if (!values.categoriaId) faltan.push("Falta la categoría contable");
   if (total <= 0) faltan.push("Falta el importe de la factura");
   if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
     faltan.push("Falta el tipo de cambio");

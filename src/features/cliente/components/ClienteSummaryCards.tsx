@@ -7,9 +7,9 @@ interface Props {
   embarques: number;
   cotizaciones: number;
   contactos: number;
-  facturadoMXN: number;
-  pendienteMXN: number;
-  profitMXN: number;
+  facturadoMXN: number | null;
+  pendienteMXN: number | null;
+  profitMXN: number | null;
   /** Facturas/embarques excluidos por falta de tipo de cambio confiable (Ola 6 · M1). */
   facturasSinTc?: number;
   embarquesSinTc?: number;
@@ -57,25 +57,25 @@ export default function ClienteSummaryCards({
     { label: "Contactos", value: String(contactos), sublabel: "Exportadores / importadores", icon: Users, variant: "success" },
     {
       label: "Facturado",
-      value: formatCurrencyCompact(facturadoMXN, "MXN"),
+      value: facturadoMXN === null ? "—" : formatCurrencyCompact(facturadoMXN, "MXN"),
       sublabel: `Total emitido (MXN)${avisoFacturas}`,
-      tooltip: formatCurrency(facturadoMXN, "MXN"),
+      tooltip: facturadoMXN === null ? undefined : formatCurrency(facturadoMXN, "MXN"),
       icon: DollarSign,
       variant: "secondary",
     },
     {
       label: "Por cobrar",
-      value: formatCurrencyCompact(pendienteMXN, "MXN"),
+      value: pendienteMXN === null ? "—" : formatCurrencyCompact(pendienteMXN, "MXN"),
       sublabel: `Saldo pendiente (MXN)${avisoFacturas}`,
-      tooltip: formatCurrency(pendienteMXN, "MXN"),
+      tooltip: pendienteMXN === null ? undefined : formatCurrency(pendienteMXN, "MXN"),
       icon: AlertCircle,
       variant: "warning",
     },
     {
       label: "Utilidad",
-      value: formatCurrencyCompact(profitMXN, "MXN"),
+      value: profitMXN === null ? "—" : formatCurrencyCompact(profitMXN, "MXN"),
       sublabel: `Utilidad acumulada (MXN)${avisoEmbarques}`,
-      tooltip: formatCurrency(profitMXN, "MXN"),
+      tooltip: profitMXN === null ? undefined : formatCurrency(profitMXN, "MXN"),
       icon: TrendingUp,
       variant: "success",
     },

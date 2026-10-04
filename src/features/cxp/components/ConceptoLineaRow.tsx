@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, TASA_IVA } from "@/lib/financial/financialUtils";
+import { parseImporteFiscal } from "@/lib/domain/facturaConceptos";
+import { normalizarCantidadCaptura } from "../utils/conceptosPersistibles";
 import { parseMonto } from "@/lib/format/parseMonto";
 import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
@@ -29,7 +31,7 @@ interface Props {
 }
 
 function fmt2(n: number): string {
-  return (Number(n) || 0).toFixed(2);
+  return parseImporteFiscal(n).toFixed(2);
 }
 
 export function ConceptoLineaRow({
@@ -46,7 +48,8 @@ export function ConceptoLineaRow({
   const [ivaTxt, setIvaTxt] = useState(fmt2(c.iva ?? 0));
   const [iepsTxt, setIepsTxt] = useState(fmt2(c.ieps ?? 0));
 
-  const total = totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad });
+  const cantidadValida = normalizarCantidadCaptura(c.cantidad) > 0;
+  const total = cantidadValida ? totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad }) : 0;
 
   const aplicarIva16 = () => {
     // BUG-14: redondeo canónico (half away from zero, igual que Postgres);
@@ -84,10 +87,15 @@ export function ConceptoLineaRow({
               setCantidadTxt(e.target.value);
               // FIX-R3: la cantidad NO es dinero — sin el opt-out, "1.500"
               // (una cantidad con 3 decimales) se leería como 1,500.
-              onActualizar(c.key, "cantidad", parseMonto(e.target.value, 1, { puntoDeMiles: false }));
+              onActualizar(c.key, "cantidad", normalizarCantidadCaptura(parseMonto(e.target.value, 1, { puntoDeMiles: false })));
             }}
-            onBlur={() => setCantidadTxt(String(parseMonto(cantidadTxt, 1, { puntoDeMiles: false }) || 1))}
+            onBlur={() => {
+              const cantidad = normalizarCantidadCaptura(parseMonto(cantidadTxt, 1, { puntoDeMiles: false }));
+              setCantidadTxt(String(cantidad));
+              onActualizar(c.key, "cantidad", cantidad);
+            }}
             aria-label="Cantidad"
+            aria-invalid={!cantidadValida}
           />
         </label>
 
@@ -99,9 +107,13 @@ export function ConceptoLineaRow({
             value={importeTxt}
             onChange={(e) => {
               setImporteTxt(e.target.value);
-              onActualizar(c.key, "importe", parseMonto(e.target.value));
+              onActualizar(c.key, "importe", parseImporteFiscal(parseMonto(e.target.value)));
             }}
-            onBlur={() => setImporteTxt(fmt2(parseMonto(importeTxt)))}
+            onBlur={() => {
+              const valor = parseImporteFiscal(parseMonto(importeTxt));
+              setImporteTxt(fmt2(valor));
+              onActualizar(c.key, "importe", valor);
+            }}
             aria-label="Precio unitario"
           />
         </label>
@@ -114,9 +126,13 @@ export function ConceptoLineaRow({
             value={ivaTxt}
             onChange={(e) => {
               setIvaTxt(e.target.value);
-              onActualizar(c.key, "iva", parseMonto(e.target.value));
+              onActualizar(c.key, "iva", parseImporteFiscal(parseMonto(e.target.value)));
             }}
-            onBlur={() => setIvaTxt(fmt2(parseMonto(ivaTxt)))}
+            onBlur={() => {
+              const valor = parseImporteFiscal(parseMonto(ivaTxt));
+              setIvaTxt(fmt2(valor));
+              onActualizar(c.key, "iva", valor);
+            }}
             aria-label="IVA del concepto"
           />
         </label>
@@ -129,9 +145,13 @@ export function ConceptoLineaRow({
             value={iepsTxt}
             onChange={(e) => {
               setIepsTxt(e.target.value);
-              onActualizar(c.key, "ieps", parseMonto(e.target.value));
+              onActualizar(c.key, "ieps", parseImporteFiscal(parseMonto(e.target.value)));
             }}
-            onBlur={() => setIepsTxt(fmt2(parseMonto(iepsTxt)))}
+            onBlur={() => {
+              const valor = parseImporteFiscal(parseMonto(iepsTxt));
+              setIepsTxt(fmt2(valor));
+              onActualizar(c.key, "ieps", valor);
+            }}
             aria-label="IEPS del concepto"
           />
         </label>
@@ -164,6 +184,7 @@ export function ConceptoLineaRow({
           onEliminar={() => onEliminar(c.key)}
         />
       </div>
+      {!cantidadValida && <p role="alert" className="text-body-sm text-destructive">La cantidad debe ser al menos 0.000001.</p>}
     </div>
   );
 }

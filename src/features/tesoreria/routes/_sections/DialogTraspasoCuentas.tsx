@@ -26,8 +26,6 @@ import {
 import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 
-
-
 type Cuenta = Tables<"cuentas_bancarias">;
 
 interface DialogTraspasoCuentasProps {
@@ -43,7 +41,8 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   const faltanCuentas = cuentasActivas.length < 2;
   const {
     state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error,
-    fechaTcDof, tcEsManual, fechaInicial, revisarCaptura, capturasNegativas,
+    fechaTcDof, tcEsManual, fechaInicial, fechaMinima, errorFecha, revisarCaptura, capturasNegativas,
+    corteOrigen, corteDestino,
   } = useTraspasoForm(open, cuentasActivas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
@@ -137,6 +136,10 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
 
       <TraspasoImportes
         fecha={state.fecha}
+        fechaMinima={fechaMinima}
+        corteOrigen={corteOrigen}
+        corteDestino={corteDestino}
+        errorFecha={errorFecha}
         montoOrigen={state.montoOrigen}
         comision={state.comision}
         monedaOrigen={origen?.moneda}
@@ -147,7 +150,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         capturasNegativas={capturasNegativas}
       />
 
-      {origen && destino && (
+      {origen && destino && !errorFecha && (
         <TraspasoConversion
           cuentaOrigenId={origen.id}
           monedaOrigen={origen.moneda}
@@ -164,8 +167,6 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
 
         />
       )}
-
-
 
       <FormDialogSection title="Detalles" cols={1}>
         <div className="space-y-1.5">

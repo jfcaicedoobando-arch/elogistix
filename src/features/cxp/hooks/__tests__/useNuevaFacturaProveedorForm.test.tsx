@@ -17,6 +17,12 @@ const toastSuccess = vi.fn();
 const toastError = vi.fn();
 const toastWarning = vi.fn();
 
+// Aislamiento explícito: cualquier I/O no previsto falla localmente, nunca usa .env.
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { from: vi.fn(() => { throw new Error("Supabase I/O no simulado en este test"); }),
+    rpc: vi.fn(() => { throw new Error("Supabase RPC no simulado en este test"); }) },
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: (...a: unknown[]) => toastSuccess(...a),
@@ -185,7 +191,7 @@ describe("useNuevaFacturaProveedorForm", () => {
     await act(async () => {
       await result.current.handleCfdiParsed(
         {
-          cfdi: { uuid: "U-1", moneda: "MXN", serie: "A", folio: "100", fecha: "2026-02-01", tipo_cambio: 1, subtotal: 100, iva_trasladado: 16, retenciones: 0, emisor: { rfc: "XAXX010101000", nombre: "Otro SA" } },
+          cfdi: { uuid: "U-1", moneda: "MXN", serie: "A", folio: "100", fecha: "2026-02-01", tipo_cambio: 1, subtotal: 100, iva_trasladado: 16, retenciones: 0, conceptos: [{ descripcion: "Servicio", cantidad: 1, importe: 100, iva: 16, ieps: 0 }], emisor: { rfc: "XAXX010101000", nombre: "Otro SA" } },
           ai: { categoria_id: null, notas: null },
         } as never,
         { xml, pdf: null },

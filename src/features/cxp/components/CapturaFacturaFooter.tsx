@@ -44,7 +44,7 @@ export function CapturaFacturaFooter({
               <button
                 key={p.texto}
                 type="button"
-                onClick={() => pasos.irA(p.paso)}
+                onClick={() => { pasos.irA(p.paso); if (p.paso === 2) pasos.revisarDatos(); }}
                 /* v13.823.25: altura mínima táctil de 36px en móvil. */
                 className="inline-flex min-h-9 items-center underline-offset-4 hover:underline hover:text-foreground"
               >

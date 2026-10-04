@@ -3,7 +3,9 @@
  * vinculación (una factura no puede cubrir más de su subtotal).
  * Extraído de `useNuevaFacturaProveedorForm.ts` (Power-of-10, ≤200 líneas).
  */
+import { calcularCuadreCaptura, cantidadesCapturaValidas } from "../utils/conceptosPersistibles";
 import { notifyError } from "@/lib/ui/appFeedback";
+import type { FacturaFormValues } from "../types";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 import type { ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import { formatCurrency } from "@/lib/formatters";
@@ -68,3 +70,42 @@ export function puedeContinuarTope(
   return false;
 }
 
+
+/** Defensa antes de insertar cabecera, también para XML/PDF y líneas sin vínculo. */
+function validarConceptosPersistibles(
+  conceptos: ReadonlyArray<CfdiConceptoParsed>, subtotal: number, moneda: string,
+): boolean {
+  if (!conceptos.length) return true;
+  if (!cantidadesCapturaValidas(conceptos)) {
+    notifyError(undefined, {
+      title: "Revisa las cantidades de los conceptos",
+      description: "Cada cantidad debe ser al menos 0.000001; se admiten hasta 6 decimales.",
+      method: "CXP_CONCEPTOS_CANTIDAD_INVALIDA",
+    });
+    return false;
+  }
+  const cuadre = calcularCuadreCaptura(subtotal,
+    conceptos.map((c) => ({ monto: c.importe, cantidad: c.cantidad })));
+  if (cuadre.puedeAprobar) return true;
+  notifyError(undefined, {
+    title: "Los conceptos no cuadran con el subtotal",
+    description: `Con precios a 2 decimales, los conceptos suman ${formatCurrency(cuadre.suma, moneda)} y el subtotal es ${formatCurrency(subtotal, moneda)}. Revisa los conceptos y los importes antes de guardar.`,
+    method: "CXP_CONCEPTOS_NORMALIZADOS_DESCUADRE",
+  });
+  return false;
+}
+
+/** Validación final sobre los valores normalizados, antes de crear la cabecera. */
+export function puedePersistirFactura(
+  values: FacturaFormValues, conceptos: ReadonlyArray<CfdiConceptoParsed>,
+): boolean {
+  if (!values.categoriaId) {
+    notifyError(undefined, {
+      title: "Falta la categoría contable",
+      description: "Selecciona la categoría de presupuesto antes de guardar la factura.",
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CATEGORIA_PRE",
+    });
+    return false;
+  }
+  return validarConceptosPersistibles(conceptos, Number(values.subtotal) || 0, values.moneda);
+}

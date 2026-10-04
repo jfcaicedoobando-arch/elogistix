@@ -91,7 +91,7 @@ describe("fetchLayoutContableData", () => {
 });
 
 describe("fetchEstadoCuentaFacturas", () => {
-  it("filtra por cliente_id + estados Emitida/Vencida y ordena asc por fecha_emision", async () => {
+  it("filtra por cliente_id + estados vivos, calcula saldo y ordena asc por fecha_emision", async () => {
     mock.setTableResult("facturas", {
       data: [
         { numero: "F1", fecha_emision: "2026-01-01", fecha_vencimiento: "2026-02-01",
@@ -102,7 +102,9 @@ describe("fetchEstadoCuentaFacturas", () => {
     const res = await fetchEstadoCuentaFacturas("cl1");
     expect(res).toHaveLength(1);
     const call = mock.tableCalls.find(c => c.table === "facturas");
-    expect(call?.ops).toContain("eq");
+    expect(call?.opArgs).toContainEqual(["cliente_id", ["cl1"]]);
+    expect(call?.opArgs).toContainEqual(["estado", ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"]]);
+    expect(res[0].saldo).toBe(100);
     expect(call?.ops).toContain("in");
     expect(call?.ops).toContain("order");
   });

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/shared/NumericInput";
-import { FormSection } from "./facturaFormPrimitives";
+import { FormSection, FieldError } from "./facturaFormPrimitives";
 import { MonedaImportesSection } from "./FacturaProveedorFormFields.moneda";
 import type { FacturaFormValues, TcOrigen } from "@/features/cxp/types";
 
@@ -41,8 +41,9 @@ export function FechasEImportesBlock({
               value={values.emision}
               onChange={(v) => onChange("emision", v)}
               className="w-full"
+              errorText={errors.emision}
+              aria-label="Emisión"
             />
-            {errors?.emision && <p className="text-body-sm text-destructive">{errors.emision}</p>}
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>
@@ -50,16 +51,20 @@ export function FechasEImportesBlock({
               value={values.diasCredito}
               onChange={(n) => onChange("diasCredito", n)}
               aria-label="Días de crédito"
+              aria-invalid={!!errors.diasCredito}
             />
+            <FieldError msg={errors.diasCredito} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="factura-prov-vencimiento">Vencimiento</Label>
             <Input
               id="factura-prov-vencimiento"
+              aria-invalid={!!errors.vencimiento}
               value={values.vencimiento ? values.vencimiento.split("-").reverse().join("/") : ""}
               readOnly
               className="bg-muted"
             />
+            <FieldError msg={errors.vencimiento} />
           </div>
         </div>
       </FormSection>

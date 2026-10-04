@@ -5,7 +5,8 @@ import {
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import { toTitleCase, formatPercent } from "@/lib/formatters";
+import { toTitleCase, formatPercent, formatCurrency } from "@/lib/formatters";
+import { comisionSinEmbarque } from "../domain/cobroSinEmbarque";
 import type { ComisionDevengada } from "@/features/comisiones/services";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
@@ -44,6 +45,10 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
         accessor: (c) => c.monto_cobrado_mxn,
         defaultCurrency: "MXN",
       }),
+      accessorFn: (c) => c.monto_cobrado_mxn,
+      cell: ({ row }) => row.original.monto_cobrado_mxn === null
+        ? "No calculado"
+        : formatCurrency(row.original.monto_cobrado_mxn, "MXN"),
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     },
     {
@@ -52,12 +57,14 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
         accessor: (c) => c.utilidad_prorrateada_mxn,
         defaultCurrency: "MXN",
       }),
+      cell: ({ row }) => comisionSinEmbarque(row.original)
+        ? "No calculada" : formatCurrency(row.original.utilidad_prorrateada_mxn, "MXN"),
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       id: "pct", header: "%",
       meta: { width: COL_W.tiny, className: "text-right tabular-nums hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => formatPercent(row.original.porcentaje_aplicado),
+      cell: ({ row }) => comisionSinEmbarque(row.original) ? "No aplica" : formatPercent(row.original.porcentaje_aplicado),
     },
     {
       ...moneyColumn<ComisionDevengada>({
@@ -65,7 +72,10 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
         accessor: (c) => c.comision_mxn,
         defaultCurrency: "MXN",
       }),
-      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      cell: ({ row }) => comisionSinEmbarque(row.original)
+        ? <span>No calculada<span className="block text-xs font-normal text-muted-foreground">Sin embarque asociado</span></span>
+        : formatCurrency(row.original.comision_mxn, "MXN"),
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums font-semibold" },
     },
     {
       ...statusColumn<ComisionDevengada>({

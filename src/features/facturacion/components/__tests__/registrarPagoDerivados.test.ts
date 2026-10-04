@@ -57,6 +57,52 @@ describe("derivarEstadoPago (cross-moneda)", () => {
     rates: RATES,
   };
 
+  it.each([
+    { monto: "1.16", residual: 0, incompleto: false },
+    { monto: "1.15", residual: 0.01, incompleto: false },
+    { monto: "1.14", residual: 0.02, incompleto: true },
+    { monto: "1.12", residual: 0.04, incompleto: true },
+    { monto: "1.11", residual: 0.05, incompleto: true },
+  ])("AUD54: PUE con residual $residual respeta el cierre de 0.01", ({ monto, residual, incompleto }) => {
+    const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "MXN", saldo: 1.16, metodoPagoFactura: "PUE" });
+    expect(d.montoAplicado).toBe(Number(monto));
+    expect(1.16 - d.montoAplicado).toBeCloseTo(residual, 4);
+    expect(d.pueIncompleto).toBe(incompleto);
+    expect(d.invalido).toBe(incompleto);
+  });
+
+  it.each([
+    { monto: "23", aplicado: 1.15, incompleto: false },
+    { monto: "22.99", aplicado: 1.1495, incompleto: true },
+  ])("AUD54: PUE cross-moneda valida saldo exacto sin redondear a centavos ($monto)", ({ monto, aplicado, incompleto }) => {
+    const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "USD", saldo: 1.16, metodoPagoFactura: "PUE", tcManual: "20" });
+    expect(d.montoAplicado).toBe(aplicado);
+    expect(d.pueIncompleto).toBe(incompleto);
+    expect(d.invalido).toBe(incompleto);
+  });
+
+  it("AUD54: PPD sigue admitiendo un abono parcial", () => {
+    const d = derivarEstadoPago({ ...base, monto: "1.12", monedaPago: "MXN", monedaFactura: "MXN", saldo: 1.16, metodoPagoFactura: "PPD" });
+    expect(d.pueIncompleto).toBe(false);
+    expect(d.invalido).toBe(false);
+  });
+
+  it("AUD54: la tolerancia de cierre PUE no amplía la de sobrepago", () => {
+    const d = derivarEstadoPago({ ...base, monto: "1.17", monedaPago: "MXN", monedaFactura: "MXN", saldo: 1.16, metodoPagoFactura: "PUE" });
+    expect(d.pueIncompleto).toBe(false);
+    expect(d.excede).toBe(true);
+    expect(d.invalido).toBe(true);
+  });
+
+  it.each([
+    { monto: "57.99", incompleto: false },
+    { monto: "57.98", incompleto: true },
+  ])("AUD54: límite de cierre sobre saldo neto de NC ($monto)", ({ monto, incompleto }) => {
+    const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "MXN", saldo: 58, metodoPagoFactura: "PUE" });
+    expect(d.montoAplicado).toBe(Number(monto));
+    expect(d.invalido).toBe(incompleto);
+  });
+
   it.each([{ monto: "58", incompleto: false }, { monto: "57", incompleto: true }])("AUD25: PUE total116/NC58 liquida saldo canónico58 con $monto", ({ monto, incompleto }) => {
     // `saldo_factura` entrega58 después de una NC efectiva58 sobre total116.
     // El formulario valida ese saldo RPC, que no se sustituye por el total bruto.

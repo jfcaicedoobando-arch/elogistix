@@ -29,3 +29,6 @@ export type {
   DefaultsFacturacionCliente,
 } from "./datosFiscalesCliente";
 export * from "./cobranza";
+
+export { fetchEstadoCuenta } from "../estadoCuenta/services/estadoCuenta";
+export type { FacturaEstadoCuenta } from "../estadoCuenta/services/estadoCuenta";

@@ -155,7 +155,7 @@ export function carteraACsv(
       "", f.mxnHistorico, f.mxnCorte, f.diferencia,
     ]),
   );
-  return toCsv([...ENCABEZADOS_CARTERA], [...filasDetalle, ...filasTotales]);
+  return toCsv([...ENCABEZADOS_CARTERA], [...filasDetalle, ...filasTotales], ",", [6, 9, 10, 11, 12]);
 }
 
 /** Distingue una exportación parcial sin incluir texto libre en el nombre. */

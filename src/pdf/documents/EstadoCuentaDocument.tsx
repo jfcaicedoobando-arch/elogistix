@@ -1,7 +1,7 @@
 /**
  * Documento PDF: Estado de cuenta por cliente.
  *
- * Lista facturas emitidas/vencidas con aging (Por vencer, 1-30, 31-60,
+ * Lista facturas del corte seleccionado con su saldo neto, aging (Por vencer, 1-30, 31-60,
  * 61-90, +90 días) y totales por moneda. Reemplaza al generador legacy
  * `window.open + print` (v13.823.248): ahora se descarga como archivo.
  * v13.823.249 — pulido profesional: BrandHeader corporativo, KPIs de
@@ -28,6 +28,7 @@ export interface EstadoCuentaRow {
   estado: string;
   moneda: string;
   total: number;
+  saldo: number;
   diasVencido: number;
   bucket: string;
 }
@@ -69,7 +70,7 @@ const cols: PdfColumn<EstadoCuentaRow>[] = [
   { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => (r.diasVencido > 0 ? `+${r.diasVencido}` : String(r.diasVencido)) },
   { key: "bucket", title: "Antigüedad", cellStyle: { width: 74, flexGrow: 0, flexShrink: 0 }, render: (r) => r.bucket },
   { key: "estado", title: "Estado", cellStyle: { width: 52, flexGrow: 0, flexShrink: 0 }, render: (r) => r.estado },
-  { key: "total", title: "Total", cellStyle: styles.cellMoney, render: (r) => formatCurrency(r.total, r.moneda) },
+  { key: "saldo", title: "Saldo", cellStyle: styles.cellMoney, render: (r) => formatCurrency(r.saldo, r.moneda) },
 ];
 
 /** Días y antigüedad de facturas vencidas en color de alerta. */

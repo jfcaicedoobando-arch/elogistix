@@ -49,3 +49,11 @@ describe("toCsv (serializeCsv)", () => {
     expect(csv).toContain("ok");
   });
 });
+
+
+describe("columnas numéricas declaradas", () => {
+  it("preserva decimales finitos y neutraliza fórmulas incluso en columnas numéricas", () => {
+    expect(toCsv(["texto", "importe"], [["-171.92", "-171.92"], ["ok", "-1+2"], ["ok", "=SUM(1)"]], ",", [1]))
+      .toBe("texto,importe\n'-171.92,-171.92\nok,'-1+2\nok,'=SUM(1)");
+  });
+});

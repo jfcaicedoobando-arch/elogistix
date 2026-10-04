@@ -826,7 +826,8 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
       USING ERRCODE = 'P0001';
   END IF;
-  IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.05 THEN
+  -- Mismo umbral que recalcular_estado_factura: el saldo exacto no se redondea ni se ajusta.
+  IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.01 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: registra el cobro por el saldo neto pendiente (%) en una sola exhibición, considerando las notas de crédito vigentes.', v_total
       USING ERRCODE = 'P0001';
   END IF;
@@ -35399,7 +35400,6 @@ CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pa
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
 CREATE TRIGGER trg_pago_no_altera_historia_rep BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_no_altera_historia_rep();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
-CREATE TRIGGER trg_pago_pue_exhibicion_unica BEFORE INSERT OR UPDATE OF factura_id, monto, monto_aplicado_factura ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_pago_pue_exhibicion_unica();
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
 CREATE TRIGGER trg_pago_sin_rep_vivo_delete BEFORE DELETE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_sin_rep_vivo_delete();
 CREATE TRIGGER trg_pagos_factura_autocierre AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_autocierre_por_liquidar();
@@ -35501,6 +35501,7 @@ CREATE TRIGGER update_proforma_conceptos_consolidados_updated_at BEFORE UPDATE O
 CREATE TRIGGER update_proveedor_facturas_conceptos_updated_at BEFORE UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_proveedores_updated_at BEFORE UPDATE ON public.proveedores FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_refacturaciones_updated_at BEFORE UPDATE ON public.refacturaciones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER z_pago_pue_exhibicion_unica BEFORE INSERT OR UPDATE OF factura_id, monto, monto_aplicado_factura, moneda, tipo_cambio ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_pago_pue_exhibicion_unica();
 CREATE TRIGGER zz_crm_cerrar_oportunidad_desde_cotizacion BEFORE INSERT OR UPDATE OF estado, embarque_id, oportunidad_id, organization_id, deleted_at ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion();
 CREATE TRIGGER zz_pago_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_factura_viva_para_pago();
 CREATE TRIGGER zz_pagos_factura_no_sobrepago BEFORE INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.tg_pago_factura_no_sobrepago();

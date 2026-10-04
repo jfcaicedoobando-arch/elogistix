@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency, formatCurrencyCompact, formatCompactNumber } from "@/lib/formatters";
 import { resumirTarjetasCxP } from "@/features/cxp/services/cxpKpiConteos";
+import { useDiaNegocio } from "@/hooks/shared/useDiaNegocio";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function countLabel(count: number): string {
@@ -25,12 +26,13 @@ function sufijoEur(monto: number): string {
 }
 
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
+  const diaNegocio = useDiaNegocio();
   // Los conteos salen del MISMO canon que los importes (`resumirTarjetasCxP`
   // usa `esFacturaPorPagar` + la ventana canónica de 7 días).
   const {
     porPagarMxn, porPagarUsd, vencidasN, porVencerN,
     programadoMxn, programadoUsd, programadoEur, programadoN,
-  } = useMemo(() => resumirTarjetasCxP(data), [data]);
+  } = useMemo(() => resumirTarjetasCxP(data, diaNegocio), [data, diaNegocio]);
   return (
     // Ola 9: a 1280x720 las 5 tarjetas truncaban el importe ("MXN 80,234…") y
     // la etiqueta con el conteo. Ahora el valor va en notación compacta con
@@ -76,4 +78,3 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
     </div>
   );
 }
-

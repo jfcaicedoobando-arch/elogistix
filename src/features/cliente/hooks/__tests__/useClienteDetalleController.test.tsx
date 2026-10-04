@@ -35,6 +35,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 }));
 
 import { notifySuccess } from "@/lib/ui/appFeedback";
+import { useClienteFinancials } from "../useClienteFinancials";
 import { useUpdateCliente } from "@/features/cliente/hooks/useClientes";
 
 describe("useClienteDetalleController", () => {
@@ -51,6 +52,18 @@ describe("useClienteDetalleController", () => {
 
     expect(result.current.contactDialogOpen).toBe(true);
     expect(result.current.editingContacto).toBeNull();
+  });
+
+  it("expone el error y reintento financieros sin borrar importes cacheados", () => {
+    const financials = { facturadoMXN: 116, pendienteMXN: 58, profitMXN: 20, facturasSinTc: 0, embarquesSinTc: 0 };
+    const error = new Error("Falta TC histórico");
+    const refetch = vi.fn();
+    vi.mocked(useClienteFinancials).mockReturnValueOnce({ data: financials, error, refetch, isFetching: true } as never);
+    const { result } = renderHook(() => useClienteDetalleController(), { wrapper: createWrapper() });
+    expect(result.current.financials).toBe(financials);
+    expect(result.current.errorFinancials).toBe(error);
+    expect(result.current.refetchFinancials).toBe(refetch);
+    expect(result.current.fetchingFinancials).toBe(true);
   });
 
   it("handles saving a client with audit logs", async () => {

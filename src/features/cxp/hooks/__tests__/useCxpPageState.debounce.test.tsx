@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
+import { todayLocalISO } from "@/lib/date/today";
 
 const { mockFetchFacturas } = vi.hoisted(() => ({
   mockFetchFacturas: vi.fn(),
@@ -65,6 +66,7 @@ describe("useCxpPageState — debounce de búsqueda", () => {
     expect(mockFetchFacturas).toHaveBeenCalledTimes(1);
     expect(mockFetchFacturas).toHaveBeenCalledWith(
       expect.objectContaining({ search: "abcde" }),
+      todayLocalISO(),
     );
   });
 });

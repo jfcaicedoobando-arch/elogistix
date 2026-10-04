@@ -8,3 +8,6 @@
  * ≥ 1 centavo.
  */
 export const TOLERANCIA_SOBREPAGO = 0.005;
+
+/** Saldo máximo que `public.recalcular_estado_factura` considera liquidado. */
+export const TOLERANCIA_CIERRE_FACTURA = 0.01;

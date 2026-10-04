@@ -14,11 +14,16 @@ export function neutralizarFormulaCsv(valor: string): string {
   return /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor;
 }
 
-export function toCsv(headers: string[], rows: string[][], delimiter: "," | ";" = ","): string {
+export function toCsv(headers: string[], rows: string[][], delimiter: "," | ";" = ",", numericColumns: readonly number[] = []): string {
   const out = Papa.unparse(
     {
       fields: headers.map(neutralizarFormulaCsv),
-      data: rows.map((r) => r.map((c) => neutralizarFormulaCsv(String(c ?? "")))),
+      data: rows.map((r) => r.map((c, i) => {
+        const value = String(c ?? "");
+        // Sólo columnas numéricas declaradas y decimales finitos, nunca fórmulas.
+        if (numericColumns.includes(i) && /^-?\d+(?:\.\d+)?$/.test(value) && Number.isFinite(Number(value))) return value;
+        return neutralizarFormulaCsv(value);
+      })),
     },
     { delimiter, newline: "\n" },
   );

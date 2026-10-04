@@ -134,6 +134,20 @@ beforeEach(() => {
 });
 
 describe("fetchFacturasCxP — lectura completa por lotes", () => {
+  it("AUD50: captura el día antes del I/O para mapear y filtrar todas las filas", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-04T05:59:59Z"));
+    estado.filas = generar(1, () => ({ fecha_vencimiento: "2026-10-03" }));
+    const pendiente = fetchFacturasCxP({ estatus: "Por vencer" });
+    vi.setSystemTime(new Date("2026-10-04T06:00:01Z"));
+    const ayer = await pendiente;
+    expect(ayer).toHaveLength(1);
+    expect(ayer[0]).toMatchObject({ estatus: "Por vencer", dias_vencido: 0 });
+    expect(await fetchFacturasCxP({ estatus: "Por vencer" }, "2026-10-04")).toHaveLength(0);
+    const hoy = await fetchFacturasCxP({ estatus: "Vencida" }, "2026-10-04");
+    expect(hoy[0]).toMatchObject({ estatus: "Vencida", dias_vencido: 1 });
+  });
+
   it("con 250 facturas devuelve las 250 (antes se cortaba en 200)", async () => {
     estado.filas = generar(250);
     const rows = await fetchFacturasCxP({});

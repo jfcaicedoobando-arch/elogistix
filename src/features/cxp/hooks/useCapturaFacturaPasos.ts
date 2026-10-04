@@ -1,9 +1,9 @@
 /**
  * Navegación por pasos del modal "Capturar factura de proveedor" (v13.712.0).
  *
- * Sólo presentación: decide el paso activo (siempre arranca en el paso 1, tanto
- * en captura manual como desde el buzón) y a qué paso pertenece cada pendiente
- * para poder saltar ahí desde el footer.
+ * Arranca en el paso 1 (captura manual y buzón), clasifica pendientes y
+ * valida antes de avanzar desde los datos de la factura. Permite volver
+ * desde el footer al paso con errores y enfocar el primer campo inválido.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -52,6 +52,8 @@ interface Args {
   abierto: boolean;
   /** Pendientes vigentes de la captura (texto plano). */
   pendientes: readonly string[];
+  /** Valida los campos del paso 2 sin borrar la captura. */
+  validarDatos?: () => boolean;
 }
 
 export interface CapturaPasos {
@@ -62,17 +64,20 @@ export interface CapturaPasos {
   esPrimero: boolean;
   irA: (paso: 1 | 2 | 3) => void;
   siguiente: () => void;
+  revisarDatos: () => boolean;
+  solicitudFoco: number;
   anterior: () => void;
   pendientesPorPaso: PendientesPorPaso;
   /** Pendientes que no se resuelven en el paso activo. */
   pendientesDeOtrosPasos: Array<{ paso: 1 | 2 | 3; texto: string }>;
 }
 
-export function useCapturaFacturaPasos({ abierto, pendientes }: Args): CapturaPasos {
+export function useCapturaFacturaPasos({ abierto, pendientes, validarDatos }: Args): CapturaPasos {
   // v13.712.1: el wizard SIEMPRE arranca en el paso 1, incluso desde el buzón:
   // el usuario debe ver primero el documento y sus conceptos antes de capturar.
   const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const estabaAbierto = useRef(abierto);
+  const [solicitudFoco, setSolicitudFoco] = useState(0);
 
   // Al reabrir el modal volvemos al primer paso.
   useEffect(() => {
@@ -82,10 +87,16 @@ export function useCapturaFacturaPasos({ abierto, pendientes }: Args): CapturaPa
 
 
   const irA = useCallback((destino: 1 | 2 | 3) => setPaso(destino), []);
-  const siguiente = useCallback(
-    () => setPaso((p) => (p < TOTAL_PASOS_CAPTURA ? ((p + 1) as 1 | 2 | 3) : p)),
-    [],
-  );
+  const revisarDatos = useCallback(() => {
+    if (!validarDatos || validarDatos()) return true;
+    setPaso(2);
+    setSolicitudFoco((n) => n + 1);
+    return false;
+  }, [validarDatos]);
+  const siguiente = useCallback(() => {
+    if (paso === 2 && !revisarDatos()) return;
+    setPaso((p) => (p < TOTAL_PASOS_CAPTURA ? ((p + 1) as 1 | 2 | 3) : p));
+  }, [paso, revisarDatos]);
   const anterior = useCallback(
     () => setPaso((p) => (p > 1 ? ((p - 1) as 1 | 2 | 3) : p)),
     [],
@@ -108,7 +119,7 @@ export function useCapturaFacturaPasos({ abierto, pendientes }: Args): CapturaPa
     esUltimo: paso === TOTAL_PASOS_CAPTURA,
     esPrimero: paso === 1,
     irA,
-    siguiente,
+    siguiente, revisarDatos, solicitudFoco,
     anterior,
     pendientesPorPaso,
     pendientesDeOtrosPasos,

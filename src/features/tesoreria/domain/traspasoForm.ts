@@ -10,6 +10,7 @@ import { roundMoney } from "@/lib/financial/financialUtils";
 import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
 import { hoyMx } from "@/lib/date/mx";
 import type { MonedaTc } from "@/features/tesoreria/domain/tcPar";
+import { fechaMinimaTraspaso, validarFechaTraspaso } from "./traspasoFecha";
 
 type Cuenta = Tables<"cuentas_bancarias">;
 export type ParTcLocal = { base: MonedaTc; quote: MonedaTc } | null;
@@ -74,9 +75,8 @@ export function validarTraspaso(
   const errorImportes = validarImportesTraspaso(state.montoOrigen, state.comision);
   if (errorImportes) return errorImportes;
   if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
-  // FE-07: fecha del traspaso obligatoria y nunca futura.
-  if (!state.fecha) return "Captura la fecha del traspaso.";
-  if (state.fecha > hoyIso()) return "La fecha del traspaso no puede ser futura.";
+  const errorFecha = validarFechaTraspaso(state.fecha, fechaMinimaTraspaso(origen, destino));
+  if (errorFecha) return errorFecha;
   if (mismoMoneda) return null;
   if (!state.tcQuote || state.tcQuote <= 0) {
     return "Captura el tipo de cambio para cuentas de distinta moneda.";

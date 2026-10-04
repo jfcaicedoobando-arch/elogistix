@@ -3,6 +3,7 @@
  * atiende el atajo Ctrl/Cmd + Enter. Extraído de `DialogNuevaFacturaProveedor`
  * (v13.712.2) para respetar el tope de complejidad de ESLint.
  */
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PasoDocumento } from "./PasoDocumento";
 import { PasoDatos } from "./PasoDatos";
@@ -34,16 +35,24 @@ export function CapturaFacturaPasosBody({
   keyRenglonSospechoso, modoBuzon, onCerrar,
 }: Props) {
   const navigate = useNavigate();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (pasos.paso !== 2 || !pasos.solicitudFoco) return;
+    const campo = bodyRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    campo?.focus();
+    campo?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [pasos.paso, pasos.solicitudFoco]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
     e.preventDefault();
+    e.stopPropagation();
     if (!pasos.esUltimo) pasos.siguiente();
-    else if (ctl.puedeGuardar) void ctl.submit();
+    else if (ctl.puedeGuardar && pasos.revisarDatos()) void ctl.submit();
   };
 
   return (
-    <div className="space-y-5" onKeyDown={onKeyDown}>
+    <div ref={bodyRef} className="space-y-5" onKeyDownCapture={onKeyDown}>
       {pasos.paso === 1 && (
         <PasoDocumento
           ctl={ctl}
