@@ -33,9 +33,33 @@ function pegar(input: HTMLInputElement, raw: string) {
   fireEvent.paste(input, { clipboardData: { getData: () => raw } });
   fireEvent.input(input, { target: { value: raw }, inputType: "insertFromPaste" });
 }
+function escribir(input: HTMLInputElement, texto: string) {
+  fireEvent.focus(input);
+  fireEvent.input(input, { target: { value: "" }, inputType: "deleteContentBackward" });
+  for (const letra of texto) fireEvent.input(input, { target: { value: input.value + letra }, inputType: "insertText" });
+  fireEvent.blur(input);
+}
 
 describe("Traspaso: negativos explícitos sin invertir el signo", () => {
-  it.each(["-25", "-25.50", "-25,50", "-", "$-25", "−25"])("rechaza %s pegado y mantiene el error tras blur", (raw) => {
+  it("teclear monto y comisión válidos conserva el importe y permite corregir un negativo", () => {
+    registrar.mockClear();
+    renderHarness();
+    const monto = screen.getByLabelText("Monto a transferir") as HTMLInputElement;
+    const comision = screen.getByLabelText("Comisión bancaria (opcional)") as HTMLInputElement;
+    escribir(monto, "1000"); escribir(comision, "25");
+    expect(monto).toHaveValue("1,000.00");
+    expect(comision).toHaveValue("25.00");
+    expect(screen.getByLabelText("Importe")).toHaveTextContent("1000");
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeEnabled();
+    escribir(monto, "-25.50");
+    expect(monto).toHaveValue("-25.50");
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeDisabled();
+    escribir(monto, "25.50");
+    expect(monto).toHaveValue("25.50");
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeEnabled();
+    expect(registrar).not.toHaveBeenCalled();
+  });
+  it.each(["-25", "-25.50", "-25,50", "-", "$-25", "−25", "(25)"])("rechaza %s pegado y mantiene el error tras blur", (raw) => {
     registrar.mockClear();
     renderHarness();
     const input = screen.getByLabelText("Monto a transferir") as HTMLInputElement;

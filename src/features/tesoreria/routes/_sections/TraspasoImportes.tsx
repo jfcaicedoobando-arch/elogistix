@@ -23,6 +23,8 @@ export function TraspasoImportes({
   fecha, montoOrigen, comision, monedaOrigen,
   onFechaChange, onMontoChange, onComisionChange, onCaptura, capturasNegativas,
 }: TraspasoImportesProps) {
+  // El raw y MoneyInput se procesan en el mismo evento change. Capturar input
+  // puede restaurar el DOM controlado antes de que React procese onChange.
   const capturar = (campo: "montoOrigen" | "comision", target: EventTarget) => {
     if (target instanceof HTMLInputElement) onCaptura(campo, target.value);
   };
@@ -32,7 +34,7 @@ export function TraspasoImportes({
         <Label htmlFor="traspaso-fecha">Fecha</Label>
         <DatePickerMx id="traspaso-fecha" value={fecha} onChange={onFechaChange} />
       </div>
-      <div className="space-y-1.5" onInputCapture={(e) => capturar("montoOrigen", e.target)}>
+      <div className="space-y-1.5" onChangeCapture={(e) => capturar("montoOrigen", e.target)}>
         <Label htmlFor="traspaso-monto">Monto a transferir</Label>
         <MoneyInput
           id="traspaso-monto"
@@ -47,7 +49,7 @@ export function TraspasoImportes({
           Corrige el monto negativo; no se cambiará el signo para registrarlo.
         </p>}
       </div>
-      <div className="space-y-1.5" onInputCapture={(e) => capturar("comision", e.target)}>
+      <div className="space-y-1.5" onChangeCapture={(e) => capturar("comision", e.target)}>
         <Label htmlFor="traspaso-comision">Comisión bancaria (opcional)</Label>
         <MoneyInput
           id="traspaso-comision"

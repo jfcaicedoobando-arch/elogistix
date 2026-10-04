@@ -100,7 +100,8 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   );
 
   const revisarCaptura = (campo: "montoOrigen" | "comision", raw: string) => {
-    setCapturasNegativas((prev) => ({ ...prev, [campo]: /[-−]/.test(raw) || /^\s*\(.*\)\s*$/.test(raw) }));
+    const negativa = /[-−]/.test(raw) || /^\s*\(.*\)\s*$/.test(raw);
+    setCapturasNegativas((prev) => prev[campo] === negativa ? prev : { ...prev, [campo]: negativa });
   };
 
   return {
