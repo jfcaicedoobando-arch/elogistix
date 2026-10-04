@@ -23,6 +23,8 @@ export interface FacturaRow {
 
 
 export interface NotaCreditoRow {
+  id: string;
+  folio: string | null;
   monto: number;
   /** Base del desglose; null si no permite un reporte homogéneo sin impuestos. */
   subtotal: number | null;
@@ -80,6 +82,8 @@ export function mapFacturaRows(data: unknown): FacturaRow[] {
 
 export function mapNotaCreditoRows(data: unknown): NotaCreditoRow[] {
   return ((data ?? []) as RawRow[]).map((r) => ({
+    id: str(r.id),
+    folio: nullableStr(r.folio),
     monto: num(r.monto),
     subtotal: baseNotaCreditoSinImpuestos(r.conceptos),
     moneda: str(r.moneda),

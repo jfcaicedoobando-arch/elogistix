@@ -19,9 +19,18 @@ export function baseNotaCreditoSinImpuestos(conceptos: unknown): number | null {
   return Number.isFinite(subtotal) ? subtotal : null;
 }
 
+export interface NotaCreditoSinDesglose {
+  id: string;
+  folio: string | null;
+}
+
 export class NotaCreditoSinDesgloseError extends Error {
-  constructor() {
-    super("No se puede calcular este mes sin IVA: hay notas de crédito sin un desglose válido de conceptos. Revisa su desglose antes de generar el reporte.");
+  readonly notas: readonly NotaCreditoSinDesglose[];
+
+  constructor(notas: readonly NotaCreditoSinDesglose[] = []) {
+    const detalle = notas.map(({ id, folio }) => `${folio || "Sin folio"} (ID: ${id || "no disponible"})`).join("; ");
+    super(`No se puede calcular este mes sin IVA: hay notas de crédito sin un desglose válido de conceptos. Revisa su desglose antes de generar el reporte.${detalle ? ` Notas afectadas: ${detalle}.` : ""}`);
     this.name = "NotaCreditoSinDesgloseError";
+    this.notas = notas.map(({ id, folio }) => ({ id, folio }));
   }
 }

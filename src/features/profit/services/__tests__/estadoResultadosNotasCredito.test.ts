@@ -45,6 +45,35 @@ describe("AUD33: notas de crédito en EERR sin impuestos", () => {
     expect(buildEstadoResultados(out.embarques, out.ventas, []).totalIngresos.total).toBe(-2050);
   });
 
+  it("NC1 con su JSON persistido conserva base 50 e identificación, sin bloquear por IVA 8", () => {
+    const [nc] = mapNotaCreditoRows([{
+      id: "42b98b51-9e87-4cdb-8b07-91a259b774ff", folio: "NC1", factura_id: "a3",
+      monto: 58, moneda: "MXN", fecha_emision: "2026-10-03", estado: "Timbrada",
+      conceptos: [{ cantidad: 1, precio_unitario: 50, tasa_iva: 0.16, tipo_iva: "gravado_16", tasa_retencion: 0 }],
+    }]);
+    expect(nc).toMatchObject({ id: "42b98b51-9e87-4cdb-8b07-91a259b774ff", folio: "NC1", subtotal: 50, monto: 58 });
+    const out = bucket();
+    expect(() => ingresosDeNotas([nc], out, tc)).not.toThrow();
+    expect(buildEstadoResultados(out.embarques, out.ventas, []).totalIngresos.total).toBe(-50);
+  });
+
+  it("identifica todas las NC inválidas sin agregar previamente una NC válida", () => {
+    const out = bucket();
+    const ncs = mapNotaCreditoRows([
+      { id: "valida", folio: "NC1", factura_id: "a3", monto: 58, moneda: "MXN", conceptos: [{ cantidad: 1, precio_unitario: 50 }] },
+      { id: "sin-conceptos", folio: "NC2", factura_id: "a3", monto: 58, moneda: "MXN", conceptos: [] },
+      { id: "precio-ausente", folio: null, factura_id: "a3", monto: 116, moneda: "MXN", conceptos: [{ cantidad: 1 }] },
+    ]);
+    let error: unknown;
+    try { ingresosDeNotas(ncs, out, tc); } catch (e) { error = e; }
+    expect(error).toBeInstanceOf(NotaCreditoSinDesgloseError);
+    expect(error).toMatchObject({ notas: [{ id: "sin-conceptos", folio: "NC2" }, { id: "precio-ausente", folio: null }] });
+    expect(String(error)).toContain("NC2 (ID: sin-conceptos)");
+    expect(String(error)).toContain("Sin folio (ID: precio-ausente)");
+    expect(String(error)).not.toContain("NC1");
+    expect(out).toEqual(bucket());
+  });
+
   it.each([null, [], [{ cantidad: 1 }], [{ cantidad: 0, precio_unitario: 50 }], [{ cantidad: 1, precio_unitario: "" }], [{ cantidad: 1, precio_unitario: -50 }], [{ cantidad: 1e308, precio_unitario: 1e308 }], [{ cantidad: 1, precio_unitario: 1e306 }, { cantidad: 1, precio_unitario: 1e306 }]].map(conceptos => ({ conceptos })))("bloquea un reporte sin desglose válido ($conceptos)", ({ conceptos }) => {
     expect(baseNotaCreditoSinImpuestos(conceptos)).toBeNull();
     expect(() => ingresosDeNotas(mapNotaCreditoRows([{ factura_id: "legacy", monto: 58, moneda: "MXN", conceptos }]), bucket(), tc)).toThrow(NotaCreditoSinDesgloseError);

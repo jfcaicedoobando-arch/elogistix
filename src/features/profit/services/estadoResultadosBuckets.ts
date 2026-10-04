@@ -80,8 +80,11 @@ export function ingresosDeNotas(
    */
   modoPorFactura: ReadonlyMap<string, string> = new Map(),
 ): void {
+  const invalidas = ncs
+    .filter((nc) => nc.subtotal === null || !Number.isFinite(nc.subtotal))
+    .map(({ id, folio }) => ({ id, folio }));
+  if (invalidas.length) throw new NotaCreditoSinDesgloseError(invalidas);
   for (const [indice, nc] of ncs.entries()) {
-    if (nc.subtotal === null || !Number.isFinite(nc.subtotal)) throw new NotaCreditoSinDesgloseError();
     const id = `nc-${nc.factura_id}-${indice}`;
     // Ola 9 · M6: usar el TC de la nota de crédito cuando exista; sólo caer al
     // TC del mes si la NC no lo tiene capturado.
@@ -94,7 +97,7 @@ export function ingresosDeNotas(
     out.ventas.push({
       embarque_id: id,
       descripcion: "Notas de crédito",
-      total: -Math.abs(nc.subtotal),
+      total: -Math.abs(Number(nc.subtotal)),
       moneda: String(nc.moneda),
     });
   }
