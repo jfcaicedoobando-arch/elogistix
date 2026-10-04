@@ -161,6 +161,7 @@ supabase/tests/cxp_historial_fecha_pago.sql
 supabase/tests/cotizacion_aerea_peso_fisico.sql
 supabase/tests/r4_embarque_proforma_regresiones.sql
 # Auditoría de tests 2026-10-03: radar promovido, fixtures transaccionales.
+supabase/tests/cobro_atomico_comportamiento.sql
 supabase/tests/cotizacion_totales_moneda_no_soportada.sql
 supabase/tests/cxp_cancelar_rol_financiero.sql
 supabase/tests/eliminar_pago_proveedor_revierte_anticipo.sql

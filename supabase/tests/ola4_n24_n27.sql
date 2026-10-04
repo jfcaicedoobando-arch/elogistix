@@ -44,6 +44,9 @@ BEGIN
 
   -- El reporte usa venta FACTURADA, no venta cotizada. Mantener el mismo
   -- 100 + 200 esperado con documentos/conceptos reales del modelo vigente.
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, eur_mxn)
+  VALUES (CURRENT_DATE - 1, 18, 20)
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 18, eur_mxn = 20;
   INSERT INTO public.facturas (id, organization_id, numero, cliente_id, cliente_nombre,
     embarque_id, subtotal, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado)
   VALUES

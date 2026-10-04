@@ -55,6 +55,7 @@ BEGIN
     v_org, v_prov, v_emb, 'A-CC-USD01', v_cat, 500, 500,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
+  UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1 WHERE id = v_pf;
 
   -- Caso 1: pago de 500 MXN con TC 19 => 26.32 USD, no cubre los 500 USD.
   INSERT INTO public.pagos_proveedor
