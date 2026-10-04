@@ -19,7 +19,10 @@ export async function inspectPdf(name: string, document: Parameters<typeof rende
   const info = execFileSync(process.env.PDFINFO_BINARY ?? "pdfinfo", [path], { encoding: "utf8" });
   const pages = Number(info.match(/^Pages:\s+(\d+)/m)?.[1]);
   expect(pages).toBeGreaterThan(0);
-  const text = execFileSync(process.env.PDFTOTEXT_BINARY ?? "pdftotext", ["-layout", path, "-"], { encoding: "utf8" });
+  // Assert semantic labels in content-stream order. Physical table layout
+  // interleaves neighbouring columns into wrapped labels ("No" / "objeto").
+  // Layout itself is checked on rendered pages, not reconstructed plain text.
+  const text = execFileSync(process.env.PDFTOTEXT_BINARY ?? "pdftotext", ["-raw", path, "-"], { encoding: "utf8" });
   return { pages, text: normalizeText(text) };
 }
 

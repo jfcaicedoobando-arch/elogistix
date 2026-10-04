@@ -30,5 +30,7 @@ test("empty, error and loading remain distinct", async ({ page }) => {
   await expect(page.getByRole("button", { name: /reintentar/i })).toBeVisible();
   await expect(page.getByText("Sin cotizaciones", { exact: true })).toHaveCount(0);
   await page.goto("/e2e/visual/index.html?state=loading");
+  await expect(page.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  await expect(page.getByRole("status")).toContainText("Cargando…");
   await expect(page.getByText("Sin cotizaciones", { exact: true })).toHaveCount(0);
 });

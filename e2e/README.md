@@ -218,7 +218,7 @@ Resultados HTML quedan en `playwright-report/` (ábrelos con `bun run e2e:report
 | 09 | `09-cierre-embarque.spec.ts` | Checklist bloquea el cierre + tooltip; bypass admin_org opcional. **Muta**: reabre el embarque en cleanup. |
 | 10 | `10-auditoria-bulk.spec.ts` | Selección múltiple de hallazgos + marcar revisados; snooze rechaza >30 días. **Muta**: deja revisiones marcadas `E2E_TEST`. |
 | 11 | `11-cotizacion-a-embarque.spec.ts` | Cotización aceptada → `crear_embarque_borrador_desde_cotizacion` → expediente real. **Muta**: borra el embarque borrador en cleanup. |
-| 12 | `12-cxp-factura-pago.spec.ts` | Captura factura proveedor (asigna folio `FP-XXXXXX`) + registra pago. **Muta**: borra pago y factura en cleanup. |
+| 12 | `12-cxp-factura-pago.spec.ts` | Captura/autoriza factura del proveedor, costo y embarque explícitos + paga su saldo exacto. **Muta**: conserva factura/pago mock como evidencia. |
 | 21 | `21-embarque-detalle-tabs.spec.ts` | Detalle de embarque: tabs Resumen/Tracking/Documentos montan; sin "ETA vencida" tras arribo (regresión 13.300.16). |
 | 22 | `22-modal-enviar-documento.spec.ts` | Modal Enviar cotización: chips en Para/CC + chip bloqueado del usuario (rediseño 13.300.17). |
 | 23 | `23-por-cobrar-aging.spec.ts` | Bandeja Por cobrar: la columna "Vence en" no está clampada a "hoy" (regresión 13.300.18). |
