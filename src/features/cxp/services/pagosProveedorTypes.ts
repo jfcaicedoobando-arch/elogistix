@@ -16,6 +16,7 @@ export type PagoProveedorConMov = PagoProveedor & {
     concepto: string | null;
     referencia: string | null;
     cargo: number | string;
+    cuentas_bancarias?: { moneda: string } | null;
     abono: number | string;
     estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado";
   }> | null;

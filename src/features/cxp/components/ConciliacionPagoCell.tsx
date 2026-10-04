@@ -10,7 +10,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatCurrency, formatFechaDia } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia, formatNumber } from "@/lib/formatters";
 import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
 import { Hint } from "@/components/shared/Hint";
 import { PagoAnticipoBancoCell } from "./PagoAnticipoBancoCell";
@@ -22,6 +22,7 @@ interface MovimientoVinculado {
   concepto: string | null;
   referencia: string | null;
   cargo: number | string;
+  cuentas_bancarias?: { moneda: string } | null;
 }
 
 interface Props {
@@ -49,6 +50,10 @@ function ConciliacionPagoBancarioCell({
 
 
   if (movimiento) {
+    const monedaBancaria = movimiento.cuentas_bancarias?.moneda;
+    const cargo = monedaBancaria
+      ? formatCurrency(Number(movimiento.cargo), monedaBancaria)
+      : `${formatNumber(Number(movimiento.cargo), { decimals: 2 })} · Moneda bancaria no disponible`;
     return (
       <div className="flex items-center gap-2">
         <ToneBadge tone="success" size="md">
@@ -56,7 +61,7 @@ function ConciliacionPagoBancarioCell({
         </ToneBadge>
 
         <div className="flex flex-col text-label text-muted-foreground min-w-0">
-          <span className="tabular-nums">{formatFechaDia(movimiento.fecha)} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
+          <span className="tabular-nums">{formatFechaDia(movimiento.fecha)} · {cargo}</span>
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}
         </div>
         {!disabled && (
