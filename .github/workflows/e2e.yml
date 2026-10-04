@@ -8,7 +8,7 @@ name: E2E (Playwright)
 # Estrategia:
 #   - `internal-shard` (matrix 1..3): specs read-only del project `chromium-internal`
 #     en paralelo con `--shard`.
-#   - `mutators`: specs 09-12 en `chromium-mutators` con workers: 1 (single job).
+#   - `mutators`: 08-12, 25, 28 y 30; workers: 1 (single job).
 #   - `portal`: specs del project `chromium-portal`.
 #   - `merge-reports`: junta los blob reports y publica el HTML unificado.
 #
@@ -23,9 +23,14 @@ on:
         required: false
         type: string
       strict_fixtures:
-        description: "Si '1', los specs con fixtures ausentes fallan (no skip)."
+        description: "Si '1', exige también todas las fixtures opcionales. Los flujos solicitados siempre son obligatorios."
         required: false
-        default: ""
+        default: "0"
+        type: string
+      required_flows:
+        description: "Flujos mutadores que DEBEN completarse; IDs separados por coma."
+        required: true
+        default: "08,11,12,25"
         type: string
 
 permissions:
@@ -62,6 +67,12 @@ env:
   E2E_COTIZACION_ACEPTADA_ID: ${{ secrets.E2E_COTIZACION_ACEPTADA_ID }}
   E2E_PROVEEDOR_ID: ${{ secrets.E2E_PROVEEDOR_ID }}
   E2E_EMBARQUE_PARA_CXP_ID: ${{ secrets.E2E_EMBARQUE_PARA_CXP_ID }}
+  E2E_CONCEPTO_CXP_ID: ${{ secrets.E2E_CONCEPTO_CXP_ID }}
+  E2E_CATEGORIA_CXP_ID: ${{ secrets.E2E_CATEGORIA_CXP_ID }}
+  E2E_SUSTITUCION_FACTURA_UUID: ${{ secrets.E2E_SUSTITUCION_FACTURA_UUID }}
+  E2E_FACTURA_BORRADOR_ID: ${{ secrets.E2E_FACTURA_BORRADOR_ID }}
+  E2E_EMBARQUE_EDITAR_ID: ${{ secrets.E2E_EMBARQUE_EDITAR_ID }}
+  E2E_REQUIRED_FLOWS: ${{ inputs.required_flows || '08,11,12,25' }}
   # Multi-tenant (spec 26 — corre en el job `multi-tenant`).
   E2E_MT_A_EMAIL: ${{ secrets.E2E_MT_A_EMAIL }}
   E2E_MT_A_PASSWORD: ${{ secrets.E2E_MT_A_PASSWORD }}
@@ -69,8 +80,8 @@ env:
   E2E_MT_B_PASSWORD: ${{ secrets.E2E_MT_B_PASSWORD }}
   # Cuando E2E_STRICT_FIXTURES=1, `requireFixture()` de testBase promueve los
   # skips por fixture ausente a fallo (ver `e2e/fixtures/requireFixture.ts`).
-  # En CI lo dejamos apagado por default; se activa vía dispatch input.
-  E2E_STRICT_FIXTURES: ${{ github.event.inputs.strict_fixtures || '' }}
+  # Opt-in para fixtures opcionales; el gate por flujo solicitado siempre es obligatorio.
+  E2E_STRICT_FIXTURES: ${{ inputs.strict_fixtures || '0' }}
 
 jobs:
   guard-secrets:
@@ -187,7 +198,7 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run internal specs (shard ${{ matrix.shard }}/3)
-        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --grep-invert "@visual" --reporter=blob,json  # @visual fuera de CI hasta commitear baselines (ver spec 27)
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --reporter=blob,json
 
       - name: Gate anti-skip — internal-shard debe ejecutar tests reales
         # v13.x (GHA-audit A1) — mismo criterio que mutators: si los specs
@@ -230,7 +241,7 @@ jobs:
           retention-days: 14
 
   mutators:
-    name: Mutators (09-12, serial)
+    name: Mutators (flujos solicitados, serial)
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
@@ -239,7 +250,7 @@ jobs:
     environment: e2e-staging
     timeout-minutes: 20
     # NUNCA correr mutators en paralelo con otro run mutador contra el mismo
-    # tenant staging — el orden serial de 09→12 asume DB estable.
+    # tenant staging — los flujos solicitados requieren fixtures propias y estables.
     concurrency:
       group: e2e-mutators
       cancel-in-progress: false
@@ -267,6 +278,10 @@ jobs:
 
       - name: Run mutators
         run: PLAYWRIGHT_JSON_OUTPUT_NAME=mutators-report.json bunx playwright test --project=chromium-mutators --reporter=blob,json
+
+      - name: Flujos críticos completos (ningún paso omitido)
+        if: always()
+        run: bun scripts/e2e/assert-required-flows.ts mutators-report.json
 
       - name: Gate anti-skip — mutators debe ejecutar tests reales
         # Auditoría de tests 2026-07-24 (H2): los specs 09-12 y 25 hacen

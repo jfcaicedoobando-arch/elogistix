@@ -9,6 +9,7 @@
  */
 import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { draftValue } from "../fixtures/draft";
 
 test.describe("Flujo 29 — Wizard cotización: restaurar borrador", () => {
   test("restaura los datos capturados y el paso del wizard", async ({ page }) => {
@@ -30,7 +31,8 @@ test.describe("Flujo 29 — Wizard cotización: restaurar borrador", () => {
     expect(clienteTexto.length).toBeGreaterThan(0);
 
     // Esperar al autosave (debounce) antes de abandonar la ruta.
-    await page.waitForTimeout(2_500);
+    await expect.poll(() => draftValue(page, "clienteId")).toBeTruthy();
+    const clienteId = await draftValue(page, "clienteId");
 
     // Salir y volver.
     await page.goto("/cotizaciones");
@@ -42,6 +44,7 @@ test.describe("Flujo 29 — Wizard cotización: restaurar borrador", () => {
 
     // El banner desaparece y el cliente capturado sigue presente (no vuelve vacío).
     await expect(banner).toBeHidden({ timeout: 10_000 });
+    await expect.poll(() => draftValue(page, "clienteId")).toBe(clienteId);
     await expect(page.getByText(clienteTexto, { exact: false }).first()).toBeVisible({
       timeout: 10_000,
     });

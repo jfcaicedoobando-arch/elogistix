@@ -160,3 +160,18 @@ supabase/tests/cxp_impuestos_globales_y_base_iva.sql
 supabase/tests/cxp_historial_fecha_pago.sql
 supabase/tests/cotizacion_aerea_peso_fisico.sql
 supabase/tests/r4_embarque_proforma_regresiones.sql
+# Auditoría de tests 2026-10-03: radar promovido, fixtures transaccionales.
+supabase/tests/cobro_atomico_comportamiento.sql
+supabase/tests/cotizacion_totales_moneda_no_soportada.sql
+supabase/tests/cxp_cancelar_rol_financiero.sql
+supabase/tests/eliminar_pago_proveedor_revierte_anticipo.sql
+supabase/tests/embarques_listado_sin_select_estrella.sql
+supabase/tests/nc_cliente_transicion_uuid_fiscal.sql
+supabase/tests/normalizar_razon_social_unicode.sql
+supabase/tests/ola4_n24_n27.sql
+supabase/tests/ola4_n31_n36_n37.sql
+supabase/tests/ola4_n41_n44_n45.sql
+supabase/tests/ola4_n48_n52_n53.sql
+supabase/tests/test_puede_escribir_cotizaciones_vendedor.sql
+supabase/tests/validar_cierre_cxp_conversion_moneda.sql
+supabase/tests/validar_cierre_umbral_por_moneda.sql

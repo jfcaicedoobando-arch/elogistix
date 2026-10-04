@@ -3,7 +3,7 @@
  *
  * La auditoría de v13.743.0 encontró 12 archivos `.sql` que existían en el repo
  * pero no los ejecutaba ningún workflow: cobertura ficticia. Este test exige que
- * cada suite esté en el manifiesto bloqueante, en el manifiesto RADAR, o
+ * cada suite esté en el manifiesto bloqueante, o
  * referenciada explícitamente en algún workflow de `.github/workflows/`.
  */
 import { readFileSync, readdirSync } from "node:fs";
@@ -30,7 +30,6 @@ describe("suites SQL referenciadas en CI", () => {
 
     const referencias = [
       ...leerManifiesto(`${DIR_TESTS}/_guards_manifest.txt`),
-      ...leerManifiesto(`${DIR_TESTS}/_guards_manifest_radar.txt`),
     ];
 
     const yaml = readdirSync(DIR_WORKFLOWS)
@@ -44,14 +43,13 @@ describe("suites SQL referenciadas en CI", () => {
 
     expect(
       huerfanas,
-      `Suites SQL que ningún workflow ejecuta (agrégalas a supabase/tests/_guards_manifest.txt o al manifiesto RADAR): ${huerfanas.join(", ")}`,
+      `Suites SQL que ningún workflow ejecuta (agrégalas a supabase/tests/_guards_manifest.txt): ${huerfanas.join(", ")}`,
     ).toEqual([]);
   });
 
   it("los manifiestos sólo listan rutas existentes y sin duplicados", () => {
     const rutas = [
       ...leerManifiesto(`${DIR_TESTS}/_guards_manifest.txt`),
-      ...leerManifiesto(`${DIR_TESTS}/_guards_manifest_radar.txt`),
     ];
     const duplicadas = rutas.filter((r, i) => rutas.indexOf(r) !== i);
     expect(duplicadas, `Rutas duplicadas: ${duplicadas.join(", ")}`).toEqual([]);
@@ -66,5 +64,18 @@ describe("suites SQL referenciadas en CI", () => {
       inexistentes,
       `Rutas listadas que no existen: ${inexistentes.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("las trece suites recuperadas y nuevos cobros usan fixtures transaccionales", () => {
+    const source = readFileSync(`${DIR_TESTS}/_guards_manifest.txt`, "utf8");
+    const section = source.split("# Auditoría de tests 2026-10-03:")[1];
+    expect(section, "sección de suites recuperadas presente").toBeDefined();
+    const promoted = section.split(/\r?\n/).slice(1).map(line => line.trim()).filter(line => line && !line.startsWith("#"));
+    expect(promoted.length).toBeGreaterThanOrEqual(13);
+    for (const file of promoted) {
+      const sql = readFileSync(file, "utf8");
+      expect(sql, `${file}: fixture transaccional`).toMatch(/^BEGIN;/m);
+      expect(sql, `${file}: rollback obligatorio`).toMatch(/^ROLLBACK;/m);
+    }
   });
 });

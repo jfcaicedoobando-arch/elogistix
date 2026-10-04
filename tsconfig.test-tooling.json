@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "incremental": false,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["e2e", "tests/pdf", "scripts/e2e/requiredFlows.ts", "scripts/e2e/assert-required-flows.ts", "playwright.config.ts", "playwright.visual.config.ts", "vite.visual.config.ts", "vitest.pdf.config.ts", "src/vite-env.d.ts"],
+  "exclude": ["e2e/.auth", "e2e/.tmp"]
+}

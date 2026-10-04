@@ -13,7 +13,7 @@
 interface UpdateQuery {
   eq: (col: string, val: string) => UpdateQuery;
   is: (col: string, val: null) => UpdateQuery;
-  select: (cols: string) => { maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }> };
+  select: (cols: string) => { maybeSingle: () => PromiseLike<{ data: unknown; error: { message: string } | null }> };
 }
 type Db = {
   from: (t: string) => { update: (patch: Record<string, unknown>) => UpdateQuery };

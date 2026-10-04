@@ -3,7 +3,7 @@
  *
  * v13.300.23 — Auditoría:
  *   - Paralelismo activado (`fullyParallel: true`, workers configurables).
- *   - Specs mutadores (09–12) agrupados en `chromium-mutators` con
+ *   - Specs mutadores clasificados en fixtures/specGroups agrupados en `chromium-mutators` con
  *     `fullyParallel: false` para preservar el orden y evitar contención
  *     sobre datos compartidos.
  *   - Reporters `junit` + `blob` habilitados en CI para shards.
@@ -21,17 +21,13 @@ import { defineConfig, devices } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { config as loadDotenv } from "dotenv";
+import { MUTATOR_SPECS, PORTAL_SPEC, MULTI_TENANT_SPEC, mutatorPattern } from "./e2e/fixtures/specGroups";
 
 const envFile = resolve(process.cwd(), ".env.e2e");
 if (existsSync(envFile)) loadDotenv({ path: envFile });
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8080";
 const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(BASE_URL);
-
-// Regex de specs mutadores: mantener aquí y en globalSetup.
-const MUTATOR_SPECS = /0[9]-|1[0-2]-|25-/;
-const PORTAL_SPEC = /05-portal\.spec\.ts/;
-const MULTI_TENANT_SPEC = /26-multi-tenant-isolation\.spec\.ts/;
 
 // Workers: CI conservador (2), local agresivo (4). Override con E2E_WORKERS.
 const WORKERS = Number(
@@ -87,10 +83,10 @@ export default defineConfig({
         storageState: "e2e/.auth/internal.json",
       },
     },
-    // Specs mutadores (09–12) → serie estricta contra la DB compartida.
+    // Todos los specs que escriben → serie estricta contra la DB compartida.
     {
       name: "chromium-mutators",
-      testMatch: MUTATOR_SPECS,
+      testMatch: mutatorPattern(process.env.E2E_REQUIRED_FLOWS),
       fullyParallel: false,
       workers: 1,
       use: {

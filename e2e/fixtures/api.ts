@@ -18,16 +18,19 @@ interface SupabaseHandle {
   accessToken: string;
 }
 
-async function readHandle(page: Page): Promise<SupabaseHandle> {
-  const handle = await page.evaluate(() => {
-    // Tomamos url + anon key del cliente generado (window.__SUPA_E2E__ no
-    // existe en prod; usamos los valores expuestos por Vite import.meta).
-    // La forma robusta: buscar la sb-*-auth-token en localStorage.
-    const keys = Object.keys(window.localStorage).filter((k) =>
-      /^sb-[^-]+-auth-token$/.test(k),
-    );
-    if (keys.length === 0) return null;
-    const raw = window.localStorage.getItem(keys[0]);
+export async function readHandle(page: Page): Promise<SupabaseHandle> {
+  // La función serializada por Playwright NO pasa por Vite. Resolver la
+  // configuración en Node y leer exclusivamente la sesión de ese proyecto.
+  const url = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !anonKey) throw new Error("supabaseRest: faltan VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY en el runner.");
+  const destination = new URL(url);
+  if (!/^https?:$/.test(destination.protocol) || destination.username || destination.password) {
+    throw new Error("supabaseRest: URL de Supabase inválida.");
+  }
+  const storageKey = `sb-${destination.hostname.split(".")[0]}-auth-token`;
+  const accessToken = await page.evaluate((key) => {
+    const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     let parsed: { access_token?: string } | null = null;
     try {
@@ -36,21 +39,15 @@ async function readHandle(page: Page): Promise<SupabaseHandle> {
       return null;
     }
     if (!parsed?.access_token) return null;
-    // VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY están inyectados en bundle.
-    const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
-    return {
-      url: env.VITE_SUPABASE_URL ?? "",
-      anonKey: env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "",
-      accessToken: parsed.access_token,
-    };
-  });
-  if (!handle || !handle.url || !handle.anonKey || !handle.accessToken) {
+    return parsed.access_token;
+  }, storageKey);
+  if (!accessToken) {
     throw new Error(
       "supabaseRest: no hay sesión en el page (sb-*-auth-token ausente o sin access_token). " +
         "¿Olvidaste llamar a loginAs(page) antes del cleanup?",
     );
   }
-  return handle;
+  return { url: destination.origin, anonKey, accessToken };
 }
 
 // Operadores PostgREST conocidos — si el valor empieza con uno de estos
@@ -124,6 +121,7 @@ export function supabaseRest(page: Page) {
         body: JSON.stringify(args),
       });
       if (!res.ok) throw new Error(`RPC ${fn} ${res.status}: ${await res.text()}`);
+      return res.status === 204 ? null : await res.json() as unknown;
     },
   };
 }
