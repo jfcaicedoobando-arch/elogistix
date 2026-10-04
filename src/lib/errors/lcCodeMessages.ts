@@ -38,4 +38,6 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El tipo de cambio debe ser un número válido mayor a cero. Captura una paridad válida o deja el campo vacío para consultar DOF.",
   LC_PAGO_ANTICIPO_NO_EDITABLE:
     "Este pago aplica un anticipo y no se puede editar directamente. Usa «Revertir aplicación de anticipo» y vuelve a aplicarlo; el cargo original se conserva.",
+  LC_BITACORA_ACCION_RESERVADA:
+    "Las aprobaciones y rechazos se registran automáticamente al realizar esa acción en la factura.",
 };

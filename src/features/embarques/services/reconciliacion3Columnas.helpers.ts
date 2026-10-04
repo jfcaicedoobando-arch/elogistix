@@ -165,7 +165,6 @@ export function buildFilas3C(
   return filas;
 }
 
-
 /**
  * Agrupa las filas de conciliación (una por concepto de costo) en el eje
  * (concepto, moneda) que usa la tabla de 3 columnas, sumando SÓLO el monto
