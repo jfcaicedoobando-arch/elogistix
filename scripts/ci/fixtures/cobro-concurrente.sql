@@ -5,8 +5,8 @@ INSERT INTO auth.users (id, email, raw_user_meta_data)
 VALUES ('a0100000-0000-4000-8000-000000000002', 'cobros-concurrencia@example.test', '{"skip_auto_org":true}');
 INSERT INTO public.organization_members (organization_id, user_id, role)
 VALUES ('a0100000-0000-4000-8000-000000000001', 'a0100000-0000-4000-8000-000000000002', 'contador');
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('a0100000-0000-4000-8000-000000000003', 'a0100000-0000-4000-8000-000000000001', 'Refacciones Regiomontanas QA');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('a0100000-0000-4000-8000-000000000003', 'a0100000-0000-4000-8000-000000000001', 'Refacciones Regiomontanas QA', 'compras-concurrencia@example.test');
 INSERT INTO public.facturas (id, organization_id, cliente_id, cliente_nombre, numero,
   subtotal, iva, total, moneda, metodo_pago, fecha_emision, fecha_vencimiento, estado)
 VALUES ('a0100000-0000-4000-8000-000000000004', 'a0100000-0000-4000-8000-000000000001',
