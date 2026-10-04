@@ -4,7 +4,9 @@
 --   2) Fail-closed: pago 9500 MXN SIN tipo de cambio -> se excluye del pagado,
 --      pagos_sin_tipo_cambio=1 y el cierre sigue bloqueado.
 --   3) Control positivo: pago 9500 MXN @19 (= 500 USD) -> cxp_pagada.ok=true.
-DO $$
+BEGIN;
+
+DO $
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();
@@ -111,17 +113,9 @@ BEGIN
   END IF;
   RAISE NOTICE '✓ caso 3: pago 9500 MXN @19 salda la factura de 500 USD';
 
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN NULL; END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'validar_cierre_cxp_conversion_moneda: PASS';
 END $$;
+
+ROLLBACK;

@@ -49,6 +49,10 @@ BEGIN
   v_pos_update  := position('UPDATE cotizaciones' in d);
   v_pos_autor   := position('LC_NO_AUTORIZADO' in d);
 
+  IF v_pos_autor = 0 OR v_pos_update = 0 THEN
+    RAISE EXCEPTION 'REGRESION: faltan los marcadores de autorización o persistencia';
+  END IF;
+
   IF v_pos_idem = 0 THEN
     RAISE EXCEPTION 'REGRESION: no se localizó el camino idempotente (Aceptada/En operación)';
   END IF;

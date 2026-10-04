@@ -2,7 +2,9 @@
 -- moneda. Con una factura de proveedor USD con saldo pendiente y una
 -- situación MXN saldada, el check debe venir ok=false y detalle.por_moneda
 -- debe incluir la moneda con saldo (USD).
-DO $$
+BEGIN;
+
+DO $
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();
@@ -96,17 +98,9 @@ BEGIN
 
   RAISE NOTICE '✓ cxp_pagada.ok=false y por_moneda incluye USD con saldo: %', v_por_moneda;
 
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN NULL; END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'validar_cierre_umbral_por_moneda: PASS';
 END $$;
+
+ROLLBACK;

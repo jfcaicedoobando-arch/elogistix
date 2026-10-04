@@ -28,6 +28,9 @@ describe("aceptar_cotizacion_version (SQL canónico)", () => {
     const idempotente = cuerpo.indexOf("IF v_estado_actual IN ('Aceptada','En operación') THEN");
     const sello = cuerpo.indexOf("UPDATE cotizaciones");
     const autoridad = cuerpo.indexOf("LC_NO_AUTORIZADO");
+    for (const posicion of [cliente, oportunidad, idempotente, sello, autoridad]) {
+      expect(posicion, "el marcador debe existir antes de comparar posiciones").toBeGreaterThanOrEqual(0);
+    }
     expect(idempotente).toBeGreaterThan(0);
     expect(cliente).toBeLessThan(idempotente);
     expect(oportunidad).toBeLessThan(idempotente);

@@ -2,7 +2,9 @@
 -- Verifica que sólo un rol financiero (rol_efectivo vía organization_members)
 -- pueda cancelar una factura de proveedor; un rol no financiero de la MISMA
 -- organización debe recibir LC_CXP_CANCELAR_FORBIDDEN (42501).
-DO $$
+BEGIN;
+
+DO $
 DECLARE
   v_org uuid;
   v_uid_venta uuid := gen_random_uuid();
@@ -91,18 +93,9 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  BEGIN
-    DELETE FROM auth.users WHERE id IN (v_uid_venta, v_uid_fin);
-  EXCEPTION WHEN OTHERS THEN
-    NULL;
-  END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'OK: sólo un rol financiero puede cancelar una factura de proveedor (BUG-06).';
 END $$;
+
+ROLLBACK;

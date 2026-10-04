@@ -2,7 +2,9 @@
 -- Verifica que al eliminar un pago que aplicó un anticipo, en la MISMA
 -- transacción se revierta la aplicación (anticipos_aplicaciones.deleted_at),
 -- el saldo/estado del anticipo se recalculen y la factura vuelva a 'Vigente'.
-DO $$
+BEGIN;
+
+DO $
 DECLARE
   v_org uuid;
   v_uid uuid := gen_random_uuid();
@@ -106,21 +108,9 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
-  DELETE FROM public.anticipos_aplicaciones WHERE organization_id = v_org;
-  DELETE FROM public.pagos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedor_facturas WHERE organization_id = v_org;
-  DELETE FROM public.anticipos_proveedor WHERE organization_id = v_org;
-  DELETE FROM public.proveedores WHERE organization_id = v_org;
-  DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  DELETE FROM public.user_roles WHERE user_id = v_uid;
-  BEGIN
-    DELETE FROM auth.users WHERE id = v_uid;
-  EXCEPTION WHEN OTHERS THEN
-    NULL;
-  END;
+  -- ROLLBACK exterior revierte todo el fixture, sin DELETE físico.
 
   RAISE NOTICE 'OK: eliminar_pago_proveedor revierte el anticipo y el estado de la factura (BUG-07).';
 END $$;
+
+ROLLBACK;
