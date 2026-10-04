@@ -80,7 +80,7 @@ env:
   E2E_MT_B_PASSWORD: ${{ secrets.E2E_MT_B_PASSWORD }}
   # Cuando E2E_STRICT_FIXTURES=1, `requireFixture()` de testBase promueve los
   # skips por fixture ausente a fallo (ver `e2e/fixtures/requireFixture.ts`).
-  # Estricto por defecto. Un verde global no prueba que un flujo omitido pase.
+  # Opt-in para fixtures opcionales; el gate por flujo solicitado siempre es obligatorio.
   E2E_STRICT_FIXTURES: ${{ inputs.strict_fixtures || '0' }}
 
 jobs:
@@ -198,7 +198,7 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run internal specs (shard ${{ matrix.shard }}/3)
-        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --grep-invert "@visual" --reporter=blob,json  # @visual fuera de CI hasta commitear baselines (ver spec 27)
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --reporter=blob,json
 
       - name: Gate anti-skip — internal-shard debe ejecutar tests reales
         # v13.x (GHA-audit A1) — mismo criterio que mutators: si los specs
@@ -241,7 +241,7 @@ jobs:
           retention-days: 14
 
   mutators:
-    name: Mutators (09-12, serial)
+    name: Mutators (flujos solicitados, serial)
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
@@ -250,7 +250,7 @@ jobs:
     environment: e2e-staging
     timeout-minutes: 20
     # NUNCA correr mutators en paralelo con otro run mutador contra el mismo
-    # tenant staging — el orden serial de 09→12 asume DB estable.
+    # tenant staging — los flujos solicitados requieren fixtures propias y estables.
     concurrency:
       group: e2e-mutators
       cancel-in-progress: false
