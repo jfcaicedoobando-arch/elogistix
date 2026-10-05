@@ -46,10 +46,7 @@ export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown
 }
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {
-  const token = await getAuthToken();
-  const res = await invokeUserManagement({ action: "delete", user_id: userId },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const res = await invokeUserManagement({ action: "delete", user_id: userId });
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   const body = res.data as { error?: string };
   if (body?.error) throw new Error(body.error);
@@ -71,19 +68,16 @@ export async function quitarDeOrganizacion(
     modulo: "usuarios",
     accion: "Quitó usuario de organización",
     entidadId: userId,
-    detalles: { organizationId });
+    detalles: { organizationId },
+  });
 }
 
 /** U-03: dispara el correo de restablecimiento de contraseña para el usuario. */
 export async function enviarResetPassword(userId: string): Promise<void> {
-  const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: {
-      action: "reset-password",
-      user_id: userId,
-      redirect_to: resetRedirectUrl(),
-    },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const res = await invokeUserManagement({
+    action: "reset-password",
+    user_id: userId,
+    redirect_to: resetRedirectUrl(),
   });
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo enviar el correo. Reintenta en unos minutos.");
   const body = res.data as { error?: string };
