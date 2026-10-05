@@ -139,6 +139,7 @@ export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP, hoyIso
   const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento, hoyIso);
   return {
     id: f.id,
+    updated_at: f.updated_at,
     proveedor_id: f.proveedor_id,
     proveedor_nombre: f.proveedor_nombre,
     proveedor_origen: f.proveedores?.origen_proveedor ?? null,

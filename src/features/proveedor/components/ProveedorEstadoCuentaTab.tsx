@@ -14,6 +14,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { useProveedorMovimientos } from "@/features/proveedor/hooks/useProveedorMovimientos";
 import {
   agingPorMoneda, conSaldoCorrido, filtrarPorRango,
+  type EstadoCuentaMovimientos,
 } from "@/features/proveedor/domain/movimientosProveedor";
 import {
   descargarEstadoCuentaCsv, descargarEstadoCuentaPdf,
@@ -38,6 +39,10 @@ function isoHaceUnAnio(): string {
   return todayLocalISO(d);
 }
 
+function alcanceExport(data: EstadoCuentaMovimientos | undefined) {
+  return { hayMas: data?.hay_mas, totalMovimientos: data?.total_movimientos };
+}
+
 export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: Props) {
   const [desde, setDesde] = useState(isoHaceUnAnio);
   const [hasta, setHasta] = useState(isoHoy);
@@ -56,7 +61,10 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
   const saldos = data?.saldos ?? [];
   const apertura = data?.saldo_apertura ?? [];
 
-  const datosExport = { proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos };
+  const datosExport = {
+    proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos,
+    saldoApertura: apertura, ...alcanceExport(data),
+  };
 
   const handlePdf = async () => {
     setDescargando(true);

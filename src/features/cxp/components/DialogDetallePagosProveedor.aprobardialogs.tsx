@@ -3,6 +3,7 @@
  * para mantener el archivo bajo 200 líneas (Power of 10).
  */
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { ReasonDialog } from "@/components/shared/ReasonDialog";
 import {
@@ -14,7 +15,7 @@ import type { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 export function AprobarRechazarDialogs({
-  f, openAprobar, openRechazar, setOpenAprobar, setOpenRechazar, aprobar, ctxLabel,
+  f: actual, openAprobar, openRechazar, setOpenAprobar, setOpenRechazar, aprobar, ctxLabel,
 }: {
   f: FacturaCxP;
   openAprobar: boolean;
@@ -24,6 +25,13 @@ export function AprobarRechazarDialogs({
   aprobar: ReturnType<typeof useAprobarFactura>;
   ctxLabel: string;
 }) {
+  const [revisada, setRevisada] = useState<FacturaCxP | null>(null);
+  useEffect(() => {
+    if (!openAprobar && !openRechazar) setRevisada(null);
+    else if (!revisada) setRevisada(actual);
+  }, [actual, openAprobar, openRechazar, revisada]);
+  const f = revisada ?? actual;
+  if ((openAprobar || openRechazar) && !revisada) return null;
   // Ola 4 (H2): sin embarque vinculado no hay contra qué contrastar el gasto;
   // la base de datos exige una justificación escrita para aprobar.
   const requiereJustificacion = !f.embarque_id;
@@ -32,6 +40,7 @@ export function AprobarRechazarDialogs({
     try {
       await aprobar.mutateAsync({
         id: f.id, aprobar: true, motivo,
+        expectedUpdatedAt: revisada?.updated_at,
         folio: f.folio_interno, proveedor: f.proveedor_nombre,
       });
       setOpenAprobar(false);
@@ -90,7 +99,7 @@ export function AprobarRechazarDialogs({
         pending={aprobar.isPending}
         onConfirm={async (motivo) => {
           try {
-            await aprobar.mutateAsync({ id: f.id, aprobar: false, motivo, folio: f.folio_interno, proveedor: f.proveedor_nombre });
+            await aprobar.mutateAsync({ id: f.id, aprobar: false, motivo, expectedUpdatedAt: revisada?.updated_at, folio: f.folio_interno, proveedor: f.proveedor_nombre });
             setOpenRechazar(false);
           } catch { /* toast del hook */ }
         }}

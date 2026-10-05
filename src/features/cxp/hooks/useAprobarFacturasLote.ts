@@ -27,6 +27,8 @@ export interface OpcionesLote {
   justificacion?: string;
   /** Ids que requieren la justificación (facturas sin embarque). */
   requierenJustificacion?: ReadonlySet<string>;
+  /** Versiones mostradas al abrir la confirmación, nunca las de un refetch. */
+  versionesRevisadas?: ReadonlyMap<string, string | undefined>;
 }
 
 /** Errores de validación de negocio ya explicados al usuario: no son bugs. */
@@ -111,7 +113,7 @@ export function useAprobarFacturasLote() {
         const id = ids[i];
         const motivo = requieren?.has(id) ? justificacion : undefined;
         try {
-          await aprobarFacturaProveedor(id, true, motivo);
+          await aprobarFacturaProveedor(id, true, motivo, opciones?.versionesRevisadas?.get(id));
           exitos.push(id);
         } catch (e) {
           if (!primerCodigo && e instanceof AprobacionFacturaError) primerCodigo = e.code;

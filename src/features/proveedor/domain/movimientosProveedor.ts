@@ -21,7 +21,8 @@ export type TipoMovimientoProveedor =
   | "Nota de crédito"
   | "Pago"
   | "Anticipo aplicado"
-  | "Anticipo";
+  | "Anticipo"
+  | "Devolución de anticipo";
 
 export interface MovimientoProveedor {
   fecha: string;

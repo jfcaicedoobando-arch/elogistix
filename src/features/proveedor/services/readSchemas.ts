@@ -75,7 +75,7 @@ export const estadoCuentaProveedorSchema = z
 
 const movimientoSchema = z.object({
   fecha: z.string(),
-  tipo: z.enum(["Factura", "Nota de crédito", "Pago", "Anticipo aplicado", "Anticipo"]),
+  tipo: z.enum(["Factura", "Nota de crédito", "Pago", "Anticipo aplicado", "Anticipo", "Devolución de anticipo"]),
   ref_id: z.string(),
   folio: z.string(),
   referencia: z.string().nullable(),

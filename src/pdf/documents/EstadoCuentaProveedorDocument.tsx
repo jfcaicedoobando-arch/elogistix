@@ -43,6 +43,9 @@ interface Props {
   movimientos: FilaMovimientoPdf[];
   aging: FilaAgingPdf[];
   saldos: FilaSaldoPdf[];
+  saldoApertura?: { moneda: string; saldo: string }[];
+  hayMas?: boolean;
+  totalMovimientos?: number;
   emisor?: { razonSocial?: string };
 }
 
@@ -71,11 +74,12 @@ const colsSaldos: PdfColumn<FilaSaldoPdf>[] = [
   { key: "moneda", title: "Moneda", cellStyle: COL_CORTA, render: (r) => r.moneda },
   { key: "cargos", title: "Cargos", cellStyle: styles.cellNumWide, render: (r) => money(r.cargos, r.moneda) },
   { key: "abonos", title: "Abonos", cellStyle: styles.cellNumWide, render: (r) => money(r.abonos, r.moneda) },
-  { key: "saldo", title: "Saldo final", cellStyle: styles.cellNumWide, render: (r) => money(r.saldo, r.moneda) },
+  { key: "saldo", title: "Saldo global", cellStyle: styles.cellNumWide, render: (r) => money(r.saldo, r.moneda) },
 ];
 
 export function EstadoCuentaProveedorDocument({
   proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos, emisor,
+  saldoApertura = [], hayMas = false, totalMovimientos,
 }: Props) {
   return (
     <Document
@@ -101,21 +105,40 @@ export function EstadoCuentaProveedorDocument({
           </View>
         </View>
 
-        <Text style={[styles.h3, { marginTop: 10 }]}>Resumen por moneda</Text>
+        <Text style={[styles.h3, { marginTop: 10 }]}>Resumen global por moneda</Text>
+        <Text style={styles.paragraph}>
+          Saldo global al día de hoy (sin filtro de periodo). No representa el cierre del periodo seleccionado.
+        </Text>
         {saldos.length === 0 ? (
-          <Text style={styles.paragraph}>Sin movimientos en el periodo.</Text>
+          <Text style={styles.paragraph}>Sin saldos globales registrados.</Text>
         ) : (
           <DataTable columns={colsSaldos} rows={saldos} />
         )}
 
-        <Text style={[styles.h3, { marginTop: 10 }]}>Antigüedad de saldos por pagar</Text>
+        <Text style={[styles.h3, { marginTop: 10 }]}>Antigüedad de saldos por pagar al día de hoy</Text>
         {aging.length === 0 ? (
           <Text style={styles.paragraph}>Sin saldos pendientes.</Text>
         ) : (
           <DataTable columns={colsAging} rows={aging} />
         )}
 
-        <Text style={[styles.h3, { marginTop: 10 }]}>Movimientos</Text>
+        <Text style={[styles.h3, { marginTop: 10 }]}>Saldo inicial del periodo</Text>
+        <Text style={styles.paragraph}>Antes del {formatDate(desde)}:</Text>
+        {saldoApertura.length === 0 ? (
+          <Text style={styles.paragraph}>Sin saldo previo al periodo (saldo inicial cero).</Text>
+        ) : saldoApertura.map((s) => (
+          <Text key={s.moneda} style={styles.paragraph}>
+            {s.moneda}: {money(s.saldo, s.moneda)}
+          </Text>
+        ))}
+
+        <Text style={[styles.h3, { marginTop: 10 }]}>Movimientos del periodo seleccionado</Text>
+        {hayMas && (
+          <Text style={styles.paragraph}>
+            Detalle parcial: {movimientos.length} de {totalMovimientos ?? "más"} movimientos.
+            Acota el periodo para consultar el detalle completo.
+          </Text>
+        )}
         {movimientos.length === 0 ? (
           <Text style={styles.paragraph}>Sin movimientos en el periodo.</Text>
         ) : (

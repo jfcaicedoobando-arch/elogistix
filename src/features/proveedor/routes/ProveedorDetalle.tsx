@@ -147,7 +147,7 @@ export default function ProveedorDetalle() {
       />
 
       {!isErrorEstadoCuenta && (
-        <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
+        <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorId={proveedor.id} proveedorNombre={nombreFmt} />
       )}
 
       <ProveedorDetalleTabs

@@ -4371,7 +4371,10 @@
       "20261004002600_audit26_factura_redondeo_linea.sql",
       "20261004004000_audit40_importacion_espejos_revisados.sql",
       "20261004004200_audit42_43_conciliacion_moneda_alcance.sql",
-      "20261004005400_audit54_pue_tolerancia_cierre.sql"
+      "20261004005400_audit54_pue_tolerancia_cierre.sql",
+      "20261005010100_audit65_68_version_precision_moneda_cxp.sql",
+      "20261005010200_audit70_71_proveedor_nc_devoluciones.sql",
+      "20261005010300_audit72_partidas_cantidad_neta.sql"
     ]
   }
 }

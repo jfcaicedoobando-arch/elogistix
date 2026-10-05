@@ -20,6 +20,7 @@ import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ComprasPorAprobarMobileRow } from "./ComprasPorAprobar.mobileCard";
 import { useSeleccionEfectiva } from "./ComprasPorAprobar.seleccion";
+import { useRevisionLote } from "./ComprasPorAprobar.useRevisionLote";
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
 type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
 
@@ -28,9 +29,6 @@ export default function ComprasPorAprobar() {
   const [aprobacion, setAprobacion] = useFiltroUrl<AprobacionFiltro>("estado", APROBACION_FILTROS, "pendiente");
   const [search, setSearch] = useTextoUrl("q");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  // FP-000221: justificación única para las seleccionadas sin embarque.
-  const [justificacionLote, setJustificacionLote] = useState("");
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
   const {
     verificar: verificarSat,
@@ -53,20 +51,8 @@ export default function ComprasPorAprobar() {
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
 
   const seleccion = useSeleccionEfectiva(rows, selected, bloqueadosSod);
-
-  const handleAprobarLote = async () => {
-    if (seleccion.ids.length === 0) {
-      setConfirmOpen(false);
-      return;
-    }
-    await aprobar(seleccion.ids, {
-      justificacion: justificacionLote,
-      requierenJustificacion: seleccion.idsSinEmbarque,
-    });
-    setSelected(new Set());
-    setJustificacionLote("");
-    setConfirmOpen(false);
-  };
+  const { confirmOpen, setConfirmOpen, justificacionLote, setJustificacionLote,
+    confirmacion, abrir, confirmar } = useRevisionLote(seleccion, aprobar, () => setSelected(new Set()));
 
   return (
     <PageContainer width="wide">
@@ -132,9 +118,7 @@ export default function ComprasPorAprobar() {
               totalSelUsd={seleccion.totalUsd}
               isRunning={isRunning}
               progreso={progreso}
-              onOpenConfirm={() => {
-                if (seleccion.filas.length > 0) setConfirmOpen(true);
-              }}
+              onOpenConfirm={abrir}
               validablesCount={seleccion.validablesSat.length}
               satRunning={satRunning}
               satProgreso={satProgreso}
@@ -179,14 +163,14 @@ export default function ComprasPorAprobar() {
       <ConfirmarAprobacionLoteDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        cantidad={seleccion.filas.length}
-        totalMxn={seleccion.totalMxn}
-        totalUsd={seleccion.totalUsd}
+        cantidad={confirmacion.filas.length}
+        totalMxn={confirmacion.totalMxn}
+        totalUsd={confirmacion.totalUsd}
         isRunning={isRunning}
-        requierenJustificacion={seleccion.idsSinEmbarque.size}
+        requierenJustificacion={confirmacion.idsSinEmbarque.size}
         justificacion={justificacionLote}
         onJustificacionChange={setJustificacionLote}
-        onConfirm={() => void handleAprobarLote()}
+        onConfirm={() => void confirmar()}
       />
       </CargaGuard>
     </PageContainer>

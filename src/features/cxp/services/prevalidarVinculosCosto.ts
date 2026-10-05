@@ -2,10 +2,11 @@
 import currency from "currency.js";
 import { supabase } from "@/integrations/supabase/client";
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
+import { totalLinea } from "../utils/cuadreConceptos";
 
 interface VinculoPropuesto { monto: number }
 interface Costo { id: string; concepto: string; monto: number; moneda: string }
-interface VinculoExistente { concepto_costo_id: string | null; monto: number }
+interface VinculoExistente { concepto_costo_id: string | null; monto: number; cantidad?: number | null }
 
 export function detectarSobreasignacionCosto(
   monedaFactura: string,
@@ -16,7 +17,7 @@ export function detectarSobreasignacionCosto(
   const asignado = new Map<string, number>();
   for (const fila of existentes) {
     if (!fila.concepto_costo_id) continue;
-    asignado.set(fila.concepto_costo_id, (asignado.get(fila.concepto_costo_id) ?? 0) + Number(fila.monto));
+    asignado.set(fila.concepto_costo_id, (asignado.get(fila.concepto_costo_id) ?? 0) + totalLinea(fila));
   }
   for (const costo of costos) {
     if (Number(costo.monto) <= 0 || costo.moneda.trim().toUpperCase() !== monedaFactura.trim().toUpperCase()) continue;
@@ -45,7 +46,7 @@ export async function prevalidarVinculosCosto(
       .select("id, concepto, monto, moneda")
       .eq("organization_id", organizationId).in("id", ids),
     supabase.from("proveedor_facturas_conceptos")
-      .select("concepto_costo_id, monto")
+      .select("concepto_costo_id, monto, cantidad")
       .eq("organization_id", organizationId).in("concepto_costo_id", ids),
   ]);
   if (errorCostos) throw errorCostos;

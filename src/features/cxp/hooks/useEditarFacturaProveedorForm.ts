@@ -49,6 +49,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   // Un refetch del mismo id (invalidación por pago, foco de ventana, staleTime
   // agotado) no debe pisar la captura en curso del modal.
   const lastLoadedId = useRef<string | null>(null);
+  const reviewedUpdatedAt = useRef<string | null>(null);
 
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => (p ? { ...p, tc: String(r.tipoCambio) } : p));
@@ -61,6 +62,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     if (row) {
       if (lastLoadedId.current === factura?.id) return;
       lastLoadedId.current = factura?.id ?? null;
+      reviewedUpdatedAt.current = row.updated_at;
       const v = fromRow(row);
       setValues(v);
       setInitial(v);
@@ -72,6 +74,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       manualTcRef.current = v.moneda !== "MXN" && !!v.tc;
     } else if (!factura) {
       lastLoadedId.current = null;
+      reviewedUpdatedAt.current = null;
       setValues(null);
       setInitial(null);
       setErrors({});
@@ -133,6 +136,9 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   const submit = async () => {
     if (!factura || !values) return;
     const next = validateFactura(values, total);
+    if (values.moneda !== initial?.moneda && (factura.pagado > 0 || factura.notas_credito > 0)) {
+      next.moneda = "La moneda no puede cambiar mientras haya pagos, notas de crédito o anticipos aplicados.";
+    }
     if (Object.keys(next).length > 0) {
       setErrors(next);
       notifyError(undefined, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USEEDITARFACTURAPROVEEDORFORM_1" });
@@ -153,7 +159,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       notas: values.notas,
     };
     try {
-      await actualizar.mutateAsync({ id: factura.id, payload, expectedUpdatedAt: row?.updated_at ?? null });
+      await actualizar.mutateAsync({ id: factura.id, payload, expectedUpdatedAt: reviewedUpdatedAt.current });
       onDone();
     } catch {
       // Notificación gestionada por el hook.

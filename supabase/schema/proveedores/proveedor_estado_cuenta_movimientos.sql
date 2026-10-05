@@ -3,9 +3,11 @@
 -- p_offset se cuenta DESDE EL FINAL (antes empujaba la ventana hacia
 -- adelante y los renglones viejos eran inalcanzables). 'hay_mas' = hay
 -- renglones anteriores a la ventana.
--- Migración vigente: 20260824040000_ola13_r4bd05_p_offset_desde_el_final.sql,
+-- Migración vigente: 20261005010200_audit70_71_proveedor_nc_devoluciones.sql,
 -- acumulativa sobre la final de Ola 12 (20260813190546, Sprint 10) — conserva
 -- R3FE-04, R3P-09, R3P-10, R3BD-04, R3FE-03, R3P-07/R3P-08 y R3P-06.
+-- Auditoría70: NC y aging en moneda de factura con conversión canónica.
+-- Auditoría71: contrapartida de devolución por el monto efectivamente devuelto.
 -- Espejo 1:1 obligatorio (lo verifica audit:schema-functions).
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(
@@ -59,7 +61,10 @@ BEGIN
   ),
   notas AS (
     -- R3P-08: sólo NC aplicadas descuentan el estado de cuenta (regla única).
-    SELECT nc.id, nc.folio_nc, nc.fecha, nc.monto, nc.moneda::text AS moneda,
+    SELECT nc.id, nc.folio_nc, nc.fecha,
+           nc.monto AS monto_nota, nc.moneda::text AS moneda_nota,
+           public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda) AS monto_factura,
+           f.moneda AS moneda_factura,
            nc.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
     FROM public.proveedor_notas_credito nc
     JOIN facturas f ON f.id = nc.proveedor_factura_id
@@ -82,13 +87,33 @@ BEGIN
   ),
   anticipos AS (
     SELECT a.id, a.fecha_anticipo, a.monto, a.moneda::text AS moneda,
-           a.referencia, a.metodo_pago, a.embarque_id, e.expediente
+           a.referencia, a.metodo_pago, a.embarque_id, e.expediente,
+           COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
+           -- La fecha bancaria conserva el periodo efectivo de la devolución.
+           -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
+           COALESCE(d.fecha,
+                    (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
+                    (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
+                    a.fecha_anticipo) AS fecha_devolucion,
+           d.referencia AS referencia_devolucion,
+           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
+    LEFT JOIN LATERAL (
+      SELECT b.fecha, b.referencia
+      FROM public.bbva_movimientos b
+      WHERE b.anticipo_proveedor_id = a.id
+        AND b.organization_id = v_oid
+        AND b.deleted_at IS NULL
+        AND b.hash_dedupe = 'devolucion-' || a.id::text
+        AND b.abono > 0
+      ORDER BY b.fecha, b.id
+      LIMIT 1
+    ) d ON true
     WHERE a.proveedor_id = p_proveedor_id
       AND a.organization_id = v_oid
       AND a.deleted_at IS NULL
-      AND a.estado <> 'Cancelado'
+      AND a.estado <> 'cancelado'
   ),
   movs AS (
     SELECT f.fecha_emision AS fecha, 'Factura'::text AS tipo, f.id AS ref_id,
@@ -100,7 +125,14 @@ BEGIN
     UNION ALL
     SELECT n.fecha, 'Nota de crédito', n.id,
            COALESCE(n.folio_nc, 'NC'), n.folio_interno, COALESCE(n.expediente, ''),
-           n.embarque_id, n.moneda, 0::numeric, COALESCE(n.monto, 0), NULL::text
+           n.embarque_id, n.moneda_factura, 0::numeric, COALESCE(n.monto_factura, 0),
+           CASE
+             WHEN n.moneda_nota <> n.moneda_factura AND n.monto_factura IS NULL
+               THEN 'NC en ' || n.moneda_nota || ' SIN TC (excluida del saldo)'
+             WHEN n.moneda_nota <> n.moneda_factura
+               THEN 'NC en ' || n.moneda_nota || ' ' || n.monto_nota::text || ' convertida a ' || n.moneda_factura
+             ELSE NULL::text
+           END
     FROM notas n
     UNION ALL
     SELECT p.fecha_pago,
@@ -129,6 +161,18 @@ BEGIN
            -- R3P-07: el anticipo entregado ES un abono (dinero al proveedor).
            0::numeric, COALESCE(a.monto, 0), a.metodo_pago
     FROM anticipos a
+    UNION ALL
+    SELECT a.fecha_devolucion, 'Devolución de anticipo', a.id, 'Devolución de anticipo',
+           COALESCE(a.referencia_devolucion, a.referencia), COALESCE(a.expediente, ''),
+           a.embarque_id, a.moneda,
+           -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
+           -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
+           a.monto_devuelto, 0::numeric,
+           CASE WHEN a.devolucion_sin_fecha_bancaria
+             THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
+             ELSE a.metodo_pago END
+    FROM anticipos a
+    WHERE a.monto_devuelto > 0
   )
   SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio), '[]'::jsonb)
   INTO v_todos
@@ -198,8 +242,10 @@ BEGIN
                               FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).
-                  - COALESCE((SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc
+                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda))
+                              FROM public.proveedor_notas_credito nc
                               WHERE nc.proveedor_factura_id = f.id AND nc.deleted_at IS NULL
+                                AND nc.organization_id = v_oid
                                 AND nc.estado = 'Aplicada'), 0)
            END AS saldo
     FROM facturas f
@@ -251,3 +297,8 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO service_role;

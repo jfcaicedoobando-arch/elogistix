@@ -68,3 +68,18 @@ números sin convertir ni usar TC actual para una aplicación histórica.
 - No se puede cancelar un anticipo que ya tenga aplicaciones vivas: primero se reversan.
 - El monto a aplicar nunca puede exceder el saldo a favor ni el saldo de la factura.
 - No se puede vincular un embarque a un anticipo cancelado ni a un embarque de otra organización.
+
+## Estado de cuenta y devoluciones
+
+El anticipo entregado aparece como abono en su fecha original. Su aplicación a una
+factura es informativa (cargo y abono cero), porque el dinero ya se contó al entregarlo.
+La devolución aparece como **Devolución de anticipo**, con cargo por `monto_devuelto`:
+un anticipo de 25 con aplicación de 10 y devolución del remanente de 15 reduce la deuda
+sólo en 10. Una devolución completa sin aplicaciones deja efecto neto cero.
+
+La fecha efectiva de devolución se toma del movimiento bancario de devolución
+vinculado al anticipo. Para datos históricos sin ese movimiento, se usa `devuelto_at`
+en la fecha de negocio México; si falta, `updated_at` y finalmente la fecha del anticipo.
+El detalle del movimiento aclara que la fecha de registro se usa como referencia.
+Este cálculo también reconoce montos devueltos parciales históricos; no habilita
+nuevas devoluciones parciales del saldo disponible ni modifica registros históricos.

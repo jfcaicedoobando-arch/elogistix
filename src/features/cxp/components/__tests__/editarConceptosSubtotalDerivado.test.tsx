@@ -12,8 +12,11 @@ const conceptos = [
   { id: "c2", descripcion: "Maniobras", cantidad: 1, clave_unidad: null, monto: 500, iva: 0, ieps: 0 },
 ];
 
-vi.mock("@/features/cxp/hooks/useConceptosCfdiFactura", () => ({
-  useConceptosCfdiFactura: () => ({ data: conceptos, isLoading: false }),
+const referencia = vi.hoisted(() => ({ subtotal: 0 }));
+vi.mock("@/features/cxp/hooks/useConceptosFacturaSnapshot", () => ({
+  useConceptosFacturaSnapshot: () => ({ data: { conceptos, factura: {
+    subtotal: referencia.subtotal, iva: 0, ieps: 0, retenciones: 0, total: referencia.subtotal, updated_at: "v1",
+  } }, isLoading: false }),
 }));
 vi.mock("@/features/cxp/hooks/useEditarConceptosFactura", () => ({
   useEditarConceptosFactura: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -24,6 +27,7 @@ const { DialogEditarConceptosFactura } = await import(
 );
 
 function renderDialog(subtotal: number) {
+  referencia.subtotal = subtotal;
   return render(
     <TooltipProvider>
       <DialogEditarConceptosFactura

@@ -40,6 +40,13 @@ BEGIN
     organization_id, proveedor_factura_id, concepto_costo_id, descripcion, monto
   ) VALUES (v_orgs.org_b, v_factura, v_costo, 'AUD02 Flete B', 100);
 
+  -- Fixture aprobado despues de vincular conceptos; esta prueba evalua RLS.
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id = v_factura;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
+
   -- Dejar una marca calculada incorrecta permite detectar un UPDATE cruzado,
   -- incluso si el atacante únicamente obtiene void (sin oráculo de existencia).
   UPDATE public.conceptos_costo
