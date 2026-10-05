@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { ProveedorBrechaCard } from "../ProveedorBrechaCard";
-import { useCxpPageState } from "@/features/cxp/hooks/useCxpPageState";
+import { useCxpPageState } from "@/features/cxp/hooks";
 import CxpPorCapturar from "@/features/bandejas/routes/CxpPorCapturar";
 
 vi.mock("@/features/bandejas/hooks/useBandejas", () => ({

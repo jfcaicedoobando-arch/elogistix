@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { useSeleccionEfectiva } from "./ComprasPorAprobar.seleccion";
-import type { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
+import type { useAprobarFacturasLote } from "@/features/cxp/hooks";
 
 /** La confirmación conserva exactamente la selección y versiones que se mostraron. */
 export function useRevisionLote(

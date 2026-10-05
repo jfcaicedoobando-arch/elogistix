@@ -68,6 +68,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
 
   LC_CXP_PAGADA_INMUTABLE:
     "La factura ya está pagada. Reversa los pagos antes de modificarla.",
+  LC_CXP_MONEDA_CON_APLICACIONES:
+    "La moneda no puede cambiar mientras existan pagos, notas de crédito o anticipos aplicados. Usa el flujo autorizado de reverso antes de corregirla.",
   LC_CXP_REAPERTURA: "No se puede reabrir una factura de proveedor cerrada.",
   LC_CXP_CANCEL_DIRECTA:
     "No se permite cancelar directamente; usa la opción de eliminar/reversar según corresponda.",
