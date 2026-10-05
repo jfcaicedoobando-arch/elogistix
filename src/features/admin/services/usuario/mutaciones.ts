@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import type { AppRole } from "@/types/appRole";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { resetRedirectUrl } from "./mutaciones.auth";
 import { errorDeEdgeFunction } from "./mutaciones.errores";
 
 export {
@@ -34,7 +34,7 @@ export async function updateUserRole(
 }
 
 export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown> {
-  const { data, error } = await invokeUserManagement({ action: "delete", user_id: userId });
+  const { data, error } = await invokeUserManagement<{ error?: string }>({ action: "delete", user_id: userId });
   if (error) throw await errorDeEdgeFunction(error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   if (data?.error) throw new Error(data.error);
   await registrarActividad({

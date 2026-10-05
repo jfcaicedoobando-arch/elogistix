@@ -1,7 +1,6 @@
 /**
  * Servicio: invita o crea cuenta para un agente del Portal vía edge `user-management`.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 
 export interface InviteAgenteInput {

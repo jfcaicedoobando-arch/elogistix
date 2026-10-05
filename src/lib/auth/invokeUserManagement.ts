@@ -5,21 +5,20 @@
  * Devuelve la misma forma que `supabase.functions.invoke`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { ensureFreshSession } from "@/lib/auth/ensureFreshSession";
 
-type InvokeResult = Awaited<ReturnType<typeof supabase.functions.invoke>>;
+type InvokeResult<T> = Awaited<ReturnType<typeof supabase.functions.invoke<T>>>;
 
 function es401(error: unknown): boolean {
   const ctx = (error as { context?: { status?: number } } | null)?.context;
   return ctx?.status === 401;
 }
 
-export async function invokeUserManagement(
+export async function invokeUserManagement<T = unknown>(
   body: Record<string, unknown>,
-): Promise<InvokeResult> {
+): Promise<InvokeResult<T>> {
   let token = await ensureFreshSession();
-  let res: InvokeResult = await supabase.functions.invoke("user-management", {
+  let res: InvokeResult<T> = await supabase.functions.invoke<T>("user-management", {
     body,
     ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
   });
@@ -28,7 +27,7 @@ export async function invokeUserManagement(
   const rechazado = token;
   token = await ensureFreshSession(true, rechazado);
   if (!token || token === rechazado) return res;
-  res = await supabase.functions.invoke("user-management", {
+  res = await supabase.functions.invoke<T>("user-management", {
     body,
     headers: { Authorization: `Bearer ${token}` },
   });

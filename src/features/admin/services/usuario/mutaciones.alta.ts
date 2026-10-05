@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { resetRedirectUrl } from "./mutaciones.auth";
 import { errorDeEdgeFunction, traducirMensajeEdge } from "./mutaciones.errores";
 
 export interface CreateUserParams {
