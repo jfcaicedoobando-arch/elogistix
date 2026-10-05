@@ -29,6 +29,13 @@
       "when": 1791237737995,
       "tag": "0003_pricing_respuesta_tarifas_folio_mensual",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791237765806,
+      "tag": "0004_pricing_adjuntos_storage",
+      "breakpoints": true
     }
   ]
 }
