@@ -121,11 +121,13 @@ export async function fetchNotasCreditoMes(orgId: string | null, desde: string, 
     // otro mes y las fronteras naive T00:00:00/T23:59:59 se interpretaban en
     // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
     // viene de `rangoMes`, igual que facturas.
-      .select("id, folio, monto, conceptos, moneda, factura_id, fecha_emision, tipo_cambio")
+      // La NC sólo reconoce un padre vivo, aunque su factura sea de otro periodo.
+      .select("id, folio, monto, conceptos, moneda, factura_id, fecha_emision, tipo_cambio, facturas!inner(id)")
       .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
       .gte("fecha_emision", desde)
       .lte("fecha_emision", hasta)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      .is("facturas.deleted_at", null);
     if (orgId) q = q.eq("organization_id", orgId);
     return q.order("id").range(ini, fin);
   });
@@ -163,11 +165,12 @@ export async function fetchProveedorNotasCreditoMes(
   const data = await leerTodasLasPaginas("profit.proveedorNotasCreditoMes", (ini, fin) => {
     let q = supabase
       .from("proveedor_notas_credito")
-      .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio")
+      .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio, proveedor_facturas!inner(id)")
       .eq("estado", "Aplicada")
       .gte("fecha", desde)
       .lte("fecha", hasta)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      .is("proveedor_facturas.deleted_at", null);
     if (orgId) q = q.eq("organization_id", orgId);
     return q.order("id").range(ini, fin);
   });

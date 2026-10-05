@@ -119,6 +119,29 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
     expect(anual[10].ingresos_mxn).toBe(0);
   });
 
+  it("EUR factura y NC usan su TC documental y coinciden mensual/anual aunque el DOF y embarque difieran", async () => {
+    datos.embarques = [{ id: "emb-eur", expediente: "EXP-EUR", modo: "Aéreo", tipo_cambio_usd: 18, tipo_cambio_eur: 23 }];
+    datos.facturas = mapFacturaRows([
+      { id: "eur-sin-emb", subtotal: 100, moneda: "EUR", tipo_cambio: 20, fecha_emision: "2026-10-02" },
+      { id: "eur-con-emb", expediente: "EXP-EUR", subtotal: 100, moneda: "EUR", tipo_cambio: 20, fecha_emision: "2026-10-02" },
+    ]);
+    datos.ncs = mapNotaCreditoRows([{
+      id: "nc-eur", factura_id: "eur-sin-emb", monto: 58, conceptos: [{ cantidad: 1, precio_unitario: 50 }],
+      moneda: "EUR", tipo_cambio: 19, fecha_emision: "2026-10-03",
+    }]);
+    datos.pfacts = mapProveedorFacturaRows([{
+      id: "pf-eur", embarque_id: "emb-eur", subtotal: 100, moneda: "EUR", tipo_cambio_usd: 18, fecha_emision: "2026-10-02",
+    }]);
+    datos.pncs = mapProveedorNotaCreditoRows([{
+      id: "pnc-eur", proveedor_factura_id: "pf-eur", monto: 50, moneda: "EUR", tipo_cambio: 22, fecha: "2026-10-03",
+    }]);
+    const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
+    const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
+    expect(mensual.totalIngresos.total).toBe(3050);
+    expect(mensual.totalCostos.total).toBe(1200);
+    expect(anual).toEqual({ mes: 10, ingresos_mxn: 3050, costos_mxn: 1200 });
+  });
+
   it("un rango entre años carga sólo los meses solicitados y conserva bloqueo de NC sin desglose", async () => {
     datos.facturas = mapFacturaRows([{ id: "a3", subtotal: 100, moneda: "MXN", fecha_emision: "2026-10-03" }]);
     datos.ncs = mapNotaCreditoRows([
