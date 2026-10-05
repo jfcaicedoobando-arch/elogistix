@@ -32,7 +32,7 @@ export default function CrmEmpresaDetalle() {
         title={data?.nombre ?? "Empresa"}
         subtitle={data ? `Alta: ${formatFechaDia(data.created_at)}` : undefined}
         badge={estado ? <Badge variant={varianteEstadoEmpresa(estado)}>{estado}</Badge> : undefined}
-        trailing={canEditCrm && estado === "Lead" ? (
+        trailing={canEditCrm && (estado === "Lead" || estado === "Sospechoso") ? (
           <Button onClick={() => pasar.mutate(id)} disabled={pasar.isPending}>
             <ArrowRight className="size-4" /> Pasar a prospecto
           </Button>

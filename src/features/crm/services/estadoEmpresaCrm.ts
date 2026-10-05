@@ -1,10 +1,10 @@
 /**
- * Estado de la empresa en el CRM: Lead (fuera del embudo) → Prospecto (entra al
+ * Estado de la empresa en el CRM: Lead → Sospechoso (fuera del embudo) → Prospecto (entra al
  * embudo en la etapa Prospecto) → Cliente (dada de alta en Clientes).
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export const ESTADOS_EMPRESA_CRM = ["Lead", "Prospecto", "Cliente"] as const;
+export const ESTADOS_EMPRESA_CRM = ["Lead", "Sospechoso", "Prospecto", "Cliente"] as const;
 export type EstadoEmpresaCrm = (typeof ESTADOS_EMPRESA_CRM)[number];
 export const FILTRO_ESTADO_EMPRESA = ["todos", ...ESTADOS_EMPRESA_CRM] as const;
 export type FiltroEstadoEmpresa = (typeof FILTRO_ESTADO_EMPRESA)[number];
@@ -12,7 +12,7 @@ export type FiltroEstadoEmpresa = (typeof FILTRO_ESTADO_EMPRESA)[number];
 /** Normaliza el valor de la base; si falta, se deduce del alta a Clientes. */
 export function estadoEmpresa(fila: { estado_crm?: string | null; cliente_id: string | null }): EstadoEmpresaCrm {
   const v = fila.estado_crm;
-  if (v === "Lead" || v === "Prospecto" || v === "Cliente") return v;
+  if (v === "Lead" || v === "Sospechoso" || v === "Prospecto" || v === "Cliente") return v;
   return fila.cliente_id ? "Cliente" : "Lead";
 }
 
