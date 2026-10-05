@@ -94,7 +94,7 @@ export function validarOportunidadForm(
     return {
       title: "Captura la fecha de cierre real",
       description:
-        "Una oportunidad ganada necesita su fecha de cierre para que el Resumen y el Leaderboard coincidan.",
+        "Indica la fecha de cierre real de la oportunidad ganada para registrarla en el periodo correspondiente.",
     };
   }
   return null;

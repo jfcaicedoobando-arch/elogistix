@@ -48,7 +48,7 @@ export function TabDemoras({ embarqueId, canEdit, soloConsulta = false }: Props)
           <p className="text-body-sm text-muted-foreground mt-1">
             {soloConsulta ? "Fechas y demoras históricas de contenedores, conservadas en sólo consulta." : <>Captura la fecha real de descarga y devolución de cada contenedor para calcular las
             demoras con el tabulador de la naviera. Si dejas un campo vacío, usamos las fechas del
-            timeline del embarque. El campo "Días libres" solo sobreescribe el default de la naviera
+            cronología del embarque. El campo "Días libres" solo sustituye el valor configurado de la naviera
             cuando lo capturas. Al guardar, recalculamos automáticamente los conceptos de demora.</>}
           </p>
         </CardHeader>

@@ -11,12 +11,22 @@ describe("Emitidas - ámbitos del totalizador", () => {
     expect(screen.getByText("Filas visibles").nextElementSibling).toHaveTextContent("11");
     expect(screen.getByText("Facturas incluidas en totales").nextElementSibling).toHaveTextContent("1");
     expect(screen.getByText("Borrador / por timbrar (excluidas)").nextElementSibling).toHaveTextContent("10");
-    expect(screen.getByText("Subtotal MXN").nextElementSibling).toHaveTextContent("MXN 116.00");
+    expect(screen.getByText("Total facturado MXN").nextElementSibling).toHaveTextContent("MXN 116.00");
+    expect(screen.queryByText(/Subtotal/)).not.toBeInTheDocument();
   });
 
   it("informa las filas aunque todas estén en preparación", () => {
     render(<FacturasEmitidasFooter facturas={borradores} />);
     expect(screen.getByText("Facturas incluidas en totales").nextElementSibling).toHaveTextContent("0");
     expect(screen.getByText("Filas visibles").nextElementSibling).toHaveTextContent("10");
+  });
+
+  it("conserva el total con IVA por moneda y excluye canceladas sin llamarlo subtotal", () => {
+    const factura = { subtotal: 100, iva: 16, total: 116, moneda: "USD", estado: "Pagada", tipo_cambio: 20 };
+    render(<FacturasEmitidasFooter facturas={[factura, { ...factura, estado: "Cancelada" }]} />);
+    expect(screen.getByText("Total facturado USD").nextElementSibling).toHaveTextContent("USD 116.00");
+    expect(screen.getByText("MXN equivalente").nextElementSibling).toHaveTextContent("MXN 2,320.00");
+    expect(screen.getByText("Canceladas (excluidas)").nextElementSibling).toHaveTextContent("1");
+    expect(screen.queryByText(/Subtotal/)).not.toBeInTheDocument();
   });
 });

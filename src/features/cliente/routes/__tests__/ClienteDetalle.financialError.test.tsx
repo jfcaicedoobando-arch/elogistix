@@ -99,3 +99,28 @@ describe("ClienteDetalle: fallo de saldos financieros", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
+
+describe("ClienteDetalle: título de navegación", () => {
+  it.each(["CRM", "Cotizaciones", "Facturación"])("no hereda el título de %s", (origen) => {
+    document.title = `${origen} · Libre Carga`;
+    const { rerender } = render(<ClienteDetalle />);
+    expect(document.title).toBe("Cliente: Cliente Sintético · Libre Carga");
+    rerender(<ClienteDetalle />);
+    expect(document.title).toBe("Cliente: Cliente Sintético · Libre Carga");
+  });
+
+  it("usa un título neutro al cargar y lo actualiza al obtener el cliente", () => {
+    mocks.controller.mockReturnValue({ ...controller(), cliente: null, loadingCliente: true });
+    const { rerender } = render(<ClienteDetalle />);
+    expect(document.title).toBe("Cliente · Libre Carga");
+    mocks.controller.mockReturnValue(controller());
+    rerender(<ClienteDetalle />);
+    expect(document.title).toBe("Cliente: Cliente Sintético · Libre Carga");
+  });
+
+  it.each(["error", "ausente"])("no identifica otro cliente ante estado %s", (estado) => {
+    mocks.controller.mockReturnValue({ ...controller(), cliente: null, errorCliente: estado === "error" ? new Error("Sin acceso") : null });
+    render(<ClienteDetalle />);
+    expect(document.title).toBe("Cliente · Libre Carga");
+  });
+});
