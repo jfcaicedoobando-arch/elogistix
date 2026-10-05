@@ -111,7 +111,7 @@
     "cmdk": "^1.1.1",
     "currency.js": "^2.0.4",
     "decimal.js": "^10.6.0",
-    "date-fns": "3.6.0",
+    "date-fns": "4.4.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.2",
     "libphonenumber-js": "1.13.14",
