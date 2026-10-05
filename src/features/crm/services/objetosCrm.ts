@@ -35,7 +35,8 @@ export async function fetchEmpresas(busqueda: string, pagina: number, letra = "t
   const term = limpiarBusqueda(busqueda);
   if (term) q = q.ilike("nombre", `%${term}%`);
   if (letra !== "todas") q = q.eq("letra_empresa_crm", letra);
-  if (estado !== "todos") q = q.eq("estado_crm", estado);
+  // SAFE-CAST: columna del borrador; los tipos se regeneran al aceptar la migración.
+  if (estado !== "todos") q = q.eq("estado_crm" as "nombre", estado);
   const { data, error, count } = await q;
   if (error) throw error;
   // SAFE-CAST: `estado_crm` llega con la migración del borrador; los tipos se regeneran al aceptarla.
