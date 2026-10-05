@@ -53,7 +53,7 @@ export default function TesoreriaPagos() {
     <PageContainer>
       <PageHeader
         title="Pagos"
-        description="Todos los cobros de clientes, pagos a proveedores y anticipos en un solo lugar"
+        description="Cobros, pagos a proveedores, anticipos y sus devoluciones en un solo lugar"
         actions={<LibroPagosExportButtons pagos={visibles} rango={rango} totales={totales} />}
       />
 

@@ -230,3 +230,40 @@ describe("useNotaCreditoDraft · guard de timbrado", () => {
     }
   });
 });
+
+describe("Auditoría 87 · porcentaje estable sobre la base seleccionada", () => {
+  it("repetir 10% y cambiar a 20% equivale a aplicar 20% desde cero", () => {
+    const { result } = renderHook(() => useNotaCreditoDraft({ ...baseParams, conceptosSugeridos: [sugerido("Flete", 100)] }), { wrapper });
+    act(() => result.current.aplicarDescuento(10));
+    expect(result.current.monto).toBe(11.6);
+    act(() => result.current.aplicarDescuento(10));
+    expect(result.current.monto).toBe(11.6);
+    act(() => result.current.aplicarDescuento(20));
+    expect(result.current.monto).toBe(23.2);
+    expect(result.current.conceptos[0].precio_unitario).toBe(20);
+  });
+
+  it("conserva selección e impuestos, y editar descripción no convierte el descuento en nueva base", () => {
+    const { result } = renderHook(() => useNotaCreditoDraft({ ...baseParams,
+      conceptosSugeridos: [sugerido("Flete", 100), { ...sugerido("Exento", 50), tasa_iva: 0, tipo_iva: "exento" }],
+    }), { wrapper });
+    act(() => result.current.aplicarSeleccion([1]));
+    act(() => result.current.aplicarDescuento(10));
+    act(() => result.current.setConceptos((prev) => prev.map((c) => ({ ...c, descripcion: "Detalle" }))));
+    act(() => result.current.aplicarDescuento(20));
+    expect(result.current.conceptos).toHaveLength(1);
+    expect(result.current.conceptos[0]).toMatchObject({ descripcion: "Detalle", precio_unitario: 10, tipo_iva: "exento" });
+    expect(result.current.monto).toBe(10);
+  });
+
+  it("un precio editado pasa a ser base explícita y volver a seleccionar restaura el original", () => {
+    const { result } = renderHook(() => useNotaCreditoDraft({ ...baseParams, conceptosSugeridos: [sugerido("Flete", 100)] }), { wrapper });
+    act(() => result.current.aplicarDescuento(10));
+    act(() => result.current.setConceptos((prev) => prev.map((c) => ({ ...c, precio_unitario: 80 }))));
+    act(() => result.current.aplicarDescuento(20));
+    expect(result.current.conceptos[0].precio_unitario).toBe(16);
+    act(() => result.current.aplicarSeleccion([0]));
+    act(() => result.current.aplicarDescuento(20));
+    expect(result.current.conceptos[0].precio_unitario).toBe(20);
+  });
+});

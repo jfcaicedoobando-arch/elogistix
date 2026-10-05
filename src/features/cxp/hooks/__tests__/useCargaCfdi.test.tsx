@@ -165,3 +165,47 @@ describe("useCargaCfdi", () => {
     expect(result.current.loading).toBe(false);
   });
 });
+
+describe("Auditoría 95 · quitar XML y descartar respuestas tardías", () => {
+  it("Quitar XML limpia selección, adjunto y validación previa; permite elegir el mismo archivo de nuevo", () => {
+    const onClear = vi.fn();
+    const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed, onClear }));
+    const xml = makeXml();
+    act(() => result.current.handleXml(xml));
+    act(() => result.current.setPdf(new File(["pdf"], "nc.pdf")));
+    onClear.mockClear();
+    act(() => result.current.handleXml(null));
+    expect(result.current.xml).toBeNull();
+    expect(result.current.pdf).toBeNull();
+    expect(onClear).toHaveBeenCalledOnce();
+    act(() => result.current.handleXml(xml));
+    expect(result.current.xml).toBe(xml);
+  });
+
+  it.each(["reset", "remove", "replace", "unmount"])("un parseo tardío no restaura XML después de %s", async (accion) => {
+    let resolver!: (v: unknown) => void;
+    parseCfdiXml.mockImplementationOnce(() => new Promise((r) => { resolver = r; }));
+    const { result, unmount } = renderHook(() => useCargaCfdi({ categorias, onParsed }));
+    act(() => result.current.handleXml(makeXml()));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.procesar(); });
+    act(() => {
+      if (accion === "reset") result.current.reset();
+      if (accion === "remove") result.current.handleXml(null);
+      if (accion === "replace") result.current.handleXml(makeXml(10, "nueva.xml"));
+      if (accion === "unmount") unmount();
+    });
+    await act(async () => { resolver({ cfdi: { uuid: "viejo" } }); await pending; });
+    expect(onParsed).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+  });
+
+  it("envía la factura objetivo al parser de NC", async () => {
+    parseCfdiXml.mockResolvedValueOnce({ cfdi: { uuid: "U" } });
+    const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed, facturaNcId: "factura-objetivo" }));
+    const xml = makeXml();
+    act(() => result.current.handleXml(xml));
+    await act(async () => { await result.current.procesar(); });
+    expect(parseCfdiXml).toHaveBeenCalledWith(xml, categorias, "22222222-2222-4222-8222-222222222222", "factura-objetivo");
+  });
+});

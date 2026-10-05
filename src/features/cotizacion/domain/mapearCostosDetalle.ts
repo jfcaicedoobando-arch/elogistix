@@ -6,6 +6,7 @@
  * y al renovar las filas con los costos canónicos que devuelve la RPC tras un
  * guardado exitoso. Antes sólo existía dentro del efecto de hidratación.
  */
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 import type { CostoCotizacion, ConceptoVentaCotizacion, FilaCostoDetalle } from "@/features/cotizacion/types";
 // O3/A-5: match costos↔conceptos sólo por nombre normalizado (sin fallback posicional).
 import { matchConceptoVenta } from "@/features/cotizacion/utils/matchConceptoVenta";
@@ -34,8 +35,8 @@ export function mapearCostosAFilas(
       Number.isFinite(Number(c.precio_venta));
     const cv = matchConceptoVenta(c.moneda === "USD" ? conceptosUSD : conceptosMXN, c.concepto);
     const venta = tienePrecioVenta
-      ? Number(c.precio_venta) * (Number(c.cantidad) || 0)
-      : (cv ? cv.cantidad * cv.precio_unitario : 0);
+      ? subtotalLinea(Number(c.cantidad) || 0, Number(c.precio_venta))
+      : (cv ? subtotalLinea(cv.cantidad, cv.precio_unitario) : 0);
     return {
       concepto: c.concepto,
       moneda: c.moneda,
@@ -59,11 +60,11 @@ export function mapearConceptosAFilas(
 ): FilaCostoDetalle[] {
   const fromUSD: FilaCostoDetalle[] = conceptosUSD.map((c) => ({
     concepto: c.descripcion, moneda: "USD" as const, proveedor: "", cantidad: c.cantidad,
-    costo_unitario: 0, venta: c.cantidad * c.precio_unitario, aplica_iva: c.aplica_iva ?? false, notas: "",
+    costo_unitario: 0, venta: subtotalLinea(c.cantidad, c.precio_unitario), aplica_iva: c.aplica_iva ?? false, notas: "",
   }));
   const fromMXN: FilaCostoDetalle[] = conceptosMXN.map((c) => ({
     concepto: c.descripcion, moneda: "MXN" as const, proveedor: "", cantidad: c.cantidad,
-    costo_unitario: 0, venta: c.cantidad * c.precio_unitario, notas: "",
+    costo_unitario: 0, venta: subtotalLinea(c.cantidad, c.precio_unitario), notas: "",
   }));
   return [...fromUSD, ...fromMXN];
 }
@@ -76,7 +77,7 @@ export function mapearFilasACostos(
   return filas.map((f) => ({
     id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
     proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
-    costo_total: f.cantidad * f.costo_unitario,
+    costo_total: subtotalLinea(f.cantidad, f.costo_unitario),
     // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta.
     precio_venta: f.cantidad > 0 ? f.venta / f.cantidad : f.venta,
     notas: f.notas ?? "",

@@ -75,7 +75,7 @@ export function NotasPago({
           Equivalente: {formatCurrency(montoAplicado, monedaFactura)} (TC: {tipoCambio.toFixed(4)})
         </p>
       )}
-      {mostrarConversion && tcBloqueado && (
+      {montoNum > 0 && tcBloqueado && (
         <Alert className="border-warning/40 bg-warning/5">
           <AlertDescription className="text-body-sm">
             {cruceNoSoportado ? (
@@ -89,7 +89,7 @@ export function NotasPago({
                 <strong>Tipo de cambio de respaldo.</strong> No pudimos obtener el TC oficial de
                 Banxico; registrar un cobro en {monedaPago} para una factura en {monedaFactura} con
                 un TC estimado distorsionaría el REP y la diferencia cambiaria. Reintenta más tarde
-                o cobra en la moneda de la factura.
+                o captura un tipo de cambio verificado para la fecha de pago.
               </>
             ) : (
               <>

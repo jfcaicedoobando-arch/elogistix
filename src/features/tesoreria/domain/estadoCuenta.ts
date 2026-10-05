@@ -7,6 +7,7 @@
  */
 
 export type TipoMovimientoEstadoCuenta = "todos" | "entradas" | "salidas";
+export type CoberturaHistoricaEstadoCuenta = "completa" | "parcial" | "sin_cobertura";
 
 export interface MovimientoEstadoCuenta {
   id: string;
@@ -28,12 +29,16 @@ export interface EstadoCuentaBancario {
   alias: string;
   banco: string;
   moneda: string;
+  /** Inicio efectivo cubierto; conserva el solicitado cuando no hay cobertura. */
   desde: string;
+  desde_solicitado: string;
   hasta: string;
-  saldo_inicial: number;
-  total_entradas: number;
-  total_salidas: number;
-  saldo_final: number;
+  cobertura_historica: CoberturaHistoricaEstadoCuenta;
+  /** NULL significa desconocido, nunca un saldo de cero. */
+  saldo_inicial: number | null;
+  total_entradas: number | null;
+  total_salidas: number | null;
+  saldo_final: number | null;
   /** Fecha de corte del saldo inicial de la cuenta (arranque en el sistema). */
   fecha_saldo_inicial: string | null;
   /** Movimientos con fecha anterior al corte: existen pero no afectan el saldo. */

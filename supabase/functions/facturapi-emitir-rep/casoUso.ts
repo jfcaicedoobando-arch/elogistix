@@ -68,6 +68,7 @@ export async function emitirRepCasoUso(args: ArgsCasoUsoRep): Promise<Response> 
     construirPagoContext({ factura, pago, fiscal: etapaFiscal.valor, datos: etapaDatos.valor }),
     pago.id,
     json,
+    pago.updated_at,
   );
   if (!etapaCtx.ok) return etapaCtx.response;
   const ctx = etapaCtx.valor;

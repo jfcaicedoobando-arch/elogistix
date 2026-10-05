@@ -20,6 +20,7 @@ export interface FilaEstadoCuentaExport {
 
 interface ResumenPdf {
   periodo: string;
+  cobertura?: string | null;
   saldoInicial: string;
   entradas: string;
   salidas: string;
@@ -76,6 +77,7 @@ export function EstadoCuentaBancarioDocument({
           </View>
         </View>
 
+        {resumen.cobertura && <Text style={styles.paragraph}>{resumen.cobertura}</Text>}
         <Text style={styles.h3}>Resumen de todo el periodo</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16, marginBottom: 10 }}>
           <Text style={{ fontSize: 9, color: COLORS.muted }}>

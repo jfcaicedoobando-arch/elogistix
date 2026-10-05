@@ -42,6 +42,7 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
 export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
   // MNY-P2.1: un cobro en lote también es dinero recibido del cliente.
   const esCobro = esDineroRecibido(pago.tipo);
+  const esCliente = ["cobro", "lote_cobro"].includes(pago.tipo);
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -77,7 +78,7 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
       <div className="grid grid-cols-2 gap-3">
 
         <Dato label="Fecha">{formatDate(pago.fecha)}</Dato>
-        <Dato label={esCobro ? "Cliente" : "Proveedor"}>{pago.contraparte ?? "—"}</Dato>
+        <Dato label={esCliente ? "Cliente" : "Proveedor"}>{pago.contraparte ?? "—"}</Dato>
         <Dato label="Método">{pago.metodo_pago ?? "—"}</Dato>
         <Dato label="Referencia">{pago.referencia ?? "—"}</Dato>
         <Dato label="Cuenta bancaria">{pago.cuenta_alias ?? "—"}</Dato>
@@ -133,7 +134,7 @@ export function BloqueMovimiento({
         as="h3"
         variant="subsection"
         actions={
-          <StatusBadge domain="conciliacion" status="Conciliado" />
+          <StatusBadge domain="conciliacion" status={movimiento.estado_conciliacion ?? "Pendiente"} />
         }
       >
         Movimiento bancario

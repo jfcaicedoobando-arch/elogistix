@@ -67,6 +67,10 @@ export function NotaCreditoAtajos(props: Props) {
         </div>
       </div>
 
+      <p className="text-label text-muted-foreground">
+        El porcentaje usa los precios base de la selección. Repetirlo no acumula descuentos.
+        Si editas un precio manualmente, ese será su nueva base.
+      </p>
       {conceptosSugeridos.length > 0 && (
         <div className="space-y-1.5">
           <Label size="sm">Conceptos de la factura</Label>

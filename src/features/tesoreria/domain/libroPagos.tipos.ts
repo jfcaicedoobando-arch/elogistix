@@ -5,7 +5,7 @@
  * archivo (Power of 10).
  */
 
-export type TipoPago = "cobro" | "pago" | "anticipo";
+export type TipoPago = "cobro" | "pago" | "anticipo" | "devolucion_anticipo";
 export type VistaLibroPagos = "todos" | "recibidos" | "realizados";
 export type FiltroConciliacion = "todos" | "conciliados" | "pendientes";
 export type FiltroRep = "todos" | "timbrado" | "pendiente" | "cancelado";
@@ -72,6 +72,7 @@ export const TIPO_PAGO_LABELS: Record<TipoPago, string> = {
   cobro: "Cobro de cliente",
   pago: "Pago a proveedor",
   anticipo: "Anticipo a proveedor",
+  devolucion_anticipo: "Devolución de anticipo",
 };
 
 export const VISTA_LABELS: Record<VistaLibroPagos, string> = {
@@ -83,6 +84,7 @@ export const VISTA_LABELS: Record<VistaLibroPagos, string> = {
 export interface TotalesLibroPagos {
   cobradoMxn: number;
   pagadoMxn: number;
+  devueltoMxn: number;
   netoMxn: number;
   conteo: number;
   /** MNY-P2.3: pagos sin T/C registrado, excluidos de los totales en pesos. */

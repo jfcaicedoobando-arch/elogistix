@@ -52,18 +52,26 @@ export function estadoCuentaACsv(filas: readonly FilaEstadoCuentaExport[]): stri
 /** Resumen del periodo, ya formateado, para encabezar el CSV/PDF. */
 export function resumenEstadoCuenta(estado: EstadoCuentaBancario): {
   periodo: string;
+  cobertura: string | null;
   saldoInicial: string;
   entradas: string;
   salidas: string;
   saldoFinal: string;
 } {
   const m = estado.moneda;
+  const importe = (valor: number | null) => valor === null ? "No disponible" : formatCurrency(valor, m);
+  const cobertura = estado.cobertura_historica === "sin_cobertura"
+    ? `No hay cobertura histórica para el periodo seleccionado. Los saldos y movimientos están disponibles desde el arranque de la cuenta${estado.fecha_saldo_inicial ? `, el ${formatDate(estado.fecha_saldo_inicial)}` : ""}. Selecciona un periodo que incluya esa fecha o una posterior.`
+    : estado.cobertura_historica === "parcial"
+      ? `El periodo solicitado comienza el ${formatDate(estado.desde_solicitado)}, antes del arranque de la cuenta. El resumen y los movimientos abarcan únicamente del ${formatDate(estado.desde)} al ${formatDate(estado.hasta)}; el saldo inicial corresponde al arranque. No hay cobertura histórica anterior.`
+      : null;
   return {
     periodo: `${formatDate(estado.desde)} – ${formatDate(estado.hasta)}`,
-    saldoInicial: formatCurrency(estado.saldo_inicial, m),
-    entradas: formatCurrency(estado.total_entradas, m),
-    salidas: formatCurrency(estado.total_salidas, m),
-    saldoFinal: formatCurrency(estado.saldo_final, m),
+    cobertura,
+    saldoInicial: importe(estado.saldo_inicial),
+    entradas: importe(estado.total_entradas),
+    salidas: importe(estado.total_salidas),
+    saldoFinal: importe(estado.saldo_final),
   };
 }
 

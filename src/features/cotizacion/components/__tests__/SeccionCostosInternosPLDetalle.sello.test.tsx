@@ -263,3 +263,36 @@ describe("guardado rápido de costos con sello optimista", () => {
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 });
+
+describe("Auditoría97 · venta total fraccionaria con snapshot y CAS", () => {
+  const fixture = () => [{ ...COSTOS_500[0], moneda: "USD", cantidad: 960, costo_unitario: 2.65, costo_total: 2544, precio_venta: 3.05 }];
+  it("3000 coincide en fila y resumen; cancelar recupera2928 sin persistir", () => {
+    snapshot = { costos: fixture(), updatedAt: S0 };
+    renderSeccion(); abrirEdicion();
+    const tabla = within(screen.getByRole("table", { name: "Costos de escritorio en USD" }));
+    fireEvent.change(tabla.getByLabelText("Venta total de Flete"), { target: { value: "3000" } });
+    expect(tabla.getByText("3,000.00", { exact: false })).toBeInTheDocument();
+    expect(tabla.getAllByText(/456\.00/)).toHaveLength(2);
+    expect(screen.queryByText(/3,004\.80/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar edición" }));
+    expect(tabla.getAllByText(/2,928\.00/)).toHaveLength(2);
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+  it("guarda precio unitario3.125 y la relectura mantiene venta3000/utilidad456", async () => {
+    snapshot = { costos: fixture(), updatedAt: S0 };
+    mutateAsync.mockImplementation(async ({ costos }: { costos: typeof COSTOS_500 }) => {
+      snapshot = { costos, updatedAt: S1 };
+      return { updatedAt: S1, snapshot };
+    });
+    renderSeccion(); abrirEdicion();
+    const tabla = within(screen.getByRole("table", { name: "Costos de escritorio en USD" }));
+    fireEvent.change(tabla.getByLabelText("Venta total de Flete"), { target: { value: "3000" } });
+    guardar();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledOnce());
+    expect(mutateAsync.mock.calls[0][0]).toMatchObject({ expectedUpdatedAt: S0, costos: [expect.objectContaining({ cantidad: 960, precio_venta: 3.125, costo_total: 2544 })] });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Editar costos" })).toBeInTheDocument());
+    expect(tabla.getAllByText(/3,000\.00/)).toHaveLength(2);
+    expect(tabla.getAllByText(/456\.00/)).toHaveLength(2);
+    expect(screen.queryByText(/3,004\.80/)).not.toBeInTheDocument();
+  });
+});

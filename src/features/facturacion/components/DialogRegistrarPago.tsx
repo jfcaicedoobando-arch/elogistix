@@ -25,6 +25,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { derivarEstadoPago } from "./registrarPagoDerivados";
+import { ERROR_FORMA_COBRO } from "../domain/formaPagoCobro";
 import { pagoClienteSucio } from "./registrarPagoDirty";
 import type { Moneda } from "@/types/db";
 
@@ -48,7 +49,6 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   factura: Factura | null;
 }
-
 
 const today = () => todayLocalISO();
 
@@ -79,7 +79,6 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     [factura, pagosPrevios, notasAplicadas, saldoServidor],
   );
 
-
   const [values, setValues] = useState<PagoFormValues>({
     fecha: today(), monto: "", moneda: "MXN",
     formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
@@ -96,7 +95,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   if (!factura) return null;
 
   const {
-    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, pueIncompleto, invalido,
+    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, pueIncompleto, formaPagoInvalida, invalido,
   } = derivarEstadoPago({
       monto: values.monto,
       monedaPago: values.moneda,
@@ -106,7 +105,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       fechaEmision: factura.fechaEmision,
       saldo,
       rates,
-      metodoPagoFactura: factura.metodoPago, tcManual: values.tipoCambioManual,
+      metodoPagoFactura: factura.metodoPago, formaPago: values.formaPago, tcManual: values.tipoCambioManual,
     });
 
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
@@ -177,6 +176,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
           (el botón del footer envía este formulario vía `form={FORM_ID}`). */}
       <form id={FORM_ID} onSubmit={handleGuardar} className="space-y-5">
         <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} tc={{ monedaFactura: factura.moneda, saldo, rates }} />
+        {formaPagoInvalida && <p role="alert" className="text-label text-destructive">{ERROR_FORMA_COBRO}</p>}
         <NotasPago
           esPpdTimbrada={esPpdTimbrada}
           monedaPago={values.moneda}

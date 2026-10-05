@@ -13,4 +13,12 @@ describe("PDF bancario - ámbitos", () => {
     expect(container).toHaveTextContent("Entradas visibles: MXN 116.00 | Salidas visibles: MXN 0.00");
     expect(container).toHaveTextContent("saldo corrido real");
   });
+
+  it("conserva la explicación de cobertura parcial del estado de cuenta", () => {
+    const cobertura = "El resumen y los movimientos abarcan únicamente del 03/10/2026 al 05/10/2026; el saldo inicial corresponde al arranque.";
+    const { container } = render(<EstadoCuentaBancarioDocument cuenta="Cuenta sintética" banco="Banco" moneda="MXN" filas={[]}
+      resumen={{ periodo: "03/10/2026 – 05/10/2026", cobertura, saldoInicial: "MXN 1,000.00", entradas: "MXN 50.00", salidas: "MXN 20.00", saldoFinal: "MXN 1,030.00" }} />);
+    expect(container).toHaveTextContent(cobertura);
+    expect(container).toHaveTextContent("Periodo 03/10/2026 – 05/10/2026");
+  });
 });

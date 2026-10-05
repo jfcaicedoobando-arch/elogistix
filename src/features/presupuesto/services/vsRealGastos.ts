@@ -12,7 +12,7 @@ export type CxpRow = {
   /** BL-07: base SIN IVA; los presupuestos se capturan como gasto neto. */
   subtotal: number | string;
   moneda: string | null;
-  /** Paridad MXN por 1 USD (única columna de T/C que existe en CxP). */
+  /** Paridad MXN por una unidad de la moneda de la factura (nombre histórico). */
   tipo_cambio_usd: number | string | null;
 };
 
@@ -53,7 +53,7 @@ function convertirAMxn(
   const div = (moneda ?? "MXN").toUpperCase();
   if (div === "MXN") return monto;
   const tc = Number(tcCrudo ?? 0);
-  if (!(tc > 0)) return null;
+  if (!(tc > 0) || !Number.isFinite(tc) || !Number.isFinite(monto * tc)) return null;
   if (div !== "USD" && !paridadPropia) return null;
   return monto * tc;
 }
@@ -63,7 +63,7 @@ export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
   let sinTc = 0;
   for (const g of rows) {
     if (!g.categoria_presupuesto_id) continue;
-    const mxn = convertirAMxn(Number(g.subtotal), g.moneda, g.tipo_cambio_usd);
+    const mxn = convertirAMxn(Number(g.subtotal), g.moneda, g.tipo_cambio_usd, true);
     if (mxn === null) {
       // Ola 5 · A7 + N9: sin paridad válida para esa divisa no se puede valuar;
       // excluir en vez de asumir 1:1 o usar el T/C del dólar.

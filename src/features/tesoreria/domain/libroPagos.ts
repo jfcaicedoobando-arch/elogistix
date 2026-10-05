@@ -33,6 +33,7 @@ export function repCancelado(pago: PagoLibro): boolean {
 export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPagos {
   let cobradoMxn = 0;
   let pagadoMxn = 0;
+  let devueltoMxn = 0;
   let sinTcCount = 0;
   for (const p of pagos) {
     // Ola 4 · N20: los ajustes no mueven dinero y los anticipos aplicados ya se
@@ -45,13 +46,15 @@ export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPago
       sinTcCount += 1;
       continue;
     }
-    if (esEntrada(p)) cobradoMxn += p.monto_mxn;
+    if (p.tipo === "devolucion_anticipo") devueltoMxn += p.monto_mxn;
+    else if (esEntrada(p)) cobradoMxn += p.monto_mxn;
     else pagadoMxn += p.monto_mxn;
   }
   return {
     cobradoMxn,
     pagadoMxn,
-    netoMxn: cobradoMxn - pagadoMxn,
+    devueltoMxn,
+    netoMxn: cobradoMxn + devueltoMxn - pagadoMxn,
     conteo: pagos.length,
     sinTcCount,
   };

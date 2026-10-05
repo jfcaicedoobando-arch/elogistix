@@ -10,28 +10,16 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { cn } from "@/lib/utils";
 import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
 import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
+import { renglonesFlujoMonedas } from "@/features/tesoreria/domain/flujoMonedas";
 import type { FlujoMes } from "@/features/tesoreria/domain/resumen.types";
 
 interface Props {
   flujo: FlujoMes;
 }
 
-interface Renglon {
-  moneda: string;
-  cobrar: number;
-  pagar: number;
-}
-
 export function TesoreriaFlujoMonedas({ flujo }: Props) {
   const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
-  const renglones: Renglon[] = [
-    { moneda: "MXN", cobrar: flujo.por_cobrar_mxn, pagar: flujo.por_pagar_mxn },
-    { moneda: "USD", cobrar: flujo.por_cobrar_usd, pagar: flujo.por_pagar_usd },
-    // P1-7: fila EUR (antes ausente, la porción EUR se perdía en el total MXN).
-    ...(flujo.por_cobrar_eur !== 0 || flujo.por_pagar_eur !== 0
-      ? [{ moneda: "EUR", cobrar: flujo.por_cobrar_eur, pagar: flujo.por_pagar_eur }]
-      : []),
-  ];
+  const renglones = renglonesFlujoMonedas(flujo);
 
   return (
     <Card>
@@ -52,7 +40,7 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
           </TableHeader>
           <TableBody>
             {renglones.map((r) => {
-              const neto = r.cobrar - r.pagar;
+              const neto = r.neto;
               return (
                 <DetailTableRow key={r.moneda}>
                   <TableCell className="font-medium whitespace-nowrap">{r.moneda}</TableCell>

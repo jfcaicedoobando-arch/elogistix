@@ -40,9 +40,11 @@ export function TabButton({ active, onClick, children }: {
 /** Captura por XML vs manual. */
 interface OrigenNc {
   mode: "manual" | "cfdi";
+  facturaId: string;
+  onClearCfdi: () => void;
   onModeChange: (mode: "manual" | "cfdi") => void;
   parsedCfdi: CfdiParsedResponse | null;
-  onCfdiParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void;
+  onCfdiParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void | boolean;
 }
 
 /** Datos base de la nota de crédito. */
@@ -78,7 +80,7 @@ interface Props {
 const MONEDAS: MonedaNC[] = ["MXN", "USD", "EUR"];
 
 export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
-  const { mode, onModeChange, parsedCfdi, onCfdiParsed } = origen;
+  const { mode, onModeChange, parsedCfdi, onCfdiParsed, facturaId, onClearCfdi } = origen;
   const {
     folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange,
     motivo, onMotivoChange, descripcion, onDescripcionChange,
@@ -95,7 +97,7 @@ export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
       </div>
       <div className="p-4">
         {mode === "cfdi" && (
-          <CargaXmlNcSection parsed={parsedCfdi} onParsed={onCfdiParsed} />
+          <CargaXmlNcSection key={facturaId} parsed={parsedCfdi} onParsed={onCfdiParsed} facturaId={facturaId} onClear={onClearCfdi} />
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">

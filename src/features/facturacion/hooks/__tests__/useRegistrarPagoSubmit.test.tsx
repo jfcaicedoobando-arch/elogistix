@@ -215,3 +215,27 @@ describe("useRegistrarPagoSubmit", () => {
     expect(invalidateSpy).toHaveBeenCalled();
   });
 });
+
+describe("AUD88/91: submit no persiste un cobro fiscalmente inválido", () => {
+  it.each(["99", "", "77"])("PPD forma %s no llama registro ni emisor", async (formaPago) => {
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
+    await act(async () => { await result.current.submit({ ...baseArgs, esPpdTimbrada: true, formaPago }); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(emitirRep).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(notifyError).toHaveBeenCalled();
+  });
+  it("USD no acepta neutral 1 como valuación", async () => {
+    const { result } = renderHook(() => useRegistrarPagoSubmit(vi.fn()), { wrapper });
+    await act(async () => { await result.current.submit({ ...baseArgs, moneda: "USD", tipoCambio: 1 }); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(emitirRep).not.toHaveBeenCalled();
+  });
+  it("USD 1 registra TC18.1903 sin multiplicar la aplicación", async () => {
+    mutateAsync.mockResolvedValue({ pagoId: "pago-usd", movimientoBancario: "no_aplica" });
+    const { result } = renderHook(() => useRegistrarPagoSubmit(vi.fn()), { wrapper });
+    await act(async () => { await result.current.submit({ ...baseArgs, moneda: "USD", monto: 1, montoAplicado: 1, tipoCambio: 18.1903 }); });
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ monto: 1, monto_aplicado_factura: 1, tipo_cambio: 18.1903 }));
+  });
+});

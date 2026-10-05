@@ -3,6 +3,7 @@
  * Muestra tipo, contraparte, documento, método, monto original y su
  * equivalente en pesos, más el estado de conciliación y del complemento.
  */
+import { estadoConciliacionPago } from "@/features/tesoreria/domain/conciliacionPago";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -173,13 +174,13 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
     {
       id: "conciliado",
       header: "Conciliación",
-      accessorFn: (p) => (p.conciliado ? "Conciliado" : "Pendiente"),
+      accessorFn: (p) => estadoConciliacionPago(p),
       meta: { width: "w-32" },
       cell: ({ row }) =>
         (
           <StatusBadge
             domain="conciliacion"
-            status={row.original.conciliado ? "Conciliado" : "Pendiente"}
+            status={estadoConciliacionPago(row.original)}
           />
         ),
     },

@@ -7,6 +7,7 @@
  *
  * Espejo del pago en lote a proveedor (`pagoProveedorLote.ts`).
  */
+import { ERROR_FORMA_COBRO, formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { supabase } from "@/integrations/supabase/client";
 import { round2 } from "@/features/cxp/services";
 import {
@@ -86,6 +87,7 @@ export function validarCobroLote(
     moneda: string;
     fecha: string;
     tcAplicable: number | null;
+    formaPago?: string;
   },
 ): ValidacionCobroLote {
   const conMonto = renglones.filter((r) => r.monto > 0);
@@ -107,6 +109,7 @@ export function validarCobroLote(
   }
 
   const error =
+    (opts.formaPago !== undefined && !formaPagoCobroValida(opts.formaPago) ? ERROR_FORMA_COBRO : null) ??
     errorFacturaDuplicada(facturas, conMonto) ??
     errorRenglonExcedeSaldo(facturas, conMonto) ??
     errorCuadre(total, totalRepartido) ??
@@ -138,6 +141,7 @@ export async function obtenerFacturasConRep(ids: string[]): Promise<string[]> {
 export async function registrarPagoClienteLote(
   input: RegistrarCobroLoteInput,
 ): Promise<CobroLoteResultado> {
+  if (!formaPagoCobroValida(input.forma_pago)) throw new Error(ERROR_FORMA_COBRO);
   const payload = {
     ...input,
     // Ola 5 · RG4-5: la RPC valida que el reparto cuadre con el importe.

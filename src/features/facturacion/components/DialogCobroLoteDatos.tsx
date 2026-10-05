@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
-import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_COBRO_SAT } from "../domain/formaPagoCobro";
 import { round2 } from "@/features/facturacion/services/pagoClienteLote";
 
 interface CuentaLote {
@@ -85,7 +85,7 @@ export function DialogCobroLoteDatos(p: Props) {
           <Select value={p.formaPago} onValueChange={p.onFormaPago}>
             <SelectTrigger aria-label="Forma de pago"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {FORMAS_PAGO_SAT.map((f) => (
+              {FORMAS_COBRO_SAT.map((f) => (
                 <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
               ))}
             </SelectContent>

@@ -8,6 +8,12 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
 
+// Sólo se prueban permisos y acciones. El diálogo hijo no debe consultar un catálogo real.
+vi.mock("@/features/catalogos/services/tiposContenedor", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/features/catalogos/services/tiposContenedor")>(),
+  fetchTiposContenedor: vi.fn().mockResolvedValue([]),
+}));
+
 const baseProps = {
   esProspecto: false,
   numContenedores: 1,

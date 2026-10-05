@@ -80,7 +80,7 @@ export default function ProfitEstadoResultados() {
             puedeIrAtras={c.puedeIrAtras}
             puedeIrAdelante={c.puedeIrAdelante}
           />
-          <FuenteEerrToggle />
+          <FuenteEerrToggle fuente={c.fuente} onFuenteChange={c.setFuente} />
           <div className="flex-1" />
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV

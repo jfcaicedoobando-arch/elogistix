@@ -12,10 +12,15 @@ interface Props {
   /** Etiqueta accesible para el grupo. */
   ariaLabel?: string;
   className?: string;
+  /** Permite que una vista con fuente en URL sea la autoridad del control. */
+  fuente?: FuenteEERR;
+  onFuenteChange?: (fuente: FuenteEERR) => void;
 }
 
-export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados", className }: Props) {
-  const { fuente, setFuente } = useFuenteEerr();
+export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados", className, fuente: fuenteControlada, onFuenteChange }: Props) {
+  const preferencia = useFuenteEerr();
+  const fuente = fuenteControlada ?? preferencia.fuente;
+  const setFuente = onFuenteChange ?? preferencia.setFuente;
   return (
     <div className={`flex items-center gap-2 ${className ?? ""}`}>
       <ToggleGroup

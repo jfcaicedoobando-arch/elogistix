@@ -48,6 +48,7 @@ export interface CfdiParsed {
   emisor: { rfc: string; nombre: string; regimen: string };
   receptor: { rfc: string; nombre: string };
   conceptos: CfdiConcepto[];
+  relacionados?: string[];
 }
 
 const ATTR = (name: string) => new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, "i");
@@ -300,5 +301,6 @@ export function parseCfdi(xml: string): CfdiParsed {
       nombre: attr(receptor, "Nombre"),
     },
     conceptos,
+    relacionados: findAllTags(xml, "CfdiRelacionado").map((tag) => attr(tag, "UUID")).filter(Boolean),
   };
 }

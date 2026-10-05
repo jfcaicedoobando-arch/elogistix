@@ -60,3 +60,9 @@ describe("calcTotalsPL", () => {
     expect(calcTotalsPL([fila(1, 15_000, 19_500)]).totalCosto).not.toBe(292_500_000);
   });
 });
+
+it("Auditoría97: venta total 3000 / 960 conserva 3000 y utilidad456", () => {
+  expect(calcTotalsPL([{ cantidad: 960, costo: 2.65, venta: 3000 }])).toMatchObject({
+    totalCosto: 2544, totalVenta: 3000, profit: 456,
+  });
+});

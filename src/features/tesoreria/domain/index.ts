@@ -6,3 +6,5 @@ export * from "./resumen";
 export * from "./flujoProyectado";
 export * from "./pagosProgramados";
 export * from "./movimientoManual";
+export { renglonesFlujoMonedas } from "./flujoMonedas";
+export type { RenglonFlujoMoneda } from "./flujoMonedas";

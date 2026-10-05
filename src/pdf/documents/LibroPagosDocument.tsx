@@ -28,6 +28,7 @@ interface ResumenPdf {
   periodo: string;
   cobrado: string;
   pagado: string;
+  devuelto?: string;
   neto: string;
   conteo: string;
 }
@@ -64,13 +65,13 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
           <View>
             <Text style={styles.h1}>Libro de pagos</Text>
             <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
-              Cobros de clientes, pagos a proveedores y anticipos
+              Cobros de clientes, pagos a proveedores, anticipos y devoluciones
             </Text>
             <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
               Periodo {resumen.periodo}
             </Text>
             <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
-              Importes en MXN valuados al tipo de cambio de cada pago
+              Importes en MXN al TC guardado; devoluciones al TC del anticipo original
             </Text>
           </View>
         </View>
@@ -93,6 +94,7 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
         <View style={{ flexDirection: "row", gap: 16, marginTop: 10 }}>
           <Text style={{ fontSize: 9 }}>Total cobrado (MXN): {resumen.cobrado}</Text>
           <Text style={{ fontSize: 9 }}>Total pagado (MXN): {resumen.pagado}</Text>
+          <Text style={{ fontSize: 9 }}>Devoluciones (MXN): {resumen.devuelto ?? "—"}</Text>
           <Text style={{ fontSize: 9 }}>Neto (MXN): {resumen.neto}</Text>
           <Text style={{ fontSize: 9 }}>Pagos incluidos: {resumen.conteo}</Text>
         </View>

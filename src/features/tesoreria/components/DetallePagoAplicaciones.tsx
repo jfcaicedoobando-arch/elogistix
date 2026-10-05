@@ -42,7 +42,7 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
             <DetailTableRow hoverable={false}>
               <DetailTableHead>Factura</DetailTableHead>
               <DetailTableHead className="text-right">Aplicado</DetailTableHead>
-              <DetailTableHead className="text-right">Saldo</DetailTableHead>
+              <DetailTableHead className="text-right">Saldo actual</DetailTableHead>
             </DetailTableRow>
           </TableHeader>
           <TableBody>

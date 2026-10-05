@@ -22,6 +22,8 @@ import {
   debeReportarStatus,
   wrapEdgeHandler,
 } from "../_shared/sentry.ts";
+import { validarNcProveedor } from "./validarNcProveedor.ts";
+import { esUuid } from "../_shared/uuid.ts";
 import { parseCfdi } from "../_shared/cfdiParser.ts";
 import { type Categoria, parseCategoriasJson } from "./aiHelpers.ts";
 import {
@@ -58,6 +60,7 @@ async function validarEntrada(
     ok: true;
     file: File;
     categoriasJson: string | null;
+    facturaNcId: string | null;
   }
   | { ok: false; res: Response }
 > {
@@ -103,7 +106,11 @@ async function validarEntrada(
       ),
     };
   }
-  return { ok: true, file, categoriasJson };
+  const facturaNc = form.get("factura_nc_id");
+  if (facturaNc !== null && (typeof facturaNc !== "string" || !esUuid(facturaNc))) {
+    return { ok: false, res: errorResponse("Factura de la NC inválida", 400, cors) };
+  }
+  return { ok: true, file, categoriasJson, facturaNcId: facturaNc };
 }
 
 async function handle(
@@ -128,7 +135,7 @@ async function handle(
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-  const { file, categoriasJson } = entrada;
+  const { file, categoriasJson, facturaNcId } = entrada;
 
   const text = await file.text();
   let cfdi;
@@ -137,6 +144,11 @@ async function handle(
   } catch (e) {
     const msg = e instanceof Error ? e.message : "XML inválido";
     return errorResponse(msg, 400, cors);
+  }
+
+  if (facturaNcId) {
+    const rechazo = await validarNcProveedor(auth.adminClient, autorizacion.orgId, facturaNcId, cfdi);
+    if (rechazo) return errorResponse(rechazo, 422, cors);
   }
 
   const categorias: Categoria[] = parseCategoriasJson(categoriasJson);
@@ -167,7 +179,7 @@ async function handle(
       ai_latency_ms: aiResult.latency_ms,
     },
   });
-  return jsonResponse({ cfdi, ai: aiResult.result }, 200, cors);
+  return jsonResponse({ cfdi, ai: aiResult.result, ...(facturaNcId ? { nc_validacion: { factura_id: facturaNcId } } : {}) }, 200, cors);
 }
 
 Deno.serve(wrapEdgeHandler("parse-cfdi-xml", async (req) => {

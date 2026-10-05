@@ -79,11 +79,14 @@ export async function validarPagoContext(
   ctx: PagoContext,
   pagoId: string,
   json: JsonFn,
+  expectedUpdatedAt?: string | null,
 ): Promise<Etapa<PagoContext>> {
   const issues = validateRepContext(ctx);
   if (issues.length === 0) return etapaOk(ctx);
-  await supabase.from("pagos_factura")
+  let update = supabase.from("pagos_factura")
     .update({ estado_rep: "Error", rep_error: issues.map((i) => i.message).join("; ") })
-    .eq("id", pagoId);
+    .eq("id", pagoId).is("deleted_at", null);
+  if (expectedUpdatedAt) update = update.eq("updated_at", expectedUpdatedAt);
+  await update;
   return etapaCorte(json({ error: "validation_failed", issues }, 422));
 }

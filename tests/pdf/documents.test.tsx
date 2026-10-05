@@ -38,3 +38,12 @@ describe("real PDF renderer (on demand, without the normal Vitest stub)", () => 
     for (const text of ["Resumen de Tesorería", "Operación Monterrey", "125,000.00", "8,000.00", "Sin deudores vencidos"]) expect(doc.text).toContain(text);
   });
 });
+
+it("Auditoría89: PDF real mantiene obligaciones EUR100 junto con USD811 y MXN", async () => {
+  const resumen = calcularResumenTesoreria({ cuentas: [], cobranza: [], cxp: [], hoy: new Date("2026-10-04T12:00:00"), tipoCambioUsd: 18 });
+  resumen.flujo = { ...resumen.flujo, por_cobrar_mxn: 116.04, por_pagar_mxn: 7729.5,
+    por_cobrar_usd: 0, por_pagar_usd: 811, por_cobrar_eur: 0, por_pagar_eur: 100 };
+  const doc = await inspectPdf("tesoreria-audit89-eur", <ReporteTesoreriaDocument fechaCorte="2026-10-04" resumen={resumen} emisor={emisor} />);
+  expect(doc.pages).toBe(1);
+  for (const text of ["Moneda", "Por cobrar", "Por pagar", "Neto", "MXN", "USD", "EUR", "100.00", "811.00", "7,729.50", "7,613.46"]) expect(doc.text.toUpperCase()).toContain(text.toUpperCase());
+});

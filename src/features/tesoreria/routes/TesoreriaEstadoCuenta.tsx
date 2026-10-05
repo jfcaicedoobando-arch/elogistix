@@ -21,15 +21,15 @@ import { DataTable } from "@/components/shared/DataTable";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useEstadoCuenta } from "@/features/tesoreria/hooks/useEstadoCuenta";
 import {
-  filtrarMovimientos, rangoMes, totalesVisibles,
+  filtrarMovimientos, rangoMes,
   type RangoFechas, type TipoMovimientoEstadoCuenta,
 } from "@/features/tesoreria/domain/estadoCuenta";
-import { formatCurrency } from "@/lib/formatters";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { estadoCuentaColumns } from "./_sections/estadoCuentaColumns";
 import { EstadoCuentaToolbar } from "./_sections/EstadoCuentaToolbar";
 import { EstadoCuentaResumen } from "./_sections/EstadoCuentaResumen";
+import { EstadoCuentaMovimientosResumen } from "./_sections/EstadoCuentaMovimientosResumen";
 import { EstadoCuentaExportButtons } from "./_sections/EstadoCuentaExportButtons";
 
 function cuentasListas(cargando: boolean, error: boolean, cantidad: number) {
@@ -67,7 +67,7 @@ export default function TesoreriaEstadoCuenta() {
     () => filtrarMovimientos(estado?.movimientos ?? [], { texto, tipo }),
     [estado, texto, tipo],
   );
-  const totales = useMemo(() => totalesVisibles(visibles), [visibles]);
+  const sinCobertura = estado?.cobertura_historica === "sin_cobertura";
 
   return (
     <PageContainer>
@@ -113,16 +113,7 @@ export default function TesoreriaEstadoCuenta() {
           <EstadoCuentaResumen estado={estado} isLoading={isLoading} />
 
           <div className="space-y-1">
-            <div className="flex flex-wrap justify-between gap-2 px-1 text-body-sm text-muted-foreground">
-              <span>
-                {visibles.length} de {estado?.movimientos.length ?? 0} movimientos
-                {estado ? ` · ${estado.alias}` : ""}
-              </span>
-              <span className="tabular-nums">
-                Entradas visibles {formatCurrency(totales.entradas, moneda)} · Salidas visibles{" "}
-                {formatCurrency(totales.salidas, moneda)}
-              </span>
-            </div>
+            <EstadoCuentaMovimientosResumen estado={estado} visibles={visibles} moneda={moneda} />
             <DataTable
               columns={columns}
               data={visibles}
@@ -134,7 +125,7 @@ export default function TesoreriaEstadoCuenta() {
               isLoading={isLoading}
               isError={isError}
               onRetry={() => void refetch()}
-              emptyMessage="No hay movimientos en el periodo seleccionado."
+              emptyMessage={sinCobertura ? "El periodo seleccionado es anterior al arranque de la cuenta. No hay cobertura histórica disponible." : "No hay movimientos en el periodo seleccionado."}
             />
 
           </div>

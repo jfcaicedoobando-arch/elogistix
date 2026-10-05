@@ -4,6 +4,7 @@
  * Extraído de `libroPagos.ts` para respetar el límite de 200 líneas por
  * archivo (Power of 10). Sin red ni React: sólo predicados puros.
  */
+import { estadoConciliacionPago } from "./conciliacionPago";
 import type { FiltrosLibroPagos, FiltroRep, PagoLibro, VistaLibroPagos } from "./libroPagos.tipos";
 
 export function normalizarTextoPago(valor: string): string {
@@ -14,9 +15,9 @@ export function normalizarTextoPago(valor: string): string {
     .trim();
 }
 
-/** ¿El pago entra dinero (cobro) o lo saca (pago / anticipo)? */
+/** ¿El evento entra dinero (cobro / devolución) o lo saca (pago / anticipo)? */
 export function esEntrada(pago: PagoLibro): boolean {
-  return pago.tipo === "cobro";
+  return pago.tipo === "cobro" || pago.tipo === "devolucion_anticipo";
 }
 
 function coincideVista(pago: PagoLibro, vista: VistaLibroPagos): boolean {
@@ -43,7 +44,7 @@ function coincideCuenta(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
 
 function coincideConciliacion(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
   if (f.conciliacion === "conciliados") return pago.conciliado;
-  if (f.conciliacion === "pendientes") return !pago.conciliado;
+  if (f.conciliacion === "pendientes") return estadoConciliacionPago(pago) === "Pendiente";
   return true;
 }
 

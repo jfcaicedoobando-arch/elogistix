@@ -31,6 +31,11 @@ export { makeConcepto };
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
 type Motivo = Tables<"factura_notas_credito">["motivo"];
+type DraftConBase = DraftNC & { baseDescuento: ConceptoNotaCredito[] };
+function inicialConBase(args: Parameters<typeof draftInicialNC>[0]): DraftConBase {
+  const inicial = draftInicialNC(args);
+  return { ...inicial, baseDescuento: inicial.conceptos.map((c) => ({ ...c })) };
+}
 
 interface Params {
   open: boolean;
@@ -58,8 +63,8 @@ export function useNotaCreditoDraft(p: Params) {
   const ultimos = useRef({ conceptos: p.conceptosSugeridos, formaPago: sugerenciaPago.formaPago });
   ultimos.current = { conceptos: p.conceptosSugeridos, formaPago: sugerenciaPago.formaPago };
 
-  const [draft, setDraft] = useState<DraftNC>(() =>
-    draftInicialNC({ formaPago: sugerenciaPago.formaPago, conceptosSugeridos: p.conceptosSugeridos }),
+  const [draft, setDraft] = useState<DraftConBase>(() =>
+    inicialConBase({ formaPago: sugerenciaPago.formaPago, conceptosSugeridos: p.conceptosSugeridos }),
   );
 
   // B-bug: sólo la transición real cerrado→abierto reinicia TODO el borrador.
@@ -69,7 +74,7 @@ export function useNotaCreditoDraft(p: Params) {
   useEffect(() => {
     if (p.open && !abiertoPrev.current) {
       setDraft(
-        draftInicialNC({
+        inicialConBase({
           formaPago: ultimos.current.formaPago,
           conceptosSugeridos: ultimos.current.conceptos,
         }),
@@ -82,10 +87,17 @@ export function useNotaCreditoDraft(p: Params) {
   const setConceptos = (
     next: ConceptoNotaCredito[] | ((prev: ConceptoNotaCredito[]) => ConceptoNotaCredito[]),
   ) =>
-    setDraft((prev) => ({
-      ...prev,
-      conceptos: typeof next === "function" ? next(prev.conceptos) : next,
-    }));
+    setDraft((prev) => {
+      const conceptos = typeof next === "function" ? next(prev.conceptos) : next;
+      const baseDescuento = conceptos.map((c, i) => {
+        const anterior = prev.conceptos.indexOf(c);
+        const index = anterior >= 0 ? anterior : i;
+        const sinCambioPrecio = c.precio_unitario === prev.conceptos[index]?.precio_unitario;
+        return { ...c, precio_unitario: sinCambioPrecio
+          ? (prev.baseDescuento[index]?.precio_unitario ?? c.precio_unitario) : c.precio_unitario };
+      });
+      return { ...prev, conceptos, baseDescuento };
+    });
 
   const d = useMemo(
     () =>
@@ -113,13 +125,14 @@ export function useNotaCreditoDraft(p: Params) {
       });
       return;
     }
-    setConceptos(r.conceptos);
+    setDraft((prev) => ({ ...prev, conceptos: r.conceptos, baseDescuento: r.conceptos.map((c) => ({ ...c })) }));
   };
   const aplicarDescuento = (porcentaje: number) =>
-    setConceptos((prev) => aplicarPorcentaje(prev, porcentaje));
+    setDraft((prev) => ({ ...prev, conceptos: aplicarPorcentaje(prev.baseDescuento, porcentaje) }));
   const aplicarSeleccion = (indices: number[]) => {
     const elegidos = conceptosSeleccionados(p.conceptosSugeridos ?? [], indices);
-    setConceptos(elegidos.length ? elegidos : [makeConcepto()]);
+    const conceptos = elegidos.length ? elegidos : [makeConcepto()];
+    setDraft((prev) => ({ ...prev, conceptos, baseDescuento: conceptos.map((c) => ({ ...c })) }));
   };
 
   const submit = useNotaCreditoSubmit({ facturaId: p.facturaId, onOpenChange: p.onOpenChange });

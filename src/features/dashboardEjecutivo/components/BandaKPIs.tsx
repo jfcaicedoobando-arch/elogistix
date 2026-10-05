@@ -1,3 +1,4 @@
+import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
@@ -13,6 +14,8 @@ import { presupuestoVsRealHref } from "@/features/presupuesto";
 
 interface Props {
   kpis: KPIsEjecutivos;
+  periodo: string;
+  fuente: FuenteEERR;
   /** Datos para drill-downs (Batch E). Si no se proveen, el KPI navega directo. */
   topDeudores?: TopItem[];
   topAcreedores?: TopItem[];
@@ -73,8 +76,9 @@ function buildCumplimientoDisplay(
   return { variant: "positive", delta: "En rango", sinPresupuesto };
 }
 
-export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Props) {
+export function BandaKPIs({ kpis, periodo, fuente, topDeudores, topAcreedores, presupuesto }: Props) {
   const nav = useNavigate();
+  const detalleHref = `/profit/estado-resultados?${new URLSearchParams({ mes: periodo, fuente })}`;
   const [drill, setDrill] = useState<null | "deudores" | "acreedores" | "presupuesto">(null);
   const delta = formatDelta(kpis.ingresos_delta_pct);
   const cumplimiento = kpis.cumplimiento_presupuesto_pct;
@@ -95,7 +99,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
           delta={delta.text}
           deltaVariant={delta.variant}
           icon={DollarSign}
-          onClick={() => nav("/profit/estado-resultados")}
+          onClick={() => nav(detalleHref)}
         />
         <KpiCard
           label="Utilidad operativa"
@@ -103,7 +107,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
           delta={buildUtilidadDelta(kpis)}
           deltaVariant={utilidadVariant(kpis)}
           icon={TrendingUp}
-          onClick={() => nav("/profit/estado-resultados")}
+          onClick={() => nav(detalleHref)}
         />
         <KpiCard
           label="Saldo en bancos"

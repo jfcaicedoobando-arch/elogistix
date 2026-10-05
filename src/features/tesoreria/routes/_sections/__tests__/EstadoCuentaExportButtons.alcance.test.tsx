@@ -10,7 +10,7 @@ vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: mocks.pdf }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
 
 const movimiento: MovimientoEstadoCuenta = { id: "A1", fecha: "2026-09-30", concepto: "Cobro A1", referencia: "A1", cargo: 0, abono: 116, estado_conciliacion: "Pendiente", saldo_corrido: 1016, pago_factura_id: null, pago_proveedor_id: null, anticipo_proveedor_id: null, pago_proveedor_lote_id: null };
-const estado: EstadoCuentaBancario = { cuenta_id: "fixture", alias: "Cuenta sintética", banco: "Banco", moneda: "MXN", desde: "2026-09-01", hasta: "2026-09-30", saldo_inicial: 1000, total_entradas: 116, total_salidas: 100, saldo_final: 1016, fecha_saldo_inicial: null, movimientos_previos_corte: 0, movimientos: [{ ...movimiento, id: "FP", cargo: 100, abono: 0, saldo_corrido: 900 }, movimiento] };
+const estado: EstadoCuentaBancario = { cuenta_id: "fixture", alias: "Cuenta sintética", banco: "Banco", moneda: "MXN", desde: "2026-09-01", desde_solicitado: "2026-09-01", cobertura_historica: "completa", hasta: "2026-09-30", saldo_inicial: 1000, total_entradas: 116, total_salidas: 100, saldo_final: 1016, fecha_saldo_inicial: null, movimientos_previos_corte: 0, movimientos: [{ ...movimiento, id: "FP", cargo: 100, abono: 0, saldo_corrido: 900 }, movimiento] };
 
 describe("Descarga PDF - estado de cuenta filtrado", () => {
   it("entrega al documento filtro, ambos ámbitos y sólo los movimientos visibles", async () => {

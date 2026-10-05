@@ -83,14 +83,15 @@ VALUES
   ('44444444-4444-4444-4444-4444444444b1',
    '33333333-3333-3333-3333-3333333333b1', '11111111-1111-1111-1111-111111111111',
    CURRENT_DATE, 19000, 'MXN'::public.moneda, 19, 1000, 'Transferencia', 'BL01-Q1', '');
--- Q2: pago 500 USD sobre factura USD; aplicado = 500 USD; factor = 1.
+-- Q2: pago 500 USD sobre factura USD; aplicado = 500 USD (factor neutral),
+-- valuación del cobro19MXN/USD. La comisión conserva TC de emisión18 (AUD91).
 INSERT INTO public.pagos_factura
   (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
    monto_aplicado_factura, forma_pago, referencia, notas)
 VALUES
   ('44444444-4444-4444-4444-4444444444b2',
    '33333333-3333-3333-3333-3333333333b2', '11111111-1111-1111-1111-111111111111',
-   CURRENT_DATE, 500, 'USD'::public.moneda, 1, 500, 'Transferencia', 'BL01-Q2', '');
+   CURRENT_DATE, 500, 'USD'::public.moneda, 19, 500, 'Transferencia', 'BL01-Q2', '');
 -- Q3: pago 1,000 USD sobre factura MXN; aplicado = 19,500 MXN; factor = 19.5.
 INSERT INTO public.pagos_factura
   (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,

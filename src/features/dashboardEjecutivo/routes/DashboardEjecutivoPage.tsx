@@ -124,6 +124,8 @@ export default function DashboardEjecutivoPage() {
 
           <BandaKPIs
             kpis={data.kpis}
+            periodo={data.periodo}
+            fuente={data.fuente}
             topDeudores={data.vencimientos.cobranzaMayor30.top}
             topAcreedores={data.vencimientos.cxpProximos7.top}
             presupuesto={data.presupuesto}
