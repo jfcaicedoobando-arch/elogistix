@@ -14,10 +14,18 @@ function es401(error: unknown): boolean {
   return ctx?.status === 401;
 }
 
+async function tokenVigente(forzar = false, rechazado?: string): Promise<string | null> {
+  try {
+    return await ensureFreshSession(forzar, rechazado);
+  } catch {
+    return null; // sin token propio, el SDK adjunta la sesión que tenga
+  }
+}
+
 export async function invokeUserManagement<T = unknown>(
   body: Record<string, unknown>,
 ): Promise<InvokeResult<T>> {
-  let token = await ensureFreshSession();
+  let token = await tokenVigente();
   let res: InvokeResult<T> = await supabase.functions.invoke<T>("user-management", {
     body,
     ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
@@ -25,7 +33,7 @@ export async function invokeUserManagement<T = unknown>(
   if (!res.error || !es401(res.error) || !token) return res;
 
   const rechazado = token;
-  token = await ensureFreshSession(true, rechazado);
+  token = await tokenVigente(true, rechazado);
   if (!token || token === rechazado) return res;
   res = await supabase.functions.invoke<T>("user-management", {
     body,
