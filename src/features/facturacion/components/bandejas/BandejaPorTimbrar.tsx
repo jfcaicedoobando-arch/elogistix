@@ -28,7 +28,7 @@ const columns = defineColumns<FilaPorTimbrar>([
         : row.original.numero,
   },
   clientColumn<FilaPorTimbrar>({ accessor: (r) => r.cliente_nombre }),
-  { ...dateColumn<FilaPorTimbrar>({ id: "emision", header: "Emisión", accessor: (r) => r.fecha_emision }),
+  { ...dateColumn<FilaPorTimbrar>({ id: "emision", header: "Emisión prevista", accessor: (r) => r.fecha_emision }),
     meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
   { ...moneyColumn<FilaPorTimbrar>({ id: "total", header: "Total",
       accessor: (r) => r.total, currencyAccessor: (r) => r.moneda }),
@@ -97,7 +97,7 @@ export function BandejaPorTimbrar() {
                     ) : r.numero}
                   </div>
                   <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
-                  <div className="text-label text-muted-foreground mt-0.5">{formatDate(r.fecha_emision)}</div>
+                  <div className="text-label text-muted-foreground mt-0.5">Emisión prevista: {formatDate(r.fecha_emision)}</div>
                 </div>
                 <span className="text-body font-semibold tabular-nums whitespace-nowrap">{formatCurrency(r.total, r.moneda)}</span>
               </div>

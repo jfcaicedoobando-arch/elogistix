@@ -46,7 +46,7 @@ export function FechasEImportesBlock({
             />
           </div>
           <div className="space-y-1">
-            <Label>Días crédito</Label>
+            <Label>Días de crédito</Label>
             <NumericInput
               value={values.diasCredito}
               onChange={(n) => onChange("diasCredito", n)}

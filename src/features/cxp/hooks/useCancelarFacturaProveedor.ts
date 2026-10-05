@@ -18,8 +18,8 @@ export function useCancelarFacturaProveedor() {
       cancelarFacturaProveedor(p.facturaId, p.motivo),
     onSuccess: () => {
       notifySuccess(undefined, {
-        title: "Factura cancelada",
-        description: "Se cancelaron las notas de crédito asociadas y se limpiaron los conceptos del embarque.",
+        title: "Registro de factura de proveedor cancelado",
+        description: "Se cancelaron los registros de notas de crédito asociados y se recalculó la liquidación de los costos del embarque. No se solicitó cancelación ante el SAT.",
       });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });

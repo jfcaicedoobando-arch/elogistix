@@ -31,7 +31,7 @@ describe("Toast actions stay inside their session scope", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       act(() => { controls.cancel.onClick(); controls.action.onClick(); controls.onAutoClose(); });
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Ver último error" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Ver último diagnóstico" })).not.toBeInTheDocument();
       expect(retry).not.toHaveBeenCalled();
       act(() => notifyWarning(undefined, { title: "MOCK nueva sesión" }));
       act(() => mocks.warning.mock.calls.at(-1)?.[1].action.onClick());

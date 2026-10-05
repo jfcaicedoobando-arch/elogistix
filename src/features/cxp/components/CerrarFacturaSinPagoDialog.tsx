@@ -77,7 +77,7 @@ export function CerrarFacturaSinPagoDialog({
           </p>
           <ul className="list-disc pl-5 text-muted-foreground text-body-sm space-y-1">
             <li>Se creará un ajuste tipificado en el histórico de pagos (marcado como ajuste, no como pago).</li>
-            <li>La factura quedará marcada como <strong>Pagada</strong> y desaparecerá del aging.</li>
+            <li>La factura quedará marcada como <strong>Pagada</strong> y dejará de aparecer en Antigüedad de saldos por pagar.</li>
             <li>La acción queda registrada en la bitácora con tu usuario y el motivo.</li>
             <li>Requiere que la factura esté aprobada.</li>
           </ul>

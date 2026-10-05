@@ -61,7 +61,7 @@ export function DialogRegistrarPagoLiquidacion({
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
         </div>
         <div className="space-y-1">
-          <Label>Método</Label>
+          <Label>Medio de pago</Label>
           <Select value={metodo} onValueChange={setMetodo}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>

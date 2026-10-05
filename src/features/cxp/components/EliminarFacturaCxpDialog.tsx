@@ -39,10 +39,11 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
       entityName={factura ? `la factura ${factura.folio_proveedor}` : "la factura"}
       description={
         <>
-          La factura será enviada a la papelera. Podrás restaurarla desde el historial si fue un error.
+          La factura será enviada a la papelera. Un administrador podrá revisar su recuperación desde Papelera si fue un error.
         </>
       }
-      finalDescription="Esta acción la envía a la papelera y puede restaurarse después."
+      finalDescription="Confirma el envío de esta factura a la papelera. No se borrará físicamente."
+      confirmLabel="Enviar a la papelera"
       onConfirm={onConfirm}
       isPending={isPending}
     >

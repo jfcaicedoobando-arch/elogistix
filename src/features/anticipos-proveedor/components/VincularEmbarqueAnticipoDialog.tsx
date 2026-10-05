@@ -43,7 +43,7 @@ export function VincularEmbarqueAnticipoDialog({ open, onOpenChange, anticipo }:
         Cancelar
       </Button>
       <Button onClick={onSubmit} disabled={sinCambios} loading={vincular.isPending}>
-        {vincular.isPending ? "Guardando…" : embarqueId ? "Vincular embarque" : "Quitar embarque"}
+        {vincular.isPending ? "Guardando…" : embarqueId ? "Vincular al embarque" : "Desvincular del embarque"}
       </Button>
     </>
   );
@@ -54,7 +54,7 @@ export function VincularEmbarqueAnticipoDialog({ open, onOpenChange, anticipo }:
       onOpenChange={onOpenChange}
       icon={Ship}
       title="Vincular anticipo a un embarque"
-      description="Indica el expediente al que corresponde el dinero adelantado para amarrarlo después con la factura del proveedor."
+      description="Indica el expediente al que corresponde el anticipo para vincularlo después con la factura del proveedor. Desvincularlo sólo retira esta referencia; no elimina el embarque ni el anticipo."
       size="md"
       footer={footer}
     >

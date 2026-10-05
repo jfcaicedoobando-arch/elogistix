@@ -12,6 +12,14 @@ const report = () => buildErrorReport({ title: "Costo no guardado", requestId: "
 function open() { const next = report(); rememberErrorReport(next); openErrorReport(next); render(<ErrorDetailsDialog />); }
 
 describe("ErrorDetailsDialog", () => {
+  it("usa un encabezado neutro para un diagnóstico de advertencia o éxito", () => {
+    const notice = buildErrorReport({ title: "Importación parcial", context: { omitidos: 2 } });
+    openErrorReport(notice);
+    render(<ErrorDetailsDialog />);
+    expect(screen.getByRole("heading", { name: "Detalles de la operación" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Detalles del error" })).not.toBeInTheDocument();
+    expect((screen.getByRole("textbox", { name: "JSON de diagnóstico" }) as HTMLTextAreaElement).value).toContain("Importación parcial");
+  });
   it("copies valid JSON with backend ID and reports success inside the dialog", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
@@ -25,7 +33,7 @@ describe("ErrorDetailsDialog", () => {
     open();
     fireEvent.click(screen.getByRole("button", { name: "Copiar JSON" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("cópialo manualmente"));
-    const field = screen.getByRole("textbox", { name: "JSON del error" }) as HTMLTextAreaElement;
+    const field = screen.getByRole("textbox", { name: "JSON de diagnóstico" }) as HTMLTextAreaElement;
     const json = JSON.parse(field.value);
     expect(json.requestId).toBe("backend-123");
     expect(json.clipboardError.message).toBe("MOCK denied");
@@ -38,11 +46,11 @@ describe("ErrorDetailsDialog", () => {
     act(() => { rememberErrorReport(next); offerErrorRecovery(next); });
     // El recuperador permanece por debajo de los modales z-50, fuera del
     // centro donde viven Cancelar/Guardar en formularios estrechos.
-    expect(screen.getByRole("button", { name: "Ver último error" })).toHaveClass("left-4", "z-40");
-    fireEvent.click(screen.getByRole("button", { name: "Ver último error" }));
+    expect(screen.getByRole("button", { name: "Ver último diagnóstico" })).toHaveClass("left-4", "z-40");
+    fireEvent.click(screen.getByRole("button", { name: "Ver último diagnóstico" }));
     expect(screen.getByRole("dialog")).toBeVisible();
     act(() => setAuthSnapshot({ userId: "nuevo", email: null, organizationId: "otra", organizationName: null, role: null, effectiveRole: null }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Ver último error" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ver último diagnóstico" })).not.toBeInTheDocument();
   });
 });

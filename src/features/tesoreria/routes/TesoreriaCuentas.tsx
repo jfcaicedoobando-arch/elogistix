@@ -139,7 +139,7 @@ export default function TesoreriaCuentas() {
         open={!!deleteTarget}
         onOpenChange={(v) => { if (!v) cancelarEliminar(); }}
         title={deleteTarget ? `¿Eliminar cuenta "${deleteTarget.alias}"?` : "¿Eliminar cuenta?"}
-        description="La cuenta dejará de aparecer en conciliación. Esta acción no se puede deshacer."
+        description="La cuenta se dará de baja y dejará de aparecer en conciliación. No se borrará físicamente ni se eliminarán sus movimientos registrados."
         confirmLabel="Eliminar cuenta"
         pending={eliminando}
         onConfirm={confirmarEliminar}

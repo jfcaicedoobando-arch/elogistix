@@ -56,7 +56,7 @@ function AccionesFactura({ r, onEjecutarPago, onAbrirFactura }: AccionesProps) {
   }
   return r.fecha_programada_pago ? (
     <Button size="sm" variant="outline" onClick={() => onEjecutarPago(r)}>
-      <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
+      <Wallet className="h-3.5 w-3.5 mr-1.5" /> Registrar pago
     </Button>
   ) : (
     <Button size="sm" variant="ghost" onClick={() => onAbrirFactura(r)}>

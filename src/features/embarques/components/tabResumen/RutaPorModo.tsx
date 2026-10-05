@@ -46,8 +46,8 @@ export function RutaMaritimo({ e }: { e: EmbarqueRow }) {
   const tipoNombre = resolveTipoContenedorNombre(e.tipo_contenedor, tipos, PLACEHOLDER);
   return (
     <>
-      <DetailRow label="Puerto Origen" value={e.puerto_origen || PLACEHOLDER} />
-      <DetailRow label="Puerto Destino" value={e.puerto_destino || PLACEHOLDER} />
+      <DetailRow label="Puerto de origen" value={e.puerto_origen || PLACEHOLDER} />
+      <DetailRow label="Puerto de destino" value={e.puerto_destino || PLACEHOLDER} />
       <DetailRow label="Naviera" value={e.naviera || PLACEHOLDER} />
       <DetailRow label="BL Master" value={e.bl_master || PLACEHOLDER} />
       <DetailRow label="BL House" value={e.bl_house || PLACEHOLDER} />

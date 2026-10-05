@@ -37,7 +37,7 @@ export function EstadoConciliado({
         </Button>
       ) : (
         <p className="text-body-sm text-muted-foreground">
-          Este movimiento está conciliado, pero no guarda el pago con el que se amarró.
+          Este movimiento está conciliado, pero no conserva un vínculo con el pago.
         </p>
       )}
       {tipo === "traspaso" ? <p className="text-body-sm text-muted-foreground">
@@ -45,6 +45,7 @@ export function EstadoConciliado({
       </p> : <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
         Desconciliar
       </Button>}
+      {tipo !== "traspaso" && <p className="text-body-sm text-muted-foreground">Desconciliar sólo retira el vínculo bancario. Conserva el pago y sus aplicaciones a facturas; no devuelve dinero ni anula el pago.</p>}
     </>
   );
 }

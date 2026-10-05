@@ -2,7 +2,7 @@
  * Helpers para el formulario de datos fiscales de una factura borrador.
  * v13.171.0 — `tipoCambio` puede ser `null` mientras el usuario captura.
  *   Las facturas USD/EUR nacen sin TC (null) y el timbrado se bloquea hasta
- *   que el usuario lo capture o pulse "Obtener TC DOF de hoy".
+ *   que el usuario lo capture o pulse "Consultar TC DOF".
  * v13.164.3 — se removió `serie`: FacturAPI es la fuente de verdad para
  * serie y folio; enviar un hint manual solo introduce riesgo de mismatch.
  */
@@ -23,7 +23,7 @@ export function avisoTipoCambioFactura(
 ): string | null {
   if (moneda === "MXN") return null;
   if (tcValido(tipoCambio) == null) {
-    return "Falta capturar el tipo de cambio del día. Pulsa “Obtener TC DOF de hoy” o escríbelo manualmente antes de timbrar.";
+    return "Falta capturar el tipo de cambio para la fecha de emisión. Pulsa “Consultar TC DOF” o escríbelo manualmente antes de timbrar.";
   }
   const fueraDeBanda = validarTcMxn(tipoCambio);
   if (fueraDeBanda) {

@@ -7,6 +7,13 @@ import { render, screen } from "@testing-library/react";
 import { CotizacionesKpis } from "../CotizacionesKpis";
 
 describe("CotizacionesKpis", () => {
+  it("no confunde aceptación comercial con conversión a embarque", () => {
+    render(<CotizacionesKpis total={12} aceptadas={5} rechazadas={2} tasa="41.7" />);
+    expect(screen.getByText("Tasa de aceptación")).toBeInTheDocument();
+    expect(screen.getByText("Aceptadas ÷ total del periodo")).toBeInTheDocument();
+    expect(screen.getByText("Incluye cotizaciones en operación")).toBeInTheDocument();
+    expect(screen.queryByText("Tasa de conversión")).not.toBeInTheDocument();
+  });
   it("muestra el label corto y el periodo como sublabel", () => {
     render(<CotizacionesKpis total={12} aceptadas={5} rechazadas={2} tasa="41.7" />);
     expect(screen.getByText("Total cotizaciones")).toBeTruthy();

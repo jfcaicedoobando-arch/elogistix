@@ -23,7 +23,7 @@ export interface BanxicoTcResult {
 
 /**
  * Devuelve una mutación que consulta el TC DOF de Banxico y ejecuta `onTC`
- * con el valor. Auto-guarda a través del callback (no requiere botón manual).
+ * con el valor. El formulario consumidor decide cuándo persistirlo.
  *
  * B-03: `fechaEmision` (ISO `YYYY-MM-DD`) consulta la Publicación DOF vigente
  * en ESA fecha. Sin ella se usa la de hoy, lo que valúa mal los documentos
@@ -55,8 +55,8 @@ export function useBanxicoTipoCambio(
     onSuccess: (d) => {
       onTC(d.tipoCambio);
       notifySuccess(undefined, {
-        title: `TC DOF ${d.moneda}: ${d.tipoCambio}`,
-        description: "Guardado automáticamente en la factura.",
+        title: `Tipo de cambio consultado: ${d.tipoCambio} ${d.moneda}/MXN`,
+        description: "Se completó el campo de tipo de cambio. Revisa los datos de la factura antes de continuar.",
       });
     },
     onError: (err) =>

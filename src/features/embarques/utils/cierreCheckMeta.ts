@@ -42,8 +42,8 @@ export interface CierreCheckMeta {
 }
 
 
-const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", descripcion: "El cliente ya nos pagó: no quedan facturas de venta con saldo abierto.", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
-const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", descripcion: "Ya le pagamos a cada proveedor: no quedan facturas de proveedor con saldo abierto.", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 3 };
+const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", descripcion: "Verifica que las facturas de venta del embarque no tengan saldo pendiente. No implica un cobro si no hay facturas aplicables.", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
+const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", descripcion: "Verifica que las facturas de proveedor del embarque no tengan saldo pendiente. No implica un pago si no hay facturas aplicables.", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 3 };
 
 const docs: CierreCheckMeta = { label: "Documentos requeridos completos", responsable: "Coordinador logístico", ruta: buildRuta("documentos", "faltantes"), ctaLabel: "Ir a Documentos", formatDetalle: fmtDocs, fase: "documentos", orden: 1 };
 

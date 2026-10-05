@@ -9,6 +9,16 @@ import ReportesKpiCards from "../ReportesKpiCards";
 const kpisBase = { totalClientes: 3, revenue: 1000, profit: 200, margenProm: 20 };
 
 describe("ReportesKpiCards — advertencia de embarques sin TC", () => {
+  it("identifica el margen como global, no promedio", () => {
+    render(<ReportesKpiCards kpis={{ ...kpisBase, embarquesSinTc: 0 }} isLoading={false} />);
+    expect(screen.getByText("Margen global")).toBeInTheDocument();
+    expect(screen.getByText("Utilidad total ÷ venta total")).toBeInTheDocument();
+    expect(screen.queryByText("Margen promedio")).not.toBeInTheDocument();
+  });
+  it("no afirma un margen de 0% sin venta", () => {
+    render(<ReportesKpiCards kpis={{ ...kpisBase, revenue: 0, margenProm: 0, embarquesSinTc: 0 }} isLoading={false} />);
+    expect(screen.getByText("No calculable")).toBeInTheDocument();
+  });
   it("muestra centavos sin desbordar el KPI cuando el monto es grande", () => {
     render(<ReportesKpiCards kpis={{ ...kpisBase, revenue: 1234567.89, profit: 620, embarquesSinTc: 0 }} isLoading={false} />);
     expect(screen.getByText("USD 1,234,567.89")).toBeInTheDocument();

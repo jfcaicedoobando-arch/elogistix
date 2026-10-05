@@ -15,7 +15,7 @@ const TABS = [
   { value: "conciliacion", label: "Conciliación" },
   { value: "pnl", label: "Utilidad" },
   { value: "cierre", label: "Cierre" },
-  { value: "notas", label: "Notas y Actividad" },
+  { value: "notas", label: "Notas y actividad" },
 ] as const;
 
 /**

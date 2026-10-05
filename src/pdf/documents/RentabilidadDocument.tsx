@@ -37,7 +37,7 @@ const cols: PdfColumn<RentabilidadClienteRow>[] = [
   { key: "venta", title: "Venta", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.venta_usd, "USD") },
   { key: "costo", title: "Costo", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.costo_usd, "USD") },
   { key: "profit", title: "Utilidad", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.profit_usd, "USD") },
-  { key: "margen", title: "Margen", cellStyle: styles.cellNum, render: (r) => `${r.margen.toFixed(1)}%` },
+  { key: "margen", title: "Margen", cellStyle: styles.cellNum, render: (r) => r.venta_usd === 0 ? "No calculable" : `${r.margen.toFixed(1)}%` },
 ];
 
 export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes, emisor }: Props) {
@@ -61,7 +61,7 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
             { l: "Venta total", v: formatCurrency(kpis.total_venta_usd, "USD") },
             { l: "Costo total", v: formatCurrency(kpis.total_costo_usd, "USD") },
             { l: "Utilidad total", v: formatCurrency(kpis.total_profit_usd, "USD") },
-            { l: "Margen promedio", v: `${kpis.margen_promedio.toFixed(1)}%` },
+            { l: "Margen global", v: kpis.total_venta_usd === 0 ? "No calculable" : `${kpis.margen_promedio.toFixed(1)}%` },
           ].map((k) => (
             <View key={k.l} style={styles.kpiCard}>
               <View style={styles.kpiInner}>

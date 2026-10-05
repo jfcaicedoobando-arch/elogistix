@@ -34,7 +34,7 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
             <AccordionTrigger className="text-subsection hover:no-underline">
               <span className="flex items-center gap-2">
                 <Ship className="h-5 w-5 text-primary" />
-                Número de Embarques
+                Cantidad de contenedores
                 {complete && (
                   <span
                     className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
@@ -73,7 +73,7 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
           <AccordionTrigger className="text-subsection hover:no-underline">
             <span className="flex items-center gap-2">
               <StickyNote className="h-5 w-5 text-primary" />
-              Notas Adicionales
+              Notas adicionales
             </span>
           </AccordionTrigger>
           <AccordionContent className="pt-2">

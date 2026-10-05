@@ -30,9 +30,9 @@ export function CotizacionesKpis({ total, aceptadas, rechazadas, tasa, segmento 
       </p>
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard label="Total cotizaciones" sublabel="30 días" value={total} icon={BarChart3} variant="info" iconVariant="chip" />
-        <KpiCard label="Aceptadas" value={aceptadas} icon={CheckCircle} variant="success" iconVariant="chip" />
+        <KpiCard label="Aceptadas" sublabel="Incluye cotizaciones en operación" value={aceptadas} icon={CheckCircle} variant="success" iconVariant="chip" />
         <KpiCard label="Rechazadas" value={rechazadas} icon={XCircle} variant={rechazadas > 0 ? "destructive" : "default"} iconVariant="chip" />
-        <KpiCard label="Tasa de conversión" value={`${tasa}%`} icon={TrendingUp} variant="accent" iconVariant="chip" />
+        <KpiCard label="Tasa de aceptación" sublabel="Aceptadas ÷ total del periodo" value={`${tasa}%`} icon={TrendingUp} variant="accent" iconVariant="chip" />
       </div>
     </div>
   );

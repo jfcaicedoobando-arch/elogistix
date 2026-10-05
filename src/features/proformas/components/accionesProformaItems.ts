@@ -18,7 +18,7 @@ export function buildPrimaryItem(p: PrimaryParams): DetalleActionItem | null {
   if (p.puedeConvertir) {
     return {
       id: "convertir",
-      label: "Convertir a factura",
+      label: "Crear borrador de factura",
       icon: Receipt,
       onClick: p.onConvertir,
       loading: p.convirtiendo,

@@ -141,7 +141,7 @@ export function buildAnticipoColumns({
                 disabled={!canCancel || !canEditFinance}
                 onClick={() => onCancelar(row)}
               >
-                <Ban className="mr-2 h-4 w-4" /> Cancelar
+                <Ban className="mr-2 h-4 w-4" /> Anular registro
               </DropdownMenuItem>
 
             </DropdownMenuContent>

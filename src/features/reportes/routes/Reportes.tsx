@@ -50,7 +50,7 @@ export default function Reportes() {
     <PageContainer>
       <PageHeader
         title="Rentabilidad por cliente"
-        description="P&L agrupado por cuenta con filtros de periodo y modo"
+        description="Ventas, costos y utilidad por cliente con filtros de periodo y modo."
         actions={
           <>
             {/* Mobile: un solo dropdown "Exportar ▾" */}

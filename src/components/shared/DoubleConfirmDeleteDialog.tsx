@@ -20,7 +20,7 @@ interface DoubleConfirmDeleteDialogProps {
    *  Ola 3 · O3.1 — permite adoptar el patrón sin clonarlo cuando el diálogo
    *  necesita mostrar datos de la entidad antes de confirmar. */
   children?: ReactNode;
-  /** Etiqueta del botón destructivo final. Default "Eliminar definitivamente". */
+  /** Etiqueta del botón destructivo final. La purga debe indicarse explícitamente. */
   confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
   isPending?: boolean;
@@ -40,7 +40,7 @@ function DoubleConfirmInner({
   description,
   finalDescription,
   children,
-  confirmLabel = "Eliminar definitivamente",
+  confirmLabel = "Eliminar",
   onConfirm,
   isPending = false,
 }: DoubleConfirmDeleteDialogProps) {
@@ -76,7 +76,7 @@ function DoubleConfirmInner({
             <AlertDialogTitle>¿Eliminar {entityName}?</AlertDialogTitle>
             {typeof description === "string" || !description ? (
               <AlertDialogDescription>
-                {description || `Se eliminará ${entityName} de forma permanente.`}
+                {description || `Se eliminará ${entityName}. Revisa el alcance de esta acción antes de continuar.`}
               </AlertDialogDescription>
             ) : (
               <AlertDialogDescription asChild>
@@ -107,7 +107,7 @@ function DoubleConfirmInner({
             </AlertDialogTitle>
             {typeof finalDescription === "string" || !finalDescription ? (
               <AlertDialogDescription>
-                {finalDescription || "¿Estás completamente seguro? Esta acción no se puede deshacer."}
+                {finalDescription || "Confirma que deseas eliminar este registro."}
               </AlertDialogDescription>
             ) : (
               <AlertDialogDescription asChild>

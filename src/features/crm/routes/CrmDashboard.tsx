@@ -74,7 +74,7 @@ function ForecastMesCard() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle>Forecast por mes</CardTitle>
+        <CardTitle>Proyección por mes</CardTitle>
       </CardHeader>
       <CardContent>
         {isError ? (
@@ -136,7 +136,7 @@ export default function CrmDashboard() {
           {/* Hallazgo #5: nunca sumar monedas distintas ni etiquetarlas como MXN. */}
           <StatStripItem
             icon={TrendingUp}
-            label="Pipeline ponderado"
+            label="Valor ponderado de oportunidades"
             value={
               isLoading
                 ? "…"

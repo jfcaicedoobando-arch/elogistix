@@ -62,7 +62,7 @@ export function EmbarqueDetalleTabs({
           Operación: Resumen · Tracking · Documentos
           Finanzas:  Costos · Garantías y Demoras · Seguros · P&L · Facturación · Conciliación
           Cierre:    Cierre
-          Bitácora:  Notas y Actividad
+          Bitácora:  Notas y actividad
       */}
       {/* v13.139.18 (F-04 auditoría 3): 11 tabs desbordaban a 2ª línea con
           flex-wrap. Cambiamos a scroll horizontal nativo con scrollbar fino

@@ -27,11 +27,11 @@ function ErrorDetailsContent({ report }: { report: ErrorReport }) {
   return (
     <DialogContent className={cn(dialogSize["3xl"], "z-[70]")} overlayClassName="z-[70]">
       <DialogHeader>
-        <DialogTitle>Detalles del error</DialogTitle>
-        <DialogDescription>Comparte el JSON con soporte para identificar la operación y el error original.</DialogDescription>
+        <DialogTitle>Detalles de la operación</DialogTitle>
+        <DialogDescription>Comparte el JSON con soporte para identificar la operación y el aviso original.</DialogDescription>
       </DialogHeader>
       <textarea
-        aria-label="JSON del error"
+        aria-label="JSON de diagnóstico"
         readOnly
         value={json}
         onFocus={(event) => event.currentTarget.select()}
@@ -58,7 +58,7 @@ export function ErrorDetailsDialog() {
     <>
       {!report && recoverable && (
         <Button size="sm" variant="outline" className="fixed bottom-4 left-4 z-40 rounded-full shadow-sm"
-          onClick={() => openErrorReport(recoverable)}><FileJson className="h-4 w-4 mr-2" />Ver último error</Button>
+          onClick={() => openErrorReport(recoverable)}><FileJson className="h-4 w-4 mr-2" />Ver último diagnóstico</Button>
       )}
       <Dialog open={report !== null} onOpenChange={(open) => { if (!open) closeErrorReport(); }}>
         {report && <ErrorDetailsContent key={report.clientReportId ?? report.requestId} report={report} />}

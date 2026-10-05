@@ -10,6 +10,12 @@ const mockKpis = {
 };
 
 describe("RentabilidadDocument", () => {
+  it("distingue margen global de promedio y no exporta 0% sin venta", () => {
+    const { container } = render(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={{ ...mockKpis, total_venta_usd: 0, margen_promedio: 0 }} clientes={[{ cliente_nombre: "Sin venta", total_embarques: 1, venta_usd: 0, costo_usd: 100, profit_usd: -100, margen: 0 }]} />);
+    expect(container).toHaveTextContent("Margen global");
+    expect(container.textContent?.match(/No calculable/g)).toHaveLength(2);
+    expect(container).not.toHaveTextContent("Margen promedio");
+  });
   it("renderiza título, período y mensaje cuando no hay clientes", () => {
     const { container } = render(
       <RentabilidadDocument

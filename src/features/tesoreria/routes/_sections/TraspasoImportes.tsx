@@ -47,7 +47,7 @@ export function TraspasoImportes({
         </div>}
       </div>
       <div className="space-y-1.5" onChangeCapture={(e) => capturar("montoOrigen", e.target)}>
-        <Label htmlFor="traspaso-monto">Monto a transferir</Label>
+        <Label htmlFor="traspaso-monto">Monto transferido</Label>
         <MoneyInput
           id="traspaso-monto"
           value={montoOrigen}

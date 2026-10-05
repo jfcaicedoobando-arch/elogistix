@@ -32,6 +32,7 @@ import {
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 import { AutoSaveIndicator } from "./AutoSaveIndicator";
 import { queryKeys } from "@/lib/query";
+import { formatDate } from "@/lib/formatters";
 
 interface Props {
   factura: FacturaDetalle;
@@ -120,7 +121,7 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
         />
 
         {factura.moneda !== "MXN" && (
-          <div className="flex justify-start">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -129,8 +130,9 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
               onClick={() => obtenerTC.mutate()}
             >
               <RefreshCw className={`h-3.5 w-3.5 mr-1 ${obtenerTC.isPending ? "animate-spin" : ""}`} />
-              {obtenerTC.isPending ? "Consultando Banxico…" : `Obtener TC DOF de hoy (${factura.moneda})`}
+              {obtenerTC.isPending ? "Consultando Banxico…" : `Consultar TC DOF (${factura.moneda})`}
             </Button>
+            <span className="text-body-sm text-muted-foreground">Fecha de emisión: {factura.fecha_emision ? formatDate(factura.fecha_emision) : "hoy"}.</span>
           </div>
         )}
       </CardContent>

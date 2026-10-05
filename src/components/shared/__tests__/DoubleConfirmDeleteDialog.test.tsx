@@ -3,6 +3,14 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 
 describe("<DoubleConfirmDeleteDialog />", () => {
+  it("no afirma borrado físico por defecto; la purga debe declararlo explícitamente", () => {
+    const { rerender } = render(<DoubleConfirmDeleteDialog open entityName="registro" onConfirm={vi.fn()} onOpenChange={vi.fn()} />);
+    expect(screen.queryByText(/permanente|no se puede deshacer/i)).not.toBeInTheDocument();
+    rerender(<DoubleConfirmDeleteDialog open entityName="registro" onConfirm={vi.fn()} onOpenChange={vi.fn()} confirmLabel="Eliminar definitivamente" finalDescription="Esta purga no se puede deshacer." />);
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByText("Esta purga no se puede deshacer.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Eliminar definitivamente" })).toBeDisabled();
+  });
   it("muestra paso 1 con descripción por defecto y botón Continuar", () => {
     render(
       <DoubleConfirmDeleteDialog
@@ -46,7 +54,7 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
     expect(screen.getByText(/confirmar eliminación/i)).toBeInTheDocument();
     expect(screen.getByText("Acción irreversible.")).toBeInTheDocument();
-    const eliminar = screen.getByRole("button", { name: /eliminar definitivamente/i });
+    const eliminar = screen.getByRole("button", { name: /^eliminar$/i });
     expect(eliminar).toBeDisabled();
   });
 
@@ -63,7 +71,7 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
 
     const input = screen.getByPlaceholderText("ELIMINAR");
-    const btn = screen.getByRole("button", { name: /eliminar definitivamente/i });
+    const btn = screen.getByRole("button", { name: /^eliminar$/i });
 
     fireEvent.change(input, { target: { value: "eliminar mal" } });
     expect(btn).toBeDisabled();
@@ -156,7 +164,7 @@ describe("<DoubleConfirmDeleteDialog />", () => {
       target: { value: "ELIMINAR" },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /eliminar definitivamente/i }));
+      fireEvent.click(screen.getByRole("button", { name: /^eliminar$/i }));
       await Promise.resolve();
       await Promise.resolve();
     });

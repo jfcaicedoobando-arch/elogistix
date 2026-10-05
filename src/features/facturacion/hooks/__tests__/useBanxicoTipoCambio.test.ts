@@ -10,6 +10,7 @@ import React from "react";
 const mocks = vi.hoisted(() => ({
   fetchExchangeRates: vi.fn(),
   toastSuccess: vi.fn(),
+  notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
 
@@ -21,7 +22,7 @@ vi.mock("sonner", () => ({
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: mocks.notifyError,
-  notifySuccess: (_t: unknown, opts: { title: string }) => mocks.toastSuccess(opts?.title),
+  notifySuccess: (_t: unknown, opts: { title: string }) => { mocks.notifySuccess(opts); mocks.toastSuccess(opts?.title); },
 }));
 
 import { useBanxicoTipoCambio } from "../useBanxicoTipoCambio";
@@ -34,6 +35,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 beforeEach(() => {
   mocks.fetchExchangeRates.mockReset();
   mocks.toastSuccess.mockReset();
+  mocks.notifySuccess.mockReset();
   mocks.notifyError.mockReset();
 });
 
@@ -43,7 +45,7 @@ describe("useBanxicoTipoCambio · FIX-10 fallback guard", () => {
       usdMxn: 17.25, eurMxn: 18.5, esFallback: true,
     });
     const onTC = vi.fn();
-    const { result } = renderHook(() => useBanxicoTipoCambio("USD", onTC), { wrapper });
+    const { result } = renderHook(() => useBanxicoTipoCambio("USD", onTC, "2026-09-30"), { wrapper });
 
     await act(async () => { result.current.mutate(); });
     await waitFor(() => expect(mocks.notifyError).toHaveBeenCalled());
@@ -59,12 +61,15 @@ describe("useBanxicoTipoCambio · FIX-10 fallback guard", () => {
       usdMxn: 18.42, eurMxn: 19.9, esFallback: false,
     });
     const onTC = vi.fn();
-    const { result } = renderHook(() => useBanxicoTipoCambio("USD", onTC), { wrapper });
+    const { result } = renderHook(() => useBanxicoTipoCambio("USD", onTC, "2026-09-30"), { wrapper });
 
     await act(async () => { result.current.mutate(); });
     await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalled());
 
     expect(onTC).toHaveBeenCalledWith(18.42);
+    expect(mocks.fetchExchangeRates).toHaveBeenCalledWith("2026-09-30");
+    expect(mocks.notifySuccess.mock.calls[0][0].description).toContain("Se completó el campo");
+    expect(mocks.notifySuccess.mock.calls[0][0].description).not.toMatch(/guardad/i);
     expect(mocks.notifyError).not.toHaveBeenCalled();
   });
 });

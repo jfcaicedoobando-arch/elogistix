@@ -35,7 +35,7 @@ export function AlertaLimiteCreditoDialog({
       onOpenChange={onOpenChange}
       title="Límite de crédito excedido"
       titleIcon={<AlertTriangle className="h-5 w-5 text-warning" />}
-      confirmLabel="Facturar de todas formas"
+      confirmLabel="Autorizar exceso y crear borrador"
       cancelLabel="Cancelar"
       size="md"
       confirmDisabled={!puedeExceder}
@@ -51,7 +51,7 @@ export function AlertaLimiteCreditoDialog({
           </p>
           {puedeExceder ? (
             <p className="text-body-sm text-muted-foreground pt-2">
-              Se registrará en bitácora que continuaste a pesar del exceso.
+              Se registrará en bitácora que autorizaste el exceso y se creará un borrador de factura. Deberás revisarlo y timbrarlo después.
             </p>
           ) : (
             <p className="text-body-sm pt-2 font-medium text-destructive">

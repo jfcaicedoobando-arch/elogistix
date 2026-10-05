@@ -46,7 +46,7 @@ export function CxpPorPagarFiltersBar(props: CxpPorPagarFiltersBarProps) {
               <SelectValue placeholder="Moneda" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todas">Todas monedas</SelectItem>
+              <SelectItem value="todas">Todas las monedas</SelectItem>
               {props.monedas.map((m) => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>
               ))}

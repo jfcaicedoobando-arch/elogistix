@@ -68,6 +68,8 @@ export interface CfdiUploadErrorContext {
   lastStatus: number | null;
   phase: CfdiUploadPhase;
   errorName: string;
+  /** Mensaje técnico original del servicio, reservado para el JSON de diagnóstico. */
+  technicalMessage?: string;
 }
 
 export class CfdiUploadError extends Error {

@@ -39,7 +39,7 @@ describe("CotizacionSuccessDialog", () => {
 
   it("dispara los 5 handlers al click", () => {
     const props = setup();
-    fireEvent.click(screen.getByRole("button", { name: /Enviar proforma/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Enviar cotización/i }));
     fireEvent.click(screen.getByRole("button", { name: /Crear embarque/i }));
     fireEvent.click(screen.getByRole("button", { name: /Duplicar/i }));
     fireEvent.click(screen.getByRole("button", { name: /Ver listado/i }));

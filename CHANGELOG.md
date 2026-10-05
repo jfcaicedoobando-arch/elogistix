@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.25] - 2026-10-04
+
+- **fix(copy · auditoría 01–27)**: las confirmaciones distinguen papelera y purga, cancelación del registro ERP y cancelación ante el SAT, registro de pagos y ejecución bancaria. Anular un anticipo explica el efecto en sus movimientos; desconciliar conserva pagos y aplicaciones.
+- **fix(cobranza y métricas)**: estados vacíos según filtros y urgencia; márgenes sin base y vendedores sin meta no se presentan como 0%. Se aclaran margen global, tasa de aceptación y conteos de cotizaciones, incluida la exportación de rentabilidad.
+- **fix(facturación y diagnósticos)**: consultar el TC no anuncia un guardado y muestra la fecha de emisión usada. Crear una factura desde una proforma se identifica como borrador. Los diagnósticos tienen encabezados neutros; los errores de PDF muestran ayuda legible y conservan el detalle técnico en JSON.
+- **fix(pulido editorial)**: nombres de acciones coherentes, ayudas de validación visibles, lenguaje operativo en español y títulos en estilo oración. La reapertura contable distingue preparación de confirmación y la conciliación automática explica sus tolerancias existentes.
+- Sin migraciones, cambios fiscales, permisos, cálculos financieros ni modificación de registros.
+
 ## [13.824.24] - Unreleased
 
 - **fix(CxP y notas de crédito)**: la edición valida saldos en moneda de factura; las notas de crédito explican sus tasas históricas y equivalentes en ficha, lista y CSV. Los filtros usan estados válidos y distinguen errores de consulta de resultados vacíos.

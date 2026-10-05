@@ -45,13 +45,13 @@ export default function LeaderboardVendedores() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-4 w-4" /> {soloYo ? "Tu desempeño del mes" : "Leaderboard del mes"}
+          <Trophy className="h-4 w-4" /> {soloYo ? "Tu desempeño del mes" : "Desempeño de vendedores del mes"}
         </CardTitle>
       </CardHeader>
 
       <CardContent>
         {isError ? (
-          <ErrorStateInline message="No se pudo cargar el leaderboard." onRetry={refetch} />
+          <ErrorStateInline message="No se pudo cargar el desempeño de vendedores." onRetry={refetch} />
         ) : isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : grupos.length === 0 ? (
@@ -70,8 +70,10 @@ export default function LeaderboardVendedores() {
                         {f.cuota > 0 && <> / {formatCurrencyCompact(f.cuota, f.moneda)}</>}
                       </span>
                     </div>
-                    <Progress value={f.avance} className="h-2" />
-                    <div className="text-body-sm text-muted-foreground text-right">{f.avance}%</div>
+                    {f.cuota > 0 ? <>
+                      <Progress value={f.avance} className="h-2" />
+                      <div className="text-body-sm text-muted-foreground text-right">{f.avance}%</div>
+                    </> : <p className="text-body-sm text-muted-foreground">Sin meta configurada</p>}
                   </div>
                 ))}
               </li>

@@ -97,7 +97,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
       onOpenChange={onOpenChange}
       icon={ArrowRightLeft}
       title="Traspaso entre cuentas propias"
-      description="Registra un movimiento entre tus cuentas del mismo tenant. Se generan los movimientos bancarios conciliados automáticamente."
+      description="Registra en el ERP un traspaso ya realizado entre cuentas de tu empresa. No envía dinero al banco. Los movimientos registrados quedarán conciliados automáticamente."
       size="lg"
       formId={FORM_ID}
       onSubmit={handleSubmit}

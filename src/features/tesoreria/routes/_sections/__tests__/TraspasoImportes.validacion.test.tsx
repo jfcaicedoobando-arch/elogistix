@@ -44,7 +44,7 @@ describe("Traspaso: negativos explícitos sin invertir el signo", () => {
   it("teclear monto y comisión válidos conserva el importe y permite corregir un negativo", () => {
     registrar.mockClear();
     renderHarness();
-    const monto = screen.getByLabelText("Monto a transferir") as HTMLInputElement;
+    const monto = screen.getByLabelText("Monto transferido") as HTMLInputElement;
     const comision = screen.getByLabelText("Comisión bancaria (opcional)") as HTMLInputElement;
     escribir(monto, "1000"); escribir(comision, "25");
     expect(monto).toHaveValue("1,000.00");
@@ -62,7 +62,7 @@ describe("Traspaso: negativos explícitos sin invertir el signo", () => {
   it.each(["-25", "-25.50", "-25,50", "-", "$-25", "−25", "(25)"])("rechaza %s pegado y mantiene el error tras blur", (raw) => {
     registrar.mockClear();
     renderHarness();
-    const input = screen.getByLabelText("Monto a transferir") as HTMLInputElement;
+    const input = screen.getByLabelText("Monto transferido") as HTMLInputElement;
     pegar(input, raw); fireEvent.blur(input);
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByRole("button", { name: "Registrar" })).toBeDisabled();
@@ -73,7 +73,7 @@ describe("Traspaso: negativos explícitos sin invertir el signo", () => {
 
   it("teclear signo y dígitos conserva el negativo hasta corregirlo", () => {
     renderHarness();
-    const input = screen.getByLabelText("Monto a transferir") as HTMLInputElement;
+    const input = screen.getByLabelText("Monto transferido") as HTMLInputElement;
     for (const raw of ["-", "-2", "-25", "-25.5"]) fireEvent.input(input, { target: { value: raw }, inputType: "insertText" });
     fireEvent.blur(input);
     expect(input).toHaveValue("-25.50");

@@ -29,7 +29,7 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
     if (motivo.trim().length < 3) {
       notifyWarning(undefined, {
         title: "Indica un motivo",
-        description: "Escribe un motivo de al menos 3 caracteres para cancelar el anticipo.",
+        description: "Escribe un motivo de al menos 3 caracteres para anular el registro del anticipo.",
       });
       return;
     }
@@ -44,11 +44,12 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
       open={open}
       onOpenChange={handleOpenChange}
       icon={Ban}
-      title="¿Cancelar este anticipo?"
+      title="¿Anular el registro de este anticipo?"
       description={
         <>
-          El anticipo de {anticipo.proveedor_nombre ?? "este proveedor"} quedará marcado como cancelado y ya no
-          podrá aplicarse a facturas. Esta acción no se puede deshacer.
+          El anticipo de {anticipo.proveedor_nombre ?? "este proveedor"} quedará cancelado y ya no podrá aplicarse a facturas.
+          Se anulará también su movimiento bancario en el ERP; esto no devuelve dinero en el banco.
+          Si el proveedor regresó el dinero, usa “Registrar devolución”. Esta anulación no se puede deshacer desde la interfaz.
         </>
       }
       size="md"
@@ -62,13 +63,13 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
             onClick={() => void handleConfirm()}
             disabled={cancelar.isPending}
           >
-            {cancelar.isPending ? "Cancelando…" : "Cancelar anticipo"}
+            {cancelar.isPending ? "Anulando…" : "Anular registro"}
           </Button>
         </>
       }
     >
       <div className="space-y-1.5">
-        <Label htmlFor="cancel-motivo">Motivo de cancelación</Label>
+        <Label htmlFor="cancel-motivo">Motivo de anulación (mínimo 3 caracteres)</Label>
         <Textarea
           id="cancel-motivo"
           rows={3}
