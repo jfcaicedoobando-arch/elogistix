@@ -29,6 +29,11 @@ export interface TarifaInput {
   transit_time_dias?: number | null;
   notas?: string | null;
   recargos: TarifaRecargoInput[];
+  /** Solicitud de pricing a la que responde (sólo en alta; inmutable). */
+  solicitud_pricing_id?: string | null;
+  carta_garantia?: boolean | null;
+  /** Unidad del flete (p. ej. "por contenedor", "W/M"). */
+  unidad_flete?: string | null;
 }
 
 /**
