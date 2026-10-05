@@ -28,7 +28,7 @@ const contenidoDataTable = readFileSync(
 
 describe("MR-UI-01: título del documento", () => {
   it("CosteoTarifas fija el título de la pestaña", () => {
-    expect(pagina).toContain('useDocumentTitle("Tarifas marítimas")');
+    expect(pagina).toContain('useDocumentTitle("Solicitudes de pricing")');
   });
 });
 
