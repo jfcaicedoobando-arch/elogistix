@@ -11289,9 +11289,6 @@ BEGIN
   IF v_aprob <> 'aprobada'::public.estado_aprobacion_factura_proveedor THEN
     RAISE EXCEPTION 'La factura debe estar aprobada antes de cerrarla.' USING ERRCODE = '22023';
   END IF;
-  -- Fase M: gate de rol.
-  -- Bypass super_admin; en caso normal exige que el usuario pertenezca a la org
-  -- de la factura Y tenga uno de los roles autorizados.
   IF public.has_role(v_uid, 'super_admin'::public.app_role) THEN
     v_rol_ejecutor := 'super_admin';
   ELSIF v_org = public.current_user_org_id() AND public.has_role(v_uid, 'admin'::public.app_role) THEN
