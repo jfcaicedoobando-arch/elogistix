@@ -9,6 +9,7 @@ import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { formatCurrency } from "@/lib/formatters";
+import { presupuestoVsRealHref } from "@/features/presupuesto";
 
 export interface AlertasInput {
   flujo: FlujoProyectado;
@@ -85,7 +86,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
           ? `Categoría "${peor.categoria_nombre}" excedida`
           : `${fueraDePresupuestoCount} categorías excedidas`,
       descripcion: `Peor: ${peor.categoria_nombre} al ${peor.cumplimiento_pct.toFixed(0)}%`,
-      url: "/profit/presupuesto",
+      url: presupuestoVsRealHref(input.presupuesto.periodo),
     });
   }
 
@@ -131,14 +132,11 @@ export function calcularKPIsEjecutivos(
   // mezclando USD y MXN indistintamente).
   const saldoBancos = snapshot.tesoreria.saldo_bancos_mxn;
 
-  // B1 fix (v13.300.49): usar el conteo/monto sobre el universo completo
-  // (no sobre el Top-5 truncado). El desglose por antigüedad (>30d) se
-  // sacrifica porque no se conserva en el dataset agregado; el filtro por
-  // "vencida" a nivel factura ya captura el 100% de exposición vencida.
-  const carteraVencida = snapshot.tesoreria.cartera_vencida_total_mxn;
-  const carteraVencidaCount = snapshot.tesoreria.cartera_vencida_count;
-
-  const cxp7d = snapshot.flujo.semanas[0]?.salidas_mxn ?? 0;
+  // El total completo y el detalle usan la misma ventana explícita; Top-5
+  // sólo limita la lista, nunca el importe ni el número de clientes.
+  const carteraVencida = snapshot.vencimientos.cobranzaMayor30.total_mxn;
+  const carteraVencidaCount = snapshot.vencimientos.cobranzaMayor30.count;
+  const cxp7d = snapshot.vencimientos.cxpProximos7.total_mxn;
 
   const totalPresup = snapshot.presupuesto.total_presupuesto_mxn;
   const totalReal = snapshot.presupuesto.total_real_mxn;

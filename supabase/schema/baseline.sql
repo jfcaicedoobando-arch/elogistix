@@ -20413,23 +20413,18 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
   FOR f IN
-    SELECT fa.id, fa.numero, COALESCE(fa.total, 0) AS total,
+    SELECT fa.id, fa.numero,
            fa.moneda::text AS moneda, fa.tipo_cambio AS tc
       FROM public.facturas fa
      WHERE fa.cliente_id = p_cliente_id
        AND fa.deleted_at IS NULL
        AND fa.estado IN ('Emitida','Vencida','Parcialmente pagada','Pagada')
   LOOP
+    v_saldo := GREATEST(0, public.saldo_factura(f.id));
+    IF v_saldo <= 0 THEN
+      CONTINUE;
+    END IF;
     v_facturas := v_facturas + 1;
-    SELECT GREATEST(
-             0,
-             f.total
-               - COALESCE((SELECT SUM(p.monto_aplicado_factura)
-                             FROM public.pagos_factura p
-                            WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
-               - public.nc_aplicadas_en_moneda_factura(f.id)
-           )
-      INTO v_saldo;
     IF f.moneda = 'MXN' THEN
       v_en_uso := v_en_uso + v_saldo;
     ELSIF v_saldo > 0 THEN

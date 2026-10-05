@@ -12,6 +12,7 @@ import { ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { FilaVsReal } from "@/features/presupuesto/services";
+import { presupuestoVsRealHref } from "@/features/presupuesto";
 
 interface Props {
   open: boolean;
@@ -41,7 +42,7 @@ export function BudgetOverrunSheet({ open, onOpenChange, filas, periodo }: Props
   const navigate = useNavigate();
   const irADetalle = () => {
     onOpenChange(false);
-    navigate(`/profit/presupuesto?periodo_vs_real=${periodo}`);
+    navigate(presupuestoVsRealHref(periodo));
   };
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

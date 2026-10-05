@@ -24,6 +24,11 @@ function baseSnap(eerrPeriodo: ReturnType<typeof makeEerr>) {
     periodo: "2026-07",
     eerrPeriodo,
     eerr12m: [],
+    vencimientos: {
+      fechaReferencia: "2026-07-01",
+      cobranzaMayor30: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+      cxpProximos7: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+    },
     tesoreria: {
       cuentas: [],
       flujo: {

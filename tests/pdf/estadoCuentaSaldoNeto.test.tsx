@@ -14,4 +14,18 @@ describe("real PDF: saldo neto del cliente", () => {
     for (const text of ["A3-QA", "SALDO", "58.00", "PENDIENTE MXN", "POR VENCER MXN"]) expect(doc.text).toContain(text);
     expect(doc.text).not.toContain("116.00");
   });
+
+  it("imprime alcance parcial, filtro y subtotal 58 en una página", async () => {
+    const doc = await inspectPdf("estado-cuenta-alcance-76", <EstadoCuentaDocument
+      cliente={{ nombre: "Cliente sintético QA76", rfc: null }}
+      rows={[{ numero: "A3-QA", expediente: "E3", fecha_emision: "2026-10-01", fecha_vencimiento: "2026-10-03",
+        estado: "Emitida", moneda: "MXN", total: 116, saldo: 58, diasVencido: 1, bucket: "1-30 días" }]}
+      totalesPorMoneda={[{ moneda: "MXN", total: 58, buckets: [{ label: "1-30 días", total: 58 }] }]}
+      alcance={{ parcial: true, filtros: ["Emisión: 01/09/2026 a 04/10/2026", "Moneda: MXN", "Sólo con saldo", "Antigüedad: 1-30 días"] }}
+    />);
+    expect(doc.pages).toBe(1);
+    for (const text of ["Alcance parcial", "Facturas incluidas: 1", "Antigüedad: 1-30 días", "Moneda: MXN",
+      "SUBTOTAL PENDIENTE MXN", "Subtotal del corte", "no representan el saldo global", "58.00"]) expect(doc.text).toContain(text);
+    expect(doc.text).not.toContain("116.04");
+  });
 });

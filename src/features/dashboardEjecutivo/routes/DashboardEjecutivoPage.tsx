@@ -124,8 +124,8 @@ export default function DashboardEjecutivoPage() {
 
           <BandaKPIs
             kpis={data.kpis}
-            topDeudores={data.topDeudores}
-            topAcreedores={data.topAcreedores}
+            topDeudores={data.vencimientos.cobranzaMayor30.top}
+            topAcreedores={data.vencimientos.cxpProximos7.top}
             presupuesto={data.presupuesto}
           />
           <BandaKPIsEficiencia kpis={data.kpis} />

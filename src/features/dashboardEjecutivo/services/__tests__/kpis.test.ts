@@ -19,6 +19,11 @@ function baseSnapshot(over: Partial<Parameters<typeof calcularKPIsEjecutivos>[0]
       costos: [],
     },
     eerr12m: [],
+    vencimientos: {
+      fechaReferencia: "2026-07-01",
+      cobranzaMayor30: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+      cxpProximos7: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+    },
     ingresosPrevios: 0,
     tesoreria: {
       cuentas: [],
@@ -58,8 +63,13 @@ function baseSnapshot(over: Partial<Parameters<typeof calcularKPIsEjecutivos>[0]
 }
 
 describe("calcularKPIsEjecutivos · cartera vencida (v13.300.49)", () => {
-  it("consume el total sin truncar del servicio de tesorería", () => {
+  it("consume el total de >30 días sin truncar y omite el resto de cartera vencida", () => {
     const snap = baseSnapshot({
+      vencimientos: {
+        fechaReferencia: "2026-07-01",
+        cobranzaMayor30: { total_mxn: 200_000, count: 8, top: [], excluido_por_moneda: {} },
+        cxpProximos7: { total_mxn: 500, count: 1, top: [], excluido_por_moneda: {} },
+      },
       tesoreria: {
         cuentas: [],
         flujo: {
@@ -78,8 +88,9 @@ describe("calcularKPIsEjecutivos · cartera vencida (v13.300.49)", () => {
       } as never,
     });
     const kpis = calcularKPIsEjecutivos(snap, 0);
-    expect(kpis.cartera_vencida_mxn).toBe(250_000);
-    expect(kpis.cartera_vencida_count).toBe(12);
+    expect(kpis.cartera_vencida_mxn).toBe(200_000);
+    expect(kpis.cartera_vencida_count).toBe(8);
+    expect(kpis.cxp_7dias_mxn).toBe(500);
   });
 
   it("DSO/DPO usan totales convertidos (MXN + USD*TC)", () => {

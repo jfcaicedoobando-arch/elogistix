@@ -21,7 +21,7 @@ describe("ProfitSubNav", () => {
     expect(screen.getByRole("link", { name: /Dashboard Ejecutivo/i })).toHaveAttribute("href", "/profit/dashboard");
     expect(screen.getByRole("link", { name: /Proyección/i })).toHaveAttribute("href", "/profit/proyeccion");
     expect(screen.getByRole("link", { name: /Estado de Resultados/i })).toHaveAttribute("href", "/profit/estado-resultados");
-    expect(screen.getByRole("link", { name: /Presupuesto vs Real/i })).toHaveAttribute("href", "/profit/presupuesto");
+    expect(screen.getByRole("link", { name: /Presupuesto vs Real/i })).toHaveAttribute("href", "/profit/presupuesto?tab=vs-real");
   });
 
   it("marca la ruta activa con border-primary", () => {
