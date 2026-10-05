@@ -9,7 +9,7 @@ ALTER TABLE public.crm_empresas
 
 DO $$ BEGIN
   ALTER TABLE public.crm_empresas
-    ADD CONSTRAINT crm_empresas_estado_crm_chk CHECK (estado_crm IN ('Lead','Prospecto','Cliente'));
+    ADD CONSTRAINT crm_empresas_estado_crm_chk CHECK (estado_crm IN ('Lead','Sospechoso','Prospecto','Cliente'));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE INDEX IF NOT EXISTS crm_empresas_org_estado_idx ON public.crm_empresas (organization_id, estado_crm);
@@ -159,7 +159,7 @@ BEGIN
   SELECT o.id INTO v_op FROM public.crm_oportunidad_empresa oe
     JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
    WHERE oe.empresa_id = v_emp.id ORDER BY o.created_at LIMIT 1;
-  IF v_emp.estado_crm <> 'Lead' AND v_op IS NOT NULL THEN
+  IF v_emp.estado_crm NOT IN ('Lead','Sospechoso') AND v_op IS NOT NULL THEN
     RETURN jsonb_build_object('oportunidad_id', v_op, 'sin_cambios', true);
   END IF;
 
@@ -188,8 +188,27 @@ BEGIN
     INSERT INTO public.crm_oportunidad_empresa (oportunidad_id, empresa_id) VALUES (v_op, v_emp.id);
   END IF;
 
-  UPDATE public.crm_empresas SET estado_crm = 'Prospecto' WHERE id = v_emp.id AND estado_crm = 'Lead';
+  UPDATE public.crm_empresas SET estado_crm = 'Prospecto' WHERE id = v_emp.id AND estado_crm IN ('Lead','Sospechoso');
   RETURN jsonb_build_object('oportunidad_id', v_op, 'sin_cambios', false);
 END $$;
 REVOKE ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) TO authenticated, service_role;
+
+-- 5) La etapa "Sospechoso" sale del embudo y pasa a ser un estado de la empresa
+--    (Lead → Sospechoso → Prospecto → Cliente). Las empresas cuyas oportunidades
+--    estaban en esa etapa conservan "Sospechoso"; esas oportunidades se archivan
+--    (soft-delete) para que "Pasar a prospecto" cree la suya en la etapa Prospecto.
+UPDATE public.crm_empresas e SET estado_crm = 'Sospechoso'
+  FROM public.crm_oportunidad_empresa oe
+  JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
+  JOIN public.crm_etapas_pipeline s ON s.id = o.etapa_id AND s.nombre = 'Sospechoso'
+ WHERE oe.empresa_id = e.id AND e.estado_crm <> 'Cliente';
+UPDATE public.crm_oportunidades o SET deleted_at = now()
+  FROM public.crm_etapas_pipeline s
+ WHERE s.id = o.etapa_id AND s.nombre = 'Sospechoso' AND o.deleted_at IS NULL;
+UPDATE public.crm_etapas_pipeline SET activa = false, deleted_at = now()
+ WHERE nombre = 'Sospechoso' AND deleted_at IS NULL;
+
+-- 6) La etapa "Calificado" se renombra "En cotización".
+UPDATE public.crm_etapas_pipeline SET nombre = 'En cotización'
+ WHERE nombre = 'Calificado' AND deleted_at IS NULL;
