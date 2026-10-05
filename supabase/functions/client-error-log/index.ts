@@ -132,7 +132,13 @@ export async function handleClientErrorLog(
     if (raw.length > MAX_BODY_BYTES) {
       return jsonResponse({ error: "payload_too_large" }, 413);
     }
-    body = JSON.parse(raw) as ClientErrorPayload;
+    const parsed: unknown = JSON.parse(raw);
+    // JAVASCRIPT-REACT-79: JSON válido pero no-objeto (`null`, número, arreglo)
+    // reventaba al leer `body.message`; es input inválido, no un fallo interno.
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return jsonResponse({ error: "invalid_payload" }, 400);
+    }
+    body = parsed as ClientErrorPayload;
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
   }
