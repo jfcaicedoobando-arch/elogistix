@@ -4,9 +4,10 @@
  * 200 líneas (Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { resetRedirectUrl } from "./mutaciones.auth";
 import { errorDeEdgeFunction, traducirMensajeEdge } from "./mutaciones.errores";
 
 export interface CreateUserParams {
@@ -72,17 +73,13 @@ export async function createUserViaEdgeFunction(
   const emailNormalizado = params.email.trim().toLowerCase();
   await validarAltaUsuario(params.orgId, emailNormalizado);
 
-  const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: {
-      action: params.password ? "create" : "invite",
-      email: emailNormalizado,
-      password: params.password,
-      role: params.role,
-      organization_id: params.orgId,
-      redirect_to: resetRedirectUrl(),
-    },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const res = await invokeUserManagement({
+    action: params.password ? "create" : "invite",
+    email: emailNormalizado,
+    password: params.password,
+    role: params.role,
+    organization_id: params.orgId,
+    redirect_to: resetRedirectUrl(),
   });
   // El motivo real (p. ej. correo inválido) viaja en el cuerpo de la respuesta.
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo crear el usuario. Reintenta en unos minutos.");

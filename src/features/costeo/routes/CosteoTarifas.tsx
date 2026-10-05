@@ -31,7 +31,7 @@ import {
 
 export default function CosteoTarifas() {
   // MR-UI-01: la pestaña del navegador debe reflejar la página activa.
-  useDocumentTitle("Tarifas marítimas");
+  useDocumentTitle("Solicitudes de pricing");
   const s = useCosteoTarifasPageState();
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
@@ -47,8 +47,8 @@ export default function CosteoTarifas() {
   return (
     <PageContainer className="short:space-y-3">
       <PageHeader
-        title="Tarifas marítimas"
-        description="Matriz de tarifas por agente, naviera, ruta y contenedor. Moneda base: USD."
+        title="Solicitudes de pricing"
+        description="Respuestas de pricing: tarifas por agente, naviera, ruta y contenedor. Moneda base: USD."
         actions={
           <Button
             onClick={s.nuevo}

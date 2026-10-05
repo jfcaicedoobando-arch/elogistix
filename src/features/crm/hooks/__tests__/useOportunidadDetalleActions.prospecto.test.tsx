@@ -21,6 +21,7 @@ vi.mock("@/features/crm/hooks", () => ({
 vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: vi.fn(), notifyInfo: vi.fn() }));
 vi.mock("@/features/crm/lib/crmToast", () => ({ crmToast: { success: vi.fn() } }));
 
+const ETAPAS_EC = [{ id: "e1", nombre: "En cotización", tipo: "abierta" }];
 const op = { id: "op1", cliente_id: null, etapa_id: "e1", modo: "Marítimo" };
 
 describe("useOportunidadDetalleActions · prospecto sin cliente", () => {
@@ -33,7 +34,7 @@ describe("useOportunidadDetalleActions · prospecto sin cliente", () => {
 
   it("elegible: navega al cotizador con la oportunidad y no inserta", async () => {
     prospecto.data = { kind: "oportunidad", id: "op1", empresa: "ACME", leadId: "l1" };
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     expect(result.current.puedeCotizar).toBe(true);
     await result.current.crearCotizacion();
     expect(navigate).toHaveBeenCalledWith("/cotizaciones/nueva?oportunidad=op1");
@@ -41,7 +42,7 @@ describe("useOportunidadDetalleActions · prospecto sin cliente", () => {
   });
 
   it("no elegible: sigue bloqueado con motivo y sin navegar", async () => {
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     expect(result.current.puedeCotizar).toBe(false);
     expect(result.current.motivoNoCotizar).toMatch(/prospecto calificado/i);
     await result.current.crearCotizacion();
@@ -51,10 +52,23 @@ describe("useOportunidadDetalleActions · prospecto sin cliente", () => {
 
   it("con cliente conserva el flujo canónico existente", async () => {
     const { result } = renderHook(() =>
-      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, []),
+      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, ETAPAS_EC),
     );
     await result.current.crearCotizacion();
     expect(crearCotMutateAsync).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith("/cotizaciones/c1/editar");
+  });
+});
+
+describe("candado de etapa En cotización", () => {
+  it("fuera de En cotización no permite cotizar", async () => {
+    const etapas = [{ id: "e1", nombre: "Prospecto", tipo: "abierta" }];
+    const { result } = renderHook(() =>
+      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, etapas),
+    );
+    expect(result.current.puedeCotizar).toBe(false);
+    expect(result.current.motivoNoCotizar).toMatch(/En cotización/);
+    await result.current.crearCotizacion();
+    expect(crearCotMutateAsync).not.toHaveBeenCalled();
   });
 });

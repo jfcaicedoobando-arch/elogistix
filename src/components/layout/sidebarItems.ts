@@ -110,12 +110,12 @@ export const SIDEBAR_SUPER_ADMIN_ITEMS: SidebarItem[] = [
 
 export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Comparador top 3", url: "/costeo/buscar", icon: Search },
-  { title: "Catálogo de tarifas", url: "/costeo/tarifas", icon: Calculator },
+  { title: "Solicitudes de pricing", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas marítimas", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
   { title: "Navieras (condiciones)", url: "/costeo/navieras", icon: Anchor },
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
-  { title: "Solicitudes de pricing", url: "/costeo/solicitudes", icon: Inbox },
+  { title: "Bandeja de pricing", url: "/costeo/solicitudes", icon: Inbox },
 ];
 
 /**

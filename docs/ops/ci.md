@@ -1,7 +1,7 @@
 # CI de Libre Carga
 
 Fuente de verdad: `.github/workflows/` y `.github/actions/`.
-Revisado el **2026-10-03**. Esta guía no configura protección de rama.
+Revisado el **2026-10-05**. Esta guía no configura protección de rama.
 
 ## CI principal
 
@@ -79,6 +79,19 @@ Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
 Consultar filtros exactos en YAML. E2E contiene mutadores; smoke tampoco
 debe suponerse read-only. Confirmar destino/efectos antes del dispatch.
 Estos workflows no publican automáticamente frontend en Lovable.
+
+### Cobertura de mantenimiento de dependencias
+
+Dependabot propone actualizaciones de Actions y Bun. No actualiza hoy los
+imports `npm:`/HTTP de `supabase/functions/`; un pin del mismo paquete en
+`package.json` tampoco cambia su import Edge. Dependency Review dispara
+sólo por `package.json`, `bun.lock` o su propio workflow: no acredita que
+se hayan revisado dependencias Edge ni todas sus transitivas.
+
+GitHub admite Deno mediante manifiestos npm/JSR, pero todavía no hay
+`imports` consumidos en los `deno.json` de este repo. Se mantiene una revisión
+manual, sin nuevo pipeline. Inventario, procedimiento y condiciones del
+piloto nativo en [mantenimiento del stack](../stack-mantenimiento.md#dependabot-y-dependencias-edge).
 
 ## RLS
 

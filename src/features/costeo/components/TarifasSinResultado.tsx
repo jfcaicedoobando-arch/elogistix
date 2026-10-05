@@ -18,7 +18,7 @@ export function TarifasSinResultado({ diagnostico }: TarifasSinResultadoProps) {
       <EmptyStateInline
         icon={Clock}
         message="Existe una tarifa para esta combinación, pero está pendiente de aprobación."
-        hint="Pide a Operaciones que la apruebe en “Catálogo de tarifas” para poder usarla."
+        hint="Pide a Operaciones que la apruebe en “Solicitudes de pricing” para poder usarla."
       />
     );
   }
@@ -27,7 +27,7 @@ export function TarifasSinResultado({ diagnostico }: TarifasSinResultadoProps) {
       <EmptyStateInline
         icon={CalendarX}
         message="La tarifa de esta combinación está vencida."
-        hint="Actualiza su vigencia o captura una nueva en “Catálogo de tarifas”."
+        hint="Actualiza su vigencia o captura una nueva en “Solicitudes de pricing”."
       />
     );
   }
@@ -35,7 +35,7 @@ export function TarifasSinResultado({ diagnostico }: TarifasSinResultadoProps) {
     <EmptyStateInline
       icon={FileSearch}
       message="No hay tarifas vigentes para esta combinación."
-      hint="Captura una nueva en “Catálogo de tarifas”."
+      hint="Captura una nueva en “Solicitudes de pricing”."
     />
   );
 }

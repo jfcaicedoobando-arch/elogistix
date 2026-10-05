@@ -70,7 +70,7 @@ const op = {
 };
 
 const etapasConCotizando = [
-  { id: "etapa-1", nombre: "Nueva", tipo: "abierta", probabilidad_default: 10 },
+  { id: "etapa-1", nombre: "En cotización", tipo: "abierta", probabilidad_default: 10 },
   { id: "etapa-cotizando", nombre: "Cotizando", tipo: "abierta", probabilidad_default: 40 },
 ];
 
