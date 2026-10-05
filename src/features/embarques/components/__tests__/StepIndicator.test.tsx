@@ -13,7 +13,7 @@ describe("<StepIndicator />", () => {
   it("mantiene el título completo accesible aunque muestre el corto", () => {
     render(<StepIndicator steps={STEPS} currentStep={3} />);
 
-    expect(screen.getByLabelText("Progreso del wizard")).toBeInTheDocument();
+    expect(screen.getByLabelText("Progreso del asistente")).toBeInTheDocument();
     expect(screen.getByLabelText("Paso actual 3: Cotización del cliente")).toBeInTheDocument();
   });
 

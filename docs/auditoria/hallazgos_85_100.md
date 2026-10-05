@@ -1,6 +1,6 @@
 # Correcciones de auditoría financiera 85–100
 
-Versión preparada: 13.824.26. Base revisada: `5775b5e7df7a069594b17faeb59c5650dc9622b7` (13.824.24). Integrado sobre main `ba6311ec2c039fa3dfdaee9e1fc9ca9ee3434a40` (13.824.25), conservando íntegros los cambios editoriales de PR131. Cambios desarrollados y validados en entorno cloud aislado. La auditoría se detuvo en 100; este paquete no agrega hallazgos ni modifica sus fixtures.
+Versión preparada: 13.824.27. Base revisada: `5775b5e7df7a069594b17faeb59c5650dc9622b7` (13.824.24). Integrado sobre main `0c7f9e3989241d03a7ff8ab36763801f122b2953` (13.824.26), conservando íntegros los cambios editoriales de PR131 y PR132. Cambios desarrollados y validados en entorno cloud aislado. La auditoría se detuvo en 100; este paquete no agrega hallazgos ni modifica sus fixtures.
 
 ## Matriz de aceptación
 
@@ -49,7 +49,7 @@ Versión preparada: 13.824.26. Base revisada: `5775b5e7df7a069594b17faeb59c5650d
 1. Congelar commit y revisar CI para ese commit; confirmar el inventario de migraciones y respaldo operativo según procedimiento del entorno. No activar mantenimiento antes de acordar ventana.
 2. En la ventana autorizada, impedir capturas financieras con clientes antiguos durante el cambio de contrato. Aplicar las dos migraciones forward con el runner transaccional habitual y verificar funciones, triggers, grants y RLS.
 3. Desplegar `facturapi-emitir-rep` y `parse-cfdi-xml` del mismo commit, preservando configuración JWT y secretos existentes. Verificar estado y hashes; no modificar webhooks como parte de este cambio.
-4. Publicar frontend13.824.26 y exigir refresco de sesiones antiguas antes de reabrir captura. El nuevo frontend falla cerrado si el parser anterior no devuelve validación de identidad; el nuevo trigger rechaza TC extranjero neutral de clientes viejos.
+4. Publicar frontend13.824.27 y exigir refresco de sesiones antiguas antes de reabrir captura. El nuevo frontend falla cerrado si el parser anterior no devuelve validación de identidad; el nuevo trigger rechaza TC extranjero neutral de clientes viejos.
 5. Repetir aceptación con fixtures nuevas autorizadas en Sandbox, comparar recibido/aplicado/valuación/diferencia/XML y revisar navegación/exportaciones. Mantener envío de correo desactivado. No reutilizar ni alterar las fixtures de la auditoría para obtener un resultado verde.
 6. Si un gate falla, mantener bloqueadas las operaciones afectadas y coordinar una corrección forward; no borrar historial ni revertir constraints de dinero mientras existan operaciones nuevas.
 

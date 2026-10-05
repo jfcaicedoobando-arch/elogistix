@@ -14,6 +14,7 @@ import { formatNombreEntidad } from "@/lib/formatNombreEntidad";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ClienteDetalleTabs } from "./_sections/ClienteDetalleTabs";
 import { leerFlagAutorizacion } from "@/features/cliente/domain/autorizacionCliente";
+import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 /** Contactos secundarios + el contacto principal del perfil (si existe). */
 function contarContactos(secundarios: number, principal?: string | null): number {
   return secundarios + (principal && principal.trim() ? 1 : 0);
@@ -108,6 +109,8 @@ export default function ClienteDetalle() {
     openNewContact,
     openEditContact,
   } = useClienteDetalleController();
+  useDocumentTitle(!loadingCliente && !errorCliente && cliente?.nombre
+    ? `Cliente: ${formatNombreEntidad(cliente.nombre)}` : "Cliente");
   useRegisterBreadcrumbLabel(id, cliente?.nombre ? formatNombreEntidad(cliente.nombre) : undefined);
 
   if (errorCliente) {

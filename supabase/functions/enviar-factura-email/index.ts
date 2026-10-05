@@ -3,7 +3,7 @@
  *
  * Homólogo a `enviar-cotizacion-email`, pero descarga el PDF/XML desde
  * FacturApi (una vez timbrada), los sube al bucket privado `facturas-pdf`
- * y firma URLs a 30 días. Encola un correo por destinatario en la plantilla
+ * y firma URLs a 7 días. Encola un correo por destinatario en la plantilla
  * `factura-enviada` y registra el envío en `factura_envios` + bitácora.
  *
  * Los helpers viven en `./helpers.ts` para respetar `max-lines`.

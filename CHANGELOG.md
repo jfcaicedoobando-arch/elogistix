@@ -1,12 +1,20 @@
 # Changelog
 
-## [13.824.26] - Unreleased
+## [13.824.27] - Unreleased
 
 - **fix(cobros y REP · 88, 91–93)**: la aplicación en moneda de factura queda separada de la valuación a MXN del cobro; el complemento conserva el monto recibido y su equivalencia convenida. La base calcula la diferencia cambiaria realizada y rechaza formas incompatibles antes de registrar. El claim protege importe, forma, fecha, referencia, orden fiscal y eliminación mientras se emite, sin recalcular metadatos históricos.
 - **fix(Tesorería · 86, 89, 94, 98–100)**: los rangos anteriores al arranque muestran saldo no disponible; PDF y pantalla comparten monedas. Se conserva el identificador fiscal una sola vez, el saldo actual incluye NC aplicadas, efectivo sin banco indica No aplica y las devoluciones de anticipos aparecen como entradas independientes en el neto, sin borrar el egreso bruto.
 - **fix(NC · 87, 95–96)**: porcentajes repetidos no se acumulan. Quitar XML limpia selección, UUID y adjuntos derivados e ignora respuestas tardías; el parser valida tipo, UUID, emisor, receptor y relación con la factura de proveedor, dentro de la organización autorizada, antes del prellenado.
 - **fix(reportes y cotización · 85, 90, 97)**: Presupuesto reconoce el TC documental EUR; el desglose ejecutivo conserva mes y fuente. Los totales de venta no redondean un precio unitario implícito antes de multiplicar, conservando precisión al guardar y releer.
 - **test(auditoría financiera 85–100)**: regresiones de UI, dominio, Edge, PDF real y SQL/RLS; dos migraciones nuevas sin backfill. No emite ni cancela comprobantes, no repara fixtures históricas y no implica publicación o despliegue.
+
+## [13.824.26] - 2026-10-05
+
+- **fix(copy · segunda auditoría 01–16)**: el pie de facturas identifica totales con impuestos, no subtotales. Cancelar un REP explica la baja del cobro, el recálculo de saldo y los efectos de conciliación sin prometer devolución bancaria; pendientes y fallos locales conservan mensajes diferenciados.
+- **fix(ayuda operativa)**: IVA por producto/servicio con tratamientos del catálogo; requisitos documentales compartidos con la ficha del cliente; flujo de proforma → borrador → timbrado, cotización multimodal y fases actuales de embarques. La conciliación requiere una acción explícita y revisión de ambigüedades; Ayuda enlaza al ERP para reportar problemas.
+- **fix(contexto y vocabulario)**: Analítica CRM aclara todas las fechas de cierre estimado y qué cuenta la columna Oportunidades. Proyección, valor ponderado y antigüedad de saldos usan nombres coherentes. La ficha del cliente establece su título de navegador y los mensajes operativos no exigen conocer jerga de implementación.
+- **fix(envío y REP)**: cobro en lote distingue solicitud de timbrado de REP terminado. El modal de factura describe enlaces de descarga de 7 días, conforme al servicio, y el diálogo compartido no promete adjuntos.
+- Pruebas enfocadas de significado financiero, estados REP, ayuda y títulos; sin migraciones ni cambios de impuestos, permisos, cálculos o registros.
 
 ## [13.824.25] - 2026-10-04
 

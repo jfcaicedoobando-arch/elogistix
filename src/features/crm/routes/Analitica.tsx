@@ -32,18 +32,23 @@ function ForecastPanel() {
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
   return (
     <div className="space-y-4">
+      <p className="text-body-sm text-muted-foreground">
+        <strong className="text-foreground">Todas las fechas de cierre estimado.</strong>{" "}
+        Incluye fechas anteriores al mes actual y oportunidades sin fecha; no es el total del mes.
+        La columna Oportunidades cuenta también ganadas, perdidas y sin etapa clasificada.
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {totales.length === 0 ? (
           <>
-            <KpiCard label="Pipeline" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
-            <KpiCard label="Ponderado" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
+            <KpiCard label="Oportunidades abiertas" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
+            <KpiCard label="Valor ponderado" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
             <KpiCard label="Ganado" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} variant="success" />
           </>
         ) : (
           totales.map((t) => (
             <div key={t.moneda} className="grid grid-cols-3 gap-4 col-span-1 md:col-span-3">
-              <KpiCard label={`Pipeline (${t.moneda})`} value={formatCurrencyCompact(t.totalPipeline, t.moneda)} loading={isLoading} />
-              <KpiCard label={`Ponderado (${t.moneda})`} value={formatCurrencyCompact(t.totalPonderado, t.moneda)} loading={isLoading} />
+              <KpiCard label={`Oportunidades abiertas (${t.moneda})`} value={formatCurrencyCompact(t.totalPipeline, t.moneda)} loading={isLoading} />
+              <KpiCard label={`Valor ponderado (${t.moneda})`} value={formatCurrencyCompact(t.totalPonderado, t.moneda)} loading={isLoading} />
               <KpiCard label={`Ganado (${t.moneda})`} value={formatCurrencyCompact(t.totalGanado, t.moneda)} loading={isLoading} variant="success" />
             </div>
           ))
@@ -58,7 +63,7 @@ function ForecastPanel() {
 
             <Table className="w-full text-body">
               <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
-                <DetailTableHead>Mes</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+                <DetailTableHead>Mes estimado</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Oportunidades abiertas</DetailTableHead><DetailTableHead className="text-right">Valor ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">Oportunidades</DetailTableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {porMes.map((b) => (
@@ -83,7 +88,7 @@ function ForecastPanel() {
             <div className="overflow-x-auto">
             <Table className="w-full text-body">
               <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
-                <DetailTableHead>Vendedor</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+                <DetailTableHead>Vendedor</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Oportunidades abiertas</DetailTableHead><DetailTableHead className="text-right">Valor ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">Oportunidades</DetailTableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {porVendedor.map((b) => (
@@ -165,14 +170,14 @@ export default function Analitica() {
     <PageContainer>
       <PageHeader
         title="Analítica CRM"
-        description="Forecast, embudo de conversión y rendimiento por vendedor"
+        description="Proyección de ventas, embudo de conversión y rendimiento por vendedor"
       />
-      <CrmSubheader context="Forecast · Embudo · Pérdidas · Vendedores" />
+      <CrmSubheader context="Proyección · Embudo · Pérdidas · Vendedores" />
       <ForecastPanel />
       <EmbudoYPerdidas />
       {canEdit && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle>Vendedores</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Desempeño de vendedores</CardTitle></CardHeader>
           <CardContent><LeaderboardVendedores /></CardContent>
         </Card>
       )}

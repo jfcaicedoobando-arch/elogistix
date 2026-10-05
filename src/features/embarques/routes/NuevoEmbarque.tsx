@@ -46,7 +46,7 @@ export default function NuevoEmbarque() {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-body-sm flex items-center justify-between gap-2">
             <span>
-              <strong>Tienes este wizard abierto en otra pestaña</strong> y acaba de guardar
+              <strong>Tienes este asistente abierto en otra pestaña</strong> y acaba de guardar
               cambios ahí. Para no mezclar capturas, trabaja en una sola pestaña.
             </span>
             <Button type="button" variant="ghost" size="sm" onClick={descartarConflicto}>
@@ -78,7 +78,7 @@ export default function NuevoEmbarque() {
           onRetry={w.recargarCatalogos}
           skeleton={<ListSkeleton rows={5} />}
           errorTitle="No se pudieron cargar los catálogos"
-          errorDescription="Sin clientes, proveedores y cotizaciones no podemos abrir el wizard. Reintenta."
+          errorDescription="Falló la carga de clientes, proveedores o cotizaciones necesarios para abrir el asistente. Reintenta la carga."
         >
         <NuevoEmbarquePasos w={w} />
         </AsyncBoundary>

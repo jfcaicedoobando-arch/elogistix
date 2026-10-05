@@ -78,7 +78,7 @@ function ForecastMesCard() {
       </CardHeader>
       <CardContent>
         {isError ? (
-          <ErrorStateInline message="No se pudo cargar el forecast." onRetry={refetch} />
+          <ErrorStateInline message="No se pudo cargar la proyección de ventas." onRetry={refetch} />
         ) : isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : porMes.length === 0 ? (

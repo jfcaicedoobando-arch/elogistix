@@ -15,7 +15,7 @@ interface Props {
   totalRepartido: number;
   sinAsignar: number;
   error: string | null;
-  /** Facturas PPD timbradas del reparto que generarán REP automáticamente. */
+  /** Facturas PPD timbradas del reparto para las que se solicitará un REP. */
   repRequeridos?: number;
   /** Asigna el sobrante a la siguiente factura pendiente. */
   onAsignarSobrante?: () => void;
@@ -66,8 +66,9 @@ export function DialogCobroLoteResumen(p: Props) {
       {!!p.repRequeridos && p.repRequeridos > 0 && (
         <p className="text-body-sm text-muted-foreground">
           {p.repRequeridos === 1
-            ? "1 factura requiere complemento de pago (REP): se timbrará automáticamente al aplicar el cobro."
-            : `${p.repRequeridos} facturas requieren complemento de pago (REP): se timbrarán automáticamente al aplicar el cobro.`}
+            ? "1 factura requiere complemento de pago (REP): se solicitará su timbrado al aplicar el cobro."
+            : `${p.repRequeridos} facturas requieren complemento de pago (REP): se solicitará su timbrado al aplicar el cobro.`}
+          {" "}Si un REP queda en proceso o presenta un error, revisa REP pendientes sin registrar otra vez el cobro.
         </p>
       )}
       {p.error && <p className="text-body-sm text-destructive">{p.error}</p>}

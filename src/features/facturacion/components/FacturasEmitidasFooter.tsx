@@ -37,10 +37,10 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[300px] text-body-sm">
-                Suma de los resultados VISIBLES (la página actual con los
+                Suma de los totales con impuestos de las facturas visibles (la página actual con los
                 filtros aplicados), separada por moneda y excluyendo borradores,
                 por timbrar y canceladas. No incluye las demás páginas del servidor. El <strong>MXN equivalente</strong> usa el tipo
-                de cambio de cada factura o el TC del día como fallback — es el
+                de cambio de cada factura o, si falta, el TC del día como valor de respaldo. Es el
                 importe comparable con "Facturado mes" cuando la página contiene
                 todas las facturas del mismo mes.
               </TooltipContent>
@@ -65,12 +65,12 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
           )}
 
           <div className="flex flex-col">
-            <span className="text-overline">Subtotal MXN</span>
+            <span className="text-overline">Total facturado MXN</span>
             <span className="font-semibold tabular-nums">{formatCurrency(r.totalMxn, "MXN")}</span>
           </div>
 
           <div className="flex flex-col">
-            <span className="text-overline">Subtotal USD</span>
+            <span className="text-overline">Total facturado USD</span>
             <span className="font-semibold tabular-nums">{formatCurrency(r.totalUsd, "USD")}</span>
           </div>
 

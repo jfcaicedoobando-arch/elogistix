@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Search, HelpCircle, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -169,13 +170,12 @@ export default function Ayuda() {
         </CardHeader>
         <CardContent className="text-body text-muted-foreground space-y-2">
           <p>
-            Usa el botón flotante de <strong>Feedback</strong> (esquina inferior) para reportar un problema
-            o sugerir mejora; el equipo lo recibe con captura de pantalla y contexto automático.
+            Dentro del ERP, usa <strong>Reportar bug o mejora</strong> en la barra superior.
+            Describe los pasos y adjunta el diagnóstico con <strong>Copiar JSON</strong> si el aviso lo ofrece.
           </p>
           <p>
-            El registro completo de cambios y funciones nuevas vive en <code>CHANGELOG.md</code>.
-            Si eres administrador de la organización, también puedes consultar <strong>/auditoria</strong>{" "}
-            para ver el estado técnico del sistema.
+            <Link to="/inicio" className="text-primary underline underline-offset-4">Entrar al ERP</Link>
+            {" "}para reportarlo. Si no tienes una sesión activa, se te pedirá iniciar sesión.
           </p>
         </CardContent>
       </Card>

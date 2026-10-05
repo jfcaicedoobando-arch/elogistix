@@ -61,7 +61,7 @@ export function CobroLoteRenglon(p: Props) {
                 <FileText className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
               </TooltipTrigger>
               <TooltipContent>
-                Requiere complemento de pago (REP): se timbrará automáticamente.
+                Requiere REP: se solicitará su timbrado al aplicar el cobro. Revisa su estado en REP pendientes.
               </TooltipContent>
             </Tooltip>
           )}
