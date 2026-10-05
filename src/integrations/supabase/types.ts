@@ -2185,6 +2185,7 @@ export type Database = {
           agente_id: string
           aprobada_en: string | null
           aprobada_por: string | null
+          carta_garantia: boolean | null
           creado_por: string | null
           created_at: string
           dias_libres_almacenaje_lcl: number | null
@@ -2201,8 +2202,10 @@ export type Database = {
           organization_id: string
           reemplazada_por: string | null
           ruta_id: string
+          solicitud_pricing_id: string | null
           tipo_contenedor_id: string
           transit_time_dias: number | null
+          unidad_flete: string | null
           updated_at: string
           vigente_desde: string
           vigente_hasta: string
@@ -2211,6 +2214,7 @@ export type Database = {
           agente_id: string
           aprobada_en?: string | null
           aprobada_por?: string | null
+          carta_garantia?: boolean | null
           creado_por?: string | null
           created_at?: string
           dias_libres_almacenaje_lcl?: number | null
@@ -2227,8 +2231,10 @@ export type Database = {
           organization_id: string
           reemplazada_por?: string | null
           ruta_id: string
+          solicitud_pricing_id?: string | null
           tipo_contenedor_id: string
           transit_time_dias?: number | null
+          unidad_flete?: string | null
           updated_at?: string
           vigente_desde: string
           vigente_hasta: string
@@ -2237,6 +2243,7 @@ export type Database = {
           agente_id?: string
           aprobada_en?: string | null
           aprobada_por?: string | null
+          carta_garantia?: boolean | null
           creado_por?: string | null
           created_at?: string
           dias_libres_almacenaje_lcl?: number | null
@@ -2253,8 +2260,10 @@ export type Database = {
           organization_id?: string
           reemplazada_por?: string | null
           ruta_id?: string
+          solicitud_pricing_id?: string | null
           tipo_contenedor_id?: string
           transit_time_dias?: number | null
+          unidad_flete?: string | null
           updated_at?: string
           vigente_desde?: string
           vigente_hasta?: string
@@ -2293,6 +2302,13 @@ export type Database = {
             columns: ["ruta_id"]
             isOneToOne: false
             referencedRelation: "costeo_rutas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_solicitud_pricing_id_fkey"
+            columns: ["solicitud_pricing_id"]
+            isOneToOne: false
+            referencedRelation: "crm_solicitudes_pricing"
             referencedColumns: ["id"]
           },
           {
@@ -9680,6 +9696,7 @@ export type Database = {
         Returns: undefined
       }
       _crm_es_pricing: { Args: { p_org: string }; Returns: boolean }
+      _crm_folio_pricing_prefijo: { Args: { p_ts: string }; Returns: string }
       _crm_opcion_vigente: { Args: { p_id: string }; Returns: string }
       _crm_vincular_cotizacion_core: {
         Args: {
@@ -10970,6 +10987,7 @@ export type Database = {
           agente_id: string
           aprobada_en: string | null
           aprobada_por: string | null
+          carta_garantia: boolean | null
           creado_por: string | null
           created_at: string
           dias_libres_almacenaje_lcl: number | null
@@ -10986,8 +11004,10 @@ export type Database = {
           organization_id: string
           reemplazada_por: string | null
           ruta_id: string
+          solicitud_pricing_id: string | null
           tipo_contenedor_id: string
           transit_time_dias: number | null
+          unidad_flete: string | null
           updated_at: string
           vigente_desde: string
           vigente_hasta: string
