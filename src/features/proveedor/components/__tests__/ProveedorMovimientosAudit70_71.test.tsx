@@ -34,7 +34,9 @@ describe("Auditoría70–71: movimientos y aging de proveedor", () => {
       <ProveedorAgingCard aging={agingPorMoneda(data.aging ?? [])} />
       <ProveedorMovimientosTable movimientos={movimientos} />
     </MemoryRouter>);
-    expect(screen.getByText("Nota de crédito")).toHaveAttribute("title", "NC en MXN 2000 convertida a USD");
+    const nota = screen.getByText("Nota de crédito");
+    expect(nota).toHaveAccessibleName("Nota de crédito: NC en MXN 2000 convertida a USD");
+    expect(nota).toHaveAttribute("tabindex", "0");
     const fila = screen.getAllByRole("row").find((r) => r.textContent?.includes("AUD70-NC"))!;
     expect(within(fila).getByText(/16\.00/)).toBeInTheDocument();
     expect(screen.getAllByText(/16\.00/).length).toBeGreaterThan(1);
@@ -66,7 +68,9 @@ describe("Auditoría70–71: movimientos y aging de proveedor", () => {
     ], [{ moneda: "MXN", saldo: -50 }]);
     expect(movimientos[0].saldo).toBe(-40);
     render(<MemoryRouter><ProveedorMovimientosTable movimientos={movimientos} /></MemoryRouter>);
-    expect(screen.getByText("Devolución de anticipo")).toHaveAttribute("title",
-      "Sin fecha bancaria de devolución; fecha de registro como referencia");
+    const devolucion = screen.getByText("Devolución de anticipo");
+    expect(devolucion).toHaveAccessibleName(
+      "Devolución de anticipo: Sin fecha bancaria de devolución; fecha de registro como referencia");
+    expect(devolucion).toHaveAttribute("tabindex", "0");
   });
 });
