@@ -35,7 +35,9 @@ BEGIN
   ),
   pfc_conv AS (
     SELECT pfc.concepto_costo_id,
-           pfc.monto,
+           -- AUD72: monto es unitario; el respaldo compara subtotal neto.
+           -- IVA/IEPS ya son importes fiscales separados, no se multiplican.
+           pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1) AS monto,
            pf.id AS factura_id, pf.folio_interno, pf.folio_proveedor,
            pf.estado::text AS estado, pf.estado_aprobacion::text AS estado_aprobacion,
            pf.fecha_emision, pf.fecha_vencimiento, pf.moneda::text AS moneda,
@@ -131,9 +133,9 @@ BEGIN
              (COALESCE(ppf.pagado, 0) + COALESCE(ncf.nc_aplicada, 0))
              * CASE
                  WHEN COALESCE(pf.subtotal, 0) > 0
-                   THEN LEAST(COALESCE(pfc.monto, 0) / pf.subtotal, 1)
+                   THEN LEAST(COALESCE(pfc.monto, 0) * COALESCE(NULLIF(pfc.cantidad, 0), 1) / pf.subtotal, 1)
                  WHEN COALESCE(pf.total, 0) > 0
-                   THEN LEAST(COALESCE(pfc.monto, 0) / pf.total, 1)
+                   THEN LEAST(COALESCE(pfc.monto, 0) * COALESCE(NULLIF(pfc.cantidad, 0), 1) / pf.total, 1)
                  ELSE 0
                END
            ) AS pagado_factura
@@ -184,7 +186,8 @@ BEGIN
   FROM (
     SELECT pf.id AS factura_id, pf.folio_interno, pf.folio_proveedor,
            pf.fecha_emision, pf.moneda::text AS moneda,
-           SUM(pfc.monto) AS monto_sin_vincular,
+           -- AUD72: suma neta de las partidas, igual al contrato del cuadre.
+           SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1)) AS monto_sin_vincular,
            COUNT(*) AS partidas
     FROM public.proveedor_facturas pf
     JOIN public.proveedor_facturas_conceptos pfc ON pfc.proveedor_factura_id = pf.id
@@ -204,4 +207,7 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO authenticated, service_role;
 

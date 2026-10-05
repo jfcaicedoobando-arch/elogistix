@@ -15,6 +15,11 @@ function snap(over: Record<string, unknown> = {}) {
       margen: 40, ingresos: [], costos: [],
     },
     eerr12m: [],
+    vencimientos: {
+      fechaReferencia: "2026-07-01",
+      cobranzaMayor30: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+      cxpProximos7: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+    },
     tesoreria: {
       cuentas: [{ id: "b1", nombre: "BBVA", saldo: 100_000, moneda: "MXN" }],
       flujo: {

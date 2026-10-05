@@ -35,6 +35,7 @@ import { CxcAgingMobileCard } from "@/features/cxc/components/CxcAgingMobileCard
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Link } from "react-router-dom";
 import { CXC_AGING_ALCANCE, CXC_AGING_DESCRIPCION, CXC_AGING_FECHA_LABEL } from "../domain/agingScope";
+import { cubetaDesdeFiltro } from "@/lib/aging/reportScope";
 
 interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
@@ -93,8 +94,8 @@ export default function CxcAging() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportarCxcAgingCsv(rowsFiltradas, monedaActiva, fecha)}
-              disabled={rowsFiltradas.length === 0}
+              onClick={() => exportarCxcAgingCsv(paged.filteredRows, monedaActiva, fecha, { search: paged.search, cubeta: paged.filters.cubeta })}
+              disabled={paged.filteredCount === 0 || isLoading}
             >
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
@@ -158,6 +159,9 @@ export default function CxcAging() {
         onClearAll={paged.resetAll}
       />
 
+      <p className="text-body-sm text-muted-foreground">
+        CSV: {paged.filteredCount} clientes con los filtros actuales, en todas las páginas. Cada fila incluye el saldo de todas sus cubetas.
+      </p>
       <Card>
         <CardContent className="p-0">
           {/* v13.823.25: ResponsiveDataTable evita el desbordamiento horizontal en móvil/plegable. */}
@@ -170,7 +174,7 @@ export default function CxcAging() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
-            onRowClick={(r) => setDrilldown({ cli: r, cubeta: "todas" })}
+            onRowClick={(r) => setDrilldown({ cli: r, cubeta: cubetaDesdeFiltro(paged.filters.cubeta) })}
             getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.cliente_nombre}`}
             emptyMessage="Sin saldos pendientes"
             emptyHint="No hay facturas con saldo abierto."
@@ -188,6 +192,7 @@ export default function CxcAging() {
         onOpenChange={(o) => !o && setDrilldown(null)}
         cliente={drilldown?.cli ?? null}
         cubetaInicial={drilldown?.cubeta ?? "todas"}
+        fechaReferencia={fecha}
       />
     </PageContainer>
   );

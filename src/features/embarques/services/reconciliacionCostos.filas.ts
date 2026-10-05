@@ -9,10 +9,12 @@ import {
   type FilaReconciliacion,
   type PFCRow,
 } from "./reconciliacionCostos.tipos";
+import { conceptosConAjustesVerificables, esAjustePresupuestario, esFacturaVigente } from "./reconciliacionCostos.ajustes";
+import Decimal from "decimal.js";
 
 export function calcularDesviacionPct(cotizado: number, real: number): number {
-  if (cotizado <= 0) return real > 0 ? 100 : 0;
-  return ((real - cotizado) / cotizado) * 100;
+  if (cotizado === 0) return real === 0 ? 0 : real > 0 ? 100 : -100;
+  return ((real - cotizado) / Math.abs(cotizado)) * 100;
 }
 
 /**
@@ -25,9 +27,9 @@ export function clasificarRenglon(
   tieneFacturas: boolean,
 ): EstatusRenglon {
   if (!tieneFacturas) return "sin_match";
-  if (cotizado <= 0) return real > 0 ? "excedente" : "conciliado";
-  const superior = cotizado * (1 + TOLERANCIA_CONCILIACION);
-  const inferior = cotizado * (1 - TOLERANCIA_CONCILIACION);
+  if (cotizado === 0) return real !== 0 ? "excedente" : "conciliado";
+  const superior = cotizado + Math.abs(cotizado) * TOLERANCIA_CONCILIACION;
+  const inferior = cotizado - Math.abs(cotizado) * TOLERANCIA_CONCILIACION;
   if (real > superior) return "excedente";
   if (real < inferior) return "parcial";
   return "conciliado";
@@ -55,10 +57,18 @@ export function convertirMontoVinculo(
   return null;
 }
 
-function aVinculo(v: PFCRow, monedaConcepto: string): FacturaVinculada | null {
+function montoNetoVinculo(v: PFCRow, ajuste: boolean): number {
+  // El delta sintético es trazabilidad. Las partidas ordinarias usan el mismo
+  // neto de AUD72: monto × COALESCE(NULLIF(cantidad, 0), 1), antes del FX.
+  const cantidad = ajuste || v.cantidad == null || Number(v.cantidad) === 0 ? 1 : Number(v.cantidad);
+  if (!Number.isFinite(cantidad)) throw new Error("No se puede conciliar una partida con cantidad inválida.");
+  return new Decimal(Number(v.monto) || 0).times(cantidad).toNumber();
+}
+
+function aVinculo(v: PFCRow, monedaConcepto: string, ajuste: boolean): FacturaVinculada | null {
   const pf = v.proveedor_facturas;
   if (!pf) return null;
-  const original = Number(v.monto) || 0;
+  const original = montoNetoVinculo(v, ajuste);
   const monedaFactura = pf.moneda ?? null;
   const convertido = convertirMontoVinculo(
     original,
@@ -91,44 +101,46 @@ export function buildFilasReconciliacion(
 ): FilaReconciliacion[] {
   const porConcepto = new Map<string, PFCRow[]>();
   for (const v of vinculos) {
-    if (!v.concepto_costo_id || !v.proveedor_facturas || v.proveedor_facturas.deleted_at) continue;
+    if (!v.concepto_costo_id || !esFacturaVigente(v.proveedor_facturas)) continue;
     // v13.505.0 — una factura Cancelada (p. ej. cancelada ante el SAT) no
     // cuenta como facturada: el concepto vuelve a quedar "sin factura".
-    if ((v.proveedor_facturas.estado ?? "").toLowerCase() === "cancelada") continue;
     const arr = porConcepto.get(v.concepto_costo_id) ?? [];
     arr.push(v);
     porConcepto.set(v.concepto_costo_id, arr);
   }
-  return conceptos.map((c) => {
+  return conceptosConAjustesVerificables(conceptos, vinculos).map((c) => {
+    const ajuste = esAjustePresupuestario(c);
     const facs = (porConcepto.get(c.id) ?? [])
-      .map((v) => aVinculo(v, c.moneda))
+      .map((v) => aVinculo(v, c.moneda, ajuste))
       .filter((f): f is FacturaVinculada => f !== null);
     const comparables = facs.filter((f) => !f.excluida);
-    const excluidas = facs.length - comparables.length;
-    const real = comparables.reduce((s, f) => s + f.monto, 0);
+    const excluidas = ajuste ? 0 : facs.length - comparables.length;
+    const real = ajuste ? 0 : comparables.reduce((s, f) => s + f.monto, 0);
     const cotizado = Number(c.monto) || 0;
     // Con vínculos sin TC la variación no es interpretable: se reporta 0 y el
     // estatus `no_comparable` indica a las vistas que deben mostrar N/D.
     // P1-A: sin factura la diferencia no existe (N/D), no es ahorro de -100%.
-    const sinDato = excluidas > 0 || comparables.length === 0;
+    const sinDato = excluidas > 0 || (!ajuste && comparables.length === 0);
     const diferencia = sinDato ? 0 : real - cotizado;
     return {
       concepto_costo_id: c.id,
+      embarque_id: c.embarque_id,
       concepto: c.concepto,
       proveedor_nombre: c.proveedor_nombre,
       moneda: c.moneda,
       cotizado,
       real_facturado: real,
       diferencia,
-      desviacion_pct: sinDato ? 0 : calcularDesviacionPct(cotizado, real),
+      desviacion_pct: sinDato || ajuste ? 0 : calcularDesviacionPct(cotizado, real),
       estado_liquidacion: c.estado_liquidacion,
       // Con vínculos sin TC el facturado es parcial: nunca se presenta como
       // ahorro/sobrecosto definitivo.
-      estatus_renglon: excluidas > 0
+      estatus_renglon: ajuste ? "ajuste" : excluidas > 0
         ? "no_comparable"
         : clasificarRenglon(cotizado, real, comparables.length > 0),
       facturas: facs,
       vinculos_excluidos: excluidas,
+      ajuste_presupuestario: ajuste,
     };
   });
 }

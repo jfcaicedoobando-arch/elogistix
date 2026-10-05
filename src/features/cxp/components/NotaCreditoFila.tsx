@@ -8,7 +8,8 @@ import { Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
-import { formatCurrency, formatFechaDia } from "@/lib/formatters";
+import { formatFechaDia } from "@/lib/formatters";
+import { NotaCreditoImporte } from "@/components/shared/NotaCreditoImporte";
 import { NcSatBadge } from "./NcSatBadge";
 import { Hint } from "@/components/shared/Hint";
 import type { NotaCreditoProveedor as NotaCredito } from "@/features/cxp/types";
@@ -57,7 +58,9 @@ export function NotaCreditoFila({
       <TableCell className="font-mono text-body-sm">{n.folio_nc}</TableCell>
       <TableCell>{formatFechaDia(n.fecha)}</TableCell>
       <TableCell className="text-muted-foreground">{n.motivo}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</TableCell>
+      <TableCell className="text-right tabular-nums">
+        <NotaCreditoImporte nota={{ ...n, monto: Number(n.monto) }} factura={n.proveedor_facturas} estado={n.estado} />
+      </TableCell>
       <TableCell className="text-center"><NcEstadoBadge estado={n.estado} /></TableCell>
       <TableCell className="text-center">
         <NcSatBadge

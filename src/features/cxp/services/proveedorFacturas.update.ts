@@ -18,6 +18,7 @@ import {
   calcularTotal,
   detectarCambioSensible,
   validarTotalNoMenorAPagado,
+  validarCambioMonedaSinAplicaciones,
 } from "./proveedorFacturas.update.reglas";
 import type {
   ActualizarFacturaPayload,
@@ -78,6 +79,7 @@ export async function actualizarFacturaProveedor(
 
   // 3) Validar que el nuevo total no quede por debajo de lo ya pagado.
   const nuevoTotal = calcularTotal(payload);
+  if (actual.moneda !== payload.moneda) await validarCambioMonedaSinAplicaciones(id);
   await validarTotalNoMenorAPagado(id, nuevoTotal);
 
   // 4) ¿Hubo cambio sensible? → re-aprobación si estaba aprobada.

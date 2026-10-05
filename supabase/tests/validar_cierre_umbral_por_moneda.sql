@@ -68,6 +68,13 @@ BEGIN
   UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1
   WHERE id IN (v_pf_usd, v_pf_mxn);
 
+  -- La fecha sensible invalida la aprobacion; completar ambas facturas del fixture.
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id IN (v_pf_usd, v_pf_mxn);
+  PERFORM set_config('app.aprobando_cxp', '0', true);
+
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)
   VALUES (v_org, v_pf_mxn, 2000, 'MXN'::public.moneda, NULL, public.fecha_negocio_mx());

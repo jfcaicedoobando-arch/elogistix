@@ -21,6 +21,8 @@ export const CONCILIACION_ESTADO_LABELS: Record<EstadoConciliacion, {
   sin_facturar: { label: "Sin facturar", variant: "destructive", icon: AlertTriangle },
   parcial: { label: "Parcial", variant: "secondary", icon: Clock },
   completa: { label: "Conciliada", variant: "default", icon: CheckCircle2 },
+  no_comparable: { label: "Pendiente de TC", variant: "outline", icon: AlertTriangle },
+  ajuste: { label: "Ajuste de presupuesto", variant: "outline", icon: Clock },
 };
 
 export function buildConciliacionColumns() {
@@ -50,10 +52,12 @@ export function buildConciliacionColumns() {
       cell: ({ row }) => formatCurrency(row.original.presupuestado, row.original.moneda),
     },
     {
-      id: "pagado",
+      id: "facturado",
       header: "Facturado",
-      accessorFn: (r) => r.pagado,
-      cell: ({ row }) => formatCurrency(row.original.pagado, row.original.moneda),
+      accessorFn: (r) => r.facturado,
+      cell: ({ row }) => (
+        <span>{row.original.estado_conciliacion === "ajuste" ? "No aplica" : formatCurrency(row.original.facturado, row.original.moneda)}{row.original.pendientes_tc > 0 ? " (parcial)" : ""}</span>
+      ),
     },
     {
       id: "pendiente",
@@ -61,7 +65,7 @@ export function buildConciliacionColumns() {
       accessorFn: (r) => r.pendiente,
       cell: ({ row }) => (
         <span className={row.original.pendiente > 0 ? "font-medium text-destructive" : ""}>
-          {formatCurrency(row.original.pendiente, row.original.moneda)}
+          {row.original.pendientes_tc > 0 || row.original.estado_conciliacion === "ajuste" ? "N/D" : formatCurrency(row.original.pendiente, row.original.moneda)}
         </span>
       ),
     },
@@ -69,7 +73,7 @@ export function buildConciliacionColumns() {
       id: "cobertura",
       header: "Cobertura",
       accessorFn: (r) => r.cobertura,
-      cell: ({ row }) => (
+      cell: ({ row }) => row.original.pendientes_tc > 0 || row.original.estado_conciliacion === "ajuste" ? "N/D" : (
         <div className="flex items-center gap-2 min-w-[120px]">
           <Progress value={Math.round(row.original.cobertura * 100)} className="h-1.5" />
           <span className="text-xs tabular-nums w-8 text-right">
@@ -80,7 +84,7 @@ export function buildConciliacionColumns() {
     },
     {
       id: "conceptos_pendientes",
-      header: "Pend.",
+      header: "Por facturar",
       accessorFn: (r) => r.conceptos_pendientes,
       cell: ({ row }) =>
         row.original.conceptos_pendientes > 0 ? (

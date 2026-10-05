@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.824.24] - Unreleased
+
+- **fix(CxP y notas de crédito)**: la edición valida saldos en moneda de factura; las notas de crédito explican sus tasas históricas y equivalentes en ficha, lista y CSV. Los filtros usan estados válidos y distinguen errores de consulta de resultados vacíos.
+- **fix(historial de facturas)**: las decisiones nuevas conservan snapshots con procedencia del servidor; la actividad antigua sigue visible con su procedencia no verificable, incluido el motivo declarado de un rechazo tras una reaprobación. Se identifica la información histórica no disponible y se protegen las acciones reservadas, sin reconstruir ni reparar el pasado.
+- **fix(conciliación y navegación)**: facturado se obtiene de asignaciones reales de facturas, separado de pagos y de los ajustes presupuestarios; los totales mantienen el presupuesto neto y distinguen monedas. Un excedente no oculta el faltante de otro concepto sin un ajuste verificable de la misma factura, embarque y moneda. Las líneas fiscales con asociación válida no se cuentan como huérfanas, sin afirmar una asignación íntegra por la sola presencia del vínculo. La categoría se explica como clasificación presupuestaria. Programar pago abre la sección fiscal y enfoca la fecha; Cancelar un cobro respeta el aviso de descarte.
+- **fix(traspasos)**: se bloquea y explica un abono que redondea a cero antes de enviar; vista previa y validación comparten el cálculo a centavos.
+- **test(auditoría financiera 55-64)**: regresiones de moneda, historial, navegación, descarte y conciliación; sin cambios de datos históricos, pagos, correos ni despliegue implícito.
+
+- **fix(revisión de CxP)**: aprobar y reemplazar conceptos comprueban la versión exacta revisada; los conflictos conservan la edición y la justificación del lote, sin reenviar las facturas aprobadas. La integración conserva los snapshots y la procedencia física del historial al incorporar el control de concurrencia.
+- **fix(estado de cuenta del proveedor)**: se distinguen notas de crédito y devoluciones de anticipos; la brecha de partidas usa cantidad por importe unitario y las descargas explican su alcance. La conciliación comparte ese importe neto antes de convertir moneda.
+- **fix(reportes financieros)**: dashboard, aging, comisiones y estado de cuenta muestran el alcance y las fuentes de sus cifras. El estado de resultados conserva la elegibilidad de las facturas madre de notas de crédito y convierte con el tipo de cambio documental de cada moneda, incluido EUR.
+
 ## [13.824.23] - Unreleased
 
 - **fix(saldos del cliente)**: KPI y PDF usan el saldo neto de pagos y notas de crédito; el PDF comparte el corte filtrado de la tabla y CSV, incluidas facturas parcialmente pagadas.

@@ -6,6 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import {
   reemplazarConceptosFactura,
   type ReemplazarConceptosParams,
@@ -28,7 +29,7 @@ export function useEditarConceptosFactura(facturaId: string) {
     onError: (error: Error) => {
       notifyError(undefined, {
         title: "No se pudieron guardar los conceptos",
-        description: error.message,
+        description: getErrorMessage(error),
         error,
       });
     },

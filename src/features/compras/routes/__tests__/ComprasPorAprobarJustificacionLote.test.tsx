@@ -115,11 +115,12 @@ describe("Aprobación en lote con justificación", () => {
       await result.current.aprobar([A, B], {
         justificacion: "  Renta de oficina de agosto  ",
         requierenJustificacion: new Set([B]),
+        versionesRevisadas: new Map([[A, "v1"], [B, "v2"]]),
       });
     });
 
     await waitFor(() => expect(aprobarMock).toHaveBeenCalledTimes(2));
-    expect(aprobarMock).toHaveBeenNthCalledWith(1, A, true, undefined);
-    expect(aprobarMock).toHaveBeenNthCalledWith(2, B, true, "Renta de oficina de agosto");
+    expect(aprobarMock).toHaveBeenNthCalledWith(1, A, true, undefined, "v1");
+    expect(aprobarMock).toHaveBeenNthCalledWith(2, B, true, "Renta de oficina de agosto", "v2");
   });
 });

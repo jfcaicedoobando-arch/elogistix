@@ -11,6 +11,7 @@ import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { toEstadoCuentaFacturas } from "../../services/exports";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
+import type { EstadoCuentaAlcance } from "@/pdf/components/EstadoCuentaAlcance";
 
 const CSV_COLUMNS = [
   { key: "numero", label: "# Factura" },
@@ -42,7 +43,7 @@ function buildCsvRows(rows: ReadonlyArray<FacturaEstadoCuenta>) {
   }));
 }
 
-export function useExportActions(clienteIds: string[], rows: ReadonlyArray<FacturaEstadoCuenta>) {
+export function useExportActions(clienteIds: string[], rows: ReadonlyArray<FacturaEstadoCuenta>, alcance?: EstadoCuentaAlcance) {
   const [busy, setBusy] = useState<"pdf" | "csv" | null>(null);
   const soloUnCliente = clienteIds.length === 1;
 
@@ -59,7 +60,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     setBusy("pdf");
     try {
       const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
-      await generarEstadoCuentaPdf(data, toEstadoCuentaFacturas(rows));
+      await generarEstadoCuentaPdf(data, toEstadoCuentaFacturas(rows), alcance);
       notifySuccess(undefined, { title: "Estado de cuenta PDF descargado" });
     } catch (err) {
       notifyError(undefined, {
@@ -70,7 +71,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     } finally {
       setBusy(null);
     }
-  }, [clienteIds, soloUnCliente, rows]);
+  }, [clienteIds, soloUnCliente, rows, alcance]);
 
   const onCsv = useCallback(() => {
     if (rows.length === 0) {

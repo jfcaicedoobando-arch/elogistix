@@ -38,6 +38,8 @@ export type EstatusCxP =
 
 export interface FacturaCxP {
   id: string;
+  /** Versión de la factura mostrada; las decisiones se validan contra ella. */
+  updated_at?: string;
   proveedor_id: string;
   proveedor_nombre: string;
   proveedor_origen: "Nacional" | "Extranjero" | null;
@@ -117,7 +119,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   archivo_xml_url, archivo_pdf_url,
   uuid_verificado, uuid_verificado_fecha, uuid_estatus_sat,
   fecha_programada_pago,
-  fecha_cancelacion, motivo_cancelacion, cancelada_por, created_by,
+  fecha_cancelacion, motivo_cancelacion, cancelada_por, created_by, updated_at,
   pagos_proveedor(monto, monto_en_moneda_factura, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
@@ -148,6 +150,7 @@ export type Joined = Pick<
   | "fecha_programada_pago"
   | "fecha_cancelacion" | "motivo_cancelacion" | "cancelada_por" | "created_by"
 > & {
+  updated_at?: string;
   pagos_proveedor: Array<PagoCxpParcial> | null;
   proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;

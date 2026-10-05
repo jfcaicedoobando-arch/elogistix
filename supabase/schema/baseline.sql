@@ -5372,6 +5372,55 @@ CREATE FUNCTION public._venta_facturada_por_embarque(p_org uuid) RETURNS TABLE(e
   FROM reparto r JOIN f ON f.id = r.factura_id
   GROUP BY r.embarque_id, f.moneda;
 $$;
+CREATE FUNCTION public._versionar_conceptos_factura_proveedor() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+  v_ids uuid[];
+BEGIN
+  IF TG_OP = 'UPDATE' AND (to_jsonb(NEW) - 'updated_at') = (to_jsonb(OLD) - 'updated_at') THEN
+    RETURN NEW;
+  END IF;
+  v_ids := CASE TG_OP
+    WHEN 'INSERT' THEN ARRAY[NEW.proveedor_factura_id]
+    WHEN 'DELETE' THEN ARRAY[OLD.proveedor_factura_id]
+    ELSE ARRAY[OLD.proveedor_factura_id, NEW.proveedor_factura_id] END;
+  -- UPDATE/DELETE directo puede llegar con el renglón hijo ya bloqueado.
+  -- Si otro RPC tiene el padre, esperar aquí invertiría el orden padre/hijo
+  -- del reemplazo y podría provocar un deadlock. Rechazar permite recargar
+  -- y reintentar explícitamente, sin sobrescribir la edición de otra sesión.
+  FOR v_id IN SELECT DISTINCT unnest(v_ids) ORDER BY 1 LOOP
+    BEGIN
+      PERFORM 1 FROM public.proveedor_facturas WHERE id = v_id FOR UPDATE NOWAIT;
+    EXCEPTION WHEN lock_not_available THEN
+      RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: la factura está siendo modificada por otra sesión. Recarga y revisa los datos actuales antes de volver a guardar los conceptos.'
+        USING ERRCODE = '40001';
+    END;
+    UPDATE public.proveedor_facturas
+       SET updated_at = clock_timestamp(),
+           estado_aprobacion = CASE WHEN estado_aprobacion = 'aprobada' THEN 'pendiente'::public.estado_aprobacion_factura_proveedor ELSE estado_aprobacion END,
+           aprobada_por = CASE WHEN estado_aprobacion = 'aprobada' THEN NULL ELSE aprobada_por END,
+           aprobada_at = CASE WHEN estado_aprobacion = 'aprobada' THEN NULL ELSE aprobada_at END,
+           aprobacion_heredada = false
+     WHERE id = v_id;
+  END LOOP;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._versionar_factura_proveedor() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- now() es constante dentro de la transacción. Ni dos escrituras consecutivas
+  -- ni un timestamp enviado por el cliente pueden reutilizar una versión.
+  NEW.updated_at := GREATEST(clock_timestamp(), OLD.updated_at + interval '1 microsecond');
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) RETURNS numeric
     LANGUAGE sql IMMUTABLE
     SET search_path TO 'public'
@@ -7332,7 +7381,7 @@ CREATE TABLE public.proveedor_facturas (
     CONSTRAINT proveedor_facturas_estado_captura_check CHECK ((estado_captura = ANY (ARRAY['pendiente_xml'::text, 'capturada'::text, 'conciliada'::text, 'pagada'::text]))),
     CONSTRAINT proveedor_facturas_origen_carga_check CHECK ((origen_carga = ANY (ARRAY['manual'::text, 'cfdi'::text, 'pdf_ia'::text])))
 );
-CREATE FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text DEFAULT NULL::text) RETURNS public.proveedor_facturas
+CREATE FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text DEFAULT NULL::text, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS public.proveedor_facturas
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -7376,6 +7425,10 @@ BEGIN
      )
   THEN
     RAISE EXCEPTION 'Factura no encontrada' USING ERRCODE = '42501';
+  END IF;
+  IF p_expected_updated_at IS NULL OR v_row.updated_at IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: la factura cambió desde que la revisaste. Recarga y revisa los datos actuales antes de decidir.'
+      USING ERRCODE = '40001';
   END IF;
   IF v_row.estado_aprobacion <> 'pendiente' THEN
     RAISE EXCEPTION 'La factura ya fue %', v_row.estado_aprobacion;
@@ -7431,7 +7484,7 @@ BEGIN
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
-      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
+      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, fuente_evento)
     VALUES (
       v_row.organization_id,
       v_uid,
@@ -7443,9 +7496,12 @@ BEGIN
       jsonb_build_object(
         'motivo', p_motivo,
         'total', v_row.total,
+        'moneda', v_row.moneda,
+        'tipo_cambio_usd', v_row.tipo_cambio_usd,
         'aprobada', p_aprobar,
         'justificacion_sin_vinculo', v_row.justificacion_sin_vinculo
-      ) || v_desvinculo
+      ) || v_desvinculo,
+      'rpc_aprobar_factura_proveedor'
     );
   EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'bitacora_actividad insert failed in aprobar_factura_proveedor: % %', SQLSTATE, SQLERRM;
@@ -20413,23 +20469,18 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
   FOR f IN
-    SELECT fa.id, fa.numero, COALESCE(fa.total, 0) AS total,
+    SELECT fa.id, fa.numero,
            fa.moneda::text AS moneda, fa.tipo_cambio AS tc
       FROM public.facturas fa
      WHERE fa.cliente_id = p_cliente_id
        AND fa.deleted_at IS NULL
        AND fa.estado IN ('Emitida','Vencida','Parcialmente pagada','Pagada')
   LOOP
+    v_saldo := GREATEST(0, public.saldo_factura(f.id));
+    IF v_saldo <= 0 THEN
+      CONTINUE;
+    END IF;
     v_facturas := v_facturas + 1;
-    SELECT GREATEST(
-             0,
-             f.total
-               - COALESCE((SELECT SUM(p.monto_aplicado_factura)
-                             FROM public.pagos_factura p
-                            WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
-               - public.nc_aplicadas_en_moneda_factura(f.id)
-           )
-      INTO v_saldo;
     IF f.moneda = 'MXN' THEN
       v_en_uso := v_en_uso + v_saldo;
     ELSIF v_saldo > 0 THEN
@@ -20971,6 +21022,42 @@ BEGIN
           OR public.has_role(v_uid, 'tesorero'::app_role)) THEN
     RAISE EXCEPTION 'LC_CXP_CANCELAR_FORBIDDEN: tu rol no puede cancelar facturas de proveedor.'
       USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.guard_edicion_factura_proveedor() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- La moneda es la unidad de las aplicaciones históricas. Para corregirla se
+  -- requiere el flujo explícito de reverso; editar la cabecera no reconvierte pagos.
+  IF NEW.moneda IS DISTINCT FROM OLD.moneda AND (
+    EXISTS (SELECT 1 FROM public.pagos_proveedor pp
+             WHERE pp.proveedor_factura_id = OLD.id AND pp.deleted_at IS NULL)
+    OR EXISTS (SELECT 1 FROM public.proveedor_notas_credito nc
+                WHERE nc.proveedor_factura_id = OLD.id AND nc.estado = 'Aplicada' AND nc.deleted_at IS NULL)
+    OR EXISTS (SELECT 1 FROM public.anticipos_aplicaciones aa
+                WHERE aa.proveedor_factura_id = OLD.id AND aa.deleted_at IS NULL)
+  ) THEN
+    RAISE EXCEPTION 'LC_CXP_MONEDA_CON_APLICACIONES: la moneda no puede cambiar mientras existan pagos, notas de crédito o anticipos aplicados. Usa el flujo autorizado de reverso antes de corregir la moneda.'
+      USING ERRCODE = '23514';
+  END IF;
+  IF OLD.estado_aprobacion = 'aprobada' AND (
+    NEW.folio_proveedor IS DISTINCT FROM OLD.folio_proveedor
+    OR NEW.fecha_emision IS DISTINCT FROM OLD.fecha_emision
+    OR NEW.moneda IS DISTINCT FROM OLD.moneda
+    OR ROUND(NEW.tipo_cambio_usd, 4) IS DISTINCT FROM ROUND(OLD.tipo_cambio_usd, 4)
+    OR ROUND(NEW.subtotal, 2) IS DISTINCT FROM ROUND(OLD.subtotal, 2)
+    OR ROUND(NEW.iva, 2) IS DISTINCT FROM ROUND(OLD.iva, 2)
+    OR ROUND(NEW.ieps, 2) IS DISTINCT FROM ROUND(OLD.ieps, 2)
+    OR ROUND(NEW.retenciones, 2) IS DISTINCT FROM ROUND(OLD.retenciones, 2)
+  ) THEN
+    NEW.estado_aprobacion := 'pendiente';
+    NEW.aprobada_por := NULL;
+    NEW.aprobada_at := NULL;
+    NEW.aprobacion_heredada := false;
   END IF;
   RETURN NEW;
 END;
@@ -21627,124 +21714,116 @@ $$;
 CREATE FUNCTION public.historial_proveedor_factura(p_id uuid) RETURNS TABLE(ts timestamp with time zone, tipo text, descripcion text, actor_email text, monto numeric, moneda text, detalles jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
 BEGIN
-  IF v_uid IS NULL THEN
-    RAISE EXCEPTION 'No autenticado';
-  END IF;
-  SELECT organization_id INTO v_org
-  FROM public.proveedor_facturas
-  WHERE id = p_id;
-  IF v_org IS NULL THEN
-    RAISE EXCEPTION 'Factura no encontrada';
-  END IF;
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'No autenticado'; END IF;
+  SELECT organization_id INTO v_org FROM public.proveedor_facturas WHERE id = p_id;
+  IF v_org IS NULL THEN RAISE EXCEPTION 'Factura no encontrada'; END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.organization_members om
     WHERE om.organization_id = v_org AND om.user_id = v_uid
   ) AND NOT EXISTS (
     SELECT 1 FROM public.user_roles ur
     WHERE ur.user_id = v_uid AND ur.role::text = 'super_admin'
-  ) THEN
-    RAISE EXCEPTION 'Sin acceso a la factura';
-  END IF;
+  ) THEN RAISE EXCEPTION 'Sin acceso a la factura'; END IF;
   RETURN QUERY
-  WITH eventos AS (
-    SELECT
-      pf.created_at AS ev_ts,
-      'creada'::text AS ev_tipo,
+  WITH bitacora AS (
+    SELECT b.*,
+      CASE WHEN jsonb_typeof(b.detalles) = 'object' THEN b.detalles
+        ELSE jsonb_build_object('datos_originales', b.detalles) END AS datos_registrados,
+      COALESCE(b.fuente_evento = 'rpc_aprobar_factura_proveedor'
+        AND b.accion IN ('aprobar_factura_proveedor', 'rechazar_factura_proveedor'), false) AS evento_verificado,
+      CASE WHEN length(b.detalles->>'total') <= 64
+        AND b.detalles->>'total' ~ '^-?[0-9]+(\.[0-9]+)?$'
+        THEN (b.detalles->>'total')::numeric END AS total_historico,
+      CASE WHEN b.detalles->>'moneda' IN ('MXN', 'USD', 'EUR')
+        THEN b.detalles->>'moneda' END AS moneda_historica
+    FROM public.bitacora_actividad b
+    WHERE b.entidad_id = p_id AND b.modulo = 'cxp' AND b.organization_id = v_org
+  ), eventos AS (
+    SELECT pf.created_at AS ev_ts, 'creada'::text AS ev_tipo,
       'Factura capturada'::text AS ev_descripcion,
       COALESCE(u.email, '')::text AS ev_actor_email,
-      pf.total AS ev_monto,
-      pf.moneda::text AS ev_moneda,
-      jsonb_build_object('folio', pf.folio_proveedor) AS ev_detalles
+      NULL::numeric AS ev_monto, NULL::text AS ev_moneda,
+      jsonb_build_object('origen', 'registro_factura', 'snapshot_historico_disponible', false,
+        'procedencia_verificada', true) AS ev_detalles
     FROM public.proveedor_facturas pf
     LEFT JOIN auth.users u ON u.id = pf.created_by
-    WHERE pf.id = p_id
+    WHERE pf.id = p_id AND pf.organization_id = v_org
     UNION ALL
-    SELECT
-      pf.aprobada_at,
-      CASE pf.estado_aprobacion::text
-        WHEN 'aprobada' THEN 'aprobada'
-        WHEN 'rechazada' THEN 'rechazada'
-        ELSE pf.estado_aprobacion::text
-      END,
-      CASE pf.estado_aprobacion::text
-        WHEN 'aprobada' THEN 'Factura aprobada'
-        WHEN 'rechazada' THEN 'Factura rechazada'
-        ELSE 'Cambio de estado'
-      END,
-      COALESCE(u.email, '')::text,
-      NULL::numeric,
-      NULL::text,
-      jsonb_build_object('motivo_rechazo', pf.motivo_rechazo)
+    -- La columna aprobada_at conserva sólo la última decisión. Es un fallback
+    -- para facturas antiguas sin su evento; nunca reemplaza decisiones de bitácora.
+    SELECT pf.aprobada_at, pf.estado_aprobacion::text,
+      CASE pf.estado_aprobacion::text WHEN 'aprobada' THEN 'Factura aprobada'
+        ELSE 'Factura rechazada' END,
+      COALESCE(u.email, '')::text, NULL::numeric, NULL::text,
+      jsonb_build_object('motivo_rechazo', pf.motivo_rechazo,
+        'origen', 'registro_factura', 'snapshot_historico_disponible', false, 'procedencia_verificada', true)
     FROM public.proveedor_facturas pf
     LEFT JOIN auth.users u ON u.id = pf.aprobada_por
-    WHERE pf.id = p_id AND pf.aprobada_at IS NOT NULL
+    WHERE pf.id = p_id AND pf.organization_id = v_org AND pf.aprobada_at IS NOT NULL
+      AND pf.estado_aprobacion::text IN ('aprobada', 'rechazada')
+      AND NOT EXISTS (
+        SELECT 1 FROM bitacora b WHERE b.evento_verificado AND b.created_at = pf.aprobada_at
+          AND b.accion = CASE pf.estado_aprobacion::text
+            WHEN 'aprobada' THEN 'aprobar_factura_proveedor' ELSE 'rechazar_factura_proveedor' END
+      )
     UNION ALL
-    SELECT
-      pp.created_at,
-      'pago'::text,
-      ('Pago registrado' ||
-        CASE WHEN pp.referencia IS NOT NULL AND pp.referencia <> ''
-             THEN ' · ref ' || pp.referencia ELSE '' END)::text,
-      COALESCE(u.email, '')::text,
-      pp.monto,
-      pp.moneda::text,
+    SELECT pp.created_at, 'pago'::text,
+      ('Pago registrado' || CASE WHEN COALESCE(pp.referencia, '') <> ''
+        THEN ' · ref ' || pp.referencia ELSE '' END)::text,
+      COALESCE(u.email, '')::text, pp.monto, pp.moneda::text,
       jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago)
     FROM public.pagos_proveedor pp
     LEFT JOIN auth.users u ON u.id = pp.created_by
-    WHERE pp.proveedor_factura_id = p_id AND pp.deleted_at IS NULL
+    WHERE pp.proveedor_factura_id = p_id AND pp.organization_id = v_org AND pp.deleted_at IS NULL
     UNION ALL
-    SELECT
-      nc.created_at,
-      'nota_credito'::text,
-      ('Nota de crédito ' || COALESCE(nc.folio_nc, '') ||
-        CASE WHEN nc.motivo IS NOT NULL AND nc.motivo::text <> ''
-             THEN ' · ' || nc.motivo::text ELSE '' END)::text,
-      COALESCE(u.email, '')::text,
-      nc.monto,
-      nc.moneda::text,
+    SELECT nc.created_at, 'nota_credito'::text,
+      ('Nota de crédito ' || COALESCE(nc.folio_nc, '') || CASE WHEN COALESCE(nc.motivo::text, '') <> ''
+        THEN ' · ' || nc.motivo::text ELSE '' END)::text,
+      COALESCE(u.email, '')::text, nc.monto, nc.moneda::text,
       jsonb_build_object('folio', nc.folio_nc, 'estado', nc.estado)
     FROM public.proveedor_notas_credito nc
     LEFT JOIN auth.users u ON u.id = nc.created_by
-    WHERE nc.proveedor_factura_id = p_id AND nc.deleted_at IS NULL
+    WHERE nc.proveedor_factura_id = p_id AND nc.organization_id = v_org AND nc.deleted_at IS NULL
     UNION ALL
-    SELECT
-      pf.deleted_at,
-      'eliminada'::text,
-      'Factura enviada a papelera'::text,
-      COALESCE(u.email, '')::text,
-      NULL::numeric,
-      NULL::text,
-      '{}'::jsonb
+    SELECT pf.deleted_at, 'eliminada'::text, 'Factura enviada a papelera'::text,
+      COALESCE(u.email, '')::text, NULL::numeric, NULL::text, '{}'::jsonb
     FROM public.proveedor_facturas pf
     LEFT JOIN auth.users u ON u.id = pf.deleted_by
-    WHERE pf.id = p_id AND pf.deleted_at IS NOT NULL
+    WHERE pf.id = p_id AND pf.organization_id = v_org AND pf.deleted_at IS NOT NULL
     UNION ALL
-    SELECT
-      b.created_at,
-      COALESCE(b.accion, 'evento')::text,
-      COALESCE(b.entidad_nombre, b.accion)::text,
+    SELECT b.created_at,
+      CASE WHEN b.evento_verificado THEN
+        CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'aprobada' ELSE 'rechazada' END
+        ELSE 'actividad' END::text,
+      CASE WHEN b.evento_verificado THEN
+        CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'Factura aprobada' ELSE 'Factura rechazada' END
+        ELSE CASE b.accion WHEN 'aprobar_factura_proveedor' THEN 'Aprobación registrada en bitácora'
+          WHEN 'rechazar_factura_proveedor' THEN 'Rechazo registrado en bitácora'
+          WHEN 'crear' THEN 'Captura registrada en bitácora'
+          WHEN 'editar' THEN 'Edición registrada en bitácora'
+          ELSE 'Actividad registrada: ' || COALESCE(NULLIF(b.entidad_nombre, ''), b.accion) END END::text,
       COALESCE(b.usuario_email, '')::text,
-      NULL::numeric,
-      NULL::text,
-      COALESCE(b.detalles, '{}'::jsonb)
-    FROM public.bitacora_actividad b
-    WHERE b.entidad_id = p_id
-      AND b.modulo = 'cxp'
-      AND b.accion NOT IN ('aprobar_factura_proveedor', 'rechazar_factura_proveedor')
+      CASE WHEN b.evento_verificado
+        THEN b.total_historico END,
+      CASE WHEN b.evento_verificado
+        THEN b.moneda_historica END,
+      b.datos_registrados || jsonb_build_object(
+        'bitacora_id', b.id, 'origen', 'bitacora', 'fuente_evento', b.fuente_evento,
+        'procedencia_verificada', b.evento_verificado,
+        'accion_registrada', b.accion, 'motivo_rechazo', COALESCE(b.detalles->>'motivo_rechazo', b.detalles->>'motivo'),
+        'snapshot_historico_disponible', b.evento_verificado AND b.total_historico IS NOT NULL AND b.moneda_historica IS NOT NULL
+      )
+    FROM bitacora b
   )
-  SELECT
-    e.ev_ts, e.ev_tipo, e.ev_descripcion, e.ev_actor_email,
-    e.ev_monto, e.ev_moneda, e.ev_detalles
-  FROM eventos e
-  WHERE e.ev_ts IS NOT NULL
-  ORDER BY e.ev_ts ASC;
+  SELECT e.ev_ts, e.ev_tipo, e.ev_descripcion, e.ev_actor_email, e.ev_monto, e.ev_moneda, e.ev_detalles
+  FROM eventos e WHERE e.ev_ts IS NOT NULL ORDER BY e.ev_ts ASC;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.idempotency_claim(_key uuid, _fn text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -24774,7 +24853,9 @@ BEGIN
   ),
   pfc_conv AS (
     SELECT pfc.concepto_costo_id,
-           pfc.monto,
+           -- AUD72: monto es unitario; el respaldo compara subtotal neto.
+           -- IVA/IEPS ya son importes fiscales separados, no se multiplican.
+           pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1) AS monto,
            pf.id AS factura_id, pf.folio_interno, pf.folio_proveedor,
            pf.estado::text AS estado, pf.estado_aprobacion::text AS estado_aprobacion,
            pf.fecha_emision, pf.fecha_vencimiento, pf.moneda::text AS moneda,
@@ -24870,9 +24951,9 @@ BEGIN
              (COALESCE(ppf.pagado, 0) + COALESCE(ncf.nc_aplicada, 0))
              * CASE
                  WHEN COALESCE(pf.subtotal, 0) > 0
-                   THEN LEAST(COALESCE(pfc.monto, 0) / pf.subtotal, 1)
+                   THEN LEAST(COALESCE(pfc.monto, 0) * COALESCE(NULLIF(pfc.cantidad, 0), 1) / pf.subtotal, 1)
                  WHEN COALESCE(pf.total, 0) > 0
-                   THEN LEAST(COALESCE(pfc.monto, 0) / pf.total, 1)
+                   THEN LEAST(COALESCE(pfc.monto, 0) * COALESCE(NULLIF(pfc.cantidad, 0), 1) / pf.total, 1)
                  ELSE 0
                END
            ) AS pagado_factura
@@ -24922,7 +25003,8 @@ BEGIN
   FROM (
     SELECT pf.id AS factura_id, pf.folio_interno, pf.folio_proveedor,
            pf.fecha_emision, pf.moneda::text AS moneda,
-           SUM(pfc.monto) AS monto_sin_vincular,
+           -- AUD72: suma neta de las partidas, igual al contrato del cuadre.
+           SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1)) AS monto_sin_vincular,
            COUNT(*) AS partidas
     FROM public.proveedor_facturas pf
     JOIN public.proveedor_facturas_conceptos pfc ON pfc.proveedor_factura_id = pf.id
@@ -24983,7 +25065,10 @@ BEGIN
   ),
   notas AS (
     -- R3P-08: sólo NC aplicadas descuentan el estado de cuenta (regla única).
-    SELECT nc.id, nc.folio_nc, nc.fecha, nc.monto, nc.moneda::text AS moneda,
+    SELECT nc.id, nc.folio_nc, nc.fecha,
+           nc.monto AS monto_nota, nc.moneda::text AS moneda_nota,
+           public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda) AS monto_factura,
+           f.moneda AS moneda_factura,
            nc.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
     FROM public.proveedor_notas_credito nc
     JOIN facturas f ON f.id = nc.proveedor_factura_id
@@ -25006,13 +25091,33 @@ BEGIN
   ),
   anticipos AS (
     SELECT a.id, a.fecha_anticipo, a.monto, a.moneda::text AS moneda,
-           a.referencia, a.metodo_pago, a.embarque_id, e.expediente
+           a.referencia, a.metodo_pago, a.embarque_id, e.expediente,
+           COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
+           -- La fecha bancaria conserva el periodo efectivo de la devolución.
+           -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
+           COALESCE(d.fecha,
+                    (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
+                    (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
+                    a.fecha_anticipo) AS fecha_devolucion,
+           d.referencia AS referencia_devolucion,
+           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
+    LEFT JOIN LATERAL (
+      SELECT b.fecha, b.referencia
+      FROM public.bbva_movimientos b
+      WHERE b.anticipo_proveedor_id = a.id
+        AND b.organization_id = v_oid
+        AND b.deleted_at IS NULL
+        AND b.hash_dedupe = 'devolucion-' || a.id::text
+        AND b.abono > 0
+      ORDER BY b.fecha, b.id
+      LIMIT 1
+    ) d ON true
     WHERE a.proveedor_id = p_proveedor_id
       AND a.organization_id = v_oid
       AND a.deleted_at IS NULL
-      AND a.estado <> 'Cancelado'
+      AND a.estado <> 'cancelado'
   ),
   movs AS (
     SELECT f.fecha_emision AS fecha, 'Factura'::text AS tipo, f.id AS ref_id,
@@ -25024,7 +25129,14 @@ BEGIN
     UNION ALL
     SELECT n.fecha, 'Nota de crédito', n.id,
            COALESCE(n.folio_nc, 'NC'), n.folio_interno, COALESCE(n.expediente, ''),
-           n.embarque_id, n.moneda, 0::numeric, COALESCE(n.monto, 0), NULL::text
+           n.embarque_id, n.moneda_factura, 0::numeric, COALESCE(n.monto_factura, 0),
+           CASE
+             WHEN n.moneda_nota <> n.moneda_factura AND n.monto_factura IS NULL
+               THEN 'NC en ' || n.moneda_nota || ' SIN TC (excluida del saldo)'
+             WHEN n.moneda_nota <> n.moneda_factura
+               THEN 'NC en ' || n.moneda_nota || ' ' || n.monto_nota::text || ' convertida a ' || n.moneda_factura
+             ELSE NULL::text
+           END
     FROM notas n
     UNION ALL
     SELECT p.fecha_pago,
@@ -25053,6 +25165,18 @@ BEGIN
            -- R3P-07: el anticipo entregado ES un abono (dinero al proveedor).
            0::numeric, COALESCE(a.monto, 0), a.metodo_pago
     FROM anticipos a
+    UNION ALL
+    SELECT a.fecha_devolucion, 'Devolución de anticipo', a.id, 'Devolución de anticipo',
+           COALESCE(a.referencia_devolucion, a.referencia), COALESCE(a.expediente, ''),
+           a.embarque_id, a.moneda,
+           -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
+           -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
+           a.monto_devuelto, 0::numeric,
+           CASE WHEN a.devolucion_sin_fecha_bancaria
+             THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
+             ELSE a.metodo_pago END
+    FROM anticipos a
+    WHERE a.monto_devuelto > 0
   )
   SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio), '[]'::jsonb)
   INTO v_todos
@@ -25117,8 +25241,10 @@ BEGIN
                               FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).
-                  - COALESCE((SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc
+                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda))
+                              FROM public.proveedor_notas_credito nc
                               WHERE nc.proveedor_factura_id = f.id AND nc.deleted_at IS NULL
+                                AND nc.organization_id = v_oid
                                 AND nc.estado = 'Aplicada'), 0)
            END AS saldo
     FROM facturas f
@@ -26764,7 +26890,7 @@ BEGIN
   RETURN v_insertados;
 END;
 $$;
-CREATE FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb DEFAULT NULL::jsonb) RETURNS integer
+CREATE FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb DEFAULT NULL::jsonb, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -26800,6 +26926,10 @@ BEGIN
           OR public.has_role(auth.uid(), 'tesorero')) THEN
     RAISE EXCEPTION 'LC_CONCEPTOS_FORBIDDEN: sin permiso para editar los conceptos de la factura'
       USING ERRCODE = '42501';
+  END IF;
+  IF p_expected_updated_at IS NULL OR v_f.updated_at IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: los conceptos o la factura cambiaron mientras los editabas. Recarga antes de volver a guardar.'
+      USING ERRCODE = '40001';
   END IF;
   IF v_f.uuid_fiscal IS NOT NULL OR v_f.archivo_xml_url IS NOT NULL THEN
     RAISE EXCEPTION 'LC_CONCEPTOS_FISCALES: los conceptos vienen del XML del CFDI; vuelve a adjuntar el XML para cambiarlos'
@@ -27587,6 +27717,11 @@ DECLARE
   v_org uuid := p_organization_id;
   v_email text;
 BEGIN
+  -- AUD-57: estas decisiones sólo las escribe su RPC de negocio, nunca el recorder.
+  IF lower(btrim(COALESCE(p_accion, ''))) IN ('aprobar_factura_proveedor', 'rechazar_factura_proveedor') THEN
+    RAISE EXCEPTION 'LC_BITACORA_ACCION_RESERVADA: la decisión se registra desde su RPC de negocio'
+      USING ERRCODE = '42501';
+  END IF;
   -- FIX BL-02: con JWT de usuario solo se puede escribir con identidad propia y
   -- en una organización de la que el usuario sea miembro. service_role y
   -- llamadas internas sin JWT de usuario quedan fuera del guard.
@@ -31334,7 +31469,8 @@ BEGIN
   IF TG_OP = 'UPDATE'
      AND NEW.concepto_costo_id IS NOT DISTINCT FROM OLD.concepto_costo_id
      AND NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
-     AND NEW.monto IS NOT DISTINCT FROM OLD.monto THEN
+     AND NEW.monto IS NOT DISTINCT FROM OLD.monto
+     AND NEW.cantidad IS NOT DISTINCT FROM OLD.cantidad THEN
     RETURN NEW;
   END IF;
   SELECT cc.moneda, cc.monto, cc.proveedor_id, cc.organization_id
@@ -31390,7 +31526,8 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
-  SELECT COALESCE(sum(pfc.monto), 0)
+  -- AUD72: el monto es unitario; los vínculos se contrastan por subtotal neto.
+  SELECT COALESCE(sum(pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1)), 0)
     INTO v_asignado
     FROM public.proveedor_facturas_conceptos pfc
    WHERE pfc.concepto_costo_id = NEW.concepto_costo_id
@@ -31399,7 +31536,7 @@ BEGIN
   -- TC la comparación directa de importes no es válida.
   IF COALESCE(v_cc_monto, 0) > 0
      AND upper(btrim(COALESCE(v_fac_moneda, ''))) = upper(btrim(COALESCE(v_cc_moneda, '')))
-     AND round(v_asignado + COALESCE(NEW.monto, 0), 2) > round(v_cc_monto * 1.05, 2) THEN
+     AND round(v_asignado + COALESCE(NEW.monto, 0) * COALESCE(NULLIF(NEW.cantidad, 0), 1), 2) > round(v_cc_monto * 1.05, 2) THEN
     RAISE EXCEPTION 'LC_CXP_VINCULO_SOBREASIGNADO: el costo del expediente % es de % % y ya tiene % asignado; la factura % excede el monto restante',
       COALESCE(v_expediente, '(sin expediente)'), v_cc_monto, COALESCE(v_cc_moneda, ''),
       v_asignado, COALESCE(v_fac_folio, '(sin folio)')
@@ -32466,7 +32603,8 @@ CREATE TABLE public.bitacora_actividad (
     entidad_nombre text DEFAULT ''::text,
     detalles jsonb DEFAULT '{}'::jsonb,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    organization_id uuid DEFAULT public.current_user_org_id()
+    organization_id uuid DEFAULT public.current_user_org_id(),
+    fuente_evento text
 );
 CREATE TABLE public.catalogo_claves_sat (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -35265,6 +35403,8 @@ CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_ba
 CREATE TRIGGER trg_cuentas_bancarias_moneda_guard BEFORE UPDATE OF moneda ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public.guard_cuenta_bancaria_moneda();
 CREATE TRIGGER trg_cuentas_bancarias_updated BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cxp_cancelacion_rol_financiero BEFORE UPDATE OF estado ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_cxp_cancelacion_rol_financiero();
+CREATE TRIGGER trg_cxp_edicion_sensible BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_edicion_factura_proveedor();
+CREATE TRIGGER trg_cxp_versionar_conceptos BEFORE INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._versionar_conceptos_factura_proveedor();
 CREATE TRIGGER trg_demoras_venta_updated_at BEFORE UPDATE ON public.costeo_demoras_venta_tarifa FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_docs_promover_por_liquidar AFTER INSERT OR UPDATE ON public.documentos_embarque FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
 CREATE TRIGGER trg_efe_normalizar_uuid_fiscal BEFORE INSERT OR UPDATE OF uuid_fiscal ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public._normalizar_uuid_fiscal();
@@ -35434,7 +35574,7 @@ CREATE TRIGGER trg_proveedor_facturas_folio_unico BEFORE INSERT OR UPDATE OF org
 CREATE TRIGGER trg_proveedor_facturas_recalc_liq AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_proveedor_facturas_recalc_liq();
 CREATE TRIGGER trg_proveedor_facturas_set_fecha_vencimiento BEFORE INSERT OR UPDATE OF fecha_emision, dias_credito ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_set_fecha_vencimiento();
 CREATE TRIGGER trg_proveedor_facturas_total_guard BEFORE INSERT OR UPDATE OF subtotal, iva, ieps, retenciones, total ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_proveedor_factura_total();
-CREATE TRIGGER trg_proveedor_facturas_updated BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_proveedor_facturas_updated BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._versionar_factura_proveedor();
 CREATE TRIGGER trg_proveedor_notas_credito_updated BEFORE UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedores_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.proveedores FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
 CREATE TRIGGER trg_reabrir_entrantes_factura AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW WHEN ((((new.estado IS DISTINCT FROM old.estado) AND (new.estado = 'Cancelada'::public.estado_proveedor_factura)) OR ((new.deleted_at IS DISTINCT FROM old.deleted_at) AND (new.deleted_at IS NOT NULL)))) EXECUTE FUNCTION public._reabrir_entrantes_factura();
@@ -37018,6 +37158,10 @@ GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authentica
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO service_role;
 REVOKE ALL ON FUNCTION public._venta_facturada_por_embarque(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._venta_facturada_por_embarque(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._versionar_conceptos_factura_proveedor() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._versionar_conceptos_factura_proveedor() TO service_role;
+REVOKE ALL ON FUNCTION public._versionar_factura_proveedor() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._versionar_factura_proveedor() TO service_role;
 REVOKE ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO service_role;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO authenticated;
@@ -37092,9 +37236,9 @@ GRANT ALL ON FUNCTION public.current_user_org_id() TO authenticated;
 GRANT ALL ON FUNCTION public.current_user_org_id() TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proveedor_facturas TO authenticated;
 GRANT ALL ON TABLE public.proveedor_facturas TO service_role;
-REVOKE ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text, p_expected_updated_at timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text, p_expected_updated_at timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar boolean, p_motivo text, p_expected_updated_at timestamp with time zone) TO service_role;
 REVOKE ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) TO service_role;
@@ -37738,6 +37882,8 @@ GRANT ALL ON FUNCTION public.guard_cuenta_bancaria_moneda() TO service_role;
 REVOKE ALL ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() TO service_role;
+REVOKE ALL ON FUNCTION public.guard_edicion_factura_proveedor() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_edicion_factura_proveedor() TO service_role;
 REVOKE ALL ON FUNCTION public.guard_estado_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_estado_cotizacion() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_estado_cotizacion() TO service_role;
@@ -38062,9 +38208,9 @@ GRANT ALL ON FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo
 REVOKE ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.reemplazar_conceptos_entrante(p_documento_id uuid, p_conceptos jsonb) TO service_role;
-REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb) TO authenticated;
-GRANT ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb, p_expected_updated_at timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb, p_expected_updated_at timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(p_factura_id uuid, p_conceptos jsonb, p_impuestos_no_desglosados jsonb, p_expected_updated_at timestamp with time zone) TO service_role;
 REVOKE ALL ON FUNCTION public.reemplazar_demoras_tramos_rpc(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_tramos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reemplazar_demoras_tramos_rpc(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_tramos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.reemplazar_demoras_tramos_rpc(p_naviera_condicion_id uuid, p_tipo_contenedor_id uuid, p_tramos jsonb) TO service_role;

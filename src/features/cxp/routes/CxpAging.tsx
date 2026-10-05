@@ -38,6 +38,7 @@ import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { CxpAgingMobileCard } from "@/features/cxp/components/CxpAgingMobileCard";
+import { cubetaDesdeFiltro } from "@/lib/aging/reportScope";
 
 
 interface Filters extends Record<string, string> { cubeta: string }
@@ -95,8 +96,8 @@ export default function CxpAging() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportarCxpAgingCsv(rowsFiltradas, monedaActiva, fecha)}
-              disabled={rowsFiltradas.length === 0}
+              onClick={() => exportarCxpAgingCsv(paged.filteredRows, monedaActiva, fecha, { search: paged.search, cubeta: paged.filters.cubeta })}
+              disabled={paged.filteredCount === 0 || isLoading}
             >
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
@@ -149,6 +150,9 @@ export default function CxpAging() {
         onClearAll={paged.resetAll}
       />
 
+      <p className="text-body-sm text-muted-foreground">
+        CSV: {paged.filteredCount} proveedores con los filtros actuales, en todas las páginas. Cada fila incluye el saldo de todas sus cubetas.
+      </p>
       <Card>
         <CardContent className="p-0">
           <ResponsiveDataTable<CxpAgingRow>
@@ -162,7 +166,7 @@ export default function CxpAging() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
-            onRowClick={(r) => setDrilldown({ prov: r, cubeta: "todas" })}
+            onRowClick={(r) => setDrilldown({ prov: r, cubeta: cubetaDesdeFiltro(paged.filters.cubeta) })}
             getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.proveedor_nombre}`}
             emptyMessage="Sin saldos pendientes"
             striped
@@ -179,6 +183,7 @@ export default function CxpAging() {
         onOpenChange={(o) => !o && setDrilldown(null)}
         proveedor={drilldown?.prov ?? null}
         cubetaInicial={drilldown?.cubeta ?? "todas"}
+        fechaReferencia={fecha}
       />
     </PageContainer>
   );

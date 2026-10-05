@@ -80,6 +80,11 @@ export function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: To
                 {t.sin_factura} renglón(es) sin factura: fuera de la variación{t.diferencia === null ? "" : " (variación parcial)"}.
               </div>
             )}
+            {(t.ajustes_no_comparables ?? 0) > 0 && (
+              <div className="col-span-5 text-2xs text-muted-foreground">
+                {t.ajustes_no_comparables} ajuste(s) sin base comparable de su factura en esta moneda: conservan el presupuesto y quedan fuera de la variación.
+              </div>
+            )}
           </div>
         ))}
       </div>

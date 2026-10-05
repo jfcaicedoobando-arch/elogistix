@@ -16,6 +16,8 @@ interface Props {
   facturaId: string;
   fechaProgramada: string | null;
   saldo: number;
+  /** La bandeja de Tesorería enlaza directamente esta captura de fecha. */
+  autoFocus?: boolean;
 }
 
 function formatoLocal(iso: string | null): string {
@@ -28,7 +30,7 @@ function formatoBonito(iso: string | null): string | null {
   return formatFechaEs(iso, { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props) {
+export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo, autoFocus = false }: Props) {
   const [valor, setValor] = useState<string>(formatoLocal(fechaProgramada));
   useEffect(() => setValor(formatoLocal(fechaProgramada)), [fechaProgramada]);
 
@@ -38,7 +40,7 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
   const dirty = valor !== formatoLocal(fechaProgramada);
 
   return (
-    <div className="mt-3 pt-3 border-t">
+    <div id="programacion-pago" className="mt-3 pt-3 border-t scroll-mt-4">
       <div className="flex items-center gap-2 mb-2">
         <CalendarClock className="h-4 w-4 text-muted-foreground" />
         <span className="text-overline font-medium">
@@ -53,6 +55,8 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <DatePickerMx
+          aria-label="Fecha programada de pago"
+          autoFocus={autoFocus}
           value={valor}
           onChange={setValor}
           disabled={yaSaldada || prog.isPending}

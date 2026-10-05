@@ -31,7 +31,7 @@ describe("exportación del mismo corte de estado de cuenta", () => {
     const { result } = renderHook(() => useExportActions(["cliente"], [ROW]));
     await act(async () => { await result.current.onPdf(); });
     act(() => { result.current.onCsv(); });
-    expect(mocks.pdf).toHaveBeenCalledWith(CLIENTE, [expect.objectContaining({ numero: "A3", total: 116, saldo: 58 })]);
+    expect(mocks.pdf).toHaveBeenCalledWith(CLIENTE, [expect.objectContaining({ numero: "A3", total: 116, saldo: 58 })], undefined);
     expect(mocks.csv).toHaveBeenCalledWith(expect.any(String), expect.any(Array), [expect.objectContaining({ numero: "A3", total: 116, saldo: 58 })]);
     expect(mocks.error).not.toHaveBeenCalled();
   });
@@ -41,7 +41,16 @@ describe("exportación del mismo corte de estado de cuenta", () => {
     const { result, rerender } = renderHook(({ rows }) => useExportActions(ids, rows), { initialProps: { rows: [ROW] } });
     rerender({ rows: [{ ...ROW, pagado: 20, saldo: 38 }] });
     await act(async () => { await result.current.onPdf(); });
-    expect(mocks.pdf).toHaveBeenCalledWith(CLIENTE, [expect.objectContaining({ numero: "A3", saldo: 38 })]);
+    expect(mocks.pdf).toHaveBeenCalledWith(CLIENTE, [expect.objectContaining({ numero: "A3", saldo: 38 })], undefined);
+  });
+
+  it("entrega los filtros vigentes junto al saldo filtrado sin incluir el saldo global", async () => {
+    const alcance = { parcial: true, filtros: ["Antigüedad: 1-30 días", "Moneda: MXN"] };
+    const actualizado = { parcial: true, filtros: ["Antigüedad: 31-60 días", "Moneda: MXN"] };
+    const { result, rerender } = renderHook(({ scope }) => useExportActions(["cliente"], [ROW], scope), { initialProps: { scope: alcance } });
+    rerender({ scope: actualizado });
+    await act(async () => { await result.current.onPdf(); });
+    expect(mocks.pdf).toHaveBeenCalledWith(CLIENTE, [expect.objectContaining({ saldo: 58 })], actualizado);
   });
 
   it("no exporta facturas fuera de un corte vacío", async () => {

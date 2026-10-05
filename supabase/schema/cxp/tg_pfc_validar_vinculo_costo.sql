@@ -39,7 +39,8 @@ BEGIN
   IF TG_OP = 'UPDATE'
      AND NEW.concepto_costo_id IS NOT DISTINCT FROM OLD.concepto_costo_id
      AND NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
-     AND NEW.monto IS NOT DISTINCT FROM OLD.monto THEN
+     AND NEW.monto IS NOT DISTINCT FROM OLD.monto
+     AND NEW.cantidad IS NOT DISTINCT FROM OLD.cantidad THEN
     RETURN NEW;
   END IF;
 
@@ -106,7 +107,8 @@ BEGIN
     END IF;
   END IF;
 
-  SELECT COALESCE(sum(pfc.monto), 0)
+  -- AUD72: el monto es unitario; los vínculos se contrastan por subtotal neto.
+  SELECT COALESCE(sum(pfc.monto * COALESCE(NULLIF(pfc.cantidad, 0), 1)), 0)
     INTO v_asignado
     FROM public.proveedor_facturas_conceptos pfc
    WHERE pfc.concepto_costo_id = NEW.concepto_costo_id
@@ -116,7 +118,7 @@ BEGIN
   -- TC la comparación directa de importes no es válida.
   IF COALESCE(v_cc_monto, 0) > 0
      AND upper(btrim(COALESCE(v_fac_moneda, ''))) = upper(btrim(COALESCE(v_cc_moneda, '')))
-     AND round(v_asignado + COALESCE(NEW.monto, 0), 2) > round(v_cc_monto * 1.05, 2) THEN
+     AND round(v_asignado + COALESCE(NEW.monto, 0) * COALESCE(NULLIF(NEW.cantidad, 0), 1), 2) > round(v_cc_monto * 1.05, 2) THEN
     RAISE EXCEPTION 'LC_CXP_VINCULO_SOBREASIGNADO: el costo del expediente % es de % % y ya tiene % asignado; la factura % excede el monto restante',
       COALESCE(v_expediente, '(sin expediente)'), v_cc_monto, COALESCE(v_cc_moneda, ''),
       v_asignado, COALESCE(v_fac_folio, '(sin folio)')

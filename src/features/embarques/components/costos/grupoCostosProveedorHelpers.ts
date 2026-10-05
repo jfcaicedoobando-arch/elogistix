@@ -4,6 +4,7 @@
  */
 import { formatFechaDia } from "@/lib/formatters";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
+import { ajusteTieneBaseComparable, obtenerBasesComparables } from "@/features/embarques/services/reconciliacionCostos.helpers";
 
 export type SubtotalPorMoneda = {
   moneda: string;
@@ -21,11 +22,12 @@ export type SubtotalPorMoneda = {
 
 /** Fila con factura ligada cuyo ajuste es definitivo (sin vínculos sin TC). */
 export function esFilaComparable(f: FilaReconciliacion): boolean {
-  return f.facturas.length > 0 && (f.vinculos_excluidos ?? 0) === 0;
+  return !f.ajuste_presupuestario && f.facturas.length > 0 && (f.vinculos_excluidos ?? 0) === 0;
 }
 
 export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMoneda[] {
   const map = new Map<string, SubtotalPorMoneda>();
+  const basesComparables = obtenerBasesComparables(filas);
   for (const f of filas) {
     const cur = map.get(f.moneda) ?? {
       moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0,
@@ -33,7 +35,10 @@ export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMone
     };
     cur.cotizado += f.cotizado;
     cur.facturado += f.real_facturado;
-    if (f.facturas.length === 0) cur.sinFactura += 1;
+    if (f.ajuste_presupuestario) {
+      if (ajusteTieneBaseComparable(f, basesComparables)) cur.cotizadoFacturable += f.cotizado;
+    }
+    else if (f.facturas.length === 0) cur.sinFactura += 1;
     else if (!esFilaComparable(f)) cur.noComparables += 1;
     else {
       cur.cotizadoFacturable += f.cotizado;
@@ -51,6 +56,7 @@ export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMone
  */
 export function ordenarFilasPorAjuste(filas: FilaReconciliacion[]): FilaReconciliacion[] {
   const bucket = (f: FilaReconciliacion): number => {
+    if (f.ajuste_presupuestario) return 3;
     if (f.facturas.length === 0) return 1;             // sin factura
     if (!esFilaComparable(f)) return 1;                // pendiente de TC
     if (Math.abs(f.diferencia) < 0.01) return 2;       // sin ajuste
@@ -69,6 +75,7 @@ export function estatusBadgeClass(estatus: FilaReconciliacion["estatus_renglon"]
     case "parcial": return "bg-warning/15 text-warning border-warning/30";
     case "excedente": return "bg-destructive/15 text-destructive border-destructive/30";
     case "no_comparable": return "bg-warning/10 text-warning border-warning/30";
+    case "ajuste": return "bg-muted text-muted-foreground border-border";
     case "sin_match":
     default: return "bg-muted text-muted-foreground border-border";
   }
@@ -80,6 +87,7 @@ export function estatusLabel(estatus: FilaReconciliacion["estatus_renglon"]): st
     case "parcial": return "Parcial";
     case "excedente": return "Excedente";
     case "no_comparable": return "Pendiente de tipo de cambio";
+    case "ajuste": return "Ajuste de presupuesto";
     case "sin_match":
     default: return "Sin factura";
   }
@@ -106,7 +114,7 @@ export function pagoBadgeClass(estado: string | null): string {
 
 /** La columna Pago refleja la liquidación calculada con pagos reales, no el estado del documento. */
 export function estadoPagoConcepto(fila: FilaReconciliacion): "Pendiente" | "Pagado" | null {
-  if (fila.facturas.length === 0) return null;
+  if (fila.ajuste_presupuestario || fila.facturas.length === 0) return null;
   const estado = (fila.estado_liquidacion ?? "").toLowerCase();
   if (estado === "pagado") return "Pagado";
   if (estado === "pendiente") return "Pendiente";

@@ -5,9 +5,12 @@
  * cambio de esquema se absorba en un único punto.
  */
 import type { Tables } from "@/types/db";
+import type { ContextoFacturaNotaCredito } from "@/lib/financial/notaCreditoEquivalente";
 
 /** Fila completa de nota de crédito de proveedor. */
-export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
+export type NotaCreditoProveedor = Tables<"proveedor_notas_credito"> & {
+  proveedor_facturas?: ContextoFacturaNotaCredito | null;
+};
 
 /** Motivo fiscal de la nota de crédito de proveedor. */
 export type MotivoNotaCreditoProveedor = NotaCreditoProveedor["motivo"];

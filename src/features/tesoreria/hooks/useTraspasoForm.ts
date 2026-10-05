@@ -5,12 +5,11 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
-import { roundMoney } from "@/lib/financial/financialUtils";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { multiplicadorOrigenDestino, parTc } from "@/features/tesoreria/domain/tcPar";
 import { fechaMinimaTraspaso, validarFechaTraspaso } from "@/features/tesoreria/domain/traspasoFecha";
 import {
-  ESTADO_INICIAL, hoyIso, sugerirTcQuote, validarTraspaso,
+  ESTADO_INICIAL, hoyIso, sugerirTcQuote, validarTraspaso, calcularMontoDestinoTraspaso,
 } from "@/features/tesoreria/domain/traspasoForm";
 
 type Cuenta = Tables<"cuentas_bancarias">;
@@ -88,11 +87,9 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   }, [mismoMoneda, par, origen?.moneda, state.tcQuote]);
 
   const montoDestino = useMemo(() => {
-    if (!state.montoOrigen || state.montoOrigen <= 0) return 0;
-    if (!factorOrigenDestino || factorOrigenDestino <= 0) return 0;
     // FE-07: la RPC redondea con ROUND(monto*tc, 2); el preview debe coincidir
     // centavo a centavo con el abono real.
-    return roundMoney(state.montoOrigen * factorOrigenDestino);
+    return calcularMontoDestinoTraspaso(state.montoOrigen, factorOrigenDestino);
   }, [state.montoOrigen, factorOrigenDestino]);
 
   const error = useMemo(

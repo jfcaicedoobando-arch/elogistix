@@ -5,3 +5,4 @@
 export * from "./reconciliacionCostos.tipos";
 export * from "./reconciliacionCostos.filas";
 export * from "./reconciliacionCostos.resumen";
+export * from "./reconciliacionCostos.cobertura";

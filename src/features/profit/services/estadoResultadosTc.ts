@@ -12,6 +12,14 @@ export interface TcFallback { usd: number; eur: number }
 /** Devuelve `tc` si es positivo; si no, el respaldo indicado. */
 export const fallbackTC = (tc: number | null, respaldo: number) => (tc && tc > 0 ? tc : respaldo);
 
+/** El TC genérico fiscal corresponde a la moneda del documento, USD o EUR. */
+export function tcDocumentoPorMoneda(moneda: string, documental: number | null, respaldo: TcFallback): TcFallback {
+  return {
+    usd: moneda.toUpperCase() === "USD" ? fallbackTC(documental, respaldo.usd) : respaldo.usd,
+    eur: moneda.toUpperCase() === "EUR" ? fallbackTC(documental, respaldo.eur) : respaldo.eur,
+  };
+}
+
 export async function tcFallbackDof(): Promise<TcFallback> {
   const rates = await fetchExchangeRates().catch(() => EXCHANGE_RATES_FALLBACK);
   return {

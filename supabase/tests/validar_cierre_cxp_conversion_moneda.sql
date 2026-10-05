@@ -57,6 +57,13 @@ BEGIN
   ) RETURNING id INTO v_pf;
   UPDATE public.proveedor_facturas SET fecha_emision = public.fecha_negocio_mx() - 1 WHERE id = v_pf;
 
+  -- La fecha sensible invalida la aprobacion; completar el fixture antes de pagar.
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id = v_pf;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
+
   -- Caso 1: pago de 500 MXN con TC 19 => 26.32 USD, no cubre los 500 USD.
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd, fecha_pago)

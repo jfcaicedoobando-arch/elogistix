@@ -75,12 +75,12 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
       {factura.pagado > 0 && (
         <BannerContexto tone="warn" icon={AlertTriangle}>
           Esta factura tiene pagos por <strong>{formatCurrency(factura.pagado, factura.moneda)}</strong>.
-          El nuevo total no puede quedar por debajo de lo ya pagado.
+          El nuevo total no puede quedar por debajo de lo ya pagado. La moneda no puede cambiar mientras existan aplicaciones vigentes.
         </BannerContexto>
       )}
       {aviso && (
         <BannerContexto tone="primary" icon={ShieldAlert}>
-          Si cambias folio, fecha de emisión o algún importe, la factura volverá a estado <strong>Por aprobar</strong>.
+          Si cambias folio, fecha de emisión, moneda, tipo de cambio o algún importe, la factura volverá a estado <strong>Por aprobar</strong>.
         </BannerContexto>
       )}
 

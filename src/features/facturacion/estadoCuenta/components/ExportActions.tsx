@@ -9,8 +9,9 @@ import { ExportFileButton } from "./ExportFileButton";
 import { ExportEmailButton } from "./ExportEmailButton";
 import { useExportActions } from "../hooks/useExportActions";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
+import { crearEstadoCuentaAlcance, type EstadoCuentaFiltrosExportacion } from "../services/estadoCuentaAlcance";
 
-interface Props {
+interface Props extends EstadoCuentaFiltrosExportacion {
   clienteIds: string[];
   rows: ReadonlyArray<FacturaEstadoCuenta>;
   desde?: string | null;
@@ -31,8 +32,9 @@ function buildPeriodo(desde: string | null, hasta: string | null): string {
   return desde && hasta ? `${formatDate(desde)} – ${formatDate(hasta)}` : (desde ?? "");
 }
 
-export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Props) {
-  const { busy, onPdf, onCsv, soloUnCliente } = useExportActions(clienteIds, rows);
+export function ExportActions({ clienteIds, rows, desde = "", hasta = "", ...filtros }: Props) {
+  const alcance = crearEstadoCuentaAlcance({ desde, hasta, ...filtros });
+  const { busy, onPdf, onCsv, soloUnCliente } = useExportActions(clienteIds, rows, alcance);
   const periodo = buildPeriodo(desde, hasta);
   const sinFilas = rows.length === 0;
   const isBusy = busy !== null;

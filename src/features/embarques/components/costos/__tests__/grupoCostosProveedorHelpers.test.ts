@@ -42,6 +42,18 @@ function factura(overrides: Partial<FacturaVinculada>): FacturaVinculada {
 }
 
 describe("calcularSubtotales", () => {
+  it("un ajuste trazado modifica el presupuesto comparable sin sumar factura ni simular pago", () => {
+    const base = fila({ estatus_renglon: "parcial", cotizado: 1000, real_facturado: 900, facturas: [factura({ monto: 900 })] });
+    const ajuste = fila({ estatus_renglon: "ajuste", ajuste_presupuestario: true, cotizado: -100, real_facturado: 0, facturas: [factura({ monto: -100 })], estado_liquidacion: "Pagado" });
+    expect(calcularSubtotales([base, ajuste])[0]).toMatchObject({ cotizado: 900, facturado: 900, cotizadoFacturable: 900, facturadoFacturable: 900, sinFactura: 0, noComparables: 0 });
+    expect(estatusLabel("ajuste")).toBe("Ajuste de presupuesto");
+    expect(estadoPagoConcepto(ajuste)).toBeNull();
+  });
+  it("un delta de otra factura no contamina la variación comparable de un proveedor", () => {
+    const baseB = fila({ estatus_renglon: "conciliado", moneda: "USD", facturas: [factura({ proveedor_factura_id: "f2" })] });
+    const ajusteA = fila({ estatus_renglon: "ajuste", ajuste_presupuestario: true, moneda: "USD", cotizado: -5, real_facturado: 0, facturas: [factura({ proveedor_factura_id: "f1", monto: -5 })] });
+    expect(calcularSubtotales([baseB, ajusteA])[0]).toMatchObject({ cotizado: 95, facturado: 100, cotizadoFacturable: 100, facturadoFacturable: 100 });
+  });
   it("devuelve arreglo vacío sin filas", () => {
     expect(calcularSubtotales([])).toEqual([]);
   });

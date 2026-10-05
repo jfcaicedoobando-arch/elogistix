@@ -43,6 +43,7 @@ const row = {
   categoria_presupuesto_id: "cat-1",
   notas: "n",
   estado_aprobacion: "pendiente" as const,
+  updated_at: "2026-10-04T11:00:00.000Z",
 };
 
 const factura = { id: "f-1" } as never;
@@ -54,6 +55,24 @@ beforeEach(() => {
 });
 
 describe("useEditarFacturaProveedorForm", () => {
+  it("bloquea corregir la moneda cuando hay pagos aplicados y explica el motivo", async () => {
+    const pagada = { id: "f-1", pagado: 1, notas_credito: 0 } as never;
+    const { result } = renderHook(() => useEditarFacturaProveedorForm({ factura: pagada, onDone: vi.fn() }), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.values).not.toBeNull());
+    act(() => { result.current.handleChange("moneda", "USD"); result.current.handleChange("tc", "21"); });
+    await act(() => result.current.submit());
+    expect(result.current.errors.moneda).toMatch(/no puede cambiar.*pagos/);
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+  it("permite corregir moneda sin aplicaciones y envía la versión original", async () => {
+    const sinPagos = { id: "f-1", pagado: 0, notas_credito: 0 } as never;
+    const { result } = renderHook(() => useEditarFacturaProveedorForm({ factura: sinPagos, onDone: vi.fn() }), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.values).not.toBeNull());
+    act(() => { result.current.handleChange("moneda", "USD"); result.current.handleChange("tc", "21"); });
+    await act(() => result.current.submit());
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ expectedUpdatedAt: row.updated_at,
+      payload: expect.objectContaining({ moneda: "USD", tipo_cambio_usd: 21 }) }));
+  });
   it("precarga values desde la fila y total = subtotal + iva - retenciones", async () => {
     const onDone = vi.fn();
     const { result } = renderHook(

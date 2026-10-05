@@ -40,13 +40,13 @@ describe("useAprobarFacturasLote", () => {
 
     let resumen!: Awaited<ReturnType<typeof result.current.aprobar>>;
     await act(async () => {
-      resumen = await result.current.aprobar(["a", "b", "c"]);
+      resumen = await result.current.aprobar(["a", "b", "c"], { versionesRevisadas: new Map([["a", "v1"], ["b", "v2"], ["c", "v3"]]) });
     });
 
     expect(aprobarSvc).toHaveBeenCalledTimes(3);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(1, "a", true, undefined);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(2, "b", true, undefined);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(3, "c", true, undefined);
+    expect(aprobarSvc).toHaveBeenNthCalledWith(1, "a", true, undefined, "v1");
+    expect(aprobarSvc).toHaveBeenNthCalledWith(2, "b", true, undefined, "v2");
+    expect(aprobarSvc).toHaveBeenNthCalledWith(3, "c", true, undefined, "v3");
     expect(resumen.exitos).toEqual(["a", "b", "c"]);
     expect(resumen.fallos).toEqual([]);
     expect(notifySuccess).toHaveBeenCalled();

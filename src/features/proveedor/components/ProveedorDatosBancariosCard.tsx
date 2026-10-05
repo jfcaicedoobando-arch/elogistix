@@ -102,8 +102,9 @@ function SinDatosBancarios({ onCapturar }: { onCapturar?: () => void }) {
   return (
     <CardContent className="text-body">
       <p className="text-muted-foreground">
-        Este proveedor todavía no tiene datos bancarios capturados. Sin ellos no se
-        puede registrar el pago.
+        Este proveedor todavía no tiene datos bancarios capturados. Puedes registrar
+        un pago interno seleccionando la cuenta de origen; estos datos sirven para
+        consultar las instrucciones de transferencia al proveedor.
       </p>
       {onCapturar && (
         <Button variant="outline" size="sm" className="mt-3" onClick={onCapturar}>

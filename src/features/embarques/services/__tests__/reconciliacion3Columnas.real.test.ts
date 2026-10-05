@@ -39,6 +39,15 @@ const pfc = (conceptoId: string, monto: number, estado: string) => ({
 });
 
 describe("agruparRealesFacturados", () => {
+  it("el eje real no convierte trazabilidad de ajustes en otra factura ni descarta negativos ordinarios", () => {
+    const reales = agruparRealesFacturados([
+      { concepto: "Flete", moneda: "MXN", real_facturado: 900, facturas: [{ excluida: false }] },
+      { concepto: "Ajuste factura", moneda: "MXN", real_facturado: 0, facturas: [{ excluida: false }], ajuste_presupuestario: true },
+      { concepto: "Descuento real", moneda: "MXN", real_facturado: -10, facturas: [{ excluida: false }] },
+    ]);
+    expect(reales.map((fila) => fila.concepto)).toEqual(["Flete", "Descuento real"]);
+    expect(reales.find((fila) => fila.concepto === "Descuento real")).toMatchObject({ monto: -10, tiene_factura: true });
+  });
   it("sin factura: real 0 y marcado como sin factura", () => {
     const filas = buildFilasReconciliacion([conceptoCosto("c1", "Flete", 4500)], []);
     const reales = agruparRealesFacturados(filas);

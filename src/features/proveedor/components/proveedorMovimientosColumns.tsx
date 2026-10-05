@@ -5,6 +5,7 @@
 import type { ColumnDef } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type {
   MovimientoConSaldo,
@@ -17,6 +18,7 @@ const TONO_TIPO: Record<TipoMovimientoProveedor, string> = {
   Pago: "bg-success/15 text-success border-success/30",
   "Anticipo aplicado": "bg-success/15 text-success border-success/30",
   Anticipo: "bg-muted text-muted-foreground border-border",
+  "Devolución de anticipo": "bg-warning/15 text-warning border-warning/30",
 };
 
 export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): ColumnDef<T, unknown>[] {
@@ -36,9 +38,13 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
       enableSorting: true,
       meta: { width: COL_W.short },
       cell: ({ row }) => (
-        <Badge variant="outline" className={TONO_TIPO[row.original.tipo]}>
-          {row.original.tipo}
-        </Badge>
+        <Hint label={row.original.detalle}>
+          <Badge variant="outline" className={TONO_TIPO[row.original.tipo]}
+            aria-label={row.original.detalle ? `${row.original.tipo}: ${row.original.detalle}` : undefined}
+            tabIndex={row.original.detalle ? 0 : undefined}>
+            {row.original.tipo}
+          </Badge>
+        </Hint>
       ),
     },
     {

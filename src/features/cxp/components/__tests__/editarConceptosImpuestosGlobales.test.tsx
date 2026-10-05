@@ -6,8 +6,10 @@ const { mutateAsync, filas } = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
   filas: [{ id: "c1", descripcion: "Maniobras", monto: 1000, cantidad: 1, iva: 172.8, ieps: 0 }],
 }));
-vi.mock("@/features/cxp/hooks/useConceptosCfdiFactura", () => ({
-  useConceptosCfdiFactura: () => ({ data: filas, isLoading: false, isError: false }),
+vi.mock("@/features/cxp/hooks/useConceptosFacturaSnapshot", () => ({
+  useConceptosFacturaSnapshot: () => ({ data: { conceptos: filas, factura: {
+    subtotal: 1000, iva: 172.8, ieps: 80, retenciones: 0, total: 1252.8, updated_at: "v1",
+  } }, isLoading: false, isError: false }),
 }));
 vi.mock("@/features/cxp/hooks/useEditarConceptosFactura", () => ({
   useEditarConceptosFactura: () => ({ mutateAsync, isPending: false }),

@@ -1,8 +1,9 @@
 -- Espejo canónico de public.registrar_bitacora
--- Fuente vigente (mayor timestamp): 20260812173006_82a0172a-850c-406f-aeb5-c9ec4b8553b1.sql
+-- Fuente vigente: 20261004055700_cxp_historial_eventos_reales.sql (AUD-57).
 -- Endurecida por 20260910000500_bitacora_no_falsificable.sql (DEFECTO 8):
--- desde esa migración es la ÚNICA vía de escritura a `bitacora_actividad`
--- para clientes `authenticated` — el INSERT directo está REVOKE y sin policy.
+-- La escritura genérica de clientes `authenticated` pasa por este recorder.
+-- RLS no tiene policies permisivas de INSERT/UPDATE, aunque conserva grants
+-- de tabla; los eventos reservados los escribe su RPC de negocio.
 -- Deriva usuario_id/email SIEMPRE del servidor (auth.uid()/auth.users) para
 -- llamadas `authenticated`; p_usuario_id/p_organization_id sólo aplican a
 -- llamadas sin JWT de usuario (contextos internos/servicio).
@@ -27,6 +28,12 @@ DECLARE
   v_org uuid := p_organization_id;
   v_email text;
 BEGIN
+  -- AUD-57: estas decisiones sólo las escribe su RPC de negocio, nunca el recorder.
+  IF lower(btrim(COALESCE(p_accion, ''))) IN ('aprobar_factura_proveedor', 'rechazar_factura_proveedor') THEN
+    RAISE EXCEPTION 'LC_BITACORA_ACCION_RESERVADA: la decisión se registra desde su RPC de negocio'
+      USING ERRCODE = '42501';
+  END IF;
+
   -- FIX BL-02: con JWT de usuario solo se puede escribir con identidad propia y
   -- en una organización de la que el usuario sea miembro. service_role y
   -- llamadas internas sin JWT de usuario quedan fuera del guard.

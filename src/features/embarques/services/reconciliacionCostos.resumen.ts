@@ -15,18 +15,36 @@ export function esFilaNoComparable(f: FilaReconciliacion): boolean {
   return f.estatus_renglon === "no_comparable" || (f.vinculos_excluidos ?? 0) > 0;
 }
 
-interface Acum { cot: number; real: number; cotComp: number; realComp: number; comparables: number; pendientes: number; sinFactura: number }
+interface Acum { cot: number; real: number; cotComp: number; realComp: number; comparables: number; pendientes: number; sinFactura: number; ajustesFuera: number }
 
 /** P1-A: sin factura vinculada el real es 0 por falta de captura, no un ahorro. */
 export function esFilaSinFactura(f: FilaReconciliacion): boolean {
   return f.estatus_renglon === "sin_match";
 }
 
+export function obtenerBasesComparables(filas: FilaReconciliacion[]): Set<string> {
+  return new Set(filas
+    .filter((f) => !f.ajuste_presupuestario && !esFilaNoComparable(f) && !esFilaSinFactura(f))
+    .flatMap((f) => f.facturas.filter((factura) => !factura.excluida)
+      .map((factura) => `${factura.proveedor_factura_id}|${f.embarque_id ?? ""}|${f.moneda}`)));
+}
+
+export function ajusteTieneBaseComparable(fila: FilaReconciliacion, bases: ReadonlySet<string>): boolean {
+  return fila.facturas.some((factura) => bases.has(`${factura.proveedor_factura_id}|${fila.embarque_id ?? ""}|${fila.moneda}`));
+}
+
 function acumular(filas: FilaReconciliacion[]): Acum {
-  const a: Acum = { cot: 0, real: 0, cotComp: 0, realComp: 0, comparables: 0, pendientes: 0, sinFactura: 0 };
+  const a: Acum = { cot: 0, real: 0, cotComp: 0, realComp: 0, comparables: 0, pendientes: 0, sinFactura: 0, ajustesFuera: 0 };
+  const basesComparables = obtenerBasesComparables(filas);
   for (const f of filas) {
     a.cot += f.cotizado;
     a.real += f.real_facturado;
+    if (f.ajuste_presupuestario) {
+      const tieneSuBase = ajusteTieneBaseComparable(f, basesComparables);
+      if (tieneSuBase) a.cotComp += f.cotizado;
+      else a.ajustesFuera += 1;
+      continue;
+    }
     if (esFilaNoComparable(f)) { a.pendientes += 1; continue; }
     if (esFilaSinFactura(f)) { a.sinFactura += 1; continue; }
     a.comparables += 1;
@@ -57,7 +75,10 @@ export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliac
 
 export function calcularResumenPorEstatus(filas: FilaReconciliacion[]): ResumenPorEstatus {
   const r: ResumenPorEstatus = { sin_match: 0, parcial: 0, conciliado: 0, excedente: 0, no_comparable: 0 };
-  for (const f of filas) r[f.estatus_renglon] += 1;
+  for (const f of filas) {
+    if (f.estatus_renglon === "ajuste") r.ajuste = (r.ajuste ?? 0) + 1;
+    else r[f.estatus_renglon] += 1;
+  }
   return r;
 }
 
@@ -71,6 +92,7 @@ export function calcularResumenPorMoneda(filas: FilaReconciliacion[]): ResumenPo
     return {
       moneda, cotizado: a.cot, real: a.real,
       diferencia: v.diferencia, desviacion_pct: v.pct, pendientes_tc: a.pendientes, sin_factura: a.sinFactura,
+      ...(a.ajustesFuera > 0 ? { ajustes_no_comparables: a.ajustesFuera } : {}),
     };
   });
 }

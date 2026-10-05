@@ -47,6 +47,8 @@ DECLARE
   cat_a  uuid := gen_random_uuid();
   fac1   uuid := gen_random_uuid();
   fac2   uuid := gen_random_uuid();
+  v_version_fac1 timestamptz;
+  v_version_fac2 timestamptz;
   v_estado text;
 BEGIN
   -- ── Seed ──
@@ -87,6 +89,8 @@ BEGIN
   ) VALUES
     (fac1, org_a, prov_a, 'Proveedor ROL A', 'ROL-A-001', cat_a, 'MXN', 1000, 160, 1160, 'Vigente'),
     (fac2, org_a, prov_a, 'Proveedor ROL A', 'ROL-A-002', cat_a, 'MXN', 500,  80,  580,  'Vigente');
+  SELECT updated_at INTO v_version_fac1 FROM public.proveedor_facturas WHERE id = fac1;
+  SELECT updated_at INTO v_version_fac2 FROM public.proveedor_facturas WHERE id = fac2;
 
   -- ────────────────────────────────────────────────────────────────────────
   -- 1) Helpers de capacidades por rol
@@ -126,14 +130,16 @@ BEGIN
   -- a. rol sin permisos financieros
   PERFORM pg_temp.as_user(u_cs_a);
   PERFORM pg_temp.assert_raises(
-    format('SELECT public.aprobar_factura_proveedor(%L::uuid, false, ''sin permisos'')', fac1),
+    format('SELECT public.aprobar_factura_proveedor(%L::uuid, false, ''sin permisos'', %L::timestamptz)',
+      fac1, v_version_fac1),
     'customer_service NO debe poder rechazar facturas de proveedor'
   );
 
   -- b. rol financiero de otra organización (guard tenant v13.322.2)
   PERFORM pg_temp.as_user(u_conta_b);
   PERFORM pg_temp.assert_raises(
-    format('SELECT public.aprobar_factura_proveedor(%L::uuid, false, ''cross tenant'')', fac1),
+    format('SELECT public.aprobar_factura_proveedor(%L::uuid, false, ''cross tenant'', %L::timestamptz)',
+      fac1, v_version_fac1),
     'contador de org_b NO debe poder tocar facturas de org_a'
   );
 
@@ -145,7 +151,7 @@ BEGIN
 
   -- c. contador de la misma organización sí puede rechazar
   PERFORM pg_temp.as_user(u_conta_a);
-  PERFORM public.aprobar_factura_proveedor(fac2, false, 'rechazo de prueba');
+  PERFORM public.aprobar_factura_proveedor(fac2, false, 'rechazo de prueba', v_version_fac2);
 
   PERFORM pg_temp.as_postgres();
   SELECT estado_aprobacion::text INTO v_estado

@@ -53,6 +53,7 @@ export function MonedaImportesSection({
               <SelectItem value="EUR">EUR</SelectItem>
             </SelectContent>
           </Select>
+          <FieldError msg={errors.moneda} />
         </div>
         {showTc && (
           <div className="space-y-1">

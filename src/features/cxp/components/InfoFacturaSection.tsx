@@ -4,6 +4,7 @@
  * (`DocumentosProveedorSection`) para dar paridad con facturas emitidas.
  */
 import { Building2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function InfoFacturaSection({ factura: f }: Props) {
+  const location = useLocation();
   const verificar = useVerificarUuidSat();
   const estaCancelada = f.estado === "Cancelada";
   const verifDate = f.uuid_verificado_fecha
@@ -55,6 +57,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
           facturaId={f.id}
           fechaProgramada={f.fecha_programada_pago}
           saldo={f.saldo}
+          autoFocus={location.hash === "#programacion-pago"}
         />
       </div>
 

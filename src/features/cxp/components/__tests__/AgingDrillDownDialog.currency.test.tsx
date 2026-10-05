@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AgingDrillDownDialog } from "../AgingDrillDownDialog";
 import type { CxpAgingRow } from "../../services/cxpAging";
+import { addDaysIso } from "@/lib/date/dateOnly";
 
 const { fetchMock, csvRows } = vi.hoisted(() => ({ fetchMock: vi.fn(), csvRows: vi.fn() }));
 vi.mock("@/features/cxp/hooks", () => ({ useFacturasCxP: fetchMock }));
@@ -14,7 +15,7 @@ vi.mock("../AgingDrillDownDialog.parts", () => ({
   AgingActionBar: ({ onChange, onExport, exportCount }: { onChange: (v: string) => void; onExport: () => void; exportCount: number }) => <div><button onClick={() => onChange("d_1_30")}>Vencidas</button><button onClick={onExport}>CSV {exportCount}</button></div>,
 }));
 const proveedor: CxpAgingRow = { proveedor_id: "p", proveedor_nombre: "Proveedor", moneda: "USD", saldo_total: 795, vigente: 95, d_1_30: 700, d_31_60: 0, d_61_90: 0, mas_90: 0, num_facturas: 2 };
-const factura = (id: string, moneda: string, saldo: number, dias_vencido: number) => ({ id, folio_proveedor: id, moneda, saldo, dias_vencido, fecha_emision: "2026-10-03", fecha_vencimiento: "2026-10-03" });
+const factura = (id: string, moneda: string, saldo: number, dias_vencido: number) => ({ id, folio_proveedor: id, moneda, saldo, dias_vencido, fecha_emision: "2026-09-01", fecha_vencimiento: addDaysIso("2026-10-03", -dias_vencido) });
 
 describe("aging CxP: moneda y cubeta del detalle/CSV", () => {
   it("filtra moneda aun con datos cacheados mezclados y exporta sólo filas visibles", () => {
@@ -23,7 +24,7 @@ describe("aging CxP: moneda y cubeta del detalle/CSV", () => {
     const createUrl = vi.fn(() => "blob:test");
     vi.stubGlobal("URL", { createObjectURL: createUrl, revokeObjectURL: vi.fn() });
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    const { rerender } = render(<AgingDrillDownDialog proveedor={proveedor} open onOpenChange={() => {}} />);
+    const { rerender } = render(<AgingDrillDownDialog proveedor={proveedor} open onOpenChange={() => {}} fechaReferencia="2026-10-03" />);
     expect(fetchMock).toHaveBeenLastCalledWith({ proveedor_id: "p", moneda: "USD" });
     expect(screen.queryByText("MXN-vencida")).not.toBeInTheDocument();
     expect(screen.getByText("2 facturas")).toBeInTheDocument();
@@ -35,17 +36,32 @@ describe("aging CxP: moneda y cubeta del detalle/CSV", () => {
     fireEvent.click(screen.getByText("CSV 1"));
     expect(csvRows.mock.lastCall?.[0]).toContain("USD-vencida");
     expect(csvRows.mock.lastCall?.[0]).not.toContain("USD-vigente");
-    rerender(<AgingDrillDownDialog proveedor={{ ...proveedor, moneda: "MXN", num_facturas: 1 }} open onOpenChange={() => {}} />);
+    rerender(<AgingDrillDownDialog proveedor={{ ...proveedor, moneda: "MXN", num_facturas: 1 }} open onOpenChange={() => {}} fechaReferencia="2026-10-03" />);
     expect(screen.getByText("MXN-vencida")).toBeInTheDocument();
     expect(screen.queryByText("USD-vencida")).not.toBeInTheDocument();
     fireEvent.click(screen.getByText("CSV 1"));
     expect(csvRows.mock.lastCall?.[0]).not.toContain("USD-vencida");
     // Reabrir la misma entidad restablece "todas", no la última cubeta elegida.
-    rerender(<AgingDrillDownDialog proveedor={proveedor} open={false} onOpenChange={() => {}} />);
-    rerender(<AgingDrillDownDialog proveedor={proveedor} open onOpenChange={() => {}} />);
+    rerender(<AgingDrillDownDialog proveedor={proveedor} open={false} onOpenChange={() => {}} fechaReferencia="2026-10-03" />);
+    rerender(<AgingDrillDownDialog proveedor={proveedor} open onOpenChange={() => {}} fechaReferencia="2026-10-03" />);
     expect(screen.getByText("2 facturas")).toBeInTheDocument();
     expect(screen.getByText("USD-vigente")).toBeInTheDocument();
     fireEvent.click(screen.getByText("CSV 2"));
     expect(csvRows.mock.lastCall?.[0]).toContain("USD-vigente");
+  });
+
+  it("reclasifica y exporta a la fecha del reporte en vez de usar los días de hoy", () => {
+    fetchMock.mockReturnValue({ data: [factura("USD-referencia", "USD", 95, 0)], isLoading: false });
+    vi.stubGlobal("Blob", class { constructor(parts: unknown[]) { csvRows(parts[0]); } });
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:test"), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const props = { proveedor, open: true, onOpenChange: () => {}, cubetaInicial: "d_31_60" as const, fechaReferencia: "2026-11-04" };
+    const { rerender } = render(<AgingDrillDownDialog {...props} />);
+    expect(screen.getByText("USD-referencia")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("CSV 1"));
+    expect(csvRows.mock.lastCall?.[0]).toContain("2026-10-03,32,31-60 d,USD,95,2026-11-04,31-60 d");
+    rerender(<AgingDrillDownDialog {...props} fechaReferencia="2026-10-03" />);
+    expect(screen.queryByText("USD-referencia")).not.toBeInTheDocument();
+    expect(screen.getByText("0 facturas")).toBeInTheDocument();
   });
 });

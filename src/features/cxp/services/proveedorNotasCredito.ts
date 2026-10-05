@@ -11,8 +11,9 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { unwrapOr } from "@/lib/supabase/response";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
+import type { NotaCreditoProveedor } from "../types/notasCredito";
 
-export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
+export type { NotaCreditoProveedor };
 
 /**
  * Error tipado cuando la BD rechaza una transición de estado en la NC de proveedor
@@ -51,7 +52,7 @@ export async function fetchNotasCreditoFactura(
   return unwrapOr(
     supabase
       .from("proveedor_notas_credito")
-      .select("*")
+      .select("*, proveedor_facturas(moneda, tipo_cambio_usd)")
       .eq("proveedor_factura_id", facturaId)
       .is("deleted_at", null)
       .order("fecha", { ascending: false }),
@@ -92,7 +93,7 @@ export async function crearNotaCreditoProveedor(
 async function updateEstado(
   id: string,
   estado: NotaCreditoProveedor["estado"],
-  extra: Partial<NotaCreditoProveedor> = {},
+  extra: Partial<Tables<"proveedor_notas_credito">> = {},
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("proveedor_notas_credito")

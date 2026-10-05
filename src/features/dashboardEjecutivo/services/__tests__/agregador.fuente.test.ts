@@ -3,9 +3,8 @@
  * `"facturas"` debe usar `fetchEstadoResultadosDevengado`, y cuando es
  * `"embarques"` (o default) debe usar `fetchEstadoResultadosMes`.
  *
- * v13.317.9 · P8 alineado — el agregador ahora invoca el servicio EERR
- * completo sólo para el periodo actual y el previo (2 llamadas), y usa
- * la RPC `eerr_resumen_anual` para la tendencia de 12 meses.
+ * Actual y previo usan el servicio completo; la tendencia devengada usa
+ * el mismo criterio mensual en lecturas por rango anual.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
@@ -16,6 +15,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 const stubs = vi.hoisted(() => ({
   fetchEstadoResultadosDevengado: vi.fn(),
+  fetchEstadoResultadosDevengadoAnual: vi.fn(),
   fetchEstadoResultadosMes: vi.fn(),
   fetchSaldosCuentas: vi.fn(),
   fetchResumenTesoreria: vi.fn(),
@@ -28,6 +28,7 @@ const stubs = vi.hoisted(() => ({
 
 vi.mock("@/features/profit/services/estadoResultadosDevengado", () => ({
   fetchEstadoResultadosDevengado: stubs.fetchEstadoResultadosDevengado,
+  fetchEstadoResultadosDevengadoAnual: stubs.fetchEstadoResultadosDevengadoAnual,
 }));
 vi.mock("@/features/profit/services/estadoResultados", () => ({
   fetchEstadoResultadosMes: stubs.fetchEstadoResultadosMes,
@@ -62,6 +63,7 @@ describe("agregador — selección de fuente EERR", () => {
     rpcMock.mockResolvedValue({ data: [], error: null });
     Object.values(stubs).forEach((s) => s.mockReset());
     stubs.fetchEstadoResultadosDevengado.mockResolvedValue(EERR_ZERO);
+    stubs.fetchEstadoResultadosDevengadoAnual.mockResolvedValue([]);
     stubs.fetchEstadoResultadosMes.mockResolvedValue(EERR_ZERO);
     stubs.fetchSaldosCuentas.mockResolvedValue([]);
     stubs.fetchResumenTesoreria.mockResolvedValue({
@@ -74,14 +76,15 @@ describe("agregador — selección de fuente EERR", () => {
     stubs.calcularKPIsEjecutivos.mockReturnValue({});
   });
 
-  it("con fuente='facturas' usa fetchEstadoResultadosDevengado (actual + previo) y RPC anual", async () => {
+  it("con fuente='facturas' usa devengado mensual y anual sin RPC bruto", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1", periodo: "2026-06",
       cobranza: [], cxp: [], fuente: "facturas",
     });
     expect(stubs.fetchEstadoResultadosDevengado).toHaveBeenCalledTimes(2);
     expect(stubs.fetchEstadoResultadosMes).not.toHaveBeenCalled();
-    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", expect.objectContaining({ p_fuente: "facturas" }));
+    expect(stubs.fetchEstadoResultadosDevengadoAnual).toHaveBeenCalledTimes(2);
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 
   it("con fuente='embarques' usa fetchEstadoResultadosMes (actual + previo) y RPC anual", async () => {

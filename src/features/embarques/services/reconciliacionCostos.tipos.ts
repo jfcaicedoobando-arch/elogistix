@@ -14,7 +14,7 @@ export interface FacturaVinculada {
   descripcion: string | null;
   /** Monto YA convertido a la moneda del concepto de costo. 0 si `excluida`. */
   monto: number;
-  /** MNY-NEW-03: monto tal como viene en la factura del proveedor. */
+  /** Subtotal neto de la partida en moneda de factura, antes de convertir. */
   monto_original?: number;
   /** Moneda de la factura del proveedor. */
   moneda?: string | null;
@@ -24,13 +24,14 @@ export interface FacturaVinculada {
 }
 
 /** `no_comparable`: hay facturas ligadas sin TC para convertir; el ajuste no es definitivo. */
-export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente" | "no_comparable";
+export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente" | "no_comparable" | "ajuste";
 
 /** Tolerancia relativa para clasificar Conciliado (±1%). */
 export const TOLERANCIA_CONCILIACION = 0.01;
 
 export interface FilaReconciliacion {
   concepto_costo_id: string;
+  embarque_id?: string;
   concepto: string;
   proveedor_nombre: string;
   moneda: string;
@@ -44,6 +45,8 @@ export interface FilaReconciliacion {
   facturas: FacturaVinculada[];
   /** MNY-NEW-03: vínculos no comparables por moneda/TC faltante. */
   vinculos_excluidos?: number;
+  /** Delta firmado del presupuesto; su puente es trazabilidad, no facturación adicional. */
+  ajuste_presupuestario?: boolean;
 }
 
 export interface ResumenReconciliacion {
@@ -64,6 +67,7 @@ export interface ResumenPorEstatus {
   conciliado: number;
   excedente: number;
   no_comparable: number;
+  ajuste?: number;
 }
 
 export interface ResumenPorMoneda {
@@ -78,10 +82,14 @@ export interface ResumenPorMoneda {
   pendientes_tc: number;
   /** Renglones sin factura: fuera de la variación (numerador y base). */
   sin_factura: number;
+  /** Ajustes sin base comparable de la misma factura/embarque/moneda. */
+  ajustes_no_comparables?: number;
 }
 
 export interface PFCRow {
   monto: number | string;
+  /** Monto unitario × cantidad; NULL, cero u omitida conservan el legado de una unidad. */
+  cantidad?: number | string | null;
   concepto_costo_id: string | null;
   descripcion?: string | null;
   proveedor_facturas: {
@@ -91,6 +99,7 @@ export interface PFCRow {
     fecha_emision?: string | null;
     fecha_vencimiento?: string | null;
     estado?: string | null;
+    estado_aprobacion?: string | null;
     moneda?: string | null;
     tipo_cambio_usd?: number | string | null;
     deleted_at: string | null;
@@ -99,6 +108,8 @@ export interface PFCRow {
 
 export interface CCRow {
   id: string;
+  embarque_id?: string;
+  origen?: string | null;
   concepto: string;
   proveedor_nombre: string;
   moneda: string;

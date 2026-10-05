@@ -14,6 +14,7 @@ import {
 } from "../aprobacionFactura";
 
 const VALID_ID = "11111111-2222-3333-4444-555555555555";
+const REVIEWED_VERSION = "2026-10-04T11:00:00.123456+00:00";
 
 describe("aprobarFacturaProveedor - validaciones", () => {
   beforeEach(() => {
@@ -47,6 +48,10 @@ describe("aprobarFacturaProveedor - validaciones", () => {
     expect(MOTIVO_RECHAZO_MIN).toBeGreaterThan(0);
     expect(MOTIVO_RECHAZO_MAX).toBeGreaterThan(MOTIVO_RECHAZO_MIN);
   });
+  it("falla cerrado sin versión revisada y no llama al servidor", async () => {
+    await expect(aprobarFacturaProveedor(VALID_ID, true)).rejects.toMatchObject({ code: "LC_CONFLICTO_CONCURRENCIA" });
+    expect(mock.rpcCalls).toHaveLength(0);
+  });
 });
 
 describe("aprobarFacturaProveedor - RPC", () => {
@@ -59,14 +64,15 @@ describe("aprobarFacturaProveedor - RPC", () => {
       data: { id: VALID_ID, estado_aprobacion: "aprobada" },
       error: null,
     });
-    const res = await aprobarFacturaProveedor(VALID_ID, true);
+    const res = await aprobarFacturaProveedor(VALID_ID, true, undefined, REVIEWED_VERSION);
     expect(res).toMatchObject({ id: VALID_ID });
     expect(mock.rpcCalls[0].fn).toBe("aprobar_factura_proveedor");
+    expect(mock.rpcCalls[0].args).toMatchObject({ p_expected_updated_at: REVIEWED_VERSION });
   });
 
   it("data null → NOT_FOUND", async () => {
     mock.setRpcResult("aprobar_factura_proveedor", { data: null, error: null });
-    await expect(aprobarFacturaProveedor(VALID_ID, true)).rejects.toMatchObject({
+    await expect(aprobarFacturaProveedor(VALID_ID, true, undefined, REVIEWED_VERSION)).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
   });
@@ -75,6 +81,7 @@ describe("aprobarFacturaProveedor - RPC", () => {
     [{ code: "PGRST301", message: "jwt expired" }, "SESSION_EXPIRED"],
     [{ code: "42501", message: "permission denied" }, "FORBIDDEN"],
     [{ code: "PGRST116", message: "no rows" }, "NOT_FOUND"],
+    [{ code: "40001", message: "LC_CONFLICTO_CONCURRENCIA" }, "LC_CONFLICTO_CONCURRENCIA"],
     [{ message: "estado inválido: already_approved" }, "INVALID_STATE"],
     [{ message: "network error fetch failed" }, "NETWORK"],
     [{ message: "boom desconocido" }, "UNKNOWN"],
@@ -87,7 +94,7 @@ describe("aprobarFacturaProveedor - RPC", () => {
     [{ message: "LC_CXP_UUID_NO_VERIFICADO: verifica" }, "LC_CXP_UUID_NO_VERIFICADO"],
   ])("mapea error RPC %j → %s", async (rpcError, expectedCode) => {
     mock.setRpcResult("aprobar_factura_proveedor", { data: null, error: rpcError });
-    await expect(aprobarFacturaProveedor(VALID_ID, true)).rejects.toMatchObject({
+    await expect(aprobarFacturaProveedor(VALID_ID, true, undefined, REVIEWED_VERSION)).rejects.toMatchObject({
       code: expectedCode,
     });
   });
@@ -97,7 +104,7 @@ describe("aprobarFacturaProveedor - RPC", () => {
       data: { id: VALID_ID },
       error: null,
     });
-    await aprobarFacturaProveedor(VALID_ID, false, "  motivo válido  ");
+    await aprobarFacturaProveedor(VALID_ID, false, "  motivo válido  ", REVIEWED_VERSION);
     const call = mock.rpcCalls[0].args as { p_motivo: string };
     expect(call.p_motivo).toBe("motivo válido");
   });

@@ -24,4 +24,23 @@ describe("tope de vínculo por costo antes de crear factura", () => {
     expect(detectarSobreasignacionCosto("USD", { c1: { monto: 584.64 } }, [costo], [])).toBeNull();
     expect(detectarSobreasignacionCosto("MXN", { c1: { monto: 700 } }, [costo], [])).toBeNull();
   });
+
+  it("AUD72: descuenta el subtotal de 3 unidades de MXN10 al validar otro vínculo", () => {
+    const costoMxn = { ...costo, monto: 40, moneda: "MXN" };
+    const existentes = [{ concepto_costo_id: "c1", monto: 10, cantidad: 3 }];
+    expect(detectarSobreasignacionCosto("MXN", { c1: { monto: 12 } }, [costoMxn], existentes)).toBeNull();
+    expect(detectarSobreasignacionCosto("MXN", { c1: { monto: 12.2 } }, [costoMxn], existentes))
+      .toContain("12.00 MXN");
+  });
+
+  it("AUD72: cantidades fraccionarias y cero legado mantienen el contrato del guard", () => {
+    const costoMxn = { ...costo, monto: 20, moneda: "MXN" };
+    const existentes = [
+      { concepto_costo_id: "c1", monto: 8, cantidad: 0.125 },
+      { concepto_costo_id: "c1", monto: 2, cantidad: 0 },
+    ];
+    expect(detectarSobreasignacionCosto("MXN", { c1: { monto: 18 } }, [costoMxn], existentes)).toBeNull();
+    expect(detectarSobreasignacionCosto("MXN", { c1: { monto: 18.01 } }, [costoMxn], existentes))
+      .toContain("18.00 MXN");
+  });
 });

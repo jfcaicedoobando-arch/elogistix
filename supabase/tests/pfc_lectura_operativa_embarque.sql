@@ -203,7 +203,8 @@ BEGIN
   -- la operación llega a ejecutarse con éxito.
   v_ok := false;
   BEGIN
-    PERFORM public.aprobar_factura_proveedor(v_pf, true, NULL);
+    PERFORM public.aprobar_factura_proveedor(v_pf, true, NULL,
+      (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
     v_ok := true;
   EXCEPTION WHEN OTHERS THEN
     v_ok := false;

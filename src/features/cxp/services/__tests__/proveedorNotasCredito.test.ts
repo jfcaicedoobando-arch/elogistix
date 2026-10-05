@@ -40,6 +40,16 @@ describe("proveedorNotasCredito service", () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
     expect(await fetchNotasCreditoFactura("f1")).toEqual([]);
   });
+  it("58: recupera moneda y TC de factura sin omitir la NC cuando el contexto falta", async () => {
+    const rows = [{ id: "nc1", monto: 2000, moneda: "MXN", tipo_cambio: 20, proveedor_facturas: { moneda: "USD", tipo_cambio_usd: 20 } },
+      { id: "nc2", proveedor_facturas: null }];
+    mock.setTableResult("proveedor_notas_credito", { data: rows, error: null });
+    expect(await fetchNotasCreditoFactura("f1")).toEqual(rows);
+    const call = mock.tableCalls[0];
+    expect(call.opArgs[call.ops.indexOf("select")][0]).toBe("*, proveedor_facturas(moneda, tipo_cambio_usd)");
+    expect(mock.getMutationPayload("proveedor_notas_credito", "update")).toBeNull();
+    expect(mock.getMutationPayload("proveedor_notas_credito", "insert")).toBeNull();
+  });
 
   it("fetchNotasCreditoFactura propaga error", async () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: { message: "x" } });

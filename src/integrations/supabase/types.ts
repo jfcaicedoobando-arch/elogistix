@@ -626,6 +626,7 @@ export type Database = {
           detalles: Json | null
           entidad_id: string | null
           entidad_nombre: string | null
+          fuente_evento: string | null
           id: string
           modulo: string
           organization_id: string | null
@@ -638,6 +639,7 @@ export type Database = {
           detalles?: Json | null
           entidad_id?: string | null
           entidad_nombre?: string | null
+          fuente_evento?: string | null
           id?: string
           modulo: string
           organization_id?: string | null
@@ -650,6 +652,7 @@ export type Database = {
           detalles?: Json | null
           entidad_id?: string | null
           entidad_nombre?: string | null
+          fuente_evento?: string | null
           id?: string
           modulo?: string
           organization_id?: string | null
@@ -10027,7 +10030,12 @@ export type Database = {
         }[]
       }
       aprobar_factura_proveedor: {
-        Args: { p_aprobar: boolean; p_id: string; p_motivo?: string }
+        Args: {
+          p_aprobar: boolean
+          p_expected_updated_at?: string
+          p_id: string
+          p_motivo?: string
+        }
         Returns: {
           aprobacion_heredada: boolean
           aprobada_at: string | null
@@ -12299,6 +12307,7 @@ export type Database = {
       reemplazar_conceptos_factura_proveedor: {
         Args: {
           p_conceptos: Json
+          p_expected_updated_at?: string
           p_factura_id: string
           p_impuestos_no_desglosados?: Json
         }

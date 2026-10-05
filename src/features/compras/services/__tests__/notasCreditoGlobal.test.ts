@@ -20,7 +20,7 @@ const SAMPLE = [
   },
   {
     id: "nc2", folio_nc: "NC-002", fecha: "2026-06-05", monto: "50", moneda: "USD",
-    motivo: "Error", estado: "Emitida", descripcion: "Duplicada",
+    motivo: "Error", estado: "Aprobada", descripcion: "Duplicada",
     proveedor_factura_id: "f2",
     proveedor_facturas: {
       folio_interno: "FP-000002", folio_proveedor: "B-200",
@@ -43,6 +43,36 @@ describe("listarNotasCreditoGlobal", () => {
       id: "nc1", folio_nc: "NC-001", monto: 100, estado: "Aplicada",
       proveedor_nombre: "ACME SA", factura_folio_interno: "FP-000001",
     });
+  });
+
+  it("58: conserva las tasas guardadas y expone MXN2000 equivalentes a USD100", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: [{
+      ...SAMPLE[0], monto: "2000", tipo_cambio: 20,
+      proveedor_facturas: { ...SAMPLE[0].proveedor_facturas, moneda: "USD", tipo_cambio_usd: 20 },
+    }], error: null });
+    const [r] = await listarNotasCreditoGlobal();
+    expect(r).toMatchObject({ monto: 2000, moneda: "MXN", tipo_cambio: 20, factura_moneda: "USD", factura_tipo_cambio: 20, monto_en_moneda_factura: 100 });
+    const select = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("select")][0];
+    expect(select).toContain("tipo_cambio");
+    expect(select).toContain("moneda, tipo_cambio_usd");
+    expect(mock.tableCalls.every((c) => !c.ops.some((op) => ["update", "insert", "delete"].includes(op)))).toBe(true);
+  });
+
+  it("58: un TC faltante deja equivalente no disponible y conserva el monto nominal", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: [{
+      ...SAMPLE[0], monto: "2000", tipo_cambio: null,
+      proveedor_facturas: { ...SAMPLE[0].proveedor_facturas, moneda: "USD", tipo_cambio_usd: 20 },
+    }], error: null });
+    const [r] = await listarNotasCreditoGlobal();
+    expect(r.monto).toBe(2000);
+    expect(r.monto_en_moneda_factura).toBeNull();
+  });
+  it("58: NC MXN2000 TC25 equivale USD80 aunque la factura tenga TC20", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: [{
+      ...SAMPLE[0], monto: "2000", tipo_cambio: 25,
+      proveedor_facturas: { ...SAMPLE[0].proveedor_facturas, moneda: "USD", tipo_cambio_usd: 20 },
+    }], error: null });
+    expect((await listarNotasCreditoGlobal())[0]).toMatchObject({ tipo_cambio: 25, factura_tipo_cambio: 20, monto_en_moneda_factura: 80 });
   });
 
   // M-4 (auditoría v14): filtros server-side antes del LIMIT.

@@ -5,6 +5,8 @@ import type { EstadoResultados } from "@/features/profit/domain/estadoResultados
 import type { ResumenTesoreria, TopItem } from "@/features/tesoreria/services";
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
+import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+import type { VencimientosEjecutivos } from "../domain/vencimientos";
 
 export type SeveridadAlerta = "info" | "warning" | "critica";
 
@@ -57,6 +59,8 @@ export interface KPIsEjecutivos {
 
 export interface SnapshotEjecutivo {
   periodo: string;
+  fuente: FuenteEERR;
+  vencimientos: VencimientosEjecutivos;
   generadoEn: string;
   kpis: KPIsEjecutivos;
   eerrPeriodo: EstadoResultados;

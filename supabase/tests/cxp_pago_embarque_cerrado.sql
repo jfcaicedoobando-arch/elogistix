@@ -67,6 +67,13 @@ BEGIN
     (organization_id, proveedor_factura_id, concepto_costo_id, descripcion, cantidad, monto)
   VALUES (v_org, v_pf, v_cc, 'Flete Internacional', 1, 1000);
 
+  -- Aprobar el fixture despues de vincular conceptos, antes de cerrar y pagar.
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id = v_pf;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
+
   -- Cerramos el embarque recorriendo la cadena de transiciones válidas
   -- (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado).
   -- El bypass de cierre sólo evita el guard de self-update, no el de transición.

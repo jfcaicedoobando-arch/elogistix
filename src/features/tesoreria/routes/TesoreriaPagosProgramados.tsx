@@ -1,12 +1,12 @@
 import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchPagosProgramables,
   type FacturaProgramableRow,
 } from "@/features/tesoreria/services/pagosProgramados";
-import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { agruparPorSemana, puedeEjecutarPago, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import { tesoreria as tesoreriaKeys } from "@/features/tesoreria/queryKeys";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -92,9 +92,13 @@ export default function TesoreriaPagosProgramados() {
   // CI-02: "Programar pago" / "Revisar aprobación" navegan a la factura de
   // Compras vía callback.
   const navigate = useNavigate();
+  const location = useLocation();
   const abrirFactura = useCallback(
-    (f: FacturaProgramable) => navigate(`/compras/facturas/${f.id}`),
-    [navigate],
+    (f: FacturaProgramable) => navigate(
+      `/compras/facturas/${f.id}?tab=fiscal${puedeEjecutarPago(f) && !f.fecha_programada_pago ? "#programacion-pago" : ""}`,
+      { state: { from: location.pathname + location.search } },
+    ),
+    [navigate, location.pathname, location.search],
   );
   const columns = useMemo(
     () => buildPagosProgramadosColumns(abrirDialogoPago, abrirFactura),

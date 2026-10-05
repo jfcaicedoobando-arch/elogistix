@@ -31,9 +31,10 @@ BEGIN
   VALUES (v_org, v_pf, 'Maniobras', 1, 1000, 172.8, 0);
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
-  -- Cliente anterior (2 argumentos): descripción no modifica IEPS, total ni deuda.
+  -- El token revisado conserva el contrato: descripción no modifica IEPS, total ni deuda.
   PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf,
-    '[{"descripcion":"Maniobras corregidas","monto":1000,"cantidad":1,"iva":172.8,"ieps":0}]');
+    '[{"descripcion":"Maniobras corregidas","monto":1000,"cantidad":1,"iva":172.8,"ieps":0}]',
+    NULL, (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
   SELECT * INTO v_f FROM public.proveedor_facturas WHERE id = v_pf;
   IF v_f.subtotal <> 1000 OR v_f.iva <> 172.8 OR v_f.ieps <> 80 OR v_f.total <> 1252.8 THEN
     RAISE EXCEPTION 'FAIL descripción perdió impuestos/total: %', row_to_json(v_f);
@@ -43,14 +44,14 @@ BEGIN
   -- Cliente nuevo: distribuir el IEPS explícitamente sin duplicar el global.
   PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf,
     '[{"descripcion":"Maniobras","monto":1000,"cantidad":1,"iva":172.8,"ieps":80}]',
-    '{"iva":0,"ieps":0}');
+    '{"iva":0,"ieps":0}', (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
   SELECT * INTO v_f FROM public.proveedor_facturas WHERE id = v_pf;
   IF v_f.ieps <> 80 OR v_f.total <> 1252.8 THEN RAISE EXCEPTION 'FAIL distribución duplicó impuesto'; END IF;
 
   -- Impuestos son importes del renglón: cantidad 2 no vuelve a multiplicarlos.
   PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf,
     '[{"descripcion":"Maniobras","monto":1000,"cantidad":2,"iva":345.6,"ieps":160}]',
-    '{"iva":0,"ieps":0}');
+    '{"iva":0,"ieps":0}', (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
   SELECT * INTO v_f FROM public.proveedor_facturas WHERE id = v_pf;
   IF v_f.subtotal <> 2000 OR v_f.iva <> 345.6 OR v_f.ieps <> 160 OR v_f.total <> 2505.6 THEN
     RAISE EXCEPTION 'FAIL cantidad/importe fiscal incorrecto';
@@ -72,7 +73,8 @@ BEGIN
   -- Payload incompleto/negativo rechazado atómicamente, sin borrar partidas.
   v_rechazo := false;
   BEGIN
-    PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]', '{"iva":0,"ieps":-80}');
+    PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]', '{"iva":0,"ieps":-80}',
+      (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
   EXCEPTION WHEN SQLSTATE '22023' THEN v_rechazo := true;
   END;
   IF NOT v_rechazo OR (SELECT COUNT(*) FROM public.proveedor_facturas_conceptos WHERE proveedor_factura_id = v_pf) <> 1 THEN
@@ -83,7 +85,8 @@ BEGIN
   UPDATE public.proveedor_facturas SET uuid_fiscal = gen_random_uuid()::text WHERE id = v_pf;
   v_rechazo := false;
   BEGIN
-    PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]', '{"iva":0,"ieps":0}');
+    PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]', '{"iva":0,"ieps":0}',
+      (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
   EXCEPTION WHEN SQLSTATE '22023' THEN
     IF SQLERRM NOT LIKE 'LC_CONCEPTOS_FISCALES:%' THEN RAISE; END IF;
     v_rechazo := true;

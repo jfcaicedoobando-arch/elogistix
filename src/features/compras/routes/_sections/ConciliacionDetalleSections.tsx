@@ -68,7 +68,7 @@ function TilesMoneda({ t }: { t: TotalesMoneda[number] }) {
         value={formatCurrency(t.real, t.moneda)}
       />
       <ResumenTile
-        label={!nd && t.sin_factura + t.pendientes_tc > 0 ? "Variación comparable (parcial)" : "Variación comparable"}
+        label={!nd && t.sin_factura + t.pendientes_tc + (t.ajustes_no_comparables ?? 0) > 0 ? "Variación comparable (parcial)" : "Variación comparable"}
         value={nd ? "N/D" : formatCurrency(t.diferencia ?? 0, t.moneda)}
         tone={nd ? "muted" : toneFromNumber(t.diferencia ?? 0)}
       />
@@ -106,13 +106,15 @@ export function ResumenGrid({
           <EstatusCount label="Conciliado" count={resumenEstatus.conciliado} tone="success" />
           <EstatusCount label="Excedente" count={resumenEstatus.excedente} tone="destructive" />
           <EstatusCount label="Pendiente de TC" count={resumenEstatus.no_comparable} tone="warning" />
+          <EstatusCount label="Ajuste de presupuesto" count={resumenEstatus.ajuste ?? 0} tone="warning" />
         </div>
         <div className="mt-2 pt-2 border-t text-label text-muted-foreground flex justify-between">
-          <span>Partidas huérfanas</span>
+          <span>Partidas sin vínculo válido</span>
           <span className={huerfanas > 0 ? "text-destructive font-semibold" : "font-semibold"}>
             {huerfanas}
           </span>
         </div>
+        <p className="mt-1 text-2xs text-muted-foreground">Este conteo revisa asociaciones; no certifica que todo el importe de la factura esté asignado.</p>
       </div>
     </div>
   );

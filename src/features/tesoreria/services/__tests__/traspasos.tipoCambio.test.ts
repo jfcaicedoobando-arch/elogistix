@@ -72,6 +72,20 @@ describe("registrarTraspaso — tipo de cambio", () => {
     expect(res).toEqual({ id: "tr-1", duplicado: false });
   });
 
+  it("59: rechaza destino redondeado a cero sin emitir una RPC", async () => {
+    await expect(registrarTraspaso({
+      ...base, montoOrigen: 0.01, tipoCambio: 1 / 18.1903,
+    })).rejects.toThrow(/destino.*0\.00.*redondeo/i);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("59: admite el primer centavo positivo sin alterar monto ni TC", async () => {
+    const tipoCambio = 1 / 18.1903;
+    await registrarTraspaso({ ...base, montoOrigen: 0.10, tipoCambio });
+    expect(rpc).toHaveBeenCalledExactlyOnceWith("registrar_traspaso_bancario",
+      expect.objectContaining({ p_monto_origen: 0.10, p_tipo_cambio: tipoCambio }));
+  });
+
   // OLA A (A.1) — el doble clic ya no duplica el traspaso.
   it("envía la clave de idempotencia a la RPC", async () => {
     await registrarTraspaso({ ...base, tipoCambio: 1, clientRequestId: "k-1" });

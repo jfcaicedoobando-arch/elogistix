@@ -26,21 +26,23 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 import { todayLocalISO } from "@/lib/date/today";
 import { AgingActionBar, AgingKpiRow } from "./AgingDrillDownDialog.parts";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { clasificarAFecha } from "@/lib/aging/reportScope";
 
 interface Props {
   proveedor: CxpAgingRow | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   cubetaInicial?: CubetaAging | "todas";
+  fechaReferencia?: string;
 }
 
-function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "todas" }: Props) {
+function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "todas", fechaReferencia = todayLocalISO() }: Props) {
   const [cubeta, setCubeta] = useState<CubetaAging | "todas">(cubetaInicial);
   const { data: facturas = [], isLoading } = useFacturasCxP(
     proveedor ? { proveedor_id: proveedor.proveedor_id, moneda: proveedor.moneda } : {},
   );
 
-  const abiertas = useMemo(() => facturas.filter((f) => f.saldo > 0 && f.moneda === proveedor?.moneda), [facturas, proveedor?.moneda]);
+  const abiertas = useMemo(() => clasificarAFecha(facturas, fechaReferencia).filter((f) => f.saldo > 0.005 && f.moneda === proveedor?.moneda), [facturas, proveedor?.moneda, fechaReferencia]);
   const filtradas = useMemo(() => {
     if (cubeta === "todas") return abiertas;
     return abiertas.filter((f) => bucketDeDias(f.dias_vencido) === cubeta);
@@ -82,13 +84,14 @@ function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "to
 
   const handleExport = () => {
     if (filtradas.length === 0 || !proveedor) return;
-    const headers = ["Folio proveedor", "Emisión", "Vencimiento", "Días", "Cubeta", "Moneda", "Saldo"];
+    const headers = ["Folio proveedor", "Emisión", "Vencimiento", "Días", "Cubeta", "Moneda", "Saldo", "Fecha para antigüedad", "Filtro de cubeta"];
     const lines = filtradas.map((f) => {
       const bucket = bucketDeDias(f.dias_vencido);
       return [
         `"${f.folio_proveedor.replace(/"/g, '""')}"`,
         f.fecha_emision, f.fecha_vencimiento ?? "",
         f.dias_vencido, BUCKET_LABELS[bucket], f.moneda, f.saldo,
+        fechaReferencia, cubeta === "todas" ? "Todas las cubetas" : BUCKET_LABELS[cubeta],
       ].join(",");
     });
     const csv = [headers.join(","), ...lines].join("\n");
@@ -97,7 +100,7 @@ function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "to
     const a = document.createElement("a");
     a.href = url;
     const slug = proveedor.proveedor_nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
-    a.download = `aging-${slug}-${todayLocalISO()}.csv`;
+    a.download = `aging-${slug}-${fechaReferencia}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -119,7 +122,7 @@ function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "to
               )}
             </div>
             <DialogDescription>
-              Facturas abiertas del proveedor en la cubeta de antigüedad seleccionada.
+              Facturas abiertas del proveedor clasificadas al {formatDate(fechaReferencia)} en la cubeta seleccionada.
             </DialogDescription>
             {proveedor && (
               <p className="text-body-sm text-muted-foreground">{proveedor.proveedor_nombre}</p>
@@ -172,6 +175,6 @@ function AgingDrillDownBody({ proveedor, open, onOpenChange, cubetaInicial = "to
 
 /** Cada apertura/proveedor/moneda comienza en la cubeta solicitada, sin filtro heredado. */
 export function AgingDrillDownDialog(props: Props) {
-  const identity = `${props.proveedor?.proveedor_id}:${props.proveedor?.moneda}:${props.open}:${props.cubetaInicial ?? "todas"}`;
+  const identity = `${props.proveedor?.proveedor_id}:${props.proveedor?.moneda}:${props.open}:${props.cubetaInicial ?? "todas"}:${props.fechaReferencia}`;
   return <AgingDrillDownBody key={identity} {...props} />;
 }

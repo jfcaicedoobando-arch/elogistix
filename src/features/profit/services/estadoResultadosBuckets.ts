@@ -15,7 +15,7 @@
  * "Marítimo" — cae en "Otros" para no inflar una columna de modo con importes
  * cuyo modo real es desconocido.
  */
-import { fallbackTC, type TcFallback } from "./estadoResultadosTc";
+import { fallbackTC, tcDocumentoPorMoneda, type TcFallback } from "./estadoResultadosTc";
 import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 import type {
   EmbarqueER,
@@ -52,11 +52,14 @@ export function ingresosDeFacturas(
   for (const f of facturas) {
     const emb = f.expediente ? embPorExp.get(f.expediente) : undefined;
     const id = `fact-${f.id}`;
+    const tipos = tcDocumentoPorMoneda(f.moneda, f.tipo_cambio, {
+      usd: emb?.tipo_cambio_usd ?? tc.usd, eur: emb?.tipo_cambio_eur ?? tc.eur,
+    });
     out.embarques.push({
       id,
       modo: emb?.modo ?? MODO_DESCONOCIDO,
-      tipo_cambio_usd: fallbackTC(Number(f.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
-      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
+      tipo_cambio_usd: tipos.usd,
+      tipo_cambio_eur: tipos.eur,
     });
     out.ventas.push({
       embarque_id: id,
@@ -86,13 +89,14 @@ export function ingresosDeNotas(
   if (invalidas.length) throw new NotaCreditoSinDesgloseError(invalidas);
   for (const [indice, nc] of ncs.entries()) {
     const id = `nc-${nc.factura_id}-${indice}`;
+    const tipos = tcDocumentoPorMoneda(nc.moneda, nc.tipo_cambio, tc);
     // Ola 9 · M6: usar el TC de la nota de crédito cuando exista; sólo caer al
     // TC del mes si la NC no lo tiene capturado.
     out.embarques.push({
       id,
       modo: modoPorFactura.get(nc.factura_id) ?? MODO_DESCONOCIDO,
-      tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio ?? 0), tc.usd),
-      tipo_cambio_eur: tc.eur,
+      tipo_cambio_usd: tipos.usd,
+      tipo_cambio_eur: tipos.eur,
     });
     out.ventas.push({
       embarque_id: id,
@@ -146,11 +150,14 @@ export function costosDeNotasProveedor(
     const embId = embPorFacturaProv.get(nc.proveedor_factura_id);
     const emb = embId ? embPorId.find((e) => e.id === embId) : undefined;
     const id = `pnc-${nc.id}`;
+    const tipos = tcDocumentoPorMoneda(nc.moneda, nc.tipo_cambio, {
+      usd: emb?.tipo_cambio_usd ?? tc.usd, eur: emb?.tipo_cambio_eur ?? tc.eur,
+    });
     out.embarques.push({
       id,
       modo: emb?.modo ?? MODO_DESCONOCIDO,
-      tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
-      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
+      tipo_cambio_usd: tipos.usd,
+      tipo_cambio_eur: tipos.eur,
     });
     out.costos.push({
       embarque_id: id,
