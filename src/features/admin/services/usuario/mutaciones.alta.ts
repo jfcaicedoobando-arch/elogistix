@@ -4,7 +4,7 @@
  * 200 líneas (Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { resetRedirectUrl } from "./mutaciones.auth";

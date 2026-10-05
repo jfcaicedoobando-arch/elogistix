@@ -6,7 +6,7 @@
  * con consumidores existentes (`useOrgMembersMutations`, tests).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { AppRole } from "@/types/appRole";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";

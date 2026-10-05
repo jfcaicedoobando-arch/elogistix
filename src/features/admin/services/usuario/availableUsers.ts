@@ -8,7 +8,7 @@
  * arquitectónica (paso 6: eliminar acoplamiento `comisiones → admin`).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 
 export interface UserOption {
   id: string;

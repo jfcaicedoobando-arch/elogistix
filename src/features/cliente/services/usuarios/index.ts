@@ -2,7 +2,7 @@
  * Servicio de usuarios de cliente (portal): listado enriquecido, invitación y revocación.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ClientUserEnriched {
