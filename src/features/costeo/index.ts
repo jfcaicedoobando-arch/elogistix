@@ -19,3 +19,4 @@ export {
 export type { FilaConPuertos, PuertoIdentidad } from "./utils/puertoLabel";
 export { esTarifaUsableEn, resolverEstadoVigenciaTarifa } from "./utils/vigenciaTarifa";
 export type { EstadoCanonicoTarifa, TarifaVigenciaLike } from "./utils/vigenciaTarifa";
+export { TarifaForm } from "./components/TarifaForm";

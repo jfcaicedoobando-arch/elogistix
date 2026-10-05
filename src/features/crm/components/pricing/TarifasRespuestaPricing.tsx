@@ -3,12 +3,12 @@
  * Pricing agrega una tarifa por opción con el mismo formulario del catálogo.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TarifaForm } from "@/features/costeo/components/TarifaForm";
-import { listarTarifasRespuesta, type TarifaRespuestaRow } from "@/features/crm/services/pricing/tarifasRespuesta";
+import { TarifaForm } from "@/features/costeo";
+import { useTarifasRespuestaPricing } from "@/features/crm/hooks/useTarifasRespuestaPricing";
+import type { TarifaRespuestaRow } from "@/features/crm/services/pricing/tarifasRespuesta";
 import { formatDate } from "@/lib/formatters/dates";
 
 interface Props { solicitudId: string; editable: boolean; hayOpcionesViejas: boolean }
@@ -35,16 +35,9 @@ function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
   );
 }
 
-export function useTarifasRespuesta(solicitudId: string) {
-  return useQuery({
-    queryKey: ["crm", "pricing", "tarifas-respuesta", solicitudId],
-    queryFn: () => listarTarifasRespuesta(solicitudId),
-  });
-}
-
 export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const q = useTarifasRespuesta(solicitudId);
+  const q = useTarifasRespuestaPricing(solicitudId);
   const tarifas = q.data ?? [];
   const cerrar = (v: boolean) => { setAbierto(v); if (!v) void q.refetch(); };
 
