@@ -7,6 +7,7 @@
  * resolvemos el email vía la edge `user-management` action `list`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { UNRESOLVED_EMAIL } from "./constants";
 import { logger } from "@/lib/observability/logger";
 
@@ -38,9 +39,7 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
   const emailMap: Record<string, string> = {};
   if (userIds.length === 0) return emailMap;
   try {
-    const { data, error } = await supabase.functions.invoke("user-management", {
-      body: { action: "list-portal-emails", user_ids: userIds },
-    });
+    const { data, error } = await invokeUserManagement({ action: "list-portal-emails", user_ids: userIds });
     if (error) {
       logger.warn("portales", "list-portal-emails invoke error:", error);
       return emailMap;

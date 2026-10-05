@@ -4,6 +4,7 @@
  * emails y fechas de alta de auth.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import type { AppRole } from "@/types/appRole";
 import { UNRESOLVED_EMAIL } from "./constants";
 import { logger } from "@/lib/observability/logger";
@@ -67,9 +68,7 @@ async function cargarDirectorioAuth(): Promise<Record<string, ListUsersRow>> {
   const authMap: Record<string, ListUsersRow> = {};
   ultimoListadoFallo = false;
   try {
-    const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
-      body: { action: "list" },
-    });
+    const { data: usersData, error: fnError } = await invokeUserManagement({ action: "list" });
     if (fnError) {
       ultimoListadoFallo = true;
       logger.warn("fetchUsuariosOrganizacion", "user-management invoke error:", fnError);

@@ -6,6 +6,7 @@
  * con consumidores existentes (`useOrgMembersMutations`, tests).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { AppRole } from "@/types/appRole";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
@@ -113,15 +114,13 @@ export interface CreateOrgMemberInput {
 }
 
 export async function createOrgMember(input: CreateOrgMemberInput): Promise<void> {
-  const { error } = await supabase.functions.invoke("user-management", {
-    body: {
+  const { error } = await invokeUserManagement({
       action: "create",
       email: input.email,
       password: input.password,
       role: input.role,
       organization_id: input.organizationId,
-    },
-  });
+    });
   if (error) throw error;
   await registrarActividad({
     modulo: "usuarios",

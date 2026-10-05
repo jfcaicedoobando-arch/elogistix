@@ -4,6 +4,7 @@
  * 200 líneas (Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
@@ -73,8 +74,7 @@ export async function createUserViaEdgeFunction(
   await validarAltaUsuario(params.orgId, emailNormalizado);
 
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: {
+  const res = await invokeUserManagement({
       action: params.password ? "create" : "invite",
       email: emailNormalizado,
       password: params.password,
@@ -103,8 +103,7 @@ export async function createUserViaEdgeFunction(
     accion: "Creó usuario",
     entidadId: nuevoId,
     entidadNombre: emailNormalizado,
-    detalles: { role: params.role, orgId: params.orgId ?? null },
-  });
+    detalles: { role: params.role, orgId: params.orgId ?? null });
 
   return body;
 }

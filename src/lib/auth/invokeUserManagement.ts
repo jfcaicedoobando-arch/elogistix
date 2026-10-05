@@ -5,6 +5,7 @@
  * Devuelve la misma forma que `supabase.functions.invoke`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import { ensureFreshSession } from "@/lib/auth/ensureFreshSession";
 
 type InvokeResult = Awaited<ReturnType<typeof supabase.functions.invoke>>;

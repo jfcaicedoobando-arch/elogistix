@@ -4,6 +4,7 @@
  * sesión en `./mutaciones.auth.ts` (límite de 200 líneas, Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 import type { AppRole } from "@/types/appRole";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
@@ -33,9 +34,7 @@ export async function updateUserRole(
 }
 
 export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: { action: "delete", user_id: userId },
-  });
+  const { data, error } = await invokeUserManagement({ action: "delete", user_id: userId });
   if (error) throw await errorDeEdgeFunction(error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   if (data?.error) throw new Error(data.error);
   await registrarActividad({
@@ -48,8 +47,7 @@ export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: { action: "delete", user_id: userId },
+  const res = await invokeUserManagement({ action: "delete", user_id: userId },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
@@ -73,8 +71,7 @@ export async function quitarDeOrganizacion(
     modulo: "usuarios",
     accion: "Quitó usuario de organización",
     entidadId: userId,
-    detalles: { organizationId },
-  });
+    detalles: { organizationId });
 }
 
 /** U-03: dispara el correo de restablecimiento de contraseña para el usuario. */

@@ -8,6 +8,7 @@
  * arquitectónica (paso 6: eliminar acoplamiento `comisiones → admin`).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 
 export interface UserOption {
   id: string;
@@ -16,9 +17,7 @@ export interface UserOption {
 }
 
 export async function fetchAvailableUsers(): Promise<UserOption[]> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: { action: "list" },
-  });
+  const { data, error } = await invokeUserManagement({ action: "list" });
   if (error) throw error;
   return Array.isArray(data) ? (data as UserOption[]) : [];
 }
@@ -51,9 +50,7 @@ export interface NombreUsuario {
  * operativos (comisiones, auditoría) que sólo necesitan resolver nombres.
  */
 export async function fetchNombresUsuarios(): Promise<NombreUsuario[]> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: { action: "list-nombres" },
-  });
+  const { data, error } = await invokeUserManagement({ action: "list-nombres" });
   if (error) throw error;
   return Array.isArray(data) ? (data as NombreUsuario[]) : [];
 }

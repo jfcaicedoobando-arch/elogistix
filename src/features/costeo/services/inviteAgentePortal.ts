@@ -2,6 +2,7 @@
  * Servicio: invita o crea cuenta para un agente del Portal vía edge `user-management`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
 
 export interface InviteAgenteInput {
   email: string;
@@ -16,13 +17,11 @@ export interface InviteAgenteResult {
 }
 
 export async function inviteAgentePortal(input: InviteAgenteInput): Promise<InviteAgenteResult> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: {
+  const { data, error } = await invokeUserManagement({
       action: "invite-agente",
       ...input,
       ...(input.mode === "password" ? { password: input.password } : {}),
-    },
-  });
+    });
   if (error) throw error;
   return (data ?? {}) as InviteAgenteResult;
 }
