@@ -85,13 +85,11 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const onAdjuntarXml = async (row: FacturaEntranteRow, xml: File) => {
     if (!organizationId) return;
     const meta = await extraerCfdiXmlMetaDeArchivo(xml).catch(() => null);
-    await adjuntarXml.mutateAsync({
-      id: row.id,
-      xml,
-      meta,
-      embarqueId,
-      organizationId,
-    });
+    // JAVASCRIPT-REACT-4J: el aviso ya lo muestra onError del hook; aquí sólo
+    // evitamos que el rechazo quede "suelto" y se reporte como falla.
+    await adjuntarXml
+      .mutateAsync({ id: row.id, xml, meta, embarqueId, organizationId })
+      .catch(() => undefined);
   };
 
   return (

@@ -3,6 +3,7 @@
 ## [13.824.29] - 2026-10-05
 
 - **fix(CRM · adjuntos de pricing)**: se aplicaron los dos cambios de base del borrador aceptado (folio mensual con tarifas ligadas y reglas de acceso del bucket `crm-pricing-adjuntos`). Antes, adjuntar un archivo se rechazaba por RLS.
+- **fix(Embarques · adjuntar XML)**: un XML inválido ya no deja un error suelto que llegaba a Sentry; el aviso al usuario sigue igual (JAVASCRIPT-REACT-4J).
 
 ## [13.824.28] - 2026-10-05
 
