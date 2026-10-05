@@ -1,9 +1,3 @@
--- Fusión de Leads/Prospectos en Empresas y Contactos.
--- 1) Estado de la empresa (Lead → Prospecto → Cliente).
--- 2) Propiedades nuevas de Empresa con los datos del lead que no existían.
--- 3) Traspaso idempotente de datos del lead (nunca sobrescribe valores capturados).
--- 4) RPC "Pasar a prospecto" + sincronía con el estado del lead y el alta a Clientes.
-
 ALTER TABLE public.crm_empresas
   ADD COLUMN IF NOT EXISTS estado_crm text NOT NULL DEFAULT 'Lead';
 
@@ -14,7 +8,6 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE INDEX IF NOT EXISTS crm_empresas_org_estado_idx ON public.crm_empresas (organization_id, estado_crm);
 
--- Estado inicial desde el lead de origen o el alta a Clientes.
 UPDATE public.crm_empresas e
    SET estado_crm = CASE
      WHEN e.cliente_id IS NOT NULL OR l.estado::text = 'Convertido' THEN 'Cliente'
@@ -24,7 +17,6 @@ UPDATE public.crm_empresas e
  WHERE l.id = e.lead_origen_id;
 UPDATE public.crm_empresas SET estado_crm = 'Cliente' WHERE cliente_id IS NOT NULL AND estado_crm <> 'Cliente';
 
--- Propiedades nuevas de Empresa (globales, como las existentes).
 INSERT INTO public.crm_propiedades (objeto, clave, etiqueta, tipo, orden)
 VALUES
   ('empresa','pais','País','texto',100), ('empresa','ciudad','Ciudad','texto',101),
@@ -42,7 +34,6 @@ VALUES
   ('empresa','fecha_nutricion','Fecha de nutrición','fecha',121), ('empresa','notas','Notas','texto',122)
 ON CONFLICT (objeto, clave) DO NOTHING;
 
--- Textos de Empresa.
 INSERT INTO public.crm_valores (organization_id, propiedad_id, registro_id, valor_texto)
 SELECT e.organization_id, p.id, e.id, btrim(v.txt)
   FROM public.crm_empresas e
@@ -59,7 +50,6 @@ SELECT e.organization_id, p.id, e.id, btrim(v.txt)
  WHERE e.deleted_at IS NULL AND nullif(btrim(v.txt), '') IS NOT NULL
 ON CONFLICT (propiedad_id, registro_id) DO NOTHING;
 
--- Número y fecha de Empresa.
 INSERT INTO public.crm_valores (organization_id, propiedad_id, registro_id, valor_numero)
 SELECT e.organization_id, p.id, e.id, l.anios_establecida
   FROM public.crm_empresas e JOIN public.crm_leads l ON l.id = e.lead_origen_id
@@ -74,7 +64,6 @@ SELECT e.organization_id, p.id, e.id, l.fecha_nutricion
  WHERE e.deleted_at IS NULL AND l.fecha_nutricion IS NOT NULL
 ON CONFLICT (propiedad_id, registro_id) DO NOTHING;
 
--- Fuente → opción equivalente por etiqueta.
 INSERT INTO public.crm_valores (organization_id, propiedad_id, registro_id, opcion_ids)
 SELECT e.organization_id, p.id, e.id, ARRAY[o.id]
   FROM public.crm_empresas e JOIN public.crm_leads l ON l.id = e.lead_origen_id
@@ -83,7 +72,6 @@ SELECT e.organization_id, p.id, e.id, ARRAY[o.id]
  WHERE e.deleted_at IS NULL
 ON CONFLICT (propiedad_id, registro_id) DO NOTHING;
 
--- Interés de modo → Tipo de transporte (opciones que aparezcan en el texto).
 INSERT INTO public.crm_valores (organization_id, propiedad_id, registro_id, opcion_ids)
 SELECT e.organization_id, p.id, e.id, array_agg(o.id ORDER BY o.orden)
   FROM public.crm_empresas e JOIN public.crm_leads l ON l.id = e.lead_origen_id
@@ -96,7 +84,6 @@ SELECT e.organization_id, p.id, e.id, array_agg(o.id ORDER BY o.orden)
  GROUP BY e.organization_id, p.id, e.id
 ON CONFLICT (propiedad_id, registro_id) DO NOTHING;
 
--- Contactos: puesto y datos vacíos.
 INSERT INTO public.crm_valores (organization_id, propiedad_id, registro_id, valor_texto)
 SELECT c.organization_id, p.id, c.id, btrim(l.cargo_contacto)
   FROM public.crm_contactos c JOIN public.crm_leads l ON l.id = c.lead_origen_id
@@ -112,7 +99,6 @@ UPDATE public.crm_contactos c
    AND ((nullif(btrim(c.email), '') IS NULL AND nullif(btrim(l.email), '') IS NOT NULL)
      OR (nullif(btrim(c.telefono), '') IS NULL AND nullif(btrim(l.telefono), '') IS NOT NULL));
 
--- Sincronía: alta a Clientes marca la empresa como Cliente.
 CREATE OR REPLACE FUNCTION public._crm_empresa_estado_por_cliente()
 RETURNS trigger LANGUAGE plpgsql SET search_path TO 'public' AS $$
 BEGIN
@@ -124,7 +110,6 @@ CREATE TRIGGER trg_crm_empresa_estado_por_cliente
 BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas
 FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
 
--- Sincronía: los flujos existentes del lead (calificar, convertir) mueven el estado de la empresa.
 CREATE OR REPLACE FUNCTION public._crm_lead_sync_estado_empresa()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 BEGIN
@@ -142,7 +127,6 @@ AFTER UPDATE OF estado ON public.crm_leads
 FOR EACH ROW WHEN (NEW.estado IS DISTINCT FROM OLD.estado)
 EXECUTE FUNCTION public._crm_lead_sync_estado_empresa();
 
--- Pasar a prospecto: idempotente; crea/reutiliza la oportunidad en la etapa Prospecto.
 CREATE OR REPLACE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 DECLARE
@@ -168,7 +152,6 @@ BEGIN
   IF v_etapa IS NULL THEN RAISE EXCEPTION 'LC_CRM_ETAPA_PROSPECTO_FALTANTE'; END IF;
   SELECT email INTO v_email FROM auth.users WHERE id = auth.uid();
 
-  -- El embudo exige un origen calificado: se usa (o crea) el lead de origen.
   v_lead := v_emp.lead_origen_id;
   IF v_lead IS NULL THEN
     INSERT INTO public.crm_leads (organization_id, empresa, estado, vendedor_id, vendedor_email, created_by)
@@ -194,10 +177,6 @@ END $$;
 REVOKE ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.crm_empresa_pasar_a_prospecto(uuid) TO authenticated, service_role;
 
--- 5) La etapa "Sospechoso" sale del embudo y pasa a ser un estado de la empresa
---    (Lead → Sospechoso → Prospecto → Cliente). Las empresas cuyas oportunidades
---    estaban en esa etapa conservan "Sospechoso"; esas oportunidades se archivan
---    (soft-delete) para que "Pasar a prospecto" cree la suya en la etapa Prospecto.
 UPDATE public.crm_empresas e SET estado_crm = 'Sospechoso'
   FROM public.crm_oportunidad_empresa oe
   JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
@@ -209,6 +188,5 @@ UPDATE public.crm_oportunidades o SET deleted_at = now()
 UPDATE public.crm_etapas_pipeline SET activa = false, deleted_at = now()
  WHERE nombre = 'Sospechoso' AND deleted_at IS NULL;
 
--- 6) La etapa "Calificado" se renombra "En cotización".
 UPDATE public.crm_etapas_pipeline SET nombre = 'En cotización'
  WHERE nombre = 'Calificado' AND deleted_at IS NULL;

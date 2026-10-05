@@ -3323,6 +3323,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           deleted_at: string | null
+          estado_crm: string
           id: string
           lead_origen_id: string | null
           nombre: string
@@ -3335,6 +3336,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          estado_crm?: string
           id?: string
           lead_origen_id?: string | null
           nombre: string
@@ -3346,6 +3348,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          estado_crm?: string
           id?: string
           lead_origen_id?: string | null
           nombre?: string
@@ -11040,6 +11043,10 @@ export type Database = {
           probabilidad_default: number
           valor: number
         }[]
+      }
+      crm_empresa_pasar_a_prospecto: {
+        Args: { p_empresa_id: string }
+        Returns: Json
       }
       crm_enviar_solicitud_pricing: { Args: { p_id: string }; Returns: Json }
       crm_higiene_oportunidades: {
