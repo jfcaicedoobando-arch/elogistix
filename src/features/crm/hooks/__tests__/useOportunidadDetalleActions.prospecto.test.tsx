@@ -52,10 +52,23 @@ describe("useOportunidadDetalleActions · prospecto sin cliente", () => {
 
   it("con cliente conserva el flujo canónico existente", async () => {
     const { result } = renderHook(() =>
-      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, []),
+      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, ETAPAS_EC),
     );
     await result.current.crearCotizacion();
     expect(crearCotMutateAsync).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith("/cotizaciones/c1/editar");
+  });
+});
+
+describe("candado de etapa En cotización", () => {
+  it("fuera de En cotización no permite cotizar", async () => {
+    const etapas = [{ id: "e1", nombre: "Prospecto", tipo: "abierta" }];
+    const { result } = renderHook(() =>
+      useOportunidadDetalleActions({ ...op, cliente_id: "cli1" }, etapas),
+    );
+    expect(result.current.puedeCotizar).toBe(false);
+    expect(result.current.motivoNoCotizar).toMatch(/En cotización/);
+    await result.current.crearCotizacion();
+    expect(crearCotMutateAsync).not.toHaveBeenCalled();
   });
 });
