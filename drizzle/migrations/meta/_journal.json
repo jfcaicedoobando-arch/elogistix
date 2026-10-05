@@ -8,6 +8,13 @@
       "when": 1790966446858,
       "tag": "0000_pricing_gerente_operaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791221842951,
+      "tag": "0001_crm_empresa_estado_fusion_leads",
+      "breakpoints": true
     }
   ]
 }
