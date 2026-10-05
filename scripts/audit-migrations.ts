@@ -51,6 +51,7 @@ import {
   type Violation,
 } from "./lib/audit-sql-signatures";
 import { scanVersionesDuplicadas } from "./lib/audit-migration-versions";
+import { scanDrizzleReplay, type DrizzleReplayEntry } from "./lib/audit-drizzle-replay";
 
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
@@ -387,6 +388,11 @@ function main() {
   // H0 — unicidad de timestamp. Aplica a TODO el historial (incluido
   // pre-baseline) con una única excepción legacy exacta.
   violations.push(...scanVersionesDuplicadas(all));
+  const drizzleDir = path.resolve(process.cwd(), "drizzle/migrations");
+  const drizzle = new Map(fs.readdirSync(drizzleDir).filter((f) => f.endsWith(".sql"))
+    .map((file) => [file, fs.readFileSync(path.join(drizzleDir, file), "utf8")]));
+  const replayEntries = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "drizzle/replay.json"), "utf8")) as DrizzleReplayEntry[];
+  violations.push(...scanDrizzleReplay(drizzle, bodies, replayEntries));
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);

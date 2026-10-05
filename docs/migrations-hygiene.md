@@ -62,6 +62,32 @@ timestamp — o cualquier otro timestamp duplicado — falla como H0.
 - **RLS en tablas nuevas**: además del GRANT (H2), es obligatorio `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `CREATE POLICY` en el mismo archivo. El auditor no valida esto (los tests de RLS lo hacen), pero es parte del contrato.
 - **Enums nuevos**: no requieren GRANT, sólo `ALTER TYPE ... ADD VALUE IF NOT EXISTS` para bumps posteriores.
 
+## Drizzle de Lovable y replay de Supabase
+
+Lovable registra su SQL aplicado en `drizzle.__drizzle_migrations`; las pruebas
+aisladas reconstruyen el esquema con `supabase/migrations`. Son dos historiales:
+un CI verde no demuestra por sí solo que la base de Lovable coincida con el replay.
+
+`drizzle/replay.json` relaciona cada SQL inmutable con su SHA-256 (contenido Git
+con LF) y sus migraciones de replay revisadas. `audit:migrations` exige cobertura,
+hash intacto y cuerpos coincidentes en los replays declarados. Las correcciones
+posteriores pueden reemitir funciones sin editar SQL histórico de Drizzle;
+los espejos y la baseline siguen comprobando el estado vigente. Es un control estático
+de cobertura, no un parser completo de DDL ni una certificación de la base remota.
+Drizzle también activa los checks DB del CI y el workflow RLS existente; no se
+crea otro pipeline ni se aplican automáticamente estos archivos en Lovable.
+
+Los replays de 0000/0001/0003/0004 incorporan esquema y ACL explícitas. No repiten
+la copia histórica de leads, archivados, renombre de etapas o renumeración de
+folios de las migraciones originales. La configuración histórica de datos debe
+verificarse por separado antes de migrar un entorno antiguo. El replay 0004 crea
+el bucket sólo si no existe; no sobrescribe configuración ni archivos existentes.
+
+Para un cambio nuevo: conservar el SQL aplicado, preparar replay y espejos,
+actualizar el mapping/manifiesto y regenerar la baseline en PostgreSQL 17.9
+aislado. Ejecutar los guards y RLS. No copiar/reaplicar una migración con backfill
+ni modificar los historiales remotos para hacer coincidir sus números.
+
 ## Cómo correr localmente
 
 ```bash

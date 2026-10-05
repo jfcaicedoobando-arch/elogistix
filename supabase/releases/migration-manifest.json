@@ -4396,7 +4396,11 @@
       "20261005010300_audit72_partidas_cantidad_neta.sql",
       "20261005060100_audit88_91_93_cobros_valuacion.sql",
       "20261005060200_audit86_94_98_99_100_tesoreria.sql",
-      "20261005190000_replay_cierre_sin_pago_tc_nulo.sql"
+      "20261005190000_replay_cierre_sin_pago_tc_nulo.sql",
+      "20261005230000_replay_pricing_gerencia.sql",
+      "20261005230100_replay_crm_empresa_estado.sql",
+      "20261006000100_replay_pricing_tarifas_folio.sql",
+      "20261006000200_replay_pricing_adjuntos.sql"
     ]
   }
 }
