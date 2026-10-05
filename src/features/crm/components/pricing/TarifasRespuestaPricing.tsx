@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { listarTarifasRespuesta, type TarifaRespuestaRow } from "@/features/crm/services/pricing/tarifasRespuesta";
-import { formatDateMX } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters/dates";
 
 interface Props { solicitudId: string; editable: boolean; hayOpcionesViejas: boolean }
 
@@ -29,18 +29,22 @@ function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
         <div><span className="text-muted-foreground">Flete: </span>{moneda(t.flete_base, t.moneda)} {t.unidad_flete ?? ""}</div>
         <div><span className="text-muted-foreground">Tránsito: </span>{t.transit_time_dias != null ? `${t.transit_time_dias} días` : "—"}</div>
         <div><span className="text-muted-foreground">Carta garantía: </span>{carta(t.carta_garantia)}</div>
-        <div><span className="text-muted-foreground">Vigente hasta: </span>{t.vigente_hasta ? formatDateMX(t.vigente_hasta) : "—"}</div>
+        <div><span className="text-muted-foreground">Vigente hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
       </CardContent>
     </Card>
   );
 }
 
-export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas }: Props) {
-  const [abierto, setAbierto] = useState(false);
-  const q = useQuery({
+export function useTarifasRespuesta(solicitudId: string) {
+  return useQuery({
     queryKey: ["crm", "pricing", "tarifas-respuesta", solicitudId],
     queryFn: () => listarTarifasRespuesta(solicitudId),
   });
+}
+
+export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas }: Props) {
+  const [abierto, setAbierto] = useState(false);
+  const q = useTarifasRespuesta(solicitudId);
   const tarifas = q.data ?? [];
   const cerrar = (v: boolean) => { setAbierto(v); if (!v) void q.refetch(); };
 
