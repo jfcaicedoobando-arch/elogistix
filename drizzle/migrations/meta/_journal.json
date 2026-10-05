@@ -15,6 +15,13 @@
       "when": 1791221842951,
       "tag": "0001_crm_empresa_estado_fusion_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791222840376,
+      "tag": "0002_cerrar_sin_pago_tc_nulo",
+      "breakpoints": true
     }
   ]
 }
