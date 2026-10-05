@@ -1,6 +1,6 @@
 /**
  * DialogEnviarFacturaBranded — Envía la factura al cliente con correo branded
- * (PDF y XML como enlaces firmados con TTL 30 días). Usa el dialog compartido
+ * (PDF y XML como enlaces firmados con TTL 7 días). Usa el dialog compartido
  * `EnviarDocumentoDialog` para homologar el design language con cotizaciones
  * y proformas.
  *
@@ -46,7 +46,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
       onOpenChange={onOpenChange}
       clienteId={factura.cliente_id ?? null}
       titulo={esReenvio ? "Reenviar factura por correo" : "Enviar factura por correo"}
-      descripcion="Se enviará un correo branded al cliente con enlaces firmados al PDF y XML (válidos por 30 días)."
+      descripcion="Se enviará un correo con la imagen de tu empresa y enlaces de descarga al PDF y XML, disponibles durante 7 días."
       buildAsuntoInicial={() => `Factura ${factura.numero}`}
       esReenvio={esReenvio}
       loading={mutation.isPending}

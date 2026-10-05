@@ -137,7 +137,7 @@ export default function Compras() {
           to={ROUTES.COMPRAS_AGING}
           icon={<AlertTriangle className="h-4 w-4" />}
           tone={hayVencido ? "danger" : "success"}
-          hint="Saldo total ya vencido (todas las cubetas de aging combinadas). Click para ver el desglose por proveedor."
+          hint="Saldo total ya vencido, sumando todos los tramos de vencimiento. Selecciona para ver el desglose por proveedor."
         />
       </div>
 

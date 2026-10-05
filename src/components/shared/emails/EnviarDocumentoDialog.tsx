@@ -80,7 +80,7 @@ export function EnviarDocumentoDialog({
       onOpenChange={onOpenChange}
       icon={Send}
       title={titulo}
-      description={descripcion ?? "Se enviará un correo branded al cliente con los adjuntos correspondientes."}
+      description={descripcion ?? "Envía el documento al cliente por correo con la imagen de tu empresa."}
       size="xl"
       footer={
         <>

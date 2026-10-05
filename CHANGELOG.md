@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.26] - 2026-10-05
+
+- **fix(copy · segunda auditoría 01–16)**: el pie de facturas identifica totales con impuestos, no subtotales. Cancelar un REP explica la baja del cobro, el recálculo de saldo y los efectos de conciliación sin prometer devolución bancaria; pendientes y fallos locales conservan mensajes diferenciados.
+- **fix(ayuda operativa)**: IVA por producto/servicio con tratamientos del catálogo; requisitos documentales compartidos con la ficha del cliente; flujo de proforma → borrador → timbrado, cotización multimodal y fases actuales de embarques. La conciliación requiere una acción explícita y revisión de ambigüedades; Ayuda enlaza al ERP para reportar problemas.
+- **fix(contexto y vocabulario)**: Analítica CRM aclara todas las fechas de cierre estimado y qué cuenta la columna Oportunidades. Proyección, valor ponderado y antigüedad de saldos usan nombres coherentes. La ficha del cliente establece su título de navegador y los mensajes operativos no exigen conocer jerga de implementación.
+- **fix(envío y REP)**: cobro en lote distingue solicitud de timbrado de REP terminado. El modal de factura describe enlaces de descarga de 7 días, conforme al servicio, y el diálogo compartido no promete adjuntos.
+- Pruebas enfocadas de significado financiero, estados REP, ayuda y títulos; sin migraciones ni cambios de impuestos, permisos, cálculos o registros.
+
 ## [13.824.25] - 2026-10-04
 
 - **fix(copy · auditoría 01–27)**: las confirmaciones distinguen papelera y purga, cancelación del registro ERP y cancelación ante el SAT, registro de pagos y ejecución bancaria. Anular un anticipo explica el efecto en sus movimientos; desconciliar conserva pagos y aplicaciones.

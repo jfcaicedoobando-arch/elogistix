@@ -30,7 +30,7 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
       )}
       <ol
       className="flex items-center gap-1 sm:gap-2 overflow-x-auto list-none p-0 m-0"
-      aria-label="Progreso del wizard"
+      aria-label="Progreso del asistente"
     >
       {steps.map((step, i) => {
         const isCompleted = currentStep > step.num;

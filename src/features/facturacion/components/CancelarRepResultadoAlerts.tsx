@@ -15,7 +15,8 @@ export function CancelarRepResultadoAlerts({ resultado }: { resultado: Resultado
       <Alert variant="success">
         <CheckCircle2 className="size-4" />
         <AlertDescription>
-          Cancelación aceptada. El pago fue eliminado y el saldo de la factura se recalculó.
+          REP cancelado. Se dio de baja su cobro y se recalculó el saldo de la factura,
+          conservando los demás abonos y créditos. Esto no devuelve dinero en el banco.
         </AlertDescription>
       </Alert>
     );
@@ -25,9 +26,9 @@ export function CancelarRepResultadoAlerts({ resultado }: { resultado: Resultado
       <Alert variant="destructive">
         <CircleAlert className="size-4" />
         <AlertDescription>
-          El SAT aceptó la cancelación del REP, pero no se pudo eliminar el pago local.
-          Revisa el mensaje de error. Si el pago aún existe, elimínalo manualmente para que
-          la factura vuelva a reflejar saldo pendiente.
+          El SAT aceptó la cancelación del REP, pero no se pudo dar de baja su cobro en el ERP.
+          Revisa el error y actualiza el estado. Si el cobro sigue registrado y la cancelación
+          está confirmada, completa su baja para recalcular el saldo y sus vínculos bancarios.
         </AlertDescription>
       </Alert>
     );
@@ -37,10 +38,12 @@ export function CancelarRepResultadoAlerts({ resultado }: { resultado: Resultado
       <Alert variant="warning">
         <Clock3 className="size-4" />
         <AlertDescription>
-          El SAT está verificando la cancelación. El pago no se eliminó todavía porque la
-          respuesta fiscal aún no es definitiva. Cuando el estado cambie a "Cancelado",
-          vuelve a intentar la cancelación o elimina el pago manualmente si ya tienes
-          constancia del SAT.
+          {resultado === "pending"
+            ? "La solicitud de cancelación sigue pendiente."
+            : "Aún no se pudo confirmar el resultado fiscal de la cancelación."}
+          {" "}El cobro se conserva en el ERP hasta contar con una respuesta definitiva.
+          Usa "Actualizar estado"; si el REP aparece como "Cancelado" y el cobro sigue
+          registrado, completa su baja sin registrar otro cobro.
         </AlertDescription>
       </Alert>
     );

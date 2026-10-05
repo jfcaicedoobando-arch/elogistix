@@ -1,7 +1,7 @@
 /**
  * Diálogo para cancelar un REP (Complemento de Pago) ante el SAT.
  * Reutiliza el selector de motivos SAT y, tras aceptación, el pago asociado
- * se elimina para que la factura vuelva a reflejar saldo pendiente.
+ * se da de baja y se recalcula el saldo de la factura.
  * El resumen del REP, el selector de motivo y las alertas de resultado viven
  * en `CancelarRepInfoSummary` y `CancelarRepResultadoAlerts`.
  */
@@ -51,10 +51,10 @@ export function DialogCancelarRep({
     `Cancelar REP ${labelRep}`;
   const descripcion =
     resultado === "accepted"
-      ? "El complemento de pago fue cancelado ante el SAT y el pago asociado se eliminó. La factura volvió a estado pendiente."
+      ? "El REP fue cancelado ante el SAT. Se dio de baja su cobro y se recalculó el saldo de la factura."
       : resultado === "accepted_sync_failed"
-      ? "El SAT aceptó la cancelación, pero no se pudo eliminar el pago local. Revisa el mensaje de error; si el pago ya no existe, actualiza la página. De lo contrario, elimina el pago manualmente para reflejar el saldo pendiente."
-      : "La cancelación se enviará al SAT a través de Facturapi. Si el SAT la acepta, el pago se eliminará y la factura quedará pendiente de cobro.";
+      ? "El SAT aceptó la cancelación, pero no se pudo dar de baja el cobro en el ERP. Revisa el error y actualiza el estado antes de completar la baja local."
+      : "La cancelación se enviará al SAT a través de Facturapi. Si la acepta, el ERP dará de baja este cobro y recalculará el saldo de la factura, conservando los demás abonos y créditos.";
 
   const footer = (
     <>
@@ -100,8 +100,9 @@ export function DialogCancelarRep({
           <div className="flex items-start gap-2 text-body-sm text-muted-foreground">
             <TriangleAlert className="size-4 shrink-0 mt-0.5" />
             <span>
-              Esta acción es irreversible ante el SAT. Si la cancelación es aceptada, el pago se
-              eliminará y la factura quedará pendiente de cobro.
+              Una cancelación aceptada no se puede deshacer ante el SAT. Los movimientos
+              bancarios generados por este cobro se darán de baja; los importados se
+              desvincularán y quedarán pendientes de conciliación. Esto no devuelve dinero en el banco.
             </span>
           </div>
         </div>

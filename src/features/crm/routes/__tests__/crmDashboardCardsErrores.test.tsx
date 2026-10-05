@@ -52,7 +52,7 @@ describe("CrmDashboard — embudo y forecast: error vs vacío", () => {
   it("fallo del forecast muestra reintento y NO 'Sin datos para los próximos meses'", () => {
     forecast.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() });
     render(<CrmDashboard />);
-    expect(screen.getByText(/No se pudo cargar el forecast/i)).toBeInTheDocument();
+    expect(screen.getByText(/No se pudo cargar la proyección de ventas/i)).toBeInTheDocument();
     expect(screen.queryByText(/Sin datos para los próximos meses/i)).toBeNull();
     expect(screen.getByRole("button", { name: /reintentar/i })).toBeInTheDocument();
   });
