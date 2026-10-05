@@ -9,6 +9,7 @@ import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiDrilldownSheet } from "./KpiDrilldownSheet";
 import { BudgetOverrunSheet } from "@/features/profit/components/BudgetOverrunSheet";
+import { presupuestoVsRealHref } from "@/features/presupuesto";
 
 interface Props {
   kpis: KPIsEjecutivos;
@@ -130,7 +131,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
           delta={cumpl.delta}
           deltaVariant={cumpl.variant}
           icon={Target}
-          onClick={() => (puedeDrillPresupuesto ? setDrill("presupuesto") : nav("/profit/presupuesto"))}
+          onClick={() => (puedeDrillPresupuesto ? setDrill("presupuesto") : nav(presupuestoVsRealHref(presupuesto?.periodo)))}
         />
       </KpiStrip>
 
@@ -138,10 +139,10 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
         <KpiDrilldownSheet
           open={drill === "deudores"}
           onOpenChange={(v) => setDrill(v ? "deudores" : null)}
-          title="Cobranza vencida"
+          title="Cobranza vencida (>30d)"
           description="Clientes con facturas vencidas hace más de 30 días."
           items={topDeudores ?? []}
-          emptyText="Sin cartera vencida."
+          emptyText="Sin cartera vencida hace más de 30 días."
           verTodosHref="/facturacion"
           verTodosLabel="Ver cobranza completa"
           diasTone="vencido"
@@ -152,9 +153,9 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
           open={drill === "acreedores"}
           onOpenChange={(v) => setDrill(v ? "acreedores" : null)}
           title="CxP próximos 7 días"
-          description="Facturas de proveedor que vencen en la próxima semana."
+          description="Facturas de proveedor con saldo que vencen desde hoy hasta dentro de 7 días, inclusive."
           items={topAcreedores ?? []}
-          emptyText="Sin CxP pendiente."
+          emptyText="Sin CxP con vencimiento en los próximos 7 días."
           verTodosHref="/compras/facturas"
           verTodosLabel="Ver cuentas por pagar"
           diasTone="porVencer"

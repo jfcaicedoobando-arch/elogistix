@@ -39,8 +39,12 @@ const alertaCols: PdfColumn<AlertaEjecutiva>[] = [
 
 export function ReporteEjecutivoDocument({ snapshot }: Props) {
   const { kpis } = snapshot;
+  const fuente = snapshot.fuente === "facturas" ? "Facturas (devengada)" : "Embarques (operativa)";
+  const criterio = snapshot.fuente === "facturas"
+    ? "Bases sin IVA: facturas por fecha fiscal (timbre en hora de México o emisión), CxP por emisión y notas de crédito vigentes por emisión, restadas sobre su base."
+    : "Bases sin IVA: ventas facturadas netas de notas de crédito y conceptos de costo de embarques contables cuya ETA cae en el periodo.";
   return (
-    <Document title={`Dashboard Ejecutivo ${snapshot.periodo}`} author="Libre Carga">
+    <Document title={`Dashboard Ejecutivo ${snapshot.periodo} - ${fuente}`} author="Libre Carga">
       <Page size="LETTER" style={styles.page}>
         {/* Banda corporativa repetida en TODAS las páginas (raíz de Page). */}
         <View style={styles.topBand} fixed />
@@ -49,6 +53,15 @@ export function ReporteEjecutivoDocument({ snapshot }: Props) {
             <Text style={styles.h1}>Dashboard Ejecutivo</Text>
             <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
               Periodo: {snapshot.periodo} · Generado: {formatFechaHora(snapshot.generadoEn)}
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 10, fontWeight: "bold" }}>Fuente EERR: {fuente}</Text>
+            <Text style={{ marginTop: 4, fontSize: 9, color: COLORS.muted }}>{criterio}</Text>
+            <Text style={{ marginTop: 4, fontSize: 9, color: COLORS.muted }}>
+              EERR en MXN con el tipo de cambio fiscal/operativo disponible y respaldo DOF cuando corresponde.
+              Bancos y cartera al {snapshot.vencimientos.fechaReferencia}; listas en moneda original.
+              TC de saldos USD: {snapshot.tipoCambioUsd.toFixed(4)} MXN/USD
+              {snapshot.tesoreria.tipo_cambio_fecha ? ` (${snapshot.tesoreria.tipo_cambio_fecha})` : ""}
+              {snapshot.tcEsFallback ? " - respaldo estimado, sólo referencia." : "."}
             </Text>
           </View>
         </View>

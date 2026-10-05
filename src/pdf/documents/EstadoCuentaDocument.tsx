@@ -19,6 +19,7 @@ import { COLORS } from "../theme/tokens";
 import { Footer } from "../components/Footer";
 import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { EstadoCuentaAlcanceResumen, type EstadoCuentaAlcance } from "../components/EstadoCuentaAlcance";
 
 export interface EstadoCuentaRow {
   numero: string;
@@ -57,6 +58,7 @@ interface Props {
   rows: EstadoCuentaRow[];
   totalesPorMoneda: EstadoCuentaMonedaTotal[];
   emisor?: EmisorInfo;
+  alcance?: EstadoCuentaAlcance;
 }
 
 const alertaCell: Style = { color: COLORS.warningFg, fontFamily: FONTS.bold };
@@ -85,10 +87,10 @@ interface AgingFila {
   esTotal: boolean;
 }
 
-function AgingTable({ tot }: { tot: EstadoCuentaMonedaTotal }) {
+function AgingTable({ tot, parcial }: { tot: EstadoCuentaMonedaTotal; parcial: boolean }) {
   const filas: AgingFila[] = [
     ...tot.buckets.map((b) => ({ label: b.label, total: b.total, esTotal: false })),
-    { label: "Total", total: tot.total, esTotal: true },
+    { label: parcial ? "Subtotal del corte" : "Total", total: tot.total, esTotal: true },
   ];
   const agingCols: PdfColumn<AgingFila>[] = [
     { key: "label", title: `Antigüedad — ${tot.moneda}`, cellStyle: styles.cellDesc, render: (r) => r.label },
@@ -105,13 +107,14 @@ function AgingTable({ tot }: { tot: EstadoCuentaMonedaTotal }) {
   );
 }
 
-function KpisMoneda({ tot }: { tot: EstadoCuentaMonedaTotal }) {
+function KpisMoneda({ tot, parcial }: { tot: EstadoCuentaMonedaTotal; parcial: boolean }) {
   const porVencer = tot.buckets.find((b) => b.label === "Por vencer")?.total ?? 0;
   const vencido = tot.total - porVencer;
+  const prefijo = parcial ? "Subtotal " : "";
   const kpis = [
-    { label: `Pendiente ${tot.moneda}`, value: formatCurrency(tot.total, tot.moneda), alerta: false },
-    { label: `Vencido ${tot.moneda}`, value: formatCurrency(vencido, tot.moneda), alerta: vencido > 0 },
-    { label: `Por vencer ${tot.moneda}`, value: formatCurrency(porVencer, tot.moneda), alerta: false },
+    { label: `${prefijo}Pendiente ${tot.moneda}`, value: formatCurrency(tot.total, tot.moneda), alerta: false },
+    { label: `${prefijo}Vencido ${tot.moneda}`, value: formatCurrency(vencido, tot.moneda), alerta: vencido > 0 },
+    { label: `${prefijo}Por vencer ${tot.moneda}`, value: formatCurrency(porVencer, tot.moneda), alerta: false },
   ];
   return (
     <View style={styles.kpiRow}>
@@ -129,7 +132,7 @@ function KpisMoneda({ tot }: { tot: EstadoCuentaMonedaTotal }) {
   );
 }
 
-export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor }: Props) {
+export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, alcance }: Props) {
   const direccion = [cliente.direccion, cliente.ciudad, cliente.estado].filter(Boolean).join(", ");
   const meta = [
     ...(cliente.rfc ? [{ label: "RFC", value: cliente.rfc }] : []),
@@ -150,17 +153,18 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor }
         {direccion ? (
           <Text style={{ fontSize: 9, color: COLORS.muted, marginBottom: 8 }}>{direccion}</Text>
         ) : null}
+        {alcance && <EstadoCuentaAlcanceResumen alcance={alcance} facturas={rows.length} />}
 
         {rows.length === 0 ? (
           <Text style={styles.paragraph}>No hay facturas pendientes.</Text>
         ) : (
           <View>
             {totalesPorMoneda.map((t) => (
-              <KpisMoneda key={`kpi-${t.moneda}`} tot={t} />
+              <KpisMoneda key={`kpi-${t.moneda}`} tot={t} parcial={alcance?.parcial === true} />
             ))}
             <DataTable columns={cols} rows={rows} cellStyleForRow={acentoVencida} />
             {totalesPorMoneda.map((t) => (
-              <AgingTable key={t.moneda} tot={t} />
+              <AgingTable key={t.moneda} tot={t} parcial={alcance?.parcial === true} />
             ))}
             <Text style={{ marginTop: 10, fontSize: 8, color: COLORS.muted }}>{notaContacto}</Text>
           </View>

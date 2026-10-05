@@ -16,7 +16,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comisiones/hooks";
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
-import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
+import { buildComisionesColumns, comisionSearchAccessor, comisionesSorters } from "@/features/comisiones/components/comisionesColumns";
 import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
 import { AlertaComisionesPendientes } from "@/features/comisiones/components/AlertaComisionesPendientes";
 import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
@@ -70,21 +70,8 @@ export default function Comisiones() {
     isLoading,
     defaultFilters: CLIENT_DEFAULTS,
     defaultSort: { key: "fecha", dir: "desc" },
-    searchAccessor: (r) =>
-      `${r.factura_numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
-    sorters: {
-      factura: (a, b) => (a.factura_numero ?? "").localeCompare(b.factura_numero ?? ""),
-      cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
-      cobrado: (a, b) => {
-        if (a.monto_cobrado_mxn === null) return b.monto_cobrado_mxn === null ? 0 : 1;
-        if (b.monto_cobrado_mxn === null) return -1;
-        return a.monto_cobrado_mxn - b.monto_cobrado_mxn;
-      },
-      utilidad: (a, b) => a.utilidad_prorrateada_mxn - b.utilidad_prorrateada_mxn,
-      porcentaje: (a, b) => a.porcentaje_aplicado - b.porcentaje_aplicado,
-      comision: (a, b) => a.comision_mxn - b.comision_mxn,
-      fecha: (a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""),
-    },
+    searchAccessor: comisionSearchAccessor,
+    sorters: comisionesSorters,
   });
 
   return (
@@ -175,6 +162,8 @@ export default function Comisiones() {
                 isLoading={paged.isLoading}
                 emptyMessage="No hay comisiones devengadas"
                 rowKey={(c) => c.id}
+                getRowHref={(c) => `/facturacion/${c.factura_id}`}
+                getRowAriaLabel={(c) => `Abrir factura ${c.factura_numero ?? c.factura_id}`}
                 sortMode="server"
                 controlledSort={paged.controlledSort}
                 onSortChange={paged.setSort}

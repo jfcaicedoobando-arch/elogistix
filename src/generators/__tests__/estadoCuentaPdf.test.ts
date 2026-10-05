@@ -22,6 +22,7 @@ import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import type { EstadoCuentaRow, EstadoCuentaMonedaTotal } from "@/pdf/documents/EstadoCuentaDocument";
+import type { EstadoCuentaAlcance } from "@/pdf/components/EstadoCuentaAlcance";
 
 const mockFetch = fetchEstadoCuentaFacturas as ReturnType<typeof vi.fn>;
 const mockEmisor = cargarEmisorEmpresa as ReturnType<typeof vi.fn>;
@@ -33,6 +34,7 @@ interface DocumentoProps {
   cliente: { nombre: string };
   rows: EstadoCuentaRow[];
   totalesPorMoneda: EstadoCuentaMonedaTotal[];
+  alcance: EstadoCuentaAlcance;
 }
 
 function propsCapturados(): DocumentoProps {
@@ -137,6 +139,17 @@ describe("generarEstadoCuentaPdf", () => {
     expect(mockFetch).not.toHaveBeenCalled();
     expect(propsCapturados().rows).toEqual([]);
     expect(propsCapturados().totalesPorMoneda).toEqual([]);
+  });
+
+  it("preserva el subtotal de 58 y documenta el filtro de antigüedad", async () => {
+    const alcance = { parcial: true, filtros: ["Antigüedad: 1-30 días"] };
+    await generarEstadoCuentaPdf(CLIENTE, [{ numero: "A3", expediente: "E3", fecha_emision: "2026-10-01",
+      fecha_vencimiento: "2026-10-03", total: 116, saldo: 58, moneda: "MXN", estado: "Emitida" }], alcance);
+    const props = propsCapturados();
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(props.alcance).toEqual(alcance);
+    expect(props.totalesPorMoneda[0].total).toBe(58);
+    expect(props.rows[0].saldo).toBe(58);
   });
 
   it("propaga el error si descargarPdf lanza al generar el estado de cuenta", async () => {

@@ -5,6 +5,12 @@ import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 
 const mockSnapshot = {
   periodo: "2023-01",
+  fuente: "embarques",
+  vencimientos: {
+    fechaReferencia: "2023-01-01",
+    cobranzaMayor30: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+    cxpProximos7: { total_mxn: 0, count: 0, top: [], excluido_por_moneda: {} },
+  },
   generadoEn: "2023-01-01T10:00:00Z",
   kpis: {
     ingresos_mxn: 1_000_000,
@@ -49,6 +55,21 @@ describe("ReporteEjecutivoDocument", () => {
     expect(text).toContain("Top acreedores");
     expect(text).toContain("Sin cuentas activas");
     expect(text).toContain("Sin cartera vencida");
+    expect(text).toContain("25.0%");
+    expect(text).toContain("Fuente EERR: Embarques (operativa)");
+    expect(text).toContain("cuya ETA cae en el periodo");
+    expect(text).toContain("Bancos y cartera al 2023-01-01");
+  });
+
+  it("identifica fuente Facturas y su criterio fiscal sin cambiar los KPIs", () => {
+    const snapshot: SnapshotEjecutivo = { ...mockSnapshot, fuente: "facturas", tcEsFallback: true };
+    const { container } = render(<ReporteEjecutivoDocument snapshot={snapshot} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Fuente EERR: Facturas (devengada)");
+    expect(text).toContain("Bases sin IVA");
+    expect(text).toContain("facturas por fecha fiscal");
+    expect(text).toContain("notas de crédito vigentes por emisión");
+    expect(text).toContain("respaldo estimado, sólo referencia");
     expect(text).toContain("25.0%");
   });
 

@@ -50,6 +50,7 @@ describe("useClientPagedList", () => {
   it("aplica default sort ascendente y pagina", () => {
     const { result } = setup();
     expect(result.current.rows.map((r) => r.nombre)).toEqual(["Alfa", "Beta"]);
+    expect(result.current.filteredRows.map((r) => r.nombre)).toEqual(["Alfa", "Beta", "Delta", "Epsilon", "Gamma"]);
     expect(result.current.filteredCount).toBe(5);
     expect(result.current.totalPages).toBe(3);
     expect(result.current.pagination.page).toBe(0);
@@ -118,5 +119,17 @@ describe("useClientPagedList", () => {
     );
     expect(result.current.rows).toEqual([]);
     expect(result.current.filteredCount).toBe(0);
+  });
+
+  it("expone todo el conjunto exportable con búsqueda y filtro combinados, independiente de la página", async () => {
+    const { result } = setup();
+    await act(async () => result.current.setSearch("a"));
+    await act(async () => result.current.setFilter("moneda", "USD"));
+    await act(async () => result.current.setPageSize(1));
+    await act(async () => result.current.setPage(1));
+    expect(result.current.rows.map((r) => r.nombre)).toEqual(["Delta"]);
+    expect(result.current.filteredRows.map((r) => r.nombre)).toEqual(["Beta", "Delta"]);
+    await act(async () => result.current.setSearch("sin resultados"));
+    expect(result.current.filteredRows).toEqual([]);
   });
 });

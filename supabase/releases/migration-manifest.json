@@ -2913,7 +2913,8 @@
       "20261004002600_audit26_factura_redondeo_linea.sql",
       "20261004004000_audit40_importacion_espejos_revisados.sql",
       "20261004004200_audit42_43_conciliacion_moneda_alcance.sql",
-      "20261004005400_audit54_pue_tolerancia_cierre.sql"
+      "20261004005400_audit54_pue_tolerancia_cierre.sql",
+      "20261004010000_audit75_credito_facturas_con_saldo.sql"
     ]
   },
   "13.824.24": {

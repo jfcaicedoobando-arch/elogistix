@@ -11,12 +11,13 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, FileBarChart, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { presupuestoVsRealHref } from "@/features/presupuesto";
 
 const ITEMS = [
   { to: "/profit/dashboard", label: "Dashboard Ejecutivo", icon: LayoutDashboard },
   { to: "/profit/proyeccion", label: "Proyección", icon: TrendingUp },
   { to: "/profit/estado-resultados", label: "Estado de Resultados", icon: FileBarChart },
-  { to: "/profit/presupuesto", label: "Presupuesto vs Real", icon: Target },
+  { to: presupuestoVsRealHref(), label: "Presupuesto vs Real", icon: Target },
 ] as const;
 
 export function ProfitSubNav() {

@@ -17,97 +17,44 @@ import {
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { defineColumns } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { ToneBadge } from "@/components/shared/ToneBadge";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import type { FacturaCobranza } from "@/features/facturacion/services/cobranza";
 import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
-import { bucketDeDias, CUBETA_LABELS, CUBETA_TONE, type CubetaAging } from "@/lib/aging/buckets";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { bucketDeDias, CUBETA_LABELS, type CubetaAging } from "@/lib/aging/buckets";
+import { formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { CxcAgingActionBar, CxcAgingKpiRow } from "./CxcAgingDrillDownDialog.parts";
 import { CxcAgingDrillDownMobileCard } from "./CxcAgingDrillDownMobileCard";
+import { clasificarAFecha } from "@/lib/aging/reportScope";
+import { buildCxcAgingDrillDownColumns } from "./cxcAgingDrillDownColumns";
 
 interface Props {
   cliente: CxcAgingRow | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   cubetaInicial?: CubetaAging | "todas";
+  fechaReferencia?: string;
 }
 
-function buildColumns() {
-  return defineColumns<FacturaCobranza>([
-    {
-      id: "numero",
-      header: "Factura",
-      accessorKey: "numero",
-      cell: ({ row }) => (
-        <span className="font-mono text-xs font-medium">{row.original.numero}</span>
-      ),
-    },
-    {
-      id: "expediente",
-      header: "Expediente",
-      accessorKey: "expediente",
-      cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground">{row.original.expediente || "—"}</span>
-      ),
-    },
-    {
-      id: "fecha_emision",
-      header: "Emisión",
-      accessorKey: "fecha_emision",
-      cell: ({ row }) => <span className="text-xs">{formatDate(row.original.fecha_emision)}</span>,
-    },
-    {
-      id: "fecha_vencimiento",
-      header: "Vence",
-      accessorKey: "fecha_vencimiento",
-      cell: ({ row }) => (
-        <span className="text-xs">{formatDate(row.original.fecha_vencimiento)}</span>
-      ),
-    },
-    {
-      id: "cubeta",
-      header: "Antigüedad",
-      cell: ({ row }) => {
-        const b = bucketDeDias(row.original.dias_vencido);
-        return <ToneBadge tone={CUBETA_TONE[b]}>{CUBETA_LABELS[b]}</ToneBadge>;
-      },
-    },
-    {
-      id: "saldo",
-      header: "Saldo",
-      accessorKey: "saldo",
-      cell: ({ row }) => (
-        <span className="tabular-nums font-medium">
-          {formatCurrency(row.original.saldo, row.original.moneda)}
-        </span>
-      ),
-      meta: { align: "right" },
-    },
-  ]);
-}
-
-export function CxcAgingDrillDownDialog({
-  cliente, open, onOpenChange, cubetaInicial = "todas",
+function CxcAgingDrillDownBody({
+  cliente, open, onOpenChange, cubetaInicial = "todas", fechaReferencia = todayLocalISO(),
 }: Props) {
   const [cubeta, setCubeta] = useState<CubetaAging | "todas">(cubetaInicial);
   const { data: facturas = [], isLoading } = useCobranza(
     cliente ? { cliente_id: cliente.cliente_id } : {},
   );
-  const columns = useMemo(() => buildColumns(), []);
+  const columns = useMemo(() => buildCxcAgingDrillDownColumns(), []);
 
   const abiertas = useMemo(
     () =>
-      facturas.filter(
-        (f) => f.saldo > 0 && (!cliente || f.moneda.toUpperCase() === cliente.moneda),
+      clasificarAFecha(facturas, fechaReferencia).filter(
+        (f) => f.saldo > 0.005 && (!cliente || f.moneda.toUpperCase() === cliente.moneda),
       ),
-    [facturas, cliente],
+    [facturas, cliente, fechaReferencia],
   );
 
   const filtradas = useMemo(() => {
@@ -116,7 +63,7 @@ export function CxcAgingDrillDownDialog({
   }, [abiertas, cubeta]);
 
   function exportar() {
-    const headers = ["Factura", "Expediente", "Emisión", "Vencimiento", "Días vencido", "Antigüedad", "Moneda", "Saldo"];
+    const headers = ["Factura", "Expediente", "Emisión", "Vencimiento", "Días vencido", "Antigüedad", "Moneda", "Saldo", "Fecha para antigüedad", "Filtro de cubeta"];
     const lines = filtradas.map((f) =>
       [
         f.numero,
@@ -127,10 +74,12 @@ export function CxcAgingDrillDownDialog({
         CUBETA_LABELS[bucketDeDias(f.dias_vencido)],
         f.moneda,
         f.saldo,
+        fechaReferencia,
+        cubeta === "todas" ? "Todas las cubetas" : CUBETA_LABELS[cubeta],
       ].join(","),
     );
     downloadCsvWithFeedback({
-      filename: `aging-cxc-${cliente?.cliente_nombre ?? "cliente"}-${todayLocalISO()}.csv`,
+      filename: `aging-cxc-${cliente?.cliente_nombre ?? "cliente"}-${fechaReferencia}.csv`,
       csv: [headers.join(","), ...lines].join("\n"),
       rowCount: filtradas.length,
       emptyWarning: { description: "No hay facturas con saldo en la cubeta seleccionada." },
@@ -149,7 +98,7 @@ export function CxcAgingDrillDownDialog({
               Facturas con saldo · {cliente?.cliente_nombre ?? ""}
             </DialogTitle>
             <DialogDescription>
-              Facturas abiertas del cliente en la cubeta de antigüedad seleccionada.
+              Facturas abiertas del cliente clasificadas al {formatDate(fechaReferencia)} en la cubeta seleccionada.
             </DialogDescription>
           </DialogHeader>
 
@@ -190,4 +139,10 @@ export function CxcAgingDrillDownDialog({
     </Dialog>
   );
 
+}
+
+/** Cada apertura, entidad o fecha conserva la cubeta solicitada por el reporte. */
+export function CxcAgingDrillDownDialog(props: Props) {
+  const identity = `${props.cliente?.cliente_id}:${props.cliente?.moneda}:${props.open}:${props.cubetaInicial ?? "todas"}:${props.fechaReferencia}`;
+  return <CxcAgingDrillDownBody key={identity} {...props} />;
 }

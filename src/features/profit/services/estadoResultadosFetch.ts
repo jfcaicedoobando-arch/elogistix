@@ -9,6 +9,7 @@ import { unwrap } from "@/lib/supabase/response";
 import { FACTURA_ESTADOS_VIVOS, NC_CLIENTE_ESTADOS_VIGENTES } from "@/lib/domain/estadosFactura";
 import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { fetchInChunks } from "@/lib/supabase/chunkedIn";
 
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 import {
@@ -26,13 +27,13 @@ import {
 
 export async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
   if (ids.length === 0) return [];
-  const data = (await unwrap(
+  const data = await fetchInChunks(ids, async (lote) => (await unwrap(
     supabase
       .from("embarques")
       .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
-      .in("id", ids)
+      .in("id", lote)
       .is("deleted_at", null),
-  )) ?? [];
+  )) ?? []);
   return mapEmbarqueERRows(data);
 }
 
@@ -41,13 +42,15 @@ export async function loadEmbarquesPorExpedientes(
   organizationId: string | null,
 ): Promise<Map<string, EmbarqueER>> {
   if (exps.length === 0) return new Map();
-  let q = supabase
-    .from("embarques")
-    .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
-    .in("expediente", exps)
-    .is("deleted_at", null);
-  if (organizationId) q = q.eq("organization_id", organizationId);
-  const data = (await unwrap(q)) ?? [];
+  const data = await fetchInChunks(exps, (lote) => leerTodasLasPaginas("profit.embarquesExpedientes", (ini, fin) => {
+    let q = supabase
+      .from("embarques")
+      .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
+      .in("expediente", lote)
+      .is("deleted_at", null);
+    if (organizationId) q = q.eq("organization_id", organizationId);
+    return q.order("id").range(ini, fin);
+  }));
   const map = new Map<string, EmbarqueER>();
   const duplicados = new Set<string>();
   for (const e of mapEmbarqueERConExpediente(data)) {
@@ -110,36 +113,44 @@ export async function fetchFacturasMes(orgId: string | null, desde: string, hast
 
 
 export async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
-  let q = supabase
-    .from("factura_notas_credito")
+  const data = await leerTodasLasPaginas("profit.notasCreditoMes", (ini, fin) => {
+    let q = supabase
+      .from("factura_notas_credito")
     // BL-10: ubicar la NC por su `fecha_emision` (DATE de negocio, inmutable),
     // no por `updated_at`: cualquier UPDATE posterior movía el reconocimiento a
     // otro mes y las fronteras naive T00:00:00/T23:59:59 se interpretaban en
     // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
     // viene de `rangoMes`, igual que facturas.
-    .select("id, folio, monto, conceptos, moneda, factura_id, fecha_emision, tipo_cambio")
-    .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
-    .gte("fecha_emision", desde)
-    .lte("fecha_emision", hasta)
-    .is("deleted_at", null);
-  if (orgId) q = q.eq("organization_id", orgId);
-  return mapNotaCreditoRows((await unwrap(q)) ?? []);
+      // La NC sólo reconoce un padre vivo, aunque su factura sea de otro periodo.
+      .select("id, folio, monto, conceptos, moneda, factura_id, fecha_emision, tipo_cambio, facturas!inner(id)")
+      .in("estado", [...NC_CLIENTE_ESTADOS_VIGENTES])
+      .gte("fecha_emision", desde)
+      .lte("fecha_emision", hasta)
+      .is("deleted_at", null)
+      .is("facturas.deleted_at", null);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q.order("id").range(ini, fin);
+  });
+  return mapNotaCreditoRows(data);
 }
 
 export async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
-  let q = supabase
-    .from("proveedor_facturas")
+  const data = await leerTodasLasPaginas("profit.proveedorFacturasMes", (ini, fin) => {
+    let q = supabase
+      .from("proveedor_facturas")
     // BL-06: `subtotal` (sin IVA) en lugar de `total` (con IVA).
-    .select("id, embarque_id, subtotal, moneda, fecha_emision, tipo_cambio_usd")
-    .gte("fecha_emision", desde)
-    .lte("fecha_emision", hasta)
-    .neq("estado", "Cancelada")
+      .select("id, embarque_id, subtotal, moneda, fecha_emision, tipo_cambio_usd")
+      .gte("fecha_emision", desde)
+      .lte("fecha_emision", hasta)
+      .neq("estado", "Cancelada")
     // EERR-APROB (v13.823.246): una factura de proveedor rechazada no es costo;
     // antes sólo se excluían las canceladas y el costo del mes quedaba inflado.
-    .neq("estado_aprobacion", "rechazada")
-    .is("deleted_at", null);
-  if (orgId) q = q.eq("organization_id", orgId);
-  return mapProveedorFacturaRows((await unwrap(q)) ?? []);
+      .neq("estado_aprobacion", "rechazada")
+      .is("deleted_at", null);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q.order("id").range(ini, fin);
+  });
+  return mapProveedorFacturaRows(data);
 }
 
 /**
@@ -151,15 +162,19 @@ export async function fetchProveedorNotasCreditoMes(
   desde: string,
   hasta: string,
 ): Promise<ProveedorNotaCreditoRow[]> {
-  let q = supabase
-    .from("proveedor_notas_credito")
-    .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio")
-    .eq("estado", "Aplicada")
-    .gte("fecha", desde)
-    .lte("fecha", hasta)
-    .is("deleted_at", null);
-  if (orgId) q = q.eq("organization_id", orgId);
-  return mapProveedorNotaCreditoRows((await unwrap(q)) ?? []);
+  const data = await leerTodasLasPaginas("profit.proveedorNotasCreditoMes", (ini, fin) => {
+    let q = supabase
+      .from("proveedor_notas_credito")
+      .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio, proveedor_facturas!inner(id)")
+      .eq("estado", "Aplicada")
+      .gte("fecha", desde)
+      .lte("fecha", hasta)
+      .is("deleted_at", null)
+      .is("proveedor_facturas.deleted_at", null);
+    if (orgId) q = q.eq("organization_id", orgId);
+    return q.order("id").range(ini, fin);
+  });
+  return mapProveedorNotaCreditoRows(data);
 }
 
 /** `proveedor_factura_id` → `embarque_id` para ubicar el modo de cada NC. */
@@ -168,13 +183,13 @@ export async function loadEmbarqueIdsPorFacturaProveedor(
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   if (ids.length === 0) return out;
-  const data = (await unwrap(
+  const data = await fetchInChunks(ids, async (lote) => (await unwrap(
     supabase
       .from("proveedor_facturas")
       .select("id, embarque_id")
-      .in("id", ids)
+      .in("id", lote)
       .is("deleted_at", null),
-  )) ?? [];
+  )) ?? []);
   for (const row of (data ?? []) as { id: string; embarque_id: string | null }[]) {
     if (row.embarque_id) out.set(row.id, row.embarque_id);
   }

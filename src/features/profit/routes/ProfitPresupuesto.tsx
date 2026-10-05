@@ -9,9 +9,11 @@ import { TabVsReal } from "@/features/presupuesto/components/TabVsReal";
 import { TabCategorias } from "@/features/presupuesto/components/TabCategorias";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
+import { usePresupuestoTabUrl } from "@/features/presupuesto/hooks/usePresupuestoTabUrl";
 
 export default function ProfitPresupuesto() {
   const [anio, setAnio] = useState(new Date().getFullYear());
+  const { tab, setTab } = usePresupuestoTabUrl();
 
   return (
     <PageContainer>
@@ -20,7 +22,7 @@ export default function ProfitPresupuesto() {
         description="Control mensual de gasto de administración por categoría."
         tabs={<ProfitSubNav />}
       />
-      <Tabs defaultValue="captura" className="space-y-3">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-3">
         <TabsList>
           <TabsTrigger value="captura">Captura</TabsTrigger>
           <TabsTrigger value="vs-real">Vs Real</TabsTrigger>

@@ -3,7 +3,7 @@
  * y construye un snapshot. Auditoría Paso 4 (v12.95.11): recibe `cobranza` y
  * `cxp` inyectados por el hook caller para no acoplar service→service.
  */
-import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
+import { fetchEstadoResultadosDevengado, fetchEstadoResultadosDevengadoAnual } from "@/features/profit/services/estadoResultadosDevengado";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
 import { logger } from "@/lib/observability/logger";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
 import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+import { calcularVencimientosEjecutivos } from "../domain/vencimientos";
 
 export interface FetchSnapshotParams {
   organizationId: string | null;
@@ -49,28 +50,32 @@ function meses12Atras(periodo: string): Array<{ year: number; month: number; key
 }
 
 /**
- * P8 (v13.317.x): trae la tendencia 12m en 1 sola llamada RPC en lugar de
- * 12 fetch mensuales separados. La semántica es idéntica a
- * fetchEstadoResultadosMes / fetchEstadoResultadosDevengado (mismos filtros,
- * misma conversión a MXN), pero agregada en el servidor por mes/año.
- * Puede abarcar dos años calendario (ej. mar-2025 → feb-2026) así que
- * hacemos hasta 2 llamadas RPC.
+ * Embarques conserva la agregación RPC por año. Facturas comparte el lector
+ * y los cálculos mensuales devengados: bases sin IVA, NC netas y TC fiscal.
+ * Cada lectura por año se limita a los meses visibles de la ventana de 12m.
  */
 async function fetchTendencia12m(
   meses: Array<{ year: number; month: number; key: string }>,
   fuente: FuenteEERR,
+  organizationId: string | null,
 ): Promise<PuntoEERR[]> {
   const years = Array.from(new Set(meses.map((m) => m.year)));
   const results = await Promise.all(
-    years.map((y) =>
-      supabase.rpc("eerr_resumen_anual", { p_year: y, p_fuente: fuente }),
-    ),
+    years.map(async (y) => {
+      if (fuente === "facturas") {
+        const mesesYear = meses.filter((mes) => mes.year === y).map((mes) => mes.month);
+        return fetchEstadoResultadosDevengadoAnual({
+          organizationId, year: y, desdeMes: Math.min(...mesesYear), hastaMes: Math.max(...mesesYear),
+        });
+      }
+      const { data, error } = await supabase.rpc("eerr_resumen_anual", { p_year: y, p_fuente: fuente });
+      if (error) throw error;
+      return data ?? [];
+    }),
   );
   const porYearMes = new Map<string, { ingresos: number; costos: number }>();
   years.forEach((y, i) => {
-    const { data, error } = results[i];
-    if (error) throw error;
-    for (const row of (data ?? []) as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string }>) {
+    for (const row of results[i] as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string }>) {
       porYearMes.set(`${y}-${String(row.mes).padStart(2, "0")}`, {
         ingresos: Number(row.ingresos_mxn) || 0,
         costos: Number(row.costos_mxn) || 0,
@@ -101,9 +106,8 @@ export async function fetchDashboardEjecutivo(
   const fetchEerr = fuente === "facturas" ? fetchEstadoResultadosDevengado : fetchEstadoResultadosMes;
 
   const meses = meses12Atras(periodo);
-  // P8: la tendencia 12m ahora usa 1 RPC (`eerr_resumen_anual`) en vez de
-  // 12 fetch mensuales. `eerrPeriodo` y `eerrPrev` siguen usando el fetch
-  // completo porque necesitan el pivot por concepto/modo.
+  // La tendencia agrupa lecturas por año; actual y previo conservan el
+  // pivot completo por concepto/modo del mismo criterio contable.
   const [
     cuentas,
     eerrPeriodo,
@@ -117,7 +121,7 @@ export async function fetchDashboardEjecutivo(
     fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchPresupuestoVsReal(periodo, organizationId),
     fetchExchangeRates().catch(() => EXCHANGE_RATES_FALLBACK),
-    fetchTendencia12m(meses, fuente),
+    fetchTendencia12m(meses, fuente, organizationId),
   ]);
   const tipoCambioUsd = tipoCambio.usdMxn;
   // Ola 5 · A10: si el TC vino del fallback operativo (17.25/18.5), el tablero
@@ -151,7 +155,10 @@ export async function fetchDashboardEjecutivo(
   ]);
 
 
-  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
+  const vencimientos = calcularVencimientosEjecutivos({
+    cobranza, cxp, tasas: { usdMxn: tipoCambioUsd, eurMxn: tipoCambioEur },
+  });
+  const base = { periodo, fuente, vencimientos, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
 

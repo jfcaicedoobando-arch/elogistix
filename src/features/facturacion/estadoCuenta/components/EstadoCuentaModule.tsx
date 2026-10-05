@@ -46,6 +46,10 @@ export function EstadoCuentaModule({
               rows={v.filtradas}
               desde={v.desde}
               hasta={v.hasta}
+              moneda={v.moneda}
+              soloConSaldo={v.soloConSaldo}
+              busqueda={v.busqueda}
+              bucket={v.bucket}
             />
           )}
         </div>

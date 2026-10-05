@@ -10,13 +10,21 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+
+// El mensual/anual delega sus lecturas a estos módulos: se guardan los
+// lectores reales, no el wrapper que sólo compone el resultado.
+const EERR_REPORTES_FILES = [
+  "src/features/profit/services/estadoResultadosDevengadoDatos.ts",
+  "src/features/profit/services/estadoResultadosFetch.ts",
+];
 
 const REPORTES_FILES = [
   "src/features/facturacion/services/dashboardEjecutivo.ts",
   "src/features/facturacion/services/cobranza.ts",
   "src/features/facturacion/estadoCuenta/services/estadoCuenta.ts",
   "src/features/facturacion/services/huecoFacturacion/fetchSources.ts",
-  "src/features/profit/services/estadoResultadosDevengado.ts",
+  ...EERR_REPORTES_FILES,
   "src/features/portal/services/queries.ts",
   "src/features/cliente/services/financials.ts",
 ];
@@ -24,6 +32,15 @@ const REPORTES_FILES = [
 const ESTADOS_MUERTOS = ["Cancelada", "Sustituida"];
 
 describe("Reportes de facturas · guardrail estados vivos", () => {
+  it("los lectores del EERR mantienen el canon que excluye Cancelada y Sustituida", () => {
+    for (const dead of ESTADOS_MUERTOS) expect(FACTURA_ESTADOS_VIVOS).not.toContain(dead);
+    for (const relPath of EERR_REPORTES_FILES) {
+      const src = readFileSync(resolve(process.cwd(), relPath), "utf-8");
+      expect(src, `${relPath} debe leer facturas con el canon de estados vivos`)
+        .toMatch(/\.in\(\s*["']estado["']\s*,\s*\[\s*\.\.\.FACTURA_ESTADOS_VIVOS\s*\]/);
+    }
+  });
+
   for (const relPath of REPORTES_FILES) {
     it(`${relPath} filtra por estado (excluye Cancelada/Sustituida)`, () => {
       const src = readFileSync(resolve(process.cwd(), relPath), "utf-8");

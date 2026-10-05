@@ -10,6 +10,24 @@ import { comisionSinEmbarque } from "../domain/cobroSinEmbarque";
 import type { ComisionDevengada } from "@/features/comisiones/services";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
+/** Búsqueda y orden de la lista sobre los campos que representa esta tabla. */
+export const comisionSearchAccessor = (r: ComisionDevengada): string =>
+  `${r.factura_numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`;
+
+export const comisionesSorters: Record<string, (a: ComisionDevengada, b: ComisionDevengada) => number> = {
+  factura: (a, b) => (a.factura_numero ?? "").localeCompare(b.factura_numero ?? ""),
+  cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
+  cobrado: (a, b) => {
+    if (a.monto_cobrado_mxn === null) return b.monto_cobrado_mxn === null ? 0 : 1;
+    if (b.monto_cobrado_mxn === null) return -1;
+    return a.monto_cobrado_mxn - b.monto_cobrado_mxn;
+  },
+  utilidad: (a, b) => a.utilidad_prorrateada_mxn - b.utilidad_prorrateada_mxn,
+  porcentaje: (a, b) => a.porcentaje_aplicado - b.porcentaje_aplicado,
+  comision: (a, b) => a.comision_mxn - b.comision_mxn,
+  fecha: (a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""),
+};
+
 export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[] {
   return defineColumns<ComisionDevengada>([
     {
@@ -36,7 +54,7 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
     },
     {
       id: "factura", header: "Factura",
-      meta: { width: COL_W.fecha, className: "font-mono text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "font-mono text-xs whitespace-nowrap" },
       cell: ({ row }) => row.original.factura_numero ?? "—",
     },
     {

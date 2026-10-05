@@ -17,6 +17,7 @@ import { withOrgPrefix, slugifyOrg } from "@/lib/filenames";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { todayLocalISO } from "@/lib/date/today";
 import { sumarMontos } from "@/lib/financial/financialUtils";
+import type { EstadoCuentaAlcance } from "@/pdf/components/EstadoCuentaAlcance";
 import type {
   EstadoCuentaBucketTotal,
   EstadoCuentaCliente,
@@ -45,6 +46,7 @@ function bucketFor(diasVencido: number): string {
 export async function generarEstadoCuentaPdf(
   cliente: EstadoCuentaCliente & { id: string },
   snapshot?: readonly EstadoCuentaFactura[],
+  alcance?: EstadoCuentaAlcance,
 ): Promise<void> {
   const [facturas, emisor, { EstadoCuentaDocument }] = await Promise.all([
     snapshot ?? fetchEstadoCuentaFacturas(cliente.id),
@@ -76,6 +78,7 @@ export async function generarEstadoCuentaPdf(
       rows={rows}
       totalesPorMoneda={totalesPorMoneda}
       emisor={emisor}
+      alcance={alcance ?? { parcial: snapshot !== undefined, filtros: [snapshot !== undefined ? "Selección de facturas" : "Sólo facturas con saldo"] }}
     />,
     nombre,
   );

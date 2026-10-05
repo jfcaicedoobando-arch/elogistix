@@ -1,46 +1,8 @@
-/**
- * Fuente devengada del Estado de Resultados (post-Sprint 2):
- *   Ingresos = facturas con fecha_emision en el mes (no canceladas)
- *              menos notas de crédito aplicadas en el mes.
- *   Costos  = proveedor_facturas con fecha_emision en el mes (no canceladas
- *              ni rechazadas) menos notas de crédito de proveedor aplicadas
- *              en el mes.
- *
- * Pivot por modo del embarque vinculado (facturas.expediente → embarques /
- * proveedor_facturas.embarque_id → embarques). Las filas sin embarque (o con
- * expediente duplicado) caen en "Otros": no se asume Marítimo.
- *
- * Tipo de cambio: TC del documento fiscal → TC del embarque → TC del DOF.
- */
-import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr } from "@/lib/supabase/response";
-import { tcFallbackDof } from "./estadoResultadosTc";
-import {
-  ingresosDeFacturas,
-  ingresosDeNotas,
-  costosDeProveedorFacturas,
-  costosDeNotasProveedor,
-} from "./estadoResultadosBuckets";
+/** EERR devengado: el mensual y la tendencia anual comparten bases, fechas y TC. */
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
-import {
-  buildEstadoResultados,
-  type EstadoResultados,
-  type EmbarqueER,
-  type ConceptoVentaER,
-  type ConceptoCostoER,
-} from "@/features/profit/domain/estadoResultados";
-import type { FacturaRow, NotaCreditoRow } from "@/lib/mappers/estadoResultadosRows";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
-import {
-  fetchFacturasMes,
-  fetchNotasCreditoMes,
-  fetchProveedorFacturasMes,
-  fetchProveedorNotasCreditoMes,
-  loadEmbarqueIdsPorFacturaProveedor,
-  loadEmbarquesPorExpedientes,
-  loadEmbarquesPorIds,
-} from "@/features/profit/services/estadoResultadosFetch";
-
+import { fechaFiscalFactura } from "@/features/profit/domain/fechaFiscalFactura";
+import type { EstadoResultados } from "@/features/profit/domain/estadoResultados";
+import { cargarDatosDevengados, construirEstadoDevengado } from "./estadoResultadosDevengadoDatos";
 
 interface Params {
   organizationId: string | null;
@@ -48,102 +10,44 @@ interface Params {
   month: number;
 }
 
-/**
- * BL-8: resuelve el modo de transporte real de cada NC a través de su factura
- * padre (`factura_id` → `expediente` → embarque). Las facturas del mes ya están
- * cargadas; sólo se consultan los `factura_id` que faltan (NC de meses previos).
- */
-async function modoPorFacturaDeNotas(
-  ncs: NotaCreditoRow[],
-  facturas: FacturaRow[],
-  embPorExp: Map<string, EmbarqueER>,
-  organizationId: string | null,
-): Promise<Map<string, string>> {
-  const out = new Map<string, string>();
-  const idsNc = Array.from(new Set(ncs.map((n) => n.factura_id).filter(Boolean)));
-  if (idsNc.length === 0) return out;
-
-  const expPorFactura = new Map<string, string | null>();
-  for (const f of facturas) {
-    if (idsNc.includes(f.id)) expPorFactura.set(f.id, f.expediente ?? null);
-  }
-
-  const faltantes = idsNc.filter((id) => !expPorFactura.has(id));
-  if (faltantes.length > 0) {
-    const data = await unwrapOr(supabase.from("facturas")
-      .select("id, expediente").in("id", faltantes)
-      // Reportería devengada: sólo facturas vivas (excluye Cancelada/Sustituida).
-      .in("estado", [...FACTURA_ESTADOS_VIVOS])
-      .is("deleted_at", null), []);
-
-    for (const row of data as { id: string; expediente: string | null }[]) {
-      expPorFactura.set(row.id, row.expediente ?? null);
-    }
-  }
-
-  const expsFaltantes = Array.from(
-    new Set(
-      Array.from(expPorFactura.values()).filter(
-        (e): e is string => typeof e === "string" && e.length > 0 && !embPorExp.has(e),
-      ),
-    ),
-  );
-  const extra: Map<string, EmbarqueER> =
-    expsFaltantes.length > 0
-      ? await loadEmbarquesPorExpedientes(expsFaltantes, organizationId)
-      : new Map();
-
-  for (const [facturaId, exp] of expPorFactura) {
-    if (!exp) continue;
-    const emb = embPorExp.get(exp) ?? extra.get(exp);
-    if (emb?.modo) out.set(facturaId, emb.modo);
-  }
-  return out;
-}
-
 export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
   const { desde, hasta } = rangoMes(p.year, p.month);
+  return construirEstadoDevengado(await cargarDatosDevengados(p.organizationId, desde, hasta));
+}
 
-  const [facturas, ncs, pfacts, pncs, tc] = await Promise.all([
-    fetchFacturasMes(p.organizationId, desde, hasta),
-    fetchNotasCreditoMes(p.organizationId, desde, hasta),
-    fetchProveedorFacturasMes(p.organizationId, desde, hasta),
-    fetchProveedorNotasCreditoMes(p.organizationId, desde, hasta),
-    tcFallbackDof(),
-  ]);
+export interface ResumenDevengadoMes {
+  mes: number;
+  ingresos_mxn: number;
+  costos_mxn: number;
+}
 
-  // Las NC de proveedor pueden colgar de facturas de otros meses: se resuelve
-  // su embarque para no perder el modo.
-  const embPorFacturaProv = await loadEmbarqueIdsPorFacturaProveedor(
-    Array.from(new Set(pncs.map((n) => n.proveedor_factura_id).filter(Boolean))),
-  );
-
-  const exps = Array.from(new Set(facturas.map((f) => f.expediente).filter(Boolean) as string[]));
-  const embIds = Array.from(
-    new Set([
-      ...(pfacts.map((f) => f.embarque_id).filter(Boolean) as string[]),
-      ...embPorFacturaProv.values(),
-    ]),
-  );
-  const [embPorExp, embPorId] = await Promise.all([
-    loadEmbarquesPorExpedientes(exps, p.organizationId),
-    loadEmbarquesPorIds(embIds),
-  ]);
-
-  const modoNc = await modoPorFacturaDeNotas(ncs, facturas, embPorExp, p.organizationId);
-
-  const ventasBucket = { embarques: [] as EmbarqueER[], ventas: [] as ConceptoVentaER[] };
-  ingresosDeFacturas(facturas, embPorExp, ventasBucket, tc);
-  ingresosDeNotas(ncs, ventasBucket, tc, modoNc);
-
-  const costosBucket = { embarques: [] as EmbarqueER[], costos: [] as ConceptoCostoER[] };
-  costosDeProveedorFacturas(pfacts, embPorId, costosBucket, tc);
-  costosDeNotasProveedor(pncs, embPorId, embPorFacturaProv, costosBucket, tc);
-
-
-  return buildEstadoResultados(
-    [...ventasBucket.embarques, ...costosBucket.embarques],
-    ventasBucket.ventas,
-    costosBucket.costos,
-  );
+/**
+ * AUD83: una lectura del rango anual, con el mismo cálculo del EERR mensual.
+ * Evita la RPC antigua que sumaba IVA y NC brutas con fechas/TC distintos.
+ * Los límites permiten que una tendencia entre años lea sólo los meses visibles.
+ */
+export async function fetchEstadoResultadosDevengadoAnual(p: {
+  organizationId: string | null;
+  year: number;
+  desdeMes?: number;
+  hastaMes?: number;
+}): Promise<ResumenDevengadoMes[]> {
+  const desdeMes = p.desdeMes ?? 1;
+  const hastaMes = p.hastaMes ?? 12;
+  const { desde } = rangoMes(p.year, desdeMes);
+  const { hasta } = rangoMes(p.year, hastaMes);
+  const datos = await cargarDatosDevengados(p.organizationId, desde, hasta);
+  const filas: ResumenDevengadoMes[] = [];
+  for (let mes = desdeMes; mes <= hastaMes; mes++) {
+    const periodo = `${p.year}-${String(mes).padStart(2, "0")}`;
+    const estado = construirEstadoDevengado({
+      ...datos,
+      facturas: datos.facturas.filter((f) => fechaFiscalFactura(f).startsWith(periodo)),
+      ncs: datos.ncs.filter((nc) => nc.fecha_emision.startsWith(periodo)),
+      pfacts: datos.pfacts.filter((pf) => pf.fecha_emision.startsWith(periodo)),
+      pncs: datos.pncs.filter((nc) => nc.fecha.startsWith(periodo)),
+    });
+    filas.push({ mes, ingresos_mxn: estado.totalIngresos.total, costos_mxn: estado.totalCostos.total });
+  }
+  return filas;
 }

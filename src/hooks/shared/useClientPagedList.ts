@@ -32,6 +32,8 @@ export interface ClientPagedOpts<TRow, TFilters extends Record<string, string>>
 
 export interface ClientPagedResult<TRow, TFilters extends Record<string, string>> {
   rows: TRow[];
+  /** Todas las filas con los filtros y orden activos, antes de paginar. */
+  filteredRows: TRow[];
   filteredCount: number;
   totalPages: number;
   isLoading: boolean;
@@ -141,6 +143,7 @@ export function useClientPagedList<
 
   return {
     rows,
+    filteredRows: processed,
     filteredCount,
     totalPages,
     isLoading,

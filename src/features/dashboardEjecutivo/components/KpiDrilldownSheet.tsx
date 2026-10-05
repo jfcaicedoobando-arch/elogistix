@@ -23,20 +23,20 @@ export interface KpiDrilldownProps {
   emptyText?: string;
   verTodosHref: string;
   verTodosLabel?: string;
-  /** Dirección semántica de `dias`: positivo=vencido (rojo) o positivo=por vencer (ámbar). */
+  /** Tono del KPI; `dias` siempre conserva el signo canónico: positivo=vencido. */
   diasTone?: "vencido" | "porVencer";
 }
 
 function badgeVariant(dias: number | undefined, tone: "vencido" | "porVencer"): "destructive" | "default" | "secondary" {
-  if (!dias || dias <= 0) return "secondary";
-  if (tone === "vencido") return dias > 30 ? "destructive" : "default";
-  return dias <= 7 ? "destructive" : "default";
+  if (dias == null) return "secondary";
+  if (dias > 0) return tone === "porVencer" || dias > 30 ? "destructive" : "default";
+  return tone === "porVencer" && dias >= -7 ? "default" : "secondary";
 }
 
-function labelDias(dias: number | undefined, tone: "vencido" | "porVencer"): string | null {
-  if (typeof dias !== "number" || dias === 0) return null;
-  if (tone === "vencido") return dias > 0 ? `${dias} d vencido` : `${Math.abs(dias)} d por vencer`;
-  return dias > 0 ? `Vence en ${dias} d` : `Vencido ${Math.abs(dias)} d`;
+function labelDias(dias: number | undefined): string | null {
+  if (typeof dias !== "number") return null;
+  if (dias === 0) return "Vence hoy";
+  return dias > 0 ? `${dias} d vencido` : `Vence en ${Math.abs(dias)} d`;
 }
 
 export function KpiDrilldownSheet({
@@ -65,7 +65,7 @@ export function KpiDrilldownSheet({
           ) : (
             <ul className="divide-y">
               {items.slice(0, 10).map((it, i) => {
-                const lbl = labelDias(it.dias, diasTone);
+                const lbl = labelDias(it.dias);
                 return (
                   <li key={`${it.nombre}-${i}`} className="py-2 flex items-center justify-between gap-2 text-body">
                     <div className="min-w-0">

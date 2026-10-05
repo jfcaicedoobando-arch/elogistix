@@ -14,6 +14,8 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 const fetchEstadoResultadosDevengado = vi.fn();
+const fetchEstadoResultadosDevengadoAnual = vi.fn();
+const fetchEstadoResultadosMes = vi.fn();
 const fetchSaldosCuentas = vi.fn();
 const fetchResumenTesoreria = vi.fn();
 const fetchFlujoProyectado = vi.fn();
@@ -23,6 +25,11 @@ const fetchExchangeRates = vi.fn();
 vi.mock("@/features/profit/services/estadoResultadosDevengado", () => ({
   fetchEstadoResultadosDevengado: (...args: unknown[]) =>
     fetchEstadoResultadosDevengado(...args),
+  fetchEstadoResultadosDevengadoAnual: (...args: unknown[]) =>
+    fetchEstadoResultadosDevengadoAnual(...args),
+}));
+vi.mock("@/features/profit/services/estadoResultados", () => ({
+  fetchEstadoResultadosMes: (...args: unknown[]) => fetchEstadoResultadosMes(...args),
 }));
 vi.mock("@/features/tesoreria/services", () => ({
   fetchSaldosCuentas: (...args: unknown[]) => fetchSaldosCuentas(...args),
@@ -64,6 +71,8 @@ describe("dashboardEjecutivo/agregador", () => {
     vi.clearAllMocks();
     rpcMock.mockResolvedValue({ data: [], error: null });
     fetchEstadoResultadosDevengado.mockResolvedValue(eerr(100));
+    fetchEstadoResultadosDevengadoAnual.mockResolvedValue([]);
+    fetchEstadoResultadosMes.mockResolvedValue(eerr(100));
     fetchSaldosCuentas.mockResolvedValue([{ id: "c1", saldo: 500 }]);
     fetchResumenTesoreria.mockResolvedValue({
       top_deudores: [{ cliente: "X", monto: 1 }],
@@ -74,7 +83,7 @@ describe("dashboardEjecutivo/agregador", () => {
     fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
   });
 
-  it("invoca EERR para periodo, periodo anterior y tendencia 12m vía RPC eerr_resumen_anual", async () => {
+  it("invoca EERR mensual y lectura anual neta para los 12 meses visibles de Facturas", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1",
       periodo: "2025-03",
@@ -82,14 +91,15 @@ describe("dashboardEjecutivo/agregador", () => {
       cxp: [],
       fuente: "facturas",
     });
-    // P8: sólo actual + previo van al servicio EERR completo; tendencia 12m usa RPC agregada.
+    // Actual y previo conservan el pivot; tendencia comparte el criterio mensual.
     expect(fetchEstadoResultadosDevengado).toHaveBeenCalledTimes(2);
     const calls = fetchEstadoResultadosDevengado.mock.calls.map((c) => c[0]);
     expect(calls).toContainEqual({ organizationId: "org-1", year: 2025, month: 2 });
     expect(calls).toContainEqual({ organizationId: "org-1", year: 2025, month: 3 });
-    // Tendencia 12m (abr-2024 → mar-2025) abarca 2 años → 2 llamadas RPC.
-    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2024, p_fuente: "facturas" });
-    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2025, p_fuente: "facturas" });
+    expect(fetchEstadoResultadosDevengadoAnual).toHaveBeenCalledTimes(2);
+    expect(fetchEstadoResultadosDevengadoAnual).toHaveBeenCalledWith({ organizationId: "org-1", year: 2024, desdeMes: 4, hastaMes: 12 });
+    expect(fetchEstadoResultadosDevengadoAnual).toHaveBeenCalledWith({ organizationId: "org-1", year: 2025, desdeMes: 1, hastaMes: 3 });
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 
   it("calcula correctamente el cruce de año en periodo anterior", async () => {
@@ -136,6 +146,7 @@ describe("dashboardEjecutivo/agregador", () => {
       fuente: "facturas",
     });
     expect(snap.periodo).toBe("2025-06");
+    expect(snap.fuente).toBe("facturas");
     expect(snap.kpis).toEqual({ ingresos: 100 });
     expect(snap.alertas).toEqual([{ id: "a1", severidad: "alta" }]);
     expect(snap.topDeudores).toEqual([{ cliente: "X", monto: 1 }]);
@@ -144,7 +155,7 @@ describe("dashboardEjecutivo/agregador", () => {
     expect(typeof snap.generadoEn).toBe("string");
   });
 
-  it("tolera la columna excluidos_sin_tc del RPC sin romper la tendencia 12m (Ola 4 · N8)", async () => {
+  it("mantiene RPC para Embarques y tolera la columna excluidos_sin_tc", async () => {
     rpcMock.mockResolvedValue({
       data: [
         { mes: 3, ingresos_mxn: 1000, costos_mxn: 400, excluidos_sin_tc: 2 },
@@ -156,9 +167,25 @@ describe("dashboardEjecutivo/agregador", () => {
       periodo: "2025-03",
       cobranza: [],
       cxp: [],
-      fuente: "facturas",
+      fuente: "embarques",
     });
     const marzo = snap.eerr12m.find((p) => p.periodo === "2025-03");
     expect(marzo).toEqual({ periodo: "2025-03", ingresos: 1000, costos: 400, utilidad: 600 });
+    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2025, p_fuente: "embarques" });
+    expect(fetchEstadoResultadosDevengadoAnual).not.toHaveBeenCalled();
+  });
+
+  it("tendencia Facturas usa ingreso y costo netos del mismo origen que KPI", async () => {
+    fetchEstadoResultadosDevengado.mockResolvedValue(eerr(251.11));
+    fetchEstadoResultadosDevengadoAnual.mockResolvedValue([
+      { mes: 10, ingresos_mxn: 251.11, costos_mxn: 125.555 },
+    ]);
+    const snap = await fetchDashboardEjecutivo({ organizationId: "org-1", periodo: "2026-10", cobranza: [], cxp: [], fuente: "facturas" });
+    expect(snap.eerr12m.find((p) => p.periodo === "2026-10")).toEqual({
+      periodo: "2026-10", ingresos: snap.eerrPeriodo.totalIngresos.total,
+      costos: snap.eerrPeriodo.totalCostos.total, utilidad: snap.eerrPeriodo.utilidad.total,
+    });
+    expect(snap.vencimientos.cobranzaMayor30.total_mxn).toBe(0);
+    expect(snap.vencimientos.cxpProximos7.top).toEqual([]);
   });
 });
