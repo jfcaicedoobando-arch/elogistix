@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.29] - 2026-10-05
+
+- **fix(CRM · adjuntos de pricing)**: se aplicaron los dos cambios de base del borrador aceptado (folio mensual con tarifas ligadas y reglas de acceso del bucket `crm-pricing-adjuntos`). Antes, adjuntar un archivo se rechazaba por RLS.
+- **fix(Embarques · adjuntar XML)**: un XML inválido ya no deja un error suelto que llegaba a Sentry; el aviso al usuario sigue igual (JAVASCRIPT-REACT-4J).
+
 ## [13.824.28] - 2026-10-05
 
 - **fix(Sentry · JAVASCRIPT-REACT-7F, 79, 7G, 7D)**: el cierre sin pago guarda el ajuste sin tipo de cambio (antes 0, rechazado por la base); `client-error-log` responde 400 ante un cuerpo JSON que no es objeto; retirar del buzón un documento ya retirado (doble clic) ya no marca error. 7D ya estaba cubierto por el filtro de estados vigente.

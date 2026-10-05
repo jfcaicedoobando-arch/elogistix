@@ -46,7 +46,7 @@ export function SugerenciasTarifaResultados({ isFetching, error, isRefetching, t
       <EmptyStateInline
         icon={FileSearch}
         message="No hay tarifas vigentes para esta combinación."
-        hint="Para FCL, vincula una tarifa vigente o captura una nueva en Catálogo de tarifas antes de continuar."
+        hint="Para FCL, vincula una tarifa vigente o captura una nueva en Solicitudes de pricing antes de continuar."
         className="rounded-md border border-dashed"
       />
     );

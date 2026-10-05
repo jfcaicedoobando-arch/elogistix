@@ -4,9 +4,10 @@
  * sesión en `./mutaciones.auth.ts` (límite de 200 líneas, Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import type { AppRole } from "@/types/appRole";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { resetRedirectUrl } from "./mutaciones.auth";
 import { errorDeEdgeFunction } from "./mutaciones.errores";
 
 export {
@@ -33,9 +34,7 @@ export async function updateUserRole(
 }
 
 export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: { action: "delete", user_id: userId },
-  });
+  const { data, error } = await invokeUserManagement<{ error?: string }>({ action: "delete", user_id: userId });
   if (error) throw await errorDeEdgeFunction(error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   if (data?.error) throw new Error(data.error);
   await registrarActividad({
@@ -47,11 +46,7 @@ export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown
 }
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {
-  const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: { action: "delete", user_id: userId },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const res = await invokeUserManagement({ action: "delete", user_id: userId });
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   const body = res.data as { error?: string };
   if (body?.error) throw new Error(body.error);
@@ -79,14 +74,10 @@ export async function quitarDeOrganizacion(
 
 /** U-03: dispara el correo de restablecimiento de contraseña para el usuario. */
 export async function enviarResetPassword(userId: string): Promise<void> {
-  const token = await getAuthToken();
-  const res = await supabase.functions.invoke("user-management", {
-    body: {
-      action: "reset-password",
-      user_id: userId,
-      redirect_to: resetRedirectUrl(),
-    },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const res = await invokeUserManagement({
+    action: "reset-password",
+    user_id: userId,
+    redirect_to: resetRedirectUrl(),
   });
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo enviar el correo. Reintenta en unos minutos.");
   const body = res.data as { error?: string };

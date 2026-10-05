@@ -23,7 +23,7 @@ const ESTADOS = [
 ];
 
 export default function SolicitudesPricing() {
-  useDocumentTitle("Solicitudes de pricing");
+  useDocumentTitle("Bandeja de pricing");
   const [params, setParams] = useSearchParams();
   const estado = params.get("estado") ?? "enviada";
   const pagina = Number(params.get("p") ?? "0") || 0;
@@ -41,7 +41,7 @@ export default function SolicitudesPricing() {
 
   return (
     <PageContainer>
-      <PageHeader title="Solicitudes de pricing" description="Baja 8 h · Media 24 h · Alta 48 h para responder." />
+      <PageHeader title="Bandeja de pricing" description="Baja 8 h · Media 24 h · Alta 48 h para responder." />
         <Select value={estado} onValueChange={(v) => cambiar("estado", v)}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>{ESTADOS.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}</SelectContent>

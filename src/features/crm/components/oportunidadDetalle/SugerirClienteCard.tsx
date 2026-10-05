@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 interface Props {
   etapaTipo?: string | null;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function SugerirClienteCard({ etapaTipo, clienteId }: Props) {
+  const { effectiveRole } = useAuth();
   if (etapaTipo !== "ganada" || clienteId) return null;
   return (
     <Alert variant="success">
@@ -21,9 +23,11 @@ export function SugerirClienteCard({ etapaTipo, clienteId }: Props) {
         <div className="text-body">
           <span>Oportunidad ganada. Da de alta la empresa como cliente para empezar a operar.</span>
         </div>
-        <Button asChild size="sm">
-          <Link to="/clientes?nuevo=1">Crear cliente</Link>
-        </Button>
+        {effectiveRole === "contador" && (
+          <Button asChild size="sm">
+            <Link to="/clientes?nuevo=1">Crear cliente</Link>
+          </Button>
+        )}
       </AlertDescription>
     </Alert>
   );
