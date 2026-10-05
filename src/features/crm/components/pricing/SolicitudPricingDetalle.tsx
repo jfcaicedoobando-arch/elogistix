@@ -8,6 +8,7 @@ import { useOpcionesPricing } from "@/features/crm/hooks/usePricingCrm";
 import { esRolPricing, puedeAgregarTarifaRespuesta } from "@/features/crm/services/pricing/permisosPricing";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
+import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
 import { ResumenSolicitudPricing } from "./ResumenSolicitudPricing";
 import { TarifasRespuestaPricing, useTarifasRespuesta } from "./TarifasRespuestaPricing";
@@ -28,6 +29,8 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       <AccionesSolicitudPricing solicitud={s} puedeCancelar={puedeCancelar} puedeResponder={editable}
         numOpciones={opciones.length + tarifas.length} />
       <ResumenSolicitudPricing solicitud={s} />
+      <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
+        puedeAdjuntar={s.estado !== "cancelada"} />
       {opciones.map((o) => (
         <OpcionPricingEditor key={o.id} solicitudId={s.id} organizationId={s.organization_id}
           orden={o.orden} opcion={o} editable={false} />
