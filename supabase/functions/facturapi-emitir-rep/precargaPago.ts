@@ -9,7 +9,7 @@ import { esReTimbradoPermitido } from "./claimRep.ts";
 import type { PagoRep } from "./etapaDatos.ts";
 
 const COLS_PAGO =
-  "id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, uuid_rep, rep_cancelado_facturapi_id, monto_aplicado_factura";
+  "id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, uuid_rep, rep_cancelado_facturapi_id, monto_aplicado_factura, updated_at";
 
 export async function precargarPagoRep(
   supabase: SupabaseClient,
@@ -18,7 +18,7 @@ export async function precargarPagoRep(
   json: (body: unknown, status?: number) => Response,
 ): Promise<{ response: Response } | { pago: PagoRep }> {
   const { data: pago, error: pErr } = await supabase
-    .from("pagos_factura").select(COLS_PAGO).eq("id", pagoId).maybeSingle();
+    .from("pagos_factura").select(COLS_PAGO).eq("id", pagoId).is("deleted_at", null).maybeSingle();
   if (pErr || !pago) return { response: json({ error: "pago_not_found", detail: pErr?.message }, 404) };
 
   // Ola 12 · R3P-21: un REP cancelado no es un candado — el pago puede

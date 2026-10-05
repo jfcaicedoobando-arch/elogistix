@@ -6,7 +6,10 @@
  * a qué facturas se aplicó, cuánto se aplicó y cuánto queda pendiente.
  */
 
-export type TipoPagoDetalle = "cobro" | "pago" | "anticipo" | "lote" | "lote_cobro" | "traspaso";
+import Decimal from "decimal.js";
+import { esPagoEfectivo } from "./conciliacionPago";
+
+export type TipoPagoDetalle = "cobro" | "pago" | "anticipo" | "devolucion_anticipo" | "lote" | "lote_cobro" | "traspaso";
 
 export interface PagoDetalleEncabezado {
   id: string;
@@ -65,6 +68,8 @@ export interface AplicacionPago {
   monto_aplicado: number;
   total: number;
   pagado: number;
+  /** NC aplicadas vigentes, convertidas a moneda de factura. */
+  notas_credito_aplicadas?: number;
   fecha_aplicacion: string | null;
   pago_id: string | null;
 }
@@ -90,6 +95,7 @@ export const TIPO_PAGO_DETALLE_LABELS: Record<TipoPagoDetalle, string> = {
   lote: "Pago en lote a proveedor",
   lote_cobro: "Cobro en lote de cliente",
   anticipo: "Anticipo a proveedor",
+  devolucion_anticipo: "Devolución de anticipo",
   traspaso: "Traspaso entre cuentas propias",
 };
 
@@ -103,6 +109,8 @@ export interface VinculosMovimiento {
   pago_proveedor_id?: string | null;
   pago_proveedor_lote_id?: string | null;
   anticipo_proveedor_id?: string | null;
+  abono?: number | null;
+  cargo?: number | null;
 }
 
 /**
@@ -118,13 +126,17 @@ export function refPagoDeMovimiento(mov: VinculosMovimiento | null | undefined):
   if (mov.pago_factura_lote_id) return { tipo: "lote_cobro", id: mov.pago_factura_lote_id };
   if (mov.pago_factura_id) return { tipo: "cobro", id: mov.pago_factura_id };
   if (mov.pago_proveedor_id) return { tipo: "pago", id: mov.pago_proveedor_id };
-  if (mov.anticipo_proveedor_id) return { tipo: "anticipo", id: mov.anticipo_proveedor_id };
+  if (mov.anticipo_proveedor_id) return {
+    tipo: (mov.abono ?? 0) > 0 && !(mov.cargo ?? 0) ? "devolucion_anticipo" : "anticipo",
+    id: mov.anticipo_proveedor_id,
+  };
   return null;
 }
 
 /** Saldo pendiente de la factura a la que se aplicó el pago (nunca negativo). */
 export function saldoAplicacion(aplicacion: AplicacionPago): number {
-  const saldo = aplicacion.total - aplicacion.pagado;
+  const saldo = new Decimal(aplicacion.total).minus(aplicacion.pagado)
+    .minus(aplicacion.notas_credito_aplicadas ?? 0).toNumber();
   return saldo > 0 ? saldo : 0;
 }
 
@@ -149,7 +161,7 @@ export function resumenAplicaciones(aplicaciones: AplicacionPago[]): string {
 
 /** Fila del libro de pagos: lo mínimo para pedir su detalle. */
 export interface FilaLibroRef {
-  tipo: "cobro" | "pago" | "anticipo";
+  tipo: "cobro" | "pago" | "anticipo" | "devolucion_anticipo";
   id: string;
   lote_id: string | null;
 }
@@ -167,9 +179,9 @@ export function refPagoDeLibro(fila: FilaLibroRef): RefPago {
   return { tipo: fila.tipo, id: fila.id };
 }
 
-/** Los tipos que representan dinero recibido del cliente (no un egreso). */
+/** Los tipos que representan entradas: cobro de cliente o devolución de proveedor. */
 export function esDineroRecibido(tipo: TipoPagoDetalle): boolean {
-  return tipo === "cobro" || tipo === "lote_cobro";
+  return tipo === "cobro" || tipo === "lote_cobro" || tipo === "devolucion_anticipo";
 }
 
 /**
@@ -177,7 +189,6 @@ export function esDineroRecibido(tipo: TipoPagoDetalle): boolean {
  * que la ausencia de movimiento NO es un pendiente de conciliación.
  */
 export function esperaMovimientoBancario(metodoPago: string | null): boolean {
-  const m = (metodoPago ?? "").trim().toLowerCase();
-  return m !== "efectivo";
+  return !esPagoEfectivo(metodoPago);
 }
 

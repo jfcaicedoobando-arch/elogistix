@@ -25,7 +25,7 @@ interface Props {
 
 export function EstadoCuentaExportButtons({ estado, movimientos, filtros }: Props) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const sinDatos = movimientos.length === 0;
+  const sinDatos = movimientos.length === 0 || estado.cobertura_historica === "sin_cobertura";
   const filas = filasEstadoCuentaExport(movimientos, estado.moneda);
 
   const descargarCsv = () => {

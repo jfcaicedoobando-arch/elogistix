@@ -1,6 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, waitFor, act, render, screen, fireEvent } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
+import { FuenteEerrToggle } from '@/features/profit/components/FuenteEerrToggle';
+import { STORAGE_KEYS } from '@/lib/browserStorage';
 import { MemoryRouter } from 'react-router-dom';
 
 type ERFixture = {
@@ -55,10 +57,10 @@ describe('useEstadoResultados', () => {
   // tipo de componente en cada render → React desmonta/remonta y las queries
   // duplican `mockFetchER` rompiendo `toHaveBeenCalledTimes(1)`. Además sobrescribía
   // `globalThis.__TEST_QUERY_CLIENT__` rompiendo `cleanupGlobalQueryClient`.
-  const makeWrapper = () => {
+  const makeWrapper = (initialEntry = "/") => {
     const QueryWrapper = createWrapper();
     return ({ children }: { children: React.ReactNode }) => (
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <QueryWrapper>{children}</QueryWrapper>
       </MemoryRouter>
     );
@@ -86,4 +88,31 @@ describe('useEstadoResultados', () => {
     await waitFor(() => expect(mockFetchERDevengado).toHaveBeenCalled());
     expect(result.current.fuente).toBe('facturas');
   });
+  it('Auditoría90: recarga del detalle mantiene septiembre y la fuente explícita del KPI', async () => {
+    const { result } = renderHook(() => useEstadoResultados(), {
+      wrapper: makeWrapper('/profit/estado-resultados?mes=2026-09&fuente=facturas'),
+    });
+    await waitFor(() => expect(mockFetchERDevengado).toHaveBeenCalled());
+    expect(mockFetchERDevengado.mock.calls[0][0]).toMatchObject({ year: 2026, month: 9 });
+    expect(result.current.mesActual.key).toBe('2026-09');
+    expect(result.current.fuente).toBe('facturas');
+    expect(mockFetchER).not.toHaveBeenCalled();
+  });
+
+  it('Auditoría90: el selector controlado coincide con la fuente URL y cambiarlo cambia los datos', async () => {
+    localStorage.setItem(STORAGE_KEYS.eerrFuente, 'embarques');
+    function Detalle() {
+      const c = useEstadoResultados();
+      return <><FuenteEerrToggle fuente={c.fuente} onFuenteChange={c.setFuente} /><output>{c.mesActual.key}:{c.fuente}</output></>;
+    }
+    render(<Detalle />, { wrapper: makeWrapper('/profit/estado-resultados?mes=2026-09&fuente=facturas') });
+    expect(screen.getByLabelText('Fuente devengada (facturas emitidas y CxP)')).toHaveAttribute('data-state', 'on');
+    await waitFor(() => expect(mockFetchERDevengado).toHaveBeenCalledOnce());
+    fireEvent.click(screen.getByLabelText('Fuente operativa (por ETA de embarque)'));
+    await waitFor(() => expect(mockFetchER).toHaveBeenCalledOnce());
+    expect(screen.getByLabelText('Fuente operativa (por ETA de embarque)')).toHaveAttribute('data-state', 'on');
+    expect(screen.getByText('2026-09:embarques')).toBeInTheDocument();
+    expect(mockFetchER.mock.calls[0][0]).toMatchObject({ year: 2026, month: 9 });
+  });
+
 });

@@ -35,6 +35,7 @@ export interface FacturaRep {
 
 /** Pago a timbrar, tal como lo entrega `precargarPagoRep`. */
 export interface PagoRep {
+  updated_at?: string | null;
   id: string;
   factura_id: string;
   organization_id: string;

@@ -1,12 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
-import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
-import { useFuenteEerr } from "@/features/profit/hooks/useFuenteEerr";
+import { usePeriodoMesUrl } from "./usePeriodoMesUrl";
+import { useFuenteEerr, type FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 
 ;
 
@@ -16,40 +16,19 @@ export function useEstadoResultados() {
   const { organizationId, orgListo } = useOrgFilter();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const mesesDisponibles = useMemo(
-    () => generarMesesDisponibles().filter((m) => m.key >= MES_MINIMO),
-    [],
-  );
-
-  const mesQp = searchParams.get("mes");
-  const mesValido = mesesDisponibles.find((m) => m.key === mesQp);
-  const defaultMes = mesesDisponibles.find((m) => m.key === mesActualKey()) ?? mesesDisponibles[0];
-  const [mesKey, setMesKeyState] = useState<string>(mesValido?.key ?? defaultMes.key);
-
-  const { fuente, setFuente } = useFuenteEerr();
-
-  const setMesKey = useCallback(
-    (key: string) => {
-      setMesKeyState(key);
-      const next = new URLSearchParams(searchParams);
-      next.set("mes", key);
-      setSearchParams(next, { replace: true });
-    },
-    [searchParams, setSearchParams],
-  );
-
-  const mesActual = useMemo(
-    () => mesesDisponibles.find((m) => m.key === mesKey) ?? defaultMes,
-    [mesesDisponibles, mesKey, defaultMes],
-  );
-
-  const indiceMes = mesesDisponibles.findIndex((m) => m.key === mesActual.key);
-  const irMesAnterior = useCallback(() => {
-    if (indiceMes > 0) setMesKey(mesesDisponibles[indiceMes - 1].key);
-  }, [indiceMes, mesesDisponibles, setMesKey]);
-  const irMesSiguiente = useCallback(() => {
-    if (indiceMes < mesesDisponibles.length - 1) setMesKey(mesesDisponibles[indiceMes + 1].key);
-  }, [indiceMes, mesesDisponibles, setMesKey]);
+  const periodo = usePeriodoMesUrl("mes", MES_MINIMO);
+  const { mesActual, mesesDisponibles, setMesKey, irMesAnterior, irMesSiguiente } = periodo;
+  const preferencia = useFuenteEerr();
+  const fuenteUrl = searchParams.get("fuente");
+  const fuente: FuenteEERR = fuenteUrl === "embarques" || fuenteUrl === "facturas" ? fuenteUrl : preferencia.fuente;
+  const setFuente = useCallback((next: FuenteEERR) => {
+    preferencia.setFuente(next);
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.set("fuente", next);
+      return params;
+    }, { replace: true });
+  }, [preferencia, setSearchParams]);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.profit.estadoResultados(organizationId, mesActual.key, fuente),
@@ -72,8 +51,8 @@ export function useEstadoResultados() {
     setMesKey,
     irMesAnterior,
     irMesSiguiente,
-    puedeIrAtras: indiceMes > 0,
-    puedeIrAdelante: indiceMes < mesesDisponibles.length - 1,
+    puedeIrAtras: periodo.puedeIrAtras,
+    puedeIrAdelante: periodo.puedeIrAdelante,
     data,
     isLoading,
     isError,

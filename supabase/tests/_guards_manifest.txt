@@ -182,3 +182,9 @@ supabase/tests/validar_cierre_cxp_conversion_moneda.sql
 supabase/tests/validar_cierre_umbral_por_moneda.sql
 supabase/tests/audit70_71_proveedor_nc_devoluciones.sql
 supabase/tests/audit72_partidas_cantidad_neta.sql
+
+# Auditoría financiera85–100: regresiones bloqueantes de cobros y Tesorería.
+supabase/tests/audit86_estado_cuenta_cobertura.sql
+supabase/tests/audit88_91_93_cobros_valuacion.sql
+supabase/tests/audit94_98_99_tesoreria.sql
+supabase/tests/audit100_libro_devoluciones.sql

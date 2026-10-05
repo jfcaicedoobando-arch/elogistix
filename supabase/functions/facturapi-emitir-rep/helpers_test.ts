@@ -87,7 +87,8 @@ Deno.test("buildRepPayload invierte el T/C del doc relacionado: pago MXN, factur
   const exchange = p.complements[0].data[0].related_documents[0].exchange!;
   // Facturapi exige ≤ 1 cuando el pago es MXN y el documento USD.
   assert(exchange <= 1, `exchange debe ser ≤ 1, fue ${exchange}`);
-  assertEquals(exchange, 0.0586166471);
+  assertEquals(exchange, 0.0586166649);
+  assertEquals(Math.round(1356.45 / exchange * 100) / 100, 23141.03);
   // Coherencia: monto del pago × factor ≈ importe pagado en la moneda del CFDI.
   assert(Math.abs(23141.03 * exchange - 1356.45) < 0.5);
 });
@@ -97,27 +98,30 @@ Deno.test("buildRepPayload conserva el T/C cuando el pago es USD y la factura MX
     ...validCtx,
     moneda: "USD",
     tipo_cambio: 17.06,
-    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "MXN", tipo_cambio_dr: 1 },
+    monto: 100,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "MXN", tipo_cambio_dr: 1, imp_pagado: 1706, imp_saldo_ant: 1706 },
   });
   assertEquals(p.complements[0].data[0].related_documents[0].exchange, 17.06);
 });
 
-Deno.test("buildRepPayload omite exchange del doc relacionado si falta el T/C", () => {
+Deno.test("buildRepPayload deriva exchange del cobro aunque falte TC de emisión", () => {
   const p = buildRepPayload({
     ...validCtx,
     moneda: "MXN",
     tipo_cambio: 1,
-    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0 },
+    monto: 20,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0, imp_pagado: 1 },
   });
-  assertEquals(p.complements[0].data[0].related_documents[0].exchange, undefined);
+  assertEquals(p.complements[0].data[0].related_documents[0].exchange, 0.05);
 });
 
-Deno.test("validateRepContext exige T/C del documento cuando las monedas difieren", () => {
+Deno.test("validateRepContext no usa valuación histórica para la equivalencia del cobro", () => {
   const issues = validateRepContext({
     ...validCtx,
-    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0 },
+    monto: 20,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0, imp_pagado: 1 },
   });
-  assert(issues.some((i) => i.field === "documento.tipo_cambio_dr"));
+  assertEquals(issues, []);
 });
 
 
@@ -179,6 +183,7 @@ Deno.test("buildRepPayload emite RetencionesDR con la misma BaseDR del traslado"
   // Factura 1,000 + IVA 160 − retención IVA 40 = total 1,120, liquidada.
   const p = buildRepPayload({
     ...validCtx,
+    monto: 1120,
     documento_relacionado: {
       ...validCtx.documento_relacionado,
       imp_saldo_ant: 1120,

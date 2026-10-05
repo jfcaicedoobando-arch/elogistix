@@ -65,7 +65,9 @@ function DetallePagoConvencional({ ref_pago, onOpenChange }: Props) {
                 metodoPago={data.pago.metodo_pago}
               />
 
-              <BloqueAplicaciones aplicaciones={data.aplicaciones} />
+              {data.tipo === "devolucion_anticipo" ? (
+                <p className="text-body-sm text-muted-foreground">Devolución recibida del proveedor. La salida original del anticipo se conserva en su fecha.</p>
+              ) : <BloqueAplicaciones aplicaciones={data.aplicaciones} />}
             </>
           ) : null}
         </div>

@@ -36,3 +36,15 @@ describe("ReporteTesoreriaDocument", () => {
     expect(text).not.toContain("Sin cuentas bancarias");
   });
 });
+
+it("Auditoría89: PDF conserva cobros, pagos y neto de MXN, USD y EUR sin mezclarlos", () => {
+  const resumen = { ...mockResumen, flujo: {
+    por_cobrar_mxn: 116.04, por_pagar_mxn: 7729.5,
+    por_cobrar_usd: 0, por_pagar_usd: 811,
+    por_cobrar_eur: 0, por_pagar_eur: 100,
+  } };
+  const { container } = render(<ReporteTesoreriaDocument fechaCorte="2026-10-04" resumen={resumen} />);
+  for (const t of ["Moneda", "Por cobrar", "Por pagar", "Neto", "MXN", "USD", "EUR", "116.04", "7,729.50", "7,613.46", "811.00", "100.00"]) {
+    expect(container).toHaveTextContent(t);
+  }
+});

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { PagoFormValues } from "./PagoFormFields";
 import {
-  TC_MAX, TC_MIN, tcCuadreExacto, tcManualValido, tcParaPago, type RatesTc,
+  TC_MAX, TC_MIN, requiereTcPago, crucePagoNoSoportado, tcCuadreExacto, tcManualValido, tcParaPago, type RatesTc,
 } from "./registrarPagoDerivados";
 
 export interface CampoTcProps {
@@ -20,8 +20,8 @@ export interface CampoTcProps {
 }
 
 export function CampoTipoCambio({ values, onChange, monedaFactura, saldo, rates }: CampoTcProps) {
-  // Sólo pago en MXN sobre factura extranjera (o al revés); USD↔EUR lo bloquea la BD.
-  const aplica = values.moneda !== monedaFactura && (values.moneda === "MXN" || monedaFactura === "MXN");
+  // Incluye la valuación MXN de pagos en la misma divisa; no soporta USD↔EUR.
+  const aplica = requiereTcPago(values.moneda, monedaFactura) && !crucePagoNoSoportado(values.moneda, monedaFactura);
   if (!aplica) return null;
   const sugerido = tcParaPago(values.moneda, monedaFactura, rates);
   const manual = values.tipoCambioManual ?? "";
@@ -43,7 +43,9 @@ export function CampoTipoCambio({ values, onChange, monedaFactura, saldo, rates 
         className="h-10 text-right tabular-nums"
       />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p className="text-label text-muted-foreground">{textoAyuda(manual, sugerido)}</p>
+        <p className="text-label text-muted-foreground">{values.moneda === monedaFactura
+          ? "Valuación en MXN del cobro; el abono a la factura conserva su importe en divisa."
+          : textoAyuda(manual, sugerido)}</p>
         {manual && (
           <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => onChange("tipoCambioManual", "")}>
             Usar DOF

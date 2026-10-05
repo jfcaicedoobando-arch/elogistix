@@ -154,3 +154,18 @@ describe("validarCobroLote", () => {
     expect(res.error).toMatch(/exactamente el importe recibido/i);
   });
 });
+
+
+describe("AUD88/91: preflight de cobros en lote", () => {
+  const opts = { cuentaId: null, monedaCuenta: null, moneda: "USD", fecha: todayLocalISO(), tcAplicable: 18.1903, formaPago: "03" };
+  const renglones = [{ factura_id: "f-nueva", monto: 1 }, { factura_id: "f-vieja", monto: 1 }];
+  it("conserva nominalUSD2 con TC de valuación", () => {
+    expect(validarCobroLote(facturas, renglones, 2, opts)).toEqual({ totalRepartido: 2, error: null });
+  });
+  it("bloquea99 antes de registrar el lote", () => {
+    expect(validarCobroLote(facturas, renglones, 2, { ...opts, formaPago: "99" }).error).toMatch(/99/);
+  });
+  it.each([null, 1, NaN, Infinity, 4, 41])("bloquea valuación inválida %s", (tcAplicable) => {
+    expect(validarCobroLote(facturas, renglones, 2, { ...opts, tcAplicable }).error).toMatch(/tipo de cambio/);
+  });
+});

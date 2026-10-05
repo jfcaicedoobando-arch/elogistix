@@ -24,7 +24,7 @@ function str(v: unknown): string | null {
 }
 
 function tipo(v: unknown): TipoPago {
-  return v === "cobro" || v === "pago" || v === "anticipo" ? v : "pago";
+  return v === "cobro" || v === "pago" || v === "anticipo" || v === "devolucion_anticipo" ? v : "pago";
 }
 
 function mapPago(row: Record<string, unknown>): PagoLibro {

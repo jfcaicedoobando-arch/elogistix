@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_COBRO_SAT } from "../domain/formaPagoCobro";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { AvisoFechaPreviaCorte } from "@/components/shared/AvisoFechaPreviaCorte";
 import { CampoTipoCambio, type CampoTcProps } from "./CampoTipoCambio";
@@ -65,7 +65,7 @@ export function PagoFormFields({ values, onChange, cuentas = [], tc }: Props) {
         <Select value={values.formaPago} onValueChange={(v) => onChange("formaPago", v)}>
           <SelectTrigger id="pago-forma"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+            {FORMAS_COBRO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>

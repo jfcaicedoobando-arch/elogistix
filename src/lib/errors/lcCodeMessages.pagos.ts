@@ -1,9 +1,4 @@
-/**
- * Mensajes `LC_*` de pagos, REP, conciliación bancaria y anticipos.
- *
- * Separado de `lcCodeMessages.financiero.ts` para respetar el límite de 200
- * líneas (Power of 10). Se consume desde `lcCodeMessages.ts` (índice).
- */
+/** Mensajes de pagos, REP, conciliación y anticipos; reexportados por lcCodeMessages.ts. */
 export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   // ── Pagos (cliente y proveedor) ────────────────────────────────────────
   LC_PAGO_NO_ENCONTRADO: "El pago no existe o fue eliminado.",
@@ -32,6 +27,10 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "Captura el tipo de cambio del día para registrar este pago en divisa distinta a la factura.",
   LC_PAGO_TC_FACTURA_REQUERIDO:
     "La factura en divisa necesita su tipo de cambio para poder recibir un pago en otra moneda.",
+  LC_PAGO_FORMA_REP_INVALIDA:
+    "Selecciona la forma efectiva del cobro. Por definir (99) no permite emitir su complemento de pago.",
+  LC_PAGO_REP_EN_PROCESO:
+    "El complemento de este cobro está en proceso. Espera a que termine antes de modificar sus datos o eliminarlo.",
   LC_PAGO_TC_NO_VERIFICABLE:
     "El tipo de cambio capturado no es verificable (se esperan pesos por 1 dólar o euro). Corrígelo antes de registrar el pago para no abonar de más.",
   LC_PAGO_TC_FACTURA_NO_VERIFICABLE:

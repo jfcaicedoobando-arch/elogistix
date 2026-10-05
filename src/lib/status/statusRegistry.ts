@@ -72,7 +72,7 @@ const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
     rechazada: "Rechazada",
     facturada: "Facturada",
   },
-  pago_tipo: { cobro: "Cobro", pago: "Pago", anticipo: "Anticipo" },
+  pago_tipo: { cobro: "Cobro", pago: "Pago", anticipo: "Anticipo", devolucion_anticipo: "Devolución" },
   lead: {
     Nuevo: "Nuevo",
     Contactado: "Contactado",

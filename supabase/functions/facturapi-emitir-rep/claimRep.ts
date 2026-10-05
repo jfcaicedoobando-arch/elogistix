@@ -20,6 +20,7 @@ type Db = {
 };
 
 export interface PagoClaimRow {
+  updated_at?: string | null;
   id: string;
   estado_rep?: string | null;
   facturapi_rep_id?: string | null;
@@ -62,6 +63,9 @@ export async function tomarClaimRep(
   }
 
   let query = supabase.from("pagos_factura").update(update).eq("id", pago.id);
+  // CAS: no timbrar un contexto leído antes de una edición concurrente.
+  query = query.is("deleted_at", null);
+  if (pago.updated_at) query = query.eq("updated_at", pago.updated_at);
   query = repAnteriorId
     ? query.eq("facturapi_rep_id", repAnteriorId)
     : query.is("facturapi_rep_id", null);
@@ -109,7 +113,7 @@ export async function reservarRep(
   if (!claim.ok) {
     return {
       response: json(
-        { error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." },
+        { error: "ya_timbrado_rep", message: "El cobro cambió o hay otro timbrado en curso. Recarga el pago antes de reintentar." },
         409,
       ),
     };

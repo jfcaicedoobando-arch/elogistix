@@ -19688,13 +19688,16 @@ BEGIN
       'alias', v_cuenta.alias,
       'banco', v_cuenta.banco,
       'moneda', v_cuenta.moneda,
-      'desde', v_desde,
+      'desde', p_desde,
+      'desde_solicitado', p_desde,
+      'cobertura_historica', 'sin_cobertura',
       'hasta', p_hasta,
       'fecha_saldo_inicial', v_cuenta.corte,
-      'saldo_inicial', v_cuenta.saldo_apertura,
-      'total_entradas', 0,
-      'total_salidas', 0,
-      'saldo_final', v_cuenta.saldo_apertura,
+      -- No se conoce el saldo anterior al arranque: NULL no significa cero.
+      'saldo_inicial', NULL::numeric,
+      'total_entradas', NULL::numeric,
+      'total_salidas', NULL::numeric,
+      'saldo_final', NULL::numeric,
       'movimientos_previos_corte', 0,
       'movimientos', '[]'::jsonb
     );
@@ -19741,6 +19744,8 @@ BEGIN
     'banco',          v_cuenta.banco,
     'moneda',         v_cuenta.moneda,
     'desde',          v_desde,
+    'desde_solicitado', p_desde,
+    'cobertura_historica', CASE WHEN p_desde < v_cuenta.corte THEN 'parcial' ELSE 'completa' END,
     'hasta',          p_hasta,
     'fecha_saldo_inicial', v_cuenta.corte,
     'saldo_inicial',  v_saldo_ini,
@@ -22154,7 +22159,7 @@ BEGIN
       c.nombre                                  AS contraparte,
       f.cliente_id                              AS contraparte_id,
       f.id                                      AS documento_id,
-      NULLIF(TRIM(COALESCE(f.serie, '') || COALESCE(f.numero::text, '')), '') AS documento_folio,
+      CASE WHEN NULLIF(TRIM(f.serie), '') IS NULL OR LEFT(TRIM(COALESCE(f.numero::text, '')), LENGTH(TRIM(f.serie))) = TRIM(f.serie) THEN NULLIF(TRIM(f.numero::text), '') ELSE NULLIF(TRIM(f.serie) || TRIM(COALESCE(f.numero::text, '')), '') END AS documento_folio,
       pf.moneda::text                           AS moneda,
       COALESCE(pf.monto, 0)                     AS monto,
       NULLIF(pf.tipo_cambio, 0)                 AS tipo_cambio,
@@ -22247,14 +22252,52 @@ BEGIN
     FROM public.anticipos_proveedor ap
     LEFT JOIN public.proveedores pr ON pr.id = ap.proveedor_id
     WHERE ap.deleted_at IS NULL
-      AND COALESCE(ap.estado, 'Vigente') <> 'Cancelado'
+      AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
       AND ap.fecha_anticipo BETWEEN p_desde AND p_hasta
       AND (v_super OR ap.organization_id = v_org)
+  ),
+  devoluciones AS (
+    -- AUD100: cada devolución es una entrada independiente. La salida original
+    -- se conserva bruta; la fecha/cuenta/referencia proceden del asiento real.
+    SELECT ap.id, 'devolucion_anticipo'::text AS tipo,
+      COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
+      pr.nombre AS contraparte, ap.proveedor_id AS contraparte_id,
+      NULL::uuid AS documento_id, NULL::text AS documento_folio,
+      ap.moneda::text AS moneda, ap.monto_devuelto AS monto,
+      NULLIF(ap.tipo_cambio_usd, 0) AS tipo_cambio,
+      CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
+           WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd
+           ELSE NULL END AS monto_mxn,
+      CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
+      COALESCE(d.referencia, ap.referencia) AS referencia,
+      d.cuenta_bancaria_id,
+      concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
+        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END) AS notas,
+      ap.embarque_id, 0::numeric AS diferencia_cambiaria_mxn,
+      NULL::text AS estado_rep, NULL::text AS folio_rep,
+      false AS es_ajuste, false AS es_anticipo_aplicado, NULL::uuid AS lote_id,
+      ap.devuelto_by AS created_by, ap.devuelto_at AS created_at
+    FROM public.anticipos_proveedor ap
+    LEFT JOIN public.proveedores pr ON pr.id = ap.proveedor_id
+    LEFT JOIN LATERAL (
+      SELECT m.id, m.fecha, m.referencia, m.cuenta_bancaria_id
+      FROM public.bbva_movimientos m
+      WHERE m.anticipo_proveedor_id = ap.id
+        AND m.organization_id = ap.organization_id AND m.deleted_at IS NULL
+        AND m.hash_dedupe = 'devolucion-' || ap.id::text AND m.abono > 0
+      ORDER BY m.fecha, m.id LIMIT 1
+    ) d ON true
+    WHERE ap.deleted_at IS NULL AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
+      AND ap.monto_devuelto > 0 AND (v_super OR ap.organization_id = v_org)
+      AND COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
+          BETWEEN p_desde AND p_hasta
   ),
   unidos AS (
     SELECT * FROM cobros
     UNION ALL SELECT * FROM pagos
     UNION ALL SELECT * FROM anticipos
+    UNION ALL SELECT * FROM devoluciones
   ),
   enriquecidos AS (
     SELECT
@@ -22262,20 +22305,25 @@ BEGIN
       cb.alias                                  AS cuenta_alias,
       cb.banco                                  AS cuenta_banco,
       mov.id                                    AS movimiento_id,
-      (mov.id IS NOT NULL)                      AS conciliado
+      (mov.id IS NOT NULL)                      AS conciliado,
+      CASE WHEN mov.id IS NOT NULL THEN 'Conciliado'
+           WHEN u.cuenta_bancaria_id IS NULL AND lower(trim(COALESCE(u.metodo_pago, ''))) IN ('efectivo', '01')
+             THEN 'No aplica' ELSE 'Pendiente' END AS estado_conciliacion
     FROM unidos u
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = u.cuenta_bancaria_id AND cb.deleted_at IS NULL
     LEFT JOIN LATERAL (
       SELECT m.id
       FROM public.bbva_movimientos m
-      WHERE m.deleted_at IS NULL
+      WHERE m.deleted_at IS NULL AND m.organization_id = v_org
         AND m.estado_conciliacion = 'Conciliado'::estado_conciliacion
         AND (
           (u.tipo = 'cobro'    AND (m.pago_factura_id = u.id
                                     OR (u.lote_id IS NOT NULL AND m.pago_factura_lote_id = u.lote_id)))
           OR (u.tipo = 'pago'  AND (m.pago_proveedor_id = u.id
                                     OR (u.lote_id IS NOT NULL AND m.pago_proveedor_lote_id = u.lote_id)))
-          OR (u.tipo = 'anticipo' AND m.anticipo_proveedor_id = u.id)
+          OR (u.tipo = 'anticipo' AND m.anticipo_proveedor_id = u.id AND m.cargo > 0)
+          OR (u.tipo = 'devolucion_anticipo' AND m.anticipo_proveedor_id = u.id
+              AND m.hash_dedupe = 'devolucion-' || u.id::text AND m.abono > 0)
         )
       LIMIT 1
     ) mov ON true
@@ -23557,7 +23605,7 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_PARAMS: falta el identificador del pago';
   END IF;
   v_tipo := lower(coalesce(p_tipo, ''));
-  IF v_tipo NOT IN ('cobro','pago','anticipo','lote','lote_cobro') THEN
+  IF v_tipo NOT IN ('cobro','pago','anticipo','devolucion_anticipo','lote','lote_cobro') THEN
     RAISE EXCEPTION 'LC_PAGO_DETALLE_TIPO: tipo de pago no soportado (%)', p_tipo;
   END IF;
   v_org := current_user_org_id();
@@ -23642,6 +23690,9 @@ BEGIN
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
     WHERE l.id = p_id AND l.deleted_at IS NULL;
   ELSIF v_tipo = 'lote_cobro' THEN
+    -- MNY-01: un depósito que cubre varias facturas de cliente se registra en
+    -- `pagos_factura_lote` y el movimiento bancario guarda `pago_factura_lote_id`.
+    -- Sin esta rama, el detalle del movimiento conciliado quedaba inaccesible.
     SELECT l.organization_id,
            jsonb_build_object(
              'id', l.id, 'tipo', 'lote_cobro', 'fecha', l.fecha_pago,
@@ -23665,6 +23716,36 @@ BEGIN
     LEFT JOIN public.clientes c ON c.id = l.cliente_id
     LEFT JOIN public.cuentas_bancarias cb ON cb.id = l.cuenta_bancaria_id
     WHERE l.id = p_id AND l.deleted_at IS NULL;
+  ELSIF v_tipo = 'devolucion_anticipo' THEN
+    SELECT ap.organization_id, jsonb_build_object(
+      'id', ap.id, 'tipo', v_tipo,
+      'fecha', COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
+      'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
+      'moneda', ap.moneda::text, 'monto', ap.monto_devuelto,
+      'tipo_cambio', NULLIF(ap.tipo_cambio_usd, 0),
+      'monto_mxn', CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
+        WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd ELSE NULL END,
+      'metodo_pago', CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
+      'referencia', COALESCE(d.referencia, ap.referencia),
+      'cuenta_bancaria_id', d.cuenta_bancaria_id, 'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
+      'notas', concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
+        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END),
+      'embarque_id', ap.embarque_id, 'diferencia_cambiaria_mxn', 0,
+      'es_ajuste', false, 'created_by', ap.devuelto_by, 'created_at', ap.devuelto_at)
+    INTO v_org_pago, v_pago
+    FROM public.anticipos_proveedor ap
+    LEFT JOIN public.proveedores pr ON pr.id = ap.proveedor_id
+    LEFT JOIN LATERAL (
+      SELECT m.id, m.fecha, m.referencia, m.cuenta_bancaria_id
+      FROM public.bbva_movimientos m
+      WHERE m.anticipo_proveedor_id = ap.id AND m.organization_id = ap.organization_id
+        AND m.deleted_at IS NULL AND m.hash_dedupe = 'devolucion-' || ap.id::text AND m.abono > 0
+      ORDER BY m.fecha, m.id LIMIT 1
+    ) d ON true
+    LEFT JOIN public.cuentas_bancarias cb ON cb.id = d.cuenta_bancaria_id
+    WHERE ap.id = p_id AND ap.deleted_at IS NULL AND ap.monto_devuelto > 0
+      AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado';
   ELSE
     SELECT ap.organization_id,
            jsonb_build_object(
@@ -23717,7 +23798,9 @@ BEGIN
                                 OR (v_lote IS NOT NULL AND m.pago_proveedor_lote_id = v_lote)))
       OR (v_tipo = 'lote'  AND m.pago_proveedor_lote_id = p_id)
       OR (v_tipo = 'lote_cobro' AND m.pago_factura_lote_id = p_id)
-      OR (v_tipo = 'anticipo' AND m.anticipo_proveedor_id = p_id)
+      OR (v_tipo = 'anticipo' AND m.anticipo_proveedor_id = p_id AND m.cargo > 0)
+      OR (v_tipo = 'devolucion_anticipo' AND m.anticipo_proveedor_id = p_id
+          AND m.hash_dedupe = 'devolucion-' || p_id::text AND m.abono > 0)
     )
   ORDER BY m.fecha DESC
   LIMIT 1;
@@ -23726,7 +23809,7 @@ BEGIN
     FROM (
       SELECT jsonb_build_object(
                'documento_id', f.id, 'documento_tipo', 'cliente',
-               'folio', NULLIF(TRIM(COALESCE(f.serie,'')||COALESCE(f.numero::text,'')),''),
+               'folio', CASE WHEN NULLIF(TRIM(f.serie), '') IS NULL OR LEFT(TRIM(COALESCE(f.numero::text, '')), LENGTH(TRIM(f.serie))) = TRIM(f.serie) THEN NULLIF(TRIM(f.numero::text), '') ELSE NULLIF(TRIM(f.serie) || TRIM(COALESCE(f.numero::text, '')), '') END,
                'embarque_id', pf.embarque_id,
                'moneda', f.moneda::text,
                'monto_aplicado', COALESCE(pf.monto_aplicado_factura, pf.monto, 0),
@@ -23734,7 +23817,9 @@ BEGIN
                'total', COALESCE(f.total,0),
                'pagado', COALESCE((SELECT SUM(COALESCE(p2.monto_aplicado_factura, p2.monto, 0))
                                    FROM public.pagos_factura p2
-                                   WHERE p2.factura_id = f.id AND p2.deleted_at IS NULL), 0)
+                                   WHERE p2.factura_id = f.id AND p2.deleted_at IS NULL
+                                     AND p2.estado_rep IS DISTINCT FROM 'Cancelado'), 0),
+               'notas_credito_aplicadas', public._nc_aplicadas_moneda_factura(f.id)
              ) AS x
       FROM public.pagos_factura pf
       JOIN public.facturas f ON f.id = pf.factura_id
@@ -23755,16 +23840,22 @@ BEGIN
                'monto_aplicado', COALESCE(pp.monto_en_moneda_factura, pp.monto, 0),
                'pago_id', pp.id,
                'total', COALESCE(pfa.total,0),
-               'pagado', COALESCE((SELECT SUM(COALESCE(p2.monto_en_moneda_factura, p2.monto, 0))
+               'pagado', COALESCE((SELECT SUM(p2.monto_en_moneda_factura)
                                    FROM public.pagos_proveedor p2
-                                   WHERE p2.proveedor_factura_id = pfa.id AND p2.deleted_at IS NULL), 0)
+                                   WHERE p2.proveedor_factura_id = pfa.id AND p2.deleted_at IS NULL), 0),
+               -- AUD98: saldo actual, con NC Aplicada en la moneda de factura.
+               'notas_credito_aplicadas', COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(
+                   nc.monto, nc.moneda::text, nc.tipo_cambio, pfa.moneda::text))
+                 FROM public.proveedor_notas_credito nc
+                 WHERE nc.proveedor_factura_id = pfa.id AND nc.organization_id = pfa.organization_id
+                   AND nc.deleted_at IS NULL AND nc.estado = 'Aplicada'), 0)
              ) AS x
       FROM public.pagos_proveedor pp
       JOIN public.proveedor_facturas pfa ON pfa.id = pp.proveedor_factura_id
       WHERE pp.deleted_at IS NULL
         AND ((v_lote IS NOT NULL AND pp.lote_id = v_lote) OR (v_lote IS NULL AND pp.id = p_id))
     ) s;
-  ELSE
+  ELSIF v_tipo = 'anticipo' THEN
     SELECT COALESCE(jsonb_agg(x ORDER BY folio), '[]'::jsonb) INTO v_aplic
     FROM (
       SELECT COALESCE(pfa.folio_interno, pfa.folio_proveedor) AS folio,
@@ -23777,9 +23868,15 @@ BEGIN
                'monto_aplicado', COALESCE(aa.monto_aplicado,0),
                'fecha_aplicacion', aa.fecha_aplicacion,
                'total', COALESCE(pfa.total,0),
-               'pagado', COALESCE((SELECT SUM(COALESCE(p2.monto_en_moneda_factura, p2.monto, 0))
+               'pagado', COALESCE((SELECT SUM(p2.monto_en_moneda_factura)
                                    FROM public.pagos_proveedor p2
-                                   WHERE p2.proveedor_factura_id = pfa.id AND p2.deleted_at IS NULL), 0)
+                                   WHERE p2.proveedor_factura_id = pfa.id AND p2.deleted_at IS NULL), 0),
+               -- AUD98: saldo actual, con NC Aplicada en la moneda de factura.
+               'notas_credito_aplicadas', COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(
+                   nc.monto, nc.moneda::text, nc.tipo_cambio, pfa.moneda::text))
+                 FROM public.proveedor_notas_credito nc
+                 WHERE nc.proveedor_factura_id = pfa.id AND nc.organization_id = pfa.organization_id
+                   AND nc.deleted_at IS NULL AND nc.estado = 'Aplicada'), 0)
              ) AS x
       FROM public.anticipos_aplicaciones aa
       JOIN public.proveedor_facturas pfa ON pfa.id = aa.proveedor_factura_id
@@ -31371,26 +31468,88 @@ CREATE FUNCTION public.tg_pagos_factura_monto_convertido() RETURNS trigger
     AS $$
 DECLARE
   v_fact_moneda public.moneda;
-  v_fact_tc     numeric;
+  v_fact_tc numeric;
+  v_metodo text;
+  v_forma text;
+  v_dinero_cambia boolean := true;
+  v_fiscal_cambia boolean;
 BEGIN
-  IF NEW.deleted_at IS NOT NULL THEN
-    RETURN NEW;
+  -- DELETE y baja lógica también pueden invalidar un REP enviado sin UUID aún.
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.facturapi_rep_id LIKE 'PENDING:%' THEN
+      RAISE EXCEPTION 'LC_PAGO_REP_EN_PROCESO: no se puede eliminar un cobro mientras se timbra el REP'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    RETURN OLD;
   END IF;
-  SELECT moneda, tipo_cambio INTO v_fact_moneda, v_fact_tc
-  FROM public.facturas
-  WHERE id = NEW.factura_id;
+  IF TG_OP = 'UPDATE' THEN
+    v_dinero_cambia := NEW.factura_id IS DISTINCT FROM OLD.factura_id
+      OR NEW.monto IS DISTINCT FROM OLD.monto
+      OR NEW.moneda IS DISTINCT FROM OLD.moneda
+      OR NEW.tipo_cambio IS DISTINCT FROM OLD.tipo_cambio
+      OR NEW.monto_aplicado_factura IS DISTINCT FROM OLD.monto_aplicado_factura
+      OR NEW.diferencia_cambiaria_mxn IS DISTINCT FROM OLD.diferencia_cambiaria_mxn
+      OR OLD.deleted_at IS NOT NULL;
+    v_fiscal_cambia := v_dinero_cambia
+      OR NEW.forma_pago IS DISTINCT FROM OLD.forma_pago
+      OR NEW.fecha_pago IS DISTINCT FROM OLD.fecha_pago
+      OR NEW.created_at IS DISTINCT FROM OLD.created_at
+      OR NEW.referencia IS DISTINCT FROM OLD.referencia
+      OR NEW.deleted_at IS DISTINCT FROM OLD.deleted_at;
+    IF v_fiscal_cambia AND OLD.facturapi_rep_id LIKE 'PENDING:%' THEN
+      RAISE EXCEPTION 'LC_PAGO_REP_EN_PROCESO: no se pueden editar los datos fiscales o eliminar el cobro mientras se timbra el REP'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF v_fiscal_cambia AND OLD.uuid_rep IS NOT NULL AND OLD.estado_rep = 'Timbrado' THEN
+      RAISE EXCEPTION 'LC_PAGO_CON_REP_VIVO: cancela el REP antes de editar los datos fiscales del cobro'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF NOT v_dinero_cambia AND NEW.forma_pago IS NOT DISTINCT FROM OLD.forma_pago THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+  IF NEW.deleted_at IS NOT NULL THEN RETURN NEW; END IF;
+  -- Serializa con el resto de cobros/NC antes de leer la valuación documental.
+  SELECT moneda, tipo_cambio, metodo_pago INTO v_fact_moneda, v_fact_tc, v_metodo
+  FROM public.facturas WHERE id = NEW.factura_id FOR UPDATE;
   IF v_fact_moneda IS NULL THEN
-    RAISE EXCEPTION 'LC_FACTURA_NO_ENCONTRADA: factura % no existe', NEW.factura_id
-      USING ERRCODE = 'P0002';
+    RAISE EXCEPTION 'LC_FACTURA_NO_ENCONTRADA: factura % no existe', NEW.factura_id USING ERRCODE = 'P0002';
+  END IF;
+  v_forma := lower(btrim(COALESCE(NEW.forma_pago, '')));
+  IF v_metodo = 'PPD' AND NOT (v_forma = ANY(ARRAY[
+    '01','02','03','04','05','06','08','12','13','14','15','17','23','24','25','26','27','28','29','30','31',
+    'transferencia','transfer','cheque','efectivo','tarjeta','tarjeta de crédito','tarjeta de credito','tarjeta de débito','tarjeta de debito'
+  ])) THEN
+    RAISE EXCEPTION 'LC_PAGO_FORMA_REP_INVALIDA: capture la forma efectiva del cobro PPD; 99 (Por definir) no es válida para REP'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF NOT v_dinero_cambia THEN RETURN NEW; END IF;
+  IF NEW.monto IS NULL OR NEW.monto <= 0 OR NEW.monto::text IN ('NaN','Infinity','-Infinity') THEN
+    RAISE EXCEPTION 'LC_PAGO_MONTO_INVALIDO: el importe recibido debe ser finito y mayor a cero'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  -- Mismo USD/USD conserva factor de aplicación 1, pero NO valuación MXN 1.
+  IF (NEW.moneda <> 'MXN' OR v_fact_moneda <> 'MXN')
+     AND (NEW.tipo_cambio IS NULL OR NEW.tipo_cambio NOT BETWEEN 5 AND 40
+          OR NEW.tipo_cambio::text IN ('NaN', 'Infinity', '-Infinity')) THEN
+    RAISE EXCEPTION 'LC_PAGO_TC_NO_VERIFICABLE: capture la valuación del cobro (5 a 40 MXN por divisa), incluso si la factura está en la misma moneda'
+      USING ERRCODE = 'check_violation';
   END IF;
   NEW.monto_aplicado_factura := public.convertir_monto_pago_a_factura(
-    NEW.monto,
-    NEW.moneda,
-    CASE WHEN NEW.moneda <> v_fact_moneda AND NEW.tipo_cambio = 1
-         THEN NULL ELSE NEW.tipo_cambio END,
-    v_fact_moneda,
-    v_fact_tc
-  );
+    NEW.monto, NEW.moneda, NEW.tipo_cambio, v_fact_moneda, v_fact_tc);
+  -- MXN recibido menos la baja del activo al TC de emisión, a cuatro decimales.
+  -- La entrada del cliente nunca es autoridad sobre este cálculo.
+  IF v_fact_moneda <> 'MXN' THEN
+    IF v_fact_tc IS NULL OR v_fact_tc <= 1 OR v_fact_tc::text IN ('NaN','Infinity','-Infinity') THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_FACTURA_NO_VERIFICABLE: la factura necesita su valuación de emisión para calcular la diferencia realizada'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    NEW.diferencia_cambiaria_mxn := round(
+      NEW.monto * CASE WHEN NEW.moneda = 'MXN' THEN 1 ELSE NEW.tipo_cambio END
+      - NEW.monto_aplicado_factura * v_fact_tc, 4);
+  ELSE
+    NEW.diferencia_cambiaria_mxn := 0;
+  END IF;
   RETURN NEW;
 END;
 $$;
@@ -35543,7 +35702,7 @@ CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
 CREATE TRIGGER trg_pago_sin_rep_vivo_delete BEFORE DELETE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_sin_rep_vivo_delete();
 CREATE TRIGGER trg_pagos_factura_autocierre AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_autocierre_por_liquidar();
-CREATE TRIGGER trg_pagos_factura_monto_convertido BEFORE INSERT OR UPDATE OF monto, moneda, tipo_cambio, factura_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.tg_pagos_factura_monto_convertido();
+CREATE TRIGGER trg_pagos_factura_monto_convertido BEFORE INSERT OR DELETE OR UPDATE OF monto, moneda, tipo_cambio, factura_id, monto_aplicado_factura, diferencia_cambiaria_mxn, forma_pago, fecha_pago, created_at, referencia, deleted_at ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.tg_pagos_factura_monto_convertido();
 CREATE TRIGGER trg_pagos_proveedor_autocierre AFTER INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._trg_autocierre_por_liquidar();
 CREATE TRIGGER trg_pagos_proveedor_guard BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.guard_pago_proveedor();
 CREATE TRIGGER trg_pagos_proveedor_lote_updated BEFORE UPDATE ON public.pagos_proveedor_lote FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

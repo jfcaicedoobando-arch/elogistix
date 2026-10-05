@@ -4,6 +4,7 @@
  * Se separa de `pagoClienteLote.ts` para respetar el límite de 200 líneas y la
  * complejidad máxima (Power of 10): `validarCobroLote` sólo orquesta.
  */
+import { TC_MXN_MIN, TC_MXN_MAX } from "@/lib/financial/tcBanda";
 import { round2 } from "@/features/cxp/services";
 import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
@@ -38,7 +39,7 @@ export function errorFechaLote(fecha: string): string | null {
  * bloquea en vez de guardarse con tipo_cambio NULL (paridad degradada).
  */
 export function errorTcLote(moneda: string, tcAplicable: number | null): string | null {
-  if (moneda !== "MXN" && !(tcAplicable && tcAplicable > 0)) {
+  if (moneda !== "MXN" && !(tcAplicable && Number.isFinite(tcAplicable) && tcAplicable >= TC_MXN_MIN && tcAplicable <= TC_MXN_MAX)) {
     return `No hay tipo de cambio ${moneda}/MXN disponible para la fecha elegida. Intenta de nuevo en unos segundos; si el problema persiste, contacta a soporte.`;
   }
   return null;

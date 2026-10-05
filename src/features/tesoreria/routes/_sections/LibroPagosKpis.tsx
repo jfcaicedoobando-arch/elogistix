@@ -29,7 +29,8 @@ export function LibroPagosKpis({ totales, isLoading }: Props) {
         <KpiCard label="Pagos registrados" value={String(totales.conteo)} loading={isLoading} />
       </div>
       <p className="text-body-sm text-muted-foreground">
-        Los equivalentes en pesos usan el tipo de cambio guardado en cada pago, no el del día de hoy.
+        Devoluciones de anticipos: {formatCurrency(totales.devueltoMxn, "MXN")}, incluidas en el neto.
+        Los equivalentes en pesos usan el tipo de cambio guardado; las devoluciones usan el TC del anticipo original.
         Los cobros con complemento de pago cancelado se conservan como histórico, pero no suman en
         estos totales.
         {/* MNY-P2.3: los pagos sin T/C registrado no se valúan con una tasa inventada. */}

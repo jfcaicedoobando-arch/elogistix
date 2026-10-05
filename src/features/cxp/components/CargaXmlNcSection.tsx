@@ -14,7 +14,9 @@ import { useCargaCfdi } from "@/features/cxp/hooks/useCargaCfdi";
 
 interface Props {
   parsed: CfdiParsedResponse | null;
-  onParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void;
+  facturaId: string;
+  onClear: () => void;
+  onParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void | boolean;
 }
 
 const TIPO_LABEL: Record<string, string> = {
@@ -70,7 +72,7 @@ function XmlDrop({ xml, onFile, inputRef }: XmlDropProps) {
         type="file"
         accept=".xml,text/xml,application/xml"
         className="hidden"
-        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) onFile(file); }}
       />
       {xml ? (
         <div className="flex items-center justify-center gap-2 text-body">
@@ -113,7 +115,7 @@ function PdfPicker({ pdf, onFile, inputRef }: PdfPickerProps) {
         type="file"
         accept="application/pdf"
         className="hidden"
-        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) onFile(file); }}
       />
       <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
         <FileText className="h-4 w-4 mr-1.5" />
@@ -135,9 +137,11 @@ function PdfPicker({ pdf, onFile, inputRef }: PdfPickerProps) {
   );
 }
 
-export function CargaXmlNcSection({ parsed, onParsed }: Props) {
+export function CargaXmlNcSection({ parsed, onParsed, facturaId, onClear }: Props) {
   const { xml, pdf, loading, setPdf, reset, handleXml, procesar } = useCargaCfdi({
     categorias: [],
+    facturaNcId: facturaId,
+    onClear,
     onParsed: async (data, files) => onParsed(data, files),
   });
   const xmlInputRef = useRef<HTMLInputElement>(null);

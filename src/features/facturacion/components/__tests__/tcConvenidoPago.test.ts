@@ -3,7 +3,7 @@ import { derivarEstadoPago, tcCuadreExacto, tcManualValido } from "../registrarP
 
 const base = {
   monto: "17008.32", monedaPago: "MXN", fecha: "2026-09-09", hoy: "2026-10-02",
-  monedaFactura: "USD", saldo: 1005, rates: { usdMxn: 16.9202, eurMxn: 19 }, metodoPagoFactura: "PPD",
+  monedaFactura: "USD", saldo: 1005, rates: { usdMxn: 16.9202, eurMxn: 19 }, metodoPagoFactura: "PPD", formaPago: "03",
 };
 
 describe("TC convenido en el cobro", () => {

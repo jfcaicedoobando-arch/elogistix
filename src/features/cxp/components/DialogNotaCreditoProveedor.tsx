@@ -15,7 +15,7 @@ import { useNcProveedorTipoCambio } from "@/features/cxp/hooks/useNcProveedorTip
 import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
-import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
+import { buildNcPrefillFromCfdi, origenNcValido, xmlNcVerificado } from "./ncFromCfdi";
 import { esCruceNoConvertible, montoNcEnMonedaFactura } from "./ncMonedaProveedor";
 import { NcProveedorAvisos } from "./NcProveedorAvisos";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -24,7 +24,6 @@ import type {
   MonedaNotaCreditoProveedor as MonedaNC,
 } from "@/features/cxp/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
-
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -32,7 +31,6 @@ interface Props {
   monedaFactura: MonedaNC;
   saldoFactura: number;
 }
-
 export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, monedaFactura, saldoFactura }: Props) {
   const [mode, setMode] = useState<"manual" | "cfdi">("manual");
   const [folio, setFolio] = useState("");
@@ -47,18 +45,15 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const [uuidFiscal, setUuidFiscal] = useState<string | null>(null);
   const crear = useCrearNotaCredito(facturaId);
   const { organizationId } = useOrgFilter();
-
   const montoNum = Number(monto);
   const conversion = useNcProveedorTipoCambio({ open, fecha, moneda, monedaFactura, tipoCambio });
   const cruceInvalido = esCruceNoConvertible(moneda, monedaFactura);
   const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, conversion.tipoCambio);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
-  const valido = Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
-
+  const valido = origenNcValido(mode, parsedCfdi, facturaId, cfdiFiles.xml) && Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
   // YG-04: hay datos capturados que se perderían al cerrar el modal.
   const isDirty =
     folio.trim() !== "" || monto.trim() !== "" || descripcion.trim() !== "" || parsedCfdi !== null;
-
   const reset = () => {
     setMode("manual");
     setFolio("");
@@ -72,24 +67,32 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
     setCfdiFiles({ xml: null, pdf: null });
     setUuidFiscal(null);
   };
-
   const handleOpenChange = (o: boolean) => {
     onOpenChange(o);
     if (!o) reset();
   };
-
+  const clearCfdi = () => {
+    setParsedCfdi(null);
+    setCfdiFiles({ xml: null, pdf: null });
+    setUuidFiscal(null);
+  };
   const handleCfdiParsed = (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
+    if (!xmlNcVerificado(data, facturaId)) {
+      clearCfdi();
+      notifyError(undefined, { title: "No se pudo verificar el XML contra esta factura. Vuelve a procesarlo.", method: "NC_PROVEEDOR_IDENTIDAD" });
+      return false;
+    }
     const prefill = buildNcPrefillFromCfdi(data);
     setFolio(prefill.folio);
     setFecha(prefill.fecha);
     setMonto(prefill.monto);
     if (prefill.moneda) setMoneda(prefill.moneda);
+    setTipoCambio(prefill.tipoCambio);
     setDescripcion(prefill.descripcion);
     setUuidFiscal(prefill.uuidFiscal);
     setParsedCfdi(data);
     setCfdiFiles({ xml: files.xml, pdf: files.pdf });
   };
-
   const onSubmit = async () => {
     if (!valido || crear.isPending) return;
     const payload = {
@@ -104,7 +107,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       estado: "Borrador" as const,
       uuid_fiscal: uuidFiscal,
     };
-
     try {
       const created = await crear.mutateAsync(payload);
       if (created?.id && (cfdiFiles.xml || cfdiFiles.pdf)) {
@@ -131,11 +133,9 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       void err;
     }
   };
-
   const motivoLabel = ["Devolución", "Bonificación", "Descuento", "Error de facturación", "Cancelación", "Otro"][
     ["Devolucion", "Bonificacion", "Descuento", "ErrorFacturacion", "Cancelacion", "Otro"].indexOf(motivo)
   ] ?? "—";
-
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -144,7 +144,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       </Button>
     </>
   );
-
   return (
     <FormDialogShell
       open={open}
@@ -166,9 +165,8 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
         <Kpi label="Moneda" value={monedaFactura} />
         <Kpi label="Motivo" value={motivoLabel} />
       </div>
-
       <NuevaNotaCreditoFormFields
-        origen={{ mode, onModeChange: setMode, parsedCfdi, onCfdiParsed: handleCfdiParsed }}
+        origen={{ mode, facturaId, onModeChange: (next) => { clearCfdi(); setMode(next); }, parsedCfdi, onCfdiParsed: handleCfdiParsed, onClearCfdi: clearCfdi }}
         datos={{
           folio, onFolioChange: setFolio,
           fecha, onFechaChange: setFecha,
@@ -182,7 +180,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
           tipoCambio, onTipoCambioChange: setTipoCambio,
         }}
       />
-
       <NcProveedorAvisos
         cruceInvalido={cruceInvalido}
         moneda={moneda}

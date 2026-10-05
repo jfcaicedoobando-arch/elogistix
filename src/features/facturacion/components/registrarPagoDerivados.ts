@@ -3,6 +3,7 @@
  * `DialogRegistrarPago` para mantener el componente ≤200 líneas).
  */
 import Decimal from "decimal.js";
+import { formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { TOLERANCIA_CIERRE_FACTURA, TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 
@@ -45,12 +46,20 @@ export function tcParaPago(
   monedaFactura: string,
   rates: RatesTc | undefined,
 ): number | null {
-  if (monedaPago === monedaFactura) return 1;
+  if (monedaPago === "MXN" && monedaFactura === "MXN") return 1;
   const extranjera = monedaPago === "MXN" ? monedaFactura : monedaPago;
   // La BD sólo convierte cruces con MXN en una de las patas.
-  if (monedaPago !== "MXN" && monedaFactura !== "MXN") return null;
+  if (monedaPago !== monedaFactura && monedaPago !== "MXN" && monedaFactura !== "MXN") return null;
   const tc = extranjera === "USD" ? rates?.usdMxn : extranjera === "EUR" ? rates?.eurMxn : null;
-  return tc && tc > 1 ? tc : null;
+  return tc && Number.isFinite(tc) && tc >= TC_MIN && tc <= TC_MAX ? tc : null;
+}
+
+export function requiereTcPago(monedaPago: string, monedaFactura: string): boolean {
+  return monedaPago !== "MXN" || monedaFactura !== "MXN";
+}
+
+export function crucePagoNoSoportado(monedaPago: string, monedaFactura: string): boolean {
+  return monedaPago !== monedaFactura && monedaPago !== "MXN" && monedaFactura !== "MXN";
 }
 
 export interface DerivadosPago {
@@ -66,6 +75,7 @@ export interface DerivadosPago {
   errorFecha: string | null;
   /** B-4 (v14-2): factura PUE con cobro menor al saldo (PUE = una exhibición). */
   pueIncompleto: boolean;
+  formaPagoInvalida: boolean;
   invalido: boolean;
 }
 
@@ -81,6 +91,7 @@ export function derivarEstadoPago(a: {
   rates: RatesTc | undefined;
   /** B-4: método de pago de la factura; `PUE` exige liquidar en una exhibición. */
   metodoPagoFactura?: string | null;
+  formaPago?: string;
   /** TC convenido con el cliente (Guía REP, EquivalenciaDR). "" = usar DOF. */
   tcManual?: string;
 }): DerivadosPago {
@@ -99,10 +110,10 @@ export function derivarEstadoPago(a: {
   // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
   // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
   // un error fiscal, no sólo de visualización.
-  const tcRespaldo = !usaManual && a.monedaPago !== a.monedaFactura && esRespaldo(a.rates);
+  const tcRespaldo = !usaManual && requiereTcPago(a.monedaPago, a.monedaFactura) && esRespaldo(a.rates);
   // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
   const cruceNoSoportado =
-    a.monedaPago !== a.monedaFactura && a.monedaPago !== "MXN" && a.monedaFactura !== "MXN";
+    crucePagoNoSoportado(a.monedaPago, a.monedaFactura);
   const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
@@ -111,6 +122,7 @@ export function derivarEstadoPago(a: {
   const pueIncompleto =
     a.metodoPagoFactura === "PUE" && montoAplicado > 0 &&
     new Decimal(a.saldo).minus(montoAplicado).greaterThan(TOLERANCIA_CIERRE_FACTURA);
+  const formaPagoInvalida = a.metodoPagoFactura === "PPD" && !formaPagoCobroValida(a.formaPago);
   return {
     montoNum,
     montoAplicado,
@@ -121,7 +133,8 @@ export function derivarEstadoPago(a: {
     cruceNoSoportado,
     errorFecha,
     pueIncompleto,
-    invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null || pueIncompleto,
+    formaPagoInvalida,
+    invalido: formaPagoInvalida || montoNum <= 0 || excede || tcBloqueado || errorFecha !== null || pueIncompleto,
   };
 }
 
@@ -149,6 +162,6 @@ function esRespaldo(r: RatesTc | undefined): boolean {
 /** TC convenido (si hay y aplica) o DOF de la fecha. */
 function resolverTc(mp: string, mf: string, rates: RatesTc | undefined, tcManual?: string) {
   const manual = tcManualValido(tcManual);
-  const usaManual = manual !== undefined && mp !== mf;
+  const usaManual = manual !== undefined && requiereTcPago(mp, mf);
   return { usaManual, tcPago: usaManual ? manual : tcParaPago(mp, mf, rates) };
 }

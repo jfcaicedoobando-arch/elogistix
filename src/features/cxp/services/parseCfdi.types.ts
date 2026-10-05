@@ -41,7 +41,10 @@ export interface CfdiParsedResponse {
     emisor: { rfc: string; nombre: string; regimen: string };
     receptor: { rfc: string; nombre: string };
     conceptos: CfdiConceptoParsed[];
+    relacionados?: string[];
   };
+  /** Validación del XML contra la factura objetivo, calculada por el servidor. */
+  nc_validacion?: { factura_id: string };
   ai: { categoria_id: string | null; notas: string };
   /**
    * Sólo lo manda `parse-invoice-pdf`: "baja" cuando la IA no pudo copiar el

@@ -28,7 +28,7 @@ function ctxCon(dr: Partial<Dr>): PagoContext {
     },
     forma_pago: "03",
     fecha_pago: "2026-09-20T12:00:00",
-    monto: 1160,
+    monto: dr.imp_pagado ?? 1160,
     moneda: "MXN",
     tipo_cambio: 1,
     documento_relacionado: {

@@ -21,7 +21,8 @@ export interface RegistrarPagoInput {
   /**
    * Diferencia cambiaria en MXN. Aplica cuando la factura es USD/EUR y el
    * pago se recibe en MXN: monto MXN recibido − (monto_aplicado_factura × TC
-   * de emisión). El UI calcula y manda el valor; default 0.
+   * de emisión). La BD lo calcula autoritativamente; este campo legacy se
+   * conserva por compatibilidad pero no determina el valor persistido.
    */
   diferencia_cambiaria_mxn?: number;
   /**

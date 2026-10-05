@@ -1,6 +1,7 @@
 /**
  * Exportación (lógica pura) del libro maestro de pagos a CSV y PDF.
  */
+import { estadoConciliacionPago } from "@/features/tesoreria/domain/conciliacionPago";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { toCsv } from "@/lib/csv/serializeCsv";
 import {
@@ -72,9 +73,10 @@ export function filasLibroPagosExport(
       : p.tipo_cambio && p.tipo_cambio > 0
         ? p.tipo_cambio.toFixed(4)
         : "Sin T/C",
-    fuenteTc: fuenteTcPago(p),
+    fuenteTc: p.tipo === "devolucion_anticipo" && !esMxn(p.moneda) && p.tipo_cambio
+      ? "TC registrado del anticipo original" : fuenteTcPago(p),
     montoMxn: p.monto_mxn == null ? "Sin T/C" : formatCurrency(p.monto_mxn, "MXN"),
-    estado: p.conciliado ? "Conciliado" : "Pendiente",
+    estado: estadoConciliacionPago(p),
   }));
 }
 
@@ -93,11 +95,12 @@ export function resumenLibroPagos(
   desde: string,
   hasta: string,
   totales: TotalesLibroPagos,
-): { periodo: string; cobrado: string; pagado: string; neto: string; conteo: string } {
+): { periodo: string; cobrado: string; pagado: string; devuelto: string; neto: string; conteo: string } {
   return {
     periodo: `${formatDate(desde)} – ${formatDate(hasta)}`,
     cobrado: formatCurrency(totales.cobradoMxn, "MXN"),
     pagado: formatCurrency(totales.pagadoMxn, "MXN"),
+    devuelto: formatCurrency(totales.devueltoMxn, "MXN"),
     neto: formatCurrency(totales.netoMxn, "MXN"),
     conteo: String(totales.conteo),
   };

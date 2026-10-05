@@ -32,7 +32,7 @@ export interface PagoContext {
   fecha_pago: string;       // ISO date (YYYY-MM-DD) o ISO timestamp
   forma_pago: string;       // SAT c_FormaPago: 01, 02, 03, 04, 99...
   moneda: string;           // MXN, USD...
-  tipo_cambio: number;      // 1 si MXN; tipo de cambio del pago si diferente a MXN
+  tipo_cambio: number;      // Valuación MXN/divisa; MXN cruzado guarda TC convenido, TipoCambioP sigue 1
   monto: number;            // Monto del pago en la moneda del pago
   numero_operacion?: string | null;
   // Documento relacionado (la factura original)
@@ -41,7 +41,7 @@ export interface PagoContext {
     folio?: string | null;
     serie?: string | null;
     moneda_dr: string;             // Moneda de la factura original
-    tipo_cambio_dr: number;        // Tipo de cambio de la factura original (1 si moneda_dr == moneda)
+    tipo_cambio_dr: number;        // Valuación de emisión; NO determina EquivalenciaDR del cobro
     num_parcialidad: number;       // 1, 2, 3...
     imp_saldo_ant: number;         // Saldo antes de este pago, en moneda_dr
     imp_pagado: number;            // Importe que este pago abona en moneda_dr
@@ -204,6 +204,10 @@ export function formaPagoRepObligatoria(formaPago: string | null | undefined): s
   return codigo;
 }
 
+function valuacionPagoValida(ctx: PagoContext): boolean {
+  return ctx.moneda === "MXN" || (Number.isFinite(ctx.tipo_cambio) && ctx.tipo_cambio >= 5 && ctx.tipo_cambio <= 40);
+}
+
 export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   const issues: RepValidationIssue[] = [];
   if (!isValidRfc(ctx.receptor.tax_id)) issues.push({ field: "rfc", message: "RFC del receptor inválido" });
@@ -213,25 +217,13 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
     issues.push({ field: "forma_pago", message: MSG_REP_FORMA_PAGO_INVALIDA });
   }
   if (!ctx.fecha_pago) issues.push({ field: "fecha_pago", message: "Fecha de pago requerida" });
-  if (!(ctx.monto > 0)) issues.push({ field: "monto", message: "Monto del pago debe ser mayor a 0" });
-  if (ctx.moneda !== "MXN" && !(ctx.tipo_cambio > 0)) {
-    issues.push({ field: "tipo_cambio", message: "Tipo de cambio requerido cuando moneda ≠ MXN" });
+  if (!Number.isFinite(ctx.monto) || !(ctx.monto > 0)) issues.push({ field: "monto", message: "Monto del pago debe ser mayor a 0" });
+  if (!valuacionPagoValida(ctx)) {
+    issues.push({ field: "tipo_cambio", message: "Captura la valuación en MXN del cobro (5 a 40 MXN por divisa); el factor neutral 1 no es una valuación" });
   }
-  if (
-    ctx.moneda !== ctx.documento_relacionado.moneda_dr &&
-    tipoCambioDocRelacionado(
-      ctx.moneda,
-      ctx.tipo_cambio,
-      ctx.documento_relacionado.moneda_dr,
-      ctx.documento_relacionado.tipo_cambio_dr,
-    ) === null
-  ) {
-    issues.push({
-      field: "documento.tipo_cambio_dr",
-      message:
-        `El pago está en ${ctx.moneda} y la factura en ${ctx.documento_relacionado.moneda_dr}: ` +
-        "captura el tipo de cambio (pesos por divisa) para poder timbrar el complemento de pago.",
-    });
+  if (equivalenciaDelCobro(ctx) === null) {
+    issues.push({ field: "documento.equivalencia_dr", message:
+      "El importe recibido y el aplicado no permiten representar el cobro con la precisión del REP. Revisa los importes y su equivalencia antes de timbrar." });
   }
   if (!ctx.documento_relacionado.uuid) issues.push({ field: "documento.uuid", message: "La factura original debe estar timbrada (UUID requerido)" });
 
@@ -252,30 +244,20 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   return issues;
 }
 
-/** Pesos mexicanos por una unidad de `moneda` (convención canónica del sistema). */
-function pesosPorUnidad(moneda: string, tipoCambio: number): number | null {
-  if (moneda === "MXN") return 1;
-  return tipoCambio > 0 ? tipoCambio : null;
-}
-
 /**
- * TipoCambioDR: factor que convierte el monto del pago a la moneda del
- * documento relacionado. `null` si falta algún tipo de cambio.
- * Máximo 10 decimales (límite del SAT).
+ * AUD92: EquivalenciaDR = unidades de la factura por unidad recibida.
+ * Facturapi PaymentInput no admite Monto directo: lo deriva de amount/exchange.
+ * Usamos los importes que realmente se serializan (2 decimales para MXN/USD/EUR),
+ * no el TC histórico de emisión. La verificación impide alterar Monto por redondeo.
+ * Referencia: docs.facturapi.io/redocusaurus/api-es.yaml, PaymentInput (2026-10-05).
  */
-export function tipoCambioDocRelacionado(
-  monedaPago: string,
-  tipoCambioPago: number,
-  monedaDr: string,
-  tipoCambioDr: number,
-): number | null {
-  if (monedaPago === monedaDr) return null;
-  const pago = pesosPorUnidad(monedaPago, tipoCambioPago);
-  const doc = pesosPorUnidad(monedaDr, tipoCambioDr);
-  if (pago === null || doc === null) return null;
-  const factor = pago / doc;
-  if (!Number.isFinite(factor) || factor <= 0) return null;
-  return Math.round(factor * 1e10) / 1e10;
+export function equivalenciaDelCobro(ctx: PagoContext): number | null {
+  const recibido = round2(ctx.monto);
+  const aplicado = round2(ctx.documento_relacionado.imp_pagado);
+  if (!Number.isFinite(recibido) || !Number.isFinite(aplicado) || recibido <= 0 || aplicado <= 0) return null;
+  if (ctx.moneda === ctx.documento_relacionado.moneda_dr) return recibido === aplicado ? 1 : null;
+  const factor = Math.round((aplicado / recibido) * 1e10) / 1e10;
+  return factor > 0 && round2(aplicado / factor) === recibido ? factor : null;
 }
 
 /**
@@ -284,8 +266,11 @@ export function tipoCambioDocRelacionado(
  */
 
 export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
+  if (!valuacionPagoValida(ctx)) throw new Error("La valuación del cobro en MXN no es verificable.");
   const dr = ctx.documento_relacionado;
   const sameCurrency = ctx.moneda === dr.moneda_dr;
+  const equivalencia = equivalenciaDelCobro(ctx);
+  if (equivalencia === null) throw new Error("El REP no puede representar el importe recibido sin alterarlo.");
 
   const payload: FacturapiRepPayload = {
     type: "P",
@@ -332,16 +317,8 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
   const rdoc = payload.complements[0].data[0].related_documents[0];
   if (dr.folio) rdoc.folio_number = dr.folio;
   if (dr.serie) rdoc.series = dr.serie;
-  // TipoCambioDR (SAT/CFDI 4.0): cuántas unidades de la moneda del documento
-  // equivale UNA unidad de la moneda del pago. Nuestras tablas guardan el T/C
-  // en la convención "pesos por divisa" (17.06 MXN/USD), así que aquí se
-  // invierte cuando corresponde: pago MXN + factura USD → 1/17.06 = 0.0586170
-  // (Facturapi rechaza con `exchange_rate_too_large` cualquier valor > 1).
-  if (!sameCurrency) {
-    const factor = tipoCambioDocRelacionado(ctx.moneda, ctx.tipo_cambio, dr.moneda_dr, dr.tipo_cambio_dr);
-    if (factor !== null) rdoc.exchange = factor;
-  }
-
+  // AUD92: nunca reconstruir el dinero recibido con la valuación de emisión.
+  if (!sameCurrency) rdoc.exchange = equivalencia;
 
   // v13.208.0 — Bloque "Referencias del embarque" al pie del PDF.
   const pdfSection = buildPdfCustomSection(ctx.referencias);

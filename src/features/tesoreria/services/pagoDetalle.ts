@@ -28,7 +28,7 @@ function str(v: unknown): string | null {
  * como pago al proveedor, en rojo y con una sola factura.
  */
 function tipo(v: unknown): TipoPagoDetalle {
-  return v === "cobro" || v === "pago" || v === "anticipo" || v === "lote" || v === "lote_cobro"
+  return v === "cobro" || v === "pago" || v === "anticipo" || v === "devolucion_anticipo" || v === "lote" || v === "lote_cobro"
     ? v
     : "pago";
 }
@@ -100,6 +100,7 @@ function mapAplicacion(row: Record<string, unknown>): AplicacionPago {
     monto_aplicado: num(row.monto_aplicado),
     total: num(row.total),
     pagado: num(row.pagado),
+    notas_credito_aplicadas: num(row.notas_credito_aplicadas),
     fecha_aplicacion: str(row.fecha_aplicacion),
     pago_id: str(row.pago_id),
   };

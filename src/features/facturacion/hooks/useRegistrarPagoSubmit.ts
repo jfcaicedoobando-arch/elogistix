@@ -4,6 +4,7 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
+import { ERROR_FORMA_COBRO, formaPagoCobroValida } from "../domain/formaPagoCobro";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
 import { useQueryClient } from "@tanstack/react-query";
 import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "@/lib/ui/appFeedback";
@@ -79,6 +80,11 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
   };
 
   const submit = async (args: SubmitArgs) => {
+    if (args.esPpdTimbrada && !formaPagoCobroValida(args.formaPago)) {
+      notifyError(undefined, { title: "Forma de pago inválida", description: ERROR_FORMA_COBRO,
+        method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      return;
+    }
     // FE-01: guarda de dominio (no sólo UI). El CHECK de BD exige
     // tipo_cambio > 0 y monto_aplicado_factura > 0; con misma moneda estos
     // valores siempre son > 0, así que este guard no afecta el flujo normal.
@@ -95,7 +101,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
     // M-14 (re-fix v15): si el pago se convierte a otra moneda, el T/C debe
     // caer en la banda de plausibilidad (pesos por divisa, 5-40).
     const tcFueraDeBanda =
-      args.tipoCambio !== 1 ? validarTcMxn(args.tipoCambio) : null;
+      (args.moneda !== "MXN" || args.tipoCambio !== 1) ? validarTcMxn(args.tipoCambio) : null;
     if (tcFueraDeBanda) {
       notifyError(undefined, {
         title: "Tipo de cambio no plausible",

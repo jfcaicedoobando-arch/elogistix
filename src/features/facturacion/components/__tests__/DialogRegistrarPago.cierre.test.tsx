@@ -21,13 +21,13 @@ vi.mock("@/features/facturacion/hooks/useRegistrarPagoSubmit", () => ({
 
 const factura = { id: "factura-a4", numero: "A4", total: 116, moneda: "MXN", metodoPago: "PPD", estado: "Emitida" };
 
-function montar() {
+function montar(moneda = "MXN") {
   const onClose = vi.fn();
   function Harness() {
     const [open, setOpen] = useState(true);
     return <TooltipProvider>
       <button type="button" onClick={() => setOpen(true)}>Reabrir</button>
-      <DialogRegistrarPago open={open} factura={factura} onOpenChange={(v) => { onClose(v); setOpen(v); }} />
+      <DialogRegistrarPago open={open} factura={{ ...factura, moneda }} onOpenChange={(v) => { onClose(v); setOpen(v); }} />
     </TooltipProvider>;
   }
   render(<Harness />);
@@ -105,5 +105,24 @@ describe("61: cierre de Registrar pago conserva captura hasta descartar", () => 
     expect(mocks.submit).toHaveBeenCalledWith(expect.objectContaining({ monto: 55, referencia: "SPEI-55", notas: "Captura sin guardar" }));
     expect(onClose).toHaveBeenCalledExactlyOnceWith(false);
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+});
+
+
+describe("AUD88/91: formulario de cobro", () => {
+  it("muestra valuación MXN aunque el pago y la factura sean USD", async () => {
+    montar("USD");
+    await waitFor(() => expect(screen.getByLabelText("Tipo de cambio del pago")).toHaveValue("20"));
+    fireEvent.change(screen.getByLabelText("Monto del pago"), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText("Tipo de cambio del pago"), { target: { value: "18.1903" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
+    expect(mocks.submit).toHaveBeenCalledWith(expect.objectContaining({ monto: 1, montoAplicado: 1, tipoCambio: 18.1903 }));
+  });
+  it("el catálogo del cobro recibido omite99 y conserva transferencia03", async () => {
+    montar();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Forma de pago" }), { key: "ArrowDown" });
+    expect(await screen.findByRole("option", { name: /03 - Transferencia/ })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /99 - Por definir/ })).not.toBeInTheDocument();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 });

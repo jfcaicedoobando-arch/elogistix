@@ -4,6 +4,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { ResumenTesoreria, ResumenCuenta, TopItem } from "@/features/tesoreria/services";
+import { renglonesFlujoMonedas, type RenglonFlujoMoneda } from "@/features/tesoreria/domain";
 import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
@@ -24,8 +25,15 @@ const colsTop: PdfColumn<TopItem>[] = [
   { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => r.dias != null ? String(r.dias) : "—" },
 ];
 
+const colsFlujo: PdfColumn<RenglonFlujoMoneda>[] = [
+  { key: "moneda", title: "Moneda", cellStyle: { width: "16%", flexGrow: 0, flexShrink: 0 }, render: (r) => r.moneda },
+  { key: "cobrar", title: "Por cobrar", cellStyle: { width: "28%", textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatCurrency(r.cobrar, r.moneda) },
+  { key: "pagar", title: "Por pagar", cellStyle: { width: "28%", textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatCurrency(r.pagar, r.moneda) },
+  { key: "neto", title: "Neto", cellStyle: { width: "28%", textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatCurrency(r.neto, r.moneda) },
+];
+
 export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props) {
-  const f = resumen.flujo;
+  const flujo = renglonesFlujoMonedas(resumen.flujo);
   return (
     <Document title={`Tesorería ${fechaCorte}`} author={emisor?.razonSocial ?? "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
@@ -44,32 +52,7 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
         )}
 
         <Text style={[styles.h3, { marginTop: 12 }]}>Flujo esperado 30 días</Text>
-        <View style={styles.kpiRow}>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Por cobrar MXN</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(f.por_cobrar_mxn, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Por pagar MXN</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(f.por_pagar_mxn, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Flujo neto MXN</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(f.flujo_neto_mxn, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Flujo neto USD</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(f.flujo_neto_usd, "USD")}</Text>
-            </View>
-          </View>
-        </View>
+        <DataTable columns={colsFlujo} rows={flujo} />
 
         <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 deudores vencidos</Text>
         {resumen.top_deudores.length === 0 ? (

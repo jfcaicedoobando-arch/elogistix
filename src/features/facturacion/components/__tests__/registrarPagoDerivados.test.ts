@@ -14,8 +14,9 @@ import {
 const RATES = { usdMxn: 17.06, eurMxn: 19.75 };
 
 describe("tcParaPago", () => {
-  it("misma moneda → 1 (derivados de registrar pago)", () => {
-    expect(tcParaPago("USD", "USD", RATES)).toBe(1);
+  it("misma moneda USD conserva valuación MXN y aplicación neutral", () => {
+    expect(tcParaPago("USD", "USD", RATES)).toBe(17.06);
+    expect(aplicarTcPago(1, "USD", "USD", 17.06)).toBe(1);
   });
 
   it("pago MXN de factura USD usa pesos por dólar (no la razón invertida)", () => {
@@ -55,6 +56,7 @@ describe("derivarEstadoPago (cross-moneda)", () => {
     hoy: "2026-08-19",
     fechaEmision: "2026-08-01",
     rates: RATES,
+    formaPago: "03",
   };
 
   it.each([
@@ -138,5 +140,35 @@ describe("derivarEstadoPago (cross-moneda)", () => {
     expect(d.cruceNoSoportado).toBe(true);
     expect(d.tcBloqueado).toBe(true);
     expect(d.invalido).toBe(true);
+  });
+});
+
+describe("AUD88/91: preflight de cobros reales", () => {
+  const pago = { monto: "1", monedaPago: "USD", monedaFactura: "USD", saldo: 116,
+    fecha: "2026-10-04", hoy: "2026-10-05", rates: { usdMxn: 18.1903, eurMxn: 20 },
+    metodoPagoFactura: "PPD", formaPago: "03" };
+  it.each(["99", "", "77"])("bloquea %s antes del submit", (formaPago) => {
+    expect(derivarEstadoPago({ ...pago, formaPago })).toMatchObject({ formaPagoInvalida: true, invalido: true });
+  });
+  it("USD 1 sobre USD aplica 1 y valúa 18.1903 MXN", () => {
+    expect(derivarEstadoPago(pago)).toMatchObject({ montoAplicado: 1, tipoCambio: 18.1903, invalido: false });
+  });
+  it("EUR misma moneda conserva saldo y TC manual a MXN independiente", () => {
+    expect(derivarEstadoPago({ ...pago, monedaPago: "EUR", monedaFactura: "EUR", tcManual: "21" }))
+      .toMatchObject({ montoAplicado: 1, tipoCambio: 21, invalido: false });
+  });
+  it("MXN sobre MXN sigue usando uno sin DOF", () => {
+    expect(derivarEstadoPago({ ...pago, monedaPago: "MXN", monedaFactura: "MXN", rates: undefined }))
+      .toMatchObject({ montoAplicado: 1, tipoCambio: 1, invalido: false });
+  });
+  it.each([undefined, { usdMxn: 1, eurMxn: 1 }, { usdMxn: 18.1903, eurMxn: 20, esFallback: true }])("bloquea USD misma moneda sin valuación confiable: %o", (rates) => {
+      expect(derivarEstadoPago({ ...pago, rates })).toMatchObject({ tcBloqueado: true, invalido: true });
+    });
+  it("TC capturado sustituye fallback para la misma divisa", () => {
+    expect(derivarEstadoPago({ ...pago, rates: undefined, tcManual: "18.1903" })).toMatchObject({ tipoCambio: 18.1903, invalido: false });
+  });
+  it("AUD92: MXN20 a TC20 conserva aplicadoUSD1", () => {
+    expect(derivarEstadoPago({ ...pago, monto: "20", monedaPago: "MXN", tcManual: "20" }))
+      .toMatchObject({ montoNum: 20, montoAplicado: 1, tipoCambio: 20, invalido: false });
   });
 });
