@@ -50,11 +50,12 @@ export function usePasarAProspecto() {
   return useMutation({
     mutationFn: (empresaId: string) => pasarAProspecto(empresaId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: BASE });
       void qc.invalidateQueries({ queryKey: ["crm"] });
-      notifySuccess("La empresa ya es prospecto y entró al embudo");
+      notifySuccess(undefined, { title: "La empresa ya es prospecto y entró al embudo" });
     },
-    onError: (e: Error) => notifyError(e.message || "No se pudo pasar a prospecto"),
+    onError: (error: Error) => notifyError(undefined, {
+      title: "No se pudo pasar a prospecto", description: error.message, error, method: "CRM_PASAR_A_PROSPECTO",
+    }),
   });
 }
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge, Presentation } from "lucide-react";
+import { Target, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge, Presentation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -13,8 +13,6 @@ import { tabsUnderlineTriggerClass } from "@/components/ui/tabs";
 const TABS = [
   { to: "/crm/mi-dia", label: "Mi día", icon: Sun, end: false },
   { to: "/crm", label: "Resumen", icon: LayoutDashboard, end: true },
-  { to: "/crm/leads", label: "Leads", icon: Users, end: false },
-  { to: "/crm/prospectos", label: "Prospectos", icon: UserCheck, end: false },
   { to: "/crm/empresas", label: "Empresas", icon: Building2, end: false },
   { to: "/crm/contactos", label: "Contactos", icon: UserRound, end: false },
   { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false },

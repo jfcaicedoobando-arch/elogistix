@@ -12,7 +12,7 @@ import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { CRM_CONFIGURACION_ROLES } from "@/lib/access/roleRouteMatrix";
 import {
-  CrmDashboard, CrmMiDia, Leads, LeadDetalle, CrmProspectos,
+  CrmDashboard, CrmMiDia, LeadDetalle,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion, CrmHigiene,
   CrmEmpresas, CrmEmpresaDetalle, CrmContactos, CrmContactoDetalle, CrmPropiedades, CrmPuntaje, CrmReportes,
 } from "./appRoutes.lazy";
@@ -21,7 +21,9 @@ export const crmChildRoutes = (
   <Fragment>
     <Route index element={<CrmDashboard />} />
     <Route path="mi-dia" element={<CrmMiDia />} />
-    <Route path="leads" element={<Leads />} />
+    {/* Leads y Prospectos ahora son estados de la Empresa: las listas viejas
+        llevan a Empresas filtradas; la ficha del lead se conserva. */}
+    <Route path="leads" element={<Navigate to="/crm/empresas?estado=Lead" replace />} />
     <Route path="leads/:id" element={<LeadDetalle />} />
     <Route path="empresas" element={<CrmEmpresas />} />
     <Route path="empresas/:id" element={<CrmEmpresaDetalle />} />
@@ -30,7 +32,7 @@ export const crmChildRoutes = (
     <Route path="propiedades" element={<CrmPropiedades />} />
     <Route path="puntaje" element={<CrmPuntaje />} />
     <Route path="reportes" element={<CrmReportes />} />
-    <Route path="prospectos" element={<CrmProspectos />} />
+    <Route path="prospectos" element={<Navigate to="/crm/empresas?estado=Prospecto" replace />} />
     <Route path="oportunidades" element={<Oportunidades />} />
     <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
     <Route path="actividades" element={<ActividadesCrm />} />

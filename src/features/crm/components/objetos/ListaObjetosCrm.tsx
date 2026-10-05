@@ -13,6 +13,9 @@ import { useListaObjetosCrm } from "@/features/crm/hooks/useObjetosCrm";
 import { usePuntajes } from "@/features/crm/hooks/useScoringCrm";
 import { FiltroLetraSelect } from "@/features/crm/components/scoring/FiltroLetraSelect";
 import { InsigniaPuntaje } from "@/features/crm/components/scoring/InsigniaPuntaje";
+import { FiltroEstadoEmpresaSelect } from "@/features/crm/components/objetos/FiltroEstadoEmpresaSelect";
+import { FILTRO_ESTADO_EMPRESA } from "@/features/crm/services/estadoEmpresaCrm";
+import { useFiltroUrl } from "@/hooks/shared/useFiltroUrl";
 
 export interface Columna<T> { titulo: string; celda: (fila: T) => ReactNode }
 
@@ -27,9 +30,12 @@ export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBas
   const [texto, setTexto] = useState("");
   const [pagina, setPagina] = useState(0);
   const [letra, setLetra] = useState("todas");
+  // El estado vive en la URL (?estado=Lead) para compartir el enlace filtrado.
+  const [estado, setEstado] = useFiltroUrl("estado", FILTRO_ESTADO_EMPRESA, "todos");
   const busqueda = useDebounce(texto, 300);
+  const filtroEstado = objeto === "empresa" ? estado : "todos";
   // SAFE-CAST: `objeto` determina el tipo de fila que devuelve el servicio.
-  const q = useListaObjetosCrm(objeto, busqueda, pagina, letra) as UseQueryResult<Pagina<T>>;
+  const q = useListaObjetosCrm(objeto, busqueda, pagina, letra, filtroEstado) as UseQueryResult<Pagina<T>>;
   const conPuntaje = objeto === "empresa";
   const ids = useMemo(() => (conPuntaje ? q.data?.filas.map((f) => f.id) ?? [] : []), [conPuntaje, q.data]);
   const { data: puntajes } = usePuntajes("empresa", ids);
@@ -55,6 +61,7 @@ export function ListaObjetosCrm<T extends { id: string }>({ placeholder, rutaBas
           aria-label={placeholder}
         />
       </div>
+      {conPuntaje && <FiltroEstadoEmpresaSelect value={estado} onChange={(v) => { setEstado(v); setPagina(0); }} />}
       {conPuntaje && <FiltroLetraSelect value={letra} onChange={(v) => { setLetra(v); setPagina(0); }} />}
       </div>
       <div className="rounded-md border">

@@ -10,10 +10,12 @@ import { formatFechaDia } from "@/lib/formatters/dates";
 import { ListaObjetosCrm, type Columna } from "@/features/crm/components/objetos/ListaObjetosCrm";
 import { NuevoObjetoCrmDialog } from "@/features/crm/components/objetos/NuevoObjetoCrmDialog";
 import type { EmpresaRow } from "@/features/crm/services/objetosCrm";
+import { estadoEmpresa } from "@/features/crm/services/estadoEmpresaCrm";
+import { varianteEstadoEmpresa } from "@/features/crm/components/objetos/FiltroEstadoEmpresaSelect";
 
 const COLUMNAS: Columna<EmpresaRow>[] = [
   { titulo: "Empresa", celda: (f) => <span className="font-medium">{f.nombre}</span> },
-  { titulo: "Estado", celda: (f) => (f.cliente_id ? <Badge variant="secondary">Cliente</Badge> : <Badge variant="outline">Prospecto</Badge>) },
+  { titulo: "Estado", celda: (f) => { const e = estadoEmpresa(f); return <Badge variant={varianteEstadoEmpresa(e)}>{e}</Badge>; } },
   { titulo: "Alta", celda: (f) => formatFechaDia(f.created_at) },
 ];
 
