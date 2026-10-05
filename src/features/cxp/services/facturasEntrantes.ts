@@ -130,6 +130,10 @@ export async function eliminarFacturaEntrante(
   const { error } = await supabase.rpc("retirar_factura_entrante", {
     p_documento_id: row.id,
   });
+  // JAVASCRIPT-REACT-7G: doble clic o lista desactualizada → el documento ya
+  // fue retirado. El estado final es el pedido; no es un fallo (la limpieza de
+  // archivos ya la hizo el primer retiro).
+  if (error && /^LC_NOT_FOUND/.test(error.message ?? "")) return;
   if (error) throw error;
   const paths = [row.archivo_path, row.xml_path].filter((p): p is string => Boolean(p));
   if (paths.length === 0) return;
