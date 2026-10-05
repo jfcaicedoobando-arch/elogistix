@@ -27,8 +27,8 @@ updates:
 
   # Dependencias JS (bun.lock). Sin esto, las ~100 deps de package.json nunca
   # reciben PRs de actualización — dependency-review sólo audita PRs que ya
-  # existen; nada los propone. Grupos para no inundar: minor/patch agrupados,
-  # majors llegan individuales para revisión manual.
+  # existen; nada los propone. Mantenimiento y migraciones mayores separados.
+  # Familias acopladas primero: Dependabot usa el primer grupo que coincide.
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
@@ -38,6 +38,27 @@ updates:
       timezone: "America/Mexico_City"
     open-pull-requests-limit: 5
     groups:
+      react-minor-patch:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+        update-types: ["minor", "patch"]
+      react-major:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+        update-types: ["major"]
+      router-minor-patch:
+        patterns: ["react-router", "react-router-dom"]
+        update-types: ["minor", "patch"]
+      router-major:
+        patterns: ["react-router", "react-router-dom"]
+        update-types: ["major"]
+      vitest-minor-patch:
+        patterns: ["vitest", "@vitest/*"]
+        update-types: ["minor", "patch"]
+      vitest-major:
+        patterns: ["vitest", "@vitest/*"]
+        update-types: ["major"]
+      # Sólo version-updates (default). No cambia los grupos de seguridad.
+      # Agrupar no fuerza versiones ausentes ni certifica compatibilidad;
+      # las migraciones mayores requieren revisar/adaptar la familia completa.
       bun-minor-patch:
         update-types:
           - "minor"

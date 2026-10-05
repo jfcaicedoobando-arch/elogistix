@@ -96,3 +96,19 @@ Deno.test("handleClientErrorLog: JSON inválido → 400", async () => {
   const res = await handleClientErrorLog(req, client, "req-1");
   assertEquals(res.status, 400);
 });
+
+for (const payload of [null, 123, "texto", true, []]) {
+  Deno.test(`handleClientErrorLog: raíz ${JSON.stringify(payload)} → 400 sin insertar`, async () => {
+    let inserts = 0;
+    const client = fakeClient(async (fn: string) => {
+      if (fn === "check_ratelimit") return { data: { ok: true }, error: null };
+      inserts++;
+      return { data: {}, error: null };
+    });
+    const req = new Request("https://x", { method: "POST", body: JSON.stringify(payload) });
+    const res = await handleClientErrorLog(req, client, "req-1");
+    assertEquals(res.status, 400);
+    assertEquals(await res.json(), { error: "invalid_payload" });
+    assertEquals(inserts, 0);
+  });
+}

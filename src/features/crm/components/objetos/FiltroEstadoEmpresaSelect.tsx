@@ -15,6 +15,3 @@ export function FiltroEstadoEmpresaSelect({ value, onChange }: Props) {
     </Select>
   );
 }
-
-const VARIANTE = { Lead: "outline", Sospechoso: "outline", Prospecto: "default", Cliente: "secondary" } as const;
-export function varianteEstadoEmpresa(e: keyof typeof VARIANTE) { return VARIANTE[e]; }

@@ -13,6 +13,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { esClientErrorPayload, type ClientErrorPayload } from "./payload.ts";
 
 initSentryEdge("client-error-log");
 
@@ -21,15 +22,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-interface ClientErrorPayload {
-  message?: unknown;
-  stack?: unknown;
-  component_stack?: unknown;
-  route?: unknown;
-  user_agent?: unknown;
-  app_version?: unknown;
-}
 
 /**
  * N51 (Ola 4): límite de tamaño del body. El payload real son 6 strings
@@ -135,10 +127,10 @@ export async function handleClientErrorLog(
     const parsed: unknown = JSON.parse(raw);
     // JAVASCRIPT-REACT-79: JSON válido pero no-objeto (`null`, número, arreglo)
     // reventaba al leer `body.message`; es input inválido, no un fallo interno.
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    if (!esClientErrorPayload(parsed)) {
       return jsonResponse({ error: "invalid_payload" }, 400);
     }
-    body = parsed as ClientErrorPayload;
+    body = parsed;
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
   }
