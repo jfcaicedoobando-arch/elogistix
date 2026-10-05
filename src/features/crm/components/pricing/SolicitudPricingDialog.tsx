@@ -11,7 +11,11 @@ import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { hoyMx } from "@/lib/date/mx";
 import { useGuardarSolicitud } from "@/features/crm/hooks/usePricingCrm";
 import { solicitudCompleta, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
+import { subirAdjunto } from "@/features/crm/services/pricing/adjuntosPricing";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { SolicitudPricingCampos, type DatosSolicitud } from "./SolicitudPricingCampos";
+import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
+import { AdjuntosPendientes } from "./AdjuntosPendientes";
 
 interface Props {
   open: boolean;
@@ -37,9 +41,10 @@ export function SolicitudPricingDialog({ open, onOpenChange, oportunidadId, clie
   const guardar = useGuardarSolicitud();
   const [datos, setDatos] = useState<DatosSolicitud>(() => inicial(user?.id ?? "", clienteNombre, solicitud));
   const [sucio, setSucio] = useState(false);
+  const [pendientes, setPendientes] = useState<File[]>([]);
 
   useEffect(() => {
-    if (open) { setDatos(inicial(user?.id ?? "", clienteNombre, solicitud)); setSucio(false); }
+    if (open) { setDatos(inicial(user?.id ?? "", clienteNombre, solicitud)); setSucio(false); setPendientes([]); }
   }, [open, user?.id, clienteNombre, solicitud]);
 
   const set = <K extends keyof DatosSolicitud>(campo: K, valor: DatosSolicitud[K]) => {
@@ -51,8 +56,16 @@ export function SolicitudPricingDialog({ open, onOpenChange, oportunidadId, clie
     if (!organizationId || guardar.isPending) return;
     guardar.mutate(
       { id: solicitud?.id, enviar, datos: { ...datos, organization_id: organizationId, oportunidad_id: oportunidadId, folio: "" } },
-      { onSuccess: () => onOpenChange(false) },
+      { onSuccess: async (id) => { await subirPendientes(organizationId, id); onOpenChange(false); } },
     );
+  };
+  const subirPendientes = async (orgId: string, id: string) => {
+    try {
+      for (const f of pendientes) await subirAdjunto(orgId, id, f);
+    } catch (e) {
+      notifyError(undefined, { title: "La solicitud se guardó, pero un archivo no se adjuntó",
+        description: "Ábrela de nuevo y vuelve a adjuntarlo.", error: e, method: "CRM_PRICING_ADJUNTO" });
+    }
   };
   const onSubmit = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); ejecutar(true); };
   const completa = solicitudCompleta(datos);
@@ -82,6 +95,9 @@ export function SolicitudPricingDialog({ open, onOpenChange, oportunidadId, clie
       }
     >
       <SolicitudPricingCampos datos={datos} set={set} disabled={guardar.isPending} />
+      {solicitud && organizationId
+        ? <AdjuntosSolicitudPricing organizationId={organizationId} solicitudId={solicitud.id} puedeAdjuntar />
+        : <AdjuntosPendientes archivos={pendientes} onChange={(f) => { setPendientes(f); setSucio(true); }} disabled={guardar.isPending} />}
     </FormDialogShell>
   );
 }
