@@ -14,7 +14,7 @@ export interface FacturaVinculada {
   descripcion: string | null;
   /** Monto YA convertido a la moneda del concepto de costo. 0 si `excluida`. */
   monto: number;
-  /** MNY-NEW-03: monto tal como viene en la factura del proveedor. */
+  /** Subtotal neto de la partida en moneda de factura, antes de convertir. */
   monto_original?: number;
   /** Moneda de la factura del proveedor. */
   moneda?: string | null;
@@ -88,6 +88,8 @@ export interface ResumenPorMoneda {
 
 export interface PFCRow {
   monto: number | string;
+  /** Monto unitario × cantidad; NULL, cero u omitida conservan el legado de una unidad. */
+  cantidad?: number | string | null;
   concepto_costo_id: string | null;
   descripcion?: string | null;
   proveedor_facturas: {

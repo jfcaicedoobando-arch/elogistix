@@ -12,6 +12,7 @@ interface Vars {
   id: string;
   aprobar: boolean;
   motivo?: string;
+  expectedUpdatedAt?: string | null;
   /** Contexto opcional para enriquecer el toast (folio, proveedor). */
   folio?: string | null;
   proveedor?: string | null;
@@ -20,8 +21,8 @@ interface Vars {
 export function useAprobarFactura() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, aprobar, motivo }: Vars) =>
-      aprobarFacturaProveedor(id, aprobar, motivo),
+    mutationFn: ({ id, aprobar, motivo, expectedUpdatedAt }: Vars) =>
+      aprobarFacturaProveedor(id, aprobar, motivo, expectedUpdatedAt),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pendientesAprobacionCount });

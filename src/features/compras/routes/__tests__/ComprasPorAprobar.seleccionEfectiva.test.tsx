@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 function factura(id: string, folio: string): FacturaCxP {
   return {
-    id, folio_proveedor: folio, folio_interno: folio, proveedor_nombre: "Proveedor",
+    id, updated_at: "v1", folio_proveedor: folio, folio_interno: folio, proveedor_nombre: "Proveedor",
     proveedor_id: "p1", proveedor_origen: "Nacional", embarque_id: id === "b" ? "emb-1" : null,
     embarque_expediente: id === "b" ? "ELIMP00008" : null, fecha_emision: "2026-09-01", fecha_vencimiento: "2026-09-30",
     dias_vencido: 0, moneda: "MXN", total: 1160, pagado: 0, notas_credito: 0,
@@ -67,7 +67,7 @@ function renderPage() {
 
 describe("selección efectiva de compras por aprobar", () => {
   beforeEach(() => {
-    mocks.aprobar.mockReset();
+    mocks.aprobar.mockReset().mockImplementation(async (ids: string[]) => ({ exitos: ids, fallos: [] }));
     mocks.bloqueados.clear();
   });
 
@@ -96,6 +96,7 @@ describe("selección efectiva de compras por aprobar", () => {
       expect(mocks.aprobar).toHaveBeenCalledWith(["b"], {
         justificacion: "",
         requierenJustificacion: new Set(),
+        versionesRevisadas: new Map([["b", "v1"]]),
       });
     });
   });

@@ -15,6 +15,7 @@ import type {
   AgingMonedaProveedor,
   MovimientoConSaldo,
   SaldoMonedaProveedor,
+  SaldoAperturaProveedor,
 } from "@/features/proveedor/domain/movimientosProveedor";
 
 export interface DatosEstadoCuenta {
@@ -25,6 +26,9 @@ export interface DatosEstadoCuenta {
   movimientos: MovimientoConSaldo[];
   aging: AgingMonedaProveedor[];
   saldos: SaldoMonedaProveedor[];
+  saldoApertura?: SaldoAperturaProveedor[];
+  hayMas?: boolean;
+  totalMovimientos?: number;
 }
 
 function sinDatos(): void {
@@ -69,7 +73,8 @@ export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
 
 export async function descargarEstadoCuentaPdf(datos: DatosEstadoCuenta): Promise<void> {
   const movs = filasMovimientosExport(datos.movimientos);
-  if (movs.length === 0 && !tieneAging(datos)) return sinDatos();
+  const tieneApertura = datos.saldoApertura?.some((s) => Math.abs(s.saldo) > 0.005);
+  if (movs.length === 0 && !tieneAging(datos) && !tieneApertura) return sinDatos();
   try {
     const [{ descargarPdf }, { EstadoCuentaProveedorDocument }] = await Promise.all([
       import("@/pdf/render/descargarPdf"),
@@ -84,6 +89,11 @@ export async function descargarEstadoCuentaPdf(datos: DatosEstadoCuenta): Promis
         movimientos={movs}
         aging={filasAgingExport(datos.aging)}
         saldos={filasSaldosExport(datos.saldos)}
+        saldoApertura={(datos.saldoApertura ?? []).map((s) => ({
+          moneda: s.moneda, saldo: String(s.saldo),
+        }))}
+        hayMas={datos.hayMas}
+        totalMovimientos={datos.totalMovimientos}
       />,
       nombreArchivoEstadoCuenta(datos.proveedorNombre, datos.hasta, "pdf"),
     );

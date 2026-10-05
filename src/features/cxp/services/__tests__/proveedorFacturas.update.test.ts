@@ -12,6 +12,7 @@ import {
   SaldoNegativoError,
   type ActualizarFacturaPayload,
 } from "../proveedorFacturas.update";
+import { detectarCambioSensible } from "../proveedorFacturas.update.reglas";
 
 const baseActual = {
   id: "f1",
@@ -19,7 +20,7 @@ const baseActual = {
   estado_aprobacion: "aprobada",
   folio_proveedor: "A-1",
   fecha_emision: "2026-01-01",
-  moneda: "MXN",
+  moneda: "MXN" as const,
   tipo_cambio_usd: 1,
   subtotal: 1000,
   iva: 160,
@@ -79,6 +80,20 @@ describe("proveedorFacturas.update", () => {
   });
 
   describe("actualizarFacturaProveedor", () => {
+    it.each([20.0001, 20.0049, 20.01])("TC 20 a %s exige nueva aprobación", async (tc) => {
+      const actual = { ...baseActual, moneda: "USD", tipo_cambio_usd: 20 };
+      mock.setTableResult("proveedor_facturas", { data: actual, error: null });
+      mock.setTableResult("pagos_proveedor", { data: [], error: null });
+      await actualizarFacturaProveedor("f1", { ...basePayload, moneda: "USD", tipo_cambio_usd: tc });
+      const update = mock.tableCalls.find((c) => c.table === "proveedor_facturas" && c.ops.includes("update"))!;
+      expect(update.opArgs[update.ops.indexOf("update")]?.[0]).toMatchObject({ estado_aprobacion: "pendiente", aprobada_por: null, aprobada_at: null });
+    });
+    it("compara importes a centavos y tipo de cambio a cuatro decimales", () => {
+      expect(detectarCambioSensible(baseActual, { ...basePayload, subtotal: 1000.001 })).toBe(false);
+      expect(detectarCambioSensible(baseActual, { ...basePayload, subtotal: 1000.01 })).toBe(true);
+      expect(detectarCambioSensible(baseActual, { ...basePayload, tipo_cambio_usd: 1.0001 })).toBe(true);
+      expect(detectarCambioSensible(baseActual, { ...basePayload, tipo_cambio_usd: 1.00004 })).toBe(false);
+    });
     it("retorna la fila actualizada en happy path sin cambios sensibles", async () => {
       // Lectura inicial, dup-check, update.select.single — todos vuelven al mismo result.
       // Como el read es .single() y el dup-check es awaitable, devolvemos el row crudo

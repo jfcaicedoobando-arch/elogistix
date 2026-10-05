@@ -89,7 +89,7 @@ BEGIN
     jsonb_build_object('descripcion', 'EBS EMERGENCY BAF 1/40HQ', 'cantidad', 1, 'monto', 120),
     jsonb_build_object('descripcion', 'HSS HI SEC SEAL CH 1/40HQ', 'cantidad', 1, 'monto', 12),
     jsonb_build_object('descripcion', 'DOC O/B DOC FEE', 'cantidad', 1, 'monto', 50)
-  ));
+  ), NULL, (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
 
   SELECT subtotal, total INTO v_sub, v_tot
     FROM public.proveedor_facturas WHERE id = v_pf;
@@ -105,7 +105,8 @@ BEGIN
   RAISE NOTICE '✓ caso 1: cabecera 332 USD sin duplicar el renglón de vínculo';
 
   -- CASO 2: sin desglose fiscal, la cabecera cae al renglón de vínculo (no cero).
-  PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]'::jsonb);
+  PERFORM public.reemplazar_conceptos_factura_proveedor(v_pf, '[]'::jsonb,
+    NULL, (SELECT updated_at FROM public.proveedor_facturas WHERE id = v_pf));
 
   SELECT subtotal, total INTO v_sub, v_tot
     FROM public.proveedor_facturas WHERE id = v_pf;

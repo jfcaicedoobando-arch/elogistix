@@ -35,6 +35,12 @@ BEGIN
   INSERT INTO public.proveedor_facturas_conceptos(
     organization_id, proveedor_factura_id, concepto_costo_id, descripcion, monto
   ) VALUES (p_org, v_factura, v_costo, 'AUD02 Flete', p_total);
+  -- Insertar conceptos invalida la aprobacion; completar el fixture antes de pagar.
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id = v_factura;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
   RETURN QUERY SELECT v_costo, v_factura;
 END;
 $$;
@@ -150,6 +156,11 @@ BEGIN
   INSERT INTO public.proveedor_facturas_conceptos(
     organization_id, proveedor_factura_id, concepto_costo_id, descripcion, monto
   ) VALUES (v_org, v_segunda, v_fixture.costo_id, 'AUD02 Segundo flete', 100);
+  PERFORM set_config('app.aprobando_cxp', '1', true);
+  UPDATE public.proveedor_facturas
+  SET estado_aprobacion = 'aprobada', aprobada_at = now()
+  WHERE id = v_segunda;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
   INSERT INTO public.pagos_proveedor(organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
   VALUES (v_org, v_fixture.factura_id, public.fecha_negocio_mx() - 1, 100, 'USD');
   PERFORM pg_temp.assert_liquidacion_costo(v_fixture.costo_id, 'Pendiente', 'segunda factura pendiente');

@@ -8,7 +8,8 @@
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
   p_factura_id uuid,
   p_conceptos jsonb,
-  p_impuestos_no_desglosados jsonb DEFAULT NULL::jsonb
+  p_impuestos_no_desglosados jsonb DEFAULT NULL::jsonb,
+  p_expected_updated_at timestamptz DEFAULT NULL::timestamptz
 ) RETURNS integer
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -48,6 +49,11 @@ BEGIN
           OR public.has_role(auth.uid(), 'tesorero')) THEN
     RAISE EXCEPTION 'LC_CONCEPTOS_FORBIDDEN: sin permiso para editar los conceptos de la factura'
       USING ERRCODE = '42501';
+  END IF;
+
+  IF p_expected_updated_at IS NULL OR v_f.updated_at IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: los conceptos o la factura cambiaron mientras los editabas. Recarga antes de volver a guardar.'
+      USING ERRCODE = '40001';
   END IF;
 
   IF v_f.uuid_fiscal IS NOT NULL OR v_f.archivo_xml_url IS NOT NULL THEN
@@ -154,5 +160,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb, jsonb, timestamptz) TO authenticated, service_role;

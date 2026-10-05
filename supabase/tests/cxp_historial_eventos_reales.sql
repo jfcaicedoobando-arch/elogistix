@@ -18,6 +18,8 @@ DECLARE
   v_aprobacion2 timestamptz := '2026-10-02T11:00:00Z';
   v_evento record;
   v_n integer;
+  v_updated_at timestamptz;
+  v_error text;
 BEGIN
   INSERT INTO public.organizations (nombre) VALUES ('TEST HISTORIAL REAL') RETURNING id INTO v_org;
   INSERT INTO public.organizations (nombre) VALUES ('TEST HISTORIAL OTRA ORG') RETURNING id INTO v_otra_org;
@@ -145,10 +147,24 @@ BEGIN
   INSERT INTO public.proveedor_facturas_conceptos
     (organization_id, proveedor_factura_id, descripcion, cantidad, monto)
     VALUES (v_org, v_futura, 'Servicio TEST historial', 1, 100);
-  PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba');
+  SELECT updated_at INTO v_updated_at FROM public.proveedor_facturas WHERE id = v_futura;
+  -- La integración conserva el contrato CAS: clientes sin revisión no deciden
+  -- ni escriben una bitácora que pudiera parecer una aprobación verificada.
+  v_error := NULL;
+  BEGIN
+    PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba');
+  EXCEPTION WHEN serialization_failure THEN GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT; END;
+  IF COALESCE(v_error LIKE 'LC_CONFLICTO_CONCURRENCIA:%', false) IS NOT TRUE
+    OR EXISTS (SELECT 1 FROM public.bitacora_actividad WHERE entidad_id = v_futura)
+    OR NOT EXISTS (SELECT 1 FROM public.proveedor_facturas WHERE id = v_futura
+      AND estado_aprobacion = 'pendiente' AND updated_at = v_updated_at) THEN
+    RAISE EXCEPTION 'FAIL cliente sin versión aprobó, cambió la factura o produjo bitácora';
+  END IF;
+  PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba', v_updated_at);
   UPDATE public.proveedor_facturas SET moneda = 'USD', estado_aprobacion = 'pendiente',
     aprobada_at = NULL, aprobada_por = NULL WHERE id = v_futura;
-  PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba');
+  SELECT updated_at INTO v_updated_at FROM public.proveedor_facturas WHERE id = v_futura;
+  PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba', v_updated_at);
   SELECT count(*) INTO v_n FROM public.historial_proveedor_factura(v_futura)
     WHERE tipo = 'aprobada' AND monto = 116 AND moneda IN ('MXN', 'USD')
       AND (detalles->>'tipo_cambio_usd')::numeric = 20

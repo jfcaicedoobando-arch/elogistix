@@ -10,6 +10,7 @@ import {
   type PFCRow,
 } from "./reconciliacionCostos.tipos";
 import { conceptosConAjustesVerificables, esAjustePresupuestario, esFacturaVigente } from "./reconciliacionCostos.ajustes";
+import Decimal from "decimal.js";
 
 export function calcularDesviacionPct(cotizado: number, real: number): number {
   if (cotizado === 0) return real === 0 ? 0 : real > 0 ? 100 : -100;
@@ -56,10 +57,18 @@ export function convertirMontoVinculo(
   return null;
 }
 
-function aVinculo(v: PFCRow, monedaConcepto: string): FacturaVinculada | null {
+function montoNetoVinculo(v: PFCRow, ajuste: boolean): number {
+  // El delta sintético es trazabilidad. Las partidas ordinarias usan el mismo
+  // neto de AUD72: monto × COALESCE(NULLIF(cantidad, 0), 1), antes del FX.
+  const cantidad = ajuste || v.cantidad == null || Number(v.cantidad) === 0 ? 1 : Number(v.cantidad);
+  if (!Number.isFinite(cantidad)) throw new Error("No se puede conciliar una partida con cantidad inválida.");
+  return new Decimal(Number(v.monto) || 0).times(cantidad).toNumber();
+}
+
+function aVinculo(v: PFCRow, monedaConcepto: string, ajuste: boolean): FacturaVinculada | null {
   const pf = v.proveedor_facturas;
   if (!pf) return null;
-  const original = Number(v.monto) || 0;
+  const original = montoNetoVinculo(v, ajuste);
   const monedaFactura = pf.moneda ?? null;
   const convertido = convertirMontoVinculo(
     original,
@@ -102,7 +111,7 @@ export function buildFilasReconciliacion(
   return conceptosConAjustesVerificables(conceptos, vinculos).map((c) => {
     const ajuste = esAjustePresupuestario(c);
     const facs = (porConcepto.get(c.id) ?? [])
-      .map((v) => aVinculo(v, c.moneda))
+      .map((v) => aVinculo(v, c.moneda, ajuste))
       .filter((f): f is FacturaVinculada => f !== null);
     const comparables = facs.filter((f) => !f.excluida);
     const excluidas = ajuste ? 0 : facs.length - comparables.length;

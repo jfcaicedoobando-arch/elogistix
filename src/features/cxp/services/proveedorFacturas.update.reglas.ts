@@ -7,6 +7,7 @@ import type { ActualizarFacturaPayload } from "./proveedorFacturas.update.types"
 import { fetchSaldosProveedorFacturas } from "./saldosProveedorFactura";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
+import Decimal from "decimal.js";
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
@@ -45,7 +46,9 @@ export function detectarCambioSensible(
       const na = a == null || a === "" ? null : Number(a);
       const nb = b == null || b === "" ? null : Number(b);
       if (na === null || nb === null) return na !== nb;
-      return roundMoney(na) !== roundMoney(nb);
+      const precision = k === "tipo_cambio_usd" ? 4 : 2;
+      return new Decimal(na).toDecimalPlaces(precision, Decimal.ROUND_HALF_UP)
+        .equals(new Decimal(nb).toDecimalPlaces(precision, Decimal.ROUND_HALF_UP)) === false;
     }
     return (a ?? null) !== (b ?? null);
   });

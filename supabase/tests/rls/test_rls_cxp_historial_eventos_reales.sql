@@ -18,6 +18,7 @@ DECLARE
   v_datos jsonb;
   v_error text;
   v_evento record;
+  v_updated_at timestamptz;
 BEGIN
   SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUD57RLS');
   INSERT INTO public.user_roles(user_id, role) VALUES (v_super, 'super_admin'), (v_sin_org, 'contador');
@@ -37,11 +38,12 @@ BEGIN
   INSERT INTO public.bitacora_actividad(organization_id, entidad_id, modulo, accion, detalles, usuario_email)
     VALUES (fx.org_a, v_pf, 'cxp', 'crear', '{"total":116,"moneda":"MXN"}', 'org-a@test.local'),
       (fx.org_b, v_pf, 'cxp', 'editar', '{"total":999,"moneda":"EUR"}', 'org-b@test.local');
+  SELECT updated_at INTO v_updated_at FROM public.proveedor_facturas WHERE id = v_pf;
 
   -- El defecto OLD era de confianza en el historial, no una aprobación real.
   PERFORM pg_temp.as_user(v_miembro);
   v_error := NULL;
-  BEGIN PERFORM public.aprobar_factura_proveedor(v_pf, true, 'Aprobacion falsa de prueba');
+  BEGIN PERFORM public.aprobar_factura_proveedor(v_pf, true, 'Aprobacion falsa de prueba', v_updated_at);
   EXCEPTION WHEN raise_exception THEN GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT; END;
   PERFORM pg_temp.assert(COALESCE(v_error LIKE 'LC_SOD_VIOLATION:%', false),
     'AUD57RLS: miembro sin rol no debe aprobar por RPC de negocio');
@@ -159,7 +161,8 @@ BEGIN
   INSERT INTO public.proveedor_facturas_conceptos(organization_id, proveedor_factura_id, descripcion, cantidad, monto)
     VALUES (fx.org_a, v_pf, 'Servicio AUD57RLS', 1, 116);
   PERFORM pg_temp.as_user(fx.admin_a);
-  PERFORM public.aprobar_factura_proveedor(v_pf, true, 'Gasto de administración de prueba');
+  SELECT updated_at INTO v_updated_at FROM public.proveedor_facturas WHERE id = v_pf;
+  PERFORM public.aprobar_factura_proveedor(v_pf, true, 'Gasto de administración de prueba', v_updated_at);
   SELECT * INTO v_evento FROM public.historial_proveedor_factura(v_pf) WHERE tipo = 'aprobada';
   PERFORM pg_temp.assert(v_evento.monto IS NOT DISTINCT FROM 116::numeric AND v_evento.moneda IS NOT DISTINCT FROM 'USD'
     AND v_evento.detalles->>'procedencia_verificada' IS NOT DISTINCT FROM 'true'

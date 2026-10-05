@@ -39,6 +39,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- Auditoría 23: triggers privados de integridad de aplicaciones/tesorería.
   ('public._guard_movimiento_anticipo_aplicado()'),
   ('public._guard_pago_anticipo_aplicado_edicion()'),
+  -- AUD65-68: triggers privados de precision, moneda y version de factura/conceptos.
+  ('public.guard_edicion_factura_proveedor()'),
+  ('public._versionar_factura_proveedor()'),
+  ('public._versionar_conceptos_factura_proveedor()'),
   -- v13.823.51 · candados multiempresa CRM + probabilidad terminal.
   ('public._cotizacion_oportunidad_misma_org()'),
   ('public._crm_actividad_entidad_misma_org()'),

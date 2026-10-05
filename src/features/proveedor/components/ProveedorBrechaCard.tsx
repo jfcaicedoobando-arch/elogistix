@@ -16,10 +16,11 @@ import type {
 interface Props {
   brecha: BrechaFacturacion;
   huerfanas: FacturaHuerfana[];
+  proveedorId: string;
   proveedorNombre: string;
 }
 
-export function ProveedorBrechaCard({ brecha, huerfanas, proveedorNombre }: Props) {
+export function ProveedorBrechaCard({ brecha, huerfanas, proveedorId, proveedorNombre }: Props) {
   const montos = Object.entries(brecha.porFacturarPorMoneda).filter(([, m]) => m > 0.01);
   const sinBrecha = montos.length === 0 && huerfanas.length === 0 && brecha.partidasSobrefacturadas === 0;
 
@@ -59,13 +60,18 @@ export function ProveedorBrechaCard({ brecha, huerfanas, proveedorNombre }: Prop
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/compras/por-capturar">Ir a Por capturar</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/compras/facturas">Ver facturas</Link>
-            </Button>
+          <div className="space-y-2 sm:max-w-xs">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/compras/por-capturar">Ir a Por capturar (global)</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/compras/facturas?proveedorId=${encodeURIComponent(proveedorId)}`}>Ver facturas</Link>
+              </Button>
+            </div>
+            <p className="text-body-sm text-muted-foreground">
+              Por capturar muestra embarques de todos los proveedores. Ver facturas muestra sólo las de {proveedorNombre}.
+            </p>
           </div>
         </div>
 
