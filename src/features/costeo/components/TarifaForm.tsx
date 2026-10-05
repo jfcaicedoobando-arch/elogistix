@@ -23,6 +23,7 @@ import {
   computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
 import { BotonCancelarTarifa } from "./TarifaFormCancelar";
+import { TarifaPricingFields } from "./TarifaPricingFields";
 import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
 
 import { formatUSD } from "@/lib/formatters";
@@ -173,6 +174,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
           onRutaIdsChange={setRutaIds}
         />
         <NumerosFields form={form} setForm={setForm} errores={errores} />
+        <TarifaPricingFields form={form} setForm={setForm} />
         <VigenciaFields form={form} setForm={setForm} errores={errores} />
 
         <TarifaRecargosEditor
