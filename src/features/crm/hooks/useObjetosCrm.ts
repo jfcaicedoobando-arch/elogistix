@@ -8,6 +8,7 @@ import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
   type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
 } from "@/features/crm/services/objetosCrm";
+import { pasarAProspecto } from "@/features/crm/services/estadoEmpresaCrm";
 import {
   contactosDeEmpresa, contactosDeOportunidad, desligar, empresasDeContacto, empresasDeOportunidad,
   ligar, oportunidadesDe, type TipoVinculo,
@@ -32,12 +33,28 @@ export function useContactosCrm(busqueda: string, pagina: number) {
 }
 
 /** Lista paginada de un objeto (una sola consulta según `objeto`). */
-export function useListaObjetosCrm(objeto: "empresa" | "contacto", busqueda: string, pagina: number, letra = "todas") {
+export function useListaObjetosCrm(
+  objeto: "empresa" | "contacto", busqueda: string, pagina: number, letra = "todas", estado = "todos",
+) {
   return useQuery({
-    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina, letra],
+    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina, letra, estado],
     queryFn: (): Promise<Pagina<EmpresaRow | ContactoRow>> =>
-      objeto === "empresa" ? fetchEmpresas(busqueda, pagina, letra) : fetchContactos(busqueda, pagina),
+      objeto === "empresa" ? fetchEmpresas(busqueda, pagina, letra, estado) : fetchContactos(busqueda, pagina),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** Pasa una empresa de Lead a Prospecto (entra al embudo). */
+export function usePasarAProspecto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (empresaId: string) => pasarAProspecto(empresaId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: BASE });
+      void qc.invalidateQueries({ queryKey: ["crm"] });
+      notifySuccess("La empresa ya es prospecto y entró al embudo");
+    },
+    onError: (e: Error) => notifyError(e.message || "No se pudo pasar a prospecto"),
   });
 }
 

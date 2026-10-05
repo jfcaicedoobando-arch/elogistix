@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const OBJETOS_PAGE_SIZE = 25;
 
-export interface EmpresaRow { id: string; nombre: string; cliente_id: string | null; created_at: string }
+export interface EmpresaRow { id: string; nombre: string; cliente_id: string | null; estado_crm?: string | null; created_at: string }
 export interface ContactoRow { id: string; nombre: string; email: string | null; telefono: string | null; created_at: string }
 export interface Pagina<T> { filas: T[]; total: number }
 export interface RefRow { id: string; nombre: string }
@@ -21,18 +21,25 @@ function limpiarBusqueda(texto: string): string {
   return texto.trim().replace(/[%,()]/g, " ");
 }
 
-/** `letra` filtra por la columna calculada `letra_empresa_crm` (puntaje A/B/C en servidor). */
-export async function fetchEmpresas(busqueda: string, pagina: number, letra = "todas"): Promise<Pagina<EmpresaRow>> {
+const EMPRESA_COLS = "id, nombre, cliente_id, estado_crm, created_at";
+
+/**
+ * `letra` filtra por la columna calculada `letra_empresa_crm` (puntaje A/B/C en servidor);
+ * `estado` por el estado de la empresa (Lead/Prospecto/Cliente).
+ */
+export async function fetchEmpresas(busqueda: string, pagina: number, letra = "todas", estado = "todos"): Promise<Pagina<EmpresaRow>> {
   const [desde, hasta] = rango(pagina);
   let q = supabase.from("crm_empresas")
-    .select("id, nombre, cliente_id, created_at", { count: "exact" })
+    .select(EMPRESA_COLS, { count: "exact" })
     .is("deleted_at", null).order("nombre").range(desde, hasta);
   const term = limpiarBusqueda(busqueda);
   if (term) q = q.ilike("nombre", `%${term}%`);
   if (letra !== "todas") q = q.eq("letra_empresa_crm", letra);
+  if (estado !== "todos") q = q.eq("estado_crm", estado);
   const { data, error, count } = await q;
   if (error) throw error;
-  return { filas: data ?? [], total: count ?? 0 };
+  // SAFE-CAST: `estado_crm` llega con la migración del borrador; los tipos se regeneran al aceptarla.
+  return { filas: (data ?? []) as unknown as EmpresaRow[], total: count ?? 0 };
 }
 
 export async function fetchContactos(busqueda: string, pagina: number): Promise<Pagina<ContactoRow>> {
@@ -49,9 +56,10 @@ export async function fetchContactos(busqueda: string, pagina: number): Promise<
 
 export async function fetchEmpresa(id: string): Promise<EmpresaRow | null> {
   const { data, error } = await supabase.from("crm_empresas")
-    .select("id, nombre, cliente_id, created_at").eq("id", id).is("deleted_at", null).maybeSingle();
+    .select(EMPRESA_COLS).eq("id", id).is("deleted_at", null).maybeSingle();
   if (error) throw error;
-  return data;
+  // SAFE-CAST: ver fetchEmpresas (`estado_crm` del borrador).
+  return data as unknown as EmpresaRow | null;
 }
 
 export async function fetchContacto(id: string): Promise<ContactoRow | null> {
