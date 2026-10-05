@@ -36,7 +36,7 @@ export function CrmForecastMesKpis() {
       </SectionHeading>
       <p className="text-body-sm text-muted-foreground">Oportunidades abiertas: importe estimado. Valor ponderado: importe × probabilidad de cierre, sin sumar monedas distintas.</p>
       {isError ? (
-        <ErrorStateInline message="No se pudo cargar el proyección de ventas del mes." onRetry={() => void refetch()} />
+        <ErrorStateInline message="No se pudo cargar la proyección de ventas del mes." onRetry={() => void refetch()} />
       ) : isLoading ? (
         <TiraPlaceholder valor="…" />
       ) : totalesPorMoneda.length === 0 ? (
