@@ -38,6 +38,7 @@ vi.mock("@/features/crm/lib/crmToast", () => ({
 // cuando la oportunidad ya tiene cliente. Sin `cliente_id` el hook toma el
 // camino de prospecto (navega al wizard, sin INSERT), que se cubre en
 // `useOportunidadDetalleActions.prospecto.test.tsx`.
+const ETAPAS_EC = [{ id: "e1", nombre: "En cotización", tipo: "abierta" }];
 const op = {
   id: "op1",
   cliente_id: "cli-1",
@@ -57,7 +58,7 @@ describe("useOportunidadDetalleActions", () => {
   });
 
   it("eliminar con éxito notifica y navega", async () => {
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     await result.current.handleEliminar();
     expect(successToast).toHaveBeenCalledWith("Oportunidad eliminada");
     expect(navigate).toHaveBeenCalledWith("/crm/oportunidades");
@@ -66,7 +67,7 @@ describe("useOportunidadDetalleActions", () => {
 
   it("oportunidad: si eliminar falla no repite el aviso ni navega", async () => {
     eliminarMutateAsync.mockRejectedValueOnce(new Error("tiene cotizaciones"));
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     await result.current.handleEliminar();
     expect(notifyError).not.toHaveBeenCalled();
     expect(successToast).not.toHaveBeenCalled();
@@ -74,7 +75,7 @@ describe("useOportunidadDetalleActions", () => {
   });
 
   it("crear cotización con éxito muestra folio y navega al editor", async () => {
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     await result.current.crearCotizacion();
     expect(successToast).toHaveBeenCalledWith("Cotización creada · COT-1");
     expect(navigate).toHaveBeenCalledWith("/cotizaciones/c1/editar");
@@ -83,7 +84,7 @@ describe("useOportunidadDetalleActions", () => {
 
   it("con avisoEtapa usa notifyInfo en lugar del toast de éxito", async () => {
     crearCotMutateAsync.mockResolvedValueOnce({ id: "c1", folio: "COT-1", avisoEtapa: "sin etapa Cotizando" });
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     await result.current.crearCotizacion();
     expect(notifyInfo).toHaveBeenCalledTimes(1);
     expect(successToast).not.toHaveBeenCalled();
@@ -92,7 +93,7 @@ describe("useOportunidadDetalleActions", () => {
 
   it("si crear cotización falla no repite el aviso ni navega", async () => {
     crearCotMutateAsync.mockRejectedValueOnce(new Error("RPC denegada"));
-    const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
+    const { result } = renderHook(() => useOportunidadDetalleActions(op, ETAPAS_EC));
     await result.current.crearCotizacion();
     // El caso negativo debe ejercer de verdad la mutación: si el hook saliera
     // antes (p. ej. por fixture sin cliente) la prueba pasaría vacía.

@@ -29,6 +29,15 @@ interface OpLite {
   modo: string;
 }
 
+/** Candado: sólo se cotiza cuando la oportunidad está en "En cotización". */
+export const MOTIVO_NO_EN_COTIZACION =
+  'Mueve la oportunidad a la etapa "En cotización" del pipeline para poder cotizar.';
+
+function esEtapaEnCotizacion(etapas: EtapaLite[], etapaId: string): boolean {
+  const e = etapas.find((x) => x.id === etapaId);
+  return Boolean(e && e.tipo === "abierta" && /en cotizaci/i.test(e.nombre));
+}
+
 function findCotizandoEtapa(etapas: EtapaLite[]): EtapaLite | undefined {
   return etapas.find((e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta");
 }
@@ -57,7 +66,10 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
     }
   };
 
+  const enCotizacion = esEtapaEnCotizacion(etapas, op.etapa_id);
+
   const crearCotizacion = async () => {
+    if (!enCotizacion) return;
     if (!tieneCliente) {
       if (!puedeCotizarProspecto) return;
       // Se abre el wizard existente con el prospecto/oportunidad precargados.
@@ -105,7 +117,9 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
     handleEliminar,
     crearCotizacion,
     crearCotPending: crearCot.isPending || (!tieneCliente && prospectoLoading),
-    puedeCotizar: tieneCliente || puedeCotizarProspecto,
-    motivoNoCotizar: tieneCliente || puedeCotizarProspecto ? undefined : MOTIVO_NO_COTIZABLE,
+    puedeCotizar: enCotizacion && (tieneCliente || puedeCotizarProspecto),
+    motivoNoCotizar: !enCotizacion
+      ? MOTIVO_NO_EN_COTIZACION
+      : tieneCliente || puedeCotizarProspecto ? undefined : MOTIVO_NO_COTIZABLE,
   };
 }

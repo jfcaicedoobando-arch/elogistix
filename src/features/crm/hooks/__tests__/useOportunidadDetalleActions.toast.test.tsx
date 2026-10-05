@@ -58,6 +58,7 @@ vi.mock("@/features/crm/hooks", async (importOriginal) => {
 
 import { useOportunidadDetalleActions } from "../useOportunidadDetalleActions";
 
+const ETAPAS_EC = [{ id: "e1", nombre: "En cotización", tipo: "abierta" }];
 const op = {
   id: "op-1",
   // Contrato de CLIENTE existente (creación directa de cotización + toast único).
