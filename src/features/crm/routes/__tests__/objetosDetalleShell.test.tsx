@@ -3,7 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const { query } = vi.hoisted(() => ({ query: vi.fn() }));
-vi.mock("@/features/crm/hooks/useObjetosCrm", () => ({ useEmpresaCrm: query, useContactoCrm: query }));
+vi.mock("@/features/crm/hooks/useObjetosCrm", () => ({
+  useEmpresaCrm: query, useContactoCrm: query,
+  usePasarAProspecto: () => ({ mutate: vi.fn(), isPending: false }),
+}));
 vi.mock("@/hooks/shared", () => ({ useDocumentTitle: vi.fn(), usePermissions: () => ({ canEditCrm: false }) }));
 vi.mock("@/features/crm/components/objetos/PropiedadesCard", () => ({ PropiedadesCard: () => <div>Propiedades</div> }));
 vi.mock("@/features/crm/components/objetos/VinculosCard", () => ({ VinculosCard: () => <div>Vínculos</div> }));

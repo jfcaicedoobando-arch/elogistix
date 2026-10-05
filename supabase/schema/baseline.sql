@@ -11320,7 +11320,7 @@ BEGIN
     organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas, es_ajuste, motivo_ajuste, created_by
   ) VALUES (
-    v_org, p_factura_id, CURRENT_DATE, v_saldo, v_moneda, 0,
+    v_org, p_factura_id, CURRENT_DATE, v_saldo, v_moneda, NULL,
     'Ajuste', 'Cierre sin pago: ' || p_motivo,
     COALESCE(p_comentario, ''), true, p_motivo, v_uid
   )

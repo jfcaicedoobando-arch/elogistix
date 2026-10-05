@@ -11,7 +11,7 @@ import { useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { formatFechaDia } from "@/lib/formatters/dates";
 import { useEmpresaCrm, usePasarAProspecto } from "@/features/crm/hooks/useObjetosCrm";
 import { estadoEmpresa } from "@/features/crm/services/estadoEmpresaCrm";
-import { varianteEstadoEmpresa } from "@/features/crm/components/objetos/FiltroEstadoEmpresaSelect";
+import { varianteEstadoEmpresa } from "@/features/crm/components/objetos/estadoEmpresaVisual";
 import { PropiedadesCard } from "@/features/crm/components/objetos/PropiedadesCard";
 import { VinculosCard } from "@/features/crm/components/objetos/VinculosCard";
 import { DesglosePuntajeCard } from "@/features/crm/components/scoring/DesglosePuntajeCard";
