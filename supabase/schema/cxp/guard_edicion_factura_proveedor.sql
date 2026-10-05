@@ -68,9 +68,17 @@ BEGIN
     WHEN 'INSERT' THEN ARRAY[NEW.proveedor_factura_id]
     WHEN 'DELETE' THEN ARRAY[OLD.proveedor_factura_id]
     ELSE ARRAY[OLD.proveedor_factura_id, NEW.proveedor_factura_id] END;
-  -- El bloqueo del padre precede a la escritura del concepto: la aprobación
-  -- y el reemplazo transaccional serializan también contra escrituras directas.
+  -- UPDATE/DELETE directo puede llegar con el renglón hijo ya bloqueado.
+  -- Si otro RPC tiene el padre, esperar aquí invertiría el orden padre/hijo
+  -- del reemplazo y podría provocar un deadlock. Rechazar permite recargar
+  -- y reintentar explícitamente, sin sobrescribir la edición de otra sesión.
   FOR v_id IN SELECT DISTINCT unnest(v_ids) ORDER BY 1 LOOP
+    BEGIN
+      PERFORM 1 FROM public.proveedor_facturas WHERE id = v_id FOR UPDATE NOWAIT;
+    EXCEPTION WHEN lock_not_available THEN
+      RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: la factura está siendo modificada por otra sesión. Recarga y revisa los datos actuales antes de volver a guardar los conceptos.'
+        USING ERRCODE = '40001';
+    END;
     UPDATE public.proveedor_facturas
        SET updated_at = clock_timestamp(),
            estado_aprobacion = CASE WHEN estado_aprobacion = 'aprobada' THEN 'pendiente'::public.estado_aprobacion_factura_proveedor ELSE estado_aprobacion END,
