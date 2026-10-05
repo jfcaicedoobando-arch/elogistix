@@ -1,7 +1,7 @@
 /**
  * Servicio: invita o crea cuenta para un agente del Portal vía edge `user-management`.
  */
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 
 export interface InviteAgenteInput {
   email: string;

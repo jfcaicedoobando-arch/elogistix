@@ -7,7 +7,7 @@
  * resolvemos el email vía la edge `user-management` action `list`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import { UNRESOLVED_EMAIL } from "./constants";
 import { logger } from "@/lib/observability/logger";
 

@@ -26,7 +26,7 @@ export function SelectorAdjuntos({ onArchivos, disabled }: Props) {
 
   return (
     <div tabIndex={0} onPaste={onPaste}
-      className="flex flex-wrap items-center gap-3 rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+      className="flex flex-wrap items-center gap-3 rounded-md border border-dashed border-border p-3 text-body text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
       <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={() => input.current?.click()}>
         <Paperclip className="mr-2 h-4 w-4" /> Adjuntar archivo
       </Button>

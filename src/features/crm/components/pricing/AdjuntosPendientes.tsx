@@ -22,10 +22,10 @@ export function AdjuntosPendientes({ archivos, onChange, disabled }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Archivos adjuntos</p>
+      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Archivos adjuntos</p>
       <SelectorAdjuntos onArchivos={agregar} disabled={disabled} />
       {archivos.length > 0 && (
-        <ul className="space-y-1 text-sm">
+        <ul className="space-y-1 text-body">
           {archivos.map((f, i) => (
             <li key={`${f.name}-${i}`} className="flex items-center justify-between rounded border border-border px-2 py-1">
               <span className="truncate">{f.name}</span>

@@ -5,13 +5,14 @@
  */
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOpcionesPricing } from "@/features/crm/hooks/usePricingCrm";
+import { useTarifasRespuestaPricing } from "@/features/crm/hooks/useTarifasRespuestaPricing";
 import { esRolPricing, puedeAgregarTarifaRespuesta } from "@/features/crm/services/pricing/permisosPricing";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
 import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
 import { ResumenSolicitudPricing } from "./ResumenSolicitudPricing";
-import { TarifasRespuestaPricing, useTarifasRespuesta } from "./TarifasRespuestaPricing";
+import { TarifasRespuestaPricing } from "./TarifasRespuestaPricing";
 
 interface Props { solicitud: SolicitudPricingRow }
 
@@ -19,7 +20,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { effectiveRole, user } = useAuth();
   const esPricing = esRolPricing(effectiveRole);
   const { data: opciones = [] } = useOpcionesPricing(s.id);
-  const { data: tarifas = [] } = useTarifasRespuesta(s.id);
+  const { data: tarifas = [] } = useTarifasRespuestaPricing(s.id);
   const editable = esPricing && s.estado === "enviada";
   const abierta = s.estado === "borrador" || s.estado === "enviada";
   const puedeCancelar = abierta && (esPricing || s.created_by === user?.id);

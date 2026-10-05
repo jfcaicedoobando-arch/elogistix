@@ -1,5 +1,5 @@
 /**
- * Invoca la Edge Function `user-management` con una sesión vigente.
+ * Servicio compartido: invoca `user-management` con una sesión vigente.
  * Si el backend responde 401 (token vencido/rotado, típico tras pestaña
  * inactiva), refresca la sesión y reintenta UNA vez antes de devolver el error.
  * Devuelve la misma forma que `supabase.functions.invoke`.

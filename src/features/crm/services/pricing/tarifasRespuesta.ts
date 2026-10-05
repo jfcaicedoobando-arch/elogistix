@@ -2,9 +2,9 @@
  * Tarifas del catálogo que responden a una solicitud de pricing.
  * La respuesta de pricing ES la tarifa (ligada por `solicitud_pricing_id`).
  */
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { tarifasRespuestaDbSchema } from "./readSchemas";
 
 export interface TarifaRespuestaRow {
   id: string;
@@ -27,12 +27,10 @@ const COLS = [
 ].join(", ");
 
 export async function listarTarifasRespuesta(solicitudId: string): Promise<TarifaRespuestaRow[]> {
-  // SAFE-CAST: columnas nuevas aún no reflejadas en los tipos generados.
-  const db = fromDb<SupabaseClient>(supabase);
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("costeo_tarifas").select(COLS)
     .eq("solicitud_pricing_id", solicitudId)
     .order("created_at", { ascending: true }).limit(50);
   if (error) throw error;
-  return fromDb<TarifaRespuestaRow[]>(data ?? []);
+  return fromDb(data ?? [], tarifasRespuestaDbSchema);
 }

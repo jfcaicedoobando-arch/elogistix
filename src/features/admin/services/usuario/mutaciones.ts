@@ -4,7 +4,7 @@
  * sesión en `./mutaciones.auth.ts` (límite de 200 líneas, Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { invokeUserManagement } from "@/lib/auth/invokeUserManagement";
+import { invokeUserManagement } from "@/services/userManagement/invoke";
 import type { AppRole } from "@/types/appRole";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { resetRedirectUrl } from "./mutaciones.auth";
