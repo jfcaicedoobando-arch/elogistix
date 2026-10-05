@@ -5,7 +5,7 @@
  */
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOpcionesPricing } from "@/features/crm/hooks/usePricingCrm";
-import { esRolPricing } from "@/features/crm/services/pricing/permisosPricing";
+import { esRolPricing, puedeAgregarTarifaRespuesta } from "@/features/crm/services/pricing/permisosPricing";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
@@ -32,7 +32,8 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
         <OpcionPricingEditor key={o.id} solicitudId={s.id} organizationId={s.organization_id}
           orden={o.orden} opcion={o} editable={false} />
       ))}
-      <TarifasRespuestaPricing solicitudId={s.id} editable={editable} hayOpcionesViejas={opciones.length > 0} />
+      <TarifasRespuestaPricing solicitudId={s.id} hayOpcionesViejas={opciones.length > 0}
+        editable={s.estado === "enviada" && puedeAgregarTarifaRespuesta(effectiveRole)} />
     </div>
   );
 }
