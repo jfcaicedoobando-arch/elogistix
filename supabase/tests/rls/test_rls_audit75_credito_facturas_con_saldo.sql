@@ -21,9 +21,9 @@ BEGIN
     importe := CASE n WHEN 4 THEN 29 WHEN 5 THEN 29.04 ELSE 116 END;
     fac := gen_random_uuid();
     INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, numero, fecha_emision,
-      fecha_vencimiento, moneda, tipo_cambio, total, estado, metodo_pago)
+      fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado, metodo_pago)
     VALUES (fac, fx.org_a, cli, 'Cliente AUD75', 'AUD75-A' || n, CURRENT_DATE,
-      CURRENT_DATE + 30, 'MXN', 1, importe, 'Emitida', 'PPD');
+      CURRENT_DATE + 30, 'MXN', 1, importe, 0, importe, 'Emitida', 'PPD');
     IF n <= 2 THEN
       pago := gen_random_uuid();
       INSERT INTO public.pagos_factura(id, factura_id, organization_id, fecha_pago, monto, moneda,
