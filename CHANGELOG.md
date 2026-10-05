@@ -2,6 +2,7 @@
 
 ## [13.824.27] - Unreleased
 
+- **fix(Sentry · JAVASCRIPT-REACT-7F, 79, 7G, 7D)**: el cierre sin pago guarda el ajuste sin tipo de cambio (antes 0, rechazado por la base); `client-error-log` responde 400 ante un cuerpo JSON que no es objeto; retirar del buzón un documento ya retirado (doble clic) ya no marca error. 7D ya estaba cubierto por el filtro de estados vigente.
 - **fix(cobros y REP · 88, 91–93)**: la aplicación en moneda de factura queda separada de la valuación a MXN del cobro; el complemento conserva el monto recibido y su equivalencia convenida. La base calcula la diferencia cambiaria realizada y rechaza formas incompatibles antes de registrar. El claim protege importe, forma, fecha, referencia, orden fiscal y eliminación mientras se emite, sin recalcular metadatos históricos.
 - **fix(Tesorería · 86, 89, 94, 98–100)**: los rangos anteriores al arranque muestran saldo no disponible; PDF y pantalla comparten monedas. Se conserva el identificador fiscal una sola vez, el saldo actual incluye NC aplicadas, efectivo sin banco indica No aplica y las devoluciones de anticipos aparecen como entradas independientes en el neto, sin borrar el egreso bruto.
 - **fix(NC · 87, 95–96)**: porcentajes repetidos no se acumulan. Quitar XML limpia selección, UUID y adjuntos derivados e ignora respuestas tardías; el parser valida tipo, UUID, emisor, receptor y relación con la factura de proveedor, dentro de la organización autorizada, antes del prellenado.
