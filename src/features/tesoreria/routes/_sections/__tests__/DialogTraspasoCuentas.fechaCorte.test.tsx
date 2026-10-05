@@ -36,7 +36,7 @@ function preparar() {
   const rendered = render(<DialogTraspasoCuentas {...props} />);
   fireEvent.change(screen.getByLabelText("Cuenta origen"), { target: { value: "origen" } });
   fireEvent.change(screen.getByLabelText("Cuenta destino"), { target: { value: "destino" } });
-  fireEvent.input(screen.getByLabelText("Monto a transferir"), { target: { value: "20" } });
+  fireEvent.input(screen.getByLabelText("Monto transferido"), { target: { value: "20" } });
   return rendered;
 }
 function fecha(texto: string) {

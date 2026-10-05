@@ -48,10 +48,11 @@ export function SegmentoTabs({
   return (
     <Tabs value={value} onValueChange={onChange} className="w-full">
       <TabsList aria-label="Segmento de cotizaciones">
-        <TabsTrigger value="clientes">Clientes ({conteos.clientes})</TabsTrigger>
-        <TabsTrigger value="prospectos">Prospectos ({conteos.prospectos})</TabsTrigger>
+        <TabsTrigger value="clientes">De clientes ({conteos.clientes})</TabsTrigger>
+        <TabsTrigger value="prospectos">A prospectos ({conteos.prospectos})</TabsTrigger>
         <TabsTrigger value="todas">Todas ({conteos.todas})</TabsTrigger>
       </TabsList>
+      <p className="mt-1 text-body-sm text-muted-foreground">Los conteos corresponden a cotizaciones, no a personas o empresas.</p>
     </Tabs>
   );
 }

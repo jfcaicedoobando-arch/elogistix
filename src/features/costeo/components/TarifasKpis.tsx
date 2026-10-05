@@ -56,7 +56,7 @@ export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, ac
         className={cn(activeKpi === "porVencer" && activeRing.warning)}
       />
       <KpiCard
-        label="Pendientes aprobación"
+        label="Pendientes de aprobación"
         value={k.pendientes}
         hint={k.borradoresVencidos > 0 ? `+${k.borradoresVencidos} borradores vencidos (requieren renovar vigencia)` : undefined}
         icon={AlertTriangle}

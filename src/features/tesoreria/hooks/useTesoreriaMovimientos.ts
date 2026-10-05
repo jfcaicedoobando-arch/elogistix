@@ -88,6 +88,7 @@ export function useDesconciliar() {
     mutationFn: (movId: string) => desconciliarMovimiento(movId),
     invalidate: queryKeys.tesoreria.all,
     successTitle: "Movimiento desconciliado",
+    successDescription: "Se retiró el vínculo bancario. El pago y sus aplicaciones a facturas se conservaron.",
     errorTitle: "Error al desconciliar",
     errorMethod: "DESCONCILIAR",
   });

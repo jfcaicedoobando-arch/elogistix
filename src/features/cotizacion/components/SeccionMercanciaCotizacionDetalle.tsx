@@ -48,7 +48,7 @@ export default function SeccionMercanciaCotizacionDetalle({ cotizacion }: Props)
         {cotizacion.descripcion_adicional
           && cotizacion.descripcion_adicional !== cotizacion.descripcion_mercancia && (
           <div className="text-body">
-            <span className="text-muted-foreground">Descripción Adicional</span>
+            <span className="text-muted-foreground">Descripción adicional</span>
             <p className="font-medium whitespace-pre-wrap">{cotizacion.descripcion_adicional}</p>
           </div>
         )}

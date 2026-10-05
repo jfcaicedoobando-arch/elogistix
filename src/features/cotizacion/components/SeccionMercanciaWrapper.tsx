@@ -62,7 +62,7 @@ export default function SeccionMercanciaWrapper({
       <Accordion type="multiple" className="w-full">
         <AccordionItem value="descripcion-adicional" className="border-b-0">
           <AccordionTrigger className="text-body font-medium py-2 hover:no-underline">
-            Descripción Adicional
+            Descripción adicional
           </AccordionTrigger>
           <AccordionContent>
             <Textarea

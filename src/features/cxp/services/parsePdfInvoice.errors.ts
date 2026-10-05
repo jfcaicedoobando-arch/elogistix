@@ -25,7 +25,7 @@ export interface Attempt {
 export async function mapHttpError(err: FunctionsHttpError): Promise<{ status: number | null; message: string }> {
   const ctx = err.context as Response | undefined;
   const status = ctx?.status ?? null;
-  let message = `parse-invoice-pdf respondió HTTP ${status ?? "?"}`;
+  let message = "No se pudo leer la factura PDF. Intenta de nuevo o usa Captura manual.";
   try {
     const body = await ctx?.clone().json();
     if (body?.error) message = body.error;
@@ -47,17 +47,18 @@ function esFallaDeRed(last: Attempt | null, online: boolean): boolean {
 
 function mensajeAmigable(last: Attempt | null, fallaDeRed: boolean, serviceUnavailable: boolean): string {
   if (fallaDeRed) {
-    return "No pudimos contactar al servidor desde este dispositivo. Revisa tu conexión (Wi-Fi o datos) e intenta de nuevo, o usa el tab de \"Captura manual\".";
+    return "No pudimos contactar al servidor desde este dispositivo. Revisa tu conexión (Wi-Fi o datos) e intenta de nuevo, o usa la pestaña Captura manual.";
   }
   if (serviceUnavailable) {
-    return "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos.";
+    return "El servicio de captura por IA no está disponible en este momento. Puedes usar la pestaña Captura manual o intentar de nuevo en unos segundos.";
   }
   // Un 401 tras reintentar con sesión refrescada sólo puede ser sesión vencida:
   // mostrar "Token inválido" no le dice nada al usuario.
   if (last?.status === 401) {
     return "Tu sesión expiró. Vuelve a iniciar sesión y sube el PDF de nuevo.";
   }
-  return last?.message ?? "No se pudo procesar el PDF con IA";
+  if (last?.status === 200) return "No se pudieron extraer los datos de este PDF. Revisa que sea legible o usa Captura manual.";
+  return "No se pudo leer la factura PDF. Intenta de nuevo o usa Captura manual.";
 }
 
 export function buildFailure(file: File, last: Attempt | null, latencyMs: number): CfdiUploadError {
@@ -77,6 +78,7 @@ export function buildFailure(file: File, last: Attempt | null, latencyMs: number
       lastStatus: last?.status ?? null,
       phase: last?.phase ?? "request",
       errorName: "PdfIaUploadError",
+      technicalMessage: last?.message,
     },
     last?.cause ?? null,
   );

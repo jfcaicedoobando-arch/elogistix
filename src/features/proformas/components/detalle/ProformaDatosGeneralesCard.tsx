@@ -67,7 +67,7 @@ export function ProformaDatosGeneralesCard({
       <CardContent className="grid grid-cols-2 gap-4 text-body">
         <Field label="Vigencia" value={vigenciaPlus30(fechaEmision)} />
         <Field
-          label="Días crédito"
+          label="Días de crédito"
           value={formatDiasCredito(credito.dias)}
           badge={credito.heredado ? "Heredado del cliente" : undefined}
         />

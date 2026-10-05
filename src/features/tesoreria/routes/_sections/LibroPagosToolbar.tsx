@@ -40,7 +40,7 @@ export function LibroPagosToolbar({
     <>
       <FiltroCuenta cuentas={cuentas} value={filtros.cuentaId} onChange={(cuentaId) => onFiltrosChange({ cuentaId })} />
       <FiltroSelect label="Moneda" value={filtros.moneda} options={["todas", ...monedas]} onChange={(moneda) => onFiltrosChange({ moneda })} />
-      <FiltroSelect label="Método de pago" value={filtros.metodo} options={["todos", ...metodos]} onChange={(metodo) => onFiltrosChange({ metodo })} />
+      <FiltroSelect label="Medio de pago" value={filtros.metodo} options={["todos", ...metodos]} onChange={(metodo) => onFiltrosChange({ metodo })} />
       <FiltroSelect label="Conciliación" value={filtros.conciliacion} options={["todos", "conciliados", "pendientes"]} onChange={(conciliacion) => onFiltrosChange({ conciliacion: conciliacion as FiltroConciliacion })} />
       <FiltroSelect label="Complemento" value={filtros.rep} options={["todos", "timbrado", "pendiente", "cancelado"]} onChange={(rep) => onFiltrosChange({ rep: rep as FiltroRep })} />
     </>

@@ -20,7 +20,7 @@ export function ConflictoPestanaAlert({ onDescartar }: Props) {
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="text-body-sm flex items-center justify-between gap-2">
           <span>
-            <strong>Tienes este wizard abierto en otra pestaña</strong> y acaba de guardar
+            <strong>Tienes este asistente abierto en otra pestaña</strong> y acaba de guardar
             cambios ahí. Para no mezclar capturas, trabaja en una sola pestaña.
           </span>
           <Button type="button" variant="ghost" size="sm" onClick={onDescartar}>

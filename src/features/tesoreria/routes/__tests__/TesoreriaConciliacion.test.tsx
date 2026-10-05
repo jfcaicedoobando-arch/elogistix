@@ -129,13 +129,13 @@ describe("TesoreriaConciliacion — VirtualDataTable (P3)", () => {
     expect(screen.getByText("Fecha")).toBeInTheDocument();
   });
 
-  it("el botón 'Conciliar exactos' sigue disponible y deshabilitado sin pendientes", () => {
+  it("el botón 'Conciliar coincidencias únicas' sigue disponible y deshabilitado sin pendientes", () => {
     mockUseMovimientos.mockReturnValue({
       data: [{ ...movimientos[1] }],
       isLoading: false,
     });
     renderPage();
     seleccionarCuenta();
-    expect(screen.getByRole("button", { name: /Conciliar exactos/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Conciliar coincidencias únicas/ })).toBeDisabled();
   });
 });

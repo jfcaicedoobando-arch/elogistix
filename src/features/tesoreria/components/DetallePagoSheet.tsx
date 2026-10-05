@@ -38,7 +38,7 @@ function DetallePagoConvencional({ ref_pago, onOpenChange }: Props) {
         <SheetHeader>
           <SheetTitle>Detalle del pago</SheetTitle>
           <SheetDescription>
-            Movimiento bancario conciliado y facturas a las que se aplicó.
+            Datos del pago, aplicaciones a facturas y conciliación bancaria.
           </SheetDescription>
         </SheetHeader>
 

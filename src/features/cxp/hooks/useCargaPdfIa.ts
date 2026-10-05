@@ -9,6 +9,7 @@ import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 
 interface Args {
   categorias: { id: string; nombre: string }[];
@@ -60,11 +61,13 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando PDF";
       const isTimeout = msg === "CLIENT_TIMEOUT";
-      const title = isTimeout
+      const isAuthMessage = msg === AUTH_ERROR_MESSAGES.sessionRefreshFailed || msg === AUTH_ERROR_MESSAGES.sessionRequired("procesar la factura PDF");
+      const description = isTimeout
         ? "La IA tardó demasiado en procesar el PDF. Inténtalo de nuevo o usa Captura manual."
-        : msg;
+        : e instanceof CfdiUploadError || isAuthMessage ? msg : "Intenta de nuevo o usa Captura manual. Puedes compartir el JSON de diagnóstico con soporte.";
       notifyError(undefined, {
-        title,
+        title: "No se pudo leer la factura PDF",
+        description,
         error: e,
         context: e instanceof CfdiUploadError ? { ...e.context } as Record<string, unknown> : { pdfName: pdf.name, pdfSize: pdf.size },
         method: "FEATURES_CXP_HOOKS_USECARGAPDFIA_ERR",

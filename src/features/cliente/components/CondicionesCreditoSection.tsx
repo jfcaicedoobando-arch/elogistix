@@ -57,7 +57,7 @@ export function CondicionesCreditoSection<T extends Value>({ form, setForm }: Pr
   return (
     <FormDialogSection
       title="Condiciones de crédito"
-      description="Fuente única de verdad. Aplica a proformas y facturas emitidas al cliente."
+      description="Estas condiciones se usan al preparar las proformas y facturas del cliente."
     >
       <div>
         <Label htmlFor="cliente-dias-credito">Días de crédito</Label>

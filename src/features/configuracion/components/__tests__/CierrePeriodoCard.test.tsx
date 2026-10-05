@@ -44,7 +44,7 @@ describe("CierrePeriodoCard", () => {
   it("sin cierre configurado no muestra aviso ni botón de reapertura", () => {
     renderCard();
     expect(screen.getByText("Cierre de periodo contable")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Reabrir periodo/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Preparar reapertura/i })).toBeNull();
   });
 
   it("avance de fecha (sin retroceso) no exige motivo y llama al servicio", async () => {
@@ -57,7 +57,7 @@ describe("CierrePeriodoCard", () => {
 
     expect(screen.queryByLabelText(/Motivo del retroceso/i)).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /Guardar cierre/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Actualizar fecha de cierre/i }));
 
     await waitFor(() =>
       expect(actualizarCierrePeriodo).toHaveBeenCalledWith("org-1", "2026-03-31", undefined),
@@ -68,17 +68,19 @@ describe("CierrePeriodoCard", () => {
     valorGuardado = "2026-01-31";
     renderCard();
 
-    fireEvent.click(screen.getByRole("button", { name: /Reabrir periodo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Preparar reapertura/i }));
     expect(screen.getByLabelText(/Motivo del retroceso/i)).toBeInTheDocument();
+    expect(screen.getByText(/La reapertura aún no se ha aplicado/)).toBeInTheDocument();
+    expect(actualizarCierrePeriodo).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: /Guardar cierre/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar reapertura/i }));
     expect(await screen.findByText(/al menos 10 caracteres/i)).toBeInTheDocument();
     expect(actualizarCierrePeriodo).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/Motivo del retroceso/i), {
       target: { value: "Se corrige una factura mal capturada" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Guardar cierre/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar reapertura/i }));
 
     await waitFor(() =>
       expect(actualizarCierrePeriodo).toHaveBeenCalledWith(
@@ -98,11 +100,11 @@ describe("CierrePeriodoCard", () => {
     actualizarCierrePeriodo.mockRejectedValue(errorOriginal);
     renderCard();
 
-    fireEvent.click(screen.getByRole("button", { name: /Reabrir periodo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Preparar reapertura/i }));
     fireEvent.change(screen.getByLabelText(/Motivo del retroceso/i), {
       target: { value: "Motivo suficientemente largo" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Guardar cierre/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar reapertura/i }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     const [, opts] = notifyError.mock.calls[0];

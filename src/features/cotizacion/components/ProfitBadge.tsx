@@ -21,7 +21,7 @@ const UMBRAL_SANO_MXN = 10;
  * Muestra un badge de porcentaje de profit coloreado según el nivel.
  *
  * v13.823.336 — recibe el importe de venta. Sin venta capturada el margen es
- * indeterminado: se muestra "—" en tono neutro (antes decía "0.0%", que se leía
+ * indeterminado: se muestra "No calculable" en tono neutro (antes decía "0.0%", que se leía
  * como un margen real de cero).
  */
 export function ProfitBadge({
@@ -31,7 +31,7 @@ export function ProfitBadge({
   if (sinVenta) {
     return (
       <Hint label="Sin venta capturada">
-        <MargenBadge pct={null} venta={0} umbrales={UMBRAL_MARGEN_COTIZACION} label="—" />
+        <MargenBadge pct={null} venta={0} umbrales={UMBRAL_MARGEN_COTIZACION} />
       </Hint>
     );
   }

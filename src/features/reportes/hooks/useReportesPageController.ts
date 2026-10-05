@@ -130,10 +130,10 @@ export function useReportesPageController() {
         { key: "total_embarques", label: "Embarques" },
         { key: "venta_usd", label: "Venta USD" },
         { key: "costo_usd", label: "Costo USD" },
-        { key: "profit_usd", label: "Profit USD" },
+        { key: "profit_usd", label: "Utilidad USD" },
         { key: "margen", label: "Margen %" },
       ],
-      sorted.map((c) => ({ ...c, margen: c.margen.toFixed(1) })),
+      sorted.map((c) => ({ ...c, margen: c.venta_usd === 0 ? "No calculable" : c.margen.toFixed(1) })),
     );
   };
 

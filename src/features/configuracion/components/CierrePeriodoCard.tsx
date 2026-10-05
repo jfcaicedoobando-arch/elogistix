@@ -87,7 +87,7 @@ export default function CierrePeriodoCard() {
         <div className="max-w-xs">
           <FormField
             label="Cerrado hasta"
-            hint="Deja el campo vacío para reabrir todos los periodos"
+            hint="Vaciar el campo prepara la reapertura de todos los periodos; confirma el cambio para aplicarlo."
           >
             <DatePickerMx value={fecha} onChange={setFecha} title="Cerrado hasta" />
           </FormField>
@@ -96,11 +96,12 @@ export default function CierrePeriodoCard() {
         {mostrarMotivo ? (
           <CierrePeriodoMotivoField motivo={motivo} onChange={setMotivo} error={motivoError} />
         ) : null}
+        {guardada && !fecha && <p className="text-body-sm text-muted-foreground">La reapertura aún no se ha aplicado. Captura el motivo y pulsa “Confirmar reapertura”.</p>}
 
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => guardar(fecha)} disabled={mutation.isPending || (!fecha && !guardada)}>
             <Save className="h-4 w-4 mr-2" aria-hidden="true" />
-            Guardar cierre
+            {guardada && !fecha ? "Confirmar reapertura" : guardada && fecha !== guardada ? "Actualizar fecha de cierre" : "Guardar cierre"}
           </Button>
           {guardada && fecha !== "" ? (
             <Button
@@ -109,7 +110,7 @@ export default function CierrePeriodoCard() {
               disabled={mutation.isPending}
             >
               <Unlock className="h-4 w-4 mr-2" aria-hidden="true" />
-              Reabrir periodo
+              Preparar reapertura
             </Button>
           ) : null}
         </div>

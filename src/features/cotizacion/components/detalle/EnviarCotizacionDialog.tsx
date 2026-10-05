@@ -26,7 +26,7 @@ export function EnviarCotizacionDialog({ open, onOpenChange, cotizacion, totalMx
       onOpenChange={onOpenChange}
       clienteId={cotizacion.cliente_id ?? null}
       titulo={esReenvio ? "Reenviar cotización por correo" : "Enviar cotización por correo"}
-      descripcion="Se enviará un correo branded al cliente con el PDF y un botón al portal."
+      descripcion="Se enviará un correo con la identidad de tu empresa, el PDF de la cotización y un enlace al portal."
       buildAsuntoInicial={() => `Cotización ${cotizacion.folio} — ${cotizacion.origen} → ${cotizacion.destino}`}
       mostrarMarcarEnviada={cotizacion.estado === "Borrador"}
       labelMarcarEnviada={<>Marcar la cotización como <strong>Enviada</strong></>}

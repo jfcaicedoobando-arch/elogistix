@@ -23,8 +23,8 @@ export function MargenBadge({ pct, umbrales, venta, label, className }: MargenBa
   const tono = tonoMargen(pct, { umbrales, venta });
   const variant = tono === "neutral" ? "neutral" : tono;
   return (
-    <Badge variant={variant} className={className}>
-      {label ?? (pct == null ? "—" : formatPercent(pct))}
+    <Badge variant={variant} className={className} aria-label={venta === 0 ? "Margen no calculable: sin ventas como base" : undefined}>
+      {venta === 0 ? "No calculable" : label ?? (pct == null ? "—" : formatPercent(pct))}
     </Badge>
   );
 }
@@ -32,8 +32,8 @@ export function MargenBadge({ pct, umbrales, venta, label, className }: MargenBa
 /** Variante sin recuadro: sólo el porcentaje coloreado (tablas densas). */
 export function MargenTexto({ pct, umbrales, venta, className }: Omit<MargenBadgeProps, "label">) {
   return (
-    <span className={cn("tabular-nums", claseTonoMargen(pct, { umbrales, venta }), className)}>
-      {pct == null ? "—" : formatPercent(pct)}
+    <span className={cn("tabular-nums", claseTonoMargen(pct, { umbrales, venta }), className)} aria-label={venta === 0 ? "Margen no calculable: sin ventas como base" : undefined}>
+      {venta === 0 ? "No calculable" : pct == null ? "—" : formatPercent(pct)}
     </span>
   );
 }

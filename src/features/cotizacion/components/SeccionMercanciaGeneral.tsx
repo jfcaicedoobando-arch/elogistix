@@ -16,7 +16,7 @@ export default function SeccionMercanciaGeneral({ msdsFile, setMsdsFile }: Props
     <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-          <Label htmlFor="cot-tipo-unidad">Tipo de Unidad</Label>
+          <Label htmlFor="cot-tipo-unidad">Tipo de unidad</Label>
           <Input
             id="cot-tipo-unidad"
             type="text"

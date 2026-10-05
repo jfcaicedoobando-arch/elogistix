@@ -121,7 +121,7 @@ export function buildPagosProgramadosColumns(
         }
         return f.fecha_programada_pago ? (
           <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(f)}>
-            <Wallet className="size-3.5 mr-1.5" /> Ejecutar pago
+            <Wallet className="size-3.5 mr-1.5" /> Registrar pago
           </Button>
         ) : (
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAbrirFactura(f); }}>

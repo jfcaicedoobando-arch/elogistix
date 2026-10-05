@@ -110,6 +110,7 @@ export default function Papelera() {
         entityName={purgeTarget ? `«${purgeTarget.label}»` : "este registro"}
         description="El registro se eliminará definitivamente de la base de datos. Esta acción no se puede deshacer."
         finalDescription="Una vez purgado no podrás recuperarlo desde la papelera. ¿Continuar?"
+        confirmLabel="Eliminar definitivamente"
         isPending={purge.isPending}
         onConfirm={async () => {
           if (purgeTarget) await purge.mutateAsync(purgeTarget.id);

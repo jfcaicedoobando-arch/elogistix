@@ -56,7 +56,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
       <div className="space-y-1.5">
-        <Label htmlFor="factura-manual-dias-credito">Días crédito</Label>
+        <Label htmlFor="factura-manual-dias-credito">Días de crédito</Label>
         <Hint label={diasReadonly ? diasReadonlyReason : undefined}>
           <Input
             id="factura-manual-dias-credito"

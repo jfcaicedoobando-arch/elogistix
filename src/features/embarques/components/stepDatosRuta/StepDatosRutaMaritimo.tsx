@@ -86,7 +86,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
   return (
     <>
       <div className="space-y-2">
-        <Label>Puerto Origen *</Label>
+        <Label>Puerto de origen *</Label>
         <Controller name="puertoOrigen" render={({ field }) => (
           <PortSelect
             value={field.value}
@@ -99,7 +99,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
         {errors.puertoOrigen && <p className={errClass}>{errors.puertoOrigen}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Puerto Destino *</Label>
+        <Label>Puerto de destino *</Label>
         <Controller name="puertoDestino" render={({ field }) => (
           <PortSelect
             value={field.value}

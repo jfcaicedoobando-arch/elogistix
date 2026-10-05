@@ -39,7 +39,7 @@ export function TraspasoResumen({
 
   return (
     <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
-      <Renglon label="Monto a transferir" value={formatCurrency(r.montoOrigen, monedaOrigen)} />
+      <Renglon label="Monto transferido" value={formatCurrency(r.montoOrigen, monedaOrigen)} />
       {r.comision > 0 && (
         <>
           <Renglon label="Comisión bancaria" value={formatCurrency(r.comision, monedaOrigen)} muted />
@@ -61,10 +61,10 @@ export function TraspasoResumen({
       )}
       <div className="flex items-center gap-2 pt-1 text-muted-foreground">
         <ArrowDown className="size-4" aria-hidden />
-        <span className="text-body-sm">Se abona en la cuenta destino</span>
+        <span className="text-body-sm">Abono que se registrará en el ERP</span>
       </div>
       <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2">
-        <span className="text-body font-medium">Llega a la cuenta destino</span>
+        <span className="text-body font-medium">Monto recibido en la cuenta destino</span>
         <span className="text-h4 font-semibold tabular-nums text-primary">
           {formatCurrency(r.montoDestino, monedaDestino)}
         </span>

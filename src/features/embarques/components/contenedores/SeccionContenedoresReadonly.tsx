@@ -101,7 +101,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
           </CardTitle>
           <p className="text-body-sm text-muted-foreground mt-1">
             Para agregar, editar o eliminar contenedores usa el botón
-            <span className="font-medium"> Editar embarque</span>.
+            <span className="font-medium"> Editar contenedores</span>.
           </p>
         </div>
         <Button type="button" size="sm" variant="outline" onClick={irAEditar}>

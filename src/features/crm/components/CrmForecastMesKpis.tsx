@@ -1,5 +1,5 @@
 /**
- * Forecast del mes en KPIs, una tira por moneda.
+ * Proyección de ventas del mes en KPIs, una tira por moneda.
  * P1-5: nunca se suman monedas distintas ni se etiquetan como MXN.
  */
 import { Target, TrendingUp, Trophy } from "lucide-react";
@@ -17,25 +17,26 @@ const STRIP_CLASS =
 function TiraPlaceholder({ valor }: { valor: string }) {
   return (
     <KpiStrip desktopCols={3} className={STRIP_CLASS}>
-      <CrmStatStripItem icon={TrendingUp} label="Pipeline" value={valor} />
-      <CrmStatStripItem icon={Target} label="Ponderado" value={valor} />
+      <CrmStatStripItem icon={TrendingUp} label="Oportunidades abiertas" value={valor} />
+      <CrmStatStripItem icon={Target} label="Valor ponderado" value={valor} />
       <CrmStatStripItem icon={Trophy} label="Ganado" value={valor} />
     </KpiStrip>
   );
 }
 
 export function CrmForecastMesKpis() {
-  // FIX-8 (auditoría): "Forecast del mes" es SOLO el mes en curso, calendario MX.
+  // FIX-8 (auditoría): "Proyección de ventas del mes" es SOLO el mes en curso, calendario MX.
   const { data: forecast, isLoading, isError, refetch } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(0));
   const totalesPorMoneda = forecast?.totalesPorMoneda ?? [];
 
   return (
     <section className="space-y-2">
       <SectionHeading as="h2" variant="overline">
-        Forecast del mes
+        Proyección de ventas del mes
       </SectionHeading>
+      <p className="text-body-sm text-muted-foreground">Oportunidades abiertas: importe estimado. Valor ponderado: importe × probabilidad de cierre, sin sumar monedas distintas.</p>
       {isError ? (
-        <ErrorStateInline message="No se pudo cargar el forecast del mes." onRetry={() => void refetch()} />
+        <ErrorStateInline message="No se pudo cargar la proyección de ventas del mes." onRetry={() => void refetch()} />
       ) : isLoading ? (
         <TiraPlaceholder valor="…" />
       ) : totalesPorMoneda.length === 0 ? (
@@ -45,13 +46,13 @@ export function CrmForecastMesKpis() {
           <KpiStrip key={t.moneda} desktopCols={3} className={STRIP_CLASS}>
             <CrmStatStripItem
               icon={TrendingUp}
-              label={`Pipeline (${t.moneda})`}
+              label={`Oportunidades abiertas (${t.moneda})`}
               value={formatCurrencyCompact(t.totalPipeline, t.moneda)}
               valueTooltip={formatCurrency(t.totalPipeline, t.moneda)}
             />
             <CrmStatStripItem
               icon={Target}
-              label={`Ponderado (${t.moneda})`}
+              label={`Valor ponderado (${t.moneda})`}
               value={formatCurrencyCompact(t.totalPonderado, t.moneda)}
               valueTooltip={formatCurrency(t.totalPonderado, t.moneda)}
             />

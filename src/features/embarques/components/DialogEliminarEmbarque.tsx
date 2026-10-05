@@ -75,8 +75,8 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
       });
       notifySuccess(undefined, {
-        title: "Embarque eliminado",
-        description: `${label} fue eliminado permanentemente.`,
+        title: "Embarque enviado a la papelera",
+        description: `${label} dejó de aparecer en los listados activos.`,
       });
       navigate("/embarques");
       onOpenChange(false);
@@ -129,13 +129,14 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       }}
       entityName={`embarque ${label}`}
       description={
-        <p>¿Estás seguro de que deseas eliminar este embarque? Esta acción no se puede deshacer.</p>
+        <p>El embarque dejará de aparecer en los listados activos y se enviará a la papelera.</p>
       }
       finalDescription={
         <>
-          Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta y notas asociados al embarque <strong>{label}</strong>.
+          Se dará de baja el embarque <strong>{label}</strong> junto con sus documentos, costos, conceptos de venta y notas asociados. No es un borrado físico. Un administrador podrá revisar su recuperación desde Papelera.
         </>
       }
+      confirmLabel="Enviar a la papelera"
       isPending={eliminarEmbarque.isPending}
       onConfirm={handleEliminar}
     />

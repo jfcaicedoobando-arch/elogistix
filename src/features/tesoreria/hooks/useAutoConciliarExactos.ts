@@ -65,7 +65,7 @@ export function useAutoConciliarExactos(
       });
     } else if (revision > 0) {
       notifyWarning(undefined, {
-        title: "No se encontraron matches exactos únicos",
+        title: "No se conciliaron movimientos automáticamente",
         description: `${revision} movimientos pendientes requieren revisión`,
       });
     }

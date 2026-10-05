@@ -37,7 +37,7 @@ export function CerrarEmbarqueDialog({
       title="Confirmar cierre del embarque"
       description={
         <>
-          Esta acción es <strong>irreversible</strong> sin intervención de un super admin.
+          El cierre bloqueará la edición del embarque. Un administrador autorizado podrá reabrirlo con un motivo que quedará registrado en bitácora.
           Escribe <strong>CERRAR</strong> para confirmar.
         </>
       }

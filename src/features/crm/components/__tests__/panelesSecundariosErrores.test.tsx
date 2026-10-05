@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { formatCurrencyCompact } from "@/lib/formatters";
 
 const forecast = vi.fn();
 const leaderboard = vi.fn();
@@ -41,15 +42,17 @@ describe("CrmForecastMesKpis — error vs ceros", () => {
     forecast.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
     render(<CrmForecastMesKpis />);
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByText(/No se pudo cargar el forecast del mes/i)).toBeInTheDocument();
-    expect(screen.queryByText("Pipeline")).toBeNull();
+    expect(screen.getByText(/No se pudo cargar la proyección de ventas del mes/i)).toBeInTheDocument();
+    expect(screen.queryByText("Oportunidades abiertas")).toBeNull();
+    expect(screen.queryByText(formatCurrencyCompact(0, "MXN"))).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /reintentar/i }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it("éxito sin movimientos sí muestra la tira en ceros", () => {
     render(<CrmForecastMesKpis />);
-    expect(screen.getByText("Pipeline")).toBeInTheDocument();
+    expect(screen.getByText("Oportunidades abiertas")).toBeInTheDocument();
+    expect(screen.getAllByText(formatCurrencyCompact(0, "MXN"))).toHaveLength(3);
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
@@ -59,7 +62,7 @@ describe("LeaderboardVendedores — error vs vacío", () => {
     const refetch = vi.fn();
     leaderboard.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
     render(<LeaderboardVendedores />);
-    expect(screen.getByText(/No se pudo cargar el leaderboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/No se pudo cargar el desempeño de vendedores/i)).toBeInTheDocument();
     expect(screen.queryByText(/Sin actividad de cierre/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /reintentar/i }));
     expect(refetch).toHaveBeenCalledTimes(1);

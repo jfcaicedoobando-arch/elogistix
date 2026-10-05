@@ -74,8 +74,8 @@ export function useCancelarAnticipo() {
     // Ola 12 · R3P-02: el anticipo aparece en el estado de cuenta.
     // MNY P2.8: cancelar revierte el movimiento bancario del anticipo.
     invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all, queryKeys.tesoreria.all],
-    successTitle: "Anticipo cancelado",
-    errorTitle: "No se pudo cancelar el anticipo",
+    successTitle: "Registro de anticipo anulado",
+    errorTitle: "No se pudo anular el registro del anticipo",
     errorMethod: "ANTICIPOS_PROVEEDOR_CANCELAR",
   });
 }
@@ -108,7 +108,7 @@ export function useVincularAnticipoEmbarque() {
     mutationFn: (v: VincularEmbarqueVars) => vincularAnticipoEmbarque(v.id, v.embarqueId),
     // Ola 12 · R3P-02: el anticipo aparece en el estado de cuenta.
     invalidate: [anticiposProveedorKeys.all, queryKeys.proveedores.all],
-    successTitle: "Embarque actualizado",
+    successTitle: "Vínculo del anticipo actualizado",
     errorTitle: "No se pudo vincular el embarque",
     errorMethod: "ANTICIPOS_PROVEEDOR_VINCULAR_EMBARQUE",
   });

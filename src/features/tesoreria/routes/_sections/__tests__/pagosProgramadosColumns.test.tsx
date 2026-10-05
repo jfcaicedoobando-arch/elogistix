@@ -1,6 +1,6 @@
 /**
  * MNY-04 — sin fecha programada la RPC responde LC_PAGO_SIN_PROGRAMACION, así
- * que la bandeja debe ofrecer "Programar pago" y no "Ejecutar pago".
+ * que la bandeja debe ofrecer "Programar pago" y no "Registrar pago".
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -39,12 +39,12 @@ describe("columna de acciones de pagos programados (MNY-04)", () => {
     const { onProgramarPago } = renderAcciones(f);
     fireEvent.click(screen.getByRole("button", { name: /Programar pago/i }));
     expect(onProgramarPago).toHaveBeenCalledWith(f);
-    expect(screen.queryByRole("button", { name: /Ejecutar pago/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Registrar pago/i })).toBeNull();
   });
 
   it("con fecha programada ofrece ejecutar el pago", () => {
     renderAcciones(factura({ fecha_programada_pago: "2026-09-05" }));
-    expect(screen.getByRole("button", { name: /Ejecutar pago/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Registrar pago/i })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Programar pago/i })).toBeNull();
   });
 
@@ -53,7 +53,7 @@ describe("columna de acciones de pagos programados (MNY-04)", () => {
   it("sin aprobación lleva a revisar la aprobación, no a pagar", () => {
     const f = factura({ fecha_programada_pago: "2026-09-05", estado_aprobacion: "pendiente" });
     const { onProgramarPago } = renderAcciones(f);
-    expect(screen.queryByRole("button", { name: /Ejecutar pago/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Registrar pago/i })).toBeNull();
     expect(screen.getByText(/Por aprobar/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Revisar aprobación/i }));
     expect(onProgramarPago).toHaveBeenCalledWith(f);
@@ -62,6 +62,6 @@ describe("columna de acciones de pagos programados (MNY-04)", () => {
   it("una factura rechazada se marca como tal", () => {
     renderAcciones(factura({ fecha_programada_pago: "2026-09-05", estado_aprobacion: "rechazada" }));
     expect(screen.getByText(/Rechazada/i)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Ejecutar pago/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Registrar pago/i })).toBeNull();
   });
 });

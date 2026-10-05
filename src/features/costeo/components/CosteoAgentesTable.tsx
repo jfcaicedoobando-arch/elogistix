@@ -65,7 +65,7 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
       },
       {
         id: "dias_credito",
-        header: "Días crédito",
+        header: "Días de crédito",
         accessorFn: (a) => a.dias_credito ?? 0,
         sortingFn: sortByNumber((a) => a.dias_credito),
         enableSorting: true,

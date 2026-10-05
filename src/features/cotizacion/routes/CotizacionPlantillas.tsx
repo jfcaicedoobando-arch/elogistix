@@ -70,7 +70,7 @@ export default function CotizacionPlantillas() {
     <PageContainer>
       <PageHeader
         title="Plantillas de cotización"
-        description="Reutiliza cotizaciones frecuentes. Las plantillas se aplican desde el Paso 1 del wizard."
+        description="Reutiliza cotizaciones frecuentes. Las plantillas se aplican desde el paso 1 del asistente."
         icon={<Sparkles className="h-5 w-5" />}
         actions={
           <Button onClick={() => navigate("/cotizaciones/nueva")}>
@@ -117,7 +117,7 @@ export default function CotizacionPlantillas() {
               </p>
               {plantillas.length === 0 && (
                 <p className="text-body-sm">
-                  Guarda tu primera plantilla desde el diálogo "Cotización creada" al terminar el wizard.
+                  Guarda tu primera plantilla desde el diálogo "Cotización creada" al terminar el asistente.
                 </p>
               )}
             </div>

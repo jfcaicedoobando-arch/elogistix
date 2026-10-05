@@ -178,7 +178,9 @@ export default function Cotizaciones() {
         open={!!c.cotizacionAEliminar}
         onOpenChange={(open) => { if (!open) c.setCotizacionAEliminar(null); }}
         entityName="cotización"
-        description="Esta acción eliminará la cotización de forma permanente."
+        description="La cotización dejará de aparecer en los listados activos y se enviará a la papelera."
+        finalDescription="Confirma el envío de esta cotización a la papelera. Un administrador podrá revisar su recuperación desde Papelera."
+        confirmLabel="Enviar a la papelera"
         onConfirm={c.confirmarEliminar}
         isPending={c.isDeleting}
       />

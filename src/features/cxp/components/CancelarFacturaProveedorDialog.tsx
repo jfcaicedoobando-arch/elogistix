@@ -40,10 +40,10 @@ export function CancelarFacturaProveedorDialog({
       open={open}
       onOpenChange={handleOpenChange}
       size="md"
-      title="Cancelar factura de proveedor"
+      title="Cancelar registro de factura de proveedor"
       titleIcon={<AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />}
       variant="destructive"
-      confirmLabel="Cancelar factura"
+      confirmLabel="Cancelar registro"
       cancelLabel="Volver"
       confirmDisabled={!puedeConfirmar}
       isPending={isPending}
@@ -52,6 +52,7 @@ export function CancelarFacturaProveedorDialog({
         <div className="space-y-3 text-body">
           {factura && <FacturaContextoBand factura={factura} variant="compact" emphasis="saldo" />}
           <ul className="list-disc pl-5 text-muted-foreground text-body-sm space-y-1">
+            <li>Sólo se cancela el registro en el ERP. No se solicita la cancelación del CFDI ante el SAT.</li>
             <li>Las notas de crédito asociadas se cancelarán automáticamente.</li>
             <li>Los conceptos del embarque dejarán de contarla como liquidada.</li>
             <li>No podrás cancelar si la factura tiene pagos aplicados: debes anularlos primero.</li>
@@ -66,12 +67,14 @@ export function CancelarFacturaProveedorDialog({
         </Label>
         <Textarea
           id="cxp-cancel-motivo"
+          aria-describedby="cxp-cancel-motivo-ayuda"
           value={motivo}
           onChange={(e) => setMotivo(e.target.value)}
           placeholder="Ej: CFDI cancelado en el SAT, error de captura, duplicado, etc."
           rows={3}
           disabled={isPending}
         />
+        <p id="cxp-cancel-motivo-ayuda" className="text-body-sm text-muted-foreground">Mínimo 4 caracteres.</p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="cxp-cancel-confirm">

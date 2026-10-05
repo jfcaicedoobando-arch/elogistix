@@ -63,7 +63,7 @@ export function CotizacionSuccessDialog({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
           <Button variant="default" onClick={onEnviarProforma} className="justify-start">
-            <Send className="h-4 w-4 mr-2" /> Enviar proforma
+            <Send className="h-4 w-4 mr-2" /> Enviar cotización
           </Button>
           {puedeCrearEmbarque ? (
             <Button variant="outline" onClick={onCrearEmbarque} className="justify-start">

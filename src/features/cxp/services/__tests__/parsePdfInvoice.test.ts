@@ -139,12 +139,16 @@ describe("parsePdfInvoice — mensajes de falla", () => {
     );
   }, 15000);
 
-  it("mantiene el mensaje del servicio cuando responde con error HTTP", async () => {
+  it("presenta ayuda legible y conserva el mensaje técnico HTTP en el diagnóstico", async () => {
     invokeMock.mockResolvedValue({
       data: null,
       error: new FunctionsHttpError(new Response(JSON.stringify({ error: "PDF ilegible" }), { status: 400 })),
     });
 
-    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toThrow(/PDF ilegible/);
+    await expect(sinEsperas(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL))).rejects.toMatchObject({
+      message: expect.stringMatching(/No se pudo leer la factura PDF/),
+      context: expect.objectContaining({ technicalMessage: "PDF ilegible", lastStatus: 400 }),
+      cause: expect.any(FunctionsHttpError),
+    });
   }, 15000);
 });

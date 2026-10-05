@@ -31,6 +31,7 @@ import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useDocumentTitle } from "@/hooks/shared";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
+import { carteraEmptyState } from "./_sections/carteraEmptyState";
 
 
 export default function Cartera() {
@@ -66,6 +67,7 @@ export default function Cartera() {
   );
   const lote = useMemo(() => derivarLoteCobro(seleccionadas), [seleccionadas]);
   const hayEnCancelacion = useMemo(() => hayEnTramiteCancelacion(seleccionadas), [seleccionadas]);
+  const empty = carteraEmptyState({ search: paged.search, ...paged.filters, dateFrom: paged.dateFrom, dateTo: paged.dateTo });
 
   return (
     <PageContainer>
@@ -115,7 +117,7 @@ export default function Cartera() {
                 <SelectValue placeholder="Moneda" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todas">Todas monedas</SelectItem>
+                <SelectItem value="todas">Todas las monedas</SelectItem>
                 {monedas.map((m) => (
                   <SelectItem key={m} value={m}>{m}</SelectItem>
                 ))}
@@ -159,8 +161,8 @@ export default function Cartera() {
             onSortChange={paged.setSort}
             pagination={{ ...paged.pagination, hideWhenSinglePage: true }}
             emptyIcon={Inbox}
-            emptyMessage="Sin cartera pendiente"
-            emptyHint="¡Todo cobrado!"
+            emptyMessage={empty.message}
+            emptyHint={empty.hint}
             rowSelection={canRegistrarCobro ? rowSelection : undefined}
             onRowSelectionChange={canRegistrarCobro ? setRowSelection : undefined}
             mobileCard={(r) => <CarteraMobileCard row={r} />}

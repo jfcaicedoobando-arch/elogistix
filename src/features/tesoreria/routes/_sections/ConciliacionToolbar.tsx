@@ -10,6 +10,7 @@ import { Upload, Sparkles, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
+import { toleranciaMonto, TOLERANCIA_DIAS } from "@/lib/domain/tolerancia";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -45,6 +46,10 @@ export function ConciliacionToolbar({
   pendientesCount, isAutoConciliando, onConciliarExactos, onAbrirManual,
   fileRef, onFile, importando, puedeCapturar,
 }: Props) {
+  const moneda = cuentas.find((c) => c.id === cuentaId)?.moneda;
+  const ayudaAuto = moneda
+    ? `Aplica la conciliación automáticamente sólo si existe una coincidencia única: misma moneda y dirección, diferencia de monto de hasta ${toleranciaMonto(moneda)} ${moneda} y de fecha de hasta ${TOLERANCIA_DIAS} días. Las coincidencias ambiguas requieren revisión manual.`
+    : "Selecciona una cuenta para revisar la tolerancia de conciliación automática.";
   return (
     <Card>
       <CardContent density="compact" className="flex flex-wrap gap-3 items-center">
@@ -70,14 +75,16 @@ export function ConciliacionToolbar({
 
         <div className="flex-1" />
 
+        <Hint label={ayudaAuto}>
         <Button
           variant="outline"
           onClick={onConciliarExactos}
           disabled={!cuentaId || isAutoConciliando || pendientesCount === 0}
         >
           <Sparkles className="h-4 w-4 mr-2 text-primary" />
-          {isAutoConciliando ? "Conciliando…" : "Conciliar exactos"}
+          {isAutoConciliando ? "Conciliando…" : "Conciliar coincidencias únicas"}
         </Button>
+        </Hint>
 
         {puedeCapturar ? (
           <>

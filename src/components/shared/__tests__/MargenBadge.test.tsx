@@ -3,6 +3,15 @@ import { render, screen } from "@testing-library/react";
 import { MargenBadge, MargenTexto } from "@/components/shared/MargenBadge";
 
 describe("MargenBadge (Ola 5 · 5.6)", () => {
+  it("no presenta como 0% un margen sin venta base, ni permite una etiqueta que lo oculte", () => {
+    render(<><MargenBadge pct={0} venta={0} label="0%" /><MargenTexto pct={0} venta={0} /></>);
+    expect(screen.getAllByText("No calculable")).toHaveLength(2);
+    expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+  it("conserva un 0% válido cuando sí existe venta", () => {
+    render(<MargenBadge pct={0} venta={100} />);
+    expect(screen.getByText("0.0 %")).toBeInTheDocument();
+  });
   it("formatea el porcentaje con el formateador canónico", () => {
     render(<MargenBadge pct={12.34} />);
     expect(screen.getByText("12.3 %")).toBeInTheDocument();

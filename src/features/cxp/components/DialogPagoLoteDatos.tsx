@@ -78,9 +78,9 @@ export function DialogPagoLoteDatos(p: Props) {
           )}
         </div>
         <div className="space-y-1.5">
-          <Label>Método de pago</Label>
+          <Label>Medio de pago</Label>
           <Select value={p.metodo} onValueChange={p.onMetodo}>
-            <SelectTrigger aria-label="Método de pago"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Medio de pago"><SelectValue /></SelectTrigger>
             <SelectContent>
               {metodosFor(p.proveedorOrigen).map((m) => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>

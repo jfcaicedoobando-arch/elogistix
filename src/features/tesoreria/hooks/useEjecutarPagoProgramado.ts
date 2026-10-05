@@ -11,7 +11,7 @@ export function useEjecutarPagoProgramado() {
   return useMutationWithFeedback({
     mutationFn: (input: EjecutarPagoProgramadoInput) => ejecutarPagoProgramado(input),
     invalidate: [tesoreriaKeys.all, queryKeys.cxp.all, queryKeys.proveedorFacturas.all],
-    successTitle: "Pago ejecutado y aplicado a la factura",
+    successTitle: "Pago registrado y aplicado a la factura",
     errorTitle: "No se pudo ejecutar el pago",
     errorMethod: "FEATURES_TESORERIA_HOOKS_USEEJECUTARPAGOPROGRAMADO",
   });

@@ -52,7 +52,7 @@ export function EjecutarPagoDialog({
       open={!!facturaPago}
       onOpenChange={(v) => { if (!v) onClose(); }}
       icon={Wallet}
-      title="Ejecutar pago programado"
+      title="Registrar pago realizado"
       description={
         facturaPago
           ? `${facturaPago.proveedor_nombre ?? "Proveedor"} · Saldo ${formatCurrency(facturaPago.saldo, facturaPago.moneda)}`
@@ -65,12 +65,13 @@ export function EjecutarPagoDialog({
         <FormDialogFooter
           formId={FORM_ID}
           onCancel={onClose}
-          confirmLabel="Ejecutar pago"
+          confirmLabel="Registrar pago"
           loading={isPending}
           disabled={!puedeEjecutar || isPending}
         />
       }
     >
+      <p className="sm:col-span-2 text-body-sm text-muted-foreground">Registra un pago ya realizado y aplícalo a la factura. El ERP no envía dinero al banco.</p>
       <div className="sm:col-span-2">
         <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
         <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
@@ -101,7 +102,7 @@ export function EjecutarPagoDialog({
         />
       </div>
       <div>
-        <Label htmlFor="pago-metodo">Método de pago</Label>
+        <Label htmlFor="pago-metodo">Medio de pago</Label>
         <Select value={form.metodoPago} onValueChange={(v) => setField("metodoPago", v)}>
           <SelectTrigger id="pago-metodo"><SelectValue /></SelectTrigger>
           <SelectContent>
