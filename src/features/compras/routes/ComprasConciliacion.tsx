@@ -43,7 +43,7 @@ export default function ComprasConciliacion() {
       <PageHeader
         icon={<GitCompare className="h-6 w-6" />}
         title="Conciliación con embarques"
-        description="Presupuesto (conceptos de costo) vs facturación real de proveedor por embarque."
+        description="Presupuesto (conceptos de costo) vs facturación real de proveedor por embarque. La cobertura es un cociente total; el estado y los pendientes consideran cada concepto."
       />
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">

@@ -5,7 +5,8 @@
  *  - `presupuestado`  = suma de montos de conceptos activos (no borrados).
  *  - `facturado`      = vínculos de facturas vigentes, sin impuestos, convertidos
  *                       a la moneda del costo con el mismo cálculo del detalle.
- *  - `pendiente`      = presupuestado - facturado (no es saldo por pagar).
+ *  - `pendiente`      = faltantes por concepto, con ajustes verificados
+ *                       de su factura/embarque/moneda (no es saldo por pagar).
  *  - `cobertura`      = facturado / presupuestado.
  *  - `conceptos_pendientes` = conceptos sin factura o con facturación parcial.
  *  - `pendientes_tc`  = conceptos con vínculos no convertibles; no son cero real.
@@ -14,7 +15,6 @@
  *  - Ignora conceptos con `deleted_at IS NOT NULL`.
  *  - Separa por moneda (MXN / USD) porque no se pueden sumar entre sí.
  *  - Ordena por mayor pendiente descendente.
- *
  * DEFECTO 6 (P1): antes se pedía un único `.limit(CAP_REPORTE_AMPLIO)` y la UI
  * presentaba los KPIs (sumas por moneda) como TOTALES. Con más de 5000
  * conceptos activos el corte era silencioso: los KPIs y la lista quedaban
@@ -26,7 +26,7 @@ import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
 import { CAP_LOTES_DURO } from "@/constants/queryCaps";
 import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
-import { buildFilasReconciliacion, type CCRow, type FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos.helpers";
+import { buildFilasReconciliacion, calcularPendientesConciliacion, claveGrupoConciliacion, type CCRow, type FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos.helpers";
 import { fetchVinculosReconciliacion } from "@/features/embarques/services/reconciliacionCostos.lecturas";
 
 export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa" | "no_comparable" | "ajuste";
@@ -70,9 +70,9 @@ interface RowConcepto extends CCRow {
 const LOTE = 1000;
 interface AcumConciliacion extends EmbarqueConciliacion { sin_factura: number }
 
-function clasificar(cobertura: number, conFactura: number, sinFactura: number): EstadoConciliacion {
+function clasificar(cobertura: number, conFactura: number, conceptosPendientes: number): EstadoConciliacion {
   if (conFactura === 0) return "sin_facturar";
-  if (sinFactura > 0) return "parcial";
+  if (conceptosPendientes > 0) return "parcial";
   if (cobertura >= 0.99) return "completa";
   return "parcial";
 }
@@ -99,35 +99,36 @@ function initAcc(r: RowConcepto): AcumConciliacion {
 function agrupar(rows: RowConcepto[], filas: FilaReconciliacion[]): AcumConciliacion[] {
   const map = new Map<string, AcumConciliacion>();
   const porId = new Map(filas.map((fila) => [fila.concepto_costo_id, fila]));
+  const pendientes = calcularPendientesConciliacion(filas);
   for (const r of rows) {
     const fila = porId.get(r.id);
     if (!fila) continue; // Ajustes conocidos de facturas que ya no están vigentes.
     const monto = Number(r.monto ?? 0);
-    const key = `${r.embarque_id}|${r.moneda}`;
+    const key = claveGrupoConciliacion(r);
     let acc = map.get(key);
     if (!acc) { acc = initAcc(r); map.set(key, acc); }
     acc.presupuestado += monto;
     if (!fila.ajuste_presupuestario) acc.conceptos_total += 1;
     acc.facturado += fila.real_facturado;
-    if (fila.estatus_renglon === "sin_match" || fila.estatus_renglon === "parcial") acc.conceptos_pendientes += 1;
     if (fila.estatus_renglon === "sin_match") acc.sin_factura += 1;
     if (fila.estatus_renglon === "no_comparable") acc.pendientes_tc += 1;
   }
-  return Array.from(map.values());
+  return Array.from(map, ([key, acc]) => {
+    const faltantes = pendientes.get(key);
+    return { ...acc, pendiente: faltantes?.pendiente ?? 0,
+      conceptos_pendientes: Math.min(acc.conceptos_total, faltantes?.conceptos_pendientes ?? 0) };
+  });
 }
 
 function derivarMetricas(a: AcumConciliacion): EmbarqueConciliacion {
   const { sin_factura, ...row } = a;
-  // Defensa de costos negativos legacy sin perder el signo de la asignación.
-  const saldoPorFacturar = (a.presupuestado - a.facturado) * (a.presupuestado < 0 ? -1 : 1);
-  const pendiente = a.conceptos_total === 0 ? 0 : Math.max(0, saldoPorFacturar);
+  const pendiente = a.conceptos_total === 0 ? 0 : a.pendiente;
   const conFactura = a.conceptos_total - sin_factura;
   const cobertura = a.presupuestado !== 0 ? a.facturado / a.presupuestado : conFactura > 0 && a.facturado === 0 ? 1 : 0;
   const estado_conciliacion = a.conceptos_total === 0 ? "ajuste" : a.pendientes_tc > 0
     ? "no_comparable"
-    : clasificar(cobertura, conFactura, sin_factura);
-  const conceptos_pendientes = estado_conciliacion === "completa" ? 0 : a.conceptos_pendientes;
-  return { ...row, pendiente, cobertura, estado_conciliacion, conceptos_pendientes };
+    : clasificar(cobertura, conFactura, a.conceptos_pendientes);
+  return { ...row, pendiente, cobertura, estado_conciliacion };
 }
 
 function aplicarFiltrosCliente(

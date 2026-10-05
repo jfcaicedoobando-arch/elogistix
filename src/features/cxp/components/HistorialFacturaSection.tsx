@@ -55,8 +55,8 @@ function iconoTipo(tipo: string) {
 function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
   const { Icon, color, ring } = iconoTipo(ev.tipo);
   const motivo =
-    ev.tipo === "rechazada"
-      ? (ev.detalles?.motivo_rechazo as string | null | undefined)
+    ev.tipo === "rechazada" && typeof ev.detalles?.motivo_rechazo === "string" && ev.detalles.motivo_rechazo.trim()
+      ? ev.detalles.motivo_rechazo
       : null;
   return (
     <li className="relative pl-8">
@@ -102,7 +102,7 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
           Datos de bitácora; procedencia no verificable.
         </p>
       )}
-      <DatosDeclaradosBitacora detalles={ev.detalles} />
+      <DatosDeclaradosBitacora tipo={ev.tipo} detalles={ev.detalles} />
     </li>
   );
 }

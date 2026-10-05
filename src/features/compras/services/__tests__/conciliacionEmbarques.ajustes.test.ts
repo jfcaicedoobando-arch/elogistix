@@ -65,7 +65,7 @@ describe("62: contrato real de captura y ajustes firmados de presupuesto", () =>
   it("un costo ordinario sin factura mantiene el estado parcial aunque otro sobrecosto cubra el total", async () => {
     mock.setTableResult("conceptos_costo", { data: [costo("original", 1000), costo("sin-factura", 100)], error: null });
     mock.setTableResult("proveedor_facturas_conceptos", { data: [{ concepto_costo_id: "original", monto: 1100, proveedor_facturas: factura }], error: null });
-    expect((await listarConciliacionEmbarques())[0]).toMatchObject({ facturado: 1100, presupuestado: 1100, cobertura: 1, estado_conciliacion: "parcial", conceptos_pendientes: 1 });
+    expect((await listarConciliacionEmbarques())[0]).toMatchObject({ facturado: 1100, presupuestado: 1100, cobertura: 1, pendiente: 100, estado_conciliacion: "parcial", conceptos_pendientes: 1 });
   });
 
   it.each([[-100, "conciliado", "completa", 1, 0], [-90, "excedente", "parcial", 0.9, 10], [-110, "parcial", "completa", 1.1, 0], [100, "excedente", "parcial", -1, 200]])(
@@ -137,5 +137,29 @@ describe("62: contrato real de captura y ajustes firmados de presupuesto", () =>
     ], error: null });
     const monedas = calcularResumenPorMoneda(await fetchReconciliacionEmbarque("e1"));
     expect(monedas.find((fila) => fila.moneda === "USD")).toMatchObject({ cotizado: 95, real: 100, diferencia: 0, desviacion_pct: 0 });
+  });
+
+  it.each([[-5, 45], [2, 52]])("un ajuste FX%s de facturaA no reduce ni agrega faltantes de facturaB", async (delta, realA) => {
+    const usdA = { ...factura, moneda: "USD", tipo_cambio_usd: 20 };
+    const usdB = { ...usdA, id: "f2" };
+    mock.setTableResult("conceptos_costo", { data: [costo("original", 1000), { ...costo("ajuste", delta, "ajuste_factura_proveedor"), moneda: "USD" }, { ...costo("otro", 100), moneda: "USD" }], error: null });
+    mock.setTableResult("proveedor_facturas_conceptos", { data: [
+      { concepto_costo_id: "original", monto: realA, proveedor_facturas: usdA },
+      { concepto_costo_id: "ajuste", monto: delta, proveedor_facturas: usdA },
+      { concepto_costo_id: "otro", monto: 90, proveedor_facturas: usdB },
+    ], error: null });
+    expect((await listarConciliacionEmbarques({ moneda: "USD" }))[0]).toMatchObject({ presupuestado: 100 + delta, facturado: 90,
+      pendiente: 10, conceptos_pendientes: 1, estado_conciliacion: "parcial" });
+  });
+
+  it("un ajuste FX positivo sin base en esa moneda conserva presentación sólo de ajuste", async () => {
+    const usd = { ...factura, moneda: "USD", tipo_cambio_usd: 20 };
+    mock.setTableResult("conceptos_costo", { data: [costo("original", 1000), { ...costo("ajuste", 2, "ajuste_factura_proveedor"), moneda: "USD" }], error: null });
+    mock.setTableResult("proveedor_facturas_conceptos", { data: [
+      { concepto_costo_id: "original", monto: 52, proveedor_facturas: usd },
+      { concepto_costo_id: "ajuste", monto: 2, proveedor_facturas: usd },
+    ], error: null });
+    expect((await listarConciliacionEmbarques({ moneda: "USD" }))[0]).toMatchObject({ presupuestado: 2, facturado: 0,
+      pendiente: 0, conceptos_pendientes: 0, conceptos_total: 0, estado_conciliacion: "ajuste" });
   });
 });

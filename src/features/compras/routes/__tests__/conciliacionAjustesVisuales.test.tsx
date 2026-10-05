@@ -40,4 +40,17 @@ describe("62: presentación de ajuste separado y cobertura neta", () => {
     expect(screen.queryByText("Sin match")).toBeNull();
     expect(screen.queryByRole("button", { name: /Vincular/ })).toBeNull();
   });
+
+  it("KPI conserva parcial y 40 pendientes con cobertura nominal 100% sin ajustes", async () => {
+    const costo = { embarque_id: "e1", concepto: "Flete", proveedor_nombre: "Proveedor", moneda: "MXN", monto: 1000, estado_liquidacion: "Pendiente" };
+    mock.setTableResult("conceptos_costo", { data: [{ ...costo, id: "a" }, { ...costo, id: "b" }], error: null });
+    mock.setTableResult("proveedor_facturas_conceptos", { data: [
+      { concepto_costo_id: "a", monto: 1040, proveedor_facturas: factura },
+      { concepto_costo_id: "b", monto: 960, proveedor_facturas: { ...factura, id: "f2" } },
+    ], error: null });
+    ui.rows = await listarConciliacionEmbarques();
+    const { result } = renderHook(useComprasConciliacionController);
+    expect(result.current.kpis).toMatchObject({ parcial: 1, completa: 0, pendienteMxn: 40 });
+    expect(result.current.rows[0]).toMatchObject({ cobertura: 1, pendiente: 40, conceptos_pendientes: 1 });
+  });
 });
