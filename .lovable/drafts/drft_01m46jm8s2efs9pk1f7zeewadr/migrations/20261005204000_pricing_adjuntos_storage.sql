@@ -24,15 +24,3 @@ CREATE POLICY crm_pricing_adjuntos_subir ON storage.objects FOR INSERT TO authen
         AND s.estado <> 'cancelada'
     )
   );
-
--- Sólo quien subió el archivo puede quitarlo.
-CREATE POLICY crm_pricing_adjuntos_borrar ON storage.objects FOR DELETE TO authenticated
-  USING (
-    bucket_id = 'crm-pricing-adjuntos'
-    AND owner_id = auth.uid()::text
-    AND EXISTS (
-      SELECT 1 FROM public.crm_solicitudes_pricing s
-      WHERE s.id::text = (storage.foldername(name))[2]
-        AND s.organization_id = public.org_scope()
-    )
-  );

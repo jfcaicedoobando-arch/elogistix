@@ -57,8 +57,3 @@ export async function urlAdjunto(path: string): Promise<string> {
   if (error) throw error;
   return data.signedUrl;
 }
-
-export async function borrarAdjunto(path: string): Promise<void> {
-  const { error } = await supabase.storage.from(BUCKET_ADJUNTOS_PRICING).remove([path]);
-  if (error) throw error;
-}
