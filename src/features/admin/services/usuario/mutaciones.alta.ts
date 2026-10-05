@@ -73,16 +73,13 @@ export async function createUserViaEdgeFunction(
   const emailNormalizado = params.email.trim().toLowerCase();
   await validarAltaUsuario(params.orgId, emailNormalizado);
 
-  const token = await getAuthToken();
   const res = await invokeUserManagement({
-      action: params.password ? "create" : "invite",
-      email: emailNormalizado,
-      password: params.password,
-      role: params.role,
-      organization_id: params.orgId,
-      redirect_to: resetRedirectUrl(),
-    },
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    action: params.password ? "create" : "invite",
+    email: emailNormalizado,
+    password: params.password,
+    role: params.role,
+    organization_id: params.orgId,
+    redirect_to: resetRedirectUrl(),
   });
   // El motivo real (p. ej. correo inválido) viaja en el cuerpo de la respuesta.
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo crear el usuario. Reintenta en unos minutos.");
@@ -103,7 +100,8 @@ export async function createUserViaEdgeFunction(
     accion: "Creó usuario",
     entidadId: nuevoId,
     entidadNombre: emailNormalizado,
-    detalles: { role: params.role, orgId: params.orgId ?? null });
+    detalles: { role: params.role, orgId: params.orgId ?? null },
+  });
 
   return body;
 }
