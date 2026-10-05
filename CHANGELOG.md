@@ -3,6 +3,7 @@
 ## [13.824.28] - 2026-10-05
 
 - **fix(Sentry · JAVASCRIPT-REACT-7F, 79, 7G, 7D)**: el cierre sin pago guarda el ajuste sin tipo de cambio (antes 0, rechazado por la base); `client-error-log` responde 400 ante un cuerpo JSON que no es objeto; retirar del buzón un documento ya retirado (doble clic) ya no marca error. 7D ya estaba cubierto por el filtro de estados vigente.
+- **fix(CRM · adjuntos de pricing)**: se aplicaron los dos cambios de base del borrador aceptado (folio mensual con tarifas ligadas y reglas de acceso del bucket `crm-pricing-adjuntos`). Antes, adjuntar un archivo se rechazaba por RLS.
 
 ## [13.824.27] - 2026-10-05
 
