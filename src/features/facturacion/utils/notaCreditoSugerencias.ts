@@ -9,6 +9,7 @@
  *   dinero y se usa 15 (condonación); si ya se cobró, se replica la forma con
  *   la que entró el dinero (o 03 si no se conoce).
  */
+import Decimal from "decimal.js";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { factorTotalNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
@@ -74,17 +75,24 @@ export function conceptoPorSaldo(
   };
 }
 
-/** Escala los precios de los conceptos a un porcentaje (10 => 10% del importe). */
+/**
+ * Escala los precios sin redondear el unitario: el importe monetario se
+ * redondea después de multiplicar por la cantidad en `subtotalLinea`.
+ * La división decimal conserva también porcentajes fraccionarios.
+ */
 export function aplicarPorcentaje(
   conceptos: ConceptoNotaCredito[],
   porcentaje: number,
 ): ConceptoNotaCredito[] {
   const pct = Number.isFinite(porcentaje) ? porcentaje : 0;
-  const factor = Math.min(Math.max(pct, 0), 100) / 100;
-  return conceptos.map((c) => ({
-    ...c,
-    precio_unitario: roundMoney(Number(c.precio_unitario ?? 0) * factor),
-  }));
+  const factor = new Decimal(Math.min(Math.max(pct, 0), 100)).div(100);
+  return conceptos.map((c) => {
+    const precio = Number(c.precio_unitario ?? 0);
+    return {
+      ...c,
+      precio_unitario: Number.isFinite(precio) ? new Decimal(precio).times(factor).toNumber() : 0,
+    };
+  });
 }
 
 /** Copia sólo los conceptos marcados de la factura original. */
