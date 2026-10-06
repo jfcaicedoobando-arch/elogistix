@@ -7,7 +7,10 @@ import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
 import { buildKpisDocumento } from "@/lib/domain/documentoKpis";
 import type { FacturaDetalle } from "@/features/facturacion/types";
 
-type FacturaKpisInput = Pick<FacturaDetalle, "total" | "estado" | "moneda" | "fecha_vencimiento" | "dias_credito">;
+import { diasVencidos } from "@/lib/date/dateOnly";
+import { todayLocalISO } from "@/lib/date/today";
+
+type FacturaKpisInput = Pick<FacturaDetalle, "total" | "estado" | "moneda" | "dias_credito"> & { fecha_vencimiento?: string | null };
 
 export function buildKpisFactura(factura: FacturaKpisInput, saldo?: number, cobrado = 0): DocumentoKpi[] {
   const total = Number(factura.total ?? 0);
@@ -23,7 +26,9 @@ export function buildKpisFactura(factura: FacturaKpisInput, saldo?: number, cobr
     cancelada,
     fechaVencimiento: factura.fecha_vencimiento,
     diasCredito: factura.dias_credito,
-    diasVencido: factura.estado === "Vencida" ? 1 : 0,
+    diasVencido: factura.fecha_vencimiento && factura.estado !== "Borrador"
+      ? Math.max(0, diasVencidos(factura.fecha_vencimiento, todayLocalISO()))
+      : 0,
     etiquetaPagado: "Cobrado",
   });
 }
