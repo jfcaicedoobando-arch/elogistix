@@ -1,6 +1,13 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { createWrapper } from '@/test/utils/queryWrapper';
+import { createWrapper as createQueryWrapper } from '@/test/utils/queryWrapper';
+import { MemoryRouter } from 'react-router';
+import type { ReactNode } from 'react';
+
+const createWrapper = () => {
+  const QueryWrapper = createQueryWrapper();
+  return ({ children }: { children: ReactNode }) => <MemoryRouter><QueryWrapper>{children}</QueryWrapper></MemoryRouter>;
+};
 
 const { mockUseRentabilidad, notifyWarning } = vi.hoisted(() => ({
   mockUseRentabilidad: vi.fn(),
@@ -15,6 +22,8 @@ vi.mock('@/lib/ui/appFeedback', () => ({
 }));
 vi.mock('@/generators/exportCsv', () => ({ exportToCsv: vi.fn() }));
 
+import { exportToCsv } from '@/generators/exportCsv';
+import { BASE_CSV_RENTABILIDAD } from '@/types/rentabilidad';
 import { useReportesPageController } from '../useReportesPageController';
 
 describe('useReportes Hooks', () => {
@@ -77,6 +86,33 @@ describe('useReportes Hooks', () => {
     });
     // Ascending order -> 'A', 'B'
     expect(result.current.sorted[0].cliente_nombre).toBe('A');
+  });
+
+  it('CSV carries ETA period, mode and base without changing financial precision', () => {
+    mockUseRentabilidad.mockReturnValue({ ...mockRentabilidad, clientes: [{ ...clientes[0], venta_usd: 12.3693, costo_usd: 12.1185, profit_usd: 0.2508, margen: 2.0276 }] });
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    act(() => result.current.applyFilters({ fechaDesde: new Date(2026, 9, 5), fechaHasta: new Date(2026, 9, 5), modo: 'Terrestre' }));
+    act(() => result.current.handleExport());
+    expect(exportToCsv).toHaveBeenLastCalledWith(
+      'rentabilidad_clientes_2026-10-05_2026-10-05_terrestre.csv',
+      expect.arrayContaining([
+        { key: 'venta_usd', label: 'Venta equivalente (USD)' },
+        { key: 'costo_usd', label: 'Costo equivalente (USD)' },
+        { key: 'profit_usd', label: 'Utilidad equivalente (USD)' },
+        { key: 'desde_eta', label: 'Desde (ETA)' },
+        { key: 'hasta_eta', label: 'Hasta (ETA)' },
+        { key: 'modo', label: 'Modo' },
+        { key: 'base', label: 'Base' },
+      ]),
+      [expect.objectContaining({ venta_usd: 12.3693, costo_usd: 12.1185, profit_usd: 0.2508, margen: '2.0', desde_eta: '2026-10-05', hasta_eta: '2026-10-05', modo: 'Terrestre', base: BASE_CSV_RENTABILIDAD })],
+    );
+  });
+
+  it('CSV keeps zero revenue margin non-calculable and labels all modes', () => {
+    mockUseRentabilidad.mockReturnValue({ ...mockRentabilidad, clientes: [{ ...clientes[0], venta_usd: 0 }] });
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    act(() => result.current.handleExport());
+    expect(exportToCsv).toHaveBeenLastCalledWith(expect.stringMatching(/_todos.csv$/), expect.any(Array), [expect.objectContaining({ margen: 'No calculable', modo: 'Todos los modos' })]);
   });
 
   describe('DEFECTO 8: bloqueo de exportación cuando hay embarques sin TC', () => {

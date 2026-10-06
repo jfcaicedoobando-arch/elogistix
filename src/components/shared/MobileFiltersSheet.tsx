@@ -23,6 +23,8 @@ export interface MobileFiltersSheetProps {
   title?: string;
   activeCount: number;
   onClearAll: () => void;
+  /** Commits a caller-owned draft; dismissal never invokes this callback. */
+  onApply?: () => void;
   /** Trigger button label, default "Filtros". */
   triggerLabel?: string;
   /**
@@ -42,6 +44,7 @@ export function MobileFiltersSheet({
   title = "Filtros",
   activeCount,
   onClearAll,
+  onApply,
   triggerLabel = "Filtros",
   snapshot,
   restore,
@@ -73,6 +76,7 @@ export function MobileFiltersSheet({
   };
 
   const aplicar = () => {
+    onApply?.();
     aplicadoRef.current = true;
     onOpenChange(false);
   };

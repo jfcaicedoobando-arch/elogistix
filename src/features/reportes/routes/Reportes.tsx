@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
-import { METODOLOGIA_RENTABILIDAD } from "@/types/rentabilidad";
+import { Link } from "react-router";
+import { ROUTES } from "@/constants/routes";
+import { DESCRIPCION_RENTABILIDAD, AVISO_RENTABILIDAD, AYUDA_CAMBIARIA_RENTABILIDAD } from "@/types/rentabilidad";
 import { Download, FileText, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,7 +33,7 @@ export default function Reportes() {
     setFechaDesde,
     setFechaHasta,
     setModo,
-    resetFilters,
+    applyFilters,
     kpis,
     isLoading,
     isError,
@@ -51,7 +53,19 @@ export default function Reportes() {
     <PageContainer>
       <PageHeader
         title="Rentabilidad por cliente"
-        description={METODOLOGIA_RENTABILIDAD}
+        subHeader={
+          <div className="space-y-2 text-body-sm text-muted-foreground">
+            <p>{DESCRIPCION_RENTABILIDAD}</p>
+            <p>{AVISO_RENTABILIDAD}</p>
+            <Link className="text-primary underline" to={ROUTES.REPORTES_CIERRE_MENSUAL}>
+              Ver proyección y pendiente de facturar en Cierre mensual
+            </Link>
+            <details>
+              <summary className="cursor-pointer">Cómo se convierten los importes a USD</summary>
+              <p className="mt-1">{AYUDA_CAMBIARIA_RENTABILIDAD}</p>
+            </details>
+          </div>
+        }
         actions={
           <>
             {/* Mobile: un solo dropdown "Exportar ▾" */}
@@ -94,7 +108,7 @@ export default function Reportes() {
         onFechaDesdeChange={setFechaDesde}
         onFechaHastaChange={setFechaHasta}
         onModoChange={setModo}
-        onResetFilters={resetFilters}
+        onApplyFilters={applyFilters}
       />
 
       {/* Ramas mutuamente excluyentes: error → contenido. En error no se

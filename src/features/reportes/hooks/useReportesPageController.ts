@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { useMemo } from "react";
+import { format } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
 // `generarRentabilidadPdf` se importa dinámicamente dentro de `handleExportPdf`
@@ -7,7 +7,8 @@ import { exportToCsv } from "@/generators/exportCsv";
 import type { generarRentabilidadPdf as GenerarRentabilidadPdfFn } from "@/generators/rentabilidadPdf";
 import { useRentabilidadClientes } from "@/features/cliente/hooks/useRentabilidadClientes";
 import { toTitleCase } from "@/lib/formatters";
-import type { SortField } from "@/features/reportes/components/ReportesTablaClientes";
+import { useReportesFilters } from "./useReportesFilters";
+import { BASE_CSV_RENTABILIDAD } from "@/types/rentabilidad";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { usePdfExport } from "@/hooks/shared";
 import { notifyWarning } from "@/lib/ui/appFeedback";
@@ -17,44 +18,8 @@ import { notifyWarning } from "@/lib/ui/appFeedback";
  * página de Reportes. Deja `Reportes.tsx` como composición pura de UI.
  */
 export function useReportesPageController() {
-  const now = new Date();
-  const [fechaDesde, setFechaDesde] = useState<Date>(startOfMonth(now));
-  const [fechaHasta, setFechaHasta] = useState<Date>(endOfMonth(now));
-  const [modo, setModo] = useState("all");
-  const [sortField, setSortField] = useState<SortField>("profit_usd");
-
-  // EC-13: nunca permitir un rango invertido (desde > hasta) — el RPC devolvería
-  // vacío indistinguible de un periodo sin operación y el PDF/CSV saldría con
-  // el rango invertido. Auto-corregimos el otro extremo y avisamos una vez.
-  const avisarRangoInvertido = () =>
-    notifyWarning(undefined, {
-      title: "Rango de fechas ajustado",
-      description: "La fecha «Desde» no puede ser posterior a «Hasta».",
-      id: "reportes-rango-fechas-invertido",
-    });
-
-  const handleFechaDesde = (d: Date) => {
-    setFechaDesde(d);
-    if (d > fechaHasta) {
-      setFechaHasta(endOfMonth(d));
-      avisarRangoInvertido();
-    }
-  };
-
-  const handleFechaHasta = (d: Date) => {
-    setFechaHasta(d);
-    if (d < fechaDesde) {
-      setFechaDesde(startOfMonth(d));
-      avisarRangoInvertido();
-    }
-  };
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const resetFilters = () => {
-    const hoy = new Date();
-    setFechaDesde(startOfMonth(hoy));
-    setFechaHasta(endOfMonth(hoy));
-    setModo("all");
-  };
+  const { fechaDesde, fechaHasta, modo, sortField, sortDir, setFechaDesde,
+    setFechaHasta, setModo, applyFilters, resetFilters, handleSort } = useReportesFilters();
 
   const filtros = useMemo(
     () => ({
@@ -101,15 +66,6 @@ export function useReportesPageController() {
     [clientes],
   );
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
-    } else {
-      setSortField(field);
-      setSortDir("desc");
-    }
-  };
-
   const hayEmbarquesSinTc = kpis.embarquesSinTc > 0;
 
   const handleExport = () => {
@@ -124,16 +80,24 @@ export function useReportesPageController() {
       return;
     }
     exportToCsv(
-      "rentabilidad_clientes.csv",
+      `rentabilidad_clientes_${filtros.fechaDesde}_${filtros.fechaHasta}_${modo === "all" ? "todos" : modo.toLowerCase()}.csv`,
       [
         { key: "cliente_nombre", label: "Cliente" },
         { key: "total_embarques", label: "Embarques" },
-        { key: "venta_usd", label: "Venta USD" },
-        { key: "costo_usd", label: "Costo USD" },
-        { key: "profit_usd", label: "Utilidad USD" },
+        { key: "venta_usd", label: "Venta equivalente (USD)" },
+        { key: "costo_usd", label: "Costo equivalente (USD)" },
+        { key: "profit_usd", label: "Utilidad equivalente (USD)" },
         { key: "margen", label: "Margen %" },
+        { key: "desde_eta", label: "Desde (ETA)" },
+        { key: "hasta_eta", label: "Hasta (ETA)" },
+        { key: "modo", label: "Modo" },
+        { key: "base", label: "Base" },
       ],
-      sorted.map((c) => ({ ...c, margen: c.venta_usd === 0 ? "No calculable" : c.margen.toFixed(1) })),
+      sorted.map((c) => ({
+        ...c, margen: c.venta_usd === 0 ? "No calculable" : c.margen.toFixed(1),
+        desde_eta: filtros.fechaDesde, hasta_eta: filtros.fechaHasta,
+        modo: modo === "all" ? "Todos los modos" : modo, base: BASE_CSV_RENTABILIDAD,
+      })),
     );
   };
 
@@ -172,10 +136,11 @@ export function useReportesPageController() {
     fechaDesde,
     fechaHasta,
     modo,
-    setFechaDesde: handleFechaDesde,
-    setFechaHasta: handleFechaHasta,
+    setFechaDesde,
+    setFechaHasta,
     setModo,
     resetFilters,
+    applyFilters,
     // datos
     kpis,
     isLoading,

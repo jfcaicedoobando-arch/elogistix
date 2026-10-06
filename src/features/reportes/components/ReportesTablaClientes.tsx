@@ -1,3 +1,4 @@
+import { VACIO_RENTABILIDAD } from "@/types/rentabilidad";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -8,7 +9,8 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 
-export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
+import type { SortField } from "../domain/reportesFilters";
+export type { SortField } from "../domain/reportesFilters";
 
 interface ClienteRow {
   cliente_id: string;
@@ -39,9 +41,9 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
     { id: "cliente", header: "Cliente", meta: { className: "font-medium max-w-[200px] truncate" },
       cell: ({ row }) => <Hint label={toTitleCase(row.original.cliente_nombre)}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint> },
     { id: "embarques", header: "Embarques", meta: { align: "center" }, cell: ({ row }) => row.original.total_embarques },
-    { id: "venta_usd", header: "Venta USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
-    { id: "costo_usd", header: "Costo USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },
-    { id: "profit_usd", header: "Utilidad USD", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
+    { id: "venta_usd", header: "Venta equivalente (USD)", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
+    { id: "costo_usd", header: "Costo equivalente (USD)", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },
+    { id: "profit_usd", header: "Utilidad equivalente (USD)", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
     { id: "margen", header: "Margen", enableSorting: true, meta: { align: "center" }, cell: ({ row }) => margenBadge(row.original.margen, row.original.venta_usd) },
   ]);
 
@@ -63,7 +65,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
             onSortChange={(key) => {
               if (key && SORT_KEYS.includes(key as SortField)) onSort(key as SortField);
             }}
-            emptyMessage="Sin datos en el periodo seleccionado"
+            emptyMessage={VACIO_RENTABILIDAD}
             density={TABLE_DENSITY.embebida}
             mobileCard={(c) => (
               <div className="flex flex-col gap-2 min-w-0">
@@ -75,8 +77,8 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
                   {margenBadge(c.margen, c.venta_usd)}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <MoneyCell label="Venta" value={formatCurrency(c.venta_usd, "USD")} />
-                  <MoneyCell label="Utilidad" value={formatCurrency(c.profit_usd, "USD")} highlight />
+                  <MoneyCell label="Venta equivalente (USD)" value={formatCurrency(c.venta_usd, "USD")} />
+                  <MoneyCell label="Utilidad equivalente (USD)" value={formatCurrency(c.profit_usd, "USD")} highlight />
                 </div>
               </div>
             )}
