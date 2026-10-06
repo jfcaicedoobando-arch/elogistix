@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { ComprasPorAprobarMobileCard } from "@/features/compras/components/ComprasPorAprobarMobileCard";

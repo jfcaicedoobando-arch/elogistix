@@ -40,7 +40,7 @@ vi.mock("@/features/cotizacion/services/candadoCostosAviso", () => ({
   verificarCostosOAvisar: (...a: unknown[]) => verificarCostosOAvisar(...a),
 }));
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router", () => ({ useNavigate: () => vi.fn() }));
 
 vi.mock("@/features/costeo/components/BuscarTarifaDialog", () => ({
   BuscarTarifaDialog: () => null,

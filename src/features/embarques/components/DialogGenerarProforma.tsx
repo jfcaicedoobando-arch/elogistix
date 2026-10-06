@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { FileSpreadsheet } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useDialogGenerarProformaController } from "@/features/embarques/hooks";

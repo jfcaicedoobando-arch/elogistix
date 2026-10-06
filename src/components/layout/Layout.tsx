@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { PageContainer } from "@/components/shared/PageContainer";

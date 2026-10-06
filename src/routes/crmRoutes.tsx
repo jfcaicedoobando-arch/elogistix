@@ -8,7 +8,7 @@
  * ProtectedRoute inline con CRM_CONFIGURACION_ROLES (subconjunto de CRM_ROLES).
  */
 import { Fragment } from "react";
-import { Route, Navigate } from "react-router-dom";
+import { Route, Navigate } from "react-router";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { CRM_CONFIGURACION_ROLES } from "@/lib/access/roleRouteMatrix";
 import {

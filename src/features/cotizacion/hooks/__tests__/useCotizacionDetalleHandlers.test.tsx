@@ -39,7 +39,7 @@ const {
   supabaseCountRef: { value: 1 } as { value: number },
 }));
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => navigateMock }));
+vi.mock("react-router", () => ({ useNavigate: () => navigateMock }));
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: toastFn }),
   useRegistrarActividad: () => ({ mutate: registrarActividadMutate }),

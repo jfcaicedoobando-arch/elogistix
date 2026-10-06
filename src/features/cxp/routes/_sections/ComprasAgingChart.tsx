@@ -4,7 +4,7 @@
  * v13.307.22 — Wave "dashboard-compras-visual".
  */
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

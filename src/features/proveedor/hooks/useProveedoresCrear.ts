@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 import { useProveedorMutations } from "@/features/proveedor/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";

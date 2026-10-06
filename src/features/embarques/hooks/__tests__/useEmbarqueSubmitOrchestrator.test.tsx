@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueSubmitOrchestrator } from "../useEmbarqueSubmitOrchestrator";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const { createEmbarqueMock, resolverExpedienteMock, subirDocsMock } = vi.hoisted(() => ({
   createEmbarqueMock: vi.fn().mockResolvedValue({ id: "1" }),

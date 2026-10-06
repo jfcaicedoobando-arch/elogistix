@@ -9,7 +9,7 @@
  *   arriba, igual que una página nueva del ERP (no guardamos posiciones).
  */
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 export function RouteScrollReset() {
   const { pathname, hash } = useLocation();

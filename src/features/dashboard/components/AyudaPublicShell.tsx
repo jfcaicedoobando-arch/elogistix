@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { LogIn } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { Skeleton } from "@/components/ui/skeleton";

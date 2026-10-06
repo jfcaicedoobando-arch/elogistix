@@ -3,7 +3,7 @@
  * /embarques/nuevo. Explica que los embarques nacen de una cotización aceptada.
  */
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

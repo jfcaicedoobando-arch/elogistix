@@ -4,7 +4,7 @@
  * v13.823.12 — la empresa solicitante se elige explícitamente (multicliente).
  */
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { FileText, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";

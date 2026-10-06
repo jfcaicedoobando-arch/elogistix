@@ -10,7 +10,7 @@ const crearCotMutateAsync = vi.fn(async () => ({ id: "c1", folio: "COT-1", aviso
 const navigate = vi.fn();
 const prospecto = { data: null as unknown, isLoading: false };
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
+vi.mock("react-router", () => ({ useNavigate: () => navigate }));
 vi.mock("@/features/crm/hooks/useCrmProspectoOportunidad", () => ({
   useCrmProspectoOportunidad: () => prospecto,
 }));

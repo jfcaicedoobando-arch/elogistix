@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";

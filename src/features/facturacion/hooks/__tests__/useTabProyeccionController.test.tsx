@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const fetchProyeccionMesMock = vi.fn();
 const exportToCsvMock = vi.fn();

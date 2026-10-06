@@ -6,7 +6,7 @@
  * Convertidos sólo ofrecen "Ver conversión" (navegación de sólo lectura).
  */
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { PageContainer } from "@/components/shared/PageContainer";

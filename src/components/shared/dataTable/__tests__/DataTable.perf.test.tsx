@@ -15,7 +15,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { render as rtlRender, cleanup } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";

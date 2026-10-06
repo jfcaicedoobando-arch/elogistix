@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Building2, Users, ArrowRight, BarChart3, Building } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";

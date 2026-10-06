@@ -2,7 +2,7 @@
  * Bloque "Aplicado a" del panel Detalle del pago (Tesorería):
  * tabla de facturas a las que se aplicó el pago y su saldo restante.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Table, TableBody, TableHeader, TableCell } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { SectionHeading } from "@/components/shared/SectionHeading";

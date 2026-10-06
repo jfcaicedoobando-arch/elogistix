@@ -11,7 +11,7 @@
  * activo. Si el rango está vacío, `isInRange` siempre devuelve `true`.
  */
 import { useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 export interface FacturacionDateRange {
   desde: Date | null;

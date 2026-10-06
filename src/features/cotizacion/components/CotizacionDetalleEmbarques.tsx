@@ -1,6 +1,6 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { formatDate } from "@/lib/formatters";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 

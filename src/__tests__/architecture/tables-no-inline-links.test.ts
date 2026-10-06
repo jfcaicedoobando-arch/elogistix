@@ -1,6 +1,6 @@
 /**
  * Guardrail de arquitectura — Ninguna columna de tabla (archivos `*columns.tsx`
- * / `*Columns.tsx`) puede importar `Link` de `react-router-dom`.
+ * / `*Columns.tsx`) puede importar `Link` de `react-router`.
  *
  * Rationale: las tablas de la app estandarizan drilldown vía `getRowHref` en
  * `<DataTable />` (fila entera navegable, con soporte de teclado y Ctrl+click).
@@ -20,9 +20,9 @@ import { walk, relPath } from "../../../scripts/lib/walk";
 
 const ROOT = resolve(__dirname, "../../..");
 
-/** Detecta `import { ..., Link, ... } from "react-router-dom"`. */
+/** Detecta `import { ..., Link, ... } from "react-router"`. */
 const LINK_IMPORT_RE =
-  /import\s*(?:type\s*)?\{[^}]*\bLink\b[^}]*\}\s*from\s*["']react-router-dom["']/;
+  /import\s*(?:type\s*)?\{[^}]*\bLink\b[^}]*\}\s*from\s*["']react-router["']/;
 
 /** Archivos autorizados a importar `Link` en columnas (excepciones justificadas). */
 const ALLOWLIST: readonly string[] = [
@@ -44,7 +44,7 @@ const isColumnFile = (rel: string) =>
   /columns\.tsx$/i.test(rel) && !/\.test\.tsx?$/i.test(rel);
 
 describe("architecture — no <Link> inline en columnas de tabla", () => {
-  it("ningún archivo *columns.tsx importa Link de react-router-dom", () => {
+  it("ningún archivo *columns.tsx importa Link de react-router", () => {
     const violations: string[] = [];
     for (const f of walk(join(ROOT, "src"), {
       excludeDirs: ["__tests__", "node_modules"],
@@ -58,7 +58,7 @@ describe("architecture — no <Link> inline en columnas de tabla", () => {
     }
     expect(
       violations,
-      `Archivos *columns.tsx que importan Link de react-router-dom.\n` +
+      `Archivos *columns.tsx que importan Link de react-router.\n` +
         `Usa getRowHref en <DataTable /> para el drilldown de la fila, o\n` +
         `agrega el archivo a ALLOWLIST en\n` +
         `src/__tests__/architecture/tables-no-inline-links.test.ts con justificación.\n\n` +

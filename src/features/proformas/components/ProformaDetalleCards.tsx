@@ -3,7 +3,7 @@
  * Extraídos para mantener la página ≤200 líneas (Power-of-10 #4) y reducir
  * la complejidad ciclomática del componente página.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

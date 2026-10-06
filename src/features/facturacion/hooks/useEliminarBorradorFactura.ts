@@ -4,7 +4,7 @@
  * factura activa. La aceptación del cliente se conserva.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { toast } from "@/hooks/shared/useToast";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { eliminarFacturaBorrador } from "@/features/facturacion/services/eliminarBorrador";

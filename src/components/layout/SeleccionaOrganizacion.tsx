@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Building2, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

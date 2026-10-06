@@ -3,7 +3,7 @@
  * Extraído de `DialogDuplicarEmbarque` en 12.1.0 (Power of 10).
  */
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useDuplicarEmbarque } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

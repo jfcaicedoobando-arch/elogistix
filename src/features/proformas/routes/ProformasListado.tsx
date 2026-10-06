@@ -8,7 +8,7 @@
  * (ej. "Por emitir" → /proformas?estado=aceptada).
  */
 import { FileSpreadsheet } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProformas } from "@/features/facturacion/components/TabProformas";

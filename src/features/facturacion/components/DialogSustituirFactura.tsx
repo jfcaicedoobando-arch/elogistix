@@ -8,7 +8,7 @@
  *   3) Regresar y confirmar cancelación motivo 01 con la sustituta timbrada.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";

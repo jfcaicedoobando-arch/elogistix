@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import {
   useEliminarEmbarque,
   useEmbarqueDependenciasFinancieras,

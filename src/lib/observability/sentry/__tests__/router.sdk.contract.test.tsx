@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import * as Sentry from "@sentry/react";
 import type { Envelope } from "@sentry/core";
 import { reactRouterBrowserTracingIntegration } from "@sentry/react/react-router";
@@ -13,7 +13,7 @@ vi.mock("@/routes/portalRoutes", () => ({ portalRoutes: null }));
 vi.mock("@/routes/adminRoutes", () => ({ adminRoutes: null }));
 vi.mock("@/routes/agenteRoutes", () => ({ agenteRoutes: null }));
 vi.mock("@/routes/appRoutes", async () => {
-  const { Route } = await import("react-router-dom");
+  const { Route } = await import("react-router");
   const { useState } = await import("react");
   function Form() {
     const [value, setValue] = useState("");

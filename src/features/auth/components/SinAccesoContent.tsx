@@ -3,7 +3,7 @@
  * Extraído de `SinAcceso.tsx` para mantener el límite de 200 líneas y aislar
  * la lógica de copy (fácil de auditar/traducir) de la maquetación general.
  */
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { useCallback } from "react";
 import { Home, LifeBuoy, LogOut, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";

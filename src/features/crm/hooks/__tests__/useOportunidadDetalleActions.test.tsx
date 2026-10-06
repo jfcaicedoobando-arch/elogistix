@@ -16,7 +16,7 @@ const notifyError = vi.fn();
 const notifyInfo = vi.fn();
 const successToast = vi.fn();
 
-vi.mock("react-router-dom", () => ({
+vi.mock("react-router", () => ({
   useNavigate: () => navigate,
 }));
 vi.mock("@/features/crm/hooks/useCrmProspectoOportunidad", () => ({

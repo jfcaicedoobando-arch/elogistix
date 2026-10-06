@@ -2,7 +2,7 @@
  * Tarjeta de registros ligados (p. ej. "Contactos" dentro de una Empresa).
  * Permite navegar, ligar uno existente y quitar el vínculo (no borra el registro).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

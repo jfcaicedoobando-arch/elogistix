@@ -1,5 +1,5 @@
 import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { ROUTES } from "@/constants/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";

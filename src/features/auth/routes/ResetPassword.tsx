@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { resolveLandingRoute } from "@/features/auth/services";
 import { subscribeToAuthChanges, getCurrentSession, updateUserPassword } from "@/features/auth/services";

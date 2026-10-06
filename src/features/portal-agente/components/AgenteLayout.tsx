@@ -3,7 +3,7 @@
  * v13.226.0 (Lote 6 · D-02, D-12): paridad con `PortalLayout` — breadcrumbs bar,
  * dropdown de usuario con avatar, `FeedbackButton` y footer con org dinámico.
  */
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useMemo } from "react";
 import { Ship, FileSpreadsheet, ShieldCheck, LayoutDashboard, User, Building2 } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";

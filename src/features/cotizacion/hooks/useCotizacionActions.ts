@@ -4,7 +4,7 @@
  * para separar orquestación de UI vs queries/derivaciones.
  */
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 import { exportToCsv } from "@/generators/exportCsv";
 import { todayLocalISO } from "@/lib/date/today";

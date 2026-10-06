@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import AgenteGarantias from "../AgenteGarantias";
 
 const viewport = vi.hoisted(() => ({ mobile: true }));

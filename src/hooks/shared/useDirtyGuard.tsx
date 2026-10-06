@@ -8,7 +8,7 @@
  *  2. Intercepción de clics en enlaces internos (`<a href>` del sidebar, tablas,
  *     breadcrumbs) mostrando el `ConfirmActionDialog` estándar.
  *
- * IMPORTANTE (v13.544.2): antes se usaba `useBlocker` de react-router-dom, que
+ * IMPORTANTE (v13.544.2): antes se usaba `useBlocker` de react-router, que
  * SÓLO existe en routers de datos (`createBrowserRouter`). La app monta
  * `<BrowserRouter>`, así que `useBlocker` lanzaba una excepción y tumbaba el
  * modal de captura de facturas de proveedor. La intercepción de clics no
@@ -19,7 +19,7 @@
  *   // …en el JSX: {guardDialog}
  */
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useDirtyHistoryGuard } from "./useDirtyHistoryGuard";
 

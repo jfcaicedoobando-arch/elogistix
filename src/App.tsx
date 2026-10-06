@@ -4,7 +4,7 @@ import { RouteToastCleanup } from "@/components/shared/RouteToastCleanup";
 import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 import { RouteScrollReset } from "./components/layout/RouteScrollReset";

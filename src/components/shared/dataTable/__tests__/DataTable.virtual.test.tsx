@@ -5,7 +5,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";

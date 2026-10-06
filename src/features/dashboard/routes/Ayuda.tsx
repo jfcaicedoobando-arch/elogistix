@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Search, HelpCircle, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

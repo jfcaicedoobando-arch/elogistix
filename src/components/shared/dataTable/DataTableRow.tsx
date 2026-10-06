@@ -3,7 +3,7 @@
  * el límite de complejidad ciclomática (ESLint 16) y mantener el body legible.
  */
 import { flexRender, type Cell, type Row } from "@tanstack/react-table";
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, type ColumnAlign } from "./types";

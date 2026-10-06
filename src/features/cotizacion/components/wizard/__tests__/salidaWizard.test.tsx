@@ -3,7 +3,7 @@
  * navegaba al listado sin advertir de la captura pendiente.
  */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 import { ejecutarSalidaWizard } from "../salidaWizard";

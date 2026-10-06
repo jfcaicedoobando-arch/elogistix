@@ -4,7 +4,7 @@
  * de contenido con el mismo ancho y tipografía en las tres páginas.
  */
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { ROUTES } from "@/constants/routes";

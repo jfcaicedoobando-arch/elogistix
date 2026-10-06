@@ -1,7 +1,7 @@
 /**
  * Guard del Portal del Agente de Carga. Sólo permite el rol `agente_carga`.
  */
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { RouteLoadingSkeleton } from "@/components/ui/RouteLoadingSkeleton";
 import { ErrorState } from "@/components/shared/states/ErrorState";

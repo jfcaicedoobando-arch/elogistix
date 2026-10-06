@@ -2,7 +2,7 @@
  * Acciones de una fila del buzón CxP (extraído para complejidad ≤16).
  * v13.368.0
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { CheckCircle2, Eye, FileCode2, FilePlus2, MoreHorizontal, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

@@ -10,7 +10,7 @@
  */
 import { type ReactNode } from "react";
 import { AlertTriangle, Receipt } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DetailHeader } from "@/components/shared/DetailHeader";

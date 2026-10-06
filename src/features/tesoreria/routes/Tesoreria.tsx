@@ -4,7 +4,7 @@
  */
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Wallet, ArrowRight, FileText, TrendingUp, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";

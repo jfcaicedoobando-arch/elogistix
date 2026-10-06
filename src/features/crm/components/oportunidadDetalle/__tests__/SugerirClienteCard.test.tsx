@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 let mockRole: string | null = null;
 vi.mock("@/lib/contexts/AuthContext", () => ({

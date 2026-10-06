@@ -3,7 +3,7 @@ import { Ship, ArrowRight, Clock } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ROUTES } from "@/constants/routes";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";

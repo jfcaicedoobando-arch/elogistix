@@ -5,7 +5,7 @@
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, FileSpreadsheet, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";

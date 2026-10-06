@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import type { TopItem } from "@/features/tesoreria/services";
 
 export interface KpiDrilldownProps {

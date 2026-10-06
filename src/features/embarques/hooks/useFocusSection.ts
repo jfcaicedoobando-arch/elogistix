@@ -11,7 +11,7 @@
  * vuelva a resaltar.
  */
 import { useCallback, useMemo, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 const HIGHLIGHT_CLASSES = [
   "ring-2",

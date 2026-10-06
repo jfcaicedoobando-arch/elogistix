@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Button } from "@/components/ui/button";

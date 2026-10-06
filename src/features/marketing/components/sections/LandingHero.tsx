@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Ship, Container, FileText, Clock } from "lucide-react";
 import { HERO, PROOF_TITLE, PROOF_NAVIERAS, PROOF_ESTANDARES, PROOF_DISCLAIMER } from "../../routes/landingCopy";

@@ -2,7 +2,7 @@
  * Bottom navigation bar para el portal de cliente en mobile.
  * Sticky bottom, oculta en md+, respeta safe-area-inset-bottom (notch iPhone).
  */
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";
 
 export function PortalBottomNav() {

@@ -3,7 +3,7 @@
  * expedientes y todavía no llegó como factura del proveedor, más las facturas
  * capturadas cuyas partidas no están ligadas a ningún costo.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FileWarning, Link2Off, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

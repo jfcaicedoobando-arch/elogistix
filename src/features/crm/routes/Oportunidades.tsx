@@ -3,7 +3,7 @@
  * Filtros avanzados colapsables para ganar espacio vertical.
  */
 import { useCallback, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { copiaContadorOportunidades } from "./oportunidadesContadorCopy";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { useDebounce, useDocumentTitle, usePermissions } from "@/hooks/shared";

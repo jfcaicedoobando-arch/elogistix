@@ -4,7 +4,7 @@
  * (`DocumentosProveedorSection`) para dar paridad con facturas emitidas.
  */
 import { Building2 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";

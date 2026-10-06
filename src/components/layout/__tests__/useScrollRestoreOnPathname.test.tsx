@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter, useNavigate } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router";
 import { useRef } from "react";
 import { useScrollRestoreOnPathname } from "../useScrollRestoreOnPathname";
 

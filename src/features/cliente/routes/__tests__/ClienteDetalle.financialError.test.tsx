@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 const mocks = vi.hoisted(() => ({ controller: vi.fn(), retry: vi.fn() }));
 vi.mock("@/features/cliente/hooks", () => ({ useClienteDetalleController: mocks.controller }));
-vi.mock("react-router-dom", () => ({ useParams: () => ({ id: "cliente" }) }));
+vi.mock("react-router", () => ({ useParams: () => ({ id: "cliente" }) }));
 vi.mock("@/lib/contexts/BreadcrumbContext", () => ({ useRegisterBreadcrumbLabel: vi.fn() }));
 vi.mock("@/components/shared/PageContainer", () => ({ PageContainer: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/features/cliente/components/detalle/ClienteDetalleDialogs", () => ({ ClienteDetalleDialogs: () => null }));

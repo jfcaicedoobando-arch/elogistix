@@ -3,7 +3,7 @@
  * expediente enlazado, stepper de ciclo de vida y acciones contextuales.
  */
 import { type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { ReceiptText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";

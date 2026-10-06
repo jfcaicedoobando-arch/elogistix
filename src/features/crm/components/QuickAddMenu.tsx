@@ -11,7 +11,7 @@
  * Atajos: N abre el menú; L/O/A abren directo el formulario correspondiente.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

@@ -5,7 +5,7 @@
  * cinta de KPIs, pestañas enlazables y riel de historial).
  */
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { FileX } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DetailSkeleton } from "@/components/shared/skeletons";

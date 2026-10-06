@@ -2,14 +2,14 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useCotizacionHydration } from "../useCotizacionHydration";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const mockCot = { id: "cot-1", folio: "COT-001", estado: "Aceptada" };
 const mockBorrador = { id: "cot-2", folio: "COT-002", estado: "Borrador" };
 
 const navigateSpy = vi.fn();
-vi.mock("react-router-dom", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("react-router-dom")>()),
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router")>()),
   useNavigate: () => navigateSpy,
 }));
 

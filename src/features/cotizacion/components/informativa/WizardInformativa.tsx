@@ -3,7 +3,7 @@
  * datos generales + tarifas + notas. Crea la cotización con tipo_documento='informativa'.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Textarea } from "@/components/ui/textarea";

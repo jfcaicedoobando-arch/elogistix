@@ -5,7 +5,7 @@
  *             ok se muestran en muted (sin rojo) y sin link, ya que no hay
  *             acción que tomar sobre un embarque cerrado.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ExternalLink, MinusCircle, XCircle } from "lucide-react";
 import { getCierreCheckMeta } from "@/features/embarques/utils/cierreCheckMeta";

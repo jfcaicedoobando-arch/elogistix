@@ -3,7 +3,7 @@
  * Extraído de `DemoAccessDialog` para respetar el límite de 200 líneas.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";

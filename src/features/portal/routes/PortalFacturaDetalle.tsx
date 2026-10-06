@@ -1,6 +1,6 @@
 import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailHeader } from "@/components/shared/DetailHeader";

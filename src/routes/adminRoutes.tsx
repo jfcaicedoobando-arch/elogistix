@@ -3,7 +3,7 @@
  * Extraído de `src/routes.tsx` en 11.65.0 (D12).
  */
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Route } from "react-router";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { AdminLayout } from "@/features/admin/components/AdminLayout";
 

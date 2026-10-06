@@ -2,7 +2,7 @@
  * Vista CRM dentro de ClienteDetalle (Sprint D): oportunidades, última
  * cotización, último embarque y timeline de actividades.
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Briefcase, ClipboardList, FileText, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";

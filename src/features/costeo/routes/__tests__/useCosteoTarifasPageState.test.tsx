@@ -1,7 +1,7 @@
 /** P2-A2/A3/A4: ruta del URL, "Nueva tarifa" desde ruta y KPIs excluyentes. */
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import type { ReactNode } from "react";
 
 vi.mock("@/features/costeo/hooks/useCosteoTarifas", () => ({

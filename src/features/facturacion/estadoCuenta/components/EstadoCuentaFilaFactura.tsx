@@ -1,7 +1,7 @@
 /**
  * Fila de factura del Estado de cuenta (una línea del statement).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { TableCell } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
 import { Badge } from "@/components/ui/badge";

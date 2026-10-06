@@ -1,6 +1,6 @@
 /** Estado y handlers de la página `CosteoTarifas`. */
 import { useMemo, useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { useCosteoTarifas, useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";

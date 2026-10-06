@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useSearchParams, Navigate } from "react-router-dom";
+import { useParams, useSearchParams, Navigate } from "react-router";
 import { FormProvider } from "react-hook-form";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";

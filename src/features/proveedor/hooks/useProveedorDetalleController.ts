@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { useProveedor, useProveedorMutations } from "@/features/proveedor/hooks/useProveedores";
 import { useProveedorEstadoCuenta } from "@/features/proveedor/hooks/useProveedorEstadoCuenta";
 import { calcularAgregadosProveedor } from "@/features/proveedor/domain/agregadosProveedor";

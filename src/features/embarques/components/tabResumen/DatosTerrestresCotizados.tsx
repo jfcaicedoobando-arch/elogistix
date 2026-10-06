@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useCotizacion } from "@/features/cotizacion/hooks";
 import { DetailRow } from "../DetailRow";
 

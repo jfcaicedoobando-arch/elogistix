@@ -1,5 +1,5 @@
 import { Plus, MoreHorizontal, Download, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import {

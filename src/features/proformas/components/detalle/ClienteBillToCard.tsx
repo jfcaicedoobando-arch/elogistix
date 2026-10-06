@@ -2,7 +2,7 @@
  * Card "Facturar a" con los datos completos del cliente (RFC + dirección).
  * Enlaza al expediente del cliente cuando conocemos su id.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

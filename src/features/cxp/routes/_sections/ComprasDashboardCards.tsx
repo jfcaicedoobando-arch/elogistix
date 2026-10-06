@@ -3,7 +3,7 @@
  * facturas capturadas". v13.307.22 — se agrega barra proporcional en Top
  * proveedores y link "Ver todas" en Últimas facturas.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ArrowUpRight, Wallet, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";

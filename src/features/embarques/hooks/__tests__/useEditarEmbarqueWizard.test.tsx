@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEditarEmbarqueWizard } from "../useEditarEmbarqueWizard";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { email: "test@example.com" } }),

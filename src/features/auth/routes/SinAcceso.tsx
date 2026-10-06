@@ -13,7 +13,7 @@
  *    "Reintentar" como acción principal en vez de pedir intervención de un
  *    administrador.
  */
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useState } from "react";
 import { ShieldAlert, AlertTriangle } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";

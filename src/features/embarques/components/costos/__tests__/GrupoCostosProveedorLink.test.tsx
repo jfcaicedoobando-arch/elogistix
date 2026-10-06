@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { GrupoCostosProveedor } from "../GrupoCostosProveedor";
 
 // B1 (v13.823.395): el enlace a CxP sólo se renderiza con `canViewFinancials`.

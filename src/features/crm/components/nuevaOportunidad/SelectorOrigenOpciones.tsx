@@ -3,7 +3,7 @@
  * para mantener la complejidad por función dentro del límite del proyecto).
  */
 import { Check, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";

@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
 import { COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
 import { mensajeTrackingAmigable } from "./trackingErrorCopy";

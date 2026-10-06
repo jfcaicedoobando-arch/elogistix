@@ -1,5 +1,5 @@
 import { FormProvider } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

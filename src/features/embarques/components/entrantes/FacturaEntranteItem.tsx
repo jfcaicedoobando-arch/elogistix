@@ -3,7 +3,7 @@
  * Acomodo denso en columnas (archivo/estado · proveedor · montos · acciones);
  * el motivo de rechazo se muestra como franja a todo el ancho.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FileText, Link2 as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Hint } from "@/components/shared/Hint";

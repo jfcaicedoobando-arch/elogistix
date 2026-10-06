@@ -4,7 +4,7 @@
  * (Power-of-10); sin cambios de comportamiento.
  */
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 
 export interface AccionesCapturaProps {

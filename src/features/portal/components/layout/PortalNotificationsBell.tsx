@@ -3,7 +3,7 @@
  * Muestra contador de no leídas, dropdown con últimas 50 notificaciones,
  * marca como leída al hacer click y navega al recurso (embarque/factura).
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Bell, CheckCheck } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";

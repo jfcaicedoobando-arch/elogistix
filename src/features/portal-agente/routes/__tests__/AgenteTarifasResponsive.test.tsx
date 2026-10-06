@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { buildAgenteTarifasColumns } from "../_sections/agenteTarifasColumns";
 import { AgenteTarifaCard } from "../_sections/AgenteTarifaCard";

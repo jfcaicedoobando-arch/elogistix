@@ -7,7 +7,7 @@
  * (cotización aprobada → embarque) y ofrece ir a cotizaciones si tiene acceso.
  */
 import { Ship } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyState from "@/components/empty/EmptyState";
 import { OrgContextoHint } from "@/components/shared/OrgContextoHint";

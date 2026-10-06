@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useProveedorDetalleController } from "../useProveedorDetalleController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("react-router-dom", () => ({
+vi.mock("react-router", () => ({
   useNavigate: vi.fn(),
   useParams: vi.fn(() => ({ id: "prov-1" })),
 }));

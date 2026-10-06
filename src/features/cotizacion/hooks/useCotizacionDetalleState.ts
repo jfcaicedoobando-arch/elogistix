@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCotizacion, useEmbarquesVinculados } from "@/features/cotizacion/hooks/useCotizaciones";
 import { usePermissions } from "@/hooks/shared/usePermissions";

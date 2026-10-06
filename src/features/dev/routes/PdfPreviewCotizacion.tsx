@@ -3,7 +3,7 @@
  * Renderiza CotizacionDocument dentro de <PDFViewer> para validar layout
  * antes de cablear el botón de descarga en producción.
  */
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useTasaIVA, useTiposContenedor } from "@/features/catalogos/hooks";
 import { usePdfPreviewCotizacionPage } from "@/features/cotizacion/hooks/usePdfPreviewCotizacionPage";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
