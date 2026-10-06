@@ -14,6 +14,7 @@ import { useContenedoresInfoMap } from "@/features/embarques/hooks/useContenedor
 import { buildEmbarqueColumns } from "@/features/embarques/table/embarqueColumns";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fetchEmbarquesParaExport } from "@/features/embarques/services";
+import { fetchContenedoresParaExport } from "@/features/embarques/services/contenedores/exportContenedores";
 import { useOrgFilter } from "@/hooks/shared";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -85,6 +86,8 @@ export function useEmbarquesPageController() {
         return;
       }
 
+      const contenedoresExport = await fetchContenedoresParaExport(filtradosFinal, organizationId);
+
       exportToCsv(
         `embarques_${todayLocalISO()}.csv`,
         [
@@ -118,8 +121,8 @@ export function useEmbarquesPageController() {
           etd: e.etd || "",
           eta: e.eta || "",
           operador: e.operador || "",
-          contenedor: e.contenedor || "",
-          tipo_contenedor: e.tipo_contenedor || "",
+          contenedor: contenedoresExport[e.id]?.contenedor ?? "",
+          tipo_contenedor: contenedoresExport[e.id]?.tipo_contenedor ?? "",
           descripcion_mercancia: e.descripcion_mercancia || "",
           tipo_cambio_usd: e.tipo_cambio_usd ?? "",
           tipo_cambio_eur: e.tipo_cambio_eur ?? "",
