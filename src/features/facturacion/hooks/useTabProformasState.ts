@@ -17,6 +17,9 @@ import { getEstadoUnificado, type EstadoUnificadoProforma } from "@/lib/domain/e
 export type FiltroEstadoProforma = "todas" | EstadoUnificadoProforma;
 
 const TODOS = "todos";
+// Keep the default predicate stable: changing it invalidates filtered data and
+// can feed TanStack's automatic page-reset render loop after selection changes.
+const FECHA_SIN_RESTRICCION = () => true;
 
 function fechaEnRango(fecha: string | null | undefined, desde: string, hasta: string): boolean {
   if (!desde && !hasta) return true;
@@ -29,7 +32,7 @@ function fechaEnRango(fecha: string | null | undefined, desde: string, hasta: st
 
 export function useTabProformasState(
   proformas: ProformaConFactura[],
-  isInRange: (fecha: string | null | undefined) => boolean = () => true,
+  isInRange: (fecha: string | null | undefined) => boolean = FECHA_SIN_RESTRICCION,
   estadoInicial: FiltroEstadoProforma = "todas",
 ) {
   const [search, setSearchState] = useState("");
