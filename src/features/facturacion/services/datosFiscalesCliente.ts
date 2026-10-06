@@ -57,6 +57,25 @@ export async function actualizarDatosTimbradoFactura(
 }
 
 /**
+ * Realinea la fecha de emisión de un borrador sin timbrar al día indicado; el
+ * trigger del DOF recalcula el tipo de cambio de esa fecha.
+ */
+export async function realinearFechaEmisionBorrador(facturaId: string, fecha: string): Promise<void> {
+  const filas = await unwrapOr(
+    supabase.from("facturas").update({ fecha_emision: fecha })
+      .eq("id", facturaId).is("uuid_fiscal", null).select("id"),
+    [],
+  );
+  if (filas.length === 0) throw new Error("La factura ya no está en borrador; no se cambió la fecha.");
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "realinear_fecha_emision_borrador",
+    entidadId: facturaId,
+    detalles: { fecha_emision: fecha },
+  });
+}
+
+/**
  * Defaults de facturación por cliente (uso CFDI, forma/método de pago, CC de correo).
  *
  * Origen: preferencia guardada en `clientes.*_default`; si no existe, se usa
