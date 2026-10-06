@@ -23,8 +23,8 @@ export interface EvolucionMes {
 }
 
 /**
- * M-3: la conversión pasa por el canon único (`aMxn`); EUR usa su propio tipo
- * de cambio en vez de compartir el del USD.
+ * El TC documental (campo histórico `tipo_cambio_usd`) tiene prioridad para
+ * USD y EUR. Sólo sin un TC confiable se usa el respaldo de la misma moneda.
  */
 export function agruparTopProveedores(
   rows: FacturaLite[],
@@ -37,8 +37,8 @@ export function agruparTopProveedores(
     const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, eur: 0, count: 0, mxnEquiv: 0 };
     cur.count += 1;
 
-    const tcMoneda = r.moneda === "USD" ? (r.tipo_cambio_usd || tcDof) : tcEurDof;
-    const equiv = r.moneda === "MXN" ? r.total : aMxn(r.total, r.moneda, tcMoneda).monto;
+    const fallback = r.moneda === "USD" ? tcDof : r.moneda === "EUR" ? tcEurDof : null;
+    const equiv = aMxn(r.total, r.moneda, r.tipo_cambio_usd, { fallback }).monto;
 
     if (r.moneda === "MXN") cur.mxn += r.total;
     else if (r.moneda === "USD") cur.usd += r.total;

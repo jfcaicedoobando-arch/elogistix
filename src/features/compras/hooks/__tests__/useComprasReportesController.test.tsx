@@ -9,7 +9,7 @@ vi.mock("@/hooks/shared/useOrgFilter", () => ({
 }));
 vi.mock("@/features/compras/services/reportesFetch", () => ({ fetchFacturasReporte: mocks.fetch }));
 vi.mock("@/features/catalogos/services", () => ({
-  fetchExchangeRates: async () => ({ usdMxn: 18.071, eurMxn: 20 }),
+  fetchExchangeRates: async () => ({ usdMxn: 18.071, eurMxn: 30 }),
 }));
 vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: mocks.descargar }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -23,6 +23,36 @@ beforeEach(() => {
 });
 
 describe("Compras reportes — rango y exportación", () => {
+  it("entrega el mismo ranking documental EUR a la pantalla y al CSV", async () => {
+    mocks.fetch.mockResolvedValue([
+      { id: "eur", fecha_emision: "2026-10-04", total: 100, moneda: "EUR",
+        proveedor_id: "eur", proveedor_nombre: "Europeo", tipo_cambio_usd: 20 },
+      { id: "mxn", fecha_emision: "2026-10-04", total: 2100, moneda: "MXN",
+        proveedor_id: "mxn", proveedor_nombre: "Local", tipo_cambio_usd: null },
+    ]);
+    const { result } = renderHook(useComprasReportesController, { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.numFacturas).toBe(2));
+    expect(result.current.topProveedores).toEqual([
+      { nombre: "Local", mxn: 2100, usd: 0, eur: 0, count: 1, mxnEquiv: 2100 },
+      { nombre: "Europeo", mxn: 0, usd: 0, eur: 100, count: 1, mxnEquiv: 2000 },
+    ]);
+
+    act(() => result.current.handleExport());
+    expect(mocks.descargar).toHaveBeenCalledTimes(1);
+    const blob: Blob = mocks.descargar.mock.calls[0][0];
+    const csv = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob);
+    });
+    expect(csv.split("\n")).toEqual([
+      "proveedor,facturas,total_mxn,total_usd,total_eur,total_equivalente_mxn",
+      "Local,1,2100,0,0,2100",
+      "Europeo,1,0,0,100,2000",
+    ]);
+  });
+
   it("no consulta ni exporta un rango invertido y permite corregirlo", async () => {
     const { result } = renderHook(useComprasReportesController, { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.numFacturas).toBe(1));
