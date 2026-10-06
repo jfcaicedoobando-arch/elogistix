@@ -130,7 +130,6 @@ export function usePrefillVinculosEntrante({
     if (requiereConversion(sugeridos, facturaMoneda) && !tc) return;
 
     let vivo = true;
-    aplicadoPara.current = clave;
     void (async () => {
       let cubiertos: Set<string>;
       try {
@@ -149,6 +148,9 @@ export function usePrefillVinculosEntrante({
         return;
       }
       if (!vivo) return;
+      // Cerrar/cambiar el T/C puede invalidar una lectura pendiente. Marcar
+      // sólo al resolver evita bloquear el reintento del efecto siguiente.
+      aplicadoPara.current = clave;
       setErrorCubiertos(false);
       const libres = sugeridos.filter((s) => !cubiertos.has(s.conceptoCostoId));
       const { convertibles, sinTipoCambio: sinTc, monedaNoSoportada: noSoportada } =

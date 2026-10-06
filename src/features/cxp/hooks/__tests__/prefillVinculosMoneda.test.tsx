@@ -8,6 +8,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { usePrefillVinculosEntrante } from "../usePrefillVinculosEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
+import type { TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 
 vi.mock("@/features/embarques/services/costosConFactura", () => ({
   fetchCostosConFactura: vi.fn(async () => new Set<string>()),
@@ -80,6 +81,30 @@ describe("usePrefillVinculosEntrante · falla cerrado (bug 10)", () => {
 });
 
 describe("auditoría 133 · precarga incompatible", () => {
+  it("conserva el aviso si llega el DOF durante la consulta y no repite una precarga terminada", async () => {
+    const { fetchCostosConFactura } = await import("@/features/embarques/services/costosConFactura");
+    const pendientes: Array<(value: Set<string>) => void> = [];
+    const demorar = () => new Promise<Set<string>>((resolve) => pendientes.push(resolve));
+    vi.mocked(fetchCostosConFactura).mockClear().mockImplementationOnce(demorar).mockImplementationOnce(demorar);
+    const aplicarSugerencias = vi.fn();
+    const { result, rerender } = renderHook(({ tcActual }: { tcActual: TcPivote | null }) =>
+      usePrefillVinculosEntrante({ entrante, abierto: true, habilitado: true,
+        aplicarSugerencias, facturaMoneda: "EUR", tc: tcActual }),
+      { initialProps: { tcActual: null as TcPivote | null } },
+    );
+    expect(fetchCostosConFactura).toHaveBeenCalledTimes(1);
+    rerender({ tcActual: { usdMxn: 17, eurMxn: 20.44 } });
+    await act(async () => { pendientes.splice(0).forEach((resolve) => resolve(new Set())); });
+    await waitFor(() => expect(result.current.monedaNoSoportada).toHaveLength(1));
+    expect(result.current.sinTipoCambio).toEqual([]);
+    expect(result.current.aplicados).toEqual([]);
+    expect(aplicarSugerencias).not.toHaveBeenCalled();
+    const lecturas = vi.mocked(fetchCostosConFactura).mock.calls.length;
+    rerender({ tcActual: { usdMxn: 17, eurMxn: 20.44 } });
+    expect(fetchCostosConFactura).toHaveBeenCalledTimes(lecturas);
+    expect(result.current.monedaNoSoportada).toHaveLength(1);
+  });
+
   it("expone USD/EUR sin preseleccionar y limpia el aviso al cerrar", async () => {
     const aplicarSugerencias = vi.fn();
     const { result, rerender } = renderHook(({ abierto }: { abierto: boolean }) =>
