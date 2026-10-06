@@ -69,6 +69,8 @@ export function conceptoPorSaldo(
   const saldoSeguro = Number.isFinite(saldo) && saldo > 0 ? saldo : 0;
   return {
     ...linea,
+    // AUDIT-144: el saldo abarca toda la factura, no un solo concepto.
+    concepto_factura_id: null,
     descripcion: DESCRIPCION_SALDO,
     cantidad: 1,
     precio_unitario: factor > 0 ? roundMoney(saldoSeguro / factor) : 0,

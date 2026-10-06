@@ -9773,6 +9773,15 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: number
       }
+      _nc_factor_moneda_factura: {
+        Args: {
+          p_f_moneda: string
+          p_f_tc: number
+          p_nc_moneda: string
+          p_nc_tc: number
+        }
+        Returns: number
+      }
       _recalc_anticipo_saldo: {
         Args: { p_anticipo_id: string }
         Returns: undefined

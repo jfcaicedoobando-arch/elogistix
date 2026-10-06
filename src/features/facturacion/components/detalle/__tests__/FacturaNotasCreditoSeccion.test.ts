@@ -22,3 +22,14 @@ describe("parseConceptosSugeridos (Ola 4 · N19)", () => {
     expect(parseConceptosSugeridos({})).toEqual([]);
   });
 });
+
+describe("parseConceptosSugeridos (AUDIT-144 linaje)", () => {
+  it("copia el id del concepto original y deja null si falta", () => {
+    const out = parseConceptosSugeridos({ conceptos: [
+      { id: "cf-1", descripcion: "A", precio_unitario: 100 },
+      { descripcion: "B", precio_unitario: 300 },
+    ] });
+    expect(out[0].concepto_factura_id).toBe("cf-1");
+    expect(out[1].concepto_factura_id).toBeNull();
+  });
+});

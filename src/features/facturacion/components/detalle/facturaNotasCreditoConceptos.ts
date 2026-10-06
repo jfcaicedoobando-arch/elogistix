@@ -13,6 +13,8 @@ import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasC
 import { esTratamientoNC } from "@/features/facturacion/utils/impuestosNotaCredito";
 
 interface ConceptoSnapshot {
+  /** Id de `conceptos_factura` incluido en el snapshot de emisión. */
+  id?: string | null;
   descripcion?: string;
   concepto?: string;
   cantidad?: number;
@@ -54,5 +56,7 @@ export function parseConceptosSugeridos(snapshot: unknown): ConceptoNotaCredito[
     tipo_iva: esTratamientoNC(c.tipo_iva) ? c.tipo_iva : null,
     tasa_ret_isr: numeroOpcional(c.tasa_ret_isr) ?? 0,
     tasa_ret_iva: numeroOpcional(c.tasa_ret_iva) ?? 0,
+    // AUDIT-144: linaje al renglón original; nunca se infiere si falta.
+    concepto_factura_id: typeof c.id === "string" && c.id ? c.id : null,
   })).filter((c) => c.descripcion);
 }

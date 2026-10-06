@@ -31,7 +31,11 @@ BEGIN
     RAISE EXCEPTION 'M1-res REGRESIÓN: profit_por_cliente no usa la venta facturada neta de NC';
   END IF;
   SELECT pg_get_functiondef('public._venta_facturada_por_embarque(uuid)'::regprocedure) INTO v_def;
-  IF v_def NOT ILIKE '%_nc_aplicadas_moneda_factura%' THEN
+  -- AUDIT-144: el canon resta NC timbradas por renglón (linaje al concepto)
+  -- con la misma conversión de moneda; sin linaje, prorratea.
+  IF v_def NOT ILIKE '%factura_notas_credito%'
+     OR v_def NOT ILIKE '%_nc_factor_moneda_factura%'
+     OR v_def NOT ILIKE '%concepto_factura_id%' THEN
     RAISE EXCEPTION 'M1-res REGRESIÓN: la venta facturada no descuenta notas de crédito (canon ausente)';
   END IF;
   IF v_def NOT ILIKE '%factura_embarques%' THEN
