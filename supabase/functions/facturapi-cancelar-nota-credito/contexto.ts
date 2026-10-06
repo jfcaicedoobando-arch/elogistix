@@ -22,7 +22,7 @@ export interface NcRow {
 
 export type CtxResult =
   | { ok: false; response: Response }
-  | { ok: true; nc: NcRow; sustituyeFacturapiId?: string };
+  | { ok: true; nc: NcRow & { facturapi_id: string }; sustituyeFacturapiId?: string };
 
 const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
 
@@ -46,14 +46,14 @@ async function cargarNc(supabase: SupabaseClient, id: string): Promise<CtxResult
     .maybeSingle();
   const nc = data as NcRow | null;
   if (error || !nc) return { ok: false, response: jsonResponse({ error: "nota_credito_not_found" }, 404) };
-  if (!nc.facturapi_id) return { ok: false, response: jsonResponse({ error: "no_timbrada" }, 409) };
+  if (typeof nc.facturapi_id !== "string" || !nc.facturapi_id) return { ok: false, response: jsonResponse({ error: "no_timbrada" }, 409) };
   if (nc.estado === "Cancelada") {
     return {
       ok: false,
       response: jsonResponse({ error: "ya_cancelada", message: "Esta nota de crédito ya está cancelada." }, 409),
     };
   }
-  return { ok: true, nc };
+  return { ok: true, nc: { ...nc, facturapi_id: nc.facturapi_id } };
 }
 
 /**

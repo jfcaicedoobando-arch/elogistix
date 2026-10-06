@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 /**
  * P0-A — Timbrado PENDIENTE de la nota de crédito (CFDI E).
  *
@@ -15,7 +16,7 @@ import {
 } from "../_shared/timbradoPendiente.ts";
 
 // SAFE-CAST: cliente de Supabase creado en index.ts.
-type Db = ReturnType<typeof import("https://esm.sh/@supabase/supabase-js@2.45.0").createClient>;
+type Db = SupabaseClient;
 
 interface Args {
   supabase: Db;
