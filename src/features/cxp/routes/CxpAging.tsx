@@ -21,7 +21,7 @@ import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns"
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
-import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
+import { CXP_AGING_ALCANCE, type CxpAgingRow } from "@/features/cxp/services/cxpAging";
 
 import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
@@ -112,7 +112,10 @@ export default function CxpAging() {
         fecha={fecha}
         onFechaChange={setFecha}
         idFecha="aging-cxp-corte"
+        fechaLabel="Fecha para antigüedad"
       />
+
+      <p className="text-body-sm text-muted-foreground">{CXP_AGING_ALCANCE}</p>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {CUBETAS_AGING.map((b) => (

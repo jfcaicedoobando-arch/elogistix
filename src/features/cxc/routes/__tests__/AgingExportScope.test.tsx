@@ -66,3 +66,20 @@ describe.each([["CxC", CxcAging], ["CxP", CxpAging]] as const)("CSV Aging %s res
     expect(csv).not.toHaveBeenCalled();
   });
 });
+
+
+it("CxP aclara que la fecha reclasifica saldos actuales tanto en pantalla como en CSV", () => {
+  render(<CxpAging />, { wrapper: wrapper("") });
+  expect(screen.getByRole("textbox", { name: "Fecha para antigüedad" })).toBeInTheDocument();
+  expect(screen.queryByText("Fecha de corte")).not.toBeInTheDocument();
+  const alcance = screen.getByText(/Cartera actual reclasificada por antigüedad/);
+  expect(alcance).toHaveTextContent("no es un cierre histórico");
+  expect(alcance).toHaveTextContent("Incluye facturas posteriores a la fecha seleccionada");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  const content: string = csv.mock.lastCall?.[0].csv;
+  expect(content).toContain("Fecha para antigüedad");
+  expect(content).toContain("Alcance de saldos");
+  expect(content).toContain(alcance.textContent);
+  expect(content).toContain("116.04");
+  expect(csv).toHaveBeenCalledWith(expect.objectContaining({ rowCount: 4 }));
+});
