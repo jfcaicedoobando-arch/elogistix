@@ -26,7 +26,7 @@ export default function OportunidadMontosFields({ form, set, esGanada }: Props) 
   return (
     <>
       <div className="space-y-1">
-        <Label htmlFor="op-monto-estimado">Monto estimado</Label>
+        <Label htmlFor="op-monto-estimado">Valor real</Label>
         <MoneyInput
           id="op-monto-estimado"
           value={form.monto_estimado}

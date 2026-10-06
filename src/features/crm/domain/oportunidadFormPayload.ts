@@ -62,7 +62,7 @@ export function buildOportunidadFormPayload(
     monto_meta: opt(form.monto_meta),
     fecha_meta_cierre: form.fecha_meta_cierre || null,
     compromiso_nota: form.compromiso_nota || null,
-    margen_pct: opt(form.margen_pct),
+    margen_pct: opt(Number(form.margen_pct)),
     riesgos_objeciones: form.riesgos_objeciones || null,
   };
 }
