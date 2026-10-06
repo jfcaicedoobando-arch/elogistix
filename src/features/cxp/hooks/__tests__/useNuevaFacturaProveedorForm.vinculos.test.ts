@@ -36,3 +36,19 @@ describe("toggleVinculoReducer", () => {
     expect(toggleVinculoReducer(conVinculo, concepto, false)).toEqual({});
   });
 });
+
+describe("auditoría 133 · guardia de selección", () => {
+  const costoMxn = { ...concepto, moneda: "MXN", monto: 20.44 };
+  it("no selecciona EUR/MXN aunque se proporcione una equivalencia de 1 EUR", () => {
+    const prev = {};
+    expect(toggleVinculoReducer(prev, costoMxn, true, 1, "EUR")).toBe(prev);
+  });
+  it("permite quitar un vínculo anterior incompatible", () => {
+    const prev = toggleVinculoReducer({}, costoMxn, true, 20.44, "MXN");
+    expect(toggleVinculoReducer(prev, costoMxn, false, undefined, "EUR")).toEqual({});
+  });
+  it("permite EUR/EUR sin conversión", () => {
+    const eur = { ...concepto, moneda: "EUR", monto: 1 };
+    expect(toggleVinculoReducer({}, eur, true, undefined, "EUR").c1.monto).toBe(1);
+  });
+});

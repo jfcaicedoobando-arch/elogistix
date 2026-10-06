@@ -146,9 +146,9 @@ export const fmtEntrantesEvidencia = (d: unknown): string | null => {
   const nombres = pick(d, "proveedores");
   if (Array.isArray(nombres) && nombres.length > 0) {
     const muestra = nombres.slice(0, 3).map(String).join(", ");
-    return `${n} proveedor(es) sin factura adjunta: ${muestra}${nombres.length > 3 ? "…" : ""}`;
+    return `${n} proveedor(es) sin archivo recibido ni factura vigente vinculada: ${muestra}${nombres.length > 3 ? "…" : ""}`;
   }
-  return `${n} proveedor(es) sin factura adjunta`;
+  return `${n} proveedor(es) sin archivo recibido ni factura vigente vinculada`;
 };
 
 

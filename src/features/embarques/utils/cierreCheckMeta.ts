@@ -55,11 +55,11 @@ const META: Record<string, CierreCheckMeta> = {
   documentos_completos: docs,
   docs_completos: docs,
   // v13.347.0 — Buzón CxP fusionado en la pestaña Costos.
-  // v13.381.0 — Secuencia explícita: 1) llegó · 2) se capturó · 3) se ligó al costo.
+  // Secuencia: 1) archivo o factura directa · 2) buzón capturado · 3) costos vinculados.
   facturas_entrantes_evidencia: {
-    label: "Paso 1 · Recibimos la factura de cada proveedor",
+    label: "Paso 1 · Cada proveedor tiene archivo recibido o factura vigente registrada",
     descripcion:
-      "Revisa que cada proveedor con costos en este embarque tenga al menos un archivo (PDF o XML) subido al buzón. Si hay costos sin proveedor asignado, también cuenta como pendiente.",
+      "Verifica que cada proveedor con costos tenga un archivo en el buzón o una factura vigente capturada y vinculada a sus costos. Este control no confirma que haya un PDF o XML adjunto a una factura capturada manualmente. Los costos sin proveedor ni factura vinculada quedan pendientes.",
 
     responsable: "Operador",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",

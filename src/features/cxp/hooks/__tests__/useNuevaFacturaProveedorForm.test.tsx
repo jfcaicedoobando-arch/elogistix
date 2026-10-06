@@ -82,7 +82,8 @@ describe("useNuevaFacturaProveedorForm", () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
     act(() => result.current.toggleVinculo(
-      { id: "c1", embarque_id: "e1", concepto: "Flete", monto: 500 } as never,
+      { id: "c1", embarque_id: "e1", concepto: "Flete", monto: 500, moneda: "MXN",
+        embarque_expediente: "ELNAC1", fecha_vencimiento: null },
       true,
     ));
     expect(Object.keys(result.current.vinculos)).toEqual(["c1"]);

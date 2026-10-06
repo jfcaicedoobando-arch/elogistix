@@ -11,13 +11,14 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
-  TIPO_PAGO_LABELS, esEntrada,
+  TIPO_PAGO_LABELS, esEntrada, normalizarTextoPago,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
 
 /** Normaliza el estado crudo del REP al vocabulario del dominio `rep`. */
 function estadoRepCanonico(crudo: string | null | undefined): string {
-  const estado = (crudo ?? "").toLowerCase();
+  const estado = normalizarTextoPago(crudo ?? "");
+  if (estado === "noaplica") return "No aplica";
   if (estado === "timbrado") return "Timbrado";
   if (estado === "cancelado") return "Cancelado";
   return "Pendiente";

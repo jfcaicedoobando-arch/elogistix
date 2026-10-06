@@ -12,14 +12,7 @@ import { Hint } from "@/components/shared/Hint";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { VincularConceptoAvisos } from "./VincularConceptoAvisos";
-import {
-  convertirMonto,
-  desviacionTcExcedida,
-  excedeCotizadoConTc,
-  factorConversion,
-  tcImplicito,
-  type TcPivote,
-} from "@/features/cxp/utils/vinculoMoneda";
+import { resumirMonedaVinculo, type TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SeleccionLinea } from "@/features/cxp/types";
 
@@ -43,24 +36,12 @@ export function VincularConceptoRow({
   facturaMoneda, tc, tcFecha,
 }: Props) {
   const checked = !!sel;
-  const mismaMoneda = it.moneda === facturaMoneda;
-  const factor = factorConversion(it.moneda, facturaMoneda, tc);
-  const cotizadoEnFactura = convertirMonto(it.monto, it.moneda, facturaMoneda, tc);
-  const sinTc = !mismaMoneda && cotizadoEnFactura === null;
-
-  const excede =
-    checked &&
-    excedeCotizadoConTc({
-      montoCapturado: Number(sel.monto) || 0,
-      montoCotizado: it.monto,
-      factorDof: factor,
-      mismaMoneda,
-    });
-  const implicito = checked && !mismaMoneda ? tcImplicito(Number(sel.monto) || 0, it.monto) : null;
-  const desviado = desviacionTcExcedida(implicito, factor);
-
+  const { mismaMoneda, errorMoneda, factor, cotizadoEnFactura, sinTc, excede, implicito, desviado } =
+    resumirMonedaVinculo({ monedaCosto: it.moneda, monedaFactura: facturaMoneda,
+      montoCosto: it.monto, montoCapturado: sel?.monto, tc });
 
   const handleToggle = (v: boolean) => {
+    if (v && (errorMoneda || sinTc)) return;
     // La base del vínculo se guarda SIEMPRE en la moneda de la factura, para que
     // el ajuste de costo no incluya la diferencia de conversión.
     const base = !mismaMoneda && cotizadoEnFactura !== null ? cotizadoEnFactura : undefined;
@@ -72,7 +53,7 @@ export function VincularConceptoRow({
     <div className="px-3 py-2 flex items-center gap-3 text-body">
       <Checkbox
         checked={checked}
-        disabled={sinTc}
+        disabled={!checked && (sinTc || !!errorMoneda)}
         onCheckedChange={(v) => handleToggle(!!v)}
         aria-label={`Vincular ${it.concepto}`}
       />
@@ -93,6 +74,7 @@ export function VincularConceptoRow({
           )}
 
         </div>
+        {errorMoneda && <p className="mt-0.5 text-label text-destructive">{errorMoneda}</p>}
         <VincularConceptoAvisos
           sinTc={sinTc}
           monedaCosto={it.moneda}
@@ -111,7 +93,8 @@ export function VincularConceptoRow({
           <MoneyInput
             value={sel.monto}
             onChange={(n: number) => onChangeMonto(it.id, n)}
-            aria-invalid={excede || undefined}
+            disabled={!!errorMoneda}
+            aria-invalid={excede || !!errorMoneda || undefined}
             aria-label={`Importe aplicado al concepto ${it.concepto} en ${facturaMoneda}`}
             className={`w-28 h-8 ${excede ? "border-destructive text-destructive" : ""}`}
           />
