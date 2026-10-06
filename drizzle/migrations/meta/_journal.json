@@ -57,6 +57,13 @@
       "when": 1791321530739,
       "tag": "0007_audit144_nc_linaje_concepto",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791322938543,
+      "tag": "0008_proforma_estado_cancelada",
+      "breakpoints": true
     }
   ]
 }
