@@ -128,6 +128,6 @@ export function useEliminarOpcion() {
     onSuccess: (_data, { solicitudId }) => {
       void qc.invalidateQueries({ queryKey: crmPricingKeys.opciones(solicitudId), exact: true });
     },
-    onError,
+    onError: onError,
   });
 }

@@ -80,3 +80,31 @@ Independent review found the retry multiplication and mutation-callback ordering
 issues during development. Both were fixed and covered by regression tests
 before publication. Review did not include real-browser or attachment-upload
 integration testing.
+
+## Bundle experiment and its limits
+
+The lockfile-matched baseline and implementation both built successfully with
+`BUILD_SOURCEMAPS=false vite build --minify=false --manifest`. This is a diagnostic
+build, **not the production minified payload**: local Terser attempts were killed
+by the memory limit, even with one worker. Production typecheck/build and bundle
+and sourcemap gates separately passed in CI for PR #147 before the guard-only
+follow-up; final readiness requires the latest head's checks.
+
+Manifest traversal follows only static JavaScript imports, de-duplicates chunks,
+and subtracts the entry's own static closure. For entering Facturación after the
+entry is loaded:
+
+| Diagnostic static JS | Baseline | Implementation |
+| --- | ---: | ---: |
+| Raw bytes | 1,107,256 | 964,476 |
+| Sum of gzip level-9 bytes per chunk | 300,355 | 267,011 |
+| Sum of Brotli quality-5 bytes per chunk | 285,472 | 253,581 |
+
+JSZip is reachable in the baseline Facturación static closure, and absent in the
+implementation's static closure. Its new diagnostic deferred chunk is 136,057 raw
+bytes (32,336 gzip / 31,196 Brotli). The production CI output independently shows
+a deferred JSZip chunk of 96.30 kB raw / 28.27 kB gzip; there is no matching
+production baseline measurement, so no production byte delta is claimed.
+These counts exclude CSS/assets, dynamic imports and cache/history effects. They
+do not measure parsing, execution, compression configuration of deployed hosting,
+or time saved. TarifaForm remains eager; no unmeasured lazy-form win is claimed.

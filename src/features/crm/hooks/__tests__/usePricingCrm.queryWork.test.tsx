@@ -82,6 +82,9 @@ describe("invalidación acotada de Pricing", () => {
     const reads = activeQueries();
     const { result } = renderHook(useGuardarOpcion, { wrapper: Wrapper });
     await act(() => result.current.mutateAsync({ solicitudId: "s1", organizationId: "org1", orden: 1, datos: OPCION_VACIA }));
+    expect(services.guardarOpcion).toHaveBeenCalledWith({
+      solicitudId: "s1", organizationId: "org1", orden: 1, datos: OPCION_VACIA,
+    }, expect.anything());
     expectReads(reads, ["opciones"]);
   });
 
