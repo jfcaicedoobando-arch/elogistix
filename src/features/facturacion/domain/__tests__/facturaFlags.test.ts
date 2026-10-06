@@ -52,6 +52,15 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeSustituirCfdi).toBe(true);
   });
 
+  it("Timbrada + Vencida + canEdit → puede cancelar y sustituir CFDI", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Vencida", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(true);
+    expect(r.puedeSustituirCfdi).toBe(true);
+  });
+
   it("Timbrada + Emitida + !canEdit → no puede cancelar/sustituir", () => {
     const r = deriveFacturaFlags(
       { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST },

@@ -4,12 +4,12 @@
  * route `FacturaDetalle` (Power of 10 #4) y hacerlos testeables.
  */
 
-/**
- * Fecha a partir de la cual el sistema tuvo capacidad de timbrar CFDI.
- * Facturas creadas antes de este corte fueron timbradas directamente en
- * el portal del SAT, por lo que no se puede/debe re-timbrar desde la app.
- */
-export const FECHA_INICIO_TIMBRADO_SISTEMA = "2026-07-01T00:00:00Z";
+import { esCreadaConCapacidadTimbrado } from "./facturaCapacidadTimbrado";
+
+export {
+  esCreadaConCapacidadTimbrado,
+  FECHA_INICIO_TIMBRADO_SISTEMA,
+} from "./facturaCapacidadTimbrado";
 
 export interface FacturaFlagsInput {
   estado?: string | null;
@@ -93,6 +93,9 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
  */
 const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
 
+/** Estados sin pagos aplicados cuyo CFDI puede cancelarse/sustituirse ante el SAT. */
+const ESTADOS_CFDI_VIGENTE = new Set(["Emitida", "Vencida"]);
+
 function enTramiteCancelacion(f: FacturaFlagsInput): boolean {
   return f.cancellation_status === "pending" || f.cancellation_status === "verifying";
 }
@@ -113,7 +116,8 @@ function deriveFiscalFlags(
   sinTimbrar: boolean,
   estaCancelada: boolean,
 ): FiscalFlags {
-  const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
+  // "Vencida" sólo indica plazo de cobro vencido; el CFDI sigue vigente ante el SAT.
+  const timbradaVigente = !sinTimbrar && ESTADOS_CFDI_VIGENTE.has(f.estado ?? "");
   const sinSustitutaViva = !isSustitutaViva(f);
   // v13.589.5: refacturar sólo exige CFDI timbrado y vivo (espejo de
   // `abrir_caso_refacturacion`), por eso no reusa `puedeSustituirCfdi`.
@@ -182,17 +186,4 @@ export function deriveFacturaFlags(
 ): FacturaFlags {
   if (!factura) return EMPTY_FLAGS;
   return deriveActionFlags(factura, canEdit, ctx, canRegistrarCobro);
-}
-
-/**
- * Helper reutilizable por listas/tablas donde no se necesita el resto de
- * flags: indica si una factura fue emitida dentro de la ventana en que el
- * sistema puede timbrar (post 01/07/2026). Se usa la fecha de emisión
- * porque es la que el usuario ve y el campo disponible en el listado.
- */
-export function esCreadaConCapacidadTimbrado(
-  fechaEmision: string | null | undefined,
-): boolean {
-  if (!fechaEmision) return false;
-  return fechaEmision >= FECHA_INICIO_TIMBRADO_SISTEMA;
 }
