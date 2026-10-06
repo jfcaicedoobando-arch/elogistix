@@ -8,7 +8,7 @@
  *
  * Entrada: { pago_id: string }
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
@@ -56,7 +56,7 @@ export function resolverPatchRep(
 }
 
 type Json = (body: unknown, status?: number) => Response;
-type Supa = ReturnType<typeof createClient>;
+type Supa = SupabaseClient;
 
 /**
  * Ola 14 · R5EF-02: tope por organización para la consulta manual de estatus

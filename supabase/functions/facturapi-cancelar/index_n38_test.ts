@@ -22,7 +22,7 @@ Deno.test("index.ts: rechaza sustituta de otra organización con 422 sustituta_o
   // factura.organization_id) y ANTES de invocar a FacturAPI.
   const idxCargaFactura = indexSource.indexOf('.from("facturas")');
   const idxGuardCrossOrg = indexSource.indexOf("sustitutaOrgId !== factura.organization_id");
-  const idxLlamadaCancel = indexSource.indexOf("facturapi.invoices.cancel");
+  const idxLlamadaCancel = indexSource.indexOf('exigirInvoices(facturapi, "cancel").cancel');
   assert(idxCargaFactura >= 0 && idxGuardCrossOrg > idxCargaFactura && idxGuardCrossOrg < idxLlamadaCancel,
     "El guard cross-org debe ir después de cargar la factura y antes de llamar a FacturAPI");
 });

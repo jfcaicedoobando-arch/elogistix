@@ -36,17 +36,19 @@ async function authorize(req: Request, cors: Record<string, string>) {
     const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(auth.adminClient, auth.userId);
     if (!isGlobalAdmin && !callerOrgId) {
       return {
+        ok: false as const,
         error: new Response(
           JSON.stringify({ ok: false, error: "Permisos insuficientes" }),
           { status: 403, headers: { ...cors, "Content-Type": "application/json" } },
         ),
       };
     }
-    return { auth, isGlobalAdmin, callerOrgId };
+    return { ok: true as const, auth, isGlobalAdmin, callerOrgId };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const status = msg.startsWith("401:") ? 401 : 500;
     return {
+      ok: false as const,
       error: new Response(
         JSON.stringify({ ok: false, error: "No autorizado" }),
         { status, headers: { ...cors, "Content-Type": "application/json" } },
@@ -62,7 +64,7 @@ Deno.serve(async (req) => {
 
   try {
     const authResult = await authorize(req, cors);
-    if ("error" in authResult) return authResult.error;
+    if (!authResult.ok) return authResult.error;
     const { auth, isGlobalAdmin, callerOrgId } = authResult;
 
     const body = (await req.json().catch(() => ({}))) as Body;

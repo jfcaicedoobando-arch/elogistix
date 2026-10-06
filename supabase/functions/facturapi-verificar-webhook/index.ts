@@ -11,7 +11,7 @@
  * SEGURIDAD: la respuesta NUNCA incluye la API key ni el secret del webhook;
  * sólo URL, id, eventos y estado. Requiere rol emisor fiscal en la org.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -93,7 +93,7 @@ async function listarWebhooksRemotos(apiKey: string): Promise<FacturapiWebhookRe
  * coincide, o la del otro ambiente resuelta explícitamente.
  */
 async function resolverKeyDelAmbiente(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   orgId: string,
   ambiente: FacturapiAmbiente,
 ): Promise<{ apiKey: string } | { respuesta: Response }> {
@@ -114,7 +114,7 @@ async function resolverKeyDelAmbiente(
 
 /** Lista los webhooks remotos; ante fallo deja constancia del estado `error`. */
 async function listarOMarcarError(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   orgId: string,
   ambiente: FacturapiAmbiente,
   apiKey: string,

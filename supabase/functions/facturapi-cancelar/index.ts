@@ -13,6 +13,7 @@ import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { exigirInvoices } from "../_shared/facturapiSdk.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
@@ -150,7 +151,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     // estado real de la factura.
     cancelResp = await withFacturapiTimeout(
       "invoices.cancel",
-      facturapi.invoices.cancel(factura.facturapi_id, cancelPayload),
+      exigirInvoices(facturapi, "cancel").cancel(factura.facturapi_id, cancelPayload),
       FACTURAPI_CANCEL_TIMEOUT_MS,
     ) as FapiCancelResponse;
   } catch (err) {

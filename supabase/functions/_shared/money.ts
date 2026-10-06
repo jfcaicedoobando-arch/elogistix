@@ -1,4 +1,4 @@
-import Decimal from "npm:decimal.js@10.6.0";
+import { Decimal } from "npm:decimal.js@10.6.0";
 
 /** Same finite-input cent policy as financialUtils and Postgres numeric ROUND. */
 export function roundMoney(n: number): number {

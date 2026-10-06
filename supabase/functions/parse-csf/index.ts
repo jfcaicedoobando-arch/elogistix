@@ -27,7 +27,7 @@ export { validateFile };
 
 
 
-function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit, detail?: string) {
+function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: Record<string, string>, detail?: string) {
   if (status === 429) {
     log.warn("rate limited por gateway", { status_code: 429 });
     return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
@@ -118,7 +118,6 @@ async function processCsf(req: Request, cors: Record<string, string>, log: Retur
   const rechazo = await autorizarYLimitar(auth, cors, log);
   if (rechazo) return rechazo;
 
-  // @ts-expect-error Deno global
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 

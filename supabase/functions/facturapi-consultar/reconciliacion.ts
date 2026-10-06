@@ -2,7 +2,7 @@
  * Helpers de consulta/reconciliación para `facturapi-consultar`.
  * Separado del handler para respetar el límite de líneas por archivo.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -53,7 +53,7 @@ export interface LocalFactura {
   rfc_cliente: string | null;
 }
 
-export type SBClient = ReturnType<typeof createClient>;
+export type SBClient = SupabaseClient;
 
 /**
  * Copia local de la lógica de `facturapi-reconciliar-cancelaciones/reconcile.ts`.

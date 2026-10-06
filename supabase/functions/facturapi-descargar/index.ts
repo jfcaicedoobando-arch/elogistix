@@ -14,7 +14,7 @@
  * Salida: archivo binario (Content-Type application/pdf | application/xml)
  *         con Content-Disposition de descarga.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
@@ -67,7 +67,7 @@ type PadreResuelto =
   | { ok: false; status: number; body: unknown };
 
 async function resolvePadre(
-  supabase: ReturnType<typeof createClient>, facturaIdPadre: string | null,
+  supabase: SupabaseClient, facturaIdPadre: string | null,
 ): Promise<PadreResuelto> {
   if (!facturaIdPadre) return { ok: true, cliente: null, clienteId: null, fecha: null };
   const { data: padre } = await supabase
@@ -86,7 +86,7 @@ async function resolvePadre(
 }
 
 async function resolveFromNc(
-  supabase: ReturnType<typeof createClient>, id: string,
+  supabase: SupabaseClient, id: string,
 ): Promise<Resolved> {
   const { data: nc, error } = await supabase
     .from("factura_notas_credito")
@@ -119,7 +119,7 @@ async function resolveFromNc(
 }
 
 async function resolveFromPago(
-  supabase: ReturnType<typeof createClient>, id: string,
+  supabase: SupabaseClient, id: string,
 ): Promise<Resolved> {
   const { data: pago, error } = await supabase
     .from("pagos_factura")
@@ -150,7 +150,7 @@ async function resolveFromPago(
 }
 
 async function resolveFromFactura(
-  supabase: ReturnType<typeof createClient>, id: string,
+  supabase: SupabaseClient, id: string,
 ): Promise<Resolved> {
   const { data: factura, error } = await supabase
     .from("facturas")
@@ -179,7 +179,7 @@ async function resolveFromFactura(
 }
 
 async function resolveTarget(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   body: ReqBody,
 ): Promise<Resolved> {
   if (body.nota_credito_id) return resolveFromNc(supabase, body.nota_credito_id);

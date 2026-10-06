@@ -5,7 +5,7 @@
  * Multi-tenant: la key se resuelve por `_shared/facturapiAuth.ts` (vault o env).
  * No expone la key al cliente; sólo devuelve `{ ok, ambiente, facturapi_org_id, nombre }`.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
@@ -46,7 +46,7 @@ interface FacturapiHttpError extends Error {
   detail?: unknown;
 }
 
-function buildSupabaseLike(sbAdmin: ReturnType<typeof createClient>, cred: CredRow, ambiente: "sandbox" | "live") {
+function buildSupabaseLike(sbAdmin: SupabaseClient, cred: CredRow, ambiente: "sandbox" | "live") {
   const fakeRow = { ambiente, ...cred };
   return {
     from: () => ({
@@ -117,7 +117,7 @@ async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null, 
 // `AbortSignal.timeout(15_000)` en runTest aborta la conexión y el
 // DOMException resultante se mapea a 504 en errorResponse.
 
-async function loadCredentials(sbAdmin: ReturnType<typeof createClient>, organizationId: string) {
+async function loadCredentials(sbAdmin: SupabaseClient, organizationId: string) {
   const { data } = await sbAdmin
     .from("facturapi_credenciales")
     .select("api_key_sandbox_vault_id, api_key_live_vault_id, api_key_sandbox_secret_name, api_key_live_secret_name, facturapi_org_id")
@@ -127,7 +127,7 @@ async function loadCredentials(sbAdmin: ReturnType<typeof createClient>, organiz
 }
 
 async function persistOrgId(
-  sbAdmin: ReturnType<typeof createClient>,
+  sbAdmin: SupabaseClient,
   organizationId: string,
   meId: string | undefined,
   currentOrgId: string | null,
@@ -166,7 +166,7 @@ function errorResponse(err: unknown) {
   }, httpStatus);
 }
 
-async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
+async function runTest(body: Body, sbAdmin: SupabaseClient) {
   const cred = await loadCredentials(sbAdmin, body.organization_id);
   if (!cred) return jsonResponse({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
 

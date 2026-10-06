@@ -20,7 +20,7 @@
  *   }
  */
 // deno-lint-ignore-file no-explicit-any
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 type Level = "info" | "warn" | "error";
 
@@ -46,7 +46,7 @@ export interface Logger {
 // 12.32.0: ya no decodificamos JWT sin verificar firma. El caller debe pasar
 // `userId` ya verificado vía `setUserId()` cuando esté disponible.
 
-let cachedClient: ReturnType<typeof createClient> | null = null;
+let cachedClient: SupabaseClient | null = null;
 function getServiceClient() {
   if (cachedClient) return cachedClient;
   const url = Deno.env.get("SUPABASE_URL");

@@ -14,7 +14,6 @@ import {
   type Recipient,
 } from "./helpers.ts";
 
-declare const Deno: { env: { get(key: string): string | undefined } };
 
 async function readBody(req: Request): Promise<unknown | null> {
   try {

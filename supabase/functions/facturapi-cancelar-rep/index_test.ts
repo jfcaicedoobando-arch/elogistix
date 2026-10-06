@@ -36,7 +36,7 @@ Deno.test("N5: sólo marca estado_rep=Cancelado cuando rep_cancellation_status=a
 
 Deno.test("cancelación repetida pendiente es idempotente y no vuelve a llamar al proveedor", () => {
   const guardIdx = srcIndex.indexOf('["pending", "verifying"].includes');
-  const cancelIdx = srcIndex.indexOf('facturapi.invoices.cancel');
+  const cancelIdx = srcIndex.indexOf('exigirInvoices(facturapi, "cancel").cancel');
   assert(guardIdx >= 0, "debe reconocer solicitudes pendientes o en verificación");
   assert(guardIdx < cancelIdx, "el guard debe ejecutarse antes de solicitar otra cancelación");
   assertStringIncludes(src, "La solicitud de cancelación del REP ya está en verificación ante el SAT.");
