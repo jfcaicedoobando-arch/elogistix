@@ -11,13 +11,19 @@ export function keepDialogControlVisible(container: HTMLElement, target: EventTa
     const containerRect = container.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     const style = getComputedStyle(container);
-    const top = containerRect.top + container.clientTop + (parseFloat(style.scrollPaddingTop) || 0);
-    const bottom = containerRect.top + container.clientTop + container.clientHeight - (parseFloat(style.scrollPaddingBottom) || 0);
+    // Entrance animations scale DOMRects, but client sizes and scrollTop stay
+    // in layout pixels. Convert both edges before calculating the scroll delta.
+    const scaleY = containerRect.height / container.offsetHeight;
+    if (!Number.isFinite(scaleY) || scaleY <= 0) return;
+    const targetTop = (targetRect.top - containerRect.top) / scaleY;
+    const targetBottom = (targetRect.bottom - containerRect.top) / scaleY;
+    const top = container.clientTop + (parseFloat(style.scrollPaddingTop) || 0);
+    const bottom = container.clientTop + container.clientHeight - (parseFloat(style.scrollPaddingBottom) || 0);
     // An oversized editor cannot fit; preserve the browser's caret positioning.
-    if (targetRect.height > bottom - top) return;
+    if (targetBottom - targetTop > bottom - top) return;
 
-    const delta = targetRect.top < top ? Math.floor(targetRect.top - top)
-      : targetRect.bottom > bottom ? Math.ceil(targetRect.bottom - bottom) : 0;
+    const delta = targetTop < top ? Math.floor(targetTop - top)
+      : targetBottom > bottom ? Math.ceil(targetBottom - bottom) : 0;
     if (delta === 0) return;
     // Only this scroll container moves. Round outward to avoid subpixel clips.
     container.scrollTop = Math.max(0, Math.min(

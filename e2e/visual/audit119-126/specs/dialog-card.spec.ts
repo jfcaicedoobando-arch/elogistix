@@ -27,6 +27,10 @@ test("119/126: currencies, bounded scroll, keyboard cancellation and reset witho
     const confirm = dialog.getByRole("button", { name: "Cerrar factura", exact: true });
     await expect(cancel).toBeFocused();
     await expect(confirm).toBeDisabled();
+    // Validate Radix's initial autofocus itself, without a test-side refocus or
+    // scroll that could hide clipping while the entrance animation settles.
+    await expect(cancel).toBeInViewport({ ratio: 1 });
+    await expect(cancel).toBeFocused();
     await capture(page, testInfo, "modal-initial");
     const initial = await geometry(dialog);
     facts.initial = initial;

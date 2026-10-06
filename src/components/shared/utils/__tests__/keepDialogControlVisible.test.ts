@@ -18,6 +18,7 @@ function setup(top = 330.09375, height = 120) {
   document.body.append(container);
   Object.defineProperties(container, {
     clientTop: { value: 1 }, clientHeight: { value: 355 }, scrollHeight: { value: 1281 },
+    offsetHeight: { value: 357 },
   });
   container.style.scrollPaddingTop = "12px";
   container.style.scrollPaddingBottom = "12px";
@@ -48,6 +49,18 @@ describe("keepDialogControlVisible", () => {
     keepDialogControlVisible(container, control);
     flushFocusFrame();
     expect(container.scrollTop).toBe(595); // floor(44.09375 - 44.5) = -1
+  });
+
+  it.each([0.95, 0.975, 1])("usa píxeles de layout durante la animación con escala %s", scale => {
+    const { container, control } = setup();
+    container.getBoundingClientRect = () => new DOMRect(9.5, 31.5, 672 * scale, 357 * scale);
+    control.getBoundingClientRect = () => new DOMRect(
+      46.5, 31.5 + (330.09375 - 31.5) * scale, 598 * scale, 120 * scale,
+    );
+    keepDialogControlVisible(container, control);
+    flushFocusFrame();
+    // The border is 0.95/0.975 physical px while clientTop remains 1 layout px.
+    expect(container.scrollTop).toBe(671);
   });
 
   it.each([[100, 120], [10, 500]])("no mueve un control visible o demasiado alto: %s, %s", (top, height) => {
