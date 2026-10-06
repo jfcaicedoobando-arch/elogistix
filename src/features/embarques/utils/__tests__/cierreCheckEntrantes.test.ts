@@ -32,9 +32,9 @@ describe("checklist de cierre · facturas entrantes", () => {
   it("formatea proveedores sin evidencia con muestra de nombres", () => {
     expect(
       fmtEntrantesEvidencia({ proveedores_sin_evidencia: 2, proveedores: ["COSCO", "DHL"] }),
-    ).toBe("2 proveedor(es) sin factura adjunta: COSCO, DHL");
+    ).toBe("2 proveedor(es) sin archivo recibido ni factura vigente vinculada: COSCO, DHL");
     expect(fmtEntrantesEvidencia({ proveedores_sin_evidencia: 1 }))
-      .toBe("1 proveedor(es) sin factura adjunta");
+      .toBe("1 proveedor(es) sin archivo recibido ni factura vigente vinculada");
     expect(fmtEntrantesEvidencia({ proveedores_sin_evidencia: 0 })).toBeNull();
   });
 });
@@ -50,5 +50,24 @@ describe("v13.381.1 · buzón vacío", () => {
 
   it("no dice nada cuando el buzón está vacío pero todos los costos ya tienen factura", () => {
     expect(fmtEntrantesPendientes({ pendientes: 0, buzon_vacio: false })).toBeNull();
+  });
+});
+
+describe("auditoría 140 · archivo recibido o captura directa", () => {
+  it("explica la alternativa sin certificar adjuntos y mantiene la responsabilidad y ruta", () => {
+    const meta = getCierreCheckMeta("facturas_entrantes_evidencia");
+    expect(meta.label).toBe("Paso 1 · Cada proveedor tiene archivo recibido o factura vigente registrada");
+    expect(meta.descripcion).toContain("un archivo en el buzón o una factura vigente capturada y vinculada a sus costos");
+    expect(meta.descripcion).toContain("no confirma que haya un PDF o XML adjunto");
+    expect(meta.descripcion).toContain("Los costos sin proveedor ni factura vinculada quedan pendientes");
+    expect(meta).toMatchObject({ responsable: "Operador", fase: "costos", orden: 1, ctaLabel: "Ir a Costos" });
+    expect(meta.ruta!("emb-1")).toContain("focus=facturas-entrantes");
+  });
+  it("mantiene el resultado OK sin inventar una exigencia de adjuntos", () => {
+    expect(fmtEntrantesEvidencia({ proveedores_sin_evidencia: 0, proveedores: [] })).toBeNull();
+  });
+  it("el detalle pendiente conserva los nombres y el límite de muestra sin exigir adjuntar factura", () => {
+    expect(fmtEntrantesEvidencia({ proveedores_sin_evidencia: 4, proveedores: ["A", "B", "C", "D"] }))
+      .toBe("4 proveedor(es) sin archivo recibido ni factura vigente vinculada: A, B, C…");
   });
 });
