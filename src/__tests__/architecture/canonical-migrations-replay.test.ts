@@ -28,6 +28,13 @@ describe("canonical migration reconstruction", () => {
     expect(migrations.some((file) => /^20261005180[0-5]00_audit/.test(file))).toBe(false);
   });
 
+  it("keeps the audit110 two-session idempotency check in isolated CI", () => {
+    const workflow = readFileSync(".github/workflows/rls-tests.yml", "utf8");
+    expect(workflow).toMatch(/name: Concurrencia de dos sesiones — factura manual idempotente\s+env:\s+ISOLATED_QA_DB: '1'\s+run: bash scripts\/ci\/concurrencia-factura-manual\.sh/);
+    expect(workflow.match(/"scripts\/ci\/concurrencia-factura-manual\.sh"/g)).toHaveLength(2);
+    expect(workflow.match(/"scripts\/ci\/fixtures\/factura-manual-concurrente\.sql"/g)).toHaveLength(2);
+  });
+
   it("refuses a non-loopback CI replay target before connecting", () => {
     expect(() => execFileSync("bash", ["scripts/ci/rls-prepare-db.sh"], {
       env: { ...process.env, PGHOST: "production.invalid" }, stdio: "pipe",

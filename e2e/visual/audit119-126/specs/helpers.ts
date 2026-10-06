@@ -83,7 +83,10 @@ export async function checkCards(page: Page) {
     for (const amount of await card.locator(".tabular-nums").all()) {
       await amount.hover();
       await expect(page.getByRole("tooltip")).toHaveText(await amount.innerText());
-      await page.mouse.move(0, 0);
+      // Radix creates its hover-grace area on pointerleave and tracks the
+      // following pointermoves to dismiss it. A single teleport can stop before
+      // that listener runs; continuous travel tests actually leaving the area.
+      await page.mouse.move(0, 0, { steps: 10 });
       await expect(page.getByRole("tooltip")).toHaveCount(0);
     }
   }
