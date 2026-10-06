@@ -27,7 +27,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider 
 
 /** Un observador real: cada llamada a read representa una lectura tras invalidar. */
 function observe<T>(queryKey: QueryKey, data: T) {
-  const read = vi.fn<() => Promise<T>>().mockResolvedValue(data);
+  const read = vi.fn((): Promise<T> => new Promise((resolve) => resolve(data)));
   const observer = new QueryObserver(client, { queryKey, queryFn: read, initialData: data });
   subscriptions.push(observer.subscribe(() => undefined));
   return { read, observer };
