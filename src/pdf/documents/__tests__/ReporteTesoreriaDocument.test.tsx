@@ -18,7 +18,7 @@ describe("ReporteTesoreriaDocument", () => {
     expect(text).toContain("Resumen de Tesorería");
     expect(text).toContain("Sin cuentas bancarias configuradas");
     expect(text).toContain("Sin deudores vencidos");
-    expect(text).toContain("Sin vencimientos próximos");
+    expect(text).toContain("Sin proveedores con facturas vencidas");
     expect(text).toContain("Flujo esperado 30 días");
   });
 
