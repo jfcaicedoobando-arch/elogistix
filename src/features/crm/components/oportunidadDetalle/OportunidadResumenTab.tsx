@@ -27,8 +27,8 @@ export function OportunidadResumenTab({ op, etapa, canEdit }: Props) {
     { label: "Cierre estimado", value: formatFechaDia(op.fecha_estimada_cierre) },
     { label: "Origen", value: op.origen },
     { label: "Destino", value: op.destino },
-    { label: "Monto meta", value: op.monto_meta != null ? formatCurrencyCompact(Number(op.monto_meta), op.moneda) : null },
-    { label: "Fecha meta de cierre", value: formatFechaDia(op.fecha_meta_cierre) },
+    { label: "Valor estimado", value: op.monto_meta != null ? formatCurrencyCompact(Number(op.monto_meta), op.moneda) : null },
+    { label: "Fecha estimada de cierre", value: formatFechaDia(op.fecha_meta_cierre) },
     { label: "Compromiso", value: op.compromiso_nota, colSpan: true },
     { label: "Notas", value: op.notas, colSpan: true },
   ];
