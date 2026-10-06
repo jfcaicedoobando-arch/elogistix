@@ -55,6 +55,17 @@ jobs:
             throw new Error(`Expected 20 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
           }
           JS
+      - name: Upload compact synthetic screenshots and facts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: isolated-ui-audit-119-126-images-and-facts
+          path: |
+            test-results/audit119-126/**/attachments/*.png
+            test-results/audit119-126/**/test-failed-*.png
+            reports/audit119-126/results.json
+          retention-days: 3
+          if-no-files-found: warn
       - name: Upload synthetic screenshots, diagnostics and logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

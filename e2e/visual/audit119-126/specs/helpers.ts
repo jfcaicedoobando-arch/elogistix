@@ -44,7 +44,38 @@ export async function geometry(locator: Locator) {
 export async function expectReachable(control: Locator, page: Page) {
   await control.focus();
   await expect(control).toBeFocused();
-  await expect(control).toBeInViewport({ ratio: 1 });
+  try {
+    await expect(control).toBeInViewport({ ratio: 1 });
+  } catch (error) {
+    // Keep the strict assertion, but make clipping diagnosable from CI logs even
+    // when the full trace archive exceeds the artifact download size limit.
+    const clipping = await control.evaluate(element => new Promise(resolve => {
+      const observer = new IntersectionObserver(([entry]) => {
+        observer.disconnect();
+        const ancestors = [];
+        for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+          const style = getComputedStyle(ancestor);
+          if (style.overflowX === "visible" && style.overflowY === "visible") continue;
+          ancestors.push({
+            tag: ancestor.tagName, role: ancestor.getAttribute("role"),
+            rect: ancestor.getBoundingClientRect().toJSON(),
+            clientHeight: ancestor.clientHeight, clientWidth: ancestor.clientWidth,
+            scrollHeight: ancestor.scrollHeight, scrollWidth: ancestor.scrollWidth,
+            scrollTop: ancestor.scrollTop, scrollLeft: ancestor.scrollLeft,
+            overflowX: style.overflowX, overflowY: style.overflowY,
+          });
+        }
+        resolve({
+          id: element.id, tag: element.tagName, text: element.textContent,
+          rect: entry.boundingClientRect.toJSON(), intersection: entry.intersectionRect.toJSON(),
+          ratio: entry.intersectionRatio, viewport: { width: innerWidth, height: innerHeight }, ancestors,
+        });
+      });
+      observer.observe(element);
+    }));
+    console.log("Focused control clipping:", JSON.stringify(clipping));
+    throw error;
+  }
   const bounds = await control.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.y).toBeGreaterThanOrEqual(-1);
