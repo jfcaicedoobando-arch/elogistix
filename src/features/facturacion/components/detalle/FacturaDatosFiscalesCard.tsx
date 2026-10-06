@@ -12,11 +12,14 @@ import { RefreshCw, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchClienteFiscal,
   type ClienteFiscalRow,
 } from "@/features/facturacion/services";
+import { realinearFechaEmisionBorrador } from "@/features/facturacion/services/datosFiscalesCliente";
+import { hoyMx } from "@/lib/date/mx";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
 import { useAutoSaveDatosFiscales } from "@/features/facturacion/hooks/useAutoSaveDatosFiscales";
@@ -69,8 +72,21 @@ export function FacturaDatosFiscalesCard({ factura, conceptos = [] }: Props) {
     usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas,
   });
 
-  // B-03: TC DOF vigente en la fecha de emisión de la factura, no el de hoy.
-  const obtenerTC = useBanxicoTipoCambio(factura.moneda, setTipoCambio, factura.fecha_emision);
+  // El CFDI se certifica con la fecha del timbre: el borrador consulta el DOF
+  // de HOY y realinea su fecha de emisión para que el trigger no lo regrese.
+  const qc = useQueryClient();
+  const hoy = hoyMx();
+  const aplicarTcDeHoy = (tc: number | null) => {
+    if (!tc) return;
+    if ((factura.fecha_emision ?? "").slice(0, 10) === hoy) return setTipoCambio(tc);
+    void realinearFechaEmisionBorrador(factura.id, hoy)
+      .then(() => {
+        setTipoCambio(tc);
+        void qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(factura.id) });
+      })
+      .catch((error) => notifyError(undefined, { title: "No se pudo actualizar la fecha de emisión", error, method: "FACTURA_FECHA_HOY" }));
+  };
+  const obtenerTC = useBanxicoTipoCambio(factura.moneda, aplicarTcDeHoy, hoy);
 
   // B12: el borrador USD nace sin T/C; también avisamos si quedó fuera de banda.
   const avisoTC = avisoTipoCambioFactura(factura.moneda, tipoCambio);
