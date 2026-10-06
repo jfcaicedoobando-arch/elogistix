@@ -4,7 +4,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatFechaDia } from "@/lib/formatters/dates";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
-import { ETIQUETA_COMPLEJIDAD, type ComplejidadPricing, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
+import { ETIQUETA_COMPLEJIDAD, UNIDADES_MEDIDA_PRICING, type ComplejidadPricing, type SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 
 const siNo = (v: boolean | null) => (v == null ? null : v ? "Sí" : "No");
 
@@ -16,7 +16,9 @@ export function ResumenSolicitudPricing({ solicitud: s }: { solicitud: Solicitud
     ["Service", s.servicio], ["Complejidad", ETIQUETA_COMPLEJIDAD[s.complejidad as ComplejidadPricing] ?? s.complejidad],
     ["Incoterm", s.incoterm], ["IMO", siNo(s.imo)], ["Commodity", s.commodity],
     ["Container Size", s.container_size], ["Type", s.tipo_carga], ["Quantity", s.cantidad],
-    ["Estibable", siNo(s.estibable)], ["Weight", s.peso], ["Dimensions", s.dimensiones],
+    ["Estibable", siNo(s.estibable)], ["Weight", s.peso],
+    ["Units of measurement", UNIDADES_MEDIDA_PRICING.find((u) => u.value === s.unidad_medida)?.label ?? s.unidad_medida ?? null],
+    ["Dimensions", s.dimensiones],
     ["AOL/POL", s.pol], ["AOD/POD", s.pod], ["Origen", s.origen], ["Destino", s.destino],
     ["Fecha tentativa de carga", formatFechaDia(s.fecha_tentativa_carga)], ["Delivery", s.delivery],
   ];
