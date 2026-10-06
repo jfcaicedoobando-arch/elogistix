@@ -45,7 +45,7 @@ const ARCHIVOS_PERF = [
 
 const ARCHIVOS_NORMALES = [
   "src/lib/algo.test.ts",
-  "src/routes/__tests__/routerV7Runtime.test.tsx",
+  "src/routes/__tests__/routerRuntime.test.tsx",
   "src/components/shared/dataTable/__tests__/DataTable.test.tsx",
 ];
 

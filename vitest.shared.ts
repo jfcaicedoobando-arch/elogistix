@@ -34,22 +34,12 @@ export interface AliasEntry {
 }
 
 /**
- * React Router 7: los imports de la app y de nuqs deben compartir el mismo
- * contexto. Se fija la variante ESM de los especificadores canónicos para
- * evitar mezclar las resoluciones CJS/ESM del paquete durante las pruebas
- * ("useNavigate() may be used only in the context of a <Router>"). Sólo
- * aplica a Vitest; el build de producción resuelve el paquete normalmente.
+ * Router 8 es ESM-only: se usan sus exports públicos sin aliases a archivos
+ * internos. Los contratos de navegación/nuqs/Sentry verifican que compartan
+ * contexto; no alterar el modo declarativo para resolver problemas de tests.
  */
 export function aliasVitest(root: string): AliasEntry[] {
   return [
-    {
-      find: /^react-router$/,
-      replacement: path.resolve(root, "./node_modules/react-router/dist/development/index.mjs"),
-    },
-    {
-      find: /^react-router\/dom$/,
-      replacement: path.resolve(root, "./node_modules/react-router/dist/development/dom-export.mjs"),
-    },
     { find: "@", replacement: path.resolve(root, "./src") },
     // En tests, @react-pdf/renderer apunta a un stub ligero
     // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por archivo.
