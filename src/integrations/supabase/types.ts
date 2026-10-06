@@ -11040,6 +11040,10 @@ export type Database = {
         Args: { p_id: string }
         Returns: undefined
       }
+      crm_crear_oportunidad_con_empresa: {
+        Args: { p_datos: Json; p_empresa_id: string }
+        Returns: Json
+      }
       crm_criterios_avance: {
         Args: { p_oportunidad_ids: string[] }
         Returns: {

@@ -36,6 +36,13 @@
       "when": 1791237765806,
       "tag": "0004_pricing_adjuntos_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791246856454,
+      "tag": "0005_crm_crear_oportunidad_con_empresa",
+      "breakpoints": true
     }
   ]
 }
