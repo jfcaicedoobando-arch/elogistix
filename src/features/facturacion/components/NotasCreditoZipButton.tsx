@@ -77,7 +77,7 @@ export function NotasCreditoZipButton({ notas }: { notas: ReadonlyArray<NotaZip>
       loading={progreso != null}
       onClick={descargar}
     >
-      {!progreso && <Download className="h-4 w-4 mr-1" />}
+      {!progreso && <Download className="size-4 mr-1" />}
       {progreso ? `Descargando ${progreso.hechas}/${progreso.total}…` : `Descargar ZIP (${descargables.length})`}
     </Button>
   );
