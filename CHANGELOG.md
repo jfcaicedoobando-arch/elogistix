@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.32] - Unreleased
+
+- **fix(Garantías · 146)**: actualización y refresco desde tarifa conservan el receptor del cliente Supabase; se evita el fallo local previo al envío RPC, manteniendo payloads, errores y bitácora.
+- Pruebas de regresión con el método real del SDK y transporte sintético, sin conexión a datos de negocio.
+- Metadatos de entrega de la corrección ya integrada; sin migraciones nuevas ni ejecución SQL. El manifiesto conserva la ventana canónica de tres versiones y no certifica el estado publicado.
+
 ## [13.824.31] - Unreleased
 
 - **fix(Proformas · 138)**: selección y deselección sin bucle de render; predicado de fecha por defecto estable, conservando filtros, orden, paginación y reglas de conversión.
