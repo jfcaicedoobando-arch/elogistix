@@ -93,6 +93,9 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
  */
 const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
 
+/** Estados sin pagos aplicados cuyo CFDI puede cancelarse/sustituirse ante el SAT. */
+const ESTADOS_CFDI_VIGENTE = new Set(["Emitida", "Vencida"]);
+
 function enTramiteCancelacion(f: FacturaFlagsInput): boolean {
   return f.cancellation_status === "pending" || f.cancellation_status === "verifying";
 }
@@ -113,7 +116,8 @@ function deriveFiscalFlags(
   sinTimbrar: boolean,
   estaCancelada: boolean,
 ): FiscalFlags {
-  const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
+  // "Vencida" sólo indica plazo de cobro vencido; el CFDI sigue vigente ante el SAT.
+  const timbradaVigente = !sinTimbrar && ESTADOS_CFDI_VIGENTE.has(f.estado ?? "");
   const sinSustitutaViva = !isSustitutaViva(f);
   // v13.589.5: refacturar sólo exige CFDI timbrado y vivo (espejo de
   // `abrir_caso_refacturacion`), por eso no reusa `puedeSustituirCfdi`.
