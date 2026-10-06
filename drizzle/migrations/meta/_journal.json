@@ -64,6 +64,13 @@
       "when": 1791322938543,
       "tag": "0008_proforma_estado_cancelada",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791323024098,
+      "tag": "0009_proforma_siempre_cancelar",
+      "breakpoints": true
     }
   ]
 }
