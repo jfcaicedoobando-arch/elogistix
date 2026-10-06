@@ -42,6 +42,11 @@ export interface ConceptoNotaCredito {
    * quedan de sólo lectura para reversar exactamente lo timbrado.
    */
   es_manual?: boolean;
+  /**
+   * AUDIT-144: renglón de la factura que acredita (copiado del snapshot). La
+   * base resta en el embarque de ese concepto; sin id se prorratea.
+   */
+  concepto_factura_id?: string | null;
 }
 
 export interface CrearNotaCreditoInput {
