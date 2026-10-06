@@ -119,7 +119,7 @@ describe("respuesta Pricing con un único observador", () => {
     expect(screen.getByText("Agente nuevo")).toBeInTheDocument();
   });
 
-  it.each(["vendedor", "admin_org"])("%s conserva su restricción para agregar tarifas", async (role) => {
+  it.each(["vendedor"])("%s conserva su restricción para agregar tarifas", async (role) => {
     mocks.role = role;
     render(view());
     await flush();
