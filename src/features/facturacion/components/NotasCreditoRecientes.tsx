@@ -21,6 +21,8 @@ import { Receipt } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import { Checkbox } from "@/components/ui/checkbox";
+import { NotasCreditoZipButton, ESTADOS_NC_CON_CFDI } from "./NotasCreditoZipButton";
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
   Aprobada: "bg-warning/10 text-warning border-warning/20",
@@ -36,6 +38,8 @@ export function NotasCreditoRecientes() {
   const [open, setOpen] = useState(false);
   const [estado, setEstado] = useState<EstadoNotaCredito | "todos">("todos");
   const [cliente, setCliente] = useState<string>("todos");
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const toggle = (id: string) => setSel((prev) => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s; });
 
   const { data = [], isLoading } = useNotasCreditoRecientes({
     estado, limit: 200,
@@ -100,6 +104,9 @@ export function NotasCreditoRecientes() {
                   {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{toTitleCase(c.nombre)}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <div className="flex-1" />
+              {sel.size > 0 && <Button variant="ghost" size="sm" className="h-8" onClick={() => setSel(new Set())}>Limpiar selección</Button>}
+              <NotasCreditoZipButton notas={sel.size > 0 ? filtradas.filter((n) => sel.has(n.id)) : filtradas} />
             </div>
 
             {isLoading ? (
@@ -111,6 +118,7 @@ export function NotasCreditoRecientes() {
                 <Table className="w-full text-body">
                   <TableHeader className="text-body-sm text-muted-foreground border-y bg-muted/20">
                     <TableRow>
+                      <DetailTableHead className="w-8"><span className="sr-only">Seleccionar</span></DetailTableHead>
                       <DetailTableHead>Folio</DetailTableHead>
                       <DetailTableHead>Factura</DetailTableHead>
                       <DetailTableHead>Cliente</DetailTableHead>
@@ -136,6 +144,11 @@ export function NotasCreditoRecientes() {
                         }}
                         className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                          {ESTADOS_NC_CON_CFDI.has(n.estado) && (
+                            <Checkbox aria-label={`Seleccionar ${n.folio}`} checked={sel.has(n.id)} onCheckedChange={() => toggle(n.id)} />
+                          )}
+                        </TableCell>
                         <TableCell className="font-mono text-body-sm whitespace-nowrap">{n.folio}</TableCell>
                         <TableCell className="whitespace-nowrap font-mono text-body-sm">
                           {n.factura_numero}
