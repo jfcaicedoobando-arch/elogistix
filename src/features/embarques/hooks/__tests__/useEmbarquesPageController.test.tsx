@@ -10,6 +10,8 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import React from "react";
 
 const fetchExport = vi.fn();
+const fetchContenedores = vi.fn();
+vi.mock("@/features/embarques/services/contenedores/exportContenedores", () => ({ fetchContenedoresParaExport: (...args: unknown[]) => fetchContenedores(...args) }));
 const exportToCsv = vi.fn();
 const toastFn = vi.fn();
 const calcularEstado = vi.fn((_m, _t, _e, _e2, est: string) => est);
@@ -68,7 +70,7 @@ const makeWrapper = () => {
   );
 };
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => { vi.clearAllMocks(); fetchContenedores.mockResolvedValue({ e1: { contenedor: "AUDU2609261; AUDU2609270", tipo_contenedor: "40HC; 40HC" } }); });
 
 describe("useEmbarquesPageController", () => {
   it("expone columnas, canEdit y operadores", () => {
@@ -91,6 +93,8 @@ describe("useEmbarquesPageController", () => {
     expect(fileName).toMatch(/^embarques_\d{4}-\d{2}-\d{2}\.csv$/);
     expect(columns.map((c: { key: string }) => c.key)).toContain("expediente");
     expect(rows[0]).toMatchObject({ expediente: "EXP-001", cliente_nombre: "ACME" });
+    expect(rows[0]).toMatchObject({ contenedor: "AUDU2609261; AUDU2609270", tipo_contenedor: "40HC; 40HC" });
+    expect(fetchContenedores).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: "e1" })]), "org-1");
     expect(notifySuccess).toHaveBeenCalled();
   });
 
