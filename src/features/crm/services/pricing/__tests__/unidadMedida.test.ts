@@ -3,7 +3,7 @@ import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
 import { actualizarSolicitud, crearSolicitud } from "../pricingCrm";
 
 const db = vi.hoisted(() => ({ mock: null as ReturnType<typeof createSupabaseMock> | null }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: (tabla: string) => db.mock?.from(tabla) } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: (tabla: string) => db.mock?.supabase.from(tabla) } }));
 
 describe("persistencia de unidad de peso Pricing", () => {
   beforeEach(() => {

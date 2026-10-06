@@ -33782,11 +33782,13 @@ CREATE TABLE public.crm_solicitudes_pricing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    unidad_medida text,
     CONSTRAINT crm_solicitudes_pricing_cantidad_check CHECK (((cantidad IS NULL) OR (cantidad > 0))),
     CONSTRAINT crm_solicitudes_pricing_complejidad_check CHECK ((complejidad = ANY (ARRAY['baja'::text, 'media'::text, 'alta'::text]))),
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
     CONSTRAINT crm_solicitudes_pricing_incoterm_check CHECK ((incoterm = ANY (ARRAY['EXW'::text, 'FAS'::text, 'FCA'::text, 'FOB'::text, 'CFR'::text, 'CIF'::text, 'DAP'::text, 'DDP'::text, 'DPU'::text]))),
-    CONSTRAINT crm_solicitudes_pricing_servicio_check CHECK ((servicio = ANY (ARRAY['Marítimo'::text, 'Terrestre'::text, 'Aéreo'::text])))
+    CONSTRAINT crm_solicitudes_pricing_servicio_check CHECK ((servicio = ANY (ARRAY['Marítimo'::text, 'Terrestre'::text, 'Aéreo'::text]))),
+    CONSTRAINT crm_solicitudes_pricing_unidad_medida_check CHECK (((unidad_medida IS NULL) OR (unidad_medida = ANY (ARRAY['kg'::text, 'lb'::text, 't'::text, 'g'::text]))))
 );
 CREATE TABLE public.crm_tableros (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
