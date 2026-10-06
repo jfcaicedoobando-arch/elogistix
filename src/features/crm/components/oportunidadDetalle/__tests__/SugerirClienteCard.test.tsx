@@ -18,7 +18,7 @@ describe("SugerirClienteCard", () => {
     r("ganada", null);
     expect(screen.getByRole("link", { name: "Crear cliente" })).toHaveAttribute("href", "/clientes?nuevo=1");
   });
-  it("el botón sólo se muestra al rol de contador", () => {
+  it("el botón no se muestra a roles sin alta de clientes", () => {
     mockRole = "ejecutivo_cobranza";
     r("ganada", null);
     expect(screen.getByText(/Da de alta la empresa como cliente/)).toBeDefined();
