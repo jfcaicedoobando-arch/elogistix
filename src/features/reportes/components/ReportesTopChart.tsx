@@ -1,3 +1,4 @@
+import { VACIO_RENTABILIDAD } from "@/types/rentabilidad";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
@@ -21,7 +22,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
   function renderBody() {
     if (isLoading) return <ChartSkeleton height={300} />;
     if (data.length === 0) {
-      return <EmptyStateInline icon={BarChart3} message="Sin datos en el periodo seleccionado" />;
+      return <EmptyStateInline icon={BarChart3} message={VACIO_RENTABILIDAD} />;
     }
     // VT-19: con todos los montos en $0 el eje X queda degenerado (tick único
     // "$0"); se muestra empty state en lugar de la gráfica vacía.

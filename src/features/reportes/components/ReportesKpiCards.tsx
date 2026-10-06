@@ -23,7 +23,7 @@ export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLo
   };
   const cards: Array<{ label: string; value: string; sublabel?: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
     { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, variant: "default" },
-    { label: "Venta total", ...montoKpi(kpis.revenue), icon: DollarSign, variant: "default" },
+    { label: "Ventas facturadas netas", ...montoKpi(kpis.revenue), icon: DollarSign, variant: "default" },
     { label: "Utilidad total", ...montoKpi(kpis.profit), icon: TrendingUp, variant: "default" },
     { label: "Margen global", value: kpis.revenue === 0 ? "No calculable" : kpis.margenProm.toFixed(1) + "%", sublabel: "Utilidad total ÷ venta total", icon: Percent, variant: kpis.margenProm < 0 ? "destructive" : "default" },
   ];

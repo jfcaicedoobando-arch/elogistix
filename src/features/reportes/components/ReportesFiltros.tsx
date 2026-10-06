@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
+import { defaultReportesFilters, type ReportesFilters } from "../domain/reportesFilters";
 import { cn } from "@/lib/utils";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
@@ -25,7 +26,7 @@ interface Props {
   onFechaDesdeChange: (d: Date) => void;
   onFechaHastaChange: (d: Date) => void;
   onModoChange: (m: string) => void;
-  onResetFilters: () => void;
+  onApplyFilters: (filters: ReportesFilters) => void;
 }
 
 function DateField({ label, value, onChange, fullWidth }: { label: string; value: Date; onChange: (d: Date) => void; fullWidth?: boolean }) {
@@ -65,8 +66,13 @@ function ModoField({ value, onChange, fullWidth }: { value: string; onChange: (m
   );
 }
 
-export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaDesdeChange, onFechaHastaChange, onModoChange, onResetFilters }: Props) {
+export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaDesdeChange, onFechaHastaChange, onModoChange, onApplyFilters }: Props) {
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<ReportesFilters>({ fechaDesde, fechaHasta, modo });
+  const handleOpenChange = (next: boolean) => {
+    if (next) setDraft({ fechaDesde, fechaHasta, modo });
+    setOpen(next);
+  };
   const hoy = new Date();
   const rangoPersonalizado = !isSameDay(fechaDesde, startOfMonth(hoy)) || !isSameDay(fechaHasta, endOfMonth(hoy));
   const activeCount = Number(modo !== "all") + Number(rangoPersonalizado);
@@ -77,22 +83,16 @@ export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaD
       <div className="md:hidden">
         <MobileFiltersSheet
           open={open}
-          onOpenChange={setOpen}
+          onOpenChange={handleOpenChange}
           title="Filtros de reporte"
-          activeCount={activeCount}
-          onClearAll={onResetFilters}
+          activeCount={open ? Number(draft.modo !== "all") + Number(!isSameDay(draft.fechaDesde, startOfMonth(hoy)) || !isSameDay(draft.fechaHasta, endOfMonth(hoy))) : activeCount}
+          onClearAll={() => setDraft(defaultReportesFilters())}
+          onApply={() => onApplyFilters(draft)}
           triggerLabel="Filtros de fecha y modo"
-          snapshot={() => ({ fechaDesde, fechaHasta, modo })}
-          restore={(foto) => {
-            const prev = foto as { fechaDesde: Date; fechaHasta: Date; modo: string };
-            onFechaDesdeChange(prev.fechaDesde);
-            onFechaHastaChange(prev.fechaHasta);
-            onModoChange(prev.modo);
-          }}
         >
-          <DateField label={RANGO_DESDE_LABEL} value={fechaDesde} onChange={onFechaDesdeChange} fullWidth />
-          <DateField label={RANGO_HASTA_LABEL} value={fechaHasta} onChange={onFechaHastaChange} fullWidth />
-          <ModoField value={modo} onChange={onModoChange} fullWidth />
+          <DateField label={RANGO_DESDE_LABEL} value={draft.fechaDesde} onChange={(date) => setDraft((prev) => ({ ...prev, fechaDesde: date, fechaHasta: date > prev.fechaHasta ? endOfMonth(date) : prev.fechaHasta }))} fullWidth />
+          <DateField label={RANGO_HASTA_LABEL} value={draft.fechaHasta} onChange={(date) => setDraft((prev) => ({ ...prev, fechaHasta: date, fechaDesde: date < prev.fechaDesde ? startOfMonth(date) : prev.fechaDesde }))} fullWidth />
+          <ModoField value={draft.modo} onChange={(value) => setDraft((prev) => ({ ...prev, modo: value }))} fullWidth />
         </MobileFiltersSheet>
         <p className="mt-2 text-body-sm text-muted-foreground" aria-live="polite">
           {format(fechaDesde, "dd MMM yyyy", { locale: es })} → {format(fechaHasta, "dd MMM yyyy", { locale: es })}
