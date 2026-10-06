@@ -18,6 +18,7 @@ import { useClientesForSelect } from "@/features/cliente/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { useNuevaOportunidadSubmit } from "@/features/crm/hooks/useNuevaOportunidadSubmit";
 import { faltantesOportunidadForm } from "@/features/crm/domain/oportunidadFormPayload";
+import type { RefRow } from "@/features/crm/services/objetosCrm";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,7 @@ interface Props {
   origenInicial?: OrigenInicial | null;
   /** Nombre precapturado en el alta express al pulsar "Más campos". */
   nombreInicial?: string | null;
+  empresaInicial?: RefRow | null;
   /** Etapa prefijada por el CTA de una columna del Kanban (sólo si abierta). */
   etapaInicialId?: string | null;
 }
@@ -39,6 +41,7 @@ export default function NuevaOportunidadDialog({
   onSaved,
   origenInicial,
   nombreInicial,
+  empresaInicial,
   etapaInicialId,
 }: Props) {
   const isEdit = !!oportunidad;
@@ -51,7 +54,7 @@ export default function NuevaOportunidadDialog({
     oportunidad,
     etapas,
     user,
-    { origen: origenInicial, nombre: nombreInicial, etapaId: etapaInicialId },
+    { origen: origenInicial, nombre: nombreInicial, etapaId: etapaInicialId, empresa: empresaInicial },
   );
   const [autoActividad, setAutoActividad] = useState(true);
 
