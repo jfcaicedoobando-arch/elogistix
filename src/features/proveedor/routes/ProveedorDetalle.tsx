@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PackageX } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";

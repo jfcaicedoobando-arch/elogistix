@@ -4,7 +4,7 @@
  * Se separan del Sheet para mantener cada archivo corto y enfocado:
  * datos del pago, movimiento bancario conciliado y facturas aplicadas.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";

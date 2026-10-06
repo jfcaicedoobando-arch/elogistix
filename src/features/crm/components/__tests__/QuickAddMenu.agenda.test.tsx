@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import QuickAddMenu from "../QuickAddMenu";
 
 vi.mock("@/hooks/shared", () => ({ usePermissions: () => ({ canCrearLead: true, canCrearOportunidad: true, canCrearActividad: true, canGestionarLeadsEnLote: false }) }));

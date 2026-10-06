@@ -5,7 +5,7 @@
  *
  * Ruta: /logo-preview (pública, no indexable).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Seo } from "@/components/shared/Seo";
 import { useEffect } from "react";
 

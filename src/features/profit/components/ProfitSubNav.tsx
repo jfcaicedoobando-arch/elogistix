@@ -8,7 +8,7 @@
  * Real sin regresar al sidebar. Este componente reemplaza esa fricción con
  * pills conectadas al `<PageHeader tabs>`.
  */
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 import { LayoutDashboard, TrendingUp, FileBarChart, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { presupuestoVsRealHref } from "@/features/presupuesto";

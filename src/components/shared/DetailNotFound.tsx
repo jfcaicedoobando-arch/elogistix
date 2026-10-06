@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailHeader } from "@/components/shared/DetailHeader";

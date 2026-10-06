@@ -67,6 +67,7 @@ export async function expectReachable(control: Locator, page: Page) {
         }
         resolve({
           id: element.id, tag: element.tagName, text: element.textContent,
+          focused: document.activeElement === element, activeElementId: document.activeElement?.id,
           rect: entry.boundingClientRect.toJSON(), intersection: entry.intersectionRect.toJSON(),
           ratio: entry.intersectionRatio, viewport: { width: innerWidth, height: innerHeight }, ancestors,
         });
@@ -76,6 +77,7 @@ export async function expectReachable(control: Locator, page: Page) {
     console.log("Focused control clipping:", JSON.stringify(clipping));
     throw error;
   }
+  await expect(control).toBeFocused();
   const bounds = await control.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.y).toBeGreaterThanOrEqual(-1);

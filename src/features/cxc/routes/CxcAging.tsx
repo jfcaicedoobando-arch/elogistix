@@ -33,7 +33,7 @@ import {
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { CxcAgingMobileCard } from "@/features/cxc/components/CxcAgingMobileCard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { CXC_AGING_ALCANCE, CXC_AGING_DESCRIPCION, CXC_AGING_FECHA_LABEL } from "../domain/agingScope";
 import { cubetaDesdeFiltro } from "@/lib/aging/reportScope";
 

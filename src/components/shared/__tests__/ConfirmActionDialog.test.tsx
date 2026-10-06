@@ -14,6 +14,11 @@ describe("<ConfirmActionDialog />", () => {
     expect(screen.getByRole("alertdialog")).toHaveClass("grid-cols-1", "overflow-y-auto");
   });
 
+  it("reserva margen de scroll para no recortar campos ni anillos de foco en los bordes", () => {
+    render(<ConfirmActionDialog open onOpenChange={() => {}} title="Formulario" onConfirm={() => {}} />);
+    expect(screen.getByRole("alertdialog")).toHaveClass("scroll-py-2");
+  });
+
   it("invoca onConfirm al aceptar", async () => {
     const onConfirm = vi.fn();
     render(

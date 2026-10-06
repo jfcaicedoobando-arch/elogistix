@@ -4,7 +4,7 @@
  * (Los roles cliente / super_admin son re-redirigidos por ProtectedRoute desde
  * `/inicio` hacia `/portal` o `/admin` respectivamente.)
  */
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { lazy, Suspense } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { PageSkeleton } from "@/components/shared/skeletons/PageSkeleton";

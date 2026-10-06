@@ -3,7 +3,7 @@
  * Refactor v13.297.4: tabla y dialog extraídos a `components/plantillas/*`.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Sparkles } from "lucide-react";

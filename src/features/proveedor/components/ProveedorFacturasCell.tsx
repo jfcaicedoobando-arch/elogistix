@@ -6,7 +6,7 @@
  * (`getRowHref` → expediente) no puede representar todos esos destinos. Estos
  * enlaces son secundarios y no compiten con la navegación principal de la fila.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
 
 interface Props {

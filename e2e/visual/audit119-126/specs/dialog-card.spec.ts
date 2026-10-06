@@ -61,6 +61,10 @@ test("119/126: currencies, bounded scroll, keyboard cancellation and reset witho
     await expect(page.getByRole("option", { name: "Condonación", exact: true })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(reason).toHaveText("Condonación");
+    // Radix restores focus after the select's exit/unmount. Wait for that
+    // handoff before focusing another field, or it can steal focus back.
+    await expect(page.getByRole("listbox")).toBeHidden();
+    await expect(reason).toBeFocused();
     const comment = page.locator("#cxp-cerrar-comentario");
     await expectReachable(comment, page);
     await comment.fill("Comentario ficticio para verificar scroll y cancelación.");

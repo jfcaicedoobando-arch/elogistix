@@ -3,7 +3,7 @@
  * Se abre/cierra con `open` y notifica con `onOpenChange`.
  */
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { UserPlus, Target, ClipboardList } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,

@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
 import { usePortalClienteName, usePortalOrgName, usePortalClientUsers } from "@/features/portal/hooks";

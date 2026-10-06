@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { CotizacionDetalleContenido } from "@/features/cotizacion/components/detalle/CotizacionDetalleContenido";

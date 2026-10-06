@@ -10,7 +10,7 @@
  * mediante `data-no-row-nav` o selectores nativos.
  */
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { handleRowClick, handleRowKeyDown } from "./rowNav";
 
 interface Params {

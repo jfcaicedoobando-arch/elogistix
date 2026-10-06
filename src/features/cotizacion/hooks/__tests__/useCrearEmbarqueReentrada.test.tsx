@@ -9,7 +9,7 @@ import { renderHook } from "@testing-library/react";
 const mutateAsync = vi.fn();
 const mutate = vi.fn();
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("@/features/cotizacion/services/revalidacion", () => ({
   revalidarTarifa: vi.fn(),
 }));

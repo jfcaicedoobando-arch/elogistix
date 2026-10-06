@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Ship } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
 
 /** Fila mínima que la tarjeta necesita del listado de cotizaciones del portal. */

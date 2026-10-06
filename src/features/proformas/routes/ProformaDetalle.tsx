@@ -5,7 +5,7 @@
  * barra lateral de contexto (datos generales, cliente, embarque, historial).
  */
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { FileX } from "lucide-react";

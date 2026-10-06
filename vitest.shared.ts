@@ -34,19 +34,14 @@ export interface AliasEntry {
 }
 
 /**
- * v13.824.x — React Router 7: `react-router-dom` externalizado se carga como
- * CJS mientras `react-router` (importado por `nuqs/adapters/react-router/v7`)
- * se carga como ESM, creando DOS instancias del contexto del router
- * ("useNavigate() may be used only in the context of a <Router>"). Se fija la
- * variante ESM de ambos para que en tests exista una sola instancia. Sólo
+ * React Router 7: los imports de la app y de nuqs deben compartir el mismo
+ * contexto. Se fija la variante ESM de los especificadores canónicos para
+ * evitar mezclar las resoluciones CJS/ESM del paquete durante las pruebas
+ * ("useNavigate() may be used only in the context of a <Router>"). Sólo
  * aplica a Vitest; el build de producción resuelve el paquete normalmente.
  */
 export function aliasVitest(root: string): AliasEntry[] {
   return [
-    {
-      find: /^react-router-dom$/,
-      replacement: path.resolve(root, "./node_modules/react-router-dom/dist/index.mjs"),
-    },
     {
       find: /^react-router$/,
       replacement: path.resolve(root, "./node_modules/react-router/dist/development/index.mjs"),

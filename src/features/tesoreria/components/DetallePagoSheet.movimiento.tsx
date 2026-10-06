@@ -4,7 +4,7 @@
  * Extraídas de `DetallePagoSheet.parts.tsx` para respetar el límite de 200
  * líneas por archivo (Power of 10). Sin cambios de comportamiento.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {

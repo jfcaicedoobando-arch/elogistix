@@ -3,7 +3,7 @@
  * calcula el diff para bitácora y ejecuta la mutación. Extraído para que el
  * hook orquestador quede enfocado en el estado de hidratación del wizard.
  */
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { getErrorMessage } from "@/lib/errors";

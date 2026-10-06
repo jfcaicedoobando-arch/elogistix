@@ -7,7 +7,7 @@
  * inicialización.
  */
 import { useEffect, useRef } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useToast } from "@/hooks/shared";
 import { useCotizacion, type CotizacionRow } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

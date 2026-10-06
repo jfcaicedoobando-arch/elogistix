@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/features/crm/hooks";

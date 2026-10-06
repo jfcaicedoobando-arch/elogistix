@@ -61,7 +61,7 @@ export function ConfirmActionDialog({
 }: ConfirmActionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={cn("grid-cols-1", dialogSize[size], scrollableDialog)}>
+      <AlertDialogContent className={cn("grid-cols-1 scroll-py-2", dialogSize[size], scrollableDialog)}>
         <AlertDialogHeader>
           <AlertDialogTitle
             className={cn(

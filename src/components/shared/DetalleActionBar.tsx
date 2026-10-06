@@ -16,7 +16,7 @@
  * El componente NO decide qué acciones mostrar; sólo renderiza las listas
  * declarativas que le pasa la página. Mantiene < 200 líneas (Power of 10 #4).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Loader2, MoreHorizontal, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

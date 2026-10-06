@@ -28,7 +28,7 @@ import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
 import { exportarCxpAgingCsv } from "@/features/cxp/services/cxpAgingExport";
 import { AgingMonedaFechaBar } from "@/components/shared/aging/AgingMonedaFechaBar";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FileSpreadsheet } from "lucide-react";
 import {
   CUBETAS_AGING, CUBETA_LABELS_LARGAS, CUBETA_TONO_KPI,

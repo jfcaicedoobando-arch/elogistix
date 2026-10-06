@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router";
 import { useState } from "react";
 import { useDirtyGuard } from "../useDirtyGuard";
 import { registerDirtyHistoryGuard } from "@/lib/bootstrap/dirtyHistoryGuard";

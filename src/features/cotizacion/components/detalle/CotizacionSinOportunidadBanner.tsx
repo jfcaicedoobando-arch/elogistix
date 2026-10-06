@@ -6,7 +6,7 @@
  * elegir el prospecto u oportunidad real del CRM. El envío sigue bloqueado
  * hasta que exista el vínculo (`LC_COT_SIN_OPORTUNIDAD` desde la base).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { AlertTriangle, Link2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

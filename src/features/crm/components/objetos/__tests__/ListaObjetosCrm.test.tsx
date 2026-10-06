@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 
 const { query, scoring } = vi.hoisted(() => ({ query: vi.fn(), scoring: vi.fn() }));

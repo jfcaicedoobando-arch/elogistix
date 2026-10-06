@@ -2,7 +2,7 @@
  * /crm/oportunidades/:id — Detalle de oportunidad con tabs internas.
  * Resumen / Comunicación / Trazabilidad para reducir scroll.
  */
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { OportunidadDetalleContent } from "@/features/crm/components/oportunidadDetalle/OportunidadDetalleContent";
 import { LoadingState } from "@/components/shared/states/LoadingState";

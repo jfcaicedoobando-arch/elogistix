@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";
 import type { CrmLeadRow } from "@/features/crm/hooks";
 
@@ -27,8 +27,8 @@ vi.mock("@/features/crm/lib/crmToast", () => ({
   crmToast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("react-router-dom", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("react-router-dom")>()),
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router")>()),
   useNavigate: () => mocks.navigate,
 }));
 

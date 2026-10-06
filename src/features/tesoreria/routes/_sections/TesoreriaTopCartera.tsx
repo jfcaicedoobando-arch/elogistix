@@ -2,7 +2,7 @@
  * Lista Top-5 de cartera (deudores o acreedores) con días vencidos coloreados
  * por severidad y pie con el total real de la cartera vencida.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/SectionHeading";

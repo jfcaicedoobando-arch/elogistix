@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useLocation, useNavigate } from "react-router";
 import { useEffect, type ReactNode } from "react";
 import { usePeriodoMesUrl } from "../usePeriodoMesUrl";
 

@@ -1,7 +1,7 @@
 import { useMemo, useDeferredValue } from "react";
 // YG-03: paginación/filtros server-side vía `useServerPagedList`, encapsulado
 // en `useCotizacionesPageController` (mismo primitivo que CRM/bandejas).
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 import { Plus } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";

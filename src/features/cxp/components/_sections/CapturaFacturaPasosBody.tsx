@@ -4,7 +4,7 @@
  * (v13.712.2) para respetar el tope de complejidad de ESLint.
  */
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { PasoDocumento } from "./PasoDocumento";
 import { PasoDatos } from "./PasoDatos";
 import { PasoVinculacion } from "./PasoVinculacion";

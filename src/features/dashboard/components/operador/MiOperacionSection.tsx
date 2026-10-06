@@ -5,7 +5,7 @@
  * reciente. Todo filtrado por `operador = user.email`.
  */
 import { memo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { AlertCircle, FileWarning, Radio } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
 import type { AlertaDemora, ProximoArribo } from "@/features/dashboard/hooks";

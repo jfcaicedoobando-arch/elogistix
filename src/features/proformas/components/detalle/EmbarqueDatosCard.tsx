@@ -2,7 +2,7 @@
  * Card "Datos del embarque" — modo, tipo, incoterm, ruta, contenedores y
  * descripción de mercancía. Se oculta si la proforma no tiene embarque.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hint } from "@/components/shared/Hint";

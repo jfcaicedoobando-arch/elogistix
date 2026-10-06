@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 import type { FilaVsReal } from "@/features/presupuesto/services";
 import { presupuestoVsRealHref } from "@/features/presupuesto";

@@ -3,7 +3,7 @@
  * apuntando a una sustituta que fue cancelada. Informa al usuario que la
  * factura original vuelve a estar disponible para cancelarse o sustituirse.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { AlertTriangle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 

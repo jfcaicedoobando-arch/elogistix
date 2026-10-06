@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { exportToCsv } from "@/generators/exportCsv";
 import { pluralizar } from "@/lib/format/pluralizar";
 import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarques/hooks/useEmbarques";

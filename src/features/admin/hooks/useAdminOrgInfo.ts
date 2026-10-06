@@ -10,7 +10,7 @@ import {
   updateAdminOrganization,
   deleteOrganization,
 } from "@/features/admin/services";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { getErrorMessage } from "@/lib/errors";

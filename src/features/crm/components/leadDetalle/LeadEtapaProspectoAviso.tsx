@@ -5,7 +5,7 @@
  * cliente. Sólo un rol autorizado puede darlo de alta desde el módulo oficial
  * de Clientes, con las validaciones fiscales completas.
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { AlertTriangle, Info, UserPlus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

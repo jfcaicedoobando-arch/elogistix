@@ -26,7 +26,7 @@ vi.mock("@/hooks/shared", () => ({
   }),
   useDocumentTitle: () => undefined,
 }));
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("@/components/shared/dataTable/ResponsiveDataTable", () => ({
   ResponsiveDataTable: (props: Record<string, unknown>) => {
     tablaProps.current = props;

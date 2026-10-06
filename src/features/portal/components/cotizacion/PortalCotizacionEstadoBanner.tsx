@@ -1,7 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Info, MessageSquare, Ship, ArrowRight, CalendarCheck2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { formatDate } from "@/lib/formatters";
 
 interface PortalCotizacionEstadoBannerProps {

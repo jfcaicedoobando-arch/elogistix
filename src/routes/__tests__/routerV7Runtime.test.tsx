@@ -8,8 +8,9 @@
  *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
  */
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, cleanup } from "@testing-library/react";
 import {
+  BrowserRouter,
   MemoryRouter,
   Routes,
   Route,
@@ -19,7 +20,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
-} from "react-router-dom";
+} from "react-router";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { useQueryState } from "nuqs";
 import { RedirectPreserveSearch } from "../RedirectPreserveSearch";
@@ -153,10 +154,9 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
 
   afterEach(async () => {
     vi.useRealTimers();
-    // Los tests que alinean `window.history` con el MemoryRouter restauran la
-    // URL para no contaminar el resto de la suite. nuqs parchea la History API
-    // y notifica a sus suscriptores: como este hook corre ANTES del cleanup de
-    // RTL (los componentes siguen montados), la restauración va dentro de `act`.
+    cleanup();
+    // Restaurar el historial después de desmontar evita notificar a los
+    // suscriptores del caso anterior. nuqs sólo soporta BrowserRouter.
     await act(async () => {
       window.history.replaceState(null, "", "/");
     });
@@ -180,20 +180,18 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
   }
 
   it("lee el valor inicial desde la URL", async () => {
-    // `MemoryRouter` no toca `window.location`; el adaptador lee la URL real,
-    // así que se alinean ambas para reproducir el comportamiento del navegador.
     window.history.replaceState(null, "", "/embarques?estado=en_puerto");
     // El montaje del adaptador de nuqs programa una hidratación asíncrona del
     // estado desde la URL: se envuelve el render en act para capturarla.
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={["/embarques?estado=en_puerto"]}>
+        <BrowserRouter>
           <NuqsAdapter>
             <Routes>
               <Route path="/embarques" element={<Filtros />} />
             </Routes>
           </NuqsAdapter>
-        </MemoryRouter>,
+        </BrowserRouter>,
       );
     });
     // nuqs programa la hidratación inicial en un timer interno: se drena dentro
@@ -203,9 +201,10 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
   });
 
   it("escribe el filtro en la URL sin perder la ruta", async () => {
+    window.history.replaceState(null, "", "/embarques");
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={["/embarques"]}>
+        <BrowserRouter>
           <NuqsAdapter>
             <Routes>
               <Route
@@ -219,7 +218,7 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
               />
             </Routes>
           </NuqsAdapter>
-        </MemoryRouter>,
+        </BrowserRouter>,
       );
     });
     await act(async () => {
@@ -229,9 +228,7 @@ describe("NuqsAdapter v7 — filtros en query string", () => {
     // se drena dentro de act antes de afirmar estado y URL.
     await drenarNuqs();
     expect(screen.getByTestId("estado").textContent).toBe("en_transito");
-    // El adaptador actualiza la URL real vía History API (shallow), por eso la
-    // afirmación del query se hace contra `window.location` y no contra el
-    // historial interno del MemoryRouter.
+    // El adaptador actualiza la URL real vía History API (shallow).
     expect(window.location.search).toContain("estado=en_transito");
     // La ruta del router no se pierde con la escritura del filtro.
     expect(screen.getByTestId("url").textContent).toContain("/embarques");

@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { GrupoCostosProveedor } from "../GrupoCostosProveedor";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 

@@ -3,7 +3,7 @@
  * Extraído de `src/routes.tsx` en 11.65.0 (D12).
  */
 import { lazy } from "react";
-import { Route, Navigate } from "react-router-dom";
+import { Route, Navigate } from "react-router";
 import { AyudaPublicShell } from "@/features/dashboard/components/AyudaPublicShell";
 
 const Login = lazy(() => import("@/features/auth/routes/Login"));

@@ -20,7 +20,7 @@ import {
 } from "@/lib/domain/estadoUnificado";
 import { etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { Hint } from "@/components/shared/Hint";
 import { buildProformaImportesColumns } from "./proformasImportesColumns";

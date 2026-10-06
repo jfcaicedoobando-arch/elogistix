@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const { mockKpis, mockTotales } = vi.hoisted(() => ({ mockKpis: vi.fn(), mockTotales: vi.fn() }));
 

@@ -6,7 +6,7 @@ import { useDocumentTitle } from "@/hooks/shared/useDocumentTitle";
  * saldo corrido, filtros por fecha/concepto/tipo y exportación a CSV/PDF.
  */
 import { useMemo, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";

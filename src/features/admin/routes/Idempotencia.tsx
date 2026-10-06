@@ -1,5 +1,5 @@
 import { Repeat2, RefreshCw, Copy } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";

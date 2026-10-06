@@ -4,7 +4,7 @@
  * probar la lógica de click/teclado/selección de forma aislada.
  */
 import type { KeyboardEvent, MouseEvent } from "react";
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
 
 export interface RowBehavior<T> {

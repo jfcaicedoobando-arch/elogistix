@@ -3,7 +3,7 @@
  * orientada a México. Captura búsqueda orgánica sobre puertos de México,
  * UN/LOCODE, rutas Asia–MX y servicios troncales.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Seo } from "@/components/shared/Seo";
 import { LandingNav } from "../components/sections/LandingNav";
 import { LandingFooter } from "../components/sections/LandingFooter";

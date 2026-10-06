@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import type { UseFormRegister } from "react-hook-form";
 import type { RegistrarAnticipoFormInput } from "../registrarAnticipo.schema";
 import { RegistrarAnticipoDialog } from "../RegistrarAnticipoDialog";

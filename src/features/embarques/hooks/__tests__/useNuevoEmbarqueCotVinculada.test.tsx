@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useNuevoEmbarqueCotVinculada } from "../useNuevoEmbarqueCotVinculada";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const fetchCostos = vi.hoisted(() => vi.fn());
 vi.mock("@/features/cotizacion/services", () => ({ fetchCotizacionCostosForEmbarque: fetchCostos }));

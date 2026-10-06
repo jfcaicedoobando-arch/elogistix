@@ -10,7 +10,7 @@ import { PortalPageShell } from "@/features/portal/components/layout/PortalPageS
 import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalFacturasMobileFilters } from "@/features/portal/components/facturas/PortalFacturasMobileFilters";
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 

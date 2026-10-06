@@ -1,26 +1,20 @@
 /**
- * Contract test de los alias de React Router usados SÓLO en Vitest
- * (P2 auditoría stack).
+ * Contrato de los alias ESM exclusivos de Vitest. Si cambia el layout del
+ * paquete, falla aquí antes de producir errores difusos de contexto.
  *
- * Analogía: es el acta de un acuerdo con el paquete. Los alias apuntan a
- * archivos concretos dentro de `node_modules/react-router*`; si una versión
- * nueva los renombra o mueve, este test falla con un mensaje claro en vez de
- * dejar el error difuso "useNavigate() may be used only in the context of a
- * <Router>" en cientos de pruebas.
- *
- * Por qué el alias sigue siendo necesario: `react-router-dom` se resuelve como
- * CJS y `react-router` (que importa `nuqs/adapters/react-router/v7`) como ESM,
- * lo que crea DOS instancias del contexto del router en pruebas. Fijar la
- * variante ESM de ambos garantiza una sola instancia. No aplica al build de
- * producción. La alternativa (migrar a Data Router) está fuera de alcance.
+ * La primera etapa de preparación para Router 8 usa los especificadores
+ * canónicos pero conserva Router 7 y el adaptador nuqs v7. No migra el modo
+ * declarativo a Data Router ni afecta la resolución del build de producción.
  */
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { aliasVitest } from "../../../vitest.shared";
+import { walk, relPath } from "../../../scripts/lib/walk";
 
 const raiz = process.cwd();
 const alias = aliasVitest(raiz);
+const especificadoresRouter = [/^react-router$/, /^react-router\/dom$/];
 
 function destino(patron: RegExp): string {
   const entrada = alias.find(
@@ -31,36 +25,50 @@ function destino(patron: RegExp): string {
 }
 
 describe("alias de React Router en Vitest · contrato con el paquete", () => {
-  it("los tres archivos ESM aliaseados existen en node_modules", () => {
-    for (const patron of [/^react-router-dom$/, /^react-router$/, /^react-router\/dom$/]) {
+  it("los dos archivos ESM aliaseados existen en node_modules", () => {
+    for (const patron of especificadoresRouter) {
       const archivo = destino(patron);
       expect(fs.existsSync(archivo), `No existe ${archivo} (¿cambió el layout del paquete?)`).toBe(true);
     }
   });
 
   it("los destinos son módulos ESM (.mjs), no CJS", () => {
-    for (const patron of [/^react-router-dom$/, /^react-router$/, /^react-router\/dom$/]) {
+    for (const patron of especificadoresRouter) {
       expect(destino(patron).endsWith(".mjs")).toBe(true);
     }
   });
 
-  it("react-router y react-router-dom están en la misma major 7", () => {
-    const leerVersion = (paquete: string): string =>
-      JSON.parse(
-        fs.readFileSync(path.join(raiz, "node_modules", paquete, "package.json"), "utf8"),
-      ).version as string;
-    const router = leerVersion("react-router");
-    const dom = leerVersion("react-router-dom");
-    expect(router.split(".")[0]).toBe("7");
-    expect(dom.split(".")[0]).toBe("7");
-    // Una divergencia de minor entre ambos también duplica el contexto.
-    expect(dom.split(".").slice(0, 2).join(".")).toBe(router.split(".").slice(0, 2).join("."));
+  it("conserva Router 7 y no declara el wrapper legacy como dependencia", () => {
+    const proyecto = JSON.parse(fs.readFileSync(path.join(raiz, "package.json"), "utf8"));
+    const instalado = JSON.parse(
+      fs.readFileSync(path.join(raiz, "node_modules/react-router/package.json"), "utf8"),
+    );
+    expect(instalado.version.split(".")[0]).toBe("7");
+    expect(proyecto.dependencies["react-router"]).toBe(instalado.version);
+    expect(proyecto.dependencies["react-router-dom"]).toBeUndefined();
+    expect(proyecto.devDependencies["react-router-dom"]).toBeUndefined();
   });
 
-  it("el alias declara una sola instancia por especificador", () => {
+  it("el alias declara una sola instancia por especificador y ningún wrapper legacy", () => {
     const especificadores = alias
       .filter((a) => a.find instanceof RegExp)
       .map((a) => (a.find as RegExp).source);
     expect(new Set(especificadores).size).toBe(especificadores.length);
+    expect(especificadores).not.toContain("^react-router-dom$");
+  });
+
+  it("la app, sus mocks y los fixtures sólo importan especificadores canónicos", () => {
+    const importLegacy = /\b(?:from|import\s*(?:\(|(?=["']))|require\s*\(|vi\.(?:mock|doMock|unmock|doUnmock|importActual|importMock)\s*\()\s*["']react-router-dom(?:\/[^"']*)?["']/;
+    const violaciones: string[] = [];
+    for (const carpeta of ["src", "tests", "e2e"]) {
+      const directorio = path.join(raiz, carpeta);
+      if (!fs.existsSync(directorio)) continue;
+      for (const archivo of walk(directorio, { exts: ["ts", "tsx", "js", "jsx", "mjs", "cjs"] })) {
+        if (importLegacy.test(fs.readFileSync(archivo, "utf8"))) {
+          violaciones.push(relPath(raiz, archivo));
+        }
+      }
+    }
+    expect(violaciones, "Usa react-router; las APIs DOM específicas van en react-router/dom").toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { Building2, ChevronDown, ShieldCheck } from "lucide-react";
 import {
