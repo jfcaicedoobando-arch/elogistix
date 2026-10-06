@@ -27,6 +27,22 @@ interface Etapa {
   tipo?: string;
 }
 
+interface Precapturado {
+  origen?: OrigenInicial | null;
+  nombre?: string | null;
+  etapaId?: string | null;
+  empresa?: RefRow | null;
+}
+
+function datosIniciales(datos?: Precapturado) {
+  return {
+    origenInicial: datos?.origen ?? null,
+    nombreInicial: datos?.nombre ?? null,
+    empresaInicial: datos?.empresa ?? null,
+    etapaIdInicial: datos?.etapaId ?? null,
+  };
+}
+
 /** Comparación estable de dos estados del formulario (objeto plano y pequeño). */
 function mismoForm(a: OportunidadFormState, b: OportunidadFormState): boolean {
   return (Object.keys(a) as (keyof OportunidadFormState)[]).every((k) => a[k] === b[k]);
@@ -41,13 +57,10 @@ export function useOportunidadForm(
    * Datos precapturados que viajan del alta express al formulario completo
    * (origen/ownership ya elegido y nombre escrito).
    */
-  precapturado?: { origen?: OrigenInicial | null; nombre?: string | null; etapaId?: string | null; empresa?: RefRow | null },
+  precapturado?: Precapturado,
 ) {
-  const origenInicial = precapturado?.origen ?? null;
-  const nombreInicial = precapturado?.nombre ?? null;
-  const empresaInicial = precapturado?.empresa ?? null;
+  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial } = datosIniciales(precapturado);
   // CTA de columna del Kanban: etapa destino prefijada (sólo si es abierta).
-  const etapaIdInicial = precapturado?.etapaId ?? null;
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
   // Sólo recalculamos cuando cambia la *identidad* del registro o el estado
