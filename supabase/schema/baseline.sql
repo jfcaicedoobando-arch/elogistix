@@ -34796,11 +34796,12 @@ CREATE TABLE public.proforma_conceptos_consolidados (
     iva numeric DEFAULT 0 NOT NULL,
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    tasa_iva_aplicada numeric DEFAULT 0.16 NOT NULL,
+    tasa_iva_aplicada numeric DEFAULT 0.16,
     deleted_at timestamp with time zone,
     deleted_by uuid,
     updated_at timestamp with time zone DEFAULT now(),
     tipo_iva text,
+    CONSTRAINT pcc_tasa_iva_presente_chk CHECK (((tasa_iva_aplicada IS NOT NULL) OR (NOT (tipo_iva IS DISTINCT FROM 'no_objeto'::text)))),
     CONSTRAINT pcc_tipo_iva_chk CHECK (((tipo_iva IS NULL) OR (tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text, 'no_objeto'::text]))))
 );
 CREATE TABLE public.proforma_envios (

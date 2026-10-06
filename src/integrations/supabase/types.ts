@@ -7579,7 +7579,7 @@ export type Database = {
           organization_id: string
           precio_unitario: number
           proforma_id: string
-          tasa_iva_aplicada: number
+          tasa_iva_aplicada: number | null
           tipo_contenedor: string | null
           tipo_iva: string | null
           total: number
@@ -7600,7 +7600,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id: string
-          tasa_iva_aplicada?: number
+          tasa_iva_aplicada?: number | null
           tipo_contenedor?: string | null
           tipo_iva?: string | null
           total?: number
@@ -7621,7 +7621,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id?: string
-          tasa_iva_aplicada?: number
+          tasa_iva_aplicada?: number | null
           tipo_contenedor?: string | null
           tipo_iva?: string | null
           total?: number
