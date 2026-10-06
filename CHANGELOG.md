@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.31] - Unreleased
+
+- **fix(Proformas · 138)**: selección y deselección sin bucle de render; predicado de fecha por defecto estable, conservando filtros, orden, paginación y reglas de conversión.
+- **fix(Rentabilidad · 136–137)**: filtros móviles con borrador descartable, aplicación atómica y persistencia de periodo ETA, modo y orden al navegar. Alcance, base de cálculo y equivalentes USD más claros en pantalla y CSV.
+- **perf(consultas)**: reducción de trabajo redundante en consultas financieras, embarques y CRM, con contratos de caché y pruebas de regresión.
+- **fix(arquitectura)**: restauración de guardas de capas y contratos de respuesta financieros; verificación de tipos de adaptadores Edge sin supresiones.
+- Metadatos de entrega sobre los cambios ya integrados; sin migraciones nuevas ni ejecución SQL. El manifiesto conserva la ventana canónica de tres versiones y no certifica el estado publicado.
+
 ## [13.824.30] - Unreleased
 
 - **fix(Tesorería · 103–105, 108, 114, 120–121)**: efectivo programado sin banco, tipo de cambio explícito en pagos extranjeros, prevalidación de fecha e importe y cierre no monetario sin TC cero. Filtros semánticos, rankings separados por moneda y procedencia del TC sin atribución DOF no verificada.
