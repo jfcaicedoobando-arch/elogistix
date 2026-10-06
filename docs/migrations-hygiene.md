@@ -74,6 +74,19 @@ hash intacto y cuerpos coincidentes en los replays declarados. Las correcciones
 posteriores pueden reemitir funciones sin editar SQL histórico de Drizzle;
 los espejos y la baseline siguen comprobando el estado vigente. Es un control estático
 de cobertura, no un parser completo de DDL ni una certificación de la base remota.
+Un replay compuesto puede conservar varias migraciones históricas consecutivas,
+incluidas redefiniciones de la misma firma. Solo el mapping del primer origen
+puede declarar `composition`: `sources` en orden, `replaySha256` y `preamble`.
+Cada origen conserva su entrada y SHA-256 inmutable, y todos apuntan exclusivamente
+al mismo replay. El preámbulo admite solo líneas completas de comentarios `--`.
+DR6 exige que el replay, normalizado a LF, sea exactamente el preámbulo seguido de
+los orígenes unidos por un único LF adicional entre archivos, sin quitar espacios
+ni saltos finales. Verifica orden consecutivo, hashes, pertenencia exclusiva y
+contenido completo antes de comparar por DR4 las últimas definiciones por firma.
+Un descriptor inválido falla cerrado y conserva la comparación histórica ordinaria;
+no autoriza omitir DDL, reordenar SQL ni saltarse DR1–DR5. Este contrato solo prueba
+coherencia estática: no verifica permisos efectivos ni una base de datos remota.
+
 Drizzle también activa los checks DB del CI y el workflow RLS existente; no se
 crea otro pipeline ni se aplican automáticamente estos archivos en Lovable.
 

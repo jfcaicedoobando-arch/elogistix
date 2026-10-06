@@ -17,6 +17,10 @@ export type FacturaEmbarqueLite = {
   proforma_id?: string | null;
 };
 
+function varianteSinAutorizacion(estado: ReturnType<typeof getEstadoUnificado>): "destructive" | "success" | "warning" {
+  return estado === "rechazada" ? "destructive" : estado === "aceptada" ? "success" : "warning";
+}
+
 export function renderEstado(
   p: ProformaConFactura,
   proformas: ProformaConFactura[],
@@ -57,8 +61,7 @@ export function renderEstado(
       ...p,
       requiere_autorizacion_proforma: false,
     });
-    const variant =
-      unificado === "rechazada" ? "destructive" : unificado === "aceptada" ? "success" : "warning";
+    const variant = varianteSinAutorizacion(unificado);
     return <Badge variant={variant} className="w-fit">{etiqueta}</Badge>;
   }
 

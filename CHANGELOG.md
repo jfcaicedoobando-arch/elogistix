@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.34] - Unreleased
+
+- **fix(infraestructura)**: registro verificable de replays ya presentes en main, incluido el replay compuesto de proformas. Valida hashes, orden y contenido completo antes de comparar definiciones finales; las reglas ordinarias siguen intactas.
+- **fix(mensajes)**: los errores de referencia e importe por concepto de nota de crédito tienen textos claros, sin mostrar identificadores ni cambiar reglas fiscales.
+- **fix(higiene SQL)**: reemisión idéntica del helper de proformas con sus ACL actuales explícitas para cerrar H6. No cambia permisos efectivos ni corrige los hallazgos de concurrencia, consistencia del flag o alcance del bypass; esas correcciones se entregan aparte.
+- **refactor(proformas)**: se extrae el color del estado a un helper puro para cumplir el límite de complejidad, conservando etiquetas, prioridades y permisos.
+- Empaquetado de compatibilidad previo al hallazgo 141, que se entrega por separado. Las entradas históricas del manifiesto se conservan; estos metadatos no certifican aplicación remota ni publicación.
+
 ## [13.824.33] - Unreleased
 
 - **fix(Garantías · 146)**: los campos de depósito y referencia conservan el foco y el borrador durante la edición; guardan al salir o pulsar Enter, sin remontar la celda al cargar catálogos o fechas.

@@ -34,6 +34,10 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El origen de tesorería del anticipo no es consistente. Revisa el cargo original o su registro en efectivo; no generes otro cargo.",
   LC_ANTICIPO_SIN_NUEVO_CARGO:
     "Esta aplicación de anticipo usa la salida original y no admite otro cargo bancario. Revisa el movimiento del anticipo.",
+  LC_NC_EXCEDE_CONCEPTO:
+    "El crédito supera el importe sin impuestos disponible para este concepto de la factura. Revisa el importe y las notas de crédito ya registradas.",
+  LC_NC_LINAJE_INVALIDO:
+    "Uno de los conceptos de la nota de crédito no corresponde a un concepto válido de esta factura en la empresa actual. Revisa los conceptos antes de continuar.",
   LC_NC_PROV_TC_INVALIDO:
     "El tipo de cambio debe ser un número válido mayor a cero. Captura una paridad válida o deja el campo vacío para consultar DOF.",
   LC_PAGO_ANTICIPO_NO_EDITABLE:
