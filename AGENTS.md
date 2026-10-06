@@ -1,5 +1,7 @@
 # Decisiones técnicas
 
+- Manual CRM opportunity creation uses `crm_crear_oportunidad_con_empresa` with SECURITY INVOKER; the selected company is carried through quick/full forms but never sent as an opportunity column. Why: opportunity and same-organization company link must commit atomically without changing historical records or bypassing RLS.
+
 - CRM opportunity margin keeps an empty editing value in form state and normalizes it when building the payload. Why: clearing the field must not restore a sticky zero or change the persistence contract.
 
 - CRM por objetos: lecturas y vínculos de Empresas/Contactos viven en `src/features/crm/services/objetosCrm.ts` y `vinculosCrm.ts`; las pantallas usan `VinculosCard` para ligar/desligar, y quitar un vínculo nunca borra el registro. Why: un solo lugar para el modelo muchos-a-muchos.

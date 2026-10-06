@@ -44,6 +44,11 @@ vi.mock("@/components/ui/select", () => ({
   ),
 }));
 vi.mock("@/features/cliente/hooks", () => ({ useClientesForSelect: () => ({ data: [] }) }));
+vi.mock("@/features/crm/components/nuevaOportunidad/OportunidadEmpresaField", () => ({
+  OportunidadEmpresaField: ({ onChange }: { onChange: (e: { id: string; nombre: string }) => void }) => (
+    <button type="button" onClick={() => onChange({ id: "empresa-1", nombre: "Acme" })}>elegir-empresa</button>
+  ),
+}));
 vi.mock("@/features/crm/components/comboboxes/EntidadComboboxCrm", () => ({
   LeadComboboxCrm: ({
     estadoIn,
@@ -81,20 +86,24 @@ describe("QuickCreateOportunidadDialog", () => {
     // Cambiar el origen a prospecto monta el combobox.
     fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
     fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
+    expect(screen.getByRole("button", { name: "Crear" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("empresa asociada");
+    fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
     fireEvent.click(screen.getByRole("button", { name: "Crear" }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
-    const payload = mutateAsync.mock.calls[0]![0];
-    expect(payload.lead_id).toBe("lead-1");
-    expect(payload.vendedor_id).toBe("u-dueno");
-    expect(payload.vendedor_email).toBe("dueno@x.com");
+    const payload = mutateAsync.mock.calls[0]?.[0];
+    expect(payload?.empresa_id).toBe("empresa-1");
+    expect(payload?.lead_id).toBe("lead-1");
+    expect(payload?.vendedor_id).toBe("u-dueno");
+    expect(payload?.vendedor_email).toBe("dueno@x.com");
 
     const estados = estadosRecibidos.find(Boolean);
     expect(estados).toEqual([...LEAD_ESTADOS_ETAPA_PROSPECTO]);
     expect(estados).not.toContain("Convertido");
     // La etapa terminal en orden 1 no puede ser la etapa inicial.
-    expect(payload.etapa_id).toBe("e-ab");
-    expect(payload.probabilidad).toBe(20);
+    expect(payload?.etapa_id).toBe("e-ab");
+    expect(payload?.probabilidad).toBe(20);
   });
 
   it("sin etapas abiertas no permite crear y muestra el mensaje", async () => {
@@ -130,10 +139,18 @@ describe("QuickCreateOportunidadDialog", () => {
     // Cambiar el origen a prospecto monta el combobox.
     fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
     fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
+    fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
     fireEvent.click(screen.getByRole("button", { name: "Crear" }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     // El único feedback de error visible lo emite useCrearOportunidad.onError.
     expect(notifyError).not.toHaveBeenCalled();
+  });
+  it("incluye la empresa al pasar a Más campos", () => {
+    const onMore = vi.fn();
+    render(<QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={onMore} />);
+    fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
+    fireEvent.click(screen.getByRole("button", { name: /Más campos/ }));
+    expect(onMore).toHaveBeenCalledWith(expect.objectContaining({ empresa: { id: "empresa-1", nombre: "Acme" } }));
   });
 });
