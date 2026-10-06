@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import GraficoFlujoProyectado from "../GraficoFlujoProyectado";
 import type { SemanaFlujo } from "@/features/tesoreria/domain";
@@ -30,4 +30,44 @@ it("mantiene la leyenda en el orden de sus series, con y sin saldo disponible", 
   await waitFor(() => expect(labels()).toEqual(["Entradas", "Salidas", "Saldo"]));
   rerender(<GraficoFlujoProyectado semanas={semanas} saldoDisponible={false} />);
   await waitFor(() => expect(labels()).toEqual(["Entradas", "Salidas"]));
+});
+
+it("conserva el signo del saldo negativo y muestra las salidas como importe positivo", async () => {
+  const { container } = render(<GraficoFlujoProyectado semanas={semanas} />);
+  const chart = screen.getByRole("application");
+  fireEvent.focus(chart);
+  await waitFor(() => {
+    const tooltip = container.querySelector(".recharts-tooltip-wrapper");
+    expect(tooltip).not.toBeNull();
+    expect(within(tooltip as HTMLElement).getByText("MXN 120,000.00")).toBeInTheDocument();
+  });
+
+  fireEvent.keyDown(chart, { key: "ArrowRight" });
+  await waitFor(() => {
+    const tooltip = container.querySelector(".recharts-tooltip-wrapper") as HTMLElement;
+    expect(within(tooltip).getByText("MXN -10,000.00")).toBeInTheDocument();
+    expect(within(tooltip).getByText("MXN 220,000.00")).toBeInTheDocument();
+    expect(within(tooltip).getByText("MXN 90,000.00")).toBeInTheDocument();
+  });
+});
+
+it("no inventa un saldo cuando no hay saldo disponible", async () => {
+  const { container } = render(<GraficoFlujoProyectado semanas={semanas} saldoDisponible={false} />);
+  const chart = screen.getByRole("application");
+  fireEvent.focus(chart);
+  await waitFor(() => {
+    const tooltip = container.querySelector(".recharts-tooltip-wrapper") as HTMLElement;
+    expect(within(tooltip).getByText("MXN 130,000.00")).toBeInTheDocument();
+    expect(within(tooltip).queryByText("Saldo")).not.toBeInTheDocument();
+  });
+});
+
+it("muestra saldo cero sin cambiarlo por un importe ausente", async () => {
+  const { container } = render(<GraficoFlujoProyectado semanas={semanas.map((s) => ({ ...s, saldo_proyectado_mxn: 0 }))} />);
+  fireEvent.focus(screen.getByRole("application"));
+  await waitFor(() => {
+    const tooltip = container.querySelector(".recharts-tooltip-wrapper") as HTMLElement;
+    expect(within(tooltip).getByText("Saldo")).toBeInTheDocument();
+    expect(within(tooltip).getByText("MXN 0.00")).toBeInTheDocument();
+  });
 });
