@@ -1,4 +1,6 @@
-import { endOfMonth, format, isValid, parseISO, startOfMonth } from "date-fns";
+import { endOfMonth, isValid, parseISO, startOfMonth } from "date-fns";
+import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
+
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
 export const MODOS_RENTABILIDAD = ["all", "Marítimo", "Aéreo", "Terrestre", "Multimodal"] as const;
@@ -19,7 +21,7 @@ export const defaultReportesFilters = (now = new Date()): ReportesFilters => ({
 function readDate(value: string | null, fallback: Date): Date {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback;
   const date = parseISO(value);
-  return isValid(date) && format(date, "yyyy-MM-dd") === value ? date : fallback;
+  return isValid(date) && formatDateOnlyLocal(date) === value ? date : fallback;
 }
 
 /** Never submit malformed dates, inverted ranges or arbitrary modes from links. */
@@ -40,8 +42,8 @@ export function readReportesSelection(params: URLSearchParams, defaults: Reporte
 /** One URL update commits the entire selection and preserves unrelated params. */
 export function writeReportesSelection(params: URLSearchParams, selection: ReportesSelection): URLSearchParams {
   const next = new URLSearchParams(params);
-  next.set("desde", format(selection.fechaDesde, "yyyy-MM-dd"));
-  next.set("hasta", format(selection.fechaHasta, "yyyy-MM-dd"));
+  next.set("desde", formatDateOnlyLocal(selection.fechaDesde));
+  next.set("hasta", formatDateOnlyLocal(selection.fechaHasta));
   next.set("modo", selection.modo);
   next.set("sort", selection.sortField);
   next.set("dir", selection.sortDir);
