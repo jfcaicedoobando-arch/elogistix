@@ -34,5 +34,19 @@
     "replays": [
       "20261006000200_replay_pricing_adjuntos.sql"
     ]
+  },
+  {
+    "file": "0005_crm_crear_oportunidad_con_empresa.sql",
+    "sha256": "1587cb0edd39177b00f2c88edc79344d1589b52a66ba1eeaa58dd0ae99c87042",
+    "replays": [
+      "20261006004000_replay_crm_oportunidad_empresa.sql"
+    ]
+  },
+  {
+    "file": "0006_pricing_unidad_medida.sql",
+    "sha256": "8eaaacbb39f67a7ad454cddd72d3f9efae3ba0c3c95a33d3adb57598628930ce",
+    "replays": [
+      "20261006012000_replay_pricing_unidad_medida.sql"
+    ]
   }
 ]
