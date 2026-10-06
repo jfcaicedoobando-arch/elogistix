@@ -28,7 +28,7 @@ describe("EDITAR_COSTOS_EMBARQUE", () => {
   });
 
   it("excluye roles financieros y de solo consulta", () => {
-    ["contador", "tesorero", "gerente_visor", "viewer"].forEach(rol => {
+    (["contador", "tesorero", "gerente_visor", "viewer"] as const).forEach(rol => {
       expect(hasRole(EDITAR_COSTOS_EMBARQUE, rol)).toBe(false);
     });
   });
