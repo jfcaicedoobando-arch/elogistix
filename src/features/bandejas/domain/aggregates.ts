@@ -133,8 +133,8 @@ export function resumirCxpPorPagar(rows: CxpPorPagarRow[]): CxpPagarSummary {
     if (moneda === "MXN" || moneda === "USD" || moneda === "EUR") {
       porMoneda[moneda] += saldo;
     }
-    // EUR no tiene TC en `proveedor_facturas` todavía: `aMxn` lo marca incompleto.
-    const conv = aMxn(saldo, moneda, moneda === "USD" ? num(r.tipo_cambio_usd) : null);
+    // El campo histórico `tipo_cambio_usd` guarda el TC documental también para EUR.
+    const conv = aMxn(saldo, moneda, r.tipo_cambio_usd);
     if (conv.completo) saldoMXN += conv.monto;
     else faltaTipoCambio += 1;
   }

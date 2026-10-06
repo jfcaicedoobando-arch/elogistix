@@ -1,5 +1,5 @@
 /**
- * Card "Top 10 proveedores por gasto" para /compras/reportes.
+ * Card "Top 10 proveedores por importe facturado bruto" para /compras/reportes.
  * Extraído de `ComprasReportes.tsx` (v13.317.9).
  */
 import { Building2 } from "lucide-react";
@@ -32,8 +32,11 @@ export function TopProveedoresCard({ isLoading, rows }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-accent" /> Top 10 proveedores por gasto
+          <Building2 className="h-4 w-4 text-accent" /> Top 10 proveedores por importe facturado bruto
         </CardTitle>
+        <p className="text-body-sm text-muted-foreground">
+          Sin IVA y antes de notas de crédito. Ordenados por equivalente en MXN.
+        </p>
         {tcEstimado ? (
           <p className="text-xs text-warning">
             Orden calculado con tipo de cambio estimado (no oficial): úsalo sólo como referencia.
