@@ -26,6 +26,7 @@ import QuickCreateOportunidadDialog, {
 import QuickCreateActividadDialog, {
   type ActividadQuickDraft,
 } from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
+import { NuevoObjetoCrmDialog } from "@/features/crm/components/objetos/NuevoObjetoCrmDialog";
 import { usePermissions } from "@/hooks/shared";
 import { useVolverAgendaActividad } from "@/features/crm/hooks/useVolverAgendaActividad";
 
@@ -62,6 +63,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   const [opOpen, setOpOpen] = useState(false);
   const [actOpen, setActOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [objeto, setObjeto] = useState<"empresa" | "contacto" | null>(null);
   // Borrador mínimo del alta express de oportunidad: se conserva sólo mientras
   // el formulario completo está abierto (transición "Más campos →").
   const [opDraft, setOpDraft] = useState<OportunidadQuickDraft | null>(null);
@@ -121,13 +123,19 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
           canCrearOportunidad={canCrearOportunidad}
           canCrearActividad={canCrearActividad}
           canGestionarLeadsEnLote={canGestionarLeadsEnLote}
-          onLead={() => abrirQuick("lead")}
+          onEmpresa={() => { setMenuOpen(false); setObjeto("empresa"); }}
+          onContacto={() => { setMenuOpen(false); setObjeto("contacto"); }}
           onOportunidad={() => abrirQuick("oportunidad")}
           onActividad={() => abrirQuick("actividad")}
           onImportar={() => { setMenuOpen(false); setImportOpen(true); }}
         />
       </DropdownMenu>
 
+      <NuevoObjetoCrmDialog
+        objeto={objeto ?? "empresa"}
+        open={objeto !== null}
+        onOpenChange={(o) => { if (!o) setObjeto(null); }}
+      />
       <QuickCreateLeadDialog
         open={quick === "lead"}
         onOpenChange={cerrarQuick}
