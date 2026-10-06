@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.824.33] - Unreleased
+
+- **fix(Garantías · 146)**: los campos de depósito y referencia conservan el foco y el borrador durante la edición; guardan al salir o pulsar Enter, sin remontar la celda al cargar catálogos o fechas.
+- **fix(Cobranza y seguros · 142, 149)**: días vencidos calculados por fecha civil; pólizas vencidas y por vencer en los próximos siete días en categorías separadas, excluyendo las eliminadas.
+- **fix(Embarques · 150)**: el CSV incluye todos los contenedores activos de los embarques exportados, con números y tipos legibles alineados, independientemente de la página visible.
+- **fix(CxP y compras · extensiones 85, 106)**: el saldo por pagar reconoce el TC documental EUR; el ranking de proveedores prioriza el TC documental de USD/EUR y reserva el respaldo para la misma moneda.
+- **fix(NC · extensión 107)**: los porcentajes conservan precisión en el precio unitario hasta calcular el importe por cantidad, incluidos porcentajes fraccionarios en la vista previa.
+- **fix(reportes · extensiones 32, 81, 101)**: antigüedad de CxP aclara la fecha usada y el alcance de saldos actuales en pantalla y CSV; compras identifica importes facturados brutos antes de NC y sus excepciones históricas; el PDF de Tesorería identifica saldos vencidos y el mayor atraso por nombre y moneda.
+- **feat(facturación y CRM)**: consulta del TC DOF de hoy con realineación de la fecha del borrador sin timbrar; descarga ZIP de PDF/XML de NC elegibles; acciones CRM visibles para los roles ya admitidos por la base y cancelación/sustitución de CFDI vencido sujeta a las guardas existentes. Se separa el helper de capacidad de timbrado para conservar la guarda de arquitectura.
+- Metadatos de entrega de los cambios ya integrados; sin nuevas migraciones ni cambios de Edge Functions. El manifiesto conserva las 1.475 migraciones existentes y la ventana canónica de tres versiones; no ejecuta SQL ni certifica publicación o despliegue.
+
 ## [13.824.32] - Unreleased
 
 - **fix(Garantías · 146)**: actualización y refresco desde tarifa conservan el receptor del cliente Supabase; se evita el fallo local previo al envío RPC, manteniendo payloads, errores y bitácora.
