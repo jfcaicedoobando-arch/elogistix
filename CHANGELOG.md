@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.35] - Unreleased
+
+- **fix(proformas · consistencia interna)**: un único cálculo mantiene el indicador del embarque según proformas operativas; excluye canceladas, rechazadas, eliminadas y originales consolidados, exige conceptos vivos en borradores y conserva las facturadas.
+- **fix(concurrencia)**: bloqueos transaccionales ordenados y lectura posterior a la espera evitan flags obsoletos al cancelar, liberar conceptos o mover vínculos, incluidos los vínculos inicialmente sin embarque. Los cambios de metadatos y resultados sin cambio no reescriben el embarque.
+- **fix(cierre y trazabilidad)**: el bypass técnico queda acotado y restaura el valor previo; rechazo validado y consolidación conservan sus flujos, snapshots e historial. Generar en un embarque cerrado exige reapertura. Las ACL efectivas permanecen iguales.
+- **test(proformas)**: regresiones SQL de dominio sobre PostgreSQL 17.9, consolidación real, rollback, restauración, 10 escenarios de concurrencia y pruebas frontend relacionadas. Consulta de diferencias sólo de lectura.
+- Una migración forward posterior a la compatibilidad 34. No ejecuta backfill, no modifica historial, no cambia permisos persistentes y no implica aplicación remota ni publicación. El endurecimiento ACL se mantiene fuera de esta entrega.
+
 ## [13.824.34] - Unreleased
 
 - **fix(infraestructura)**: registro verificable de replays ya presentes en main, incluido el replay compuesto de proformas. Valida hashes, orden y contenido completo antes de comparar definiciones finales; las reglas ordinarias siguen intactas.
