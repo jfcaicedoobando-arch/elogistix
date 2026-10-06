@@ -3,7 +3,7 @@ import { EMPTY_OPORTUNIDAD } from "../oportunidadFormState";
 import { buildOportunidadFormPayload, validarOportunidadForm } from "../oportunidadFormPayload";
 import { buildOportunidadInsertPayload } from "../oportunidadPayload";
 
-const form = { ...EMPTY_OPORTUNIDAD, nombre: "Acme", cliente_id: "cliente-1", etapa_id: "etapa-1" };
+const form = { ...EMPTY_OPORTUNIDAD, origen_tipo: "cliente" as const, nombre: "Acme", cliente_id: "cliente-1", etapa_id: "etapa-1" };
 
 describe("Empresa obligatoria al crear oportunidad", () => {
   it("rechaza alta sin empresa", () => {
