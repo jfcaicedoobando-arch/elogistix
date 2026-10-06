@@ -32,7 +32,7 @@ export function GraficoEERR12m({ data }: Props) {
               <XAxis dataKey="periodo" tick={CHART_TICK} />
               <YAxis tick={CHART_TICK} tickFormatter={(v) => formatCompactNumber(v)} />
               <Tooltip content={<ChartTooltip formatValue={(v) => formatCompactNumber(v)} />} />
-              <Legend wrapperStyle={CHART_LEGEND_STYLE} />
+              <Legend itemSorter={(item) => ["ingresos", "costos", "utilidad"].findIndex((key) => key === item.dataKey)} wrapperStyle={CHART_LEGEND_STYLE} />
               <Bar dataKey="ingresos" name="Ingresos" fill="hsl(var(--primary))" />
               <Bar dataKey="costos" name="Costos" fill="hsl(var(--destructive))" />
               <Line

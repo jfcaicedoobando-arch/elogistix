@@ -105,6 +105,37 @@ Aliases ESM de Router evitan doble contexto CJS/ESM con nuqs v7.
 Contract test comprueba layout; no eliminar alias por estética.
 `testEnvSplit.ts` reparte archivos; un `@vitest-environment` explícito manda.
 
+## Recharts 3
+
+El frontend fija `recharts@3.10.1`. La migración desde 2.15.4 conserva los
+cálculos y formatos del ERP: el dominio de rentabilidad acepta límites
+`readonly`, la cuadrícula de auditoría usa explícitamente el eje `left` y
+las ocho leyendas tienen un orden estable por `dataKey`, alineado con sus
+series (no el nuevo orden alfabético por defecto).
+
+`RechartsCompatibility.test.tsx` comprueba la cuadrícula con dos escalas,
+leyendas, pérdidas, sectores/etiquetas de pastel y tooltip por teclado con
+Recharts real. Sólo fija tamaño y desactiva animaciones en jsdom; no sustituye
+una revisión de layout/animaciones en navegador. Se mantiene la accesibilidad
+activada por defecto en Recharts 3.
+
+El contrato de flujo vive junto a `GraficoFlujoProyectado` en tesorería;
+no se expone el componente por su barrel público sólo para importarlo en un
+test compartido. Comprueba también la leyenda cuando no hay saldo disponible.
+
+Validación local del 2026-10-05: 225 pruebas focales en 39 archivos,
+TypeScript, ESLint sin warnings, build y seis guardias estáticas de BD.
+Comparación visual aislada con 2.15.4: 18 componentes reales, temas claro y
+oscuro, Desktop HD 1280×720 y revisión estrecha 691×763, estados vacíos/carga
+y valores negativos. Los datos se inyectaron en fixtures temporales sin
+backend, retirados después; no acredita publicación ni un recorrido completo
+con roles/datos remotos. Los budgets de bundle y sourcemaps se conservaron.
+
+Para futuros upgrades, usar la
+[guía oficial de migración](https://github.com/recharts/recharts/wiki/3.0-migration-guide)
+y repetir estas pruebas; no resolver incompatibilidades con casts ni
+desactivar la accesibilidad para recuperar una captura anterior.
+
 ## Evidencia histórica
 
 El ensayo de minificadores del 2026-09-19 midió Terser 67 s / 355–364 KB gzip

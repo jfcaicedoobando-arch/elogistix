@@ -29,6 +29,7 @@ export default function DesempenoOperadoresChart({ data }: Props) {
         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
         <RechartsTooltip content={<ChartTooltip />} />
         <Legend
+          itemSorter={(item) => ESTADOS_KEYS.findIndex((estado) => estado === item.dataKey)}
           verticalAlign="top"
           align="right"
           wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}

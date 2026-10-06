@@ -100,7 +100,7 @@ export default function ComprasReportes() {
                     cursor={{ fill: CHART.border, fillOpacity: 0.15 }}
                     content={<ChartTooltip formatValue={(valor, serie) => formatCurrency(valor, serie.toUpperCase())} />}
                   />
-                  <Legend wrapperStyle={CHART_LEGEND_STYLE} formatter={(label) => <span className="text-foreground">{label}</span>} />
+                  <Legend itemSorter={(item) => ["mxn", "usd", "eur"].findIndex((key) => key === item.dataKey)} wrapperStyle={CHART_LEGEND_STYLE} formatter={(label) => <span className="text-foreground">{label}</span>} />
                   <Bar dataKey="mxn" name="MXN" fill={CHART.primary} radius={CHART_BAR_RADIUS} />
                   <Bar dataKey="usd" name="USD" fill={CHART.success} radius={CHART_BAR_RADIUS} />
                   <Bar dataKey="eur" name="EUR" fill={CHART.warning} radius={CHART_BAR_RADIUS} />

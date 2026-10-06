@@ -54,7 +54,7 @@ export default function GraficoFlujoProyectado({ semanas, saldoDisponible = true
               <XAxis dataKey="semana" tick={{ fontSize: 11 }} interval={tickInterval} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(Number(v))} />
               <RTooltip content={<ChartTooltip formatValue={(v) => formatCurrency(Math.abs(v), "MXN")} />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Legend itemSorter={(item) => ["Entradas", "Salidas", "Saldo"].findIndex((key) => key === item.dataKey)} wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="Entradas" fill="hsl(var(--kpi-success))" />
               <Bar dataKey="Salidas" fill="hsl(var(--destructive))" />
               {saldoDisponible && <Line type="monotone" dataKey="Saldo" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 3 }} />}

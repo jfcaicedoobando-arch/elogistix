@@ -84,7 +84,7 @@ export default function CrmForecastMensualChart({ porMes, isLoading }: Props) {
                     cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
                     content={<ChartTooltip formatValue={(v) => formatCurrency(v, moneda)} />}
                   />
-                  <Legend wrapperStyle={CHART_LEGEND_STYLE} />
+                  <Legend itemSorter={(item) => ["Pipeline", "Ponderado", "Ganado"].findIndex((key) => key === item.dataKey)} wrapperStyle={CHART_LEGEND_STYLE} />
                   <Bar dataKey="Pipeline" name="Oportunidades abiertas" fill={CHART.primary} radius={CHART_BAR_RADIUS} />
                   <Bar dataKey="Ponderado" name="Valor ponderado" fill={CHART.warning} radius={CHART_BAR_RADIUS} />
                   <Bar dataKey="Ganado" fill={CHART.success} radius={CHART_BAR_RADIUS} />

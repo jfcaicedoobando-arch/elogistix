@@ -37,7 +37,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
               <XAxis
                 type="number"
                 tickCount={5}
-                domain={([min, max]: [number, number]) => [Math.min(0, min), Math.max(0, max)]}
+                domain={([min, max]: readonly [number, number]) => [Math.min(0, min), Math.max(0, max)]}
                 allowDecimals={false}
                 tickFormatter={(v) => formatCurrencyCompact(Number(v) || 0, "USD")}
                 tick={{ fontSize: 11 }}

@@ -49,7 +49,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
                 <XAxis dataKey="periodo" tick={CHART_TICK} />
                 <YAxis tick={CHART_TICK} tickFormatter={(v) => formatCompactNumber(v)} />
                 <Tooltip content={<ChartTooltip formatValue={(v) => formatCompactNumber(v)} />} />
-                <Legend wrapperStyle={CHART_LEGEND_STYLE} />
+                <Legend itemSorter={(item) => ["banda_max", "banda_min", "ingresos", "proyeccion"].findIndex((key) => key === item.dataKey)} wrapperStyle={CHART_LEGEND_STYLE} />
                 <Area
                   type="monotone"
                   dataKey="banda_max"
