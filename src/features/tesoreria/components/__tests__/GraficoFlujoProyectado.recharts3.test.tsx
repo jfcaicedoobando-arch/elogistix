@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
 import GraficoFlujoProyectado from "../GraficoFlujoProyectado";
 import type { SemanaFlujo } from "@/features/tesoreria/domain";
 
@@ -23,6 +23,13 @@ const semanas: SemanaFlujo[] = [
   { semana_iso: "2026-W40", inicio: "2026-09-28", fin: "2026-10-04", entradas_mxn: 160000, salidas_mxn: 130000, flujo_neto_mxn: 30000, saldo_proyectado_mxn: 120000, detalle_entradas: [], detalle_salidas: [] },
   { semana_iso: "2026-W41", inicio: "2026-10-05", fin: "2026-10-11", entradas_mxn: 90000, salidas_mxn: 220000, flujo_neto_mxn: -130000, saldo_proyectado_mxn: -10000, detalle_entradas: [], detalle_salidas: [] },
 ];
+
+afterEach(async () => {
+  cleanup();
+  // Drena el batch RAF de Recharts/RTK antes del teardown global de jsdom;
+  // así no queda su timeout de respaldo buscando cancelAnimationFrame.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+});
 
 it("mantiene la leyenda en el orden de sus series, con y sin saldo disponible", async () => {
   const { container, rerender } = render(<GraficoFlujoProyectado semanas={semanas} />);
