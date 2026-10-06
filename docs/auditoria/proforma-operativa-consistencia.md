@@ -37,7 +37,7 @@ Esta corrección funcional reexpresa las ACL existentes sin ampliarlas ni retira
 
 1. Conservar intactos Drizzle `0008` y `0009` y su replay histórico.
 2. Aplicar primero la reemisión idéntica de compatibilidad `20261006223000_proforma_helper_acl_restatement.sql` del trabajo de infraestructura.
-3. Aplicar después `20261006230000_proforma_operativa_consistencia.sql` mediante el proceso de revisión y despliegue autorizado.
+3. Aplicar el ajuste de snapshot `20261006225000_proforma_no_objeto_snapshot.sql`, seguido de `20261006230000_proforma_operativa_consistencia.sql`, mediante el proceso de revisión y despliegue autorizado.
 
 El forward contiene DDL de funciones/triggers y reexpresión de permisos. No recalcula filas existentes, no cambia estados históricos y no ejecuta un backfill. La consulta `scripts/db/report-proforma-operativa-drift.sql` permite revisar diferencias antes de decidir una reparación separada de datos.
 
@@ -54,6 +54,6 @@ Las pruebas son locales. No equivalen a haber migrado una base remota ni a haber
 
 PostgreSQL 17.9: suite completa de dominio verde, incluida la RPC real de consolidación sobre embarques cerrados con bypass previo `off` y `on`, fallos forzados reversibles y restauración de conceptos históricos. Los 10 escenarios concurrentes pasaron cinco repeticiones consecutivas. Las tres regresiones SQL existentes pasaron. El reporte de diferencias se ejecutó sin escribir; detectó únicamente un fixture obsoleto creado deliberadamente para reproducir la carrera antes de corregirla.
 
-Frontend: 350 pruebas relacionadas en 62 archivos, TypeScript y build local correctos. El snapshot normalizado de PostgreSQL 17.9 coincide exactamente con el baseline actualizado. Auditoría de espejos y funciones correcta. La composición de los guards de migración, espejos y funciones pasa sobre la infraestructura 34 real. Esta integración asigna versión y manifiesto 13.824.35; no certifica aplicación remota ni publicación.
+Frontend: 381 pruebas relacionadas y de composición en 64 archivos tras integrar el snapshot `no_objeto`; TypeScript y build local se verifican sobre la entrega compuesta. El snapshot normalizado de PostgreSQL 17.9 coincide exactamente con el baseline actualizado. Auditoría de espejos y funciones correcta. La composición de los guards de migración, espejos y funciones pasa sobre la infraestructura 34 real. Esta integración asigna versión y manifiesto 13.824.35; no certifica aplicación remota ni publicación.
 
-Hallazgo preexistente fuera de alcance: la consolidación de `no_objeto` intenta persistir una tasa NULL en `proforma_conceptos_consolidados.tasa_iva_aplicada`, columna actualmente NOT NULL. No se alteró ese tratamiento fiscal en esta corrección; las pruebas de mecánica de consolidación utilizan `tasa_0` válida.
+La entrega 35 incorpora como commit separado el ajuste de snapshot `no_objeto`: permite tasa NULL sólo para ese tipo explícito, conserva la exigencia para los demás tipos y legacy, y no reescribe filas históricas. La suite específica verifica consolidación y conversión MXN/USD, ObjetoImp 01 sin traslado y preservación de exento, tasa 0, IVA 16% e IVA 8%. La suite de mecánica de concurrencia/consolidación conserva sus fixtures `tasa_0`.

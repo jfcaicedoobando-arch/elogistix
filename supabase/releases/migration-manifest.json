@@ -4440,6 +4440,7 @@
       "20261006213000_replay_audit144_nc_linaje.sql",
       "20261006214500_replay_proforma_cancelada.sql",
       "20261006223000_proforma_helper_acl_restatement.sql",
+      "20261006225000_proforma_no_objeto_snapshot.sql",
       "20261006230000_proforma_operativa_consistencia.sql"
     ]
   }

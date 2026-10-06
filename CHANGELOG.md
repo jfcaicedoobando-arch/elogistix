@@ -5,8 +5,9 @@
 - **fix(proformas · consistencia interna)**: un único cálculo mantiene el indicador del embarque según proformas operativas; excluye canceladas, rechazadas, eliminadas y originales consolidados, exige conceptos vivos en borradores y conserva las facturadas.
 - **fix(concurrencia)**: bloqueos transaccionales ordenados y lectura posterior a la espera evitan flags obsoletos al cancelar, liberar conceptos o mover vínculos, incluidos los vínculos inicialmente sin embarque. Los cambios de metadatos y resultados sin cambio no reescriben el embarque.
 - **fix(cierre y trazabilidad)**: el bypass técnico queda acotado y restaura el valor previo; rechazo validado y consolidación conservan sus flujos, snapshots e historial. Generar en un embarque cerrado exige reapertura. Las ACL efectivas permanecen iguales.
+- **fix(proformas · no objeto)**: el snapshot consolidado admite tasa ausente sólo con tratamiento explícito `no_objeto`, sin reclasificar ni reescribir datos históricos; los demás tratamientos y los tipos legacy conservan tasa obligatoria. Se valida conversión MXN/USD con ObjetoImp 01 sin traslado de IVA.
 - **test(proformas)**: regresiones SQL de dominio sobre PostgreSQL 17.9, consolidación real, rollback, restauración, 10 escenarios de concurrencia y pruebas frontend relacionadas. Consulta de diferencias sólo de lectura.
-- Una migración forward posterior a la compatibilidad 34. No ejecuta backfill, no modifica historial, no cambia permisos persistentes y no implica aplicación remota ni publicación. El endurecimiento ACL se mantiene fuera de esta entrega.
+- Dos migraciones forward posteriores a la compatibilidad 34. No ejecuta backfill, no modifica historial, no cambia permisos persistentes y no implica aplicación remota ni publicación. El endurecimiento ACL se mantiene fuera de esta entrega.
 
 ## [13.824.34] - Unreleased
 
