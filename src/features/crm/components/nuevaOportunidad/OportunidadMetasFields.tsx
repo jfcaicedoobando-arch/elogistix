@@ -19,7 +19,7 @@ export default function OportunidadMetasFields({ form, set }: Props) {
   return (
     <>
       <div className="space-y-1">
-        <Label htmlFor="op-monto-meta">Monto meta</Label>
+        <Label htmlFor="op-monto-meta">Valor estimado</Label>
         <MoneyInput
           id="op-monto-meta"
           value={form.monto_meta}
@@ -28,7 +28,7 @@ export default function OportunidadMetasFields({ form, set }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Fecha meta de cierre</Label>
+        <Label>Fecha estimada de cierre</Label>
         <DatePickerMx
           value={form.fecha_meta_cierre}
           onChange={(v) => set("fecha_meta_cierre", v)}
@@ -45,7 +45,7 @@ export default function OportunidadMetasFields({ form, set }: Props) {
           step="0.1"
           value={form.margen_pct}
           onChange={(e) =>
-            set("margen_pct", Math.max(0, Math.min(100, Number(e.target.value) || 0)))
+            set("margen_pct", e.target.value === "" ? "" : Math.max(0, Math.min(100, Number(e.target.value) || 0)))
           }
         />
       </div>

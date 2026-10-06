@@ -49,7 +49,7 @@ export function OportunidadKpisCards({ etapa, montoEstimado, valorReal, probabil
         ) : null}
       </KpiCard>
       <KpiCard
-        label="Monto estimado"
+        label="Valor real"
         value={formatCurrencyCompact(montoEstimado, moneda)}
         icon={Target}
       />

@@ -42,7 +42,7 @@ export interface OportunidadFormState {
   fecha_meta_cierre: string;
   compromiso_nota: string;
   // Mapeo CRM Hunter: margen esperado y riesgos/objeciones del negocio.
-  margen_pct: number;
+  margen_pct: number | "";
   riesgos_objeciones: string;
 }
 
@@ -71,6 +71,6 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   monto_meta: 0,
   fecha_meta_cierre: "",
   compromiso_nota: "",
-  margen_pct: 0,
+  margen_pct: "",
   riesgos_objeciones: "",
 };

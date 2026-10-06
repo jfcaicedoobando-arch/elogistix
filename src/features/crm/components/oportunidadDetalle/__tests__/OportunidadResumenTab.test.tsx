@@ -61,8 +61,8 @@ describe("OportunidadResumenTab", () => {
     expect(screen.getByTestId("datos-comerciales")).toBeInTheDocument();
 
     const estimada = fieldsByLabel.get("Cierre estimado");
-    const meta = fieldsByLabel.get("Fecha meta de cierre");
-    const monto = fieldsByLabel.get("Monto meta");
+    const meta = fieldsByLabel.get("Fecha estimada de cierre");
+    const monto = fieldsByLabel.get("Valor estimado");
 
     expect(estimada).toBe("15/09/2026");
     expect(estimada).not.toMatch(/^\d{4}-\d{2}-\d{2}/);
@@ -84,8 +84,8 @@ describe("OportunidadResumenTab", () => {
     render(<OportunidadResumenTab op={op} etapa={{ nombre: "Calificado", tipo: "abierta" }} canEdit={false} />);
 
     expect(fieldsByLabel.get("Cierre estimado")).toBe("—");
-    expect(fieldsByLabel.get("Fecha meta de cierre")).toBe("—");
+    expect(fieldsByLabel.get("Fecha estimada de cierre")).toBe("—");
     // Monto meta nulo se deja para el fallback de DatosComercialesCard (—).
-    expect(fieldsByLabel.get("Monto meta")).toBeNull();
+    expect(fieldsByLabel.get("Valor estimado")).toBeNull();
   });
 });
