@@ -17,20 +17,22 @@ export type { ForecastResumen, ReportesCRM };
 // FIX C3 (S6-07): caps explícitos verificados por assertNotTruncated.
 const LIMITE_CRM = 5000;
 
-export async function fetchEtapaTipos(): Promise<Map<string, EtapaTipo>> {
-  // Soft-delete: una etapa eliminada no debe clasificar oportunidades en
-  // forecast (quedaban contando como abiertas/ganadas fuera del embudo).
+export async function fetchEtapasAnalitica() {
   const { data, error } = await supabase
     .from("crm_etapas_pipeline")
-    .select("id, tipo")
+    .select("id, nombre, tipo")
     .is("deleted_at", null);
   if (error) throw error;
-  return new Map((data ?? []).map((e) => [e.id, e.tipo as EtapaTipo]));
+  return data ?? [];
 }
 
+type EtapasAnalitica = Awaited<ReturnType<typeof fetchEtapasAnalitica>>;
 
-export async function fetchForecast(desde?: string, hasta?: string): Promise<ForecastResumen> {
-  const etapaTipos = await fetchEtapaTipos();
+export async function fetchEtapaTipos(): Promise<Map<string, EtapaTipo>> {
+  return new Map((await fetchEtapasAnalitica()).map((e) => [e.id, e.tipo as EtapaTipo]));
+}
+
+export async function fetchForecast(desde?: string, hasta?: string, etapas?: Promise<EtapasAnalitica>): Promise<ForecastResumen> {
   let q = supabase
     .from("crm_oportunidades")
     .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id, moneda")
@@ -40,30 +42,30 @@ export async function fetchForecast(desde?: string, hasta?: string): Promise<For
   // Cap defensivo: agregado por org; >5000 oportunidades activas es señal
   // operativa para migrar a RPC con agregación server-side.
   q = q.limit(LIMITE_CRM);
-  const { data, error } = await q;
+  const [etapasData, { data, error }] = await Promise.all([etapas ?? fetchEtapasAnalitica(), q]);
+  const etapaTipos = new Map(etapasData.map((e) => [e.id, e.tipo as EtapaTipo]));
   if (error) throw error;
   return computeForecast(assertNotTruncated(data, LIMITE_CRM, "crm.fetchForecast"), etapaTipos);
 }
 
-export async function fetchReportesCRM(): Promise<ReportesCRM> {
+export async function fetchReportesCRM(etapas?: Promise<EtapasAnalitica>): Promise<ReportesCRM> {
   // Caps defensivos para agregados por org. >5000 leads/oportunidades activos
   // → migrar a RPC con agregación server-side.
   const [leadsR, opsR, motivosR, etapasR] = await Promise.all([
     supabase.from("crm_leads").select("estado, fuente").is("deleted_at", null).limit(LIMITE_CRM),
     supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").is("deleted_at", null).limit(LIMITE_CRM),
     supabase.from("crm_motivos_perdida").select("id, nombre").is("deleted_at", null),
-    supabase.from("crm_etapas_pipeline").select("id, nombre, tipo").is("deleted_at", null),
+    etapas ?? fetchEtapasAnalitica(),
   ]);
   if (leadsR.error) throw leadsR.error;
   if (opsR.error) throw opsR.error;
   if (motivosR.error) throw motivosR.error;
-  if (etapasR.error) throw etapasR.error;
   assertNotTruncated(leadsR.data, LIMITE_CRM, "crm.fetchReportes.leads");
   assertNotTruncated(opsR.data, LIMITE_CRM, "crm.fetchReportes.oportunidades");
 
   const motivoNombre = new Map((motivosR.data ?? []).map((m) => [m.id, m.nombre]));
   const etapaInfo = new Map(
-    (etapasR.data ?? []).map((e) => [e.id, { nombre: e.nombre, tipo: e.tipo as EtapaTipo }]),
+    etapasR.map((e) => [e.id, { nombre: e.nombre, tipo: e.tipo as EtapaTipo }]),
   );
 
   return computeReportesCRM(

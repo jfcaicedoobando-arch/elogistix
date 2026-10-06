@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useResumenTesoreria } from "@/features/tesoreria/hooks";
-import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks/useHuecoFacturacion";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { esFacturaPorPagar } from "@/features/cxp/services";
@@ -17,7 +16,6 @@ export function useFinanceDashboard() {
   const cobranzaQ = useCobranza({});
   const cxpQ = useFacturasCxP({});
   const tesoreriaQ = useResumenTesoreria();
-  const ejecutivoQ = useDashboardEjecutivoFacturacion();
   const huecoQ = useHuecoFacturacion();
   const pendientesAdminQ = useEmbarquesPendientesAdmin(true);
 
@@ -51,7 +49,6 @@ export function useFinanceDashboard() {
     cobranzaQ.isLoading ||
     cxpQ.isLoading ||
     tesoreriaQ.isLoading ||
-    ejecutivoQ.isLoading ||
     huecoQ.isLoading;
 
   // Fuentes críticas: si CxC/CxP/tesorería fallan, los KPIs no pueden mostrar 0
@@ -60,8 +57,6 @@ export function useFinanceDashboard() {
   const error = (cobranzaQ.error ?? cxpQ.error ?? tesoreriaQ.error ?? null) as Error | null;
 
   const refetch = () => {
-    void cobranzaQ.refetch();
-    void cxpQ.refetch();
     tesoreriaQ.refetch();
   };
 
@@ -73,7 +68,6 @@ export function useFinanceDashboard() {
     cobranzaKpis: cobranzaQ.kpis,
     cxpKpis: cxpQ.kpis,
     tesoreria: tesoreriaQ.data,
-    ejecutivo: ejecutivoQ.data,
     hueco: { total: huecoQ.totalEmbarques, totalUsd: huecoQ.totalUsd, totalMxn: huecoQ.totalMxn },
     pendientesAdmin: pendientesAdminQ.data,
     facturasVencidas,

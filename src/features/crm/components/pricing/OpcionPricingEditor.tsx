@@ -51,7 +51,7 @@ export function OpcionPricingEditor({ solicitudId, organizationId, orden, opcion
         <CardTitle className="text-body">Opción {orden}</CardTitle>
         {editable && opcion && (
           <Button type="button" size="icon" variant="ghost" aria-label="Quitar opción"
-            disabled={eliminar.isPending} onClick={() => eliminar.mutate(opcion.id)}>
+            disabled={eliminar.isPending} onClick={() => eliminar.mutate({ id: opcion.id, solicitudId })}>
             <Trash2 className="size-4" />
           </Button>
         )}

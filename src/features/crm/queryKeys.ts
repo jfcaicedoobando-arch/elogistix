@@ -90,6 +90,7 @@ export const crm = {
     unreadCount: (uid?: string) => ['crm', 'notificaciones', 'unread-count', uid] as const,
   },
   etapas: {
+    analitica: ['crm', 'etapas', 'analitica'] as const,
     all: ['crm', 'etapas'] as const,
     todas: ['crm', 'etapas', 'all'] as const,
   },

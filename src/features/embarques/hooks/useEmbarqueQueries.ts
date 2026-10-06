@@ -1,10 +1,13 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
+import { queryKeys } from '@/lib/query';
 import { embarqueQueries } from '@/features/embarques/queries';
 import type { EmbarquesPaginadosFilters } from '@/features/embarques/services';
 
 
 interface UseEmbarquesPaginadosParams {
+  enabled?: boolean;
   search: string;
   filterModo: string;
   filterEstado: string;
@@ -20,7 +23,7 @@ interface UseEmbarquesPaginadosParams {
 }
 
 export function useEmbarquesPaginados({
-  search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma = 'todos', page, pageSize, fechaDesde, fechaHasta, sortBy, sortDir,
+  enabled = true, search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma = 'todos', page, pageSize, fechaDesde, fechaHasta, sortBy, sortDir,
 }: UseEmbarquesPaginadosParams) {
   const { organizationId } = useOrgFilter();
   const filters: EmbarquesPaginadosFilters & { filterEstado: string } = {
@@ -41,6 +44,7 @@ export function useEmbarquesPaginados({
 
   return useQuery({
     ...embarqueQueries.list(filters),
+    enabled,
     placeholderData: (prev) => prev,
   });
 }
@@ -55,9 +59,17 @@ export function useEmbarque(id: string | undefined) {
 /** Hook para prefetch en hover (lista → detalle) */
 export function usePrefetchEmbarque() {
   const queryClient = useQueryClient();
-  return (id: string) => {
-    queryClient.prefetchQuery(embarqueQueries.detail(id));
-  };
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return useCallback((id: string) => {
+    clearTimeout(timer.current);
+    // Coalesce a sweep across rows and avoid concurrent full-detail requests.
+    timer.current = setTimeout(() => {
+      if (queryClient.isFetching({ queryKey: queryKeys.embarques.fullRoot }) === 0) {
+        void queryClient.prefetchQuery(embarqueQueries.full(id));
+      }
+    }, 200);
+  }, [queryClient]);
 }
 
 export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {

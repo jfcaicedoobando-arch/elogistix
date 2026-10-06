@@ -1,3 +1,4 @@
+import { crmPricingKeys } from "@/features/crm/queryKeys.performance";
 import { useQuery } from "@tanstack/react-query";
 import { listarTarifasRespuesta } from "@/features/crm/services/pricing/tarifasRespuesta";
 
@@ -7,7 +8,7 @@ import { listarTarifasRespuesta } from "@/features/crm/services/pricing/tarifasR
  */
 export function useTarifasRespuestaPricing(solicitudId: string, esperandoRespuesta = false) {
   return useQuery({
-    queryKey: ["crm", "pricing", "tarifas-respuesta", solicitudId],
+    queryKey: crmPricingKeys.tarifasRespuesta(solicitudId),
     queryFn: () => listarTarifasRespuesta(solicitudId),
     refetchInterval: esperandoRespuesta ? 30_000 : false,
   });

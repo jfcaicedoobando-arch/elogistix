@@ -20,7 +20,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { effectiveRole, user } = useAuth();
   const esPricing = esRolPricing(effectiveRole);
   const { data: opciones = [] } = useOpcionesPricing(s.id);
-  const { data: tarifas = [] } = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
+  const tarifasRespuesta = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
   const editable = esPricing && s.estado === "enviada";
   const abierta = s.estado === "borrador" || s.estado === "enviada";
   const puedeCancelar = abierta && (esPricing || s.created_by === user?.id);
@@ -28,7 +28,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   return (
     <div className="space-y-4">
       <AccionesSolicitudPricing solicitud={s} puedeCancelar={puedeCancelar} puedeResponder={editable}
-        numOpciones={opciones.length + tarifas.length} />
+        numOpciones={opciones.length + (tarifasRespuesta.data?.length ?? 0)} />
       <ResumenSolicitudPricing solicitud={s} />
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
@@ -37,7 +37,8 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
           orden={o.orden} opcion={o} editable={false} />
       ))}
       <TarifasRespuestaPricing solicitudId={s.id} hayOpcionesViejas={opciones.length > 0}
-        esperandoRespuesta={s.estado === "enviada"}
+        tarifas={tarifasRespuesta.data ?? []} isLoading={tarifasRespuesta.isLoading}
+        isError={tarifasRespuesta.isError} onSaved={() => { void tarifasRespuesta.refetch(); }}
         editable={s.estado === "enviada" && puedeAgregarTarifaRespuesta(effectiveRole)} />
     </div>
   );
