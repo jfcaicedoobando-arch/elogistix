@@ -8,7 +8,7 @@ el bloqueo PPD + No objeto eran referencias superadas.
 
 ## Trabajo nuevo
 
-- [ ] Exigir una empresa asociada al crear oportunidades; conservar origen y validaciones actuales, sin modificar oportunidades históricas.
+- [x] Exigir empresa asociada en alta rápida y completa; guardado atómico sin cambiar históricos. 43 pruebas focalizadas, lint y prueba SQL aislada correctos; baseline regenerada. CI/RLS completos y db:postcheck quedan pendientes de GitHub Actions, conforme a la política de validación local.
 
 - [x] Oportunidades CRM: margen esperado sin cero fijo y etiquetas actualizadas; 26 pruebas focalizadas y lint de archivos modificados correctos. CI/RLS completos quedan en GitHub Actions.
 

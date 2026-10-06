@@ -152,7 +152,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         onCreated={(id) => navigate(`/crm/oportunidades/${id}`)}
         onMore={(draft) => {
           setQuick(null);
-          setOpDraft(draft.nombre || draft.origen ? draft : null);
+          setOpDraft(draft.nombre || draft.origen || draft.empresa ? draft : null);
           setOpOpen(true);
         }}
       />

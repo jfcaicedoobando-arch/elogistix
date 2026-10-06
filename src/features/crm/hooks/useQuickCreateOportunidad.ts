@@ -13,6 +13,7 @@ import {
   MSG_SIN_ETAPA_ABIERTA,
   type OrigenInicial,
 } from "@/features/crm/domain/oportunidadFormHelpers";
+import type { RefRow } from "@/features/crm/services/objetosCrm";
 
 /**
  * Borrador mínimo que viaja del alta express al formulario completo cuando el
@@ -21,6 +22,7 @@ import {
 export interface OportunidadQuickDraft {
   nombre: string;
   origen: OrigenInicial | null;
+  empresa?: RefRow | null;
 }
 
 export type OrigenTipo = "prospecto" | "cliente";
@@ -38,6 +40,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: clientes = [] } = useClientesForSelect() as { data: { id: string; nombre: string }[] | undefined };
   const [nombre, setNombre] = useState("");
+  const [empresa, setEmpresa] = useState<RefRow | null>(null);
   const [origenTipo, setOrigenTipo] = useState<OrigenTipo>("cliente");
   const [clienteId, setClienteId] = useState("");
   const [leadId, setLeadId] = useState("");
@@ -54,6 +57,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   useEffect(() => {
     if (abiertoAntes.current && !open) {
       setNombre("");
+      setEmpresa(null);
       setOrigenTipo("cliente");
       setClienteId(""); setLeadId(""); setLeadNombre("");
       setLeadVendedorId(null); setLeadVendedorEmail("");
@@ -77,6 +81,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     if (!nombre.trim()) return "Nombre requerido";
     if (!etapaInicial) return MSG_SIN_ETAPA_ABIERTA;
     if (!origenListo) return "Elige un prospecto o un cliente";
+    if (!empresa) return "Selecciona la empresa asociada";
     return null;
   };
 
@@ -96,11 +101,12 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     const nombreLimpio = nombre.trim();
     const cliente = clientes.find((c) => c.id === clienteId);
     if (origenTipo === "cliente" && cliente) {
-      return { nombre: nombreLimpio, origen: { tipo: "cliente", id: cliente.id, nombre: cliente.nombre } };
+      return { nombre: nombreLimpio, empresa, origen: { tipo: "cliente", id: cliente.id, nombre: cliente.nombre } };
     }
     if (origenTipo === "prospecto" && leadId) {
       return {
         nombre: nombreLimpio,
+        empresa,
         origen: {
           tipo: "prospecto",
           id: leadId,
@@ -110,14 +116,14 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
         },
       };
     }
-    return { nombre: nombreLimpio, origen: null };
+    return { nombre: nombreLimpio, origen: null, empresa };
   };
 
   const submit = async () => {
     if (crear.isPending || enviandoRef.current) return;
     const invalido = validar();
-    if (invalido) {
-      notifyError(undefined, { title: invalido, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
+    if (invalido || !etapaInicial || !empresa) {
+      notifyError(undefined, { title: invalido ?? "Selecciona la empresa asociada", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
       return;
     }
     const n = nombre.trim();
@@ -126,12 +132,13 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     try {
       const r = await crear.mutateAsync({
         nombre: n,
+        empresa_id: empresa.id,
         cliente_id: origenTipo === "cliente" ? (cliente?.id ?? null) : null,
         cliente_nombre: origenTipo === "cliente" ? (cliente?.nombre ?? "") : leadNombre,
         lead_id: origenTipo === "prospecto" ? leadId : null,
-        etapa_id: etapaInicial!.id,
+        etapa_id: etapaInicial.id,
         moneda: "MXN",
-        probabilidad: etapaInicial!.probabilidad_default ?? 10,
+        probabilidad: etapaInicial.probabilidad_default ?? 10,
         ...resolverVendedor(),
       });
       // El cierre limpia el estado (efecto de transición): sin reset duplicado.
@@ -146,6 +153,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
 
   return {
     nombre, setNombre,
+    empresa, setEmpresa,
     origenTipo, setOrigenTipo,
     clienteId, setClienteId,
     leadId, setLeadId, setLeadNombre,

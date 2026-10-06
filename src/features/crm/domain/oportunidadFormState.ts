@@ -12,6 +12,8 @@ export type OportunidadOrigenTipo = "prospecto" | "cliente";
 
 export interface OportunidadFormState {
   nombre: string;
+  empresa_id: string | null;
+  empresa_nombre: string;
   origen_tipo: OportunidadOrigenTipo;
   lead_id: string | null;
   lead_nombre: string;
@@ -48,6 +50,8 @@ export interface OportunidadFormState {
 
 export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   nombre: "",
+  empresa_id: null,
+  empresa_nombre: "",
   origen_tipo: "prospecto",
   lead_id: null,
   lead_nombre: "",
