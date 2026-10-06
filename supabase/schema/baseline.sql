@@ -6750,6 +6750,7 @@ DECLARE
   v_now           timestamptz := now();
   v_motivo        text;
   v_is_authorized boolean;
+  v_bypass_prev text;
   v_liberados     integer := 0;
 BEGIN
   IF p_respuesta NOT IN ('aceptada','rechazada','pendiente') THEN
@@ -6802,7 +6803,17 @@ BEGIN
          updated_at     = v_now
    WHERE id = p_proforma_id;
   IF p_respuesta = 'rechazada' AND v_proforma.estado_cliente <> 'rechazada' THEN
-    v_liberados := public.liberar_conceptos_de_proforma(p_proforma_id);
+    -- Respuesta validada del cliente: liberar vínculos derivados no abre
+    -- la edición del embarque cerrado ni deja una excepción para la llamada siguiente.
+    v_bypass_prev := COALESCE(current_setting('app.bypass_cierre', true), '');
+    BEGIN
+      PERFORM set_config('app.bypass_cierre', 'on', true);
+      v_liberados := public.liberar_conceptos_de_proforma(p_proforma_id);
+      PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+    EXCEPTION WHEN OTHERS THEN
+      PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+      RAISE;
+    END;
   END IF;
   INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
   VALUES (v_proforma.organization_id, auth.uid(), COALESCE(v_user_email,''),
@@ -12374,6 +12385,7 @@ CREATE FUNCTION public.consolidar_proformas(p_embarque_id uuid, p_cliente_id uui
     SET search_path TO 'public'
     AS $_$
 DECLARE
+  v_bypass_prev text;
   v_nueva          public.proformas;
   v_cached         jsonb;
   v_caller_org     uuid;
@@ -12516,13 +12528,19 @@ BEGIN
   WHERE id = ANY(p_proforma_ids);
   -- v13.301.69 FIX BUG 2: repuntar conceptos_venta a la proforma consolidada
   -- para que sync_conceptos_venta_facturado propague al facturar/cancelar.
-  PERFORM set_config('app.bypass_cierre', 'on', true);
-  UPDATE public.conceptos_venta
-     SET proforma_id = v_nueva.id
-   WHERE proforma_id = ANY(p_proforma_ids)
-     AND organization_id = v_org_efectiva
-     AND deleted_at IS NULL;
-  PERFORM set_config('app.bypass_cierre', 'off', true);
+  v_bypass_prev := COALESCE(current_setting('app.bypass_cierre', true), '');
+  BEGIN
+    PERFORM set_config('app.bypass_cierre', 'on', true);
+    UPDATE public.conceptos_venta
+       SET proforma_id = v_nueva.id
+     WHERE proforma_id = ANY(p_proforma_ids)
+       AND organization_id = v_org_efectiva
+       AND deleted_at IS NULL;
+    PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+  EXCEPTION WHEN OTHERS THEN
+    PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+    RAISE;
+  END;
   PERFORM public.idempotency_store(p_request_id, jsonb_build_object('id', v_nueva.id));
   RETURN v_nueva;
 END;
@@ -14785,6 +14803,7 @@ CREATE FUNCTION public.crear_proforma_atomica(p_organization_id uuid, p_embarque
     AS $_$
 DECLARE
   v_numero text;
+  v_estado_embarque text;
   v_proforma public.proformas;
   v_override record;
   v_org uuid;
@@ -14822,10 +14841,18 @@ BEGIN
     RAISE EXCEPTION 'LC_PROFORMA_EMBARQUE_INVALIDO: el embarque no existe en tu organización o no corresponde al cliente indicado'
       USING ERRCODE = 'P0001';
   END IF;
+  -- El cierre operativo no se elude por un efecto lateral del trigger
+  -- que mantiene tiene_proforma. Los guards vuelven a validar al vincular.
+  SELECT estado::text INTO v_estado_embarque FROM public.embarques
+  WHERE id = p_embarque_id AND organization_id = v_org FOR KEY SHARE;
+  IF v_estado_embarque = 'Cerrado' THEN
+    RAISE EXCEPTION 'LC_EMBARQUE_CERRADO: reabre el embarque antes de generar una proforma'
+      USING ERRCODE = '23514';
+  END IF;
   -- Bloquea los conceptos y valida que estén libres antes de crear la proforma.
   PERFORM 1 FROM public.conceptos_venta
    WHERE id = ANY(p_concepto_ids) AND organization_id = v_org
-   FOR UPDATE;
+   ORDER BY id FOR UPDATE;
   -- Ola E1 · C5: ningún concepto puede venir de otro embarque ni estar borrado.
   SELECT COUNT(*) INTO v_ajenos
   FROM unnest(p_concepto_ids) AS s(id)
@@ -22497,19 +22524,12 @@ BEGIN
     UPDATE public.conceptos_venta
        SET proforma_id = NULL,
            estado_facturacion = 'pendiente'
-     WHERE proforma_id = p_proforma_id
+     WHERE proforma_id = p_proforma_id AND deleted_at IS NULL
     RETURNING id
   )
   SELECT COUNT(*) INTO v_liberados FROM upd;
-  -- Recalcula tiene_proforma: true solo si queda otra proforma viva en el embarque.
-  UPDATE public.embarques e
-     SET tiene_proforma = EXISTS (
-       SELECT 1 FROM public.proformas p
-        WHERE p.embarque_id = e.id
-          AND p.id <> p_proforma_id
-          AND COALESCE(p.estado_cliente, 'pendiente') <> 'rechazada'
-     )
-   WHERE e.id = v_embarque_id;
+  -- El cálculo canónico incluye rechazo, cancelación, borradores y consolidación.
+  PERFORM public.recompute_embarque_tiene_proforma(v_embarque_id);
   RETURN v_liberados;
 END;
 $$;
@@ -24871,6 +24891,7 @@ DECLARE
   v_now       timestamptz := now();
   v_motivo    text;
   v_titulo    text; v_mensaje text; v_tipo text;
+  v_bypass_prev text;
   v_liberados integer := 0;
   v_rl        jsonb;
 BEGIN
@@ -24923,7 +24944,17 @@ BEGIN
     RAISE EXCEPTION 'Esta proforma ya fue respondida por otra solicitud concurrente.';
   END IF;
   IF p_respuesta = 'rechazada' THEN
-    v_liberados := public.liberar_conceptos_de_proforma(v_proforma.id);
+    -- Respuesta validada del cliente: liberar vínculos derivados no abre
+    -- la edición del embarque cerrado ni deja una excepción para la llamada siguiente.
+    v_bypass_prev := COALESCE(current_setting('app.bypass_cierre', true), '');
+    BEGIN
+      PERFORM set_config('app.bypass_cierre', 'on', true);
+      v_liberados := public.liberar_conceptos_de_proforma(v_proforma.id);
+      PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+    EXCEPTION WHEN OTHERS THEN
+      PERFORM set_config('app.bypass_cierre', v_bypass_prev, true);
+      RAISE;
+    END;
   END IF;
   -- fix3: usuario sentinel en vez de NULL — bitacora_actividad.usuario_id es
   -- NOT NULL (20260301200638). Mismo patrón que otras escrituras de sistema
@@ -27292,28 +27323,38 @@ $$;
 CREATE FUNCTION public.recompute_embarque_tiene_proforma(p_embarque_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
+    SET "app.bypass_cierre" TO 'on'
     AS $$
+DECLARE
+  v_tiene_proforma boolean;
 BEGIN
-  IF p_embarque_id IS NULL THEN
-    RETURN;
-  END IF;
-  PERFORM set_config('app.bypass_cierre', 'on', true);
-  UPDATE public.embarques e
-  SET tiene_proforma = EXISTS (
-    SELECT 1
-    FROM public.proformas p
-    WHERE p.embarque_id = e.id
+  IF p_embarque_id IS NULL THEN RETURN; END IF;
+  -- Serializar antes de leer los hijos. En READ COMMITTED, la siguiente
+  -- sentencia toma un snapshot nuevo después de esperar al último escritor.
+  -- NO KEY UPDATE es compatible con los KEY SHARE de las claves foráneas.
+  PERFORM 1 FROM public.embarques WHERE id = p_embarque_id FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RETURN; END IF;
+  SELECT EXISTS (
+    SELECT 1 FROM public.proformas p
+    WHERE p.embarque_id = p_embarque_id
       AND p.deleted_at IS NULL
       AND COALESCE(p.estado_proforma, 'pendiente') <> 'cancelada'
+      AND COALESCE(p.estado_cliente, 'pendiente') <> 'rechazada'
+      AND COALESCE(p.estado_revision, 'aprobada') <> 'consolidada'
+      AND p.consolidada_en IS NULL
       AND (
-        COALESCE(p.estado_aprobacion, 'aprobada') <> 'borrador'
+        p.estado_proforma = 'facturada'
+        OR COALESCE(p.estado_aprobacion, 'aprobada') <> 'borrador'
         OR EXISTS (
           SELECT 1 FROM public.conceptos_venta cv
-          WHERE cv.proforma_id = p.id
+          WHERE cv.proforma_id = p.id AND cv.deleted_at IS NULL
         )
       )
-  )
-  WHERE e.id = p_embarque_id;
+  ) INTO v_tiene_proforma;
+  -- Un cambio de metadatos de la proforma no altera updated_at del embarque.
+  UPDATE public.embarques SET tiene_proforma = v_tiene_proforma
+  WHERE id = p_embarque_id AND tiene_proforma IS DISTINCT FROM v_tiene_proforma;
+  -- El SET de la función restaura el valor previo también ante excepciones.
 END;
 $$;
 CREATE FUNCTION public.recotizar_cotizacion(p_cotizacion_id uuid, p_motivo text) RETURNS jsonb
@@ -31313,16 +31354,15 @@ $$;
 CREATE FUNCTION public.sync_conceptos_venta_facturado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
+    SET "app.bypass_cierre" TO 'on'
     AS $$
 BEGIN
-  PERFORM set_config('app.bypass_cierre', 'on', true);
   IF TG_OP = 'UPDATE' AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
     UPDATE public.conceptos_venta
        SET estado_facturacion = 'pendiente',
            proforma_id = NULL
      WHERE proforma_id = NEW.id
        AND deleted_at IS NULL;
-    PERFORM set_config('app.bypass_cierre', 'off', true);
     RETURN NEW;
   END IF;
   IF TG_OP = 'UPDATE' AND NEW.estado_proforma IS DISTINCT FROM OLD.estado_proforma THEN
@@ -31340,7 +31380,6 @@ BEGIN
          AND estado_facturacion = 'facturado';
     END IF;
   END IF;
-  PERFORM set_config('app.bypass_cierre', 'off', true);
   RETURN NEW;
 END;
 $$;
@@ -31421,16 +31460,36 @@ CREATE FUNCTION public.sync_embarque_tiene_proforma() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_ids uuid[];
+  v_embarque uuid;
 BEGIN
-  IF TG_OP = 'DELETE' THEN
-    PERFORM public.recompute_embarque_tiene_proforma(OLD.embarque_id);
-    RETURN OLD;
+  IF TG_OP = 'INSERT' THEN
+    v_ids := ARRAY[NEW.embarque_id];
+  ELSIF TG_OP = 'DELETE' THEN
+    v_ids := ARRAY[OLD.embarque_id];
+  ELSE
+    IF (OLD.embarque_id, OLD.deleted_at, OLD.estado_proforma,
+        OLD.estado_aprobacion, OLD.estado_cliente, OLD.estado_revision, OLD.consolidada_en)
+       IS NOT DISTINCT FROM
+       (NEW.embarque_id, NEW.deleted_at, NEW.estado_proforma,
+        NEW.estado_aprobacion, NEW.estado_cliente, NEW.estado_revision, NEW.consolidada_en) THEN
+      RETURN NEW;
+    END IF;
+    v_ids := ARRAY[OLD.embarque_id, NEW.embarque_id];
   END IF;
-  PERFORM public.recompute_embarque_tiene_proforma(NEW.embarque_id);
-  IF TG_OP = 'UPDATE' AND OLD.embarque_id IS DISTINCT FROM NEW.embarque_id THEN
-    PERFORM public.recompute_embarque_tiene_proforma(OLD.embarque_id);
-  END IF;
-  RETURN NEW;
+  -- La clave de proforma también existe cuando embarque_id es NULL.
+  -- Serializa el vínculo con cambios de conceptos antes de resolver el agregado.
+  PERFORM pg_advisory_xact_lock(hashtextextended('proforma-operativa:' || COALESCE(NEW.id, OLD.id)::text, 0));
+  -- Ambos extremos se bloquean juntos en el mismo orden, incluso al mover.
+  PERFORM 1 FROM public.embarques
+  WHERE id = ANY(v_ids) ORDER BY id FOR NO KEY UPDATE;
+  FOR v_embarque IN SELECT DISTINCT id FROM unnest(v_ids) AS x(id)
+    WHERE id IS NOT NULL ORDER BY id
+  LOOP
+    PERFORM public.recompute_embarque_tiene_proforma(v_embarque);
+  END LOOP;
+  RETURN COALESCE(NEW, OLD);
 END;
 $$;
 CREATE FUNCTION public.sync_embarque_tiene_proforma_from_concepto() RETURNS trigger
@@ -31438,34 +31497,47 @@ CREATE FUNCTION public.sync_embarque_tiene_proforma_from_concepto() RETURNS trig
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_old_embarque uuid;
-  v_new_embarque uuid;
+  v_proformas uuid[];
+  v_lock_key bigint;
+  v_embarques uuid[];
+  v_actuales uuid[];
+  v_embarque uuid;
 BEGIN
-  IF TG_OP = 'DELETE' THEN
-    IF OLD.proforma_id IS NOT NULL THEN
-      SELECT embarque_id INTO v_old_embarque FROM public.proformas WHERE id = OLD.proforma_id;
-      PERFORM public.recompute_embarque_tiene_proforma(v_old_embarque);
-    END IF;
-    RETURN OLD;
-  ELSIF TG_OP = 'INSERT' THEN
-    IF NEW.proforma_id IS NOT NULL THEN
-      SELECT embarque_id INTO v_new_embarque FROM public.proformas WHERE id = NEW.proforma_id;
-      PERFORM public.recompute_embarque_tiene_proforma(v_new_embarque);
-    END IF;
-    RETURN NEW;
+  IF TG_OP = 'INSERT' THEN
+    v_proformas := ARRAY[NEW.proforma_id];
+  ELSIF TG_OP = 'DELETE' THEN
+    v_proformas := ARRAY[OLD.proforma_id];
   ELSE
-    IF OLD.proforma_id IS DISTINCT FROM NEW.proforma_id THEN
-      IF OLD.proforma_id IS NOT NULL THEN
-        SELECT embarque_id INTO v_old_embarque FROM public.proformas WHERE id = OLD.proforma_id;
-        PERFORM public.recompute_embarque_tiene_proforma(v_old_embarque);
-      END IF;
-      IF NEW.proforma_id IS NOT NULL THEN
-        SELECT embarque_id INTO v_new_embarque FROM public.proformas WHERE id = NEW.proforma_id;
-        PERFORM public.recompute_embarque_tiene_proforma(v_new_embarque);
-      END IF;
+    IF OLD.proforma_id IS NOT DISTINCT FROM NEW.proforma_id
+       AND OLD.deleted_at IS NOT DISTINCT FROM NEW.deleted_at THEN
+      RETURN NEW;
     END IF;
-    RETURN NEW;
+    v_proformas := ARRAY[OLD.proforma_id, NEW.proforma_id];
   END IF;
+  -- Ordenar las claves bigint reales mantiene el orden incluso ante colisiones
+  -- del hash. No tomamos un row lock de proforma después de bloquear conceptos.
+  FOR v_lock_key IN
+    SELECT DISTINCT hashtextextended('proforma-operativa:' || id::text, 0) AS lock_key
+    FROM unnest(v_proformas) AS x(id) WHERE id IS NOT NULL ORDER BY lock_key
+  LOOP
+    PERFORM pg_advisory_xact_lock(v_lock_key);
+  END LOOP;
+  SELECT array_agg(DISTINCT embarque_id ORDER BY embarque_id) INTO v_embarques
+  FROM public.proformas WHERE id = ANY(v_proformas) AND embarque_id IS NOT NULL;
+  PERFORM 1 FROM public.embarques
+  WHERE id = ANY(v_embarques) ORDER BY id FOR NO KEY UPDATE;
+  -- Si otra transacción movió la proforma mientras esperábamos, no añadir un
+  -- bloqueo fuera de orden ni escribir un agregado del embarque equivocado.
+  SELECT array_agg(DISTINCT embarque_id ORDER BY embarque_id) INTO v_actuales
+  FROM public.proformas WHERE id = ANY(v_proformas) AND embarque_id IS NOT NULL;
+  IF v_actuales IS DISTINCT FROM v_embarques THEN
+    RAISE EXCEPTION 'LC_PROFORMA_VINCULO_CAMBIO: la proforma cambió de embarque; vuelve a intentar la operación'
+      USING ERRCODE = '40001';
+  END IF;
+  FOREACH v_embarque IN ARRAY COALESCE(v_embarques, ARRAY[]::uuid[]) LOOP
+    PERFORM public.recompute_embarque_tiene_proforma(v_embarque);
+  END LOOP;
+  RETURN COALESCE(NEW, OLD);
 END;
 $$;
 CREATE FUNCTION public.sync_pago_factura_embarque() RETURNS trigger
@@ -36201,7 +36273,7 @@ CREATE TRIGGER trg_sync_conceptos_venta_facturado AFTER UPDATE ON public.proform
 CREATE TRIGGER trg_sync_cotizacion_embarque_link AFTER INSERT OR UPDATE OF cotizacion_id, deleted_at ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.sync_cotizacion_embarque_link();
 CREATE TRIGGER trg_sync_embarque_desde_contenedor AFTER INSERT OR DELETE OR UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_desde_contenedor();
 CREATE TRIGGER trg_sync_embarque_tiene_proforma AFTER INSERT OR DELETE OR UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_tiene_proforma();
-CREATE TRIGGER trg_sync_embarque_tiene_proforma_from_concepto AFTER INSERT OR DELETE OR UPDATE OF proforma_id ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_tiene_proforma_from_concepto();
+CREATE TRIGGER trg_sync_embarque_tiene_proforma_from_concepto AFTER INSERT OR DELETE OR UPDATE OF proforma_id, deleted_at ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public.sync_embarque_tiene_proforma_from_concepto();
 CREATE TRIGGER trg_sync_pago_factura_embarque BEFORE INSERT OR UPDATE OF factura_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.sync_pago_factura_embarque();
 CREATE TRIGGER trg_sync_user_roles_om_del AFTER DELETE ON public.organization_members FOR EACH ROW EXECUTE FUNCTION public._sync_user_roles_desde_membership();
 CREATE TRIGGER trg_sync_user_roles_om_ins AFTER INSERT ON public.organization_members FOR EACH ROW EXECUTE FUNCTION public._sync_user_roles_desde_membership();
