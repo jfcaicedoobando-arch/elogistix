@@ -24,6 +24,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_COSTO_VINCULADO_CXP:
     "Este costo ya está vinculado a una factura de proveedor vigente: no puede cambiar de monto, " +
     "moneda ni proveedor. Desvincula o corrige primero esa factura de proveedor.",
+  LC_PROFORMA_VINCULO_CAMBIO:
+    "La proforma cambió de embarque mientras guardabas. Actualiza la pantalla y vuelve a intentar la operación.",
   LC_PROFORMA_EMBARQUE_AJENO:
     "Todas las proformas a consolidar deben pertenecer al mismo embarque.",
   // ── Facturas cliente (CxC) ─────────────────────────────────────────────
