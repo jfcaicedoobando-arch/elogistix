@@ -94,6 +94,8 @@ describe("EC-10 · avisos de tipo de cambio de respaldo", () => {
       />,
     );
     expect(screen.getByText(/Orden calculado con tipo de cambio estimado/)).toBeInTheDocument();
+    expect(screen.getByText("Top 10 proveedores por importe facturado bruto")).toBeInTheDocument();
+    expect(screen.getByText(/Sin IVA y antes de notas de crédito/)).toHaveTextContent("Ordenados por equivalente en MXN");
   });
 
   it("Compras sin partidas en USD no avisa", () => {

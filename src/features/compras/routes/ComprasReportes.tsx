@@ -42,13 +42,18 @@ export default function ComprasReportes() {
       <PageHeader
         icon={<BarChart3 className="h-6 w-6 text-accent" />}
         title="Reportes de compras"
-        description="Analítica de gasto por proveedor y período. Basado en fecha de emisión de la factura."
+        description="Importe facturado bruto, sin IVA y antes de notas de crédito. Por proveedor y período de emisión de la factura."
         actions={
           <Button variant="outline" size="sm" onClick={handleExport} disabled={!!errorRango || isLoading || isError || topProveedores.length === 0}>
             <Download className="h-4 w-4 mr-1.5" /> Exportar CSV
           </Button>
         }
       />
+
+      <p className="text-body-sm text-muted-foreground">
+        Incluye facturas no canceladas ni eliminadas, de cualquier estado de aprobación.
+        En facturas históricas sin subtotal se usa el total registrado, que puede incluir IVA.
+      </p>
 
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -73,9 +78,9 @@ export default function ComprasReportes() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
-        <KpiCard label="Subtotal MXN (sin IVA)" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
-        <KpiCard label="Subtotal USD (sin IVA)" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
-        <KpiCard label="Subtotal EUR (sin IVA)" value={formatCurrency(totalEur, "EUR")} icon={Coins} />
+        <KpiCard label="Facturado bruto MXN" sublabel="Sin IVA · antes de notas de crédito" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
+        <KpiCard label="Facturado bruto USD" sublabel="Sin IVA · antes de notas de crédito" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
+        <KpiCard label="Facturado bruto EUR" sublabel="Sin IVA · antes de notas de crédito" value={formatCurrency(totalEur, "EUR")} icon={Coins} />
       </div>
 
       <TopProveedoresCard isLoading={isLoading} rows={topProveedores} />
@@ -83,7 +88,7 @@ export default function ComprasReportes() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-accent" /> Evolución mensual
+            <TrendingUp className="h-4 w-4 text-accent" /> Evolución mensual del importe facturado bruto
           </CardTitle>
         </CardHeader>
         <CardContent>
