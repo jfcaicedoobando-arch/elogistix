@@ -1,6 +1,6 @@
 # Mantenimiento del stack de build y pruebas
 
-Revisión del repositorio: **2026-10-05**. Stack: Vite 8, Vitest 5, Router 7,
+Revisión del repositorio: **2026-10-05**. Stack: Vite 8, Vitest 5, Router 8,
 TypeScript 6. [CI](ops/ci.md) es la guía de jobs/triggers.
 
 ## Dependabot y dependencias Edge
@@ -101,20 +101,38 @@ Proyectos node/jsdom definidos explícitamente con `extends: false` para
 evitar herencia/duplicación de plugins. Benchmarks `perf` están separados.
 `clearMocks: false` es una decisión de compatibilidad de la suite.
 
-Preparación para Router 8, etapa 1: el frontend conserva `react-router@7.18.4`
-y `nuqs/adapters/react-router/v7`, pero usa imports canónicos de `react-router`.
-Se retiró la dependencia directa `react-router-dom`; las APIs específicas
+El frontend fija `react-router@8.4.0` y usa `nuqs/adapters/react-router/v8`
+de `nuqs@2.10.1`. Se conservan los imports canónicos de `react-router` y la
+ausencia de la dependencia directa `react-router-dom`; las APIs específicas
 `RouterProvider`/`HydratedRouter`, si se necesitan, se importan de `react-router/dom`.
-No se cambió el modo declarativo, el árbol de rutas ni la versión del ERP.
+Node mínimo: **22.22.0**, acorde con el paquete. React/DOM 19.3 y el target/lib
+ES2022 existentes cumplen los requisitos. No se cambió el modo declarativo,
+el árbol de rutas, los roles ni la versión del ERP; no se adoptó Framework
+Mode, SSR, loaders/actions ni flags de middleware que no usa esta SPA.
 
-Los dos aliases ESM canónicos de Router evitan doble contexto CJS/ESM con nuqs.
-El contract test comprueba layout, versión instalada y ausencia de imports
-legacy en app/mocks/fixtures; no eliminar aliases por estética. La prueba de
-filtros nuqs usa `BrowserRouter`, el router soportado oficialmente, y conserva
-la revisión de enlaces, redirects, historial y estado de formularios/Sentry.
-Router 8 y su adaptador nuqs v8 se evaluarán como una etapa posterior separada.
+Router 8 es ESM-only: se retiraron los dos aliases a archivos `.mjs` de Router 7.
+Vitest resuelve los exports públicos del paquete. `routerPackageContract`
+comprueba los exports declarados, versión, Node mínimo y ausencia de imports
+legacy/adaptadores v6/v7; los tests reales de rutas, filtros y SDK Sentry
+comprueban contexto compartido. No se omitieron estos contratos para aprobar
+la migración. Filtros nuqs usan `BrowserRouter`, no `MemoryRouter`.
 
-Validación local de esta etapa (2026-10-05): 599 pruebas en 148 archivos,
+Referencias: [migración oficial a v8](https://reactrouter.com/upgrading/v7) y
+[adaptador nuqs v8](https://nuqs.dev/docs/adapters#react-router-v8).
+
+Validación local de la migración a Router 8 (2026-10-05): **733 pruebas en
+153 archivos**, TypeScript, ESLint sin warnings, build y seis guardias estáticas
+de BD. Incluye los contratos del SDK Sentry real, roles/redirecciones y filtros
+nuqs sin aliases del router. En navegador, fixtures temporales con componentes
+compartidos y `useDirtyGuard` real comprobaron enlaces profundos/recarga,
+filtros, atrás/adelante, conservación de captura y aviso de salida; listado y
+modal revisados a 1280×720 y 691×763. Fixtures retirados después: sin backend,
+autenticación ni escrituras en el ERP. No acredita publicación o un recorrido
+con datos remotos; el build de Lovable debe usar un Node compatible antes de
+publicar. La versión del ERP y el changelog no se modifican en esta iniciativa.
+
+La etapa previa (Router 7, imports canónicos) se fusionó por separado en el
+PR #145. Validación local de esa preparación (2026-10-05): 599 pruebas en 148 archivos,
 TypeScript, ESLint sin warnings, build y seis guardias estáticas de BD.
 En navegador, fixtures aislados sin backend verificaron enlaces, filtros,
 recarga, atrás/adelante y conservación de un formulario al cambiar la URL;
