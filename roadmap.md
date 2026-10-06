@@ -8,6 +8,8 @@ el bloqueo PPD + No objeto eran referencias superadas.
 
 ## Trabajo nuevo
 
+- [ ] Oportunidades CRM: permitir borrar el margen esperado y actualizar las etiquetas de valor y fecha; validar sólo los campos afectados.
+
 Registrar cada iniciativa aprobada en un issue/PR o diagnóstico con:
 ID, evidencia/fecha/entorno, prioridad, alcance, responsable y criterio
 observable de cierre. Verificar el código/deploy actual antes de reabrir
