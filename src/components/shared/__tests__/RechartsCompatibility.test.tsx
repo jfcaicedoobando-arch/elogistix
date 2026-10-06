@@ -7,7 +7,6 @@ import ReportesTopChart from "@/features/reportes/components/ReportesTopChart";
 import { CHART } from "@/lib/chartTokens";
 import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";
 import { ForecastMultiMesChart } from "@/features/dashboardEjecutivo/components/ForecastMultiMesChart";
-import GraficoFlujoProyectado from "@/features/tesoreria/components/GraficoFlujoProyectado";
 import AdminDashboardActivityChart from "@/features/admin/components/AdminDashboardActivityChart";
 import CrmForecastMensualChart from "@/features/crm/components/analitica/CrmForecastMensualChart";
 import { ProveedorTendenciaChart } from "@/features/proveedor/components/ProveedorTendenciaChart";
@@ -43,7 +42,6 @@ vi.mock("@/features/auditoria/hooks", () => ({
 vi.mock("@/features/operaciones/hooks", async () =>
   import("@/features/operaciones/domain/desempenoChart"),
 );
-vi.mock("@/hooks/shared", () => ({ useIsMobile: () => false }));
 
 const historial = [
   { periodo: "2026-06", ingresos: 540000, costos: 440000, utilidad: 100000 },
@@ -83,14 +81,6 @@ describe("Compatibilidad con Recharts 3 real", () => {
       nombre: "forecast ejecutivo",
       chart: <ForecastMultiMesChart historico={historial} />,
       labels: ["Banda +15%", "Banda -15%", "Ingresos reales", "Proyección"],
-    },
-    {
-      nombre: "tesorería",
-      chart: <GraficoFlujoProyectado semanas={[
-        { semana_iso: "2026-W40", inicio: "2026-09-28", fin: "2026-10-04", entradas_mxn: 160000, salidas_mxn: 130000, flujo_neto_mxn: 30000, saldo_proyectado_mxn: 120000, detalle_entradas: [], detalle_salidas: [] },
-        { semana_iso: "2026-W41", inicio: "2026-10-05", fin: "2026-10-11", entradas_mxn: 90000, salidas_mxn: 220000, flujo_neto_mxn: -130000, saldo_proyectado_mxn: -10000, detalle_entradas: [], detalle_salidas: [] },
-      ]} />,
-      labels: ["Entradas", "Salidas", "Saldo"],
     },
     {
       nombre: "administración",

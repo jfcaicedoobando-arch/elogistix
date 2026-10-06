@@ -119,7 +119,11 @@ Recharts real. Sólo fija tamaño y desactiva animaciones en jsdom; no sustituye
 una revisión de layout/animaciones en navegador. Se mantiene la accesibilidad
 activada por defecto en Recharts 3.
 
-Validación local del 2026-10-05: 224 pruebas focales en 37 archivos,
+El contrato de flujo vive junto a `GraficoFlujoProyectado` en tesorería;
+no se expone el componente por su barrel público sólo para importarlo en un
+test compartido. Comprueba también la leyenda cuando no hay saldo disponible.
+
+Validación local del 2026-10-05: 225 pruebas focales en 39 archivos,
 TypeScript, ESLint sin warnings, build y seis guardias estáticas de BD.
 Comparación visual aislada con 2.15.4: 18 componentes reales, temas claro y
 oscuro, Desktop HD 1280×720 y revisión estrecha 691×763, estados vacíos/carga
