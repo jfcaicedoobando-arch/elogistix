@@ -4560,6 +4560,7 @@ export type Database = {
           servicio: string | null
           solicitante_id: string
           tipo_carga: string | null
+          unidad_medida: string | null
           updated_at: string
           vence_at: string | null
         }
@@ -4595,6 +4596,7 @@ export type Database = {
           servicio?: string | null
           solicitante_id: string
           tipo_carga?: string | null
+          unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
         }
@@ -4630,6 +4632,7 @@ export type Database = {
           servicio?: string | null
           solicitante_id?: string
           tipo_carga?: string | null
+          unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
         }

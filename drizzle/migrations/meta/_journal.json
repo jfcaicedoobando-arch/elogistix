@@ -43,6 +43,13 @@
       "when": 1791246856454,
       "tag": "0005_crm_crear_oportunidad_con_empresa",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791248833205,
+      "tag": "0006_pricing_unidad_medida",
+      "breakpoints": true
     }
   ]
 }
