@@ -16,7 +16,7 @@
  * URLs viejas (?tab=cobranza|liquidacion|proyeccion|pendientes) → redirect.
  */
 import { useCallback, useMemo, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router";
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";

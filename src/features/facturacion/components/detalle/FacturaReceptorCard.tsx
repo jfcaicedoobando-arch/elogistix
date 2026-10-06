@@ -7,7 +7,7 @@
  * v13.308.16: el nombre del cliente pasa al título del card (antes era una
  * fila más) para evitar triplicar el mismo dato en la vista.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Check, X, UserCog, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

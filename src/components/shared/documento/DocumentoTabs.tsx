@@ -3,7 +3,7 @@
  * para que cada sección sea enlazable y sobreviva a un refresh.
  */
 import { type ReactNode } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 

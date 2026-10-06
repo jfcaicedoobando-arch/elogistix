@@ -2,7 +2,7 @@
  * Lista las cotizaciones vinculadas a una oportunidad (Sprint D).
  * 11.13.0: la query se mueve a `useOportunidadCotizaciones`.
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ClipboardList, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -3,7 +3,7 @@
  * Extraído de `AnticiposProveedor.tsx` (v13.317.9).
  */
 import { MoreHorizontal, Ban, Link2, Ship, Undo2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

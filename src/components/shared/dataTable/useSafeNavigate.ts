@@ -10,7 +10,7 @@
  * así que gatear con `useInRouterContext()` no rompe reglas de hooks en
  * la práctica.
  */
-import { useInRouterContext, useNavigate, type NavigateFunction } from "react-router-dom";
+import { useInRouterContext, useNavigate, type NavigateFunction } from "react-router";
 
 const NOOP_NAVIGATE: NavigateFunction = () => {
   /* fuera de <Router>: no-op */

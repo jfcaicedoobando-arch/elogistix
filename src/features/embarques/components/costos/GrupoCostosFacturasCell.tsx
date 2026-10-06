@@ -7,7 +7,7 @@
  * enlace al módulo de CxP (`/compras/facturas/:id`) porque esa ruta les está
  * negada. Sólo `canViewFinancials` conserva el enlace.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

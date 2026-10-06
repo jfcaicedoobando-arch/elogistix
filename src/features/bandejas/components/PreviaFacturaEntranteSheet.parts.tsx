@@ -2,7 +2,7 @@
  * Piezas de la vista previa lateral del buzón CxP (v13.388.0).
  * Extraídas para mantener la complejidad del contenedor bajo control.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   CheckCircle2, Download, ExternalLink, FileCode2, FilePlus2, Maximize2, Minimize2, XCircle,
 } from "lucide-react";

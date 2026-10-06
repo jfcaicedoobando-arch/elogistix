@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const { query } = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("@/features/crm/hooks/useObjetosCrm", () => ({

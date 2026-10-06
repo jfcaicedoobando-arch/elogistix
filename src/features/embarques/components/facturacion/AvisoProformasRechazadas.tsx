@@ -4,7 +4,7 @@
  * los conceptos (vía RPC), por lo que aquí sólo comunicamos el estado y
  * damos un atajo a la proforma rechazada para consultar el motivo.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { AlertTriangle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

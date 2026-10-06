@@ -11,7 +11,7 @@
  * Se debe montar UNA sola vez a nivel `Layout`.
  */
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { SIDEBAR_URL_TITLE_MAP } from "@/components/layout/sidebarItems";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 

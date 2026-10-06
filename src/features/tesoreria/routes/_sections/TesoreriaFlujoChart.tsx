@@ -3,7 +3,7 @@
  * con enlace a la vista completa de 90 días.
  */
 import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/SectionHeading";

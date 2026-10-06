@@ -4,7 +4,7 @@
  * siguiendo el patrón de `useFacturacionDateRange`.
  */
 import { useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 export type PresetRango = "30d" | "mes" | "trimestre" | "anio" | "historico";
 

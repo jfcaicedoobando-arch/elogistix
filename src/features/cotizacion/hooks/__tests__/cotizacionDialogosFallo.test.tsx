@@ -14,7 +14,7 @@ const { mutateAsync, fetchFiscales, notifyError } = vi.hoisted(() => ({
   notifyError: vi.fn(),
 }));
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("@/features/cotizacion/hooks/useCotizaciones", () => ({
   useDeleteCotizacion: () => ({ mutateAsync, isPending: false }),
   usePrefetchCotizacion: () => vi.fn(),

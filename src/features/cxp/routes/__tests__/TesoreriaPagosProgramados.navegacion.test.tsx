@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DocumentoTabs } from "@/components/shared/documento/DocumentoTabs";
 import { FacturaProveedorHeader } from "../../components/detalle/FacturaProveedorHeader";

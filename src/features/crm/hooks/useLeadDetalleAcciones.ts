@@ -6,7 +6,7 @@
  * (Power of 10).
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { ROUTES } from "@/constants/routes";
 import { faltantesGateProspecto } from "@/features/crm/domain/leads/etapas";

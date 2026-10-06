@@ -11,7 +11,7 @@ import {
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
 import { TABLAS, GRUPOS } from "./papelera/tablas";
 import { buildPapeleraColumns } from "./papelera/columns";

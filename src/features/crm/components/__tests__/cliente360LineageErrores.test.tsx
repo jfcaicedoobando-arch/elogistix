@@ -15,7 +15,7 @@ vi.mock("@/features/crm/hooks", () => ({
   useLeadLineage: () => leadLineage(),
   useOportunidadLineage: () => opLineage(),
 }));
-vi.mock("react-router-dom", () => ({
+vi.mock("react-router", () => ({
   useNavigate: () => vi.fn(),
   Link: ({ children }: { children: React.ReactNode }) => <a href="#">{children}</a>,
 }));

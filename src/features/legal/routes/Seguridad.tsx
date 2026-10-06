@@ -1,5 +1,5 @@
 import { Seo } from "@/components/shared/Seo";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ShieldCheck, Lock, Users, Activity, DatabaseBackup, Mail } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { LegalShell } from "@/features/legal/components/LegalShell";

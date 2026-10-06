@@ -5,7 +5,7 @@
  * completado. Si ya lo completaron, redirige a /inicio.
  */
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { Seo } from "@/components/shared/Seo";

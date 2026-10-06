@@ -11,7 +11,7 @@
  * - `setMesKey` usa `setSearchParams((prev) => …)` — callback estable.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
 
 export interface MesDisponible {

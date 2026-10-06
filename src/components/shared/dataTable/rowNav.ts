@@ -8,7 +8,7 @@
  *   `data-no-row-nav` o `stopPropagation` para no chocar.
  */
 import type { KeyboardEvent, MouseEvent } from "react";
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 
 const INTERACTIVE_SELECTOR =
   'button, a, input, select, textarea, [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="checkbox"], [role="switch"], [role="tab"], [data-no-row-nav]';

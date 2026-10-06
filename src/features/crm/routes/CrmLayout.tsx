@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from "react-router";
 import { Target, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck, Building2, UserRound, SlidersHorizontal, Gauge, Presentation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

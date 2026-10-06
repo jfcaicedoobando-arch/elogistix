@@ -4,7 +4,7 @@
  * bajo 200 líneas (Power-of-10).
  */
 import type { UseFormReturn } from "react-hook-form";
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks/useCotizacionCostos";
 import type {
   CreateCotizacionInput,

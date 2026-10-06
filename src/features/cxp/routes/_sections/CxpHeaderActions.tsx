@@ -2,7 +2,7 @@
  * Acciones del encabezado de Facturas de proveedor. Extraídas de `Cxp.tsx`
  * en v13.823.312 (Power-of-10: ≤200 líneas). Sin cambios visuales.
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Plus, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";

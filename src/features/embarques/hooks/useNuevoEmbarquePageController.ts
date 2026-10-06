@@ -9,7 +9,7 @@
  * permisos, navegación ni textos.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";

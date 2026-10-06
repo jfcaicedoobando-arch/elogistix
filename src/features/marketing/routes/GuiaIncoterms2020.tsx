@@ -2,7 +2,7 @@
  * Guía Incoterms 2020 — página de contenido SEO orientada a México.
  * Objetivo: capturar búsquedas "incoterms 2020" (~2,400/mo, KDI 21).
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Seo } from "@/components/shared/Seo";
 import { LandingNav } from "../components/sections/LandingNav";
 import { LandingFooter } from "../components/sections/LandingFooter";

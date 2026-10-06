@@ -7,7 +7,7 @@
  * un CTA que abre el directorio filtrado por tipo "Naviera".
  */
 import { AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";

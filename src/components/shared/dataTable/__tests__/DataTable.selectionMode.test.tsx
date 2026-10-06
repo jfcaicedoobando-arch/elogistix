@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 
 interface Row {

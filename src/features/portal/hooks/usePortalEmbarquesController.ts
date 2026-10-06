@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { usePortalEmbarques, usePortalClientUsers } from "@/features/portal/hooks/usePortalData";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 

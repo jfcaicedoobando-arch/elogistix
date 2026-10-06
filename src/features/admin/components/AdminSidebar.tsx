@@ -1,6 +1,6 @@
 import { LogOut, ChevronUp, User } from "lucide-react";
 import { NavLink } from "@/components/layout/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   Sidebar,

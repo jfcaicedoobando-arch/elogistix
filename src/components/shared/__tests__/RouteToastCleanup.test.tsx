@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useNavigate } from "react-router";
 import { useEffect } from "react";
 import { RouteToastCleanup } from "../RouteToastCleanup";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

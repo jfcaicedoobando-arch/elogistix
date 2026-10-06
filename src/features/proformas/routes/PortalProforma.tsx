@@ -2,7 +2,7 @@
  * Portal público de proformas: `/portal/proformas/:token`.
  * Sin autenticación. Permite al cliente aceptar o rechazar la proforma.
  */
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { CheckCircle2, Clock, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
 import { DetailHeader } from "@/components/shared/DetailHeader";

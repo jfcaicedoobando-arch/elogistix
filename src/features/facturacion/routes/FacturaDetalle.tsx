@@ -3,7 +3,7 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { FileX } from "lucide-react";
 import { DetailSkeleton } from "@/components/shared/skeletons";

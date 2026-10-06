@@ -6,7 +6,7 @@
  *
  * No navega solo: el operador decide.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

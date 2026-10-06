@@ -3,7 +3,7 @@ import { renderHook, waitFor, act, render, screen, fireEvent } from '@testing-li
 import { createWrapper } from '@/test/utils/queryWrapper';
 import { FuenteEerrToggle } from '@/features/profit/components/FuenteEerrToggle';
 import { STORAGE_KEYS } from '@/lib/browserStorage';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 type ERFixture = {
   ingresos: unknown[];

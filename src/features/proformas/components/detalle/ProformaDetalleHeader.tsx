@@ -4,7 +4,7 @@
  * total destacado como acción trailing.
  */
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { FileText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";

@@ -4,7 +4,7 @@
  * v13.490.0 — el área completa de la celda selecciona; el folio es el único
  * drilldown explícito y abre en pestaña nueva mientras haya selección.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";

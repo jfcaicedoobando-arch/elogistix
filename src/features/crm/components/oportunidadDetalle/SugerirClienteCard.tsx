@@ -2,7 +2,7 @@
  * Fase 4 CRM: al quedar en "Cerrado ganado" sin cliente ligado, sugiere dar de
  * alta la empresa como cliente. Nunca crea nada solo: el usuario confirma.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";

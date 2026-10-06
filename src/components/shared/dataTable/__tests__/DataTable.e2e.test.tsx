@@ -9,7 +9,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { useState, useMemo, type ReactElement } from "react";
 import { render as rtlRender, screen, fireEvent, within, act } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { DataTable, defineColumns, type ColumnDef, type SortDir } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";

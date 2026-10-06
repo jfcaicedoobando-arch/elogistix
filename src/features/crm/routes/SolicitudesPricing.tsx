@@ -2,7 +2,7 @@
  * Bandeja de Pricing: solicitudes enviadas desde el CRM, ordenadas por
  * vencimiento. `?id=` abre una solicitud (lo usa el aviso de la campanita).
  */
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";

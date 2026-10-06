@@ -11,7 +11,7 @@ const revalidarTarifa = vi.fn();
 const verificarCostosOAvisar = vi.fn();
 const navigate = vi.fn();
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
+vi.mock("react-router", () => ({ useNavigate: () => navigate }));
 vi.mock("@/features/cotizacion/services/revalidacion", () => ({
   revalidarTarifa: (...a: unknown[]) => revalidarTarifa(...a),
 }));

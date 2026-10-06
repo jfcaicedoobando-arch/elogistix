@@ -4,7 +4,7 @@
  * viven en `./ConciliacionDetalleSections` para respetar el techo Power of 10.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../../queryKeys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";

@@ -6,7 +6,7 @@ TypeScript 6. [CI](ops/ci.md) es la guía de jobs/triggers.
 ## Dependabot y dependencias Edge
 
 `.github/dependabot.yml` cubre Actions y el `package.json`/`bun.lock` del
-frontend. React/DOM/tipos, Router/DOM y Vitest/`@vitest/*` tienen grupos propios,
+frontend. React/DOM/tipos, Router y Vitest/`@vitest/*` tienen grupos propios,
 separando major de minor/patch. La agrupación no acredita compatibilidad ni
 fusiona PRs automáticamente.
 
@@ -101,8 +101,24 @@ Proyectos node/jsdom definidos explícitamente con `extends: false` para
 evitar herencia/duplicación de plugins. Benchmarks `perf` están separados.
 `clearMocks: false` es una decisión de compatibilidad de la suite.
 
-Aliases ESM de Router evitan doble contexto CJS/ESM con nuqs v7.
-Contract test comprueba layout; no eliminar alias por estética.
+Preparación para Router 8, etapa 1: el frontend conserva `react-router@7.18.4`
+y `nuqs/adapters/react-router/v7`, pero usa imports canónicos de `react-router`.
+Se retiró la dependencia directa `react-router-dom`; las APIs específicas
+`RouterProvider`/`HydratedRouter`, si se necesitan, se importan de `react-router/dom`.
+No se cambió el modo declarativo, el árbol de rutas ni la versión del ERP.
+
+Los dos aliases ESM canónicos de Router evitan doble contexto CJS/ESM con nuqs.
+El contract test comprueba layout, versión instalada y ausencia de imports
+legacy en app/mocks/fixtures; no eliminar aliases por estética. La prueba de
+filtros nuqs usa `BrowserRouter`, el router soportado oficialmente, y conserva
+la revisión de enlaces, redirects, historial y estado de formularios/Sentry.
+Router 8 y su adaptador nuqs v8 se evaluarán como una etapa posterior separada.
+
+Validación local de esta etapa (2026-10-05): 599 pruebas en 148 archivos,
+TypeScript, ESLint sin warnings, build y seis guardias estáticas de BD.
+En navegador, fixtures aislados sin backend verificaron enlaces, filtros,
+recarga, atrás/adelante y conservación de un formulario al cambiar la URL;
+listado/modal revisados a 1280×720 y 691×763. No acredita publicación.
 `testEnvSplit.ts` reparte archivos; un `@vitest-environment` explícito manda.
 
 ## Recharts 3

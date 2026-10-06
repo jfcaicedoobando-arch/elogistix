@@ -2,7 +2,7 @@
  * Formularios completos ("Más campos →") del alta express del CRM.
  * Extraído de `QuickAddMenu` para mantenerlo compacto.
  */
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";

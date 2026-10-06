@@ -4,7 +4,7 @@
  * `useRefacturarWizard` para respetar los límites de líneas y complejidad.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useDeferredValue, useMemo, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router";
 import { Search } from "lucide-react";
 import { atajoBusquedaGlobal, atajoCrmPalette } from "@/lib/ui/atajoTeclado";
 import {

@@ -1,6 +1,6 @@
 import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency, formatNumber, formatPercent} from "@/lib/formatters/numbers";

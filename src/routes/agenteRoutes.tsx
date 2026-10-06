@@ -2,7 +2,7 @@
  * Rutas del Portal del Agente de Carga. Todas bajo `AgenteProtectedRoute`.
  */
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Route } from "react-router";
 import { AgenteProtectedRoute } from "@/features/auth/components/AgenteProtectedRoute";
 
 const AgenteLayout = lazy(() => import("@/features/portal-agente/components/AgenteLayout"));

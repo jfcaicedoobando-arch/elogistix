@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useClienteDetalleController } from "../useClienteDetalleController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("react-router-dom", () => ({
+vi.mock("react-router", () => ({
   useNavigate: vi.fn(),
   useParams: vi.fn(() => ({ id: "client-1" })),
 }));

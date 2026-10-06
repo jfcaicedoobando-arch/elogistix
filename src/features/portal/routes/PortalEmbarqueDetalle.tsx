@@ -1,6 +1,6 @@
 import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { ROUTES } from "@/constants/routes";
 import { Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

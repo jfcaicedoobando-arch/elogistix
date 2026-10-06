@@ -1,5 +1,5 @@
 /** /crm/empresas/:id — Ficha de empresa con contactos y oportunidades ligadas. */
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { ArrowRight, Building2 } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";

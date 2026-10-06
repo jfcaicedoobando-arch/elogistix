@@ -2,7 +2,7 @@
  * Tarjeta con las oportunidades de un prospecto (Fase 2 rediseño CRM).
  * Muestra los negocios en el aire del prospecto y permite abrir cada uno.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Briefcase, Plus } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

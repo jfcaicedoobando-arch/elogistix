@@ -7,7 +7,7 @@ import { renderHook, act } from "@testing-library/react";
 
 const actualizarMutateAsync = vi.fn().mockResolvedValue(undefined);
 
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("react-router", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("@/features/crm/hooks", () => ({
   useActualizarLead: () => ({ mutateAsync: actualizarMutateAsync, isPending: false }),
   useEliminarLead: () => ({ mutateAsync: vi.fn(), isPending: false }),

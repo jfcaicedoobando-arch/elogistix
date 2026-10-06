@@ -2,7 +2,7 @@
  * Redirect helper que preserva `?query=...` al saltar de una ruta legacy
  * a la nueva. Usado por los redirects de `/cxp/*` y `/proveedores` → `/compras/*`.
  */
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 
 interface Props {
   to: string;

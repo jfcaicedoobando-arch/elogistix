@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { ComisionDevengada } from "@/features/comisiones/services";
 import Comisiones from "../Comisiones";

@@ -12,7 +12,7 @@
  * mismas reglas del sello, mismas rutas y mismos textos.
  */
 import { useCallback, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { useToast, usePermissions, useRegistrarActividad, useDocumentTitle } from "@/hooks/shared";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { useAuth } from "@/lib/contexts/AuthContext";

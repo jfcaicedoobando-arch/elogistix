@@ -1,5 +1,5 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino, formatFechaDia } from "@/lib/formatters";

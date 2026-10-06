@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useToast } from "@/hooks/shared";
@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 import CotizacionWizardLayout from "@/features/cotizacion/components/CotizacionWizardLayout";
-import type { NavigateFunction } from "react-router-dom";
+import type { NavigateFunction } from "react-router";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";

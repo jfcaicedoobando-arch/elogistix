@@ -3,7 +3,7 @@
  * complejidad ciclomática del componente principal por debajo de 16.
  * v13.307.17
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
 import { formatCurrency } from "@/lib/formatters";

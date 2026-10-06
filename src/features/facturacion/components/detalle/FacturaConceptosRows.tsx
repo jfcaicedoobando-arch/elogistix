@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 
 export interface ConceptoRow {

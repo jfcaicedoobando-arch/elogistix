@@ -7,7 +7,7 @@
  * 13.141.8 — auditoría Sentry.
  */
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { setErrorContext } from "@/lib/observability/errorContextStore";

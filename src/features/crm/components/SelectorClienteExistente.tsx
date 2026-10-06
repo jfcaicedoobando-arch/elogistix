@@ -5,7 +5,7 @@
  * `LC_LEAD_ALTA_CLIENTE_PROHIBIDA`): aquí únicamente se liga uno ya capturado,
  * o se deja la oportunidad sin cliente para ligarlo después.
  */
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ExternalLink } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {

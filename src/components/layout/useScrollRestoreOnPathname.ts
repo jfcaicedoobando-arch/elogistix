@@ -1,5 +1,5 @@
 import { type RefObject, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 /**
  * Restaura el scroll al inicio del contenedor de contenido y de la ventana
