@@ -22,6 +22,7 @@ vi.mock("@/features/reportes/components/ReportesTopChart", () => ({
 }));
 
 import Reportes from "../Reportes";
+import { AVISO_RENTABILIDAD, DESCRIPCION_RENTABILIDAD, AYUDA_CAMBIARIA_RENTABILIDAD } from "@/types/rentabilidad";
 
 const BASE = {
   fechaDesde: "2026-09-01",
@@ -55,6 +56,16 @@ const renderPage = () =>
 beforeEach(() => vi.clearAllMocks());
 
 describe("Reportes — ramas excluyentes", () => {
+  it("shows methodology and warning outside the clamped description, with the real monthly-close link", () => {
+    mockCtrl.mockReturnValue(BASE);
+    renderPage();
+    for (const copy of [DESCRIPCION_RENTABILIDAD, AVISO_RENTABILIDAD]) {
+      expect(screen.getByText(copy).closest('.line-clamp-2')).toBeNull();
+    }
+    expect(screen.getByRole('link', { name: 'Ver proyección y pendiente de facturar en Cierre mensual' })).toHaveAttribute('href', '/reportes/cierre-mensual');
+    expect(screen.getByText(AYUDA_CAMBIARIA_RENTABILIDAD).closest('details')).toBeInTheDocument();
+  });
+
   it("error: sólo estado de error, sin KPIs ni tabla", () => {
     const retry = vi.fn();
     mockCtrl.mockReturnValue({ ...BASE, isError: true, refetch: retry });

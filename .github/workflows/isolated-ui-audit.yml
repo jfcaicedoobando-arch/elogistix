@@ -76,3 +76,66 @@ jobs:
             reports/audit119-126/
           retention-days: 3
           if-no-files-found: warn
+
+  profitability-filters:
+    name: Isolated profitability filters (8 cases)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Install lockfile Playwright Chromium and system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/audit136-137
+          node node_modules/@playwright/test/cli.js install --with-deps chromium 2>&1 | tee reports/audit136-137/browser-install.log
+      - name: Typecheck isolated fixture and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc -p e2e/visual/audit136-137/tsconfig.json 2>&1 | tee reports/audit136-137/typecheck.log
+      - name: Build isolated fixture (empty envDir, no app/backend)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/audit136-137
+          node node_modules/vite/bin/vite.js build --config e2e/visual/audit136-137/vite.config.ts 2>&1 | tee reports/audit136-137/build.log
+      - name: Check 8 browser cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/@playwright/test/cli.js test --config e2e/visual/audit136-137/playwright.config.ts 2>&1 | tee reports/audit136-137/browser.log
+      - name: Require all 8 cases without skips
+        if: always()
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from "node:fs";
+          const { stats } = JSON.parse(readFileSync("reports/audit136-137/results.json", "utf8"));
+          if (stats.expected !== 8 || stats.unexpected !== 0 || stats.skipped !== 0 || stats.flaky !== 0) {
+            throw new Error(`Expected 8 passing GUI cases with no skips/retries: ${JSON.stringify(stats)}`);
+          }
+          JS
+      - name: Upload compact synthetic screenshots and facts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: isolated-ui-audit-136-137-images-and-facts
+          path: |
+            test-results/audit136-137/**/*.png
+            test-results/audit136-137/**/test-failed-*.png
+            reports/audit136-137/results.json
+          retention-days: 3
+          if-no-files-found: warn
+      - name: Upload synthetic screenshots, diagnostics and logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: isolated-ui-audit-136-137
+          path: |
+            test-results/audit136-137/
+            reports/audit136-137/
+          retention-days: 3
+          if-no-files-found: warn
