@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import {
   EMAIL_RE,
   type EnvioFormState,
-} from "@/hooks/emails/useEnvioDocumentoForm";
+} from "@/hooks/emails";
 import type { EmailChip } from "@/components/shared/emails/EmailChipsField";
 
 export interface UseEnvioChipsResult {

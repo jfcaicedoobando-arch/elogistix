@@ -11,7 +11,7 @@ import {
   Collapsible,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import { trackNavEvent } from "@/services/observability/trackNavEvent";
+import { trackNavEvent } from "@/services/observability";
 import { isActive, queriesHermanasDe, esExacto, type SidebarItem } from "@/components/layout/sidebarActivo";
 import { SidebarGroupHeader } from "@/components/layout/SidebarGroupHeader";
 import { SidebarMenuItemBlock } from "@/components/layout/SidebarMenuItemBlock";

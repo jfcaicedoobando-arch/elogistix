@@ -13,7 +13,7 @@
  */
 import type { ReactNode } from "react";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { useCargaExpirada } from "@/hooks/shared/useCargaExpirada";
+import { useCargaExpirada } from "@/hooks/shared";
 
 export interface AsyncBoundaryProps {
   isLoading?: boolean;

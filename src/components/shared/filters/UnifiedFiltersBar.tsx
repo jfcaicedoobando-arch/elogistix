@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/shared";
 import { cn } from "@/lib/utils";
-import type { ChipItem } from "@/hooks/shared/useTableFilters";
+import type { ChipItem } from "@/hooks/shared";
 
 
 export interface UnifiedFiltersBarProps {

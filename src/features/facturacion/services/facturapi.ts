@@ -3,11 +3,12 @@ import {
   FacturapiError,
   parseFunctionError,
   toReadableError,
-  type EdgeErrorBody,
 } from "./facturapiError";
 import { type TimbradoPendiente } from "./timbradoPendiente";
 import { interpretarTimbrado } from "./timbradoParse";
 import type { TimbradoExitoWire, TimbradoWire } from "./timbradoWire";
+import { interpretarErrorCancelacion } from "./cancelacionErrorWire";
+import { interpretarCancelacion, interpretarAcuse } from "./cancelacionWire";
 import { assertSinRepsVivos } from "./facturapiRepsVivos";
 
 export { FacturapiError, parseFunctionError };
@@ -62,17 +63,7 @@ export async function cancelarFacturapi(
 ): Promise<CancelarFacturapiResult> {
   await assertSinRepsVivos(facturaId);
 
-  const { data, error } = await supabase.functions.invoke<
-    {
-      ok?: boolean;
-      sustituida?: boolean;
-      pending?: boolean;
-      uncertain?: boolean;
-      cancellation_status?: string;
-      vence_en?: string | null;
-      message?: string;
-    } & EdgeErrorBody
-  >("facturapi-cancelar", {
+  const { data, error } = await supabase.functions.invoke<unknown>("facturapi-cancelar", {
     body: {
       factura_id: facturaId,
       motivo,
@@ -82,19 +73,9 @@ export async function cancelarFacturapi(
   });
   if (error) {
     const body = await parseFunctionError(error);
-    throw toReadableError(error, body, "No se pudo cancelar la factura.");
+    throw interpretarErrorCancelacion(body);
   }
-  if (data?.error) {
-    throw toReadableError(null, data, data.error);
-  }
-  return {
-    sustituida: !!data?.sustituida,
-    pending: !!data?.pending,
-    uncertain: !!data?.uncertain,
-    cancellation_status: data?.cancellation_status,
-    vence_en: data?.vence_en ?? null,
-    message: data?.message,
-  };
+  return interpretarCancelacion(data);
 }
 
 /**
@@ -107,22 +88,16 @@ export async function reintentarAcuseCancelacion(
   facturaId: string,
 ): Promise<{ acuse_status: string; acuse_guardado: boolean }> {
   const { data, error } = await supabase.functions.invoke<
-    { ok?: boolean; acuse_status?: string; acuse_guardado?: boolean } & EdgeErrorBody
+    unknown
   >(
     "facturapi-cancelar",
     { body: { factura_id: facturaId, solo_descargar_acuse: true } },
   );
   if (error) {
     const body = await parseFunctionError(error);
-    throw toReadableError(error, body, "No se pudo descargar el acuse.");
+    throw interpretarErrorCancelacion(body);
   }
-  if (data?.error) {
-    throw toReadableError(null, data, data.error);
-  }
-  return {
-    acuse_status: data?.acuse_status ?? "pending",
-    acuse_guardado: !!data?.acuse_guardado,
-  };
+  return interpretarAcuse(data);
 }
 
 /**

@@ -16,8 +16,8 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * Superficie pública de un feature (barrels de subcapa, 1 solo segmento).
- * El barrel raíz `@/features/<f>` siempre está permitido. Estos barrels se
+ * Superficie pública objetivo de un feature (barrels de subcapa, 1 solo segmento).
+ * El barrel raíz `@/features/<f>` siempre está permitido. Estos barrels y los imports profundos actuales se
  * toleran como burn-down documentado (ver `feature-barrel-surface.test.ts`,
  * que ya exige barrel raíz en los features migrados).
  */

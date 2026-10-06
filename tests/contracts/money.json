@@ -1,0 +1,8 @@
+[
+  { "input": 1.005, "rounded": 1.01 },
+  { "input": -1.005, "rounded": -1.01 },
+  { "input": 10.075, "rounded": 10.08 },
+  { "input": -10.075, "rounded": -10.08 },
+  { "input": 0.125, "rounded": 0.13 },
+  { "input": -0.125, "rounded": -0.13 }
+]

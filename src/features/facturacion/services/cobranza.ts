@@ -14,6 +14,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { kpisCobranzaSchema, type KpisCobranzaRemotos } from "./cobranzaWire";
+export type { KpisCobranzaRemotos } from "./cobranzaWire";
 import { escapeIlike } from "@/lib/search/ilike";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
@@ -54,18 +56,6 @@ export interface FetchCobranzaFilters {
   estatus?: EstatusCobranza | "todos";
 }
 
-/** Shape del jsonb de `cobranza_agregados` (C3c): espejo de `KPIsCobranza`. */
-export interface KpisCobranzaRemotos {
-  total_mxn: number;
-  total_usd: number;
-  vencido_mxn: number;
-  vencido_usd: number;
-  por_vencer_7d_mxn: number;
-  por_vencer_7d_usd: number;
-  facturas_vencidas: number;
-  facturas_con_saldo: number;
-}
-
 /**
  * FIX C3c (S6-02): KPIs de cartera agregados en SQL sobre el UNIVERSO completo
  * de facturas activas — no sobre la página visible (que sigue limitada y
@@ -80,8 +70,7 @@ export async function fetchCobranzaKpis(
     p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
   });
   if (error) throw error;
-  // SAFE-CAST: jsonb con el shape de la migración C3c.
-  return data as unknown as KpisCobranzaRemotos;
+  return kpisCobranzaSchema.parse(data);
 }
 
 

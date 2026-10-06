@@ -1,3 +1,4 @@
+import { crm } from "../queryKeys";
 /**
  * Hooks del CRM por objetos (Fase 2): Empresas, Contactos y vínculos.
  * Todas las llaves cuelgan de ['crm','objetos'] para invalidar en bloque.
@@ -14,11 +15,11 @@ import {
   ligar, oportunidadesDe, type TipoVinculo,
 } from "@/features/crm/services/vinculosCrm";
 
-const BASE = ["crm", "objetos"] as const;
+const BASE = crm.objetos.all;
 
 export function useEmpresasCrm(busqueda: string, pagina: number) {
   return useQuery({
-    queryKey: [...BASE, "empresas", busqueda, pagina],
+    queryKey: crm.objetos.list("empresas", busqueda, pagina),
     queryFn: () => fetchEmpresas(busqueda, pagina),
     placeholderData: keepPreviousData,
   });
@@ -26,7 +27,7 @@ export function useEmpresasCrm(busqueda: string, pagina: number) {
 
 export function useContactosCrm(busqueda: string, pagina: number) {
   return useQuery({
-    queryKey: [...BASE, "contactos", busqueda, pagina],
+    queryKey: crm.objetos.list("contactos", busqueda, pagina),
     queryFn: () => fetchContactos(busqueda, pagina),
     placeholderData: keepPreviousData,
   });
@@ -37,7 +38,7 @@ export function useListaObjetosCrm(
   objeto: "empresa" | "contacto", busqueda: string, pagina: number, letra = "todas", estado = "todos",
 ) {
   return useQuery({
-    queryKey: [...BASE, objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina, letra, estado],
+    queryKey: crm.objetos.list(objeto === "empresa" ? "empresas" : "contactos", busqueda, pagina, letra, estado),
     queryFn: (): Promise<Pagina<EmpresaRow | ContactoRow>> =>
       objeto === "empresa" ? fetchEmpresas(busqueda, pagina, letra, estado) : fetchContactos(busqueda, pagina),
     placeholderData: keepPreviousData,
@@ -50,7 +51,7 @@ export function usePasarAProspecto() {
   return useMutation({
     mutationFn: (empresaId: string) => pasarAProspecto(empresaId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["crm"] });
+      void qc.invalidateQueries({ queryKey: crm.all });
       notifySuccess(undefined, { title: "La empresa ya es prospecto y entró al embudo" });
     },
     onError: (error: Error) => notifyError(undefined, {
@@ -60,11 +61,11 @@ export function usePasarAProspecto() {
 }
 
 export function useEmpresaCrm(id?: string) {
-  return useQuery({ queryKey: [...BASE, "empresa", id], queryFn: () => fetchEmpresa(id!), enabled: !!id });
+  return useQuery({ queryKey: crm.objetos.detail("empresa", id), queryFn: () => fetchEmpresa(id!), enabled: !!id });
 }
 
 export function useContactoCrm(id?: string) {
-  return useQuery({ queryKey: [...BASE, "contacto", id], queryFn: () => fetchContacto(id!), enabled: !!id });
+  return useQuery({ queryKey: crm.objetos.detail("contacto", id), queryFn: () => fetchContacto(id!), enabled: !!id });
 }
 
 /** Lista de registros ligados a un objeto. */
@@ -83,7 +84,7 @@ const LECTORES: Record<Relacion, (id: string) => Promise<{ id: string; nombre: s
 };
 
 export function useRelacionCrm(relacion: Relacion, id: string) {
-  return useQuery({ queryKey: [...BASE, "rel", relacion, id], queryFn: () => LECTORES[relacion](id) });
+  return useQuery({ queryKey: crm.objetos.relacion(relacion, id), queryFn: () => LECTORES[relacion](id) });
 }
 
 function useInvalidarObjetos() {

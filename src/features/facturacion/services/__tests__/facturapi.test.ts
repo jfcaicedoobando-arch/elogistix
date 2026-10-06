@@ -57,7 +57,7 @@ describe("facturapi service", () => {
   });
 
   it("cancelarFacturapi pasa motivo y sustituye_uuid en el body", async () => {
-    invoke.mockResolvedValueOnce({ data: { ok: true, sustituida: true }, error: null });
+    invoke.mockResolvedValueOnce({ data: { ok: true, sustituida: true, cancellation_status: "accepted" }, error: null });
     const res = await cancelarFacturapi("f1", "01", "UUID-1", "f2");
     expect(res).toMatchObject({ sustituida: true });
     expect(invoke).toHaveBeenCalledWith("facturapi-cancelar", {
@@ -65,9 +65,9 @@ describe("facturapi service", () => {
     });
   });
 
-  it("cancelarFacturapi returns sustituida=false when omitted", async () => {
+  it("cancelarFacturapi rejects incomplete success without declaring cancellation", async () => {
     invoke.mockResolvedValueOnce({ data: { ok: true }, error: null });
-    await expect(cancelarFacturapi("f1", "02")).resolves.toMatchObject({ sustituida: false });
+    await expect(cancelarFacturapi("f1", "02")).rejects.toThrow(/Consulta el estado/);
   });
 
   it("cancelarFacturapi propaga uncertain del 202 de timeout", async () => {
@@ -84,7 +84,7 @@ describe("facturapi service", () => {
 
   it("cancelarFacturapi propaga error de transporte y de data.error", async () => {
     invoke.mockResolvedValueOnce({ data: null, error: { message: "boom" } });
-    await expect(cancelarFacturapi("f1", "02")).rejects.toThrow("boom");
+    await expect(cancelarFacturapi("f1", "02")).rejects.toThrow(/Consulta el estado/);
     invoke.mockResolvedValueOnce({ data: { error: "X", message: "No se puede cancelar" }, error: null });
     await expect(cancelarFacturapi("f1", "02")).rejects.toThrow("No se puede cancelar");
   });

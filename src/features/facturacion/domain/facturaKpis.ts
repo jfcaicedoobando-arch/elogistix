@@ -3,9 +3,9 @@
  * v13.350.0: delega en el constructor compartido `buildKpisDocumento`
  * para que emitidas y recibidas usen las mismas etiquetas y tonos.
  */
-import type { DocumentoKpi } from "@/components/shared/documento/DocumentoKpiStrip";
+import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
 import { buildKpisDocumento } from "@/lib/domain/documentoKpis";
-import type { FacturaDetalle } from "@/features/facturacion/services/detail";
+import type { FacturaDetalle } from "@/features/facturacion/types";
 
 type FacturaKpisInput = Pick<FacturaDetalle, "total" | "estado" | "moneda" | "fecha_vencimiento" | "dias_credito">;
 

@@ -9,8 +9,7 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
 import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { DetailTableHead } from "@/components/shared/DetailTable";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import {
   esMarcadorContenedor,
   mostrarColumnaCarga,
@@ -53,11 +52,11 @@ interface CargaCellProps {
 function CargaCell({ contenedor, campo, vacio, decimals }: CargaCellProps) {
   const valor = valorCargaCapturada(contenedor, campo);
   return (
-    <TableCell className="text-right tabular-nums">
+    <span className="tabular-nums">
       {valor === null
         ? <span className="text-muted-foreground">{vacio}</span>
         : formatNumber(valor, decimals === undefined ? undefined : { decimals })}
-    </TableCell>
+    </span>
   );
 }
 
@@ -148,42 +147,21 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                 )}
               </div>
             )}
-            <div className="overflow-x-auto">
-              <Table className="w-full max-w-3xl text-body">
-                <TableHeader className="text-body-sm text-muted-foreground">
-                  <TableRow className="border-b">
-                    <DetailTableHead className="w-auto">Número</DetailTableHead>
-                    <DetailTableHead className="w-[140px]">Tipo</DetailTableHead>
-                    {mostrarBLHouse && <DetailTableHead className="w-[180px]">BL House</DetailTableHead>}
-                    {mostrarPeso && <DetailTableHead className="text-right w-[120px]">Peso (kg)</DetailTableHead>}
-                    {mostrarVolumen && <DetailTableHead className="text-right w-[120px]">Volumen (m³)</DetailTableHead>}
-                    {mostrarPiezas && <DetailTableHead className="text-right w-[100px]">Piezas</DetailTableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lista.map((c) => (
-                    <TableRow key={c.id} className="border-b last:border-0 odd:bg-muted/20">
-                      <TableCell className="font-medium">
-                        {c.numero_contenedor || (
-                          <span className="text-body-sm text-warning">Pendiente de captura</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {c.tipo_contenedor
-                          ? <Badge variant="secondary">{resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor)}</Badge>
-                          : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      {mostrarBLHouse && (
-                        <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
-                      )}
-                      {mostrarPeso && <CargaCell contenedor={c} campo="peso_kg" vacio="Sin capturar" />}
-                      {mostrarVolumen && <CargaCell contenedor={c} campo="volumen_m3" vacio="—" decimals={2} />}
-                      {mostrarPiezas && <CargaCell contenedor={c} campo="piezas" vacio="—" />}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              data={lista}
+              rowKey={(c) => c.id}
+              tableClassName="w-full max-w-3xl text-body"
+              columns={defineColumns<Contenedor>([
+                { id: "numero", header: "Número", cell: ({ row }) => row.original.numero_contenedor || <span className="text-body-sm text-warning">Pendiente de captura</span> },
+                { id: "tipo", header: "Tipo", cell: ({ row }) => row.original.tipo_contenedor
+                  ? <Badge variant="secondary">{resolveTipoContenedorNombre(row.original.tipo_contenedor, tiposContenedor)}</Badge>
+                  : <span className="text-muted-foreground">—</span> },
+                ...(mostrarBLHouse ? [{ id: "bl", header: "BL House", accessorFn: (c: Contenedor) => c.bl_house || "—" }] : []),
+                ...(mostrarPeso ? [{ id: "peso", header: "Peso (kg)", cell: ({ row }: { row: { original: Contenedor } }) => <CargaCell contenedor={row.original} campo="peso_kg" vacio="Sin capturar" />, meta: { className: "text-right", headerClassName: "text-right" } }] : []),
+                ...(mostrarVolumen ? [{ id: "volumen", header: "Volumen (m³)", cell: ({ row }: { row: { original: Contenedor } }) => <CargaCell contenedor={row.original} campo="volumen_m3" vacio="—" decimals={2} />, meta: { className: "text-right", headerClassName: "text-right" } }] : []),
+                ...(mostrarPiezas ? [{ id: "piezas", header: "Piezas", cell: ({ row }: { row: { original: Contenedor } }) => <CargaCell contenedor={row.original} campo="piezas" vacio="—" />, meta: { className: "text-right", headerClassName: "text-right" } }] : []),
+              ])}
+            />
           </div>
         )}
       </CardContent>

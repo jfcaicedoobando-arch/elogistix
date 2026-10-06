@@ -3,7 +3,7 @@
  * refacturación: etiqueta en español, paso al que pertenece y si es un fallo.
  * Sin React ni red, para poder probarse en aislamiento.
  */
-import type { RefacturacionEventoRaw } from "@/features/facturacion/services/refacturacionExpediente";
+import type { RefacturacionEventoRaw } from "@/features/facturacion/types";
 
 export type SeveridadEvento = "ok" | "pendiente" | "error";
 

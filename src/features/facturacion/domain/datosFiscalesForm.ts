@@ -6,8 +6,7 @@
  * v13.164.3 — se removió `serie`: FacturAPI es la fuente de verdad para
  * serie y folio; enviar un hint manual solo introduce riesgo de mismatch.
  */
-import type { FacturaDetalle } from "@/features/facturacion/hooks";
-import type { DatosTimbradoPatch } from "@/features/facturacion/services";
+import type { FacturaDetalle, DatosTimbradoPatch } from "@/features/facturacion/types";
 import { tcValido } from "@/lib/financial/tcValido";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
 

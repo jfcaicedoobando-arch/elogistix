@@ -11,7 +11,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
-export type FuenteEERR = "embarques" | "facturas";
+import type { FuenteEERR } from "../domain/fuenteEerr";
+export type { FuenteEERR } from "../domain/fuenteEerr";
 const DEFAULT: FuenteEERR = "embarques";
 
 function read(): FuenteEERR {

@@ -9,9 +9,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/shared";
-import { useRecentPages } from "@/hooks/shared/useRecentPages";
+import { useRecentPages } from "@/hooks/shared";
 import { useDebouncedValue } from "@/lib/hooks";
-import { trackNavEvent } from "@/services/observability/trackNavEvent";
+import { trackNavEvent } from "@/services/observability";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { buscarPaginas } from "@/features/search/domain/paginas";
 import {

@@ -2,7 +2,7 @@
  * Hooks de react-query para el buzón de facturas de proveedor (CxP Inbox).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import {
   adjuntarXmlFacturaEntrante,
   capturarFacturaEntrante,
@@ -11,7 +11,7 @@ import {
   listarFacturasEntrantesPorEstado,
   listarFacturasEntrantesPorEmbarque,
   rechazarFacturaEntrante,
-  subirFacturaEntrante,
+  subirFacturaEntranteConResultado,
   type FacturaEntranteRow,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes";
@@ -56,9 +56,22 @@ function useInvalidarEntrantes() {
 export function useSubirFacturaEntrante() {
   const invalidar = useInvalidarEntrantes();
   return useMutation({
-    mutationFn: (input: SubirFacturaEntranteInput) => subirFacturaEntrante(input),
-    onSuccess: () => {
+    mutationFn: (input: SubirFacturaEntranteInput) => subirFacturaEntranteConResultado(input),
+    onSuccess: (resultado) => {
       invalidar();
+      if (!resultado.sugerenciasGuardadas || resultado.verificacionXmlPendiente || resultado.bitacoraPendiente) {
+        notifyWarning(undefined, {
+          title: "El documento se guardó con tareas pendientes",
+          description: [
+            !resultado.sugerenciasGuardadas && "Contabilidad puede vincular los conceptos a mano.",
+            resultado.verificacionXmlPendiente && "La verificación del XML quedó pendiente: revisa el documento guardado antes de capturarlo.",
+            resultado.bitacoraPendiente && "No se confirmó el registro de bitácora.",
+            "No vuelvas a subir el documento.",
+          ].filter(Boolean).join(" "),
+          duration: 10000,
+        });
+        return;
+      }
       notifySuccess(undefined, {
         title: "Factura enviada al buzón",
         description: "Contabilidad la verá en su bandeja para capturarla.",

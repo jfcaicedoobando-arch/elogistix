@@ -1,3 +1,4 @@
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 /**
  * P1-IVA — Impuestos por renglón de una nota de crédito.
  *
@@ -9,7 +10,7 @@
  * Reglas (nunca se infiere ni se corrige un tratamiento):
  *  - `no_objeto` (ObjetoImp 01) y `exento` no causan IVA trasladado.
  *  - `tasa_0` traslada IVA a tasa 0 (grupo distinto de exento).
- *  - `gravado_8` / `gravado_16` usan SIEMPRE su tasa canónica (0.08 / 0.16).
+ *  - `gravado_8` / `gravado_16` usan SIEMPRE su tasa canónica (0.08 / TASA_IVA).
  *  - Un renglón sin `tipo_iva` reconocido es INDETERMINADO: se bloquea antes de
  *    guardar o timbrar (una tasa numérica suelta no dice si el original era
  *    tasa 0%, exento o no objeto).
@@ -33,7 +34,7 @@ export type TratamientoNC = (typeof TRATAMIENTOS_NC)[number];
 
 /** Tasas canónicas de cada tratamiento (las únicas representables en el CFDI). */
 export const TASA_CANONICA_NC: Record<TratamientoNC, number> = {
-  gravado_16: 0.16,
+  gravado_16: TASA_IVA,
   gravado_8: 0.08,
   tasa_0: 0,
   exento: 0,

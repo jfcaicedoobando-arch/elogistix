@@ -1,3 +1,4 @@
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 /**
  * Candado puro contra el "IVA fantasma" en la captura de facturas de proveedor.
  *
@@ -16,7 +17,7 @@
  */
 
 /** Tasa máxima de IVA trasladado en México. */
-export const TASA_IVA_MAXIMA = 0.16;
+export const TASA_IVA_MAXIMA = TASA_IVA;
 /** Tolerancia de redondeo a centavos. */
 const TOLERANCIA = 0.02;
 

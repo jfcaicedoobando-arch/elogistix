@@ -1,0 +1,1 @@
+export { registrarActividad } from "./registrar";

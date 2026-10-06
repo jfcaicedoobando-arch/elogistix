@@ -21,7 +21,7 @@ import currency from "currency.js";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database, Json } from "@/integrations/supabase/types";
-import type { VinculoLinea } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
+import type { VinculoLinea } from "@/features/cxp/types";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 const TOLERANCIA = 0.01;

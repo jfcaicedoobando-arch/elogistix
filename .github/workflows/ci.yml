@@ -175,6 +175,10 @@ jobs:
           # Supabase/Lovable administra el runtime desplegado por separado.
           deno-version: v2.9.7
 
+      - name: Check all deployable Edge adapters
+        if: needs.detector.outputs.edge == 'true'
+        run: bash scripts/check-edge-entrypoints.sh
+
       - name: Deno tests (con typecheck, excluye smoke)
         if: needs.detector.outputs.edge == 'true'
         # No mezclar React 19 del frontend con React 18 de plantillas Edge.

@@ -1,4 +1,5 @@
 import type { ProformaConFactura } from "@/features/embarques/hooks";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 const BASE_PROFORMA: ProformaConFactura = {
   id: "p1", numero: "P-0001", expediente: "EXP-1", cliente_nombre: "cliente dos",
@@ -11,7 +12,7 @@ const BASE_PROFORMA: ProformaConFactura = {
   es_consolidada: false, factura_id: null, factura_secundaria_id: null,
   fecha_facturacion: null, folio_factura_externa: null, motivo_rechazo: null,
   notas: null, origen: null, proformas_origen: null, rechazada_at: null,
-  snapshot_emision: null, tasa_iva_aplicada: 0.16, token_expira_at: null,
+  snapshot_emision: null, tasa_iva_aplicada: TASA_IVA, token_expira_at: null,
   token_publico: null, ultimo_envio_email: null, updated_at: "2024-01-05",
   facturas: null, subtotal_mxn: 0, subtotal_usd: 0, iva_mxn: 0, iva_usd: 0,
   total_mxn: 0, total_usd: 0,

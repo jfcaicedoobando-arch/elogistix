@@ -1,3 +1,4 @@
+import { CancelacionContratoError } from "../../services/cancelacionErrorWire";
 /**
  * @vitest-environment jsdom
  *
@@ -163,6 +164,22 @@ describe("useCancelarFactura", () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.all });
     // No reintenta la cancelación por su cuenta.
     expect(cancelarFacturapi).toHaveBeenCalledTimes(1);
+    qc.clear();
+  });
+
+  it("an unknown cancellation result warns and refreshes without a retry action", async () => {
+    cancelarFacturapi.mockRejectedValue(new CancelacionContratoError());
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidar = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useCancelarFactura(), { wrapper: wrapper(qc) });
+    result.current.mutate({ facturaId: "uncertain-id", motivo: "02" });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(notifyWarning).toHaveBeenCalledTimes(1);
+    expect(notifyWarning.mock.calls[0][1]).toMatchObject({ title: "Cancelación sin confirmar" });
+    expect(notifyWarning.mock.calls[0][1]).not.toHaveProperty("action");
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(cancelarFacturapi).toHaveBeenCalledTimes(1);
+    expect(invalidar).toHaveBeenCalled();
     qc.clear();
   });
 

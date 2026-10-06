@@ -24,20 +24,8 @@ export interface PendingCfdi {
   nombreEmisorDetectado?: string;
 }
 
-export interface VinculoLinea {
-  embarqueId: string;
-  montoOriginal: number;
-  descripcion: string;
-  monto: number;
-  /**
-   * Moneda en la que se congelaron `monto` y `montoOriginal` (la de la factura
-   * en ese instante). Si después cambia la moneda de la factura, el delta ya no
-   * es comparable y no debe convertirse en ajuste de costo: es el bug del
-   * "ajuste fantasma" de −953.68 USD en ELIMP00358 (60 USD contra 1,013.68 MXN).
-   */
-  monedaBase?: string;
-}
-
+import type { VinculoLinea } from "../types/vinculoLinea";
+export type { VinculoLinea } from "../types/vinculoLinea";
 export function addDays(iso: string, days: number): string {
   // Blindaje: si la emisión viene vacía o no es un ISO YYYY-MM-DD, devolvemos ""
   // en lugar de crashear con RangeError: Invalid time value.

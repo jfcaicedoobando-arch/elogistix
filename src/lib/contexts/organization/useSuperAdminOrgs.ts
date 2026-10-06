@@ -8,7 +8,7 @@ import {
   getSuperAdminOrg,
   listActiveOrganizations,
   setSuperAdminOrg,
-} from "@/features/admin/services/organization";
+} from "@/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { logger } from "@/lib/observability/logger";
 import type { Organization } from "./types";
@@ -39,7 +39,7 @@ export function useSuperAdminOrgs(enabled: boolean): SuperAdminOrgState {
     setLoading(true);
     setError(false);
     try {
-      const orgList = await listActiveOrganizations<Organization>();
+      const orgList = await listActiveOrganizations();
       setOrganizations(orgList);
       const stored = safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg);
       // El super admin administra la plataforma, NO es miembro de un tenant:

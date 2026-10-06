@@ -24,7 +24,8 @@ vi.mock("@/features/cxp/hooks", () => ({
   }),
   useSodAprobacion: () => ({ idsBloqueados: () => new Set<string>(), motivo: () => null }),
 }));
-vi.mock("@/hooks/shared", () => ({
+vi.mock("@/hooks/shared", async () => ({
+  ...(await import("@/hooks/shared/useCargaExpirada")),
   usePermissions: () => ({ canEdit: true }),
   useFiltroUrl: <T,>(_clave: string, _validos: readonly T[], porDefecto: T) => [
     porDefecto,

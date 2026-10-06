@@ -12,7 +12,7 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
     loading: false,
   }),
 }));
-vi.mock("@/features/admin/services/organization", () => ({
+vi.mock("@/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => []),
   // El mock debe exponer TODO lo que consume el hook: sin esto el hook caía al
   // catch y ensuciaba la salida con `[organization] No se pudo leer el tenant…`.

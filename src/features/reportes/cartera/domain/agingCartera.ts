@@ -1,3 +1,4 @@
+import { roundMoney } from "@/lib/financial/financialUtils";
 /**
  * Dominio puro del reporte contable de Cartera y Antigüedad (CxC + CxP).
  *
@@ -68,7 +69,7 @@ export interface TotalBucket extends TotalesCartera {
 }
 
 function round2(n: number): number {
-  return Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  return roundMoney(n);
 }
 
 /** Días vencidos de una factura al corte (0 o negativo = aún no vence). */

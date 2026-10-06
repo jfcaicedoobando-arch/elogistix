@@ -2,7 +2,7 @@
  * Pure helpers for parsing/computing totals from a cotización's `conceptos_venta` JSON column.
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
-import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
+import type { ConceptoVentaCotizacion } from "@/types/cotizacionConceptos";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos, subtotalLinea } from "@/lib/financial/financialUtils";
 import { logger } from "@/lib/observability/logger";
 import { parseNumeroFiscal } from "@/lib/domain/facturaConceptos";

@@ -1,5 +1,5 @@
 import { labelExpediente } from "@/lib/domain/labelExpediente";
-import type { CxpPorCapturarRow } from "../services/bandejas";
+import type { CxpPorCapturarRow } from "../types/bandejas";
 
 export function referenciaCxpEmbarque(row: CxpPorCapturarRow): string {
   // Falta de permisos/metadata no acredita que la operación sea un borrador.

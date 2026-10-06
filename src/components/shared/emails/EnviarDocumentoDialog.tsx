@@ -19,7 +19,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import {
   useEnvioDocumentoForm,
   type EnvioFormState,
-} from "@/hooks/emails/useEnvioDocumentoForm";
+} from "@/hooks/emails";
 import { DestinatariosPicker } from "@/components/shared/emails/DestinatariosPicker";
 import { EmailChipsField } from "@/components/shared/emails/EmailChipsField";
 import { useEnvioChips } from "@/components/shared/emails/useEnvioChips";

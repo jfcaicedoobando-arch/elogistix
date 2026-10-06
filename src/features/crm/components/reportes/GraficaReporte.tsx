@@ -1,3 +1,4 @@
+import { formatNumber, formatCurrency } from "@/lib/formatters";
 /**
  * Dibuja los datos de un reporte dinámico según su tipo de gráfica.
  * Colores con tokens semánticos (hsl(var(--...))) para respetar el tema.
@@ -18,9 +19,9 @@ interface Props {
 
 function formatoValor(v: number, medida: MedidaReporte): string {
   if (medida === "suma_monto_usd") {
-    return new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
+    return formatCurrency(v, "USD", { decimals: 0 });
   }
-  return new Intl.NumberFormat("es-MX").format(v);
+  return formatNumber(v, { minimumFractionDigits: 0, maximumFractionDigits: 3 });
 }
 
 export function GraficaReporte({ tipo, datos, medida }: Props) {

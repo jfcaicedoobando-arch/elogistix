@@ -18,7 +18,7 @@ import { fetchExchangeRates, EXCHANGE_RATES_FALLBACK } from "@/features/catalogo
 import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
-import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+import type { FuenteEERR } from "@/features/profit/domain/fuenteEerr";
 import { calcularVencimientosEjecutivos } from "../domain/vencimientos";
 
 export interface FetchSnapshotParams {

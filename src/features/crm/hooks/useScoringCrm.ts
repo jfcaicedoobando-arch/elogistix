@@ -1,3 +1,4 @@
+import { crm } from "../queryKeys";
 /** Hooks del puntaje A/B/C (Fase 6). Llave base ['crm','scoring']. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -7,11 +8,11 @@ import {
   type Cortes, type NuevaRegla, type ReglaScoring,
 } from "@/features/crm/services/scoring/reglasScoringCrm";
 
-export const SCORING_KEY = ["crm", "scoring"] as const;
+export const SCORING_KEY = crm.scoring.all;
 
 export function usePuntajeDetalle(objeto: ObjetoPuntaje, id: string) {
   return useQuery({
-    queryKey: [...SCORING_KEY, "detalle", objeto, id],
+    queryKey: crm.scoring.detalle(objeto, id),
     queryFn: () => fetchPuntajeDetalle(objeto, id),
     enabled: !!id,
   });
@@ -19,18 +20,18 @@ export function usePuntajeDetalle(objeto: ObjetoPuntaje, id: string) {
 
 export function usePuntajes(objeto: ObjetoPuntaje, ids: string[]) {
   return useQuery({
-    queryKey: [...SCORING_KEY, "lote", objeto, ids],
+    queryKey: crm.scoring.lote(objeto, ids),
     queryFn: () => fetchPuntajes(objeto, ids),
     enabled: ids.length > 0,
   });
 }
 
 export function useReglasScoring(objeto: ObjetoPuntaje) {
-  return useQuery({ queryKey: [...SCORING_KEY, "reglas", objeto], queryFn: () => listarReglas(objeto) });
+  return useQuery({ queryKey: crm.scoring.reglas(objeto), queryFn: () => listarReglas(objeto) });
 }
 
 export function useCortesScoring() {
-  return useQuery({ queryKey: [...SCORING_KEY, "cortes"], queryFn: listarCortes });
+  return useQuery({ queryKey: crm.scoring.cortes, queryFn: listarCortes });
 }
 
 function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {

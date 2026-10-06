@@ -6,7 +6,7 @@ import { Link } from "lucide-react";
 import { formatNumber } from "@/lib/formatters";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 // Exenta de no-restricted-imports vía eslint.config.js allowlist: render row custom para sub-tabla de embarques relacionados.
-import { TableRow, TableCell } from "@/components/ui/table";
+import { DataTableTotalsRow } from "@/components/shared/dataTable/DataTableTotalsRow";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
@@ -71,13 +71,12 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
           rowClassName={(r) => r.id === embarqueId ? 'bg-accent/10 font-medium' : ''}
           getRowHref={(r) => r.id !== embarqueId ? `/embarques/${r.id}` : null}
           footer={
-            <TableRow className="hover:bg-transparent even:bg-transparent font-semibold">
-              <TableCell colSpan={3} className="text-body-sm text-right">Totales:</TableCell>
-              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalPeso, { suffix: "kg" })}</TableCell>
-              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalVol, { decimals: 2, suffix: "m³" })}</TableCell>
-              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalPiezas)}</TableCell>
-              <TableCell />
-            </TableRow>
+            <DataTableTotalsRow label="Totales:" labelSpan={3} values={[
+              formatNumber(totalPeso, { suffix: "kg" }),
+              formatNumber(totalVol, { decimals: 2, suffix: "m³" }),
+              formatNumber(totalPiezas),
+              "",
+            ]} />
           }
         />
       </CardContent>

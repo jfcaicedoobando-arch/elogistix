@@ -5,8 +5,8 @@ ni el esquema desplegados en producción.
 
 ## Stack y capas
 
-SPA: React 19, Vite 8, TypeScript 6 estricto, Router 7 declarativo
-(`BrowserRouter`, nuqs v7) y Tailwind 3. No SSR, TanStack Start ni Router framework mode.
+SPA: React 19, Vite 8, TypeScript 6 estricto, Router 8 declarativo
+(`BrowserRouter`, nuqs v2) y Tailwind 3. No SSR, TanStack Start ni Router framework mode.
 
 ```text
 páginas / componentes

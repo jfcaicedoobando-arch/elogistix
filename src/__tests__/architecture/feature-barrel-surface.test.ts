@@ -15,6 +15,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import ts from "typescript";
 import { walk, relPath } from "../../../scripts/lib/walk";
 
 const ROOT = process.cwd();
@@ -55,16 +56,40 @@ const BASELINE: Record<string, string[]> = {
   ],
 };
 
+/** Only actual declarations count; comments and virtual lint fixtures are data. */
+function featureSpecifiers(text: string, file = "fixture.ts"): string[] {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const specifiers: string[] = [];
+  function visit(node: ts.Node): void {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      const specifier = node.moduleSpecifier;
+      if (specifier && ts.isStringLiteral(specifier) && specifier.text.startsWith("@/features/")) {
+        specifiers.push(specifier.text);
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return specifiers;
+}
+
 describe("O4 — deep imports en features con barrel", () => {
+  it("counts real type imports and reexports, not virtual source strings", () => {
+    expect(featureSpecifiers(`
+      import type { Real } from "@/features/cxp/services/real";
+      export type { Other } from "@/features/proformas/types/real";
+      const virtual = 'import { x } from "@/features/cxp/services/virtual";';
+      // import { x } from "@/features/cxp/services/comment";
+    `)).toEqual(["@/features/cxp/services/real", "@/features/proformas/types/real"]);
+  });
+
   it("ningún deep import nuevo fuera de la baseline", () => {
     const offenders: string[] = [];
-    const importRe = /from\s+["'](@\/features\/[a-z-]+\/[^"']+)["']/g;
     for (const file of walk(join(ROOT, "src"))) {
       const rel = relPath(ROOT, file);
       if (rel.endsWith("feature-barrel-surface.test.ts")) continue;
       const text = readFileSync(file, "utf8");
-      for (const m of text.matchAll(importRe)) {
-        const spec = m[1];
+      for (const spec of featureSpecifiers(text, file)) {
         const parts = spec.split("/"); // ["@", "features", "<f>", ...rest]
         const feature = parts[2] as (typeof BARRELED_FEATURES)[number];
         if (!BARRELED_FEATURES.includes(feature)) continue;

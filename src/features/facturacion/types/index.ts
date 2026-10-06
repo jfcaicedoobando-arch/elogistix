@@ -25,3 +25,9 @@ export type MotivoNotaCredito = FacturaNotaCredito["motivo"];
 
 /** Moneda de la nota de crédito al cliente. */
 export type MonedaNotaCredito = FacturaNotaCredito["moneda"];
+
+export type { FacturaDetalle } from "./detalle";
+export type { RefacturacionEventoRaw } from "./refacturacion";
+
+export type { DatosTimbradoPatch } from "./datosFiscales";
+export type { FilaHueco } from "./huecoFacturacion";

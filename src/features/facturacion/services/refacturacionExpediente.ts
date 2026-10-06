@@ -47,15 +47,8 @@ export interface RefacturacionPagoResumen {
   es_nuevo: boolean;
 }
 
-export interface RefacturacionEventoRaw {
-  id: string;
-  ts: string;
-  accion: string;
-  usuario_email: string;
-  entidad_nombre: string;
-  detalles: Record<string, unknown>;
-}
-
+import type { RefacturacionEventoRaw } from "../types/refacturacion";
+export type { RefacturacionEventoRaw } from "../types/refacturacion";
 export interface RefacturacionExpediente {
   caso: RefacturacionCasoResumen;
   factura_original: RefacturacionFacturaResumen | null;

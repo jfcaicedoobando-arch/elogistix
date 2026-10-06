@@ -112,7 +112,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
             />
           )}
           {!isLoading && filas.length > 0 && (
-            <div className="hidden grid-cols-12 gap-4 border-b pb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground md:grid">
+            <div className="hidden grid-cols-12 gap-4 border-b pb-2 text-label font-medium uppercase tracking-wide text-muted-foreground md:grid">
               <span className="col-span-4">Archivo y estado</span>
               <span className="col-span-3">Proveedor y folio</span>
               <span className="col-span-2">Montos</span>

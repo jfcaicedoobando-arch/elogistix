@@ -1,5 +1,4 @@
-import type { MovimientoBBVA } from "../services/conciliacion";
-import type { Candidato } from "../services/sugerirCandidatos";
+import type { MovimientoBBVA, Candidato } from "./conciliacionTypes";
 import { dentroDeTolerancia, deltaDiasIso, toleranciaMonto } from "./tolerancia";
 
 /**

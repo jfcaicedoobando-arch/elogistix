@@ -4,9 +4,7 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
+import { saldoMonetario } from "../_shared/money.ts";
 
 export interface ParcialidadInfo {
   numParcialidad: number;
@@ -23,16 +21,16 @@ export function calcularParcialidad(
   /** N1 — notas de crédito aplicadas antes de este pago, en moneda del DR. */
   ncAplicadas = 0,
 ): ParcialidadInfo {
-  let acumuladoAntes = 0;
+  const aplicadosAntes: number[] = [];
   let numParcialidad = 1;
   for (const pp of pagosPrev ?? []) {
     if (pp.id === pagoId) break;
-    acumuladoAntes += Number(pp.monto_aplicado_factura ?? 0);
+    aplicadosAntes.push(Number(pp.monto_aplicado_factura ?? 0));
     numParcialidad += 1;
   }
-  const saldoAnt = round2(totalFactura - acumuladoAntes - Number(ncAplicadas ?? 0));
+  const saldoAnt = saldoMonetario(totalFactura, [...aplicadosAntes, Number(ncAplicadas ?? 0)]);
   const impPagado = Number(montoAplicado ?? 0);
-  return { numParcialidad, saldoAnt, impPagado, saldoInsoluto: round2(saldoAnt - impPagado) };
+  return { numParcialidad, saldoAnt, impPagado, saldoInsoluto: saldoMonetario(saldoAnt, [impPagado]) };
 }
 
 export interface RefsEmbarque {

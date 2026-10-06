@@ -34,16 +34,8 @@ export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFisc
   ) as Promise<ClienteFiscalRow | null>;
 }
 
-export interface DatosTimbradoPatch {
-  serie?: string;
-  uso_cfdi: string;
-  forma_pago: string;
-  metodo_pago: string;
-  dias_credito?: number;
-  notas?: string | null;
-  tipo_cambio?: number | null;
-  fecha_emision?: string;
-}
+import type { DatosTimbradoPatch } from "../types/datosFiscales";
+export type { DatosTimbradoPatch } from "../types/datosFiscales";
 
 export async function actualizarDatosTimbradoFactura(
   facturaId: string,

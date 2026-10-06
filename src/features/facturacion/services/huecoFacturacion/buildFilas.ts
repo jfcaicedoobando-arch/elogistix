@@ -7,22 +7,8 @@ import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/features/facturacion
 import type { EmbarqueHuecoRow } from "./fetchSources";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
-export interface FilaHueco {
-  embarque_id: string;
-  expediente: string;
-  cliente_nombre: string;
-  operador: string;
-  etd: string | null;
-  eta: string;
-  bl_master: string | null;
-  bl_house: string | null;
-  diasDesdeEta: number;
-  ventaMxn: number;
-  ventaUsd: number;
-  /** Ola 9 · M5: el embarque no tiene TC capturado; las conversiones valen 0. */
-  sin_tc: boolean;
-}
-
+import type { FilaHueco } from "../../types/huecoFacturacion";
+export type { FilaHueco } from "../../types/huecoFacturacion";
 
 export function diasDesde(fechaIso: string, hoy: Date): number {
   return diffDiasCalendario(fechaIso, hoy);
@@ -72,4 +58,3 @@ export function construirFilaHueco(
     sin_tc: (requiereUsd && tcUsd === 0) || (requiereEur && tcEur === 0),
   };
 }
-

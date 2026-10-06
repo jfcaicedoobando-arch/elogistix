@@ -50,9 +50,9 @@ describe("guardarConceptosSugeridos", () => {
     expect(notifyWarning).not.toHaveBeenCalled();
   });
 
-  it("avisa una vez y devuelve false si ambos intentos fallan", async () => {
+  it("devuelve false sin decisiones visuales si ambos intentos fallan", async () => {
     respuestas = [{ error: { message: "boom" } }, { error: { message: "boom" } }];
     await expect(guardarConceptosSugeridos("e1", input)).resolves.toBe(false);
-    expect(notifyWarning).toHaveBeenCalledTimes(1);
+    expect(notifyWarning).not.toHaveBeenCalled();
   });
 });

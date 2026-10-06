@@ -7,11 +7,11 @@
  * - sugerirCandidatos: matching por monto (±$1) y fecha (±5 días) contra CxC/CxP pendientes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { MovimientoBBVA } from "../domain/conciliacionTypes";
 import { unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
-export type MovimientoBBVA = Tables<"bbva_movimientos">;
+export type { MovimientoBBVA } from "../domain/conciliacionTypes";
 
 /** Shape del jsonb de `conciliacion_resumen` (C3c). */
 export interface ConciliacionResumen {

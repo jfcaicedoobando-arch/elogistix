@@ -10,7 +10,7 @@
  *
  * Reemplaza llamadas directas a `console.warn|error` en código productivo.
  */
-import { logClientError } from "@/services/observability/logClientError";
+import { logClientError } from "@/services/observability";
 import { captureExceptionOnce } from "./captureExceptionOnce";
 import { scrubTelemetryData } from "./scrubTelemetryData";
 

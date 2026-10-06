@@ -1,3 +1,4 @@
+import { CancelacionContratoError } from "../services/cancelacionErrorWire";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
 import { emitirFacturapi, cancelarFacturapi, FacturapiError, type MotivoCancelacionSat, type CancelarFacturapiResult } from "@/features/facturacion/services/facturapi";
@@ -106,6 +107,17 @@ export function useCancelarFactura() {
       cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid, vars.sustituidaPorFacturaId),
     onSuccess: (res) => manejarResultadoCancelacion(res, qc),
     onError: (err: Error, vars) => {
+      if (err instanceof CancelacionContratoError) {
+        invalidarTrasTimbrado(qc, vars.facturaId);
+        notifyWarning(undefined, {
+          title: "Cancelación sin confirmar",
+          description: err.message,
+          error: err,
+          context: { facturaId: vars.facturaId },
+          method: "CANCELACION_RESULTADO_INCIERTO",
+        });
+        return;
+      }
       // Error transitorio del SAT: pintar toast ámbar con acción "Reintentar"
       // en vez del toast rojo genérico. El modal queda abierto para que el
       // usuario reintente sin perder los datos ya seleccionados.

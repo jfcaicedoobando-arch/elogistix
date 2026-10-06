@@ -8,7 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
-import { fetchVentaFacturadaEmbarques } from "@/features/facturacion/services/shared/ventaFacturada";
+import { fetchVentaFacturadaEmbarques } from "@/features/facturacion";
 import { ESTADOS_EMBARQUE_NO_CONTABLES } from "@/features/embarques/domain/estadosContables";
 import {
   buildEstadoResultados,

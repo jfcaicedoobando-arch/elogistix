@@ -9,7 +9,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 const permisos = { canEmitirFactura: true };
-vi.mock("@/hooks/shared", () => ({ usePermissions: () => permisos }));
+vi.mock("@/hooks/shared", async () => ({
+  ...(await import("@/hooks/shared/useCargaExpirada")), usePermissions: () => permisos }));
 
 const buildColumnsSpy = vi.fn((_args: Record<string, unknown>) => []);
 vi.mock("../proformasColumns", () => ({
