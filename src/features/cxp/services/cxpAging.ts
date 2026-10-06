@@ -39,6 +39,10 @@ const EMPTY_TOTALS: CxpAgingTotals = {
   vigente: 0, d_1_30: 0, d_31_60: 0, d_61_90: 0, mas_90: 0, total: 0,
 };
 
+/** Alcance temporal de la cartera tanto en pantalla como en CSV. */
+export const CXP_AGING_ALCANCE = "Cartera actual reclasificada por antigüedad; no es un cierre histórico. Incluye facturas posteriores a la fecha seleccionada y los pagos y notas de crédito aplicados actualmente.";
+
+/** `fecha` sólo determina las cubetas; la RPC conserva los saldos actuales. */
 export async function fetchCxpAging(
   fecha?: string,
   organizationId?: string | null,

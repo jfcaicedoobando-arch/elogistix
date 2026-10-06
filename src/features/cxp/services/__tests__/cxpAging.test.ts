@@ -56,7 +56,8 @@ describe("calcularTotalesAging", () => {
 
   it("total agregado refleja saldo_total, no suma de cubetas (puede divergir si hay datos sucios)", () => {
     // Invariante: usamos saldo_total como fuente de verdad porque la RPC ya
-    // hace el corte por fecha. Si total fuera suma de cubetas, una migración
+    // calcula los saldos actuales y usa la fecha sólo para clasificar. Si el total
+    // fuera suma de cubetas, una migración
     // que añada una nueva cubeta dejaría totales mal hasta que se actualice
     // este helper.
     const tot = calcularTotalesAging([
