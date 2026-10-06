@@ -110,6 +110,20 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     });
   });
 
+  it.each([
+    "drizzle/migrations/0005_pricing.sql",
+    "drizzle/migrations/meta/_journal.json",
+    "drizzle/schema.ts",
+    "drizzle.config.ts",
+    "scripts/ci/detect-areas.sh",
+  ])("%s activa las comprobaciones de BD", (ruta) => {
+    const head = commit([ruta], base);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head })).toMatchObject({
+      frontend: "true",
+      database: "true",
+    });
+  });
+
   it("base inexistente o diff vacío corre TODO (conservador)", () => {
     expect(
       detectar({ EVENT_NAME: "push", BEFORE_SHA: "0".repeat(40), HEAD_SHA: base }),

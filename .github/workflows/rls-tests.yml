@@ -19,6 +19,8 @@ on:
   pull_request:
     paths:
       - "supabase/migrations/**"
+      - "drizzle/**"
+      - "drizzle.config.ts"
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
@@ -32,6 +34,8 @@ on:
     branches: [main]
     paths:
       - "supabase/migrations/**"
+      - "drizzle/**"
+      - "drizzle.config.ts"
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"

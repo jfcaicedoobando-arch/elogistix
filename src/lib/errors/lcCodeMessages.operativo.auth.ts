@@ -30,6 +30,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_AUTH: Record<string, string> = {
     "No hay una organización activa en tu sesión. Selecciona la organización y vuelve a intentarlo.",
   LC_SIN_ORG:
     "Tu usuario no tiene una organización asignada. Contacta al administrador.",
+  LC_SIN_ORGANIZACION:
+    "No hay una organización activa en tu sesión. Vuelve a iniciar sesión; si el problema continúa, contacta al administrador.",
   LC_TENANT_MISMATCH: "El recurso no pertenece a tu organización.",
   LC_ORG_FUERA_DE_SCOPE:
     "El registro pertenece a otra organización. Cambia de organización activa para poder verlo o editarlo.",

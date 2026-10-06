@@ -185,6 +185,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Este recargo ya se usó en una cotización. Consérvalo o crea una nueva versión de la tarifa.",
   LC_TARIFA_REQUIERE_RECOTIZACION:
     "La tarifa sustituta agrega un recargo que no estaba en la cotización aceptada. Recotiza y obtén la aprobación del cliente antes de crear el embarque.",
+  LC_TARIFA_SOLICITUD_INMUTABLE:
+    "Esta tarifa ya está vinculada a una solicitud de pricing y no puede cambiar de solicitud. Crea otra tarifa si necesitas responder una solicitud distinta.",
   LC_RECARGO_DUPLICADO:
     "El mismo recargo aparece dos veces en la edición. Recarga la tarifa y revisa los recargos.",
 };

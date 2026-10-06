@@ -168,4 +168,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
    ('public._embarque_delta_tarifa_sustituida(uuid, uuid)'),
    -- AUD-ANALISIS-8: venta facturada neta por embarque; recibe la org como
    -- parámetro, así que sólo la invocan RPCs DEFINER ya acotadas a org_scope().
-   ('public._venta_facturada_por_embarque(uuid)');
+   ('public._venta_facturada_por_embarque(uuid)'),
+   -- Replay Drizzle: helpers de trigger; nunca son RPCs del cliente.
+   ('public._costeo_tarifa_solicitud_guard()'),
+   ('public._crm_sol_pricing_before_ins()'),
+   ('public._crm_empresa_estado_por_cliente()'),
+   ('public._crm_lead_sync_estado_empresa()');

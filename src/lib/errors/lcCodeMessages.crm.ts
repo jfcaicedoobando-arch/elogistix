@@ -13,6 +13,10 @@ const MSG_OPORTUNIDAD_INEXISTENTE =
   "La oportunidad ya no existe o pertenece a otra organización.";
 
 export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
+  LC_CRM_EMPRESA_NO_ENCONTRADA:
+    "La empresa no existe o no pertenece a tu organización. Actualiza la lista y selecciona una empresa disponible.",
+  LC_CRM_ETAPA_PROSPECTO_FALTANTE:
+    "Configura una etapa Prospecto activa en el pipeline antes de convertir esta empresa a prospecto.",
   LC_SCORING_OBJETO_INVALIDO: "El puntaje sólo puede calcularse para empresas u oportunidades del CRM.",
   LC_PRICING_ESTADO_INVALIDO: "La solicitud no está en un estado válido para esta acción. Actualiza la bandeja.",
   LC_PRICING_ESTADO_SOLO_RPC: "Cambia el estado desde las acciones de la solicitud de pricing.",
