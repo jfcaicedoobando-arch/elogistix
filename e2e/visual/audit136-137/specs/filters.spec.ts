@@ -89,6 +89,13 @@ for (const width of [390, 1180]) {
     await expect(page.getByTestId("applied")).toHaveText("2026-10-01|2026-10-31|Terrestre|costo_usd|desc");
     const url = page.url();
     await expect(page.getByTestId("dataset")).toHaveText("Filas sintéticas: 1");
+    if (width < 768) {
+      for (const label of ["Venta eq. USD", "Utilidad eq. USD"]) {
+        const text = page.getByText(label, { exact: true });
+        await expect(text).toBeVisible();
+        expect(await text.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+      }
+    }
     await page.getByText("Cliente Sintético", { exact: true }).click();
     await expect(page).toHaveURL(/\/clientes\/synthetic$/);
     await page.goBack();
