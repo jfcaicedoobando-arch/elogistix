@@ -12,6 +12,8 @@ export type { Moneda };
 
 export type OportunidadInput = {
   nombre: string;
+  /** Sólo alta: se persiste en crm_oportunidad_empresa, no en la oportunidad. */
+  empresa_id?: string | null;
   cliente_id?: string | null;
   cliente_nombre?: string;
   lead_id?: string | null;
