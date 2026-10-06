@@ -20,7 +20,7 @@ BEGIN
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (org_a, usuario, 'admin_org');
   INSERT INTO public.user_roles(user_id, role) VALUES (usuario, 'admin_org')
     ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
-  INSERT INTO public.clientes(id, nombre, organization_id) VALUES (cliente, 'Cliente test', org_a);
+  INSERT INTO public.clientes(id, nombre, email, organization_id) VALUES (cliente, 'Cliente test', 'empresa@test.local', org_a);
   INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, tipo)
     VALUES (etapa, org_a, 'Etapa empresa test', 99, 'abierta');
   INSERT INTO public.crm_empresas(id, organization_id, nombre, deleted_at) VALUES
