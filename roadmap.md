@@ -8,7 +8,7 @@ el bloqueo PPD + No objeto eran referencias superadas.
 
 ## Trabajo nuevo
 
-- [ ] Oportunidades CRM: permitir borrar el margen esperado y actualizar las etiquetas de valor y fecha; validar sólo los campos afectados.
+- [x] Oportunidades CRM: margen esperado sin cero fijo y etiquetas actualizadas; 26 pruebas focalizadas y lint de archivos modificados correctos. CI/RLS completos quedan en GitHub Actions.
 
 Registrar cada iniciativa aprobada en un issue/PR o diagnóstico con:
 ID, evidencia/fecha/entorno, prioridad, alcance, responsable y criterio
