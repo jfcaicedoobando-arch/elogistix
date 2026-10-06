@@ -12,6 +12,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("@/hooks/shared", () => ({ usePermissions: vi.fn() }));
+vi.mock("@/features/crm/components/objetos/NuevoObjetoCrmDialog", () => ({ NuevoObjetoCrmDialog: () => null }));
 vi.mock("@/features/crm/hooks", () => ({ useOportunidadesPorLead: vi.fn() }));
 
 // Los diálogos del menú rápido no participan en este contrato.

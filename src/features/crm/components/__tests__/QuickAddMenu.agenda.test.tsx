@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import QuickAddMenu from "../QuickAddMenu";
 
 vi.mock("@/hooks/shared", () => ({ usePermissions: () => ({ canCrearLead: true, canCrearOportunidad: true, canCrearActividad: true, canGestionarLeadsEnLote: false }) }));
+vi.mock("@/features/crm/components/objetos/NuevoObjetoCrmDialog", () => ({ NuevoObjetoCrmDialog: () => null }));
 vi.mock("../quickCreate/QuickCreateLeadDialog", () => ({ default: () => null }));
 vi.mock("../quickCreate/QuickCreateOportunidadDialog", () => ({ default: () => null }));
 vi.mock("../NuevoLeadDialog", () => ({ default: () => null }));
