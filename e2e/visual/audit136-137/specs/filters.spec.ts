@@ -27,6 +27,10 @@ async function editFuture(page: Page) {
   await page.getByRole("button", { name: /mes siguiente|next month/i }).click();
   await page.locator('[data-day="2026-11-10"] button').click();
   await page.keyboard.press("Escape");
+  // Radix keeps the closing popover layer mounted for its exit animation.
+  // Wait for its real dismissal/focus handoff before testing the next layer.
+  await expect(page.locator("[data-day]")).toHaveCount(0);
+  await expect(sheet.getByRole("button", { name: "10 nov 2026", exact: true })).toBeFocused();
   await expect(sheet.getByRole("button", { name: "10 nov 2026", exact: true })).toBeVisible();
   await expect(sheet.getByRole("button", { name: "30 nov 2026", exact: true })).toBeVisible();
   return sheet;
