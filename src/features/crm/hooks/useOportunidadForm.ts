@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CrmOportunidadRow } from "@/features/crm/hooks/useOportunidades";
 import type { User } from "@supabase/supabase-js";
+import type { RefRow } from "@/features/crm/services/objetosCrm";
 import {
   EMPTY_OPORTUNIDAD,
   type OportunidadFormState,
@@ -26,6 +27,22 @@ interface Etapa {
   tipo?: string;
 }
 
+interface Precapturado {
+  origen?: OrigenInicial | null;
+  nombre?: string | null;
+  etapaId?: string | null;
+  empresa?: RefRow | null;
+}
+
+function datosIniciales(datos?: Precapturado) {
+  return {
+    origenInicial: datos?.origen ?? null,
+    nombreInicial: datos?.nombre ?? null,
+    empresaInicial: datos?.empresa ?? null,
+    etapaIdInicial: datos?.etapaId ?? null,
+  };
+}
+
 /** Comparación estable de dos estados del formulario (objeto plano y pequeño). */
 function mismoForm(a: OportunidadFormState, b: OportunidadFormState): boolean {
   return (Object.keys(a) as (keyof OportunidadFormState)[]).every((k) => a[k] === b[k]);
@@ -40,12 +57,10 @@ export function useOportunidadForm(
    * Datos precapturados que viajan del alta express al formulario completo
    * (origen/ownership ya elegido y nombre escrito).
    */
-  precapturado?: { origen?: OrigenInicial | null; nombre?: string | null; etapaId?: string | null },
+  precapturado?: Precapturado,
 ) {
-  const origenInicial = precapturado?.origen ?? null;
-  const nombreInicial = precapturado?.nombre ?? null;
+  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial } = datosIniciales(precapturado);
   // CTA de columna del Kanban: etapa destino prefijada (sólo si es abierta).
-  const etapaIdInicial = precapturado?.etapaId ?? null;
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
   // Sólo recalculamos cuando cambia la *identidad* del registro o el estado
@@ -59,6 +74,7 @@ export function useOportunidadForm(
   const oportunidadRef = useRef(oportunidad);
   const origenRef = useRef(origenInicial);
   const nombreRef = useRef(nombreInicial);
+  const empresaRef = useRef(empresaInicial);
   const etapaRef = useRef(etapaIdInicial);
   const formRef = useRef(form);
   etapasRef.current = etapas;
@@ -66,6 +82,7 @@ export function useOportunidadForm(
   oportunidadRef.current = oportunidad;
   origenRef.current = origenInicial;
   nombreRef.current = nombreInicial;
+  empresaRef.current = empresaInicial;
   etapaRef.current = etapaIdInicial;
   formRef.current = form;
 
@@ -76,6 +93,7 @@ export function useOportunidadForm(
   // La identidad del origen prefijado también reinicia el formulario.
   const origenKey = origenInicial ? `${origenInicial.tipo}:${origenInicial.id}` : "";
   const nombreKey = nombreInicial ?? "";
+  const empresaKey = empresaInicial?.id ?? "";
   const etapaKey = etapaIdInicial ?? "";
 
   useEffect(() => {
@@ -87,6 +105,8 @@ export function useOportunidadForm(
       inicial = buildEmptyForNueva(etapasRef.current, userRef.current, origenRef.current);
       const nombrePrecapturado = (nombreRef.current ?? "").trim();
       if (nombrePrecapturado) inicial = { ...inicial, nombre: nombrePrecapturado };
+      const empresa = empresaRef.current;
+      if (empresa) inicial = { ...inicial, empresa_id: empresa.id, empresa_nombre: empresa.nombre };
       // Etapa prefijada por el CTA de la columna: sólo se respeta si existe
       // y es ABIERTA (la regla "nunca crear en Ganada/Perdida" se mantiene).
       const etapaPreId = etapaRef.current;
@@ -103,7 +123,7 @@ export function useOportunidadForm(
     // origen prefijado, el nombre/etapa precapturados y `open`; los objetos
     // se leen vía ref para evitar loops cuando el backend devuelve una
     // referencia nueva con el mismo id.
-  }, [oportunidadId, open, origenKey, nombreKey, etapaKey]);
+  }, [oportunidadId, open, origenKey, nombreKey, etapaKey, empresaKey]);
 
   // Etapas que llegan tarde (creación): si el pipeline aún no había cargado al
   // abrir, hidratamos SÓLO etapa/probabilidad y sincronizamos la fotografía

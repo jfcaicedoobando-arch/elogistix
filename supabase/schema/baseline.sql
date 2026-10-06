@@ -2124,6 +2124,30 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._costeo_tarifa_solicitud_guard() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_org uuid; v_estado text;
+BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.solicitud_pricing_id IS DISTINCT FROM OLD.solicitud_pricing_id THEN
+    RAISE EXCEPTION 'LC_TARIFA_SOLICITUD_INMUTABLE' USING ERRCODE = 'P0001';
+  END IF;
+  IF TG_OP = 'INSERT' AND NEW.solicitud_pricing_id IS NOT NULL THEN
+    SELECT organization_id, estado INTO v_org, v_estado
+      FROM public.crm_solicitudes_pricing WHERE id = NEW.solicitud_pricing_id AND deleted_at IS NULL;
+    IF v_org IS DISTINCT FROM NEW.organization_id THEN
+      RAISE EXCEPTION 'LC_PRICING_NO_ENCONTRADA' USING ERRCODE = 'P0001';
+    END IF;
+    IF v_estado <> 'enviada' THEN
+      RAISE EXCEPTION 'LC_PRICING_ESTADO_INVALIDO' USING ERRCODE = 'P0001';
+    END IF;
+    IF NOT public._crm_es_pricing(v_org) THEN
+      RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._cotizacion_oportunidad_misma_org() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2553,6 +2577,14 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_empresa_estado_por_cliente() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.cliente_id IS NOT NULL THEN NEW.estado_crm := 'Cliente'; END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -2560,7 +2592,15 @@ CREATE FUNCTION public._crm_es_pricing(p_org uuid) RETURNS boolean
   SELECT public.has_role(auth.uid(), 'super_admin') OR EXISTS (
     SELECT 1 FROM public.organization_members om
     WHERE om.user_id = auth.uid() AND om.organization_id = p_org
-      AND om.role IN ('ejecutivo_pricing','admin_org','admin'));
+      AND om.role IN ('ejecutivo_pricing','gerente_operaciones','admin_org','admin'));
+$$;
+CREATE FUNCTION public._crm_folio_pricing_prefijo(p_ts timestamp with time zone) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT (ARRAY['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'])
+           [extract(month FROM p_ts AT TIME ZONE 'America/Mexico_City')::int]
+         || to_char(p_ts AT TIME ZONE 'America/Mexico_City', 'YY')
 $$;
 CREATE FUNCTION public._crm_lead_avanzar_por_cotizacion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -2600,6 +2640,18 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_lead_sync_estado_empresa() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  UPDATE public.crm_empresas e
+     SET estado_crm = CASE WHEN NEW.estado::text = 'Convertido' THEN 'Cliente' ELSE 'Prospecto' END
+   WHERE e.lead_origen_id = NEW.id AND e.organization_id = NEW.organization_id
+     AND e.estado_crm <> 'Cliente'
+     AND NEW.estado::text IN ('Prospecto','Calificado','Pendiente de alta','Convertido');
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._crm_opcion_vigente(p_id uuid) RETURNS uuid
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
@@ -2770,7 +2822,7 @@ CREATE FUNCTION public._crm_sol_pricing_before_ins() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE v_org uuid; v_num bigint;
+DECLARE v_org uuid; v_num bigint; v_tipo text;
 BEGIN
   SELECT organization_id INTO v_org FROM public.crm_oportunidades WHERE id = NEW.oportunidad_id AND deleted_at IS NULL;
   IF v_org IS NULL OR v_org <> NEW.organization_id THEN
@@ -2779,10 +2831,11 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.organization_members WHERE user_id = NEW.solicitante_id AND organization_id = v_org) THEN
     RAISE EXCEPTION 'LC_PRICING_SOLICITANTE_INVALIDO' USING ERRCODE = 'P0001';
   END IF;
-  INSERT INTO public.folio_secuencias (organization_id, tipo, ultimo_numero) VALUES (v_org, 'pricing', 1)
+  v_tipo := 'pricing_' || to_char(now() AT TIME ZONE 'America/Mexico_City', 'YYMM');
+  INSERT INTO public.folio_secuencias (organization_id, tipo, ultimo_numero) VALUES (v_org, v_tipo, 1)
   ON CONFLICT (organization_id, tipo) DO UPDATE SET ultimo_numero = folio_secuencias.ultimo_numero + 1, updated_at = now()
   RETURNING ultimo_numero INTO v_num;
-  NEW.folio := 'SEP' || lpad(v_num::text, 4, '0');
+  NEW.folio := public._crm_folio_pricing_prefijo(now()) || lpad(v_num::text, 4, '0');
   NEW.created_by := auth.uid();
   NEW.estado := 'borrador';
   NEW.enviada_at := NULL; NEW.vence_at := NULL; NEW.respondida_at := NULL;
@@ -14694,6 +14747,9 @@ CREATE TABLE public.costeo_tarifas (
     motivo_rechazo text,
     aprobada_por uuid,
     aprobada_en timestamp with time zone,
+    solicitud_pricing_id uuid,
+    carta_garantia boolean,
+    unidad_flete text,
     CONSTRAINT costeo_tarifas_check CHECK ((vigente_hasta >= vigente_desde)),
     CONSTRAINT costeo_tarifas_dias_libres_almacenaje_lcl_chk CHECK (((dias_libres_almacenaje_lcl IS NULL) OR (dias_libres_almacenaje_lcl >= 0))),
     CONSTRAINT costeo_tarifas_dias_libres_demoras_check CHECK ((dias_libres_demoras >= 0)),
@@ -14712,7 +14768,8 @@ BEGIN
   INSERT INTO public.costeo_tarifas (
     organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
     flete_base, dias_libres_demoras, vigente_desde, vigente_hasta,
-    transit_time_dias, notas, moneda, estado
+    transit_time_dias, notas, moneda, estado,
+    solicitud_pricing_id, carta_garantia, unidad_flete
   ) VALUES (
     p_organization_id,
     NULLIF(p_tarifa->>'agente_id', '')::uuid,
@@ -14726,7 +14783,10 @@ BEGIN
     NULLIF(p_tarifa->>'transit_time_dias', '')::integer,
     NULLIF(p_tarifa->>'notas', ''),
     'USD',
-    'vigente'
+    'vigente',
+    NULLIF(p_tarifa->>'solicitud_pricing_id', '')::uuid,
+    NULLIF(p_tarifa->>'carta_garantia', '')::boolean,
+    NULLIF(btrim(COALESCE(p_tarifa->>'unidad_flete', '')), '')
   )
   RETURNING * INTO v_row;
   INSERT INTO public.costeo_tarifa_recargos (
@@ -15192,6 +15252,55 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.crm_crear_oportunidad_con_empresa(p_empresa_id uuid, p_datos jsonb) RETURNS jsonb
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid := public.org_scope();
+  v_datos public.crm_oportunidades%ROWTYPE;
+  v_id uuid;
+BEGIN
+  IF auth.uid() IS NULL OR v_org IS NULL THEN
+    RAISE EXCEPTION 'Selecciona una organización e inicia sesión' USING ERRCODE = '42501';
+  END IF;
+  IF p_empresa_id IS NULL THEN
+    RAISE EXCEPTION 'Selecciona la empresa asociada' USING ERRCODE = '22023';
+  END IF;
+  IF p_datos IS NULL OR jsonb_typeof(p_datos) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'Los datos de la oportunidad no son válidos' USING ERRCODE = '22023';
+  END IF;
+  PERFORM 1 FROM public.crm_empresas
+    WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL
+    FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'La empresa no está disponible en esta organización' USING ERRCODE = '42501';
+  END IF;
+  SELECT * INTO v_datos FROM jsonb_populate_record(NULL::public.crm_oportunidades, p_datos);
+  IF nullif(btrim(v_datos.nombre), '') IS NULL THEN
+    RAISE EXCEPTION 'Nombre es obligatorio' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.crm_oportunidades (
+    organization_id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email,
+    etapa_id, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real,
+    valor_real, modo, tipo_carga, origen, destino, notas, created_by,
+    monto_meta, fecha_meta_cierre, compromiso_nota, margen_pct, riesgos_objeciones,
+    puerto_origen_id, puerto_destino_id
+  ) VALUES (
+    v_org, v_datos.nombre, v_datos.cliente_id, coalesce(v_datos.cliente_nombre, ''), v_datos.lead_id,
+    coalesce(v_datos.vendedor_id, auth.uid()), coalesce(v_datos.vendedor_email, ''),
+    v_datos.etapa_id, coalesce(v_datos.monto_estimado, 0), coalesce(v_datos.moneda, 'MXN'),
+    coalesce(v_datos.probabilidad, 0), v_datos.fecha_estimada_cierre, v_datos.fecha_cierre_real,
+    v_datos.valor_real, coalesce(v_datos.modo, ''), coalesce(v_datos.tipo_carga, ''),
+    coalesce(v_datos.origen, ''), coalesce(v_datos.destino, ''), coalesce(v_datos.notas, ''), auth.uid(),
+    v_datos.monto_meta, v_datos.fecha_meta_cierre, v_datos.compromiso_nota, v_datos.margen_pct,
+    coalesce(v_datos.riesgos_objeciones, ''), v_datos.puerto_origen_id, v_datos.puerto_destino_id
+  ) RETURNING id INTO v_id;
+  INSERT INTO public.crm_oportunidad_empresa (organization_id, oportunidad_id, empresa_id)
+    VALUES (v_org, v_id, p_empresa_id);
+  RETURN jsonb_build_object('id', v_id);
+END;
+$$;
 CREATE FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) RETURNS TABLE(oportunidad_id uuid, etapa_id uuid, total integer, cumplidos integer, obligatorios_pendientes integer)
     LANGUAGE sql STABLE
     SET search_path TO 'public'
@@ -15255,6 +15364,50 @@ CREATE FUNCTION public.crm_embudo_conversion(p_desde date, p_hasta date) RETURNS
     FROM agregado g
    ORDER BY g.orden;
 $$;
+CREATE FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid := public.org_scope();
+  v_emp public.crm_empresas%ROWTYPE;
+  v_lead uuid; v_etapa uuid; v_op uuid; v_email text;
+BEGIN
+  IF v_org IS NULL THEN RAISE EXCEPTION 'LC_SIN_ORGANIZACION' USING ERRCODE = '42501'; END IF;
+  PERFORM public._assert_writer(v_org);
+  SELECT * INTO v_emp FROM public.crm_empresas
+   WHERE id = p_empresa_id AND organization_id = v_org AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'LC_CRM_EMPRESA_NO_ENCONTRADA' USING ERRCODE = 'P0002'; END IF;
+  SELECT o.id INTO v_op FROM public.crm_oportunidad_empresa oe
+    JOIN public.crm_oportunidades o ON o.id = oe.oportunidad_id AND o.deleted_at IS NULL
+   WHERE oe.empresa_id = v_emp.id ORDER BY o.created_at LIMIT 1;
+  IF v_emp.estado_crm NOT IN ('Lead','Sospechoso') AND v_op IS NOT NULL THEN
+    RETURN jsonb_build_object('oportunidad_id', v_op, 'sin_cambios', true);
+  END IF;
+  SELECT id INTO v_etapa FROM public.crm_etapas_pipeline
+   WHERE organization_id = v_org AND nombre = 'Prospecto' ORDER BY orden LIMIT 1;
+  IF v_etapa IS NULL THEN RAISE EXCEPTION 'LC_CRM_ETAPA_PROSPECTO_FALTANTE'; END IF;
+  SELECT email INTO v_email FROM auth.users WHERE id = auth.uid();
+  v_lead := v_emp.lead_origen_id;
+  IF v_lead IS NULL THEN
+    INSERT INTO public.crm_leads (organization_id, empresa, estado, vendedor_id, vendedor_email, created_by)
+    VALUES (v_org, v_emp.nombre, 'Prospecto', auth.uid(), coalesce(v_email, ''), auth.uid())
+    RETURNING id INTO v_lead;
+    UPDATE public.crm_empresas SET lead_origen_id = v_lead WHERE id = v_emp.id;
+  ELSE
+    UPDATE public.crm_leads SET estado = 'Prospecto'
+     WHERE id = v_lead AND estado::text IN ('Nuevo','Contactado','Descalificado');
+  END IF;
+  IF v_op IS NULL THEN
+    INSERT INTO public.crm_oportunidades
+      (organization_id, nombre, cliente_nombre, lead_id, etapa_id, vendedor_id, vendedor_email, created_by)
+    VALUES (v_org, v_emp.nombre, v_emp.nombre, v_lead, v_etapa, auth.uid(), coalesce(v_email, ''), auth.uid())
+    RETURNING id INTO v_op;
+    INSERT INTO public.crm_oportunidad_empresa (oportunidad_id, empresa_id) VALUES (v_op, v_emp.id);
+  END IF;
+  UPDATE public.crm_empresas SET estado_crm = 'Prospecto' WHERE id = v_emp.id AND estado_crm IN ('Lead','Sospechoso');
+  RETURN jsonb_build_object('oportunidad_id', v_op, 'sin_cambios', false);
+END $$;
 CREATE FUNCTION public.crm_enviar_solicitud_pricing(p_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -15703,7 +15856,8 @@ BEGIN
   IF NOT public._crm_es_pricing(v.organization_id) THEN RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501'; END IF;
   IF v.estado = 'respondida' THEN RETURN jsonb_build_object('id', v.id, 'ya_respondida', true); END IF;
   IF v.estado <> 'enviada' THEN RAISE EXCEPTION 'LC_PRICING_ESTADO_INVALIDO' USING ERRCODE = 'P0001'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.crm_pricing_opciones WHERE solicitud_id = p_id) THEN
+  IF NOT EXISTS (SELECT 1 FROM public.costeo_tarifas WHERE solicitud_pricing_id = p_id)
+     AND NOT EXISTS (SELECT 1 FROM public.crm_pricing_opciones WHERE solicitud_id = p_id) THEN
     RAISE EXCEPTION 'LC_PRICING_SIN_OPCIONES' USING ERRCODE = 'P0001';
   END IF;
   PERFORM set_config('lc.pricing_rpc', '1', true);
@@ -21953,7 +22107,9 @@ CREATE TABLE public.crm_empresas (
     created_by uuid DEFAULT auth.uid(),
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    estado_crm text DEFAULT 'Lead'::text NOT NULL,
+    CONSTRAINT crm_empresas_estado_crm_chk CHECK ((estado_crm = ANY (ARRAY['Lead'::text, 'Sospechoso'::text, 'Prospecto'::text, 'Cliente'::text])))
 );
 CREATE FUNCTION public.letra_empresa_crm(public.crm_empresas) RETURNS text
     LANGUAGE sql STABLE
@@ -33626,11 +33782,13 @@ CREATE TABLE public.crm_solicitudes_pricing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    unidad_medida text,
     CONSTRAINT crm_solicitudes_pricing_cantidad_check CHECK (((cantidad IS NULL) OR (cantidad > 0))),
     CONSTRAINT crm_solicitudes_pricing_complejidad_check CHECK ((complejidad = ANY (ARRAY['baja'::text, 'media'::text, 'alta'::text]))),
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
     CONSTRAINT crm_solicitudes_pricing_incoterm_check CHECK ((incoterm = ANY (ARRAY['EXW'::text, 'FAS'::text, 'FCA'::text, 'FOB'::text, 'CFR'::text, 'CIF'::text, 'DAP'::text, 'DDP'::text, 'DPU'::text]))),
-    CONSTRAINT crm_solicitudes_pricing_servicio_check CHECK ((servicio = ANY (ARRAY['Marítimo'::text, 'Terrestre'::text, 'Aéreo'::text])))
+    CONSTRAINT crm_solicitudes_pricing_servicio_check CHECK ((servicio = ANY (ARRAY['Marítimo'::text, 'Terrestre'::text, 'Aéreo'::text]))),
+    CONSTRAINT crm_solicitudes_pricing_unidad_medida_check CHECK (((unidad_medida IS NULL) OR (unidad_medida = ANY (ARRAY['kg'::text, 'lb'::text, 't'::text, 'g'::text]))))
 );
 CREATE TABLE public.crm_tableros (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -35069,6 +35227,8 @@ CREATE UNIQUE INDEX comisiones_recalculo_pendiente_pago_etapa_key ON public.comi
 CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_costo USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
+CREATE INDEX costeo_tarifas_solicitud_pricing_idx ON public.costeo_tarifas USING btree (solicitud_pricing_id) WHERE (solicitud_pricing_id IS NOT NULL);
+CREATE INDEX crm_empresas_org_estado_idx ON public.crm_empresas USING btree (organization_id, estado_crm);
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
 CREATE INDEX crm_reportes_tablero_idx ON public.crm_reportes USING btree (tablero_id);
 CREATE INDEX crm_scoring_reglas_objeto_idx ON public.crm_scoring_reglas USING btree (objeto, criterio) WHERE activa;
@@ -35515,6 +35675,7 @@ CREATE TRIGGER trg_costeo_demoras_updated BEFORE UPDATE ON public.costeo_naviera
 CREATE TRIGGER trg_costeo_nav_cond_updated BEFORE UPDATE ON public.costeo_navieras_condiciones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_costeo_recargos_sync_org BEFORE INSERT OR UPDATE OF tarifa_id ON public.costeo_tarifa_recargos FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_recargos_sync_org();
 CREATE TRIGGER trg_costeo_rutas_updated BEFORE UPDATE ON public.costeo_rutas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_costeo_tarifa_solicitud_guard BEFORE INSERT OR UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public._costeo_tarifa_solicitud_guard();
 CREATE TRIGGER trg_costeo_tarifas_agente_force_borrador BEFORE INSERT OR UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_agente_force_borrador();
 CREATE TRIGGER trg_costeo_tarifas_estado_derivado BEFORE INSERT OR UPDATE OF estado, vigente_desde, vigente_hasta ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_tarifas_estado_derivado();
 CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF estado, estado_aprobacion ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_marcar_reemplazadas();
@@ -35537,10 +35698,12 @@ CREATE TRIGGER trg_crm_comentario_misma_org BEFORE INSERT OR UPDATE OF oportunid
 CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa_id, organization_id ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_criterio_etapa_misma_org();
 CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_crm_empresa_estado_por_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.crm_empresas FOR EACH ROW EXECUTE FUNCTION public._crm_empresa_estado_por_cliente();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_lead_avanzar_por_cotizacion AFTER UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public._crm_lead_avanzar_por_cotizacion();
+CREATE TRIGGER trg_crm_lead_sync_estado_empresa AFTER UPDATE OF estado ON public.crm_leads FOR EACH ROW WHEN ((new.estado IS DISTINCT FROM old.estado)) EXECUTE FUNCTION public._crm_lead_sync_estado_empresa();
 CREATE TRIGGER trg_crm_leads_updated_at BEFORE UPDATE ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_notify_comentario_oportunidad AFTER INSERT ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public.crm_notify_comentario_oportunidad();
 CREATE TRIGGER trg_crm_op_updated_at BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -35946,6 +36109,8 @@ ALTER TABLE ONLY public.costeo_tarifas
     ADD CONSTRAINT costeo_tarifas_reemplazada_por_fkey FOREIGN KEY (reemplazada_por) REFERENCES public.costeo_tarifas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.costeo_tarifas
     ADD CONSTRAINT costeo_tarifas_ruta_id_fkey FOREIGN KEY (ruta_id) REFERENCES public.costeo_rutas(id);
+ALTER TABLE ONLY public.costeo_tarifas
+    ADD CONSTRAINT costeo_tarifas_solicitud_pricing_id_fkey FOREIGN KEY (solicitud_pricing_id) REFERENCES public.crm_solicitudes_pricing(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.costeo_tarifas
     ADD CONSTRAINT costeo_tarifas_tipo_contenedor_id_fkey FOREIGN KEY (tipo_contenedor_id) REFERENCES public.tipos_contenedor(id);
 ALTER TABLE ONLY public.cotizacion_costos
@@ -37105,6 +37270,8 @@ GRANT ALL ON FUNCTION public._ci_ensure_proformas_es_consolidada() TO service_ro
 REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO service_role;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO authenticated;
+REVOKE ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._costeo_tarifa_solicitud_guard() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM PUBLIC;
@@ -37133,12 +37300,19 @@ REVOKE ALL ON FUNCTION public._crm_criterio_etapa_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_criterio_etapa_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_cumplimiento_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_cumplimiento_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_empresa_estado_por_cliente() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_empresa_estado_por_cliente() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_es_pricing(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_es_pricing(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._crm_folio_pricing_prefijo(p_ts timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_folio_pricing_prefijo(p_ts timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public._crm_folio_pricing_prefijo(p_ts timestamp with time zone) TO service_role;
 REVOKE ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_lead_sync_estado_empresa() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_lead_sync_estado_empresa() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_opcion_vigente(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_opcion_vigente(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._crm_opcion_vigente(p_id uuid) TO service_role;
@@ -37158,7 +37332,6 @@ REVOKE ALL ON FUNCTION public._crm_reportes_guard() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_reportes_guard() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_reportes_guard() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_sol_pricing_before_ins() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._crm_sol_pricing_before_ins() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_ins() TO service_role;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_upd() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_sol_pricing_before_upd() TO service_role;
@@ -37689,12 +37862,18 @@ GRANT ALL ON FUNCTION public.crm_cancelar_solicitud_pricing(p_id uuid) TO authen
 GRANT ALL ON FUNCTION public.crm_cancelar_solicitud_pricing(p_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO service_role;
+REVOKE ALL ON FUNCTION public.crm_crear_oportunidad_con_empresa(p_empresa_id uuid, p_datos jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_crear_oportunidad_con_empresa(p_empresa_id uuid, p_datos jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_crear_oportunidad_con_empresa(p_empresa_id uuid, p_datos jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_embudo_conversion(p_desde date, p_hasta date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_embudo_conversion(p_desde date, p_hasta date) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_embudo_conversion(p_desde date, p_hasta date) TO service_role;
+REVOKE ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_empresa_pasar_a_prospecto(p_empresa_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_enviar_solicitud_pricing(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_enviar_solicitud_pricing(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_enviar_solicitud_pricing(p_id uuid) TO service_role;

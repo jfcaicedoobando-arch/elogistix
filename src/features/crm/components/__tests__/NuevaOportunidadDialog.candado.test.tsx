@@ -56,6 +56,7 @@ describe("NuevaOportunidadDialog — candado de creación", () => {
       origen_tipo: "prospecto",
       etapa_id: "e-ab",
       lead_id: "l-1",
+      empresa_id: "empresa-1",
       nombre: "Oportunidad Acme",
     };
     render(<NuevaOportunidadDialog open onOpenChange={vi.fn()} />);
@@ -69,10 +70,19 @@ describe("NuevaOportunidadDialog — candado de creación", () => {
       origen_tipo: "cliente",
       etapa_id: "e-ab",
       cliente_id: "c-1",
+      empresa_id: "empresa-1",
       nombre: "Oportunidad Acme",
     };
     render(<NuevaOportunidadDialog open onOpenChange={vi.fn()} />);
     expect(screen.queryByRole("status")).toBeNull();
     expect(boton().disabled).toBe(false);
+  });
+  it("con origen y nombre pero sin empresa bloquea y avisa", () => {
+    formActual = { ...EMPTY_OPORTUNIDAD, etapa_id: "e-ab", cliente_id: "c-1", nombre: "Acme" };
+    render(<NuevaOportunidadDialog open onOpenChange={vi.fn()} />);
+    expect(screen.getByRole("status")).toHaveTextContent("empresa asociada");
+    expect(boton()).toBeDisabled();
+    fireEvent.click(boton());
+    expect(mutateAsync).not.toHaveBeenCalled();
   });
 });

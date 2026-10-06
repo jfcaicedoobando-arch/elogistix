@@ -20,7 +20,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
   const { effectiveRole, user } = useAuth();
   const esPricing = esRolPricing(effectiveRole);
   const { data: opciones = [] } = useOpcionesPricing(s.id);
-  const { data: tarifas = [] } = useTarifasRespuestaPricing(s.id);
+  const { data: tarifas = [] } = useTarifasRespuestaPricing(s.id, s.estado === "enviada");
   const editable = esPricing && s.estado === "enviada";
   const abierta = s.estado === "borrador" || s.estado === "enviada";
   const puedeCancelar = abierta && (esPricing || s.created_by === user?.id);
@@ -37,6 +37,7 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
           orden={o.orden} opcion={o} editable={false} />
       ))}
       <TarifasRespuestaPricing solicitudId={s.id} hayOpcionesViejas={opciones.length > 0}
+        esperandoRespuesta={s.estado === "enviada"}
         editable={s.estado === "enviada" && puedeAgregarTarifaRespuesta(effectiveRole)} />
     </div>
   );

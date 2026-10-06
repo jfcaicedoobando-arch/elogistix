@@ -24,6 +24,7 @@ import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 import { useQuickCreateOportunidad, type OportunidadQuickDraft } from "@/features/crm/hooks/useQuickCreateOportunidad";
 import QuickCreateOportunidadOrigenFields from "./QuickCreateOportunidadOrigenFields";
+import { OportunidadEmpresaField } from "../nuevaOportunidad/OportunidadEmpresaField";
 
 export type { OportunidadQuickDraft };
 
@@ -37,6 +38,7 @@ interface Props {
 export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
   const {
     nombre, setNombre,
+    empresa, setEmpresa,
     origenTipo, setOrigenTipo,
     clienteId, setClienteId,
     leadId, setLeadId, setLeadNombre,
@@ -61,6 +63,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
       isDirty={
         nombre.trim().length > 0 ||
+        empresa !== null ||
         clienteId.length > 0 ||
         leadId.length > 0 ||
         origenTipo !== "cliente"
@@ -72,7 +75,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
           onCancel={() => onOpenChange(false)}
           confirmLabel="Crear"
           loading={crear.isPending}
-          disabled={!etapaInicial || !origenListo}
+          disabled={!etapaInicial || !origenListo || !empresa || !nombre.trim()}
           extra={
             <Button
               type="button"
@@ -116,6 +119,8 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
               setLeadVendedorEmail(meta?.vendedor_email ?? "");
             }}
           />
+          <OportunidadEmpresaField empresa={empresa} onChange={setEmpresa} disabled={crear.isPending} />
+          {!empresa && <p role="status" className="text-body-sm text-destructive">Falta seleccionar la empresa asociada.</p>}
         </div>
       </FormDialogSection>
     </FormDialogShell>

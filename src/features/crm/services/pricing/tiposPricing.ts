@@ -13,6 +13,12 @@ export type OpcionPricingInsert = Database["public"]["Tables"]["crm_pricing_opci
 export const SERVICIOS_PRICING = ["Marítimo", "Terrestre", "Aéreo"] as const;
 export const INCOTERMS_PRICING = ["EXW", "FAS", "FCA", "FOB", "CFR", "CIF", "DAP", "DDP", "DPU"] as const;
 export const MONEDAS_PRICING = ["USD", "MXN", "EUR"] as const;
+export const UNIDADES_MEDIDA_PRICING = [
+  { value: "kg", label: "Kilogramos (kg)" },
+  { value: "lb", label: "Libras (lb)" },
+  { value: "t", label: "Toneladas (t)" },
+  { value: "g", label: "Gramos (g)" },
+] as const;
 export type ComplejidadPricing = "baja" | "media" | "alta";
 
 export const HORAS_POR_COMPLEJIDAD: Record<ComplejidadPricing, number> = { baja: 8, media: 24, alta: 48 };

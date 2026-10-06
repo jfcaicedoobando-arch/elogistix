@@ -1,0 +1,52 @@
+[
+  {
+    "file": "0000_pricing_gerente_operaciones.sql",
+    "sha256": "5d5bb7df61696356340d7c5771d5796e233eaaff066213e161d168a4fcd403c5",
+    "replays": [
+      "20261005230000_replay_pricing_gerencia.sql",
+      "20261003022500_crm_pricing_preservar_gerencia.sql"
+    ]
+  },
+  {
+    "file": "0001_crm_empresa_estado_fusion_leads.sql",
+    "sha256": "fb830ab60cd6f2da5e7a32286e7a4f8c117d4bba97615a302cfb41f690ac7e79",
+    "replays": [
+      "20261005230100_replay_crm_empresa_estado.sql"
+    ]
+  },
+  {
+    "file": "0002_cerrar_sin_pago_tc_nulo.sql",
+    "sha256": "c99f56a615d7417beb4ec265eda890230f3b9c7c31a1956a794d4bda3ed030f5",
+    "replays": [
+      "20261005190000_replay_cierre_sin_pago_tc_nulo.sql"
+    ]
+  },
+  {
+    "file": "0003_pricing_respuesta_tarifas_folio_mensual.sql",
+    "sha256": "af18d96d91beb432feb50283817a25cfcff244d75b8b36426bc60219a0463415",
+    "replays": [
+      "20261006000100_replay_pricing_tarifas_folio.sql"
+    ]
+  },
+  {
+    "file": "0004_pricing_adjuntos_storage.sql",
+    "sha256": "ac403b8dbce9646319f400290a93696c2668e6e88510a37b90853feddf496e11",
+    "replays": [
+      "20261006000200_replay_pricing_adjuntos.sql"
+    ]
+  },
+  {
+    "file": "0005_crm_crear_oportunidad_con_empresa.sql",
+    "sha256": "1587cb0edd39177b00f2c88edc79344d1589b52a66ba1eeaa58dd0ae99c87042",
+    "replays": [
+      "20261006004000_replay_crm_oportunidad_empresa.sql"
+    ]
+  },
+  {
+    "file": "0006_pricing_unidad_medida.sql",
+    "sha256": "8eaaacbb39f67a7ad454cddd72d3f9efae3ba0c3c95a33d3adb57598628930ce",
+    "replays": [
+      "20261006012000_replay_pricing_unidad_medida.sql"
+    ]
+  }
+]

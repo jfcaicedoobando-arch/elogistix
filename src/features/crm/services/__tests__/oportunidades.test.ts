@@ -11,21 +11,38 @@ vi.mock("@/features/crm/domain/oportunidadPayload", () => ({
 
 import { crearOportunidad, actualizarOportunidad, moverEtapaOportunidad, eliminarOportunidad, getOportunidad } from "../oportunidades";
 
-beforeEach(() => { mock.tableCalls.length = 0; });
+beforeEach(() => { mock.resetResults(); mock.tableCalls.length = 0; mock.rpcCalls.length = 0; });
 
-const validInput = { nombre: "Op test", etapa_id: "e-1" };
+const validInput = { nombre: "Op test", etapa_id: "e-1", empresa_id: "empresa-1" };
 
 describe("crearOportunidad", () => {
-  it("inserta y devuelve id", async () => {
-    mock.setTableResult("crm_oportunidades", { data: { id: "op-1" }, error: null });
+  it("guarda oportunidad y vínculo mediante una sola operación", async () => {
+    mock.setRpcResult("crm_crear_oportunidad_con_empresa", { data: { id: "op-1" }, error: null });
     const r = await crearOportunidad(validInput, { id: "u-1", email: "a@b.com" });
     expect(r.id).toBe("op-1");
-    expect(mock.tableCalls[0]?.ops).toContain("insert");
+    expect(mock.rpcCalls).toContainEqual({ fn: "crm_crear_oportunidad_con_empresa", args: {
+      p_empresa_id: "empresa-1", p_datos: { nombre: "Test", etapa_id: "e-1" },
+    } });
+    expect(mock.tableCalls.some((c) => c.table === "crm_oportunidades" && c.ops.includes("insert"))).toBe(false);
   });
 
   it("propaga error supabase en crearOportunidad", async () => {
-    mock.setTableResult("crm_oportunidades", { data: null, error: { message: "err" } });
+    mock.setRpcResult("crm_crear_oportunidad_con_empresa", { data: null, error: { message: "err" } });
     await expect(crearOportunidad(validInput, null)).rejects.toThrow();
+  });
+  it("sin empresa no intenta escribir", async () => {
+    await expect(crearOportunidad({ nombre: "Op", etapa_id: "e-1" }, null)).rejects.toThrow("Selecciona la empresa asociada");
+    expect(mock.rpcCalls).toHaveLength(0);
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+  it("propaga rechazo de empresa ajena sin escribir por separado", async () => {
+    mock.setRpcResult("crm_crear_oportunidad_con_empresa", { data: null, error: { message: "La empresa no está disponible en esta organización" } });
+    await expect(crearOportunidad(validInput, null)).rejects.toThrow("La empresa no está disponible");
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+  it("rechaza una confirmación sin id", async () => {
+    mock.setRpcResult("crm_crear_oportunidad_con_empresa", { data: {}, error: null });
+    await expect(crearOportunidad(validInput, null)).rejects.toThrow("No se pudo confirmar");
   });
 });
 

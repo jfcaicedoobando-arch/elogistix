@@ -11,10 +11,15 @@ import type { OportunidadFormState } from "@/features/crm/domain/oportunidadForm
 const base = (patch: Partial<OportunidadFormState>): OportunidadFormState => ({
   ...EMPTY_OPORTUNIDAD,
   etapa_id: "e-ab",
+  empresa_id: "empresa-1",
   ...patch,
 });
 
 describe("faltantesOportunidadForm", () => {
+  it("exige empresa aunque nombre y origen estén completos", () => {
+    expect(faltantesOportunidadForm(base({ nombre: "Acme", cliente_id: "c-1", empresa_id: null })))
+      .toContain("empresa asociada");
+  });
   it("origen prospecto: exige prospecto y nombre", () => {
     expect(faltantesOportunidadForm(base({ origen_tipo: "prospecto" }))).toEqual([
       "prospecto de origen",

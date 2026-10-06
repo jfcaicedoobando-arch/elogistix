@@ -8,6 +8,12 @@ el bloqueo PPD + No objeto eran referencias superadas.
 
 ## Trabajo nuevo
 
+- [x] Pricing: lista Units of measurement entre Weight y Dimensions; persistencia opcional y detalle, sin modificar históricos. 12 pruebas focalizadas, lint y verificación visual correctos; bloque de baseline cotejado contra snapshot. CI/RLS completos y db:postcheck pendientes de GitHub Actions; no se incorporaron divergencias ajenas del esquema activo.
+
+- [x] Exigir empresa asociada en alta rápida y completa; guardado atómico sin cambiar históricos. 43 pruebas focalizadas, lint y prueba SQL aislada correctos; baseline regenerada. CI/RLS completos y db:postcheck quedan pendientes de GitHub Actions, conforme a la política de validación local.
+
+- [x] Oportunidades CRM: margen esperado sin cero fijo y etiquetas actualizadas; 26 pruebas focalizadas y lint de archivos modificados correctos. CI/RLS completos quedan en GitHub Actions.
+
 Registrar cada iniciativa aprobada en un issue/PR o diagnóstico con:
 ID, evidencia/fecha/entorno, prioridad, alcance, responsable y criterio
 observable de cierre. Verificar el código/deploy actual antes de reabrir

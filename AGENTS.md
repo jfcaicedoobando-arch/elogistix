@@ -1,5 +1,11 @@
 # Decisiones técnicas
 
+- Pricing requests persist the optional weight unit in `unidad_medida`, using one shared unit catalog for form and detail. Why: units survive draft editing without changing historical weights or dimensions.
+
+- Manual CRM opportunity creation uses `crm_crear_oportunidad_con_empresa` with SECURITY INVOKER; the selected company is carried through quick/full forms but never sent as an opportunity column. Why: opportunity and same-organization company link must commit atomically without changing historical records or bypassing RLS.
+
+- CRM opportunity margin keeps an empty editing value in form state and normalizes it when building the payload. Why: clearing the field must not restore a sticky zero or change the persistence contract.
+
 - CRM por objetos: lecturas y vínculos de Empresas/Contactos viven en `src/features/crm/services/objetosCrm.ts` y `vinculosCrm.ts`; las pantallas usan `VinculosCard` para ligar/desligar, y quitar un vínculo nunca borra el registro. Why: un solo lugar para el modelo muchos-a-muchos.
 - CRM propiedades: definiciones en `services/propiedadesCrm.ts`, valores EAV en `services/valoresCrm.ts`; renombrar una opción crea otra con `reemplaza_a` y archiva la anterior, y la pantalla resuelve el nombre vigente con `idVigente`/`etiquetaVigente`. Why: los valores viejos nunca se reescriben.
 - CRM puntaje: el cálculo A/B/C vive sólo en la base (`crm_puntaje_detalle`, SECURITY INVOKER) y nunca se guarda; listas usan `crm_puntajes` por lote y filtran con las columnas calculadas `letra_empresa_crm`/`letra_oportunidad_crm` (sin sobrecargas: la guardia de integridad las prohíbe). Why: el puntaje siempre refleja datos y reglas vigentes y respeta RLS.

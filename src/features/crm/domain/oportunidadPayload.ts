@@ -31,7 +31,8 @@ export function buildOportunidadInsertPayload(
     vendedor_email: user?.email ?? "",
   };
   const hasExplicitVendedor = input.vendedor_id !== undefined;
-  const merged = { ...defaults, ...stripUndefined(input) };
+  const { empresa_id: _empresaId, ...datos } = input;
+  const merged = { ...defaults, ...stripUndefined(datos) };
   return {
     ...merged,
     // EC-09: defensa final contra el CHECK (probabilidad BETWEEN 0 AND 100) —

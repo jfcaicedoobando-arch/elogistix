@@ -12,6 +12,8 @@ export type OportunidadOrigenTipo = "prospecto" | "cliente";
 
 export interface OportunidadFormState {
   nombre: string;
+  empresa_id: string | null;
+  empresa_nombre: string;
   origen_tipo: OportunidadOrigenTipo;
   lead_id: string | null;
   lead_nombre: string;
@@ -42,12 +44,14 @@ export interface OportunidadFormState {
   fecha_meta_cierre: string;
   compromiso_nota: string;
   // Mapeo CRM Hunter: margen esperado y riesgos/objeciones del negocio.
-  margen_pct: number;
+  margen_pct: number | "";
   riesgos_objeciones: string;
 }
 
 export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   nombre: "",
+  empresa_id: null,
+  empresa_nombre: "",
   origen_tipo: "prospecto",
   lead_id: null,
   lead_nombre: "",
@@ -71,6 +75,6 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   monto_meta: 0,
   fecha_meta_cierre: "",
   compromiso_nota: "",
-  margen_pct: 0,
+  margen_pct: "",
   riesgos_objeciones: "",
 };

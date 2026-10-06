@@ -57,7 +57,7 @@ fi
 if grep -qE '^supabase/functions/|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/|^scripts/ci/detect-areas\.sh$' <<<"$diff"; then
   edge=true
 fi
-if grep -qE '^supabase/(migrations|schema|tests|releases)/|^scripts/audit-|^scripts/lib/|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
+if grep -qE '^supabase/(migrations|schema|tests|releases)/|^drizzle/|^drizzle\.config\.ts$|^scripts/audit-|^scripts/lib/|^scripts/ci/detect-areas\.sh$|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
   database=true
 fi
 {

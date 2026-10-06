@@ -56,6 +56,7 @@ export default function QuickAddFullDialogs({
         onOpenChange={onOpOpenChange}
         origenInicial={opDraft?.origen ?? null}
         nombreInicial={opDraft?.nombre ?? null}
+        empresaInicial={opDraft?.empresa ?? null}
         onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
       />
       <NuevaActividadDialog

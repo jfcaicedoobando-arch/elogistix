@@ -12,6 +12,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("@/hooks/shared", () => ({ usePermissions: vi.fn() }));
+vi.mock("@/features/crm/components/objetos/NuevoObjetoCrmDialog", () => ({ NuevoObjetoCrmDialog: () => null }));
 vi.mock("@/features/crm/hooks", () => ({ useOportunidadesPorLead: vi.fn() }));
 
 // Los diálogos del menú rápido no participan en este contrato.
@@ -69,7 +70,7 @@ describe("consumo de capacidades de leads", () => {
     setPermisos({ canCrearLead: true, canGestionarLeadsEnLote: false });
     const { rerender } = render(<QuickAddMenu openTrigger={0} />, { wrapper: MemoryRouter });
     rerender(<QuickAddMenu openTrigger={1} />);
-    expect(await screen.findByText("Nuevo lead")).toBeTruthy();
+    expect(await screen.findByText("Nueva empresa")).toBeTruthy();
     expect(screen.queryByText(/importar leads csv/i)).toBeNull();
   });
 
@@ -78,6 +79,6 @@ describe("consumo de capacidades de leads", () => {
     const { rerender } = render(<QuickAddMenu openTrigger={0} />, { wrapper: MemoryRouter });
     rerender(<QuickAddMenu openTrigger={1} />);
     expect(await screen.findByText(/importar leads csv/i)).toBeTruthy();
-    expect(screen.queryByText("Nuevo lead")).toBeNull();
+    expect(screen.queryByText("Nueva empresa")).toBeNull();
   });
 });

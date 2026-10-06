@@ -38,6 +38,8 @@ export interface OrigenInicial {
 function bloqueIdentidad(o: CrmOportunidadRow) {
   return {
     nombre: o.nombre,
+    empresa_id: null,
+    empresa_nombre: "",
     origen_tipo: (o.lead_id ? "prospecto" : "cliente") as OportunidadFormState["origen_tipo"],
     lead_id: o.lead_id ?? null,
     lead_nombre: "",
