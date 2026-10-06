@@ -22,7 +22,7 @@ const colsCuentas: PdfColumn<ResumenCuenta>[] = [
 const colsTop: PdfColumn<TopItem>[] = [
   { key: "nom", title: "Nombre", cellStyle: styles.cellDesc, render: (r) => r.nombre },
   { key: "saldo", title: "Saldo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.saldo, r.moneda) },
-  { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => r.dias != null ? String(r.dias) : "—" },
+  { key: "dias", title: "Días\nvencidos", cellStyle: styles.cellNumWide, render: (r) => r.dias != null ? String(r.dias) : "—" },
 ];
 
 const colsFlujo: PdfColumn<RenglonFlujoMoneda>[] = [
@@ -54,19 +54,21 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
         <Text style={[styles.h3, { marginTop: 12 }]}>Flujo esperado 30 días</Text>
         <DataTable columns={colsFlujo} rows={flujo} />
 
-        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 deudores vencidos</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 deudores vencidos por moneda</Text>
         {resumen.top_deudores.length === 0 ? (
           <Text style={styles.paragraph}>Sin deudores vencidos.</Text>
         ) : (
           <DataTable columns={colsTop} rows={resumen.top_deudores} />
         )}
 
-        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 vencimientos próximos a proveedor</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 proveedores con saldo vencido por moneda</Text>
         {resumen.top_acreedores.length === 0 ? (
-          <Text style={styles.paragraph}>Sin vencimientos próximos.</Text>
+          <Text style={styles.paragraph}>Sin proveedores con facturas vencidas.</Text>
         ) : (
           <DataTable columns={colsTop} rows={resumen.top_acreedores} />
         )}
+
+        <Text style={styles.paragraph}>Días vencidos: mayor atraso de las facturas agrupadas por nombre y moneda.</Text>
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
