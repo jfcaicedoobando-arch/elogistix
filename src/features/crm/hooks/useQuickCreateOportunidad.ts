@@ -123,7 +123,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
     if (crear.isPending || enviandoRef.current) return;
     const invalido = validar();
     if (invalido || !etapaInicial || !empresa) {
-      notifyError(undefined, { title: invalido, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
+      notifyError(undefined, { title: invalido ?? "Selecciona la empresa asociada", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
       return;
     }
     const n = nombre.trim();
