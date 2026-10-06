@@ -1,6 +1,8 @@
 import { excedeCotizadoConTc } from "../vinculoMoneda";
 import { describe, expect, it } from "vitest";
 import {
+  avisoMonedasVinculo,
+  monedasVinculoCompatibles,
   convertirMonto,
   desviacionTcExcedida,
   factorConversion,
@@ -23,8 +25,16 @@ describe("factorConversion", () => {
     expect(factorConversion("MXN", "USD", TC)).toBeCloseTo(1 / 17.1092, 8);
   });
 
-  it("USD → EUR cruza por el pivote MXN", () => {
-    expect(factorConversion("USD", "EUR", TC)).toBeCloseTo(17.1092 / 18.5, 8);
+  it.each([["USD", "EUR"], ["EUR", "MXN"], ["MXN", "EUR"], ["EUR", "USD"]])(
+    "rechaza %s → %s aunque exista T/C porque el servidor no admite el cruce",
+    (origen, destino) => expect(factorConversion(origen, destino, TC)).toBeNull(),
+  );
+
+  it("mantiene EUR/EUR y normaliza como el servidor", () => {
+    expect(factorConversion("EUR", "EUR", null)).toBe(1);
+    expect(factorConversion(" eur ", "EUR", null)).toBe(1);
+    expect(convertirMonto(1, "EUR", "EUR", null)).toBe(1);
+    expect(factorConversion(" usd ", "mxn", TC)).toBe(TC.usdMxn);
   });
 
   it("devuelve null sin T/C disponible", () => {
@@ -110,5 +120,22 @@ describe("excedeCotizadoConTc", () => {
         montoCapturado: 100, montoCotizado: 51, factorDof: null, mismaMoneda: false,
       }),
     ).toBe(false);
+  });
+});
+
+// Auditoría 133: reconstrucción local desde el contrato de moneda del trigger.
+describe("monedasVinculoCompatibles", () => {
+  it.each([["MXN", "MXN"], ["USD", "USD"], ["EUR", "EUR"], ["JPY", "JPY"],
+    ["MXN", "USD"], ["USD", "MXN"]])("permite %s/%s", (costo, factura) => {
+    expect(monedasVinculoCompatibles(costo, factura)).toBe(true);
+  });
+  it.each([["EUR", "MXN"], ["EUR", "USD"], ["MXN", "EUR"], ["USD", "EUR"],
+    ["JPY", "MXN"], ["", ""], ["USD", ""]])("rechaza %s/%s", (costo, factura) => {
+    expect(monedasVinculoCompatibles(costo, factura)).toBe(false);
+  });
+  it("explica el par real sin pedir falsear monedas", () => {
+    expect(avisoMonedasVinculo("MXN", "EUR")).toContain("EUR/MXN");
+    expect(avisoMonedasVinculo("MXN", "EUR")).toContain("Conserva las monedas reales");
+    expect(avisoMonedasVinculo("EUR", "EUR")).toBeNull();
   });
 });

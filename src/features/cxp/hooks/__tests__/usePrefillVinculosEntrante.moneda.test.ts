@@ -52,3 +52,17 @@ describe("dividirPorTipoCambio", () => {
     expect(872.57 - base).toBeLessThan(5);
   });
 });
+
+describe("auditoría 133 · sugerencias de buzón", () => {
+  it("separa cruces no soportados de un T/C faltante y no preselecciona EUR/MXN", () => {
+    const eur = { ...SUG_USD, moneda: "EUR" };
+    const r = dividirPorTipoCambio([eur, SUG_MXN], "EUR", TC);
+    expect(r.convertibles).toEqual([eur]);
+    expect(r.monedaNoSoportada).toEqual([SUG_MXN]);
+    expect(r.sinTipoCambio).toEqual([]);
+  });
+  it("no espera un DOF que no puede habilitar un cruce EUR/MXN", () => {
+    expect(requiereConversion([SUG_MXN], "EUR")).toBe(false);
+    expect(dividirPorTipoCambio([SUG_MXN], "EUR", null).monedaNoSoportada).toEqual([SUG_MXN]);
+  });
+});

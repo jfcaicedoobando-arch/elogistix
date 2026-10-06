@@ -2,6 +2,7 @@
 import currency from "currency.js";
 import { supabase } from "@/integrations/supabase/client";
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
+import { avisoMonedasVinculo } from "../utils/vinculoMoneda";
 import { totalLinea } from "../utils/cuadreConceptos";
 
 interface VinculoPropuesto { monto: number }
@@ -53,6 +54,10 @@ export async function prevalidarVinculosCosto(
   if (errorVinculos) throw errorVinculos;
   if ((costos ?? []).length !== ids.length) {
     throw new ReglaNegocioError("No se pudieron verificar todos los costos seleccionados. Actualiza la lista antes de guardar la factura.");
+  }
+  for (const costo of costos ?? []) {
+    const errorMoneda = avisoMonedasVinculo(costo.moneda, monedaFactura);
+    if (errorMoneda) throw new ReglaNegocioError(`${costo.concepto}: ${errorMoneda}`);
   }
   const aviso = detectarSobreasignacionCosto(monedaFactura, vinculos, costos ?? [], existentes ?? []);
   if (aviso) throw new ReglaNegocioError(aviso);

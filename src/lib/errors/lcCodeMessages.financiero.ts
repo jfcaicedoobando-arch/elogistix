@@ -85,8 +85,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_AJUSTE_DESPROPORCIONADO:
     "El ajuste no puede exceder el total de la factura. Revisa la moneda del costo vinculado.",
   LC_CXP_VINCULO_MONEDA:
-    "La factura y el costo del expediente están en monedas distintas. Sólo se pueden " +
-    "conciliar pesos con dólares; para otras monedas corrige la moneda del costo.",
+    "Esta vinculación entre monedas todavía no está disponible. Sólo se admiten la misma moneda o MXN/USD. " +
+    "Conserva las monedas reales del documento y del costo; desmarca este vínculo para continuar sin asociarlo.",
   LC_CXP_VINCULO_TC_REQUERIDO:
     "La factura y el costo del expediente están en monedas distintas y la factura no tiene " +
     "tipo de cambio. Captura el tipo de cambio de la factura antes de vincularlos.",

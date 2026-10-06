@@ -28,7 +28,7 @@ import {
 
 import type { SeleccionLinea } from "@/features/cxp/types";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
-import type { TcPivote } from "@/features/cxp/utils/vinculoMoneda";
+import { avisoMonedasVinculo, type TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 
 
 interface Props {
@@ -71,6 +71,8 @@ export function VincularEmbarqueSection({
   const tc: TcPivote | null = tcDof
     ? { usdMxn: tcDof.usdMxn, eurMxn: tcDof.eurMxn }
     : null;
+  const errorMoneda = (data ?? []).filter((c) => seleccion[c.id])
+    .map((c) => avisoMonedasVinculo(c.moneda, facturaMoneda ?? "MXN")).find(Boolean);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
   const [filtro, setFiltro] = useState<string>("");
@@ -165,6 +167,7 @@ export function VincularEmbarqueSection({
 
       <TopeVinculacionBar
         resultado={tope}
+        errorMoneda={errorMoneda}
         subtotal={facturaMonto ?? 0}
         moneda={facturaMoneda ?? "MXN"}
       />

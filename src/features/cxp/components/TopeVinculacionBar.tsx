@@ -5,6 +5,7 @@
  * En rojo (y con el guardado bloqueado) cuando lo asignado excede el subtotal.
  */
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
 
@@ -12,11 +13,19 @@ interface Props {
   resultado: ResultadoTopeVinculacion;
   subtotal: number;
   moneda: string;
+  errorMoneda?: string | null;
 }
 
-export function TopeVinculacionBar({ resultado, subtotal, moneda }: Props) {
+export function TopeVinculacionBar({ resultado, subtotal, moneda, errorMoneda }: Props) {
   if (resultado.lineas === 0) return null;
   const excede = resultado.excede;
+  if (errorMoneda) {
+    return (
+      <Alert variant="destructive" className="px-3 py-2">
+        <AlertDescription className="text-body-sm text-destructive">{errorMoneda}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div
