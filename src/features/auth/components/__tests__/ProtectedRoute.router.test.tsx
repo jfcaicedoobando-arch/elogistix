@@ -1,5 +1,5 @@
 /**
- * Guards de autenticación/rol/organización bajo React Router 7 (modo declarativo).
+ * Guards de autenticación/rol/organización con React Router (modo declarativo).
  *
  * Verifica que `<Navigate>` conserve la semántica de v6: deep-link en `state.from`
  * al mandar a login, redirección a `/sin-acceso` con motivo y paso libre cuando
@@ -59,7 +59,7 @@ function montar(rutaInicial: string, allowedRoles?: AppRole[]) {
   );
 }
 
-describe("ProtectedRoute con React Router 7", () => {
+describe("ProtectedRoute con React Router", () => {
   beforeEach(() => {
     authState.user = null;
     authState.role = null;

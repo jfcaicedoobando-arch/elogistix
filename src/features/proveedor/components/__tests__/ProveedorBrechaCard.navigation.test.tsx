@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v8";
 import { ProveedorBrechaCard } from "../ProveedorBrechaCard";
 import { useCxpPageState } from "@/features/cxp/hooks";
 import CxpPorCapturar from "@/features/bandejas/routes/CxpPorCapturar";

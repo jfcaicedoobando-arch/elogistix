@@ -1,11 +1,11 @@
 /**
- * Pruebas dirigidas de la migración a React Router 7 (modo declarativo).
+ * Contratos de navegación con el React Router instalado (modo declarativo).
  *
  * Verifican comportamiento en runtime (no sólo estructura del árbol de rutas):
  *  - `Routes`/`Route`/`Navigate` siguen resolviendo rutas anidadas y profundas.
  *  - `RedirectPreserveSearch` preserva querystring y hash en los redirects legacy.
  *  - Los enlaces relativos y el trailing slash conservan la semántica de v6.
- *  - El adaptador `nuqs/adapters/react-router/v7` sincroniza filtros con la URL.
+ *  - El adaptador `nuqs/adapters/react-router/v8` sincroniza filtros con la URL.
  */
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, act, cleanup } from "@testing-library/react";
@@ -21,7 +21,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v8";
 import { useQueryState } from "nuqs";
 import { RedirectPreserveSearch } from "../RedirectPreserveSearch";
 
@@ -44,7 +44,7 @@ function LayoutShell() {
   );
 }
 
-describe("React Router 7 — rutas declarativas", () => {
+describe("React Router — rutas declarativas", () => {
   it("resuelve rutas profundas anidadas con parámetros", () => {
     render(
       <MemoryRouter initialEntries={["/crm/clientes/abc-123/contactos"]}>
@@ -144,7 +144,7 @@ describe("React Router 7 — rutas declarativas", () => {
   });
 });
 
-describe("NuqsAdapter v7 — filtros en query string", () => {
+describe("NuqsAdapter v8 — filtros en query string", () => {
   // nuqs agenda la hidratación y la escritura del query param en temporizadores
   // internos. Con temporizadores falsos se drenan dentro de `act`, de modo que
   // React no reporta actualizaciones fuera de act.

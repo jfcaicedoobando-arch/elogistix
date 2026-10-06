@@ -27,7 +27,7 @@ instalada. No significa que sean las últimas versiones de cada proveedor.
 | --- | --- |
 | Interfaz | React 19, TypeScript 6 estricto |
 | Desarrollo/build | Vite 8, React SWC, Terser |
-| Navegación | React Router 7 declarativo (`BrowserRouter`), nuqs v7 |
+| Navegación | React Router 8 declarativo (`BrowserRouter`), adaptador nuqs v8 |
 | UI | Tailwind CSS 3, Radix/shadcn adaptados, Lucide |
 | Formularios | React Hook Form 7, resolvers 5, Zod 4 |
 | Datos/tablas | TanStack Query 5, Table 8 y Virtual 3, Supabase |
@@ -38,7 +38,7 @@ instalada. No significa que sean las últimas versiones de cada proveedor.
 
 ## Desarrollo
 
-Node.js **≥22.12.0** según `engines`. CI utiliza Bun **1.4.0**.
+Node.js **≥22.22.0** según `engines` y el mínimo de Router 8. CI utiliza Bun **1.4.0**.
 
 ```bash
 bun install --frozen-lockfile
