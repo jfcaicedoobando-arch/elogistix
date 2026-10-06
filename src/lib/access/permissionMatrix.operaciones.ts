@@ -118,13 +118,14 @@ export const CONFIGURAR_AUTORIZACION_CLIENTE: readonly AppRole[] = [
  * `roles_jerarquia('operador')` incluye a `coordinador_logistico`, así que no
  * hace falta migración.
  *
- * `gerente_operaciones` sigue en sólo lectura de costos: VE costo, conciliación
- * y folio de la factura vinculada, pero no captura ni edita.
+ * Decisión 2026-10-06: `gerente_operaciones` SÍ captura y edita costos/tarifas
+ * del embarque. La base ya lo permitía vía `roles_jerarquia('operador')`.
  */
 export const EDITAR_COSTOS_EMBARQUE: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
+  "gerente_operaciones",
   "gerente_comercial",
   "operador",
   "coordinador_logistico",
