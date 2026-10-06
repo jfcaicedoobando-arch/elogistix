@@ -13,9 +13,7 @@ import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback"
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { todayLocalISO } from "@/lib/date/today";
 import type { EstadoNotaCredito } from "@/features/facturacion/hooks";
-
-/** Sólo las notas que ya pasaron por el SAT tienen PDF/XML. */
-export const ESTADOS_NC_CON_CFDI: ReadonlySet<EstadoNotaCredito> = new Set(["Timbrada", "Aplicada", "Cancelada"]);
+import { ESTADOS_NC_CON_CFDI } from "./notasCreditoZip.constants";
 
 export interface NotaZip { id: string; folio: string | number; estado: EstadoNotaCredito }
 
