@@ -91,7 +91,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   conciliacion: ["Pendiente", "Conciliado", "Ignorado", "No aplica"],
   conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
   pago_tipo: ["cobro", "pago", "anticipo", "devolucion_anticipo"],
-  rep: ["Timbrado", "Cancelado", "Pendiente"],
+  rep: ["Timbrado", "Cancelado", "Pendiente", "No aplica"],
   carta_garantia: ["Carta vigente", "Carta vencida", "Sin condiciones", "Sin carta"],
   tarifa_marcador: ["Mejor", "Nueva"],
   sat_uuid: ["Vigente", "Cancelado", "No Encontrado", "Sin verificar"],

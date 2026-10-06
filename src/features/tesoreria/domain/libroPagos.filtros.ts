@@ -33,7 +33,7 @@ function coincideRep(pago: PagoLibro, rep: FiltroRep): boolean {
   const estado = normalizarTextoPago(pago.estado_rep ?? "");
   if (rep === "timbrado") return estado === "timbrado";
   if (rep === "cancelado") return estado === "cancelado";
-  return estado !== "timbrado" && estado !== "cancelado";
+  return estado !== "timbrado" && estado !== "cancelado" && estado !== "noaplica";
 }
 
 function coincideCuenta(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
