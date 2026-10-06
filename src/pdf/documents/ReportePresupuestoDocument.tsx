@@ -1,6 +1,7 @@
 /**
  * Reporte PDF: Presupuesto vs Real por categoría.
  */
+import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { styles } from "@/pdf/theme/styles";
@@ -11,6 +12,8 @@ import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   resumen: ResumenVsReal;
+  filas?: FilaVsReal[];
+  soloExcesos?: boolean;
   emisor?: { razonSocial?: string };
 }
 
@@ -22,7 +25,7 @@ const cols: PdfColumn<FilaVsReal>[] = [
   { key: "pct", title: "% cumpl.", cellStyle: styles.cellQty, render: (r) => r.presupuesto_mxn > 0 ? `${r.cumplimiento_pct.toFixed(1)}%` : "—" },
 ];
 
-export function ReportePresupuestoDocument({ resumen, emisor }: Props) {
+export function ReportePresupuestoDocument({ resumen, filas = resumen.filas, soloExcesos = false, emisor }: Props) {
   return (
     <Document title={`Presupuesto ${resumen.periodo}`} author={emisor?.razonSocial ?? "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
@@ -33,6 +36,7 @@ export function ReportePresupuestoDocument({ resumen, emisor }: Props) {
           </View>
         </View>
 
+        {!!resumen.notas_proveedor_sin_base_count && <Text style={styles.paragraph}>{avisoNcProveedorSinBase(resumen.notas_proveedor_sin_base_count)}</Text>}
         <View style={[styles.kpiRow, { marginTop: 8 }]}>
           <View style={styles.kpiCard}>
             <View style={styles.kpiInner}>
@@ -55,10 +59,13 @@ export function ReportePresupuestoDocument({ resumen, emisor }: Props) {
         </View>
 
         <Text style={[styles.h3, { marginTop: 12 }]}>Detalle por categoría</Text>
-        {resumen.filas.length === 0 ? (
-          <Text style={styles.paragraph}>Sin categorías configuradas.</Text>
+        <Text style={styles.paragraph}>
+          {soloExcesos ? "Filtro: Solo excesos (más del 110% del presupuesto)." : "Filtro: Todas las categorías."} Los indicadores superiores corresponden al periodo completo.
+        </Text>
+        {filas.length === 0 ? (
+          <Text style={styles.paragraph}>{soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin categorías configuradas."}</Text>
         ) : (
-          <DataTable columns={cols} rows={resumen.filas} />
+          <DataTable columns={cols} rows={filas} />
         )}
 
         <Footer empresaNombre={emisor?.razonSocial} />

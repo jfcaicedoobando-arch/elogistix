@@ -1,3 +1,4 @@
+import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { formatCurrency } from "@/lib/formatters";
 import type { EstadoResultados, ModoColumna } from "@/features/profit/domain/estadoResultados";
 
@@ -31,6 +32,7 @@ export function buildEstadoResultadosCsvRows(data: EstadoResultados) {
     total: f.total.toFixed(2),
   });
   const rows: Record<string, unknown>[] = [];
+  if (data.notas_proveedor_sin_base?.length) rows.push({ seccion: "Advertencia", concepto: avisoNcProveedorSinBase(data.notas_proveedor_sin_base.length) });
   for (const r of data.ingresos) rows.push(rowOf("Ingresos", r.concepto, r));
   rows.push(rowOf("Ingresos", "TOTAL INGRESOS", data.totalIngresos));
   for (const r of data.costos) rows.push(rowOf("Costos", r.concepto, r));

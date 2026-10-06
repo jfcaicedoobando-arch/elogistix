@@ -59,13 +59,14 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
   const margenPresup = ventaPresup > 0 ? (utilidadPresup / ventaPresup) * 100 : 0;
 
 
+  const costosIncompletos = data.estado_costos === "incompleto";
   const dVenta = deltaPnl(ventaReal, ventaPresup);
   const dCosto = deltaPnl(costoReal, costoPresup);
   const { utilidadReal, margenReal, alertaSobrecosto, alertaVenta, alertaMargen, sinActividadReal } =
     calcularAlertasPnl({
-      ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct, estadoEmbarque,
+      ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct, estadoEmbarque, costosIncompletos,
     });
-  const dUtilidad = deltaPnl(utilidadReal, utilidadPresup);
+  const dUtilidad = deltaPnl(utilidadReal ?? 0, utilidadPresup);
 
   return (
     <div className="space-y-6">
@@ -99,22 +100,22 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
         />
         <KpiCard
           label="Utilidad real"
-          value={fmtPnl(utilidadReal)}
+          value={utilidadReal === null ? "No calculable" : fmtPnl(utilidadReal)}
           delta={
-            sinActividadReal
+            sinActividadReal || costosIncompletos
               ? `Presup. ${fmtPnl(utilidadPresup)}`
               : `Presup. ${fmtPnl(utilidadPresup)} · Δ ${fmtPnl(dUtilidad.abs)}`
           }
-          variant={sinActividadReal ? "default" : utilidadReal >= utilidadPresup ? "success" : "destructive"}
+          variant={sinActividadReal || utilidadReal === null ? "default" : utilidadReal >= utilidadPresup ? "success" : "destructive"}
         />
         <KpiCard
           label="Margen real"
           // UIA-10: sin venta real el margen no es 0%, es indeterminado.
-          value={ventaReal > 0 ? pctPnl(margenReal) : "n/a"}
+          value={margenReal === null ? "No calculable" : ventaReal > 0 ? pctPnl(margenReal) : "n/a"}
           delta={`Presup. ${pctPnl(margenPresup)}`}
 
           variant={
-            sinActividadReal
+            sinActividadReal || utilidadReal === null || margenReal === null
               ? "default"
               : utilidadReal < 0 || margenReal < 0
                 ? "destructive"
@@ -127,6 +128,10 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
 
       <PnlAvisosCards
         sinActividadReal={sinActividadReal}
+        costosIncompletos={costosIncompletos}
+        notasCreditoSinBase={data.notas_credito_sin_base}
+        costoSinAsignar={data.costo_sin_asignar_mxn}
+        facturasSobreasignadas={data.facturas_sobreasignadas}
         alertaSobrecosto={alertaSobrecosto}
         alertaVenta={alertaVenta}
         alertaMargen={alertaMargen}
@@ -173,7 +178,7 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
             descuenta notas de crédito prorrateadas, igual que el desglose. La
             diferencia restante viene de facturas sin conceptos capturados. */}
         El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
-        proveedor no tiene conceptos capturados, su importe aparece como "(factura completa)".
+        proveedor no tiene conceptos capturados, la base pendiente de desglosar aparece como "(factura completa / base sin detalle)".
           </p>
         </>
       )}

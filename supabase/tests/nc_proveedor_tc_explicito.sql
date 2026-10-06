@@ -32,7 +32,7 @@ BEGIN
   FOREACH v_tc IN ARRAY ARRAY[0.5, 1, 20]::numeric[] LOOP
     INSERT INTO public.proveedor_notas_credito(
       organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-    ) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', v_tc) RETURNING * INTO v_nc;
+    , subtotal) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', v_tc, 1) RETURNING * INTO v_nc;
     PERFORM pg_temp.assert(v_nc.tipo_cambio IS NOT DISTINCT FROM v_tc,
       'AUD21: TC explícito ' || v_tc || ' fue sustituido');
     PERFORM pg_temp.assert(
@@ -43,7 +43,7 @@ BEGIN
 
   INSERT INTO public.proveedor_notas_credito(
     organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-  ) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', NULL) RETURNING * INTO v_nc;
+  , subtotal) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', NULL, 1) RETURNING * INTO v_nc;
   PERFORM pg_temp.assert(v_nc.tipo_cambio IS NOT DISTINCT FROM 18.1903,
     'AUD21: sólo TC omitido debe resolver DOF');
 
@@ -51,7 +51,7 @@ BEGIN
     BEGIN
       INSERT INTO public.proveedor_notas_credito(
         organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-      ) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', v_invalido);
+      , subtotal) VALUES (v_org, v_factura, v_fecha, 1, 'MXN', v_invalido, 1);
       RAISE EXCEPTION 'AUD21: se aceptó TC explícito inválido %', v_invalido;
     EXCEPTION WHEN invalid_parameter_value THEN
       GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT;
@@ -61,13 +61,13 @@ BEGIN
 
   INSERT INTO public.proveedor_notas_credito(
     organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-  ) VALUES (v_org, v_factura, v_fecha, 1, 'USD', 0.5) RETURNING * INTO v_nc;
+  , subtotal) VALUES (v_org, v_factura, v_fecha, 1, 'USD', 0.5, 1) RETURNING * INTO v_nc;
   PERFORM pg_temp.assert(v_nc.tipo_cambio IS NULL, 'AUD21: misma moneda debe conservar TC no aplicable');
 
   BEGIN
     INSERT INTO public.proveedor_notas_credito(
       organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-    ) VALUES (v_org, v_factura, v_fecha, 1, 'EUR', 0.5);
+    , subtotal) VALUES (v_org, v_factura, v_fecha, 1, 'EUR', 0.5, 1);
     RAISE EXCEPTION 'AUD21: se admitió cruce USD/EUR no soportado';
   EXCEPTION WHEN invalid_parameter_value THEN
     GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT;
@@ -76,7 +76,7 @@ BEGIN
   BEGIN
     INSERT INTO public.proveedor_notas_credito(
       organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio
-    ) VALUES (v_org, v_factura, DATE '0001-01-01', 1, 'MXN', NULL);
+    , subtotal) VALUES (v_org, v_factura, DATE '0001-01-01', 1, 'MXN', NULL, 1);
     RAISE EXCEPTION 'AUD21: se admitió NC sin TC ni DOF';
   EXCEPTION WHEN invalid_parameter_value THEN
     GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT;

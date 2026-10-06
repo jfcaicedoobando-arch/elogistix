@@ -4,16 +4,16 @@ import type { GrupoProyeccion, KpisProyeccion } from "./types";
 export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccion {
   const total = grupos.length;
   const facturadosArr = grupos.filter((g) => g.estado === "Facturado");
-  const pendientesArr = grupos.filter((g) => g.estado === "Pendiente");
+  const pendientesArr = grupos.filter((g) => g.estado !== "Facturado");
   const facturados = facturadosArr.length;
   const pendientes = pendientesArr.length;
 
   const ventaProyMxn = grupos.reduce((s, g) => s + g.ventaMxn, 0);
   const ventaProyUsd = grupos.reduce((s, g) => s + g.ventaUsd, 0);
-  const ventaFactMxn = facturadosArr.reduce((s, g) => s + g.ventaMxn, 0);
-  const ventaFactUsd = facturadosArr.reduce((s, g) => s + g.ventaUsd, 0);
-  const ventaPendMxn = pendientesArr.reduce((s, g) => s + g.ventaMxn, 0);
-  const ventaPendUsd = pendientesArr.reduce((s, g) => s + g.ventaUsd, 0);
+  const ventaFactMxn = grupos.reduce((s, g) => s + (g.ventaFacturadaMxn ?? (g.estado === "Facturado" ? g.ventaMxn : 0)), 0);
+  const ventaFactUsd = grupos.reduce((s, g) => s + (g.ventaFacturadaUsd ?? (g.estado === "Facturado" ? g.ventaUsd : 0)), 0);
+  const ventaPendMxn = grupos.reduce((s, g) => s + (g.ventaPendienteMxn ?? (g.estado !== "Facturado" ? g.ventaMxn : 0)), 0);
+  const ventaPendUsd = grupos.reduce((s, g) => s + (g.ventaPendienteUsd ?? (g.estado !== "Facturado" ? g.ventaUsd : 0)), 0);
   const costoTotalMxn = grupos.reduce((s, g) => s + g.costoMxn, 0);
   const costoTotalUsd = grupos.reduce((s, g) => s + g.costoUsd, 0);
   const profitProyMxn = ventaProyMxn - costoTotalMxn;

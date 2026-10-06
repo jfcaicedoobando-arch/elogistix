@@ -52,7 +52,7 @@ export function fuenteTcPago(p: Pick<PagoLibro, "moneda" | "tipo_cambio">): stri
   if (esMxn(p.moneda)) return "Moneda nacional";
   // MNY-P2.3: un pago legacy sin T/C se reporta como desconocido, no como 1.
   return p.tipo_cambio && p.tipo_cambio > 0
-    ? "TC registrado del pago (DOF de la fecha de pago)"
+    ? "TC registrado del pago"
     : "Sin TC registrado";
 }
 

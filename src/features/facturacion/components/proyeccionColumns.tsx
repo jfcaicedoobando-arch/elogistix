@@ -101,6 +101,14 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     cell: ({ row }) => formatCurrency(row.original.ventaMxn, "MXN"),
   },
+  ...(["Facturada", "Pendiente"] as const).map((tipo) => ({
+    id: `venta_${tipo.toLowerCase()}`,
+    header: `${tipo} MXN`,
+    accessorFn: (g: GrupoProyeccion) => tipo === "Facturada" ? g.ventaFacturadaMxn ?? 0 : g.ventaPendienteMxn ?? 0,
+    meta: { width: COL_W.monto, align: "right" as const, className: "tabular-nums whitespace-nowrap" },
+    cell: ({ row }: { row: { original: GrupoProyeccion } }) => formatCurrency(
+      (tipo === "Facturada" ? row.original.ventaFacturadaMxn : row.original.ventaPendienteMxn) ?? 0, "MXN"),
+  })),
   {
     id: "costo",
     header: "Costo MXN",
@@ -146,7 +154,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
         </Badge>
       ) : (
         <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-          Pendiente
+          {row.original.estado}
         </Badge>
       ),
   },

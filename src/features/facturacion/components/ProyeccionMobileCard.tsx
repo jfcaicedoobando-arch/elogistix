@@ -25,7 +25,7 @@ export function ProyeccionMobileCard({ grupo }: { grupo: GrupoProyeccion }) {
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-              Pendiente
+              {grupo.estado}
             </Badge>
           )}
         </div>

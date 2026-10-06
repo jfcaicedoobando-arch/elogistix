@@ -114,7 +114,7 @@ describe("calcularResumenTesoreria", () => {
     const r = calcularResumenTesoreria({ cuentas, cobranza, cxp: [], hoy: HOY });
     const nombres = r.top_deudores.map((d) => `${d.nombre}/${d.moneda}`);
     // Acme aparece 2 veces (una por moneda), NO 3 por cada factura
-    expect(nombres).toEqual(["Acme/MXN", "Acme/USD", "Beta/MXN"]);
+    expect(nombres).toEqual(["Acme/MXN", "Beta/MXN", "Acme/USD"]);
     const acmeMxn = r.top_deudores.find((d) => d.nombre === "Acme" && d.moneda === "MXN")!;
     expect(acmeMxn.saldo).toBe(700);
     expect(acmeMxn.dias).toBe(30); // peor caso del grupo

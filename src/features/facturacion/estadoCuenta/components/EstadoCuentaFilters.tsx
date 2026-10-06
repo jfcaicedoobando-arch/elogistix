@@ -6,13 +6,15 @@ import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PresetRango } from "../hooks/useEstadoCuentaDateRange";
 
+import type { Moneda } from "../services/estadoCuentaTypes";
+
 interface Props {
   presetActivo: PresetRango | null;
   onPreset: (p: PresetRango) => void;
   soloConSaldo: boolean;
   onSoloConSaldoChange: (v: boolean) => void;
-  moneda: "MXN" | "USD" | "todas";
-  onMonedaChange: (v: "MXN" | "USD" | "todas") => void;
+  moneda: Moneda | "todas";
+  onMonedaChange: (v: Moneda | "todas") => void;
   busqueda: string;
   onBusquedaChange: (v: string) => void;
 }
@@ -67,7 +69,7 @@ export function EstadoCuentaFilters({
           <Label size="sm" htmlFor="ec-moneda" className="text-muted-foreground">
             Moneda
           </Label>
-          <Select value={moneda} onValueChange={(v) => onMonedaChange(v as "MXN" | "USD" | "todas")}>
+          <Select value={moneda} onValueChange={(v) => onMonedaChange(v as Moneda | "todas")}>
             <SelectTrigger id="ec-moneda" className="h-8 w-24">
               <SelectValue />
             </SelectTrigger>
@@ -75,6 +77,7 @@ export function EstadoCuentaFilters({
               <SelectItem value="todas">Todas</SelectItem>
               <SelectItem value="MXN">MXN</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
             </SelectContent>
           </Select>
         </div>

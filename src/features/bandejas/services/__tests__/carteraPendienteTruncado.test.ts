@@ -10,6 +10,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+import { derivarLoteCobro } from "../../routes/_sections/carteraLote";
 import { fetchCarteraPendiente, CARTERA_PENDIENTE_LIMITE } from "../bandejas";
 
 const fila = (i: number) => ({ factura_id: `f-${i}`, moneda: "MXN", total: 100, saldo: 100 });
@@ -49,4 +50,23 @@ describe("fetchCarteraPendiente — señal de truncamiento", () => {
       message: "permission denied",
     });
   });
+  it("AUD116: conserva método fiscal de cada factura hasta las candidatas de lote", async () => {
+    const rows = [1, 2].map((i) => ({ ...fila(i), cliente_id: "c1", cliente_nombre: "Cliente", fecha_emision: "2026-10-01" }));
+    mock.setRpcResult("cartera_pendiente", { data: rows, error: null });
+    mock.setRpcResult("cartera_pendiente_total", { data: 2, error: null });
+    mock.setTableResult("facturas", { data: [{ id: "f-1", metodo_pago: "PUE", uuid_fiscal: "uuid1" }, { id: "f-2", metodo_pago: "PPD", uuid_fiscal: "uuid2" }], error: null });
+    const r = await fetchCarteraPendiente();
+    const lote = derivarLoteCobro(r.rows);
+    expect(lote?.facturas.map((f) => f.metodo_pago)).toEqual(["PUE", "PPD"]);
+    expect(lote?.facturas.map((f) => f.es_ppd_timbrada)).toEqual([false, true]);
+    expect(lote?.facturas[0].fecha_emision).toBe("2026-10-01");
+  });
+
+  it("AUD116: no muestra preflight como confiable si falla la lectura fiscal", async () => {
+    mock.setRpcResult("cartera_pendiente", { data: [fila(1)], error: null });
+    mock.setRpcResult("cartera_pendiente_total", { data: 1, error: null });
+    mock.setTableResult("facturas", { data: null, error: { message: "fiscal offline" } });
+    await expect(fetchCarteraPendiente()).rejects.toMatchObject({ message: "fiscal offline" });
+  });
+
 });

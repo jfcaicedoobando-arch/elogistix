@@ -101,7 +101,7 @@ export async function vincularSafe(params: {
           lineas,
         });
       }
-      // v13.303.97: Reflejar diferencias factura vs devengado como ajustes de costo en el embarque.
+      // Sólo excesos: una parcialidad no reduce el costo comprometido.
       let ajustesCreados = 0;
       if (values.provId) {
         try {

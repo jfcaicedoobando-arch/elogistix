@@ -241,15 +241,15 @@ BEGIN
   PERFORM pg_temp.assert((SELECT moneda = 'USD' FROM public.proveedor_facturas WHERE id = v_f68_mxn),
     'AUD68: pagos eliminados permiten corregir moneda');
   INSERT INTO public.proveedor_notas_credito(
-    organization_id, proveedor_factura_id, fecha, monto, moneda, estado
-  ) VALUES (fx.org_a, v_f68_mxn, public.fecha_negocio_mx(), 1, 'USD', 'Borrador');
+    organization_id, proveedor_factura_id, fecha, monto, moneda, estado, subtotal, tipo_cambio_mxn
+  ) VALUES (fx.org_a, v_f68_mxn, public.fecha_negocio_mx(), 1, 'USD', 'Borrador', 1, 20);
   UPDATE public.proveedor_facturas SET moneda = 'MXN' WHERE id = v_f68_mxn;
   PERFORM pg_temp.assert((SELECT moneda = 'MXN' FROM public.proveedor_facturas WHERE id = v_f68_mxn),
     'AUD68: NC no aplicada no impide corregir moneda');
 
   INSERT INTO public.proveedor_notas_credito(
     organization_id, proveedor_factura_id, fecha, monto, moneda, tipo_cambio, estado
-  ) VALUES (fx.org_a, v_f68_nc, public.fecha_negocio_mx(), 20, 'MXN', 20, 'Borrador') RETURNING id INTO v_nc;
+  , subtotal) VALUES (fx.org_a, v_f68_nc, public.fecha_negocio_mx(), 20, 'MXN', 20, 'Borrador', 20) RETURNING id INTO v_nc;
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = v_nc;
   UPDATE public.proveedor_notas_credito SET estado = 'Aplicada' WHERE id = v_nc;
   PERFORM pg_temp.assert_error(format('UPDATE public.proveedor_facturas SET moneda=''MXN'' WHERE id=%L::uuid', v_f68_nc),

@@ -115,6 +115,8 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     "drizzle/migrations/meta/_journal.json",
     "drizzle/schema.ts",
     "drizzle.config.ts",
+    "drizzle/replay.json",
+    "scripts/db/local-verify.sh",
     "scripts/ci/detect-areas.sh",
   ])("%s activa las comprobaciones de BD", (ruta) => {
     const head = commit([ruta], base);

@@ -175,6 +175,7 @@ export function FacturaPagosTabla({
         <FacturaPagosMobileCard
           row={row}
           facturaId={facturaId}
+          monedaFactura={moneda}
           canEdit={canEdit}
           onEliminar={onEliminar}
           onCancelarRep={onCancelarRep}

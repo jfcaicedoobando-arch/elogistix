@@ -27,6 +27,8 @@ on:
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
+      - "scripts/ci/concurrencia-factura-manual.sh"
+      - "scripts/ci/fixtures/factura-manual-concurrente.sql"
       - "scripts/db/**"
       - ".github/actions/setup-pg-client/**"
       - ".github/workflows/rls-tests.yml"
@@ -42,6 +44,8 @@ on:
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
+      - "scripts/ci/concurrencia-factura-manual.sh"
+      - "scripts/ci/fixtures/factura-manual-concurrente.sql"
       - "scripts/db/**"
       - ".github/actions/setup-pg-client/**"
       - ".github/workflows/rls-tests.yml"
@@ -194,6 +198,11 @@ jobs:
         env:
           ISOLATED_QA_DB: '1'
         run: bash scripts/ci/concurrencia-cobro.sh
+
+      - name: Concurrencia de dos sesiones — factura manual idempotente
+        env:
+          ISOLATED_QA_DB: '1'
+        run: bash scripts/ci/concurrencia-factura-manual.sh
 
       - name: Subir logs y diff (sólo al fallar)
         if: failure()

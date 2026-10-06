@@ -1,3 +1,4 @@
+import { BaseNcProveedorFields } from "./BaseNcProveedorFields";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,8 @@ interface DatosNc {
   onFolioChange: (v: string) => void;
   fecha: string;
   onFechaChange: (v: string) => void;
+  subtotal: string;
+  onSubtotalChange: (v: string) => void;
   monto: string;
   onMontoChange: (v: string) => void;
   motivo: MotivoNC;
@@ -82,7 +85,7 @@ const MONEDAS: MonedaNC[] = ["MXN", "USD", "EUR"];
 export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
   const { mode, onModeChange, parsedCfdi, onCfdiParsed, facturaId, onClearCfdi } = origen;
   const {
-    folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange,
+    folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange, subtotal, onSubtotalChange,
     motivo, onMotivoChange, descripcion, onDescripcionChange,
   } = datos;
   const {
@@ -133,7 +136,8 @@ export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
             </Select>
           </div>
         </div>
-        {moneda !== monedaFactura && (
+        <BaseNcProveedorFields subtotal={subtotal} monto={monto} onChange={onSubtotalChange} />
+        {(moneda !== "MXN" || monedaFactura !== "MXN") && (
           <div className="space-y-1.5 mt-3">
             <Label htmlFor="nc-tc">Tipo de cambio (MXN por 1 {monedaExtranjera})</Label>
             <Input
@@ -142,7 +146,7 @@ export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
               placeholder="Ej. 18.5000"
             />
             <p className="text-label text-muted-foreground">
-              Si lo dejas vacío se usa el tipo de cambio del DOF de la fecha de la NC.
+              Valúa la NC en MXN. Si lo dejas vacío se propone el DOF de su fecha; puedes capturar el TC del documento.
             </p>
           </div>
         )}

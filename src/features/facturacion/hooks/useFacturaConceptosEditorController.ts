@@ -43,7 +43,8 @@ export function useFacturaConceptosEditorController({ facturaId, organizationId,
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: conceptosFacturaKey(facturaId) });
-    qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
+    qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() });
   };
 
   const handleError = (err: unknown) =>
@@ -68,6 +69,7 @@ export function useFacturaConceptosEditorController({ facturaId, organizationId,
   });
 
   const startEdit = (row: ConceptoFacturaRow) => {
+    if (showNew || editingId !== null) return;
     setEditingId(row.id);
     setDraft({
       descripcion: row.descripcion,

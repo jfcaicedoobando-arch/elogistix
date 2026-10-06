@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { from, deleteEq, rpc } = vi.hoisted(() => ({
+const { from, rpc } = vi.hoisted(() => ({
   from: vi.fn(),
   rpc: vi.fn().mockResolvedValue({ error: null }),
-  deleteEq: vi.fn().mockResolvedValue({ error: null }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from, rpc } }));
 
@@ -38,31 +37,11 @@ describe("crearFacturaManual", () => {
   beforeEach(() => {
     insertPayload = null; conceptosPayload = null; errFact = null; errConc = null;
     from.mockReset();
-    from.mockImplementation((table: string) => {
-      if (table === "facturas") {
-        return {
-          insert: (p: unknown) => {
-            insertPayload = p;
-            return {
-              select: () => ({
-                single: () => Promise.resolve({ data: errFact ? null : { id: "F-1" }, error: errFact }),
-              }),
-            };
-          },
-          delete: () => ({ eq: deleteEq }),
-        };
-      }
-      if (table === "conceptos_factura") {
-        return {
-          insert: (p: unknown) => {
-            conceptosPayload = p;
-            return Promise.resolve({ error: errConc });
-          },
-        };
-      }
-      return {};
+    rpc.mockReset().mockImplementation((_name, args) => {
+      insertPayload = args.p_factura;
+      conceptosPayload = args.p_conceptos;
+      return Promise.resolve({ data: errFact || errConc ? null : "F-1", error: errFact ?? errConc });
     });
-    deleteEq.mockClear();
   });
 
   it("rechaza cuando no hay conceptos", async () => {
@@ -131,10 +110,11 @@ describe("crearFacturaManual", () => {
     await expect(crearFacturaManual(baseInput)).rejects.toThrow(/Error al crear factura: dup/);
   });
 
-  it("rollback: borra factura si falla insert de conceptos", async () => {
+  it("rollback atómico: un fallo de conceptos no dispara borrado compensatorio desde cliente", async () => {
     errConc = { message: "no" };
-    await expect(crearFacturaManual(baseInput)).rejects.toThrow(/Error al crear conceptos: no/);
-    expect(rpc).toHaveBeenCalledWith("soft_delete_record", { _table: "facturas", _id: "F-1" });
+    await expect(crearFacturaManual(baseInput)).rejects.toThrow(/Error al crear factura: no/);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(from).not.toHaveBeenCalled();
   });
 
   it("FIX-17 — totales cuadran al centavo con montos difíciles (0.1, 33.333, 1/3)", async () => {
@@ -177,6 +157,15 @@ describe("crearFacturaManual", () => {
   it("FIX-17 — folio borrador incluye entropía UUID", async () => {
     await crearFacturaManual(baseInput);
     const p = insertPayload as Record<string, string>;
-    expect(p.numero).toMatch(/^BORRADOR-[0-9a-z]+-[0-9a-f]{6}$/);
+    expect(p.numero).toMatch(/^BORRADOR-[0-9a-f-]{36}$/);
   });
+  it("AUD110: cada reintento conserva identidad, folio y payload de la misma captura", async () => {
+    const input = { ...baseInput, requestId: "a1111111-1111-4111-8111-111111111111" };
+    await crearFacturaManual(input);
+    await crearFacturaManual(input);
+    expect(rpc.mock.calls[0]).toEqual(rpc.mock.calls[1]);
+    expect(rpc).toHaveBeenLastCalledWith("crear_factura_manual_idempotente", expect.objectContaining({ p_request_id: input.requestId }));
+    expect(from).not.toHaveBeenCalled();
+  });
+
 });

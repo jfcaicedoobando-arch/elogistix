@@ -38,6 +38,14 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El tipo de cambio debe ser un número válido mayor a cero. Captura una paridad válida o deja el campo vacío para consultar DOF.",
   LC_PAGO_ANTICIPO_NO_EDITABLE:
     "Este pago aplica un anticipo y no se puede editar directamente. Usa «Revertir aplicación de anticipo» y vuelve a aplicarlo; el cargo original se conserva.",
+  LC_AJUSTE_REDUCCION_NO_EXPLICITA:
+    "Una factura parcial no reduce el costo comprometido. Conserva el importe pendiente o registra un ajuste presupuestario explícito.",
+  LC_NC_PROV_BASE_REQUERIDA:
+    "Captura la base sin impuestos de la nota de crédito, después de descuentos. El total que reduce la deuda se captura por separado.",
+  LC_NC_PROV_DESGLOSE_INMUTABLE:
+    "El desglose fiscal y la valuación de esta nota de crédito ya están protegidos por su estado. No se puede modificar la base ni su tipo de cambio.",
+  LC_NC_PROV_TC_INCONSISTENTE:
+    "La valuación a pesos y la conversión contra la factura no coinciden. Revisa la moneda y los tipos de cambio de la nota de crédito.",
   LC_BITACORA_ACCION_RESERVADA:
     "Las aprobaciones y rechazos se registran automáticamente al realizar esa acción en la factura.",
 };

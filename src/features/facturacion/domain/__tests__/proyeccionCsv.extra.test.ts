@@ -31,8 +31,8 @@ function makeGrupo(overrides: Partial<GrupoProyeccion> = {}): GrupoProyeccion {
 
 // ── PROYECCION_CSV_HEADERS ──────────────────────────────────────────────────
 describe("proyeccionCsv · PROYECCION_CSV_HEADERS", () => {
-  it("contiene exactamente 13 columnas", () => {
-    expect(PROYECCION_CSV_HEADERS).toHaveLength(13);
+  it("contiene exactamente 17 columnas", () => {
+    expect(PROYECCION_CSV_HEADERS).toHaveLength(17);
   });
 
   it("primera columna es 'expediente'", () => {

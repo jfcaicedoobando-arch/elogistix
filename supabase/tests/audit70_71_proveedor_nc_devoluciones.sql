@@ -44,9 +44,9 @@ BEGIN
     (v_f_ant, v_orgs.org_a, v_prov_ant, v_cat, 'AUD71-MXN', v_hoy - 10, v_hoy - 1, 'MXN', 1, 100, 100, 'Vigente', 'aprobada');
   INSERT INTO public.proveedor_notas_credito(
     id, organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio
-  ) VALUES
-    (v_nc_mxn, v_orgs.org_a, v_f_usd, v_hoy - 8, 'AUD70-NC-MXN', 2000, 'MXN', 20),
-    (v_nc_usd, v_orgs.org_a, v_f_mxn, v_hoy - 8, 'AUD70-NC-USD', 100, 'USD', 20);
+  , subtotal) VALUES
+    (v_nc_mxn, v_orgs.org_a, v_f_usd, v_hoy - 8, 'AUD70-NC-MXN', 2000, 'MXN', 20, 2000),
+    (v_nc_usd, v_orgs.org_a, v_f_mxn, v_hoy - 8, 'AUD70-NC-USD', 100, 'USD', 20, 100);
   -- Dato legacy parcial sin movimiento bancario. Sólo este fixture efímero:
   -- no habilita nuevos reembolsos parciales ni repara registros existentes.
   INSERT INTO public.anticipos_proveedor(

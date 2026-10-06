@@ -76,6 +76,29 @@ describe("descargarEstadoCuentaCsv", () => {
     expect(notifySuccess).toHaveBeenCalled();
   });
 
+  it.each([4146.1, -12.34])("exporta apertura %s sin movimientos ni aging (AUD113)", async (saldo) => {
+    descargarEstadoCuentaCsv({ ...datos([]), saldoApertura: [{ moneda: "EUR", saldo }] });
+    expect(descargarBlob).toHaveBeenCalledTimes(1);
+    const [blob] = descargarBlob.mock.calls[0] as [Blob];
+    const texto = await new Promise<string>((resolve) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(String(lector.result));
+      lector.readAsText(blob);
+    });
+    expect(texto).toContain("Saldo inicial del periodo");
+    expect(texto).toContain(`Antes del 2026-01-01,EUR,${saldo.toFixed(2)}`);
+    expect(notifyWarning).not.toHaveBeenCalled();
+    expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      description: "Saldos sin movimientos en el periodo",
+    }));
+  });
+
+  it("no crea un archivo vacío si la apertura tampoco tiene saldo", () => {
+    descargarEstadoCuentaCsv({ ...datos([]), saldoApertura: [{ moneda: "EUR", saldo: 0 }] });
+    expect(descargarBlob).not.toHaveBeenCalled();
+    expect(notifyWarning).toHaveBeenCalled();
+  });
+
   it("descarga un CSV con BOM y nombre de archivo derivado del proveedor", () => {
     descargarEstadoCuentaCsv(datos([movimiento]));
     expect(descargarBlob).toHaveBeenCalledTimes(1);

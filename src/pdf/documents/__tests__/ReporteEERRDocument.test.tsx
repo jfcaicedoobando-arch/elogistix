@@ -12,6 +12,12 @@ const mockData = {
 } as any;
 
 describe("ReporteEERRDocument", () => {
+  it("preserva advertencia provisional de NC históricas sin base", () => {
+    const { container } = render(<ReporteEERRDocument periodo="2026-10" fuente="facturas" data={{ ...mockData, notas_proveedor_sin_base: ["legacy"] }} />);
+    expect(container.textContent).toContain("Reporte provisional");
+    expect(container.textContent).toContain("quedaron fuera del gasto");
+  });
+
   it("muestra título, período y leyenda 'Operativa' para fuente=embarques", () => {
     const { container } = render(
       <ReporteEERRDocument periodo="2023-01" fuente="embarques" data={mockData} />,

@@ -60,6 +60,7 @@ describe("95–96 · XML de NC y validación de identidad", () => {
     fireEvent.click(screen.getByText("Captura manual"));
     fireEvent.change(screen.getByLabelText("Folio NC *"), { target: { value: "MANUAL" } });
     fireEvent.change(screen.getByLabelText("Monto *"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Base sin impuestos *"), { target: { value: "10" } });
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
     await waitFor(() => expect(mocks.guardar).toHaveBeenCalledWith(expect.objectContaining({ uuid_fiscal: null, monto: 10 })));
     expect(mocks.adjuntos).not.toHaveBeenCalled();

@@ -58,7 +58,7 @@ export function GrupoCostosProveedor({
     for (const f of filas) {
       if (f.facturas.length === 0) sinFactura++;
       else if ((f.vinculos_excluidos ?? 0) > 0) continue;
-      else if (Math.abs(f.diferencia) >= 0.01) conAjuste++;
+      else if (f.diferencia >= 0.01) conAjuste++;
     }
     return { conAjuste, sinFactura };
   }, [filas]);

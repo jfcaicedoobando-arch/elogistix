@@ -90,7 +90,7 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
       id: "pf-usd", embarque_id: "emb1", subtotal: 100, total: 116, moneda: "USD", tipo_cambio_usd: 20, fecha_emision: "2026-10-02",
     }]);
     datos.pncs = mapProveedorNotaCreditoRows([{
-      id: "pnc-usd", proveedor_factura_id: "pf-usd", monto: 50, moneda: "USD", tipo_cambio: 22, fecha: "2026-10-03",
+      id: "pnc-usd", proveedor_factura_id: "pf-usd", monto: 50, subtotal: 50, moneda: "USD", tipo_cambio: 22, fecha: "2026-10-03",
     }]);
     const [octubre] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
@@ -133,13 +133,24 @@ describe("AUD83: tendencia de Facturas y EERR mensual con el mismo criterio cont
       id: "pf-eur", embarque_id: "emb-eur", subtotal: 100, moneda: "EUR", tipo_cambio_usd: 18, fecha_emision: "2026-10-02",
     }]);
     datos.pncs = mapProveedorNotaCreditoRows([{
-      id: "pnc-eur", proveedor_factura_id: "pf-eur", monto: 50, moneda: "EUR", tipo_cambio: 22, fecha: "2026-10-03",
+      id: "pnc-eur", proveedor_factura_id: "pf-eur", monto: 50, subtotal: 50, moneda: "EUR", tipo_cambio: 22, fecha: "2026-10-03",
     }]);
     const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
     const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     expect(mensual.totalIngresos.total).toBe(3050);
-    expect(mensual.totalCostos.total).toBe(1200);
-    expect(anual).toEqual({ mes: 10, ingresos_mxn: 3050, costos_mxn: 1200 });
+    expect(mensual.totalCostos.total).toBe(700);
+    expect(anual).toEqual({ mes: 10, ingresos_mxn: 3050, costos_mxn: 700 });
+  });
+
+  it("una NC sin base avisa en su mes sin bloquear los demás meses", async () => {
+    datos.pfacts = mapProveedorFacturaRows([{ id: "f", subtotal: 100, moneda: "MXN", fecha_emision: "2026-10-02" }]);
+    datos.pncs = mapProveedorNotaCreditoRows([{ id: "legacy", proveedor_factura_id: "f", monto: 58, moneda: "MXN", fecha: "2026-10-03" }]);
+    const mensual = await fetchEstadoResultadosDevengado({ ...params, month: 10 });
+    const anual = await fetchEstadoResultadosDevengadoAnual(params);
+    expect(mensual.totalCostos.total).toBe(100);
+    expect(mensual.notas_proveedor_sin_base).toEqual(["legacy"]);
+    expect(anual[9]).toMatchObject({ costos_mxn: 100, notas_proveedor_sin_base_count: 1 });
+    expect(anual[8]).toEqual({ mes: 9, ingresos_mxn: 0, costos_mxn: 0 });
   });
 
   it("un rango entre años carga sólo los meses solicitados y conserva bloqueo de NC sin desglose", async () => {

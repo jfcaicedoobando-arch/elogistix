@@ -93,7 +93,9 @@ export function construirEstadoDevengado(datos: DatosDevengados) {
   const costos: CostosBucket = { embarques: [], costos: [] };
   costosDeProveedorFacturas(pfacts, embPorId, costos, tc);
   costosDeNotasProveedor(pncs, embPorId, embPorFacturaProv, costos, tc);
-  return buildEstadoResultados(
+  const resultado = buildEstadoResultados(
     [...ventas.embarques, ...costos.embarques], ventas.ventas, costos.costos,
   );
+  if (costos.notasSinBase?.length) resultado.notas_proveedor_sin_base = costos.notasSinBase;
+  return resultado;
 }

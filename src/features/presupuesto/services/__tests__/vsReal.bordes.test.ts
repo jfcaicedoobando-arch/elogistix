@@ -108,7 +108,7 @@ describe("BL-07 — NCs de proveedor y truncamiento", () => {
       error: null,
     });
     mock.setTableResult("proveedor_notas_credito", {
-      data: [{ monto: 200, moneda: "MXN", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", tipo_cambio_usd: null } }],
+      data: [{ monto: 200, subtotal: 200, moneda: "MXN", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", tipo_cambio_usd: null } }],
       error: null,
     });
     mock.setTableResult("liquidaciones_comision", { data: [], error: null });
@@ -125,8 +125,8 @@ describe("BL-07 — NCs de proveedor y truncamiento", () => {
     });
     mock.setTableResult("proveedor_notas_credito", {
       data: [
-        { monto: 10, moneda: "USD", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", tipo_cambio_usd: 20 } },
-        { monto: 10, moneda: "USD", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", tipo_cambio_usd: null } },
+        { monto: 10, subtotal: 10, moneda: "USD", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", moneda: "USD", tipo_cambio_usd: 20 } },
+        { monto: 10, subtotal: 10, moneda: "USD", proveedor_facturas: { categoria_presupuesto_id: "cat-fletes", tipo_cambio_usd: null } },
       ],
       error: null,
     });

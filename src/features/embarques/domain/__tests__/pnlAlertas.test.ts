@@ -2,6 +2,15 @@ import { describe, it, expect } from "vitest";
 import { calcularAlertasPnl, PNL_UMBRAL_SOBRECOSTO_PCT, PNL_UMBRAL_MARGEN_MIN_PCT } from "../pnlAlertas";
 
 describe("calcularAlertasPnl", () => {
+  it("audit129 leaves profit and margin unknown while costs are incomplete", () => {
+    const args = { ventaReal: 150, costoReal: 0, ventaPresup: 150, costoPresup: 100, deltaCostoPct: -100 };
+    expect(calcularAlertasPnl({ ...args, costosIncompletos: true })).toMatchObject({
+      utilidadReal: null, margenReal: null, alertaMargen: false,
+    });
+    const completo = calcularAlertasPnl({ ...args, costoReal: 100, costosIncompletos: false });
+    expect(completo.utilidadReal).toBe(50);
+    expect(completo.margenReal).toBeCloseTo(100 / 3);
+  });
   it("sobrecosto exactamente en el umbral (10%) NO alerta (comparación estricta >)", () => {
     const r = calcularAlertasPnl({
       ventaReal: 1000, costoReal: 500, ventaPresup: 1000, costoPresup: 100,

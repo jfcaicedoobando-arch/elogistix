@@ -4,13 +4,11 @@
  */
 import { sumarMontos } from "@/lib/financial/financialUtils";
 import { esCxcVencida } from "@/lib/domain/vencimiento";
+import type { Moneda } from "./estadoCuentaTypes";
 import type { FacturaEstadoCuenta } from "./estadoCuenta";
 
 
-export interface KpiPorMoneda {
-  mxn: number;
-  usd: number;
-}
+export type KpiPorMoneda = Record<Lowercase<Moneda>, number>;
 
 export interface KpisEstadoCuenta {
   adeudado: KpiPorMoneda;
@@ -23,12 +21,14 @@ export interface KpisEstadoCuenta {
 function bucket(rows: FacturaEstadoCuenta[], predicate: (f: FacturaEstadoCuenta) => boolean) {
   const mxn: number[] = [];
   const usd: number[] = [];
+  const eur: number[] = [];
   for (const f of rows) {
     if (!predicate(f)) continue;
     if (f.moneda === "MXN") mxn.push(f.saldo);
     else if (f.moneda === "USD") usd.push(f.saldo);
+    else if (f.moneda === "EUR") eur.push(f.saldo);
   }
-  return { mxn: sumarMontos(mxn), usd: sumarMontos(usd) };
+  return { mxn: sumarMontos(mxn), usd: sumarMontos(usd), eur: sumarMontos(eur) };
 }
 
 export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstadoCuenta {
@@ -39,11 +39,13 @@ export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstad
   // Saldo a favor = suma de anticipos (monto_no_aplicado en pagos).
   const anticiposMxn: number[] = [];
   const anticiposUsd: number[] = [];
+  const anticiposEur: number[] = [];
   for (const f of rows) {
     for (const p of f.pagos) {
       if (p.monto_no_aplicado <= 0) continue;
       if (f.moneda === "MXN") anticiposMxn.push(p.monto_no_aplicado);
       else if (f.moneda === "USD") anticiposUsd.push(p.monto_no_aplicado);
+      else if (f.moneda === "EUR") anticiposEur.push(p.monto_no_aplicado);
     }
   }
 
@@ -57,6 +59,7 @@ export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstad
     aFavor: {
       mxn: sumarMontos(anticiposMxn),
       usd: sumarMontos(anticiposUsd),
+      eur: sumarMontos(anticiposEur),
     },
     facturasVencidas,
     facturasAdeudadas,

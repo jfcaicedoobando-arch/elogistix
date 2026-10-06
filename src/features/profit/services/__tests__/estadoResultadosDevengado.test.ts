@@ -205,7 +205,7 @@ describe("estadoResultadosDevengado service", () => {
       error: null,
     });
     mock.setTableResult("proveedor_notas_credito", {
-      data: [{ id: "n1", proveedor_factura_id: "pf1", monto: 120, moneda: "MXN", fecha: "2024-01-20", tipo_cambio: 1 }],
+      data: [{ id: "n1", proveedor_factura_id: "pf1", monto: 120, subtotal: 120, moneda: "MXN", fecha: "2024-01-20", tipo_cambio: 1 }],
       error: null,
     });
     mock.setTableResult("embarques", { data: [], error: null });

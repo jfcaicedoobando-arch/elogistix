@@ -23,7 +23,7 @@ export function GrupoCostosProveedorResumen({ resumen, subtotales, conAjuste, si
               <span className={cn("flex items-center gap-1.5 cursor-help", TONE_TEXT[d.tone])}>
                 <span aria-hidden>{d.icono}</span>
                 <span className="font-medium">{d.titulo}</span>
-                {(d.kind === "ahorro" || d.kind === "sobrecosto") && (
+                {(d.kind === "pendiente_facturar" || d.kind === "sobrecosto") && (
                   <>
                     <span className="text-muted-foreground">·</span>
                     <span className="text-muted-foreground">{moneda}</span>

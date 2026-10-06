@@ -41,6 +41,9 @@ export function derivarLoteCobro(seleccionadas: CarteraRow[]): LoteCobroSeleccio
       numero: r.numero,
       fecha_vencimiento: r.fecha_vencimiento,
       saldo: Number(r.saldo ?? 0),
+      metodo_pago: r.metodo_pago,
+      fecha_emision: r.fecha_emision,
+      es_ppd_timbrada: r.metodo_pago === "PPD" && !!r.uuid_fiscal,
     })),
   };
 }

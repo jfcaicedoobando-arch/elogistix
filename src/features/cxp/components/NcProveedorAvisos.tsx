@@ -37,7 +37,7 @@ export function NcProveedorAvisos({
         </Alert>
       )}
 
-      {otraMoneda && conversion.aviso && (
+      {!cruceInvalido && conversion.aviso && (
         <Alert variant="warning" className="px-3 py-2">
           <AlertDescription className="text-body-sm">
             {conversion.aviso}
@@ -50,6 +50,14 @@ export function NcProveedorAvisos({
           TC {conversion.tipoCambio} MXN por 1 {moneda === "MXN" ? monedaFactura : moneda}{" "}
           ({conversion.fuente === "dof" ? `DOF publicado el ${conversion.fechaDof}` : "capturado"}).{" "}
           Equivale a {formatCurrency(montoEnFactura, monedaFactura)} contra el saldo de la factura.
+        </div>
+      )}
+
+      {!otraMoneda && moneda !== "MXN" && conversion.disponible && (
+        <div className="rounded-md border bg-muted/30 px-3 py-2 text-body-sm text-muted-foreground">
+          Valuación: {conversion.tipoCambio} MXN por 1 {moneda}{" "}
+          ({conversion.fuente === "dof" ? `DOF publicado el ${conversion.fechaDof}` : "capturado"}).
+          La deuda se reduce en la misma moneda, sin conversión.
         </div>
       )}
 

@@ -3,6 +3,7 @@
  * Muestra tipo, contraparte, documento, método, monto original y su
  * equivalente en pesos, más el estado de conciliación y del complemento.
  */
+import { etiquetaMetodoPago } from "@/features/tesoreria/domain/metodoPago";
 import { estadoConciliacionPago } from "@/features/tesoreria/domain/conciliacionPago";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Hint } from "@/components/shared/Hint";
@@ -13,32 +14,6 @@ import {
   TIPO_PAGO_LABELS, esEntrada,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
-
-/**
- * VT-28: el libro de pagos mostraba la clave SAT cruda ("03") en la columna
- * Método. Mapeamos los códigos más comunes a etiquetas cortas y, para el
- * resto, reutilizamos el catálogo SAT quitando el prefijo "NN - ".
- * Valores ya textuales (p. ej. "Transferencia" de pagos programados) pasan tal cual.
- */
-const METODO_PAGO_LABELS_CORTOS: Record<string, string> = {
-  "01": "Efectivo",
-  "02": "Cheque",
-  "03": "Transferencia",
-  "04": "Tarjeta de crédito",
-  "28": "Tarjeta de débito",
-  "30": "Aplicación de anticipos",
-  "99": "Por definir",
-};
-
-function etiquetaMetodoPago(metodo: string | null): string {
-  if (!metodo) return "—";
-  const corto = METODO_PAGO_LABELS_CORTOS[metodo];
-  if (corto) return corto;
-  if (/^\d{2}$/.test(metodo)) {
-    return labelDeCatalogo(FORMAS_PAGO_SAT, metodo, metodo).replace(/^\d{2} - /, "");
-  }
-  return metodo;
-}
 
 /** Normaliza el estado crudo del REP al vocabulario del dominio `rep`. */
 function estadoRepCanonico(crudo: string | null | undefined): string {

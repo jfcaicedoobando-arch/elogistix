@@ -5,6 +5,7 @@
  *
  * Los tipos y la agregación pura viven en `vsRealDomain.ts`.
  */
+import { baseNcProveedor, valuacionNcProveedor } from "@/lib/financial/baseNcProveedor";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCategorias } from "./categorias";
 import { fetchPresupuestoMensualAnio } from "./mensual";
@@ -49,7 +50,7 @@ export async function fetchPresupuestoVsReal(
   // BL-07: NCs de proveedor aplicadas en el periodo descuentan el real de la
   // categoría de la factura padre (antes el gasto quedaba bruto, inflado).
   let ncQuery = supabase.from("proveedor_notas_credito")
-    .select("monto, moneda, tipo_cambio, proveedor_facturas!inner(categoria_presupuesto_id, moneda, tipo_cambio_usd)")
+    .select("monto, subtotal, moneda, tipo_cambio, tipo_cambio_mxn, proveedor_facturas!inner(categoria_presupuesto_id, moneda, tipo_cambio_usd)")
     .eq("estado", "Aplicada")
     .gte("fecha", desde).lte("fecha", hasta)
     .is("deleted_at", null)
@@ -91,7 +92,9 @@ export async function fetchPresupuestoVsReal(
 
   const presupPorCat = mapPresupuestoPorCategoria(presupuestoAnio, periodo);
   const { porCategoria: realPorCat, sinTc: gastosSinTc } = agregarGastosCxP(gastosCxP.data ?? []);
-  const ncsSinTc = restarNotasCreditoCxP(mapNcsCxP(ncsCxP.data ?? []), realPorCat);
+  const notas = mapNcsCxP(ncsCxP.data ?? []);
+  const ncsSinTc = restarNotasCreditoCxP(notas, realPorCat);
+  const notasSinBase = notas.filter((nc) => nc.categoria_presupuesto_id && baseNcProveedor(nc.subtotal) === null).length;
   aplicarLiquidacionesComisiones(realPorCat, cats, liquidaciones.data ?? []);
 
   const catIds = new Set(cats.map((c) => c.id));
@@ -123,6 +126,7 @@ export async function fetchPresupuestoVsReal(
     top_exceso,
     gastos_sin_tc_count: gastosSinTc + ncsSinTc,
     real_truncado: realTruncado,
+    notas_proveedor_sin_base_count: notasSinBase,
   };
 }
 
@@ -134,16 +138,9 @@ function mapNcsCxP(data: unknown[]): NcCxPRow[] {
       categoria_presupuesto_id: (pf.categoria_presupuesto_id as string | null) ?? null,
       monto: r.monto as number | string,
       moneda: (r.moneda as string | null) ?? null,
-      // N9: la NC trae su propia paridad (MXN por 1 USD/EUR) y manda sobre la
-      // de la factura padre; antes una NC en EUR se valuaba con el T/C del
-      // dólar heredado. Sólo se hereda cuando la NC no capturó paridad.
-      tipo_cambio_usd: (r.tipo_cambio as number | string | null)
-        ?? (pf.tipo_cambio_usd as number | string | null)
-        ?? null,
-      // N9 (backlog v4): la paridad heredada de la factura padre es MXN/USD;
-      // sólo la propia de la NC corresponde a SU divisa.
-      paridad_propia: r.tipo_cambio != null,
-
+      subtotal: (r.subtotal as number | string | null) ?? null,
+      tipo_cambio_usd: valuacionNcProveedor(r, pf),
+      paridad_propia: true,
 
     };
   });

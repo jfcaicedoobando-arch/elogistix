@@ -32,6 +32,7 @@ function abrir() {
   });
   fireEvent.change(screen.getByLabelText("Folio NC *"), { target: { value: " NC-PRUEBA " } });
   fireEvent.change(screen.getByLabelText("Monto *"), { target: { value: "1" } });
+  fireEvent.change(screen.getByLabelText("Base sin impuestos *"), { target: { value: "1" } });
   return cerrar;
 }
 
@@ -111,12 +112,27 @@ describe("Preview y payload de la NC usan el mismo TC", () => {
     expect(screen.getByRole("button", { name: "Registrar" })).toBeEnabled();
   });
 
-  it("en la moneda de la factura envía TC nulo y mantiene el importe", async () => {
-    abrir();
-    expect(screen.queryByLabelText(/Tipo de cambio/)).not.toBeInTheDocument();
+  it.each(["USD", "EUR"] as const)("misma moneda %s conserva valuación MXN separada y deuda nominal", async (moneda) => {
+    render(<DialogNotaCreditoProveedor open onOpenChange={vi.fn()} facturaId="f" monedaFactura={moneda} saldoFactura={1} />, { wrapper: createWrapper() });
+    fireEvent.change(screen.getByLabelText("Folio NC *"), { target: { value: "NC" } });
+    fireEvent.change(screen.getByLabelText("Monto *"), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText("Base sin impuestos *"), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/Tipo de cambio/), { target: { value: "20" } });
+    expect(screen.getByText(/Valuación:/)).toHaveTextContent("20 MXN");
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
-    await waitFor(() => expect(guardar).toHaveBeenCalledWith(expect.objectContaining({ monto: 1, moneda: "USD", tipo_cambio: null })));
-    expect(consultar).not.toHaveBeenCalled();
+    await waitFor(() => expect(guardar).toHaveBeenCalledWith(expect.objectContaining({ monto: 1, subtotal: 1, moneda, tipo_cambio: null, tipo_cambio_mxn: 20 })));
+  });
+
+  it("base vacía bloquea; retenciones permiten base mayor que total", async () => {
+    abrir(); await elegirMxn();
+    fireEvent.change(screen.getByLabelText(/Tipo de cambio/), { target: { value: "20" } });
+    fireEvent.change(screen.getByLabelText("Base sin impuestos *"), { target: { value: "" } });
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Monto *"), { target: { value: "94" } });
+    fireEvent.change(screen.getByLabelText("Base sin impuestos *"), { target: { value: "100" } });
+    expect(screen.getByText(/Impuestos netos/)).toHaveTextContent("-6.00");
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    await waitFor(() => expect(guardar).toHaveBeenCalledWith(expect.objectContaining({ monto: 94, subtotal: 100, tipo_cambio_mxn: 1, tipo_cambio: 20 })));
   });
 
   it("una conversión que desborda tampoco permite enviar un importe sin valuación", async () => {

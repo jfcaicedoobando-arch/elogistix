@@ -83,6 +83,15 @@ describe("dashboardEjecutivo/agregador", () => {
     fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
   });
 
+  it("NC sin base califica snapshot y tendencia sin bloquear fuentes sanas", async () => {
+    fetchEstadoResultadosDevengado.mockResolvedValue({ ...eerr(100), notas_proveedor_sin_base: ["legacy"] });
+    fetchEstadoResultadosDevengadoAnual.mockResolvedValue([{ mes: 3, ingresos_mxn: 100, costos_mxn: 50, notas_proveedor_sin_base_count: 1 }]);
+    const resultado = await fetchDashboardEjecutivo({ organizationId: "org-1", periodo: "2025-03", cobranza: [], cxp: [], fuente: "facturas" });
+    expect(resultado.alertas[0]).toMatchObject({ id: "nc-proveedor-sin-base", titulo: "Resultados provisionales", descripcion: expect.stringContaining("Reporte provisional") });
+    expect(resultado.eerr12m.at(-1)).toMatchObject({ periodo: "2025-03", notas_proveedor_sin_base_count: 1 });
+    expect(resultado.topDeudores).toHaveLength(1);
+  });
+
   it("invoca EERR mensual y lectura anual neta para los 12 meses visibles de Facturas", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1",

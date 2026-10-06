@@ -17,7 +17,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { keepDialogControlVisible } from "@/components/shared/utils/keepDialogControlVisible";
 import { cn } from "@/lib/utils";
 
 export interface ConfirmActionDialogProps {
@@ -61,7 +62,10 @@ export function ConfirmActionDialog({
 }: ConfirmActionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={dialogSize[size]}>
+      <AlertDialogContent
+        className={cn("grid-cols-1 scroll-py-2", dialogSize[size], scrollableDialog)}
+        onFocusCapture={event => keepDialogControlVisible(event.currentTarget, event.target)}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle
             className={cn(

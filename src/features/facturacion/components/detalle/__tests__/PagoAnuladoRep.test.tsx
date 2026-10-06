@@ -32,6 +32,7 @@ describe("Pago con REP cancelado (anulado)", () => {
           rep_cancellation_status: "accepted",
         }}
         facturaId="f1"
+        monedaFactura="MXN"
         canEdit={false}
         onEliminar={vi.fn()}
         onCancelarRep={vi.fn()}

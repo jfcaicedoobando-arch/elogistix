@@ -45,9 +45,9 @@ export function useEstadoCuenta(filters: EstadoCuentaFilters) {
     const r = kpisQuery.data;
     if (!remotoHabilitado || !r) return kpisLocales;
     return {
-      adeudado: { mxn: r.adeudado_mxn, usd: r.adeudado_usd },
-      vencido: { mxn: r.vencido_mxn, usd: r.vencido_usd },
-      aFavor: { mxn: r.a_favor_mxn, usd: r.a_favor_usd },
+      adeudado: { mxn: r.adeudado_mxn, usd: r.adeudado_usd, eur: r.adeudado_eur },
+      vencido: { mxn: r.vencido_mxn, usd: r.vencido_usd, eur: r.vencido_eur },
+      aFavor: { mxn: r.a_favor_mxn, usd: r.a_favor_usd, eur: r.a_favor_eur },
       facturasVencidas: r.facturas_vencidas,
       facturasAdeudadas: r.facturas_adeudadas,
     };

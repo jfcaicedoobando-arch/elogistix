@@ -165,7 +165,7 @@ export async function fetchProveedorNotasCreditoMes(
   const data = await leerTodasLasPaginas("profit.proveedorNotasCreditoMes", (ini, fin) => {
     let q = supabase
       .from("proveedor_notas_credito")
-      .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio, proveedor_facturas!inner(id)")
+      .select("id, proveedor_factura_id, monto, subtotal, moneda, fecha, tipo_cambio, tipo_cambio_mxn, proveedor_facturas!inner(id, moneda, tipo_cambio_usd)")
       .eq("estado", "Aplicada")
       .gte("fecha", desde)
       .lte("fecha", hasta)

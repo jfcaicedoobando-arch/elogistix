@@ -45,12 +45,12 @@ describe("agruparPorExpediente [agrupar.ts unit]", () => {
     expect(out[0].embarqueIds).toEqual(["e1", "e2", "e3"]);
   });
 
-  it("estado Pendiente si al menos una fila no tiene proforma+factura_pdf", () => {
+  it("estado Parcial si al menos una fila no tiene proforma+factura_pdf", () => {
     const out = agruparPorExpediente([
       base,
       { ...base, embarque_id: "e2", tiene_factura_pdf: false },
     ]);
-    expect(out[0].estado).toBe("Pendiente");
+    expect(out[0].estado).toBe("Parcial");
   });
 
   it("estado Facturado cuando todas las filas tienen proforma+factura_pdf", () => {

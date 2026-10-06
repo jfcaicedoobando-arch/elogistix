@@ -35,8 +35,8 @@ BEGIN
     VALUES (fx.org_a, doc, hoy, 5, 'MXN', 20, 'Efectivo') RETURNING id INTO p1;
   INSERT INTO public.pagos_proveedor(organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, metodo_pago)
     VALUES (fx.org_a, doc, hoy, 0.25, 'USD', 20, 'Efectivo') RETURNING id INTO p2;
-  INSERT INTO public.proveedor_notas_credito(id, organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio)
-    VALUES (nc, fx.org_a, doc, hoy, 'AUD98-NC', 10, 'MXN', 20);
+  INSERT INTO public.proveedor_notas_credito(id, organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio, subtotal)
+    VALUES (nc, fx.org_a, doc, hoy, 'AUD98-NC', 10, 'MXN', 20, 10);
   data := public.pago_detalle('pago', p1); row_ := data->'aplicaciones'->0;
   PERFORM pg_temp.assert((row_->>'pagado')::numeric = 0.5 AND (row_->>'notas_credito_aplicadas')::numeric = 0,
     'AUD98: varios pagos usan moneda factura y Borrador no descuenta');
@@ -53,8 +53,8 @@ BEGIN
     'AUD98: Cancelada no descuenta');
   -- Misma moneda conserva el mismo saldo, NC eliminada tampoco descuenta.
   nc := gen_random_uuid();
-  INSERT INTO public.proveedor_notas_credito(id, organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio)
-    VALUES (nc, fx.org_a, doc, hoy, 'AUD98-NC-USD', 0.5, 'USD', 20);
+  INSERT INTO public.proveedor_notas_credito(id, organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio, subtotal, tipo_cambio_mxn)
+    VALUES (nc, fx.org_a, doc, hoy, 'AUD98-NC-USD', 0.5, 'USD', NULL, 0.5, 20);
   UPDATE public.proveedor_notas_credito SET estado='Aprobada' WHERE id=nc;
   UPDATE public.proveedor_notas_credito SET estado='Aplicada' WHERE id=nc;
   PERFORM pg_temp.assert((public.pago_detalle('pago', p2)->'aplicaciones'->0->>'notas_credito_aplicadas')::numeric = 0.5,

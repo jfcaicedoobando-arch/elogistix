@@ -132,7 +132,7 @@ export default function Tesoreria() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <TesoreriaTopCartera
-                titulo="Top 5 deudores (vencidos)"
+                titulo="Top 5 deudores por moneda (vencidos)"
                 items={data.top_deudores}
                 vacio="Sin clientes con facturas vencidas."
                 tono="cobrar"
@@ -143,7 +143,7 @@ export default function Tesoreria() {
                 verTodoTo={ROUTES.CARTERA}
               />
               <TesoreriaTopCartera
-                titulo="Top 5 proveedores por pagar"
+                titulo="Top 5 proveedores por pagar por moneda"
                 items={data.top_acreedores}
                 vacio="Sin proveedores con facturas vencidas."
                 tono="pagar"

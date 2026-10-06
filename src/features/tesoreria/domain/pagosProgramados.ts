@@ -16,6 +16,9 @@ export interface FacturaProgramable {
   fecha_programada_pago: string | null;
   moneda: string;
   total: number;
+  fecha_emision?: string | null;
+  /** Tasa del documento, sugerencia editable para la valuación del pago. */
+  tipo_cambio_usd?: number | null;
   saldo: number;
   /**
    * MNY-P2.5: el trigger `pagos_proveedor_requiere_aprobacion` rechaza pagar

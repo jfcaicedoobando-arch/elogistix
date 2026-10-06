@@ -13,7 +13,8 @@ describe("motivoBloqueoEdicionCostos", () => {
 
   it("[MC-02] bloquea Aceptada y En operación guiando a Re-cotizar", () => {
     expect(motivoBloqueoEdicionCostos("Aceptada")).toMatch(/Re-cotizar/);
-    expect(motivoBloqueoEdicionCostos("En operación")).toMatch(/Re-cotizar/);
+    expect(motivoBloqueoEdicionCostos("En operación")).toMatch(/Duplicar.*Nueva cotización/);
+    expect(motivoBloqueoEdicionCostos("En operación")).not.toMatch(/Re-cotizar/);
   });
 
   it("[MC-03] bloquea estados terminales/desconocidos", () => {

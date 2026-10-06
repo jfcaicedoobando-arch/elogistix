@@ -15,7 +15,8 @@
  * "Marítimo" — cae en "Otros" para no inflar una columna de modo con importes
  * cuyo modo real es desconocido.
  */
-import { fallbackTC, tcDocumentoPorMoneda, type TcFallback } from "./estadoResultadosTc";
+import { tcDocumentoPorMoneda, type TcFallback } from "./estadoResultadosTc";
+import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
 import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 import type {
   EmbarqueER,
@@ -38,6 +39,7 @@ export interface VentasBucket {
 }
 
 export interface CostosBucket {
+  notasSinBase?: string[];
   embarques: EmbarqueER[];
   costos: ConceptoCostoER[];
 }
@@ -116,11 +118,14 @@ export function costosDeProveedorFacturas(
   for (const pf of pfacts) {
     const emb = pf.embarque_id ? embPorId.find((e) => e.id === pf.embarque_id) : undefined;
     const id = `pf-${pf.id}`;
+    const tipos = tcDocumentoPorMoneda(pf.moneda, pf.tipo_cambio_usd, {
+      usd: emb?.tipo_cambio_usd ?? tc.usd, eur: emb?.tipo_cambio_eur ?? tc.eur,
+    });
     out.embarques.push({
       id,
       modo: emb?.modo ?? MODO_DESCONOCIDO,
-      tipo_cambio_usd: fallbackTC(Number(pf.tipo_cambio_usd), emb?.tipo_cambio_usd ?? tc.usd),
-      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
+      tipo_cambio_usd: tipos.usd,
+      tipo_cambio_eur: tipos.eur,
     });
     out.costos.push({
       embarque_id: id,
@@ -147,6 +152,11 @@ export function costosDeNotasProveedor(
   tc: TcFallback,
 ): void {
   for (const nc of ncs) {
+    const subtotal = baseNcProveedor(nc.subtotal);
+    if (subtotal === null) {
+      (out.notasSinBase ??= []).push(nc.id);
+      continue;
+    }
     const embId = embPorFacturaProv.get(nc.proveedor_factura_id);
     const emb = embId ? embPorId.find((e) => e.id === embId) : undefined;
     const id = `pnc-${nc.id}`;
@@ -162,7 +172,7 @@ export function costosDeNotasProveedor(
     out.costos.push({
       embarque_id: id,
       concepto: "Notas de crédito de proveedor",
-      monto: -Math.abs(Number(nc.monto)),
+      monto: -subtotal,
       moneda: String(nc.moneda),
     });
   }

@@ -18,8 +18,8 @@ export const PNL_UMBRAL_SOBRECOSTO_PCT = 10;
 export const PNL_UMBRAL_MARGEN_MIN_PCT = 15;
 
 export interface AlertasPnl {
-  utilidadReal: number;
-  margenReal: number;
+  utilidadReal: number | null;
+  margenReal: number | null;
   /**
    * v13.823.366 — No hay venta ni costo real: no es una desviación financiera,
    * es que la operación no ha empezado a facturarse. Con esta bandera el tab
@@ -43,10 +43,11 @@ export function calcularAlertasPnl(args: {
   deltaCostoPct: number;
   /** Estado del embarque; sólo informativo para el copy de los avisos. */
   estadoEmbarque?: string | null;
+  costosIncompletos?: boolean;
 }): AlertasPnl {
   const { ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct } = args;
-  const utilidadReal = ventaReal - costoReal;
-  const margenReal = ventaReal > 0 ? (utilidadReal / ventaReal) * 100 : 0;
+  const utilidadReal = args.costosIncompletos ? null : ventaReal - costoReal;
+  const margenReal = utilidadReal === null ? null : ventaReal > 0 ? (utilidadReal / ventaReal) * 100 : 0;
   const sinActividadReal = ventaReal <= 0 && costoReal <= 0;
   if (sinActividadReal) {
     return {
@@ -60,6 +61,6 @@ export function calcularAlertasPnl(args: {
     sinActividadReal,
     alertaSobrecosto: costoPresup > 0 && deltaCostoPct > PNL_UMBRAL_SOBRECOSTO_PCT,
     alertaVenta: ventaPresup > 0 && ventaReal < ventaPresup,
-    alertaMargen: ventaReal > 0 && margenReal < PNL_UMBRAL_MARGEN_MIN_PCT,
+    alertaMargen: margenReal !== null && ventaReal > 0 && margenReal < PNL_UMBRAL_MARGEN_MIN_PCT,
   };
 }

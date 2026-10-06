@@ -46,6 +46,15 @@ describe("notaCreditoDraftPolitica · derivados", () => {
     expect(d.faltantesGuardar).toEqual([]);
   });
 
+  it.each(["", "2026-02-30", "05/10/2026", "2026-13-01", "2026-10", "invalid"])("AUD102: fecha inválida %s bloquea ambas acciones y la construcción del input", (fecha) => {
+    const captura = draft({ fecha });
+    const d = derivadosNC(captura, ctx);
+    expect(d.puedeGuardar).toBe(false);
+    expect(d.puedeTimbrar).toBe(false);
+    expect(d.faltantesGuardar).toContain("fecha válida");
+    expect(() => construirInputNC({ draft: captura, facturaId: "f1", monedaFactura: "MXN", tipoCambioFactura: 1, monto: 580 })).toThrow(/fecha válida/);
+  });
+
   it("sin descripción o con conceptos inválidos no puede guardarse", () => {
     const sinDesc = derivadosNC(draft({ descripcion: "   " }), ctx);
     expect(sinDesc.puedeGuardar).toBe(false);

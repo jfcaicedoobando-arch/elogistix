@@ -15,6 +15,9 @@ function row(over: Partial<CarteraRow>): CarteraRow {
     moneda: "MXN",
     saldo: 100,
     fecha_vencimiento: "2026-01-01",
+    fecha_emision: "2025-12-01",
+    metodo_pago: "PUE",
+    uuid_fiscal: "uuid-f1",
     ...over,
   } as CarteraRow;
 }
@@ -55,16 +58,29 @@ describe("derivarLoteCobro", () => {
   it("arma el lote con las facturas seleccionadas", () => {
     const res = derivarLoteCobro([
       row({}),
-      row({ factura_id: "f2", numero: "A-2", saldo: 250 }),
+      row({ factura_id: "f2", numero: "A-2", saldo: 250, fecha_emision: "2025-12-15", metodo_pago: "PPD", uuid_fiscal: "uuid-f2" }),
     ]);
     expect(res).toEqual({
       clienteId: "cli-1",
       clienteNombre: "ACME",
       moneda: "MXN",
       facturas: [
-        { factura_id: "f1", numero: "A-1", fecha_vencimiento: "2026-01-01", saldo: 100 },
-        { factura_id: "f2", numero: "A-2", fecha_vencimiento: "2026-01-01", saldo: 250 },
+        { factura_id: "f1", numero: "A-1", fecha_vencimiento: "2026-01-01", saldo: 100,
+          fecha_emision: "2025-12-01", metodo_pago: "PUE", es_ppd_timbrada: false },
+        { factura_id: "f2", numero: "A-2", fecha_vencimiento: "2026-01-01", saldo: 250,
+          fecha_emision: "2025-12-15", metodo_pago: "PPD", es_ppd_timbrada: true },
       ],
     });
   });
+  it("conserva el método PPD sin suponer REP cuando todavía no hay UUID fiscal", () => {
+    const res = derivarLoteCobro([
+      row({ metodo_pago: "PPD", uuid_fiscal: null }),
+      row({ factura_id: "f2", fecha_emision: null, metodo_pago: null, uuid_fiscal: null }),
+    ]);
+    expect(res?.facturas).toMatchObject([
+      { factura_id: "f1", metodo_pago: "PPD", es_ppd_timbrada: false, fecha_emision: "2025-12-01" },
+      { factura_id: "f2", metodo_pago: null, es_ppd_timbrada: false, fecha_emision: null },
+    ]);
+  });
+
 });

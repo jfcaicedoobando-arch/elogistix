@@ -44,6 +44,9 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
                   {formatCurrency(montos.usd, "USD")}
                 </p>
               )}
+              {montos.eur > 0 && (
+                <p className="text-kpi mt-0.5">{formatCurrency(montos.eur, "EUR")}</p>
+              )}
               <p className="text-body-sm text-muted-foreground mt-1">
                 {total} factura{total !== 1 ? "s" : ""} por pagar
               </p>

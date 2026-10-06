@@ -1,3 +1,4 @@
+import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Calendar, Download, FileText, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,11 @@ import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 // EC-10: el EERR devengado valúa filas sin embarque con `tcFallbackDof`
 // (estadoResultadosTc), que puede caer al TC de respaldo 17.25/18.5.
 import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
+
+function AvisoProveedor({ notas }: { notas?: string[] }) {
+  if (!notas?.length) return null;
+  return <p role="status" className="text-sm text-warning">{avisoNcProveedorSinBase(notas.length)}</p>;
+}
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -101,6 +107,7 @@ export default function ProfitEstadoResultados() {
 
       </p>
 
+      <AvisoProveedor notas={data?.notas_proveedor_sin_base} />
       <Card>
         <CardContent className="p-0">
           {c.isError ? (

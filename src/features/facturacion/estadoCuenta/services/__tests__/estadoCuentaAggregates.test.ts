@@ -27,9 +27,9 @@ function factura(overrides: Partial<FacturaEstadoCuenta> = {}): FacturaEstadoCue
 describe("calcularKpisEstadoCuenta", () => {
   it("regresa ceros con arreglo vacío", () => {
     const k = calcularKpisEstadoCuenta([]);
-    expect(k.adeudado).toEqual({ mxn: 0, usd: 0 });
-    expect(k.vencido).toEqual({ mxn: 0, usd: 0 });
-    expect(k.aFavor).toEqual({ mxn: 0, usd: 0 });
+    expect(k.adeudado).toEqual({ mxn: 0, usd: 0, eur: 0 });
+    expect(k.vencido).toEqual({ mxn: 0, usd: 0, eur: 0 });
+    expect(k.aFavor).toEqual({ mxn: 0, usd: 0, eur: 0 });
     expect(k.facturasAdeudadas).toBe(0);
     expect(k.facturasVencidas).toBe(0);
   });

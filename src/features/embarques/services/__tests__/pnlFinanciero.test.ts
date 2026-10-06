@@ -24,6 +24,24 @@ describe("fetchPnlEmbarque", () => {
     expect(rpc).toHaveBeenCalledWith("pnl_financiero_embarque", { _embarque_id: "e1" });
   });
 
+  it("audit129 preserves incomplete costs and null profit instead of fabricating 100%", async () => {
+    rpc.mockResolvedValue({ data: { estado_costos: "incompleto", utilidad_mxn: null,
+      notas_credito_sin_base: 1, venta: { real_mxn: 150 }, costo: { real_mxn: 0 } }, error: null });
+    const result = await fetchPnlEmbarque("e1");
+    expect(result.estado_costos).toBe("incompleto");
+    expect(result.utilidad_mxn).toBeNull();
+    expect(result.notas_credito_sin_base).toBe(1);
+  });
+
+  it("audit130 conserva la advertencia de reparto provisional sin inventar utilidad", async () => {
+    rpc.mockResolvedValue({ data: { estado_costos: "incompleto", utilidad_mxn: null,
+      facturas_sobreasignadas: 1, costo_sobreasignado_mxn: 20 }, error: null });
+    const result = await fetchPnlEmbarque("e1");
+    expect(result.facturas_sobreasignadas).toBe(1);
+    expect(result.costo_sobreasignado_mxn).toBe(20);
+    expect(result.utilidad_mxn).toBeNull();
+  });
+
   it("propaga el error de la RPC (no lo silencia)", async () => {
     rpc.mockResolvedValue({ data: null, error: new Error("permission denied") });
     await expect(fetchPnlEmbarque("e1")).rejects.toThrow("permission denied");
@@ -32,6 +50,12 @@ describe("fetchPnlEmbarque", () => {
   it("retorna el payload tal cual lo envía la RPC", async () => {
     const payload = {
       embarque_id: "e1",
+      estado_costos: "completo",
+      utilidad_mxn: 330,
+      notas_credito_sin_base: 0,
+      costo_sin_asignar_mxn: 0,
+      facturas_sobreasignadas: 0,
+      costo_sobreasignado_mxn: 0,
       tipo_cambio_usd: 17.5,
       tipo_cambio_eur: 19.0,
       venta: { presupuestada_mxn: 1000, real_mxn: 950, pdte_cobro_mxn: 50 },

@@ -26,6 +26,7 @@ export interface AgingBucket {
   label: string;
   mxn: number;
   usd: number;
+  eur: number;
   conteo: number;
 }
 
@@ -57,8 +58,8 @@ export const bucketDeFactura = bucketDeDias;
 
 /** Aging por bucket y moneda, considerando sólo facturas con saldo vivo. */
 export function calcularAging(rows: ReadonlyArray<FacturaEstadoCuenta>): AgingBucket[] {
-  const acc = new Map<BucketAging, { mxn: number[]; usd: number[]; conteo: number }>();
-  for (const id of BUCKETS_ORDEN) acc.set(id, { mxn: [], usd: [], conteo: 0 });
+  const acc = new Map<BucketAging, { mxn: number[]; usd: number[]; eur: number[]; conteo: number }>();
+  for (const id of BUCKETS_ORDEN) acc.set(id, { mxn: [], usd: [], eur: [], conteo: 0 });
 
   for (const f of rows) {
     if (f.saldo <= 0.01) continue;
@@ -67,11 +68,12 @@ export function calcularAging(rows: ReadonlyArray<FacturaEstadoCuenta>): AgingBu
     entry.conteo += 1;
     if (f.moneda === "MXN") entry.mxn.push(f.saldo);
     else if (f.moneda === "USD") entry.usd.push(f.saldo);
+    else if (f.moneda === "EUR") entry.eur.push(f.saldo);
   }
 
   return BUCKETS_ORDEN.map((id) => {
-    const e = acc.get(id) ?? { mxn: [], usd: [], conteo: 0 };
-    return { id, label: LABELS[id], mxn: sumarMontos(e.mxn), usd: sumarMontos(e.usd), conteo: e.conteo };
+    const e = acc.get(id) ?? { mxn: [], usd: [], eur: [], conteo: 0 };
+    return { id, label: LABELS[id], mxn: sumarMontos(e.mxn), usd: sumarMontos(e.usd), eur: sumarMontos(e.eur), conteo: e.conteo };
   });
 }
 

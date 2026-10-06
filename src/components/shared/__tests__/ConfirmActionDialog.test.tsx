@@ -3,6 +3,22 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 describe("<ConfirmActionDialog />", () => {
+  it("limita la columna al ancho del diálogo aunque los campos tengan ancho intrínseco", () => {
+    render(
+      <ConfirmActionDialog open onOpenChange={() => {}} title="Formulario" onConfirm={() => {}}>
+        <input aria-label="Confirmación" />
+      </ConfirmActionDialog>,
+    );
+    // minmax(0, 1fr) impide que el ancho intrínseco de inputs/textarea ensanche
+    // la columna al aumentar el texto en un viewport móvil.
+    expect(screen.getByRole("alertdialog")).toHaveClass("grid-cols-1", "overflow-y-auto");
+  });
+
+  it("reserva margen de scroll para no recortar campos ni anillos de foco en los bordes", () => {
+    render(<ConfirmActionDialog open onOpenChange={() => {}} title="Formulario" onConfirm={() => {}} />);
+    expect(screen.getByRole("alertdialog")).toHaveClass("scroll-py-2");
+  });
+
   it("invoca onConfirm al aceptar", async () => {
     const onConfirm = vi.fn();
     render(

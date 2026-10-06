@@ -56,9 +56,9 @@ BEGIN
 
   -- NC 500 con ciclo de vida completo: Borrador → Aprobada → Aplicada.
   INSERT INTO public.proveedor_notas_credito
-    (id, organization_id, proveedor_factura_id, monto, estado, moneda)
+    (id, organization_id, proveedor_factura_id, monto, estado, moneda, subtotal)
   VALUES
-    ('77777777-7777-7777-7777-777777777777', v_org, v_fact, 500, 'Borrador', 'MXN');
+    ('77777777-7777-7777-7777-777777777777', v_org, v_fact, 500, 'Borrador', 'MXN', 500);
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada'
    WHERE id = '77777777-7777-7777-7777-777777777777';
   UPDATE public.proveedor_notas_credito SET estado = 'Aplicada'
