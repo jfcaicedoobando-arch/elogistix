@@ -11,7 +11,7 @@ import { useTarifasRespuestaPricing } from "@/features/crm/hooks/useTarifasRespu
 import type { TarifaRespuestaRow } from "@/features/crm/services/pricing/tarifasRespuesta";
 import { formatDate } from "@/lib/formatters/dates";
 
-interface Props { solicitudId: string; editable: boolean; hayOpcionesViejas: boolean }
+interface Props { solicitudId: string; editable: boolean; hayOpcionesViejas: boolean; esperandoRespuesta?: boolean }
 
 const carta = (v: boolean | null) => (v === true ? "Sí" : v === false ? "No" : "—");
 const moneda = (n: number, m: string) =>
@@ -35,9 +35,9 @@ function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
   );
 }
 
-export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas }: Props) {
+export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas, esperandoRespuesta = false }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const q = useTarifasRespuestaPricing(solicitudId);
+  const q = useTarifasRespuestaPricing(solicitudId, esperandoRespuesta);
   const tarifas = q.data ?? [];
   const cerrar = (v: boolean) => { setAbierto(v); if (!v) void q.refetch(); };
 

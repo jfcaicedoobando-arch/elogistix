@@ -4560,6 +4560,7 @@ export type Database = {
           servicio: string | null
           solicitante_id: string
           tipo_carga: string | null
+          unidad_medida: string | null
           updated_at: string
           vence_at: string | null
         }
@@ -4595,6 +4596,7 @@ export type Database = {
           servicio?: string | null
           solicitante_id: string
           tipo_carga?: string | null
+          unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
         }
@@ -4630,6 +4632,7 @@ export type Database = {
           servicio?: string | null
           solicitante_id?: string
           tipo_carga?: string | null
+          unidad_medida?: string | null
           updated_at?: string
           vence_at?: string | null
         }
@@ -11039,6 +11042,10 @@ export type Database = {
       crm_cancelar_solicitud_pricing: {
         Args: { p_id: string }
         Returns: undefined
+      }
+      crm_crear_oportunidad_con_empresa: {
+        Args: { p_datos: Json; p_empresa_id: string }
+        Returns: Json
       }
       crm_criterios_avance: {
         Args: { p_oportunidad_ids: string[] }

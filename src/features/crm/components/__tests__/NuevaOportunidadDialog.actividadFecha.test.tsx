@@ -24,6 +24,7 @@ vi.mock("@/features/crm/hooks", () => ({
       ...EMPTY_OPORTUNIDAD,
       origen_tipo: "cliente",
       cliente_id: "c-1",
+      empresa_id: "empresa-1",
       etapa_id: "e-ab",
       nombre: "Oportunidad Acme",
       vendedor_id: "u-1",

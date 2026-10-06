@@ -5,7 +5,7 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
 import {
   ETIQUETA_COMPLEJIDAD, INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
-  aNumero,
+  aNumero, UNIDADES_MEDIDA_PRICING,
 } from "@/features/crm/services/pricing/tiposPricing";
 import { CampoLista, CampoSiNo, CampoTexto } from "./CamposPricing";
 
@@ -48,6 +48,8 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
           onChange={(v) => { const n = aNumero(v); set("cantidad", n != null && n > 0 ? Math.trunc(n) : null); }} />
         <CampoSiNo id="pr-estibable" label="Estibable" {...d} value={datos.estibable} onChange={(v) => set("estibable", v)} />
         <CampoTexto id="pr-peso" label="Weight" {...d} value={datos.peso} onChange={txt("peso")} />
+        <CampoLista id="pr-unidad-medida" label="Units of measurement" {...d} value={datos.unidad_medida}
+          opciones={UNIDADES_MEDIDA_PRICING} onChange={(v) => set("unidad_medida", v)} />
         <CampoTexto id="pr-dim" label="Dimensions" {...d} value={datos.dimensiones} onChange={txt("dimensiones")} />
       </FormDialogSection>
       <FormDialogSection title="Ruta">

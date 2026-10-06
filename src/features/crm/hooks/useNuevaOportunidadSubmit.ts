@@ -76,7 +76,7 @@ export function useNuevaOportunidadSubmit({
 
   const handleSubmit = async () => {
     if (pendingTotal || enviandoRef.current) return;
-    const invalido = validarOportunidadForm(form, esGanada);
+    const invalido = validarOportunidadForm(form, esGanada, isEdit);
     if (invalido) {
       return notifyError(undefined, {
         ...invalido,

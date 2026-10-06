@@ -38,6 +38,7 @@ export function buildOportunidadFormPayload(
 ) {
   return {
     nombre: form.nombre,
+    ...(!esEdicion ? { empresa_id: form.empresa_id } : {}),
     ...bloqueOrigen(form, esEdicion),
     etapa_id: form.etapa_id,
     monto_estimado: form.monto_estimado,
@@ -71,6 +72,7 @@ export function buildOportunidadFormPayload(
 export function validarOportunidadForm(
   form: OportunidadFormState,
   esGanada: boolean,
+  esEdicion = false,
 ): { title: string; description?: string } | null {
   if (!form.nombre.trim()) return { title: "Nombre es obligatorio" };
   if (form.origen_tipo === "prospecto" && !form.lead_id) {
@@ -90,6 +92,7 @@ export function validarOportunidadForm(
   // v13.823.53 — la etapa es de sólo lectura: si viene vacía es porque el
   // pipeline no tiene etapas abiertas, no porque falte elegirla.
   if (!form.etapa_id) return { title: MSG_SIN_ETAPA_ABIERTA };
+  if (!esEdicion && !form.empresa_id) return { title: "Selecciona la empresa asociada" };
   if (esGanada && !form.fecha_cierre_real) {
     return {
       title: "Captura la fecha de cierre real",
@@ -110,6 +113,7 @@ export function validarOportunidadForm(
  */
 export function faltantesOportunidadForm(form: OportunidadFormState): string[] {
   const faltan: string[] = [];
+  if (!form.empresa_id) faltan.push("empresa asociada");
   if (form.origen_tipo === "prospecto" && !form.lead_id) faltan.push("prospecto de origen");
   if (form.origen_tipo === "cliente" && !form.cliente_id) faltan.push("cliente de origen");
   if (!form.nombre.trim()) faltan.push("nombre de la oportunidad");

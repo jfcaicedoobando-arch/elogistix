@@ -21,6 +21,13 @@ const STABLE_ETAPAS: never[] = [];
 const STABLE_USER = null;
 
 describe("useOportunidadForm", () => {
+  it("conserva la empresa elegida al ampliar el formulario", () => {
+    const empresa = { id: "empresa-1", nombre: "Acme" };
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, null, STABLE_ETAPAS, STABLE_USER, { empresa }),
+    );
+    expect(result.current.form).toMatchObject({ empresa_id: "empresa-1", empresa_nombre: "Acme" });
+  });
   it("cuando hay oportunidad, usa buildFromOportunidad", () => {
     const op = { id: "o1", nombre: "Proyecto X" } as never;
     const { result } = renderHook(() =>

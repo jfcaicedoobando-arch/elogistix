@@ -23,10 +23,17 @@ export async function crearOportunidad(
   input: OportunidadInput,
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string; avisoActividad: string | null }> {
+  if (!input.empresa_id) throw new Error("Selecciona la empresa asociada");
   const payload = buildOportunidadInsertPayload(input, user);
-  const creada = (await unwrap(
-    supabase.from("crm_oportunidades").insert(payload).select("id").single(),
-  )) as { id: string };
+  const resultado = await unwrap(supabase.rpc("crm_crear_oportunidad_con_empresa", {
+    p_empresa_id: input.empresa_id,
+    p_datos: payload,
+  }));
+  if (!resultado || typeof resultado !== "object" || Array.isArray(resultado) ||
+      !("id" in resultado) || typeof resultado.id !== "string") {
+    throw new Error("No se pudo confirmar la creación de la oportunidad");
+  }
+  const creada = { id: resultado.id };
   // v13.823.32: la oportunidad YA existe. Si el registro automático de
   // actividad/bitácora falla, no la perdemos ni anunciamos fracaso: se
   // devuelve un aviso accionable para la UI.

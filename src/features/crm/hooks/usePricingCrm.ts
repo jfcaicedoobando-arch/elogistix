@@ -28,6 +28,10 @@ export function useSolicitudesOportunidad(oportunidadId: string) {
   return useQuery({
     queryKey: [...BASE, "oportunidad", oportunidadId],
     queryFn: () => listarSolicitudesOportunidad(oportunidadId),
+    // Mientras haya solicitudes enviadas sin respuesta, reconsulta solo (30 s)
+    // para que el solicitante vea la respuesta de Pricing sin recargar.
+    refetchInterval: (q) =>
+      (q.state.data ?? []).some((s) => s.estado === "enviada") ? 30_000 : false,
   });
 }
 

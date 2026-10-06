@@ -12,6 +12,7 @@ import SelectorOrigenOportunidad from "./SelectorOrigenOportunidad";
 import OportunidadMetasFields from "./OportunidadMetasFields";
 import OportunidadMontosFields from "./OportunidadMontosFields";
 import OportunidadRutaFields from "./OportunidadRutaFields";
+import { OportunidadEmpresaField } from "./OportunidadEmpresaField";
 import { useNombreProspecto } from "@/features/crm/hooks/useNombreProspecto";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 
@@ -94,6 +95,12 @@ export default function OportunidadFormFields({
         <Label htmlFor="op-nombre">Nombre *</Label>
         <Input id="op-nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
       </div>
+      {!isEdit && <div className="sm:col-span-2">
+        <OportunidadEmpresaField
+          empresa={form.empresa_id ? { id: form.empresa_id, nombre: form.empresa_nombre } : null}
+          onChange={(e) => setForm((f) => ({ ...f, empresa_id: e.id, empresa_nombre: e.nombre }))}
+        />
+      </div>}
       <div className="space-y-1">
         <Label htmlFor="op-etapa">Etapa *</Label>
         {/*
