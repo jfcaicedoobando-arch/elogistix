@@ -7914,7 +7914,7 @@ CREATE TABLE public.proformas (
     consolidada_en uuid,
     embarques_ids uuid[],
     CONSTRAINT proformas_estado_cliente_check CHECK ((estado_cliente = ANY (ARRAY['pendiente'::text, 'aceptada'::text, 'rechazada'::text]))),
-    CONSTRAINT proformas_estado_proforma_check CHECK ((estado_proforma = ANY (ARRAY['pendiente'::text, 'facturada'::text]))),
+    CONSTRAINT proformas_estado_proforma_check CHECK ((estado_proforma = ANY (ARRAY['pendiente'::text, 'facturada'::text, 'cancelada'::text]))),
     CONSTRAINT proformas_estado_revision_check CHECK ((estado_revision = ANY (ARRAY['pendiente'::text, 'aprobada'::text, 'consolidada'::text]))),
     CONSTRAINT proformas_iva_mxn_nonneg CHECK ((iva_mxn >= (0)::numeric)),
     CONSTRAINT proformas_iva_usd_nonneg CHECK ((iva_usd >= (0)::numeric)),
@@ -19075,19 +19075,12 @@ CREATE FUNCTION public.eliminar_proforma_rpc(p_proforma_id uuid) RETURNS jsonb
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_org uuid;
-  v_numero text;
-  v_estado text;
-  v_factura uuid;
-  v_factura2 uuid;
-  v_folio_ext text;
-  v_deleted timestamptz;
-  v_embarque uuid;
-  v_factura_viva boolean;
+  v_org uuid; v_numero text; v_estado text; v_factura uuid; v_factura2 uuid;
+  v_deleted timestamptz; v_embarque uuid; v_factura_viva boolean;
 BEGIN
-  SELECT organization_id, numero, estado_proforma, factura_id, factura_secundaria_id,
-         folio_factura_externa, deleted_at, embarque_id
-    INTO v_org, v_numero, v_estado, v_factura, v_factura2, v_folio_ext, v_deleted, v_embarque
+  SELECT organization_id, numero, estado_proforma, factura_id,
+         factura_secundaria_id, deleted_at, embarque_id
+    INTO v_org, v_numero, v_estado, v_factura, v_factura2, v_deleted, v_embarque
   FROM public.proformas WHERE id = p_proforma_id
   FOR UPDATE;
   IF v_org IS NULL THEN
@@ -19096,21 +19089,19 @@ BEGIN
   IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_org) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
   END IF;
-  -- Espejo de la policy RLS `Tenant delete proformas`.
   IF auth.uid() IS NOT NULL AND NOT public.has_any_role_efectivo(
        auth.uid(),
        ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
              'operador'::public.app_role, 'contador'::public.app_role,
              'super_admin'::public.app_role]
      ) THEN
-    RAISE EXCEPTION 'LC_PROFORMA_SIN_PERMISO: tu rol no puede eliminar proformas'
+    RAISE EXCEPTION 'LC_PROFORMA_SIN_PERMISO: tu rol no puede cancelar proformas'
       USING ERRCODE = '42501';
   END IF;
-  IF v_deleted IS NOT NULL THEN
-    RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', false);
+  IF v_deleted IS NOT NULL OR v_estado = 'cancelada' THEN
+    RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque,
+                              'eliminada', false, 'cancelada', false);
   END IF;
-  -- RG10 + R1: el folio externo suelto NO bloquea; una factura cancelada,
-  -- sustituida o en papelera tampoco. Sólo factura viva o estado 'facturada'.
   SELECT EXISTS (
     SELECT 1 FROM public.facturas fa
      WHERE fa.id IN (v_factura, v_factura2)
@@ -19120,13 +19111,13 @@ BEGIN
   IF v_factura_viva OR lower(COALESCE(v_estado, '')) = 'facturada' THEN
     RAISE EXCEPTION 'LC_PROFORMA_FACTURADA';
   END IF;
+  -- Se conserva la proforma (histórico) y se liberan sus conceptos.
   UPDATE public.conceptos_venta
      SET estado_facturacion = 'pendiente', proforma_id = NULL
    WHERE proforma_id = p_proforma_id;
-  UPDATE public.proformas
-     SET deleted_at = now(), deleted_by = auth.uid()
-   WHERE id = p_proforma_id;
-  RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque, 'eliminada', true);
+  UPDATE public.proformas SET estado_proforma = 'cancelada' WHERE id = p_proforma_id;
+  RETURN jsonb_build_object('numero', v_numero, 'embarque_id', v_embarque,
+                            'eliminada', false, 'cancelada', true);
 END;
 $$;
 CREATE FUNCTION public.email_queue_dispatch() RETURNS void
@@ -27312,6 +27303,8 @@ BEGIN
     SELECT 1
     FROM public.proformas p
     WHERE p.embarque_id = e.id
+      AND p.deleted_at IS NULL
+      AND COALESCE(p.estado_proforma, 'pendiente') <> 'cancelada'
       AND (
         COALESCE(p.estado_aprobacion, 'aprobada') <> 'borrador'
         OR EXISTS (

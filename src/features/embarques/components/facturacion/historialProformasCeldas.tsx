@@ -25,6 +25,9 @@ export function renderEstado(
 ) {
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
+  if (p.estado_proforma === "cancelada") {
+    return <Badge variant="destructive" className="w-fit">Cancelada</Badge>;
+  }
   const unificado = getEstadoUnificado(p);
   if (unificado === "facturada") {
     // B9 (v13.823.153): distingue borrador, "por timbrar" y emisión real.

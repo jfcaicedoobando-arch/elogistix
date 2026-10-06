@@ -93,7 +93,7 @@ export function useEliminarProforma() {
     mutationFn: (params: EliminarProformaParams & { numero: string }) =>
       svcEliminar(params).then(() => params),
     onSuccess: (params) => {
-      notifySuccess(undefined, { title: "Proforma eliminada correctamente" });
+      notifySuccess(undefined, { title: "Proforma cancelada; los conceptos quedaron libres" });
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error, params) => {

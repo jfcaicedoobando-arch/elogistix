@@ -200,16 +200,17 @@ BEGIN
 
   UPDATE public.proformas SET estado_proforma = 'pendiente' WHERE id = v_pf;
   v_res := public.eliminar_proforma_rpc(v_pf);
-  IF (v_res->>'eliminada')::boolean IS NOT TRUE THEN
-    RAISE EXCEPTION 'OLA6 M15 FAIL: no se eliminó la proforma pendiente';
+  IF (v_res->>'cancelada')::boolean IS NOT TRUE THEN
+    RAISE EXCEPTION 'OLA6 M15 FAIL: no se canceló la proforma pendiente';
   END IF;
-  IF (SELECT deleted_at FROM public.proformas WHERE id = v_pf) IS NULL THEN
-    RAISE EXCEPTION 'OLA6 M15 FAIL: la proforma no quedó con soft-delete';
+  IF (SELECT estado_proforma FROM public.proformas WHERE id = v_pf) <> 'cancelada'
+     OR (SELECT deleted_at FROM public.proformas WHERE id = v_pf) IS NOT NULL THEN
+    RAISE EXCEPTION 'OLA6 M15 FAIL: la proforma no se conservó como cancelada';
   END IF;
   -- Segunda llamada: idempotente, no vuelve a marcar.
   v_res := public.eliminar_proforma_rpc(v_pf);
-  IF (v_res->>'eliminada')::boolean IS NOT FALSE THEN
-    RAISE EXCEPTION 'OLA6 M15 FAIL: la eliminación no es idempotente';
+  IF (v_res->>'cancelada')::boolean IS NOT FALSE THEN
+    RAISE EXCEPTION 'OLA6 M15 FAIL: la cancelación no es idempotente';
   END IF;
 
   ----------------------------------------------------------------------------

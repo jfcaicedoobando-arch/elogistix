@@ -216,10 +216,10 @@ DECLARE
   v_result jsonb;
 BEGIN
   v_result := public.eliminar_proforma_rpc('c1234567-1234-1234-1234-123456789012'::uuid);
-  IF (v_result->>'eliminada')::boolean IS NOT TRUE THEN
-    RAISE EXCEPTION 'TEST FAIL: N37 - la proforma con factura Cancelada no se pudo eliminar: %', v_result;
+  IF (v_result->>'cancelada')::boolean IS NOT TRUE THEN
+    RAISE EXCEPTION 'TEST FAIL: N37 - la proforma con factura Cancelada no se pudo cancelar: %', v_result;
   END IF;
-  RAISE NOTICE '✓ N37: proforma con factura Cancelada eliminada correctamente';
+  RAISE NOTICE '✓ N37: proforma con factura Cancelada cancelada (histórico conservado)';
 END
 $n37$ LANGUAGE plpgsql;
 

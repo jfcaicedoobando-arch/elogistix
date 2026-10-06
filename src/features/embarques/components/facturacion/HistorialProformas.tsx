@@ -90,7 +90,8 @@ export function HistorialProformas({
         const p = row.original;
         const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
         const consolidada = (p.estado_revision ?? "aprobada") === "consolidada";
-        const puedeEliminar = canEdit && !facturada && !consolidada;
+        const cancelada = p.estado_proforma === "cancelada";
+        const puedeEliminar = canEdit && !facturada && !consolidada && !cancelada;
         if (!puedeEliminar) {
           return <ChevronRight className="size-4 ml-auto text-muted-foreground transition-colors group-hover:text-foreground" />;
         }
@@ -113,7 +114,7 @@ export function HistorialProformas({
                 onClick={(e) => { e.stopPropagation(); onEliminar(p.id, p.numero); }}
                 className="text-destructive focus:text-destructive"
               >
-                <Trash2 className="h-3.5 w-3.5 mr-2" /> Eliminar proforma
+                <Trash2 className="h-3.5 w-3.5 mr-2" /> Cancelar proforma
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
