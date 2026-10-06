@@ -37,7 +37,7 @@ describe("bandejas/domain/aggregates", () => {
       { saldo: 200, moneda: "USD", dias_para_vencer: -1, tipo_cambio_usd: 20 },
       // @ts-expect-error fixture parcial - USD sin TC
       { saldo: 50, moneda: "USD", dias_para_vencer: null, tipo_cambio_usd: null },
-      // @ts-expect-error fixture parcial - EUR (sin TC siempre)
+      // @ts-expect-error fixture parcial - EUR sin TC capturado
       { saldo: 30, moneda: "EUR", dias_para_vencer: 5, tipo_cambio_usd: null },
     ]);
     expect(r.total).toBe(4);

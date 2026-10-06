@@ -18,20 +18,15 @@ import { useDeleteSeguro, useSegurosEmbarque } from "@/features/embarques/hooks/
 import type { SeguroEmbarque } from "@/features/embarques/services/seguros";
 import { DialogSeguroForm } from "./DialogSeguroForm";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { contarVigenciasSeguros, diasRestantesSeguro } from "@/features/embarques/domain/vigenciaSeguros";
 
 interface Props {
   embarqueId: string;
   canEdit: boolean;
 }
 
-/** Ola 19 · paso 1: días naturales vía el helper único (inmune a DST). */
-function diasRestantes(hasta: string): number {
-  return diffDiasCalendario(new Date(), hasta);
-}
-
 function VigenciaBadge({ hasta }: { hasta: string }) {
-  const dias = diasRestantes(hasta);
+  const dias = diasRestantesSeguro(hasta);
   if (dias < 0) return <Badge variant="destructive">Vencida</Badge>;
   if (dias <= 7) return <Badge className="bg-warning/10 text-warning">Vence en {dias}d</Badge>;
   return <Badge variant="secondary">Vigente · {dias}d</Badge>;
@@ -97,7 +92,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
     },
   ]), [canEdit, del]);
 
-  const venceProntoCount = seguros.filter((s) => diasRestantes(s.vigencia_hasta) <= 7).length;
+  const { vencidas, porVencer } = contarVigenciasSeguros(seguros);
 
   return (
     <div className="space-y-4">
@@ -105,10 +100,15 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
         <SectionHeading
           as="h3"
           icon={<Shield className="h-5 w-5" />}
-          actions={venceProntoCount > 0 && (
-            <Badge className="bg-warning/10 text-warning gap-1">
-              <AlertTriangle className="h-3 w-3" /> {venceProntoCount} por vencer
-            </Badge>
+          actions={(vencidas > 0 || porVencer > 0) && (
+            <div className="flex gap-2">
+              {vencidas > 0 && <Badge variant="destructive" className="gap-1">
+                <AlertTriangle className="h-3 w-3" /> {vencidas} {vencidas === 1 ? "póliza vencida" : "pólizas vencidas"}
+              </Badge>}
+              {porVencer > 0 && <Badge className="bg-warning/10 text-warning gap-1">
+                <AlertTriangle className="h-3 w-3" /> {porVencer} por vencer en 7 días
+              </Badge>}
+            </div>
           )}
         >
           Seguros de carga
