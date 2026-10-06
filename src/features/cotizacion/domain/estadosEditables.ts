@@ -53,8 +53,11 @@ export function motivoBloqueoEdicionCotizacion(cotizacion: {
  */
 export function motivoBloqueoEdicionCostos(estado: string | null | undefined): string | null {
   if (esEstadoEditableEnWizard(estado)) return null;
-  if (estado === "Aceptada" || estado === "En operación") {
+  if (estado === "En operación") {
+    return "Los costos de esta cotización están bloqueados porque respaldan un embarque en operación. Usa Duplicar desde el listado o crea una Nueva cotización para preparar otra propuesta.";
+  }
+  if (estado === "Aceptada") {
     return "Los costos de una cotización aceptada ya no se editan: respaldan la operación. Usa Re-cotizar para generar una nueva versión.";
   }
-  return `Una cotización en estado "${estado ?? "desconocido"}" ya no permite editar costos. Genera una nueva versión (Re-cotizar) si necesitas cambiarlos.`;
+  return `Una cotización en estado "${estado ?? "desconocido"}" ya no permite editar costos. Usa Duplicar desde el listado o crea una Nueva cotización si necesitas cambiarlos.`;
 }

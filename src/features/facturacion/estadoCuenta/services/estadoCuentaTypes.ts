@@ -7,6 +7,7 @@ import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactur
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
 import { notasCreditoMonedaFactura } from "@/lib/financial/notasCreditoMonedaFactura";
+import { montoCobroEnMonedaFactura } from "@/lib/financial/montoCobroEnMonedaFactura";
 import { esNcClienteVigente } from "@/lib/domain/estadosFactura";
 
 export type FacturaRow = Tables<"facturas">;
@@ -61,24 +62,8 @@ export interface EstadoCuentaFilters {
   soloConSaldo?: boolean;
 }
 
-/** Shape del jsonb de `estado_cuenta_agregados` (C3c). */
-export interface KpisEstadoCuentaRemotos {
-  adeudado_mxn: number;
-  adeudado_usd: number;
-  vencido_mxn: number;
-  vencido_usd: number;
-  a_favor_mxn: number;
-  a_favor_usd: number;
-  facturas_vencidas: number;
-  facturas_adeudadas: number;
-}
-
-export const KPIS_ESTADO_CUENTA_VACIOS: KpisEstadoCuentaRemotos = {
-  adeudado_mxn: 0, adeudado_usd: 0,
-  vencido_mxn: 0, vencido_usd: 0,
-  a_favor_mxn: 0, a_favor_usd: 0,
-  facturas_vencidas: 0, facturas_adeudadas: 0,
-};
+export { KPIS_ESTADO_CUENTA_VACIOS } from "./estadoCuentaKpisTypes";
+export type { KpisEstadoCuentaRemotos } from "./estadoCuentaKpisTypes";
 
 export type RawPago = {
   id: string;
@@ -124,7 +109,7 @@ export function calcularEstatus(
   dias: number,
   estado: FacturaRow["estado"],
 ): EstatusCobranza {
-  if (estado === "Pagada") return "Pagada";
+  if (estado === "Pagada" && saldo <= 0.01) return "Pagada";
   if (saldo <= 0.01) return "Sin saldo";
   if (dias > 0) return "Vencida";
   // B-105 (decisión de diseño): "Por vencer" = vence en 7 días naturales o
@@ -175,11 +160,9 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
       id: p.id,
       fecha_pago: p.fecha_pago,
       monto_aplicado: Number(p.monto_aplicado_factura),
-      // B-077: convertir moneda del pago antes de restar el aplicado.
-      // Convención (la misma de DialogRegistrarPago): `tipo_cambio`
-      // convierte moneda del pago → moneda de la factura; el excedente
-      // queda expresado en moneda de la factura. Sin TC confiable → 0.
-      monto_no_aplicado: montoNoAplicado(p, f.moneda),
+      // AUD109: el TC está en pesos por divisa. El excedente conserva la
+      // moneda de factura y la conversión histórica canónica, sin inventar TC.
+      monto_no_aplicado: montoNoAplicado(p, f.moneda, f.tipo_cambio),
       forma_pago: p.forma_pago,
       referencia: p.referencia,
     })),
@@ -192,8 +175,9 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
     })),
   };
 }
-function montoNoAplicado(p: RawPago, monedaFactura: Moneda): number {
-  const tc = Number(p.tipo_cambio);
-  const factor = p.moneda === monedaFactura ? 1 : Number.isFinite(tc) && tc > 0 ? tc : 0;
-  return Math.max(0, Number(p.monto) * factor - Number(p.monto_aplicado_factura));
+function montoNoAplicado(p: RawPago, monedaFactura: Moneda, tcFactura: number | null | undefined): number {
+  const recibido = montoCobroEnMonedaFactura(Number(p.monto), p.moneda, p.tipo_cambio, monedaFactura, tcFactura);
+  const aplicado = Number(p.monto_aplicado_factura);
+  if (recibido === null || !Number.isFinite(aplicado) || aplicado < 0) return 0;
+  return Math.max(0, recibido - aplicado);
 }

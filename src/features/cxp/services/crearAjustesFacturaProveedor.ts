@@ -5,7 +5,7 @@
  * Modelo (v13.303.97):
  *  - Por cada `vinculo` con `monto ≠ montoOriginal`, se agrega un nuevo
  *    `concepto_costo` en el mismo embarque con `monto = monto − montoOriginal`
- *    (firmado). Signo negativo → descuento del proveedor → utilidad sube.
+ *    positivo. Un importe menor es facturación parcial, nunca un descuento.
  *  - El ajuste se registra también en `proveedor_facturas_conceptos` para
  *    trazabilidad y para que el trigger `tg_pfc_recalc_liq` propague estado.
  *  - `origen='ajuste_factura_proveedor'` permite distinguirlos en UI y en
@@ -62,7 +62,9 @@ export async function crearAjustesFacturaProveedor(
       vinculo: v,
       delta: currency(v.monto, { precision: 4 }).subtract(v.montoOriginal).value,
     }))
-    .filter((x) => Math.abs(x.delta) > TOLERANCIA)
+    // Una asignación menor puede ser una parcialidad: no autoriza un descuento.
+    // Las reducciones de presupuesto requieren un ajuste explícito por separado.
+    .filter((x) => x.delta > TOLERANCIA)
     // Candado de magnitud: cierra el hueco de los vínculos legacy sin
     // `monedaBase`. Si el delta supera el total de la propia factura no es un
     // descuento real, es una mezcla de monedas. Sólo aplica cuando conocemos el

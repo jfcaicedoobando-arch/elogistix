@@ -52,7 +52,7 @@ export type FacturaDetalle = Pick<
   | "cancelacion_vence_en"
   | "sustituye_a"
   | "sustituida_por"
-> & {
+> & Partial<Pick<Tables<"facturas">, "ret_isr" | "ret_iva">> & {
   proformas: { numero: string } | null;
   sustituida_por_ref: { id: string; numero: string | null; estado: string | null } | null;
 };
@@ -68,6 +68,8 @@ const COLUMNS = [
   "fecha_emision",
   "fecha_vencimiento",
   "subtotal",
+  "ret_isr",
+  "ret_iva",
   "iva",
   "total",
   "moneda",

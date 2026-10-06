@@ -90,7 +90,7 @@ export function TabProyeccion() {
       {/* Nota de moneda */}
       <p className="text-body-sm text-muted-foreground flex items-center gap-1.5 px-1">
         <Info className="h-3 w-3" />
-        Montos en USD y MXN calculados con el tipo de cambio del propio embarque. Los conceptos en otra moneda se convierten automáticamente.
+        Importes base sin impuestos, por ETA. Proyectado suma la venta facturada neta y los conceptos pendientes de emisión. Una nota de crédito reduce la venta neta sin reabrir conceptos ya facturados. Ventas emitidas netas de notas de crédito al tipo de cambio documental; proyección y costos al tipo de cambio del embarque.
       </p>
 
       {/* Filtros */}
@@ -127,6 +127,7 @@ export function TabProyeccion() {
             <SelectContent>
               <SelectItem value="todos">Todos los estados</SelectItem>
               <SelectItem value="Facturado">Facturado</SelectItem>
+              <SelectItem value="Parcial">Parcialmente facturado</SelectItem>
               <SelectItem value="Pendiente">Pendiente de facturar</SelectItem>
             </SelectContent>
           </Select>

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { METODOLOGIA_RENTABILIDAD } from "@/types/rentabilidad";
 import { Download, FileText, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,7 +51,7 @@ export default function Reportes() {
     <PageContainer>
       <PageHeader
         title="Rentabilidad por cliente"
-        description="Ventas, costos y utilidad por cliente con filtros de periodo y modo."
+        description={METODOLOGIA_RENTABILIDAD}
         actions={
           <>
             {/* Mobile: un solo dropdown "Exportar ▾" */}

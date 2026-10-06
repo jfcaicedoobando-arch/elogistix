@@ -4,9 +4,10 @@
  * Se separa de `pagoClienteLote.ts` para respetar el límite de 200 líneas y la
  * complejidad máxima (Power of 10): `validarCobroLote` sólo orquesta.
  */
+import Decimal from "decimal.js";
 import { TC_MXN_MIN, TC_MXN_MAX } from "@/lib/financial/tcBanda";
 import { round2 } from "@/features/cxp/services";
-import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
+import { TOLERANCIA_SOBREPAGO, TOLERANCIA_CIERRE_FACTURA } from "@/lib/financial/toleranciaPago";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 import { todayLocalISO } from "@/lib/date/today";
@@ -82,6 +83,18 @@ export function errorRenglonExcedeSaldo(
   return null;
 }
 
+/** Mismo cierre PUE que el cobro individual, sobre saldo neto de NC. */
+export function errorRenglonPue(facturas: FacturaCobroCandidata[], renglones: RenglonCobro[]): string | null {
+  for (const r of renglones) {
+    const f = facturas.find((x) => x.factura_id === r.factura_id);
+    if (f?.metodo_pago === "PUE" && r.monto > 0 &&
+      new Decimal(f.saldo).minus(r.monto).greaterThan(TOLERANCIA_CIERRE_FACTURA)) {
+      return `La factura ${f.numero ?? f.factura_id} es PUE: el cobro debe liquidar el saldo total.`;
+    }
+  }
+  return null;
+}
+
 /**
  * Ola 5 · RG4-5: el reparto debe cuadrar EXACTO con el importe recibido; el
  * sobrante ya no es advertencia, es error.
@@ -124,6 +137,8 @@ export function erroresPorRenglon(
   for (const r of renglones) {
     if (r.monto <= 0) continue;
     const f = facturas.find((x) => x.factura_id === r.factura_id);
+    const pue = errorRenglonPue(f ? [f] : [], [r]);
+    if (pue) errores[r.factura_id] = pue;
     if (f && r.monto > round2(f.saldo) + TOLERANCIA_CENTAVOS) {
       errores[r.factura_id] = "El importe excede el saldo de esta factura.";
     }

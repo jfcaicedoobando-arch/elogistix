@@ -19,6 +19,7 @@ export interface FilaVsReal {
 }
 
 export interface ResumenVsReal {
+  notas_proveedor_sin_base_count?: number;
   periodo: string;
   filas: FilaVsReal[];
   total_presupuesto_mxn: number;

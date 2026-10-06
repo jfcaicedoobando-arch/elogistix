@@ -42,6 +42,14 @@ describe("buildNcPrefillFromCfdi", () => {
     expect(r.monto).toBe("1234.50");
   });
 
+  it.each([
+    { subtotal: 200, total: 216, iva_trasladado: 16, retenciones: 0, base: "200.00" },
+    { subtotal: 100, total: 94, iva_trasladado: 16, retenciones: 22, base: "100.00" },
+    { subtotal: 100, total: 104.4, iva_trasladado: 14.4, retenciones: 0, base: "90.00" },
+  ])("conserva base neta con impuestos mixtos, retenciones y descuentos ($base)", ({ base, ...cfdi }) => {
+    expect(buildNcPrefillFromCfdi(makeCfdiResponse(cfdi)).subtotal).toBe(base);
+  });
+
   it("copia el UUID fiscal", () => {
     const r = buildNcPrefillFromCfdi(makeCfdiResponse());
     expect(r.uuidFiscal).toBe("123e4567-e89b-12d3-a456-426614174000");

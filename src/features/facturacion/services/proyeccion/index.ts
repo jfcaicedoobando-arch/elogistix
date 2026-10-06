@@ -26,7 +26,7 @@ export async function fetchProyeccionMes({
     new Set(embarques.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos, organizationId);
+  const { ventas, pendientes, facturadas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos, organizationId);
   const ventasMap = indexarPorEmbarque(ventas, "total");
   const costosMap = indexarPorEmbarque(costos, "monto");
   const facturadosSet = new Set<string>(
@@ -35,5 +35,8 @@ export async function fetchProyeccionMes({
   // AUD-ANALISIS-5: la venta se valúa con el TC de la factura (como el Tablero).
   const tcFactura = tcUsdFacturaPorExpediente(facturas);
 
-  return buildFilasProyeccion(embarques, ventasMap, costosMap, facturadosSet, tcFactura);
+  return buildFilasProyeccion(embarques, ventasMap, costosMap, facturadosSet, {
+    tcFacturaPorExpediente: tcFactura, facturadasMap: indexarPorEmbarque(facturadas, "total"),
+    pendientesMap: indexarPorEmbarque(pendientes, "total"),
+  });
 }

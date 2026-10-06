@@ -27,6 +27,9 @@ describe("RentabilidadDocument", () => {
     );
     const text = container.textContent ?? "";
     expect(text).toContain("Rentabilidad por cliente");
+    expect(text).toContain("Periodo por ETA");
+    expect(text).toContain("ventas facturadas netas de notas de crédito");
+    expect(text).toContain("Las ventas pendientes de facturar no se reconocen aquí");
     expect(text).toContain("2023-01-01");
     expect(text).toContain("2023-01-31");
     expect(text).toContain("No hay datos");

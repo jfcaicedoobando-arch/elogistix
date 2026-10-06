@@ -87,12 +87,12 @@ describe("agruparPorExpediente", () => {
     expect(g.contenedores).toEqual(["MSCU1234567", "MSCU0000002"]);
   });
 
-  it("estado pasa a Pendiente si CUALQUIER embarque del grupo no está facturado", () => {
+  it("estado pasa a Parcial si CUALQUIER embarque del grupo no está facturado", () => {
     const grupos = agruparPorExpediente([
       fila({ embarque_id: "e1" }),
       fila({ embarque_id: "e2", tiene_factura_pdf: false }),
     ]);
-    expect(grupos[0].estado).toBe("Pendiente");
+    expect(grupos[0].estado).toBe("Parcial");
   });
 
   it("estado Facturado solo si todos cumplen proforma + pdf", () => {

@@ -37,6 +37,17 @@ function setup(overrides: Partial<Parameters<typeof CerrarFacturaSinPagoDialog>[
 }
 
 describe("CerrarFacturaSinPagoDialog", () => {
+  it("AUD126 limita el modal al viewport y habilita scroll interno manteniendo controles", () => {
+    const { onOpenChange, onConfirm } = setup();
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveClass("max-h-[85vh]", "overflow-y-auto");
+    expect(dialog).toContainElement(screen.getByRole("heading", { name: "Cerrar factura sin pago" }));
+    expect(dialog).toContainElement(screen.getByRole("button", { name: "Cerrar factura" }));
+    fireEvent.click(screen.getByRole("button", { name: "Volver" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => vi.clearAllMocks());
 
   it("el botón 'Cerrar factura' está deshabilitado sin motivo ni 'CERRAR'", () => {

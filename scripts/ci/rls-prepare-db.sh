@@ -30,6 +30,20 @@ requerir_archivo() {
   fi
 }
 
+# This preparer destroys/rebuilds an isolated test schema; never use a remote
+# connection or a populated database, including a production tunnel on loopback.
+if [[ "${PGHOST:-}" != localhost && "${PGHOST:-}" != 127.0.0.1 ]] \
+   || [[ -n "${SUPABASE_DB_URL:-}" || -n "${DATABASE_URL:-}" || -n "${PGHOSTADDR:-}" || -n "${PGSERVICE:-}" || -n "${PGSERVICEFILE:-}" ]]; then
+  echo "Refusing schema replay: an isolated loopback database is required" >&2
+  exit 1
+fi
+if ! existing_relations="$(psql -v ON_ERROR_STOP=1 -X -A -t -c \
+  "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','f','S')")" \
+  || [[ "$existing_relations" != 0 ]]; then
+  echo "Refusing schema replay: target public schema must be empty" >&2
+  exit 1
+fi
+
 echo "▶ Bootstrap (stubs auth/storage/cron/net/pgmq)"
 "${PSQL[@]}" -f supabase/tests/rls/_ci_bootstrap.sql
 

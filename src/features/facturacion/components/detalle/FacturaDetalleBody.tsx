@@ -61,6 +61,8 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
               subtotal={Number(factura.subtotal)}
               iva={Number(factura.iva)}
               total={Number(factura.total)}
+              retIsr={factura.ret_isr}
+              retIva={factura.ret_iva}
             />
           )}
         </>

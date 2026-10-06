@@ -3,6 +3,7 @@
  * Extraído de `FacturaConceptosTable` para respetar el límite Power-of-10
  * de 200 líneas por archivo.
  */
+import { retencionesConcepto, type RetencionesConcepto } from "../../utils/retencionesConcepto";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 
-export interface ConceptoRow {
+export interface ConceptoRow extends RetencionesConcepto {
   descripcion?: string;
   concepto?: string;
   cantidad?: number;
@@ -51,6 +52,15 @@ interface ViewProps {
   inferirTipoIva: (c: ConceptoRow) => TipoIvaConcepto | null;
 }
 
+function RetencionesDetalle({ concepto, moneda }: { concepto: ConceptoRow; moneda: string }) {
+  const ret = retencionesConcepto(concepto);
+  if (!ret.tasaIsr && !ret.tasaIva && !ret.isr && !ret.iva) return null;
+  return <div className="mt-1 flex flex-wrap gap-x-3 text-body-sm text-muted-foreground">
+    {(ret.tasaIsr > 0 || ret.isr > 0) && <span>Ret. ISR {Number((ret.tasaIsr * 100).toFixed(4))}%: {formatCurrency(-ret.isr, moneda)}</span>}
+    {(ret.tasaIva > 0 || ret.iva > 0) && <span>Ret. IVA {Number((ret.tasaIva * 100).toFixed(4))}%: {formatCurrency(-ret.iva, moneda)}</span>}
+  </div>;
+}
+
 export function ConceptosMobileList({ conceptos, moneda, inferirTipoIva }: ViewProps) {
   return (
     <div className="lg:hidden space-y-2">
@@ -64,6 +74,7 @@ export function ConceptosMobileList({ conceptos, moneda, inferirTipoIva }: ViewP
               <p className="text-body font-medium">{descripcion}</p>
               <IvaCell tipo={tipoIva} />
             </div>
+            <RetencionesDetalle concepto={c} moneda={moneda} />
             {c.embarque_expediente && c.embarque_id && (
               <Link
                 to={`/embarques/${c.embarque_id}`}
@@ -107,7 +118,7 @@ export function ConceptosDesktopTable({ conceptos, moneda, mostrarEmbarque, infe
             const tipoIva = inferirTipoIva(c);
             return (
               <TableRow key={i}>
-                <TableCell>{descripcion}</TableCell>
+                <TableCell>{descripcion}<RetencionesDetalle concepto={c} moneda={moneda} /></TableCell>
                 {mostrarEmbarque && (
                   <TableCell className="text-body-sm">
                     {c.embarque_expediente && c.embarque_id ? (

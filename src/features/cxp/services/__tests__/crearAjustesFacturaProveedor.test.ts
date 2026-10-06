@@ -41,21 +41,11 @@ describe("crearAjustesFacturaProveedor", () => {
     expect(r.ajustesCreados).toBe(0);
   });
 
-  it("crea ajuste negativo cuando factura < devengado (descuento FP-000039)", async () => {
-    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
-      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
-    });
-    const r = await crearAjustesFacturaProveedor({
-      ...baseInput,
-      vinculos: { c1: v("e1", "Flete Marítimo", 18639.60, 19150.00) },
-    });
-    expect(r.ajustesCreados).toBe(1);
-    // P1: los ajustes se crean dentro de la RPC atómica.
-    const call = mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc");
-    const args = call?.args as { p_factura_id: string; p_ajustes: Array<Record<string, unknown>> };
-    expect(args.p_factura_id).toBe("f1");
-    expect(args.p_ajustes[0]).toMatchObject({ embarque_id: "e1", descripcion: "Flete Marítimo" });
-    expect(Number(args.p_ajustes[0].monto)).toBeCloseTo(-510.4, 2);
+  it.each([60, 40, 99.5, 0])("una parcialidad de %s sobre 100 no reduce el presupuesto", async (monto) => {
+    const r = await crearAjustesFacturaProveedor({ ...baseInput, totalFactura: monto,
+      vinculos: { c1: v("e1", "Flete", monto, 100) } });
+    expect(r.ajustesCreados).toBe(0);
+    expect(mock.rpcCalls).toEqual([]);
   });
 
   it("crea ajuste positivo cuando factura > devengado", async () => {
@@ -81,13 +71,13 @@ describe("crearAjustesFacturaProveedor", () => {
     expect(mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc")).toBeUndefined();
   });
 
-  it("sí crea el ajuste cuando la moneda congelada coincide con la factura", async () => {
+  it("crea sobrecosto cuando la moneda congelada coincide", async () => {
     mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
       data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
     });
     const r = await crearAjustesFacturaProveedor({
       ...baseInput,
-      vinculos: { c1: { ...v("e1", "Cargos Destino", 60, 100), monedaBase: "USD" } },
+      vinculos: { c1: { ...v("e1", "Cargos Destino", 120, 100), monedaBase: "USD" } },
     });
     expect(r.ajustesCreados).toBe(1);
   });
@@ -103,16 +93,11 @@ describe("crearAjustesFacturaProveedor", () => {
     expect(mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc")).toBeUndefined();
   });
 
-  it("conserva el descuento legítimo dentro del total de la factura", async () => {
-    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
-      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
-    });
-    const r = await crearAjustesFacturaProveedor({
-      ...baseInput,
-      totalFactura: 18639.6,
-      vinculos: { c1: v("e1", "Flete Maritimo", 18639.6, 19150) },
-    });
-    expect(r.ajustesCreados).toBe(1);
+  it("un importe menor dentro del total tampoco prueba un descuento definitivo", async () => {
+    const r = await crearAjustesFacturaProveedor({ ...baseInput, totalFactura: 18639.6,
+      vinculos: { c1: v("e1", "Flete", 18639.6, 19150) } });
+    expect(r.ajustesCreados).toBe(0);
+    expect(mock.rpcCalls).toEqual([]);
   });
 
   it("crea múltiples ajustes agrupados por vínculo", async () => {
@@ -122,7 +107,7 @@ describe("crearAjustesFacturaProveedor", () => {
     const r = await crearAjustesFacturaProveedor({
       ...baseInput,
       vinculos: {
-        c1: v("e1", "Flete", 900, 1000),
+        c1: v("e1", "Flete", 1100, 1000),
         c2: v("e2", "THC", 550, 500),
       },
     });

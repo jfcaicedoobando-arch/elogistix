@@ -19,6 +19,7 @@ describe("FacturaPagosMobileCard", () => {
           referencia: "REF-1",
         }}
         facturaId="f1"
+        monedaFactura="MXN"
         canEdit={true}
         onEliminar={vi.fn()}
         onCancelarRep={vi.fn()}
@@ -27,6 +28,6 @@ describe("FacturaPagosMobileCard", () => {
       </QueryClientProvider>,
     );
     expect(screen.getByText("REF-1")).toBeInTheDocument();
-    expect(screen.getByText(/500\.00/)).toBeInTheDocument();
+    expect(screen.getAllByText(/500\.00/)).toHaveLength(2);
   });
 });

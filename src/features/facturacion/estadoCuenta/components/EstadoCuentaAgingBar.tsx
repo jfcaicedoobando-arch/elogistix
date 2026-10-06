@@ -29,6 +29,7 @@ function importes(b: AgingBucket): string[] {
   const out: string[] = [];
   if (b.mxn > 0) out.push(formatCurrency(b.mxn, "MXN"));
   if (b.usd > 0) out.push(formatCurrency(b.usd, "USD"));
+  if (b.eur > 0) out.push(formatCurrency(b.eur, "EUR"));
   return out.length > 0 ? out : ["—"];
 }
 

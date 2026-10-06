@@ -7,6 +7,7 @@ import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback"
 import {
   estadoCuentaACsv,
   filasAgingExport,
+  filasAperturaExport,
   filasMovimientosExport,
   filasSaldosExport,
   nombreArchivoEstadoCuenta,
@@ -38,8 +39,11 @@ function sinDatos(): void {
   });
 }
 
-/** R3P-11: un estado de cuenta sin movimientos del periodo pero con saldo en
- * antigüedad SÍ se puede exportar: es el documento que se usa para conciliar. */
+/** AUD113: un periodo sin movimientos puede tener una apertura conciliable. */
+function tieneApertura(datos: DatosEstadoCuenta): boolean {
+  return datos.saldoApertura?.some((s) => Math.abs(s.saldo) > 0.005) ?? false;
+}
+
 function tieneAging(datos: DatosEstadoCuenta): boolean {
   return datos.aging.some((a) => (Number(a.total) || 0) > 0.005);
 }
@@ -47,20 +51,20 @@ function tieneAging(datos: DatosEstadoCuenta): boolean {
 export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
   const movs = filasMovimientosExport(datos.movimientos);
   const aging = filasAgingExport(datos.aging);
-  if (movs.length === 0 && !tieneAging(datos)) return sinDatos();
+  if (movs.length === 0 && !tieneAging(datos) && !tieneApertura(datos)) return sinDatos();
   try {
     const csv = estadoCuentaACsv(
       datos.proveedorNombre,
       { desde: datos.desde, hasta: datos.hasta },
       movs,
       filasSaldosExport(datos.saldos),
-      aging,
+      { aging, apertura: filasAperturaExport(datos.saldoApertura ?? []) },
     );
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
     descargarBlob(blob, nombreArchivoEstadoCuenta(datos.proveedorNombre, datos.hasta, "csv"));
     notifySuccess(undefined, {
       title: "Estado de cuenta descargado en CSV",
-      description: movs.length > 0 ? `${movs.length} movimiento(s)` : "Sólo antigüedad de saldos",
+      description: movs.length > 0 ? `${movs.length} movimiento(s)` : "Saldos sin movimientos en el periodo",
     });
   } catch (error) {
     notifyError(undefined, {
@@ -73,8 +77,7 @@ export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
 
 export async function descargarEstadoCuentaPdf(datos: DatosEstadoCuenta): Promise<void> {
   const movs = filasMovimientosExport(datos.movimientos);
-  const tieneApertura = datos.saldoApertura?.some((s) => Math.abs(s.saldo) > 0.005);
-  if (movs.length === 0 && !tieneAging(datos) && !tieneApertura) return sinDatos();
+  if (movs.length === 0 && !tieneAging(datos) && !tieneApertura(datos)) return sinDatos();
   try {
     const [{ descargarPdf }, { EstadoCuentaProveedorDocument }] = await Promise.all([
       import("@/pdf/render/descargarPdf"),

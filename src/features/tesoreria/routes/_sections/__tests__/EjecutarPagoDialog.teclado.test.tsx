@@ -21,6 +21,7 @@ const form: FormPago = {
   monto: 2500.5,
   metodoPago: "Transferencia",
   referencia: "",
+  tipoCambio: 20,
 };
 
 function renderDialog(overrides: Partial<FormPago> = {}) {

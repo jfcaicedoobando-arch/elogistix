@@ -42,16 +42,6 @@ export function vencimiento(yyyyMmDd: string, days: number): string {
 }
 
 /**
- * FIX-17 — folio borrador con entropía (Date + UUID) para evitar colisión
- * bajo carga concurrente. El prefijo `BORRADOR-` sigue siendo el marcador
- * que la UI usa para bloquear envío/descarga hasta el timbrado.
- */
-export function generarFolioBorrador(): string {
-  const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 6);
-  return `BORRADOR-${Date.now().toString(36)}-${rand}`;
-}
-
-/**
  * FIX-17 — valida cada concepto ANTES de tocar la BD y computa los totales de
  * línea con `subtotalLinea` para que el encabezado sea Σ exacto al centavo.
  */

@@ -1,3 +1,4 @@
+import { METODOLOGIA_RENTABILIDAD } from "@/types/rentabilidad";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
@@ -55,6 +56,8 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
             </Text>
           </View>
         </View>
+
+        <Text style={[styles.paragraph, { fontSize: 9, color: COLORS.muted }]}>{METODOLOGIA_RENTABILIDAD}</Text>
 
         <View style={styles.kpiRow}>
           {[

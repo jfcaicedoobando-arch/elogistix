@@ -1,6 +1,6 @@
 /** Tipos compartidos de proyección de facturación mensual. */
 
-export type EstadoProyeccion = "Facturado" | "Pendiente";
+export type EstadoProyeccion = "Facturado" | "Parcial" | "Pendiente";
 
 /** Fila plana traída del backend para un embarque del mes seleccionado. */
 export interface FilaProyeccion {
@@ -15,9 +15,15 @@ export interface FilaProyeccion {
   /** Ola 5 · M5: el embarque no tiene tipo de cambio USD capturado. */
   sin_tc: boolean;
   tiene_proforma: boolean;
-  /** ¿Existe al menos una factura con factura_pdf_url para este embarque? */
+  /** Nombre legacy: presencia de factura emitida, incluso neto0 por NC; no exige PDF. */
   tiene_factura_pdf: boolean;
   venta_mxn: number;
+  venta_facturada_mxn?: number;
+  venta_facturada_usd?: number;
+  venta_pendiente_mxn?: number;
+  venta_pendiente_usd?: number;
+  /** Cobertura pendiente en su moneda original, incluso si no se puede valuar. */
+  tiene_venta_pendiente?: boolean;
   venta_usd: number;
   costo_mxn: number;
   costo_usd: number;
@@ -35,6 +41,11 @@ export interface GrupoProyeccion {
   contenedores: string[];
   totalContenedores: number;
   ventaMxn: number;
+  ventaFacturadaMxn?: number;
+  ventaFacturadaUsd?: number;
+  ventaPendienteMxn?: number;
+  ventaPendienteUsd?: number;
+  tieneVentaPendiente?: boolean;
   ventaUsd: number;
   costoMxn: number;
   costoUsd: number;

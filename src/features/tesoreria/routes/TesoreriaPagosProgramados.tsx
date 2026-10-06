@@ -14,7 +14,9 @@ import { LoadingState } from "@/components/shared/states/LoadingState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 import { useEjecutarPagoProgramado } from "@/features/tesoreria/hooks/useEjecutarPagoProgramado";
-import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
+import { todayLocalISO } from "@/lib/date/today";
+import { erroresPagoProgramado } from "@/features/tesoreria/domain/pagoProgramadoValidacion";
+import { esPagoEfectivo } from "@/features/tesoreria/domain/conciliacionPago";
 import { EjecutarPagoDialog, type FormPago } from "./_sections/EjecutarPagoDialog";
 import { PagosProgramadosTablas } from "./_sections/PagosProgramadosTablas";
 import { buildPagosProgramadosColumns, filtrarProgramables, type FiltroBandeja } from "./_sections/pagosProgramadosColumns";
@@ -34,7 +36,7 @@ export default function TesoreriaPagosProgramados() {
   const [filtro, setFiltro] = useState<FiltroBandeja>("todas");
   const [facturaPago, setFacturaPago] = useState<FacturaProgramable | null>(null);
   const [form, setForm] = useState<FormPago>({
-    cuentaBancariaId: "", fecha: formatDateOnlyLocal(new Date()), monto: 0, metodoPago: "Transferencia", referencia: "",
+    cuentaBancariaId: "", fecha: todayLocalISO(), monto: 0, metodoPago: "Transferencia", referencia: "",
   });
 
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -53,10 +55,11 @@ export default function TesoreriaPagosProgramados() {
     requestIdRef.current = crypto.randomUUID();
     setForm({
       cuentaBancariaId: "",
-      fecha: formatDateOnlyLocal(new Date()),
+      fecha: todayLocalISO(),
       monto: f.saldo,
       metodoPago: "Transferencia",
       referencia: "",
+      tipoCambio: f.moneda === "MXN" ? null : f.tipo_cambio_usd ?? null,
     });
   };
 
@@ -64,10 +67,11 @@ export default function TesoreriaPagosProgramados() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleEjecutar = async () => {
-    if (!facturaPago) return;
+    if (!facturaPago || Object.keys(erroresPagoProgramado(form, facturaPago)).length > 0) return;
     await ejecutarPago.mutateAsync({
       facturaId: facturaPago.id,
-      cuentaBancariaId: form.cuentaBancariaId,
+      cuentaBancariaId: esPagoEfectivo(form.metodoPago) ? null : form.cuentaBancariaId,
+      tipoCambio: form.tipoCambio,
       fecha: form.fecha,
       monto: form.monto,
       metodoPago: form.metodoPago,

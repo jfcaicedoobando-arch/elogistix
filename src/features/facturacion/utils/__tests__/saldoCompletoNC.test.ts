@@ -92,4 +92,37 @@ describe("conceptosPorSaldoCompleto", () => {
     if (!r.ok) return;
     expect(r.conceptos[0].precio_unitario).toBe(1000);
   });
+  it.each([100, 1000000, 0.125])("AUD107: cantidades %s no pierden centavos con IVA mixto", (cantidad) => {
+    const lineas: ConceptoNotaCredito[] = [
+      { ...base, precio_unitario: 100 },
+      { ...base, descripcion: "Traslado", cantidad, precio_unitario: 100 / cantidad, tipo_iva: "tasa_0", tasa_iva: 0 },
+    ];
+    const r = conceptosPorSaldoCompleto(215.50, lineas, base);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(calcularTotalesNC(r.conceptos).total).toBe(215.50);
+    expect(r.conceptos.map((c) => c.tipo_iva)).toEqual(["gravado_16", "tasa_0"]);
+    expect(lineas[1].cantidad).toBe(cantidad);
+  });
+
+  it("AUD107: mezcla y retenciones cuadran exactamente en saldos fraccionarios", () => {
+    const lineas: ConceptoNotaCredito[] = [
+      { ...base, cantidad: 5000, precio_unitario: 1, tasa_ret_isr: 0.1, tasa_ret_iva: 0.04 },
+      { ...base, cantidad: 100, precio_unitario: 1, tipo_iva: "exento", tasa_iva: null },
+    ];
+    for (const saldo of [0.01, 17.43, 5199.99, 3021.61]) {
+      const r = conceptosPorSaldoCompleto(saldo, lineas, base);
+      expect(r.ok).toBe(true);
+      if (!r.ok) continue;
+      expect(calcularTotalesNC(r.conceptos).total).toBe(saldo);
+      expect(r.conceptos[0].tasa_ret_isr).toBe(0.1);
+      expect(r.conceptos[0].tasa_ret_iva).toBe(0.04);
+    }
+  });
+
+  it("AUD107: un centavo fiscal no representable devuelve un motivo, nunca una NC incorrecta", () => {
+    const r = conceptosPorSaldoCompleto(0.04, [base], base);
+    expect(r).toMatchObject({ ok: false, motivo: expect.stringContaining("saldo exacto") });
+  });
+
 });

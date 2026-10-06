@@ -3,6 +3,7 @@
  * v13.305.11 · Soporta carga automática desde XML CFDI (nota de crédito
  * mexicana) además de la captura manual existente.
  */
+import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
 import { useState } from "react";
 import { format } from "date-fns";
 import { FileMinus } from "lucide-react";
@@ -17,6 +18,7 @@ import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi, origenNcValido, xmlNcVerificado } from "./ncFromCfdi";
 import { esCruceNoConvertible, montoNcEnMonedaFactura } from "./ncMonedaProveedor";
+import { construirNcProveedorPayload } from "./ncProveedorPayload";
 import { NcProveedorAvisos } from "./NcProveedorAvisos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type {
@@ -36,6 +38,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const [folio, setFolio] = useState("");
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [monto, setMonto] = useState("");
+  const [subtotal, setSubtotal] = useState("");
   const [moneda, setMoneda] = useState<MonedaNC>(monedaFactura);
   const [tipoCambio, setTipoCambio] = useState(""); // MXN por 1 unidad extranjera
   const [motivo, setMotivo] = useState<MotivoNC>("Bonificacion");
@@ -46,19 +49,20 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const crear = useCrearNotaCredito(facturaId);
   const { organizationId } = useOrgFilter();
   const montoNum = Number(monto);
+  const baseValida = baseNcProveedor(subtotal) !== null;
   const conversion = useNcProveedorTipoCambio({ open, fecha, moneda, monedaFactura, tipoCambio });
   const cruceInvalido = esCruceNoConvertible(moneda, monedaFactura);
   const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, conversion.tipoCambio);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
-  const valido = origenNcValido(mode, parsedCfdi, facturaId, cfdiFiles.xml) && Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
-  // YG-04: hay datos capturados que se perderían al cerrar el modal.
+  const valido = baseValida && origenNcValido(mode, parsedCfdi, facturaId, cfdiFiles.xml) && Boolean(folio.trim()) && Boolean(fecha) && Number.isFinite(montoNum) && montoNum > 0 && montoEnFactura !== null && !excede && conversion.disponible;
   const isDirty =
-    folio.trim() !== "" || monto.trim() !== "" || descripcion.trim() !== "" || parsedCfdi !== null;
+    [subtotal, folio, monto, descripcion].some((value) => value.trim() !== "") || parsedCfdi !== null;
   const reset = () => {
     setMode("manual");
     setFolio("");
     setFecha(format(new Date(), "yyyy-MM-dd"));
     setMonto("");
+    setSubtotal("");
     setMoneda(monedaFactura);
     setTipoCambio("");
     setMotivo("Bonificacion");
@@ -86,6 +90,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
     setFolio(prefill.folio);
     setFecha(prefill.fecha);
     setMonto(prefill.monto);
+    setSubtotal(prefill.subtotal);
     if (prefill.moneda) setMoneda(prefill.moneda);
     setTipoCambio(prefill.tipoCambio);
     setDescripcion(prefill.descripcion);
@@ -95,18 +100,11 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   };
   const onSubmit = async () => {
     if (!valido || crear.isPending) return;
-    const payload = {
-      proveedor_factura_id: facturaId,
-      folio_nc: folio.trim(),
-      fecha,
-      monto: montoNum,
-      moneda,
-      tipo_cambio: conversion.tipoCambio,
-      motivo,
-      descripcion,
-      estado: "Borrador" as const,
-      uuid_fiscal: uuidFiscal,
-    };
+    const payload = construirNcProveedorPayload({
+      facturaId, folio, fecha, monto: montoNum, subtotal: Number(subtotal),
+      moneda, monedaFactura, tipoCambio: conversion.tipoCambio,
+      motivo, descripcion, uuidFiscal,
+    });
     try {
       const created = await crear.mutateAsync(payload);
       if (created?.id && (cfdiFiles.xml || cfdiFiles.pdf)) {
@@ -171,6 +169,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
           folio, onFolioChange: setFolio,
           fecha, onFechaChange: setFecha,
           monto, onMontoChange: setMonto,
+          subtotal, onSubtotalChange: setSubtotal,
           motivo, onMotivoChange: setMotivo,
           descripcion, onDescripcionChange: setDescripcion,
         }}

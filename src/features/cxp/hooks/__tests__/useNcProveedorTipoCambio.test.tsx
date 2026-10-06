@@ -93,8 +93,8 @@ describe("TC efectivo de la nota de crédito de proveedor", () => {
     await waitFor(() => expect(result.current.aviso).toMatch(/No hay tipo de cambio/));
   });
 
-  it("en la misma moneda ignora un TC oculto y no consulta DOF", () => {
-    const { result } = renderHook(() => useNcProveedorTipoCambio({ ...opciones, moneda: "USD", tipoCambio: "-1" }), { wrapper: createWrapper() });
+  it("en MXN/MXN no requiere valuación extranjera ni consulta DOF", () => {
+    const { result } = renderHook(() => useNcProveedorTipoCambio({ ...opciones, moneda: "MXN", monedaFactura: "MXN", tipoCambio: "-1" }), { wrapper: createWrapper() });
     expect(result.current).toMatchObject({ tipoCambio: null, disponible: true, fuente: null, aviso: null });
     expect(consultar).not.toHaveBeenCalled();
   });

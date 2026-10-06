@@ -3,7 +3,7 @@
  * Solo I/O: trae embarques del mes + sus conceptos/facturas. Sin agregaciones.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
+import { fetchFacturasEmitidasCierre, ventasPendientes } from "./ventasPendientes";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { fetchVentaFacturadaEmbarques } from "@/features/facturacion/services/shared/ventaFacturada";
 import { ESTADOS_EMBARQUE_NO_CONTABLES } from "@/features/embarques/domain/estadosContables";
@@ -45,8 +45,8 @@ export async function fetchEmbarquesMes(
 
 export async function fetchConceptosYFacturas(
   ids: string[],
-  expedientes: string[],
-  organizationId?: string | null,
+  _expedientes: string[],
+  _organizationId?: string | null,
 ) {
   // Fase 3 (alta #10): filtramos conceptos soft-eliminados para consistencia
   // con `estadoResultados` y evitar descuadre Proyección vs EERR.
@@ -60,7 +60,7 @@ export async function fetchConceptosYFacturas(
     leerTodasLasPaginas("cierre.ventas", (ini, fin) =>
       supabase
         .from("conceptos_venta")
-        .select("id, embarque_id, total, moneda")
+        .select("id, embarque_id, total, moneda, proforma_id")
         .in("embarque_id", ids)
         .is("deleted_at", null)
         .order("id")
@@ -75,12 +75,8 @@ export async function fetchConceptosYFacturas(
         .order("id")
         .range(ini, fin),
     ),
-    fetchFacturasPorExpedientes(expedientes, organizationId),
+    fetchFacturasEmitidasCierre(ids),
   ]);
-  const conFactura = new Set(facturadas.map((v) => v.embarque_id));
-  const ventas = [
-    ...facturadas,
-    ...proyectadas.filter((v) => !conFactura.has(v.embarque_id)),
-  ];
-  return { ventas, costos, facturas };
+  // Keep projected and invoiced bases separate: one invoice does not bill the whole shipment.
+  return { ventas: proyectadas, pendientes: ventasPendientes(proyectadas, facturas), facturadas, costos, facturas };
 }

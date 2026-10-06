@@ -9,6 +9,7 @@
  * Se homologa usando `Table`/`TableHeader`/`TableBody` (de `ui/table`) en
  * vez de un `<table>` crudo, para compartir estilos base con el resto del ERP.
  */
+import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +64,7 @@ export function TabVsReal() {
     void runPdfExport(async () => {
       const { ReportePresupuestoDocument } = await import("@/pdf/documents/ReportePresupuestoDocument");
       await descargarPdf(
-        <ReportePresupuestoDocument resumen={data} />,
+        <ReportePresupuestoDocument resumen={data} filas={filasVisibles} soloExcesos={soloExcesos} />,
         await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
       );
     });
@@ -106,6 +107,9 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
+          {!!data.notas_proveedor_sin_base_count && (
+            <p role="status" className="text-sm text-warning">{avisoNcProveedorSinBase(data.notas_proveedor_sin_base_count)}</p>
+          )}
           {data.real_truncado && (
             <Card className="border-warning/50">
               <CardContent className="p-3 text-sm text-warning">

@@ -45,6 +45,11 @@ describe("services/facturas/notasCredito", () => {
     await expect(listarNotasCreditoPorFactura("f1")).rejects.toThrow();
   });
 
+  it.each(["", "2026-02-30", "2026-10"])("AUD102: rechaza fecha %s sin llegar al INSERT", async (fecha_emision) => {
+    await expect(crearNotaCredito({ ...INPUT, motivo: "Descuento", fecha_emision })).rejects.toThrow(/fecha válida/);
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+
   it("crearNotaCredito inserta con estado Borrador", async () => {
     mock.setTableResult("factura_notas_credito", {
       data: { id: "nc1", estado: "Borrador" },

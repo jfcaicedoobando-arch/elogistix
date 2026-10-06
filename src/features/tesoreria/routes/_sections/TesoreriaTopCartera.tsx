@@ -37,6 +37,7 @@ export function TesoreriaTopCartera({
   excluidoPorMoneda,
 }: Props) {
   const excluidas = Object.entries(excluidoPorMoneda ?? {}).filter(([, monto]) => monto > 0);
+  const monedas = [...new Set(items.map((item) => item.moneda))].sort();
   const montoClass = tono === "cobrar" ? "text-destructive" : "text-warning";
   return (
     <Card className="flex flex-col">
@@ -45,8 +46,12 @@ export function TesoreriaTopCartera({
         {items.length === 0 ? (
           <EmptyStateInline density="compact" icon={Wallet} message={vacio} />
         ) : (
-          <ul className="space-y-1.5 text-body">
-            {items.map((d) => (
+          <div className="space-y-3">
+            <p className="text-body-sm text-muted-foreground">Hasta 5 por moneda, ordenados por saldo. No se comparan importes entre divisas.</p>
+            {monedas.map((moneda) => <section key={moneda} aria-label={`Top 5 ${moneda}`}>
+            <h4 className="mb-1 font-medium text-body-sm">{moneda}</h4>
+            <ul className="space-y-1.5 text-body">
+            {items.filter((item) => item.moneda === moneda).map((d) => (
               <li
                 key={`${d.nombre}-${d.moneda}`}
                 className="flex items-center justify-between border-b pb-1.5 last:border-0"
@@ -60,7 +65,9 @@ export function TesoreriaTopCartera({
                 </span>
               </li>
             ))}
-          </ul>
+            </ul>
+            </section>)}
+          </div>
         )}
         {items.length > 0 && <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-body-sm text-muted-foreground">
           <span>

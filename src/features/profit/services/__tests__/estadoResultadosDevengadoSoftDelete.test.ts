@@ -80,7 +80,7 @@ describe("AUD83: el EERR mensual/anual conserva la exclusión de NC con padre el
     db.tablas.facturas = [padreFixture("f-borrada", "2026-10-01")];
     db.tablas.proveedor_facturas = [padreFixture("pf-borrada", "2026-10-01")];
     db.tablas.factura_notas_credito = [{ ...ncFixture("nc-borrada", "f-borrada"), conceptos: [] }];
-    db.tablas.proveedor_notas_credito = [{ ...ncFixture("pnc-borrada", "pf-borrada"), monto: 50 }];
+    db.tablas.proveedor_notas_credito = [{ ...ncFixture("pnc-borrada", "pf-borrada"), monto: 50, subtotal: 50 }];
     const mensual = await fetchEstadoResultadosDevengado(params);
     const anual = await fetchEstadoResultadosDevengadoAnual(params);
     expect(mensual.totalIngresos.total).toBe(0);
@@ -92,7 +92,7 @@ describe("AUD83: el EERR mensual/anual conserva la exclusión de NC con padre el
     db.tablas.facturas = [padreFixture("f-viva", null, fechaPadre)];
     db.tablas.proveedor_facturas = [padreFixture("pf-viva", null, fechaPadre)];
     db.tablas.factura_notas_credito = [ncFixture("nc-viva", "f-viva")];
-    db.tablas.proveedor_notas_credito = [{ ...ncFixture("pnc-viva", "pf-viva"), monto: 50 }];
+    db.tablas.proveedor_notas_credito = [{ ...ncFixture("pnc-viva", "pf-viva"), monto: 50, subtotal: 50 }];
     const mensual = await fetchEstadoResultadosDevengado(params);
     const [anual] = await fetchEstadoResultadosDevengadoAnual({ ...params, desdeMes: 10, hastaMes: 10 });
     expect(mensual.totalIngresos.total).toBe(-50);

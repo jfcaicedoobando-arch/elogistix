@@ -8,6 +8,7 @@
  *   Aplicada  → {Cancelada}
  *   Aprobada  → {Timbrada, Cancelada}  (legado, sólo salida)
  */
+import { validarFechaNotaCredito } from "../utils/fechaNotaCredito";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { getCurrentUser } from "@/features/auth/services";
@@ -121,6 +122,7 @@ export async function listarNotasCreditoRecientes(
 }
 
 export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<NotaCredito> {
+  validarFechaNotaCredito(input.fecha_emision);
   const user = await getCurrentUser();
   const { conceptos, folio, ...rest } = input;
   // v13.213.20 — patrón "FacturAPI = source of truth" (mismo que facturas):

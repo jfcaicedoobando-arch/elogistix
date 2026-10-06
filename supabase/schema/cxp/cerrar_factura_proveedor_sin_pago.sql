@@ -1,9 +1,13 @@
--- Fuente canónica de public.cerrar_factura_proveedor_sin_pago (JAVASCRIPT-REACT-7F: ajuste con tipo_cambio_usd NULL).
-CREATE OR REPLACE FUNCTION public.cerrar_factura_proveedor_sin_pago(p_factura_id uuid, p_motivo text, p_comentario text DEFAULT NULL::text)
- RETURNS uuid
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+-- Auditoría 121. Mismo contrato, permisos y trazabilidad; no modifica históricos.
+CREATE OR REPLACE FUNCTION public.cerrar_factura_proveedor_sin_pago(
+  p_factura_id uuid,
+  p_motivo text,
+  p_comentario text DEFAULT NULL::text
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
 AS $function$
 DECLARE
   v_org      uuid;
@@ -44,6 +48,9 @@ BEGIN
     RAISE EXCEPTION 'La factura debe estar aprobada antes de cerrarla.' USING ERRCODE = '22023';
   END IF;
 
+  -- Fase M: gate de rol.
+  -- Bypass super_admin; en caso normal exige que el usuario pertenezca a la org
+  -- de la factura Y tenga uno de los roles autorizados.
   IF public.has_role(v_uid, 'super_admin'::public.app_role) THEN
     v_rol_ejecutor := 'super_admin';
   ELSIF v_org = public.current_user_org_id() AND public.has_role(v_uid, 'admin'::public.app_role) THEN
@@ -71,11 +78,13 @@ BEGIN
     RAISE EXCEPTION 'La factura no tiene saldo pendiente que cerrar.' USING ERRCODE = '22023';
   END IF;
 
+  -- Ajuste no monetario en la moneda de la factura: no requiere valuación ni banco.
+  -- NULL satisface pagos_proveedor_tc_pos sin relajar la restricción de pagos reales.
   INSERT INTO public.pagos_proveedor(
     organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas, es_ajuste, motivo_ajuste, created_by
   ) VALUES (
-    v_org, p_factura_id, CURRENT_DATE, v_saldo, v_moneda, NULL,
+    v_org, p_factura_id, public.fecha_negocio_mx(), v_saldo, v_moneda, NULL,
     'Ajuste', 'Cierre sin pago: ' || p_motivo,
     COALESCE(p_comentario, ''), true, p_motivo, v_uid
   )
@@ -102,3 +111,6 @@ BEGIN
   RETURN v_pago_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.cerrar_factura_proveedor_sin_pago(uuid, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cerrar_factura_proveedor_sin_pago(uuid, text, text) TO authenticated, service_role;

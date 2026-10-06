@@ -210,8 +210,8 @@ BEGIN
   -- `_assert_nc_prov_no_excede_saldo` bloquea NCs que exceden el saldo, y
   -- este caso mide el reporte, no el tope de saldo.
   INSERT INTO public.proveedor_notas_credito(organization_id, proveedor_factura_id, folio_nc,
-                                             fecha, monto, moneda, estado)
-  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 300, 'MXN', 'Borrador')
+                                             fecha, monto, moneda, estado, subtotal)
+  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 300, 'MXN', 'Borrador', 300)
   RETURNING id INTO ncp_borr;
 
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = ncp_borr;

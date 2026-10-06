@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 
 export interface ConfirmActionDialogProps {
@@ -61,7 +61,7 @@ export function ConfirmActionDialog({
 }: ConfirmActionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={dialogSize[size]}>
+      <AlertDialogContent className={cn(dialogSize[size], scrollableDialog)}>
         <AlertDialogHeader>
           <AlertDialogTitle
             className={cn(

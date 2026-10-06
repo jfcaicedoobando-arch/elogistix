@@ -25,12 +25,14 @@ interface RowCruda {
   fecha_programada_pago: string | null;
   moneda: string;
   total: number;
+  fecha_emision: string | null;
+  tipo_cambio_usd: number | null;
   estado: string;
   estado_aprobacion: string;
 }
 
 const SELECT_PROGRAMABLES =
-  "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion";
+  "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, fecha_emision, tipo_cambio_usd";
 
 /**
  * Ronda YAGNI · defecto 4: antes se pedía una sola página tope de PostgREST con `unwrapOr([])`, así
@@ -78,6 +80,8 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
         fecha_programada_pago: r.fecha_programada_pago,
         moneda: r.moneda,
         total: Number(r.total),
+        fecha_emision: r.fecha_emision,
+        tipo_cambio_usd: r.tipo_cambio_usd,
         saldo,
         estado: r.estado,
         estado_aprobacion: r.estado_aprobacion,

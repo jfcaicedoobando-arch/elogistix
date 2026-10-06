@@ -11,6 +11,7 @@ import {
   type AgingMonedaProveedor,
   type MovimientoConSaldo,
   type SaldoMonedaProveedor,
+  type SaldoAperturaProveedor,
 } from "@/features/proveedor/domain/movimientosProveedor";
 
 export interface FilaMovimientoExport {
@@ -66,14 +67,28 @@ export function filasSaldosExport(
   }));
 }
 
+export function filasAperturaExport(
+  saldos: readonly SaldoAperturaProveedor[],
+): { moneda: string; saldo: string }[] {
+  return saldos.map((s) => ({ moneda: s.moneda.toUpperCase(), saldo: num(s.saldo) }));
+}
+
 /** CSV contable: encabezado con proveedor y periodo, detalle y totales. */
 export function estadoCuentaACsv(
   proveedorNombre: string,
   periodo: { desde: string; hasta: string },
   movimientos: readonly FilaMovimientoExport[],
   saldos: readonly { moneda: string; cargos: string; abonos: string; saldo: string }[],
-  aging: readonly { moneda: string; etiqueta: string; saldo: string }[] = [],
+  resumen: {
+    aging?: readonly { moneda: string; etiqueta: string; saldo: string }[];
+    apertura?: readonly { moneda: string; saldo: string }[];
+  } = {},
 ): string {
+  const saldoInicial = toCsv(
+    ["Saldo inicial del periodo", "Moneda", "Saldo"],
+    (resumen.apertura ?? []).map((s) => [`Antes del ${periodo.desde}`, s.moneda, s.saldo]),
+    ",", [2],
+  );
   const detalle = toCsv(
     ["Fecha", "Movimiento", "Folio", "Expediente", "Referencia", "Moneda", "Cargo", "Abono", "Saldo"],
     movimientos.map((m) => [
@@ -88,13 +103,13 @@ export function estadoCuentaACsv(
   // movimientos en el periodo (sólo saldo vencido).
   const antiguedad = toCsv(
     ["Moneda", "Antigüedad", "Saldo"],
-    aging.map((a) => [a.moneda, a.etiqueta, a.saldo]),
+    (resumen.aging ?? []).map((a) => [a.moneda, a.etiqueta, a.saldo]),
   );
   const encabezado = toCsv(
     ["Proveedor", "Desde", "Hasta"],
     [[proveedorNombre, formatDate(periodo.desde), formatDate(periodo.hasta)]],
   );
-  return `${encabezado}\n\n${detalle}\n\n${totales}\n\n${antiguedad}`;
+  return `${encabezado}\n\n${saldoInicial}\n\n${detalle}\n\n${totales}\n\n${antiguedad}`;
 }
 
 export function nombreArchivoEstadoCuenta(

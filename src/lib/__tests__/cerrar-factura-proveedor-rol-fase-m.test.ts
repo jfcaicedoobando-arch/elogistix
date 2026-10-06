@@ -61,12 +61,12 @@ describe("Fase M — cerrar_factura_proveedor_sin_pago exige rol autorizado", ()
   });
 
   it("registra el ajuste sin inventar un tipo de cambio cero", () => {
-    expect(fnBody).toMatch(/v_org,\s*p_factura_id,\s*CURRENT_DATE,\s*v_saldo,\s*v_moneda,\s*NULL,/);
+    expect(fnBody).toMatch(/v_org,\s*p_factura_id,\s*public\.fecha_negocio_mx\(\),\s*v_saldo,\s*v_moneda,\s*NULL,/);
   });
 
   it("conserva REVOKE FROM PUBLIC + GRANT authenticated", () => {
     expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\.cerrar_factura_proveedor_sin_pago\(uuid, text, text\) FROM PUBLIC, anon/,
+      /REVOKE (?:EXECUTE|ALL) ON FUNCTION public\.cerrar_factura_proveedor_sin_pago\(uuid, text, text\) FROM PUBLIC, anon/,
     );
     expect(sql).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.cerrar_factura_proveedor_sin_pago\(uuid, text, text\) TO authenticated, service_role/,

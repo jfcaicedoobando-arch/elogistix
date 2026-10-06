@@ -84,3 +84,35 @@ describe("TabPnl — embarque con actividad real conserva comparativas", () => {
     ).toBeTruthy();
   });
 });
+
+
+describe("audit129 incomplete supplier costs", () => {
+  it("qualifies the result, avoids a definitive100% and recovers after capture", () => {
+    const result = { data: { ...dataConActividad, estado_costos: "incompleto", utilidad_mxn: null },
+      isLoading: false, error: null, refetch: vi.fn() };
+    mockUsePnlFinanciero.mockReturnValue(result);
+    const { rerender } = render(<TabPnl embarqueId="partial" />);
+    expect(screen.getByText("Costos incompletos")).toBeTruthy();
+    expect(screen.getAllByText("No calculable")).toHaveLength(2);
+    expect(screen.queryByText("100.0%")).toBeNull();
+    mockUsePnlFinanciero.mockReturnValue({ ...result, data: {
+      ...result.data, estado_costos: "completo", utilidad_mxn: 20000,
+      costo: { real_mxn: 40000, presupuestado_mxn: 80000, pdte_pago_mxn: 40000 },
+    } });
+    rerender(<TabPnl embarqueId="partial" />);
+    expect(screen.queryByText("Costos incompletos")).toBeNull();
+    expect(screen.queryByText("No calculable")).toBeNull();
+  });
+});
+
+
+it("audit130 identifica repartos provisionales por sobreasignación", () => {
+  mockUsePnlFinanciero.mockReturnValue({
+    data: { ...dataConActividad, estado_costos: "incompleto", utilidad_mxn: null,
+      facturas_sobreasignadas: 1, costo_sobreasignado_mxn: 20 },
+    isLoading: false, error: null, refetch: vi.fn(),
+  });
+  render(<TabPnl embarqueId="sobreasignado" />);
+  expect(screen.getByText(/reparto proporcional provisional/)).toBeTruthy();
+  expect(screen.getAllByText("No calculable")).toHaveLength(2);
+});

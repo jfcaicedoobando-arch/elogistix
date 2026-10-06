@@ -11,11 +11,10 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA, sumarMontos } from "@/lib/financial/financialUtils";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import type { Json } from "@/integrations/supabase/types";
 import type { Moneda } from "@/types/db";
 import {
   construirLineasManuales,
-  generarFolioBorrador,
   vencimiento,
   type ConceptoManualInput,
 } from "@/features/facturacion/services/facturaManualLineas";
@@ -23,6 +22,8 @@ import {
 export type { ConceptoManualInput };
 
 export interface CrearFacturaManualInput {
+  /** Identidad estable de una captura, conservada en reintentos. */
+  requestId?: string;
   organizationId: string;
   clienteId: string;
   clienteNombre: string;
@@ -57,11 +58,10 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     throw new Error("El total de la factura debe ser mayor a $0. Revisa los precios unitarios de los conceptos.");
   }
 
-  const numeroProvisional = generarFolioBorrador();
+  const requestId = input.requestId ?? crypto.randomUUID();
+  const numeroProvisional = `BORRADOR-${requestId}`;
 
-  const { data: factura, error: errFact } = await supabase
-    .from("facturas")
-    .insert({
+  const factura = {
       numero: numeroProvisional,
       embarque_id: null,
       proforma_id: null,
@@ -85,14 +85,9 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
       dias_credito: input.diasCredito,
       notas: input.notas ?? null,
       organization_id: input.organizationId,
-    })
-    .select("id")
-    .single();
-  if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
-  const facturaId = factura.id as string;
+  };
 
   const conceptosRows = lineas.map((l) => ({
-    factura_id: facturaId,
     descripcion: l.descripcion,
     cantidad: l.cantidad,
     precio_unitario: l.precio,
@@ -104,30 +99,12 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     tasa_iva_aplicada: l.tasaFila,
   }));
 
-  const { error: errConc } = await supabase
-    .from("conceptos_factura")
-    .insert(conceptosRows);
-  if (errConc) {
-    // Rollback: baja lógica (el DELETE físico de facturas está prohibido en BD
-    // desde la Ola 1 de remediación — hallazgo C6 de la auditoría).
-    await supabase.rpc("soft_delete_record", { _table: "facturas", _id: facturaId });
-
-    await registrarActividad({
-      modulo: "facturacion",
-      accion: "Eliminó factura borrador",
-      entidadId: facturaId,
-      entidadNombre: numeroProvisional,
-      detalles: { motivo: "Rollback por error al crear conceptos" },
-    });
-    throw new Error(`Error al crear conceptos: ${errConc.message}`);
-  }
-
-  await registrarActividad({
-    modulo: "facturacion",
-    accion: "Creó factura manual borrador",
-    entidadId: facturaId,
-    entidadNombre: numeroProvisional,
-    detalles: { cliente: input.clienteNombre, total, moneda: input.moneda },
+  const { data, error } = await supabase.rpc("crear_factura_manual_idempotente", {
+    p_request_id: requestId,
+    p_factura: factura as Json,
+    p_conceptos: conceptosRows as Json,
   });
-  return facturaId;
+  if (error) throw new Error(`Error al crear factura: ${error.message}`);
+  if (typeof data !== "string" || !data) throw new Error("La creación no devolvió el identificador de la factura.");
+  return data;
 }

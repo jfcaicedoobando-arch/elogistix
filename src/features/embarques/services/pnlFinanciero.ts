@@ -53,6 +53,12 @@ function normalizarConceptos(rows: unknown): PnlPorConcepto[] {
 
 export interface PnlEmbarque {
   embarque_id: string;
+  estado_costos: "completo" | "incompleto";
+  utilidad_mxn: number | null;
+  notas_credito_sin_base: number;
+  costo_sin_asignar_mxn: number;
+  facturas_sobreasignadas: number;
+  costo_sobreasignado_mxn: number;
   tipo_cambio_usd: number;
   tipo_cambio_eur: number;
   venta: PnlTotalesVenta;
@@ -74,6 +80,12 @@ export async function fetchPnlEmbarque(embarqueId: string): Promise<PnlEmbarque>
   const raw = (data ?? {}) as Partial<PnlEmbarque>;
   return {
     embarque_id: raw.embarque_id ?? embarqueId,
+    estado_costos: raw.estado_costos === "completo" ? "completo" : "incompleto",
+    utilidad_mxn: raw.utilidad_mxn ?? null,
+    notas_credito_sin_base: raw.notas_credito_sin_base ?? 0,
+    costo_sin_asignar_mxn: raw.costo_sin_asignar_mxn ?? 0,
+    facturas_sobreasignadas: raw.facturas_sobreasignadas ?? 0,
+    costo_sobreasignado_mxn: raw.costo_sobreasignado_mxn ?? 0,
     tipo_cambio_usd: raw.tipo_cambio_usd ?? 0,
     tipo_cambio_eur: raw.tipo_cambio_eur ?? 0,
     venta: raw.venta ?? { presupuestada_mxn: 0, real_mxn: 0, pdte_cobro_mxn: 0 },

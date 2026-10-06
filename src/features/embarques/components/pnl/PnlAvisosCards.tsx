@@ -5,8 +5,9 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { pctPnl } from "@/lib/formatters/pnl";
+import { fmtPnl, pctPnl } from "@/lib/formatters/pnl";
 
 interface Props {
   sinActividadReal: boolean;
@@ -14,14 +15,42 @@ interface Props {
   alertaVenta: boolean;
   alertaMargen: boolean;
   dCostoPct: number;
-  margenReal: number;
+  margenReal: number | null;
+  costosIncompletos?: boolean;
+  notasCreditoSinBase?: number;
+  costoSinAsignar?: number;
+  facturasSobreasignadas?: number;
+}
+
+function PnlCostosIncompletos({
+  costoSinAsignar = 0, facturasSobreasignadas = 0, notasCreditoSinBase = 0,
+}: Pick<Props, "costoSinAsignar" | "facturasSobreasignadas" | "notasCreditoSinBase">) {
+  return (
+    <Alert variant="warning">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Costos incompletos</AlertTitle>
+      <AlertDescription>
+        La utilidad y el margen no son calculables todavía. Captura las facturas de proveedor
+        y sus vínculos al embarque, y revisa los tipos de cambio. El costo registrado no sustituye
+        los costos pendientes de capturar.
+        {costoSinAsignar > 0 && ` Las facturas vinculadas tienen ${fmtPnl(costoSinAsignar)} de base sin asignar a embarques; completa sus vínculos para determinar la utilidad.`}
+        {facturasSobreasignadas > 0 && ` Las asignaciones de ${facturasSobreasignadas} factura(s) exceden su base fiscal. El costo y el saldo por embarque muestran un reparto proporcional provisional; revisa sus vínculos antes de determinar la utilidad.`}
+        {notasCreditoSinBase > 0 && ` Hay ${notasCreditoSinBase} nota(s) de crédito sin base fiscal verificable; su reversión de costo está pendiente de validar.`}
+      </AlertDescription>
+    </Alert>
+  );
 }
 
 export function PnlAvisosCards({
   sinActividadReal, alertaSobrecosto, alertaVenta, alertaMargen, dCostoPct, margenReal,
+  costosIncompletos = false, notasCreditoSinBase = 0, costoSinAsignar = 0, facturasSobreasignadas = 0,
 }: Props) {
   return (
     <>
+      {costosIncompletos && (
+        <PnlCostosIncompletos costoSinAsignar={costoSinAsignar}
+          facturasSobreasignadas={facturasSobreasignadas} notasCreditoSinBase={notasCreditoSinBase} />
+      )}
       {sinActividadReal && (
         <Card className="border-border bg-muted/40">
           <CardHeader className="pb-2 flex flex-row items-center gap-2">
@@ -51,7 +80,7 @@ export function PnlAvisosCards({
                 Venta facturada menor a presupuestada
               </Badge>
             )}
-            {alertaMargen && (
+            {alertaMargen && margenReal !== null && (
               <Badge variant="outline" className="border-warning text-warning">
                 Margen real {pctPnl(margenReal)} &lt; 15%
               </Badge>

@@ -1,3 +1,4 @@
+import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
@@ -61,6 +62,7 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           </View>
         </View>
 
+        {!!data.notas_proveedor_sin_base?.length && <Text style={styles.paragraph}>{avisoNcProveedorSinBase(data.notas_proveedor_sin_base.length)}</Text>}
         <View style={styles.kpiRow}>
           <View style={styles.kpiCard}>
             <View style={styles.kpiInner}>

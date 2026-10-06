@@ -155,9 +155,9 @@ BEGIN
   INSERT INTO public.proveedor_notas_credito(
     id, organization_id, proveedor_factura_id, folio_nc, fecha, monto,
     moneda, motivo, descripcion, estado
-  ) VALUES
-    (nc_a, org_a, pf_a, 'NC-A-001', CURRENT_DATE, 200, 'MXN', 'Bonificacion', 'Desc TAR A', 'Borrador'),
-    (nc_b, org_b, pf_b, 'NC-B-001', CURRENT_DATE, 4444, 'MXN', 'Bonificacion', 'Desc TAR B', 'Borrador');
+  , subtotal) VALUES
+    (nc_a, org_a, pf_a, 'NC-A-001', CURRENT_DATE, 200, 'MXN', 'Bonificacion', 'Desc TAR A', 'Borrador', 172.41),
+    (nc_b, org_b, pf_b, 'NC-B-001', CURRENT_DATE, 4444, 'MXN', 'Bonificacion', 'Desc TAR B', 'Borrador', 3831.03);
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.proveedor_notas_credito WHERE id IN (nc_a, nc_b);

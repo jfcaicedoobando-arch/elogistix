@@ -8,6 +8,7 @@
  * - Uso del CFDI fijo en G02; la forma de pago la sugiere `sugerirFormaPagoNC`.
  * - TC: MXN = 1; cualquier otra moneda exige un TC finito > 0 (FIX-11).
  */
+import { fechaNotaCreditoValida, validarFechaNotaCredito } from "./fechaNotaCredito";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import type {
@@ -109,12 +110,13 @@ export function derivadosNC(draft: DraftNC, ctx: ContextoFacturaNC): DerivadosNC
   // P1-IVA: un renglón sin tratamiento fiscal representable no se puede timbrar
   // (el CFDI acreditaría impuestos supuestos). Se bloquea con aviso, no se infiere.
   const tratamientoIndefinido = draft.conceptos.some(lineaIndeterminadaNC);
-  const puedeGuardar =
-    !!draft.descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo &&
-    !facturaLiquidada && !tratamientoIndefinido;
+  const fechaValida = fechaNotaCreditoValida(draft.fecha);
+  const puedeGuardar = [fechaValida, Boolean(draft.descripcion.trim()), conceptosValidos, monto > 0,
+    !excedeSaldo, !facturaLiquidada, !tratamientoIndefinido].every(Boolean);
 
   // YG-06: etiquetas de lo que falta para poder guardar/timbrar la NC.
   const faltantesGuardar = [
+    !fechaValida && "fecha válida",
     facturaLiquidada && "factura con saldo pendiente",
     !draft.descripcion.trim() && "descripción",
     !conceptosValidos && "conceptos completos (descripción, cantidad y precio)",
@@ -165,6 +167,7 @@ export function construirInputNC(params: {
   monto: number;
 }): CrearNotaCreditoInput {
   const { draft } = params;
+  validarFechaNotaCredito(draft.fecha);
   return {
     factura_id: params.facturaId,
     motivo: draft.motivo,

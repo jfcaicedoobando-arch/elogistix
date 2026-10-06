@@ -54,6 +54,8 @@ export interface CarteraPendienteRow {
   saldo: number;
   ultimo_contacto: string | null;
   estado: string;
+  metodo_pago?: string | null;
+  uuid_fiscal?: string | null;
   /** v13.592.0: trámite de cancelación ante el SAT (none|pending|verifying|…). */
   cancellation_status?: string | null;
 }
@@ -116,6 +118,17 @@ export async function fetchCarteraPendiente(): Promise<CarteraPendienteResultado
   if (lista.error) throw lista.error;
   if (conteo.error) throw conteo.error;
   const rows = (lista.data ?? []) as CarteraPendienteRow[];
+  const fiscales = await fetchInChunks(rows.map((r) => r.factura_id), async (ids) => {
+    const result = await supabase.from("facturas").select("id, metodo_pago, uuid_fiscal")
+      .in("id", ids).is("deleted_at", null);
+    if (result.error) throw result.error;
+    return result.data ?? [];
+  });
+  const porId = new Map(fiscales.map((f) => [f.id, f]));
+  const completas = rows.map((r) => ({ ...r,
+    metodo_pago: porId.get(r.factura_id)?.metodo_pago ?? null,
+    uuid_fiscal: porId.get(r.factura_id)?.uuid_fiscal ?? null,
+  }));
   const total = Number(conteo.data ?? rows.length);
-  return { rows, total, truncado: total > rows.length };
+  return { rows: completas, total, truncado: total > rows.length };
 }

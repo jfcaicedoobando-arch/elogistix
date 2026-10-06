@@ -112,7 +112,7 @@ interface TopAccessors<T> {
 }
 
 /**
- * Agrupa filas por nombre+moneda antes de rankear (Top-5 por saldo).
+ * Agrupa filas por nombre+moneda y obtiene un Top-5 independiente por moneda.
  * `dias` conserva el peor caso (más días vencidos) del grupo.
  */
 export function agruparTop<T>(rows: T[], acc: TopAccessors<T>): TopItem[] {
@@ -120,7 +120,7 @@ export function agruparTop<T>(rows: T[], acc: TopAccessors<T>): TopItem[] {
   for (const r of rows) {
     if (!acc.filtro(r)) continue;
     const nombre = acc.nombre(r);
-    const moneda = acc.moneda(r);
+    const moneda = acc.moneda(r).toUpperCase();
     const key = `${nombre}||${moneda}`;
     const dias = acc.dias(r);
     const prev = map.get(key);
@@ -131,7 +131,9 @@ export function agruparTop<T>(rows: T[], acc: TopAccessors<T>): TopItem[] {
       map.set(key, { nombre, saldo: acc.saldo(r), moneda, dias });
     }
   }
-  return Array.from(map.values())
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 5);
+  const monedas = [...new Set([...map.values()].map((item) => item.moneda))].sort();
+  return monedas.flatMap((moneda) => [...map.values()]
+    .filter((item) => item.moneda === moneda)
+    .sort((a, b) => b.saldo - a.saldo || a.nombre.localeCompare(b.nombre, "es-MX"))
+    .slice(0, 5));
 }

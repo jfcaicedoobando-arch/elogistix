@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.824.30] - Unreleased
+
+- **fix(Tesorería · 103–105, 108, 114, 120–121)**: efectivo programado sin banco, tipo de cambio explícito en pagos extranjeros, prevalidación de fecha e importe y cierre no monetario sin TC cero. Filtros semánticos, rankings separados por moneda y procedencia del TC sin atribución DOF no verificada.
+- **fix(facturación · 102, 107, 110, 112, 116–119)**: fecha obligatoria de NC, atajo de saldo fiscal exacto o rechazo explicado, creación atómica/idempotente y bloqueo de doble clic durante validaciones. Editores excluyentes, cobro PUE en lote prevalidado, refresco canónico, retenciones visibles e importe aplicado en tarjetas.
+- **fix(estados de cuenta · 109, 111, 113)**: conversión de anticipos alineada con el pago, KPI/aging/filtro EUR y apertura por moneda en CSV del proveedor.
+- **fix(créditos y presupuesto · 106, 115, 122–123, 125)**: TC documental EUR, exportación respetuosa del filtro, base de NC separada de impuestos y valuación separada de aplicación. Créditos históricos sin base verificable se advierten como información incompleta; asignaciones parciales no reducen el presupuesto automáticamente.
+- **fix(reportes y operación · 101, 124, 127–130)**: metodología visible, costos reales sin duplicar representaciones, reparto por embarque, señal de costos incompletos, facturación parcial en cierre y guía de acciones coherente. Confirmaciones largas desplazables (126).
+- Seis migraciones forward; no backfill, borrado, cambio de JWT/RLS ni movimiento financiero remoto. Pruebas locales y CI se documentan en la matriz de auditoría; esta entrega no supone despliegue.
+
 ## [13.824.29] - 2026-10-05
 
 - **fix(CRM · adjuntos de pricing)**: se aplicaron los dos cambios de base del borrador aceptado (folio mensual con tarifas ligadas y reglas de acceso del bucket `crm-pricing-adjuntos`). Antes, adjuntar un archivo se rechazaba por RLS.

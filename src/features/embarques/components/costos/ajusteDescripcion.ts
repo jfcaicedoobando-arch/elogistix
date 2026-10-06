@@ -6,14 +6,14 @@
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { formatCurrency } from "@/lib/formatters";
 
-export type AjusteKind = "sin_factura" | "sin_ajuste" | "ahorro" | "sobrecosto" | "no_comparable";
+export type AjusteKind = "sin_factura" | "sin_ajuste" | "pendiente_facturar" | "sobrecosto" | "no_comparable";
 
 export interface AjusteDescripcion {
   kind: AjusteKind;
   tone: ChipTone;
   /** Símbolo direccional listo para renderizar (▼ ▲ =). */
   icono: "▼" | "▲" | "=" | "•";
-  /** Frase corta: "Ahorro 36.80 · 19%", "Sin ajuste", "Sin factura". */
+  /** Frase corta: "Pendiente de facturar 36.80", "Sin ajuste", "Sin factura". */
   titulo: string;
   /** Explicación completa, apta para tooltip. */
   detalle: string;
@@ -60,9 +60,9 @@ export function describirAjuste(
   }
   if (dif < 0) {
     return {
-      kind: "ahorro", tone: "success", icono: "▼",
-      titulo: `Ahorro ${importe} · ${pct.toFixed(0)}%`,
-      detalle: `El proveedor facturó ${importe} menos de lo cotizado (−${pct.toFixed(1)}%).`,
+      kind: "pendiente_facturar", tone: "warning", icono: "•",
+      titulo: `Pendiente de facturar ${importe}`,
+      detalle: `Quedan ${importe} del costo comprometido por facturar. Una parcialidad no es un ahorro; sólo un ajuste explícito puede reducir el presupuesto.`,
       monto: abs, pct,
     };
   }
@@ -81,7 +81,7 @@ export function describirAjusteNeto(
   moneda: string,
 ): AjusteDescripcion {
   // P1-1: `facturado` debe venir sólo de filas comparables (sin vínculos excluidos).
-  // B-057 (v13.320.40): sin factura del proveedor NO es "ahorro" — es costo por
+  // B-057 (v13.320.40): sin factura del proveedor NO es "pendiente_facturar" — es costo por
   // devengar. Sólo hay ajuste real cuando el proveedor ya facturó (facturado > 0).
   return describirAjuste(cotizado, facturado, moneda, { tieneFactura: facturado > 0 });
 }

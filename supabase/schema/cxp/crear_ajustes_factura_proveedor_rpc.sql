@@ -1,7 +1,3 @@
--- Fuente canónica de public.crear_ajustes_factura_proveedor_rpc(uuid, jsonb).
--- 1:1 con supabase/migrations/20260910210119_d925c33b-043d-469e-8b89-a6db1fd51d81.sql
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
 CREATE OR REPLACE FUNCTION public.crear_ajustes_factura_proveedor_rpc(p_factura_id uuid, p_ajustes jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -57,6 +53,14 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_AJUSTE_DESPROPORCIONADO: el ajuste no puede exceder el total de la factura (%). Revisa la moneda del costo vinculado.', v_fact.total
       USING ERRCODE = '22003';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(COALESCE(p_ajustes, '[]'::jsonb)) AS a
+    WHERE COALESCE((a->>'monto')::numeric, 0) < -0.01
+  ) THEN
+    RAISE EXCEPTION 'LC_AJUSTE_REDUCCION_NO_EXPLICITA: una factura parcial no reduce el presupuesto; registra una reducción explícita por separado'
+      USING ERRCODE = '22023';
   END IF;
 
   -- Ola 5 · RG4-3: capturar ANTES de cualquier DELETE los ids de todos los

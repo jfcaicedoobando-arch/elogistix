@@ -5,6 +5,7 @@
  * `lib/mappers/*`) para que `services/estadoResultadosDevengado.ts`
  * quede libre de `as Tables<X>` / `as X[]`.
  */
+import { baseNcProveedor, valuacionNcProveedor } from "@/lib/financial/baseNcProveedor";
 import { num, str } from "./_helpers";
 import { baseNotaCreditoSinImpuestos } from "@/lib/financial/baseNotaCredito";
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
@@ -49,6 +50,7 @@ export interface ProveedorFacturaRow {
 
 /** EERR-NCP: nota de crédito de proveedor aplicada (resta costo del mes). */
 export interface ProveedorNotaCreditoRow {
+  subtotal: number | null;
   id: string;
   proveedor_factura_id: string;
   monto: number;
@@ -129,9 +131,10 @@ export function mapProveedorNotaCreditoRows(data: unknown): ProveedorNotaCredito
   return ((data ?? []) as RawRow[]).map((r) => ({
     id: str(r.id),
     proveedor_factura_id: str(r.proveedor_factura_id),
+    subtotal: baseNcProveedor(r.subtotal),
     monto: num(r.monto),
     moneda: str(r.moneda),
     fecha: str(r.fecha),
-    tipo_cambio: nullableNum(r.tipo_cambio),
+    tipo_cambio: valuacionNcProveedor(r, (r.proveedor_facturas ?? {}) as RawRow),
   }));
 }

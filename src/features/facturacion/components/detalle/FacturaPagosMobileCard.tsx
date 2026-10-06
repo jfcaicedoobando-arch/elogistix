@@ -30,13 +30,14 @@ interface PagoRow {
 interface Props {
   row: PagoRow;
   facturaId: string;
+  monedaFactura: string;
   canEdit: boolean;
   onEliminar: (pagoId: string) => void;
   onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
-export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, onCancelarRep, onPreviewRep }: Props) {
+export function FacturaPagosMobileCard({ row, facturaId, monedaFactura, canEdit, onEliminar, onCancelarRep, onPreviewRep }: Props) {
   const cs = (row.rep_cancellation_status ?? "").toLowerCase();
   const repVivo = !!row.uuid_rep && !row.rep_cancelado_en && cs !== "accepted";
   const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
@@ -63,6 +64,10 @@ export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, on
           className="shrink-0 max-w-[48%]"
         />
       </div>
+      <MoneyCell
+        label="Aplicado"
+        value={formatCurrency(anulado ? 0 : Number(row.monto_aplicado_factura), monedaFactura)}
+      />
       <div className="flex items-center justify-between gap-2">
         <PagoRepCell
           pagoId={row.id}

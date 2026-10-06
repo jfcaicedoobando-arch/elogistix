@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   estadoCuentaACsv,
   filasAgingExport,
+  filasAperturaExport,
   filasMovimientosExport,
   filasSaldosExport,
   nombreArchivoEstadoCuenta,
@@ -54,13 +55,13 @@ describe("filasAgingExport", () => {
 });
 
 describe("estadoCuentaACsv", () => {
-  it("neutraliza fórmulas y arma cuatro bloques", () => {
+  it("neutraliza fórmulas y arma cinco bloques", () => {
     const csv = estadoCuentaACsv(
       "HK LS Limited",
       { desde: "2026-01-01", hasta: "2026-01-31" },
       filasMovimientosExport([movimiento]),
       filasSaldosExport([{ moneda: "usd", cargos: 1000, abonos: 0, saldo: 1000 }]),
-      filasAgingExport([
+      { aging: filasAgingExport([
         {
           moneda: "USD",
           buckets: { Vigente: 0, "1-30": 600, "31-60": 0, "61-90": 0, "90+": 0 },
@@ -68,13 +69,29 @@ describe("estadoCuentaACsv", () => {
           total: 600,
           vencido: 600,
         },
-      ]),
+      ]) },
     );
     expect(csv).toContain("Proveedor");
     expect(csv).toContain("Saldo global");
     expect(csv).toContain("'=SUM(A1)");
     expect(csv).toContain("Antigüedad");
-    expect(csv.split("\n\n")).toHaveLength(4);
+    expect(csv.split("\n\n")).toHaveLength(5);
+  });
+
+  it("exporta apertura por moneda antes del detalle sin confundirla con saldo global (AUD113)", () => {
+    const csv = estadoCuentaACsv(
+      "Proveedor", { desde: "2026-10-04", hasta: "2026-10-05" },
+      filasMovimientosExport([{ ...movimiento, moneda: "MXN", cargo: 3, saldo: 4149.1 }]),
+      filasSaldosExport([{ moneda: "MXN", cargos: 4474.1, abonos: 325, saldo: 4149.1 }]),
+      { apertura: filasAperturaExport([{ moneda: "MXN", saldo: 4146.1 }, { moneda: "EUR", saldo: -12.34 }]) },
+    );
+    const bloques = csv.split("\n\n");
+    expect(bloques[1]).toContain("Saldo inicial del periodo");
+    expect(bloques[1]).toContain("Antes del 2026-10-04,MXN,4146.10");
+    expect(bloques[1]).toContain("Antes del 2026-10-04,EUR,-12.34");
+    expect(bloques[2]).toContain("MXN,3.00,0.00,4149.10");
+    expect(bloques[3]).toContain("Saldo global");
+    expect(bloques[3]).toContain("MXN,4474.10,325.00,4149.10");
   });
 
   it("soporta estado de cuenta sólo-antigüedad (sin movimientos)", () => {
@@ -83,7 +100,7 @@ describe("estadoCuentaACsv", () => {
       { desde: "2026-01-01", hasta: "2026-01-31" },
       [],
       [],
-      filasAgingExport([
+      { aging: filasAgingExport([
         {
           moneda: "MXN",
           buckets: { Vigente: 0, "1-30": 0, "31-60": 0, "61-90": 0, "90+": 5000 },
@@ -91,7 +108,7 @@ describe("estadoCuentaACsv", () => {
           total: 5000,
           vencido: 5000,
         },
-      ]),
+      ]) },
     );
     expect(csv).toContain("5000.00");
   });

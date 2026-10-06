@@ -4,6 +4,7 @@
  * Extraído de `libroPagos.ts` para respetar el límite de 200 líneas por
  * archivo (Power of 10). Sin red ni React: sólo predicados puros.
  */
+import { etiquetaMetodoPago } from "./metodoPago";
 import { estadoConciliacionPago } from "./conciliacionPago";
 import type { FiltrosLibroPagos, FiltroRep, PagoLibro, VistaLibroPagos } from "./libroPagos.tipos";
 
@@ -38,7 +39,7 @@ function coincideRep(pago: PagoLibro, rep: FiltroRep): boolean {
 function coincideCuenta(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
   if (f.cuentaId !== "todas" && pago.cuenta_bancaria_id !== f.cuentaId) return false;
   if (f.moneda !== "todas" && pago.moneda !== f.moneda) return false;
-  if (f.metodo !== "todos" && (pago.metodo_pago ?? "") !== f.metodo) return false;
+  if (f.metodo !== "todos" && etiquetaMetodoPago(pago.metodo_pago) !== etiquetaMetodoPago(f.metodo)) return false;
   return true;
 }
 
@@ -76,7 +77,7 @@ export function filtrarPagos(
 export function metodosDisponibles(pagos: readonly PagoLibro[]): string[] {
   const set = new Set<string>();
   for (const p of pagos) {
-    if (p.metodo_pago) set.add(p.metodo_pago);
+    if (p.metodo_pago) set.add(etiquetaMetodoPago(p.metodo_pago));
   }
   return [...set].sort((a, b) => a.localeCompare(b, "es-MX"));
 }

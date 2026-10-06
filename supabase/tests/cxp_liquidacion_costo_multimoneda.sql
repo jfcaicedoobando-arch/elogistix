@@ -136,7 +136,7 @@ BEGIN
   ) VALUES (v_org, v_fixture.factura_id, public.fecha_negocio_mx(), 100, 'MXN', 20);
   INSERT INTO public.proveedor_notas_credito(
     organization_id, proveedor_factura_id, fecha, folio_nc, monto, moneda, tipo_cambio
-  ) VALUES (v_org, v_fixture.factura_id, public.fecha_negocio_mx(), 'AUD02-NC', 1900, 'MXN', 20)
+  , subtotal) VALUES (v_org, v_fixture.factura_id, public.fecha_negocio_mx(), 'AUD02-NC', 1900, 'MXN', 20, 1900)
   RETURNING id INTO v_nc;
   PERFORM pg_temp.assert_liquidacion_costo(v_fixture.costo_id, 'Pendiente', 'NC Borrador no liquida');
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = v_nc;

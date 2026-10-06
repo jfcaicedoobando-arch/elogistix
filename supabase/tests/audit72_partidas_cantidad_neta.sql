@@ -71,7 +71,7 @@ BEGIN
   UPDATE public.proveedor_facturas SET deleted_at = now() WHERE id = v_eliminada;
   INSERT INTO public.proveedor_notas_credito(
     id, organization_id, proveedor_factura_id, fecha, monto, moneda, estado
-  ) VALUES (v_nc, v_fx.org_a, v_parcial, CURRENT_DATE, 24.2, 'MXN', 'Borrador');
+  , subtotal) VALUES (v_nc, v_fx.org_a, v_parcial, CURRENT_DATE, 24.2, 'MXN', 'Borrador', 20);
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = v_nc;
   UPDATE public.proveedor_notas_credito SET estado = 'Aplicada' WHERE id = v_nc;
 

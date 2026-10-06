@@ -42,6 +42,8 @@ export interface TotalER {
 }
 
 export interface EstadoResultados {
+  /** NC históricas sin base fiscal: totales provisionales, crédito excluido. */
+  notas_proveedor_sin_base?: string[];
   ingresos: FilaER[];
   costos: FilaER[];
   totalIngresos: TotalER;

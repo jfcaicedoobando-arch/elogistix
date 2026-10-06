@@ -23,6 +23,8 @@ import {
   ConceptosDesktopTable,
   type ConceptoRow,
 } from "./FacturaConceptosRows";
+import { retencionesConcepto } from "../../utils/retencionesConcepto";
+import { sumarMontos } from "@/lib/financial/financialUtils";
 import { tipoIvaDesdeSnapshot } from "@/features/facturacion/utils/tipoIvaSnapshot";
 
 interface ImpuestoSnapshot {
@@ -50,11 +52,17 @@ interface Props {
     cantidad: number;
     precio_unitario: number;
     total: number;
+    tasa_ret_isr?: number | null;
+    tasa_ret_iva?: number | null;
+    monto_ret_isr?: number | null;
+    monto_ret_iva?: number | null;
     /** `null` en renglones legacy sin tratamiento capturado (P1 auditoría IVA). */
     tipo_iva?: TipoIvaConcepto | null;
     embarque_id?: string | null;
     embarque_expediente?: string | null;
   }>;
+  retIsr?: number;
+  retIva?: number;
   subtotal?: number;
   iva?: number;
   total?: number;
@@ -79,30 +87,37 @@ function inferirTipoIva(c: ConceptoSnapshot): TipoIvaConcepto | null {
   return tipoIvaDesdeSnapshot(c) as TipoIvaConcepto | null;
 }
 
-function TotalesFooter({ subtotal, iva, total, moneda }: { subtotal: number; iva: number; total: number; moneda: string }) {
+function TotalesFooter({ subtotal, iva, total, moneda, retIsr, retIva }: { subtotal: number; iva: number; total: number; moneda: string; retIsr: number; retIva: number }) {
   return (
     <div className="border-t pt-4 mt-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <MoneyCell label="Subtotal" value={formatCurrency(subtotal, moneda)} />
         <MoneyCell label="IVA" value={formatCurrency(iva, moneda)} />
+        {retIsr > 0 && <MoneyCell label="Retención ISR" value={formatCurrency(-retIsr, moneda)} />}
+        {retIva > 0 && <MoneyCell label="Retención IVA" value={formatCurrency(-retIva, moneda)} />}
         <MoneyCell label="Total" value={formatCurrency(total, moneda)} highlight />
       </div>
     </div>
   );
 }
 
-export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConceptos, subtotal, iva, total }: Props) {
+export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConceptos, subtotal, iva, total, retIsr, retIva }: Props) {
   const conceptos: ConceptoSnapshot[] = propConceptos && propConceptos.length > 0
     ? propConceptos.map((c) => ({
         descripcion: c.descripcion,
         cantidad: c.cantidad,
         precio_unitario: c.precio_unitario,
         importe: c.total,
+        tasa_ret_isr: c.tasa_ret_isr, tasa_ret_iva: c.tasa_ret_iva,
+        monto_ret_isr: c.monto_ret_isr, monto_ret_iva: c.monto_ret_iva,
         tipo_iva: c.tipo_iva ?? undefined,
         embarque_id: c.embarque_id ?? null,
         embarque_expediente: c.embarque_expediente ?? null,
       }))
     : parseConceptos(snapshot);
+  const retenciones = conceptos.map(retencionesConcepto);
+  const totalesRet = { retIsr: retIsr ?? sumarMontos(retenciones.map((r) => r.isr)),
+    retIva: retIva ?? sumarMontos(retenciones.map((r) => r.iva)) };
   const mostrarEmbarque = conceptos.some((c) => c.embarque_expediente);
   const mostrarTotales = typeof subtotal === "number" && typeof iva === "number" && typeof total === "number";
 
@@ -121,7 +136,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
             <p className="text-body-sm mt-1">Consulta el PDF para más información.</p>
           </div>
           {mostrarTotales && (
-            <TotalesFooter subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
+            <TotalesFooter {...totalesRet} subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
           )}
         </CardContent>
       </Card>
@@ -149,7 +164,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
           inferirTipoIva={inferirTipoIva}
         />
         {mostrarTotales && (
-          <TotalesFooter subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
+          <TotalesFooter {...totalesRet} subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
         )}
       </CardContent>
     </Card>

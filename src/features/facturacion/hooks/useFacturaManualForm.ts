@@ -7,21 +7,18 @@
  */
 import { useMemo, useState } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
+import { useFacturaManualSubmit } from "./useFacturaManualSubmit";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import {
   INITIAL_CONCEPTOS, INITIAL_FISCAL, facturaManualIsDirty, serieForMoneda, useFaltantesTimbrar,
 } from "@/features/facturacion/hooks/facturaManualFormDefaults";
 
 export { serieForMoneda };
-import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
 import { formaPagoParaMetodo, validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
-import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
-import { notifyError } from "@/lib/ui/appFeedback";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
@@ -29,17 +26,12 @@ import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const { organizationId } = useOrgActiva();
   const tasaIva = useTasaIVA();
-  const crear = useCrearFacturaManual();
-  const validarLimite = useValidarLimiteCredito();
   const { data: clientes = [] } = useClientesFiscalOpts(organizationId, open);
 
   const [clienteId, setClienteId] = useState<string>("");
   const [fiscal, setFiscal] = useState<DatosFiscalesValue>(INITIAL_FISCAL);
   const [conceptos, setConceptos] = useState<ConceptoManualInput[]>(INITIAL_CONCEPTOS);
   const [notas, setNotas] = useState<string>("");
-  const [creditoAlerta, setCreditoAlerta] = useState<
-    (ValidarLimiteResultado & { timbrar: boolean }) | null
-  >(null);
 
   const cliente = useMemo(() => clientes.find((c) => c.id === clienteId), [clientes, clienteId]);
 
@@ -110,51 +102,8 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     };
   };
 
-  const ejecutarSubmit = (timbrarAlGuardar: boolean) => {
-    if (timbrarAlGuardar && errorFormaMetodo) return;
-    const payload = buildInput();
-    if (!payload) return;
-    crear.mutate({ input: payload.input, timbrarAlGuardar }, { onSuccess: () => { reset(); onClose?.(); } });
-  };
-
-  const handleSubmit = async (timbrarAlGuardar: boolean) => {
-    if (!cliente || !organizationId) return;
-    if (timbrarAlGuardar && errorFormaMetodo) return;
-    const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
-    if (totalMxn.tcFaltante) {
-      // FIX C6: sin TC confiable no se puede validar el crédito en MXN.
-      notifyError(undefined, {
-        title: "Captura un tipo de cambio válido",
-        description: `La factura está en ${fiscal.moneda} y el tipo de cambio no es utilizable.`,
-        method: "FACTURA_MANUAL_TC",
-      });
-      return;
-    }
-    try {
-      const resultado = await validarLimite({
-        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn.mxn,
-      });
-      if (resultado?.rebasa) {
-        setCreditoAlerta({ ...resultado, timbrar: timbrarAlGuardar });
-        return;
-      }
-    } catch { /* fail-open */ }
-    ejecutarSubmit(timbrarAlGuardar);
-  };
-
-  const onConfirmarExceso = async () => {
-    if (!creditoAlerta || !cliente) return;
-    await registrarExcesoCredito({
-      clienteId: cliente.id, clienteNombre: cliente.nombre,
-      totalProyectadoMxn: creditoAlerta.totalProyectadoMxn,
-      limiteMxn: creditoAlerta.exposicion.limiteMxn ?? 0,
-      excedenteMxn: creditoAlerta.excedentePotencialMxn,
-      origen: "factura_manual",
-    });
-    const timbrar = creditoAlerta.timbrar;
-    setCreditoAlerta(null);
-    ejecutarSubmit(timbrar);
-  };
+  const submit = useFacturaManualSubmit({ buildInput, puedeGuardar, puedeTimbrar,
+    onSuccess: () => { reset(); onClose?.(); } });
 
   return {
     clienteId,
@@ -169,17 +118,13 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     notas,
     setNotas,
     isDirty: facturaManualIsDirty(clienteId, fiscal, conceptos, notas),
-    reset,
-    creditoAlerta,
-    setCreditoAlerta,
+    reset: () => { reset(); submit.resetCaptura(); },
     clienteIncompleto,
     puedeGuardar,
     puedeTimbrar,
     faltantesTimbrar: tcFueraDeBanda ? [...faltantesTimbrar, "tipo de cambio plausible"] : faltantesTimbrar,
     tcFueraDeBanda,
 
-    handleSubmit,
-    onConfirmarExceso,
-    isPending: crear.isPending,
+    ...submit,
   };
 }

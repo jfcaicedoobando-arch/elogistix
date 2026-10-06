@@ -20,6 +20,19 @@ describe("ReportePresupuestoDocument", () => {
     expect(text).toContain("Detalle por categoría");
   });
 
+  it("respeta Solo excesos vacío, conserva KPIs globales y declara alcance", () => {
+    const resumen = { ...mockResumen, filas: [{ categoria_nombre: "No exportar", presupuesto_mxn: 100, real_mxn: 90 }] };
+    const { container } = render(<ReportePresupuestoDocument resumen={resumen} filas={[]} soloExcesos />);
+    expect(container.textContent).toContain("Filtro: Solo excesos");
+    expect(container.textContent).toContain("periodo completo");
+    expect(container.textContent).toContain("Ninguna categoría excede");
+    expect(container.textContent).not.toContain("No exportar");
+  });
+  it("advierte NC excluida por base histórica ausente", () => {
+    const { container } = render(<ReportePresupuestoDocument resumen={{ ...mockResumen, notas_proveedor_sin_base_count: 1 }} />);
+    expect(container.textContent).toContain("Reporte provisional");
+  });
+
   it("renderiza categorías cuando hay filas", () => {
     const resumen = {
       ...mockResumen,

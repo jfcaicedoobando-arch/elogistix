@@ -48,7 +48,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
         <Button
           type="button" size="sm" variant="outline"
           onClick={() => { setShowNew(true); setDraft(EMPTY); }}
-          disabled={showNew || busy}
+          disabled={showNew || editingId !== null || busy}
         >
           <Plus className="h-4 w-4 mr-1" /> Agregar
         </Button>
@@ -69,7 +69,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
             onCancelEdit={() => setEditingId(null)}
             onSave={() => updateMut.mutate({ conceptoId: row.id, input: draft })}
             onDelete={() => deleteMut.mutate(row.id)}
-            busy={busy}
+            busy={busy || showNew || (editingId !== null && editingId !== row.id)}
           />
         ))}
 

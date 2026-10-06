@@ -7,6 +7,8 @@
  * exclusión de gastos sin tipo de cambio válido.
  */
 
+import { baseNcProveedor } from "@/lib/financial/baseNcProveedor";
+
 export type CxpRow = {
   categoria_presupuesto_id: string | null;
   /** BL-07: base SIN IVA; los presupuestos se capturan como gasto neto. */
@@ -16,17 +18,14 @@ export type CxpRow = {
   tipo_cambio_usd: number | string | null;
 };
 
-/** BL-07: NC de proveedor aplicada (monto + TC heredado de la factura padre). */
+/** Crédito total a deuda y base neta son magnitudes distintas. */
 export type NcCxPRow = {
+  subtotal: number | string | null;
   categoria_presupuesto_id: string | null;
   monto: number | string;
   moneda: string | null;
   tipo_cambio_usd: number | string | null;
-  /**
-   * N9: true cuando la paridad viene de la NC misma (por lo tanto corresponde a
-   * SU moneda). Si es false/omitido, la paridad se heredó de la factura padre y
-   * sólo es válida para USD.
-   */
+  /** true si el mapper verificó que la paridad corresponde a la divisa de la NC. */
   paridad_propia?: boolean;
 };
 
@@ -36,14 +35,7 @@ export interface GastosAgregados {
   sinTc: number;
 }
 
-/**
- * N9 (backlog v4): la única paridad que guarda CxP es `tipo_cambio_usd`
- * (MXN por 1 USD). Aplicarla a EUR valuaba el gasto con la moneda equivocada,
- * así que sólo se acepta cuando la moneda del documento es USD — o cuando la
- * paridad fue capturada en el documento mismo (`paridadPropia`). Cualquier otra
- * divisa sin paridad válida se excluye del real y se reporta en
- * `gastos_sin_tc_count`, igual que un gasto sin T/C.
- */
+/** Divisas extranjeras requieren una paridad válida para su propia moneda. */
 function convertirAMxn(
   monto: number,
   moneda: string | null,
@@ -92,8 +84,10 @@ export function restarNotasCreditoCxP(
   let sinTc = 0;
   for (const nc of rows) {
     if (!nc.categoria_presupuesto_id) continue;
+    const subtotal = baseNcProveedor(nc.subtotal);
+    if (subtotal === null) continue;
     const mxn = convertirAMxn(
-      Number(nc.monto), nc.moneda, nc.tipo_cambio_usd, nc.paridad_propia === true,
+      subtotal, nc.moneda, nc.tipo_cambio_usd, nc.paridad_propia === true,
     );
     if (mxn === null) {
       sinTc += 1;

@@ -12,11 +12,12 @@
  *  - si algún renglón no tiene tratamiento representable ⇒ NO se genera nada y
  *    se devuelve el motivo para mostrarlo al usuario.
  */
+import { ajustarSaldoFiscalNC } from "./ajustarSaldoFiscalNC";
+import { impuestosLineaNC } from "./impuestosNotaCredito";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import {
   claveTratamientoNC,
-  factorTotalNC,
   lineaIndeterminadaNC,
 } from "@/features/facturacion/utils/impuestosNotaCredito";
 import { calcularTotalesNC } from "@/features/facturacion/utils/notaCreditoTotales";
@@ -44,24 +45,22 @@ export const MOTIVO_IMPORTES_CERO =
 function prorratear(saldo: number, lineas: ConceptoNotaCredito[]): ConceptoNotaCredito[] {
   const totalOriginal = calcularTotalesNC(lineas).total;
   const factor = saldo / totalOriginal;
-  const escalados = lineas.map((c) => ({
-    ...c,
-    precio_unitario: roundMoney(Number(c.precio_unitario ?? 0) * factor),
+  // La NC acredita importes, no unidades entregadas. Cantidad 1 evita perder
+  // centavos al volver a redondear un precio dividido entre 100 o 1 000 000.
+  return lineas.map((c) => ({ ...c, cantidad: 1,
+    precio_unitario: roundMoney(impuestosLineaNC(c).base * factor),
   }));
-  // Ajuste de centavos en el último renglón para que el total cuadre exacto.
-  const ultimo = escalados.length - 1;
-  const diferencia = roundMoney(saldo - calcularTotalesNC(escalados).total);
-  const cantidad = Number(escalados[ultimo].cantidad ?? 1) || 1;
-  const factorLinea = factorTotalNC(escalados[ultimo]);
-  if (diferencia !== 0 && factorLinea > 0) {
-    escalados[ultimo] = {
-      ...escalados[ultimo],
-      precio_unitario: roundMoney(
-        Number(escalados[ultimo].precio_unitario ?? 0) + diferencia / (cantidad * factorLinea),
-      ),
-    };
+}
+
+export const MOTIVO_CUADRE_FISCAL =
+  "No se puede representar el saldo exacto con estos impuestos y redondeos. Captura los conceptos manualmente; no se aplicó el atajo.";
+
+function resultadoExacto(saldo: number, conceptos: ConceptoNotaCredito[]): ResultadoSaldoCompleto {
+  const ajustados = ajustarSaldoFiscalNC(saldo, conceptos);
+  if (!ajustados || calcularTotalesNC(ajustados).total !== roundMoney(saldo)) {
+    return { ok: false, motivo: MOTIVO_CUADRE_FISCAL };
   }
-  return escalados;
+  return { ok: true, conceptos: ajustados };
 }
 
 export function conceptosPorSaldoCompleto(
@@ -73,13 +72,13 @@ export function conceptosPorSaldoCompleto(
   const lineas = sugeridos.filter((c) => Number(c.precio_unitario ?? 0) !== 0);
   if (lineas.length === 0) {
     if (lineaIndeterminadaNC(base)) return { ok: false, motivo: MOTIVO_TRATAMIENTO_INDEFINIDO };
-    return { ok: true, conceptos: [conceptoPorSaldo(saldo, base)] };
+    return resultadoExacto(saldo, [conceptoPorSaldo(saldo, base)]);
   }
   if (lineas.some(lineaIndeterminadaNC)) {
     return { ok: false, motivo: MOTIVO_TRATAMIENTO_INDEFINIDO };
   }
   const claves = new Set(lineas.map(claveTratamientoNC));
-  if (claves.size === 1) return { ok: true, conceptos: [conceptoPorSaldo(saldo, lineas[0])] };
+  if (claves.size === 1) return resultadoExacto(saldo, [conceptoPorSaldo(saldo, lineas[0])]);
   if (calcularTotalesNC(lineas).total <= 0) return { ok: false, motivo: MOTIVO_IMPORTES_CERO };
-  return { ok: true, conceptos: prorratear(saldo, lineas) };
+  return resultadoExacto(saldo, prorratear(saldo, lineas));
 }

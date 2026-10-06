@@ -17,6 +17,9 @@ describe("fetchProyeccionMes", () => {
     mock.tableCalls.length = 0;
     mock.rpcCalls.length = 0;
     mock.resetResults();
+    venta.filas = [];
+    mock.setTableResult("conceptos_factura", { data: [], error: null });
+    mock.setTableResult("factura_embarques", { data: [], error: null });
     mock.rpcCalls.length = 0;
   });
 
@@ -27,7 +30,7 @@ describe("fetchProyeccionMes", () => {
     expect(r).toEqual([]);
   });
 
-  it("marca tiene_factura_pdf=true cuando el expediente tiene factura con PDF", async () => {
+  it("conserva facturado100 y pendiente50 desde una factura emitida sin PDF", async () => {
     mock.setTableResult("embarques", {
       data: [
         { id: "e1", expediente: "EXP-1", cliente_nombre: "ACME", operador: "Op",
@@ -36,20 +39,39 @@ describe("fetchProyeccionMes", () => {
       error: null,
     });
     venta.filas = [{ embarque_id: "e1", total: 100, moneda: "USD" }];
+    mock.setTableResult("conceptos_venta", {
+      data: [
+        { id: "cv1", embarque_id: "e1", total: 100, moneda: "USD", proforma_id: "p1" },
+        { id: "cv2", embarque_id: "e1", total: 50, moneda: "USD", proforma_id: null },
+      ], error: null,
+    });
     mock.setTableResult("conceptos_costo", {
       data: [{ embarque_id: "e1", monto: 50, moneda: "USD" }],
       error: null,
     });
     mock.setTableResult("facturas", {
-      data: [{ expediente: "EXP-1", factura_pdf_url: "f.pdf" }],
+      data: [{ id: "f1", embarque_id: "e1", proforma_id: "p1", expediente: "EXP-1",
+        factura_pdf_url: null, moneda: "USD", subtotal: 100, tipo_cambio: 20,
+        conceptos_factura: [], factura_embarques: [],
+      }],
       error: null,
     });
     const [row] = await fetchProyeccionMes({ organizationId: "org-1", year: 2026, month: 5 });
     expect(row.tiene_factura_pdf).toBe(true);
     expect(row.tiene_proforma).toBe(true);
-    expect(row.venta_usd).toBeCloseTo(100, 2);
+    expect(row.venta_usd).toBeCloseTo(150, 2);
+    expect(row.venta_facturada_usd).toBeCloseTo(100, 2);
+    expect(row.venta_pendiente_usd).toBeCloseTo(50, 2);
     expect(row.costo_usd).toBeCloseTo(50, 2);
-    expect(row.venta_mxn).toBeCloseTo(2000, 2);
+    expect(row.venta_mxn).toBeCloseTo(3000, 2);
+    expect(row.venta_facturada_mxn).toBeCloseTo(2000, 2);
+    expect(row.venta_pendiente_mxn).toBeCloseTo(1000, 2);
+    const links = mock.tableCalls.find((call) => call.table === "factura_embarques")!;
+    expect(links.opArgs.filter((_, i) => links.ops[i] === "eq")).toContainEqual(["activa", true]);
+    const invoices = mock.tableCalls.find((call) => call.table === "facturas")!;
+    expect(invoices.opArgs.filter((_, i) => invoices.ops[i] === "in"))
+      .toContainEqual(["estado", ["Emitida", "Pagada", "Parcialmente pagada", "Vencida"]]);
+    expect(invoices.opArgs).not.toContainEqual(["factura_pdf_url", "is", null]);
   });
 
   it("agrupa conceptos por embarque correctamente", async () => {

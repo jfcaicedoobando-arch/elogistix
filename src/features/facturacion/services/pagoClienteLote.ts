@@ -16,6 +16,7 @@ import {
   errorFechaLote,
   errorMonedaCuenta,
   errorRenglonExcedeSaldo,
+  errorRenglonPue,
   errorTcLote,
 } from "./cobroLoteValidaciones";
 
@@ -30,6 +31,7 @@ export interface FacturaCobroCandidata {
   /** Desempata el FIFO cuando dos facturas vencen el mismo día. */
   fecha_emision?: string | null;
   saldo: number;
+  metodo_pago?: string | null;
   /** PPD ya timbrada: requiere REP por cada pago aplicado. */
   es_ppd_timbrada?: boolean;
 }
@@ -112,6 +114,7 @@ export function validarCobroLote(
     (opts.formaPago !== undefined && !formaPagoCobroValida(opts.formaPago) ? ERROR_FORMA_COBRO : null) ??
     errorFacturaDuplicada(facturas, conMonto) ??
     errorRenglonExcedeSaldo(facturas, conMonto) ??
+    errorRenglonPue(facturas, conMonto) ??
     errorCuadre(total, totalRepartido) ??
     errorMonedaCuenta(opts) ??
     errorTcLote(opts.moneda, opts.tcAplicable);

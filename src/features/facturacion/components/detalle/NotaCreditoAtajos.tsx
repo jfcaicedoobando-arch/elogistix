@@ -68,6 +68,7 @@ export function NotaCreditoAtajos(props: Props) {
       </div>
 
       <p className="text-label text-muted-foreground">
+        El saldo completo acredita importes con cantidad 1 por concepto y conserva sus impuestos.
         El porcentaje usa los precios base de la selección. Repetirlo no acumula descuentos.
         Si editas un precio manualmente, ese será su nueva base.
       </p>

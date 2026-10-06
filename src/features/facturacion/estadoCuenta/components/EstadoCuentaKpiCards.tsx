@@ -2,77 +2,75 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { AlertCircle, CircleDollarSign, PiggyBank } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { pluralizar } from "@/lib/format/pluralizar";
-import type { KpisEstadoCuenta } from "../services/estadoCuentaAggregates";
+import type { KpiPorMoneda, KpisEstadoCuenta } from "../services/estadoCuentaAggregates";
+import type { Moneda } from "../services/estadoCuentaTypes";
 
 interface Props {
   kpis: KpisEstadoCuenta;
   loading?: boolean;
 }
 
-/**
- * Importe principal + secundario cuando hay saldo en las dos monedas.
- * `KpiCard` no respeta saltos de línea, así que el segundo importe se manda
- * al sublabel en vez de concatenarlo (antes se truncaba en 1366 px).
- */
-function dual(mxn: number, usd: number): { value: string; extra: string | null } {
-  if (mxn > 0 && usd > 0) {
-    return { value: formatCurrency(mxn, "MXN"), extra: `+ ${formatCurrency(usd, "USD")}` };
-  }
-  if (usd > 0) return { value: formatCurrency(usd, "USD"), extra: null };
-  return { value: formatCurrency(mxn, "MXN"), extra: null };
+const MONEDAS: Record<keyof KpiPorMoneda, Moneda> = { mxn: "MXN", usd: "USD", eur: "EUR" };
+
+/** Un importe visible por moneda, sin sumar nominales ni truncar una tercera divisa. */
+function importes(montos: KpiPorMoneda) {
+  const valores = (Object.keys(MONEDAS) as (keyof KpiPorMoneda)[])
+    .filter((key) => montos[key] > 0)
+    .map((key) => formatCurrency(montos[key], MONEDAS[key]));
+  return { valores: valores.length ? valores : [formatCurrency(0, "MXN")], tieneSaldo: valores.length > 0 };
 }
 
-function sublabel(extra: string | null, fallback: string): string {
-  return extra ? `${extra} · ${fallback}` : fallback;
+function ImportesAdicionales({ valores, loading }: { valores: string[]; loading?: boolean }) {
+  if (loading) return null;
+  return valores.slice(1).map((valor) => (
+    <p key={valor} className="text-body font-semibold tabular-nums break-words">+ {valor}</p>
+  ));
 }
 
 export function EstadoCuentaKpiCards({ kpis, loading }: Props) {
-  const adeudado = dual(kpis.adeudado.mxn, kpis.adeudado.usd);
-  const vencido = dual(kpis.vencido.mxn, kpis.vencido.usd);
-  const aFavor = dual(kpis.aFavor.mxn, kpis.aFavor.usd);
-
-  const adeudadoTotal = kpis.adeudado.mxn + kpis.adeudado.usd;
-  const vencidoTotal = kpis.vencido.mxn + kpis.vencido.usd;
-  const aFavorTotal = kpis.aFavor.mxn + kpis.aFavor.usd;
+  const adeudado = importes(kpis.adeudado);
+  const vencido = importes(kpis.vencido);
+  const aFavor = importes(kpis.aFavor);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <KpiCard
         label="Saldo total adeudado"
-        value={adeudado.value}
-        valueTooltip={`${formatCurrency(kpis.adeudado.mxn, "MXN")} · ${formatCurrency(kpis.adeudado.usd, "USD")}`}
-        sublabel={sublabel(
-          adeudado.extra,
-          kpis.facturasAdeudadas > 0
-            ? `${pluralizar(kpis.facturasAdeudadas, "factura")} con saldo`
-            : "Sin adeudos",
-        )}
+        value={adeudado.valores[0]}
+        valueTooltip={adeudado.valores.join(" · ")}
+        sublabel={kpis.facturasAdeudadas > 0
+          ? `${pluralizar(kpis.facturasAdeudadas, "factura")} con saldo`
+          : "Sin adeudos"}
         icon={CircleDollarSign}
-        variant={adeudadoTotal > 0 ? "warning" : "default"}
+        variant={adeudado.tieneSaldo ? "warning" : "default"}
         loading={loading}
-      />
+      >
+        <ImportesAdicionales valores={adeudado.valores} loading={loading} />
+      </KpiCard>
       <KpiCard
         label="Saldo vencido"
-        value={vencido.value}
-        valueTooltip={`${formatCurrency(kpis.vencido.mxn, "MXN")} · ${formatCurrency(kpis.vencido.usd, "USD")}`}
-        sublabel={sublabel(
-          vencido.extra,
-          kpis.facturasVencidas > 0
-            ? `${pluralizar(kpis.facturasVencidas, "factura")} ${kpis.facturasVencidas === 1 ? "vencida" : "vencidas"}`
-            : "Al corriente",
-        )}
+        value={vencido.valores[0]}
+        valueTooltip={vencido.valores.join(" · ")}
+        sublabel={kpis.facturasVencidas > 0
+          ? `${pluralizar(kpis.facturasVencidas, "factura")} ${kpis.facturasVencidas === 1 ? "vencida" : "vencidas"}`
+          : "Al corriente"}
         icon={AlertCircle}
-        variant={vencidoTotal > 0 ? "destructive" : "success"}
+        variant={vencido.tieneSaldo ? "destructive" : "success"}
         loading={loading}
-      />
+      >
+        <ImportesAdicionales valores={vencido.valores} loading={loading} />
+      </KpiCard>
       <KpiCard
         label="Saldo a favor / anticipos"
-        value={aFavor.value}
-        sublabel={sublabel(aFavor.extra, aFavorTotal > 0 ? "Disponible para aplicar" : "Sin anticipos")}
+        value={aFavor.valores[0]}
+        valueTooltip={aFavor.valores.join(" · ")}
+        sublabel={aFavor.tieneSaldo ? "Disponible para aplicar" : "Sin anticipos"}
         icon={PiggyBank}
-        variant={aFavorTotal > 0 ? "success" : "default"}
+        variant={aFavor.tieneSaldo ? "success" : "default"}
         loading={loading}
-      />
+      >
+        <ImportesAdicionales valores={aFavor.valores} loading={loading} />
+      </KpiCard>
     </div>
   );
 }

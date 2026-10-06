@@ -38,11 +38,11 @@ describe("buildProyeccionCsvFilename", () => {
 });
 
 describe("PROYECCION_CSV_HEADERS", () => {
-  it("expone las 13 columnas esperadas", () => {
-    expect(PROYECCION_CSV_HEADERS).toHaveLength(13);
+  it("expone las 17 columnas esperadas", () => {
+    expect(PROYECCION_CSV_HEADERS).toHaveLength(17);
     expect(PROYECCION_CSV_HEADERS.map((h) => h.key)).toEqual([
       "expediente", "cliente", "operador", "eta", "contenedores",
-      "venta_usd", "venta_mxn", "costo_usd", "costo_mxn",
+      "venta_usd", "venta_mxn", "facturada_mxn", "pendiente_mxn", "facturada_usd", "pendiente_usd", "costo_usd", "costo_mxn",
       "profit_usd", "profit_mxn", "margen", "estado",
     ]);
   });

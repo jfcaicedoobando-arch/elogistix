@@ -107,6 +107,8 @@ if command -v pg_dump >/dev/null 2>&1; then
 fi
 
 
+# Do not inherit a libpq route that overrides the isolated local host.
+unset PGHOSTADDR PGSERVICE PGSERVICEFILE
 export PGHOST=127.0.0.1 PGPORT="$PORT" PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
 export PGSSLMODE=disable
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)

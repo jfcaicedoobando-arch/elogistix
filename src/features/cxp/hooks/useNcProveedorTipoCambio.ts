@@ -50,7 +50,8 @@ function resolverDof(
 /** El mismo TC mostrado se envía al guardar: sólo el campo vacío consulta DOF. */
 export function useNcProveedorTipoCambio(opciones: Opciones): TipoCambioNcProveedor {
   const { open, fecha, moneda, monedaFactura, tipoCambio } = opciones;
-  const extranjera = monedaExtranjeraDelPar(moneda, monedaFactura);
+  const extranjera = moneda === monedaFactura && moneda !== "MXN"
+    ? moneda : monedaExtranjeraDelPar(moneda, monedaFactura);
   const manual = tipoCambio.trim() !== "";
   const dof = useQuery({
     queryKey: queryKeys.exchangeRates.dofFecha(fecha),
@@ -58,7 +59,7 @@ export function useNcProveedorTipoCambio(opciones: Opciones): TipoCambioNcProvee
     enabled: open && !!fecha && extranjera !== null && !manual,
     staleTime: 30_000,
   });
-  if (moneda === monedaFactura) return { ...sinCambio, disponible: true, aviso: null };
+  if (moneda === "MXN" && monedaFactura === "MXN") return { ...sinCambio, disponible: true, aviso: null };
   if (!extranjera) return { ...sinCambio, disponible: false, aviso: null };
   return manual ? resolverManual(tipoCambio) : resolverDof(dof, extranjera);
 }

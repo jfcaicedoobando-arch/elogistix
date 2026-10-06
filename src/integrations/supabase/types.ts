@@ -8370,7 +8370,9 @@ export type Database = {
           motivo: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id: string
           proveedor_factura_id: string
+          subtotal: number | null
           tipo_cambio: number | null
+          tipo_cambio_mxn: number | null
           updated_at: string
           uuid_estatus_sat: string | null
           uuid_fiscal: string | null
@@ -8395,7 +8397,9 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id?: string
           proveedor_factura_id: string
+          subtotal?: number | null
           tipo_cambio?: number | null
+          tipo_cambio_mxn?: number | null
           updated_at?: string
           uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
@@ -8420,7 +8424,9 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id?: string
           proveedor_factura_id?: string
+          subtotal?: number | null
           tipo_cambio?: number | null
+          tipo_cambio_mxn?: number | null
           updated_at?: string
           uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
@@ -10852,6 +10858,10 @@ export type Database = {
         }
         Returns: Json
       }
+      crear_factura_manual_idempotente: {
+        Args: { p_conceptos: Json; p_factura: Json; p_request_id: string }
+        Returns: string
+      }
       crear_factura_proveedor_vinculada_rpc: {
         Args: { p_factura: Json; p_lineas: Json }
         Returns: {
@@ -11372,6 +11382,7 @@ export type Database = {
           p_monto: number
           p_referencia?: string
           p_request_id?: string
+          p_tipo_cambio?: number
         }
         Returns: Json
       }

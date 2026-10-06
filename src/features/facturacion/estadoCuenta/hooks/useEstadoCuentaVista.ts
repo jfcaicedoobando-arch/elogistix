@@ -16,6 +16,8 @@ import {
 } from "../services/estadoCuentaAging";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
+import type { Moneda } from "../services/estadoCuentaTypes";
+
 const PAGINA = 25;
 
 function coincideBusqueda(f: FacturaEstadoCuenta, q: string): boolean {
@@ -30,7 +32,7 @@ function coincideBusqueda(f: FacturaEstadoCuenta, q: string): boolean {
 export function useEstadoCuentaVista(clienteIds: string[], defaultSoloConSaldo: boolean) {
   const { desde, hasta, presetActivo, aplicarPreset } = useEstadoCuentaDateRange("30d");
   const [soloConSaldo, setSoloConSaldo] = useState(defaultSoloConSaldo);
-  const [moneda, setMoneda] = useState<"MXN" | "USD" | "todas">("todas");
+  const [moneda, setMoneda] = useState<Moneda | "todas">("todas");
   const [busqueda, setBusqueda] = useState("");
   const [bucket, setBucket] = useState<BucketAging | null>(null);
   const [sort, setSort] = useState<SortEstadoCuenta>({ key: "fecha", dir: "desc" });

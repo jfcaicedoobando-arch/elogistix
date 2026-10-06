@@ -16,6 +16,7 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
 }
 
 export interface ResumenDevengadoMes {
+  notas_proveedor_sin_base_count?: number;
   mes: number;
   ingresos_mxn: number;
   costos_mxn: number;
@@ -47,7 +48,9 @@ export async function fetchEstadoResultadosDevengadoAnual(p: {
       pfacts: datos.pfacts.filter((pf) => pf.fecha_emision.startsWith(periodo)),
       pncs: datos.pncs.filter((nc) => nc.fecha.startsWith(periodo)),
     });
-    filas.push({ mes, ingresos_mxn: estado.totalIngresos.total, costos_mxn: estado.totalCostos.total });
+    filas.push({ mes, ingresos_mxn: estado.totalIngresos.total, costos_mxn: estado.totalCostos.total,
+      ...(estado.notas_proveedor_sin_base?.length ? { notas_proveedor_sin_base_count: estado.notas_proveedor_sin_base.length } : {}),
+    });
   }
   return filas;
 }

@@ -4,6 +4,10 @@
  */
 import { Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { PagoProgramadoTipoCambio } from "./PagoProgramadoTipoCambio";
+import { esPagoEfectivo } from "@/features/tesoreria/domain/conciliacionPago";
+import { erroresPagoProgramado } from "@/features/tesoreria/domain/pagoProgramadoValidacion";
+import { todayLocalISO } from "@/lib/date/today";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -21,6 +25,7 @@ export interface FormPago {
   monto: number;
   metodoPago: string;
   referencia: string;
+  tipoCambio?: number | null;
 }
 
 interface Props {
@@ -38,8 +43,10 @@ const FORM_ID = "form-ejecutar-pago";
 export function EjecutarPagoDialog({
   facturaPago, onClose, cuentasCompatibles, form, setField, onEjecutar, isPending,
 }: Props) {
-  const puedeEjecutar =
-    !!facturaPago && !!form.cuentaBancariaId && !!form.fecha && form.monto > 0;
+  const efectivo = esPagoEfectivo(form.metodoPago);
+  const hoy = todayLocalISO();
+  const errores = erroresPagoProgramado(form, facturaPago ?? { moneda: "MXN" }, hoy);
+  const puedeEjecutar = !!facturaPago && Object.keys(errores).length === 0;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,7 +79,7 @@ export function EjecutarPagoDialog({
       }
     >
       <p className="sm:col-span-2 text-body-sm text-muted-foreground">Registra un pago ya realizado y aplícalo a la factura. El ERP no envía dinero al banco.</p>
-      <div className="sm:col-span-2">
+      {efectivo ? <p className="sm:col-span-2 text-body-sm text-muted-foreground">Efectivo: se registra sin cuenta ni movimiento bancario.</p> : <div className="sm:col-span-2">
         <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
         <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
           <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
@@ -85,10 +92,10 @@ export function EjecutarPagoDialog({
             }
           </SelectContent>
         </Select>
-      </div>
+      </div>}
       <div>
         <Label htmlFor="pago-fecha">Fecha *</Label>
-        <DatePickerMx id="pago-fecha" value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
+        <DatePickerMx id="pago-fecha" value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" min={facturaPago?.fecha_emision ?? undefined} max={hoy} errorText={errores.fecha} />
       </div>
 
       <div>
@@ -98,8 +105,10 @@ export function EjecutarPagoDialog({
           value={form.monto}
           onChange={(n: number) => setField("monto", n)}
           currency={facturaPago?.moneda}
-          aria-invalid={form.monto <= 0}
+          aria-invalid={!!errores.monto}
+          aria-describedby={errores.monto ? "pago-monto-error" : undefined}
         />
+        {errores.monto && <p id="pago-monto-error" role="alert" className="text-body-sm text-destructive">{errores.monto}</p>}
       </div>
       <div>
         <Label htmlFor="pago-metodo">Medio de pago</Label>
@@ -112,6 +121,8 @@ export function EjecutarPagoDialog({
           </SelectContent>
         </Select>
       </div>
+      <PagoProgramadoTipoCambio moneda={facturaPago?.moneda ?? "MXN"} monto={form.monto}
+        tipoCambio={form.tipoCambio} error={errores.tipoCambio} onChange={(v) => setField("tipoCambio", v)} />
       <div>
         <Label htmlFor="pago-referencia">Referencia</Label>
         <Input id="pago-referencia" value={form.referencia} onChange={(e) => setField("referencia", e.target.value)} />
