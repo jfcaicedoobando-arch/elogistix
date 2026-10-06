@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import type { EstadoGarantia, GarantiaContenedor } from "../types/garantia";
 import { mapApiError } from "./garantiasErrors";
@@ -31,13 +32,8 @@ export interface UpdateGarantiaInput {
  * El servidor valida rol, transición, congelamiento de monto y fechas requeridas.
  */
 export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> {
-  // SAFE-CAST: el tipo generado no incluye aún la RPC nueva; el contrato está fijado por la migración v13.301.88.
-  const rpc = supabase.rpc as unknown as (
-    name: "set_garantia_estado",
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
-
-  const { error } = await rpc("set_garantia_estado", {
+  type Args = Database["public"]["Functions"]["set_garantia_estado"]["Args"];
+  const args = {
     p_id: input.id,
     p_estado: input.estado ?? null,
     p_fecha_deposito: input.fecha_deposito ?? null,
@@ -45,7 +41,10 @@ export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> 
     p_monto: input.monto_deposito_usd ?? null,
     p_referencia: input.referencia_deposito ?? null,
     p_notas: input.notas ?? null,
-  });
+  } satisfies { [K in keyof Args]: Args[K] | null };
+  // SAFE-CAST: SQL accepts explicit NULL for optional parameters; generated Args omit nullability.
+  // Keep the existing NULL payload and invoke rpc on its client (the SDK reads this.rest).
+  const { error } = await supabase.rpc("set_garantia_estado", args as Args);
   if (error) throw mapApiError(error);
   await registrarBitacoraEmbarque({
     accion: "Actualizó garantía de contenedor",
@@ -60,12 +59,7 @@ export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> 
  * Devuelve el número de filas actualizadas.
  */
 export async function refrescarGarantiasDesdeTarifa(embarqueId: string): Promise<number> {
-  // SAFE-CAST: RPC nueva, aún no reflejada en tipos generados (migración 2026-07-21).
-  const rpc = supabase.rpc as unknown as (
-    name: "refrescar_garantia_desde_tarifa",
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message?: string } | null }>;
-  const { data, error } = await rpc("refrescar_garantia_desde_tarifa", { p_embarque_id: embarqueId });
+  const { data, error } = await supabase.rpc("refrescar_garantia_desde_tarifa", { p_embarque_id: embarqueId });
   if (error) throw mapApiError(error);
   const filasActualizadas = typeof data === "number" ? data : Number(data ?? 0);
   await registrarBitacoraEmbarque({
