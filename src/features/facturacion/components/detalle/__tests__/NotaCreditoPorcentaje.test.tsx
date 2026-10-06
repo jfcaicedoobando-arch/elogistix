@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { useNotaCreditoDraft } from "@/features/facturacion/hooks/useNotaCreditoDraft";
 import { NotaCreditoAtajos } from "../NotaCreditoAtajos";
@@ -54,25 +54,23 @@ function aplicar(porcentaje: string) {
   fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
 }
 
-function esperarImporte(label: string, importe: string) {
-  const fila = screen.getByText(label).parentElement;
-  expect(fila).not.toBeNull();
-  expect(within(fila!).getByText(importe)).toBeInTheDocument();
+function importe(label: string) {
+  return screen.getByText(label).nextElementSibling?.textContent;
 }
 
 describe("Auditoría 107 · preview del porcentaje de nota de crédito", () => {
   it("muestra 50.50 para 100 × 1 al 50.5%, sin acumular al repetir ni cambiar porcentaje", () => {
     render(<Vista />);
     aplicar("50.5");
-    esperarImporte("Subtotal", "MXN 50.50");
-    esperarImporte("Total de la nota", "MXN 50.50");
-    esperarImporte("Saldo después de la nota", "MXN 949.50");
+    expect(importe("Subtotal")).toBe("MXN 50.50");
+    expect(importe("Total de la nota")).toBe("MXN 50.50");
+    expect(importe("Saldo después de la nota")).toBe("MXN 949.50");
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
-    esperarImporte("Total de la nota", "MXN 50.50");
+    expect(importe("Total de la nota")).toBe("MXN 50.50");
     aplicar("100");
-    esperarImporte("Total de la nota", "MXN 100.00");
+    expect(importe("Total de la nota")).toBe("MXN 100.00");
     aplicar("50.5");
-    esperarImporte("Total de la nota", "MXN 50.50");
+    expect(importe("Total de la nota")).toBe("MXN 50.50");
   });
 
   it("mantiene deshabilitado 0% y permite volver a un porcentaje válido", () => {
@@ -80,9 +78,9 @@ describe("Auditoría 107 · preview del porcentaje de nota de crédito", () => {
     aplicar("50.5");
     aplicar("0");
     expect(screen.getByRole("button", { name: "Aplicar" })).toBeDisabled();
-    esperarImporte("Total de la nota", "MXN 50.50");
+    expect(importe("Total de la nota")).toBe("MXN 50.50");
     aplicar("100");
-    esperarImporte("Total de la nota", "MXN 100.00");
+    expect(importe("Total de la nota")).toBe("MXN 100.00");
   });
 
   it("conserva selección y tasa 8% al repetir un porcentaje fraccionario", () => {
@@ -90,11 +88,11 @@ describe("Auditoría 107 · preview del porcentaje de nota de crédito", () => {
     render(<Vista conceptos={[original, gravado]} />);
     fireEvent.click(screen.getByRole("checkbox", { name: "Acreditar Servicio sin IVA" }));
     aplicar("50.5");
-    esperarImporte("Subtotal", "MXN 50.50");
-    esperarImporte("IVA trasladado", "MXN 4.04");
-    esperarImporte("Total de la nota", "MXN 54.54");
+    expect(importe("Subtotal")).toBe("MXN 50.50");
+    expect(importe("IVA trasladado")).toBe("MXN 4.04");
+    expect(importe("Total de la nota")).toBe("MXN 54.54");
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
-    esperarImporte("Total de la nota", "MXN 54.54");
+    expect(importe("Total de la nota")).toBe("MXN 54.54");
     expect(screen.getByRole("checkbox", { name: "Acreditar Servicio sin IVA" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Acreditar Servicio frontera" })).toBeChecked();
   });
@@ -102,9 +100,9 @@ describe("Auditoría 107 · preview del porcentaje de nota de crédito", () => {
   it("usa la misma precisión con cantidad fraccionaria y en el empate de medio centavo", () => {
     render(<Vista conceptos={[{ ...original, cantidad: 0.5, precio_unitario: 0.1 }]} />);
     aplicar("70");
-    esperarImporte("Subtotal", "MXN 0.04");
-    esperarImporte("Total de la nota", "MXN 0.04");
+    expect(importe("Subtotal")).toBe("MXN 0.04");
+    expect(importe("Total de la nota")).toBe("MXN 0.04");
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
-    esperarImporte("Total de la nota", "MXN 0.04");
+    expect(importe("Total de la nota")).toBe("MXN 0.04");
   });
 });
