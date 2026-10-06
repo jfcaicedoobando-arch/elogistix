@@ -22,7 +22,8 @@ import { Receipt } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 import { Checkbox } from "@/components/ui/checkbox";
-import { NotasCreditoZipButton, ESTADOS_NC_CON_CFDI } from "./NotasCreditoZipButton";
+import { NotasCreditoZipButton } from "./NotasCreditoZipButton";
+import { ESTADOS_NC_CON_CFDI } from "./notasCreditoZip.constants";
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
   Aprobada: "bg-warning/10 text-warning border-warning/20",
