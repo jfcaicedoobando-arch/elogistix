@@ -53,7 +53,7 @@ export default function GraficoFlujoProyectado({ semanas, saldoDisponible = true
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="semana" tick={{ fontSize: 11 }} interval={tickInterval} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(Number(v))} />
-              <RTooltip content={<ChartTooltip formatValue={(v) => formatCurrency(Math.abs(v), "MXN")} />} />
+              <RTooltip content={<ChartTooltip formatValue={(v, serie) => formatCurrency(serie === "Salidas" ? Math.abs(v) : v, "MXN")} />} />
               <Legend itemSorter={(item) => ["Entradas", "Salidas", "Saldo"].findIndex((key) => key === item.dataKey)} wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="Entradas" fill="hsl(var(--kpi-success))" />
               <Bar dataKey="Salidas" fill="hsl(var(--destructive))" />

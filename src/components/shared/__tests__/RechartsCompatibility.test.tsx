@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuditoriaTendenciaChart } from "@/features/auditoria/components/AuditoriaTendenciaChart";
 import DesempenoOperadoresChart from "@/features/operaciones/components/DesempenoOperadoresChart";
 import { GraficaReporte } from "@/features/crm/components/reportes/GraficaReporte";
@@ -50,6 +50,14 @@ const historial = [
 ];
 
 describe("Compatibilidad con Recharts 3 real", () => {
+  afterEach(async () => {
+    cleanup();
+    // RTK agrupa notificaciones en RAF con un timeout de respaldo. Dejar que
+    // termine el frame tras desmontar cancela ese timeout antes de que el
+    // teardown global cierre jsdom y elimine cancelAnimationFrame.
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  });
+
   it("mantiene la cuadrícula y ambas escalas en la tendencia de auditoría", async () => {
     const { container } = render(<AuditoriaTendenciaChart />);
     await waitFor(() => {
