@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { CHART } from "@/lib/chartTokens";
 import ReportesTopChart from "../ReportesTopChart";
 
-const captured = vi.hoisted(() => ({ domain: undefined as undefined | ((limits: [number, number]) => number[]), colors: [] as string[], zero: undefined as number | undefined }));
+const captured = vi.hoisted(() => ({ domain: undefined as undefined | ((limits: readonly [number, number]) => readonly [number, number]), colors: [] as string[], zero: undefined as number | undefined }));
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: PropsWithChildren) => <div>{children}</div>,
   BarChart: ({ children }: PropsWithChildren) => <div>{children}</div>,
@@ -26,7 +26,9 @@ describe("Rentabilidad - categorías con pérdidas", () => {
     { profits: [200, 200], limits: [200, 200], expected: [0, 200] },
   ])("incluye cero y todos los valores de $profits", ({ profits, limits, expected }) => {
     render(<ReportesTopChart data={profits.map((profit, i) => ({ name: `Cliente ${i}`, profit }))} isLoading={false} />);
-    expect(captured.domain?.(limits as [number, number])).toEqual(expected);
+    const immutableLimits: readonly [number, number] = Object.freeze([limits[0], limits[1]]);
+    expect(captured.domain?.(immutableLimits)).toEqual(expected);
+    expect(immutableLimits).toEqual(limits);
     expect(captured.zero).toBe(0);
     expect(captured.colors).toHaveLength(profits.length);
     profits.forEach((profit, i) => { if (profit < 0) expect(captured.colors[i]).toBe(CHART.destructive); });

@@ -28,7 +28,7 @@ export default function AdminDashboardActivityChart({ data }: Props) {
           <XAxis dataKey="nombre" tick={CHART_TICK} />
           <YAxis tick={CHART_TICK} allowDecimals={false} />
           <RTooltip content={<ChartTooltip />} />
-          <Legend wrapperStyle={CHART_LEGEND_STYLE} />
+          <Legend itemSorter={(item) => ["embarques", "cotizaciones"].findIndex((key) => key === item.dataKey)} wrapperStyle={CHART_LEGEND_STYLE} />
           <Bar dataKey="embarques" name="Embarques" fill="hsl(var(--primary))" radius={CHART_BAR_RADIUS} />
           <Bar dataKey="cotizaciones" name="Cotizaciones" fill="hsl(var(--info))" radius={CHART_BAR_RADIUS} />
         </BarChart>

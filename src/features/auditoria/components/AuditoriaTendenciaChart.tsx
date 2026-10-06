@@ -43,7 +43,7 @@ export function AuditoriaTendenciaChart() {
               }))}
               margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid yAxisId="left" strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="fecha" className="text-label" />
               <YAxis yAxisId="left" className="text-label" domain={[0, 100]} />
               <YAxis

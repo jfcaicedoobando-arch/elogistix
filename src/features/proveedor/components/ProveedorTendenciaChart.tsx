@@ -56,7 +56,7 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
                 <XAxis dataKey="etiqueta" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatCompactNumber(v)} />
                 <Tooltip content={<ChartTooltip formatValue={(v) => formatCurrency(v, "MXN")} />} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend itemSorter={(item) => ["comprometido", "facturado", "pagado"].findIndex((key) => key === item.dataKey)} wrapperStyle={{ fontSize: 12 }} />
                 <Bar name="Comprometido" dataKey="comprometido" fill={CHART.neutral} radius={[3, 3, 0, 0]} />
                 <Bar name="Facturado" dataKey="facturado" fill={CHART.primary} radius={[3, 3, 0, 0]} />
                 <Bar name="Pagado" dataKey="pagado" fill={CHART.success} radius={[3, 3, 0, 0]} />
