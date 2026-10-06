@@ -33,6 +33,18 @@ beforeEach(() => {
 });
 
 describe("Compras reportes — presentación", () => {
+  it("identifica importes brutos y revela el alcance de aprobación y el fallback histórico", () => {
+    render(<ComprasReportes />);
+    expect(screen.getByText(/Importe facturado bruto, sin IVA y antes de notas de crédito/)).toBeInTheDocument();
+    expect(screen.getByText(/de cualquier estado de aprobación/)).toHaveTextContent("no canceladas ni eliminadas");
+    expect(screen.getByText(/de cualquier estado de aprobación/)).toHaveTextContent("sin subtotal se usa el total registrado, que puede incluir IVA");
+    for (const moneda of ["MXN", "USD", "EUR"]) {
+      expect(screen.getByText(`Facturado bruto ${moneda}`)).toBeInTheDocument();
+    }
+    expect(screen.getAllByText("Sin IVA · antes de notas de crédito")).toHaveLength(3);
+    expect(screen.getByText("Evolución mensual del importe facturado bruto")).toBeInTheDocument();
+  });
+
   it("respeta las monedas del tooltip y usa colores distintos por serie", () => {
     const { container } = render(<ComprasReportes />);
     const tooltip = screen.getByText("2026-09").parentElement;
