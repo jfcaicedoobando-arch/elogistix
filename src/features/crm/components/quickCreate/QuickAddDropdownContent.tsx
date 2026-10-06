@@ -2,7 +2,7 @@
  * Contenido del DropdownMenu de "+ Nuevo" del CRM.
  * Extraído de `QuickAddMenu` para mantenerlo compacto.
  */
-import { Users, Target, Activity, Upload } from "lucide-react";
+import { Building2, UserRound, Target, Activity, Upload } from "lucide-react";
 import {
   DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -12,7 +12,8 @@ interface Props {
   canCrearOportunidad: boolean;
   canCrearActividad: boolean;
   canGestionarLeadsEnLote: boolean;
-  onLead: () => void;
+  onEmpresa: () => void;
+  onContacto: () => void;
   onOportunidad: () => void;
   onActividad: () => void;
   onImportar: () => void;
@@ -20,14 +21,19 @@ interface Props {
 
 export default function QuickAddDropdownContent({
   canCrearLead, canCrearOportunidad, canCrearActividad, canGestionarLeadsEnLote,
-  onLead, onOportunidad, onActividad, onImportar,
+  onEmpresa, onContacto, onOportunidad, onActividad, onImportar,
 }: Props) {
   return (
     <DropdownMenuContent align="end" className="w-56">
       {canCrearLead && (
-        <DropdownMenuItem onSelect={onLead}>
-          <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
-        </DropdownMenuItem>
+        <>
+          <DropdownMenuItem onSelect={onEmpresa}>
+            <Building2 className="h-4 w-4 mr-2" /> Nueva empresa
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={onContacto}>
+            <UserRound className="h-4 w-4 mr-2" /> Nuevo contacto
+          </DropdownMenuItem>
+        </>
       )}
       {canCrearOportunidad && (
         <DropdownMenuItem onSelect={onOportunidad}>
