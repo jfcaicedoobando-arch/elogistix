@@ -100,14 +100,16 @@ export async function eliminarProforma(params: EliminarProformaParams): Promise<
     p_proforma_id: params.proformaId,
   });
   if (error) throw error;
-  const payload = (data ?? {}) as { numero?: string | null; eliminada?: boolean };
-  if (payload.eliminada === false) return;
+  const payload = (data ?? {}) as {
+    numero?: string | null; eliminada?: boolean; cancelada?: boolean;
+  };
+  if (payload.eliminada !== true && payload.cancelada !== true) return;
 
   // B-3: NO actualizar embarques.tiene_proforma desde el cliente.
   // El trigger DB `trg_sync_embarque_tiene_proforma` lo maneja automáticamente.
   await registrarActividad({
     modulo: "facturacion",
-    accion: "Eliminó proforma",
+    accion: payload.cancelada ? "Canceló proforma" : "Eliminó proforma",
     entidadId: params.proformaId,
     entidadNombre: payload.numero ?? null,
     detalles: { embarque_id: params.embarqueId },

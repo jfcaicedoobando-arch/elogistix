@@ -18,14 +18,14 @@ export function DialogEliminarProforma({
     <ConfirmActionDialog
       open={!!proformaAEliminar}
       onOpenChange={(o) => { if (!o) onCancel(); }}
-      title="Eliminar proforma"
+      title="Cancelar proforma"
       description={
         <>
-          ¿Estás seguro de eliminar la proforma <strong>{proformaAEliminar?.numero}</strong>?
-          Los conceptos volverán a estado Pendiente.
+          ¿Cancelar la proforma <strong>{proformaAEliminar?.numero}</strong>? Quedará en el
+          historial como Cancelada y sus conceptos volverán a Pendiente para hacer una nueva.
         </>
       }
-      confirmLabel="Eliminar"
+      confirmLabel="Cancelar proforma"
       variant="destructive"
       isPending={isPending}
       onConfirm={onConfirm}
