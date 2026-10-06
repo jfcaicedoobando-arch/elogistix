@@ -16,7 +16,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchCostosConFactura } from "@/features/embarques/services/costosConFactura";
-import { convertirMonto, type TcPivote } from "@/features/cxp/utils/vinculoMoneda";
+import { monedasVinculoCompatibles, convertirMonto, type TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 import type { ConceptoSugeridoEntrante } from "@/features/cxp/services/facturasEntrantesConceptos";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -46,6 +46,8 @@ export interface HerenciaSugerencias {
   descartados: ConceptoSugeridoEntrante[];
   /** Sugerencias en otra moneda que no se pudieron convertir por falta de T/C. */
   sinTipoCambio: ConceptoSugeridoEntrante[];
+  /** Cruces no admitidos por el servidor, aunque exista T/C. */
+  monedaNoSoportada: ConceptoSugeridoEntrante[];
   /**
    * v13.823.339 (bug 10) — `true` si no se pudo consultar qué costos ya
    * tienen factura (RLS/red): falla cerrado, no se pre-marca nada mientras
@@ -58,31 +60,34 @@ export interface HerenciaSugerencias {
   reaplicar: () => void;
 }
 
-/** `true` si alguna sugerencia está en una moneda distinta a la de la factura. */
+/** `true` si algún cruce admitido necesita T/C; un cruce no soportado no espera DOF. */
 export function requiereConversion(
   lista: readonly ConceptoSugeridoEntrante[],
   facturaMoneda: string,
 ): boolean {
-  return lista.some((s) => s.moneda !== facturaMoneda);
+  return lista.some((s) => monedasVinculoCompatibles(s.moneda, facturaMoneda) &&
+    s.moneda.trim().toUpperCase() !== facturaMoneda.trim().toUpperCase());
 }
 
 /**
  * Separa las sugerencias convertibles a la moneda de la factura de las que no
- * lo son por falta de T/C. Función pura.
+ * lo son por falta de T/C o por un cruce no admitido. Función pura.
  */
 export function dividirPorTipoCambio(
   lista: readonly ConceptoSugeridoEntrante[],
   facturaMoneda: string,
   tc: TcPivote | null,
-): { convertibles: ConceptoSugeridoEntrante[]; sinTipoCambio: ConceptoSugeridoEntrante[] } {
+): { convertibles: ConceptoSugeridoEntrante[]; sinTipoCambio: ConceptoSugeridoEntrante[]; monedaNoSoportada: ConceptoSugeridoEntrante[] } {
   const convertibles: ConceptoSugeridoEntrante[] = [];
   const sinTipoCambio: ConceptoSugeridoEntrante[] = [];
+  const monedaNoSoportada: ConceptoSugeridoEntrante[] = [];
   for (const s of lista) {
+    if (!monedasVinculoCompatibles(s.moneda, facturaMoneda)) { monedaNoSoportada.push(s); continue; }
     const monto = convertirMonto(s.monto, s.moneda, facturaMoneda, tc);
     if (monto === null) sinTipoCambio.push(s);
     else convertibles.push(s);
   }
-  return { convertibles, sinTipoCambio };
+  return { convertibles, sinTipoCambio, monedaNoSoportada };
 }
 
 export function usePrefillVinculosEntrante({
@@ -92,6 +97,7 @@ export function usePrefillVinculosEntrante({
   const [aplicados, setAplicados] = useState<ConceptoSugeridoEntrante[]>([]);
   const [descartados, setDescartados] = useState<ConceptoSugeridoEntrante[]>([]);
   const [sinTipoCambio, setSinTipoCambio] = useState<ConceptoSugeridoEntrante[]>([]);
+  const [monedaNoSoportada, setMonedaNoSoportada] = useState<ConceptoSugeridoEntrante[]>([]);
   const [errorCubiertos, setErrorCubiertos] = useState(false);
   const [intento, setIntento] = useState(0);
 
@@ -137,6 +143,7 @@ export function usePrefillVinculosEntrante({
         aplicadoPara.current = null;
         setAplicados([]);
         setSinTipoCambio([]);
+        setMonedaNoSoportada([]);
         setDescartados([]);
         setErrorCubiertos(true);
         return;
@@ -144,10 +151,11 @@ export function usePrefillVinculosEntrante({
       if (!vivo) return;
       setErrorCubiertos(false);
       const libres = sugeridos.filter((s) => !cubiertos.has(s.conceptoCostoId));
-      const { convertibles, sinTipoCambio: sinTc } =
+      const { convertibles, sinTipoCambio: sinTc, monedaNoSoportada: noSoportada } =
         dividirPorTipoCambio(libres, facturaMoneda, tc);
       setAplicados(convertibles);
       setSinTipoCambio(sinTc);
+      setMonedaNoSoportada(noSoportada);
       setDescartados(sugeridos.filter((s) => cubiertos.has(s.conceptoCostoId)));
       if (convertibles.length > 0) {
         aplicarSugerencias(aRegistro(convertibles, entrante.embarqueId));
@@ -163,6 +171,7 @@ export function usePrefillVinculosEntrante({
       setAplicados([]);
       setDescartados([]);
       setSinTipoCambio([]);
+      setMonedaNoSoportada([]);
       setErrorCubiertos(false);
     }
   }, [abierto]);
@@ -178,5 +187,5 @@ export function usePrefillVinculosEntrante({
     setIntento((n) => n + 1);
   }, []);
 
-  return { aplicados, descartados, sinTipoCambio, errorCubiertos, reintentar, reaplicar };
+  return { aplicados, descartados, sinTipoCambio, monedaNoSoportada, errorCubiertos, reintentar, reaplicar };
 }

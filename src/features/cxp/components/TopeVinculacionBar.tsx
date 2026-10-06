@@ -12,11 +12,15 @@ interface Props {
   resultado: ResultadoTopeVinculacion;
   subtotal: number;
   moneda: string;
+  errorMoneda?: string | null;
 }
 
-export function TopeVinculacionBar({ resultado, subtotal, moneda }: Props) {
+export function TopeVinculacionBar({ resultado, subtotal, moneda, errorMoneda }: Props) {
   if (resultado.lineas === 0) return null;
   const excede = resultado.excede;
+  if (errorMoneda) {
+    return <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">{errorMoneda}</p>;
+  }
 
   return (
     <div

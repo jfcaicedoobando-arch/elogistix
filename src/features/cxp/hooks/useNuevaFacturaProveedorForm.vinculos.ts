@@ -4,6 +4,7 @@
  */
 import type { ConceptoCostoAbierto } from "@/features/cxp/services";
 import type { SeleccionLinea } from "@/features/cxp/types";
+import { monedasVinculoCompatibles } from "../utils/vinculoMoneda";
 import type { VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 
 export type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
@@ -23,6 +24,7 @@ export function toggleVinculoReducer(
 ): VinculosState {
   const next = { ...prev };
   if (!checked) { delete next[c.id]; return next; }
+  if (monedaFactura && !monedasVinculoCompatibles(c.moneda, monedaFactura)) return prev;
   const base = typeof montoBaseEnMonedaFactura === "number" ? montoBaseEnMonedaFactura : c.monto;
   next[c.id] = {
     embarqueId: c.embarque_id,

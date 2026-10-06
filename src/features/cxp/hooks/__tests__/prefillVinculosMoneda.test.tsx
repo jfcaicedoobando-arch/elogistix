@@ -78,3 +78,24 @@ describe("usePrefillVinculosEntrante · falla cerrado (bug 10)", () => {
     await waitFor(() => expect(aplicarSugerencias).toHaveBeenCalledTimes(1));
   });
 });
+
+describe("auditoría 133 · precarga incompatible", () => {
+  it("expone USD/EUR sin preseleccionar y limpia el aviso al cerrar", async () => {
+    const aplicarSugerencias = vi.fn();
+    const { result, rerender } = renderHook(({ abierto }: { abierto: boolean }) =>
+      usePrefillVinculosEntrante({ entrante, abierto, habilitado: true,
+        aplicarSugerencias, facturaMoneda: "EUR", tc: null }),
+      { initialProps: { abierto: true } },
+    );
+    await waitFor(() => expect(result.current.monedaNoSoportada).toHaveLength(1));
+    expect(aplicarSugerencias).not.toHaveBeenCalled();
+    expect(result.current.sinTipoCambio).toEqual([]);
+    act(() => { result.current.reaplicar(); });
+    expect(aplicarSugerencias).not.toHaveBeenCalled();
+    rerender({ abierto: false });
+    expect(result.current.monedaNoSoportada).toEqual([]);
+    rerender({ abierto: true });
+    await waitFor(() => expect(result.current.monedaNoSoportada).toHaveLength(1));
+    expect(aplicarSugerencias).not.toHaveBeenCalled();
+  });
+});

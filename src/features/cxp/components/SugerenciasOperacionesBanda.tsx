@@ -13,6 +13,7 @@ interface Props {
   descartados: readonly ConceptoSugeridoEntrante[];
   /** Sugerencias en otra moneda sin T/C DOF disponible: no se pre-marcaron. */
   sinTipoCambio?: readonly ConceptoSugeridoEntrante[];
+  monedaNoSoportada?: readonly ConceptoSugeridoEntrante[];
   sinCostoCapturado: boolean;
   /** Cuántos conceptos están marcados ahora mismo en el formulario. */
   marcadosAhora: number;
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function SugerenciasOperacionesBanda({
-  aplicados, descartados, sinTipoCambio = [], sinCostoCapturado, marcadosAhora,
+  aplicados, descartados, sinTipoCambio = [], monedaNoSoportada = [], sinCostoCapturado, marcadosAhora,
   errorCubiertos = false, onReintentar, onQuitarTodos, onReaplicar,
 }: Props) {
   if (errorCubiertos) {
@@ -44,7 +45,8 @@ export function SugerenciasOperacionesBanda({
     );
   }
 
-  if (sinCostoCapturado && aplicados.length === 0 && descartados.length === 0) {
+  const totalSugerencias = aplicados.length + descartados.length + sinTipoCambio.length + monedaNoSoportada.length;
+  if (sinCostoCapturado && totalSugerencias === 0) {
     return (
       <p className="rounded-md border border-dashed px-3 py-2 text-body-sm text-muted-foreground">
         Operaciones indicó que este documento aún no corresponde a un costo capturado del embarque:
@@ -52,7 +54,7 @@ export function SugerenciasOperacionesBanda({
       </p>
     );
   }
-  if (aplicados.length === 0 && descartados.length === 0 && sinTipoCambio.length === 0) return null;
+  if (totalSugerencias === 0) return null;
 
   return (
     <section className="space-y-2 rounded-md border border-info/40 bg-info/5 p-3">
@@ -95,6 +97,11 @@ export function SugerenciasOperacionesBanda({
       <SugerenciasListaAviso
         items={descartados}
         motivo="el concepto ya tiene otra factura vigente:"
+      />
+
+      <SugerenciasListaAviso
+        items={monedaNoSoportada}
+        motivo="la vinculación entre estas monedas todavía no está disponible. Conserva las monedas reales del documento y del costo; continúa sin asociar estos conceptos:"
       />
 
       <SugerenciasListaAviso

@@ -61,6 +61,7 @@ export function PasoVinculacion({
           aplicados={herencia.aplicados}
           descartados={herencia.descartados}
           sinTipoCambio={herencia.sinTipoCambio}
+          monedaNoSoportada={herencia.monedaNoSoportada}
           sinCostoCapturado={Boolean(sinCostoCapturado)}
           marcadosAhora={Object.keys(ctl.vinculos).length}
           errorCubiertos={herencia.errorCubiertos}
