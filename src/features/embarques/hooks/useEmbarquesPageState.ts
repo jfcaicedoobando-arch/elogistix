@@ -61,6 +61,7 @@ export function useEmbarquesPageState() {
 
   // ---------- Rama A: sin filtro de estado → paginación server-side ----------
   const { data: resultadoServer, isLoading: loadingServer, isError: errorServer, refetch: refetchServer } = useEmbarquesPaginados({
+    enabled: !fullSetActivo,
     search: debouncedSearch,
     filterModo,
     filterEstado: "todos",

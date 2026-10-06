@@ -2,6 +2,7 @@ export const embarques = {
   all: ['embarques'] as const,
   list: (filters: Record<string, unknown>) => ['embarques', 'list', filters] as const,
   detail: (id: string) => ['embarques', id] as const,
+  fullRoot: ['embarques', 'full'] as const,
   full: (id?: string) => ['embarques', 'full', id] as const,
   fullForEstadoFilter: (filters: Record<string, unknown>) =>
     ['embarques', 'full-for-estado-filter', filters] as const,

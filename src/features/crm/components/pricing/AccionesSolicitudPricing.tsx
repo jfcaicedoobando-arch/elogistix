@@ -28,13 +28,13 @@ export function AccionesSolicitudPricing({ solicitud: s, puedeCancelar, puedeRes
         <div className="ml-auto flex gap-2">
           {puedeCancelar && (
             <Button variant="outline" size="sm" disabled={accion.isPending}
-              onClick={() => accion.mutate({ id: s.id, accion: "cancelar" })}>Cancelar solicitud</Button>
+              onClick={() => accion.mutate({ id: s.id, oportunidadId: s.oportunidad_id, accion: "cancelar" })}>Cancelar solicitud</Button>
           )}
           {puedeResponder && (
             <Hint label={sinOpciones ? "Agrega al menos una opción" : undefined}>
               <span tabIndex={sinOpciones ? 0 : undefined} aria-label={sinOpciones ? "Agrega al menos una opción para responder" : undefined}>
                 <Button size="sm" disabled={accion.isPending || sinOpciones}
-                  onClick={() => accion.mutate({ id: s.id, accion: "responder" })}>Marcar respondida</Button>
+                  onClick={() => accion.mutate({ id: s.id, oportunidadId: s.oportunidad_id, accion: "responder" })}>Marcar respondida</Button>
               </span>
             </Hint>
           )}

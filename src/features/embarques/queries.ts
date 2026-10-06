@@ -11,6 +11,7 @@ import { staleTimes } from "@/lib/query/staleTimes";
 import {
   fetchEmbarquesPaginados,
   fetchEmbarqueById,
+  fetchEmbarqueFull,
   fetchEmbarqueConceptosVenta,
   fetchEmbarqueConceptosCosto,
   fetchExpedientesCliente,
@@ -29,6 +30,14 @@ export const embarqueQueries = {
       queryKey: queryKeys.embarques.list(filters as unknown as Record<string, unknown>),
       queryFn: () => fetchEmbarquesPaginados(filters),
       staleTime: staleTimes.MEDIUM,
+    }),
+
+  /** Same full-detail contract for navigation and intentional hover. */
+  full: (id: string) =>
+    queryOptions({
+      queryKey: queryKeys.embarques.full(id),
+      queryFn: () => fetchEmbarqueFull(id),
+      staleTime: 30_000,
     }),
 
   /** Detalle de embarque. */

@@ -25,33 +25,14 @@ import {
 import { BotonCancelarTarifa } from "./TarifaFormCancelar";
 import { TarifaPricingFields } from "./TarifaPricingFields";
 import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
-
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
-import type { RutaOption } from "./MultiRutaSelect";
+import type { TarifaFormProps } from "./TarifaForm.types";
 
-interface Props {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  initial?: Partial<TarifaInput>;
-  tarifaId?: string;
-  /** Si se provee, bloquea el Select de agente y oculta la lógica de selección manual. */
-  agenteIdFijo?: string;
-  /** Nombre del agente a mostrar como readonly cuando agenteIdFijo está presente. */
-  agenteNombreFijo?: string;
-  /** Override del título del modal (e.g. cuando es desde el portal del agente). */
-  tituloOverride?: string;
-  /** Rutas a usar en lugar de useCosteoRutas() (útil cuando no hay OrganizationContext). */
-  rutasOverride?: RutaOption[];
-  /**
-   * Organización dueña de la tarifa cuando no hay OrganizationContext (portal del
-   * agente). Sin ella el insert salía con `organization_id` nulo y RLS lo rechazaba.
-   */
-  organizationIdOverride?: string | null;
-}
 
-export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride, organizationIdOverride }: Props) {
+
+export function TarifaForm({ open, onOpenChange, onSaved, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride, organizationIdOverride }: TarifaFormProps) {
   const { data: agentesData = [] } = useCosteoAgentes();
   const { data: rutasData = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
@@ -74,7 +55,6 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
 
   const esEdicion = Boolean(tarifaId);
   const multiple = !esEdicion;
-
   const aplicarInicial = useCallback((ini: Partial<TarifaInput> | undefined) => {
     const inicial = buildInitialForm(ini);
     const rutasIniciales = ini?.ruta_id ? [ini.ruta_id] : [];
@@ -104,9 +84,11 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
     rutaIds,
     esEdicion,
     tarifaId,
-    onSuccess: () => onOpenChange(false),
-    onPartialSuccess: (idsCreados) =>
-      setRutaIds((prev) => prev.filter((id) => !idsCreados.has(id))),
+    onSuccess: () => { onSaved?.(); onOpenChange(false); },
+    onPartialSuccess: (idsCreados) => {
+      setRutaIds((prev) => prev.filter((id) => !idsCreados.has(id)));
+      if (idsCreados.size > 0) onSaved?.();
+    },
   });
 
   const guardar = (e: React.FormEvent) => {

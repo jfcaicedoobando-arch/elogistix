@@ -8,7 +8,6 @@ import {
 
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { fetchCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
@@ -59,7 +58,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
     const scope = captureAuthOperationScope();
     setBusy("zip");
     try {
-      const data = await fetchFacturasParaZip(ids);
+      const [data, { default: JSZip }] = await Promise.all([fetchFacturasParaZip(ids), import("jszip")]);
       scope.assertCurrent();
       const zip = new JSZip();
       const folder = zip.folder("facturas")!;

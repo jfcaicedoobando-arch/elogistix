@@ -7,15 +7,23 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TarifaForm } from "@/features/costeo";
-import { useTarifasRespuestaPricing } from "@/features/crm/hooks/useTarifasRespuestaPricing";
 import type { TarifaRespuestaRow } from "@/features/crm/services/pricing/tarifasRespuesta";
+import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 
-interface Props { solicitudId: string; editable: boolean; hayOpcionesViejas: boolean; esperandoRespuesta?: boolean }
+interface Props {
+  solicitudId: string;
+  editable: boolean;
+  hayOpcionesViejas: boolean;
+  tarifas: TarifaRespuestaRow[];
+  isLoading: boolean;
+  isError: boolean;
+  onSaved: () => void;
+}
 
 const carta = (v: boolean | null) => (v === true ? "Sí" : v === false ? "No" : "—");
 const moneda = (n: number, m: string) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: m || "USD" }).format(Number(n) || 0);
+  formatCurrency(Number(n) || 0, m || "USD");
 
 function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
   return (
@@ -35,17 +43,14 @@ function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
   );
 }
 
-export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas, esperandoRespuesta = false }: Props) {
+export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas, tarifas, isLoading, isError, onSaved }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const q = useTarifasRespuestaPricing(solicitudId, esperandoRespuesta);
-  const tarifas = q.data ?? [];
-  const cerrar = (v: boolean) => { setAbierto(v); if (!v) void q.refetch(); };
 
   return (
     <div className="space-y-3">
       {tarifas.map((t, i) => <FilaTarifa key={t.id} t={t} n={i + 1} />)}
-      {q.isError && <p className="text-body-sm text-destructive">No se pudieron cargar las tarifas de respuesta.</p>}
-      {tarifas.length === 0 && !hayOpcionesViejas && !editable && !q.isLoading && (
+      {isError && <p className="text-body-sm text-destructive">No se pudieron cargar las tarifas de respuesta.</p>}
+      {tarifas.length === 0 && !hayOpcionesViejas && !editable && !isLoading && !isError && (
         <p className="text-body-sm text-muted-foreground">Pricing aún no agrega tarifas.</p>
       )}
       {editable && (
@@ -54,7 +59,7 @@ export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViej
         </Button>
       )}
       {abierto && (
-        <TarifaForm open={abierto} onOpenChange={cerrar}
+        <TarifaForm open={abierto} onOpenChange={setAbierto} onSaved={onSaved}
           initial={{ solicitud_pricing_id: solicitudId, carta_garantia: null, unidad_flete: null }} />
       )}
     </div>
