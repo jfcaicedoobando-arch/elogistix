@@ -34,7 +34,7 @@ describe("unidad de medida de Pricing", () => {
     fireEvent.click(await screen.findByRole("option", { name: "Kilogramos (kg)" }));
     expect(screen.getByLabelText("Units of measurement")).toHaveTextContent("Kilogramos (kg)");
     fireEvent.click(screen.getByLabelText("Units of measurement"));
-    fireEvent.click(await screen.findByRole("option", { name: "—", exact: true }));
+    fireEvent.click(await screen.findByRole("option", { name: "—" }));
     expect(screen.getByLabelText("Units of measurement")).toHaveTextContent("—");
   });
 });
