@@ -48,5 +48,34 @@
     "replays": [
       "20261006012000_replay_pricing_unidad_medida.sql"
     ]
+  },
+  {
+    "file": "0007_audit144_nc_linaje_concepto.sql",
+    "sha256": "e6df69ce5d3bfc60b5cd138c59d1ee8d9270077aea736e6a363a46db6066a3c1",
+    "replays": [
+      "20261006213000_replay_audit144_nc_linaje.sql"
+    ]
+  },
+  {
+    "file": "0008_proforma_estado_cancelada.sql",
+    "sha256": "d50f69db54a53c357844e8ce3b742a8e24aab12cbcf46722cb4a20e2ac86e7e9",
+    "replays": [
+      "20261006214500_replay_proforma_cancelada.sql"
+    ],
+    "composition": {
+      "sources": [
+        "0008_proforma_estado_cancelada.sql",
+        "0009_proforma_siempre_cancelar.sql"
+      ],
+      "replaySha256": "91778a1962461638dad9f4587dbf7fa26a389200ee8688921087643f271e2691",
+      "preamble": "-- Replay de drizzle/migrations/0008 y 0009 (ya aplicadas en Lovable Cloud): proformas canceladas conservan hist\u00f3rico.\n"
+    }
+  },
+  {
+    "file": "0009_proforma_siempre_cancelar.sql",
+    "sha256": "8a82c13bd4425b99ca481eb68020e6cba223707cf401050bc897cb4ccdd29546",
+    "replays": [
+      "20261006214500_replay_proforma_cancelada.sql"
+    ]
   }
 ]
