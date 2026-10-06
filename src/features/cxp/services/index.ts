@@ -23,7 +23,8 @@ export * from "./facturasEntrantes";
 export * from "./facturasEntrantesConceptos";
 export * from "./facturasVinculablesEntrante";
 export * from "./pagoProveedorLote";
-export * from "./pagoProveedorMovimiento";
+// Payment commands go through registrar_pago_proveedor_atomico only.
+export { cargoEnMxn, cargoEnMonedaCuenta, ERROR_TC_REQUERIDO } from "./pagoProveedorMovimiento";
 export * from "./pagoProveedorValidaciones";
 export * from "./proveedorFacturas.helpers";
 export * from "./proveedorNotasCredito";

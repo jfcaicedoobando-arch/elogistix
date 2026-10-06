@@ -1,6 +1,6 @@
 // Helpers de provisioning para `e2e-provision-multi-tenant`.
 // Separado del handler para respetar los límites de longitud/complejidad del lint.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
   BUCKET,
   upsertCliente,
@@ -15,7 +15,7 @@ import {
 } from "./orgNameAllowlist.ts";
 
 
-type AdminClient = ReturnType<typeof createClient>;
+type AdminClient = SupabaseClient;
 
 export interface OrgSpec {
   nombre: string;

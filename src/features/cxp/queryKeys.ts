@@ -5,6 +5,7 @@ export const cxp = {
     ["cxp", "facturas-abiertas-proveedor", proveedorId ?? null] as const,
   factura: (id?: string | null) => ["cxp", "factura", id] as const,
   facturaEditRow: (id?: string | null) => ["cxp", "factura-edit-row", id] as const,
+  conceptosSnapshot: (id?: string | null) => ["cxp", "factura-edit-row", id, "conceptos-snapshot"] as const,
   pagos: (facturaId: string) => ["cxp", "pagos", facturaId] as const,
   pagoLotePreflight: (ids: string[], organizationId?: string | null) =>
     ["cxp", "pago-lote-preflight", organizationId ?? null, ids] as const,

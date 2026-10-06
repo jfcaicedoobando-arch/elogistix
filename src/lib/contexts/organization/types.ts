@@ -2,8 +2,8 @@
 export interface Organization {
   id: string;
   nombre: string;
-  rfc: string;
+  rfc: string | null;
   logo_url: string | null;
-  plan: string;
-  activo: boolean;
+  plan: string | null;
+  activo: boolean | null;
 }

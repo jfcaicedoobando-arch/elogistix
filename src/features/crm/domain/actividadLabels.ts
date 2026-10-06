@@ -1,4 +1,4 @@
-import type { CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/services/actividades";
+import type { CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/types/actividades";
 
 export const ACTIVIDAD_TIPO_LABEL: Record<CrmActividadTipo, string> = {
   llamada: "Llamada",

@@ -49,6 +49,7 @@ const ALLOWLIST: readonly string[] = [
   "src/components/shared/dataTable/DataTableBodySkeleton.tsx",
   "src/components/shared/dataTable/DataTableHeaderRow.tsx",
   "src/components/shared/dataTable/DataTableRow.tsx",
+  "src/components/shared/dataTable/DataTableTotalsRow.tsx",
   // Form-tables editables con render row complejo (inputs/textareas por celda).
   "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
   "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
@@ -61,7 +62,6 @@ const ALLOWLIST: readonly string[] = [
   // Sub-tablas read-only estáticas (sin sort/paginación).
   "src/features/cotizacion/components/seccionMercancia/DimensionesLCLTable.tsx",
   "src/features/cotizacion/components/seccionMercancia/DimensionesAereasTable.tsx",
-  "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
   "src/features/embarques/components/pnl/PnlProveedoresTable.tsx",
   "src/features/embarques/components/pnl/PnlComparativaTable.tsx",
   // Estado de cuenta: filas expandibles con sub-rows (pagos + notas), no soportado por DataTable.
@@ -126,7 +126,6 @@ const ALLOWLIST: readonly string[] = [
   "src/features/cxp/components/NotasCreditoSection.tsx",
   "src/features/dashboardEjecutivo/components/SaldosBancosCard.tsx",
   "src/features/embarques/components/OrigenCostosSection.tsx",
-  "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
   "src/features/embarques/components/costos/GrupoCostosProveedor.tsx",
   "src/features/facturacion/components/CobroLoteRenglon.tsx",
   "src/features/facturacion/components/NotasCreditoRecientes.tsx",
@@ -179,7 +178,7 @@ describe("architecture — no raw @/components/ui/table imports", () => {
    * archivo a DataTable y bajas la lista, BAJA también el tope.
    */
   it("la allowlist de ui/table no crece por encima del tope", () => {
-    const TOPE = 70; // 69 actuales + 1 de holgura
+    const TOPE = 69; // 69 actuales; el catálogo baja una entrada neta.
     expect(
       ALLOWLIST.length,
       `La allowlist tiene ${ALLOWLIST.length} entradas (tope ${TOPE}).\n` +
@@ -188,7 +187,7 @@ describe("architecture — no raw @/components/ui/table imports", () => {
   });
 
   it("si bajaste entradas de la allowlist, baja el tope", () => {
-    const TOPE = 70;
+    const TOPE = 69;
     expect(
       ALLOWLIST.length,
       "Bajaste entradas de la allowlist: ajusta TOPE a la nueva cuenta + 1 de holgura.",

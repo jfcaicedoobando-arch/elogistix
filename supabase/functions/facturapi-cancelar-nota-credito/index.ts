@@ -8,6 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { exigirInvoices } from "../_shared/facturapiSdk.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
@@ -58,7 +59,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     // sincroniza el estado real de la NC.
     cancelResp = await withFacturapiTimeout(
       "invoices.cancel",
-      facturapi.invoices.cancel(nc.facturapi_id, cancelPayload),
+      exigirInvoices(facturapi, "cancel").cancel(nc.facturapi_id, cancelPayload),
       FACTURAPI_CANCEL_TIMEOUT_MS,
     ) as FapiCancelResponse;
   } catch (err) {

@@ -5,15 +5,14 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { logClientError } from "@/services/observability/logClientError";
-import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { SubirFacturaEntranteInput } from "@/features/cxp/services/facturasEntrantes.types";
 
 /**
  * Best-effort: el documento ya quedó en el buzón; si la sugerencia falla no se
  * pierde la subida, contabilidad puede vincular a mano.
  *
- * RNF-09 (Ola 11): el fallo ya no es silencioso — se reintenta una vez, se
- * avisa en pantalla (patrón `avisarMovimientoNoCreado`) y el caller registra
+ * RNF-09 (Ola 11): el fallo ya no es silencioso — se reintenta una vez, el controlador
+ * avisa en pantalla y el caller registra
  * en bitácora. Devuelve `false` si las sugerencias no quedaron guardadas.
  */
 async function insertarConceptosSugeridos(
@@ -45,13 +44,6 @@ export async function guardarConceptosSugeridos(
   if (error) {
     logClientError({
       message: `No se pudieron guardar los conceptos sugeridos del buzón: ${error.message}`,
-    });
-    notifyWarning(undefined, {
-      title: "El documento se subió, pero sin las sugerencias de conceptos",
-      description:
-        "Contabilidad podrá vincular los conceptos a mano al capturar la factura. " +
-        "Si prefieres conservar las sugerencias, retira el documento y vuelve a subirlo.",
-      duration: 10000,
     });
     return false;
   }

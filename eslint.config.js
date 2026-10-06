@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import { builtinRules } from "eslint/use-at-your-own-risk";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
@@ -234,7 +235,21 @@ const crossFeatureOverrides = FEATURES.map((self) => ({
 }));
 
 
+// Independent policy names prevent flat-config's last matching rule from
+// erasing another guard. Exemptions remain scoped to the original policy.
+const policyRules = Object.fromEntries([
+  ["layers", "no-restricted-imports"],
+  ["public-financial-api", "no-restricted-imports"],
+  ["retired-money-api", "no-restricted-imports"],
+  ["sentry", "no-restricted-imports"],
+  ["design-system", "no-restricted-imports"],
+  ["legacy-state", "no-restricted-imports"],
+  ["spacing", "no-restricted-syntax"],
+  ["input-label", "no-restricted-syntax"],
+].map(([name, rule]) => [name, builtinRules.get(rule)]));
+
 export default tseslint.config(
+  { plugins: { architecture: { rules: policyRules } } },
   // v13.303.5 — Ignores ampliados: además de `dist`/`coverage` (build output),
   // excluimos artefactos que nunca deberían pasar por el parser TS de ESLint:
   //   · `.vitest-reports/`, `reports/`, `playwright-report/`, `test-results/` — outputs de test.
@@ -489,7 +504,7 @@ export default tseslint.config(
     files: ["src/features/*/domain/**"],
     ignores: ["src/features/*/domain/**/__tests__/**"],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/layers": ["error", {
         patterns: [
           { group: ["@/hooks/*", "@/hooks/**", "@/features/*/hooks/**"], message: "features/<x>/domain no puede importar de hooks/." },
           { group: ["@/components/*", "@/components/**", "@/features/*/components/**"], message: "features/<x>/domain no puede importar de components/. domain/ es puro (sin React)." },
@@ -504,7 +519,7 @@ export default tseslint.config(
     files: ["src/features/*/services/**"],
     ignores: ["src/features/*/services/**/__tests__/**"],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/layers": ["error", {
         patterns: [
           { group: ["@/hooks/*", "@/hooks/**", "@/features/*/hooks/**"], message: "features/<x>/services no puede importar de hooks/." },
           { group: ["@/components/*", "@/components/**", "@/features/*/components/**"], message: "features/<x>/services no puede importar de components/. services/ es puro (sin React)." },
@@ -522,7 +537,7 @@ export default tseslint.config(
     files: ["src/lib/**"],
     ignores: ["src/lib/**/__tests__/**"],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/layers": ["error", {
         patterns: [
           {
             group: ["@/hooks/*", "@/hooks/**"],
@@ -568,7 +583,7 @@ export default tseslint.config(
       "src/lib/ui/uiMappings.ts",
     ],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/layers": ["error", {
         patterns: [
           {
             group: ["@/hooks/*", "@/hooks/**"],
@@ -593,7 +608,7 @@ export default tseslint.config(
     files: ["src/services/**"],
     ignores: ["src/services/**/__tests__/**"],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/layers": ["error", {
         patterns: [
           {
             group: ["@/hooks/*", "@/hooks/**"],
@@ -677,10 +692,11 @@ export default tseslint.config(
       "**/*.test.tsx",
     ],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/sentry": ["error", {
         patterns: [
           {
             group: ["@sentry/*"],
+            allowTypeImports: true,
             message:
               "Importar `@sentry/*` estáticamente sólo se permite desde `src/lib/observability/sentry/**`, `ErrorBoundary`, `components/feedback/**` y `SentryDiagnostico`. En el resto usa `await import('@sentry/react')` dinámico para mantener el SDK fuera del bundle inicial.",
           },
@@ -833,7 +849,7 @@ export default tseslint.config(
       // NO agregar entradas nuevas.
     ],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/design-system": ["error", {
         paths: [
           {
             name: "@/components/ui/table",
@@ -899,7 +915,7 @@ export default tseslint.config(
       "src/features/marketing/routes/LogoPreview.tsx",
     ],
     rules: {
-      "no-restricted-syntax": ["error",
+      "architecture/spacing": ["error",
         {
           selector:
             "Literal[value=/(^|\\s)(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|space-x|space-y)-\\[[0-9.]+(px|rem)\\](\\s|$)/]",
@@ -975,7 +991,7 @@ export default tseslint.config(
       "**/*.test.tsx",
     ],
     rules: {
-      "no-restricted-imports": ["error", {
+      "architecture/legacy-state": ["error", {
         paths: RESTRICTED_PATHS_LEGACY,
       }],
     },
@@ -1006,7 +1022,7 @@ export default tseslint.config(
     name: "a11y-input-label",
     files: ["src/features/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-syntax": ["error",
+      "architecture/input-label": ["error",
         {
           selector:
             "JSXOpeningElement[name.name='Input']:not(:has(JSXAttribute[name.name='id'])):not(:has(JSXAttribute[name.name='aria-label'])):not(JSXElement[openingElement.name.name='FormField'] > JSXElement > JSXOpeningElement)",
@@ -1014,6 +1030,30 @@ export default tseslint.config(
             "a11y: <Input> requiere `id` (con <Label htmlFor={id}>) o `aria-label`; lo más simple es envolverlo en <FormField label=\"...\">. Ver bloque `a11y-input-label` en eslint.config.js.",
         },
       ],
+    },
+  },
+  {
+    name: "public-financial-read-api",
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/features/facturacion/**", "**/__tests__/**", "**/*.test.*"],
+    rules: {
+      "architecture/public-financial-api": ["error", { paths: [{
+        name: "@/features/facturacion/services/shared/ventaFacturada",
+        message: "Use the public financial read API from @/features/facturacion.",
+      }] }],
+    },
+  },
+  {
+    name: "retired-monetary-entrypoints",
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["**/__tests__/**", "**/*.test.*"],
+    rules: {
+      "architecture/retired-money-api": ["error", { paths: [
+        { name: "@/lib/financial/financialUtils", importNames: ["convertirAMXN", "convertirAUSD"],
+          message: "Use the fail-closed currency conversion contracts in lib/financial/convertir." },
+        { name: "@/features/cxp/services/pagoProveedorMovimiento", importNames: ["crearMovimientoBancarioPago", "eliminarMovimientoBancarioPago"],
+          message: "Use the atomic supplier payment command; separate bank writes are retired." },
+      ] }],
     },
   },
 );

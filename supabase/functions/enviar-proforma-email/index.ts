@@ -2,7 +2,7 @@
 // Envía una proforma al cliente por email con enlace al portal público.
 // Genera un token si no existe, envía el correo por la entrega administrada
 // y registra el envío en `proforma_envios`.
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
@@ -38,7 +38,7 @@ interface Recipient { email: string; nombre?: string; tipo: 'to' | 'cc' }
 interface EnvioResultado { email: string; tipo: string; ok: boolean; error?: string }
 
 async function asegurarToken(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   proformaId: string,
   tokenActual: string | null,
   expiraActual: string | null,

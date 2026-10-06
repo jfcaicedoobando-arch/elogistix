@@ -16,7 +16,9 @@ export function baseNotaCreditoSinImpuestos(conceptos: unknown): number | null {
     bases.push(base);
   }
   const subtotal = sumarMontos(bases);
-  return Number.isFinite(subtotal) ? subtotal : null;
+  // Decimal no desborda al acumular como currency.js; conservar explícitamente
+  // el rechazo cuando el total ni siquiera es representable a escala de centavos.
+  return Number.isFinite(subtotal) && Number.isFinite(subtotal * 100) ? subtotal : null;
 }
 
 export interface NotaCreditoSinDesglose {

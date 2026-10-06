@@ -5,17 +5,13 @@
  * Convenciones: punto decimal, coma como separador de miles, máximo 2 decimales.
  */
 
-const groupFormatter = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 0 });
-const displayFormatter = new Intl.NumberFormat("es-MX", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+import { formatNumber } from "@/lib/formatters";
 
 /** Agrupa en miles una cadena de dígitos ("1234567" → "1,234,567"). */
 const agruparDigitos = (digitos: string): string => {
   const limpio = digitos.replace(/^0+(?=\d)/, "");
   if (limpio === "") return "";
-  return groupFormatter.format(Number(limpio));
+  return formatNumber(Number(limpio), { decimals: 0 });
 };
 
 /**
@@ -118,7 +114,7 @@ export const parseMoneyText = (clean: string): number | null => {
 export const normalizeMoneyText = (clean: string): string => {
   const n = parseMoneyText(clean);
   if (n === null) return "";
-  return displayFormatter.format(n);
+  return formatNumber(n, { decimals: 2 });
 };
 
 /** Cuenta caracteres significativos (dígitos y punto) antes de una posición. */

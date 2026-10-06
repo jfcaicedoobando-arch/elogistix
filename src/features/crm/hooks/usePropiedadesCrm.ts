@@ -1,3 +1,4 @@
+import { crm } from "../queryKeys";
 /**
  * Hooks de propiedades configurables y sus valores (Fase 3).
  */
@@ -10,21 +11,21 @@ import {
 import { fetchValores, guardarValor, type ValorEntrada } from "@/features/crm/services/valoresCrm";
 import type { TipoPropiedad } from "@/features/crm/services/propiedadesCrm";
 
-const BASE = ["crm", "propiedades"] as const;
+const BASE = crm.propiedades.all;
 
 export function usePropiedadesCrm(objeto: ObjetoCrm) {
-  return useQuery({ queryKey: [...BASE, objeto], queryFn: () => fetchPropiedades(objeto), staleTime: 5 * 60_000 });
+  return useQuery({ queryKey: crm.propiedades.objeto(objeto), queryFn: () => fetchPropiedades(objeto), staleTime: 5 * 60_000 });
 }
 
 export function useValoresCrm(registroId: string) {
-  return useQuery({ queryKey: [...BASE, "valores", registroId], queryFn: () => fetchValores(registroId) });
+  return useQuery({ queryKey: crm.propiedades.valores(registroId), queryFn: () => fetchValores(registroId) });
 }
 
 function useMutacion<V>(fn: (v: V) => Promise<void>, ok: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => { if (ok) notifySuccess(undefined, { title: ok }); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: ["crm", "scoring"] }); },
+    onSuccess: () => { if (ok) notifySuccess(undefined, { title: ok }); void qc.invalidateQueries({ queryKey: BASE }); void qc.invalidateQueries({ queryKey: crm.scoring.all }); },
     onError: (error: Error, variables) => notifyError(undefined, { title: "No se pudo guardar la propiedad", description: error.message,
       error, method: "CRM_PROPIEDADES_MUTACION", context: { variables } }),
   });

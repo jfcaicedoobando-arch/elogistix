@@ -1,3 +1,4 @@
+import { roundMoney } from "@/lib/financial/financialUtils";
 /**
  * Tabla de reparto del pago en lote (v13.445.0).
  * Rediseñada v13.498.0 con el formato del cobro en lote (CxC): zebra, badges
@@ -27,7 +28,7 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
           {facturas.map((f, i) => {
             const monto = montoDe(f.factura_id);
             const aprobada = f.estado_aprobacion === undefined || f.estado_aprobacion === "aprobada";
-            const queda = Math.max(0, Math.round((f.saldo - monto) * 100) / 100);
+            const queda = Math.max(0, roundMoney(f.saldo - monto));
             const liquidada = monto > 0 && queda <= 0.005;
             const parcial = monto > 0 && !liquidada;
             return (

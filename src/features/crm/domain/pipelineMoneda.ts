@@ -1,3 +1,4 @@
+import { roundMoney } from "@/lib/financial/financialUtils";
 /**
  * UI-15 · Suma de importes CRM en pesos.
  *
@@ -60,5 +61,5 @@ export function sumarPipelineMxn(
   }
 
   const estimado = hayExtranjera && (sinConvertir > 0 || tc?.esFallback === true);
-  return { mxn: Math.round(mxn * 100) / 100, estimado, sinConvertir };
+  return { mxn: roundMoney(mxn), estimado, sinConvertir };
 }

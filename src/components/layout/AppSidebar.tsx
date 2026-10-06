@@ -21,8 +21,8 @@ import { OrgBadge } from "@/components/layout/OrgBadge";
 import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { useAppSidebarSections } from "@/hooks/layout";
-import { useSidebarCollapse } from "@/hooks/layout/useSidebarCollapse";
-import { useDesbordamientoVertical } from "@/hooks/layout/useDesbordamientoVertical";
+import { useSidebarCollapse } from "@/hooks/layout";
+import { useDesbordamientoVertical } from "@/hooks/layout";
 
 import { obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
 

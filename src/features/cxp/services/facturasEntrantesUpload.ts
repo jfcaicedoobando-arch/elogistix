@@ -20,38 +20,56 @@ import {
   verificarMetadatosDelAlta,
 } from "@/features/cxp/services/facturasEntrantesUploadAlta";
 
+export interface ResultadoSubidaEntrante {
+  documentoId: string;
+  sugerenciasGuardadas: boolean;
+  verificacionXmlPendiente: boolean;
+  bitacoraPendiente: boolean;
+}
+
+/** Compatibility API for service consumers that only need the saved identity. */
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
+  return (await subirFacturaEntranteConResultado(input)).documentoId;
+}
+
+export async function subirFacturaEntranteConResultado(input: SubirFacturaEntranteInput): Promise<ResultadoSubidaEntrante> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
 
   const { archivoPrincipal, principal, xmlSubido } = await subirArchivosDelBuzon(input);
   const documentoId = await insertarFilaEntrante({ input, principal, xmlSubido });
 
-  const sugerenciasOk = await guardarConceptosSugeridos(documentoId, input);
-  if (!sugerenciasOk) {
-    // RNF-09: rastro auditable del fallo; el usuario ya recibió el aviso y el
-    // documento queda subido de todos modos.
-    await registrarActividad({
-      modulo: "cxp",
-      accion: "conceptos_sugeridos_no_guardados",
-      entidadId: documentoId,
-      entidadNombre: archivoPrincipal.name,
-    });
+  // From this point the document exists. Ancillary failures must keep its ID.
+  let sugerenciasGuardadas = false;
+  let verificacionXmlPendiente = false;
+  let bitacoraPendiente = false;
+  try {
+    sugerenciasGuardadas = await guardarConceptosSugeridos(documentoId, input);
+  } catch {
+    // A transport exception is also a partial result, never a missing document.
   }
-
-  await verificarMetadatosDelAlta({
-    documentoId,
-    xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
-    meta: input.meta ?? null,
-    nombreArchivo: archivoPrincipal.name,
-  });
-  await registrarActividad({
-    modulo: "cxp",
-    accion: "subir_factura_entrante",
-    entidadId: documentoId,
-    entidadNombre: archivoPrincipal.name,
-  });
-  return documentoId;
+  try {
+    await verificarMetadatosDelAlta({
+      documentoId,
+      xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
+      meta: input.meta ?? null,
+      nombreArchivo: archivoPrincipal.name,
+    });
+  } catch {
+    // Do not mark XML verified; the existing document needs review/recovery.
+    verificacionXmlPendiente = true;
+  }
+  try {
+    if (!sugerenciasGuardadas) {
+      await registrarActividad({ modulo: "cxp", accion: "conceptos_sugeridos_no_guardados",
+        entidadId: documentoId, entidadNombre: archivoPrincipal.name });
+    }
+    await registrarActividad({ modulo: "cxp", accion: "subir_factura_entrante",
+      entidadId: documentoId, entidadNombre: archivoPrincipal.name });
+  } catch {
+    bitacoraPendiente = true;
+  }
+  return { documentoId, sugerenciasGuardadas, verificacionXmlPendiente, bitacoraPendiente };
 
 }
 

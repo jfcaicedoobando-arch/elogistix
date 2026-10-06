@@ -3,7 +3,7 @@
  * Lógica pura extraída de `useHuecoFacturacion` para permitir tests sin
  * acoplarse a React Query.
  */
-import type { FilaHueco } from "@/features/facturacion/services";
+import type { FilaHueco } from "@/features/facturacion/types";
 import { formatDate } from "@/lib/formatters";
 import { hoyMx } from "@/lib/date/mx";
 

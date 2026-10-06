@@ -31,10 +31,8 @@ export const TASAS_IVA_MX = [
   { value: 0.16, label: '16% — General' },
 ] as const;
 
-
 const money = (n: number) => currency(n, { precision: 2 });
 const ratio = (n: number) => currency(n, { precision: 4 });
-
 /**
  * Redondeo canónico de dinero a 2 decimales. Política: "half away from zero",
  * idéntica a `ROUND(numeric, 2)` de Postgres. Decimal evita que empates como
@@ -88,20 +86,28 @@ export function sumarSubtotales<T>(
  * decimales antes de sumarse para evitar drift de punto flotante.
  */
 export function sumarMontos(montos: number[]): number {
-  return montos
-    .reduce((acc, m) => acc.add(money(m)), currency(0, { precision: 2 }))
-    .value;
+  // Invalid legacy inputs retain their old result. Wire contracts reject them;
+  // changing every in-process caller to throw requires a separate migration.
+  if (montos.some((m) => !Number.isFinite(m))) {
+    return montos.reduce((acc, m) => acc.add(money(m)), currency(0, { precision: 2 })).value;
+  }
+  return montos.reduce((acc, monto) => acc.plus(roundMoney(monto)), new Decimal(0)).toNumber();
 }
 
 /** Calcula el IVA sobre un monto. La tasa es obligatoria. */
 export function calcularIVA(monto: number, tasa: number): number {
-  return money(monto).multiply(tasa).value;
+  if (!Number.isFinite(monto) || !Number.isFinite(tasa)) return money(monto).multiply(tasa).value;
+  return multiplyMoney(roundMoney(monto), tasa);
 }
 
 /** Calcula el total con IVA. La tasa es obligatoria. */
 export function calcularTotalConIVA(monto: number, tasa: number): number {
-  const base = money(monto);
-  return base.add(base.multiply(tasa)).value;
+  if (!Number.isFinite(monto) || !Number.isFinite(tasa)) {
+    const legacy = money(monto);
+    return legacy.add(legacy.multiply(tasa)).value;
+  }
+  const base = roundMoney(monto);
+  return sumarMontos([base, calcularIVA(base, tasa)]);
 }
 
 /** Calcula el margen de utilidad (%) */
@@ -112,7 +118,8 @@ export function calcularMargen(venta: number, costo: number): number {
 
 /** Calcula la utilidad */
 export function calcularUtilidad(venta: number, costo: number): number {
-  return money(venta).subtract(costo).value;
+  if (!Number.isFinite(venta) || !Number.isFinite(costo)) return money(venta).subtract(costo).value;
+  return sumarMontos([venta, -costo]);
 }
 
 /**
@@ -150,7 +157,6 @@ export function convertirAUSD(
   if (moneda === 'EUR') return money(monto).multiply(tipoCambioEUR).divide(tipoCambioUSD).value;
   return monto;
 }
-
 /** Tasa 8% del estímulo de la región fronteriza (literal para no ciclar). */
 const TASA_FRONTERA = 0.08;
 

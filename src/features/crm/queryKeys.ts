@@ -1,4 +1,24 @@
 export const crm = {
+  adjuntoUrl: (path: string) => ["crm", "pricing", "adjunto-url", path] as const,
+  adjuntos: (id: string) => ["crm", "pricing", "adjuntos", id] as const,
+  objetos: {
+    all: ["crm", "objetos"] as const,
+    list: (tipo: string, busqueda: string, pagina: number, ...filtros: string[]) => ["crm", "objetos", tipo, busqueda, pagina, ...filtros] as const,
+    detail: (tipo: string, id?: string) => ["crm", "objetos", tipo, id] as const,
+    relacion: (relacion: string, id: string) => ["crm", "objetos", "rel", relacion, id] as const,
+  },
+  propiedades: {
+    all: ["crm", "propiedades"] as const,
+    objeto: (objeto: string) => ["crm", "propiedades", objeto] as const,
+    valores: (id: string) => ["crm", "propiedades", "valores", id] as const,
+  },
+  scoring: {
+    all: ["crm", "scoring"] as const,
+    detalle: (objeto: string, id: string) => ["crm", "scoring", "detalle", objeto, id] as const,
+    lote: (objeto: string, ids: string[]) => ["crm", "scoring", "lote", objeto, ids] as const,
+    reglas: (objeto: string) => ["crm", "scoring", "reglas", objeto] as const,
+    cortes: ["crm", "scoring", "cortes"] as const,
+  },
   all: ['crm'] as const,
   kpis: ['crm', 'kpis'] as const,
   dashboard: (uid?: string) => ['crm', 'dashboard', uid] as const,

@@ -1,3 +1,4 @@
+import { formatNumber } from "@/lib/formatters";
 /**
  * Tarifas vigentes y aprobadas del catálogo de Costeo para llenar una opción
  * de Pricing. Sólo se copian datos: la opción no cambia si la tarifa cambia.
@@ -54,7 +55,7 @@ export function opcionDesdeTarifa(actual: OpcionPricingForm, t: TarifaParaPricin
 }
 
 export function etiquetaTarifa(t: TarifaParaPricing): string {
-  const partes = [t.naviera ?? "Sin naviera", t.agente, `${t.moneda} ${t.flete_base.toLocaleString("es-MX")}`];
+  const partes = [t.naviera ?? "Sin naviera", t.agente, `${t.moneda} ${formatNumber(t.flete_base, { minimumFractionDigits: 0, maximumFractionDigits: 3 })}`];
   if (t.transit_time_dias != null) partes.push(`${t.transit_time_dias} d`);
   return partes.filter(Boolean).join(" · ");
 }

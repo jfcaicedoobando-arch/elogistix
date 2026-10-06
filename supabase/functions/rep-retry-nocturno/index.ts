@@ -10,7 +10,7 @@
  * Programación: 06:00 CDMX diario (12:00 UTC) vía pg_cron.
  * v13.187.0
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -65,7 +65,7 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   }
 }));
 
-async function ejecutar(admin: ReturnType<typeof createClient>): Promise<Response> {
+async function ejecutar(admin: SupabaseClient): Promise<Response> {
   const { data: pendientes, error } = await admin
     .from("v_pagos_rep_pendientes")
     .select("pago_id, factura_id, factura_numero, factura_serie, organization_id, dias_restantes, fecha_limite_rep, monto_aplicado_factura, moneda")

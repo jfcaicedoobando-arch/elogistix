@@ -23,7 +23,8 @@ vi.mock("@/features/crm/hooks", () => ({
   useReportesCRM: (...a: unknown[]) => reportes(...a),
   useForecast: (...a: unknown[]) => forecast(...a),
 }));
-vi.mock("@/hooks/shared", () => ({ useDocumentTitle: () => {} }));
+vi.mock("@/hooks/shared", async () => ({
+  ...(await import("@/hooks/shared/useCargaExpirada")), useDocumentTitle: () => {} }));
 vi.mock("@/features/crm/components/LeaderboardVendedores", () => ({ default: () => <div /> }));
 vi.mock("@/features/crm/components/CrmForecastMesKpis", () => ({ CrmForecastMesKpis: () => <div /> }));
 

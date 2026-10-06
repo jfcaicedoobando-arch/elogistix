@@ -1,14 +1,18 @@
 /** Formatos numéricos y de moneda. */
 
-// Caché de Intl.NumberFormat por moneda: construir uno por render costaba
+// Caché de Intl.NumberFormat por moneda y precisión: construir uno por render costaba
 // ~600 constructores en CxP y ~4,000 en conciliación. Mantén el Map interno
 // (no exportar) para preservar la API pública.
 const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
-const getCurrencyFormatter = (currency: string): Intl.NumberFormat => {
-  let f = currencyFormatterCache.get(currency);
+const getCurrencyFormatter = (currency: string, decimals?: number): Intl.NumberFormat => {
+  const key = `${currency}:${decimals ?? "default"}`;
+  let f = currencyFormatterCache.get(key);
   if (!f) {
-    f = new Intl.NumberFormat("es-MX", { style: "currency", currency, minimumFractionDigits: 2 });
-    currencyFormatterCache.set(currency, f);
+    f = new Intl.NumberFormat("es-MX", {
+      style: "currency", currency, minimumFractionDigits: decimals ?? 2,
+      ...(decimals === undefined ? {} : { maximumFractionDigits: decimals }),
+    });
+    currencyFormatterCache.set(key, f);
   }
   return f;
 };
@@ -41,8 +45,13 @@ const getNumberFormatter = (min: number, max: number): Intl.NumberFormat => {
   return f;
 };
 
-export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
-  const raw = getCurrencyFormatter(currency).format(amount);
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'MXN',
+  options: { decimals?: number } = {},
+): string => {
+  // Intl rounds directly, including negative half ties; never pre-round with Math.round.
+  const raw = getCurrencyFormatter(currency, options.decimals).format(amount);
   // Normaliza NBSP (Intl separa código/símbolo con U+00A0 para algunas monedas
   // como USD/EUR) a espacio normal para output consistente entre monedas.
   const formatted = raw.replace(/\u00a0/g, ' ');
@@ -97,12 +106,17 @@ export const formatCurrencyCompact = (amount: number, currency: string = "MXN"):
 /** Formatea un número entero/decimal con separadores de miles mexicanos. */
 export const formatNumber = (
   value: number | null | undefined,
-  options: { decimals?: number; suffix?: string } = {}
+  options: {
+    decimals?: number;
+    suffix?: string;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  } = {}
 ): string => {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const { decimals, suffix } = options;
-  const min = decimals ?? 0;
-  const max = decimals ?? (Number.isInteger(value) ? 0 : 2);
+  const min = options.minimumFractionDigits ?? decimals ?? 0;
+  const max = options.maximumFractionDigits ?? decimals ?? Math.max(min, Number.isInteger(value) ? 0 : 2);
   const formatted = getNumberFormatter(min, max).format(value);
   return suffix ? `${formatted} ${suffix}` : formatted;
 };

@@ -22,7 +22,7 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
   }),
 }));
 const setSuperAdminOrg = vi.fn(async (_id: string | null) => undefined);
-vi.mock("@/features/admin/services/organization", () => ({
+vi.mock("@/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => orgs),
   setSuperAdminOrg: (id: string | null) => setSuperAdminOrg(id),
   // Completar el mock (antes faltaba y el hook registraba un aviso de ruido).

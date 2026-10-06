@@ -10,3 +10,7 @@ export type {
   MotivoNotaCreditoProveedor,
   MonedaNotaCreditoProveedor,
 } from "./notasCredito";
+
+export type { VinculoLinea } from "./vinculoLinea";
+
+export type { FacturaCxP } from "./proveedorFacturas";

@@ -1,9 +1,5 @@
-import type { CrmActividadRow } from "../services/actividades";
-
-export interface ActividadEntidadContexto {
-  entidad_nombre?: string | null;
-  entidad_estado?: "disponible" | "no_disponible" | "error";
-}
+import type { CrmActividadRow, ActividadEntidadContexto } from "../types/actividades";
+export type { ActividadEntidadContexto } from "../types/actividades";
 
 export function actividadEntidadNombre(a: ActividadEntidadContexto): string {
   if (a.entidad_estado === "error") return "No pudimos consultar la entidad";

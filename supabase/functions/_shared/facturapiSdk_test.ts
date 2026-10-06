@@ -61,6 +61,24 @@ Deno.test("exigirInvoices valida todas las operaciones usadas por el ERP", () =>
   assertEquals(typeof invoices.create, "function");
 });
 
+Deno.test("cancel conserva el receptor y entrega motivo/sustitución exactamente una vez", async () => {
+  let llamadas = 0;
+  const params = { motive: "01", substitution: "sustituta-id" };
+  const invoices = {
+    marker: "invoices",
+    cancel(id: string, received: unknown) {
+      assertEquals(this.marker, "invoices");
+      assertEquals(id, "documento-id");
+      assertEquals(received, params);
+      llamadas++;
+      return Promise.resolve({ id, status: "canceled" });
+    },
+  };
+  const result = await exigirInvoices({ invoices }, "cancel").cancel("documento-id", params);
+  assertEquals(result.status, "canceled");
+  assertEquals(llamadas, 1);
+});
+
 Deno.test("exigirInvoices falla con mensaje accionable si falta una operación", () => {
   const err = assertThrows(
     () => exigirInvoices({ invoices: { create: () => Promise.resolve({}) } }, "create", "paymentSummary"),

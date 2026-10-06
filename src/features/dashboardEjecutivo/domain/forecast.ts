@@ -8,7 +8,7 @@
  *
  * Función pura — sin I/O ni fetches. Fácil de testear.
  */
-import type { PuntoEERR } from "@/features/dashboardEjecutivo/services";
+import type { PuntoEERR } from "@/features/dashboardEjecutivo/types/eerr";
 
 export interface ForecastPoint {
   periodo: string;                 // "YYYY-MM"

@@ -2,7 +2,7 @@
  * Helpers para `enviar-factura-email`. Extraído del handler principal para
  * respetar el límite `max-lines` del linter y facilitar tests unitarios.
  */
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { enviarEmailPlantilla } from "../_shared/enviarEmailPlantilla.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
@@ -49,7 +49,7 @@ export interface SendParsed {
   ejecutivo: { nombre?: string; email?: string; telefono?: string };
 }
 
-export async function loadFactura(admin: ReturnType<typeof createClient>, id: string, userId: string) {
+export async function loadFactura(admin: SupabaseClient, id: string, userId: string) {
   const { data, error } = await admin
     .from('facturas')
     .select('id, numero, organization_id, cliente_id, cliente_nombre, total, moneda, uuid_fiscal, folio_fiscal, serie, metodo_pago, forma_pago, fecha_emision, facturapi_id')
@@ -108,7 +108,7 @@ export async function fetchFacturapiFileWithFallback(
 
 
 export async function uploadToBucket(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   path: string,
   bytes: Uint8Array,
   contentType: string,
@@ -125,7 +125,7 @@ export function sanitizeDownloadFilename(name: string): string {
 }
 
 export async function signUrl(
-  admin: ReturnType<typeof createClient>, path: string, downloadFilename?: string,
+  admin: SupabaseClient, path: string, downloadFilename?: string,
 ): Promise<string> {
   const opts = downloadFilename ? { download: downloadFilename } : undefined;
   const { data, error } = await admin.storage.from('facturas-pdf').createSignedUrl(path, SIGNED_URL_TTL, opts);
@@ -180,7 +180,7 @@ export async function sendToRecipients(params: {
 export interface AuthedCtx {
   userId: string;
   userEmail: string;
-  admin: ReturnType<typeof createClient>;
+  admin: SupabaseClient;
   supabaseUrl: string;
   supabaseServiceKey: string;
 }
@@ -208,7 +208,7 @@ export async function authenticateRequest(req: Request, cors: Record<string, str
 }
 
 export async function prepareAttachments(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   factura: FacturaCtx,
   apiKey: string,
   ts: number,

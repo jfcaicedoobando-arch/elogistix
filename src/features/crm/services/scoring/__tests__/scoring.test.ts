@@ -43,4 +43,8 @@ describe("puntaje", () => {
     expect(describirCondicion({ ...base, opcion_id: "o" }, "Marítimo")).toBe("Opción: Marítimo");
     expect(describirCondicion({ ...base, fuente: "etapa", valor_texto: "Calificado" })).toBe("Etapa = Calificado");
   });
+  it("conserva tres decimales de precisión sin rellenar ceros en los límites", () => {
+    expect(describirCondicion({ ...base, min: 1.2345, max: 2.5 })).toBe("1.235 a menos de 2.5");
+    expect(describirCondicion({ ...base, min: 1 })).toBe("1 o más");
+  });
 });

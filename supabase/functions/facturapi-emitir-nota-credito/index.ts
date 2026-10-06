@@ -5,7 +5,7 @@
  * Entrada: { nota_credito_id: string }
  * Salida: { uuid, folio, serie, facturapi_id, pdf_url, xml_url }
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
@@ -34,7 +34,7 @@ interface ReqBody { nota_credito_id?: string }
 interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string; status?: string }
 
 async function createNcInvoice(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   /** Cliente opaco del SDK; lo tipa el adaptador `_shared/facturapiSdk.ts`. */
   facturapi: unknown,
   payload: unknown,
@@ -203,7 +203,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
 }));
 
 interface PersistNcArgs {
-  supabase: ReturnType<typeof createClient>;
+  supabase: SupabaseClient;
   invoice: { id: string; uuid: string; folio_number?: number; folio?: number; series?: string };
   ctx: ReturnType<typeof buildNcContextFromRows>;
   nc: { organization_id: string; factura_id: string };

@@ -9,6 +9,7 @@ import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { exigirInvoices } from "../_shared/facturapiSdk.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -113,7 +114,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     // EF-05: timeout defensivo — el webhook/cron reconcilian el estado real.
     cancelResp = await withFacturapiTimeout(
       "invoices.cancel",
-      facturapi.invoices.cancel(objetivoFacturapiId, cancelPayload),
+      exigirInvoices(facturapi, "cancel").cancel(objetivoFacturapiId, cancelPayload),
       FACTURAPI_CANCEL_TIMEOUT_MS,
     ) as FapiCancelResponse;
   } catch (err) {
@@ -168,7 +169,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       entidadId: pago.id,
       detalles: { status, response: detail },
     });
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
+    const message = typeof detail?.message === "string" ? detail.message : `FacturApi respondió ${status}`;
     return json({ error: "facturapi_error", status, detail, message }, 502);
   }
 
@@ -184,4 +185,3 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     cancelResp,
   });
 }));
-

@@ -11,7 +11,7 @@ import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
 import { clearPersistedQueryCache } from "@/lib/browserStorage";
 
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";

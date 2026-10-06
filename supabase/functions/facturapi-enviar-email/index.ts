@@ -7,7 +7,7 @@
  *
  * Salida: { ok: true, enviado_a: string } o error normalizado.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
@@ -34,7 +34,7 @@ interface Target {
   entidadId: string;
 }
 
-type SbClient = ReturnType<typeof createClient>;
+type SbClient = SupabaseClient;
 
 type ResolvedT =
   | { ok: true; data: Target }

@@ -5,7 +5,7 @@ import type { EstadoResultados } from "@/features/profit/domain/estadoResultados
 import type { ResumenTesoreria, TopItem } from "@/features/tesoreria/services";
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
-import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+import type { FuenteEERR } from "@/features/profit/domain/fuenteEerr";
 import type { VencimientosEjecutivos } from "../domain/vencimientos";
 
 export type SeveridadAlerta = "info" | "warning" | "critica";
@@ -18,13 +18,8 @@ export interface AlertaEjecutiva {
   url?: string;
 }
 
-export interface PuntoEERR {
-  notas_proveedor_sin_base_count?: number;
-  periodo: string;
-  ingresos: number;
-  costos: number;
-  utilidad: number;
-}
+import type { PuntoEERR } from "../types/eerr";
+export type { PuntoEERR } from "../types/eerr";
 
 export interface KPIsEjecutivos {
   ingresos_mxn: number;

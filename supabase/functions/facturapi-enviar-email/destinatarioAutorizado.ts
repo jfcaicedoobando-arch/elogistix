@@ -3,10 +3,10 @@
  * Vive fuera de `index.ts` para acotar la complejidad del handler y el tamaño
  * del archivo (reglas de lint del proyecto).
  */
-import type { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { bloqueoDestinatarioOverride } from "./overrideDestinatario.ts";
 
-type SbClient = ReturnType<typeof createClient>;
+type SbClient = SupabaseClient;
 
 const TIPOS_FACTURACION = [
   "facturacion", "facturación", "cobranza", "contabilidad", "pagador",

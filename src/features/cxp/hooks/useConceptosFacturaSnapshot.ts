@@ -4,7 +4,7 @@ import { fetchConceptosFacturaSnapshot } from "../services/conceptosFacturaSnaps
 
 export function useConceptosFacturaSnapshot(facturaId: string | null) {
   return useQuery({
-    queryKey: [...queryKeys.cxp.facturaEditRow(facturaId), "conceptos-snapshot"],
+    queryKey: queryKeys.cxp.conceptosSnapshot(facturaId),
     queryFn: () => fetchConceptosFacturaSnapshot(facturaId!),
     enabled: !!facturaId,
     staleTime: 0,

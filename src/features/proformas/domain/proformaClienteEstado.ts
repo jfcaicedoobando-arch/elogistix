@@ -4,7 +4,7 @@
  * Concentra en un único lugar el cast requerido y devuelve valores ya
  * normalizados a los componentes de presentación.
  */
-import type { ProformaDetalleFull } from "@/features/proformas/services";
+import type { ProformaDetalleFull } from "@/features/proformas/types";
 
 // SAFE-CAST: columnas nuevas aún no presentes en los tipos generados; el
 // helper aísla el cast para que el resto del código consuma valores tipados.

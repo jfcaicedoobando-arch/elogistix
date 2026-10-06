@@ -1,3 +1,4 @@
+import { formatFechaHora } from "@/lib/formatters";
 /**
  * P2-A · Diagnóstico accionable del webhook de facturación electrónica, por
  * ambiente (pruebas / producción). El botón consulta al proveedor y muestra
@@ -92,7 +93,7 @@ export function FacturapiWebhookDiagnostico({ orgId, ambiente, estadoGuardado, v
 
       {verificadoAt && !diag ? (
         <p className="text-xs text-muted-foreground">
-          Última verificación: {new Date(verificadoAt).toLocaleString("es-MX")}
+          Última verificación: {formatFechaHora(verificadoAt)}
         </p>
       ) : null}
 

@@ -102,6 +102,11 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     });
   });
 
+  it.each(["scripts/check-edge-entrypoints.sh", "tests/contracts/money.json"])("%s activates Edge adapter verification", (ruta) => {
+    const head = commit([ruta], base);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head })).toMatchObject({ edge: "true" });
+  });
+
   it("sin base utilizable corre TODO (conservador)", () => {
     expect(detectar({ EVENT_NAME: "workflow_dispatch", HEAD_SHA: base })).toMatchObject({
       frontend: "true",

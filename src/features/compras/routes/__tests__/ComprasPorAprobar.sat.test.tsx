@@ -49,7 +49,8 @@ vi.mock("@/features/cxp/hooks", () => ({
   useVerificarSatLote: () => ({ verificar: vi.fn(), isRunning: false, progreso: null }),
   useSodAprobacion: () => ({ idsBloqueados: () => new Set<string>(), motivoBloqueo: () => null }),
 }));
-vi.mock("@/hooks/shared", () => ({
+vi.mock("@/hooks/shared", async () => ({
+  ...(await import("@/hooks/shared/useCargaExpirada")),
   usePermissions: () => ({ canEdit: true, canAprobarFacturaProveedor: true }),
   useFiltroUrl: <T,>(_c: string, _v: readonly T[], def: T) => [def, vi.fn()],
   useTextoUrl: (_c: string, def = "") => [def, vi.fn()],

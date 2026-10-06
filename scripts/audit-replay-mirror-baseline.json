@@ -1,25 +1,27 @@
 {
-  "_doc": "Baseline R4BD-01/R4BD-03 (Ola 13 · Sprint 06): divergencias espejo↔migración vigente PREEXISTENTES al guardrail audit:replay-mirror. Son deuda técnica de la misma clase (en replay limpio gana la migración, no el espejo) pero fuera del alcance del sprint, que sólo re-emitió registrar_pago_proveedor_lote y regenerar_movimiento_pago_proveedor. NO agregar entradas nuevas: el fix correcto es re-emitir el cuerpo del espejo como migración NUEVA con timestamp posterior. Si una entrada deja de divergir, el guardrail falla y hay que borrarla de este archivo. | Ola 14 · Sprint 05 (R5BD-03): plan de saldo escrito en docs/ola14-replay-mirror-saldo.md — decisión por entrada (alinear ESPEJO en las 14, ninguna requiere re-emisión con la evidencia actual), ritmo de 3-4 entradas por ola empezando por #4 cancelar_factura_proveedor, #10 saldo_factura y #11 operaciones_stats, y fecha compromiso de vaciado total (entradas: []) al cierre de la Ola 17.",
+  "_doc": "ARQ04 / R4BD-01/R4BD-03: deuda preexistente fijada por firma completa, migración efectiva y SHA-256 de ambas definiciones normalizadas. No añadir excepciones ni regenerar huellas para conseguir verde. Revisar la definición efectiva y alinear el espejo o emitir una migración nueva; nunca editar migraciones aplicadas. La normalización preserva literales, ignora comentarios/espaciado exterior, el delimitador externo y el terminador del statement. _audit_embarques_umbrales y recalcular_estado_factura se retiraron por diferencias exclusivamente de formato, sin modificar SQL. Referencia histórica: docs/ola14-replay-mirror-saldo.md.",
   "entradas": [
     {
       "espejo": "supabase/schema/auditoria/auditoria_embarques_org.sql",
       "funcion": "auditoria_embarques_org",
-      "migracion_vigente": "20260808204754_d5747ba4-5098-4e9c-af3a-c8ecc3809a03.sql"
-    },
-    {
-      "espejo": "supabase/schema/auditoria/auditoria_embarques_org.sql",
-      "funcion": "_audit_embarques_umbrales",
-      "migracion_vigente": "20260723160534_57d816aa-4b39-4ec5-b8ab-e0dccc804d70.sql"
+      "firma": "auditoria_embarques_org(uuid)",
+      "migracion_vigente": "20260905000100_ola7_v15_m1_m8_m10_n1.sql",
+      "sha256_espejo": "3d5d8ae0bd1c383800191b81dfc577215e0f4c1e20d4c3f57fdda3d27d7aca1a",
+      "sha256_migracion": "83a054fd43266ce643cc78e00cc8d0b49b665a921ffaccb2dd88d7e6669258f0",
+      "responsable": "Mantenedores de elogistix: módulo Auditoría / SQL",
+      "justificacion": "El espejo legacy no refleja la definición efectiva de septiembre que incluye auditoría de contenedores_totales_descuadrados y cambios de valoración. Se conserva únicamente esta pareja exacta mientras se revisa su alineación; la variante sin argumentos ya coincide y no se exceptúa.",
+      "condicion_retiro": "Retirar al alinear esta firma con la definición efectiva revisada, validando replay, permisos y resultados de auditoría en una base efímera. Si se elige la lógica del espejo, emitir una migración nueva posterior y retirar la excepción."
     },
     {
       "espejo": "supabase/schema/auditoria/auditoria_embarques_org.sql",
       "funcion": "_audit_embarques_agregar",
-      "migracion_vigente": "20260808204754_d5747ba4-5098-4e9c-af3a-c8ecc3809a03.sql"
-    },
-    {
-      "espejo": "supabase/schema/facturacion/recalcular_estado_factura.sql",
-      "funcion": "recalcular_estado_factura",
-      "migracion_vigente": "20260725184833_cefe9d2d-98b6-47f0-ba83-0e49fc225e06.sql"
+      "firma": "_audit_embarques_agregar(jsonb,jsonb)",
+      "migracion_vigente": "20260829073512_457538f5-72bc-4eea-8ce0-907e71366bf8.sql",
+      "sha256_espejo": "a7b557c6b0bf945a924a29e99ce8ea2cb3160598fdb3e16e635967742bbfa8b6",
+      "sha256_migracion": "26d59037ac8efe4ec46eeba30a68cf47901c3a5de6b542aebe6446f8a0226076",
+      "responsable": "Mantenedores de elogistix: módulo Auditoría / SQL",
+      "justificacion": "El espejo legacy omite la clave venta_total_descuadrado incluida en el agregador efectivo de agosto. La excepción conserva sólo ambas definiciones existentes; no acepta cambios adicionales del agregador ni de su migración vigente.",
+      "condicion_retiro": "Retirar tras revisar y alinear el agregador canónico con su definición efectiva, validando las claves y conteos por regla en replay efímero. Cualquier corrección funcional debe ir en una migración nueva, nunca en una ya aplicada."
     }
   ]
 }

@@ -54,7 +54,7 @@ database=false
 if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$' <<<"$diff"; then
   frontend=true
 fi
-if grep -qE '^supabase/functions/|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/|^scripts/ci/detect-areas\.sh$' <<<"$diff"; then
+if grep -qE '^supabase/functions/|^tests/contracts/|^scripts/check-edge-entrypoints\.sh$|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/|^scripts/ci/detect-areas\.sh$' <<<"$diff"; then
   edge=true
 fi
 if grep -qE '^scripts/db/|^supabase/(migrations|schema|tests|releases)/|^drizzle/|^drizzle\.config\.ts$|^scripts/audit-|^scripts/lib/|^scripts/ci/detect-areas\.sh$|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then

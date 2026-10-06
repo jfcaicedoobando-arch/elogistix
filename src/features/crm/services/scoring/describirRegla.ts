@@ -1,9 +1,10 @@
+import { formatNumber } from "@/lib/formatters";
 /** Texto legible de reglas de puntaje y armado de una regla desde el formulario. */
 import { aNumero } from "@/features/crm/services/pricing/tiposPricing";
 import { ETIQUETA_FUENTE, type FuenteRegla, type NuevaRegla, type ReglaScoring } from "./reglasScoringCrm";
 import type { ObjetoPuntaje } from "./scoringCrm";
 
-const num = (n: number) => n.toLocaleString("es-MX");
+const num = (n: number) => formatNumber(n, { minimumFractionDigits: 0, maximumFractionDigits: 3 });
 
 /** Texto de la condición, p. ej. "250,000 a menos de 1,000,000". */
 export function describirCondicion(r: ReglaScoring, etiquetaOpcion?: string): string {

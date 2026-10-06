@@ -1,3 +1,4 @@
+import { crm } from "../queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   listarAdjuntos,
@@ -8,7 +9,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useUrlAdjuntoPricing(path: string) {
   return useQuery({
-    queryKey: ["crm", "pricing", "adjunto-url", path],
+    queryKey: crm.adjuntoUrl(path),
     queryFn: () => urlAdjunto(path),
     staleTime: 50 * 60_000,
   });
@@ -16,7 +17,7 @@ export function useUrlAdjuntoPricing(path: string) {
 
 export function useAdjuntosSolicitudPricing(organizationId: string, solicitudId: string) {
   const qc = useQueryClient();
-  const key = ["crm", "pricing", "adjuntos", solicitudId];
+  const key = crm.adjuntos(solicitudId);
   const { data: adjuntos = [], isLoading, error } = useQuery({
     queryKey: key,
     queryFn: () => listarAdjuntos(organizationId, solicitudId),

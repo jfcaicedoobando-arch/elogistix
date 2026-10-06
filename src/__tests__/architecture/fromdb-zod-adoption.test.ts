@@ -16,7 +16,7 @@ import { scanFromDbAdoption } from "../../../scripts/lib/fromDbAdoption";
 
 /** Casts crudos `fromDb<T>(…)` permitidos por feature. Solo puede BAJAR. */
 const BASELINE_SIN_SCHEMA: Record<string, number> = {
-  admin: 6,
+  admin: 5,
   auditoria: 1,
   catalogos: 3,
   configuracion: 4,

@@ -26,7 +26,6 @@ import {
 
 initSentryEdge("auditoria-explicar-hallazgo");
 
-// @ts-expect-error Deno global
 const env = (k: string) => Deno.env.get(k);
 
 const SYSTEM_PROMPT = `Eres un analista senior de operaciones de un freight forwarder mexicano (Libre Carga).
@@ -44,7 +43,6 @@ Máximo 220 palabras totales. No inventes datos que no estén en el contexto. Us
 
 
 async function buildContexto(adminClient: ReturnType<typeof authenticate> extends Promise<infer T> ? (T extends { adminClient: infer C } ? C : never) : never, embarqueId: string): Promise<ContextoEmbarque | null> {
-  // @ts-expect-error supabase chain
   const { data: e } = await adminClient
     .from("embarques")
     .select("expediente, estado, modo, cliente_nombre, etd, eta, fecha_llegada_real")
@@ -52,7 +50,6 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     .maybeSingle();
   if (!e) return null;
 
-  // @ts-expect-error supabase chain
   const [{ data: cv }, { data: cc }, { data: facturas }, { data: proformas }, { data: docs }] = await Promise.all([
     adminClient.from("conceptos_venta").select("id, estado_facturacion").eq("embarque_id", embarqueId),
     adminClient.from("conceptos_costo").select("id").eq("embarque_id", embarqueId),
@@ -105,7 +102,7 @@ async function callGateway(apiKey: string, userPrompt: string): Promise<Response
   });
 }
 
-function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit) {
+function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: Record<string, string>) {
   const { status: mappedStatus, message } = mapGatewayStatus(status);
   if (mappedStatus === 500) log.error("AI gateway error", { status_code: status });
   return errorResponse(message, mappedStatus, cors);
@@ -116,18 +113,15 @@ async function authorizeEmbarque(
   userId: string,
   embarqueId: string,
 ): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
-  // @ts-expect-error supabase chain
   const { data: emb } = await adminClient
     .from("embarques").select("organization_id").eq("id", embarqueId).maybeSingle();
   if (!emb?.organization_id) return { ok: false, status: 404, message: "Embarque no encontrado" };
 
-  // @ts-expect-error supabase chain
   const { data: membership } = await adminClient
     .from("organization_members").select("organization_id")
     .eq("user_id", userId).eq("organization_id", emb.organization_id).maybeSingle();
   if (membership) return { ok: true };
 
-  // @ts-expect-error supabase chain
   const { data: superRole } = await adminClient
     .from("user_roles").select("role").eq("user_id", userId).eq("role", "super_admin").maybeSingle();
   if (superRole) return { ok: true };
@@ -141,7 +135,7 @@ async function invocarGateway(
   regla: string,
   detalle: string,
   log: ReturnType<typeof createLogger>,
-  cors: HeadersInit,
+  cors: Record<string, string>,
 ): Promise<{ ok: true; content: string } | { ok: false; response: Response }> {
   const apiKey = env("LOVABLE_API_KEY");
   if (!apiKey) {
@@ -156,7 +150,7 @@ async function invocarGateway(
   return { ok: true, content };
 }
 
-async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>): Promise<Response> {
+async function processRequest(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>): Promise<Response> {
   const auth = await authenticate(req, log);
   const body = await req.json().catch(() => null) as { embarque_id?: string; regla?: string; detalle?: string } | null;
   if (!body?.embarque_id || !body?.regla || !body?.detalle) {

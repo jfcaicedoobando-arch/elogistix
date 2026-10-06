@@ -52,6 +52,7 @@ export async function persistEnvio(params: {
     estado,
     error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
   }).select('id').single();
+  const envioId = typeof envio?.id === 'string' ? envio.id : null;
   await ctx.admin.from('bitacora_actividad').insert({
     organization_id: factura.organization_id,
     usuario_id: ctx.userId,
@@ -60,7 +61,7 @@ export async function persistEnvio(params: {
     accion: anyOk ? 'factura_enviada_email' : 'factura_envio_email_fallido',
     entidad_id: factura.id,
     entidad_nombre: factura.numero,
-    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
+    detalles: { envio_id: envioId, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
   }).then(() => null, () => null);
-  return envio?.id ?? null;
+  return envioId;
 }

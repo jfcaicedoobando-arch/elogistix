@@ -3,7 +3,7 @@
  * Vive fuera de los componentes para no romper fast-refresh.
  */
 import { formatFechaEs } from "@/lib/formatters/dates";
-import type { ProximaActividad } from "@/features/crm/hooks";
+import type { ProximaActividad } from "@/features/crm/types/actividades";
 import { diffDiasMx } from "@/lib/date/mx";
 
 export function formatProx(prox: ProximaActividad | undefined): string {

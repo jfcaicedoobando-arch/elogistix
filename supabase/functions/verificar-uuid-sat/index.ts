@@ -13,7 +13,7 @@
  * El expression es: ?re={RFC_EMISOR}&rr={RFC_RECEPTOR}&tt={TOTAL}&id={UUID}
  * v13.195.0
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
@@ -150,13 +150,13 @@ interface CfdiParaVerificar {
   organization_id: string | null;
 }
 
-async function fetchOrgRfc(admin: ReturnType<typeof createClient>, orgId: string | null): Promise<string> {
+async function fetchOrgRfc(admin: SupabaseClient, orgId: string | null): Promise<string> {
   if (!orgId) return "";
   const { data } = await admin.from("organizations").select("rfc").eq("id", orgId).maybeSingle();
   return normalizarRfc((data as { rfc?: string } | null)?.rfc);
 }
 
-async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
+async function loadFacturaCxp(admin: SupabaseClient, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
   const { data, error } = await admin
     .from("proveedor_facturas")
     .select("id, uuid_fiscal, rfc_proveedor, total, organization_id")
@@ -177,7 +177,7 @@ async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId:
   };
 }
 
-async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
+async function loadFacturaCxc(admin: SupabaseClient, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
   // α.1 — CFDI emitido: emisor = org, receptor = cliente (por rfc_cliente).
   const { data, error } = await admin
     .from("facturas")
@@ -199,7 +199,7 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
   };
 }
 
-async function loadNotaCreditoCxp(admin: ReturnType<typeof createClient>, ncId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
+async function loadNotaCreditoCxp(admin: SupabaseClient, ncId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
   const { data, error } = await admin
     .from("proveedor_notas_credito")
     .select("id, uuid_fiscal, monto, organization_id, proveedor_factura_id, proveedor_facturas:proveedor_factura_id (rfc_proveedor)")
@@ -225,7 +225,7 @@ async function loadNotaCreditoCxp(admin: ReturnType<typeof createClient>, ncId: 
   };
 }
 
-async function authenticate(req: Request, cors: HeadersInit) {
+async function authenticate(req: Request, cors: Record<string, string>) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return { error: json(cors, { error: "unauthorized" }, 401) };
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
@@ -243,7 +243,7 @@ function parseTipo(raw?: string): Tipo {
   return "cxp";
 }
 
-async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string; tipo?: Tipo; error?: Response }> {
+async function parseBody(req: Request, cors: Record<string, string>): Promise<{ id?: string; tipo?: Tipo; error?: Response }> {
   let body: { factura_id?: string; nc_id?: string; tipo?: string };
   try { body = await req.json(); } catch { return { error: json(cors, { error: "invalid_json" }, 400) }; }
   if (body.nc_id && body.tipo === "cxp_nc") return { id: body.nc_id, tipo: "cxp_nc" };
@@ -253,7 +253,7 @@ async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string
 }
 
 async function processVerification(
-  cors: HeadersInit,
+  cors: Record<string, string>,
   userId: string,
   id: string,
   tipo: Tipo,

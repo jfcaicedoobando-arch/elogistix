@@ -181,11 +181,7 @@ export function cuerpoContratoSdk(
 }
 
 /**
- * `invoices.cancel` YA está tipada y cubierta por los contract tests de este
- * adaptador, pero el flujo de cancelación (`facturapi-cancelar`,
- * `facturapi-cancelar-rep`, `facturapi-cancelar-nota-credito`) todavía resuelve
- * el SDK con su propio cast: su manejo de timeout persiste
- * `cancellation_status='verifying'` y migrarlo exige rehacer ese contrato de
- * estados. Queda fuera del alcance de este lote (P2-C sólo centraliza
- * `create`, `list` y `paymentSummary`).
+ * `invoices.cancel` también usa este contrato en los tres adaptadores de
+ * cancelación. Sólo se valida la operación del SDK; el timeout y la persistencia
+ * de `cancellation_status='verifying'` conservan su orquestación existente.
  */

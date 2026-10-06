@@ -15,14 +15,8 @@ export const PERIODOS_META: { value: PeriodoMeta; label: string }[] = [
   { value: "trimestre", label: "Trimestre" },
 ];
 
-export interface PresupuestoMes {
-  id: string;
-  anio: number;
-  mes: number;
-  monto: number;
-  moneda: Moneda;
-}
-
+import type { PresupuestoMes } from "../types/metasPresupuesto";
+export type { PresupuestoMes } from "../types/metasPresupuesto";
 export interface MetaActividad {
   id: string;
   periodo: PeriodoMeta;

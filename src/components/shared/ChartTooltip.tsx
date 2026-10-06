@@ -1,3 +1,4 @@
+import { formatNumber } from "@/lib/formatters";
 /**
  * Ola D · #18 — Tooltip compartido para las gráficas (recharts).
  *
@@ -35,10 +36,7 @@ export interface ChartTooltipProps {
 
 /** Fallback es-MX: enteros sin decimales, decimales con dos. */
 function formatoPorDefecto(valor: number): string {
-  return valor.toLocaleString("es-MX", {
-    minimumFractionDigits: Number.isInteger(valor) ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
+  return formatNumber(valor, { decimals: Number.isInteger(valor) ? 0 : 2 });
 }
 
 function aNumero(valor: ChartTooltipEntry["value"]): number | null {

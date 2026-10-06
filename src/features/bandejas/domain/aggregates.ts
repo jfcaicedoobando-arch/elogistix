@@ -6,7 +6,7 @@ import type {
   CarteraPendienteRow,
   CxpPorCapturarRow,
   CxpPorPagarRow,
-} from "../services/bandejas";
+} from "../types/bandejas";
 import {
   esAccionable,
   estaPorVencer,

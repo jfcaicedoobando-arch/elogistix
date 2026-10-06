@@ -6,7 +6,7 @@
  * que el usuario lo supiera. Aquí se derivan las opciones autorizadas con
  * nombre legible para que la elección sea explícita.
  */
-import type { PortalClientUser } from "@/features/portal/services/identity";
+import type { PortalClientUser } from "@/features/portal/types/portal";
 
 export interface ClienteSolicitante {
   id: string;

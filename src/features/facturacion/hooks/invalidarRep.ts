@@ -7,18 +7,10 @@
  * existía. Centralizar las invalidaciones evita que se vuelva a olvidar.
  */
 import type { QueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
-import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { lecturasAfectadasPorRep } from "../application/efectosRep";
 
 export function invalidarTrasRep(qc: QueryClient, facturaId?: string): void {
-  if (facturaId) {
-    qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
-    qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
-  } else {
-    qc.invalidateQueries({ queryKey: queryKeys.facturas.pagosAll });
+  for (const queryKey of lecturasAfectadasPorRep(facturaId)) {
+    void qc.invalidateQueries({ queryKey });
   }
-  qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
-  qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
-  qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
-  invalidateProfitDependencies(qc);
 }
