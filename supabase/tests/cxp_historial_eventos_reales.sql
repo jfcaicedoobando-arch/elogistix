@@ -153,7 +153,7 @@ BEGIN
   v_error := NULL;
   BEGIN
     PERFORM public.aprobar_factura_proveedor(v_futura, true, 'Gasto de administración de prueba');
-  EXCEPTION WHEN serialization_failure THEN GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT; END;
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT; END;
   IF COALESCE(v_error LIKE 'LC_CONFLICTO_CONCURRENCIA:%', false) IS NOT TRUE
     OR EXISTS (SELECT 1 FROM public.bitacora_actividad WHERE entidad_id = v_futura)
     OR NOT EXISTS (SELECT 1 FROM public.proveedor_facturas WHERE id = v_futura

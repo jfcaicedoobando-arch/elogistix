@@ -134,22 +134,22 @@ BEGIN
   v_snapshot := pg_temp.snapshot_cxp(v_f66);
   PERFORM pg_temp.assert_error(format(
     'SELECT public.aprobar_factura_proveedor(%L::uuid,true,%L,NULL)', v_f66, 'Gasto administrativo de prueba'),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: version NULL');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: version NULL');
   PERFORM pg_temp.assert(pg_temp.snapshot_cxp(v_f66) = v_snapshot,
     'AUD66: version NULL no altera cabecera, conceptos ni bitacora');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.aprobar_factura_proveedor(%L::uuid,true,%L)', v_f66, 'Gasto administrativo de prueba'),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: cliente sin version');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: cliente sin version');
   PERFORM pg_temp.assert(pg_temp.snapshot_cxp(v_f66) = v_snapshot,
     'AUD66: cliente sin version no altera cabecera, conceptos ni bitacora');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.aprobar_factura_proveedor(%L::uuid,true,%L,%L::timestamptz)',
     v_f66, 'Gasto administrativo de prueba', v_version_a),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: aprobacion obsoleta');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: aprobacion obsoleta');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.aprobar_factura_proveedor(%L::uuid,false,%L,%L::timestamptz)',
     v_f66, 'Rechazo de prueba', v_version_a),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: rechazo obsoleto');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD66: rechazo obsoleto');
   PERFORM pg_temp.assert((SELECT tipo_cambio_usd = 21 AND estado_aprobacion = 'pendiente'
     AND updated_at = v_version_b AND aprobada_por IS NULL FROM public.proveedor_facturas WHERE id = v_f66),
     'AUD66: conflictos no cambian datos ni estado');
@@ -167,18 +167,18 @@ BEGIN
   v_snapshot := pg_temp.snapshot_cxp(v_f67);
   PERFORM pg_temp.assert_error(format(
     'SELECT public.reemplazar_conceptos_factura_proveedor(%L::uuid,%L::jsonb,NULL,NULL)', v_f67, v_conceptos),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: conceptos version NULL');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: conceptos version NULL');
   PERFORM pg_temp.assert(pg_temp.snapshot_cxp(v_f67) = v_snapshot,
     'AUD67: version NULL no altera cabecera, conceptos ni bitacora');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.reemplazar_conceptos_factura_proveedor(%L::uuid,%L::jsonb)', v_f67, v_conceptos),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: conceptos cliente sin version');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: conceptos cliente sin version');
   PERFORM pg_temp.assert(pg_temp.snapshot_cxp(v_f67) = v_snapshot,
     'AUD67: cliente sin version no altera cabecera, conceptos ni bitacora');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.reemplazar_conceptos_factura_proveedor(%L::uuid,%L::jsonb,NULL,%L::timestamptz)',
     v_f67, '[{"descripcion":"Concepto A obsoleto","monto":100}]', v_version_a),
-    '40001', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: reemplazo obsoleto');
+    'PT409', 'LC_CONFLICTO_CONCURRENCIA', 'AUD67: reemplazo obsoleto');
   PERFORM pg_temp.assert((SELECT count(*) = 1 AND min(descripcion) = 'Concepto B'
     FROM public.proveedor_facturas_conceptos WHERE proveedor_factura_id = v_f67)
     AND (SELECT updated_at = v_version_b FROM public.proveedor_facturas WHERE id = v_f67),
@@ -192,7 +192,7 @@ BEGIN
   PERFORM pg_temp.assert(v_version_b > v_version_a, 'AUD67: escritura directa del hijo cambia version padre');
   PERFORM pg_temp.assert_error(format(
     'SELECT public.reemplazar_conceptos_factura_proveedor(%L::uuid,%L::jsonb,NULL,%L::timestamptz)',
-    v_f67, v_conceptos, v_version_a), '40001', 'LC_CONFLICTO_CONCURRENCIA',
+    v_f67, v_conceptos, v_version_a), 'PT409', 'LC_CONFLICTO_CONCURRENCIA',
     'AUD67: cambio directo tampoco se sobrescribe');
   UPDATE public.proveedor_facturas_conceptos SET descripcion = 'Descripcion revisable'
   WHERE proveedor_factura_id = v_f66;
