@@ -41,9 +41,10 @@ export function olvidarEmbarqueInterno(embarqueId?: string): void {
  */
 export function obtenerEmbarqueInterno(
   embarqueId: string,
+  opciones: { fresco?: boolean } = {},
 ): Promise<EmbarqueInterno | null> {
   const previo = enVuelo.get(embarqueId);
-  if (previo && Date.now() - previo.at < VENTANA_MS) return previo.p;
+  if (!opciones.fresco && previo && Date.now() - previo.at < VENTANA_MS) return previo.p;
   const p = consultar(embarqueId);
   enVuelo.set(embarqueId, { at: Date.now(), p });
   p.catch(() => enVuelo.delete(embarqueId));
