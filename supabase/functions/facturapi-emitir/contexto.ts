@@ -9,6 +9,7 @@ import { resolverConceptosFiscales, type ConceptoRow } from "./conceptosFiscales
 import { validarCuadreFiscal, validarCuadreSubtotal } from "./contextoCuadre.ts";
 import { validateContext, type FacturaContext } from "./helpers.ts";
 import type { FacturaRow } from "./types.ts";
+import { cargarReferenciasConceptos } from "./referenciasConceptos.ts";
 
 interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
 // `ConceptoRow` (columnas reales de `conceptos_factura`) vive en
@@ -28,7 +29,11 @@ export async function cargarContexto(
 ): Promise<FacturaContext | Response> {
   const base = await cargarBaseContexto(supabase, facturaId, factura);
   if (base instanceof Response) return base;
-  const refs = await cargarReferenciasEmbarque(supabase, factura);
+  const conceptos = await cargarReferenciasConceptos(supabase, factura, base.conceptos);
+  if (conceptos instanceof Response) return conceptos;
+  // Sólo las facturas legadas sin vínculos por línea usan la cabecera.
+  const refs = conceptos.some((c) => c.referencias !== undefined)
+    ? null : await cargarReferenciasEmbarque(supabase, factura);
   const ctx: FacturaContext = {
     serie: factura.serie ?? null,
     forma_pago: factura.forma_pago ?? "",
@@ -37,7 +42,7 @@ export async function cargarContexto(
     moneda: factura.moneda ?? "MXN",
     tipo_cambio: Number(factura.tipo_cambio ?? 1),
     receptor: { legal_name: base.cliente.nombre, tax_id: factura.rfc_cliente ?? base.cliente.rfc ?? "", tax_system: base.cliente.regimen_fiscal ?? "", address: { zip: base.cliente.codigo_postal ?? "" }, email: base.contactoEmail },
-    conceptos: base.conceptos,
+    conceptos,
     sustituye_uuid: sustituyeUuid,
     referencias: refs,
     // REF-06: se asigna en index.ts DESPUÉS de tomar el claim (el claim ya no
@@ -65,7 +70,7 @@ async function cargarConceptosVigentes(
 ): Promise<ConceptoRow[] | Response> {
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .select("embarque_id, descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", facturaId)
     // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
     .is("deleted_at", null);
