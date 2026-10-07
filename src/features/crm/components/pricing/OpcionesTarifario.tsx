@@ -20,7 +20,7 @@ interface Props { solicitud: SolicitudPricingRow; puedeElegir: boolean }
 export function OpcionesTarifario({ solicitud: s, puedeElegir }: Props) {
   const qc = useQueryClient();
   const hoy = hoyMx();
-  const tarifas = useQuery({ queryKey: ["tarifario", "tarifas", false], queryFn: () => listarTarifasTarifario(false, hoy) });
+  const tarifas = useQuery({ queryKey: ["tarifario", "tarifas", "vigentes"], queryFn: () => listarTarifasTarifario("vigentes", hoy) });
   const esFob = (s.incoterm ?? "").toUpperCase() === "FOB";
   const fob = useQuery({ queryKey: ["tarifario", "cargos", "fob"], queryFn: () => listarCargos("fob"), enabled: esFob });
   const locales = useQuery({ queryKey: ["tarifario", "cargos", "locales"], queryFn: () => listarCargos("locales") });
