@@ -47,7 +47,7 @@ function agrupar(items: ConceptoConsolidado[]): Grupo[] {
 
 function columnas(moneda: "USD" | "MXN", hayIva: boolean): PdfColumn<ConceptoConsolidado>[] {
   const base: PdfColumn<ConceptoConsolidado>[] = [
-    { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
+    { key: "descripcion", title: "Descripción", hyphenate: false, cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum,
@@ -105,7 +105,7 @@ function SeccionMoneda({
  *
  * Contrato de maquetación multi-página (12.61.10):
  * - Únicos elementos `fixed` permitidos: `topBand` (vía `BrandHeader` dentro de
- *   `ProformaHeader`) y `Footer`. Ambos viven a nivel raíz de `<Page>`.
+ *   `ProformaHeader`), referencia de continuación y `Footer`. Viven a nivel raíz de `<Page>`.
  * - Sub-bloques NUNCA usan `fixed` — confunde el motor de cálculo de alturas.
  * - `DataTable.tableHeader fixed` es la excepción documentada: react-pdf usa
  *   este `fixed` para repetir el header de la tabla cuando salta de página.
@@ -152,6 +152,7 @@ export function ProformaConsolidadaDocument({
           <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
         </View>
 
+        {conceptosConsolidados.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
         <TotalesBox bloques={bloquesTotales} />
 
         <NotasSection notas={proforma.notas} />

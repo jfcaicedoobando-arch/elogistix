@@ -15,15 +15,15 @@ describe("pdf/theme/stylesContent", () => {
     expect(contentStyles.h4.fontFamily).toBe(FONTS.bold);
   });
 
-  it("tableHeader usa color primario y td tiene padding interior", () => {
-    expect(contentStyles.tableHeader.backgroundColor).toBe(COLORS.primary);
+  it("tableHeader usa superficie suave y td tiene padding interior", () => {
+    expect(contentStyles.tableHeader.backgroundColor).toBe(COLORS.soft);
     expect(contentStyles.td.fontSize).toBe(9);
     expect(contentStyles.td.paddingVertical).toBe(5);
-    expect(contentStyles.td.paddingHorizontal).toBe(7);
+    expect(contentStyles.td.paddingHorizontal).toBe(5);
   });
 
-  it("kpiValue es 13pt bold en color primario", () => {
-    expect(contentStyles.kpiValue.fontSize).toBe(13);
+  it("kpiValue es 12pt bold en color primario", () => {
+    expect(contentStyles.kpiValue.fontSize).toBe(12);
     expect(contentStyles.kpiValue.color).toBe(COLORS.primary);
     expect(contentStyles.kpiValue.fontFamily).toBe(FONTS.bold);
   });

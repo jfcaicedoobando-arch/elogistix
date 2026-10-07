@@ -36,7 +36,7 @@ export function SeccionMonedaPdf({
   return (
     <>
       {mostrarSubtituloMoneda ? (
-        <Text style={styles.h4} minPresenceAhead={48}>
+        <Text style={styles.h4} minPresenceAhead={100}>
           Conceptos en {moneda}
         </Text>
       ) : null}

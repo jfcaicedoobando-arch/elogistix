@@ -12,9 +12,9 @@ export const layoutStyles = {
     fontSize: 10,
     fontFamily: FONTS.regular,
     color: COLORS.ink,
-    lineHeight: 1.45,
+    lineHeight: 1.4,
   },
-  // Banda superior (3pt) decorativa
+  // Banda superior (4pt) decorativa
   topBand: {
     position: "absolute" as const,
     top: 0,
@@ -25,20 +25,18 @@ export const layoutStyles = {
   },
   // Header
   header: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    alignItems: "flex-start" as const,
+    flexDirection: "column" as const,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-    paddingBottom: 14,
+    paddingBottom: 12,
     marginBottom: 14,
   },
-  brandBlock: { flexDirection: "column" as const },
+  brandBlock: { flexDirection: "column" as const, flexGrow: 1, flexShrink: 1, minWidth: 0 },
   brandMark: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: FONTS.bold,
     color: COLORS.primary,
-    letterSpacing: 1.5,
+    letterSpacing: 0,
   },
   brandSub: {
     fontSize: 8,
@@ -49,19 +47,28 @@ export const layoutStyles = {
   },
   brandLine: { fontSize: 8, color: COLORS.muted, marginTop: 1 },
   docType: {
-    fontSize: 14,
+    fontSize: 20,
     fontFamily: FONTS.bold,
-    color: COLORS.ink,
-    textTransform: "uppercase" as const,
-    letterSpacing: 1,
-    textAlign: "right" as const,
+    color: COLORS.primary,
+    lineHeight: 1.15,
+    letterSpacing: -0.3,
   },
   docNumber: {
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: FONTS.bold,
     color: COLORS.primary,
     marginTop: 2,
     textAlign: "right" as const,
+  },
+  continuationReference: {
+    position: "absolute" as const,
+    top: 18,
+    left: 36,
+    right: 36,
+    fontSize: 8,
+    lineHeight: 1.1,
+    color: COLORS.muted,
+    maxLines: 1,
   },
   // Footer
   // R184-PDF-01: se ancla con `top` porcentual en lugar de `bottom`.
@@ -75,7 +82,7 @@ export const layoutStyles = {
     left: 36,
     right: 36,
     borderTopWidth: 0.5,
-    borderTopColor: COLORS.primary,
+    borderTopColor: COLORS.borderStrong,
     paddingTop: 6,
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,

@@ -68,7 +68,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           de conceptos fluyen libremente: no se envuelve todo en un contenedor
           con minPresenceAhead grande, que provocaba saltos de página completos.
         */}
-        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={70}>
+        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={140}>
           {multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}
         </Text>
         <SeccionMonedaPdf
@@ -85,6 +85,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           multiContenedor={multiContenedor}
           mostrarSubtituloMoneda={multiMoneda}
         />
+
+        {conceptos.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
 
         {/* P1 · Auditoría IVA: si algún renglón sigue sin clasificar, el total
             impreso es estimado y se dice explícitamente. */}

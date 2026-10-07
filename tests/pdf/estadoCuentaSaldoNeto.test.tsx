@@ -11,7 +11,7 @@ describe("real PDF: saldo neto del cliente", () => {
       totalesPorMoneda={[{ moneda: "MXN", total: 58, buckets: [{ label: "Por vencer", total: 58 }] }]}
     />);
     expect(doc.pages).toBe(1);
-    for (const text of ["A3-QA", "SALDO", "58.00", "PENDIENTE MXN", "POR VENCER MXN"]) expect(doc.text).toContain(text);
+    for (const text of ["A3-QA", "Saldo", "58.00", "PENDIENTE MXN", "POR VENCER MXN"]) expect(doc.text).toContain(text);
     expect(doc.text).not.toContain("116.00");
   });
 

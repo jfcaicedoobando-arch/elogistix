@@ -9,9 +9,10 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
+import { ReportHeader } from "@/pdf/components/ReportHeader";
+import type { EmisorInfo } from "@/pdf/components/BrandHeader";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import { COLORS } from "@/pdf/theme/tokens";
 import { nombreEmisorReporte, reporteHeaderTextStyle } from "./reporteLayout";
 
 export interface FilaFacturaPdf {
@@ -47,7 +48,7 @@ interface Props {
   leyendaTc: string;
   busqueda?: string;
   bloques: BloqueCarteraPdf[];
-  emisor?: { razonSocial?: string };
+  emisor?: EmisorInfo;
 }
 
 const money = (valor: string, moneda = "MXN") =>
@@ -82,27 +83,22 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor,
   return (
     <Document title={`Cartera y antigüedad ${fechaCorte}`} author={empresaNombre ?? "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.h1, { lineHeight: 1.2 }]}>Cartera y antigüedad</Text>
-            <Text style={{ marginTop: 6, fontSize: 10, lineHeight: 1.3, color: COLORS.muted }}>
-              Corte: {formatDate(fechaCorte)}
-            </Text>
-            <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.muted }}>{leyendaTc}</Text>
-            <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.muted }}>
-              {filtro ? `Filtro de búsqueda: ${filtro}. Totales sólo de resultados coincidentes.` : "Alcance: cartera con saldo pendiente, sin filtro de búsqueda."}
-            </Text>
-          </View>
-        </View>
+        <ReportHeader title="Cartera y antigüedad" emisor={emisor}>
+          <Text style={styles.contextText}>Corte: {formatDate(fechaCorte)}</Text>
+          <Text style={styles.contextText}>{leyendaTc}</Text>
+          <Text style={styles.contextText}>
+            {filtro ? `Filtro de búsqueda: ${filtro}. Totales sólo de resultados coincidentes.` : "Alcance: cartera con saldo pendiente, sin filtro de búsqueda."}
+          </Text>
+        </ReportHeader>
 
         {bloques.map((b) => (
           <View key={b.titulo}>
-            <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
+            <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
             <DataTable columns={colsTotales} rows={b.totales} headerTextStyle={reporteHeaderTextStyle} />
 
-            <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas</Text>
+            <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas</Text>
             {b.facturas.length === 0 ? (
-              <Text style={styles.paragraph}>Sin saldos pendientes.</Text>
+              <Text style={styles.emptyState}>Sin saldos pendientes.</Text>
             ) : (
               <DataTable columns={colsFacturas} rows={b.facturas} headerTextStyle={reporteHeaderTextStyle} />
             )}
