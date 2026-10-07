@@ -1,4 +1,4 @@
--- Fuente canónica. Forward: 20261006230000_proforma_operativa_consistencia.sql.
+-- Fuente canónica. Forward: 20261006233000_proforma_operativa_compatibilidad.sql.
 CREATE OR REPLACE FUNCTION public.consolidar_proformas(p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_operador text, p_dias_credito integer, p_organization_id uuid, p_proforma_ids uuid[], p_tasa_iva numeric DEFAULT 0.16, p_request_id uuid DEFAULT NULL::uuid) RETURNS public.proformas
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'

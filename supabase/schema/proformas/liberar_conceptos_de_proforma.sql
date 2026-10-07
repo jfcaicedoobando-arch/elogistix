@@ -1,4 +1,4 @@
--- Fuente canónica. Forward: 20261006230000_proforma_operativa_consistencia.sql.
+-- Fuente canónica. Forward: 20261006233000_proforma_operativa_compatibilidad.sql.
 CREATE OR REPLACE FUNCTION public.liberar_conceptos_de_proforma(p_proforma_id uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'

@@ -1,0 +1,180 @@
+{
+  "target": {
+    "lovableProjectId": "341dfc00-0308-4aba-9246-e4b2041e31f1",
+    "supabaseProjectRef": "eorqadkulqtneqjbsblk"
+  },
+  "observedAtUtc": "2026-10-07T00:24:20Z",
+  "attempt": {
+    "count": 1,
+    "atUtc": "2026-10-07T00:23:00Z",
+    "envelopeSha256": "45b54777eee88f434f864ad0e5f70ae48a6cc79fd444f5787ea94cfaf6d9fa5c",
+    "sqlstate": "42501",
+    "message": "permission denied to set parameter app.bypass_cierre"
+  },
+  "sourceMerge": "0b0f5603b31f0de6cdc925e2a307babacc28fb9a",
+  "scope": "Catalog metadata only; no business records, credentials or function execution. Absence claim applies only to this observed target/time.",
+  "functionsBeforeEqualsAfter": [
+    {
+      "signature": "public.actualizar_estado_cliente_proforma(uuid, text, text)",
+      "definition_sha256": "27e67ba3e399bc12c9f1394f54a50692035c70de4139a165bd905abb0284b0af",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.consolidar_proformas(uuid, uuid, text, text, text, text, integer, uuid, uuid[], numeric, uuid)",
+      "definition_sha256": "85db23df511a50f2cb9954403426a31988cee91dac0af8a6f5ac21a94480c58a",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb)",
+      "definition_sha256": "b32f0a99257ea581a747a61e7a0e19daffe7f916e042897ff4f0bc7dd0c25b74",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.liberar_conceptos_de_proforma(uuid)",
+      "definition_sha256": "92984cf09377313df1ab254c196378abb5bf62f9ffde9a850e7741d70cea712c",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.portal_responder_por_token(uuid, text, text)",
+      "definition_sha256": "4eda479100135f2a8549d24664bfab6e2902e6c431a47d2785bdf6a2ccbcf0e6",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}",
+      "anon_execute": true,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.recompute_embarque_tiene_proforma(uuid)",
+      "definition_sha256": "650fd949ff0c85a04a8ea6a05b6c55fb690441f0d40db708aec7b0d337d8b583",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.sync_conceptos_venta_facturado()",
+      "definition_sha256": "455427adb3bbbb8b266ac4376edbb858ec48ee2ea1e349ac62e3e79407b8264c",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.sync_embarque_tiene_proforma_from_concepto()",
+      "definition_sha256": "9db6b6e7c1a722ab5e1702673a033a85375b28fdb424721213cf8a7b732f167d",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    },
+    {
+      "signature": "public.sync_embarque_tiene_proforma()",
+      "definition_sha256": "053d973c8c2bbbc3a05452c6837fefbff989bf91d6c3bcca53a5f31c3747b23e",
+      "owner": "postgres",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "public_execute": false
+    }
+  ],
+  "tableBeforeEqualsAfter": [
+    {
+      "attname": "tasa_iva_aplicada",
+      "attnotnull": true,
+      "data_type": "numeric",
+      "default_expression": "0.16"
+    },
+    {
+      "attname": "tipo_iva",
+      "attnotnull": false,
+      "data_type": "text",
+      "default_expression": null
+    }
+  ],
+  "constraintBeforeEqualsAfter": [],
+  "triggerBeforeEqualsAfter": [
+    {
+      "definition": "CREATE TRIGGER trg_sync_embarque_tiene_proforma_from_concepto AFTER INSERT OR DELETE OR UPDATE OF proforma_id ON conceptos_venta FOR EACH ROW EXECUTE FUNCTION sync_embarque_tiene_proforma_from_concepto()",
+      "function": "sync_embarque_tiene_proforma_from_concepto()",
+      "tgenabled": "O",
+      "tgisinternal": false,
+      "tgname": "trg_sync_embarque_tiene_proforma_from_concepto"
+    }
+  ],
+  "ledgerBeforeEqualsAfter": [
+    {
+      "name": "proforma_helper_acl_restatement",
+      "statement_count": 3,
+      "stored_sha256": "220d476208fcff1073ab2f374fffc631793c0a4c911b3fe3dca64539e412ba4d",
+      "version": "20261006223000"
+    }
+  ],
+  "unappliedVersions": [
+    "20261006225000",
+    "20261006230000"
+  ]
+}

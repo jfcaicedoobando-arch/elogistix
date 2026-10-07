@@ -1,0 +1,31 @@
+[
+  {
+    "originalPath": "supabase/migrations/20261006230000_proforma_operativa_consistencia.sql",
+    "archivePath": "supabase/migrations_archive/withdrawn-unapplied/20261006230000_proforma_operativa_consistencia.sql",
+    "originalSha256": "b9956cf2e36a8a8165d94b1cadab749008dabd11c01186ebfa304bb2b6ad4721",
+    "replacementPath": "supabase/migrations/20261006233000_proforma_operativa_compatibilidad.sql",
+    "replacementSha256": "a889d1dc97b385c89dff49820bc8b2e6f04f324760dc3d850c11c442008d5797",
+    "historicalRelease": "13.824.35",
+    "historicalMigrationListSha256": "9093b16b0d580397dea91ec6757036633e89beebfd1d5d660fcb3f97d7d5f650",
+    "status": "withdrawn-unapplied",
+    "reason": "Original function custom SET attributes require administrative parameter permission unavailable to the inspected managed database owner; replacement preserves runtime scope without granting that permission.",
+    "targetEvidence": "Single production attempt rolled back completely; independent catalog and ledger readback2026-10-07T00:24Z confirmed neither2250 nor2300 applied. Other persistent targets must be inventoried before rollout.",
+    "ledgerRule": "Never record the withdrawn source as applied. Register only the exact replacement source actually executed.",
+    "verifiedTarget": {
+      "lovableProjectId": "341dfc00-0308-4aba-9246-e4b2041e31f1",
+      "supabaseProjectRef": "eorqadkulqtneqjbsblk",
+      "observedAtUtc": "2026-10-07T00:24:20Z",
+      "applied": false
+    },
+    "otherTargets": "Not verified. A real target with2300 applied must stop automatic deployment and obtain its own plan; preserve its actual ledger.",
+    "originalPullRequest": "https://github.com/jfcaicedoobando-arch/elogistix/pull/173",
+    "originalMergeCommit": "0b0f5603b31f0de6cdc925e2a307babacc28fb9a",
+    "originalGitBlob": "af09fd76e75f9c51af85cff9c6355dd414bee096",
+    "historicalManifestPath": "supabase/releases/history/13.824.35-migration-manifest.json",
+    "historicalManifestSha256": "86f1e05008e9e938b9500fc1a8c29743dd1bfdc2fabd78b3abbdd1456695ef16",
+    "failedEnvelopeSha256": "45b54777eee88f434f864ad0e5f70ae48a6cc79fd444f5787ea94cfaf6d9fa5c",
+    "rollbackEvidencePath": "supabase/migrations_archive/evidence/proforma2300-rollback-20261007.json",
+    "rollbackEvidenceSha256": "f552a5afca26a130f9c34b7435ca86250def02c14c8955a92a288a650ca5ec31",
+    "executionPolicy": "This record is provenance only. Any application envelope must require2300 absent before DDL; another real target with2300 applied aborts for a target-specific plan. No generic skip or ledger repair is implemented."
+  }
+]

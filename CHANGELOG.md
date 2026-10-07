@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.36] - Unreleased
+
+- **fix(proformas · compatibilidad PostgreSQL administrado)**: las dos funciones de mantenimiento usan alcance transaccional con restauración explícita del valor previo, sin requerir permisos administrativos para configurar parámetros en la declaración de función. Conserva reglas de negocio, propietarios y ACL.
+- **fix(restauración y concurrencia)**: el estado observable coincide con el candidato original ante entrada sin valor, off/on/vacío, retornos tempranos, anidación, fallos de actualización y timeouts de lock/sentencia. El alcance técnico permanece limitado a las escrituras derivadas y no deja habilitada la operación siguiente.
+- **infra(migración no aplicada)**: se conserva byte a byte el candidato2300 en archivo histórico, con hashes y evidencia acotada al backend inspeccionado; el nuevo forward2330 es la fuente ejecutable. El manifiesto histórico35 no se reescribe y nunca se registra el candidato retirado como aplicado. Otros targets necesitan reconciliación propia antes de desplegar.
+- **test(proformas)**: instalación como propietario NO superusuario sin ACL_SET, control de fallo del candidato anterior, suites ordinarias, diez escenarios concurrentes y36 comparaciones de estado/errores con el original. Forward desde un estado antiguo aplicado conserva su ledger sintético y converge al mismo snapshot.
+- No modifica datos históricos, no concede privilegios, no incluye endurecimiento ACL ni certifica aplicación remota o publicación. La migración2250 de no_objeto conserva sus bytes y su lugar previo al forward sustitutivo.
+
 ## [13.824.35] - Unreleased
 
 - **fix(proformas · consistencia interna)**: un único cálculo mantiene el indicador del embarque según proformas operativas; excluye canceladas, rechazadas, eliminadas y originales consolidados, exige conceptos vivos en borradores y conserva las facturadas.
