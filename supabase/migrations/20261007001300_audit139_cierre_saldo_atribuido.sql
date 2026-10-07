@@ -1,3 +1,6 @@
+-- Audit139 forward split: final capped invoice debt attribution.
+-- Requires audit134 frozen-payment selector; read-only, no historical rewrite.
+
 -- Fuente canónica de public.validar_cierre_embarque
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.

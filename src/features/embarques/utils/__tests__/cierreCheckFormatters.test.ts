@@ -135,3 +135,21 @@ describe("cierreCheckFormatters", () => {
      expect(fmtMargen({ utilidad: "NaN", minimo: 500 })).toContain("NaN");
   });
 });
+
+it("audit139: saldo neto nulo y cero pendientes no reclaman deuda; conversión ausente sigue visible", () => {
+  expect(fmtCxp({ por_moneda: [{ moneda: "MXN", total: 1, pagado: 0, notas_credito: 1, saldo: 0, facturas_pendientes: 0 }] })).toBeNull();
+  expect(fmtCxp({ total: 1, pagado: 0, notas_credito: 1, facturas_pendientes: 0 })).toBeNull();
+  expect(fmtCxp({ por_moneda: [{ moneda: "USD", saldo: 0, facturas_pendientes: 0, notas_sin_tipo_cambio: 1 }] })).toContain("Conversión pendiente");
+});
+
+
+it("audit139 identifies calculated invoice attribution without inventing payment lineage", () => {
+  const res = fmtCxp({ por_moneda: [{ moneda: "MXN", total: 50, pagado: 30, saldo: 20,
+    facturas_pendientes: 1, reparto_proporcional: true, pagos_sin_tipo_cambio: 1 }] });
+  expect(res).toContain("20.00");
+  expect(res).toContain("Importes atribuidos proporcionalmente");
+  expect(res).toContain("los pagos y notas de crédito corresponden a la factura");
+  expect(res).toContain("Conversión pendiente");
+  expect(fmtCxp({ por_moneda: [{ moneda: "MXN", saldo: 20, facturas_pendientes: 1 }] }))
+    .not.toContain("proporcionalmente");
+});
