@@ -1,4 +1,4 @@
--- Fuente canónica. Forward: 20261006230000_proforma_operativa_consistencia.sql.
+-- Fuente canónica. Forward: 20261006233000_proforma_operativa_compatibilidad.sql.
 CREATE OR REPLACE FUNCTION public.sync_embarque_tiene_proforma() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'

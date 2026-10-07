@@ -1,4 +1,4 @@
--- Fuente canónica. Forward: 20261006230000_proforma_operativa_consistencia.sql.
+-- Fuente canónica. Forward: 20261006233000_proforma_operativa_compatibilidad.sql.
 CREATE OR REPLACE FUNCTION public.portal_responder_por_token(p_token uuid, p_respuesta text, p_motivo text DEFAULT ''::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
