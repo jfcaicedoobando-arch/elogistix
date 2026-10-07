@@ -69,7 +69,7 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
         <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
         <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
         <Kpi label="Retenciones" value={formatCurrency(ret, moneda)} />
-        <Kpi label={`Total ${moneda}`} value={formatCurrency(ctl.total, moneda)} emphasis />
+        <Kpi label="Total" value={formatCurrency(ctl.total, moneda)} emphasis />
       </div>
 
       {factura.pagado > 0 && (
