@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.41] - Unreleased
+
+- **fix(CxP · 62/130)**: Por capturar compara la base fiscal sin IVA contra el presupuesto de la misma moneda. Atribuye cada factura por sus asignaciones positivas efectivas, agrupadas por embarque, sin duplicar líneas fiscales ni volver a multiplicar cantidades.
+- **fix(captura)**: conserva los residuos sin asignar, limita el exceso al subtotal y mantiene el fallback de cabecera sólo cuando no hay asignaciones efectivas. Canceladas y borradas salen del monto, conteo y última fecha; NC y pagos no deshacen la captura.
+- **fix(presentación)**: importes y filtros comparan los mismos centavos canónicos; evita excesos visibles de 0.00 sin tolerar un centavo faltante. Conserva el copy24 de captura/resumen, PDF182 y los cambios de los paquetes35–40.
+- Una sola migración nueva: `20261007001000_audit62_130_cxp_captura_base.sql`, posterior a40 / `20261006235700`. Mantiene firma, permisos, SECURITY INVOKER e historia. No hace backfill ni incluye otros splits contables.
+- Paquete de código para revisión local; no aplica SQL remoto, no publica frontend ni certifica cierre GUI. La publicación se apila sobre40 y la futura aplicación exige preflight independiente del backend.
+
 ## [13.824.40] - Unreleased
 
 - **fix(pagos · 134)**: las aplicaciones de anticipos usan su importe congelado en la moneda de la factura; las consultas no reconstruyen el tipo de cambio histórico con el DOF actual ni reemplazan un importe desconocido por un pago conocido. El cero guardado sigue siendo un importe conocido.

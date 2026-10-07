@@ -1,18 +1,20 @@
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters";
+import { roundMoney } from "@/lib/financial/financialUtils";
 import type { CxpPorCapturarRow } from "../services/bandejas";
 
 /** Cada moneda mantiene su propio presupuesto: no se comparan nominales. */
 export function CxpAvanceCaptura({ row }: { row: CxpPorCapturarRow }) {
   const avances = [
-    { moneda: "MXN", presupuesto: Number(row.presupuestado_mxn) || 0, capturado: Number(row.facturado_mxn) || 0 },
-    { moneda: "USD", presupuesto: Number(row.presupuestado_usd) || 0, capturado: Number(row.facturado_usd) || 0 },
+    { moneda: "MXN", presupuesto: roundMoney(Number(row.presupuestado_mxn)), capturado: roundMoney(Number(row.facturado_mxn)) },
+    { moneda: "USD", presupuesto: roundMoney(Number(row.presupuestado_usd)), capturado: roundMoney(Number(row.facturado_usd)) },
   ].filter((a) => a.presupuesto > 0 || a.capturado !== 0);
   if (avances.length === 0) return <span className="text-muted-foreground">Sin presupuesto ni captura</span>;
   return <div className="space-y-2">
+    <p className="text-label text-muted-foreground">Base sin IVA</p>
     {avances.map(({ moneda, presupuesto, capturado }) => {
       const porcentaje = presupuesto > 0 ? Math.round(capturado / presupuesto * 100) : null;
-      const exceso = capturado - presupuesto;
+      const exceso = roundMoney(capturado - presupuesto);
       return <div key={moneda} className="space-y-0.5">
         <div className="flex items-center gap-2 text-label tabular-nums">
           <span className="font-medium">{moneda}</span>

@@ -16766,39 +16766,65 @@ CREATE FUNCTION public.cxp_por_capturar() RETURNS TABLE(embarque_id uuid, expedi
     LANGUAGE sql STABLE
     SET search_path TO 'public'
     AS $$
-  SELECT
-    e.id,
-    e.expediente,
-    c.nombre,
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda::text = 'MXN'), 0),
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda::text = 'USD'), 0),
-    COALESCE((
-      SELECT SUM(pf.total) FILTER (WHERE pf.moneda::text = 'MXN')
-      FROM public.proveedor_facturas pf
-      WHERE pf.embarque_id = e.id
-        AND pf.deleted_at IS NULL
-        AND pf.estado::text <> 'Cancelada'
-    ), 0),
-    COALESCE((
-      SELECT SUM(pf.total) FILTER (WHERE pf.moneda::text = 'USD')
-      FROM public.proveedor_facturas pf
-      WHERE pf.embarque_id = e.id
-        AND pf.deleted_at IS NULL
-        AND pf.estado::text <> 'Cancelada'
-    ), 0),
-    (SELECT COUNT(*)::int FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL),
-    (SELECT MAX(pf.fecha_emision) FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL),
-    (CURRENT_DATE - (SELECT MAX(pf.fecha_emision) FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL))::int
+  WITH presupuesto AS (
+    SELECT cc.embarque_id, cc.organization_id,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'MXN'),0) AS mxn,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'USD'),0) AS usd,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'EUR'),0) AS eur
+    FROM public.conceptos_costo cc
+    WHERE cc.deleted_at IS NULL
+    GROUP BY cc.embarque_id, cc.organization_id
+  ), capturadas AS (
+    SELECT pf.id, pf.organization_id, pf.embarque_id, pf.moneda, pf.subtotal,
+      pf.fecha_emision
+    FROM public.proveedor_facturas pf
+    WHERE pf.deleted_at IS NULL AND pf.estado::text <> 'Cancelada'
+  ), asignaciones AS (
+    -- Fiscal rows and cost links describe the same expense. Only positive,
+    -- effective links determine membership (audits 124/130/139), never both.
+    SELECT pf.id AS factura_id, cc.embarque_id,
+      sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1)) AS monto
+    FROM capturadas pf
+    JOIN public.proveedor_facturas_conceptos pfc
+      ON pfc.proveedor_factura_id = pf.id AND pfc.organization_id = pf.organization_id
+    JOIN public.conceptos_costo cc
+      ON cc.id = pfc.concepto_costo_id AND cc.organization_id = pf.organization_id
+    JOIN public.embarques e
+      ON e.id = cc.embarque_id AND e.organization_id = pf.organization_id
+    WHERE cc.deleted_at IS NULL AND cc.origen <> 'ajuste_factura_proveedor'
+      AND pfc.monto > 0 AND coalesce(nullif(pfc.cantidad,0),1) > 0
+    GROUP BY pf.id, cc.embarque_id
+  ), asignado AS (
+    SELECT a.factura_id, sum(a.monto) AS total FROM asignaciones a GROUP BY a.factura_id
+  ), atribuidas AS (
+    SELECT pf.id, pf.organization_id, coalesce(a.embarque_id,pf.embarque_id) AS embarque_id,
+      pf.moneda, pf.fecha_emision,
+      CASE WHEN s.total IS NULL THEN pf.subtotal
+        -- Do not inflate a partial allocation to the full invoice. Multiply
+        -- before division only for the cap, avoiding round-trip ratio noise.
+        WHEN s.total <= pf.subtotal THEN a.monto
+        ELSE pf.subtotal * a.monto / s.total END AS base
+    FROM capturadas pf
+    LEFT JOIN asignado s ON s.factura_id = pf.id
+    LEFT JOIN asignaciones a ON a.factura_id = pf.id
+  ), captura AS (
+    -- Exactly one row per invoice/shipment feeds amount, count and dates.
+    SELECT a.embarque_id, a.organization_id,
+      coalesce(sum(a.base) FILTER (WHERE a.moneda::text = 'MXN'),0) AS mxn,
+      coalesce(sum(a.base) FILTER (WHERE a.moneda::text = 'USD'),0) AS usd,
+      count(*)::integer AS facturas, max(a.fecha_emision) AS ultima
+    FROM atribuidas a
+    WHERE a.embarque_id IS NOT NULL
+    GROUP BY a.embarque_id, a.organization_id
+  )
+  SELECT e.id, e.expediente, c.nombre, p.mxn, p.usd,
+    coalesce(a.mxn,0), coalesce(a.usd,0), coalesce(a.facturas,0),
+    a.ultima, (CURRENT_DATE - a.ultima)::integer
   FROM public.embarques e
-  LEFT JOIN public.clientes c ON c.id = e.cliente_id
-  LEFT JOIN public.conceptos_costo cc ON cc.embarque_id = e.id AND cc.deleted_at IS NULL
-  WHERE e.deleted_at IS NULL
-    AND e.estado::text <> 'Cerrado'
-  GROUP BY e.id, e.expediente, c.nombre
-  HAVING COALESCE(SUM(cc.monto), 0) > 0
+  JOIN presupuesto p ON p.embarque_id = e.id AND p.organization_id = e.organization_id
+  LEFT JOIN public.clientes c ON c.id = e.cliente_id AND c.organization_id = e.organization_id
+  LEFT JOIN captura a ON a.embarque_id = e.id AND a.organization_id = e.organization_id
+  WHERE e.deleted_at IS NULL AND e.estado::text <> 'Cerrado' AND (p.mxn > 0 OR p.usd > 0 OR p.eur > 0)
   ORDER BY e.created_at DESC
   LIMIT 500;
 $$;
