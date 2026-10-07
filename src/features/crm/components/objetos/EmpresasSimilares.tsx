@@ -2,21 +2,15 @@
  * Lista de empresas existentes que coinciden con lo que se escribe en el
  * nombre, para evitar capturar duplicados. Al elegir una se abre su ficha.
  */
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useDebounce } from "@/hooks/shared/useDebounce";
-import { fetchEmpresas } from "@/features/crm/services/objetosCrm";
+import { useEmpresasSimilares } from "@/features/crm/hooks/useEmpresasSimilares";
 
 interface Props { nombre: string; onElegir: () => void }
 
 export function EmpresasSimilares({ nombre, onElegir }: Props) {
   const termino = useDebounce(nombre.trim(), 300);
-  const q = useQuery({
-    queryKey: ["crm", "objetos", "empresas-similares", termino],
-    queryFn: () => fetchEmpresas(termino, 0),
-    enabled: termino.length >= 2,
-    staleTime: 30_000,
-  });
+  const q = useEmpresasSimilares(termino);
   if (termino.length < 2 || !q.data?.filas.length) return null;
   const filas = q.data.filas.slice(0, 6);
   return (

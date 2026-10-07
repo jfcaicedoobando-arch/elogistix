@@ -4,6 +4,11 @@
  */
 export const costeo = {
   all: ["costeo"] as const,
+  tarifario: {
+    entidades: (tipo: string) => ["tarifario", "entidades", tipo] as const,
+    cargos: (tipo: string) => ["tarifario", "cargos", tipo] as const,
+    tarifas: (filtro: string) => ["tarifario", "tarifas", filtro] as const,
+  },
 
   tarifas: {
     all: ["costeo", "tarifas"] as const,

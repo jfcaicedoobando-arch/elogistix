@@ -3,21 +3,13 @@
  * 1) Tiempo de respuesta de las solicitudes (promedio y % a tiempo).
  * 2) Cuántas solicitudes hay y en qué estatus.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useResumenPricing } from "../hooks/useResumenPricing";
 import { Clock, Inbox } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { porcentajeEntero } from "@/lib/formatters";
-import { formatoHorasRespuesta, obtenerResumenPricing } from "@/features/crm/services/pricing/resumenPricing";
-
-function useResumenPricing() {
-  return useQuery({
-    queryKey: ["crm", "pricing", "resumen"],
-    queryFn: obtenerResumenPricing,
-    staleTime: 60_000,
-  });
-}
+import { formatoHorasRespuesta } from "@/features/crm/services/pricing/resumenPricing";
 
 export function PricingResumenCards() {
   const { data, isLoading, isError, refetch } = useResumenPricing();
@@ -39,7 +31,7 @@ export function PricingResumenCards() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="size-4 text-muted-foreground" />
             Tiempo de respuesta de pricing
           </CardTitle>
         </CardHeader>
@@ -49,7 +41,7 @@ export function PricingResumenCards() {
               <EmptyStateInline icon={Clock} message="Aún no hay solicitudes respondidas." />
             ) : (
               <div className="space-y-2">
-                <p className="text-2xl font-semibold tabular-nums">
+                <p className="text-kpi tabular-nums">
                   {formatoHorasRespuesta(data.horasPromedioRespuesta ?? 0)}
                   <span className="text-body-sm font-normal text-muted-foreground"> promedio</span>
                 </p>
@@ -66,7 +58,7 @@ export function PricingResumenCards() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Inbox className="h-4 w-4 text-muted-foreground" />
+            <Inbox className="size-4 text-muted-foreground" />
             Solicitudes de pricing por estatus
           </CardTitle>
         </CardHeader>

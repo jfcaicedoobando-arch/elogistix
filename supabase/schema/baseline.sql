@@ -10774,7 +10774,11 @@ CREATE TABLE public.anticipos_proveedor (
     devuelto_by uuid,
     monto_devuelto numeric(18,4),
     motivo_devolucion text,
+    fecha_devolucion date,
+    medio_devolucion text,
+    referencia_devolucion text,
     CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text, 'devuelto'::text]))),
+    CONSTRAINT anticipos_proveedor_medio_devolucion_check CHECK ((medio_devolucion = ANY (ARRAY['Efectivo'::text, 'Bancario'::text]))),
     CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT anticipos_proveedor_saldo_rango_check CHECK (((saldo_disponible IS NULL) OR ((saldo_disponible >= (0)::numeric) AND (saldo_disponible <= (monto + 0.01)))))
 );
@@ -15100,6 +15104,38 @@ BEGIN
   RETURN ROUND(COALESCE(v_total, 0), 2);
 END;
 $$;
+CREATE FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v record; t record;
+BEGIN
+  SELECT * INTO v FROM public.crm_solicitudes_pricing WHERE id = p_solicitud_id AND deleted_at IS NULL FOR UPDATE;
+  IF v.id IS NULL OR v.organization_id IS DISTINCT FROM public.org_scope() THEN
+    RAISE EXCEPTION 'LC_PRICING_NO_ENCONTRADA' USING ERRCODE = 'P0001';
+  END IF;
+  IF v.solicitante_id IS DISTINCT FROM auth.uid() AND v.created_by IS DISTINCT FROM auth.uid()
+     AND NOT public._crm_es_pricing(v.organization_id) THEN
+    RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  IF v.estado = 'respondida' AND v.tarifa_tarifario_id = p_tarifa_id THEN
+    RETURN jsonb_build_object('id', v.id, 'ya_respondida', true);
+  END IF;
+  IF v.estado NOT IN ('borrador','enviada') THEN
+    RAISE EXCEPTION 'LC_PRICING_ESTADO_INVALIDO' USING ERRCODE = 'P0001';
+  END IF;
+  SELECT * INTO t FROM public.costeo_tarifas
+   WHERE id = p_tarifa_id AND organization_id = v.organization_id AND estado = 'vigente'
+     AND (vigente_hasta IS NULL OR vigente_hasta >= current_date);
+  IF t.id IS NULL THEN RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE = 'P0001'; END IF;
+  PERFORM set_config('lc.pricing_rpc', '1', true);
+  UPDATE public.crm_solicitudes_pricing
+     SET tarifa_tarifario_id = p_tarifa_id, estado = 'respondida',
+         enviada_at = coalesce(enviada_at, now()), respondida_at = now()
+   WHERE id = p_solicitud_id;
+  PERFORM set_config('lc.pricing_rpc', '', true);
+  RETURN jsonb_build_object('id', v.id, 'ya_respondida', false);
+END $$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -17620,7 +17656,7 @@ BEGIN
   RETURN v_inserted;
 END;
 $$;
-CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text) RETURNS public.anticipos_proveedor
+CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text, p_medio text DEFAULT 'Bancario'::text) RETURNS public.anticipos_proveedor
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17697,9 +17733,17 @@ BEGIN
         v_cierre, p_fecha USING ERRCODE = 'P0001';
     END IF;
   END IF;
+  IF p_medio IS NULL OR p_medio NOT IN ('Efectivo', 'Bancario') THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MEDIO_DEVOLUCION: Selecciona Efectivo o Bancario.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Efectivo' AND p_cuenta_bancaria_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_EFECTIVO_CON_CUENTA: Una devolución en efectivo no lleva cuenta bancaria.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Bancario' THEN
   SELECT cb.organization_id INTO v_cuenta_org
     FROM public.cuentas_bancarias cb
-   WHERE cb.id = p_cuenta_bancaria_id;
+   WHERE cb.id = p_cuenta_bancaria_id AND cb.activa AND cb.deleted_at IS NULL
+     AND cb.moneda = v_row.moneda;
   IF v_cuenta_org IS NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_REQUERIDA: Selecciona la cuenta bancaria donde entró el dinero.';
   END IF;
@@ -17707,10 +17751,14 @@ BEGIN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_OTRA_ORG: La cuenta bancaria pertenece a otra organización.'
       USING ERRCODE = '42501';
   END IF;
+  END IF;
   UPDATE public.anticipos_proveedor
     SET estado = 'devuelto',
         saldo_disponible = 0,
         monto_devuelto = p_monto,
+        fecha_devolucion = p_fecha,
+        medio_devolucion = p_medio,
+        referencia_devolucion = NULLIF(trim(COALESCE(p_referencia,'')),''),
         motivo_devolucion = trim(p_motivo),
         devuelto_at = now(),
         devuelto_by = v_uid,
@@ -17719,6 +17767,7 @@ BEGIN
     RETURNING * INTO v_row;
   -- F1: hash_dedupe es NOT NULL; sin él el INSERT lanzaba 23502 y toda la
   -- devolución hacía rollback.
+  IF p_medio = 'Bancario' THEN
   INSERT INTO public.bbva_movimientos
     (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
      cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en,
@@ -17728,6 +17777,7 @@ BEGIN
      'Devolución de anticipo ' || v_row.id::text, NULLIF(trim(COALESCE(p_referencia,'')),''),
      0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now(),
      'devolucion-' || v_row.id::text);
+  END IF;
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
@@ -17735,7 +17785,7 @@ BEGIN
     VALUES (v_row.organization_id, v_uid, COALESCE(v_email,''), 'devolver_anticipo_proveedor', 'cxp',
             v_row.id, 'Anticipo ' || v_row.id::text,
             jsonb_build_object('motivo', trim(p_motivo), 'monto_devuelto', p_monto,
-                               'moneda', v_row.moneda, 'fecha', p_fecha,
+                               'moneda', v_row.moneda, 'fecha', p_fecha, 'medio', p_medio,
                                'cuenta_bancaria_id', p_cuenta_bancaria_id,
                                'referencia', p_referencia));
   EXCEPTION WHEN OTHERS THEN
@@ -22679,7 +22729,7 @@ BEGIN
     -- AUD100: cada devolución es una entrada independiente. La salida original
     -- se conserva bruta; la fecha/cuenta/referencia proceden del asiento real.
     SELECT ap.id, 'devolucion_anticipo'::text AS tipo,
-      COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
+      COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
       pr.nombre AS contraparte, ap.proveedor_id AS contraparte_id,
       NULL::uuid AS documento_id, NULL::text AS documento_folio,
       ap.moneda::text AS moneda, ap.monto_devuelto AS monto,
@@ -22687,11 +22737,11 @@ BEGIN
       CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
            WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd
            ELSE NULL END AS monto_mxn,
-      CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
-      COALESCE(d.referencia, ap.referencia) AS referencia,
+      CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
+      CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END AS referencia,
       d.cuenta_bancaria_id,
       concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END) AS notas,
       ap.embarque_id, 0::numeric AS diferencia_cambiaria_mxn,
       NULL::text AS estado_rep, NULL::text AS folio_rep,
@@ -22709,7 +22759,7 @@ BEGIN
     ) d ON true
     WHERE ap.deleted_at IS NULL AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
       AND ap.monto_devuelto > 0 AND (v_super OR ap.organization_id = v_org)
-      AND COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
+      AND COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
           BETWEEN p_desde AND p_hasta
   ),
   unidos AS (
@@ -24138,17 +24188,17 @@ BEGIN
   ELSIF v_tipo = 'devolucion_anticipo' THEN
     SELECT ap.organization_id, jsonb_build_object(
       'id', ap.id, 'tipo', v_tipo,
-      'fecha', COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
+      'fecha', COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
       'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
       'moneda', ap.moneda::text, 'monto', ap.monto_devuelto,
       'tipo_cambio', NULLIF(ap.tipo_cambio_usd, 0),
       'monto_mxn', CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
         WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd ELSE NULL END,
-      'metodo_pago', CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
-      'referencia', COALESCE(d.referencia, ap.referencia),
+      'metodo_pago', CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
+      'referencia', CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END,
       'cuenta_bancaria_id', d.cuenta_bancaria_id, 'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
       'notas', concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END),
       'embarque_id', ap.embarque_id, 'diferencia_cambiaria_mxn', 0,
       'es_ajuste', false, 'created_by', ap.devuelto_by, 'created_at', ap.devuelto_at)
@@ -25670,12 +25720,13 @@ BEGIN
            COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
            -- La fecha bancaria conserva el periodo efectivo de la devolución.
            -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
-           COALESCE(d.fecha,
+           COALESCE(a.fecha_devolucion, d.fecha,
                     (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
                     (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
                     a.fecha_anticipo) AS fecha_devolucion,
-           d.referencia AS referencia_devolucion,
-           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
+           COALESCE(a.referencia_devolucion, d.referencia) AS referencia_devolucion,
+           a.medio_devolucion,
+           a.fecha_devolucion IS NULL AND d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
     LEFT JOIN LATERAL (
@@ -25742,14 +25793,14 @@ BEGIN
     FROM anticipos a
     UNION ALL
     SELECT a.fecha_devolucion, 'Devolución de anticipo', a.id, 'Devolución de anticipo',
-           COALESCE(a.referencia_devolucion, a.referencia), COALESCE(a.expediente, ''),
+           CASE WHEN a.medio_devolucion IS NOT NULL THEN a.referencia_devolucion ELSE COALESCE(a.referencia_devolucion, a.referencia) END, COALESCE(a.expediente, ''),
            a.embarque_id, a.moneda,
            -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
            -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
-             ELSE a.metodo_pago END
+             ELSE COALESCE(a.medio_devolucion, a.metodo_pago) END
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
@@ -33567,6 +33618,36 @@ CREATE TABLE public.contactos_cliente (
     deleted_by uuid,
     updated_at timestamp with time zone DEFAULT now()
 );
+CREATE TABLE public.costeo_cargos_fob_agente (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    agente_id uuid NOT NULL,
+    concepto text DEFAULT 'Cargos FOB'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'USD'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_fob_agente_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_fob_agente_monto_check CHECK ((monto >= (0)::numeric))
+);
+CREATE TABLE public.costeo_cargos_locales_naviera (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    naviera_id uuid NOT NULL,
+    concepto text DEFAULT 'Revalidación'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'MXN'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_locales_naviera_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_locales_naviera_monto_check CHECK ((monto >= (0)::numeric))
+);
 CREATE TABLE public.costeo_demoras_venta_tarifa (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
@@ -34168,6 +34249,7 @@ CREATE TABLE public.crm_solicitudes_pricing (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
     unidad_medida text,
+    tarifa_tarifario_id uuid,
     CONSTRAINT crm_solicitudes_pricing_cantidad_check CHECK (((cantidad IS NULL) OR (cantidad > 0))),
     CONSTRAINT crm_solicitudes_pricing_complejidad_check CHECK ((complejidad = ANY (ARRAY['baja'::text, 'media'::text, 'alta'::text]))),
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
@@ -35280,6 +35362,10 @@ ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_organization_id_nombre_key UNIQUE (organization_id, nombre);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
     ADD CONSTRAINT costeo_demoras_venta_tarifa_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
@@ -35613,6 +35699,8 @@ CREATE UNIQUE INDEX comisiones_recalculo_pendiente_pago_etapa_key ON public.comi
 CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_costo USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
+CREATE INDEX costeo_cargos_fob_agente_org_idx ON public.costeo_cargos_fob_agente USING btree (organization_id, agente_id) WHERE (deleted_at IS NULL);
+CREATE INDEX costeo_cargos_locales_naviera_org_idx ON public.costeo_cargos_locales_naviera USING btree (organization_id, naviera_id) WHERE (deleted_at IS NULL);
 CREATE INDEX costeo_tarifas_solicitud_pricing_idx ON public.costeo_tarifas USING btree (solicitud_pricing_id) WHERE (solicitud_pricing_id IS NOT NULL);
 CREATE INDEX crm_empresas_org_estado_idx ON public.crm_empresas USING btree (organization_id, estado_crm);
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
@@ -36464,6 +36552,14 @@ ALTER TABLE ONLY public.contactos_cliente
     ADD CONSTRAINT contactos_cliente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_agente_id_fkey FOREIGN KEY (agente_id) REFERENCES public.costeo_agentes(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_naviera_id_fkey FOREIGN KEY (naviera_id) REFERENCES public.navieras(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
     ADD CONSTRAINT costeo_demoras_tarifa_org_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
@@ -36608,6 +36704,8 @@ ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_oportunidad_id_fkey FOREIGN KEY (oportunidad_id) REFERENCES public.crm_oportunidades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.crm_solicitudes_pricing
+    ADD CONSTRAINT crm_solicitudes_pricing_tarifa_tarifario_id_fkey FOREIGN KEY (tarifa_tarifario_id) REFERENCES public.costeo_tarifas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_tableros
     ADD CONSTRAINT crm_tableros_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_valores
@@ -36978,6 +37076,8 @@ CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_factu
 CREATE POLICY "Operaciones sube facturas entrantes" ON public.embarque_facturas_entrantes FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (subido_por = ( SELECT auth.uid() AS uid)) AND (estado = 'por_capturar'::text) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role)))));
 CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)) WITH CHECK (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id));
+CREATE POLICY "Org lee cargos FOB" ON public.costeo_cargos_fob_agente FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
+CREATE POLICY "Org lee cargos locales" ON public.costeo_cargos_locales_naviera FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
 CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede borrar documentos de cliente" ON public.cliente_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede insertar documentos de cliente" ON public.cliente_documentos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
@@ -36993,6 +37093,10 @@ CREATE POLICY "Org staff manage agente_users" ON public.agente_users TO authenti
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = agente_users.organization_id) AND (om.role = ANY (ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'gerente_operaciones'::public.app_role, 'coordinador_logistico'::public.app_role, 'ejecutivo_pricing'::public.app_role])))))));
 CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id))));
 CREATE POLICY "Org staff read client_users" ON public.client_users FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Pricing crea cargos FOB" ON public.costeo_cargos_fob_agente FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing crea cargos locales" ON public.costeo_cargos_locales_naviera FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos FOB" ON public.costeo_cargos_fob_agente FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos locales" ON public.costeo_cargos_locales_naviera FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_aplicaciones AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_proveedor AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.auditoria_comentarios AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -37313,6 +37417,10 @@ CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes USING (((EXISTS 
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK (((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
+ALTER TABLE public.costeo_cargos_fob_agente ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_fob_agente_tenant_restrictive ON public.costeo_cargos_fob_agente AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
+ALTER TABLE public.costeo_cargos_locales_naviera ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_locales_naviera_tenant_restrictive ON public.costeo_cargos_locales_naviera AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_naviera_demoras_tarifa.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))));
@@ -38242,6 +38350,9 @@ GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uui
 GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uuid, p_tarifa jsonb, p_recargos jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO service_role;
@@ -38386,9 +38497,9 @@ GRANT ALL ON FUNCTION public.default_user_org_id() TO service_role;
 REVOKE ALL ON FUNCTION public.detectar_alertas_app_logs() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO authenticated;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO service_role;
-REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO authenticated;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO service_role;
 REVOKE ALL ON FUNCTION public.direccion_totales(p_desde date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO authenticated;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO service_role;
@@ -39372,6 +39483,10 @@ GRANT ALL ON TABLE public.configuracion_global TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO authenticated;
 GRANT ALL ON TABLE public.contactos_cliente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_fob_agente TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_fob_agente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_locales_naviera TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_locales_naviera TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.costeo_demoras_venta_tarifa TO authenticated;
 GRANT ALL ON TABLE public.costeo_demoras_venta_tarifa TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.cotizacion_costos TO anon;

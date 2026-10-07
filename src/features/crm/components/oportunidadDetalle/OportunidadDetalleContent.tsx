@@ -22,17 +22,9 @@ import { useContactosCliente } from "@/features/cliente/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 import { MoverEtapaSelect } from "./MoverEtapaSelect";
 
-interface Etapa {
-  id: string;
-  nombre: string;
-  tipo: string;
-  color?: string | null;
-  probabilidad_default?: number | null;
-}
-
 interface Props {
   op: CrmOportunidadRow;
-  etapas: Etapa[];
+  etapas: CrmEtapaRow[];
 }
 
 export function OportunidadDetalleContent({ op, etapas }: Props) {
@@ -79,7 +71,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={(canEdit || canCotizar) ? (
           <div className="flex flex-wrap items-center gap-2">
-            {canEdit && <MoverEtapaSelect op={op} etapas={etapas as CrmEtapaRow[]} />}
+            {canEdit && <MoverEtapaSelect op={op} etapas={etapas} />}
             <OportunidadDetalleAcciones
               crearCotizacion={actions.crearCotizacion}
               crearCotPending={actions.crearCotPending}

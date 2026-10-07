@@ -3,6 +3,7 @@
  * conteo por estatus y tiempo de respuesta (created_at → respondida_at).
  * Lectura ligera: sólo las columnas necesarias, acotada a las más recientes.
  */
+import { CAP_LISTA } from "@/constants/queryCaps";
 import { supabase } from "@/integrations/supabase/client";
 import { ETIQUETA_ESTADO_PRICING } from "./tiposPricing";
 
@@ -19,14 +20,16 @@ export interface ResumenPricing {
 
 const HORAS_EN_MS = 3_600_000;
 
-export async function obtenerResumenPricing(): Promise<ResumenPricing> {
+export async function obtenerResumenPricing(organizationId: string | null): Promise<ResumenPricing> {
+  if (!organizationId) throw new Error("Selecciona una empresa para consultar el resumen de pricing.");
   const { data, error } = await supabase
     .from("crm_solicitudes_pricing")
     .select("estado, created_at, respondida_at, vence_at")
+    .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .neq("estado", "borrador")
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
 
   const filas = data ?? [];

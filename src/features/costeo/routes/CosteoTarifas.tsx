@@ -23,7 +23,7 @@ import { TarifasGroupedView } from "@/features/costeo/components/TarifasGroupedV
 import { useDocumentTitle } from "@/hooks/shared";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { BandejaPricingPanel } from "@/features/crm/components/pricing/BandejaPricingPanel";
+import { BandejaPricingPanel } from "@/features/crm";
 import {
   useCosteoTarifasPageState,
   DEFAULT_ESTADO,
@@ -48,7 +48,7 @@ export default function CosteoTarifas() {
   const { data: tipos = [] } = useTiposContenedor();
 
   const { data: rutas = [] } = useCosteoRutas();
-  const rutaUrl = s.rutaIdFromUrl ? rutas.find((r) => r.id === s.rutaIdFromUrl) : undefined;
+  const rutaUrl = rutas.find((r) => r.id === s.rutaIdFromUrl);
   // P2-A2: el contexto de ruta se muestra aunque la ruta no tenga tarifas.
   const rutaLabel = s.tarifas[0]
     ? etiquetaRutaCompleta(origenDe(s.tarifas[0]), destinoDe(s.tarifas[0]))
