@@ -1,3 +1,6 @@
+-- ID provisional y no aplicado: confirmar en el futuro envelope autorizado.
+-- DDL de la función lectora; conserva firma, owner, ACL y alcance de organización.
+-- Sin DML de negocio, backfill ni reescritura de eventos.
 -- AUD-57/121: eventos reales; clasifica ajustes sólo desde el flag persistido.
 -- Sin backfill ni modificación de facturas, pagos o notas de crédito existentes.
 CREATE OR REPLACE FUNCTION public.historial_proveedor_factura(p_id uuid)

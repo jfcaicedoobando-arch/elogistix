@@ -136,6 +136,27 @@ describe("HistorialFacturaSection: snapshots históricos", () => {
     expect(screen.queryByText("Importe o moneda de este evento no disponibles.")).not.toBeInTheDocument();
   });
 
+  it("el ajuste tipificado conserva importe y fecha, sin icono ni etiqueta de dinero pagado", () => {
+    const ajuste = evento({ tipo: "pago", descripcion: "Ajuste no monetario registrado", monto: 1,
+      detalles: { pago_id: "ajuste", es_ajuste: true, motivo_ajuste: "condonacion", fecha_pago: "2026-10-03" } });
+    state.eventos = [ajuste];
+    const { container } = render(<HistorialFacturaSection facturaId="fixture" />);
+    expect(screen.getByText("Ajuste no monetario registrado")).toBeVisible();
+    expect(screen.getByText("Fecha del ajuste: 03/10/2026")).toBeVisible();
+    expect(screen.getByText("MXN 1.00")).toBeVisible();
+    expect(container.querySelector(".lucide-banknote")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Fecha de pago:/)).not.toBeInTheDocument();
+    expect(ajuste.detalles).toEqual({ pago_id: "ajuste", es_ajuste: true, motivo_ajuste: "condonacion", fecha_pago: "2026-10-03" });
+  });
+
+  it.each([undefined, false, "true"])("no interpreta textos libres ni flags no booleanos como ajuste (%j)", (es_ajuste) => {
+    state.eventos = [evento({ tipo: "pago", descripcion: "Pago registrado · ref Cierre sin pago: condonacion",
+      detalles: { es_ajuste, metodo_pago: "Ajuste", referencia: "Cierre sin pago: condonacion", fecha_pago: "2026-10-03" } })];
+    render(<HistorialFacturaSection facturaId="fixture" />);
+    expect(screen.getByText("Fecha de pago: 03/10/2026")).toBeVisible();
+    expect(screen.queryByText(/Fecha del ajuste:/)).not.toBeInTheDocument();
+  });
+
   it("mantiene separado el fallback persistido y la actividad legacy de la misma fecha", () => {
     state.eventos = [
       evento({ tipo: "actividad", descripcion: "Aprobación registrada en bitácora", monto: null, moneda: null,

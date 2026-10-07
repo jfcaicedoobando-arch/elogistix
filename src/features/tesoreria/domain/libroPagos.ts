@@ -7,6 +7,7 @@
  * 200 líneas por archivo (Power of 10). Sin red ni React.
  */
 import { esEntrada, normalizarTextoPago } from "./libroPagos.filtros";
+import { TIPO_PAGO_LABELS } from "./libroPagos.tipos";
 import type { PagoLibro, TotalesLibroPagos } from "./libroPagos.tipos";
 
 export type {
@@ -19,6 +20,11 @@ export {
 export {
   normalizarTextoPago, esEntrada, filtrarPagos, metodosDisponibles, monedasDisponibles,
 } from "./libroPagos.filtros";
+
+/** Presentación basada en el flag persistido, nunca en la referencia libre. */
+export function etiquetaTipoPagoLibro(pago: Pick<PagoLibro, "tipo" | "es_ajuste">): string {
+  return pago.es_ajuste ? "Ajuste no monetario" : TIPO_PAGO_LABELS[pago.tipo];
+}
 
 /**
  * MNY-07: un cobro con REP cancelado ya no representa dinero cobrado vigente

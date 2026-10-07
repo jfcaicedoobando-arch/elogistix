@@ -16,7 +16,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useLibroPagos } from "@/features/tesoreria/hooks/useLibroPagos";
 import { useFiltrosLibroPagosUrl } from "@/features/tesoreria/hooks/useFiltrosLibroPagosUrl";
 import {
-  VISTA_LABELS, filtrarPagos, metodosDisponibles,
+  VISTA_LABELS, etiquetaTipoPagoLibro, filtrarPagos, metodosDisponibles,
   monedasDisponibles, totalesLibroPagos,
   type VistaLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
@@ -96,7 +96,7 @@ export default function TesoreriaPagos() {
           isError={isError}
           onRetry={() => void refetch()}
           onRowClick={(p) => setPagoAbierto(refPagoDeLibro(p))}
-          getRowAriaLabel={(p) => `Ver detalle del pago de ${p.contraparte ?? "la contraparte"}`}
+          getRowAriaLabel={(p) => `Ver detalle: ${etiquetaTipoPagoLibro(p)} · ${p.contraparte ?? "la contraparte"}`}
           emptyMessage="No hay pagos registrados con estos filtros."
           mobileCard={(p) => <LibroPagosMobileCard row={p} />}
         />

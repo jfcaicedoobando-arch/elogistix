@@ -153,6 +153,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
                   {clickable ? (
                     <button
                       type="button"
+                      aria-label={ariaLabel}
                       onClick={() => onRowClick?.(row)}
                       className="w-full text-left min-h-14 px-3 py-2.5 active:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:bg-muted/60"
                     >

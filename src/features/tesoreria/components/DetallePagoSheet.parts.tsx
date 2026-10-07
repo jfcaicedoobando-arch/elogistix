@@ -39,15 +39,21 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
-  // MNY-P2.1: un cobro en lote también es dinero recibido del cliente.
+/** Los ajustes muestran su importe sin presentarlo como entrada o salida. */
+function presentacionPago(pago: PagoDetalleEncabezado) {
+  if (pago.es_ajuste) return { tipo: "Ajuste no monetario", importe: "Importe ajustado", color: "text-foreground" };
   const esCobro = esDineroRecibido(pago.tipo);
+  return { tipo: TIPO_PAGO_DETALLE_LABELS[pago.tipo], importe: esCobro ? "Dinero recibido" : "Dinero pagado",
+    color: esCobro ? "text-success" : "text-destructive" };
+}
+
+export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
+  const presentacion = presentacionPago(pago);
   const esCliente = ["cobro", "lote_cobro"].includes(pago.tipo);
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline">{TIPO_PAGO_DETALLE_LABELS[pago.tipo]}</Badge>
-        {pago.es_ajuste ? <Badge variant="outline">Ajuste</Badge> : null}
+        <Badge variant="outline">{presentacion.tipo}</Badge>
         {pago.estado ? (
           pago.tipo === "anticipo"
             ? <StatusBadge domain="anticipo_proveedor" status={pago.estado} />
@@ -56,12 +62,12 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
       </div>
       <div className="rounded-md border p-3">
         <p className="text-2xs uppercase tracking-wide text-muted-foreground">
-          {esCobro ? "Dinero recibido" : "Dinero pagado"}
+          {presentacion.importe}
         </p>
-        <p className={`text-kpi tabular-nums ${esCobro ? "text-success" : "text-destructive"}`}>
+        <p className={`text-kpi tabular-nums ${presentacion.color}`}>
           {formatCurrency(pago.monto, pago.moneda)}
         </p>
-        {pago.moneda !== "MXN" ? (
+        {!pago.es_ajuste && pago.moneda !== "MXN" ? (
           // MNY-P2.3: sin T/C registrado no se muestra "TC 1.0000" ni un
           // equivalente en pesos inventado.
           pago.tipo_cambio && pago.monto_mxn != null ? (
@@ -103,6 +109,7 @@ export function BloqueMovimiento({
   monedaCuentaPago = null,
   cuentaBancariaPagoId = null,
   metodoPago = null,
+  esAjuste = false,
 }: {
   movimiento: MovimientoConciliado | null;
   cuentaId: string | null;
@@ -111,12 +118,14 @@ export function BloqueMovimiento({
   cuentaBancariaPagoId?: string | null;
   /** MNY-P2.2: en efectivo no se espera movimiento bancario. */
   metodoPago?: string | null;
+  /** Ajuste de saldo documental sin flujo de caja. */
+  esAjuste?: boolean;
 }) {
   if (!movimiento) {
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
-        <MovimientoAusente metodoPago={metodoPago} />
+        <MovimientoAusente metodoPago={metodoPago} esAjuste={esAjuste} />
       </section>
     );
   }

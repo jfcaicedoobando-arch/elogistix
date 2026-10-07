@@ -15,7 +15,14 @@ import {
  * MNY-P2.2: estado vacío del movimiento bancario. El efectivo no genera
  * movimiento del banco por diseño; avisar "falta conciliar" era falsa alarma.
  */
-export function MovimientoAusente({ metodoPago }: { metodoPago: string | null }) {
+export function MovimientoAusente({ metodoPago, esAjuste = false }: { metodoPago: string | null; esAjuste?: boolean }) {
+  if (esAjuste) {
+    return (
+      <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
+        Ajuste no monetario: no genera movimiento en la cuenta bancaria ni requiere conciliación.
+      </p>
+    );
+  }
   if (!esperaMovimientoBancario(metodoPago)) {
     return (
       <p className="rounded-md border p-3 text-body-sm text-muted-foreground">
