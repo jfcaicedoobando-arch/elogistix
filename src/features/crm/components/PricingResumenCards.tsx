@@ -41,7 +41,7 @@ export function PricingResumenCards() {
               <EmptyStateInline icon={Clock} message="Aún no hay solicitudes respondidas." />
             ) : (
               <div className="space-y-2">
-                <p className="text-2xl font-semibold tabular-nums">
+                <p className="text-kpi tabular-nums">
                   {formatoHorasRespuesta(data.horasPromedioRespuesta ?? 0)}
                   <span className="text-body-sm font-normal text-muted-foreground"> promedio</span>
                 </p>

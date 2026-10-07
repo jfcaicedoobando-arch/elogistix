@@ -39,7 +39,7 @@ The original135 candidate remains unchanged. No full isolated app typecheck, bui
 
 ## Release39 composition on main38
 
-The isolated source is now composed on `731f7903e82782a81391489c19cf178ee6051b81`, with all inherited source, migrations and release history preserved. Release39 adds234000 (the canonical replay of Drizzle0010) and234200 to the1482-file release38 inventory; the35–38 manifest entries remain unchanged. SQL2335/2337 and previous changelog entries keep their exact bytes. See [application plan39](audit131-release39-application-plan.md) for dependencies, target checks, signature transition and rollback limits. Release38 application remains separately authorized; its Git merge is not evidence that it ran.
+The isolated source is now composed on `731f7903e82782a81391489c19cf178ee6051b81`, with all inherited source, migrations and release history preserved. Release39 adds234000 (the canonical replay of Drizzle0010),234100 (its finite tenant-scope forward) and234200 to the1482-file release38 inventory; the35–38 manifest entries remain unchanged. SQL2335/2337 and previous changelog entries keep their exact bytes. See [application plan39](audit131-release39-application-plan.md) for dependencies, target checks, signature transition and rollback limits. Release38 application remains separately authorized; its Git merge is not evidence that it ran.
 
 Independent review identified one source defect: a new refund without a reference inherited the original payment reference in the ledger, payment detail and supplier statement. The negative regression reproduced it for an originally bank-funded advance returned in cash. Only the three affected consumer expressions change: a recorded new refund medium selects `referencia_devolucion`, preserving NULL; a legacy row still uses the previous fallback. The final SQL hash is `9e1d651b437aaa05a04a71dfb9b95eda35343bc32b3f9dd84f22520af292d2af`. The original `245f15c0...` remains traceable at the source commit and is not claimed as the final hash.
 
@@ -59,6 +59,13 @@ Rechecking the full supplier output also found a second-stage legacy fallback in
 
 ## Composition with the current pricing/CRM base
 
-Current main includes immutable Drizzle0010 but initially lacked its canonical Supabase replay. Release39 now includes the reviewed replay `20261006234000_replay_tarifario_pricing.sql` and its exact mapping/baseline additions. It sorts after135 and before131 without changing any historical filename or the ordering of40–42. Historical release manifests35–38 remain unchanged;39 lists1484 migrations. The existing pricing/CRM and PDF/preview source and generated types are preserved, including blocks unrelated to131.
+Current main includes immutable Drizzle0010 but initially lacked its canonical Supabase replay. Release39 now includes the reviewed replay `20261006234000_replay_tarifario_pricing.sql` and its exact mapping/baseline additions. It sorts after135 and before131 without changing any historical filename or the ordering of40–42. Historical release manifests35–38 remain unchanged;39 lists1485 migrations. The existing pricing/CRM and PDF/preview source and generated types are preserved, including blocks unrelated to131.
 
 The replay source and its reconciliation limits are documented in [tarifario0010](../releases/tarifario-0010-replay.md). It must not be blindly rerun on a database where Drizzle0010 already exists. The CI harness restores the historical lack of authenticated DELETE on its two charge tables, and the ordinary guard manifest registers the permanent ACL test. Nothing here authorizes remote SQL, registration changes or deployment.
+
+
+## Mandatory integrity guard follow-up
+
+The first fully composed CI run passed TypeScript, static audits, build/Deno and lint, but the aggregate schema integrity step detected the two missing Ola16 restrictive policies. The earlier local replay scripts exercised188 ordinary guards and49 RLS suites without that additional aggregate step; those results were valid for their stated suites but were not a full CI pass.
+
+A separate234100 forward now adds exactly the two authenticated tenant restrictions using the explicit normal-role-preserving canonical condition. It leaves immutable0010/replay bytes and131 unchanged. Validation includes the previously missed full integrity guard, negative control on the prior catalog, policy/role behavior, before/after ACL/data preservation and exact forward/fresh convergence. The standalone0010 ledger-recognition plan remains distinct from this real policy change, which must be added explicitly to any application envelope and independently reviewed.

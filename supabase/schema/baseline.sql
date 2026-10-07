@@ -37418,7 +37418,9 @@ CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes USING (((EXISTS 
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 ALTER TABLE public.costeo_cargos_fob_agente ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_fob_agente_tenant_restrictive ON public.costeo_cargos_fob_agente AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 ALTER TABLE public.costeo_cargos_locales_naviera ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_locales_naviera_tenant_restrictive ON public.costeo_cargos_locales_naviera AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_naviera_demoras_tarifa.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))));

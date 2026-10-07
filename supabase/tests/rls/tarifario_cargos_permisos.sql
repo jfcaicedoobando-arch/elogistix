@@ -1,3 +1,4 @@
+BEGIN;
 -- Drizzle 0010 preserves charges through soft deletion; CI must not invent
 -- authenticated DELETE access when restoring its generic Data API grants.
 DO $$
@@ -25,3 +26,4 @@ BEGIN
     RAISE EXCEPTION 'Tarifario RPC ACL differs from Drizzle 0010';
   END IF;
 END $$;
+ROLLBACK;
