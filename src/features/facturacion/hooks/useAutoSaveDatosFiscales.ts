@@ -45,10 +45,17 @@ export function useAutoSaveDatosFiscales(facturaId: string, moneda: string, valu
     const todos = buildDatosTimbradoPatch({ usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas }, moneda);
     return camposEditados ? Object.fromEntries(Object.entries(todos).filter(([key]) => camposEditados.includes(key as keyof DatosTimbradoPatch))) as Partial<DatosTimbradoPatch> : todos;
   }, [usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas, moneda, camposEditados]);
-  // Normalizar notas/enteros puede producir el mismo patch. Estabilizar ANTES
-  // de la dependencia evita abortar el timer por un cambio que no requiere otro.
-  const patchJson = JSON.stringify(candidato);
-  const patch = useMemo(() => JSON.parse(patchJson) as Partial<DatosTimbradoPatch>, [patchJson]);
+  // Comparar campos ya normalizados estabiliza el patch sin deserializar datos.
+  // Un espacio final o entero equivalente no aborta el debounce pendiente.
+  const { uso_cfdi, forma_pago, metodo_pago, dias_credito, notas: notasPatch, tipo_cambio } = candidato;
+  const patch = useMemo<Partial<DatosTimbradoPatch>>(() => ({
+    ...(uso_cfdi !== undefined ? { uso_cfdi } : {}),
+    ...(forma_pago !== undefined ? { forma_pago } : {}),
+    ...(metodo_pago !== undefined ? { metodo_pago } : {}),
+    ...(dias_credito !== undefined ? { dias_credito } : {}),
+    ...(notasPatch !== undefined ? { notas: notasPatch } : {}),
+    ...(tipo_cambio !== undefined ? { tipo_cambio } : {}),
+  }), [uso_cfdi, forma_pago, metodo_pago, dias_credito, notasPatch, tipo_cambio]);
   const anterior = useRef(patch);
   const reconciliacion = useReconciliarAutoSave(qc, facturaId, organizationId, authScope);
 
