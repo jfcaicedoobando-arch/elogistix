@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agruparTarifas, entraAlTarifario, type TarifaTarifario } from "../tarifarioService";
+import { agruparTarifas, entraAlTarifario, estadoVigencia, FILTROS_VIGENCIA, type TarifaTarifario } from "../tarifarioService";
 import { tarifasCoincidentes } from "../coincidencias";
 
 const base = (o: Partial<TarifaTarifario>): TarifaTarifario => ({
@@ -25,5 +25,17 @@ describe("tarifario", () => {
     const ts = [base({ id: "a" }), base({ id: "b", tipo: { code: "40HC" } }), base({ id: "c", vigente_hasta: "2026-10-05" })];
     const s = { pol: "shanghai", pod: "Manzanillo", origen: null, destino: null, container_size: "20'", fecha_tentativa_carga: null };
     expect(tarifasCoincidentes(s, ts, "2026-10-07").map((t) => t.id)).toEqual(["a"]);
+  });
+  it("clasifica la vigencia respecto de la fecha dada", () => {
+    expect(estadoVigencia(base({}), "2026-10-07")).toBe("vigente");
+    expect(estadoVigencia(base({}), "2026-10-01")).toBe("vigente");
+    expect(estadoVigencia(base({}), "2026-10-15")).toBe("vigente");
+    expect(estadoVigencia(base({}), "2026-09-30")).toBe("proxima");
+    expect(estadoVigencia(base({}), "2026-10-16")).toBe("vencida");
+    expect(estadoVigencia(base({ vigente_desde: null, vigente_hasta: null }), "2026-10-07")).toBe("vigente");
+  });
+  it("el filtro de vigencia ofrece las cuatro opciones sin valores vacíos", () => {
+    expect(FILTROS_VIGENCIA.map((f) => f.valor)).toEqual(["vigentes", "proximas", "vencidas", "todas"]);
+    expect(FILTROS_VIGENCIA.every((f) => f.etiqueta.trim().length > 0)).toBe(true);
   });
 });
