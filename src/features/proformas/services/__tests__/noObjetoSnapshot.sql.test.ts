@@ -10,6 +10,23 @@ const table = baseline.split("CREATE TABLE public.proforma_conceptos_consolidado
 // SQL execution coverage is in supabase/tests/proforma_no_objeto_snapshot.sql.
 // These contracts guard the reviewed DDL and real downstream pure payload builder.
 describe("consolidated no_objeto snapshot contract", () => {
+  it("prepares signup before the shared DOF row in parallel fixtures", () => {
+    const fixture = readFileSync("supabase/tests/proforma_no_objeto_snapshot.sql", "utf8");
+    const signup = fixture.indexOf("INSERT INTO auth.users");
+    const dof = fixture.indexOf("INSERT INTO public.tipos_cambio_dof");
+    expect(signup).toBeGreaterThan(-1);
+    expect(dof).toBeGreaterThan(signup);
+  });
+
+  it("takes signup before transactional fault-injection table locks", () => {
+    const fixture = readFileSync("supabase/tests/proforma_operativa_consistencia.sql", "utf8");
+    const signup = fixture.indexOf("INSERT INTO auth.users");
+    const trigger = fixture.indexOf("CREATE TRIGGER");
+    expect(signup).toBeGreaterThan(-1);
+    expect(trigger).toBeGreaterThan(signup);
+    expect(fixture).toMatch(/^ROLLBACK;/m);
+  });
+
   it("allows an absent rate only for explicit no_objeto, retaining other requirements", () => {
     expect(migration).toContain("tasa_iva_aplicada IS NOT NULL OR tipo_iva IS NOT DISTINCT FROM 'no_objeto'");
     expect(table).toContain("tasa_iva_aplicada numeric DEFAULT 0.16,");

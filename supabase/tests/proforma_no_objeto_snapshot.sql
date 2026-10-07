@@ -19,10 +19,12 @@ DECLARE
   v_snapshot uuid; v_before jsonb;
 BEGIN
   PERFORM set_config('request.jwt.claims', '', true);
+  -- Signup toma un lock global: adquirirlo antes del TC compartido, igual
+  -- que seed_org_pair de las demás suites paralelas (evita inversión de locks).
+  INSERT INTO auth.users(id, email) VALUES (v_uid, 'no-objeto-consolidation@example.invalid');
   INSERT INTO public.tipos_cambio_dof(fecha, usd_mxn, eur_mxn, origen)
   VALUES (CURRENT_DATE, 18, 20, 'manual') ON CONFLICT (fecha) DO NOTHING;
   INSERT INTO public.organizations(id, nombre) VALUES (v_org, 'TEST no objeto consolidation');
-  INSERT INTO auth.users(id, email) VALUES (v_uid, 'no-objeto-consolidation@example.invalid');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (v_org, v_uid, 'admin_org');
   INSERT INTO public.user_roles(user_id, role) VALUES (v_uid, 'admin_org')
     ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;

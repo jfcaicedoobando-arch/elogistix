@@ -4,6 +4,11 @@
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
+-- El alta real toma el lock global de bootstrap antes de los locks de tabla
+-- de los triggers de fallo. Las suites paralelas usan el mismo orden.
+-- Este actor de coordinación se elimina junto con el fixture al ROLLBACK.
+INSERT INTO auth.users(id, email)
+VALUES (gen_random_uuid(), 'proforma-fixture-lock-order@example.invalid');
 
 CREATE FUNCTION pg_temp.assert_proforma(p_ok boolean, p_message text) RETURNS void
 LANGUAGE plpgsql AS $$
