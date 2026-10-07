@@ -21,12 +21,36 @@ const COLUMNAS_INTERNAS =
   "cerrado_snapshot, tarifa_delta_jsonb, reabierto_motivo, created_by_email" as const;
 
 /**
+ * PERF (presión de BD 2026-10-07): la vista cuesta ~200 ms por llamada y el
+ * detalle del embarque la pedía 3 veces (hook + tarifa + reconciliación).
+ * Se comparte la misma promesa durante unos segundos para que una apertura
+ * del detalle genere una sola consulta. Los errores no se guardan.
+ */
+const VENTANA_MS = 15_000;
+const enVuelo = new Map<string, { at: number; p: Promise<EmbarqueInterno | null> }>();
+
+/** Limpia la memoria corta (p. ej. tras cerrar/reabrir un embarque). */
+export function olvidarEmbarqueInterno(embarqueId?: string): void {
+  if (embarqueId) enVuelo.delete(embarqueId);
+  else enVuelo.clear();
+}
+
+/**
  * Devuelve las columnas internas del embarque, o `null` si el usuario no es
  * staff de la organización (la vista simplemente no devuelve la fila).
  */
-export async function obtenerEmbarqueInterno(
+export function obtenerEmbarqueInterno(
   embarqueId: string,
 ): Promise<EmbarqueInterno | null> {
+  const previo = enVuelo.get(embarqueId);
+  if (previo && Date.now() - previo.at < VENTANA_MS) return previo.p;
+  const p = consultar(embarqueId);
+  enVuelo.set(embarqueId, { at: Date.now(), p });
+  p.catch(() => enVuelo.delete(embarqueId));
+  return p;
+}
+
+async function consultar(embarqueId: string): Promise<EmbarqueInterno | null> {
   const { data, error } = await supabase
     .from("embarques_interno_v")
     .select(COLUMNAS_INTERNAS)
