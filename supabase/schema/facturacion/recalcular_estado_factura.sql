@@ -35,7 +35,7 @@ BEGIN
   WHERE factura_id = v_factura_id AND deleted_at IS NULL
     AND COALESCE(estado_rep, '') <> 'Cancelado';
 
-  IF v_saldo <= 0.01 THEN
+  IF ROUND(v_saldo, 2) <= 0 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN
     v_nuevo_estado := 'Parcialmente pagada';
@@ -60,5 +60,7 @@ BEGIN
 
   RETURN COALESCE(NEW, OLD);
 END;
-$function$
- name:recalcular_estado_factura schema:public;
+$function$;
+
+REVOKE ALL ON FUNCTION public.recalcular_estado_factura() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.recalcular_estado_factura() TO authenticated, service_role;

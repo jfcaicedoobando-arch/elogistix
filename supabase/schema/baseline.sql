@@ -823,11 +823,11 @@ BEGIN
     AND COALESCE(p.estado_rep, '') <> 'Cancelado'
     AND p.id IS DISTINCT FROM NEW.id;
   IF v_otros > 0 THEN
-    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
+    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Revisa el pago previo con Cobranza antes de corregirlo.'
       USING ERRCODE = 'P0001';
   END IF;
-  -- Mismo umbral que recalcular_estado_factura: el saldo exacto no se redondea ni se ajusta.
-  IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.01 THEN
+  -- Valida la deuda monetaria, sin condonar un centavo ni alterar el aplicado exacto.
+  IF ROUND(v_total - COALESCE(NEW.monto_aplicado_factura, NEW.monto), 2) > 0 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: registra el cobro por el saldo neto pendiente (%) en una sola exhibición, considerando las notas de crédito vigentes.', v_total
       USING ERRCODE = 'P0001';
   END IF;
@@ -11135,7 +11135,11 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
       ), 0) AS nc_aplicadas
     FROM public.facturas f
     WHERE f.deleted_at IS NULL
-      AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+      AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
   )
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
@@ -11148,7 +11152,7 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   FROM base b
   LEFT JOIN public.clientes c ON c.id = b.cliente_id
   LEFT JOIN public.embarques e ON e.id = b.embarque_id AND e.deleted_at IS NULL
-  WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
+  WHERE ROUND(b.total - b.pagado - b.nc_aplicadas, 2) > 0
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $$;
@@ -11159,8 +11163,12 @@ CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
   SELECT count(*)::bigint
   FROM public.facturas f
   WHERE f.deleted_at IS NULL
-    AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
-    AND (
+    AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
+    AND ROUND(
       f.total
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
@@ -11173,7 +11181,7 @@ CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
             AND nc.deleted_at IS NULL
             AND nc.estado IN ('Timbrada','Aplicada')
         ), 0)
-    ) > 0.005
+    , 2) > 0
 $$;
 CREATE FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid DEFAULT NULL::uuid, p_motivo text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
@@ -11804,23 +11812,25 @@ BEGIN
         AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
     LEFT JOIN LATERAL (
-      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+      SELECT public._nc_aplicadas_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0
+          AND ROUND(f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0), 2) > 0))
       AND f.organization_id = public.org_scope()
       AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
       AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
   )
   SELECT jsonb_build_object(
-    'total_mxn',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0), 0),
-    'total_usd',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0), 0),
-    'vencido_mxn',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_usd',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
-    'por_vencer_7d_mxn',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
-    'por_vencer_7d_usd',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
-    'facturas_vencidas',  COUNT(*) FILTER (WHERE moneda IN ('MXN','USD') AND saldo > 0 AND dias_vencido > 0),
-    'facturas_con_saldo', COUNT(*) FILTER (WHERE saldo > 0)
+    'total_mxn',          COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0), 0),
+    'total_usd',          COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0), 0),
+    'vencido_mxn',        COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',        COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'por_vencer_7d_mxn',  COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'por_vencer_7d_usd',  COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'facturas_vencidas',  COUNT(*) FILTER (WHERE moneda IN ('MXN','USD') AND ROUND(saldo, 2) > 0 AND dias_vencido > 0),
+    'facturas_con_saldo', COUNT(*) FILTER (WHERE ROUND(saldo, 2) > 0)
   ) INTO v_result
   FROM cartera;
   RETURN v_result;
@@ -11863,10 +11873,12 @@ BEGIN
         AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
     LEFT JOIN LATERAL (
-      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+      SELECT public._nc_aplicadas_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0
+          AND ROUND(f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0), 2) > 0))
       AND f.organization_id = v_org
       AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
       AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
@@ -11878,7 +11890,7 @@ BEGIN
   ), clasificada AS (
     SELECT c.*,
       CASE
-        WHEN c.saldo <= 0.01 THEN 'Sin saldo'
+        WHEN ROUND(c.saldo, 2) <= 0 THEN 'Sin saldo'
         WHEN c.dias_vencido > 0 THEN 'Vencida'
         WHEN c.dias_vencido BETWEEN -7 AND 0 THEN 'Por vencer'
         ELSE 'Vigente'
@@ -16469,6 +16481,7 @@ BEGIN
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY pf.factura_id
   ),
+  -- Ola v17: antes restaba ncf.monto EN CRUDO (NC en USD contra facturas MXN).
   nc AS (
     SELECT ncf.factura_id,
            COALESCE(SUM(public.nc_convertida_a_moneda_factura(
@@ -16491,7 +16504,8 @@ BEGIN
     LEFT JOIN pagado pg ON pg.factura_id = f.id
     LEFT JOIN nc ON nc.factura_id = f.id
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0))
       AND COALESCE(f.cancellation_status, 'none') NOT IN ('pending','verifying','accepted')
       AND f.sustituida_por IS NULL
       AND NOT EXISTS (
@@ -16504,17 +16518,17 @@ BEGIN
     s.cliente_id,
     MAX(s.cliente_nombre),
     s.moneda,
-    SUM(s.saldo),
-    SUM(CASE WHEN s.dias_vencido <= 0 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido > 90 THEN s.saldo ELSE 0 END),
+    SUM(ROUND(s.saldo, 2)),
+    SUM(CASE WHEN s.dias_vencido <= 0 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido > 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
     COUNT(*)::int
   FROM saldos s
-  WHERE s.saldo > 0.005
+  WHERE ROUND(s.saldo, 2) > 0
   GROUP BY s.cliente_id, s.moneda
-  ORDER BY SUM(s.saldo) DESC;
+  ORDER BY SUM(ROUND(s.saldo, 2)) DESC;
 END;
 $$;
 CREATE FUNCTION public.cxp_aging_proveedores(p_org uuid DEFAULT NULL::uuid, p_fecha date DEFAULT CURRENT_DATE) RETURNS TABLE(proveedor_id uuid, proveedor_nombre text, moneda text, saldo_total numeric, vigente numeric, d_1_30 numeric, d_31_60 numeric, d_61_90 numeric, mas_90 numeric, num_facturas integer)
@@ -20051,17 +20065,17 @@ BEGIN
       AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
   )
   SELECT jsonb_build_object(
-    'adeudado_mxn',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0), 0),
-    'adeudado_usd',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0), 0),
-    'adeudado_eur',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0), 0),
-    'vencido_mxn',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_usd',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_eur',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0 AND dias_vencido > 0), 0),
+    'adeudado_mxn',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_usd',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_eur',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0), 0),
+    'vencido_mxn',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_eur',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
     'a_favor_mxn',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'MXN'), 0),
     'a_favor_usd',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'USD'), 0),
     'a_favor_eur',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'EUR'), 0),
-    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE saldo > 0 AND dias_vencido > 0),
-    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE saldo > 0)
+    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0 AND dias_vencido > 0),
+    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0)
   ) INTO v_result;
   RETURN v_result;
 END;
@@ -27015,7 +27029,7 @@ BEGIN
   FROM pagos_factura
   WHERE factura_id = v_factura_id AND deleted_at IS NULL
     AND COALESCE(estado_rep, '') <> 'Cancelado';
-  IF v_saldo <= 0.01 THEN
+  IF ROUND(v_saldo, 2) <= 0 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN
     v_nuevo_estado := 'Parcialmente pagada';

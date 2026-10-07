@@ -17,6 +17,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type TableOptions,
   type OnChangeFn,
   type RowSelectionState,
   type SortingState,
@@ -51,7 +52,7 @@ interface Args<T> {
    *  `useRowSelection`. Cuando se omite, TanStack no habilita selección. */
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-  enableRowSelection?: boolean;
+  enableRowSelection?: TableOptions<T>["enableRowSelection"];
 }
 
 function fromControlled(sort: ControlledSort | undefined): SortingState {

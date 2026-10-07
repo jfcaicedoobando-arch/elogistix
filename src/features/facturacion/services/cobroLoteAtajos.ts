@@ -2,6 +2,7 @@
  * Atajos puros de reparto del cobro en lote de cliente.
  * Sin estado ni React: se prueban de forma aislada.
  */
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { round2 } from "@/features/cxp/services";
 import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import { TOLERANCIA_CENTAVOS } from "./cobroLoteValidaciones";
@@ -23,7 +24,7 @@ export function asignarSaldoFactura(
   sinAsignar: number,
 ): RenglonCobro[] {
   const factura = facturas.find((f) => f.factura_id === facturaId);
-  if (!factura) return renglones;
+  if (!factura || errorCobroPuePrevio(factura)) return renglones;
   const actual = renglones.find((r) => r.factura_id === facturaId)?.monto ?? 0;
   const techo = round2(actual + Math.max(0, sinAsignar));
   const monto = round2(Math.min(round2(factura.saldo), techo));
@@ -43,6 +44,7 @@ export function asignarSobrante(
   const siguiente = new Map(renglones.map((r) => [r.factura_id, r.monto]));
 
   for (const f of ordenFifo(facturas)) {
+    if (errorCobroPuePrevio(f)) continue;
     if (restante <= TOLERANCIA_CENTAVOS) break;
     const actual = siguiente.get(f.factura_id) ?? 0;
     const hueco = round2(round2(f.saldo) - actual);

@@ -5,6 +5,7 @@
  * (`cancellation_status` = pending | verifying) porque la base de datos
  * rechaza sus cobros (LC_FACTURA_EN_CANCELACION).
  */
+import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import type { CarteraRow } from "./carteraColumns";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
 
@@ -25,9 +26,13 @@ export function hayEnTramiteCancelacion(seleccionadas: CarteraRow[]): boolean {
   return seleccionadas.some((r) => enTramiteCancelacion(r));
 }
 
+export function puedeSeleccionarCobro(row: CarteraRow): boolean {
+  return !enTramiteCancelacion(row) && !errorCobroPuePrevio(row);
+}
+
 export function derivarLoteCobro(seleccionadas: CarteraRow[]): LoteCobroSeleccion | null {
   if (seleccionadas.length < 2) return null;
-  if (hayEnTramiteCancelacion(seleccionadas)) return null;
+  if (seleccionadas.some((r) => !puedeSeleccionarCobro(r))) return null;
   const primera = seleccionadas[0];
   const mismoCliente = seleccionadas.every((r) => r.cliente_id === primera.cliente_id);
   const mismaMoneda = seleccionadas.every((r) => r.moneda === primera.moneda);
@@ -41,6 +46,7 @@ export function derivarLoteCobro(seleccionadas: CarteraRow[]): LoteCobroSeleccio
       numero: r.numero,
       fecha_vencimiento: r.fecha_vencimiento,
       saldo: Number(r.saldo ?? 0),
+      pagado: r.pagado,
       metodo_pago: r.metodo_pago,
       fecha_emision: r.fecha_emision,
       es_ppd_timbrada: r.metodo_pago === "PPD" && !!r.uuid_fiscal,

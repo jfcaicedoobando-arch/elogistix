@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Tipos y utilidades puras del Estado de Cuenta por cliente.
  * Contratos y mapeo puro, sin acceso a la base de datos.
@@ -109,8 +110,8 @@ export function calcularEstatus(
   dias: number,
   estado: FacturaRow["estado"],
 ): EstatusCobranza {
-  if (estado === "Pagada" && saldo <= 0.01) return "Pagada";
-  if (saldo <= 0.01) return "Sin saldo";
+  if (estado === "Pagada" && !tieneSaldoMonetario(saldo)) return "Pagada";
+  if (!tieneSaldoMonetario(saldo)) return "Sin saldo";
   if (dias > 0) return "Vencida";
   // B-105 (decisión de diseño): "Por vencer" = vence en 7 días naturales o
   // menos, alineado con la convención del ERP (tarifas "≤7 días", aging CxC).

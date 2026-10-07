@@ -2,6 +2,8 @@
  * Estado, validación y envío del cobro en lote de cliente.
  * Mantiene el diálogo bajo el límite de complejidad y de líneas.
  */
+import { errorRenglonPue } from "../services/cobroLoteValidaciones";
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useIdsConRep, useTcLote,
@@ -39,9 +41,13 @@ interface Args {
 export function usePagoClienteLoteState(a: Args) {
   const { data: cuentas = [] } = useCuentasBancarias(true);
   const registrar = usePagoClienteLote();
+  const abiertoRef = useRef(a.open);
+  useEffect(() => { abiertoRef.current = a.open; return () => { abiertoRef.current = false; }; }, [a.open]);
+  const facturasActuales = useRef(a.facturas);
+  useEffect(() => { facturasActuales.current = a.facturas; }, [a.facturas]);
 
   const saldoTotal = useMemo(
-    () => round2(a.facturas.reduce((s, f) => s + Number(f.saldo || 0), 0)),
+    () => round2(a.facturas.filter((f) => !errorCobroPuePrevio(f)).reduce((s, f) => s + Number(f.saldo || 0), 0)),
     [a.facturas],
   );
 
@@ -107,6 +113,8 @@ export function usePagoClienteLoteState(a: Args) {
   };
 
   const setMonto = (facturaId: string, monto: number) => {
+    const f = a.facturas.find((x) => x.factura_id === facturaId);
+    if (monto > 0 && f && errorCobroPuePrevio(f)) return;
     setRenglones((prev) =>
       prev.map((r) => (r.factura_id === facturaId ? { ...r, monto: round2(monto) } : r)),
     );
@@ -129,9 +137,11 @@ export function usePagoClienteLoteState(a: Args) {
 
 
   const submit = async () => {
-    if (error) return;
+    if (error || !abiertoRef.current) return;
     const aplicadas = renglones.filter((r) => r.monto > 0).map((r) => r.factura_id);
     try {
+      const facturasConRep = await obtenerFacturasConRep(aplicadas);
+      if (!abiertoRef.current || errorRenglonPue(facturasActuales.current, renglones)) return;
       await registrar.mutateAsync({
         cliente_id: a.clienteId,
         fecha_pago: fecha,
@@ -146,7 +156,7 @@ export function usePagoClienteLoteState(a: Args) {
         importe_recibido: totalNum,
         request_id: requestId,
         renglones,
-        facturasConRep: await obtenerFacturasConRep(aplicadas),
+        facturasConRep,
       });
     } catch {
       // RFE-08 (Ola 12): el onError del mutation ya notificó con

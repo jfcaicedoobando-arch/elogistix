@@ -1,3 +1,5 @@
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Banda fija de totales del cobro en lote (recibido / repartido / sin asignar).
  * Vive en el `stickyBottom` del FormDialogShell para quedar siempre visible.
@@ -24,7 +26,7 @@ interface Props {
 export function DialogCobroLoteResumen(p: Props) {
   const liquidadas = p.facturas.filter((f) => {
     const monto = p.renglones.find((r) => r.factura_id === f.factura_id)?.monto ?? 0;
-    return monto > 0 && f.saldo - monto <= 0.005;
+    return monto > 0 && !errorCobroPuePrevio(f) && !tieneSaldoMonetario(f.saldo, monto);
   }).length;
   const conMonto = p.renglones.filter((r) => r.monto > 0).length;
   const sobrante = p.sinAsignar > 0.005;

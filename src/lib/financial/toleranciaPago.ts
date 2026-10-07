@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+
 /**
  * Tolerancia canónica (en unidades de moneda) para comparaciones de saldo en
  * pagos/cobros. Unifica los literales dispersos (`0.01`, `0.009`) que la
@@ -9,5 +11,12 @@
  */
 export const TOLERANCIA_SOBREPAGO = 0.005;
 
-/** Saldo máximo que `public.recalcular_estado_factura` considera liquidado. */
-export const TOLERANCIA_CIERRE_FACTURA = 0.01;
+/**
+ * Deuda monetaria positiva según ROUND(numeric, 2), sin alterar el saldo exacto.
+ * El empate 0.005 es cobrable; 0.01 nunca se condona como "tolerancia".
+ * Restar en Decimal evita que 1.16 - 1.155 caiga bajo el empate por ruido binario.
+ */
+export function tieneSaldoMonetario(saldo: number, aplicado = 0): boolean {
+  if (!Number.isFinite(saldo) || !Number.isFinite(aplicado)) return false;
+  return new Decimal(saldo).minus(aplicado).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).greaterThan(0);
+}

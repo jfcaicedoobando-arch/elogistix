@@ -201,3 +201,7 @@ supabase/tests/money_contract_rounding.sql
 # Proformas 13.824.35: consistencia operativa y snapshot no_objeto.
 supabase/tests/proforma_no_objeto_snapshot.sql
 supabase/tests/proforma_operativa_consistencia.sql
+
+# AUD54: saldo real y cierre monetario, sólo fixtures con ROLLBACK.
+supabase/tests/rls/test_rls_audit54_pue_tolerancia_cierre.sql
+supabase/tests/rls/test_rls_audit54_saldo_visible.sql

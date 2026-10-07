@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Drill-down de antigüedad CxC: al abrir una fila de cliente en /cobranza/aging
  * muestra sus facturas con saldo abierto, con badge de cubeta y export a CSV.
@@ -52,7 +53,7 @@ function CxcAgingDrillDownBody({
   const abiertas = useMemo(
     () =>
       clasificarAFecha(facturas, fechaReferencia).filter(
-        (f) => f.saldo > 0.005 && (!cliente || f.moneda.toUpperCase() === cliente.moneda),
+        (f) => tieneSaldoMonetario(f.saldo) && (!cliente || f.moneda.toUpperCase() === cliente.moneda),
       ),
     [facturas, cliente, fechaReferencia],
   );

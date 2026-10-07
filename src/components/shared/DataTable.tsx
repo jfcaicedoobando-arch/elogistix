@@ -1,5 +1,5 @@
 import React from "react";
-import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -67,7 +67,7 @@ interface DataTableProps<T> {
    *  `onRowSelectionChange`. Si se omite, la selección queda deshabilitada. */
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-  enableRowSelection?: boolean;
+  enableRowSelection?: TableOptions<T>["enableRowSelection"];
 }
 
 const DATA_TABLE_DEFAULTS = {

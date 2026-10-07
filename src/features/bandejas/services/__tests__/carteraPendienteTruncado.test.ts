@@ -13,7 +13,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { derivarLoteCobro } from "../../routes/_sections/carteraLote";
 import { fetchCarteraPendiente, CARTERA_PENDIENTE_LIMITE } from "../bandejas";
 
-const fila = (i: number) => ({ factura_id: `f-${i}`, moneda: "MXN", total: 100, saldo: 100 });
+const fila = (i: number) => ({ factura_id: `f-${i}`, moneda: "MXN", total: 100, saldo: 100, pagado: 0 });
 
 describe("fetchCarteraPendiente — señal de truncamiento", () => {
   beforeEach(() => {

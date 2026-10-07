@@ -4,6 +4,7 @@
  * v13.490.0 — el área completa de la celda selecciona; el folio es el único
  * drilldown explícito y abre en pestaña nueva mientras haya selección.
  */
+import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import { Link } from "react-router";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns } from "@/components/shared/DataTable";
@@ -50,11 +51,13 @@ export function buildCarteraSelectionColumns() {
           onClick={(e) => {
             e.stopPropagation();
             if (esClickEnCheckbox(e.target)) return;
-            row.toggleSelected(!row.getIsSelected());
+            if (row.getCanSelect()) row.toggleSelected(!row.getIsSelected());
           }}
           role="presentation"
         >
           <Checkbox
+            disabled={!row.getCanSelect()}
+            title={errorCobroPuePrevio(row.original) ?? undefined}
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState, TableOptions } from "@tanstack/react-table";
 import { useNavigate } from "react-router";
 import { DataTable } from "@/components/shared/DataTable";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -67,7 +67,7 @@ interface Props<T> {
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-  enableRowSelection?: boolean;
+  enableRowSelection?: TableOptions<T>["enableRowSelection"];
   striped?: boolean;
   hoverable?: boolean;
   bordered?: boolean;

@@ -11,8 +11,12 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   SELECT count(*)::bigint
   FROM public.facturas f
   WHERE f.deleted_at IS NULL
-    AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
-    AND (
+    AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
+    AND ROUND(
       f.total
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
@@ -23,9 +27,9 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
           FROM public.factura_notas_credito nc
           WHERE nc.factura_id = f.id
             AND nc.deleted_at IS NULL
-            AND nc.estado = 'Aplicada'
+            AND nc.estado IN ('Timbrada','Aplicada')
         ), 0)
-    ) > 0.005
+    , 2) > 0
 $function$;
 
 REVOKE ALL ON FUNCTION public.cartera_pendiente_total() FROM PUBLIC;

@@ -1,4 +1,4 @@
--- Auditorías 25/54: PUE liquida deuda neta de NC con la tolerancia real de cierre.
+-- Auditorías 25/54: PUE liquida toda deuda monetaria neta de NC.
 -- Sólo cambia la validación de operaciones futuras; no modifica pagos históricos.
 CREATE OR REPLACE FUNCTION public._assert_pago_pue_exhibicion_unica()
 RETURNS trigger
@@ -23,11 +23,11 @@ BEGIN
     AND COALESCE(p.estado_rep, '') <> 'Cancelado'
     AND p.id IS DISTINCT FROM NEW.id;
   IF v_otros > 0 THEN
-    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
+    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Revisa el pago previo con Cobranza antes de corregirlo.'
       USING ERRCODE = 'P0001';
   END IF;
-  -- Mismo umbral que recalcular_estado_factura: el saldo exacto no se redondea ni se ajusta.
-  IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.01 THEN
+  -- Valida la deuda monetaria, sin condonar un centavo ni alterar el aplicado exacto.
+  IF ROUND(v_total - COALESCE(NEW.monto_aplicado_factura, NEW.monto), 2) > 0 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: registra el cobro por el saldo neto pendiente (%) en una sola exhibición, considerando las notas de crédito vigentes.', v_total
       USING ERRCODE = 'P0001';
   END IF;

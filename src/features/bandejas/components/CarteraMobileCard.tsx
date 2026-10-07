@@ -4,6 +4,7 @@
  * `CarteraMobileList` propia a `ResponsiveDataTable` (patrón compartido con
  * CxP/CxC), evitando el desbordamiento horizontal en plegables (~692px).
  */
+import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import { Badge } from "@/components/ui/badge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -27,6 +28,7 @@ export function CarteraMobileCard({ row }: { row: CarteraRow }) {
             Exp: {row.expediente}
           </div>
         )}
+        {errorCobroPuePrevio(row) && <p className="text-label text-destructive">{errorCobroPuePrevio(row)}</p>}
         <div className="text-label text-muted-foreground">
           Vence: {row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}
         </div>

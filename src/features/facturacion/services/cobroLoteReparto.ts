@@ -5,6 +5,7 @@
  * Se separó de `pagoClienteLote.ts` para respetar el límite de 200 líneas
  * (Power of 10). Funciones puras: no tocan la base ni el DOM.
  */
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { round2 } from "@/features/cxp/services";
 import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
@@ -22,7 +23,7 @@ export function repartirFifo(
   const renglones: RenglonCobro[] = [];
 
   for (const f of orden) {
-    if (restante <= 0) {
+    if (restante <= 0 || errorCobroPuePrevio(f)) {
       renglones.push({ factura_id: f.factura_id, monto: 0 });
       continue;
     }
@@ -36,7 +37,7 @@ export function repartirFifo(
 
 /** Asigna a cada factura su saldo completo (atajo "Liquidar todo"). */
 export function repartirTodo(facturas: FacturaCobroCandidata[]): RenglonCobro[] {
-  return facturas.map((f) => ({ factura_id: f.factura_id, monto: round2(f.saldo) }));
+  return facturas.map((f) => ({ factura_id: f.factura_id, monto: errorCobroPuePrevio(f) ? 0 : round2(f.saldo) }));
 }
 
 /** Deja el reparto en ceros (atajo "Limpiar reparto"). */
