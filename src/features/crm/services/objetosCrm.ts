@@ -3,6 +3,8 @@
  * Lecturas paginadas en servidor; el aislamiento por organización lo hace RLS.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { TipoPropiedad } from "./propiedadesCrm";
+import { filaValor, type ValorEntrada } from "./valoresCrm";
 
 export const OBJETOS_PAGE_SIZE = 25;
 
@@ -70,14 +72,24 @@ export async function fetchContacto(id: string): Promise<ContactoRow | null> {
   return data;
 }
 
-export async function crearEmpresa(nombre: string): Promise<RefRow> {
+export async function crearEmpresa(nombre: string, valores: ValorInicial[] = []): Promise<RefRow> {
   const limpio = nombre.trim();
   if (!limpio) throw new Error("El nombre de la empresa es obligatorio");
+  // Convierte antes de insertar: un número inválido no deja una empresa a medias.
+  const filas = valores.map((v) => ({ propiedad_id: v.propiedadId, ...filaValor(v.tipo, v.valor) }));
   const { data, error } = await supabase.from("crm_empresas").insert({ nombre: limpio })
     .select("id, nombre").single();
   if (error) throw error;
+  const conDato = filas.filter((f) => f.valor_texto !== null || f.valor_numero !== null || f.valor_fecha !== null || f.opcion_ids !== null);
+  if (conDato.length) {
+    const { error: e2 } = await supabase.from("crm_valores")
+      .upsert(conDato.map((f) => ({ ...f, registro_id: data.id })), { onConflict: "propiedad_id,registro_id" });
+    if (e2) throw new Error(`La empresa se creó, pero no se guardaron sus propiedades: ${e2.message}`);
+  }
   return data;
 }
+
+export interface ValorInicial { propiedadId: string; tipo: TipoPropiedad; valor: ValorEntrada }
 
 export interface NuevoContactoInput { nombre: string; email?: string; telefono?: string }
 

@@ -95,7 +95,8 @@ function useInvalidarObjetos() {
 export function useCrearEmpresaCrm() {
   const invalidar = useInvalidarObjetos();
   return useMutation({
-    mutationFn: crearEmpresa,
+    mutationFn: (input: string | { nombre: string; valores: ValorInicial[] }) =>
+      typeof input === "string" ? crearEmpresa(input) : crearEmpresa(input.nombre, input.valores),
     onSuccess: () => { notifySuccess(undefined, { title: "Empresa creada" }); void invalidar(); },
     onError: (error: Error) => notifyError(undefined, { title: "No se pudo crear la empresa", description: error.message, error, method: "CRM_CREAR_EMPRESA" }),
   });
