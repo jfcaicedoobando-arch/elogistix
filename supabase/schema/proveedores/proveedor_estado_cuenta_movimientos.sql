@@ -3,7 +3,7 @@
 -- p_offset se cuenta DESDE EL FINAL (antes empujaba la ventana hacia
 -- adelante y los renglones viejos eran inalcanzables). 'hay_mas' = hay
 -- renglones anteriores a la ventana.
--- Migración vigente: 20261005010200_audit70_71_proveedor_nc_devoluciones.sql,
+-- Migración vigente: 20261006235700_audit134_pago_congelado.sql,
 -- acumulativa sobre la final de Ola 12 (20260813190546, Sprint 10) — conserva
 -- R3FE-04, R3P-09, R3P-10, R3BD-04, R3FE-03, R3P-07/R3P-08 y R3P-06.
 -- Auditoría70: NC y aging en moneda de factura con conversión canónica.
@@ -73,10 +73,13 @@ BEGIN
       AND nc.estado = 'Aplicada'
   ),
   pagos AS (
-    -- Ola 12 · R3P-06: el abono se convierte a la moneda de la factura; NULL = sin TC.
+    -- Audit134: la aplicación usa sólo su importe congelado; si falta,
+    -- no se reconstruye su FX histórico ni se reclasifica ninguna moneda.
     SELECT pp.id, pp.fecha_pago,
            pp.monto AS monto_pago, pp.moneda::text AS moneda_pago,
-           public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
+           public.monto_pago_proveedor_en_moneda_factura(
+             pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+             pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
            f.moneda AS moneda_factura,
            pp.referencia, pp.metodo_pago, pp.es_anticipo_aplicado,
            pp.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
@@ -143,19 +146,31 @@ BEGIN
            -- R3P-06: el abono se expresa en la moneda del cargo (factura).
            p.moneda_factura AS moneda,
            0::numeric,
-           -- R3P-07: la aplicación de un anticipo es informativa (0/0); el
-           -- abono ya se contó en la fila "Anticipo" al entregarlo.
-           CASE WHEN p.es_anticipo_aplicado THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
+           -- Audit134: same-currency applications remain informative. A cross
+           -- reclassifies credit from advance currency to invoice currency.
+           CASE WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
+             THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
            CASE
-             WHEN p.es_anticipo_aplicado
+             WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · anticipo ya contado al entregarse'
              WHEN p.moneda_pago <> p.moneda_factura AND p.monto_factura IS NULL
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago || ' SIN TC (excluido del saldo)'
+             WHEN p.es_anticipo_aplicado
+               THEN 'Reclasificación de anticipo de ' || p.moneda_pago || ' a ' || p.moneda_factura || '; sin movimiento bancario'
              WHEN p.moneda_pago <> p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago
              ELSE p.metodo_pago
            END
     FROM pagos p
+    UNION ALL
+    SELECT p.fecha_pago, 'Anticipo aplicado', p.id,
+           COALESCE(p.folio_interno, 'Aplicación'), p.referencia,
+           COALESCE(p.expediente, ''), p.embarque_id, p.moneda_pago,
+           p.monto_pago, 0::numeric,
+           'Crédito consumido en ' || p.moneda_pago || ' y aplicado a ' || p.moneda_factura || '; sin movimiento bancario'
+    FROM pagos p
+    WHERE p.es_anticipo_aplicado AND p.moneda_pago <> p.moneda_factura
+      AND p.monto_factura IS NOT NULL
     UNION ALL
     SELECT a.fecha_anticipo, 'Anticipo', a.id, 'Anticipo', a.referencia,
            COALESCE(a.expediente, ''), a.embarque_id, a.moneda,
@@ -167,7 +182,7 @@ BEGIN
            CASE WHEN a.medio_devolucion IS NOT NULL THEN a.referencia_devolucion ELSE COALESCE(a.referencia_devolucion, a.referencia) END, COALESCE(a.expediente, ''),
            a.embarque_id, a.moneda,
            -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
-           -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
+           -- sólo reclasifican moneda; no se cuenta de nuevo el dinero entregado.
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
@@ -175,14 +190,14 @@ BEGIN
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
-  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio, m.moneda, m.ref_id), '[]'::jsonb)
   INTO v_todos
   FROM movs m;
 
   -- Detalle del periodo (R3P-09): el filtro se aplica sobre el universo
   -- completo, en memoria, ANTES de paginar (R3FE-04). (Las fechas son
   -- columnas `date`; el casteo desde jsonb es seguro.)
-  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio'), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio', m->>'moneda', m->>'ref_id'), '[]'::jsonb)
   INTO v_movs_full
   FROM jsonb_array_elements(v_todos) m
   WHERE (m->>'fecha')::date BETWEEN v_desde AND v_hasta;
@@ -234,12 +249,22 @@ BEGIN
   ),
   saldo_factura AS (
     SELECT f.id, f.moneda, f.fecha_vencimiento,
-           -- Ola 12 · R3BD-04: factura marcada 'Pagada' (legacy, sin pagos
-           -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
-           CASE WHEN f.estado = 'Pagada' THEN 0::numeric
+           -- Preserve the legacy Pagada shortcut unless an active advance
+           -- application lacks its frozen amount. That exceptional unknown
+           -- must use known payments/credits, not disappear behind the status.
+           CASE WHEN f.estado = 'Pagada' AND NOT EXISTS (
+                  SELECT 1 FROM public.pagos_proveedor pp
+                  WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL
+                    AND pp.es_anticipo_aplicado
+                    AND public.monto_pago_proveedor_en_moneda_factura(
+                      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) IS NULL
+                ) THEN 0::numeric
                 ELSE f.total
                   -- R3P-06: pagos convertidos a la moneda de la factura.
-                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
+                  - COALESCE((SELECT SUM(public.monto_pago_proveedor_en_moneda_factura(
+                                pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                                pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
                               FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).

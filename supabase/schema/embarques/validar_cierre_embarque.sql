@@ -140,28 +140,31 @@ BEGIN
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
   -- N-BL-01: el pagado CxP se convierte a la moneda de la factura con
-  -- monto_pago_en_moneda_factura (antes sumaba pp.monto en crudo: una factura
+  -- selector canónico (antes sumaba pp.monto en crudo: una factura
   -- USD pagada en MXN inflaba el pagado ~19x y permitía cerrar con CxP
   -- pendiente). Fail-closed consistente con saldo_factura_proveedor: un pago
   -- sin tipo de cambio con moneda distinta se EXCLUYE del pagado (nunca 1:1
   -- silencioso) y se reporta en pagos_sin_tipo_cambio.
-  WITH agg AS (
+  -- Audit134: anticipo aplicado usa sólo monto_en_moneda_factura congelado;
+  -- NULL es desconocido. La pertenencia/agrupación sigue igual hasta audit139.
+  WITH pagos AS (
+    SELECT pp.proveedor_factura_id,
+      SUM(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)) AS pagado,
+      BOOL_OR(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text) IS NULL) AS sin_tc
+    FROM pagos_proveedor pp JOIN proveedor_facturas pf ON pf.id=pp.proveedor_factura_id
+    WHERE pp.deleted_at IS NULL AND pf.embarque_id=p_embarque_id
+      AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
+    GROUP BY pp.proveedor_factura_id
+  ), agg AS (
     SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
-      COALESCE(SUM((SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)),0)
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL)),0) AS pagado,
-      COUNT(*) FILTER (WHERE pf.total > COALESCE((
-        SELECT SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text))
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL),0) + 0.01) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE EXISTS (
-        SELECT 1 FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL
-          AND pp.moneda::text <> COALESCE(pf.moneda::text,'MXN')
-          AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)) AS pagos_sin_tipo_cambio
-    FROM proveedor_facturas pf
+      COALESCE(SUM(p.pagado),0) AS pagado,
+      COUNT(*) FILTER (WHERE pf.total > COALESCE(p.pagado,0) + 0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE p.sin_tc) AS pagos_sin_tipo_cambio
+    FROM proveedor_facturas pf LEFT JOIN pagos p ON p.proveedor_factura_id=pf.id
     WHERE pf.embarque_id=p_embarque_id AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
     GROUP BY COALESCE(pf.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
@@ -174,7 +177,7 @@ BEGIN
   -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0.01 OR (m->>'pagos_sin_tipo_cambio')::integer>0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
@@ -244,7 +247,7 @@ BEGIN
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
         WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
       COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
-        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado='Aplicada')),0) AS notas_credito,
+        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada'))),0) AS notas_credito,
       COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
     FROM facturas f
     WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
@@ -325,3 +328,6 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $$;
+
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;
