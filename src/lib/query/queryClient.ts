@@ -1,3 +1,4 @@
+import { invalidateSessionCacheEntries } from "@/lib/auth/sessionCacheRegistry";
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
@@ -13,6 +14,7 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
+    onSuccess: () => invalidateSessionCacheEntries(),
     onError: (err, _vars, _ctx, mutation) =>
       reportQueryError(
         err,

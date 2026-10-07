@@ -54,16 +54,16 @@ export const embarques = {
     ['embarque_docs_faltantes', embarqueId, estadoDestino] as const,
   dependenciasFinancieras: (embarqueId?: string) =>
     ['embarques', 'dependencias-financieras', embarqueId] as const,
-  tarifaInfo: (embarqueId?: string) => ['embarques', 'tarifa-info', embarqueId] as const,
+  tarifaInfo: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'tarifa-info', embarqueId, ...scope] as const,
   /** Columnas internas (sólo staff) leídas vía `embarques_interno_v`. */
-  interno: (embarqueId?: string) => ['embarques', 'interno', embarqueId] as const,
+  interno: (embarqueId?: string, scope: readonly unknown[] = []) => ['embarques', 'interno', embarqueId, ...scope] as const,
   alertasResumen: () => ['embarques', 'alertas-ids'] as const,
   garantias: (embarqueId?: string) => ['garantias-embarque', embarqueId] as const,
   pnlFinanciero: (embarqueId?: string) => ['embarque', embarqueId, 'pnl-financiero'] as const,
   /** v13.553.0 — Contexto DOF del tipo de cambio guardado en el embarque. */
   tcContexto: (embarqueId?: string) => ['embarque', embarqueId, 'tc-contexto'] as const,
-  reconciliacion3Columnas: (embarqueId?: string, umbrales?: unknown) =>
-    ['embarques', 'reconciliacion3c', embarqueId, umbrales] as const,
+  reconciliacion3Columnas: (embarqueId?: string, umbrales?: unknown, scope: readonly unknown[] = []) =>
+    ['embarques', 'reconciliacion3c', embarqueId, umbrales, ...scope] as const,
   reconciliacion: (embarqueId?: string) => ['embarques', 'reconciliacion', embarqueId] as const,
   seguros: (embarqueId?: string) => ['embarque', embarqueId, 'seguros'] as const,
   sinComision: (embarqueId?: string) => ['embarque', embarqueId, 'sin-comision'] as const,

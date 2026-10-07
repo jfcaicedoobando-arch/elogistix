@@ -1,7 +1,10 @@
+import { readAuthSessionIdentity } from "@/lib/auth/authSessionIdentity";
+import { invalidateSessionCacheEntries } from "@/lib/auth/sessionCacheRegistry";
 /**
  * Servicio Auth — sesión y listener. Aísla la I/O a `supabase.auth` para que
  * los contexts/hooks no toquen el cliente Supabase directamente.
  */
+import { syncAuthSessionUser } from "@/lib/auth/authSnapshot";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
@@ -12,10 +15,19 @@ export type AuthSubscription = Subscription;
 export function subscribeToAuthChanges(
   cb: (event: AuthChangeEvent, session: Session | null) => void,
 ): AuthSubscription {
+  let active = true;
   const {
     data: { subscription },
-  } = supabase.auth.onAuthStateChange(cb);
-  return subscription;
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    if (!active) return;
+    const identity = readAuthSessionIdentity(session?.access_token);
+    syncAuthSessionUser(session?.user.id ?? null, identity);
+    // Older/custom auth payloads without identity can still discard short-lived
+    // data, but cannot prove a new session and must not revoke a confirmation.
+    if (event === "SIGNED_IN" && !identity) invalidateSessionCacheEntries();
+    cb(event, session);
+  });
+  return { ...subscription, unsubscribe: () => { active = false; subscription.unsubscribe(); } };
 }
 
 export async function getCurrentSession(): Promise<Session | null> {
