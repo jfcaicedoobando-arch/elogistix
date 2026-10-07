@@ -33024,45 +33024,97 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
-  -- N-BL-01: el pagado CxP se convierte a la moneda de la factura con
-  -- selector canónico (antes sumaba pp.monto en crudo: una factura
-  -- USD pagada en MXN inflaba el pagado ~19x y permitía cerrar con CxP
-  -- pendiente). Fail-closed consistente con saldo_factura_proveedor: un pago
-  -- sin tipo de cambio con moneda distinta se EXCLUYE del pagado (nunca 1:1
-  -- silencioso) y se reporta en pagos_sin_tipo_cambio.
-  -- Audit134: anticipo aplicado usa sólo monto_en_moneda_factura congelado;
-  -- NULL es desconocido. La pertenencia/agrupación sigue igual hasta audit139.
-  WITH pagos AS (
-    SELECT pp.proveedor_factura_id,
-      SUM(public.monto_pago_proveedor_en_moneda_factura(
-        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
-        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)) AS pagado,
-      BOOL_OR(public.monto_pago_proveedor_en_moneda_factura(
-        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
-        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text) IS NULL) AS sin_tc
-    FROM pagos_proveedor pp JOIN proveedor_facturas pf ON pf.id=pp.proveedor_factura_id
-    WHERE pp.deleted_at IS NULL AND pf.embarque_id=p_embarque_id
+  -- Audit139: assess each linked invoice after payments and applied credits.
+  -- Active allocations define shipment membership; header is legacy fallback.
+  -- Attribute the invoice residual by its active cost links, as in P&L.
+  -- Payments/credits remain invoice-level facts; this is a calculated share,
+  -- never a new claim that a specific payment settled a specific shipment.
+  WITH candidatas AS (
+    SELECT pf.*
+    FROM proveedor_facturas pf
+    WHERE pf.organization_id=v_emb.organization_id
       AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
-    GROUP BY pp.proveedor_factura_id
+      AND (EXISTS (
+        SELECT 1 FROM proveedor_facturas_conceptos pfc
+        JOIN conceptos_costo cc ON cc.id=pfc.concepto_costo_id
+        WHERE pfc.proveedor_factura_id=pf.id AND pfc.monto>0
+          AND pfc.monto*COALESCE(NULLIF(pfc.cantidad,0),1)>0
+          AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+          AND cc.origen<>'ajuste_factura_proveedor' AND cc.embarque_id=p_embarque_id)
+        OR (pf.embarque_id=p_embarque_id AND NOT EXISTS (
+          SELECT 1 FROM proveedor_facturas_conceptos pfc
+          JOIN conceptos_costo cc ON cc.id=pfc.concepto_costo_id
+          WHERE pfc.proveedor_factura_id=pf.id AND pfc.monto>0
+          AND pfc.monto*COALESCE(NULLIF(pfc.cantidad,0),1)>0
+            AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+            AND cc.origen<>'ajuste_factura_proveedor')))
+  ), asignadas AS (
+    SELECT pf.*, a.asignado, a.asignado_embarque
+    FROM candidatas pf CROSS JOIN LATERAL (
+      SELECT COALESCE(SUM(pc.monto * COALESCE(NULLIF(pc.cantidad,0),1)),0) AS asignado,
+        COALESCE(SUM(pc.monto * COALESCE(NULLIF(pc.cantidad,0),1))
+          FILTER (WHERE cc.embarque_id=p_embarque_id),0) AS asignado_embarque
+      FROM proveedor_facturas_conceptos pc
+      JOIN conceptos_costo cc ON cc.id=pc.concepto_costo_id
+      WHERE pc.proveedor_factura_id=pf.id AND pc.monto>0
+        AND pc.monto*COALESCE(NULLIF(pc.cantidad,0),1)>0
+        AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+        AND cc.origen<>'ajuste_factura_proveedor'
+    ) a
+  ), facturas_cxp AS (
+    SELECT pf.*, CASE WHEN asignado>0
+      THEN asignado_embarque/GREATEST(subtotal,asignado)
+      ELSE 1::numeric END AS factor
+    FROM asignadas pf WHERE asignado_embarque>0
+      OR (asignado=0 AND embarque_id=p_embarque_id)
+  ), importes AS (
+    SELECT pf.id, pf.factor, COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(pf.total,0) AS total,
+      COALESCE((SELECT SUM(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto,pp.moneda::text,pp.tipo_cambio_usd,pf.moneda::text))
+        FROM pagos_proveedor pp WHERE pp.proveedor_factura_id=pf.id
+          AND pp.organization_id=v_emb.organization_id AND pp.deleted_at IS NULL),0) AS pagado,
+      COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(
+        nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text))
+        FROM proveedor_notas_credito nc WHERE nc.proveedor_factura_id=pf.id
+          AND nc.organization_id=v_emb.organization_id AND nc.deleted_at IS NULL
+          AND nc.estado='Aplicada'),0) AS notas_credito,
+      EXISTS (SELECT 1 FROM pagos_proveedor pp
+        WHERE pp.proveedor_factura_id=pf.id AND pp.organization_id=v_emb.organization_id
+          AND pp.deleted_at IS NULL AND public.monto_pago_proveedor_en_moneda_factura(
+            pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+            pp.monto,pp.moneda::text,pp.tipo_cambio_usd,pf.moneda::text) IS NULL) AS pago_sin_tc,
+      EXISTS (SELECT 1 FROM proveedor_notas_credito nc
+        WHERE nc.proveedor_factura_id=pf.id AND nc.organization_id=v_emb.organization_id
+          AND nc.deleted_at IS NULL AND nc.estado='Aplicada'
+          AND public.monto_pago_en_moneda_factura(
+            nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text) IS NULL) AS nc_sin_tc
+    FROM facturas_cxp pf
+  ), saldos AS (
+    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo FROM importes
   ), agg AS (
-    SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
-      COALESCE(SUM(p.pagado),0) AS pagado,
-      COUNT(*) FILTER (WHERE pf.total > COALESCE(p.pagado,0) + 0.01) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE p.sin_tc) AS pagos_sin_tipo_cambio
-    FROM proveedor_facturas pf LEFT JOIN pagos p ON p.proveedor_factura_id=pf.id
-    WHERE pf.embarque_id=p_embarque_id AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
-    GROUP BY COALESCE(pf.moneda,'MXN'))
+    SELECT moneda, SUM(total*factor) AS total, SUM(pagado*factor) AS pagado,
+      SUM(notas_credito*factor) AS notas_credito, SUM(saldo) AS saldo,
+      COUNT(*) FILTER (WHERE saldo>0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE pago_sin_tc) AS pagos_sin_tipo_cambio,
+      COUNT(*) FILTER (WHERE nc_sin_tc) AS notas_sin_tipo_cambio,
+      BOOL_OR(factor<1) AS reparto_proporcional
+    FROM saldos GROUP BY moneda
+  )
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'moneda',moneda,'total',total,'pagado',pagado,
-      'saldo',GREATEST(total-pagado,0),'facturas_pendientes',facturas_pendientes,
-      'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio
-    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
+      'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
+      'saldo',saldo,'facturas_pendientes',facturas_pendientes,
+      'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio,'notas_sin_tipo_cambio',notas_sin_tipo_cambio,
+      'reparto_proporcional',reparto_proporcional
+    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(saldo),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
   -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
   -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01 OR (m->>'pagos_sin_tipo_cambio')::integer>0);
+    WHERE (m->>'saldo')::numeric > 0.01
+      OR (m->>'pagos_sin_tipo_cambio')::integer > 0
+      OR (m->>'notas_sin_tipo_cambio')::integer > 0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,

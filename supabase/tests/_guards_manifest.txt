@@ -218,4 +218,9 @@ supabase/tests/tarifario_cargos_tenant_scope.sql
 supabase/tests/audit134_pago_congelado.sql
 supabase/tests/audit134_anticipo_reclasificacion.sql
 supabase/tests/audit134_anticipo_canon_consistente.sql
+
+# Audit139: saldo neto atribuido sin fabricar linaje de pagos.
+supabase/tests/audit139_cierre_cxp_neto.sql
+supabase/tests/audit139_cierre_reparto_original.sql
+supabase/tests/audit139_cierre_reparto_limites.sql
 supabase/tests/audit134_139_cierre_nc_cliente_estados.sql

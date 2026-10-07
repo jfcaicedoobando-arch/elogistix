@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.42] - Unreleased
+
+- **fix(Cierre · 139)**: la deuda CxP de cada embarque usa sus asignaciones positivas efectivas; la cabecera sólo es respaldo cuando no hay asignaciones vigentes. Cantidades se aplican una vez, costes borrados y ajustes de presupuesto no crean pertenencia.
+- **fix(importes)**: total, pagos, NC Aplicadas y saldo no negativo comparten la misma proporción. Conserva residuos sin asignar, limita sobreasignación y bloquea cierre si falta conversión; el desglose explica el reparto sin inventar historial de pagos por embarque.
+- Conserva importes congelados134, devoluciones131 corregidas, captura62/130 y las reglas CxC Timbrada/Aplicada. Una sola migración: `20261007001300_audit139_cierre_saldo_atribuido.sql`, después de41 / `20261007001000`.
+- Paquete de código para revisión local sobre41: no aplica SQL remoto ni publica frontend y no certifica cierre GUI. Main con143/PDF permanece independiente hasta reconciliación y verificación del stack final.
+
 ## [13.824.41] - Unreleased
 
 - **fix(CxP · 62/130)**: Por capturar compara la base fiscal sin IVA contra el presupuesto de la misma moneda. Atribuye cada factura por sus asignaciones positivas efectivas, agrupadas por embarque, sin duplicar líneas fiscales ni volver a multiplicar cantidades.
