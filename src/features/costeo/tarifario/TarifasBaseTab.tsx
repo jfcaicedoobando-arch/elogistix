@@ -5,7 +5,8 @@ import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { costeo } from "../queryKeys";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -33,11 +34,25 @@ function aCsv(f: FilaTarifario) {
   };
 }
 
+const columns = defineColumns<FilaTarifario>([
+  { accessorKey: "origen", header: "Origen" },
+  { accessorKey: "destino", header: "Destino" },
+  { id: "tipo", header: "Tipo de carga", accessorFn: () => "FCL" },
+  { accessorKey: "agente", header: "Agente" },
+  { accessorKey: "naviera", header: "Naviera" },
+  { id: "t20", header: 'Tarifa 20" (USD)', accessorFn: (f) => usd(f.tarifa20) },
+  { id: "t40", header: 'Tarifa 40" (USD)', accessorFn: (f) => usd(f.tarifa40) },
+  { id: "desde", header: "Inicio de la vigencia", accessorFn: (f) => fecha(f.base.vigente_desde) },
+  { id: "hasta", header: "Término de la vigencia", accessorFn: (f) => fecha(f.base.vigente_hasta) },
+  { id: "dias", header: "Días libres de demoras", accessorFn: (f) => f.base.dias_libres_demoras ?? "—" },
+  { id: "obs", header: "Observaciones", accessorFn: (f) => f.base.notas ?? "" },
+]);
+
 export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
   const [filtro, setFiltro] = useState<FiltroVigencia>("vigentes");
   const [texto, setTexto] = useState("");
   const [nueva, setNueva] = useState(false);
-  const q = useQuery({ queryKey: ["tarifario", "tarifas", filtro], queryFn: () => listarTarifasTarifario(filtro, hoyMx()) });
+  const q = useQuery({ queryKey: costeo.tarifario.tarifas(filtro), queryFn: () => listarTarifasTarifario(filtro, hoyMx()) });
   const etiquetaFiltro = FILTROS_VIGENCIA.find((f) => f.valor === filtro)?.etiqueta ?? "";
   const filas = useMemo(() => {
     const t = texto.trim().toLowerCase();
@@ -48,7 +63,7 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Input className="max-w-xs" placeholder="Buscar origen, destino, agente o naviera" value={texto} onChange={(e) => setTexto(e.target.value)} />
+        <Input aria-label="Buscar origen, destino, agente o naviera" className="max-w-xs" placeholder="Buscar origen, destino, agente o naviera" value={texto} onChange={(e) => setTexto(e.target.value)} />
         <Select value={filtro} onValueChange={(v) => setFiltro(v as FiltroVigencia)}>
           <SelectTrigger className="w-auto gap-1.5" aria-label="Filtrar por vigencia">
             <span className="text-body-sm text-muted-foreground">Vigencia:</span>
@@ -65,30 +80,9 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
           {puedeEditar && <Button onClick={() => setNueva(true)}><Plus className="mr-1 size-4" /> Nueva tarifa</Button>}
         </div>
       </div>
-      {q.isError && <p className="text-body-sm text-destructive">No se pudo cargar el tarifario.</p>}
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader><TableRow>{HEADERS.map((h) => <TableHead key={h.key}>{h.label}</TableHead>)}</TableRow></TableHeader>
-          <TableBody>
-            {filas.map((f) => (
-              <TableRow key={f.clave}>
-                <TableCell>{f.origen}</TableCell><TableCell>{f.destino}</TableCell><TableCell>FCL</TableCell>
-                <TableCell>{f.agente}</TableCell><TableCell>{f.naviera}</TableCell>
-                <TableCell className="tabular-nums">{usd(f.tarifa20)}</TableCell>
-                <TableCell className="tabular-nums">{usd(f.tarifa40)}</TableCell>
-                <TableCell>{fecha(f.base.vigente_desde)}</TableCell><TableCell>{fecha(f.base.vigente_hasta)}</TableCell>
-                <TableCell>{f.base.dias_libres_demoras ?? "—"}</TableCell>
-                <TableCell className="max-w-xs truncate">{f.base.notas ?? ""}</TableCell>
-              </TableRow>
-            ))}
-            {!q.isLoading && filas.length === 0 && (
-              <TableRow><TableCell colSpan={HEADERS.length} className="text-center text-muted-foreground">
-                {filtro === "todas" ? "Sin tarifas capturadas." : `Sin tarifas ${etiquetaFiltro.toLowerCase()}.`}
-              </TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable columns={columns} data={filas} rowKey={(f) => f.clave} isLoading={q.isLoading}
+        isError={q.isError} onRetry={() => { void q.refetch(); }}
+        emptyMessage={filtro === "todas" ? "Sin tarifas capturadas." : `Sin tarifas ${etiquetaFiltro.toLowerCase()}.`} />
       <p className="text-caption text-muted-foreground">Para editar o duplicar una tarifa usa el catálogo de tarifas; la versión anterior se conserva como histórico.</p>
       {nueva && <TarifaForm open={nueva} onOpenChange={setNueva} onSaved={() => { void q.refetch(); }} />}
     </div>

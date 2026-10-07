@@ -4,6 +4,7 @@
  * el origen (cliente o prospecto calificado) se deduce de la empresa, así el
  * guard `_crm_oportunidad_requiere_origen` sigue intacto.
  */
+import { crm } from "../queryKeys";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -25,6 +26,15 @@ interface Params {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (id: string) => void;
+}
+
+function camposFaltantes(nombre: string, empresa: RefRow | null, etapa: unknown, valorListo: boolean) {
+  const faltantes: string[] = [];
+  if (!nombre.trim()) faltantes.push("nombre");
+  if (!empresa) faltantes.push("empresa asociada");
+  if (!etapa) faltantes.push("etapa");
+  if (!valorListo) faltantes.push("valor estimado");
+  return faltantes;
 }
 
 export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Params) {
@@ -51,18 +61,14 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   const valorListo = valorEstimado.trim() !== "" && Number.isFinite(valor) && valor > 0;
 
   const origenQ = useQuery({
-    queryKey: ["crm", "origen-empresa", empresa?.id ?? ""],
+    queryKey: crm.origenEmpresa(empresa?.id ?? ""),
     queryFn: () => fetchOrigenEmpresa(empresa!.id),
     enabled: !!empresa,
   });
   const origen = origenQ.data?.ok ? origenQ.data.origen : null;
   const motivoOrigen = origenQ.data && !origenQ.data.ok ? origenQ.data.motivo : null;
 
-  const faltantes: string[] = [];
-  if (!nombre.trim()) faltantes.push("nombre");
-  if (!empresa) faltantes.push("empresa asociada");
-  if (!etapa) faltantes.push("etapa");
-  if (!valorListo) faltantes.push("valor estimado");
+  const faltantes = camposFaltantes(nombre, empresa, etapa, valorListo);
   const listo = faltantes.length === 0 && !!origen;
 
   const construirBorrador = (): OportunidadQuickDraft => ({

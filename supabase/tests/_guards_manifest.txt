@@ -204,3 +204,12 @@ supabase/tests/proforma_operativa_consistencia.sql
 
 # Audit135: fechas civiles de la aplicación de anticipos.
 supabase/tests/audit135_anticipo_cronologia.sql
+
+# Audit131: devolución en efectivo y compatibilidad bancaria.
+supabase/tests/audit131_devolucion_efectivo.sql
+
+# Drizzle0010: permisos del tarifario preservados después del harness de CI.
+supabase/tests/rls/tarifario_cargos_permisos.sql
+
+# Ola16: finite tenant-scope forward for the two tariff charge tables.
+supabase/tests/tarifario_cargos_tenant_scope.sql

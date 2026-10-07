@@ -18,7 +18,7 @@ import { CampoPropiedad } from "./CampoPropiedad";
 import { EmpresasSimilares } from "./EmpresasSimilares";
 
 /** Propiedades que se exigen al crear una empresa. */
-export const CLAVES_OBLIGATORIAS_EMPRESA = ["pais", "fuente", "tipo_transporte", "volumen_importacion_usd"];
+const CLAVES_OBLIGATORIAS_EMPRESA = ["pais", "fuente", "tipo_transporte", "volumen_importacion_usd"];
 const FORM_ID = "nueva-empresa-crm";
 
 interface Props { open: boolean; onOpenChange: (open: boolean) => void }
@@ -93,7 +93,7 @@ export function NuevaEmpresaDialog({ open, onOpenChange }: Props) {
       {resto.length > 0 && (
         <FormDialogSection cols={1} flat>
           <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setVerMas((v) => !v)} aria-expanded={verMas}>
-            <ChevronDown className={`h-4 w-4 transition-transform ${verMas ? "rotate-180" : ""}`} />
+            <ChevronDown className={`size-4 transition-transform ${verMas ? "rotate-180" : ""}`} />
             {verMas ? "Ocultar campos adicionales" : `Más campos (${resto.length})`}
           </Button>
         </FormDialogSection>

@@ -152,17 +152,17 @@ BEGIN
   ELSIF v_tipo = 'devolucion_anticipo' THEN
     SELECT ap.organization_id, jsonb_build_object(
       'id', ap.id, 'tipo', v_tipo,
-      'fecha', COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
+      'fecha', COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
       'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
       'moneda', ap.moneda::text, 'monto', ap.monto_devuelto,
       'tipo_cambio', NULLIF(ap.tipo_cambio_usd, 0),
       'monto_mxn', CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
         WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd ELSE NULL END,
-      'metodo_pago', CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
-      'referencia', COALESCE(d.referencia, ap.referencia),
+      'metodo_pago', CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
+      'referencia', CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END,
       'cuenta_bancaria_id', d.cuenta_bancaria_id, 'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
       'notas', concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END),
       'embarque_id', ap.embarque_id, 'diferencia_cambiaria_mxn', 0,
       'es_ajuste', false, 'created_by', ap.devuelto_by, 'created_at', ap.devuelto_at)

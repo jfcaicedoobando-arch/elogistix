@@ -19,19 +19,12 @@ import { PricingOportunidadTab } from "@/features/crm/components/pricing/Pricing
 
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
-import type { CrmOportunidadRow } from "@/features/crm/hooks";
-
-interface Etapa {
-  id: string;
-  nombre: string;
-  tipo: string;
-  color?: string | null;
-  probabilidad_default?: number | null;
-}
+import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
+import { MoverEtapaSelect } from "./MoverEtapaSelect";
 
 interface Props {
   op: CrmOportunidadRow;
-  etapas: Etapa[];
+  etapas: CrmEtapaRow[];
 }
 
 export function OportunidadDetalleContent({ op, etapas }: Props) {
@@ -77,16 +70,19 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={(canEdit || canCotizar) ? (
-          <OportunidadDetalleAcciones
-            crearCotizacion={actions.crearCotizacion}
-            crearCotPending={actions.crearCotPending}
-            onEditar={() => setEditOpen(true)}
-            onEliminar={() => setDelOpen(true)}
-            canCotizar={canCotizar}
-            canGestionar={canEdit}
-            puedeCotizar={actions.puedeCotizar}
-            motivoNoCotizar={actions.motivoNoCotizar}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {canEdit && <MoverEtapaSelect op={op} etapas={etapas} />}
+            <OportunidadDetalleAcciones
+              crearCotizacion={actions.crearCotizacion}
+              crearCotPending={actions.crearCotPending}
+              onEditar={() => setEditOpen(true)}
+              onEliminar={() => setDelOpen(true)}
+              canCotizar={canCotizar}
+              canGestionar={canEdit}
+              puedeCotizar={actions.puedeCotizar}
+              motivoNoCotizar={actions.motivoNoCotizar}
+            />
+          </div>
         ) : undefined}
       />
 
