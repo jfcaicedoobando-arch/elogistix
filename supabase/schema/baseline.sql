@@ -25761,7 +25761,7 @@ BEGIN
     FROM anticipos a
     UNION ALL
     SELECT a.fecha_devolucion, 'Devolución de anticipo', a.id, 'Devolución de anticipo',
-           COALESCE(a.referencia_devolucion, a.referencia), COALESCE(a.expediente, ''),
+           CASE WHEN a.medio_devolucion IS NOT NULL THEN a.referencia_devolucion ELSE COALESCE(a.referencia_devolucion, a.referencia) END, COALESCE(a.expediente, ''),
            a.embarque_id, a.moneda,
            -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
            -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.

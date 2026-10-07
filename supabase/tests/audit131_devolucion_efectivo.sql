@@ -102,6 +102,11 @@ BEGIN
     OR v_json->'pago'->>'metodo_pago' IS NOT NULL THEN
   RAISE EXCEPTION 'TEST FAIL: historical reference fallback or unknown medium was changed';
  END IF;
+ v_json := public.proveedor_estado_cuenta_movimientos(v_prov);
+ SELECT x INTO v_detail FROM jsonb_array_elements(v_json->'movimientos') x WHERE x->>'ref_id'='e9999999-9999-9999-9999-999999999999' AND x->>'tipo'='Devolución de anticipo';
+ IF v_detail IS NULL OR v_detail->>'referencia' IS DISTINCT FROM 'LEGACY-ORIGINAL' THEN
+  RAISE EXCEPTION 'TEST FAIL: supplier statement changed historical reference fallback: %',v_detail;
+ END IF;
  v_id := (public.registrar_anticipo_proveedor(p_proveedor_id=>v_prov,p_monto=>1,p_moneda=>'MXN',p_fecha_anticipo=>public.fecha_negocio_mx()-2,p_metodo_pago=>'Efectivo')).id;
  BEGIN
   PERFORM public.devolver_anticipo_proveedor(v_id,1,public.fecha_negocio_mx()-1,v_cta,NULL,'Reembolso','Efectivo');
@@ -132,7 +137,7 @@ BEGIN
   RAISE EXCEPTION 'TEST FAIL: cash refund detail lost medium/date/reference or fabricated bank: %',v_json;
  END IF;
  v_json := public.proveedor_estado_cuenta_movimientos(v_prov);
- IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(v_json->'movimientos') m WHERE m->>'ref_id'=v_id::text AND m->>'tipo'='Devolución de anticipo' AND (m->>'fecha')::date=public.fecha_negocio_mx()-1 AND (m->>'cargo')::numeric=1) THEN
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(v_json->'movimientos') m WHERE m->>'ref_id'=v_id::text AND m->>'tipo'='Devolución de anticipo' AND (m->>'fecha')::date=public.fecha_negocio_mx()-1 AND (m->>'cargo')::numeric=1 AND m->>'referencia'='REC-1') THEN
   RAISE EXCEPTION 'TEST FAIL: cash refund absent or misdated in statement';
  END IF;
  -- An originally cash advance may legitimately be returned by bank.
@@ -144,6 +149,11 @@ BEGIN
  END IF;
  IF v_row.metodo_pago<>'Efectivo' OR v_row.medio_devolucion<>'Bancario' THEN
   RAISE EXCEPTION 'TEST FAIL: original payment method was rewritten';
+ END IF;
+ v_json := public.proveedor_estado_cuenta_movimientos(v_prov);
+ SELECT x INTO v_detail FROM jsonb_array_elements(v_json->'movimientos') x WHERE x->>'ref_id'=v_bank::text AND x->>'tipo'='Devolución de anticipo';
+ IF v_detail IS NULL OR v_detail->>'referencia' IS DISTINCT FROM 'BANK-1' THEN
+  RAISE EXCEPTION 'TEST FAIL: supplier statement lost explicit bank refund reference: %',v_detail;
  END IF;
  -- A bank-funded advance returned as cash keeps the exact original charge.
  v_bank := (public.registrar_anticipo_proveedor(p_proveedor_id=>v_prov,p_monto=>1,p_moneda=>'MXN',p_fecha_anticipo=>public.fecha_negocio_mx(),p_metodo_pago=>'Transferencia',p_cuenta_bancaria_id=>v_cta,p_referencia=>'ORIGINAL-BANK-REF')).id;
@@ -163,6 +173,11 @@ BEGIN
  SELECT x INTO v_detail FROM jsonb_array_elements(v_json->'pagos') x WHERE x->>'id'=v_bank::text AND x->>'tipo'='devolucion_anticipo';
  IF v_detail IS NULL OR v_detail->>'referencia' IS NOT NULL THEN
   RAISE EXCEPTION 'TEST FAIL: cash refund ledger inherited original payment reference: %',v_detail;
+ END IF;
+ v_json := public.proveedor_estado_cuenta_movimientos(v_prov);
+ SELECT x INTO v_detail FROM jsonb_array_elements(v_json->'movimientos') x WHERE x->>'ref_id'=v_bank::text AND x->>'tipo'='Devolución de anticipo';
+ IF v_detail IS NULL OR v_detail->>'referencia' IS NOT NULL THEN
+  RAISE EXCEPTION 'TEST FAIL: supplier statement inherited original bank reference for new cash refund: %',v_detail;
  END IF;
  RAISE NOTICE 'audit131: cash refund, civil date, ledger, statement and legitimate bank refund passed';
 END $test$;
