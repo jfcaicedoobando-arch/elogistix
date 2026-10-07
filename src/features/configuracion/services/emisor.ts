@@ -8,9 +8,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { EmisorInfo } from "@/pdf/components/BrandHeader";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { getAuthSnapshot } from "@/lib/auth/authSnapshot";
 
 const TTL_MS = 5 * 60 * 1000; // 5 minutos
-let cache: { value: EmisorInfo; expiresAt: number } | null = null;
+let cache: { organizationId: string; userId: string | null; value: EmisorInfo; expiresAt: number } | null = null;
+let cacheGeneration = 0;
 
 const FALLBACK: EmisorInfo = {
   razonSocial: "Empresa",
@@ -27,17 +30,31 @@ function toStr(v: unknown): string {
 }
 
 export async function fetchEmisorEmpresa(): Promise<EmisorInfo> {
+  const scope = captureAuthOperationScope();
+  const { userId } = getAuthSnapshot();
+  const organizationId = scope.organizationId;
+  if (!organizationId) throw new Error("Selecciona una organización antes de cargar el emisor.");
+  // Mantiene la firma de los generadores y queryFn existentes, pero verifica
+  // que el tenant del servidor ya coincide con el que solicitó el documento.
+  const { data: serverOrg, error: scopeError } = await supabase.rpc("org_scope");
+  scope.assertCurrent();
+  if (scopeError) throw scopeError;
+  if (serverOrg !== organizationId) {
+    throw new Error("La organización activa aún no está sincronizada. Intenta de nuevo.");
+  }
   const now = Date.now();
-  if (cache && cache.expiresAt > now) return cache.value;
+  if (cache?.organizationId === organizationId && cache.userId === userId && cache.expiresAt > now) return cache.value;
+  const generation = cacheGeneration;
 
   const { data, error } = await supabase
     .from("configuracion")
     .select("clave, valor")
+    .eq("organization_id", organizationId)
     .eq("categoria", "empresa");
 
-  if (error || !data) {
-    return FALLBACK;
-  }
+  scope.assertCurrent();
+  if (error) throw error;
+  if (!data) throw new Error("No se pudo leer la configuración del emisor.");
 
   const byKey = new Map<string, unknown>(data.map((r) => [r.clave, r.valor]));
   const nombre = toStr(byKey.get("nombre")).trim();
@@ -53,11 +70,15 @@ export async function fetchEmisorEmpresa(): Promise<EmisorInfo> {
     contacto,
   };
 
-  cache = { value, expiresAt: now + TTL_MS };
+  // La primera lectura en vuelo también puede estar compartida por React
+  // Query: no basta con evitar el TTL; tampoco debe devolver el valor previo.
+  if (generation !== cacheGeneration) return fetchEmisorEmpresa();
+  cache = { organizationId, userId, value, expiresAt: now + TTL_MS };
   return value;
 }
 
 /** Invalida el cache TTL (útil tras guardar configuración de empresa). */
 export function invalidarEmisorCache(): void {
+  cacheGeneration += 1;
   cache = null;
 }

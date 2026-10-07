@@ -8,6 +8,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { ConfigGlobalItem, ConfigItem, ConfigTable } from "./configuracionTypes";
+import { invalidarEmisorCache } from "./emisor";
 
 // ── Configuración por organización (usada por panel de admin de ORG) ───────
 export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem[]> {
@@ -91,6 +92,9 @@ async function updateConfigItems(
     }),
   );
 
+  // También invalida ante escrituras parciales: alguna clave pudo guardarse
+  // aunque otra falle. La siguiente exportación debe volver a leerla.
+  if (table === "configuracion" && items.some((item) => item.categoria === "empresa")) invalidarEmisorCache();
   const firstError = results.find((r) => r.error);
   if (firstError?.error) throw firstError.error;
   // Fail-closed: si la RLS o una clave inexistente dejan 0 filas escritas, no

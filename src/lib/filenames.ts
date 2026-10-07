@@ -5,8 +5,8 @@
  * Regla global: `{Org}_{nombre}.{ext}` para PDFs generados en cliente
  * (cotizaciones, proformas, rentabilidad, reportes, etc.).
  *
- * Reusa el cache de 5 min de `fetchEmisorEmpresa`, así que agregar el prefijo
- * no añade queries perceptibles.
+ * Reusa el cache de 5 min de `fetchEmisorEmpresa`, siempre comprobando el
+ * tenant activo antes de reutilizar datos configurados.
  */
 import { fetchEmisorEmpresa } from "@/features/configuracion/services";
 
