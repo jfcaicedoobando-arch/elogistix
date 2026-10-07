@@ -82,6 +82,7 @@ export function FacturaProveedorTabs({
           <AnticipoDisponibleAviso
             proveedorId={f.proveedor_id}
             facturaId={f.id}
+            facturaFechaEmision={f.fecha_emision}
             folioFactura={f.folio_proveedor || f.folio_interno}
             importes={{
               subtotal: f.subtotal,

@@ -22,6 +22,14 @@ describe("lcCodes", () => {
     expect(getErrorMessage({ code: "40001", message: raw })).toMatch(/Refresca la pantalla e intenta de nuevo/);
   });
 
+  it("explica la cronología del anticipo en errores estándar y PostgREST", () => {
+    const raw = "LC_ANTICIPO_APLICACION_FECHA: detalle interno";
+    const friendly = "Indica una fecha de aplicación igual o posterior a la entrega del anticipo y a la emisión de la factura.";
+    expect(translateLcCode(raw)).toBe(friendly);
+    expect(getErrorMessage(new Error(raw))).toBe(friendly);
+    expect(getErrorMessage({ code: "22023", message: raw })).toBe(friendly);
+  });
+
   it("stripLcCode limpia tokens LC_*", () => {
     expect(stripLcCode("LC_FOO_BAR: mensaje humano")).toBe("mensaje humano");
     expect(stripLcCode("sin código")).toBe("sin código");

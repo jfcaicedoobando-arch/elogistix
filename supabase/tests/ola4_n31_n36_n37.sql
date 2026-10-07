@@ -47,11 +47,12 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- N31: anticipo con saldo 100; dos aplicaciones de 60 cada una exceden el saldo.
+  -- La entrega y la aplicación usan el mismo día de negocio, incluso si UTC ya cambió de fecha.
   INSERT INTO public.anticipos_proveedor (
-    id, organization_id, proveedor_id, monto, moneda, estado, saldo_disponible
+    id, organization_id, proveedor_id, monto, moneda, estado, saldo_disponible, fecha_anticipo
   ) VALUES (
     'c8888888-8888-8888-8888-888888888888', v_org, v_prov, 100, 'MXN'::public.moneda,
-    'disponible', 100
+    'disponible', 100, public.fecha_negocio_mx()
   ) ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.proveedor_facturas (

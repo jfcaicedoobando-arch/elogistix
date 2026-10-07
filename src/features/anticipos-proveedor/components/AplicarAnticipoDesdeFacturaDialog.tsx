@@ -3,6 +3,7 @@
  * La factura es fija: sólo se elige el anticipo con saldo a favor y el monto.
  * El estado y las validaciones viven en `useAplicarAnticipoDesdeFactura`.
  */
+import { FechaAplicacionAyuda } from "./FechaAplicacionAyuda";
 import { ArrowRightLeft, AlertTriangle } from "lucide-react";
 import { esMismoEmbarque } from "@/features/anticipos-proveedor/domain/ordenAnticiposPorEmbarque";
 
@@ -34,11 +35,12 @@ interface Props {
   /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
   facturaEmbarqueId?: string | null;
   facturaExpediente?: string | null;
+  facturaFechaEmision?: string | null;
 }
 
 export function AplicarAnticipoDesdeFacturaDialog({
   open, onOpenChange, facturaId, folioFactura, importes, anticipos,
-  facturaEmbarqueId, facturaExpediente,
+  facturaEmbarqueId, facturaExpediente, facturaFechaEmision,
 }: Props) {
   const f = useAplicarAnticipoDesdeFactura({
     open,
@@ -49,6 +51,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
     anticipos,
     facturaEmbarqueId,
     facturaExpediente,
+    facturaFechaEmision,
   });
 
   const footer = (
@@ -56,7 +59,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
       <Button variant="outline" onClick={() => f.handleOpenChange(false)} disabled={f.isPending}>
         Cancelar
       </Button>
-      <Button onClick={f.onSubmit} disabled={!f.anticipoId} loading={f.isPending}>
+      <Button onClick={f.onSubmit} disabled={!f.anticipoId || Boolean(f.errorFecha)} loading={f.isPending}>
         {f.isPending ? "Aplicando…" : "Aplicar anticipo"}
       </Button>
     </>
@@ -108,9 +111,11 @@ export function AplicarAnticipoDesdeFacturaDialog({
             name="fechaAplicacion"
             value={f.fecha}
             onChange={f.setFecha}
+            min={f.fechaMinima}
             max={hoyMx()}
             className="w-full"
           />
+          <FechaAplicacionAyuda minima={f.fechaMinima} error={f.errorFecha} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="apl-monto-f">
