@@ -39,10 +39,37 @@ export function entraAlTarifario(t: Pick<TarifaTarifario, "solicitud_pricing_id"
   return Date.parse(t.vigente_hasta) - Date.parse(t.vigente_desde) > DIA_MS;
 }
 
-export async function listarTarifasTarifario(incluirVencidas: boolean, hoy: string): Promise<TarifaTarifario[]> {
+/** Filtro de vigencia de la vista 1 del tarifario. */
+export type FiltroVigencia = "vigentes" | "proximas" | "vencidas" | "todas";
+
+export const FILTROS_VIGENCIA: { valor: FiltroVigencia; etiqueta: string }[] = [
+  { valor: "vigentes", etiqueta: "Vigentes hoy" },
+  { valor: "proximas", etiqueta: "Próximas a iniciar" },
+  { valor: "vencidas", etiqueta: "Vencidas" },
+  { valor: "todas", etiqueta: "Todas" },
+];
+
+export type Vigencia = "vigente" | "proxima" | "vencida";
+
+/** Estado de vigencia de una tarifa comparado contra una fecha YYYY-MM-DD. */
+export function estadoVigencia(
+  t: Pick<TarifaTarifario, "vigente_desde" | "vigente_hasta">, hoy: string,
+): Vigencia {
+  if (t.vigente_desde && t.vigente_desde > hoy) return "proxima";
+  if (t.vigente_hasta && t.vigente_hasta < hoy) return "vencida";
+  return "vigente";
+}
+
+export async function listarTarifasTarifario(filtro: FiltroVigencia, hoy: string): Promise<TarifaTarifario[]> {
   let q = supabase.from("costeo_tarifas").select(COLS).eq("estado", "vigente")
     .order("vigente_hasta", { ascending: false }).limit(1000);
-  if (!incluirVencidas) q = q.or(`vigente_hasta.is.null,vigente_hasta.gte.${hoy}`);
+  if (filtro === "vigentes") {
+    q = q.or(`vigente_desde.is.null,vigente_desde.lte.${hoy}`).or(`vigente_hasta.is.null,vigente_hasta.gte.${hoy}`);
+  } else if (filtro === "proximas") {
+    q = q.gt("vigente_desde", hoy);
+  } else if (filtro === "vencidas") {
+    q = q.lt("vigente_hasta", hoy);
+  }
   const { data, error } = await q;
   if (error) throw error;
   return fromDb(data ?? [], tarifaDbSchema).filter(entraAlTarifario);
