@@ -22,12 +22,19 @@ function Harness() {
 }
 
 describe("AUD54 P2: selección real de tabla", () => {
-  it("muestra A8 enlazada para revisión, deshabilita su checkbox y Seleccionar todas sólo marca PPD", () => {
+  it("muestra A8 enlazada para revisión, deshabilita su checkbox y Seleccionar todas sólo marca PPD", async () => {
     render(<Harness />);
     expect(screen.getByRole("link", { name: "A8" })).toHaveAttribute("href", "/facturacion/A8");
     const a8 = screen.getByRole("checkbox", { name: "Seleccionar factura A8" });
     expect(a8).toBeDisabled();
-    expect(a8).toHaveAttribute("title", expect.stringContaining("Revisa el pago previo"));
+    expect(a8).not.toHaveAttribute("title");
+    const explicacion = a8.closest("[data-pue-review]");
+    expect(explicacion).toHaveAttribute("tabindex", "0");
+    expect(explicacion).toHaveAttribute("aria-label", expect.stringContaining("Revisa el pago previo"));
+    fireEvent.focus(explicacion!);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Revisa el pago previo");
+    fireEvent.keyDown(explicacion!, { key: " " });
+    fireEvent.click(explicacion!);
     fireEvent.click(a8);
     expect(screen.getByTestId("selection")).toBeEmptyDOMElement();
     fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar todas" }));

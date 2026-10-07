@@ -11,7 +11,7 @@ export function FacturaSaldoResidualAlert({ saldo, pagado, estado, metodoPago, m
     (estado !== "Pagada" && metodoPago !== "PUE")) return null;
   return (
     <Alert variant="destructive">
-      <AlertTriangle className="h-4 w-4" />
+      <AlertTriangle className="size-4" />
       <AlertTitle>Saldo pendiente por revisar</AlertTitle>
       <AlertDescription>
         Quedan {formatCurrency(saldo, moneda)} pendientes según los cobros y notas de crédito registrados.

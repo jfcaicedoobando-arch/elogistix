@@ -14,13 +14,15 @@ DECLARE
   err text;
   estado_nc public.estado_nota_credito;
 BEGIN
+  -- Crear los usuarios adquiere el bootstrap antes del TC compartido, igual
+  -- que las suites de proformas. Evita invertir esos locks en ejecución paralela.
+  SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUD54');
   -- Las facturas USD toman el TC de DOF, no del valor capturado en el INSERT.
   -- Fijar 20 en la fecha del fixture hace deterministas los cruces; el ROLLBACK lo revierte.
   INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
   VALUES (CURRENT_DATE, 20, 'manual')
   ON CONFLICT (fecha) DO UPDATE SET usd_mxn = EXCLUDED.usd_mxn;
 
-  SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUD54');
   INSERT INTO public.clientes(id, organization_id, nombre, rfc, email)
   VALUES (cli, fx.org_a, 'AUD54', 'XAXX010101000', 'aud54@example.invalid');
 

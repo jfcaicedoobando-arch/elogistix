@@ -6,6 +6,7 @@
  */
 import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import { Link } from "react-router";
+import { Hint } from "@/components/shared/Hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -55,13 +56,20 @@ export function buildCarteraSelectionColumns() {
           }}
           role="presentation"
         >
-          <Checkbox
-            disabled={!row.getCanSelect()}
-            title={errorCobroPuePrevio(row.original) ?? undefined}
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}
-          />
+          <Hint label={errorCobroPuePrevio(row.original)}>
+            <span
+              tabIndex={row.getCanSelect() ? undefined : 0}
+              aria-label={errorCobroPuePrevio(row.original) ?? undefined}
+              data-pue-review={!row.getCanSelect() || undefined}
+            >
+              <Checkbox
+                disabled={!row.getCanSelect()}
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}
+              />
+            </span>
+          </Hint>
         </div>
       ),
       enableSorting: false,

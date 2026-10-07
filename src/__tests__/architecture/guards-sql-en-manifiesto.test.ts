@@ -19,6 +19,16 @@ function leerManifiesto(ruta: string): string[] {
     .filter((l) => l.length > 0 && !l.startsWith("#"));
 }
 
+function rutasInexistentes(rutas: string[]): string[] {
+  // El runner acepta suites anidadas (incluido rls/), no sólo archivos raíz.
+  const existentes = new Set(
+    readdirSync(DIR_TESTS, { recursive: true })
+      .filter((f) => f.endsWith(".sql"))
+      .map((f) => `${DIR_TESTS}/${f}`),
+  );
+  return rutas.filter((r) => !existentes.has(r));
+}
+
 describe("suites SQL referenciadas en CI", () => {
   it("no deja archivos .sql huérfanos", () => {
     const suites = readdirSync(DIR_TESTS)
@@ -54,16 +64,23 @@ describe("suites SQL referenciadas en CI", () => {
     const duplicadas = rutas.filter((r, i) => rutas.indexOf(r) !== i);
     expect(duplicadas, `Rutas duplicadas: ${duplicadas.join(", ")}`).toEqual([]);
 
-    const existentes = new Set(
-      readdirSync(DIR_TESTS)
-        .filter((f) => f.endsWith(".sql"))
-        .map((f) => `${DIR_TESTS}/${f}`),
-    );
-    const inexistentes = rutas.filter((r) => !existentes.has(r));
+    const inexistentes = rutasInexistentes(rutas);
     expect(
       inexistentes,
       `Rutas listadas que no existen: ${inexistentes.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("acepta suites RLS reales y sigue rechazando rutas inexistentes o ajenas", () => {
+    const falsas = [
+      `${DIR_TESTS}/rls/__guard_inexistente__.sql`,
+      `${DIR_TESTS}/../migrations/__guard_inexistente__.sql`,
+    ];
+    expect(rutasInexistentes([
+      `${DIR_TESTS}/rls/test_rls_audit54_pue_tolerancia_cierre.sql`,
+      `${DIR_TESTS}/rls/test_rls_audit54_saldo_visible.sql`,
+      ...falsas,
+    ])).toEqual(falsas);
   });
 
   it("las trece suites recuperadas y nuevos cobros usan fixtures transaccionales", () => {
