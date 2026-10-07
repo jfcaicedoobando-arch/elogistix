@@ -197,3 +197,7 @@ supabase/tests/audit124_130_pnl_asignaciones.sql
 
 # ARQ02: contrato monetario puro, sin cambios de datos de negocio.
 supabase/tests/money_contract_rounding.sql
+
+# Proformas 13.824.35: consistencia operativa y snapshot no_objeto.
+supabase/tests/proforma_no_objeto_snapshot.sql
+supabase/tests/proforma_operativa_consistencia.sql
