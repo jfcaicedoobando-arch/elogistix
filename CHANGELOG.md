@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.40] - Unreleased
+
+- **fix(pagos · 134)**: las aplicaciones de anticipos usan su importe congelado en la moneda de la factura; las consultas no reconstruyen el tipo de cambio histórico con el DOF actual ni reemplazan un importe desconocido por un pago conocido. El cero guardado sigue siendo un importe conocido.
+- **fix(reportes)**: saldo de factura, estado de cuenta, antigüedad y Cierre comparten la selección. Un cruce conocido reclasifica crédito entre ambas monedas sin otro movimiento bancario; un cruce desconocido no inventa ninguno de sus lados y mantiene el flujo incompleto.
+- Conserva notas de crédito de clientes Timbrada/Aplicada y de proveedores sólo Aplicada, junto con cronología38 y devoluciones39, incluidas sus referencias exactas. No incluye atribución de deuda139 ni otros splits contables.
+- Una sola migración nueva: `20261006235700_audit134_pago_congelado.sql`, después de39 / `20261006234200`. Mantiene los archivos y manifiestos históricos completos; no hace backfill.
+- Paquete de código: no aplica SQL remoto, no publica frontend y no certifica cierre funcional del hallazgo. Requiere verificar38 y39 aplicadas antes de su propia operación atómica revisada.
+
 ## [13.824.39] - Unreleased
 
 - **fix(anticipos · 131)**: registra el medio real de devolución, su fecha civil y referencia. El efectivo no exige cuenta ni genera movimientos bancarios; la devolución bancaria exige una cuenta activa de la misma organización y moneda.

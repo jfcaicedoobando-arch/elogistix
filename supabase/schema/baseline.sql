@@ -23359,6 +23359,15 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) RETURNS numeric
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT CASE WHEN p_es_anticipo_aplicado THEN p_monto_en_moneda_factura
+    ELSE public.monto_pago_en_moneda_factura(
+      p_monto, p_moneda_pago, p_tc_pago, p_moneda_factura)
+  END;
+$$;
 CREATE FUNCTION public.movimiento_origen_por_hash(p_hash text) RETURNS text
     LANGUAGE sql IMMUTABLE
     SET search_path TO ''
@@ -25702,10 +25711,13 @@ BEGIN
       AND nc.estado = 'Aplicada'
   ),
   pagos AS (
-    -- Ola 12 · R3P-06: el abono se convierte a la moneda de la factura; NULL = sin TC.
+    -- Audit134: la aplicación usa sólo su importe congelado; si falta,
+    -- no se reconstruye su FX histórico ni se reclasifica ninguna moneda.
     SELECT pp.id, pp.fecha_pago,
            pp.monto AS monto_pago, pp.moneda::text AS moneda_pago,
-           public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
+           public.monto_pago_proveedor_en_moneda_factura(
+             pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+             pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
            f.moneda AS moneda_factura,
            pp.referencia, pp.metodo_pago, pp.es_anticipo_aplicado,
            pp.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
@@ -25772,19 +25784,31 @@ BEGIN
            -- R3P-06: el abono se expresa en la moneda del cargo (factura).
            p.moneda_factura AS moneda,
            0::numeric,
-           -- R3P-07: la aplicación de un anticipo es informativa (0/0); el
-           -- abono ya se contó en la fila "Anticipo" al entregarlo.
-           CASE WHEN p.es_anticipo_aplicado THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
+           -- Audit134: same-currency applications remain informative. A cross
+           -- reclassifies credit from advance currency to invoice currency.
+           CASE WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
+             THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
            CASE
-             WHEN p.es_anticipo_aplicado
+             WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · anticipo ya contado al entregarse'
              WHEN p.moneda_pago <> p.moneda_factura AND p.monto_factura IS NULL
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago || ' SIN TC (excluido del saldo)'
+             WHEN p.es_anticipo_aplicado
+               THEN 'Reclasificación de anticipo de ' || p.moneda_pago || ' a ' || p.moneda_factura || '; sin movimiento bancario'
              WHEN p.moneda_pago <> p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago
              ELSE p.metodo_pago
            END
     FROM pagos p
+    UNION ALL
+    SELECT p.fecha_pago, 'Anticipo aplicado', p.id,
+           COALESCE(p.folio_interno, 'Aplicación'), p.referencia,
+           COALESCE(p.expediente, ''), p.embarque_id, p.moneda_pago,
+           p.monto_pago, 0::numeric,
+           'Crédito consumido en ' || p.moneda_pago || ' y aplicado a ' || p.moneda_factura || '; sin movimiento bancario'
+    FROM pagos p
+    WHERE p.es_anticipo_aplicado AND p.moneda_pago <> p.moneda_factura
+      AND p.monto_factura IS NOT NULL
     UNION ALL
     SELECT a.fecha_anticipo, 'Anticipo', a.id, 'Anticipo', a.referencia,
            COALESCE(a.expediente, ''), a.embarque_id, a.moneda,
@@ -25796,7 +25820,7 @@ BEGIN
            CASE WHEN a.medio_devolucion IS NOT NULL THEN a.referencia_devolucion ELSE COALESCE(a.referencia_devolucion, a.referencia) END, COALESCE(a.expediente, ''),
            a.embarque_id, a.moneda,
            -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
-           -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
+           -- sólo reclasifican moneda; no se cuenta de nuevo el dinero entregado.
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
@@ -25804,13 +25828,13 @@ BEGIN
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
-  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio, m.moneda, m.ref_id), '[]'::jsonb)
   INTO v_todos
   FROM movs m;
   -- Detalle del periodo (R3P-09): el filtro se aplica sobre el universo
   -- completo, en memoria, ANTES de paginar (R3FE-04). (Las fechas son
   -- columnas `date`; el casteo desde jsonb es seguro.)
-  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio'), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio', m->>'moneda', m->>'ref_id'), '[]'::jsonb)
   INTO v_movs_full
   FROM jsonb_array_elements(v_todos) m
   WHERE (m->>'fecha')::date BETWEEN v_desde AND v_hasta;
@@ -25858,12 +25882,22 @@ BEGIN
   ),
   saldo_factura AS (
     SELECT f.id, f.moneda, f.fecha_vencimiento,
-           -- Ola 12 · R3BD-04: factura marcada 'Pagada' (legacy, sin pagos
-           -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
-           CASE WHEN f.estado = 'Pagada' THEN 0::numeric
+           -- Preserve the legacy Pagada shortcut unless an active advance
+           -- application lacks its frozen amount. That exceptional unknown
+           -- must use known payments/credits, not disappear behind the status.
+           CASE WHEN f.estado = 'Pagada' AND NOT EXISTS (
+                  SELECT 1 FROM public.pagos_proveedor pp
+                  WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL
+                    AND pp.es_anticipo_aplicado
+                    AND public.monto_pago_proveedor_en_moneda_factura(
+                      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) IS NULL
+                ) THEN 0::numeric
                 ELSE f.total
                   -- R3P-06: pagos convertidos a la moneda de la factura.
-                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
+                  - COALESCE((SELECT SUM(public.monto_pago_proveedor_en_moneda_factura(
+                                pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                                pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
                               FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).
@@ -30279,15 +30313,20 @@ BEGIN
   IF v_f.id IS NULL THEN
     RETURN NULL;
   END IF;
-  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
-         BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
+  SELECT COALESCE(SUM(p.monto_factura), 0), BOOL_OR(p.monto_factura IS NULL)
     INTO v_pagado, v_incompleto
-  FROM public.pagos_proveedor pp
-  WHERE pp.proveedor_factura_id = p_factura_id
-    AND pp.deleted_at IS NULL;
+  FROM (
+    SELECT public.monto_pago_proveedor_en_moneda_factura(
+      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text
+    ) AS monto_factura
+    FROM public.pagos_proveedor pp
+    WHERE pp.proveedor_factura_id = p_factura_id
+      AND pp.deleted_at IS NULL
+  ) p;
   -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
-         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+         BOOL_OR(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text) IS NULL)
     INTO v_nc, v_nc_incompleto
   FROM public.proveedor_notas_credito nc
   WHERE nc.proveedor_factura_id = p_factura_id
@@ -32875,6 +32914,9 @@ BEGIN
   END IF;
   SELECT EXISTS (SELECT 1 FROM embarque_contenedores
     WHERE embarque_id=p_embarque_id AND deleted_at IS NULL) INTO v_tiene_contenedores;
+  -- v13.820.6: las fechas de descarga/devolución sólo aplican a contenedores
+  -- completos (Marítimo FCL). En LCL (caja compartida) y otros modos no hay
+  -- contenedor que descargar/devolver, aunque existan filas de agrupación.
   IF v_tiene_contenedores AND v_emb.modo='Marítimo' AND COALESCE(v_emb.tipo_carga,'') ILIKE 'FCL%' THEN
     SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_cont_sin_fechas, v_cont_fechas_ids
     FROM embarque_contenedores WHERE embarque_id=p_embarque_id AND deleted_at IS NULL
@@ -32901,6 +32943,7 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','costo_conceptos_con_factura','ok',v_ok,
     'detalle', jsonb_build_object('sin_factura', v_costos_sin_factura)));
+  -- Buzón CxP: ningún invoice puede quedar sin capturar.
   SELECT COUNT(*),
          COALESCE(MAX(GREATEST(0, (now()::date - efe.created_at::date))), 0)
     INTO v_ent_pendientes, v_ent_dias_max
@@ -32917,6 +32960,11 @@ BEGIN
     'regla','facturas_entrantes_capturadas','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_ent_pendientes, 'dias_max', v_ent_dias_max,
       'buzon_vacio', v_ent_vacio, 'costos_sin_factura', v_costos_sin_factura)));
+  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el
+  -- buzón. v13.820.4: un costo ya ligado a una factura de proveedor vigente
+  -- cuenta como evidencia aunque la factura no haya entrado por el buzón
+  -- (captura directa desde Costos); antes el paso 1 quedaba pendiente para
+  -- siempre pese a que el paso 3 estaba completo.
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
@@ -32950,23 +32998,32 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
-  WITH agg AS (
+  -- N-BL-01: el pagado CxP se convierte a la moneda de la factura con
+  -- selector canónico (antes sumaba pp.monto en crudo: una factura
+  -- USD pagada en MXN inflaba el pagado ~19x y permitía cerrar con CxP
+  -- pendiente). Fail-closed consistente con saldo_factura_proveedor: un pago
+  -- sin tipo de cambio con moneda distinta se EXCLUYE del pagado (nunca 1:1
+  -- silencioso) y se reporta en pagos_sin_tipo_cambio.
+  -- Audit134: anticipo aplicado usa sólo monto_en_moneda_factura congelado;
+  -- NULL es desconocido. La pertenencia/agrupación sigue igual hasta audit139.
+  WITH pagos AS (
+    SELECT pp.proveedor_factura_id,
+      SUM(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)) AS pagado,
+      BOOL_OR(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text) IS NULL) AS sin_tc
+    FROM pagos_proveedor pp JOIN proveedor_facturas pf ON pf.id=pp.proveedor_factura_id
+    WHERE pp.deleted_at IS NULL AND pf.embarque_id=p_embarque_id
+      AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
+    GROUP BY pp.proveedor_factura_id
+  ), agg AS (
     SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
-      COALESCE(SUM((SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)),0)
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL)),0) AS pagado,
-      COUNT(*) FILTER (WHERE pf.total > COALESCE((
-        SELECT SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text))
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL),0) + 0.01) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE EXISTS (
-        SELECT 1 FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL
-          AND pp.moneda::text <> COALESCE(pf.moneda::text,'MXN')
-          AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)) AS pagos_sin_tipo_cambio
-    FROM proveedor_facturas pf
+      COALESCE(SUM(p.pagado),0) AS pagado,
+      COUNT(*) FILTER (WHERE pf.total > COALESCE(p.pagado,0) + 0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE p.sin_tc) AS pagos_sin_tipo_cambio
+    FROM proveedor_facturas pf LEFT JOIN pagos p ON p.proveedor_factura_id=pf.id
     WHERE pf.embarque_id=p_embarque_id AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
     GROUP BY COALESCE(pf.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
@@ -32975,17 +33032,31 @@ BEGIN
       'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0.01 OR (m->>'pagos_sin_tipo_cambio')::integer>0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
-  -- P1 (v13.824.x): el vínculo concepto↔factura exige MISMA MONEDA
-  -- (conceptos_venta.moneda ↔ facturas.moneda), porque la facturación genera una
-  -- factura por moneda desde total_usd/total_mxn: una proforma mixta con la USD
-  -- Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y daba OK.
+  -- P1-1 (v13.824.x): `estado_facturacion='facturado'` se enciende en cuanto la
+  -- proforma queda 'facturada', y eso ocurre al crear una factura BORRADOR.
+  -- Fail-closed: un concepto sólo cuenta como facturado si (a) existe factura
+  -- vigente EMITIDA ligada a su proforma y (b) NO queda ninguna factura vigente
+  -- de esa misma proforma sin emitir (Borrador/Por timbrar). Esto cubre la
+  -- proforma partida por moneda (facturas USD + MXN comparten proforma_id):
+  -- emitir sólo una ya no da OK. Cancelada/Sustituida no bloquean ni acreditan.
+  -- P1 (v13.824.x): el vínculo además exige MISMA MONEDA que el concepto
+  -- (conceptos_venta.moneda ↔ facturas.moneda), porque construirFacturasAEmitir
+  -- genera una factura por moneda desde total_usd/total_mxn: una proforma mixta
+  -- con la USD Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y
+  -- daba OK. Una factura emitida en otra moneda no acredita al concepto.
+  -- El vínculo factura↔proforma usa facturas.proforma_id, los punteros
+  -- proformas.factura_id / factura_secundaria_id y conceptos_factura
+  -- .proforma_id_origen (consolidadas). Conceptos legacy sin proforma se
+  -- validan contra cualquier factura emitida del embarque en su moneda.
   WITH cv AS (
     SELECT cv.id, cv.estado_facturacion, cv.proforma_id,
            COALESCE(cv.moneda::text,'MXN') AS moneda
@@ -33021,6 +33092,8 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
       'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
+  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
+  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
   SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
     FROM facturas f
    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
@@ -33043,6 +33116,8 @@ BEGIN
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
   INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01);
@@ -33061,6 +33136,13 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','rep_timbrados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_rep_pendientes, 'ids', v_rep_ids)));
+  -- Ola 2 · O2.2: se bloquea por pendientes REALES (nota de pendiente o
+  -- cola de recálculo), no por la bandera `definitiva` que sólo se marca al
+  -- cerrar (círculo vicioso que obligaba a "forzar" todos los cierres).
+  -- v13.823.291: si el embarque no genera comisión (override propio o cliente
+  -- marcado `sin_comision`), el check NO bloquea: la UI ya lo muestra en gris
+  -- "No aplica" y el checklist se veía completo mientras el candado contaba una
+  -- comisión huérfana (ELIMP00298: nota "Sin vendedora asignada al embarque").
   v_sin_comision := public.resolver_sin_comision(p_embarque_id);
   IF v_sin_comision THEN
     v_com_count := 0;
@@ -38860,6 +38942,9 @@ GRANT ALL ON FUNCTION public.migrar_roles_legacy_dry_run() TO service_role;
 REVOKE ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO authenticated;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO service_role;
+REVOKE ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO authenticated;
+GRANT ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO service_role;
 REVOKE ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO authenticated;
 GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO service_role;

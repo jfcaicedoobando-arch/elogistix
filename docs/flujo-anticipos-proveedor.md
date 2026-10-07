@@ -72,7 +72,22 @@ números sin convertir ni usar TC actual para una aplicación histórica.
 ## Estado de cuenta y devoluciones
 
 El anticipo entregado aparece como abono en su fecha original. Su aplicación a una
-factura es informativa (cargo y abono cero), porque el dinero ya se contó al entregarlo.
+factura de la misma moneda es informativa (cargo y abono cero). En monedas distintas,
+la aplicación reclasifica el crédito en su fecha efectiva: un cargo por el importe
+consumido en la moneda del anticipo y un abono en la moneda de la factura.
+
+El abono usa sólo `pagos_proveedor.monto_en_moneda_factura`, conservado a cuatro
+decimales al registrar la aplicación. La consulta no recalcula ese importe con el
+DOF, el tipo de cambio de la factura ni `pagos_proveedor.tipo_cambio_usd`: los registros
+históricos no comparten necesariamente la misma regla de conversión. Si falta el
+importe congelado, se excluyen ambos lados monetarios de la reclasificación y se
+informa la conversión pendiente. Saldo de factura, estado de cuenta, antigüedad y
+Cierre usan la misma selección. Una factura marcada *Pagada* con una aplicación
+activa sin importe congelado conserva en la antigüedad el saldo calculado con los
+pagos y NC conocidos; esa excepción no cambia el tratamiento de las demás facturas
+históricas marcadas *Pagada*. Cierre permanece pendiente mientras haya una
+conversión desconocida. Los pagos directos conservan su conversión habitual.
+La reclasificación no crea otro movimiento bancario ni reescribe datos históricos.
 La devolución aparece como **Devolución de anticipo**, con cargo por `monto_devuelto`:
 un anticipo de 25 con aplicación de 10 y devolución del remanente de 15 reduce la deuda
 sólo en 10. Una devolución completa sin aplicaciones deja efecto neto cero.

@@ -213,3 +213,8 @@ supabase/tests/rls/tarifario_cargos_permisos.sql
 
 # Ola16: finite tenant-scope forward for the two tariff charge tables.
 supabase/tests/tarifario_cargos_tenant_scope.sql
+# Audit134: conversión congelada y reclasificación sin dinero nuevo.
+supabase/tests/audit134_pago_congelado.sql
+supabase/tests/audit134_anticipo_reclasificacion.sql
+supabase/tests/audit134_anticipo_canon_consistente.sql
+supabase/tests/audit134_139_cierre_nc_cliente_estados.sql
