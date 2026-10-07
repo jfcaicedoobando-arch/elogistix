@@ -32,8 +32,8 @@ export function AprobarRechazarDialogs({
   }, [actual, openAprobar, openRechazar, revisada]);
   const f = revisada ?? actual;
   if ((openAprobar || openRechazar) && !revisada) return null;
-  // Ola 4 (H2): sin embarque vinculado no hay contra qué contrastar el gasto;
-  // la base de datos exige una justificación escrita para aprobar.
+  // Esta guardia de UI consulta sólo el embarque de cabecera, no los conceptos.
+  // El backend valida por separado los vínculos a conceptos de costo.
   const requiereJustificacion = !f.embarque_id;
 
   const confirmarAprobacion = async (motivo?: string) => {
@@ -52,12 +52,13 @@ export function AprobarRechazarDialogs({
       {requiereJustificacion ? (
         <ReasonDialog
           open={openAprobar} onOpenChange={setOpenAprobar} icon={CheckCircle2}
-          title="Aprobar factura sin embarque"
+          title="Aprobar factura sin embarque en datos generales"
           description={[
             ctxLabel ? `${ctxLabel} — ` : "",
-            "Esta factura no está ligada a un embarque ni a costos acordados. ",
+            "Esta factura no tiene un embarque seleccionado en sus datos generales. ",
+            "Revisa los conceptos vinculados antes de aprobar. ",
             "Escribe para qué fue el gasto: la justificación queda guardada en la factura y en la bitácora. ",
-            "Si el monto supera el límite autorizado, tendrás que vincularla al embarque.",
+            "El límite autorizado para gastos directos aplica sólo si tampoco hay conceptos de costo vinculados.",
           ].join("")}
           label="Justificación del gasto"
           placeholder="Ej. Renta de oficina de agosto según contrato vigente"
