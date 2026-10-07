@@ -22,7 +22,7 @@ function leerManifiesto(ruta: string): string[] {
 function rutasInexistentes(rutas: string[]): string[] {
   // El runner acepta suites anidadas (incluido rls/), no sólo archivos raíz.
   const existentes = new Set(
-    readdirSync(DIR_TESTS, { recursive: true })
+    readdirSync(DIR_TESTS, { encoding: "utf8", recursive: true })
       .filter((f) => f.endsWith(".sql"))
       .map((f) => `${DIR_TESTS}/${f}`),
   );

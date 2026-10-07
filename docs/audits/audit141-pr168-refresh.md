@@ -2,7 +2,7 @@
 
 ## Propósito y base
 
-Sustituye el contenido obsoleto de PR168, anteriormente basado en release34, con los contadores actuales revisados sobre el núcleo54 `9fc2bc52153169b0c27396bc79725cb1a1d569e9` y main37 `57969acc4f89f7408fa6dc38bd769931f00cfe2d`. La base local equivalente `87d3f41` se comprobó contra todos los hashes del delta remoto. El traslado conserva exactamente la lógica54/141 revisada en `9f93e64`. PR168 se mantiene como la única entrega de141; no se abre un PR duplicado ni se conserva el envelope34.
+Sustituye el contenido obsoleto de PR168, anteriormente basado en release34, con los contadores actuales revisados sobre el núcleo54 `aa6ee73a9dd2a8e804ecfaaa10cf33a56886d1f2` y main38 `731f7903e82782a81391489c19cf178ee6051b81`. La base local equivalente `94e5c70` se comprobó contra todos los hashes del delta remoto. El traslado conserva exactamente la lógica54/141 revisada en `9f93e64`. PR168 se mantiene como la única entrega de141; no se abre un PR duplicado ni se conserva el envelope34.
 
 Incluye sólo los RPC `cobranza_conteo_por_cobrar` y `cobranza_conteo_vencidas`, su transporte/tipos, invalidación tras pagos/REP y pruebas. Incluye el filtro monetario y su regresión en BandejaPorCobrar, necesarios para que la tabla y su contador descarten por igual el ruido0.0049/Sin saldo. Ambos usan el saldo neto monetario, el día de negocio de México, NC Timbrada/Aplicada y pagos activos; una Pagada histórica sin pago activo sigue excluida. Ayer pertenece a Vencidas; hoy/futuro/sin fecha pertenecen a Por cobrar. El ámbito de organización y las restricciones anon se conservan.
 
@@ -16,6 +16,8 @@ La prueba complementaria extrae los fixtures revisados de pagos documentados, Pa
 
 ## Estado de entrega
 
-Manifests publicados33–37, SQL histórico, Drizzle y versiones permanecen intactos. `audit:manifest` sigue pendiente/no pasado hasta un envelope futuro; no se evita el guard. Sin SQL remoto, migraciones de datos, backfill, despliegue ni merge. La validación de la partición y el estado de CI se anotan en PR168. Los checks históricos del candidato completo no se presentan como una nueva ejecución sobre este árbol. La parte estática de audit:rpc-sync pasó; el catálogo vivo no se consultó con éxito después de detener el PostgreSQL local y no se afirma PASS de esa consulta.
+Manifests publicados33–38, SQL histórico, Drizzle y versiones permanecen intactos. `audit:manifest` sigue pendiente/no pasado hasta un envelope futuro; no se evita el guard. Sin SQL remoto, migraciones de datos, backfill, despliegue ni merge. La validación de la partición y el estado de CI se anotan en PR168. Los checks históricos del candidato completo no se presentan como una nueva ejecución sobre este árbol. La parte estática de audit:rpc-sync pasó; el catálogo vivo no se consultó con éxito después de detener el PostgreSQL local y no se afirma PASS de esa consulta.
 
 AUD54 global sigue abierto hasta integrar Dirección/cierre y verificar el release/GUI completos. Véase [núcleo54](audit54-core-delivery.md).
+
+Integración38 preserva la cronología135, SQL233700 y todos los guards. La base contiene los ajustes de fixtures/arquitectura revisados; el refinamiento de encoding:utf8 resuelve TS2339 sin cambiar qué rutas se aceptan.

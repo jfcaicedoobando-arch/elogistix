@@ -202,6 +202,9 @@ supabase/tests/money_contract_rounding.sql
 supabase/tests/proforma_no_objeto_snapshot.sql
 supabase/tests/proforma_operativa_consistencia.sql
 
+# Audit135: fechas civiles de la aplicación de anticipos.
+supabase/tests/audit135_anticipo_cronologia.sql
+
 # AUD54: saldo real y cierre monetario, sólo fixtures con ROLLBACK.
 supabase/tests/rls/test_rls_audit54_pue_tolerancia_cierre.sql
 supabase/tests/rls/test_rls_audit54_saldo_visible.sql

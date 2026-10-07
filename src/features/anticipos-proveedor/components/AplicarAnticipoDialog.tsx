@@ -17,6 +17,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { hoyMx } from "@/lib/date/mx";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
+import { fechaMinimaDesdeAnticipo } from "../domain/fechaAplicacion";
 import { buildSchema } from "../domain/aplicarAnticipoSchema";
 import { calcularTopeAplicable } from "../domain/topeAplicacionAnticipo";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks";
@@ -37,6 +38,8 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const [fechaTope, setFechaTope] = useState(todayLocalISO());
   const [saldoFacturaTope, setSaldoFacturaTope] = useState(0);
   const [monedaFacturaTope, setMonedaFacturaTope] = useState("MXN");
+  const [fechaFactura, setFechaFactura] = useState<string | null>(null);
+  const fechaMinima = fechaMinimaDesdeAnticipo(anticipo, fechaFactura);
   // MNY P1.3: el tope se calcula con el DOF de la FECHA DE APLICACIÓN, igual
   // que la valuación del servidor. Sin paridad no se adivina un 1:1.
   const { data: tcDof } = useTcDofPorFecha(fechaTope);
@@ -52,8 +55,8 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
     [saldoDisponible, monedaAnticipo, saldoFacturaTope, monedaFacturaTope, tcDof],
   );
   const schema = useMemo(
-    () => buildSchema(saldoDisponible, monedaAnticipo, tope.tope),
-    [saldoDisponible, monedaAnticipo, tope.tope],
+    () => buildSchema(saldoDisponible, monedaAnticipo, tope.tope, fechaMinima),
+    [saldoDisponible, monedaAnticipo, tope.tope, fechaMinima],
   );
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
@@ -67,6 +70,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   useEffect(() => {
     if (!open) return;
     setSaldoFacturaTope(0);
+    setFechaFactura(null);
     setMonedaFacturaTope("MXN");
     setFechaTope(todayLocalISO());
     reset({ facturaId: "", saldoFactura: 0, monedaFactura: "MXN", monto: 0, fechaAplicacion: todayLocalISO() });
@@ -137,7 +141,8 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
               <SelectorFacturaAbierta
                 proveedorId={anticipo.proveedor_id}
                 value={field.value}
-                onChange={(id, saldo, moneda) => {
+                onChange={(id, saldo, moneda, fechaEmision) => {
+                  setFechaFactura(fechaEmision ?? null);
                   field.onChange(id);
                   setValue("saldoFactura", saldo);
                   setValue("monedaFactura", moneda);
@@ -160,11 +165,13 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
                 name="fechaAplicacion"
                 value={field.value ?? ""}
                 onChange={field.onChange}
+                min={fechaMinima}
                 max={hoyMx()}
                 className="w-full"
               />
             )}
           />
+          <p className="text-xs text-muted-foreground">Fecha mínima: {fechaMinima}.</p>
           {errors.fechaAplicacion && <p className="text-xs text-destructive">{errors.fechaAplicacion.message}</p>}
         </div>
         <div className="space-y-1.5">

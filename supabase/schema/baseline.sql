@@ -7390,6 +7390,14 @@ BEGIN
   IF v_fact.proveedor_id IS DISTINCT FROM v_ant.proveedor_id THEN
     RAISE EXCEPTION 'LC_ANTICIPO_PROVEEDOR_MISMATCH: Anticipo y factura pertenecen a proveedores distintos.';
   END IF;
+  -- Audit135: civil dates must be chronological; downstream payment guards
+  -- continue to enforce business date and closed accounting periods.
+  IF p_fecha_aplicacion IS NULL
+     OR p_fecha_aplicacion < v_ant.fecha_anticipo
+     OR p_fecha_aplicacion < v_fact.fecha_emision THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_APLICACION_FECHA: La aplicación no puede preceder a la entrega del anticipo ni a la emisión de la factura.'
+      USING ERRCODE = '22023';
+  END IF;
   IF v_ant.moneda = v_fact.moneda THEN
     v_monto_convertido := p_monto;
     v_monto_historico := p_monto;
