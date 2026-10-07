@@ -40,6 +40,7 @@ import {
   CalendarCheck,
   Wallet,
   FileText,
+  BookOpen,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
