@@ -87,8 +87,7 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "Este pago ya tiene su movimiento bancario. Vuelve a conciliar para actualizar la vista.",
 
   // ── Anticipos ──────────────────────────────────────────────────────────
-  LC_ANTICIPO_APLICACION_FECHA:
-    "Indica una fecha de aplicación igual o posterior a la entrega del anticipo y a la emisión de la factura.",
+  LC_ANTICIPO_APLICACION_FECHA: "Indica una fecha de aplicación igual o posterior a la entrega del anticipo y a la emisión de la factura.",
   LC_ANTICIPO_NO_EXISTE: "El anticipo no existe.",
   LC_ANTICIPO_SIN_ROL: "No tienes permisos para gestionar anticipos.",
   LC_ANTICIPO_SIN_SALDO: "El anticipo no tiene saldo disponible.",
