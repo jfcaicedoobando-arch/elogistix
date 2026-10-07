@@ -12,6 +12,7 @@ import { AccionesSolicitudPricing } from "./AccionesSolicitudPricing";
 import { AdjuntosSolicitudPricing } from "./AdjuntosSolicitudPricing";
 import { OpcionPricingEditor } from "./OpcionPricingEditor";
 import { ResumenSolicitudPricing } from "./ResumenSolicitudPricing";
+import { OpcionesTarifario } from "./OpcionesTarifario";
 import { TarifasRespuestaPricing } from "./TarifasRespuestaPricing";
 
 interface Props { solicitud: SolicitudPricingRow }
@@ -32,6 +33,8 @@ export function SolicitudPricingDetalle({ solicitud: s }: Props) {
       <ResumenSolicitudPricing solicitud={s} />
       <AdjuntosSolicitudPricing organizationId={s.organization_id} solicitudId={s.id}
         puedeAdjuntar={s.estado !== "cancelada"} />
+      <OpcionesTarifario solicitud={s}
+        puedeElegir={esPricing || s.created_by === user?.id || s.solicitante_id === user?.id} />
       {opciones.map((o) => (
         <OpcionPricingEditor key={o.id} solicitudId={s.id} organizationId={s.organization_id}
           orden={o.orden} opcion={o} editable={false} />

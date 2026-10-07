@@ -71,6 +71,7 @@ const MATRIX = {
   "/costeo/agentes": COSTEO_ROLES,
   "/costeo/navieras": COSTEO_ROLES,
   "/costeo/demoras-venta": COSTEO_ROLES,
+  "/costeo/tarifario": COSTEO_ROLES,
   "/costeo/solicitudes": COSTEO_ROLES,
   "/profit": PROFIT_READ_ROLES,
   "/profit/dashboard": PROFIT_READ_ROLES,

@@ -1876,6 +1876,120 @@ export type Database = {
           },
         ]
       }
+      costeo_cargos_fob_agente: {
+        Row: {
+          agente_id: string
+          concepto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          moneda: string
+          monto: number
+          organization_id: string
+          unidad: string | null
+          updated_at: string
+        }
+        Insert: {
+          agente_id: string
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto: number
+          organization_id: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agente_id?: string
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto?: number
+          organization_id?: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_cargos_fob_agente_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_cargos_fob_agente_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_cargos_locales_naviera: {
+        Row: {
+          concepto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          moneda: string
+          monto: number
+          naviera_id: string
+          organization_id: string
+          unidad: string | null
+          updated_at: string
+        }
+        Insert: {
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto: number
+          naviera_id: string
+          organization_id: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Update: {
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto?: number
+          naviera_id?: string
+          organization_id?: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_cargos_locales_naviera_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_cargos_locales_naviera_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       costeo_demoras_venta_tarifa: {
         Row: {
           created_at: string
@@ -4559,6 +4673,7 @@ export type Database = {
           respondida_at: string | null
           servicio: string | null
           solicitante_id: string
+          tarifa_tarifario_id: string | null
           tipo_carga: string | null
           unidad_medida: string | null
           updated_at: string
@@ -4595,6 +4710,7 @@ export type Database = {
           respondida_at?: string | null
           servicio?: string | null
           solicitante_id: string
+          tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           unidad_medida?: string | null
           updated_at?: string
@@ -4631,6 +4747,7 @@ export type Database = {
           respondida_at?: string | null
           servicio?: string | null
           solicitante_id?: string
+          tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           unidad_medida?: string | null
           updated_at?: string
@@ -4649,6 +4766,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_solicitudes_pricing_tarifa_tarifario_id_fkey"
+            columns: ["tarifa_tarifario_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_solicitudes_pricing_tarifa_tarifario_id_fkey"
+            columns: ["tarifa_tarifario_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
             referencedColumns: ["id"]
           },
         ]
@@ -11042,6 +11173,10 @@ export type Database = {
         }
       }
       credito_en_uso_mxn: { Args: { p_cliente_id: string }; Returns: number }
+      crm_aplicar_tarifa_tarifario: {
+        Args: { p_solicitud_id: string; p_tarifa_id: string }
+        Returns: Json
+      }
       crm_autorizar_margen: {
         Args: { _margen_pct: number; _oportunidad_id: string }
         Returns: undefined
