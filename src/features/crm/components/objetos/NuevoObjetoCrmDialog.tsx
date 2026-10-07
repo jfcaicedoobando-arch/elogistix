@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { NuevaEmpresaDialog } from "./NuevaEmpresaDialog";
 import { useCrearContactoCrm, useCrearEmpresaCrm } from "@/features/crm/hooks/useObjetosCrm";
 
 interface Props {
@@ -18,7 +19,12 @@ interface Props {
 
 const FORM_ID = "nuevo-objeto-crm";
 
-export function NuevoObjetoCrmDialog({ objeto, open, onOpenChange }: Props) {
+export function NuevoObjetoCrmDialog(props: Props) {
+  if (props.objeto === "empresa") return <NuevaEmpresaDialog open={props.open} onOpenChange={props.onOpenChange} />;
+  return <DialogoBasico {...props} />;
+}
+
+function DialogoBasico({ objeto, open, onOpenChange }: Props) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
