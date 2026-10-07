@@ -1,3 +1,4 @@
+import { descripcionTimbradoExitoso } from "../utils/usoCfdiTimbrado";
 import { CancelacionContratoError } from "../services/cancelacionErrorWire";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
@@ -36,7 +37,7 @@ export function useTimbrarFactura() {
       } else {
         notifySuccess(undefined, {
           title: "Factura timbrada correctamente",
-          description: `Serie ${res.serie} · Folio ${res.folio}`,
+          description: descripcionTimbradoExitoso(res),
         });
       }
       invalidateHuecoFacturacion(qc);

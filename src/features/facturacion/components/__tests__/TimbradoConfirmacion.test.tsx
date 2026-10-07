@@ -14,7 +14,7 @@ describe("confirmación de timbrado", () => {
     it(`${compacto ? "compacto" : "completo"}: muestra el destinatario exacto y requiere elección`, () => {
       const setEnviarEmail = vi.fn();
       const props = { usoCfdi: "G03", formaPago: "03", metodoPago: "PUE", enviarEmail: false, setEnviarEmail, emailDestino: "fiscal@example.invalid" };
-      render(compacto ? <TimbrarCompacto {...props} /> : <TimbrarCompleto {...props} checks={[]} setUsoCfdi={vi.fn()} setFormaPago={vi.fn()} setMetodoPago={vi.fn()} puedeTimbrar />);
+      render(compacto ? <TimbrarCompacto {...props} /> : <TimbrarCompleto {...props} receptor={{ rfc: "AAA010101AAA", regimen: "601" }} checks={[]} setUsoCfdi={vi.fn()} setFormaPago={vi.fn()} setMetodoPago={vi.fn()} puedeTimbrar />);
       const opcion = screen.getByRole("checkbox", { name: /fiscal@example.invalid/ });
       expect(opcion).not.toBeChecked();
       fireEvent.click(opcion);

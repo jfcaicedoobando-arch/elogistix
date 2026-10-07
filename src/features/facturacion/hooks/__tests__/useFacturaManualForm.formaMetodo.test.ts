@@ -10,7 +10,7 @@ vi.mock("@/features/cliente/hooks/useValidarLimiteCredito", () => ({
   useValidarLimiteCredito: () => validarLimite, registrarExcesoCredito: vi.fn(),
 }));
 vi.mock("@/features/facturacion/hooks/useClientesFiscalOpts", () => ({
-  useClientesFiscalOpts: () => ({ data: [{ id: "cliente-1", nombre: "Cliente", rfc: "XAXX010101000", codigo_postal: "06000", regimen_fiscal: "601", dias_credito: 0 }] }),
+  useClientesFiscalOpts: () => ({ data: [{ id: "cliente-1", nombre: "Cliente", rfc: "AAA010101AAA", codigo_postal: "06000", regimen_fiscal: "601", dias_credito: 0 }] }),
 }));
 
 import { useFacturaManualForm } from "../useFacturaManualForm";

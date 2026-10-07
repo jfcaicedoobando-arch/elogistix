@@ -36,6 +36,8 @@ export const facturacion = {
   emitirNotaCredito: ['fiscal', 'emitir-nota-credito'] as const,
   cancelarNotaCredito: ['fiscal', 'cancelar-nota-credito'] as const,
   actualizarDatosTimbrado: ['fiscal', 'actualizar-datos-timbrado'] as const,
+  autosaveDatosTimbrado: (facturaId?: string | null, organizationId?: string | null) =>
+    ['fiscal', 'autosave-datos-timbrado', organizationId, facturaId] as const,
   guardarDefaultsCliente: ['fiscal', 'guardar-defaults-cliente'] as const,
   enviarCfdiEmail: ['fiscal', 'enviar-cfdi-email'] as const,
   emitirRep: ['fiscal', 'emitir-rep'] as const,

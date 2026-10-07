@@ -16,7 +16,8 @@ import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidate
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 import { getErrorMessage } from "@/lib/errors";
-import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
+import { validarTimbradoFacturaManual } from "../services/validarTimbradoFacturaManual";
+import { descripcionTimbradoExitoso } from "../utils/usoCfdiTimbrado";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -28,11 +29,8 @@ export function useCrearFacturaManual() {
   return useMutation({
     mutationKey: queryKeys.facturacion.facturaManual,
     mutationFn: async (vars: CrearFacturaManualVars) => {
-      // Validar antes de cualquier INSERT: un rechazo fiscal no debe dejar un borrador residual.
-      if (vars.timbrarAlGuardar) {
-        const issues = validarFormaMetodoPago(vars.input.formaPago, vars.input.metodoPago);
-        if (issues.length > 0) throw new Error(issues.map((issue) => issue.message).join(" "));
-      }
+      // Validar antes de cualquier INSERT: una combinación ya inválida no debe crear un borrador residual.
+      if (vars.timbrarAlGuardar) await validarTimbradoFacturaManual(vars.input);
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {
         const res = await emitirFacturapi(facturaId);
@@ -48,13 +46,14 @@ export function useCrearFacturaManual() {
             "La factura se guardó pero el timbrado no devolvió folio fiscal. Revísala en Por timbrar e intenta timbrar de nuevo.",
           );
         }
-        return { facturaId, timbrada: true as const, uuid: res.uuid };
+        return { facturaId, timbrada: true as const, uuid: res.uuid, timbrado: res };
       }
       return { facturaId, timbrada: false as const, pendiente: undefined };
     },
     onSuccess: (res) => {
       if (res.timbrada) {
-        notifySuccess(undefined, { title: tituloTimbrado("Factura manual timbrada", res.uuid) });
+        notifySuccess(undefined, { title: tituloTimbrado("Factura manual timbrada", res.uuid),
+          description: descripcionTimbradoExitoso(res.timbrado) });
       } else if (res.pendiente) {
         notifyInfo(undefined, {
           title: "Factura guardada · timbrado en proceso",
