@@ -10,7 +10,7 @@ import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
-import { hoyMx } from "@/lib/date/dateOnly";
+import { hoyMx } from "@/lib/date/mx";
 import { agruparTarifas, listarTarifasTarifario, type FilaTarifario, type TarifaTarifario } from "./tarifarioService";
 
 const usd = (t: TarifaTarifario | null) => (t ? formatCurrency(t.flete_base, t.moneda || "USD") : "—");
