@@ -180,15 +180,14 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
-          fecha_devolucion: string | null
-          medio_devolucion: string | null
-          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -199,6 +198,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -209,15 +209,14 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          fecha_devolucion?: string | null
-          medio_devolucion?: string | null
-          referencia_devolucion?: string | null
           devuelto_at?: string | null
           devuelto_by?: string | null
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
+          fecha_devolucion?: string | null
           id?: string
+          medio_devolucion?: string | null
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -228,6 +227,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia?: string | null
+          referencia_devolucion?: string | null
           saldo_disponible: number
           tipo_cambio_usd?: number | null
           updated_at?: string
@@ -238,15 +238,14 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          fecha_devolucion?: string | null
-          medio_devolucion?: string | null
-          referencia_devolucion?: string | null
           devuelto_at?: string | null
           devuelto_by?: string | null
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
+          fecha_devolucion?: string | null
           id?: string
+          medio_devolucion?: string | null
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
@@ -257,6 +256,7 @@ export type Database = {
           organization_id?: string
           proveedor_id?: string
           referencia?: string | null
+          referencia_devolucion?: string | null
           saldo_disponible?: number
           tipo_cambio_usd?: number | null
           updated_at?: string
@@ -10470,15 +10470,14 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
-          fecha_devolucion: string | null
-          medio_devolucion: string | null
-          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -10489,6 +10488,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -11458,11 +11458,11 @@ export type Database = {
       detectar_alertas_app_logs: { Args: never; Returns: number }
       devolver_anticipo_proveedor: {
         Args: {
-          p_cuenta_bancaria_id: string | null
+          p_cuenta_bancaria_id: string
           p_fecha: string
           p_id: string
-          p_monto: number
           p_medio?: string
+          p_monto: number
           p_motivo?: string
           p_referencia?: string
         }
@@ -11472,15 +11472,14 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
-          fecha_devolucion: string | null
-          medio_devolucion: string | null
-          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -11491,6 +11490,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -12567,15 +12567,14 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
-          fecha_devolucion: string | null
-          medio_devolucion: string | null
-          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -12586,6 +12585,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -13036,15 +13036,14 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
-          fecha_devolucion: string | null
-          medio_devolucion: string | null
-          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -13055,6 +13054,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
