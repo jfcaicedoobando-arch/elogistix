@@ -4,6 +4,7 @@
  * 200 líneas (Power of 10).
  * Las mutaciones separan guardar datos, timbrar y enviar el CFDI confirmado.
  */
+import { useTimbradoScope } from "./useTimbradoScope";
 import { useTimbrarFacturaDialogMutations } from "./useTimbrarFacturaDialogMutations";
 import { buildEstadoTimbrado } from "../utils/estadoTimbrado";
 import { usoCfdiParaPreferencia } from "../utils/usoCfdiTimbrado";
@@ -22,6 +23,7 @@ import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 
 interface FacturaLike {
   id: string;
+  numero?: string;
   cliente_id: string | null;
   organization_id?: string;
   rfc_cliente?: string | null;
@@ -53,6 +55,7 @@ export function useTimbrarFacturaDialog(
 ) {
   const qc = useQueryClient();
   const timbrar = useTimbrarFactura();
+  const captureScope = useTimbradoScope(factura, emailDestino, open);
   const autosaveKey = queryKeys.facturacion.autosaveDatosTimbrado(factura?.id, factura?.organization_id);
   const autosaves = useMutationState({ filters: { mutationKey: autosaveKey }, select: (m) => ({
     status: m.state.status, patch: patchAutosave(m.state),
@@ -122,27 +125,33 @@ export function useTimbrarFacturaDialog(
         method: "FACTURACION_PREFLIGHT_TIMBRADO", context: { facturaId: factura.id } });
       return;
     }
+    const scope = captureScope(factura.organization_id);
+    if (!scope) return;
+    const { id: facturaId, numero: facturaNumero, cliente_id: clienteId } = factura;
+    const receptor = { rfc: cliente?.rfc ?? "", regimen: cliente?.regimen_fiscal ?? "", usoCfdi };
     await actualizarDatos.mutateAsync({
-      facturaId: factura.id, uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
-    });
-    timbrar.mutate(factura.id, {
+      scope,
+      facturaId, uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
+    }).catch((error: unknown) => { if (scope.authScope.isCurrent()) throw error; });
+    if (!scope.authScope.isCurrent()) return;
+    timbrar.mutate({ facturaId, facturaNumero, scope }, {
       onSuccess: async (res) => {
+        if (!scope.authScope.isCurrent()) return;
         // Un 202 aún no es CFDI timbrado: no autoriza enviar correo.
         if (esPendiente(res)) { onClose(); return; }
-        if (factura.cliente_id) {
+        if (clienteId) {
           await guardarDefaults.mutateAsync({
-            clienteId: factura.cliente_id,
-            uso_cfdi_default: usoCfdiParaPreferencia(res, {
-              rfc: cliente?.rfc ?? "", regimen: cliente?.regimen_fiscal ?? "", usoCfdi,
-            }),
+            clienteId: clienteId, scope,
+            uso_cfdi_default: usoCfdiParaPreferencia(res, receptor),
             forma_pago_default: formaPago,
             metodo_pago_default: metodoPago,
           }).catch(() => undefined);
         }
+        if (!scope.authScope.isCurrent()) return;
         if (enviarEmail && emailDestino) {
-          await enviarCfdi.mutateAsync({ facturaId: factura.id, email: emailDestino }).catch(() => undefined);
+          await enviarCfdi.mutateAsync({ facturaId, email: emailDestino, scope }).catch(() => undefined);
         }
-        onClose();
+        if (scope.authScope.isCurrent()) onClose();
       },
     });
   };

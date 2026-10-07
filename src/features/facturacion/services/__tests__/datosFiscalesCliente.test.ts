@@ -8,7 +8,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchClienteFiscal, actualizarDatosTimbradoFactura } from "../datosFiscalesCliente";
+import { fetchClienteFiscal, actualizarDatosTimbradoFactura, guardarDefaultsTimbradoCliente } from "../datosFiscalesCliente";
 
 function usuario(userId = "u1") {
   setAuthSnapshot({ userId, organizationId: "org1", role: "admin", effectiveRole: "admin", email: null, organizationName: null });
@@ -94,5 +94,28 @@ describe("datosFiscalesCliente service", () => {
     await expect(pendiente).resolves.toBeUndefined();
     expect(mock.tableCalls).toHaveLength(1); expect(mock.rpcCalls).toHaveLength(0);
   });
-
+  it("defaults explícitos filtran y registran la empresa capturada", async () => {
+    mock.setTableResult("clientes", { data: [{ id: "c1" }], error: null });
+    await guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope());
+    const call = mock.tableCalls.find(c => c.table === "clientes")!;
+    expect(call.opArgs).toContainEqual(["organization_id", "org1"]);
+    expect(mock.rpcCalls).toContainEqual({ fn: "registrar_bitacora", args: expect.objectContaining({ p_organization_id: "org1", p_entidad_id: "c1" }) });
+  });
+  it("defaults de cero filas no declaran éxito ni generan bitácora", async () => {
+    mock.setTableResult("clientes", { data: [], error: null });
+    await expect(guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope())).rejects.toThrow();
+    expect(mock.rpcCalls).toHaveLength(0);
+  });
+  it("defaults no se envían con una sesión o empresa distintas", async () => {
+    const original = scope(); usuario("u2");
+    await expect(guardarDefaultsTimbradoCliente("c1", {}, original)).rejects.toThrow(/canceló/);
+    await expect(guardarDefaultsTimbradoCliente("c1", {}, { ...scope(), organizationId: "org2" })).rejects.toThrow(/canceló/);
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+  it("defaults ya escritos no registran bajo la siguiente sesión", async () => {
+    mock.setTableResult("clientes", { data: [{ id: "c1" }], error: null });
+    const pending = guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope());
+    usuario("u2"); await expect(pending).resolves.toBeUndefined();
+    expect(mock.tableCalls).toHaveLength(1); expect(mock.rpcCalls).toHaveLength(0);
+  });
 });

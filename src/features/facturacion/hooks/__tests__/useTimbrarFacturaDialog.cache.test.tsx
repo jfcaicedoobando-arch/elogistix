@@ -1,3 +1,5 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 /** @vitest-environment jsdom */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -24,7 +26,7 @@ import { useTimbrarFacturaDialog } from "../useTimbrarFacturaDialog";
 
 const cliente: ClienteFiscalRow = { rfc: "AAA010101AAA", codigo_postal: "64000", regimen_fiscal: "601", uso_cfdi_default: "G03" };
 const defaults: DefaultsFacturacionCliente = { uso_cfdi: "G03", forma_pago: "03", metodo_pago: "PUE", cc_emails: null, destinatarios_emails: null };
-const factura = { id: "f1", cliente_id: "c1", uso_cfdi: "G01" as string | null, forma_pago: "03", metodo_pago: "PUE" };
+const factura = { organization_id: "org1", id: "f1", cliente_id: "c1", uso_cfdi: "G01" as string | null, forma_pago: "03", metodo_pago: "PUE" };
 
 function setup() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 60_000 }, mutations: { retry: false } } });
@@ -41,6 +43,8 @@ function setup() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+    setAuthSnapshot({ userId: "u1", organizationId: "org1", effectiveRole: "admin", role: "admin", email: null, organizationName: null });
+    syncActiveOrganizationScope({ userId: "u1", organizationId: "org1" });
   mocks.estado.preferencia = "G03";
   mocks.estado.efectivo = "G01";
   mocks.actualizar.mockResolvedValue(undefined);
@@ -72,7 +76,7 @@ describe("preferencia guardada y ambas cachés de React Query", () => {
     const { result, rerender, qc, onClose } = setup();
     await act(() => result.current.onConfirm());
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
-    expect(mocks.guardar).toHaveBeenCalledWith("c1", { forma_pago_default: "03", metodo_pago_default: "PUE" });
+    expect(mocks.guardar).toHaveBeenCalledWith("c1", { forma_pago_default: "03", metodo_pago_default: "PUE" }, expect.objectContaining({ organizationId: "org1" }));
     expect(qc.getQueryData<ClienteFiscalRow>(queryKeys.facturacion.clienteFiscal("c1"))?.uso_cfdi_default).toBe("G03");
     expect(qc.getQueryData<DefaultsFacturacionCliente>(queryKeys.facturacion.clienteDefaults("c1"))?.uso_cfdi).toBe("G03");
     rerender({ actual: { ...factura, id: "f2", uso_cfdi: null } });

@@ -130,11 +130,19 @@ export async function fetchDefaultsFacturacionCliente(
 export async function guardarDefaultsTimbradoCliente(
   clienteId: string,
   patch: { uso_cfdi_default?: string; forma_pago_default?: string; metodo_pago_default?: string },
+  scope?: Omit<BorradorDatosFiscalesScope, "borrador">,
 ): Promise<void> {
-  await run(supabase.from("clientes").update(patch).eq("id", clienteId));
+  scope?.authScope.assertCurrent();
+  if (scope && (!scope.organizationId || scope.authScope.organizationId !== scope.organizationId)) throw new AuthOperationChangedError();
+  let query = supabase.from("clientes").update(patch).eq("id", clienteId);
+  if (scope) query = query.eq("organization_id", scope.organizationId);
+  const filas = await unwrapOr(query.select("id"), []);
+  if (scope && filas.length === 0) throw conflictoConcurrenciaError();
+  if (scope && !scope.authScope.isCurrent()) return;
   await registrarActividad({
     modulo: "facturacion",
     accion: "guardar_defaults_timbrado_cliente",
+    ...(scope ? { organizationId: scope.organizationId, authScope: scope.authScope } : {}),
     entidadId: clienteId,
     detalles: patch as Record<string, unknown>,
   });

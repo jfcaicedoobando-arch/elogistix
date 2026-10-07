@@ -1,3 +1,4 @@
+import type { TimbradoScope } from "./useTimbradoScope";
 /** Mutaciones del diálogo: guardar datos, preferencias y correo del CFDI confirmado. */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { actualizarDatosTimbradoFactura, guardarDefaultsTimbradoCliente, type ClienteFiscalRow } from "@/features/facturacion/services";
@@ -9,6 +10,7 @@ import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
 
 interface ActualizarDatosVars {
+  scope: TimbradoScope;
   facturaId: string;
   uso_cfdi: string;
   forma_pago: string;
@@ -16,6 +18,7 @@ interface ActualizarDatosVars {
 }
 
 interface GuardarDefaultsVars {
+  scope: TimbradoScope;
   clienteId: string;
   uso_cfdi_default?: string;
   forma_pago_default: string;
@@ -31,8 +34,9 @@ export function useTimbrarFacturaDialogMutations() {
     mutationFn: (v: ActualizarDatosVars) =>
       actualizarDatosTimbradoFactura(v.facturaId, {
         uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
-      }),
+      }, undefined, { ...v.scope, borrador: true }),
     onError: (err, vars) => {
+      if (!vars.scope.authScope.isCurrent()) return;
       notifyError(undefined, {
         title: "No se pudieron guardar los datos fiscales",
         description: getErrorMessage(err),
@@ -51,8 +55,9 @@ export function useTimbrarFacturaDialogMutations() {
         ...(v.uso_cfdi_default ? { uso_cfdi_default: v.uso_cfdi_default } : {}),
         forma_pago_default: v.forma_pago_default,
         metodo_pago_default: v.metodo_pago_default,
-      }),
+      }, v.scope),
     onSuccess: (_r, v) => {
+      if (!v.scope.authScope.isCurrent()) return;
       // La preferencia explícita precede al RPC: ambas cachés deben reflejar la escritura.
       const fiscalKey = queryKeys.facturacion.clienteFiscal(v.clienteId);
       qc.setQueryData<ClienteFiscalRow | null>(fiscalKey, (cached) =>
@@ -60,7 +65,8 @@ export function useTimbrarFacturaDialogMutations() {
       qc.invalidateQueries({ queryKey: fiscalKey });
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.clienteDefaults(v.clienteId) });
     },
-    onError: (err) => {
+    onError: (err, v) => {
+      if (!v.scope.authScope.isCurrent()) return;
       // best-effort: sólo warning, no rompe el timbrado ya exitoso.
       logger.warn("timbrado", "no se guardaron los defaults del cliente:", err);
     },
@@ -69,11 +75,16 @@ export function useTimbrarFacturaDialogMutations() {
   // Mutación 3 — envío del CFDI por email tras timbrado exitoso.
   const enviarCfdi = useMutation({
     mutationKey: queryKeys.facturacion.enviarCfdiEmail,
-    mutationFn: (v: { facturaId: string; email: string }) => enviarCfdiFactura(v.facturaId, v.email),
-    onSuccess: (r) => {
+    mutationFn: (v: { facturaId: string; email: string; scope: TimbradoScope }) => {
+      v.scope.authScope.assertCurrent();
+      return enviarCfdiFactura(v.facturaId, v.email);
+    },
+    onSuccess: (r, v) => {
+      if (!v.scope.authScope.isCurrent()) return;
       toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
     },
     onError: (err, vars) => {
+      if (!vars.scope.authScope.isCurrent()) return;
       notifyError(undefined, {
         title: "Factura timbrada, pero no se envió el email",
         description: getErrorMessage(err),
