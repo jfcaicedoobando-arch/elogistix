@@ -201,3 +201,6 @@ supabase/tests/money_contract_rounding.sql
 # Proformas 13.824.35: consistencia operativa y snapshot no_objeto.
 supabase/tests/proforma_no_objeto_snapshot.sql
 supabase/tests/proforma_operativa_consistencia.sql
+
+# Audit135: fechas civiles de la aplicación de anticipos.
+supabase/tests/audit135_anticipo_cronologia.sql

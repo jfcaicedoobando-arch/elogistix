@@ -6,6 +6,8 @@
  * el tope convertido al DOF de la fecha de aplicación y el envío a la RPC.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { hoyMx } from "@/lib/date/mx";
+import { fechaMinimaDesdeAnticipo, errorFechaAplicacion } from "../domain/fechaAplicacion";
 import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { parseMonto } from "@/lib/format/parseMonto";
@@ -26,11 +28,12 @@ interface Args {
   anticipos: AnticipoProveedorRow[];
   facturaEmbarqueId?: string | null;
   facturaExpediente?: string | null;
+  facturaFechaEmision?: string | null;
 }
 
 export function useAplicarAnticipoDesdeFactura({
   open, onOpenChange, facturaId, saldoFactura, monedaFactura, anticipos,
-  facturaEmbarqueId, facturaExpediente,
+  facturaEmbarqueId, facturaExpediente, facturaFechaEmision,
 }: Args) {
   const aplicar = useAplicarAnticipo();
   // Los anticipos del mismo expediente se ofrecen primero (cruce natural).
@@ -108,8 +111,14 @@ export function useAplicarAnticipoDesdeFactura({
     [anticipo, facturaEmbarqueId, facturaExpediente],
   );
 
+  const fechaMinima = fechaMinimaDesdeAnticipo(anticipo, facturaFechaEmision);
+  const errorFecha = errorFechaAplicacion(fecha, fechaMinima, hoyMx());
   const onSubmit = async () => {
-    if (!anticipo) return;
+    if (!anticipo || aplicar.isPending) return;
+    if (errorFecha) {
+      notifyError(undefined, { title: "Revisa la fecha", description: errorFecha, method: "ANTICIPO_APLICAR_FECHA" });
+      return;
+    }
     const check = validarMontoAplicacion({
       montoNum,
       disponible: anticipo.disponible,
@@ -137,7 +146,7 @@ export function useAplicarAnticipoDesdeFactura({
   return {
     anticipoId, setAnticipoId, monto, setMonto, fecha, setFecha,
     anticipo, anticiposOrdenados, montoNum, tope, tcDof: tcDof ?? null,
-    excedeTope, desajuste,
+    excedeTope, desajuste, fechaMinima, errorFecha,
     isPending: aplicar.isPending, handleOpenChange, onSubmit,
   };
 }
