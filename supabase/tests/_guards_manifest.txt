@@ -194,6 +194,7 @@ supabase/tests/audit103_108_pago_programado.sql
 supabase/tests/audit121_cerrar_sin_pago.sql
 supabase/tests/audit122_125_nc_proveedor_base_valuacion.sql
 supabase/tests/audit124_130_pnl_asignaciones.sql
+supabase/tests/audit62_130_cxp_por_capturar.sql
 
 # ARQ02: contrato monetario puro, sin cambios de datos de negocio.
 supabase/tests/money_contract_rounding.sql
