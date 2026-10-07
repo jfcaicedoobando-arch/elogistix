@@ -107,8 +107,12 @@ export default function ReportesCartera() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            {leyenda} Las facturas en EUR aún no se revalúan (no hay tipo de cambio EUR
-            histórico en cuentas por pagar) y se reportan sin valuación en pesos.
+            {leyenda} EUR se valúa al TC EUR/MXN del corte si está disponible.
+            Este reporte no utiliza TC histórico para CxP en EUR; cuando existe TC
+            al corte, ambas columnas MXN usan ese valor y la diferencia es cero.
+            Sin TC al corte se conserva
+            el histórico disponible; sin ninguno, los ceros en MXN no significan
+            que el saldo sea cero.
           </p>
         </CardContent>
       </Card>

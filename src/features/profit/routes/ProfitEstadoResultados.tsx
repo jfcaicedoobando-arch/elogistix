@@ -28,6 +28,17 @@ import { NotaCreditoSinDesgloseError } from "@/lib/financial/baseNotaCredito";
 // (estadoResultadosTc), que puede caer al TC de respaldo 17.25/18.5.
 import { TipoCambioFallbackBanner } from "@/components/shared/TipoCambioFallbackBanner";
 
+const COPY_POR_FUENTE = {
+  facturas: {
+    descripcion: "P&G mensual por modo de transporte basado en facturas de clientes y proveedores",
+    sinDatos: "Sin movimientos devengados en",
+  },
+  embarques: {
+    descripcion: "P&G mensual por modo de transporte basado en ETA del embarque",
+    sinDatos: "Sin embarques con ETA en",
+  },
+};
+
 function AvisoProveedor({ notas }: { notas?: string[] }) {
   if (!notas?.length) return null;
   return <p role="status" className="text-sm text-warning">{avisoNcProveedorSinBase(notas.length)}</p>;
@@ -35,6 +46,7 @@ function AvisoProveedor({ notas }: { notas?: string[] }) {
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
+  const copy = COPY_POR_FUENTE[c.fuente];
   const data = c.isError ? undefined : c.data;
   const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({
     successTitle: "Reporte PDF descargado",
@@ -68,7 +80,7 @@ export default function ProfitEstadoResultados() {
     <PageContainer>
       <PageHeader
         title="Estado de resultados"
-        description="P&G mensual por modo de transporte basado en ETA del embarque"
+        description={copy.descripcion}
         tabs={<ProfitSubNav />}
       />
 
@@ -101,7 +113,7 @@ export default function ProfitEstadoResultados() {
       <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
         <Info className="h-3 w-3" />
         {c.fuente === "facturas"
-          ? "Fuente devengada: facturas emitidas (CxC) por fecha de emisión, menos NC aplicadas, contra facturas de proveedor (CxP) y sus NC del mismo mes."
+          ? "Fuente devengada: facturas emitidas (CxC) por fecha de timbrado en México, o de emisión si no hay timbrado válido, menos NC aplicadas por fecha de emisión; contra facturas de proveedor (CxP) por fecha de emisión y sus NC por fecha del documento."
           : "Fuente operativa: ventas facturadas netas de NC aplicadas contra conceptos de costo, por ETA del embarque en el mes. Excluye Cancelados y Multimodal."}
         {" "}Montos en MXN sin IVA.
 
@@ -117,7 +129,7 @@ export default function ProfitEstadoResultados() {
           ) : sinDatos || !data ? (
             <EmptyStateInline
               icon={Calendar}
-              message={`Sin embarques con ETA en ${c.mesActual.label}`}
+              message={`${copy.sinDatos} ${c.mesActual.label}`}
               hint="Selecciona otro mes."
             />
           ) : (
