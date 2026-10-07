@@ -1,3 +1,5 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 /**
  * Tests focalizados de `useTimbrarFacturaDialog` — hook que orquesta 3 mutaciones
  * (actualizar datos, timbrar, guardar defaults + enviar CFDI email).
@@ -66,7 +68,7 @@ function setupTimbrar(overrides: Partial<{ mutate: ReturnType<typeof vi.fn>; isP
 
 const cliente = { rfc: "AAA010101AAA", codigo_postal: "64000", regimen_fiscal: "601", uso_cfdi_default: "G03" };
 
-const factura = {
+const factura = { organization_id: "org1",
   id: "f-1",
   cliente_id: "cli-1",
   uso_cfdi: "G01",
@@ -77,6 +79,8 @@ const factura = {
 describe("useTimbrarFacturaDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setAuthSnapshot({ userId: "u1", organizationId: "org1", effectiveRole: "admin", role: "admin", email: null, organizationName: null });
+    syncActiveOrganizationScope({ userId: "u1", organizationId: "org1" });
     mockActualizar.mockResolvedValue(undefined as never);
     mockGuardar.mockResolvedValue(undefined as never);
     mockEnviar.mockResolvedValue({ enviado_a: "a@b.com" } as never);
@@ -123,14 +127,14 @@ describe("useTimbrarFacturaDialog", () => {
       uso_cfdi: "G01",
       forma_pago: "01",
       metodo_pago: "PUE",
-    });
-    expect(mutate).toHaveBeenCalledWith("f-1", expect.objectContaining({ onSuccess: expect.any(Function) }));
+    }, undefined, expect.objectContaining({ organizationId: "org1", borrador: true }));
+    expect(mutate).toHaveBeenCalledWith(expect.objectContaining({ facturaId: "f-1", scope: expect.any(Object) }), expect.objectContaining({ onSuccess: expect.any(Function) }));
     await waitFor(() => expect(mockGuardar).toHaveBeenCalled());
     expect(mockGuardar).toHaveBeenCalledWith("cli-1", {
       uso_cfdi_default: "G01",
       forma_pago_default: "01",
       metodo_pago_default: "PUE",
-    });
+    }, expect.objectContaining({ organizationId: "org1" }));
     expect(mockEnviar).toHaveBeenCalledWith("f-1", "fiscal@example.invalid");
     expect(onClose).toHaveBeenCalled();
   });
@@ -220,6 +224,8 @@ describe("useTimbrarFacturaDialog", () => {
 describe("revalidación y preferencias de uso CFDI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setAuthSnapshot({ userId: "u1", organizationId: "org1", effectiveRole: "admin", role: "admin", email: null, organizationName: null });
+    syncActiveOrganizationScope({ userId: "u1", organizationId: "org1" });
     mockActualizar.mockResolvedValue(undefined as never);
     mockGuardar.mockResolvedValue(undefined as never);
   });
@@ -256,7 +262,7 @@ describe("revalidación y preferencias de uso CFDI", () => {
     const { result } = renderHook(() => useTimbrarFacturaDialog(factura, cliente, null, onClose), { wrapper: makeWrapper() });
     await act(async () => { await result.current.onConfirm(); });
     await waitFor(() => expect(mockGuardar).toHaveBeenCalled());
-    expect(mockGuardar).toHaveBeenCalledWith("cli-1", { forma_pago_default: "01", metodo_pago_default: "PUE" });
+    expect(mockGuardar).toHaveBeenCalledWith("cli-1", { forma_pago_default: "01", metodo_pago_default: "PUE" }, expect.objectContaining({ organizationId: "org1" }));
     expect(onClose).toHaveBeenCalled();
     expect(mockNotifyError).not.toHaveBeenCalled();
   });
@@ -272,7 +278,9 @@ describe("revalidación y preferencias de uso CFDI", () => {
 
 
 describe("preferencia explícita vs sugerencia del último XML", () => {
-  beforeEach(() => { vi.clearAllMocks(); setupTimbrar(); });
+  beforeEach(() => { vi.clearAllMocks();
+    setAuthSnapshot({ userId: "u1", organizationId: "org1", effectiveRole: "admin", role: "admin", email: null, organizationName: null });
+    syncActiveOrganizationScope({ userId: "u1", organizationId: "org1" }); setupTimbrar(); });
   it("sin preferencia permite sugerir el último XML válido sin escribir en el cliente", () => {
     const { result } = renderHook(() => useTimbrarFacturaDialog(
       { ...factura, uso_cfdi: null }, { ...cliente, uso_cfdi_default: null },
