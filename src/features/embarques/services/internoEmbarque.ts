@@ -8,6 +8,8 @@
  * vista `embarques_interno_v`, que valida membresía de organización y excluye
  * a los roles de portal (`cliente`, `agente_carga`).
  */
+import { captureAuthDataScope, AuthOperationChangedError } from "@/lib/auth/authOperationScope";
+import { registerSessionCache } from "@/lib/auth/sessionCacheRegistry";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmbarqueInterno {
@@ -27,12 +29,15 @@ const COLUMNAS_INTERNAS =
  * del detalle genere una sola consulta. Los errores no se guardan.
  */
 const VENTANA_MS = 15_000;
-const enVuelo = new Map<string, { at: number; p: Promise<EmbarqueInterno | null> }>();
+const enVuelo = new Map<string, { embarqueId: string; at: number; settled: boolean; p: Promise<EmbarqueInterno | null> }>();
+registerSessionCache(() => enVuelo.clear());
 
 /** Limpia la memoria corta (p. ej. tras cerrar/reabrir un embarque). */
 export function olvidarEmbarqueInterno(embarqueId?: string): void {
-  if (embarqueId) enVuelo.delete(embarqueId);
-  else enVuelo.clear();
+  if (!embarqueId) enVuelo.clear();
+  else for (const [key, entry] of enVuelo) {
+    if (entry.embarqueId === embarqueId) enVuelo.delete(key);
+  }
 }
 
 /**
@@ -43,11 +48,34 @@ export function obtenerEmbarqueInterno(
   embarqueId: string,
   opciones: { fresco?: boolean } = {},
 ): Promise<EmbarqueInterno | null> {
-  const previo = enVuelo.get(embarqueId);
-  if (!opciones.fresco && previo && Date.now() - previo.at < VENTANA_MS) return previo.p;
-  const p = consultar(embarqueId);
-  enVuelo.set(embarqueId, { at: Date.now(), p });
-  p.catch(() => enVuelo.delete(embarqueId));
+  const scope = captureAuthDataScope();
+  // Never reuse (or request) private data with an unresolved or portal scope.
+  if (!scope.userId || !scope.organizationId || !scope.role
+    || scope.role === "cliente" || scope.role === "agente_carga") return Promise.resolve(null);
+  const key = JSON.stringify([scope.userId, scope.organizationId, scope.role, scope.generation, embarqueId]);
+  const previo = enVuelo.get(key);
+  if (!opciones.fresco && previo && Date.now() - previo.at < VENTANA_MS) {
+    if (!previo.settled) return previo.p;
+    // A resolved promise also needs a delivery-time guard on subsequent reads.
+    return previo.p.then((data) => {
+      scope.assertCurrent();
+      if (enVuelo.get(key) !== previo) throw new AuthOperationChangedError();
+      return data;
+    });
+  }
+  const p = consultar(embarqueId).then((data) => {
+    scope.assertCurrent();
+    // Invalidation/fresco must also suppress an earlier in-flight completion.
+    const entry = enVuelo.get(key);
+    if (entry?.p !== p) throw new AuthOperationChangedError();
+    entry.settled = true;
+    return data;
+  }, (error: unknown) => {
+    scope.assertCurrent();
+    throw error;
+  });
+  enVuelo.set(key, { embarqueId, at: Date.now(), settled: false, p });
+  void p.catch(() => { if (enVuelo.get(key)?.p === p) enVuelo.delete(key); });
   return p;
 }
 

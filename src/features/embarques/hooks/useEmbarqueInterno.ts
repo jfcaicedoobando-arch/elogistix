@@ -1,3 +1,4 @@
+import { useEmbarquePrivateScope } from "./useEmbarquePrivateScope";
 /**
  * Hook: columnas internas de un embarque (delta de tarifa, snapshot de cierre,
  * motivo de reapertura y correo del creador).
@@ -16,10 +17,11 @@ import { queryKeys } from "@/lib/query";
 export type { EmbarqueInterno } from "@/features/embarques/services/internoEmbarque";
 
 export function useEmbarqueInterno(embarqueId: string | undefined) {
+  const scope = useEmbarquePrivateScope();
   return useQuery<EmbarqueInterno | null>({
-    queryKey: queryKeys.embarques.interno(embarqueId),
-    enabled: Boolean(embarqueId),
+    queryKey: queryKeys.embarques.interno(embarqueId, scope.key),
+    enabled: Boolean(embarqueId) && scope.staff,
     staleTime: 30_000,
-    queryFn: () => obtenerEmbarqueInterno(embarqueId as string, { fresco: true }),
+    queryFn: () => obtenerEmbarqueInterno(embarqueId as string),
   });
 }

@@ -106,8 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   // Snapshot global de la sesión para consumirla fuera del árbol React (errorReport).
+  setAuthSnapshot(buildAuthSnapshot(user, profile, loading ? null : effectiveRole));
   useEffect(() => {
-    setAuthSnapshot(buildAuthSnapshot(user, profile, effectiveRole));
     syncSentryUser(buildSentryUserContext(user, profile, effectiveRole));
   }, [user, profile, effectiveRole]);
 
