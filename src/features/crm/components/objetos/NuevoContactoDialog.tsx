@@ -17,6 +17,10 @@ import { filaValor, type ValorEntrada } from "@/features/crm/services/valoresCrm
 import { OportunidadEmpresaField } from "@/features/crm/components/nuevaOportunidad/OportunidadEmpresaField";
 import { CampoPropiedad } from "./CampoPropiedad";
 
+function contactoSucio(nombre: string, email: string, telefono: string, empresa: RefRow | null) {
+  return !!(nombre || email || telefono || empresa);
+}
+
 const FORM_ID = "nuevo-contacto-crm";
 const vacio = (v: ValorEntrada | undefined) => v == null || v === "" || (Array.isArray(v) && v.length === 0);
 
@@ -71,7 +75,7 @@ export function NuevoContactoDialog({ open, onOpenChange }: Props) {
       size="lg"
       formId={FORM_ID}
       onSubmit={onSubmit}
-      isDirty={!!(nombre || email || telefono || empresa) && !crear.isPending}
+      isDirty={contactoSucio(nombre, email, telefono, empresa) && !crear.isPending}
       busy={crear.isPending}
       footer={
         <>
@@ -99,7 +103,7 @@ export function NuevoContactoDialog({ open, onOpenChange }: Props) {
       {props.length > 0 && (
         <FormDialogSection cols={1} flat>
           <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setVerMas((v) => !v)} aria-expanded={verMas}>
-            <ChevronDown className={`h-4 w-4 transition-transform ${verMas ? "rotate-180" : ""}`} />
+            <ChevronDown className={`size-4 transition-transform ${verMas ? "rotate-180" : ""}`} />
             {verMas ? "Ocultar campos adicionales" : `Más campos (${props.length})`}
           </Button>
         </FormDialogSection>

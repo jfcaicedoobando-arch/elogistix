@@ -13,6 +13,7 @@ const MSG_OPORTUNIDAD_INEXISTENTE =
   "La oportunidad ya no existe o pertenece a otra organización.";
 
 export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
+  LC_TARIFA_NO_VIGENTE: "La tarifa seleccionada ya no está vigente. Actualiza las opciones del tarifario y elige otra tarifa.",
   LC_CRM_EMPRESA_NO_ENCONTRADA:
     "La empresa no existe o no pertenece a tu organización. Actualiza la lista y selecciona una empresa disponible.",
   LC_CRM_ETAPA_PROSPECTO_FALTANTE:

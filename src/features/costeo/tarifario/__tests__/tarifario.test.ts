@@ -39,3 +39,12 @@ describe("tarifario", () => {
     expect(FILTROS_VIGENCIA.every((f) => f.etiqueta.trim().length > 0)).toBe(true);
   });
 });
+
+it("conserva primera tarifa y otras duplicadas o sin tipo al agrupar", () => {
+  const rows = agruparTarifas([base({ id: "first" }), base({ id: "duplicate" }), base({ id: "unknown", tipo: null }), base({ id: "other-route", ruta: null })]);
+  expect(rows).toHaveLength(2);
+  expect(rows[0].tarifa20?.id).toBe("first");
+  expect(rows[0].otras.map((t) => t.id)).toEqual(["duplicate", "unknown"]);
+  expect(rows[1].origen).toBe("—");
+  expect(rows[1].destino).toBe("—");
+});

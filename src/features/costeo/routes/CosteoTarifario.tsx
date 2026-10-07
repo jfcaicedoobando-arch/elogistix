@@ -1,4 +1,5 @@
 /** Tarifario: tarifas vigentes, cargos FOB y cargos locales de revalidación. */
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -13,10 +14,7 @@ export default function CosteoTarifario() {
 
   return (
     <div className="space-y-4 p-4 md:p-6">
-      <div>
-        <h1 className="text-h2 font-semibold">Tarifario</h1>
-        <p className="text-body-sm text-muted-foreground">Tarifas vigentes disponibles al instante para las solicitudes de pricing.</p>
-      </div>
+      <PageHeader title="Tarifario" description="Tarifas vigentes disponibles al instante para las solicitudes de pricing." />
       <Tabs defaultValue="tarifas">
         <TabsList>
           <TabsTrigger value="tarifas">Tarifas (Puertos base)</TabsTrigger>

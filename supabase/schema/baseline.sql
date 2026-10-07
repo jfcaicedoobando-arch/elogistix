@@ -15104,6 +15104,38 @@ BEGIN
   RETURN ROUND(COALESCE(v_total, 0), 2);
 END;
 $$;
+CREATE FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v record; t record;
+BEGIN
+  SELECT * INTO v FROM public.crm_solicitudes_pricing WHERE id = p_solicitud_id AND deleted_at IS NULL FOR UPDATE;
+  IF v.id IS NULL OR v.organization_id IS DISTINCT FROM public.org_scope() THEN
+    RAISE EXCEPTION 'LC_PRICING_NO_ENCONTRADA' USING ERRCODE = 'P0001';
+  END IF;
+  IF v.solicitante_id IS DISTINCT FROM auth.uid() AND v.created_by IS DISTINCT FROM auth.uid()
+     AND NOT public._crm_es_pricing(v.organization_id) THEN
+    RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  IF v.estado = 'respondida' AND v.tarifa_tarifario_id = p_tarifa_id THEN
+    RETURN jsonb_build_object('id', v.id, 'ya_respondida', true);
+  END IF;
+  IF v.estado NOT IN ('borrador','enviada') THEN
+    RAISE EXCEPTION 'LC_PRICING_ESTADO_INVALIDO' USING ERRCODE = 'P0001';
+  END IF;
+  SELECT * INTO t FROM public.costeo_tarifas
+   WHERE id = p_tarifa_id AND organization_id = v.organization_id AND estado = 'vigente'
+     AND (vigente_hasta IS NULL OR vigente_hasta >= current_date);
+  IF t.id IS NULL THEN RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE = 'P0001'; END IF;
+  PERFORM set_config('lc.pricing_rpc', '1', true);
+  UPDATE public.crm_solicitudes_pricing
+     SET tarifa_tarifario_id = p_tarifa_id, estado = 'respondida',
+         enviada_at = coalesce(enviada_at, now()), respondida_at = now()
+   WHERE id = p_solicitud_id;
+  PERFORM set_config('lc.pricing_rpc', '', true);
+  RETURN jsonb_build_object('id', v.id, 'ya_respondida', false);
+END $$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -33586,6 +33618,36 @@ CREATE TABLE public.contactos_cliente (
     deleted_by uuid,
     updated_at timestamp with time zone DEFAULT now()
 );
+CREATE TABLE public.costeo_cargos_fob_agente (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    agente_id uuid NOT NULL,
+    concepto text DEFAULT 'Cargos FOB'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'USD'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_fob_agente_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_fob_agente_monto_check CHECK ((monto >= (0)::numeric))
+);
+CREATE TABLE public.costeo_cargos_locales_naviera (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    naviera_id uuid NOT NULL,
+    concepto text DEFAULT 'Revalidación'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'MXN'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_locales_naviera_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_locales_naviera_monto_check CHECK ((monto >= (0)::numeric))
+);
 CREATE TABLE public.costeo_demoras_venta_tarifa (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
@@ -34187,6 +34249,7 @@ CREATE TABLE public.crm_solicitudes_pricing (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
     unidad_medida text,
+    tarifa_tarifario_id uuid,
     CONSTRAINT crm_solicitudes_pricing_cantidad_check CHECK (((cantidad IS NULL) OR (cantidad > 0))),
     CONSTRAINT crm_solicitudes_pricing_complejidad_check CHECK ((complejidad = ANY (ARRAY['baja'::text, 'media'::text, 'alta'::text]))),
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
@@ -35299,6 +35362,10 @@ ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_organization_id_nombre_key UNIQUE (organization_id, nombre);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
     ADD CONSTRAINT costeo_demoras_venta_tarifa_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
@@ -35632,6 +35699,8 @@ CREATE UNIQUE INDEX comisiones_recalculo_pendiente_pago_etapa_key ON public.comi
 CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_costo USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
+CREATE INDEX costeo_cargos_fob_agente_org_idx ON public.costeo_cargos_fob_agente USING btree (organization_id, agente_id) WHERE (deleted_at IS NULL);
+CREATE INDEX costeo_cargos_locales_naviera_org_idx ON public.costeo_cargos_locales_naviera USING btree (organization_id, naviera_id) WHERE (deleted_at IS NULL);
 CREATE INDEX costeo_tarifas_solicitud_pricing_idx ON public.costeo_tarifas USING btree (solicitud_pricing_id) WHERE (solicitud_pricing_id IS NOT NULL);
 CREATE INDEX crm_empresas_org_estado_idx ON public.crm_empresas USING btree (organization_id, estado_crm);
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
@@ -36483,6 +36552,14 @@ ALTER TABLE ONLY public.contactos_cliente
     ADD CONSTRAINT contactos_cliente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_agente_id_fkey FOREIGN KEY (agente_id) REFERENCES public.costeo_agentes(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_naviera_id_fkey FOREIGN KEY (naviera_id) REFERENCES public.navieras(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
     ADD CONSTRAINT costeo_demoras_tarifa_org_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
@@ -36627,6 +36704,8 @@ ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_oportunidad_id_fkey FOREIGN KEY (oportunidad_id) REFERENCES public.crm_oportunidades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.crm_solicitudes_pricing
+    ADD CONSTRAINT crm_solicitudes_pricing_tarifa_tarifario_id_fkey FOREIGN KEY (tarifa_tarifario_id) REFERENCES public.costeo_tarifas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_tableros
     ADD CONSTRAINT crm_tableros_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_valores
@@ -36997,6 +37076,8 @@ CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_factu
 CREATE POLICY "Operaciones sube facturas entrantes" ON public.embarque_facturas_entrantes FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (subido_por = ( SELECT auth.uid() AS uid)) AND (estado = 'por_capturar'::text) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role)))));
 CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)) WITH CHECK (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id));
+CREATE POLICY "Org lee cargos FOB" ON public.costeo_cargos_fob_agente FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
+CREATE POLICY "Org lee cargos locales" ON public.costeo_cargos_locales_naviera FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
 CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede borrar documentos de cliente" ON public.cliente_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede insertar documentos de cliente" ON public.cliente_documentos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
@@ -37012,6 +37093,10 @@ CREATE POLICY "Org staff manage agente_users" ON public.agente_users TO authenti
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = agente_users.organization_id) AND (om.role = ANY (ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'gerente_operaciones'::public.app_role, 'coordinador_logistico'::public.app_role, 'ejecutivo_pricing'::public.app_role])))))));
 CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id))));
 CREATE POLICY "Org staff read client_users" ON public.client_users FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Pricing crea cargos FOB" ON public.costeo_cargos_fob_agente FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing crea cargos locales" ON public.costeo_cargos_locales_naviera FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos FOB" ON public.costeo_cargos_fob_agente FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos locales" ON public.costeo_cargos_locales_naviera FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_aplicaciones AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_proveedor AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.auditoria_comentarios AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -37332,6 +37417,8 @@ CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes USING (((EXISTS 
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK (((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
+ALTER TABLE public.costeo_cargos_fob_agente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.costeo_cargos_locales_naviera ENABLE ROW LEVEL SECURITY;
 CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_naviera_demoras_tarifa.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))));
@@ -38261,6 +38348,9 @@ GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uui
 GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uuid, p_tarifa jsonb, p_recargos jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO service_role;
@@ -39391,6 +39481,10 @@ GRANT ALL ON TABLE public.configuracion_global TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO authenticated;
 GRANT ALL ON TABLE public.contactos_cliente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_fob_agente TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_fob_agente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_locales_naviera TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_locales_naviera TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.costeo_demoras_venta_tarifa TO authenticated;
 GRANT ALL ON TABLE public.costeo_demoras_venta_tarifa TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.cotizacion_costos TO anon;

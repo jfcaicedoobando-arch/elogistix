@@ -5,7 +5,7 @@
 - **fix(anticipos · 131)**: registra el medio real de devolución, su fecha civil y referencia. El efectivo no exige cuenta ni genera movimientos bancarios; la devolución bancaria exige una cuenta activa de la misma organización y moneda.
 - **fix(reportes)**: libro de pagos, detalle y estado de cuenta del proveedor conservan la salida original y muestran la devolución según sus propios datos, sin clasificar historiales incompletos como efectivo.
 - **compatibilidad**: la RPC conserva llamadas de seis argumentos mediante el séptimo parámetro opcional `Bancario`; la UI envía el medio explícito y limpia la cuenta al devolver en efectivo.
-- Una sola migración nueva: `20261006234200_audit131_devolucion_efectivo.sql`, posterior a cronología 38 / `20261006233700`. Conserva las migraciones, manifiestos y changelog previos; no incluye 134, 139 ni otros splits contables.
+- Dos migraciones nuevas: el replay canónico `20261006234000_replay_tarifario_pricing.sql` de Drizzle0010 y `20261006234200_audit131_devolucion_efectivo.sql`, después de cronología38. El replay conserva el SQL histórico y sus permisos; no implica volver a aplicarlo donde ya existe. Las migraciones, manifiestos y changelog35–38 permanecen intactos; no incluye134,139 ni otros splits contables.
 - El paquete no aplica SQL remoto ni publica frontend. Requiere verificar primero la aplicación autorizada de 37 y 38 y la preparación de la nueva firma antes del frontend39.
 
 ## [13.824.38] - Unreleased

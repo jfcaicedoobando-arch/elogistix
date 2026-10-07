@@ -7422,6 +7422,7 @@
       "20261006233000_proforma_operativa_compatibilidad.sql",
       "20261006233500_cxp_cas_conflicts_non_retryable.sql",
       "20261006233700_audit135_anticipo_cronologia.sql",
+      "20261006234000_replay_tarifario_pricing.sql",
       "20261006234200_audit131_devolucion_efectivo.sql"
     ]
   }

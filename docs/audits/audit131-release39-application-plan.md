@@ -6,7 +6,7 @@ Estado: paquete de código y plan de aplicación. No aplicado a un backend remot
 
 - Base: main38 `731f7903e82782a81391489c19cf178ee6051b81`, PR178 ya fusionado. Que esté fusionado no acredita aplicación; la autorización específica de38 sigue pendiente al preparar este documento.
 - Fuente aislada131: `5ee14bb7fe421562ccd1d8dab29f549babbe9928`, dependiente de135. Su SQL coincide con la implementación original `9608719131c3a479f3a87bd0ebb58acf4365808e`, antes de cambiar el nombre forward.
-- Archivo nuevo único: `supabase/migrations/20261006234200_audit131_devolucion_efectivo.sql`.
+- Archivo funcional131: `supabase/migrations/20261006234200_audit131_devolucion_efectivo.sql`. La composición añade además el replay inédito `20261006234000_replay_tarifario_pricing.sql` de Drizzle0010, anterior a131 para conservar el orden de40–42. Su SHA-256 es `52a656f865c8f1eb6bb5eda548d383b1ad252cabe099f005dcb52c7332f5b00d`; origen Drizzle `2d6e1e42612e6b1e7b028e12c91fcdf3a5f0cfba1946d89a8a7562712d2c25c8`. El timestamp representa orden de replay, no fecha real de aplicación.
 - Hash original revisado: `245f15c0d14914d5b5ef402ec81461566487ebf10335df1898a4691610b2bfa1`.
 - Hash final39: `9e1d651b437aaa05a04a71dfb9b95eda35343bc32b3f9dd84f22520af292d2af`. Difiere del original sólo en tres expresiones de referencia dentro de `libro_pagos`, `pago_detalle` y `proveedor_estado_cuenta_movimientos`: las devoluciones nuevas usan su referencia explícita, incluso cuando es NULL; el fallback previo queda reservado a filas legacy sin medio registrado. Una prueba negativa reprodujo que el original mostraba la referencia del pago inicial en un reembolso nuevo en efectivo sin referencia. No se inventa ni se rellena esa referencia.
 - Tres columnas opcionales nuevas en `anticipos_proveedor`: `fecha_devolucion date`, `medio_devolucion text` y `referencia_devolucion text`, sin DEFAULT ni backfill. Las filas históricas conservan NULL y sus hechos previos.
@@ -17,21 +17,21 @@ No incorpora134,139,148,P&L,70,54/141 ni otras particiones. No cambia tipos de c
 
 ## Historia conservada
 
-39 lista 1.483 migraciones: exactamente38 más234200. Las entradas35,36,37,38 del manifiesto permanecen completas, y se añade39 sin ejecutar el actualizador que poda versiones. El guard existente no cambia. El changelog previo permanece íntegro detrás de la nueva entrada.
+39 lista 1.484 migraciones: exactamente38 más234000 y234200. Las entradas35,36,37,38 del manifiesto permanecen completas, y se añade39 sin ejecutar el actualizador que poda versiones. El guard existente no cambia. El changelog previo permanece íntegro detrás de la nueva entrada.
 
 Todo SQL anterior conserva sus bytes, incluido CAS233500 (`2c67b2aa897a26816dc2fca9cc8c93118b5012ddd274eac8b12f590d0afc415b`) y cronología233700 (`8703fd2ddb3764bd5dec415ada4be55cae32fcf0568068ac21846f809ae8916f`). Se conserva el archivo histórico35, el retiro explícito de2300 y la historia disponible33–38, sin restaurar entradas que no existen en main ni reescribir las existentes.
 
 ## Preflight obligatorio para una aplicación posterior
 
-1. Identificar el proyecto/backend exacto y el mecanismo autorizado de migraciones. Verificar37 y38 aplicadas y registradas con sus fuentes/hash exactos, además de los prerrequisitos de proformas2250/2330. Resolver38 por separado si aún está pendiente;39 no la aplica implícitamente.
+1. Revisar primero [la reconciliación del replay0010](../releases/tarifario-0010-replay.md). Si0010 ya está aplicada por Drizzle, no ejecutar otra vez sus CREATE TABLE ni asumir equivalencia sólo por existencia: comparar cuerpos, columnas, restricciones, índices, RLS, owners, ACL e historiales completos. Preparar y revisar por separado el reconocimiento registral autorizado si hay equivalencia exacta; ante drift detenerse. Después identificar el proyecto/backend exacto y el mecanismo autorizado de migraciones. Verificar37 y38 aplicadas y registradas con sus fuentes/hash exactos, además de los prerrequisitos de proformas2250/2330. Resolver38 por separado si aún está pendiente;39 no la aplica implícitamente.
 2. Leer los historiales Supabase y Drizzle, sus filas/fuentes/hashes y high-water marks. Exigir ausencia de234200, del antiguo nombre213100, de otra firma131 ya instalada o del mismo SQL registrado por otro escritor. Drift, duplicación o un timestamp posterior bloquean la operación. No usar repair, reset o include-all para forzar el orden.
 3. Capturar las tres columnas nuevas esperadas como ausentes, el CHECK ausente, y una sola RPC antigua de seis argumentos. Capturar sus defaults/retorno, las tres funciones consumidoras, owner, ACL canónicas, privilegios efectivos, SECURITY DEFINER, volatilidad y search_path; comparar con main38. Si el target ya tiene la firma nueva o las columnas, no repetir este SQL de transición.
 4. Verificar rol de sesión y propiedad/capacidades necesarias. El DROP/CREATE de la RPC debe conservar el propietario autorizado y los privilegios efectivos; no conceder permisos ni elevar roles para hacerlo pasar. El patrón esperado permite authenticated/service_role y niega PUBLIC/anon. Los consumidores y la función de aplicación135 deben permanecer con sus atributos/ACL previos.
 5. Capturar hashes del SQL final39, de los mirrors/baseline revisados y del estado previo del catálogo y ledgers. Preparar un envelope específico sólo después de ese preflight y revisarlo independientemente. Este plan no fija hashes ficticios de un target desconocido.
 
-## Operación atómica propuesta, no ejecutada
+## Operación atómica propuesta para131, no ejecutada
 
-Con autorización SQL específica y envelope ligado al preflight, una sola transacción debe:
+Sólo después de resolver234000/Drizzle0010 mediante su plan revisado, con autorización SQL específica y envelope ligado al preflight de131, una sola transacción debe:
 
 1. Usar límites revisados de lock/sentencia/inactividad y la serialización aprobada para ambos historiales. Repetir dentro de la transacción las precondiciones de target, rol, catálogo, orden e historia.
 2. Ejecutar234200 completo y exacto, sin fragmentarlo ni mezclar otras migraciones. Registrar únicamente esa migración en el mecanismo aprobado, con su fuente/hash, dentro de la misma transacción. No duplicar filas entre Supabase y Drizzle.
