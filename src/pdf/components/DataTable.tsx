@@ -1,4 +1,5 @@
 import { View, Text } from "@react-pdf/renderer";
+import type { ReactNode } from "react";
 import type { Style } from "@react-pdf/types";
 import { styles } from "../theme/styles";
 import { COLORS } from "@/pdf/theme/tokens";
@@ -28,6 +29,8 @@ interface Props<T> {
    * color de alerta en filas vencidas). Opcional; sin efecto si se omite.
    */
   cellStyleForRow?: (row: T, colKey: string) => Style | undefined;
+  /** Keep a following summary with the final data row, never on its own page. */
+  afterLastRow?: ReactNode;
 }
 
 /**
@@ -44,7 +47,7 @@ interface Props<T> {
  *   serán empujadas ni comprimidas por una celda `cellDesc` con texto largo.
  * - `cellDesc` usa `minWidth: 0` para garantizar wrap real en flex.
  */
-export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cellStyleForRow }: Props<T>) {
+export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cellStyleForRow, afterLastRow }: Props<T>) {
   return (
     <View style={styles.table}>
       {/*
@@ -60,7 +63,7 @@ export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cel
           </Text>
         ))}
       </View>
-      {rows.length === 0 ? <Text style={styles.emptyState}>Sin registros para mostrar.</Text> : null}
+      {rows.length === 0 ? <View wrap={false}><Text style={styles.emptyState}>Sin registros para mostrar.</Text>{afterLastRow}</View> : null}
       {rows.map((row, i) => {
         const subrow = renderSubrow?.(row);
         const rowStyle = i % 2 === 1 ? styles.tableRowZebra : styles.tableRow;
@@ -83,6 +86,7 @@ export function DataTable<T>({ columns, rows, headerTextStyle, renderSubrow, cel
                 </Text>
               </View>
             ) : null}
+            {i === rows.length - 1 ? afterLastRow : null}
           </View>
         );
       })}

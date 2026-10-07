@@ -5,6 +5,8 @@ import { BrandIdentity } from "./BrandIdentity";
 import { statusTextStyle } from "./statusTextStyle";
 
 export interface EmisorInfo {
+  /** Commercial identity read for the document organization; never a fiscal name. */
+  organizacionNombre?: string;
   razonSocial?: string;
   subtitulo?: string;
   rfc?: string;

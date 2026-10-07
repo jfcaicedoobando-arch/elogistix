@@ -61,7 +61,7 @@ describe("diseño comercial: renderer real y datos sintéticos", () => {
     const pdf = await inspectPdf("diseno-proforma-vacia", <ProformaDocument proforma={{ ...proforma, subtotal_usd: 0, total_usd: 0, subtotal_mxn: 0, iva_mxn: 0, total_mxn: 0 }} embarque={embarque} conceptos={[]} />);
     assertContent(pdf.text, ["Documento interno", "Sin conceptos para mostrar.", "Proforma"]);
     expect(pdf.text).not.toContain("RFC:");
-    expect(pdf.text).not.toContain("TOTAL MXN");
+    expect(pdf.text).not.toContain("Subtotal");
   });
   it("notas largas de cotización fluyen sin perder el final", async () => {
     const notes = Array.from({ length: 30 }, (_, i) => `Nota ${i + 1}: ${"Condición comercial de ejemplo sin información fiscal. ".repeat(8)}`).join("\n\n");

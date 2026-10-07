@@ -10,6 +10,8 @@ export const facturacion = {
   ambienteEmision: (organizationId?: string | null) => ['facturapi_credenciales', organizationId, 'ambiente'] as const,
   clientesFiscalOpts: (organizationId?: string | null) => ['clientes_fiscal_opts', organizationId] as const,
   emisorEmpresa: ['emisor-empresa'] as const,
+  emisorEmpresaPdf: (documentOrganizationId: string | undefined, activeOrganizationId: string | null) =>
+    ['emisor-empresa', 'pdf', documentOrganizationId, activeOrganizationId] as const,
   /** Prefijo de todas las bandejas (invalidación por dominio). */
   bandejaPrefix: () => ['facturacion', 'bandeja'] as const,
   bandejaPorTimbrar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-timbrar', organizationId] as const,

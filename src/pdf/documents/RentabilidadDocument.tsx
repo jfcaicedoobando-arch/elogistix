@@ -78,7 +78,7 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
           <DataTable columns={cols} rows={rows} headerTextStyle={reporteHeaderTextStyle} />
         )}
 
-        <Footer empresaNombre={empresaNombre} />
+        <Footer emisor={emisor} empresaNombre={empresaNombre} />
       </Page>
     </Document>
   );

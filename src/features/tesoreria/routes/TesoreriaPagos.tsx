@@ -36,7 +36,7 @@ export default function TesoreriaPagos() {
   const { rango, setRango, filtros, actualizarFiltros } = useFiltrosLibroPagosUrl();
   const [pagoAbierto, setPagoAbierto] = useState<RefPago | null>(null);
 
-  const { data: libro, isLoading, isError, refetch } = useLibroPagos(rango.desde, rango.hasta);
+  const { data: libro, organizationId, isLoading, isError, refetch } = useLibroPagos(rango.desde, rango.hasta);
   const pagos = useMemo(() => libro?.pagos ?? [], [libro]);
 
   const cuentas = useMemo(
@@ -54,7 +54,7 @@ export default function TesoreriaPagos() {
       <PageHeader
         title="Pagos"
         description="Cobros, pagos a proveedores, anticipos y sus devoluciones en un solo lugar"
-        actions={<LibroPagosExportButtons pagos={visibles} rango={rango} totales={totales} />}
+        actions={<LibroPagosExportButtons pagos={visibles} rango={rango} totales={totales} organizationId={organizationId} />}
       />
 
       <Tabs

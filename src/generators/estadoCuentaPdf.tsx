@@ -12,8 +12,9 @@
 import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
 import type { EstadoCuentaFactura } from "@/features/facturacion/services/exports";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
-import { withOrgPrefix, slugifyOrg } from "@/lib/filenames";
+import { cargarEmisorDocumento } from "@/pdf/emisor";
+import { slugifyOrg } from "@/lib/filenames";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { todayLocalISO } from "@/lib/date/today";
 import { sumarMontos } from "@/lib/financial/financialUtils";
@@ -44,13 +45,14 @@ function bucketFor(diasVencido: number): string {
 }
 
 export async function generarEstadoCuentaPdf(
-  cliente: EstadoCuentaCliente & { id: string },
+  cliente: EstadoCuentaCliente & { id: string; organization_id: string },
   snapshot?: readonly EstadoCuentaFactura[],
   alcance?: EstadoCuentaAlcance,
 ): Promise<void> {
+  const scope = captureAuthOperationScope();
   const [facturas, emisor, { EstadoCuentaDocument }] = await Promise.all([
     snapshot ?? fetchEstadoCuentaFacturas(cliente.id),
-    cargarEmisorEmpresa(),
+    cargarEmisorDocumento(cliente.organization_id),
     // P12: el Document se carga dinámicamente para no arrastrar @react-pdf al bundle inicial.
     import("@/pdf/documents/EstadoCuentaDocument"),
   ]);
@@ -71,7 +73,8 @@ export async function generarEstadoCuentaPdf(
     return { moneda: m, total: sumarMontos(fs.map((r) => r.saldo)), buckets };
   });
 
-  const nombre = await withOrgPrefix(`estado-de-cuenta-${slugifyOrg(cliente.nombre)}`);
+  const nombre = `${slugifyOrg(emisor.organizacionNombre || emisor.razonSocial)}_estado-de-cuenta-${slugifyOrg(cliente.nombre)}`;
+  scope.assertCurrent();
   await descargarPdf(
     <EstadoCuentaDocument
       cliente={cliente}

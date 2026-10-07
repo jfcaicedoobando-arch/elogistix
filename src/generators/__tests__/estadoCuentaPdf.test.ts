@@ -4,7 +4,7 @@ vi.mock("@/features/facturacion/services", () => ({
   fetchEstadoCuentaFacturas: vi.fn(),
 }));
 vi.mock("@/pdf/emisor", () => ({
-  cargarEmisorEmpresa: vi.fn(),
+  cargarEmisorDocumento: vi.fn(),
 }));
 vi.mock("@/lib/filenames", () => ({
   slugifyOrg: (s: string) => s.replace(/\s+/g, "_"),
@@ -19,16 +19,18 @@ vi.mock("@/pdf/documents/EstadoCuentaDocument", () => ({
 
 import { generarEstadoCuentaPdf } from "../estadoCuentaPdf";
 import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { cargarEmisorDocumento } from "@/pdf/emisor";
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import type { EstadoCuentaRow, EstadoCuentaMonedaTotal } from "@/pdf/documents/EstadoCuentaDocument";
 import type { EstadoCuentaAlcance } from "@/pdf/components/EstadoCuentaAlcance";
 
 const mockFetch = fetchEstadoCuentaFacturas as ReturnType<typeof vi.fn>;
-const mockEmisor = cargarEmisorEmpresa as ReturnType<typeof vi.fn>;
+const mockEmisor = cargarEmisorDocumento as ReturnType<typeof vi.fn>;
 const mockDescargar = descargarPdf as ReturnType<typeof vi.fn>;
 
-const CLIENTE = { id: "c1", nombre: "Acme SA", rfc: "ACM123456ABC" };
+const CLIENTE = { id: "c1", organization_id: "org-a", nombre: "Acme SA", rfc: "ACM123456ABC" };
 
 interface DocumentoProps {
   cliente: { nombre: string };
@@ -46,7 +48,9 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-10-04T18:00:00Z"));
   vi.clearAllMocks();
-  mockEmisor.mockResolvedValue({ razonSocial: "Empresa Test" });
+  setAuthSnapshot({ userId: "u1", email: null, organizationId: null, organizationName: null, role: "super_admin", effectiveRole: "super_admin" });
+  syncActiveOrganizationScope({ userId: "u1", organizationId: "org-a" });
+  mockEmisor.mockResolvedValue({ razonSocial: "Empresa Test", organizacionNombre: "Org" });
   mockDescargar.mockResolvedValue(undefined);
 });
 
@@ -70,6 +74,7 @@ describe("generarEstadoCuentaPdf", () => {
     await generarEstadoCuentaPdf(CLIENTE);
 
     expect(mockDescargar).toHaveBeenCalledOnce();
+    expect(mockEmisor).toHaveBeenCalledWith("org-a");
     const [, filename] = mockDescargar.mock.calls[0] as [unknown, string];
     expect(filename).toBe("Org_estado-de-cuenta-Acme_SA");
 
@@ -156,5 +161,12 @@ describe("generarEstadoCuentaPdf", () => {
     mockFetch.mockResolvedValue([]);
     mockDescargar.mockRejectedValue(new Error("PDF error"));
     await expect(generarEstadoCuentaPdf(CLIENTE)).rejects.toThrow("PDF error");
+  });
+
+  it("no descarga si cambia el tenant antes de terminar la carga", async () => {
+    const pending = generarEstadoCuentaPdf(CLIENTE, []);
+    syncActiveOrganizationScope({ userId: "u1", organizationId: "org-b" });
+    await expect(pending).rejects.toThrow("cambió el usuario o la organización");
+    expect(mockDescargar).not.toHaveBeenCalled();
   });
 });

@@ -7,7 +7,9 @@ export const reporteHeaderTextStyle = {
 };
 
 /** El loader legado devuelve "Empresa" si faltan los datos de configuración. */
-export function nombreEmisorReporte(emisor?: { razonSocial?: string }): string | undefined {
+export function nombreEmisorReporte(emisor?: { razonSocial?: string; organizacionNombre?: string }): string | undefined {
+  const comercial = emisor?.organizacionNombre?.trim();
+  if (comercial) return comercial;
   const nombre = emisor?.razonSocial?.trim();
   return nombre && nombre !== "Empresa" ? nombre : undefined;
 }

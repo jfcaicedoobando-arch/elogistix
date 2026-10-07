@@ -17,7 +17,9 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteEERRDocument se carga dinámicamente en el handler.
 import { PageContainer } from "@/components/shared/PageContainer";
-import { withOrgPrefix } from "@/lib/filenames";
+import { slugifyOrg } from "@/lib/filenames";
+import { cargarEmisorReporte } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
@@ -65,10 +67,15 @@ export default function ProfitEstadoResultados() {
   const handleExportPdf = () => {
     if (!data) return;
     void runPdfExport(async () => {
-      const { ReporteEERRDocument } = await import("@/pdf/documents/ReporteEERRDocument");
+      const scope = captureAuthOperationScope();
+      const [emisor, { ReporteEERRDocument }] = await Promise.all([
+        cargarEmisorReporte(c.organizationId),
+        import("@/pdf/documents/ReporteEERRDocument"),
+      ]);
+      scope.assertCurrent();
       await descargarPdf(
-        <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
-        await withOrgPrefix(`Reporte_EERR_${c.mesActual.key}.pdf`),
+        <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} emisor={emisor} />,
+        `${emisor ? slugifyOrg(emisor.organizacionNombre || emisor.razonSocial) + "_" : ""}Reporte_EERR_${c.mesActual.key}.pdf`,
       );
     });
   };

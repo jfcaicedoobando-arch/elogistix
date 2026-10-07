@@ -26,7 +26,7 @@ function Bloque({ b }: { b: TotalesMoneda }) {
   return (
     <View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, paddingHorizontal: 10 }}>
-        <Text style={styles.totalLabel}>Subtotal {b.moneda}</Text>
+        <Text style={styles.totalLabel}>Subtotal</Text>
         <Text style={styles.totalAmount}>
           {formatCurrency(b.subtotal, b.moneda)}
         </Text>
@@ -34,7 +34,7 @@ function Bloque({ b }: { b: TotalesMoneda }) {
       {showIva ? (
         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, paddingHorizontal: 10, borderTopWidth: 0.5, borderTopColor: COLORS.border }}>
           <Text style={styles.totalLabel}>
-            IVA{b.tasaIvaPct != null ? ` (${b.tasaIvaPct}%)` : ""} {b.moneda}
+            IVA{b.tasaIvaPct != null ? ` (${b.tasaIvaPct}%)` : ""}
           </Text>
           <Text style={styles.totalAmount}>
             {formatCurrency(b.iva, b.moneda)}
@@ -43,7 +43,7 @@ function Bloque({ b }: { b: TotalesMoneda }) {
       ) : null}
       <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, paddingHorizontal: 10, backgroundColor: COLORS.primary }}>
         <Text style={{ fontSize: 10, fontFamily: FONTS.bold, color: COLORS.primaryFg, letterSpacing: 0.5 }}>
-          TOTAL {b.moneda}
+          Total
         </Text>
         <Text style={{ fontSize: 12, fontFamily: FONTS.bold, color: COLORS.primaryFg }}>
           {formatCurrency(b.total, b.moneda)}

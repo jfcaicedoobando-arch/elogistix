@@ -57,9 +57,9 @@ const COL_CORTA = { width: 62, flexGrow: 0, flexShrink: 0 } as const;
 const colsMov: PdfColumn<FilaMovimientoPdf>[] = [
   { key: "fecha", title: "Fecha", cellStyle: COL_CORTA, render: (r) => formatDate(r.fecha) },
   { key: "tipo", title: "Movimiento", cellStyle: COL_CORTA, render: (r) => r.tipo },
-  { key: "folio", title: "Folio", cellStyle: COL_CORTA, render: (r) => r.folio },
-  { key: "exp", title: "Expediente", cellStyle: COL_CORTA, render: (r) => r.expediente || "—" },
-  { key: "ref", title: "Referencia", cellStyle: styles.cellDesc, render: (r) => r.referencia || "—" },
+  { key: "folio", title: "Folio", cellStyle: { ...COL_CORTA, width: 82 }, render: (r) => r.folio, hyphenate: false },
+  { key: "exp", title: "Expediente", cellStyle: { ...COL_CORTA, width: 70 }, render: (r) => r.expediente || "—", hyphenate: false },
+  { key: "ref", title: "Referencia", cellStyle: { ...COL_CORTA, width: 142 }, render: (r) => r.referencia || "—", hyphenate: false },
   { key: "mon", title: "Mon.", cellStyle: styles.cellQty, render: (r) => r.moneda },
   { key: "cargo", title: "Cargo", cellStyle: styles.cellNumWide, render: (r) => money(r.cargo, r.moneda) },
   { key: "abono", title: "Abono", cellStyle: styles.cellNumWide, render: (r) => money(r.abono, r.moneda) },
@@ -86,7 +86,7 @@ export function EstadoCuentaProveedorDocument({
   return (
     <Document
       title={`Estado de cuenta ${proveedorNombre}`}
-      author={emisor?.razonSocial ?? "Libre Carga"}
+      author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}
     >
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <ReportHeader title="Estado de cuenta de proveedor" emisor={emisor}>
@@ -140,7 +140,7 @@ export function EstadoCuentaProveedorDocument({
           <DataTable columns={colsMov} rows={movimientos} />
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );
