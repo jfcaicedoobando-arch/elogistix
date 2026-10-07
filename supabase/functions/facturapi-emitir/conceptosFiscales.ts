@@ -16,6 +16,7 @@ import type { FacturaContext } from "./helpers.ts";
  * PostgREST responde 400 y el timbrado muere con `conceptos_query_failed`.
  */
 export interface ConceptoRow {
+  embarque_id?: string | null;
   descripcion: string; cantidad: number | string; precio_unitario: number | string;
   clave_sat?: string | null; clave_unidad?: string | null; tipo_iva?: string | null;
   tasa_iva_aplicada?: number | string | null; tasa_ret_isr?: number | string | null; tasa_ret_iva?: number | string | null;
@@ -36,6 +37,7 @@ export function resolverConceptosFiscales(conceptos: ConceptoRow[]): FacturaCont
     });
     if (clasif.estado !== "ok") bloqueos.push(mensajeCoherenciaIva(c.descripcion, clasif));
     return {
+      embarque_id: c.embarque_id,
       descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
       clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
       tipo_iva: clasif.tipo,

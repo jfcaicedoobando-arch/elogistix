@@ -19,6 +19,10 @@ import { validarFormaMetodoPago } from "../_shared/formaMetodoPago.ts";
 
 
 export interface ConceptoInterno {
+  /** Origen del renglón; nunca se transmite como campo al PAC. */
+  embarque_id?: string | null;
+  /** undefined conserva el legado de cabecera; null indica una línea sin referencia. */
+  referencias?: ReferenciasEmbarque | null;
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
@@ -188,6 +192,11 @@ function buildTaxesLinea(c: ConceptoInterno, tipo: TipoIvaLinea, noObjeto: boole
   return taxes;
 }
 
+/** La ausencia explícita de vínculo no hereda el embarque de otra línea. */
+function referenciasDelConcepto(c: ConceptoInterno, ctx: FacturaContext): ReferenciasEmbarque | null | undefined {
+  return c.referencias === undefined ? ctx.referencias : c.referencias;
+}
+
 export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
 
   const payload: FacturapiPayload = {
@@ -212,7 +221,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
         quantity: c.cantidad,
         product: {
           // v13.208.0 — prefijo con Expediente + BLs (queda en el XML SAT).
-          description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
+          description: formatDescripcionConReferencias(c.descripcion, referenciasDelConcepto(c, ctx)),
           product_key: c.clave_sat ?? "",
           price: c.precio_unitario,
           unit_key: c.clave_unidad ?? "E48",
@@ -245,7 +254,9 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
   }
   // v13.208.0 — bloque "Referencias del embarque" al pie del PDF de FacturAPI.
-  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  const pdfSection = [...new Set(ctx.conceptos.map((c) =>
+    buildPdfCustomSection(referenciasDelConcepto(c, ctx))
+  ).filter(Boolean))].join("");
   if (pdfSection) payload.pdf_custom_section = pdfSection;
   return payload;
 }
