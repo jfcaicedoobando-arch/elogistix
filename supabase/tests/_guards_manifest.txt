@@ -205,3 +205,7 @@ supabase/tests/proforma_operativa_consistencia.sql
 # AUD54: saldo real y cierre monetario, sólo fixtures con ROLLBACK.
 supabase/tests/rls/test_rls_audit54_pue_tolerancia_cierre.sql
 supabase/tests/rls/test_rls_audit54_saldo_visible.sql
+
+# AUD141: tenant-scoped complementary monetary counters; rollback fixtures only.
+supabase/tests/audit141_cobranza_conteo.sql
+supabase/tests/audit141_contadores_complementarios.sql

@@ -14,6 +14,7 @@ vi.mock("@/lib/query", () => ({
       all: ["facturas"],
       pagos: (id: string) => ["facturas", "pagos", id],
     },
+    facturacion: { bandejaPrefix: () => ["facturacion", "bandeja"] },
     dashboardEjecutivo: { all: ["dashboard-ejecutivo"] },
     direccion: { all: ["direccion"] },
     presupuesto: { all: ["presupuesto"] },
@@ -34,8 +35,7 @@ const mockListar = vi.mocked(listarPagosFactura);
 const mockRegistrar = vi.mocked(registrarPagoFactura);
 const mockEliminar = vi.mocked(eliminarPagoFactura);
 
-function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+function makeWrapper(qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
   }
@@ -94,5 +94,23 @@ describe("useEliminarPagoFactura", () => {
       await result.current.mutateAsync({ id: "p1", facturaId: "fac-1" });
     });
     expect(mockEliminar).toHaveBeenCalledWith("p1");
+  });
+});
+
+
+describe("Audit141: overdue count follows payment mutations", () => {
+  it.each(["registrar", "eliminar"] as const)("%s invalidates the cached organization count", async (operation) => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const key = ["facturacion", "bandeja", "conteos", "org-A"];
+    qc.setQueryData(key, { vencidas: 5 });
+    mockRegistrar.mockResolvedValue({ id: "p1" } as never);
+    mockEliminar.mockResolvedValue(undefined as never);
+    const { result } = renderHook(() => ({ registrar: useRegistrarPagoFactura(), eliminar: useEliminarPagoFactura() }), { wrapper: makeWrapper(qc) });
+    await act(async () => {
+      if (operation === "registrar") await result.current.registrar.mutateAsync({ factura_id: "fac-1", monto: 200 } as never);
+      else await result.current.eliminar.mutateAsync({ id: "p1", facturaId: "fac-1" });
+    });
+    expect(qc.getQueryState(key)?.isInvalidated).toBe(true);
+    qc.clear();
   });
 });

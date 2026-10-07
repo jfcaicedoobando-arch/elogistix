@@ -11,6 +11,7 @@ export function lecturasAfectadasPorRep(facturaId?: string) {
       : [queryKeys.facturas.pagosAll]),
     queryKeys.facturas.all,
     queryKeys.facturacion.repPendientes,
+    queryKeys.facturacion.bandejaPrefix(),
     queryKeys.bandejas.all,
     queryKeys.dashboardEjecutivo.all,
     queryKeys.presupuesto.all,

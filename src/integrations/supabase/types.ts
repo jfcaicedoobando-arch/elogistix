@@ -10476,6 +10476,14 @@ export type Database = {
           total_embarques: number
         }[]
       }
+      cobranza_conteo_por_cobrar: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
+      cobranza_conteo_vencidas: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
       cobranza_agregados: {
         Args: { p_cliente_id?: string; p_moneda?: string }
         Returns: Json

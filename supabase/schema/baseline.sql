@@ -11836,6 +11836,48 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+CREATE FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT COUNT(*)
+  FROM public.facturas f
+  LEFT JOIN LATERAL (
+    SELECT SUM(pf.monto_aplicado_factura) AS pagado
+    FROM public.pagos_factura pf
+    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
+  ) pg ON true
+  WHERE f.organization_id = public.org_scope()
+    AND f.organization_id = p_organization_id
+    AND f.deleted_at IS NULL
+    AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      OR (f.estado='Pagada' AND COALESCE(pg.pagado,0)>0))
+    AND (f.fecha_vencimiento IS NULL OR f.fecha_vencimiento >= public.fecha_negocio_mx())
+    AND ROUND(f.total - COALESCE(pg.pagado, 0)
+      - COALESCE(public._nc_aplicadas_moneda_factura(f.id), 0),2) > 0;
+$$;
+CREATE FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT COUNT(*)
+  FROM public.facturas f
+  LEFT JOIN LATERAL (
+    SELECT SUM(pf.monto_aplicado_factura) AS pagado
+    FROM public.pagos_factura pf
+    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
+  ) pg ON true
+  WHERE f.organization_id = public.org_scope()
+    AND f.organization_id = p_organization_id
+    AND f.deleted_at IS NULL
+    AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      OR (f.estado='Pagada' AND COALESCE(pg.pagado,0)>0))
+    AND f.fecha_vencimiento < public.fecha_negocio_mx()
+    AND ROUND(f.total - COALESCE(pg.pagado, 0)
+      - COALESCE(public._nc_aplicadas_moneda_factura(f.id), 0),2) > 0;
+$$;
 CREATE FUNCTION public.cobranza_listado(p_cliente_id uuid DEFAULT NULL::uuid, p_moneda text DEFAULT NULL::text, p_search text DEFAULT NULL::text, p_estatus text DEFAULT NULL::text, p_limit integer DEFAULT 2000) RETURNS TABLE(id uuid, numero text, cliente_id uuid, cliente_nombre text, expediente text, moneda text, total numeric, pagado numeric, notas_credito_aplicadas numeric, saldo numeric, fecha_emision date, fecha_vencimiento date, dias_vencido integer, estatus_cobranza text, estado_factura text, tipo_cambio numeric)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -38136,6 +38178,12 @@ GRANT ALL ON FUNCTION public.clientes_sync_cp() TO service_role;
 REVOKE ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO authenticated;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO service_role;
+REVOKE ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) TO service_role;
