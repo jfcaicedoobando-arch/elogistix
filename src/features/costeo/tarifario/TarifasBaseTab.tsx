@@ -4,14 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import { hoyMx } from "@/lib/date/mx";
-import { agruparTarifas, listarTarifasTarifario, type FilaTarifario, type TarifaTarifario } from "./tarifarioService";
+import { agruparTarifas, FILTROS_VIGENCIA, listarTarifasTarifario, type FilaTarifario, type FiltroVigencia, type TarifaTarifario } from "./tarifarioService";
 
 const usd = (t: TarifaTarifario | null) => (t ? formatCurrency(t.flete_base, t.moneda || "USD") : "—");
 const fecha = (d: string | null) => (d ? formatDate(d) : "—");
@@ -34,10 +34,11 @@ function aCsv(f: FilaTarifario) {
 }
 
 export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
-  const [vencidas, setVencidas] = useState(false);
+  const [filtro, setFiltro] = useState<FiltroVigencia>("vigentes");
   const [texto, setTexto] = useState("");
   const [nueva, setNueva] = useState(false);
-  const q = useQuery({ queryKey: ["tarifario", "tarifas", vencidas], queryFn: () => listarTarifasTarifario(vencidas, hoyMx()) });
+  const q = useQuery({ queryKey: ["tarifario", "tarifas", filtro], queryFn: () => listarTarifasTarifario(filtro, hoyMx()) });
+  const etiquetaFiltro = FILTROS_VIGENCIA.find((f) => f.valor === filtro)?.etiqueta ?? "";
   const filas = useMemo(() => {
     const t = texto.trim().toLowerCase();
     const all = agruparTarifas(q.data ?? []);
@@ -48,7 +49,15 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         <Input className="max-w-xs" placeholder="Buscar origen, destino, agente o naviera" value={texto} onChange={(e) => setTexto(e.target.value)} />
-        <label className="flex items-center gap-2 text-body-sm"><Switch checked={vencidas} onCheckedChange={setVencidas} /> Ver vencidas</label>
+        <Select value={filtro} onValueChange={(v) => setFiltro(v as FiltroVigencia)}>
+          <SelectTrigger className="w-auto gap-1.5" aria-label="Filtrar por vigencia">
+            <span className="text-body-sm text-muted-foreground">Vigencia:</span>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FILTROS_VIGENCIA.map((f) => <SelectItem key={f.valor} value={f.valor}>{f.etiqueta}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <div className="ml-auto flex gap-2">
           <Button variant="outline" onClick={() => exportToCsv(`tarifario-${hoyMx()}.csv`, HEADERS, filas.map(aCsv))}>
             <Download className="mr-1 size-4" /> Descargar Excel
@@ -73,7 +82,9 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
               </TableRow>
             ))}
             {!q.isLoading && filas.length === 0 && (
-              <TableRow><TableCell colSpan={HEADERS.length} className="text-center text-muted-foreground">Sin tarifas vigentes.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={HEADERS.length} className="text-center text-muted-foreground">
+                {filtro === "todas" ? "Sin tarifas capturadas." : `Sin tarifas ${etiquetaFiltro.toLowerCase()}.`}
+              </TableCell></TableRow>
             )}
           </TableBody>
         </Table>
