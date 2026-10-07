@@ -72,35 +72,53 @@ export async function fetchContacto(id: string): Promise<ContactoRow | null> {
   return data;
 }
 
+type FilaValor = ReturnType<typeof filaValor> & { propiedad_id: string };
+
+/** Convierte antes de insertar: un número inválido no deja un registro a medias. */
+function prepararValores(valores: ValorInicial[]): FilaValor[] {
+  return valores.map((v) => ({ propiedad_id: v.propiedadId, ...filaValor(v.tipo, v.valor) }))
+    .filter((f) => f.valor_texto !== null || f.valor_numero !== null || f.valor_fecha !== null || f.opcion_ids !== null);
+}
+
+async function guardarValoresIniciales(filas: FilaValor[], registroId: string, objeto: string): Promise<void> {
+  if (!filas.length) return;
+  const { error } = await supabase.from("crm_valores")
+    .upsert(filas.map((f) => ({ ...f, registro_id: registroId })), { onConflict: "propiedad_id,registro_id" });
+  if (error) throw new Error(`${objeto} se creó, pero no se guardaron sus propiedades: ${error.message}`);
+}
+
 export async function crearEmpresa(nombre: string, valores: ValorInicial[] = []): Promise<RefRow> {
   const limpio = nombre.trim();
   if (!limpio) throw new Error("El nombre de la empresa es obligatorio");
-  // Convierte antes de insertar: un número inválido no deja una empresa a medias.
-  const filas = valores.map((v) => ({ propiedad_id: v.propiedadId, ...filaValor(v.tipo, v.valor) }));
+  const filas = prepararValores(valores);
   const { data, error } = await supabase.from("crm_empresas").insert({ nombre: limpio })
     .select("id, nombre").single();
   if (error) throw error;
-  const conDato = filas.filter((f) => f.valor_texto !== null || f.valor_numero !== null || f.valor_fecha !== null || f.opcion_ids !== null);
-  if (conDato.length) {
-    const { error: e2 } = await supabase.from("crm_valores")
-      .upsert(conDato.map((f) => ({ ...f, registro_id: data.id })), { onConflict: "propiedad_id,registro_id" });
-    if (e2) throw new Error(`La empresa se creó, pero no se guardaron sus propiedades: ${e2.message}`);
-  }
+  await guardarValoresIniciales(filas, data.id, "La empresa");
   return data;
 }
 
 export interface ValorInicial { propiedadId: string; tipo: TipoPropiedad; valor: ValorEntrada }
 
-export interface NuevoContactoInput { nombre: string; email?: string; telefono?: string }
+export interface NuevoContactoInput {
+  nombre: string; email?: string; telefono?: string; empresaId?: string; valores?: ValorInicial[];
+}
 
 export async function crearContacto(input: NuevoContactoInput): Promise<RefRow> {
   const nombre = input.nombre.trim();
   if (!nombre) throw new Error("El nombre del contacto es obligatorio");
   const email = input.email?.trim().toLowerCase() || null;
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("El correo no es válido");
+  const filas = prepararValores(input.valores ?? []);
   const { data, error } = await supabase.from("crm_contactos")
     .insert({ nombre, email, telefono: input.telefono?.trim() || null })
     .select("id, nombre").single();
   if (error) throw error;
+  if (input.empresaId) {
+    const { error: eV } = await supabase.from("crm_empresa_contacto")
+      .upsert({ empresa_id: input.empresaId, contacto_id: data.id }, { onConflict: "empresa_id,contacto_id", ignoreDuplicates: true });
+    if (eV) throw new Error(`El contacto se creó, pero no se ligó a la empresa: ${eV.message}`);
+  }
+  await guardarValoresIniciales(filas, data.id, "El contacto");
   return data;
 }
