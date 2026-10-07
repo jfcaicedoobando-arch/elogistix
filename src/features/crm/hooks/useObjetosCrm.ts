@@ -7,7 +7,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
-  type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
+  type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina, type ValorInicial,
 } from "@/features/crm/services/objetosCrm";
 import { pasarAProspecto } from "@/features/crm/services/estadoEmpresaCrm";
 import {
