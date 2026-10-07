@@ -48,7 +48,7 @@ export async function reemplazarConceptosFactura(
     } : {}),
   };
   const { data, error } = await supabase.rpc("reemplazar_conceptos_factura_proveedor", args);
-  if (error?.code === "40001") throw conflictoConcurrenciaError();
+  if (error?.code === "PT409" || error?.code === "40001") throw conflictoConcurrenciaError();
   if (error) throw error;
 
   await registrarActividad({

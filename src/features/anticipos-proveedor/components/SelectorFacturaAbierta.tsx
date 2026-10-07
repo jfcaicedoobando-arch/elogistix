@@ -9,7 +9,7 @@ import { FileX } from "lucide-react";
 interface Props {
   proveedorId: string | null;
   value: string;
-  onChange: (facturaId: string, saldo: number, moneda: string) => void;
+  onChange: (facturaId: string, saldo: number, moneda: string, fechaEmision?: string | null) => void;
 }
 
 export function SelectorFacturaAbierta({ proveedorId, value, onChange }: Props) {
@@ -30,7 +30,7 @@ export function SelectorFacturaAbierta({ proveedorId, value, onChange }: Props) 
       value={value}
       onValueChange={(id) => {
         const f = options.find((x) => x.id === id);
-        onChange(id, f?.saldo ?? 0, f?.moneda ?? "MXN");
+        onChange(id, f?.saldo ?? 0, f?.moneda ?? "MXN", f?.fecha_emision);
       }}
       disabled={isLoading}
     >

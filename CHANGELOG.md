@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.824.38] - Unreleased
+
+- **fix(anticipos · 135)**: la aplicación no puede preceder a la entrega del anticipo ni a la emisión de la factura del proveedor. La UI muestra la fecha mínima sin reemplazar la captura; el servidor conserva permisos, idempotencia, reglas de periodo y conversión.
+- **fix(mensajes)**: traducción legible del rechazo de cronología, validada para errores estándar y PostgREST.
+- **test(anticipos)**: fixture N31 alineado explícitamente al día de negocio de México; conserva aserciones de saldo, unicidad y rechazo bajo sesiones UTC y México. Guardas de arquitectura y cobertura intactas.
+- Una sola migración nueva: `20261006233700_audit135_anticipo_cronologia.sql`, después de CAS `20261006233500`. Conserva SQL y metadatos históricos de las entregas previas; no incluye 54, 131, 134, 139, 141, 148 ni P&L.
+- El empaquetado no aplica SQL remoto, no reescribe datos o ledgers y no publica frontend. CAS 37 debe verificarse aplicado antes de la operación atómica propuesta para 38.
+
+## [13.824.37] - Unreleased
+
+- **fix(CxP · concurrencia 66/67)**: las decisiones de aprobación/rechazo y la edición de conceptos con una versión revisada obsoleta devuelven `PT409`, conservando el mensaje `LC_CONFLICTO_CONCURRENCIA`. Los conflictos permanentes de revisión dejan de clasificarse como errores transitorios de serialización.
+- **fix(cliente CxP)**: reconoce `PT409` y mantiene compatibilidad con `40001` legado, sin repetir la escritura ni registrar éxito ante un conflicto. Se conservan formularios y versiones revisadas para evitar sobrescrituras silenciosas.
+- **test(CxP)**: regresiones del transporte real del SDK con respuestas sintéticas, versiones obsoletas y vigentes, snapshots sin cambios, historial y reaplicación local. Se preservan bloqueos, permisos y reglas contables.
+- Una migración forward posterior a la compatibilidad 36 y anterior al stack contable. No modifica datos históricos ni reemplaza globalmente `40001`. La causa del timeout vivo permanece sin demostrar y esta entrega no certifica aplicación remota, publicación ni cierre de las pruebas GUI 66/67.
+
 ## [13.824.36] - Unreleased
 
 - **fix(proformas · compatibilidad PostgreSQL administrado)**: las dos funciones de mantenimiento usan alcance transaccional con restauración explícita del valor previo, sin requerir permisos administrativos para configurar parámetros en la declaración de función. Conserva reglas de negocio, propietarios y ACL.
