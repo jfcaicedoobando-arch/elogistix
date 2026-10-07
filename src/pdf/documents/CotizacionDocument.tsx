@@ -1,5 +1,4 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { notasParaCliente } from "@/lib/domain/notasVisibilidad";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import type { TipoContenedorCatalogo } from "@/lib/domain/tipoContenedor";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
@@ -7,6 +6,7 @@ import { tasasEfectivas } from "@/lib/financial/etiquetaTasaIva";
 import { formatDate, formatFechaDia } from "@/lib/formatters";
 import { calcularTotales, splitConceptos } from "@/generators/cotizacion/conceptosTables";
 import { styles } from "../theme/styles";
+import { NotasSection } from "../components/NotasSection";
 import { Footer } from "../components/Footer";
 import { DataTable } from "../components/DataTable";
 import { TotalesBox } from "../components/TotalesBox";
@@ -32,7 +32,6 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
   const hayIvaUsd = tasasEfectivas(usd, tasaIva).length > 0 || totales.ivaUSD > 0;
   const hayIvaMxn = tasasEfectivas(mxn, tasaIva).length > 0 || totales.ivaMXN > 0;
   const hayIva = [hayIvaUsd, hayIvaMxn].some(Boolean);
-  const notasCliente = notasParaCliente(cotizacion.notas);
   const nombre = cotizacion.es_prospecto
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
     : cotizacion.cliente_nombre;
@@ -95,20 +94,13 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
           </>
         ) : null}
 
+        {cotizacion.conceptos_venta.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
         <TotalesBox
           bloques={bloques}
           nota={hayIva ? "* El IVA se aplica según el tratamiento fiscal de cada concepto." : undefined}
         />
 
-        {/* v13.823.341: sólo las notas dirigidas al cliente llegan al PDF. */}
-        {notasCliente ? (
-          <View wrap={false}>
-            <Text style={styles.h3}>Notas</Text>
-            <View style={styles.notesBox}>
-              <Text>{notasCliente}</Text>
-            </View>
-          </View>
-        ) : null}
+        <NotasSection notas={cotizacion.notas} />
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>

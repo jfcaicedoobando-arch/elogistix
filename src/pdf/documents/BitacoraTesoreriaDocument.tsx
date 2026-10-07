@@ -2,12 +2,14 @@
  * PDF de la bitácora de tesorería de una factura de proveedor (v13.397.0).
  * Lista los movimientos generados al registrar, editar o eliminar pagos.
  */
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Page, Text } from "@react-pdf/renderer";
 import { styles } from "@/pdf/theme/styles";
+import { ReportHeader } from "@/pdf/components/ReportHeader";
+import type { EmisorInfo } from "@/pdf/components/BrandHeader";
+import { ReportContext } from "@/pdf/components/ReportContext";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import { ENCABEZADOS_BITACORA_EXPORT, type FilaBitacoraExport } from "@/features/cxp/services";
-import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   folio: string;
@@ -15,7 +17,7 @@ interface Props {
   /** Descripción de los filtros aplicados, si los hay. */
   filtrosAplicados?: string;
   filas: FilaBitacoraExport[];
-  emisor?: { razonSocial?: string };
+  emisor?: EmisorInfo;
 }
 
 const COL_FECHA = { width: 95, flexGrow: 0, flexShrink: 0 } as const;
@@ -41,35 +43,30 @@ export function BitacoraTesoreriaDocument({
       author={emisor?.razonSocial ?? "Libre Carga"}
     >
       <Page size="LETTER" orientation="landscape" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.h1}>Bitácora de tesorería</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
-              Factura {folio}
-              {proveedor ? ` · ${proveedor}` : ""}
-            </Text>
-            {filtrosAplicados ? (
-              <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
-                {filtrosAplicados}
-              </Text>
-            ) : null}
-          </View>
-        </View>
+        <ReportHeader title="Bitácora de tesorería" emisor={emisor}>
+          <Text style={styles.contextText}>
+            Factura {folio}
+            {proveedor ? ` · ${proveedor}` : ""}
+          </Text>
+          {filtrosAplicados ? <Text style={styles.contextText}>{filtrosAplicados}</Text> : null}
+        </ReportHeader>
 
         {filas.length === 0 ? (
-          <Text style={styles.paragraph}>
+          <Text style={styles.emptyState}>
             No hay movimientos de tesorería para mostrar con los filtros seleccionados.
           </Text>
         ) : (
           <DataTable columns={cols} rows={filas} />
         )}
 
-        <Text style={[styles.paragraph, { marginTop: 10, fontSize: 9, color: COLORS.subtle }]}>
-          {filas.length} movimiento{filas.length === 1 ? "" : "s"} incluido
-          {filas.length === 1 ? "" : "s"} en este reporte.
-        </Text>
+        <ReportContext>
+          <Text style={styles.contextText}>
+            {filas.length} movimiento{filas.length === 1 ? "" : "s"} incluido
+            {filas.length === 1 ? "" : "s"} en este reporte.
+          </Text>
+        </ReportContext>
 
-        <Footer />
+        <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

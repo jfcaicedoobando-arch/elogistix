@@ -20,17 +20,18 @@ export function Footer({ empresaNombre }: Props) {
     year: "numeric",
   });
 
-  const marca = (empresaNombre ?? "").trim();
+  const nombre = (empresaNombre ?? "").trim();
+  const marca = nombre === "Empresa" ? "" : nombre;
   return (
     <View style={styles.footer} fixed>
       {marca ? (
         <Text
           style={[
             styles.footerColLeft,
-            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 0.5 },
+            { fontFamily: FONTS.bold, color: COLORS.primary, maxLines: 2 },
           ]}
         >
-          {marca.toUpperCase()}
+          {marca}
         </Text>
       ) : (
         <Text style={styles.footerColLeft}>

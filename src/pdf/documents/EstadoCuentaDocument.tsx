@@ -16,6 +16,7 @@ import type { Style } from "@react-pdf/types";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { styles, FONTS } from "../theme/styles";
 import { COLORS } from "../theme/tokens";
+import { ReportSummary } from "../components/ReportSummary";
 import { Footer } from "../components/Footer";
 import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { DataTable, type PdfColumn } from "../components/DataTable";
@@ -63,9 +64,10 @@ interface Props {
 
 const alertaCell: Style = { color: COLORS.warningFg, fontFamily: FONTS.bold };
 const boldCell: Style = { fontFamily: FONTS.bold };
+const compactCell: Style = { paddingVertical: 4 };
 
 const cols: PdfColumn<EstadoCuentaRow>[] = [
-  { key: "numero", title: "Factura", cellStyle: { width: 62, flexGrow: 0, flexShrink: 0 }, render: (r) => r.numero },
+  { key: "numero", title: "Factura", hyphenate: false, cellStyle: { width: 92, flexGrow: 0, flexShrink: 0 }, render: (r) => r.numero },
   { key: "expediente", title: "Expediente", cellStyle: styles.cellDesc, render: (r) => r.expediente },
   { key: "emision", title: "Emisión", cellStyle: { width: 66, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_emision) },
   { key: "vencimiento", title: "Vencimiento", cellStyle: { width: 84, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_vencimiento) },
@@ -77,8 +79,8 @@ const cols: PdfColumn<EstadoCuentaRow>[] = [
 
 /** Días y antigüedad de facturas vencidas en color de alerta. */
 function acentoVencida(row: EstadoCuentaRow, colKey: string): Style | undefined {
-  if (row.diasVencido > 0 && (colKey === "dias" || colKey === "bucket")) return alertaCell;
-  return undefined;
+  if (row.diasVencido > 0 && (colKey === "dias" || colKey === "bucket")) return { ...compactCell, ...alertaCell };
+  return compactCell;
 }
 
 interface AgingFila {
@@ -97,7 +99,7 @@ function AgingTable({ tot, parcial }: { tot: EstadoCuentaMonedaTotal; parcial: b
     { key: "total", title: "Total", cellStyle: { width: 100, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatCurrency(r.total, tot.moneda) },
   ];
   return (
-    <View style={{ marginTop: 10 }}>
+    <View style={{ marginTop: 6 }} wrap={false}>
       <DataTable
         columns={agingCols}
         rows={filas}
@@ -116,20 +118,7 @@ function KpisMoneda({ tot, parcial }: { tot: EstadoCuentaMonedaTotal; parcial: b
     { label: `${prefijo}Vencido ${tot.moneda}`, value: formatCurrency(vencido, tot.moneda), alerta: vencido > 0 },
     { label: `${prefijo}Por vencer ${tot.moneda}`, value: formatCurrency(porVencer, tot.moneda), alerta: false },
   ];
-  return (
-    <View style={styles.kpiRow}>
-      {kpis.map((k) => (
-        <View key={k.label} style={styles.kpiCard}>
-          <View style={styles.kpiInner}>
-            <Text style={styles.kpiLabel}>{k.label}</Text>
-            <Text style={[styles.kpiValue, k.alerta ? { color: COLORS.warningFg } : undefined]}>
-              {k.value}
-            </Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
+  return <ReportSummary columns={3} items={kpis.map((k) => ({ label: k.label, value: k.value, tone: k.alerta ? "warning" : "default" }))} />;
 }
 
 export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, alcance }: Props) {
@@ -143,9 +132,10 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, 
     : "Para cualquier aclaración sobre este estado de cuenta, contáctanos.";
   return (
     <Document title={`Estado de cuenta — ${cliente.nombre}`} author={emisor?.razonSocial ?? "Empresa"}>
-      <Page size="LETTER" style={styles.page}>
+      <Page size="LETTER" orientation="landscape" style={styles.page}>
         <BrandHeader
           tipoDocumento="Estado de cuenta"
+          variant="report"
           folio={cliente.nombre}
           meta={meta}
           emisor={emisor}
@@ -156,17 +146,20 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, 
         {alcance && <EstadoCuentaAlcanceResumen alcance={alcance} facturas={rows.length} />}
 
         {rows.length === 0 ? (
-          <Text style={styles.paragraph}>No hay facturas pendientes.</Text>
+          <Text style={styles.emptyState}>No hay facturas pendientes.</Text>
         ) : (
           <View>
             {totalesPorMoneda.map((t) => (
               <KpisMoneda key={`kpi-${t.moneda}`} tot={t} parcial={alcance?.parcial === true} />
             ))}
             <DataTable columns={cols} rows={rows} cellStyleForRow={acentoVencida} />
-            {totalesPorMoneda.map((t) => (
-              <AgingTable key={t.moneda} tot={t} parcial={alcance?.parcial === true} />
+            {totalesPorMoneda.map((t, i) => (
+              <View key={t.moneda} wrap={false}>
+                <AgingTable tot={t} parcial={alcance?.parcial === true} />
+                {i === totalesPorMoneda.length - 1 ? <Text style={{ marginTop: 6, fontSize: 8, color: COLORS.muted }}>{notaContacto}</Text> : null}
+              </View>
             ))}
-            <Text style={{ marginTop: 10, fontSize: 8, color: COLORS.muted }}>{notaContacto}</Text>
+            {totalesPorMoneda.length === 0 ? <Text style={{ marginTop: 6, fontSize: 8, color: COLORS.muted }}>{notaContacto}</Text> : null}
           </View>
         )}
 

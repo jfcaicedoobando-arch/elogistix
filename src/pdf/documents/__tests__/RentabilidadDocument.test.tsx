@@ -58,7 +58,7 @@ describe("RentabilidadDocument", () => {
   it("identifica el tenant comercial sin sustituir ni mostrar datos fiscales", () => {
     const { container } = render(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} organizacionNombre="Comercial Sintética" emisor={{ razonSocial: "Empresa" }} />);
     expect(container).toHaveTextContent("Organización: Comercial Sintética");
-    expect(container).toHaveTextContent("COMERCIAL SINTÉTICA");
+    expect(container).toHaveTextContent("Comercial Sintética");
     expect(container).not.toHaveTextContent("RFC:");
     expect(container).not.toHaveTextContent("EMPRESA");
   });
@@ -69,6 +69,6 @@ describe("RentabilidadDocument", () => {
     expect(container).toHaveTextContent("Documento generado electrónicamente");
     expect(container).not.toHaveTextContent("EMPRESA");
     rerender(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} emisor={{ razonSocial: "Organización sintética SA" }} />);
-    expect(container).toHaveTextContent("ORGANIZACIÓN SINTÉTICA SA");
+    expect(container).toHaveTextContent("Organización sintética SA");
   });
 });

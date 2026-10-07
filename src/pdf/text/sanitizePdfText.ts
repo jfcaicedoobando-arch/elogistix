@@ -1,10 +1,7 @@
 /**
- * Las fuentes built-in de @react-pdf/renderer (Helvetica) sólo cubren WinAnsi.
- * Caracteres como "→" o "↳" no existen en ese set y el visor los dibuja como
- * un glifo equivocado (se veían como "'" o "³" en las cotizaciones).
- *
- * Este helper normaliza el texto justo antes de imprimirlo en el PDF, sin
- * tocar los datos guardados en la base.
+ * Normalización visual histórica de rutas y comillas al imprimir un PDF.
+ * Se conserva con Inter local para no cambiar etiquetas o texto de documentos
+ * existentes; nunca modifica los valores guardados en la base.
  */
 
 const REEMPLAZOS: ReadonlyArray<[RegExp, string]> = [
@@ -17,7 +14,7 @@ const REEMPLAZOS: ReadonlyArray<[RegExp, string]> = [
   [/[\u201C\u201D]/g, '"'],
 ];
 
-/** Devuelve el texto listo para imprimirse con fuentes WinAnsi. */
+/** Devuelve el texto normalizado sólo para su presentación en PDF. */
 export function sanitizePdfText(input: string | null | undefined): string {
   if (input == null) return "";
   return REEMPLAZOS.reduce((txt, [re, rep]) => txt.replace(re, rep), String(input));

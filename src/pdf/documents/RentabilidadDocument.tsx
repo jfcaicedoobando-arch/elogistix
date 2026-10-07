@@ -1,10 +1,13 @@
 import { METODOLOGIA_RENTABILIDAD } from "@/types/rentabilidad";
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Page, Text } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
+import { ReportHeader } from "@/pdf/components/ReportHeader";
+import type { EmisorInfo } from "@/pdf/components/BrandHeader";
+import { ReportSummary } from "@/pdf/components/ReportSummary";
+import { ReportContext } from "@/pdf/components/ReportContext";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
-import { COLORS } from "@/pdf/theme/tokens";
 import { nombreEmisorReporte, reporteHeaderTextStyle } from "./reporteLayout";
 
 export interface RentabilidadClienteRow {
@@ -29,7 +32,7 @@ interface Props {
   modo?: string;
   kpis: RentabilidadKpis;
   clientes: RentabilidadClienteRow[];
-  emisor?: { razonSocial?: string };
+  emisor?: EmisorInfo;
   /** Identificador comercial del tenant; no es una razón social/RFC fiscal. */
   organizacionNombre?: string;
 }
@@ -49,38 +52,28 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
   const empresaNombre = nombreComercial || nombreEmisorReporte(emisor);
   return (
     <Document title="Rentabilidad por cliente" author={empresaNombre ?? "Libre Carga"}>
-      <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.h1, { lineHeight: 1.2 }]}>Rentabilidad por cliente</Text>
-            {nombreComercial && <Text style={{ marginTop: 6, fontSize: 10 }}>Organización: {nombreComercial}</Text>}
-            <Text style={{ marginTop: 6, fontSize: 10, lineHeight: 1.3, color: COLORS.muted }}>
-              Período: {fechaDesde} - {fechaHasta}
-              {modo && modo !== "all" ? `   ·   Modo: ${modo}` : ""}
-            </Text>
-          </View>
-        </View>
+      <Page size="LETTER" orientation="landscape" style={styles.page}>
+        <ReportHeader title="Rentabilidad por cliente" emisor={emisor} organizacionNombre={nombreComercial}>
+          {nombreComercial && <Text style={styles.contextText}>Organización: {nombreComercial}</Text>}
+          <Text style={styles.contextText}>
+            Período: {fechaDesde} - {fechaHasta}
+            {modo && modo !== "all" ? `   ·   Modo: ${modo}` : ""}
+          </Text>
+        </ReportHeader>
 
-        <Text style={[styles.paragraph, { fontSize: 9, color: COLORS.muted }]}>{METODOLOGIA_RENTABILIDAD}</Text>
+        <ReportContext>
+          <Text style={styles.contextText}>{METODOLOGIA_RENTABILIDAD}</Text>
+        </ReportContext>
 
-        <View style={styles.kpiRow}>
-          {[
-            { l: "Venta total", v: formatCurrency(kpis.total_venta_usd, "USD") },
-            { l: "Costo total", v: formatCurrency(kpis.total_costo_usd, "USD") },
-            { l: "Utilidad total", v: formatCurrency(kpis.total_profit_usd, "USD") },
-            { l: "Margen global", v: kpis.total_venta_usd === 0 ? "No calculable" : `${kpis.margen_promedio.toFixed(1)}%` },
-          ].map((k) => (
-            <View key={k.l} style={styles.kpiCard}>
-              <View style={styles.kpiInner}>
-                <Text style={styles.kpiLabel}>{k.l}</Text>
-                <Text style={styles.kpiValue}>{k.v}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+        <ReportSummary columns={4} items={[
+          { label: "Venta total", value: formatCurrency(kpis.total_venta_usd, "USD") },
+          { label: "Costo total", value: formatCurrency(kpis.total_costo_usd, "USD") },
+          { label: "Utilidad total", value: formatCurrency(kpis.total_profit_usd, "USD") },
+          { label: "Margen global", value: kpis.total_venta_usd === 0 ? "No calculable" : `${kpis.margen_promedio.toFixed(1)}%` },
+        ]} />
 
         {rows.length === 0 ? (
-          <Text style={styles.paragraph}>No hay datos en el período seleccionado.</Text>
+          <Text style={styles.emptyState}>No hay datos en el período seleccionado.</Text>
         ) : (
           <DataTable columns={cols} rows={rows} headerTextStyle={reporteHeaderTextStyle} />
         )}
