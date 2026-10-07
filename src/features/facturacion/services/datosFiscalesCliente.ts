@@ -3,6 +3,7 @@
  * timbrado en `facturas`. Aísla la lectura directa de `clientes` y la
  * actualización pre-timbrado del componente `DialogTimbrarFactura`.
  */
+import { AuthOperationChangedError, type captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { unwrap, run, unwrapOr } from "@/lib/supabase/response";
@@ -37,19 +38,40 @@ export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFisc
 import type { DatosTimbradoPatch } from "../types/datosFiscales";
 export type { DatosTimbradoPatch } from "../types/datosFiscales";
 
+interface BorradorDatosFiscalesScope {
+  organizationId: string;
+  borrador: true;
+  authScope: ReturnType<typeof captureAuthOperationScope>;
+}
+
+// Sólo el autosave scoped acepta un patch parcial: no reescribe campos intactos.
+export function actualizarDatosTimbradoFactura(facturaId: string, patch: Partial<DatosTimbradoPatch>, expectedUpdatedAt: undefined, scope: BorradorDatosFiscalesScope): Promise<void>;
+export function actualizarDatosTimbradoFactura(facturaId: string, patch: DatosTimbradoPatch, expectedUpdatedAt?: string | null): Promise<void>;
 export async function actualizarDatosTimbradoFactura(
   facturaId: string,
-  patch: DatosTimbradoPatch,
+  patch: Partial<DatosTimbradoPatch>,
   /** N-06 (QA r2): bloqueo optimista opcional (`updated_at` leído al abrir el diálogo). */
   expectedUpdatedAt?: string | null,
+  /** Autosave acotado al borrador/empresa capturados, incluso si la respuesta llega tras navegar. */
+  scope?: BorradorDatosFiscalesScope,
 ): Promise<void> {
+  if (scope && !scope.organizationId) throw new Error("No se pudo identificar la empresa de la factura.");
+  scope?.authScope.assertCurrent();
+  if (scope && scope.authScope.organizationId !== scope.organizationId) throw new AuthOperationChangedError();
   let query = supabase.from("facturas").update(patch).eq("id", facturaId);
+  if (scope) query = query.eq("organization_id", scope.organizationId)
+    .is("deleted_at", null).is("uuid_fiscal", null).is("facturapi_id", null)
+    .in("estado", ["Borrador", "Por timbrar"]);
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
   const filas = await unwrapOr(query.select("id"), []);
-  if (filas.length === 0 && expectedUpdatedAt) throw conflictoConcurrenciaError();
+  if (filas.length === 0 && (expectedUpdatedAt || scope)) throw conflictoConcurrenciaError();
+  // La escritura ya salió: si cambió la sesión, no fingir abortarla ni
+  // enviar su bitácora usando al siguiente usuario.
+  if (scope && !scope.authScope.isCurrent()) return;
   await registrarActividad({
     modulo: "facturacion",
     accion: "actualizar_datos_timbrado_factura",
+    ...(scope ? { organizationId: scope.organizationId, authScope: scope.authScope } : {}),
     entidadId: facturaId,
     detalles: { ...patch },
 

@@ -15,6 +15,7 @@ import {
   MSG_NO_OBJETO_RETENCIONES,
   retencionesIncompatiblesNoObjeto,
 } from "../_shared/noObjetoFiscal.ts";
+import { validarUsoCfdiIngreso } from "../_shared/usoCfdiFiscal.ts";
 import { validarFormaMetodoPago } from "../_shared/formaMetodoPago.ts";
 
 
@@ -41,7 +42,7 @@ export interface FacturaContext {
   serie?: string | null;
   forma_pago: string;        // SAT 01, 03, 99 ...
   metodo_pago: string;       // PUE / PPD
-  uso_cfdi: string;          // G03, P01, etc.
+  uso_cfdi: string;          // Uso vigente para CFDI de ingreso.
   moneda: string;            // MXN / USD
   tipo_cambio: number;
   receptor: {
@@ -130,7 +131,7 @@ export function validateContext(ctx: FacturaContext): ValidationIssue[] {
   if (!isValidRfc(ctx.receptor.tax_id)) issues.push({ field: "rfc", message: "RFC inválido" });
   if (!isValidZip(ctx.receptor.address.zip)) issues.push({ field: "codigo_postal", message: "Código postal del receptor requerido (5 dígitos)" });
   if (!ctx.receptor.tax_system) issues.push({ field: "regimen_fiscal", message: "Régimen fiscal del receptor requerido" });
-  if (!ctx.uso_cfdi) issues.push({ field: "uso_cfdi", message: "Uso de CFDI requerido" });
+  issues.push(...validarUsoCfdiIngreso({ rfc: ctx.receptor.tax_id, regimen: ctx.receptor.tax_system, usoCfdi: ctx.uso_cfdi }));
   // P1 · Auditoría fiscal — el servidor es la autoridad de la pareja
   // MétodoPago/FormaPago: PPD (no pagada) exige 99; PUE (ya pagada) exige una
   // clave real del catálogo. Así no se emite con un dato obsoleto al cambiar

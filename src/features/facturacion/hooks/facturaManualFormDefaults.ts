@@ -7,6 +7,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import type { ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
+import { validarUsoCfdiIngreso } from "@/lib/financial/usoCfdiFiscal";
 import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
 /**
@@ -57,4 +58,9 @@ export function useFaltantesTimbrar(
       ].filter((x): x is string => !!x),
     [cliente, conceptosValidos, fiscal.tipoCambio, fiscal.formaPago, fiscal.metodoPago],
   );
+}
+
+/** Misma política que el diálogo normal y el preflight de la edge. */
+export function validarUsoClienteManual(cliente: ClienteFiscalOpt | undefined, usoCfdi: string) {
+  return validarUsoCfdiIngreso({ rfc: cliente?.rfc ?? "", regimen: cliente?.regimen_fiscal ?? "", usoCfdi });
 }

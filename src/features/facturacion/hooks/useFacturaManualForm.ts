@@ -10,7 +10,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useFacturaManualSubmit } from "./useFacturaManualSubmit";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import {
-  INITIAL_CONCEPTOS, INITIAL_FISCAL, facturaManualIsDirty, serieForMoneda, useFaltantesTimbrar,
+  INITIAL_CONCEPTOS, INITIAL_FISCAL, facturaManualIsDirty, serieForMoneda, useFaltantesTimbrar, validarUsoClienteManual,
 } from "@/features/facturacion/hooks/facturaManualFormDefaults";
 
 export { serieForMoneda };
@@ -71,7 +71,8 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const puedeGuardar =
     !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0 && !tcFueraDeBanda;
   const errorFormaMetodo = validarFormaMetodoPago(fiscal.formaPago, fiscal.metodoPago)[0]?.message;
-  const puedeTimbrar = puedeGuardar && !clienteIncompleto && !errorFormaMetodo;
+  const issuesUso = validarUsoClienteManual(cliente, fiscal.usoCfdi);
+  const puedeTimbrar = puedeGuardar && !clienteIncompleto && !errorFormaMetodo && issuesUso.length === 0;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
 
 
@@ -122,7 +123,7 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     clienteIncompleto,
     puedeGuardar,
     puedeTimbrar,
-    faltantesTimbrar: tcFueraDeBanda ? [...faltantesTimbrar, "tipo de cambio plausible"] : faltantesTimbrar,
+    faltantesTimbrar: [...faltantesTimbrar, ...issuesUso.map((i) => i.message), ...(tcFueraDeBanda ? ["tipo de cambio plausible"] : [])],
     tcFueraDeBanda,
 
     ...submit,

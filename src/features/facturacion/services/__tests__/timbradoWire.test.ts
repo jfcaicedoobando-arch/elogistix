@@ -76,6 +76,12 @@ describe("emitirFacturapi / emitirRep con el contrato validado", () => {
     await expect(emitirFacturapi("f1")).resolves.toEqual(EXITO);
   });
 
+  it("emisión transporta solicitado/efectivo verificados sin alterar el éxito", async () => {
+    const data = { ...EXITO, uso_cfdi_solicitado: "G03", uso_cfdi_efectivo: "S01", fuente_uso_cfdi: "xml" };
+    invoke.mockResolvedValueOnce({ data, error: null });
+    await expect(emitirFacturapi("f1")).resolves.toEqual(data);
+  });
+
   it("pendiente por pendiente:true", async () => {
     invoke.mockResolvedValueOnce({ data: { pendiente: true, message: "en proceso" }, error: null });
     const res = await emitirFacturapi("f1");

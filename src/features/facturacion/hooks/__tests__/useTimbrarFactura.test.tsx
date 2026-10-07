@@ -89,6 +89,22 @@ describe("useTimbrarFactura", () => {
     qc.clear();
   });
 
+  it("XML distinto conserva éxito, muestra solicitado/efectivo y no ofrece reintentar", async () => {
+    emitirFacturapi.mockResolvedValue({ uuid: "uuid", serie: "A", folio: 1,
+      uso_cfdi_solicitado: "G03", uso_cfdi_efectivo: "S01", fuente_uso_cfdi: "xml" });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useTimbrarFactura(), { wrapper: wrapper(qc) });
+    result.current.mutate("fac-1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(notifySuccess).toHaveBeenCalledWith(undefined, {
+      title: "Factura timbrada correctamente",
+      description: expect.stringContaining("solicitado: G03; efectivo en el XML: S01"),
+    });
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(emitirFacturapi).toHaveBeenCalledTimes(1);
+    qc.clear();
+  });
+
   it("onError: pasa el mensaje del error a notifyError", async () => {
     emitirFacturapi.mockRejectedValue(new Error("boom"));
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });

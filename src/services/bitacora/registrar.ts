@@ -11,6 +11,7 @@
  * - Fire-and-forget: nunca lanza — la operación de negocio manda.
  * - Toma la sesión (`auth.getSession`) internamente para no repetirlo en cada caller.
  */
+import type { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -46,6 +47,10 @@ export interface RegistrarActividadInput {
   entidadId?: string | null;
   entidadNombre?: string | null;
   detalles?: Record<string, unknown>;
+  /** Destino explícito cuando el caller ya capturó la empresa de la entidad. */
+  organizationId?: string;
+  /** Scope original de una operación diferida; nunca se renueva al registrar. */
+  authScope?: ReturnType<typeof captureAuthOperationScope>;
 }
 
 /**
@@ -54,6 +59,7 @@ export interface RegistrarActividadInput {
  */
 export async function registrarActividad(input: RegistrarActividadInput): Promise<void> {
   try {
+    if (input.authScope && !input.authScope.isCurrent()) return;
     // Contrato defensivo: en pruebas se usan dobles de Supabase que sólo
     // exponen `rpc`/`from`. Llamar `auth.getSession()` ahí lanzaba y ensuciaba
     // la salida con avisos `[bitacora]` que no indican ningún defecto. En el
@@ -66,12 +72,13 @@ export async function registrarActividad(input: RegistrarActividadInput): Promis
     // duplicaba la latencia de toda mutación del ERP.
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
-    if (!user) return;
+    if (!user || (input.authScope && !input.authScope.isCurrent())) return;
 
     // DEFECTO 8: la escritura directa a `bitacora_actividad` está REVOKE para
     // el cliente; sólo esta RPC (SECURITY DEFINER) puede insertar y deriva
     // usuario_id/email del servidor, nunca de lo que mande el navegador.
     const { error } = await supabase.rpc("registrar_bitacora", {
+      ...(input.organizationId ? { p_organization_id: input.organizationId } : {}),
       p_modulo: input.modulo,
       p_accion: input.accion,
       p_entidad_id: input.entidadId ?? undefined,

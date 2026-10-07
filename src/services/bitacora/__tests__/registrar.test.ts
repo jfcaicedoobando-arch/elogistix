@@ -1,3 +1,5 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { captureAuthOperationScope, syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { registrarActividad, MODULOS_BITACORA } from "../registrar";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,4 +69,32 @@ describe("registrarActividad", () => {
     expect(valores).toContain("costeo");
     expect(valores).toContain("facturacion");
   });
+
+  it("conserva la empresa explícita del destino sin enviar identidad de actor", async () => {
+    await registrarActividad({ modulo: "facturacion", accion: "actualizar_datos_timbrado_factura", entidadId: "f1", organizationId: "org1" });
+    expect(supabase.rpc).toHaveBeenCalledWith("registrar_bitacora", expect.objectContaining({ p_organization_id: "org1", p_entidad_id: "f1" }));
+    const args = vi.mocked(supabase.rpc).mock.calls[0][1];
+    expect(args).not.toHaveProperty("p_usuario_id");
+  });
+
+  it("un caller sin destino explícito conserva su contrato anterior", async () => {
+    await registrarActividad({ modulo: "cxp", accion: "crear" });
+    const args = vi.mocked(supabase.rpc).mock.calls[0][1];
+    expect(args).not.toHaveProperty("p_organization_id");
+  });
+
+  it("una sesión que cambia mientras getSession espera no registra la operación anterior", async () => {
+    const usuario = (userId: string) => {
+      setAuthSnapshot({ userId, organizationId: "org1", role: "admin", effectiveRole: "admin", email: null, organizationName: null });
+      syncActiveOrganizationScope({ userId, organizationId: "org1" });
+    };
+    usuario("u1");
+    const session = (await supabase.auth.getSession()).data.session!;
+    let resolve!: (value: Awaited<ReturnType<typeof supabase.auth.getSession>>) => void;
+    vi.mocked(supabase.auth.getSession).mockImplementationOnce(() => new Promise((ok) => { resolve = ok; }));
+    const pending = registrarActividad({ modulo: "facturacion", accion: "autosave", organizationId: "org1", authScope: captureAuthOperationScope() });
+    usuario("u2"); resolve({ data: { session: { ...session, user: { ...session.user, id: "u2" } } }, error: null });
+    await pending; expect(supabase.rpc).not.toHaveBeenCalled();
+  });
+
 });

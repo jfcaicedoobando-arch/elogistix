@@ -8,6 +8,7 @@ import { jsonResponse } from "../_shared/response.ts";
 import { resolverConceptosFiscales, type ConceptoRow } from "./conceptosFiscales.ts";
 import { validarCuadreFiscal, validarCuadreSubtotal } from "./contextoCuadre.ts";
 import { validateContext, type FacturaContext } from "./helpers.ts";
+import { rfcReceptorFactura } from "../_shared/usoCfdiFiscal.ts";
 import type { FacturaRow } from "./types.ts";
 import { cargarReferenciasConceptos } from "./referenciasConceptos.ts";
 
@@ -41,7 +42,7 @@ export async function cargarContexto(
     uso_cfdi: factura.uso_cfdi ?? base.cliente.uso_cfdi_default ?? "",
     moneda: factura.moneda ?? "MXN",
     tipo_cambio: Number(factura.tipo_cambio ?? 1),
-    receptor: { legal_name: base.cliente.nombre, tax_id: factura.rfc_cliente ?? base.cliente.rfc ?? "", tax_system: base.cliente.regimen_fiscal ?? "", address: { zip: base.cliente.codigo_postal ?? "" }, email: base.contactoEmail },
+    receptor: { legal_name: base.cliente.nombre, tax_id: rfcReceptorFactura(factura.rfc_cliente, base.cliente.rfc), tax_system: base.cliente.regimen_fiscal ?? "", address: { zip: base.cliente.codigo_postal ?? "" }, email: base.contactoEmail },
     conceptos,
     sustituye_uuid: sustituyeUuid,
     referencias: refs,

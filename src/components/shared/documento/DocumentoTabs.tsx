@@ -2,7 +2,7 @@
  * Pestañas de un documento financiero sincronizadas con la URL (`?tab=`),
  * para que cada sección sea enlazable y sobreviva a un refresh.
  */
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ export interface DocumentoTabItem {
   /** Contador opcional a la derecha del label (ej. # de pagos). */
   count?: number;
   content: ReactNode;
+  /** Conserva estado/guardados al salir de una pestaña ya visitada; no monta pestañas nunca abiertas. */
+  keepMounted?: boolean;
 }
 
 interface Props {
@@ -26,6 +28,12 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const fromUrl = searchParams.get(param);
   const activo = tabs.some((t) => t.id === fromUrl) ? (fromUrl as string) : tabs[0]?.id;
+
+  const [visitadas, setVisitadas] = useState<string[]>([]);
+  const conservarActiva = tabs.some((t) => t.id === activo && t.keepMounted);
+  useEffect(() => {
+    if (conservarActiva && activo) setVisitadas((prev) => prev.includes(activo) ? prev : [...prev, activo]);
+  }, [activo, conservarActiva]);
 
   const onChange = (value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -59,7 +67,10 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
       </div>
 
       {tabs.map((t) => (
-        <TabsContent key={t.id} value={t.id} className="mt-4 space-y-4">
+        <TabsContent key={t.id} value={t.id} className="mt-4 space-y-4"
+          forceMount={t.keepMounted && (t.id === activo || visitadas.includes(t.id)) ? true : undefined}
+          {...(t.keepMounted ? { hidden: t.id !== activo } : {})}
+        >
           {t.content}
         </TabsContent>
       ))}

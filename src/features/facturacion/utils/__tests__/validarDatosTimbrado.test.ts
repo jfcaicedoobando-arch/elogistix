@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildChecksTimbrado } from "../validarDatosTimbrado";
 
 const happy = {
-  rfc: "XAXX010101000",
+  rfc: "AAA010101AAA",
   cp: "06600",
   regimen: "601",
   usoCfdi: "G03",
