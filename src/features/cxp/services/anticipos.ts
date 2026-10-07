@@ -159,7 +159,8 @@ export async function devolverAnticipo(input: DevolverAnticipoInput): Promise<An
     p_id: input.id,
     p_monto: input.monto,
     p_fecha: input.fecha,
-    p_cuenta_bancaria_id: input.medio === "Efectivo" ? null : input.cuentaBancariaId,
+    // SAFE-CAST: el RPC acepta null cuando el medio es Efectivo; los tipos generados lo declaran string.
+    p_cuenta_bancaria_id: (input.medio === "Efectivo" ? null : input.cuentaBancariaId) as string,
     p_medio: input.medio ?? "Bancario",
     p_referencia: input.referencia?.trim() || undefined,
     p_motivo: motivo,
