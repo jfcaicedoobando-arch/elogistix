@@ -204,3 +204,6 @@ supabase/tests/proforma_operativa_consistencia.sql
 
 # Audit135: fechas civiles de la aplicación de anticipos.
 supabase/tests/audit135_anticipo_cronologia.sql
+
+# Audit131: devolución en efectivo y compatibilidad bancaria.
+supabase/tests/audit131_devolucion_efectivo.sql

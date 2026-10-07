@@ -10774,7 +10774,11 @@ CREATE TABLE public.anticipos_proveedor (
     devuelto_by uuid,
     monto_devuelto numeric(18,4),
     motivo_devolucion text,
+    fecha_devolucion date,
+    medio_devolucion text,
+    referencia_devolucion text,
     CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text, 'devuelto'::text]))),
+    CONSTRAINT anticipos_proveedor_medio_devolucion_check CHECK ((medio_devolucion = ANY (ARRAY['Efectivo'::text, 'Bancario'::text]))),
     CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT anticipos_proveedor_saldo_rango_check CHECK (((saldo_disponible IS NULL) OR ((saldo_disponible >= (0)::numeric) AND (saldo_disponible <= (monto + 0.01)))))
 );
@@ -17620,7 +17624,7 @@ BEGIN
   RETURN v_inserted;
 END;
 $$;
-CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text) RETURNS public.anticipos_proveedor
+CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text, p_medio text DEFAULT 'Bancario'::text) RETURNS public.anticipos_proveedor
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17697,9 +17701,17 @@ BEGIN
         v_cierre, p_fecha USING ERRCODE = 'P0001';
     END IF;
   END IF;
+  IF p_medio IS NULL OR p_medio NOT IN ('Efectivo', 'Bancario') THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MEDIO_DEVOLUCION: Selecciona Efectivo o Bancario.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Efectivo' AND p_cuenta_bancaria_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_EFECTIVO_CON_CUENTA: Una devolución en efectivo no lleva cuenta bancaria.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Bancario' THEN
   SELECT cb.organization_id INTO v_cuenta_org
     FROM public.cuentas_bancarias cb
-   WHERE cb.id = p_cuenta_bancaria_id;
+   WHERE cb.id = p_cuenta_bancaria_id AND cb.activa AND cb.deleted_at IS NULL
+     AND cb.moneda = v_row.moneda;
   IF v_cuenta_org IS NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_REQUERIDA: Selecciona la cuenta bancaria donde entró el dinero.';
   END IF;
@@ -17707,10 +17719,14 @@ BEGIN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_OTRA_ORG: La cuenta bancaria pertenece a otra organización.'
       USING ERRCODE = '42501';
   END IF;
+  END IF;
   UPDATE public.anticipos_proveedor
     SET estado = 'devuelto',
         saldo_disponible = 0,
         monto_devuelto = p_monto,
+        fecha_devolucion = p_fecha,
+        medio_devolucion = p_medio,
+        referencia_devolucion = NULLIF(trim(COALESCE(p_referencia,'')),''),
         motivo_devolucion = trim(p_motivo),
         devuelto_at = now(),
         devuelto_by = v_uid,
@@ -17719,6 +17735,7 @@ BEGIN
     RETURNING * INTO v_row;
   -- F1: hash_dedupe es NOT NULL; sin él el INSERT lanzaba 23502 y toda la
   -- devolución hacía rollback.
+  IF p_medio = 'Bancario' THEN
   INSERT INTO public.bbva_movimientos
     (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
      cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en,
@@ -17728,6 +17745,7 @@ BEGIN
      'Devolución de anticipo ' || v_row.id::text, NULLIF(trim(COALESCE(p_referencia,'')),''),
      0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now(),
      'devolucion-' || v_row.id::text);
+  END IF;
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
@@ -17735,7 +17753,7 @@ BEGIN
     VALUES (v_row.organization_id, v_uid, COALESCE(v_email,''), 'devolver_anticipo_proveedor', 'cxp',
             v_row.id, 'Anticipo ' || v_row.id::text,
             jsonb_build_object('motivo', trim(p_motivo), 'monto_devuelto', p_monto,
-                               'moneda', v_row.moneda, 'fecha', p_fecha,
+                               'moneda', v_row.moneda, 'fecha', p_fecha, 'medio', p_medio,
                                'cuenta_bancaria_id', p_cuenta_bancaria_id,
                                'referencia', p_referencia));
   EXCEPTION WHEN OTHERS THEN
@@ -22679,7 +22697,7 @@ BEGIN
     -- AUD100: cada devolución es una entrada independiente. La salida original
     -- se conserva bruta; la fecha/cuenta/referencia proceden del asiento real.
     SELECT ap.id, 'devolucion_anticipo'::text AS tipo,
-      COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
+      COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
       pr.nombre AS contraparte, ap.proveedor_id AS contraparte_id,
       NULL::uuid AS documento_id, NULL::text AS documento_folio,
       ap.moneda::text AS moneda, ap.monto_devuelto AS monto,
@@ -22687,11 +22705,11 @@ BEGIN
       CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
            WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd
            ELSE NULL END AS monto_mxn,
-      CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
-      COALESCE(d.referencia, ap.referencia) AS referencia,
+      CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
+      CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END AS referencia,
       d.cuenta_bancaria_id,
       concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END) AS notas,
       ap.embarque_id, 0::numeric AS diferencia_cambiaria_mxn,
       NULL::text AS estado_rep, NULL::text AS folio_rep,
@@ -22709,7 +22727,7 @@ BEGIN
     ) d ON true
     WHERE ap.deleted_at IS NULL AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
       AND ap.monto_devuelto > 0 AND (v_super OR ap.organization_id = v_org)
-      AND COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
+      AND COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
           BETWEEN p_desde AND p_hasta
   ),
   unidos AS (
@@ -24138,17 +24156,17 @@ BEGIN
   ELSIF v_tipo = 'devolucion_anticipo' THEN
     SELECT ap.organization_id, jsonb_build_object(
       'id', ap.id, 'tipo', v_tipo,
-      'fecha', COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
+      'fecha', COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
       'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
       'moneda', ap.moneda::text, 'monto', ap.monto_devuelto,
       'tipo_cambio', NULLIF(ap.tipo_cambio_usd, 0),
       'monto_mxn', CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
         WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd ELSE NULL END,
-      'metodo_pago', CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
-      'referencia', COALESCE(d.referencia, ap.referencia),
+      'metodo_pago', CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
+      'referencia', CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END,
       'cuenta_bancaria_id', d.cuenta_bancaria_id, 'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
       'notas', concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END),
       'embarque_id', ap.embarque_id, 'diferencia_cambiaria_mxn', 0,
       'es_ajuste', false, 'created_by', ap.devuelto_by, 'created_at', ap.devuelto_at)
@@ -25670,12 +25688,13 @@ BEGIN
            COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
            -- La fecha bancaria conserva el periodo efectivo de la devolución.
            -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
-           COALESCE(d.fecha,
+           COALESCE(a.fecha_devolucion, d.fecha,
                     (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
                     (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
                     a.fecha_anticipo) AS fecha_devolucion,
-           d.referencia AS referencia_devolucion,
-           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
+           COALESCE(a.referencia_devolucion, d.referencia) AS referencia_devolucion,
+           a.medio_devolucion,
+           a.fecha_devolucion IS NULL AND d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
     LEFT JOIN LATERAL (
@@ -25749,7 +25768,7 @@ BEGIN
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
-             ELSE a.metodo_pago END
+             ELSE COALESCE(a.medio_devolucion, a.metodo_pago) END
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
@@ -38386,9 +38405,9 @@ GRANT ALL ON FUNCTION public.default_user_org_id() TO service_role;
 REVOKE ALL ON FUNCTION public.detectar_alertas_app_logs() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO authenticated;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO service_role;
-REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO authenticated;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO service_role;
 REVOKE ALL ON FUNCTION public.direccion_totales(p_desde date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO authenticated;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO service_role;

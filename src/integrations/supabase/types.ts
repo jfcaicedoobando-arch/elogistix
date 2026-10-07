@@ -180,6 +180,9 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          fecha_devolucion: string | null
+          medio_devolucion: string | null
+          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
@@ -206,6 +209,9 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          fecha_devolucion?: string | null
+          medio_devolucion?: string | null
+          referencia_devolucion?: string | null
           devuelto_at?: string | null
           devuelto_by?: string | null
           embarque_id?: string | null
@@ -232,6 +238,9 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          fecha_devolucion?: string | null
+          medio_devolucion?: string | null
+          referencia_devolucion?: string | null
           devuelto_at?: string | null
           devuelto_by?: string | null
           embarque_id?: string | null
@@ -10330,6 +10339,9 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          fecha_devolucion: string | null
+          medio_devolucion: string | null
+          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
@@ -11311,10 +11323,11 @@ export type Database = {
       detectar_alertas_app_logs: { Args: never; Returns: number }
       devolver_anticipo_proveedor: {
         Args: {
-          p_cuenta_bancaria_id: string
+          p_cuenta_bancaria_id: string | null
           p_fecha: string
           p_id: string
           p_monto: number
+          p_medio?: string
           p_motivo?: string
           p_referencia?: string
         }
@@ -11324,6 +11337,9 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          fecha_devolucion: string | null
+          medio_devolucion: string | null
+          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
@@ -12416,6 +12432,9 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          fecha_devolucion: string | null
+          medio_devolucion: string | null
+          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null
@@ -12882,6 +12901,9 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          fecha_devolucion: string | null
+          medio_devolucion: string | null
+          referencia_devolucion: string | null
           devuelto_at: string | null
           devuelto_by: string | null
           embarque_id: string | null

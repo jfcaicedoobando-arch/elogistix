@@ -25,6 +25,7 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
   const [monto, setMonto] = useState<number | null>(null);
   const [fecha, setFecha] = useState("");
   const [cuentaId, setCuentaId] = useState("");
+  const [medio, setMedio] = useState<"Efectivo" | "Bancario">("Bancario");
   const [referencia, setReferencia] = useState("");
   const [motivo, setMotivo] = useState("");
   const sesionRef = useRef<string | null>(null);
@@ -46,6 +47,7 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
     setMonto(anticipo.disponible > 0 ? anticipo.disponible : null);
     setFecha(hoyMx());
     setCuentaId("");
+    setMedio(anticipo.metodo_pago?.toLowerCase() === "efectivo" ? "Efectivo" : "Bancario");
     setReferencia("");
     setMotivo("");
   }, [open, anticipo]);
@@ -76,10 +78,10 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
       return;
     }
     if (!fecha) {
-      notifyWarning(undefined, { title: "Falta la fecha", description: "Indica cuándo entró el depósito." });
+      notifyWarning(undefined, { title: "Falta la fecha", description: "Indica cuándo recibiste la devolución." });
       return;
     }
-    if (!cuentaValida) {
+    if (medio === "Bancario" && !cuentaValida) {
       notifyWarning(undefined, {
         title: "Falta la cuenta",
         description: "Selecciona la cuenta bancaria donde entró el dinero.",
@@ -97,7 +99,8 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
       id: anticipo.id,
       monto,
       fecha,
-      cuentaBancariaId: cuentaId,
+      cuentaBancariaId: medio === "Efectivo" ? null : cuentaId,
+      medio,
       referencia: referencia.trim() || null,
       motivo: motivo.trim(),
     });
@@ -109,6 +112,8 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
     setMonto,
     fecha,
     setFecha,
+    medio, setMedio,
+    medioValido: medio === "Efectivo" || cuentaValida,
     cuentaId,
     setCuentaId: elegirCuenta,
     cuentaOriginal,

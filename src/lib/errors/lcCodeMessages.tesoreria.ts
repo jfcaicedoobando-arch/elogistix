@@ -127,6 +127,8 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   LC_ANTICIPO_EN_PROCESO:
     "Esta aplicación de anticipo ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
   // Ronda v3 · F2 — la devolución de anticipo debe ser por el saldo completo.
+  LC_ANTICIPO_MEDIO_DEVOLUCION: "Selecciona si recibiste la devolución en efectivo o por depósito bancario.",
+  LC_ANTICIPO_EFECTIVO_CON_CUENTA: "La devolución en efectivo no lleva cuenta bancaria.",
   LC_ANTICIPO_DEVOLUCION_TOTAL:
     "La devolución debe ser por el saldo completo del anticipo; no se permiten devoluciones parciales.",
   LC_ANTICIPO_FACTURA_NO_VIVA:

@@ -91,12 +91,13 @@ BEGIN
            COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
            -- La fecha bancaria conserva el periodo efectivo de la devolución.
            -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
-           COALESCE(d.fecha,
+           COALESCE(a.fecha_devolucion, d.fecha,
                     (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
                     (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
                     a.fecha_anticipo) AS fecha_devolucion,
-           d.referencia AS referencia_devolucion,
-           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
+           COALESCE(a.referencia_devolucion, d.referencia) AS referencia_devolucion,
+           a.medio_devolucion,
+           a.fecha_devolucion IS NULL AND d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
     LEFT JOIN LATERAL (
@@ -170,7 +171,7 @@ BEGIN
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
-             ELSE a.metodo_pago END
+             ELSE COALESCE(a.medio_devolucion, a.metodo_pago) END
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
