@@ -12166,6 +12166,17 @@ export type Database = {
         }
         Returns: number
       }
+      monto_pago_proveedor_en_moneda_factura: {
+        Args: {
+          p_es_anticipo_aplicado: boolean
+          p_moneda_factura: string
+          p_moneda_pago: string
+          p_monto: number
+          p_monto_en_moneda_factura: number
+          p_tc_pago: number
+        }
+        Returns: number
+      }
       movimiento_origen_por_hash: { Args: { p_hash: string }; Returns: string }
       nc_aplicadas_en_moneda_factura: {
         Args: { p_factura_id: string }
