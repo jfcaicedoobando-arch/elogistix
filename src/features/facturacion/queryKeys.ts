@@ -1,3 +1,5 @@
+import type { FacturaReferenciasInput } from "./domain/referenciasFacturaPreview";
+
 // Query keys del módulo unificado Facturación (incluye lo que antes vivía en features/facturas).
 export const facturacion = {
   /** Prefijo canónico del dominio (invalidación amplia). */
@@ -22,8 +24,9 @@ export const facturacion = {
     ['facturacion', 'bandeja', 'proformas-listas', 'count', organizationId] as const,
   dashboardEjecutivo: (organizationId?: string | null, fallback?: unknown) =>
     ['facturacion', 'dashboard-ejecutivo', organizationId, fallback] as const,
-  referenciasEmbarque: (embarqueId?: string | null, expediente?: string, referenciaBl?: string) =>
-    ['referencias_embarque_factura', embarqueId, expediente ?? '', referenciaBl ?? ''] as const,
+  referenciasEmbarque: (organizationId: string | null, factura?: FacturaReferenciasInput | null) =>
+    ['referencias_embarque_factura', organizationId, factura?.id, factura?.organization_id,
+      factura?.embarque_id, factura?.expediente, factura?.referencia_bl] as const,
   emitirFactura: ['fiscal', 'emitir-factura'] as const,
   cancelarFactura: ['fiscal', 'cancelar-factura'] as const,
   facturaManual: ['fiscal', 'factura-manual'] as const,
