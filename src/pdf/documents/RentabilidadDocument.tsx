@@ -30,6 +30,8 @@ interface Props {
   kpis: RentabilidadKpis;
   clientes: RentabilidadClienteRow[];
   emisor?: { razonSocial?: string };
+  /** Identificador comercial del tenant; no es una razón social/RFC fiscal. */
+  organizacionNombre?: string;
 }
 
 const cols: PdfColumn<RentabilidadClienteRow>[] = [
@@ -41,15 +43,17 @@ const cols: PdfColumn<RentabilidadClienteRow>[] = [
   { key: "margen", title: "Margen", cellStyle: styles.cellNum, render: (r) => r.venta_usd === 0 ? "No calculable" : `${r.margen.toFixed(1)}%` },
 ];
 
-export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes, emisor }: Props) {
+export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes, emisor, organizacionNombre }: Props) {
   const rows = [...clientes].sort((a, b) => b.profit_usd - a.profit_usd);
-  const empresaNombre = nombreEmisorReporte(emisor);
+  const nombreComercial = organizacionNombre?.trim();
+  const empresaNombre = nombreComercial || nombreEmisorReporte(emisor);
   return (
     <Document title="Rentabilidad por cliente" author={empresaNombre ?? "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
           <View>
             <Text style={[styles.h1, { lineHeight: 1.2 }]}>Rentabilidad por cliente</Text>
+            {nombreComercial && <Text style={{ marginTop: 6, fontSize: 10 }}>Organización: {nombreComercial}</Text>}
             <Text style={{ marginTop: 6, fontSize: 10, lineHeight: 1.3, color: COLORS.muted }}>
               Período: {fechaDesde} - {fechaHasta}
               {modo && modo !== "all" ? `   ·   Modo: ${modo}` : ""}

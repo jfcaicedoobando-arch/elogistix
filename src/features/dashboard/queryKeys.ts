@@ -31,8 +31,8 @@ export const operaciones = {
 export const reportes = {
   conceptos: ['reportes', 'conceptos'] as const,
   cotizaciones: ['reportes', 'cotizaciones'] as const,
-  rentabilidadClientes: (filtros: { fechaDesde?: string; fechaHasta?: string; modo?: string }) =>
-    ['reportes', 'rentabilidad', filtros] as const,
+  rentabilidadClientes: (filtros: { fechaDesde?: string; fechaHasta?: string; modo?: string }, organizationId: string | null) =>
+    ['reportes', 'rentabilidad', organizationId, filtros] as const,
 } as const;
 
 export const sidebar = {

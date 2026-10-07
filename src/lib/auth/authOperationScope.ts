@@ -36,5 +36,6 @@ export function captureAuthOperationScope() {
     return sameGeneration() && started.userId === current.userId
       && started.organizationId === current.organizationId && started.role === current.role;
   };
-  return { isCurrent, assertCurrent: () => { if (!isCurrent()) throw new AuthOperationChangedError(); } };
+  return { organizationId: started.organizationId, isCurrent,
+    assertCurrent: () => { if (!isCurrent()) throw new AuthOperationChangedError(); } };
 }

@@ -12,12 +12,15 @@ import { BASE_CSV_RENTABILIDAD } from "@/types/rentabilidad";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { usePdfExport } from "@/hooks/shared";
 import { notifyWarning } from "@/lib/ui/appFeedback";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 /**
  * Controller-hook que absorbe todo el estado, derivaciones y handlers de la
  * página de Reportes. Deja `Reportes.tsx` como composición pura de UI.
  */
 export function useReportesPageController() {
+  const { organization } = useOrganization();
   const { fechaDesde, fechaHasta, modo, sortField, sortDir, setFechaDesde,
     setFechaHasta, setModo, applyFilters, resetFilters, handleSort } = useReportesFilters();
 
@@ -30,7 +33,7 @@ export function useReportesPageController() {
     [fechaDesde, fechaHasta, modo],
   );
 
-  const { clientes, kpis, isLoading, isError, refetch } = useRentabilidadClientes(filtros);
+  const { clientes, kpis, isLoading, isError, refetch, isDataReady, dataOrganizationId } = useRentabilidadClientes(filtros);
   const { isExporting: isExportingPdf, run: runPdfExport } = usePdfExport({
     successTitle: "Reporte PDF descargado",
     method: "REPORTES_RENTABILIDAD_EXPORT_PDF",
@@ -67,6 +70,16 @@ export function useReportesPageController() {
   );
 
   const hayEmbarquesSinTc = kpis.embarquesSinTc > 0;
+  const datosDelTenant = isDataReady && !isLoading && !isError && organization?.id === dataOrganizationId;
+  const validarDatosActuales = () => {
+    if (datosDelTenant && captureAuthOperationScope().organizationId === dataOrganizationId) return true;
+    notifyWarning(undefined, {
+      title: "Exportación bloqueada",
+      description: "Espera a que termine la carga del reporte de la organización activa o vuelve a intentarlo.",
+      id: "reportes-export-tenant-no-listo",
+    });
+    return false;
+  };
 
   const handleExport = () => {
     if (hayEmbarquesSinTc) {
@@ -79,6 +92,7 @@ export function useReportesPageController() {
       });
       return;
     }
+    if (!validarDatosActuales()) return;
     exportToCsv(
       `rentabilidad_clientes_${filtros.fechaDesde}_${filtros.fechaHasta}_${modo === "all" ? "todos" : modo.toLowerCase()}.csv`,
       [
@@ -112,11 +126,18 @@ export function useReportesPageController() {
       });
       return;
     }
+    if (!validarDatosActuales()) return;
     void runPdfExport(async () => {
+      const scope = captureAuthOperationScope();
+      if (!organization || organization.id !== scope.organizationId) {
+        throw new Error("Selecciona una organización antes de exportar el reporte.");
+      }
       const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
         "@/generators/rentabilidadPdf"
       );
+      scope.assertCurrent();
       await mod.generarRentabilidadPdf({
+        organizacion: { id: organization.id, nombre: organization.nombre },
         fechaDesde: filtros.fechaDesde,
         fechaHasta: filtros.fechaHasta,
         modo: filtros.modo,
@@ -156,7 +177,7 @@ export function useReportesPageController() {
     handleExport,
     handleExportPdf,
     isExportingPdf,
-    canExport: sorted.length > 0 && !hayEmbarquesSinTc,
+    canExport: datosDelTenant && sorted.length > 0 && !hayEmbarquesSinTc,
     hayEmbarquesSinTc,
   };
 }

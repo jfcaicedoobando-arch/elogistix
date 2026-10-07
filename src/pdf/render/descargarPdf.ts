@@ -11,13 +11,16 @@ import type { DocumentProps } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/react";
 import type { ReactElement } from "react";
 import { descargarBlob } from "@/lib/downloadBlob";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 export async function descargarPdf(
   elemento: ReactElement<DocumentProps>,
   nombreArchivo: string,
 ): Promise<void> {
+  const scope = captureAuthOperationScope();
   const finalName = nombreArchivo.endsWith(".pdf") ? nombreArchivo : `${nombreArchivo}.pdf`;
   const { pdf } = await import("@react-pdf/renderer");
+  scope.assertCurrent();
   await Sentry.startSpan(
     { name: "pdf.render", op: "pdf", attributes: { filename: finalName } },
     async (span) => {
@@ -31,6 +34,7 @@ export async function descargarPdf(
           attributes: { prefix: finalName.split("-")[0] ?? "unknown" },
         });
       } catch { /* metrics es best-effort, no romper la descarga */ }
+      scope.assertCurrent();
       descargarBlob(blob, finalName);
     },
   );

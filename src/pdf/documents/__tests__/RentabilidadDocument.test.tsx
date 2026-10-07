@@ -55,6 +55,14 @@ describe("RentabilidadDocument", () => {
     expect(text).not.toContain("No hay datos");
   });
 
+  it("identifica el tenant comercial sin sustituir ni mostrar datos fiscales", () => {
+    const { container } = render(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} organizacionNombre="Comercial Sintética" emisor={{ razonSocial: "Empresa" }} />);
+    expect(container).toHaveTextContent("Organización: Comercial Sintética");
+    expect(container).toHaveTextContent("COMERCIAL SINTÉTICA");
+    expect(container).not.toHaveTextContent("RFC:");
+    expect(container).not.toHaveTextContent("EMPRESA");
+  });
+
   it("usa separador soportado y distingue identidad configurada de fallback", () => {
     const { container, rerender } = render(<RentabilidadDocument fechaDesde="2026-09-01" fechaHasta="2026-09-30" kpis={mockKpis} clientes={[]} emisor={{ razonSocial: "Empresa" }} />);
     expect(container).toHaveTextContent("Período: 2026-09-01 - 2026-09-30");

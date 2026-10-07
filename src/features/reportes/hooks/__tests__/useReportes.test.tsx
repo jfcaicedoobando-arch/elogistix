@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { createWrapper as createQueryWrapper } from '@/test/utils/queryWrapper';
 import { MemoryRouter } from 'react-router';
 import type { ReactNode } from 'react';
@@ -9,19 +9,28 @@ const createWrapper = () => {
   return ({ children }: { children: ReactNode }) => <MemoryRouter><QueryWrapper>{children}</QueryWrapper></MemoryRouter>;
 };
 
-const { mockUseRentabilidad, notifyWarning } = vi.hoisted(() => ({
+const { mockUseRentabilidad, notifyWarning, mockUseOrganization, mockPdf, notifyError } = vi.hoisted(() => ({
   mockUseRentabilidad: vi.fn(),
+  mockUseOrganization: vi.fn(),
+  mockPdf: vi.fn(),
+  notifyError: vi.fn(),
   notifyWarning: vi.fn(),
 }));
 
 vi.mock('@/features/cliente/hooks/useRentabilidadClientes', () => ({
   useRentabilidadClientes: mockUseRentabilidad,
 }));
+vi.mock('@/lib/contexts/OrganizationContext', () => ({ useOrganization: mockUseOrganization }));
+vi.mock('@/generators/rentabilidadPdf', () => ({ generarRentabilidadPdf: mockPdf }));
 vi.mock('@/lib/ui/appFeedback', () => ({
+  notifySuccess: vi.fn(),
+  notifyError,
   notifyWarning: (...args: unknown[]) => notifyWarning(...args),
 }));
 vi.mock('@/generators/exportCsv', () => ({ exportToCsv: vi.fn() }));
 
+import { setAuthSnapshot } from '@/lib/auth/authSnapshot';
+import { syncActiveOrganizationScope } from '@/lib/auth/authOperationScope';
 import { exportToCsv } from '@/generators/exportCsv';
 import { BASE_CSV_RENTABILIDAD } from '@/types/rentabilidad';
 import { useReportesPageController } from '../useReportesPageController';
@@ -29,6 +38,11 @@ import { useReportesPageController } from '../useReportesPageController';
 describe('useReportes Hooks', () => {
   beforeEach(() => {
     mockUseRentabilidad.mockReset();
+    mockUseOrganization.mockReturnValue({ organization: { id: 'org-sintetica', nombre: 'Comercial Sintética' } });
+    mockPdf.mockReset().mockResolvedValue(undefined);
+    notifyError.mockReset();
+    setAuthSnapshot({ userId: 'user-sintetico', email: null, organizationId: null, organizationName: null, role: 'super_admin', effectiveRole: 'super_admin' });
+    syncActiveOrganizationScope({ userId: 'user-sintetico', organizationId: 'org-sintetica' });
     notifyWarning.mockReset();
   });
 
@@ -41,7 +55,28 @@ describe('useReportes Hooks', () => {
     clientes,
     kpis: { revenue: 3000, profit: 300, margenProm: 15, embarquesSinTc: 0 },
     isLoading: false,
+    isDataReady: true,
+    dataOrganizationId: 'org-sintetica',
   };
+
+  it('pasa la identidad comercial del tenant al exportador PDF', async () => {
+    mockUseRentabilidad.mockReturnValue(mockRentabilidad);
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    act(() => result.current.handleExportPdf());
+    await waitFor(() => expect(mockPdf).toHaveBeenCalledOnce());
+    expect(mockPdf).toHaveBeenCalledWith(expect.objectContaining({ organizacion: { id: 'org-sintetica', nombre: 'Comercial Sintética' } }));
+  });
+
+  it('no exporta datos de la selección anterior tras cambiar tenant durante la carga', async () => {
+    mockUseRentabilidad.mockReturnValue(mockRentabilidad);
+    const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
+    act(() => {
+      result.current.handleExportPdf();
+      syncActiveOrganizationScope({ userId: 'user-sintetico', organizationId: 'otra-org-sintetica' });
+    });
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(mockPdf).not.toHaveBeenCalled();
+  });
 
   it('conserva el nombre completo en el ranking', () => {
     mockUseRentabilidad.mockReturnValue({ ...mockRentabilidad, clientes: [{ ...clientes[0], cliente_nombre: 'QA Cliente Smoke 2026-09-05' }] });

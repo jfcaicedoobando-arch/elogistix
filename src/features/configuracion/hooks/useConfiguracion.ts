@@ -50,10 +50,13 @@ export function useUpdateConfiguracion() {
       }
       return updateConfiguracionByCategoriaClave(organizationId, items);
     },
-    onSuccess: () => {
+    onSettled: () => {
       // ['configuracion'] es prefijo de ['configuracion','org',<id>]: cubre la
       // key nueva y las de useConfiguracionByOrg (impersonación).
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.facturacion.emisorEmpresa });
+    },
+    onSuccess: () => {
       notifySuccess(undefined, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
