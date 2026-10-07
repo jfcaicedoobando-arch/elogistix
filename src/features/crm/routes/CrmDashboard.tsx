@@ -167,6 +167,8 @@ export default function CrmDashboard() {
         </div>
 
         <LeaderboardVendedores />
+
+        <PricingResumenCards />
       </CargaGuard>
     </PageContainer>
   );
