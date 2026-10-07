@@ -7644,7 +7644,7 @@ BEGIN
   END IF;
   IF p_expected_updated_at IS NULL OR v_row.updated_at IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: la factura cambió desde que la revisaste. Recarga y revisa los datos actuales antes de decidir.'
-      USING ERRCODE = '40001';
+      USING ERRCODE = 'PT409';
   END IF;
   IF v_row.estado_aprobacion <> 'pendiente' THEN
     RAISE EXCEPTION 'La factura ya fue %', v_row.estado_aprobacion;
@@ -27526,7 +27526,7 @@ BEGIN
   END IF;
   IF p_expected_updated_at IS NULL OR v_f.updated_at IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: los conceptos o la factura cambiaron mientras los editabas. Recarga antes de volver a guardar.'
-      USING ERRCODE = '40001';
+      USING ERRCODE = 'PT409';
   END IF;
   IF v_f.uuid_fiscal IS NOT NULL OR v_f.archivo_xml_url IS NOT NULL THEN
     RAISE EXCEPTION 'LC_CONCEPTOS_FISCALES: los conceptos vienen del XML del CFDI; vuelve a adjuntar el XML para cambiarlos'
