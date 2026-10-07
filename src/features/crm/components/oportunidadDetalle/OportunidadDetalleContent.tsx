@@ -19,7 +19,8 @@ import { PricingOportunidadTab } from "@/features/crm/components/pricing/Pricing
 
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
-import type { CrmOportunidadRow } from "@/features/crm/hooks";
+import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
+import { MoverEtapaSelect } from "./MoverEtapaSelect";
 
 interface Etapa {
   id: string;
@@ -77,16 +78,19 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={(canEdit || canCotizar) ? (
-          <OportunidadDetalleAcciones
-            crearCotizacion={actions.crearCotizacion}
-            crearCotPending={actions.crearCotPending}
-            onEditar={() => setEditOpen(true)}
-            onEliminar={() => setDelOpen(true)}
-            canCotizar={canCotizar}
-            canGestionar={canEdit}
-            puedeCotizar={actions.puedeCotizar}
-            motivoNoCotizar={actions.motivoNoCotizar}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {canEdit && <MoverEtapaSelect op={op} etapas={etapas as CrmEtapaRow[]} />}
+            <OportunidadDetalleAcciones
+              crearCotizacion={actions.crearCotizacion}
+              crearCotPending={actions.crearCotPending}
+              onEditar={() => setEditOpen(true)}
+              onEliminar={() => setDelOpen(true)}
+              canCotizar={canCotizar}
+              canGestionar={canEdit}
+              puedeCotizar={actions.puedeCotizar}
+              motivoNoCotizar={actions.motivoNoCotizar}
+            />
+          </div>
         ) : undefined}
       />
 
