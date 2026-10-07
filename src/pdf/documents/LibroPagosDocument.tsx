@@ -61,7 +61,7 @@ const cols: PdfColumn<FilaLibroPagosExport>[] = [
 
 export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
   return (
-    <Document title="Libro de pagos" author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title="Libro de pagos" author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <ReportHeader title="Libro de pagos" emisor={emisor}>
           <Text style={styles.contextText}>
@@ -96,7 +96,7 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
           { label: "Pagos incluidos:", value: resumen.conteo },
         ]} />
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

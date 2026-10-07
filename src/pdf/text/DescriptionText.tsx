@@ -23,8 +23,15 @@ function pieces(word: string, maxWidth: number): string[] {
   let part = "";
   for (const { segment } of graphemes.segment(word)) {
     if (part && width(part + segment) > maxWidth * 0.9) {
-      result.push(part);
-      part = "";
+      // Prefer a boundary already present in an identifier; retain its characters.
+      const boundary = Math.max(part.lastIndexOf("-"), part.lastIndexOf("/"), part.lastIndexOf("_")) + 1;
+      if (boundary >= part.length / 2) {
+        result.push(part.slice(0, boundary));
+        part = part.slice(boundary);
+      } else {
+        result.push(part);
+        part = "";
+      }
     }
     part += segment;
   }

@@ -60,7 +60,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
 
 
   return (
-    <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title={`${proforma.numero} - Proforma`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
         {/*
@@ -100,7 +100,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
         <NotasSection notas={proforma.notas} />
 
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

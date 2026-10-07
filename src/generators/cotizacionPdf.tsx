@@ -8,7 +8,8 @@ import type { CotizacionRow } from "@/features/cotizacion/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 // P12: CotizacionDocument se carga dinámicamente para no arrastrar @react-pdf en el bundle inicial.
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { cargarEmisorDocumento } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { fetchTiposContenedor } from "@/features/catalogos/services";
 import { slugifyOrg } from "@/lib/filenames";
 
@@ -16,11 +17,13 @@ export async function generarPdfCotizacion(
   cotizacion: CotizacionRow,
   tasaIva: number = TASA_IVA,
 ): Promise<void> {
+  const scope = captureAuthOperationScope();
   const [emisor, tiposContenedor, { CotizacionDocument }] = await Promise.all([
-    cargarEmisorEmpresa(),
+    cargarEmisorDocumento(cotizacion.organization_id),
     fetchTiposContenedor(true).catch(() => []),
     import("@/pdf/documents/CotizacionDocument"),
   ]);
+  scope.assertCurrent();
   await descargarPdf(
     <CotizacionDocument
       cotizacion={cotizacion}
@@ -28,6 +31,6 @@ export async function generarPdfCotizacion(
       emisor={emisor}
       tiposContenedor={tiposContenedor}
     />,
-    `${slugifyOrg(emisor.razonSocial)}_${cotizacion.folio}-cotizacion`,
+    `${slugifyOrg(emisor.organizacionNombre || emisor.razonSocial)}_${cotizacion.folio}-cotizacion`,
   );
 }

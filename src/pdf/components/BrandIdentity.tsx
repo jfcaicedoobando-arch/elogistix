@@ -29,7 +29,7 @@ interface Props {
 
 export function BrandIdentity({ emisor = {}, organizacionNombre, variant, compact = false }: Props) {
   const nombre = issuerName(emisor.razonSocial);
-  const comercial = organizacionNombre?.trim();
+  const comercial = organizacionNombre?.trim() || emisor.organizacionNombre?.trim();
   const marca = comercial || nombre || "Documento interno";
   return <View style={styles.headerIdentity}>
     {emisor.logoUrl ? <Image src={emisor.logoUrl} style={styles.issuerLogo} /> : null}

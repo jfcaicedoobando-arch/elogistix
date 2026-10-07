@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { fetchConReintento, OFFLINE_MSG } from "./_networkRetry";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 export { fetchConReintento, OFFLINE_MSG };
 
@@ -60,8 +61,9 @@ const NETWORK_HINT =
   "Revisa tu conexión, VPN o antivirus/firewall corporativo e intenta de nuevo.";
 
 
-async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>): Promise<T> {
+async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>, scope: ReturnType<typeof captureAuthOperationScope>): Promise<T> {
   const { data: sessionData } = await supabase.auth.getSession();
+  scope.assertCurrent();
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) {
     throw new Error("Tu sesión expiró. Vuelve a iniciar sesión e intenta de nuevo.");
@@ -77,8 +79,9 @@ async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>
         apikey: SUPABASE_ANON_KEY,
       },
       body: JSON.stringify(body),
-    });
+    }, scope.assertCurrent);
   } catch (e) {
+    scope.assertCurrent();
     const msg = e instanceof Error ? e.message : String(e);
     if (msg === OFFLINE_MSG) throw Object.assign(new Error(OFFLINE_MSG), { cause: e });
     throw Object.assign(new Error(`No se pudo contactar al servicio de correo: ${msg}. ${NETWORK_HINT}`), { cause: e });
@@ -86,6 +89,7 @@ async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>
 
 
   const raw = await resp.text();
+  scope.assertCurrent();
   let parsed: unknown = null;
   try {
     parsed = raw ? JSON.parse(raw) : null;
@@ -112,42 +116,54 @@ interface PrepareResponse {
 }
 
 async function generarPdfBlob(cotizacion: CotizacionRow, tasaIva: number): Promise<Blob> {
+  const scope = captureAuthOperationScope();
   // Reusa la misma plantilla que el botón "Exportar PDF".
-  const [{ CotizacionDocument }, { cargarEmisorEmpresa }, { pdf }, { createElement }] = await Promise.all([
+  const [{ CotizacionDocument }, { cargarEmisorDocumento }, { pdf }, { createElement }] = await Promise.all([
     import("@/pdf/documents/CotizacionDocument"),
     import("@/pdf/emisor"),
     import("@react-pdf/renderer"),
     import("react"),
   ]);
-  const emisor = await cargarEmisorEmpresa();
+  scope.assertCurrent();
+  const emisor = await cargarEmisorDocumento(cotizacion.organization_id);
+  scope.assertCurrent();
   // SAFE-CAST: CotizacionDocument devuelve un DocumentElement de react-pdf; el genérico de createElement no lo infiere.
   const element = createElement(CotizacionDocument, { cotizacion, tasaIva, emisor }) as Parameters<typeof pdf>[0];
   const instance = pdf(element);
 
-  return await instance.toBlob();
+  const blob = await instance.toBlob();
+  scope.assertCurrent();
+  return blob;
 }
 
 
 export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise<EnviarEmailResult> {
+  const scope = captureAuthOperationScope();
   const { cotizacion, tasaIva = TASA_IVA } = input;
+  if (!cotizacion.organization_id || cotizacion.organization_id !== scope.organizationId) {
+    throw new Error("La organización del documento no coincide con la organización activa.");
+  }
 
   // 1. prepare → signed upload URL
   const prep = await invokeEnviarCotizacion<PrepareResponse>({
     action: "prepare",
     cotizacion_id: cotizacion.id,
-  });
+  }, scope);
+  scope.assertCurrent();
   if (!prep?.upload_token || !prep?.path) {
     throw new Error(prep?.error ?? "No se pudo preparar la subida del PDF");
   }
 
   // 2. Generar PDF
   const blob = await generarPdfBlob(cotizacion, tasaIva);
+  scope.assertCurrent();
 
   // 3. Subir con signed upload URL
   const { error: uploadErr } = await supabase
     .storage.from("cotizaciones-pdf")
     .uploadToSignedUrl(prep.path, prep.upload_token, blob, { contentType: "application/pdf" });
   if (uploadErr) throw new Error(`Subida de PDF falló: ${uploadErr.message}`);
+  scope.assertCurrent();
 
   // 4. send
   // R2 · W-02/W-04: `pdf_path` y `ejecutivo` ya NO se envían; el servidor
@@ -161,7 +177,8 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
     asunto: input.asunto,
     marcar_enviada: input.marcarEnviada,
     totales: input.totales,
-  });
+  }, scope);
+  scope.assertCurrent();
 
   if (!send) throw new Error("Respuesta vacía del servidor");
   if (send.error) throw new Error(send.error);

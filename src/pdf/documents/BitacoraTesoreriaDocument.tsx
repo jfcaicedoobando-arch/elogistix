@@ -40,7 +40,7 @@ export function BitacoraTesoreriaDocument({
   return (
     <Document
       title={`Bitácora de tesorería ${folio}`}
-      author={emisor?.razonSocial ?? "Libre Carga"}
+      author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}
     >
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <ReportHeader title="Bitácora de tesorería" emisor={emisor}>
@@ -66,7 +66,7 @@ export function BitacoraTesoreriaDocument({
           </Text>
         </ReportContext>
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

@@ -21,6 +21,12 @@ describe("identidad y lenguaje visual PDF interno", () => {
     expect(screen.getByText("Documento interno")).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/RFC|Libre Carga|Empresa/);
   });
+  it("usa el nombre comercial validado en cabecera y pie sin fabricar emisor fiscal", () => {
+    const emisor = { organizacionNombre: "Operación sintética", razonSocial: "Empresa" };
+    const { container } = render(<><BrandHeader tipoDocumento="Cotización" emisor={emisor} /><Footer emisor={emisor} /></>);
+    expect(screen.getAllByText("Operación sintética")).toHaveLength(2);
+    expect(container.textContent).not.toMatch(/RFC|Documento interno|Empresa/);
+  });
   it("explicita la tabla vacía sin inventar importes", () => {
     render(<DataTable columns={[{ key: "value", title: "Valor" }]} rows={[]} />);
     expect(screen.getByText("Sin registros para mostrar.")).toBeInTheDocument();

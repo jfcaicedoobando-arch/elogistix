@@ -105,7 +105,7 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor,
           </View>
         ))}
 
-        <Footer empresaNombre={empresaNombre} />
+        <Footer emisor={emisor} empresaNombre={empresaNombre} />
       </Page>
     </Document>
   );

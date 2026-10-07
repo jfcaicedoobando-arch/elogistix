@@ -37,7 +37,7 @@ const colsFlujo: PdfColumn<RenglonFlujoMoneda>[] = [
 export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props) {
   const flujo = renglonesFlujoMonedas(resumen.flujo);
   return (
-    <Document title={`Tesorería ${fechaCorte}`} author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title={`Tesorería ${fechaCorte}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
         <ReportHeader title="Resumen de Tesorería" emisor={emisor}>
           <Text style={styles.contextText}>Corte: {formatDate(fechaCorte)}</Text>
@@ -71,7 +71,7 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
           <Text style={styles.contextText}>Días vencidos: mayor atraso de las facturas agrupadas por nombre y moneda.</Text>
         </ReportContext>
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

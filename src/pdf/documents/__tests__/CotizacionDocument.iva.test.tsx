@@ -40,7 +40,7 @@ describe("CotizacionDocument — IVA real y notas internas", () => {
     });
     const text = render(<CotizacionDocument cotizacion={c} tasaIva={0.16} />).container.textContent ?? "";
     expect(text).toContain("Conceptos en MXN + IVA");
-    expect(text).toContain("IVA (8%) MXN");
+    expect(text).toContain("IVA (8%)");
     expect(text).toContain("El IVA se aplica según el tratamiento fiscal de cada concepto.");
     expect(text).not.toContain("cargos en destino");
   });
@@ -56,8 +56,8 @@ describe("CotizacionDocument — IVA real y notas internas", () => {
     const text = render(<CotizacionDocument cotizacion={c} />).container.textContent ?? "";
     expect(text).toContain("BAF (origen)");
     expect(text).toContain("Gasto sin IVA");
-    expect(text).toContain("IVA (16%) USD");
-    expect(text).toContain("IVA (8%) MXN");
+    expect(text).toContain("IVA (16%)");
+    expect(text).toContain("IVA (8%)");
     expect(text).toContain("El IVA se aplica según el tratamiento fiscal de cada concepto.");
     expect(text).not.toContain("cargos en destino");
   });

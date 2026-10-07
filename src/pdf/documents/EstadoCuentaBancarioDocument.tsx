@@ -65,7 +65,7 @@ export function EstadoCuentaBancarioDocument({
   return (
     <Document
       title={`Estado de cuenta ${cuenta}`}
-      author={emisor?.razonSocial ?? "Libre Carga"}
+      author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}
     >
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <ReportHeader title="Estado de cuenta" emisor={emisor}>
@@ -105,7 +105,7 @@ export function EstadoCuentaBancarioDocument({
           <DataTable columns={cols} rows={filas} />
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

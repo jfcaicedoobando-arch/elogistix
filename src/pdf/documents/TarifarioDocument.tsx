@@ -44,7 +44,7 @@ export function TarifarioDocument({ cotizacion, emisor }: Props) {
     : "—";
 
   return (
-    <Document title={`${cotizacion.folio} - Tarifario informativo`} author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title={`${cotizacion.folio} - Tarifario informativo`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <BrandHeader
           tipoDocumento="Tarifario Informativo"
@@ -74,7 +74,7 @@ export function TarifarioDocument({ cotizacion, emisor }: Props) {
           </View>
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

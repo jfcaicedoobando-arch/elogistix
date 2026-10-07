@@ -30,7 +30,7 @@ const cols: PdfColumn<FilaVsReal>[] = [
 
 export function ReportePresupuestoDocument({ resumen, filas = resumen.filas, soloExcesos = false, emisor }: Props) {
   return (
-    <Document title={`Presupuesto ${resumen.periodo}`} author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title={`Presupuesto ${resumen.periodo}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
         <ReportHeader title="Presupuesto vs Real" emisor={emisor}>
           <Text style={styles.contextText}>Periodo: {resumen.periodo}</Text>
@@ -59,7 +59,7 @@ export function ReportePresupuestoDocument({ resumen, filas = resumen.filas, sol
           <DataTable columns={cols} rows={filas} />
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

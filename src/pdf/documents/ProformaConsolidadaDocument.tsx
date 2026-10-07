@@ -143,7 +143,7 @@ export function ProformaConsolidadaDocument({
 
 
   return (
-    <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} emisor={emisor} />
         <View minPresenceAhead={140}>
@@ -157,7 +157,7 @@ export function ProformaConsolidadaDocument({
 
         <NotasSection notas={proforma.notas} />
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

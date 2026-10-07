@@ -131,7 +131,7 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, 
     ? `Para cualquier aclaración sobre este estado de cuenta: ${emisor.contacto}`
     : "Para cualquier aclaración sobre este estado de cuenta, contáctanos.";
   return (
-    <Document title={`Estado de cuenta — ${cliente.nombre}`} author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title={`Estado de cuenta — ${cliente.nombre}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <BrandHeader
           tipoDocumento="Estado de cuenta"
@@ -163,7 +163,7 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor, 
           </View>
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

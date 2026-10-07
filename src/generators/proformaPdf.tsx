@@ -8,7 +8,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 // P12: los Documents se importan dinámicamente dentro de la función.
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { cargarEmisorDocumento } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { slugifyOrg } from "@/lib/filenames";
 import type { EmbarqueLite, ClienteLite } from "@/pdf/documents/proformaShared";
 
@@ -26,15 +27,17 @@ interface GenerarPdfProformaParams {
 }
 
 export async function generarPdfProforma(params: GenerarPdfProformaParams): Promise<void> {
+  const scope = captureAuthOperationScope();
   const { proforma, embarque, cliente, tasaIva = TASA_IVA } = params;
-  const emisor = await cargarEmisorEmpresa();
-  const orgSlug = slugifyOrg(emisor.razonSocial);
+  const emisor = await cargarEmisorDocumento(proforma.organization_id);
+  const orgSlug = slugifyOrg(emisor.organizacionNombre || emisor.razonSocial);
   if (
     params.proforma.es_consolidada &&
     params.conceptosConsolidados &&
     params.conceptosConsolidados.length > 0
   ) {
     const { ProformaConsolidadaDocument } = await import("@/pdf/documents/ProformaConsolidadaDocument");
+    scope.assertCurrent();
     await descargarPdf(
       <ProformaConsolidadaDocument
         proforma={proforma}
@@ -48,6 +51,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
     return;
   }
   const { ProformaDocument } = await import("@/pdf/documents/ProformaDocument");
+  scope.assertCurrent();
   await descargarPdf(
     <ProformaDocument
       proforma={proforma}

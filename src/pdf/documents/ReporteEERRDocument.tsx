@@ -52,9 +52,19 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
   const ingresos = aplanar(data.ingresos);
   const costos = aplanar(data.costos);
   const utilidadModos = MODOS.map((m) => data.utilidad.porModo[m] ?? 0);
+  const resumenModos = (
+    <View style={[styles.summaryBox, { padding: 7, marginTop: 6 }]} wrap={false}>
+      <Text style={styles.contextText}>
+        Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
+        Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
+        Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
+        Otros {formatCurrency(utilidadModos[3], "MXN")}
+      </Text>
+    </View>
+  );
 
   return (
-    <Document title={`EERR ${periodo}`} author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title={`EERR ${periodo}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <ReportHeader title="Estado de Resultados" emisor={emisor}>
           <Text style={styles.contextText}>
@@ -74,23 +84,14 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           { label: "Margen", value: `${data.margen.total.toFixed(1)}%` },
         ]} />
 
-        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 12 }]}>Ingresos</Text>
+        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 8 }]}>Ingresos</Text>
         <DataTable columns={cols} rows={ingresos} />
 
-        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 12 }]}>Costos</Text>
-        <DataTable columns={cols} rows={costos} />
-
-        <View style={styles.summaryBox} wrap={false}>
-          <Text style={styles.contextText}>
-            Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
-            Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
-            Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
-            Otros {formatCurrency(utilidadModos[3], "MXN")}
-          </Text>
-        </View>
+        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 8 }]}>Costos</Text>
+        <DataTable columns={cols} rows={costos} afterLastRow={resumenModos} />
 
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );
