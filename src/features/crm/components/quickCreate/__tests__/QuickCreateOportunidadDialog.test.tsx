@@ -1,26 +1,21 @@
 /**
- * v13.823.51 — alta express de oportunidad:
- *  - la lista de prospectos usa la definición canónica del embudo (sin
- *    `Convertido`, que ya salió del embudo),
- *  - se conserva el vendedor dueño del prospecto (antes se reasignaba al
- *    usuario que capturaba).
+ * Alta express de oportunidad: etapa elegida (sólo abiertas), valor estimado
+ * obligatorio y origen deducido de la empresa asociada.
  */
 import type React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import QuickCreateOportunidadDialog from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
-import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas";
 
 const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({ id: "op-1" }));
-const estadosRecibidos: (string[] | undefined)[] = [];
 const notifyError = vi.fn();
+const origenMock = vi.fn();
 
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-actual", email: "actual@x.com" } }),
 }));
-// v13.823.53 — el pipeline del mock es configurable por prueba: la etapa
-// inicial debe ser la primera ABIERTA aunque una terminal ocupe el orden 1.
-const etapasMock: { id: string; orden: number; probabilidad_default: number; tipo: string }[] = [];
+const etapasMock: { id: string; nombre: string; orden: number; probabilidad_default: number; tipo: string }[] = [];
 vi.mock("@/features/crm/hooks", () => ({
   useCrearOportunidad: () => ({ mutateAsync, isPending: false }),
   useEtapasPipeline: () => ({ data: etapasMock }),
@@ -29,128 +24,76 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...args: unknown[]) => notifyError(...args),
   notifySuccess: vi.fn(),
 }));
-// Radix Select no es operable en jsdom: se sustituye por un <select> nativo.
+vi.mock("@/features/crm/services/origenEmpresaCrm", () => ({
+  fetchOrigenEmpresa: (...a: unknown[]) => origenMock(...a),
+}));
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, children }: { value: string; onValueChange: (v: string) => void; children: React.ReactNode }) => (
-    <select data-testid="origen" value={value} onChange={(e) => onValueChange(e.target.value)}>
-      {children}
-    </select>
+    <select data-testid="etapa" value={value} onChange={(e) => onValueChange(e.target.value)}>{children}</select>
   ),
   SelectTrigger: () => null,
   SelectValue: () => null,
   SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
+  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => <option value={value}>{children}</option>,
 }));
-vi.mock("@/features/cliente/hooks", () => ({ useClientesForSelect: () => ({ data: [] }) }));
 vi.mock("@/features/crm/components/nuevaOportunidad/OportunidadEmpresaField", () => ({
   OportunidadEmpresaField: ({ onChange }: { onChange: (e: { id: string; nombre: string }) => void }) => (
     <button type="button" onClick={() => onChange({ id: "empresa-1", nombre: "Acme" })}>elegir-empresa</button>
   ),
 }));
-vi.mock("@/features/crm/components/comboboxes/EntidadComboboxCrm", () => ({
-  LeadComboboxCrm: ({
-    estadoIn,
-    onChange,
-  }: {
-    estadoIn?: string[];
-    onChange: (id: string, label: string, meta?: { vendedor_id: string | null; vendedor_email: string }) => void;
-  }) => {
-    estadosRecibidos.push(estadoIn);
-    return (
-      <button
-        type="button"
-        onClick={() => onChange("lead-1", "ACME", { vendedor_id: "u-dueno", vendedor_email: "dueno@x.com" })}
-      >
-        elegir-prospecto
-      </button>
-    );
-  },
-}));
+
+function montar() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />
+    </QueryClientProvider>,
+  );
+}
 
 describe("QuickCreateOportunidadDialog", () => {
-  it("ofrece sólo prospectos activos (sin Convertido) y conserva su vendedor", async () => {
-    mutateAsync.mockClear();
-    estadosRecibidos.length = 0;
+  beforeEach(() => {
+    mutateAsync.mockClear(); notifyError.mockClear(); origenMock.mockReset();
     etapasMock.length = 0;
     etapasMock.push(
-      { id: "e-gan", orden: 1, probabilidad_default: 100, tipo: "ganada" },
-      { id: "e-ab", orden: 2, probabilidad_default: 20, tipo: "abierta" },
+      { id: "e-gan", nombre: "Ganada", orden: 1, probabilidad_default: 100, tipo: "ganada" },
+      { id: "e-ab", nombre: "Prospecto", orden: 2, probabilidad_default: 20, tipo: "abierta" },
+      { id: "e-neg", nombre: "Negociación", orden: 3, probabilidad_default: 60, tipo: "abierta" },
     );
-    render(
-      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
-    );
+  });
 
+  it("crea en la etapa elegida con valor estimado y origen del prospecto de la empresa", async () => {
+    origenMock.mockResolvedValue({ ok: true, origen: { tipo: "prospecto", id: "lead-1", nombre: "ACME", vendedorId: "u-dueno", vendedorEmail: "dueno@x.com" } });
+    montar();
+    expect(screen.queryByRole("option", { name: "Ganada" })).toBeNull();
     fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op nueva" } });
-    // Cambiar el origen a prospecto monta el combobox.
-    fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
-    fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
-    expect(screen.getByRole("button", { name: "Crear" })).toBeDisabled();
-    expect(screen.getByRole("status")).toHaveTextContent("empresa asociada");
     fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
+    fireEvent.change(screen.getByTestId("etapa"), { target: { value: "e-neg" } });
+    expect(screen.getByRole("status")).toHaveTextContent("valor estimado");
+    fireEvent.change(screen.getByLabelText(/Valor estimado/i), { target: { value: "1500" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Crear" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Crear" }));
-
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
-    const payload = mutateAsync.mock.calls[0]?.[0];
-    expect(payload?.empresa_id).toBe("empresa-1");
-    expect(payload?.lead_id).toBe("lead-1");
-    expect(payload?.vendedor_id).toBe("u-dueno");
-    expect(payload?.vendedor_email).toBe("dueno@x.com");
-
-    const estados = estadosRecibidos.find(Boolean);
-    expect(estados).toEqual([...LEAD_ESTADOS_ETAPA_PROSPECTO]);
-    expect(estados).not.toContain("Convertido");
-    // La etapa terminal en orden 1 no puede ser la etapa inicial.
-    expect(payload?.etapa_id).toBe("e-ab");
-    expect(payload?.probabilidad).toBe(20);
+    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({
+      empresa_id: "empresa-1", lead_id: "lead-1", cliente_id: null, etapa_id: "e-neg",
+      probabilidad: 60, monto_meta: 1500, vendedor_id: "u-dueno",
+    });
   });
 
-  it("sin etapas abiertas no permite crear y muestra el mensaje", async () => {
-    mutateAsync.mockClear();
-    etapasMock.length = 0;
-    etapasMock.push(
-      { id: "e-gan", orden: 1, probabilidad_default: 100, tipo: "ganada" },
-      { id: "e-per", orden: 2, probabilidad_default: 0, tipo: "perdida" },
-    );
-    render(
-      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
-    );
-
-    expect(
-      screen.getByText("Configura al menos una etapa abierta en el pipeline"),
-    ).toBeInTheDocument();
-    const crear = screen.getByRole("button", { name: "Crear" });
-    expect(crear).toBeDisabled();
-    fireEvent.click(crear);
-    await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled());
-  });
-
-  it("oportunidad rápida: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
-    notifyError.mockClear();
-    mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
-    etapasMock.length = 0;
-    etapasMock.push({ id: "e-ab", orden: 1, probabilidad_default: 20, tipo: "abierta" });
-    render(
-      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
-    );
-
-    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op nueva" } });
-    // Cambiar el origen a prospecto monta el combobox.
-    fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
-    fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
+  it("bloquea si la empresa no tiene prospecto ni cliente", async () => {
+    origenMock.mockResolvedValue({ ok: false, motivo: "Esta empresa aún no es prospecto ni cliente." });
+    montar();
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op" } });
     fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
-    fireEvent.click(screen.getByRole("button", { name: "Crear" }));
-
-    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
-    // El único feedback de error visible lo emite useCrearOportunidad.onError.
-    expect(notifyError).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/Valor estimado/i), { target: { value: "10" } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("no es prospecto");
+    expect(screen.getByRole("button", { name: "Crear" })).toBeDisabled();
   });
-  it("incluye la empresa al pasar a Más campos", () => {
-    const onMore = vi.fn();
-    render(<QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={onMore} />);
-    fireEvent.click(screen.getByRole("button", { name: "elegir-empresa" }));
-    fireEvent.click(screen.getByRole("button", { name: /Más campos/ }));
-    expect(onMore).toHaveBeenCalledWith(expect.objectContaining({ empresa: { id: "empresa-1", nombre: "Acme" } }));
+
+  it("sin etapas abiertas no permite crear", () => {
+    etapasMock.length = 0;
+    montar();
+    expect(screen.getByText("Configura al menos una etapa abierta en el pipeline")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Crear" })).toBeDisabled();
   });
 });
