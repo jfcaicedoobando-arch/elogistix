@@ -20,6 +20,6 @@ export function useEmbarqueInterno(embarqueId: string | undefined) {
     queryKey: queryKeys.embarques.interno(embarqueId),
     enabled: Boolean(embarqueId),
     staleTime: 30_000,
-    queryFn: () => obtenerEmbarqueInterno(embarqueId as string),
+    queryFn: () => obtenerEmbarqueInterno(embarqueId as string, { fresco: true }),
   });
 }
