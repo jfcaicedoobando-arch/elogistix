@@ -14,25 +14,27 @@ DECLARE
   datos jsonb;
   antes timestamptz;
   err text;
+  hoy date := public.fecha_negocio_mx();
 BEGIN
+  -- El corte de Cobranza es México, aunque la sesión CI esté en UTC.
   SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('AUD54-visible');
   INSERT INTO public.clientes(id, organization_id, nombre, rfc, email)
   VALUES (cli, fx.org_a, 'AUD54 visible', 'XAXX010101000', 'aud54visible@example.invalid');
   INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, numero,
     fecha_emision, fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado, metodo_pago)
   VALUES
-    (fac, fx.org_a, cli, 'Fixture', 'AUD54-PPD-cent', CURRENT_DATE - 2, CURRENT_DATE - 1, 'MXN', 1, 1, .16, 1.16, 'Emitida', 'PPD'),
-    (legacy, fx.org_a, cli, 'Fixture', 'AUD54-legacy-no-evidence', CURRENT_DATE, CURRENT_DATE + 30, 'MXN', 1, 1, .16, 1.16, 'Pagada', 'PUE'),
-    (cancelada, fx.org_a, cli, 'Fixture', 'AUD54-cancelada', CURRENT_DATE - 2, CURRENT_DATE - 1, 'MXN', 1, 1, .16, 1.16, 'Cancelada', 'PPD'),
-    (pue, fx.org_a, cli, 'Fixture', 'AUD54-legacy-with-cent', CURRENT_DATE - 2, CURRENT_DATE - 1, 'MXN', 1, 1, .16, 1.16, 'Emitida', 'PPD');
+    (fac, fx.org_a, cli, 'Fixture', 'AUD54-PPD-cent', hoy - 2, hoy - 1, 'MXN', 1, 1, .16, 1.16, 'Emitida', 'PPD'),
+    (legacy, fx.org_a, cli, 'Fixture', 'AUD54-legacy-no-evidence', hoy, hoy + 30, 'MXN', 1, 1, .16, 1.16, 'Pagada', 'PUE'),
+    (cancelada, fx.org_a, cli, 'Fixture', 'AUD54-cancelada', hoy - 2, hoy - 1, 'MXN', 1, 1, .16, 1.16, 'Cancelada', 'PPD'),
+    (pue, fx.org_a, cli, 'Fixture', 'AUD54-legacy-with-cent', hoy - 2, hoy - 1, 'MXN', 1, 1, .16, 1.16, 'Emitida', 'PPD');
   PERFORM pg_temp.as_user(fx.admin_a);
   INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago)
-  VALUES (fac, fx.org_a, CURRENT_DATE, 1.15, 'MXN', 1, 'Transferencia');
+  VALUES (fac, fx.org_a, hoy, 1.15, 'MXN', 1, 'Transferencia');
   PERFORM pg_temp.assert((SELECT estado = 'Parcialmente pagada' FROM public.facturas WHERE id = fac),
     'AUD54: PPD con centavo real no se marca Pagada');
   PERFORM pg_temp.assert(public.saldo_factura(fac) = .01, 'AUD54: PPD conserva deuda exacta');
   INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago)
-  VALUES (pue, fx.org_a, CURRENT_DATE, 1.15, 'MXN', 1, 'Transferencia') RETURNING id INTO pue_pago;
+  VALUES (pue, fx.org_a, hoy, 1.15, 'MXN', 1, 'Transferencia') RETURNING id INTO pue_pago;
 
   -- Simular exclusivamente en el fixture un estado histórico permitido por la versión anterior.
   PERFORM pg_temp.as_postgres();
@@ -75,7 +77,7 @@ BEGIN
   err := NULL;
   BEGIN
     INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago)
-    VALUES (pue, fx.org_a, CURRENT_DATE, .01, 'MXN', 1, 'Transferencia');
+    VALUES (pue, fx.org_a, hoy, .01, 'MXN', 1, 'Transferencia');
   EXCEPTION WHEN raise_exception THEN GET STACKED DIAGNOSTICS err = MESSAGE_TEXT;
   END;
   PERFORM pg_temp.assert(COALESCE(err LIKE 'LC_PAGO_PUE_EXHIBICION_UNICA:%', false),
@@ -86,7 +88,7 @@ BEGIN
 
   -- PPD sí permite cobrar el centavo restante por la vía normal.
   INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago)
-  VALUES (fac, fx.org_a, CURRENT_DATE, .01, 'MXN', 1, 'Transferencia');
+  VALUES (fac, fx.org_a, hoy, .01, 'MXN', 1, 'Transferencia');
   PERFORM pg_temp.assert(public.saldo_factura(fac) = 0 AND
     (SELECT estado = 'Pagada' FROM public.facturas WHERE id = fac), 'AUD54: PPD se liquida al cobrar todo');
   PERFORM pg_temp.assert((public.cobranza_agregados(cli)->>'total_mxn')::numeric = .01,
