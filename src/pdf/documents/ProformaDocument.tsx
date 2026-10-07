@@ -60,7 +60,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
 
 
   return (
-    <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
+    <Document title={`${proforma.numero} - Proforma`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
         {/*
@@ -68,7 +68,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           de conceptos fluyen libremente: no se envuelve todo en un contenedor
           con minPresenceAhead grande, que provocaba saltos de página completos.
         */}
-        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={70}>
+        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={140}>
           {multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}
         </Text>
         <SeccionMonedaPdf
@@ -86,6 +86,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           mostrarSubtituloMoneda={multiMoneda}
         />
 
+        {conceptos.length === 0 ? <Text style={styles.emptyState}>Sin conceptos para mostrar.</Text> : null}
+
         {/* P1 · Auditoría IVA: si algún renglón sigue sin clasificar, el total
             impreso es estimado y se dice explícitamente. */}
         {hayPorConfirmar ? (
@@ -98,7 +100,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
         <NotasSection notas={proforma.notas} />
 
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

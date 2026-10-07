@@ -33,7 +33,7 @@ function columnas(): PdfColumn<TarifaInformativa>[] {
     { key: "ruta", title: "Ruta", cellStyle: styles.cellDesc, render: (r) => rutaDe(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 70, fontSize: 9 } as never, render: (r) => r.unidad_medida },
     { key: "precio", title: "Precio", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.precio, r.moneda) },
-    { key: "notas", title: "Notas", cellStyle: { width: 95, fontSize: 9 } as never, render: (r) => r.notas || "—" },
+    { key: "notas", title: "Notas", cellStyle: { width: 160, fontSize: 9 } as never, render: (r) => r.notas || "—" },
   ];
 }
 
@@ -44,8 +44,8 @@ export function TarifarioDocument({ cotizacion, emisor }: Props) {
     : "—";
 
   return (
-    <Document>
-      <Page size="LETTER" style={styles.page}>
+    <Document title={`${cotizacion.folio} - Tarifario informativo`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Empresa"}>
+      <Page size="LETTER" orientation="landscape" style={styles.page}>
         <BrandHeader
           tipoDocumento="Tarifario Informativo"
           folio={cotizacion.folio}
@@ -74,7 +74,7 @@ export function TarifarioDocument({ cotizacion, emisor }: Props) {
           </View>
         )}
 
-        <Footer />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

@@ -16,7 +16,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import { fetchEmbarquesMes } from "@/features/facturacion/services/proyeccion/fetchSources";
 import { fetchEmbarquesParaHueco } from "@/features/facturacion/services/huecoFacturacion/fetchSources";
-import { fetchReferenciasEmbarque } from "@/features/facturacion/services/referenciasEmbarque";
+import { fetchReferenciasFacturaPreview } from "@/features/facturacion/services/referenciasEmbarque";
 
 function isArgsDeEmbarques(): unknown[][] {
   const call = mockRef.current!.tableCalls.find((c) => c.table === "embarques");
@@ -39,10 +39,11 @@ describe("facturación · embarques con borrado lógico", () => {
     expect(isArgsDeEmbarques()).toContainEqual(["deleted_at", null]);
   });
 
-  it("fetchReferenciasEmbarque filtra deleted_at IS NULL", async () => {
-    mockRef.current!.setTableResult("embarques", { data: null, error: null });
-    const res = await fetchReferenciasEmbarque("11111111-1111-4111-8111-111111111111");
-    expect(res).toBeNull();
+  it("fetchReferenciasFacturaPreview filtra deleted_at IS NULL", async () => {
+    mockRef.current!.setTableResult("conceptos_factura", { data: [{ id: "c1", descripcion: "Flete", embarque_id: "e1" }], error: null });
+    mockRef.current!.setTableResult("embarques", { data: [], error: null });
+    const res = await fetchReferenciasFacturaPreview({ id: "f1", organization_id: "org-1" }, "org-1");
+    expect(res.conceptos[0].estado).toBe("no_disponible");
     expect(isArgsDeEmbarques()).toContainEqual(["deleted_at", null]);
   });
 });

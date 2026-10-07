@@ -15,14 +15,17 @@ import {
 } from "@/features/tesoreria/services/libroPagosExport";
 import type { PagoLibro, TotalesLibroPagos } from "@/features/tesoreria/domain/libroPagos";
 import type { RangoPagos } from "@/features/tesoreria/domain/libroPagosRangos";
+import { cargarEmisorReporte } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 interface Props {
   pagos: PagoLibro[];
   rango: RangoPagos;
   totales: TotalesLibroPagos;
+  organizationId: string | null;
 }
 
-export function LibroPagosExportButtons({ pagos, rango, totales }: Props) {
+export function LibroPagosExportButtons({ pagos, rango, totales, organizationId }: Props) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const sinDatos = pagos.length === 0;
   const filas = filasLibroPagosExport(pagos);
@@ -43,16 +46,20 @@ export function LibroPagosExportButtons({ pagos, rango, totales }: Props) {
   };
 
   const descargarPdfPagos = async () => {
+    const scope = captureAuthOperationScope();
     setGenerandoPdf(true);
     try {
-      const [{ descargarPdf }, { LibroPagosDocument }] = await Promise.all([
+      const [{ descargarPdf }, { LibroPagosDocument }, emisor] = await Promise.all([
         import("@/pdf/render/descargarPdf"),
         import("@/pdf/documents/LibroPagosDocument"),
+        cargarEmisorReporte(organizationId),
       ]);
+      scope.assertCurrent();
       await descargarPdf(
         <LibroPagosDocument
           resumen={resumenLibroPagos(rango.desde, rango.hasta, totales)}
           filas={filas}
+          emisor={emisor}
         />,
         nombreArchivoLibroPagos(rango.desde, rango.hasta, "pdf"),
       );

@@ -15,9 +15,9 @@ describe("AUD100 · exportación del libro", () => {
       ]} />);
     expect(container).toHaveTextContent("Anticipo a proveedor");
     expect(container).toHaveTextContent("Devolución de anticipo");
-    expect(container).toHaveTextContent("Total pagado (MXN): MXN 0.03");
-    expect(container).toHaveTextContent("Devoluciones (MXN): MXN 0.03");
-    expect(container).toHaveTextContent("Neto (MXN): MXN 0.00");
+    expect(container).toHaveTextContent(/Total pagado \(MXN\):\s*MXN 0\.03/);
+    expect(container).toHaveTextContent(/Devoluciones \(MXN\):\s*MXN 0\.03/);
+    expect(container).toHaveTextContent(/Neto \(MXN\):\s*MXN 0\.00/);
     expect(container).toHaveTextContent("devoluciones al TC del anticipo original");
   });
 });

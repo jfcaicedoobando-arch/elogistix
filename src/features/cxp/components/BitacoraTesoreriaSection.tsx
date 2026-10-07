@@ -40,7 +40,7 @@ interface Props {
 export function BitacoraTesoreriaSection({
   facturaId, monedaFactura, folio, proveedor,
 }: Props) {
-  const { data, isLoading } = useBitacora({
+  const { data, isLoading, isPlaceholderData } = useBitacora({
     entidadId: facturaId,
     acciones: [...ACCIONES],
     limite: 50,
@@ -77,7 +77,9 @@ export function BitacoraTesoreriaSection({
     [visibles, monedaFactura, nombreCuenta],
   );
 
-  if (isLoading) return <ListSkeleton rows={3} />;
+  // useBitacora conserva temporalmente las filas de la entidad anterior.
+  // Nunca se exportan con el ID y la identidad de la factura recién elegida.
+  if (isLoading || isPlaceholderData) return <ListSkeleton rows={3} />;
 
   const vacioPorFiltros = entradas.length > 0 && visibles.length === 0;
 
@@ -91,6 +93,7 @@ export function BitacoraTesoreriaSection({
           Bitácora de tesorería
         </SectionHeading>
         <BitacoraTesoreriaExportButtons
+          facturaId={facturaId}
           filas={filasExport}
           folio={folio ?? facturaId}
           proveedor={proveedor}

@@ -1,3 +1,5 @@
+import type { FacturaReferenciasInput } from "./domain/referenciasFacturaPreview";
+
 // Query keys del módulo unificado Facturación (incluye lo que antes vivía en features/facturas).
 export const facturacion = {
   /** Prefijo canónico del dominio (invalidación amplia). */
@@ -10,6 +12,8 @@ export const facturacion = {
   ambienteEmision: (organizationId?: string | null) => ['facturapi_credenciales', organizationId, 'ambiente'] as const,
   clientesFiscalOpts: (organizationId?: string | null) => ['clientes_fiscal_opts', organizationId] as const,
   emisorEmpresa: ['emisor-empresa'] as const,
+  emisorEmpresaPdf: (documentOrganizationId: string | undefined, activeOrganizationId: string | null) =>
+    ['emisor-empresa', 'pdf', documentOrganizationId, activeOrganizationId] as const,
   /** Prefijo de todas las bandejas (invalidación por dominio). */
   bandejaPrefix: () => ['facturacion', 'bandeja'] as const,
   bandejaPorTimbrar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-timbrar', organizationId] as const,
@@ -22,8 +26,9 @@ export const facturacion = {
     ['facturacion', 'bandeja', 'proformas-listas', 'count', organizationId] as const,
   dashboardEjecutivo: (organizationId?: string | null, fallback?: unknown) =>
     ['facturacion', 'dashboard-ejecutivo', organizationId, fallback] as const,
-  referenciasEmbarque: (embarqueId?: string | null, expediente?: string, referenciaBl?: string) =>
-    ['referencias_embarque_factura', embarqueId, expediente ?? '', referenciaBl ?? ''] as const,
+  referenciasEmbarque: (organizationId: string | null, factura?: FacturaReferenciasInput | null) =>
+    ['referencias_embarque_factura', organizationId, factura?.id, factura?.organization_id,
+      factura?.embarque_id, factura?.expediente, factura?.referencia_bl] as const,
   emitirFactura: ['fiscal', 'emitir-factura'] as const,
   cancelarFactura: ['fiscal', 'cancelar-factura'] as const,
   facturaManual: ['fiscal', 'factura-manual'] as const,

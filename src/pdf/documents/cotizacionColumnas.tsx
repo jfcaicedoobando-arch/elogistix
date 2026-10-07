@@ -37,9 +37,9 @@ function columnasIva(moneda: string, tasaIva: number): PdfColumn<ConceptoVentaCo
 
 export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
-    { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
+    { key: "descripcion", title: "Descripción", hyphenate: false, cellStyle: styles.cellDesc,
       render: (r) => r.descripcion },
-    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellTreatment,
       render: (r) => etiquetaTratamientoFila(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
@@ -57,8 +57,8 @@ export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<Concept
  */
 export function columnasMXN(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
-    { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
-    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+    { key: "descripcion", title: "Descripción", hyphenate: false, cellStyle: styles.cellDesc, render: (r) => r.descripcion },
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellTreatment,
       render: (r) => etiquetaTratamientoFila(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },

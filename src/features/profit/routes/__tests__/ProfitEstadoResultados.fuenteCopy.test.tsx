@@ -19,7 +19,7 @@ const subtituloDevengado = "P&G mensual por modo de transporte basado en factura
 
 function controlador(fuente: FuenteEERR) {
   const c = {
-    mesActual: mes, mesesDisponibles: [mes], setMesKey: vi.fn(), irMesAnterior: vi.fn(), irMesSiguiente: vi.fn(),
+    organizationId: "org-test", mesActual: mes, mesesDisponibles: [mes], setMesKey: vi.fn(), irMesAnterior: vi.fn(), irMesSiguiente: vi.fn(),
     puedeIrAtras: false, puedeIrAdelante: false, data: buildEstadoResultados([], [], []),
     isLoading: false, isError: false, error: null, refetch: vi.fn(), fuente, setFuente: vi.fn(),
   };

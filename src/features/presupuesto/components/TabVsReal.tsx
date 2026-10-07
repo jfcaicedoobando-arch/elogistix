@@ -23,7 +23,9 @@ import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReportePresupuestoDocument se carga dinámicamente en el handler.
-import { withOrgPrefix } from "@/lib/filenames";
+import { slugifyOrg } from "@/lib/filenames";
+import { cargarEmisorReporte } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { usePdfExport } from "@/hooks/shared";
@@ -44,7 +46,7 @@ export function TabVsReal() {
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [soloExcesos, setSoloExcesos] = useState(false);
-  const { data, isLoading, error, refetch, isFetching } = usePresupuestoVsReal(periodo);
+  const { data, organizationId, isLoading, error, refetch, isFetching } = usePresupuestoVsReal(periodo);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -62,10 +64,15 @@ export function TabVsReal() {
   const handlePdf = () => {
     if (!data) return;
     void runPdfExport(async () => {
-      const { ReportePresupuestoDocument } = await import("@/pdf/documents/ReportePresupuestoDocument");
+      const scope = captureAuthOperationScope();
+      const [emisor, { ReportePresupuestoDocument }] = await Promise.all([
+        cargarEmisorReporte(organizationId),
+        import("@/pdf/documents/ReportePresupuestoDocument"),
+      ]);
+      scope.assertCurrent();
       await descargarPdf(
-        <ReportePresupuestoDocument resumen={data} filas={filasVisibles} soloExcesos={soloExcesos} />,
-        await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
+        <ReportePresupuestoDocument resumen={data} filas={filasVisibles} soloExcesos={soloExcesos} emisor={emisor} />,
+        `${emisor ? slugifyOrg(emisor.organizacionNombre || emisor.razonSocial) + "_" : ""}Reporte_Presupuesto_${periodo}.pdf`,
       );
     });
   };

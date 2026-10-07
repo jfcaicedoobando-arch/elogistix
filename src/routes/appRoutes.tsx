@@ -26,7 +26,7 @@ import {
   Cxp, FacturaProveedorDetalle, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpBuzonEntrantes, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion, AnticiposProveedor,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaEstadoCuenta, TesoreriaPagos, TesoreriaFlujo, TesoreriaPagosProgramados, Comisiones,
-  CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta, CosteoSolicitudesPricing,
+  CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta, CosteoSolicitudesPricing, CosteoTarifario,
   Usuarios, Configuracion,
   CrmLayout,
   DireccionDashboard,
@@ -115,6 +115,7 @@ export const appRoutes = (
     <Route path="/costeo/agentes" element={guarded("/costeo/agentes", <CosteoAgentes />)} />
     <Route path="/costeo/navieras" element={guarded("/costeo/navieras", <CosteoNavieras />)} />
     <Route path="/costeo/demoras-venta" element={guarded("/costeo/demoras-venta", <CosteoDemorasVenta />)} />
+    <Route path="/costeo/tarifario" element={guarded("/costeo/tarifario", <CosteoTarifario />)} />
     <Route path="/costeo/solicitudes" element={guarded("/costeo/solicitudes", <CosteoSolicitudesPricing />)} />
 
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />

@@ -4,6 +4,7 @@ import { descargarEstadoCuentaPdf } from "../estadoCuentaDescargas";
 
 const h = vi.hoisted(() => ({ descargarPdf: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: h.descargarPdf }));
+vi.mock("@/pdf/emisor", () => ({ cargarEmisorEntidad: async () => ({ organizacionNombre: "Operación sintética" }) }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: h.notifySuccess, notifyWarning: vi.fn(), notifyError: vi.fn(),
 }));
@@ -11,7 +12,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 describe("Descarga PDF proveedor: contrato74", () => {
   it("transporta apertura, saldo global y truncado sin reemplazarlos por el saldo del último movimiento", async () => {
     await descargarEstadoCuentaPdf({
-      proveedorNombre: "Proveedor sintético", desde: "2026-10-01", hasta: "2026-10-03",
+      proveedorId: "proveedor-sintetico", proveedorNombre: "Proveedor sintético", desde: "2026-10-01", hasta: "2026-10-03",
       movimientos: [{ fecha: "2026-10-03", tipo: "Factura", ref_id: "f1", folio: "FP-12",
         referencia: null, expediente: "", embarque_id: null, moneda: "MXN", cargo: 3,
         abono: 0, detalle: null, saldo: 4146.1 }], aging: [],

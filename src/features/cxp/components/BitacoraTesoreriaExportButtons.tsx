@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { cargarEmisorEntidad } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import {
   bitacoraExportACsv,
   nombreArchivoBitacora,
@@ -15,6 +17,7 @@ import {
 } from "@/features/cxp/services/bitacoraTesoreriaExport";
 
 interface Props {
+  facturaId: string;
   filas: FilaBitacoraExport[];
   folio: string;
   proveedor?: string;
@@ -22,7 +25,7 @@ interface Props {
 }
 
 export function BitacoraTesoreriaExportButtons({
-  filas, folio, proveedor, filtrosAplicados,
+  filas, folio, proveedor, filtrosAplicados, facturaId,
 }: Props) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const sinDatos = filas.length === 0;
@@ -44,15 +47,19 @@ export function BitacoraTesoreriaExportButtons({
   };
 
   const descargarPdfBitacora = async () => {
+    const scope = captureAuthOperationScope();
     setGenerandoPdf(true);
     try {
-      const [{ descargarPdf }, { BitacoraTesoreriaDocument }] = await Promise.all([
+      const [{ descargarPdf }, { BitacoraTesoreriaDocument }, emisor] = await Promise.all([
         import("@/pdf/render/descargarPdf"),
         import("@/pdf/documents/BitacoraTesoreriaDocument"),
+        cargarEmisorEntidad("proveedor_facturas", facturaId),
       ]);
+      scope.assertCurrent();
       await descargarPdf(
         <BitacoraTesoreriaDocument
           folio={folio}
+          emisor={emisor}
           proveedor={proveedor}
           filtrosAplicados={filtrosAplicados}
           filas={filas}

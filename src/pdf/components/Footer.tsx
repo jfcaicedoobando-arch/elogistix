@@ -1,17 +1,19 @@
 import { View, Text } from "@react-pdf/renderer";
 import { styles, FONTS, COLORS } from "../theme/styles";
 import { formatFechaEs } from "@/lib/formatters";
+import type { EmisorInfo } from "./BrandHeader";
 
 interface Props {
   /** Nombre de la empresa emisora a mostrar en la columna izquierda. */
   empresaNombre?: string;
+  emisor?: EmisorInfo;
 }
 
 /**
  * Footer fijo: 3 columnas (marca / fecha / paginación).
  * Línea superior en color corporativo. Se repite en cada página vía `fixed`.
  */
-export function Footer({ empresaNombre }: Props) {
+export function Footer({ empresaNombre, emisor }: Props) {
   // Fecha compacta (DD/MM/AAAA): la columna central del pie es estrecha y el
   // formato largo se partía en dos líneas.
   const fecha = formatFechaEs(new Date().toISOString(), {
@@ -20,17 +22,18 @@ export function Footer({ empresaNombre }: Props) {
     year: "numeric",
   });
 
-  const marca = (empresaNombre ?? "").trim();
+  const nombre = (emisor?.organizacionNombre || empresaNombre || emisor?.razonSocial || "").trim();
+  const marca = nombre === "Empresa" ? "" : nombre;
   return (
     <View style={styles.footer} fixed>
       {marca ? (
         <Text
           style={[
             styles.footerColLeft,
-            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 0.5 },
+            { fontFamily: FONTS.bold, color: COLORS.primary, maxLines: 2 },
           ]}
         >
-          {marca.toUpperCase()}
+          {marca}
         </Text>
       ) : (
         <Text style={styles.footerColLeft}>

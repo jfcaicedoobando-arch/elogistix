@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ClienteFichaEstadoCuenta {
   id: string;
+  organization_id: string;
   nombre: string;
   rfc: string | null;
   direccion: string | null;
@@ -21,13 +22,14 @@ export async function fetchClienteFichaEstadoCuenta(
 ): Promise<ClienteFichaEstadoCuenta> {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, nombre, rfc, direccion, ciudad, estado, dias_credito, limite_credito_mxn")
+    .select("id, organization_id, nombre, rfc, direccion, ciudad, estado, dias_credito, limite_credito_mxn")
     .eq("id", clienteId)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Cliente no encontrado");
   return {
     id: data.id,
+    organization_id: data.organization_id,
     nombre: data.nombre ?? "",
     rfc: data.rfc ?? null,
     direccion: data.direccion ?? null,
