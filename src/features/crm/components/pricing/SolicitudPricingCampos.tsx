@@ -67,10 +67,14 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
         <CampoTexto id="pr-dim" label="Dimensions" {...d} value={datos.dimensiones} onChange={txt("dimensiones")} />
       </FormDialogSection>
       <FormDialogSection title="Ruta">
-        <CampoTexto id="pr-pol" label="AOL/POL" {...d} value={datos.pol} onChange={txt("pol")} />
-        <CampoTexto id="pr-pod" label="AOD/POD" {...d} value={datos.pod} onChange={txt("pod")} />
-        <CampoTexto id="pr-origen" label="Origen" required {...d} value={datos.origen} onChange={txt("origen")} />
-        <CampoTexto id="pr-destino" label="Destino" required {...d} value={datos.destino} onChange={txt("destino")} />
+        <CampoLista id="pr-origen" label="País de Origen" required {...d} value={datos.origen}
+          opciones={paises} onChange={cambiarPais("origen", "pol")} />
+        <CampoPuerto id="pr-pol" label="Puerto origen" {...d} pais={datos.origen} value={datos.pol}
+          puertos={puertos} excluirEtiqueta={datos.pod} onChange={(v) => set("pol", v)} />
+        <CampoLista id="pr-destino" label="País de Destino" required {...d} value={datos.destino}
+          opciones={paises} onChange={cambiarPais("destino", "pod")} />
+        <CampoPuerto id="pr-pod" label="Puerto destino" {...d} pais={datos.destino} value={datos.pod}
+          puertos={puertos} excluirEtiqueta={datos.pol} onChange={(v) => set("pod", v)} />
         <CampoTexto id="pr-carga" label="Fecha tentativa de carga" type="date" {...d} value={datos.fecha_tentativa_carga}
           onChange={txt("fecha_tentativa_carga")} />
         <CampoTexto id="pr-delivery" label="Delivery" {...d} value={datos.delivery} onChange={txt("delivery")} />
