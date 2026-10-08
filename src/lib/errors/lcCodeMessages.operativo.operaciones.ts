@@ -16,6 +16,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_EMBARQUE_NO_ENCONTRADO: "El embarque no existe o fue eliminado.",
   LC_EMBARQUE_ELIMINADO: "El embarque ya fue eliminado.",
   LC_EMBARQUE_BLOQUEADO: "El embarque está bloqueado y no admite cambios.",
+  LC_SEGURO_FACTURA_INVALIDA:
+    "La factura no está vigente, no pertenece a tu organización o no corresponde a este embarque. Selecciona una factura válida para ligar la póliza.",
 
   // C23/C24 (v13.823.380) — sincronización de contenedores.
   LC_CONTENEDOR_ID_INVALIDO:
