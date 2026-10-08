@@ -5,6 +5,7 @@ import {
   AprobacionFacturaError,
 } from "@/features/cxp/services/aprobacionFactura";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -24,6 +25,7 @@ export function useAprobarFactura() {
     mutationFn: ({ id, aprobar, motivo, expectedUpdatedAt }: Vars) =>
       aprobarFacturaProveedor(id, aprobar, motivo, expectedUpdatedAt),
     onSuccess: (_data, vars) => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pendientesAprobacionCount });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });

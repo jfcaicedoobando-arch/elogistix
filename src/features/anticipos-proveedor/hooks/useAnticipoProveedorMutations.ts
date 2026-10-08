@@ -1,4 +1,6 @@
 /** Mutaciones del feature Anticipos a Proveedor — usan `useMutationWithFeedback`. */
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { usePayloadRequestId, scopeDePayload } from "@/lib/idempotency";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
@@ -34,6 +36,7 @@ interface AplicarAnticipoVars {
 }
 
 export function useAplicarAnticipo() {
+  const qc = useQueryClient();
   // BL-08: llave de idempotencia por intento de submit — un doble click o
   // retry de React Query reenvía la MISMA llave y el servidor deduplica.
   // MNY P1.4: la llave está ligada al contenido (anticipo, factura, monto,
@@ -53,6 +56,7 @@ export function useAplicarAnticipo() {
         ),
       ),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       reqId.reset();
     },
     // Ola 12 · R3P-02.

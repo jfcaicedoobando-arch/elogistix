@@ -5,6 +5,7 @@ import {
 } from "@/features/cxp/services/cerrarFacturaSinPago";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { getErrorMessage } from "@/lib/errors";
 
 /**
@@ -23,6 +24,7 @@ export function useCerrarFacturaProveedorSinPago() {
       comentario?: string;
     }) => cerrarFacturaProveedorSinPago(p),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       notifySuccess(undefined, {
         title: "Factura cerrada sin pago",
         description:

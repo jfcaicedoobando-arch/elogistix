@@ -4,6 +4,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import {
   registrarPagoProveedorLote,
   type RegistrarPagoLoteInput,
@@ -16,6 +17,7 @@ export function usePagoProveedorLote() {
   return useMutation({
     mutationFn: (input: RegistrarPagoLoteInput) => registrarPagoProveedorLote(input),
     onSuccess: (_id, vars) => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       // B-2: la bandeja "CxP por pagar" y su badge leen `bandejas.all`; sin

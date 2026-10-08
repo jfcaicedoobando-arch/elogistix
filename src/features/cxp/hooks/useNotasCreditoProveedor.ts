@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import {
   aplicarNotaCredito,
   aprobarNotaCredito,
@@ -27,6 +28,7 @@ export function useNotasCreditoFactura(facturaId: string | undefined) {
 function useInvalidateNc(facturaId: string | undefined) {
   const qc = useQueryClient();
   return () => {
+    void invalidateSeguroFacturaDependencies(qc);
     if (facturaId) qc.invalidateQueries({ queryKey: queryKeys.cxp.notasCredito(facturaId) });
   };
 }

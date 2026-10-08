@@ -10,6 +10,7 @@ import {
   listTrash, listTrashCounts, restoreRecord, purgeRecord,
   type SoftTable, type TrashRow, } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 export type { SoftTable, TrashRow,  };
@@ -38,8 +39,13 @@ export function usePapelera(enabled: boolean) {
 
   const restore = useMutation({
     mutationFn: (id: string) => restoreRecord(tabla, id),
-    onSuccess: () => {
+    onMutate: () => tabla,
+    onSuccess: (_data, _id, tablaRestaurada) => {
       toast({ title: "Registro restaurado" });
+      if (["embarques", "seguros_embarque", "proveedor_facturas", "conceptos_costo",
+        "proveedor_notas_credito", "pagos_proveedor"].includes(tablaRestaurada ?? "")) {
+        void invalidateSeguroFacturaDependencies(qc);
+      }
       invalidateAll();
     },
     onError: (e: Error) =>
