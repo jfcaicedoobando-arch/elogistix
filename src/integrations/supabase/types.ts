@@ -8947,6 +8947,7 @@ export type Database = {
           numero_poliza: string
           organization_id: string
           prima: number
+          proveedor_factura_id: string | null
           suma_asegurada: number
           updated_at: string
           updated_by: string | null
@@ -8969,6 +8970,7 @@ export type Database = {
           numero_poliza: string
           organization_id: string
           prima?: number
+          proveedor_factura_id?: string | null
           suma_asegurada?: number
           updated_at?: string
           updated_by?: string | null
@@ -8991,6 +8993,7 @@ export type Database = {
           numero_poliza?: string
           organization_id?: string
           prima?: number
+          proveedor_factura_id?: string | null
           suma_asegurada?: number
           updated_at?: string
           updated_by?: string | null
@@ -9004,6 +9007,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "embarques"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seguros_embarque_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "seguros_embarque_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seguros_embarque_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
           },
         ]
       }

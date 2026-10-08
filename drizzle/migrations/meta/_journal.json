@@ -85,6 +85,13 @@
       "when": 1791470138350,
       "tag": "0011_audit144_nc_identidad_normalizada",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791470851213,
+      "tag": "0012_audit148_seguro_factura_proveedor",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,8 @@ export interface SeguroEmbarque {
   vigencia_hasta: string;
   contacto: string | null;
   notas: string | null;
+  /** Factura de proveedor que documenta la prima (hallazgo 148). Opcional. */
+  proveedor_factura_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,7 +37,35 @@ export type SeguroEmbarqueInput = Omit<
 > & { organization_id?: string };
 
 const COLUMNS =
-  "id, embarque_id, organization_id, aseguradora, numero_poliza, certificado_url, cobertura_descripcion, suma_asegurada, deducible, prima, moneda, vigencia_desde, vigencia_hasta, contacto, notas, created_at, updated_at";
+  "id, embarque_id, organization_id, aseguradora, numero_poliza, certificado_url, cobertura_descripcion, suma_asegurada, deducible, prima, moneda, vigencia_desde, vigencia_hasta, contacto, notas, proveedor_factura_id, created_at, updated_at";
+
+export interface FacturaSeguroElegible {
+  id: string;
+  folio_interno: string | null;
+  proveedor_nombre: string | null;
+  subtotal: number;
+  moneda: string;
+}
+
+/**
+ * Facturas de proveedor vigentes del embarque que pueden documentar una prima.
+ * La base valida otra vez pertenencia, organización y que no la use otra póliza.
+ */
+export async function fetchFacturasSeguroElegibles(embarqueId: string): Promise<FacturaSeguroElegible[]> {
+  const data = await unwrapOr(
+    supabase
+      .from("proveedor_facturas")
+      .select("id, folio_interno, proveedor_nombre, subtotal, moneda")
+      .eq("embarque_id", embarqueId)
+      .is("deleted_at", null)
+      .not("estado", "in", "(Borrador,Cancelada)")
+      .order("fecha_emision", { ascending: false })
+      .limit(100),
+    [],
+  );
+  // SAFE-CAST: columnas explícitas mapean 1:1 a FacturaSeguroElegible.
+  return data as unknown as FacturaSeguroElegible[];
+}
 
 export async function fetchSegurosEmbarque(embarqueId: string): Promise<SeguroEmbarque[]> {
   const data = await unwrapOr(
