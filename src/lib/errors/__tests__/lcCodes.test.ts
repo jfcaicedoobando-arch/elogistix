@@ -45,6 +45,15 @@ describe("lcCodes", () => {
     expect(stripLcCode("sin código")).toBe("sin código");
   });
 
+  it("explica el rechazo de la factura de una póliza sin exponer detalles internos", () => {
+    const raw = "LC_SEGURO_FACTURA_INVALIDA: detalle interno";
+    const friendly = "La factura no está vigente, no pertenece a tu organización o no corresponde a este embarque. Selecciona una factura válida para ligar la póliza.";
+    expect(translateLcCode(raw)).toBe(friendly);
+    expect(getErrorMessage(new Error(raw))).toBe(friendly);
+    // Conserva la prioridad existente de SQLSTATE 23514 en errores PostgREST.
+    expect(getErrorMessage({ code: "23514", message: raw })).toMatch(/regla de validación del sistema/);
+  });
+
   it("getErrorMessage prioriza legacy y luego catálogo LC", () => {
     expect(getErrorMessage(new Error("factura_inmutable"))).toMatch(/nota de crédito/i);
     expect(getErrorMessage(new Error("LC_AUTH_REQUIRED"))).toMatch(/iniciar sesión/i);

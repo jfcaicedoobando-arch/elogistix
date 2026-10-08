@@ -14884,7 +14884,9 @@
       "20261007001000_audit62_130_cxp_captura_base.sql",
       "20261007001300_audit139_cierre_saldo_atribuido.sql",
       "20261007001600_audit70_aging_saldo_canonico.sql",
-      "20261007001700_audit70_por_pagar_saldo_canonico.sql"
+      "20261007001700_audit70_por_pagar_saldo_canonico.sql",
+      "20261008143000_replay_audit144_nc_identidad.sql",
+      "20261008145000_replay_audit148_seguro_factura.sql"
     ]
   }
 }

@@ -4759,13 +4759,13 @@ BEGIN
   SELECT moneda::text AS moneda, tipo_cambio INTO v_f FROM public.facturas WHERE id = NEW.factura_id;
   v_fx := public._nc_factor_moneda_factura(NEW.moneda::text, NEW.tipo_cambio, v_f.moneda, v_f.tipo_cambio);
   FOR r IN
-    SELECT l->>'concepto_factura_id' AS cfid,
+    SELECT lower(btrim(l->>'concepto_factura_id')) AS cfid,
            SUM(round(COALESCE((l->>'cantidad')::numeric, 1) * COALESCE((l->>'precio_unitario')::numeric, 0), 2)) AS base
     FROM jsonb_array_elements(NEW.conceptos) l
-    WHERE NULLIF(l->>'concepto_factura_id', '') IS NOT NULL
+    WHERE NULLIF(btrim(l->>'concepto_factura_id'), '') IS NOT NULL
     GROUP BY 1
   LOOP
-    IF r.cfid !~* '^[0-9a-f-]{36}$' OR NOT EXISTS (
+    IF r.cfid !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' OR NOT EXISTS (
       SELECT 1 FROM public.conceptos_factura cf
       WHERE cf.id = r.cfid::uuid AND cf.factura_id = NEW.factura_id
         AND cf.organization_id = NEW.organization_id AND cf.deleted_at IS NULL) THEN
@@ -4778,9 +4778,9 @@ BEGIN
     FROM public.factura_notas_credito o
     CROSS JOIN LATERAL jsonb_array_elements(
       CASE WHEN jsonb_typeof(o.conceptos) = 'array' THEN o.conceptos ELSE '[]'::jsonb END) l
-    WHERE o.factura_id = NEW.factura_id AND o.id <> NEW.id
-      AND o.deleted_at IS NULL AND o.estado <> 'Cancelada'
-      AND l->>'concepto_factura_id' = r.cfid;
+    WHERE o.factura_id = NEW.factura_id AND o.organization_id = NEW.organization_id
+      AND o.id <> NEW.id AND o.deleted_at IS NULL AND o.estado <> 'Cancelada'
+      AND lower(btrim(l->>'concepto_factura_id')) = r.cfid;
     IF r.base * v_fx + v_otras > (SELECT round(cf.cantidad * cf.precio_unitario, 2)
                                   FROM public.conceptos_factura cf WHERE cf.id = r.cfid::uuid) + 0.01 THEN
       RAISE EXCEPTION 'LC_NC_EXCEDE_CONCEPTO: la nota acredita más que el subtotal del concepto original.'
@@ -5245,6 +5245,33 @@ BEGIN
   DELETE FROM public.cotizacion_versiones WHERE organization_id = v_org;
   DELETE FROM public.cotizacion_envios WHERE organization_id = v_org;
   PERFORM set_config('app.seed_demo', '0', true);
+END;
+$$;
+CREATE FUNCTION public._seguro_validar_factura_proveedor() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.proveedor_factura_id IS NULL OR NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    WHERE pf.id = NEW.proveedor_factura_id
+      AND pf.organization_id = NEW.organization_id
+      AND pf.deleted_at IS NULL
+      AND pf.estado::text NOT IN ('Borrador','Cancelada')
+      AND (pf.embarque_id = NEW.embarque_id OR EXISTS (
+        SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+        JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+        WHERE pfc.proveedor_factura_id = pf.id AND cc.embarque_id = NEW.embarque_id
+          AND cc.deleted_at IS NULL AND COALESCE(pfc.monto, 0) > 0))
+    FOR SHARE OF pf
+  ) THEN
+    RAISE EXCEPTION 'LC_SEGURO_FACTURA_INVALIDA: la factura no es vigente, no es de tu organización o no pertenece a este embarque.'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public._sync_user_roles_desde_membership() RETURNS trigger
@@ -24419,8 +24446,12 @@ BEGIN
            coalesce(prima,0)::numeric AS monto,
            NULL::uuid AS proveedor_id, aseguradora AS proveedor_nombre,
            CASE WHEN UPPER(moneda::text) = 'EUR' THEN NULLIF(_tc_eur,0) ELSE NULLIF(_tc_usd,0) END AS tc_doc
-    FROM public.seguros_embarque
-    WHERE embarque_id = _embarque_id AND deleted_at IS NULL
+    FROM public.seguros_embarque s
+    WHERE s.embarque_id = _embarque_id AND s.deleted_at IS NULL
+      AND NOT EXISTS (SELECT 1 FROM public.proveedor_facturas pfx
+                      WHERE pfx.id = s.proveedor_factura_id AND pfx.organization_id = _org
+                        AND pfx.deleted_at IS NULL
+                        AND pfx.estado::text NOT IN ('Borrador','Cancelada'))
   ),
   -- C29 (v13.823.381): una factura fusionada puede cubrir VARIOS embarques
   -- (`factura_embarques` + `conceptos_factura.embarque_id`). Antes se filtraba
@@ -35236,7 +35267,8 @@ CREATE TABLE public.seguros_embarque (
     created_by uuid,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_by uuid,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    proveedor_factura_id uuid
 );
 CREATE TABLE public.super_admin_org_activa (
     user_id uuid NOT NULL,
@@ -36213,6 +36245,7 @@ CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios USING b
 CREATE UNIQUE INDEX ux_clientes_email_org ON public.clientes USING btree (organization_id, lower(btrim(email))) WHERE ((deleted_at IS NULL) AND (email IS NOT NULL) AND (btrim(email) <> ''::text));
 CREATE UNIQUE INDEX ux_cotizaciones_ganadora_viva_por_oportunidad ON public.cotizaciones USING btree (organization_id, oportunidad_id) WHERE ((deleted_at IS NULL) AND (oportunidad_id IS NOT NULL) AND (estado = ANY (ARRAY['Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion])));
 CREATE UNIQUE INDEX ux_proveedor_facturas_uuid_fiscal_org ON public.proveedor_facturas USING btree (organization_id, upper(btrim(uuid_fiscal))) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
+CREATE UNIQUE INDEX ux_seguros_embarque_factura_activa ON public.seguros_embarque USING btree (proveedor_factura_id) WHERE ((proveedor_factura_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE TRIGGER costeo_tarifas_match_agente_org_trg BEFORE INSERT OR UPDATE OF organization_id, agente_id ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_match_agente_org();
 CREATE TRIGGER crm_scoring_cortes_updated_at BEFORE UPDATE ON public.crm_scoring_cortes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER crm_scoring_reglas_updated_at BEFORE UPDATE ON public.crm_scoring_reglas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -36512,6 +36545,7 @@ CREATE TRIGGER trg_recalcular_estado_factura AFTER INSERT OR DELETE OR UPDATE ON
 CREATE TRIGGER trg_recalcular_estado_factura_nc AFTER INSERT OR UPDATE OF estado, monto, deleted_at ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.recalcular_estado_factura();
 CREATE TRIGGER trg_reversar_movimiento_rep_cancelado AFTER UPDATE OF estado_rep ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_reversar_movimiento_rep_cancelado();
 CREATE TRIGGER trg_reverse_ajustes_factura_proveedor AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW WHEN ((((new.estado IS DISTINCT FROM old.estado) AND (new.estado = 'Cancelada'::public.estado_proveedor_factura)) OR ((new.deleted_at IS DISTINCT FROM old.deleted_at) AND (new.deleted_at IS NOT NULL)))) EXECUTE FUNCTION public.tg_reverse_ajustes_factura_proveedor();
+CREATE TRIGGER trg_seguro_validar_factura_proveedor BEFORE INSERT OR UPDATE OF proveedor_factura_id, deleted_at, embarque_id, organization_id ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public._seguro_validar_factura_proveedor();
 CREATE TRIGGER trg_seguros_embarque_updated_at BEFORE UPDATE ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_set_embarque_created_by BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.set_embarque_created_by();
 CREATE TRIGGER trg_set_estado_rep_pago BEFORE INSERT ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.set_estado_rep_pago();
@@ -37026,6 +37060,8 @@ ALTER TABLE ONLY public.refacturaciones
     ADD CONSTRAINT refacturaciones_factura_original_id_fkey FOREIGN KEY (factura_original_id) REFERENCES public.facturas(id);
 ALTER TABLE ONLY public.seguros_embarque
     ADD CONSTRAINT seguros_embarque_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.seguros_embarque
+    ADD CONSTRAINT seguros_embarque_proveedor_factura_id_fkey FOREIGN KEY (proveedor_factura_id) REFERENCES public.proveedor_facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.super_admin_org_activa
     ADD CONSTRAINT super_admin_org_activa_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.tracking_externo
@@ -38097,6 +38133,9 @@ REVOKE ALL ON FUNCTION public._saldo_factura_calc(p_factura_id uuid) FROM PUBLIC
 GRANT ALL ON FUNCTION public._saldo_factura_calc(p_factura_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._seed_demo_limpiar_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._seed_demo_limpiar_financiero() TO service_role;
+REVOKE ALL ON FUNCTION public._seguro_validar_factura_proveedor() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._seguro_validar_factura_proveedor() TO authenticated;
+GRANT ALL ON FUNCTION public._seguro_validar_factura_proveedor() TO service_role;
 REVOKE ALL ON FUNCTION public._sync_user_roles_desde_membership() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._sync_user_roles_desde_membership() TO service_role;
 REVOKE ALL ON FUNCTION public._tasa_iva_canonica(p_tipo_iva text, p_tasa_iva_aplicada numeric, p_aplica_iva boolean, p_tasa_global numeric) FROM PUBLIC;

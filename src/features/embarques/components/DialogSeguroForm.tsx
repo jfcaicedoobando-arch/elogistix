@@ -11,6 +11,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { validarSeguroForm } from "./seguroFormValidation";
 import { SeguroFormCamposPrincipales } from "./SeguroFormCamposPrincipales";
 import { SeguroFormCamposAdicionales } from "./SeguroFormCamposAdicionales";
+import { SeguroFacturaProveedorSelect } from "./SeguroFacturaProveedorSelect";
 
 interface Props {
   open: boolean;
@@ -34,6 +35,7 @@ const emptyState = (): FormState => ({
   vigencia_hasta: todayLocalISO(),
   contacto: null,
   notas: null,
+  proveedor_factura_id: null,
 });
 
 export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Props) {
@@ -60,6 +62,7 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
             vigencia_hasta: seguro.vigencia_hasta,
             contacto: seguro.contacto,
             notas: seguro.notas,
+            proveedor_factura_id: seguro.proveedor_factura_id ?? null,
           }
         : emptyState(),
     );
@@ -96,6 +99,8 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <SeguroFormCamposPrincipales form={form} setField={setField} />
         <SeguroFormCamposAdicionales form={form} setField={setField} />
+        <SeguroFacturaProveedorSelect embarqueId={embarqueId} value={form.proveedor_factura_id}
+          onChange={(id) => setField("proveedor_factura_id", id)} />
       </div>
     </FormDialogShell>
   );

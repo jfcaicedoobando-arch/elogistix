@@ -84,5 +84,19 @@
     "replays": [
       "20261006234000_replay_tarifario_pricing.sql"
     ]
+  },
+  {
+    "file": "0011_audit144_nc_identidad_normalizada.sql",
+    "sha256": "3d5c653240c8b07f19b6bf9d921fc17c52a6bb93fcf38f286f67cf85d5f6c04d",
+    "replays": [
+      "20261008143000_replay_audit144_nc_identidad.sql"
+    ]
+  },
+  {
+    "file": "0012_audit148_seguro_factura_proveedor.sql",
+    "sha256": "da4eae0962802961bbf4d54ac73e7274c82bba2a84cc00f64d39da79e69b0b34",
+    "replays": [
+      "20261008145000_replay_audit148_seguro_factura.sql"
+    ]
   }
 ]
