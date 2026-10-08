@@ -5,6 +5,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import {
@@ -18,6 +19,7 @@ export function useEditarConceptosFactura(facturaId: string) {
     mutationFn: (params: Omit<ReemplazarConceptosParams, "facturaId">) =>
       reemplazarConceptosFactura({ ...params, facturaId }),
     onSuccess: (total) => {
+      void invalidateSeguroFacturaDependencies(qc);
       void qc.invalidateQueries({ queryKey: queryKeys.cxp.conceptosCfdi(facturaId) });
       void qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(facturaId) });
       void qc.invalidateQueries({ queryKey: queryKeys.cxp.all });

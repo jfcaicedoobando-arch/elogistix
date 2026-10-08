@@ -3,6 +3,8 @@
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
 import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import type { VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
 import { crearAccionesVinculos } from "./useNuevaFacturaProveedorForm.acciones";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -30,6 +32,7 @@ export function useNuevaFacturaProveedorForm(
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
 ) {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { organizationId } = useOrgFilter();
   const crear = useCrearFacturaProveedor();
   const manuales = useConceptosManuales();
@@ -168,6 +171,8 @@ export function useNuevaFacturaProveedorForm(
     // P1: si el cierre posterior (marcar capturado en el buzón) falla, se
     // conserva la captura para reintentar; sólo se limpia cuando cerró bien.
     onSuccess: async (facturaId) => {
+      // El submit terminó de persistir conceptos y vínculos después del alta.
+      void invalidateSeguroFacturaDependencies(qc);
       const cerrado = await onDone(facturaId);
       if (cerrado !== false) reset();
     },

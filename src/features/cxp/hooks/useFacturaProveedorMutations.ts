@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   crearFacturaProveedor,
@@ -17,6 +18,7 @@ export function useCrearFacturaProveedor() {
   return useMutation({
     mutationFn: (payload: CrearFacturaProveedorInput) => crearFacturaProveedor(payload),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
@@ -36,6 +38,7 @@ export function useEliminarFacturaProveedor() {
   return useMutation({
     mutationFn: (id: string) => softDeleteFacturaProveedor(id, user?.id ?? null),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
@@ -45,6 +48,7 @@ export function useEliminarFacturaProveedor() {
       // La fila pudo quedar "fantasma" en un cliente con caché viejo: la BD
       // responde LC_FACTURA_PROVEEDOR_NOT_FOUND porque ya estaba borrada.
       if (/LC_FACTURA_PROVEEDOR_NOT_FOUND/.test(error.message)) {
+        void invalidateSeguroFacturaDependencies(qc);
         qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
@@ -70,6 +74,7 @@ export function useActualizarFacturaProveedor() {
       expectedUpdatedAt?: string | null;
     }) => actualizarFacturaProveedor(id, payload, expectedUpdatedAt),
     onSuccess: (_data, vars) => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });

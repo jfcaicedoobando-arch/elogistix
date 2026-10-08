@@ -16,6 +16,7 @@ import {
 } from "@/features/cxp/services/aprobacionFactura";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 
 export interface ResultadoLote {
   exitos: string[];
@@ -123,6 +124,7 @@ export function useAprobarFacturasLote() {
       }
 
       // Invalida una sola vez al final.
+      if (exitos.length > 0) void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });

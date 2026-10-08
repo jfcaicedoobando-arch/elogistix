@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listarPagosProveedor,
@@ -29,6 +30,7 @@ export function useRegistrarPagoProveedor() {
     mutationFn: (input: RegistrarPagoProveedorInput) =>
       registrarPagoProveedor(input, user?.id ?? null),
     onSuccess: (_d, vars) => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(vars.proveedor_factura_id) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // R6-N1: el pago genera un movimiento bancario → refrescar saldos y conciliación.
@@ -53,6 +55,7 @@ export function useEliminarPagoProveedor(facturaId: string) {
   return useMutation({
     mutationFn: (pagoId: string) => eliminarPagoProveedor(pagoId, facturaId, user?.id ?? null),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
@@ -82,6 +85,7 @@ export function useActualizarPagoProveedor(facturaId: string) {
     mutationFn: (input: ActualizarPagoProveedorInput) =>
       actualizarPagoProveedor(input, user?.id ?? null),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });

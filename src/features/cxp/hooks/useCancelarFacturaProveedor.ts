@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cancelarFacturaProveedor } from "@/features/cxp/services/cancelarFacturaProveedor";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -17,6 +18,7 @@ export function useCancelarFacturaProveedor() {
     mutationFn: (p: { facturaId: string; motivo: string }) =>
       cancelarFacturaProveedor(p.facturaId, p.motivo),
     onSuccess: () => {
+      void invalidateSeguroFacturaDependencies(qc);
       notifySuccess(undefined, {
         title: "Registro de factura de proveedor cancelado",
         description: "Se cancelaron los registros de notas de crédito asociados y se recalculó la liquidación de los costos del embarque. No se solicitó cancelación ante el SAT.",
