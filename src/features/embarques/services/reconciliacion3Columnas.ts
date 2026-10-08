@@ -1,3 +1,4 @@
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 /**
  * Servicio: reconciliación a 3 columnas (Fase 2).
  *
@@ -47,6 +48,7 @@ export async function obtenerReconciliacion3Columnas(
   embarqueId: string,
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
 ): Promise<ResultadoReconciliacion3C> {
+  const scope = captureAuthOperationScope();
   // 1. Meta del embarque (cotizacion_id). El delta de Fase 1 vive en
   // `embarques_interno_v` desde FIX2 · B-1 (columna revocada a authenticated).
   const { data: embRaw, error: embErr } = await supabase
@@ -54,6 +56,7 @@ export async function obtenerReconciliacion3Columnas(
     .select("cotizacion_id, organization_id, tipo_cambio_usd, tipo_cambio_eur")
     .eq("id", embarqueId)
     .maybeSingle();
+  scope.assertCurrent();
   if (embErr) throw new Error(embErr.message);
   if (!embRaw) {
     return {
@@ -88,7 +91,9 @@ export async function obtenerReconciliacion3Columnas(
   const reales = agruparRealesFacturados(await fetchReconciliacionEmbarque(embarqueId));
 
   // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
+  scope.assertCurrent();
   const interno = await obtenerEmbarqueInterno(embarqueId);
+  scope.assertCurrent();
   const delta = obtenerDeltaAplicado(interno?.tarifa_delta_jsonb);
 
   const filas = buildFilas3C(cotizados, delta, reales, umbrales);

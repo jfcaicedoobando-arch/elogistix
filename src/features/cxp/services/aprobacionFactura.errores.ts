@@ -17,7 +17,7 @@ const ERROR_RULES: readonly RuleMatch[] = [
   {
     code: "LC_CONFLICTO_CONCURRENCIA",
     message: "La factura cambió desde que la revisaste. Cierra este diálogo, recarga y revisa los datos actuales antes de decidir.",
-    matches: (raw, code) => code === "40001" || raw.includes("lc_conflicto_concurrencia"),
+    matches: (raw, code) => code === "PT409" || code === "40001" || raw.includes("lc_conflicto_concurrencia"),
   },
   {
     code: "SESSION_EXPIRED",

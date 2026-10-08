@@ -194,3 +194,15 @@ BEGIN
   VALUES (v_uid, 'super_admin'::public.app_role)
   ON CONFLICT DO NOTHING;
 END $$;
+
+-- Drizzle 0010 grants SELECT/INSERT/UPDATE only: physical deletion is not part
+-- of the tarifario contract. Undo the broad test-only DELETE grant above.
+DO $$
+DECLARE tabla text;
+BEGIN
+  FOREACH tabla IN ARRAY ARRAY['costeo_cargos_fob_agente', 'costeo_cargos_locales_naviera'] LOOP
+    IF to_regclass('public.' || tabla) IS NOT NULL THEN
+      EXECUTE format('REVOKE DELETE ON public.%I FROM authenticated', tabla);
+    END IF;
+  END LOOP;
+END $$;

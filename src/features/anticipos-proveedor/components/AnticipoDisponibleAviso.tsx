@@ -22,11 +22,12 @@ interface Props {
   /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
   facturaEmbarqueId?: string | null;
   facturaExpediente?: string | null;
+  facturaFechaEmision?: string | null;
 }
 
 export function AnticipoDisponibleAviso({
   proveedorId, facturaId, folioFactura, importes, canEdit,
-  facturaEmbarqueId, facturaExpediente,
+  facturaEmbarqueId, facturaExpediente, facturaFechaEmision,
 }: Props) {
 
   const saldoFactura = importes.saldo;
@@ -84,6 +85,7 @@ export function AnticipoDisponibleAviso({
         anticipos={anticipos}
         facturaEmbarqueId={facturaEmbarqueId}
         facturaExpediente={facturaExpediente}
+        facturaFechaEmision={facturaFechaEmision}
       />
 
     </>

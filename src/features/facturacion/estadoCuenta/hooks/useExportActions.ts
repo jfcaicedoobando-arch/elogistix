@@ -12,6 +12,7 @@ import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback"
 import { toEstadoCuentaFacturas } from "../../services/exports";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 import type { EstadoCuentaAlcance } from "@/pdf/components/EstadoCuentaAlcance";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 const CSV_COLUMNS = [
   { key: "numero", label: "# Factura" },
@@ -48,6 +49,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
   const soloUnCliente = clienteIds.length === 1;
 
   const onPdf = useCallback(async () => {
+    const scope = captureAuthOperationScope();
     if (!soloUnCliente) return;
     // R-15.3: antes el botón no hacía nada cuando el periodo estaba vacío.
     if (rows.length === 0) {
@@ -60,6 +62,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     setBusy("pdf");
     try {
       const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
+      scope.assertCurrent();
       await generarEstadoCuentaPdf(data, toEstadoCuentaFacturas(rows), alcance);
       notifySuccess(undefined, { title: "Estado de cuenta PDF descargado" });
     } catch (err) {

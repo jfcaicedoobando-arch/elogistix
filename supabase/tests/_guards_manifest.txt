@@ -195,6 +195,7 @@ supabase/tests/audit121_cerrar_sin_pago.sql
 supabase/tests/audit99_121_historial_ajustes.sql
 supabase/tests/audit122_125_nc_proveedor_base_valuacion.sql
 supabase/tests/audit124_130_pnl_asignaciones.sql
+supabase/tests/audit62_130_cxp_por_capturar.sql
 
 # ARQ02: contrato monetario puro, sin cambios de datos de negocio.
 supabase/tests/money_contract_rounding.sql
@@ -202,3 +203,25 @@ supabase/tests/money_contract_rounding.sql
 # Proformas 13.824.35: consistencia operativa y snapshot no_objeto.
 supabase/tests/proforma_no_objeto_snapshot.sql
 supabase/tests/proforma_operativa_consistencia.sql
+
+# Audit135: fechas civiles de la aplicación de anticipos.
+supabase/tests/audit135_anticipo_cronologia.sql
+
+# Audit131: devolución en efectivo y compatibilidad bancaria.
+supabase/tests/audit131_devolucion_efectivo.sql
+
+# Drizzle0010: permisos del tarifario preservados después del harness de CI.
+supabase/tests/rls/tarifario_cargos_permisos.sql
+
+# Ola16: finite tenant-scope forward for the two tariff charge tables.
+supabase/tests/tarifario_cargos_tenant_scope.sql
+# Audit134: conversión congelada y reclasificación sin dinero nuevo.
+supabase/tests/audit134_pago_congelado.sql
+supabase/tests/audit134_anticipo_reclasificacion.sql
+supabase/tests/audit134_anticipo_canon_consistente.sql
+
+# Audit139: saldo neto atribuido sin fabricar linaje de pagos.
+supabase/tests/audit139_cierre_cxp_neto.sql
+supabase/tests/audit139_cierre_reparto_original.sql
+supabase/tests/audit139_cierre_reparto_limites.sql
+supabase/tests/audit134_139_cierre_nc_cliente_estados.sql

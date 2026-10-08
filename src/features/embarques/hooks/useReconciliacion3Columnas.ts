@@ -1,3 +1,4 @@
+import { useEmbarquePrivateScope } from "./useEmbarquePrivateScope";
 /**
  * Hook: reconciliación a 3 columnas para un embarque (Fase 2).
  */
@@ -13,10 +14,11 @@ export function useReconciliacion3Columnas(
   embarqueId: string | undefined,
   umbrales?: UmbralesVarianza,
 ) {
+  const scope = useEmbarquePrivateScope();
   return useQuery<ResultadoReconciliacion3C>({
-    queryKey: queryKeys.embarques.reconciliacion3Columnas(embarqueId, umbrales),
+    queryKey: queryKeys.embarques.reconciliacion3Columnas(embarqueId, umbrales, scope.key),
     queryFn: () => obtenerReconciliacion3Columnas(embarqueId as string, umbrales),
-    enabled: Boolean(embarqueId),
+    enabled: Boolean(embarqueId) && scope.staff,
     staleTime: 15_000,
   });
 }

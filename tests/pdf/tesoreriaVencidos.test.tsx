@@ -26,7 +26,7 @@ describe("PDF Tesorería — alcance de acreedores vencidos (extensión 81)", ()
     ]);
     const pdf = await inspectPdf("tesoreria-proveedores-vencidos", <ReporteTesoreriaDocument fechaCorte="2026-10-06" resumen={datos} />);
     expect(pdf.pages).toBe(1);
-    expect(pdf.text).toContain("TOP 5 PROVEEDORES CON SALDO VENCIDO POR MONEDA");
+    expect(pdf.text).toContain("Top 5 proveedores con saldo vencido por moneda");
     expect(pdf.text).toContain("Días vencidos");
     expect(pdf.text).toContain("mayor atraso de las facturas agrupadas por nombre y moneda");
     expect(pdf.text).toContain("MXN 300.00 35");

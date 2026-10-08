@@ -42,9 +42,9 @@ function ivaFila(r: ConceptoVenta, tasaIva: number): number {
 
 function columnasBase(moneda: "USD" | "MXN"): PdfColumn<ConceptoVenta>[] {
   return [
-    { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
+    { key: "descripcion", title: "Descripción", hyphenate: false, cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
-    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellQty,
+    { key: "tratamiento", title: "Trat. IVA", cellStyle: styles.cellTreatment,
       render: (r) => etiquetaTratamientoFila(r) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,

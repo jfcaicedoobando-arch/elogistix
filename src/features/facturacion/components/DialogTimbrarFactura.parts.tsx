@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { UsoCfdiIngresoSelect } from "./UsoCfdiIngresoSelect";
 /**
  * Sub-vistas del modal de timbrado. Extraídas para respetar la regla
  * Power of 10 (≤200 líneas por archivo productivo).
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { TimbradoEmail, type TimbradoEmailProps } from "./TimbradoConfirmacion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 
 interface CompactoProps extends TimbradoEmailProps {
   usoCfdi: string;
@@ -32,6 +33,7 @@ export function TimbrarCompacto({ usoCfdi, formaPago, metodoPago, ...emailProps 
 
 interface CompletoProps extends TimbradoEmailProps {
   checks: { ok: boolean; label: string }[];
+  receptor: { rfc: string; regimen: string };
   usoCfdi: string;
   setUsoCfdi: (v: string) => void;
   formaPago: string;
@@ -62,15 +64,7 @@ export function TimbrarCompleto(props: CompletoProps) {
       </ul>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>Uso CFDI</Label>
-          <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <UsoCfdiIngresoSelect value={usoCfdi} onChange={setUsoCfdi} receptor={props.receptor} />
         <div>
           <Label>Forma de pago</Label>
           <Select value={formaPago} onValueChange={setFormaPago}>

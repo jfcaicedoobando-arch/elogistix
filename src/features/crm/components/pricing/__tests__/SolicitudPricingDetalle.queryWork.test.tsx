@@ -15,6 +15,7 @@ vi.mock("../AccionesSolicitudPricing", () => ({
 }));
 vi.mock("../ResumenSolicitudPricing", () => ({ ResumenSolicitudPricing: () => null }));
 vi.mock("../AdjuntosSolicitudPricing", () => ({ AdjuntosSolicitudPricing: () => null }));
+vi.mock("../OpcionesTarifario", () => ({ OpcionesTarifario: () => null }));
 vi.mock("../OpcionPricingEditor", () => ({ OpcionPricingEditor: () => null }));
 vi.mock("@/features/costeo", () => ({
   TarifaForm: ({ onOpenChange, onSaved }: { onOpenChange: (value: boolean) => void; onSaved: () => void }) => (
@@ -33,7 +34,7 @@ const solicitud: SolicitudPricingRow = {
   cantidad: null, cliente: null, commodity: null, container_size: null, deleted_at: null, delivery: null,
   destino: null, dimensiones: null, enviada_at: null, estibable: null, fecha_tentativa_carga: null,
   imo: null, incoterm: null, notas: null, origen: null, peso: null, pod: null, pol: null,
-  respondida_at: null, servicio: null, tipo_carga: null, unidad_medida: null, vence_at: null,
+  respondida_at: null, servicio: null, tipo_carga: null, unidad_medida: null, vence_at: null, tarifa_tarifario_id: null,
 };
 const tarifa: TarifaRespuestaRow = {
   id: "t1", flete_base: 100, moneda: "USD", unidad_flete: null, carta_garantia: null,

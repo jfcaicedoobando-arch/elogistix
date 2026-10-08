@@ -15,6 +15,7 @@ import { esTimbradoPendiente } from '../_shared/timbradoPendiente.ts';
 import { registrarFacturaPendiente } from "./pendiente.ts";
 import { FACTURA_COLUMNS, type Claim, type FacturaRow, type EmitirInput } from "./types.ts";
 
+import { resultadoUsoCfdi } from "./resultadoUsoCfdi.ts";
 import { createInvoiceInFacturapi } from './crear.ts';
 import { parseInvoiceResult, persistirFacturaTimbrada } from './persistencia.ts';
 
@@ -153,6 +154,7 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   if (persistError) return persistError;
 
   return jsonResponse({
+    ...resultadoUsoCfdi(ctx.uso_cfdi, respaldo.usoCfdi),
     uuid: resultado.uuid, folio: resultado.folio, serie: resultado.serie,
     facturapi_id: resultado.facturapiId, pdf_url: resultado.pdfUrl, xml_url: resultado.xmlUrl, xml_backup: respaldo,
   });

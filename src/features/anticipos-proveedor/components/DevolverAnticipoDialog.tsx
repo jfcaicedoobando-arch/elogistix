@@ -49,8 +49,8 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
       description={
         <>
           {anticipo.proveedor_nombre ?? "El proveedor"} regresó el dinero. El anticipo quedará como{" "}
-          <strong>devuelto</strong> con saldo cero y el depósito aparecerá en tesorería pendiente de
-          conciliar. Las aplicaciones ya hechas y el pago original no se modifican.
+          <strong>devuelto</strong> con saldo cero. La devolución queda en el libro de pagos;
+          sólo la bancaria genera un depósito por conciliar. Las aplicaciones y el pago original se conservan.
         </>
       }
       size="md"
@@ -59,13 +59,24 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={f.isPending}>
             Volver
           </Button>
-          <Button onClick={() => void f.handleConfirm()} disabled={f.isPending || !f.cuentaValida}>
+          <Button onClick={() => void f.handleConfirm()} disabled={f.isPending || !f.medioValido}>
             {f.isPending ? "Registrando…" : "Registrar devolución"}
           </Button>
         </>
       }
     >
-      <FormDialogSection title="Depósito recibido">
+      <FormDialogSection title="Devolución recibida">
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="dev-medio">Medio de devolución</Label>
+          <Select value={f.medio} onValueChange={(v) => f.setMedio(v === "Efectivo" ? "Efectivo" : "Bancario")}>
+            <SelectTrigger id="dev-medio"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Efectivo">Efectivo</SelectItem>
+              <SelectItem value="Bancario">Depósito bancario</SelectItem>
+            </SelectContent>
+          </Select>
+          {f.medio === "Efectivo" && <p className="text-xs text-muted-foreground">Registra el efectivo recibido sin generar movimientos bancarios.</p>}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="dev-monto">Monto devuelto</Label>
@@ -93,7 +104,7 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
               aria-label="Fecha de la devolución"
             />
           </div>
-          <div className="space-y-1.5 sm:col-span-2">
+          {f.medio === "Bancario" && <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="dev-cuenta">Cuenta bancaria donde entró el dinero</Label>
             <Select value={f.cuentaId} onValueChange={f.setCuentaId}>
               <SelectTrigger id="dev-cuenta">
@@ -118,9 +129,9 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
                 continuar.
               </p>
             )}
-          </div>
+          </div>}
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="dev-referencia">Referencia bancaria (opcional)</Label>
+            <Label htmlFor="dev-referencia">Referencia (opcional)</Label>
             <Input
               id="dev-referencia"
               value={f.referencia}

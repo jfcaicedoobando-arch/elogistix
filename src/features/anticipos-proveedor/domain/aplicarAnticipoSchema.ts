@@ -4,6 +4,8 @@
  * (un archivo de componentes no exporta funciones).
  */
 import { z } from "zod";
+import { hoyMx } from "@/lib/date/mx";
+import { errorFechaAplicacion } from "./fechaAplicacion";
 import { formatCurrency } from "@/lib/formatters";
 
 /**
@@ -17,6 +19,7 @@ export function buildSchema(
   saldoDisponible: number,
   monedaAnticipo: string,
   topeFactura?: number | null,
+  fechaMinima?: string,
 ) {
   return z.object({
     facturaId: z.string().uuid({ message: "Selecciona una factura" }),
@@ -29,6 +32,8 @@ export function buildSchema(
       .max(saldoDisponible, { message: `No puede exceder el saldo disponible del anticipo (${formatCurrency(saldoDisponible, monedaAnticipo)})` }),
     fechaAplicacion: z.string().min(1, "La fecha es requerida"),
   }).superRefine((v, ctx) => {
+    const errorFecha = errorFechaAplicacion(v.fechaAplicacion, fechaMinima, hoyMx());
+    if (errorFecha) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fechaAplicacion"], message: errorFecha });
     const mismaMoneda =
       (v.monedaFactura || "MXN").toUpperCase() === (monedaAnticipo || "MXN").toUpperCase();
     // MNY P1.3: nunca comparar monedas distintas como si valieran lo mismo.

@@ -5,10 +5,15 @@ const h = vi.hoisted(() => ({
   notifyWarning: vi.fn(),
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
+  emisor: vi.fn(),
+  pdf: vi.fn(),
 }));
 const { descargarBlob, notifyWarning, notifySuccess, notifyError } = h;
 
 vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: h.descargarBlob }));
+vi.mock("@/pdf/emisor", () => ({ cargarEmisorEntidad: h.emisor }));
+vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: h.pdf }));
+vi.mock("@/pdf/documents/EstadoCuentaProveedorDocument", () => ({ EstadoCuentaProveedorDocument: () => null }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyWarning: h.notifyWarning,
   notifySuccess: h.notifySuccess,
@@ -17,6 +22,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 
 import {
   descargarEstadoCuentaCsv,
+  descargarEstadoCuentaPdf,
   type DatosEstadoCuenta,
 } from "@/features/proveedor/services/estadoCuentaDescargas";
 import type { MovimientoConSaldo } from "@/features/proveedor/domain/movimientosProveedor";
@@ -37,6 +43,7 @@ const movimiento: MovimientoConSaldo = {
 };
 
 const datos = (movs: MovimientoConSaldo[]): DatosEstadoCuenta => ({
+  proveedorId: "proveedor-a",
   proveedorNombre: "HK LS Limited",
   rfc: "TE25126564",
   desde: "2026-01-01",
@@ -48,9 +55,16 @@ const datos = (movs: MovimientoConSaldo[]): DatosEstadoCuenta => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  h.emisor.mockResolvedValue({ organizacionNombre: "Comercial A", razonSocial: "Empresa", rfc: "" });
 });
 
 describe("descargarEstadoCuentaCsv", () => {
+  it("el PDF conserva el proveedor del snapshot y solicita su identidad verificada", async () => {
+    await descargarEstadoCuentaPdf(datos([movimiento]));
+    expect(h.emisor).toHaveBeenCalledWith("proveedores", "proveedor-a");
+    expect(h.pdf.mock.calls[0][0].props.emisor.organizacionNombre).toBe("Comercial A");
+    expect(h.pdf.mock.calls[0][0].props.movimientos).toHaveLength(1);
+  });
   it("avisa y no descarga cuando el periodo no tiene movimientos", () => {
     descargarEstadoCuentaCsv(datos([]));
     expect(descargarBlob).not.toHaveBeenCalled();

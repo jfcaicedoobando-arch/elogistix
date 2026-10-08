@@ -6,7 +6,7 @@
  * cada suite esté en el manifiesto bloqueante, o
  * referenciada explícitamente en algún workflow de `.github/workflows/`.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const DIR_TESTS = "supabase/tests";
@@ -17,6 +17,12 @@ function leerManifiesto(ruta: string): string[] {
     .split("\n")
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !l.startsWith("#"));
+}
+
+function rutasSinSuite(rutas: string[]): string[] {
+  return rutas.filter(
+    (ruta) => !ruta.endsWith(".sql") || !statSync(ruta, { throwIfNoEntry: false })?.isFile(),
+  );
 }
 
 describe("suites SQL referenciadas en CI", () => {
@@ -54,16 +60,19 @@ describe("suites SQL referenciadas en CI", () => {
     const duplicadas = rutas.filter((r, i) => rutas.indexOf(r) !== i);
     expect(duplicadas, `Rutas duplicadas: ${duplicadas.join(", ")}`).toEqual([]);
 
-    const existentes = new Set(
-      readdirSync(DIR_TESTS)
-        .filter((f) => f.endsWith(".sql"))
-        .map((f) => `${DIR_TESTS}/${f}`),
-    );
-    const inexistentes = rutas.filter((r) => !existentes.has(r));
+    const inexistentes = rutasSinSuite(rutas);
     expect(
       inexistentes,
       `Rutas listadas que no existen: ${inexistentes.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("reconoce suites anidadas sin aceptar rutas ausentes o directorios", () => {
+    const suite = `${DIR_TESTS}/rls/tarifario_cargos_permisos.sql`;
+    const ausente = `${DIR_TESTS}/rls/suite_inexistente.sql`;
+    const directorio = `${DIR_TESTS}/rls`;
+    expect(rutasSinSuite([suite])).toEqual([]);
+    expect(rutasSinSuite([ausente, directorio])).toEqual([ausente, directorio]);
   });
 
   it("las trece suites recuperadas y nuevos cobros usan fixtures transaccionales", () => {

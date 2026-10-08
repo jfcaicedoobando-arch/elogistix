@@ -1,29 +1,18 @@
 /**
- * QuickCreateOportunidadDialog — alta express de oportunidad (nombre + origen).
- *
- * v13.746.0: migrado de Popover a modal estándar (ver nota en
- * `QuickCreateLeadDialog.tsx`): el Popover anidado en el menú "Nuevo" no
- * alcanzaba a abrirse y el clic parecía muerto.
- *
- * v13.823.50: el diálogo iniciaba en "Sin cliente" y permitía enviar
- * `cliente_id = null` + `lead_id = null`, combinación que el trigger
- * `_crm_oportunidad_requiere_origen` rechaza (`LC_OPORTUNIDAD_SIN_ORIGEN`).
- * Ahora hay que elegir un origen válido: prospecto calificado o cliente.
- *
- * v13.823.51: la lista de prospectos usa la definición canónica del embudo
- * (`LEAD_ESTADOS_ETAPA_PROSPECTO`), que excluye `Convertido` — un lead ya
- * convertido en cliente salió del embudo y no es origen válido.
+ * QuickCreateOportunidadDialog — alta express de oportunidad:
+ * nombre, empresa asociada, etapa inicial y valor estimado (todos obligatorios).
+ * El origen (cliente o prospecto calificado) se toma de la empresa elegida.
  */
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 import { useQuickCreateOportunidad, type OportunidadQuickDraft } from "@/features/crm/hooks/useQuickCreateOportunidad";
-import QuickCreateOportunidadOrigenFields from "./QuickCreateOportunidadOrigenFields";
 import { OportunidadEmpresaField } from "../nuevaOportunidad/OportunidadEmpresaField";
 
 export type { OportunidadQuickDraft };
@@ -37,18 +26,11 @@ interface Props {
 
 export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
   const {
-    nombre, setNombre,
-    empresa, setEmpresa,
-    origenTipo, setOrigenTipo,
-    clienteId, setClienteId,
-    leadId, setLeadId, setLeadNombre,
-    setLeadVendedorId, setLeadVendedorEmail,
-    limpiarOrigen,
-    etapaInicial, origenListo,
-    clientes,
-    crear,
-    submit,
-    construirBorrador,
+    nombre, setNombre, empresa, setEmpresa,
+    etapasAbiertas, etapa, setEtapaId,
+    valorEstimado, setValorEstimado,
+    origenCargando, motivoOrigen, faltantes, listo,
+    crear, submit, construirBorrador,
   } = useQuickCreateOportunidad({ open, onOpenChange, onCreated });
 
   return (
@@ -57,17 +39,11 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
       onOpenChange={onOpenChange}
       icon={Target}
       title="Nueva oportunidad"
-      description="Se crea en la primera etapa del embudo; después puedes completar montos y ruta."
+      description="Se crea en la etapa que elijas; después puedes completar montos y ruta."
       size="md"
       formId="qc-oportunidad-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
-      isDirty={
-        nombre.trim().length > 0 ||
-        empresa !== null ||
-        clienteId.length > 0 ||
-        leadId.length > 0 ||
-        origenTipo !== "cliente"
-      }
+      isDirty={nombre.trim().length > 0 || empresa !== null || valorEstimado.length > 0}
       busy={crear.isPending}
       footer={
         <FormDialogFooter
@@ -75,16 +51,10 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
           onCancel={() => onOpenChange(false)}
           confirmLabel="Crear"
           loading={crear.isPending}
-          disabled={!etapaInicial || !origenListo || !empresa || !nombre.trim()}
+          disabled={!listo || origenCargando}
           extra={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onMore(construirBorrador())}
-              disabled={crear.isPending}
-              className="text-body-sm"
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={() => onMore(construirBorrador())}
+              disabled={crear.isPending} className="text-body-sm">
               Más campos →
             </Button>
           }
@@ -95,32 +65,32 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         <div className="space-y-3">
           <div className="space-y-1">
             <Label htmlFor="qc-oportunidad-nombre">Nombre *</Label>
-            <Input
-              id="qc-oportunidad-nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Importación China Q1"
-            />
+            <Input id="qc-oportunidad-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)}
+              placeholder="Importación China Q1" />
           </div>
-          {!etapaInicial && (
-            <p role="alert" className="text-body-sm text-destructive">{MSG_SIN_ETAPA_ABIERTA}</p>
-          )}
-          <QuickCreateOportunidadOrigenFields
-            origenTipo={origenTipo}
-            onOrigenTipoChange={(t) => { setOrigenTipo(t); limpiarOrigen(); }}
-            clienteId={clienteId}
-            onClienteIdChange={setClienteId}
-            clientes={clientes}
-            leadId={leadId}
-            onLead={(id, label, meta) => {
-              setLeadId(id);
-              setLeadNombre(label);
-              setLeadVendedorId(meta?.vendedor_id ?? null);
-              setLeadVendedorEmail(meta?.vendedor_email ?? "");
-            }}
-          />
           <OportunidadEmpresaField empresa={empresa} onChange={setEmpresa} disabled={crear.isPending} />
-          {!empresa && <p role="status" className="text-body-sm text-destructive">Falta seleccionar la empresa asociada.</p>}
+          {motivoOrigen && <p role="alert" className="text-body-sm text-destructive">{motivoOrigen}</p>}
+          <div className="space-y-1">
+            <Label htmlFor="qc-oportunidad-etapa">Etapa *</Label>
+            {etapasAbiertas.length === 0 ? (
+              <p role="alert" className="text-body-sm text-destructive">{MSG_SIN_ETAPA_ABIERTA}</p>
+            ) : (
+              <Select value={etapa?.id ?? ""} onValueChange={setEtapaId}>
+                <SelectTrigger id="qc-oportunidad-etapa"><SelectValue placeholder="Selecciona una etapa" /></SelectTrigger>
+                <SelectContent>
+                  {etapasAbiertas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="qc-oportunidad-valor">Valor estimado (MXN) *</Label>
+            <Input id="qc-oportunidad-valor" type="number" inputMode="decimal" min={0} step="0.01"
+              value={valorEstimado} onChange={(e) => setValorEstimado(e.target.value)} placeholder="0.00" />
+          </div>
+          {faltantes.length > 0 && (
+            <p role="status" className="text-body-sm text-destructive">Falta: {faltantes.join(", ")}.</p>
+          )}
         </div>
       </FormDialogSection>
     </FormDialogShell>

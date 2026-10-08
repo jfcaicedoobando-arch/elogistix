@@ -1,9 +1,5 @@
-/**
- * Formatters de detalle para checks de cierre.
- * Extraídos de `cierreCheckMeta.ts` para mantener éste bajo 200 líneas (v13.89.4).
- */
+/** Texto de los resultados del diagnóstico de cierre. */
 import { formatCurrencySafe } from "@/lib/formatters";
-
 const fmtMoney = (n: unknown, moneda = "MXN"): string => formatCurrencySafe(n, moneda);
 
 export const pick = (d: unknown, key: string): unknown =>
@@ -16,6 +12,9 @@ interface SaldoPorMoneda {
   saldo?: number;
   notas_credito?: number;
   facturas_pendientes?: number;
+  pagos_sin_tipo_cambio?: number;
+  notas_sin_tipo_cambio?: number;
+  reparto_proporcional?: boolean;
 }
 
 function readPorMoneda(d: unknown): SaldoPorMoneda[] | null {
@@ -72,11 +71,14 @@ export const fmtCxp = (d: unknown): string | null => {
     const partes: string[] = [];
     if (pendientes > 0) partes.push(`${pendientes} factura(s) de proveedor por pagar`);
     if (saldoTxt) partes.push(`monto ${saldoTxt}`);
+    const sinTc = rows.reduce((n, r) => n + Number(r.pagos_sin_tipo_cambio ?? 0) + Number(r.notas_sin_tipo_cambio ?? 0), 0);
+    if (sinTc > 0) partes.push("Conversión pendiente en pagos o notas de crédito");
+    if (rows.some((r) => r.reparto_proporcional)) partes.push("Importes atribuidos proporcionalmente; los pagos y notas de crédito corresponden a la factura");
     return partes.length > 0 ? partes.join(" · ") : null;
   }
   const total = Number(pick(d, "total") ?? 0);
   const pagado = Number(pick(d, "pagado") ?? 0);
-  const saldo = total - pagado;
+  const saldo = Math.max(total - pagado - Number(pick(d, "notas_credito") ?? 0), 0);
   const facturas = pick(d, "facturas_pendientes");
   const partes: string[] = [];
   if (Number(facturas) > 0) partes.push(`${facturas} factura(s) de proveedor por pagar`);

@@ -4,6 +4,8 @@
  */
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { cargarEmisorEntidad } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import {
   estadoCuentaACsv,
   filasAgingExport,
@@ -20,6 +22,7 @@ import type {
 } from "@/features/proveedor/domain/movimientosProveedor";
 
 export interface DatosEstadoCuenta {
+  proveedorId: string;
   proveedorNombre: string;
   rfc?: string | null;
   desde: string;
@@ -76,16 +79,20 @@ export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
 }
 
 export async function descargarEstadoCuentaPdf(datos: DatosEstadoCuenta): Promise<void> {
+  const scope = captureAuthOperationScope();
   const movs = filasMovimientosExport(datos.movimientos);
   if (movs.length === 0 && !tieneAging(datos) && !tieneApertura(datos)) return sinDatos();
   try {
-    const [{ descargarPdf }, { EstadoCuentaProveedorDocument }] = await Promise.all([
+    const [{ descargarPdf }, { EstadoCuentaProveedorDocument }, emisor] = await Promise.all([
       import("@/pdf/render/descargarPdf"),
       import("@/pdf/documents/EstadoCuentaProveedorDocument"),
+      cargarEmisorEntidad("proveedores", datos.proveedorId),
     ]);
+    scope.assertCurrent();
     await descargarPdf(
       <EstadoCuentaProveedorDocument
         proveedorNombre={datos.proveedorNombre}
+        emisor={emisor}
         rfc={datos.rfc}
         desde={datos.desde}
         hasta={datos.hasta}

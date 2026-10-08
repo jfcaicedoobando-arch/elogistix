@@ -29,6 +29,13 @@ describe("conceptosFacturaEditar · impuestos explícitos", () => {
     await expect(reemplazarConceptosFactura({ facturaId: "f1", conceptos, expectedUpdatedAt })).rejects.toThrow("LC_CONCEPTOS_FISCALES");
     expect(actividad).not.toHaveBeenCalled();
   });
+  it.each(["PT409", "40001"])("clasifica %s sin repetir la escritura ni registrar éxito", async (code) => {
+    rpc.mockResolvedValue({ data: null, error: { code, message: "Versión obsoleta", details: null, hint: null } });
+    await expect(reemplazarConceptosFactura({ facturaId: "f1", conceptos, expectedUpdatedAt }))
+      .rejects.toThrow("LC_CONFLICTO_CONCURRENCIA");
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(actividad).not.toHaveBeenCalled();
+  });
   it("exige la versión original y no registra éxito ante conflicto", async () => {
     await expect(reemplazarConceptosFactura({ facturaId: "f1", conceptos })).rejects.toThrow("LC_CONFLICTO_CONCURRENCIA");
     expect(rpc).not.toHaveBeenCalled();

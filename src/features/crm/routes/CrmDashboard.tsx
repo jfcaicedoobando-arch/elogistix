@@ -15,6 +15,7 @@ import { formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import { primerDiaMesMx, ultimoDiaMesMx } from "@/lib/date/mx";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
+import { PricingResumenCards } from "@/features/crm/components/PricingResumenCards";
 import { CrmForecastMesKpis } from "@/features/crm/components/CrmForecastMesKpis";
 import { CrmStatStripItem as StatStripItem } from "@/features/crm/components/CrmStatStripItem";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -166,6 +167,8 @@ export default function CrmDashboard() {
         </div>
 
         <LeaderboardVendedores />
+
+        <PricingResumenCards />
       </CargaGuard>
     </PageContainer>
   );

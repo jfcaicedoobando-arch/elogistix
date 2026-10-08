@@ -2,6 +2,7 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { usoCfdiDesdeXml, resolverUsoCfdiEfectivo } from "../_shared/usoCfdiEfectivo.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { parseInvoiceResult, persistirFacturaTimbrada } from "./persistencia.ts";
+import { emitirYActualizar } from "./emitir.ts";
 import { promoverFactura } from "../facturapi-recuperar-claim/promoverFactura.ts";
 
 const uuid = "12345678-1234-1234-1234-123456789ABC";
@@ -64,6 +65,38 @@ Deno.test("recuperación: XML del mismo UUID sincroniza uso y mantiene compare-a
       const result = await promoverFactura({ supabase: db.client, factura, match: invoice, claimTag: "PENDING:1", user: { id: "u1" }, ambiente: "sandbox", apiKey: "fixture" } as never);
       assertEquals(result.status, claim === "PENDING:1" ? 200 : 409);
       assertEquals(db.state.uso_cfdi, claim === "PENDING:1" ? "S01" : "G03");
+    }
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+
+Deno.test("emisión exitosa con XML distinto informa ambos usos sin reintento; sin XML omite efectivo", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const xmlDisponible of [true, false]) {
+      globalThis.fetch = () => Promise.resolve(xmlDisponible ? new Response(xml()) : new Response("unavailable", { status: 503 }));
+      const db = fakeDb();
+      const enviados: unknown[] = [];
+      const ctx = {
+        serie: "A", uso_cfdi: "G03", metodo_pago: "PUE", forma_pago: "03", moneda: "MXN", tipo_cambio: 1,
+        receptor: { legal_name: "Fixture", tax_id: "AAA010101AAA", tax_system: "601", address: { zip: "64000" } },
+        conceptos: [{ descripcion: "Prueba", cantidad: 1, precio_unitario: 100, clave_sat: "78101800", clave_unidad: "E48" }],
+        external_id: "PENDING:1",
+      };
+      const res = await emitirYActualizar({
+        supabase: db.client, apiKey: "fixture", ambiente: "sandbox", ctx, factura, facturaId: "f1", user: { id: "u1" },
+        claim: { claimTag: "PENDING:1", release: () => { throw new Error("No liberar un timbre confirmado"); } },
+        facturapi: { invoices: { create: (payload: unknown) => { enviados.push(payload); return Promise.resolve(invoice); } } },
+      } as never);
+      assertEquals(res.status, 200);
+      const body = await res.json();
+      assertEquals(body.uuid, uuid);
+      assertEquals(body.uso_cfdi_solicitado, "G03");
+      assertEquals(body.uso_cfdi_efectivo, xmlDisponible ? "S01" : undefined);
+      assertEquals(body.fuente_uso_cfdi, xmlDisponible ? "xml" : undefined);
+      assertEquals(db.state.uso_cfdi, xmlDisponible ? "S01" : "G03");
+      assertEquals(enviados.length, 1);
+      assertEquals((enviados[0] as { idempotency_key: string }).idempotency_key, "PENDING:1");
     }
   } finally { globalThis.fetch = originalFetch; }
 });

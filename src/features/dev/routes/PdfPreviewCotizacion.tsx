@@ -14,11 +14,11 @@ export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
   const tasaIva = useTasaIVA();
   const { data: tiposContenedor = [] } = useTiposContenedor();
-  const { cotizacion: { data, isLoading, error }, emisor: { data: emisor } } =
+  const { cotizacion: { data, isLoading, error }, emisor: { data: emisor, isLoading: emisorLoading, error: emisorError } } =
     usePdfPreviewCotizacionPage(id);
 
-  if (isLoading) return <LoadingState label="Cargando cotización…" />;
-  if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
+  if (isLoading || emisorLoading) return <LoadingState label="Cargando cotización…" />;
+  if (error || emisorError) return <div className="p-6 text-destructive">Error: {((error || emisorError) as Error).message}</div>;
   if (!data) return <div className="p-6">Cotización no encontrada.</div>;
 
   return (

@@ -18,6 +18,7 @@ const anticipo: AnticipoProveedorRow = {
   fecha_anticipo: "2026-10-03", metodo_pago: "Transferencia", estado: "disponible", referencia: null,
   tipo_cambio_usd: null, notas: null, embarque_id: null, proveedor_nombre: "Proveedor", embarque_expediente: null,
   created_at: "2026-10-03T00:00:00Z", updated_at: "2026-10-03T00:00:00Z", created_by: null,
+  fecha_devolucion: null, medio_devolucion: null, referencia_devolucion: null,
   deleted_at: null, deleted_by: null, devuelto_at: null, devuelto_by: null, motivo_cancelacion: null, motivo_devolucion: null,
 };
 beforeEach(() => { mocks.cuentas = []; mocks.devolver.mockReset().mockResolvedValue({}); mocks.warning.mockReset(); });
@@ -61,5 +62,34 @@ describe("Devolución: cuenta original y elección consciente", () => {
     act(() => result.current.setMotivo("Reembolso")); mocks.cuentas = []; rerender();
     await act(async () => result.current.handleConfirm());
     expect(mocks.devolver).not.toHaveBeenCalled(); expect(mocks.warning).toHaveBeenCalledOnce();
+  });
+});
+
+describe("audit131 · devolución en efectivo", () => {
+  const efectivo = { ...anticipo, metodo_pago: "Efectivo", cuenta_bancaria_id: null };
+  it("permite efectivo sin cuenta, conserva fecha y no arrastra cuentas", async () => {
+    const { result } = renderHook(() => useDevolverAnticipoForm({ open: true, anticipo: efectivo, onOpenChange: vi.fn() }));
+    expect(result.current.medio).toBe("Efectivo");
+    expect(result.current.medioValido).toBe(true);
+    act(() => { result.current.setCuentaId("obsoleta"); result.current.setMotivo("Reembolso en mano"); result.current.setFecha("2026-10-05"); });
+    await act(async () => result.current.handleConfirm());
+    expect(mocks.devolver).toHaveBeenCalledWith(expect.objectContaining({ medio: "Efectivo", cuentaBancariaId: null, fecha: "2026-10-05", monto: 50 }));
+  });
+  it("exige una cuenta elegida para devolver por banco un anticipo en efectivo", async () => {
+    mocks.cuentas = [cuenta("banco")];
+    const { result } = renderHook(() => useDevolverAnticipoForm({ open: true, anticipo: efectivo, onOpenChange: vi.fn() }));
+    act(() => { result.current.setMedio("Bancario"); result.current.setMotivo("Depósito recibido"); });
+    expect(result.current.medioValido).toBe(false);
+    await act(async () => result.current.handleConfirm());
+    expect(mocks.devolver).not.toHaveBeenCalled();
+    act(() => result.current.setCuentaId("banco"));
+    await act(async () => result.current.handleConfirm());
+    expect(mocks.devolver).toHaveBeenCalledWith(expect.objectContaining({ medio: "Bancario", cuentaBancariaId: "banco" }));
+  });
+  it("reabrir descarta el medio de una sesión anterior", () => {
+    const { result, rerender } = renderHook(({ open }) => useDevolverAnticipoForm({ open, anticipo: efectivo, onOpenChange: vi.fn() }), { initialProps: { open: true } });
+    act(() => result.current.setMedio("Bancario"));
+    rerender({ open: false }); rerender({ open: true });
+    expect(result.current.medio).toBe("Efectivo");
   });
 });

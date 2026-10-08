@@ -137,7 +137,7 @@ BEGIN
     -- AUD100: cada devolución es una entrada independiente. La salida original
     -- se conserva bruta; la fecha/cuenta/referencia proceden del asiento real.
     SELECT ap.id, 'devolucion_anticipo'::text AS tipo,
-      COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
+      COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
       pr.nombre AS contraparte, ap.proveedor_id AS contraparte_id,
       NULL::uuid AS documento_id, NULL::text AS documento_folio,
       ap.moneda::text AS moneda, ap.monto_devuelto AS monto,
@@ -145,11 +145,11 @@ BEGIN
       CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
            WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd
            ELSE NULL END AS monto_mxn,
-      CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
-      COALESCE(d.referencia, ap.referencia) AS referencia,
+      CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
+      CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END AS referencia,
       d.cuenta_bancaria_id,
       concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END) AS notas,
       ap.embarque_id, 0::numeric AS diferencia_cambiaria_mxn,
       NULL::text AS estado_rep, NULL::text AS folio_rep,
@@ -167,7 +167,7 @@ BEGIN
     ) d ON true
     WHERE ap.deleted_at IS NULL AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
       AND ap.monto_devuelto > 0 AND (v_super OR ap.organization_id = v_org)
-      AND COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
+      AND COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
           BETWEEN p_desde AND p_hasta
   ),
   unidos AS (

@@ -1,5 +1,52 @@
 # Changelog
 
+## [13.824.42] - Unreleased
+
+- **fix(Cierre · 139)**: la deuda CxP de cada embarque usa sus asignaciones positivas efectivas; la cabecera sólo es respaldo cuando no hay asignaciones vigentes. Cantidades se aplican una vez, costes borrados y ajustes de presupuesto no crean pertenencia.
+- **fix(importes)**: total, pagos, NC Aplicadas y saldo no negativo comparten la misma proporción. Conserva residuos sin asignar, limita sobreasignación y bloquea cierre si falta conversión; el desglose explica el reparto sin inventar historial de pagos por embarque.
+- Conserva importes congelados134, devoluciones131 corregidas, captura62/130 y las reglas CxC Timbrada/Aplicada. Una sola migración: `20261007001300_audit139_cierre_saldo_atribuido.sql`, después de41 / `20261007001000`.
+- Paquete de código para revisión local sobre41: no aplica SQL remoto ni publica frontend y no certifica cierre GUI. Main con143/PDF permanece independiente hasta reconciliación y verificación del stack final.
+
+## [13.824.41] - Unreleased
+
+- **fix(CxP · 62/130)**: Por capturar compara la base fiscal sin IVA contra el presupuesto de la misma moneda. Atribuye cada factura por sus asignaciones positivas efectivas, agrupadas por embarque, sin duplicar líneas fiscales ni volver a multiplicar cantidades.
+- **fix(captura)**: conserva los residuos sin asignar, limita el exceso al subtotal y mantiene el fallback de cabecera sólo cuando no hay asignaciones efectivas. Canceladas y borradas salen del monto, conteo y última fecha; NC y pagos no deshacen la captura.
+- **fix(presentación)**: importes y filtros comparan los mismos centavos canónicos; evita excesos visibles de 0.00 sin tolerar un centavo faltante. Conserva el copy24 de captura/resumen, PDF182 y los cambios de los paquetes35–40.
+- Una sola migración nueva: `20261007001000_audit62_130_cxp_captura_base.sql`, posterior a40 / `20261006235700`. Mantiene firma, permisos, SECURITY INVOKER e historia. No hace backfill ni incluye otros splits contables.
+- Paquete de código para revisión local; no aplica SQL remoto, no publica frontend ni certifica cierre GUI. La publicación se apila sobre40 y la futura aplicación exige preflight independiente del backend.
+
+## [13.824.40] - Unreleased
+
+- **fix(pagos · 134)**: las aplicaciones de anticipos usan su importe congelado en la moneda de la factura; las consultas no reconstruyen el tipo de cambio histórico con el DOF actual ni reemplazan un importe desconocido por un pago conocido. El cero guardado sigue siendo un importe conocido.
+- **fix(reportes)**: saldo de factura, estado de cuenta, antigüedad y Cierre comparten la selección. Un cruce conocido reclasifica crédito entre ambas monedas sin otro movimiento bancario; un cruce desconocido no inventa ninguno de sus lados y mantiene el flujo incompleto.
+- Conserva notas de crédito de clientes Timbrada/Aplicada y de proveedores sólo Aplicada, junto con cronología38 y devoluciones39, incluidas sus referencias exactas. No incluye atribución de deuda139 ni otros splits contables.
+- Una sola migración nueva: `20261006235700_audit134_pago_congelado.sql`, después de39 / `20261006234200`. Mantiene los archivos y manifiestos históricos completos; no hace backfill.
+- Paquete de código: no aplica SQL remoto, no publica frontend y no certifica cierre funcional del hallazgo. Requiere verificar38 y39 aplicadas antes de su propia operación atómica revisada.
+
+## [13.824.39] - Unreleased
+
+- **fix(anticipos · 131)**: registra el medio real de devolución, su fecha civil y referencia. El efectivo no exige cuenta ni genera movimientos bancarios; la devolución bancaria exige una cuenta activa de la misma organización y moneda.
+- **fix(reportes)**: libro de pagos, detalle y estado de cuenta del proveedor conservan la salida original y muestran la devolución según sus propios datos, sin clasificar historiales incompletos como efectivo.
+- **fix(aislamiento)**: las dos tablas de cargos reciben la política restrictiva Ola16 de tenant seleccionado del superadmin, sin cambiar grants, propietarios, datos ni las seis políticas permisivas históricas. Los roles normales conservan sus permisos; no se debilita la guarda de integridad.
+- **compatibilidad**: la RPC conserva llamadas de seis argumentos mediante el séptimo parámetro opcional `Bancario`; la UI envía el medio explícito y limpia la cuenta al devolver en efectivo.
+- Tres migraciones nuevas: replay canónico `20261006234000_replay_tarifario_pricing.sql` de Drizzle0010, defensa uniforme de tenant `20261006234100_tarifario_cargos_tenant_scope.sql` y `20261006234200_audit131_devolucion_efectivo.sql`, después de cronología38. El replay conserva el SQL histórico y sus permisos; no implica volver a aplicarlo donde ya existe. Las migraciones, manifiestos y changelog35–38 permanecen intactos; no incluye134,139 ni otros splits contables.
+- El paquete no aplica SQL remoto ni publica frontend. Requiere verificar primero la aplicación autorizada de 37 y 38 y la preparación de la nueva firma antes del frontend39.
+
+## [13.824.38] - Unreleased
+
+- **fix(anticipos · 135)**: la aplicación no puede preceder a la entrega del anticipo ni a la emisión de la factura del proveedor. La UI muestra la fecha mínima sin reemplazar la captura; el servidor conserva permisos, idempotencia, reglas de periodo y conversión.
+- **fix(mensajes)**: traducción legible del rechazo de cronología, validada para errores estándar y PostgREST.
+- **test(anticipos)**: fixture N31 alineado explícitamente al día de negocio de México; conserva aserciones de saldo, unicidad y rechazo bajo sesiones UTC y México. Guardas de arquitectura y cobertura intactas.
+- Una sola migración nueva: `20261006233700_audit135_anticipo_cronologia.sql`, después de CAS `20261006233500`. Conserva SQL y metadatos históricos de las entregas previas; no incluye 54, 131, 134, 139, 141, 148 ni P&L.
+- El empaquetado no aplica SQL remoto, no reescribe datos o ledgers y no publica frontend. CAS 37 debe verificarse aplicado antes de la operación atómica propuesta para 38.
+
+## [13.824.37] - Unreleased
+
+- **fix(CxP · concurrencia 66/67)**: las decisiones de aprobación/rechazo y la edición de conceptos con una versión revisada obsoleta devuelven `PT409`, conservando el mensaje `LC_CONFLICTO_CONCURRENCIA`. Los conflictos permanentes de revisión dejan de clasificarse como errores transitorios de serialización.
+- **fix(cliente CxP)**: reconoce `PT409` y mantiene compatibilidad con `40001` legado, sin repetir la escritura ni registrar éxito ante un conflicto. Se conservan formularios y versiones revisadas para evitar sobrescrituras silenciosas.
+- **test(CxP)**: regresiones del transporte real del SDK con respuestas sintéticas, versiones obsoletas y vigentes, snapshots sin cambios, historial y reaplicación local. Se preservan bloqueos, permisos y reglas contables.
+- Una migración forward posterior a la compatibilidad 36 y anterior al stack contable. No modifica datos históricos ni reemplaza globalmente `40001`. La causa del timeout vivo permanece sin demostrar y esta entrega no certifica aplicación remota, publicación ni cierre de las pruebas GUI 66/67.
+
 ## [13.824.36] - Unreleased
 
 - **fix(proformas · compatibilidad PostgreSQL administrado)**: las dos funciones de mantenimiento usan alcance transaccional con restauración explícita del valor previo, sin requerir permisos administrativos para configurar parámetros en la declaración de función. Conserva reglas de negocio, propietarios y ACL.

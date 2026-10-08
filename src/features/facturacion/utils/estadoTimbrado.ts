@@ -3,6 +3,7 @@
  * Se extrae del componente para mantener su complejidad ciclomática baja
  * y poder testear la política de "todo listo" sin renderizar el diálogo.
  */
+import { rfcReceptorFactura } from "@/lib/financial/usoCfdiFiscal";
 import { buildChecksTimbrado, type CheckTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import {
   AVISO_NO_OBJETO_PPD_REP,
@@ -70,7 +71,7 @@ export function buildEstadoTimbrado(
   conceptos?: LineaNoObjeto[] | null,
 ): EstadoTimbrado {
   const { checks, puedeTimbrar } = buildChecksTimbrado({
-    rfc: cliente?.rfc ?? factura.rfc_cliente ?? "",
+    rfc: rfcReceptorFactura(factura.rfc_cliente, cliente?.rfc),
     cp: cliente?.codigo_postal ?? "",
     regimen: cliente?.regimen_fiscal ?? "",
     usoCfdi: seleccion.usoCfdi,

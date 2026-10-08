@@ -7,6 +7,7 @@ export interface CxpPorCapturarRow {
   cliente_nombre: string | null;
   presupuestado_mxn: number;
   presupuestado_usd: number;
+  /** Base fiscal capturada atribuida, sin IVA, NC ni pagos; moneda documental. */
   facturado_mxn: number;
   facturado_usd: number;
   facturas_capturadas: number;

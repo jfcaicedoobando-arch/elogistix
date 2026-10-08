@@ -2,19 +2,22 @@
  * Reporte PDF: Presupuesto vs Real por categoría.
  */
 import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Page, Text } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { styles } from "@/pdf/theme/styles";
+import { ReportHeader } from "@/pdf/components/ReportHeader";
+import type { EmisorInfo } from "@/pdf/components/BrandHeader";
+import { ReportSummary } from "@/pdf/components/ReportSummary";
+import { ReportContext } from "@/pdf/components/ReportContext";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { ResumenVsReal, FilaVsReal } from "@/features/presupuesto/services";
-import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   resumen: ResumenVsReal;
   filas?: FilaVsReal[];
   soloExcesos?: boolean;
-  emisor?: { razonSocial?: string };
+  emisor?: EmisorInfo;
 }
 
 const cols: PdfColumn<FilaVsReal>[] = [
@@ -27,48 +30,36 @@ const cols: PdfColumn<FilaVsReal>[] = [
 
 export function ReportePresupuestoDocument({ resumen, filas = resumen.filas, soloExcesos = false, emisor }: Props) {
   return (
-    <Document title={`Presupuesto ${resumen.periodo}`} author={emisor?.razonSocial ?? "Libre Carga"}>
+    <Document title={`Presupuesto ${resumen.periodo}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
       <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.h1}>Presupuesto vs Real</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Periodo: {resumen.periodo}</Text>
-          </View>
-        </View>
+        <ReportHeader title="Presupuesto vs Real" emisor={emisor}>
+          <Text style={styles.contextText}>Periodo: {resumen.periodo}</Text>
+        </ReportHeader>
 
-        {!!resumen.notas_proveedor_sin_base_count && <Text style={styles.paragraph}>{avisoNcProveedorSinBase(resumen.notas_proveedor_sin_base_count)}</Text>}
-        <View style={[styles.kpiRow, { marginTop: 8 }]}>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Total presupuesto</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(resumen.total_presupuesto_mxn, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Total real</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(resumen.total_real_mxn, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Variación neta</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(resumen.variacion_neta_mxn, "MXN")}</Text>
-            </View>
-          </View>
-        </View>
+        {!!resumen.notas_proveedor_sin_base_count && (
+          <ReportContext>
+            <Text style={styles.contextText}>{avisoNcProveedorSinBase(resumen.notas_proveedor_sin_base_count)}</Text>
+          </ReportContext>
+        )}
+        <ReportSummary columns={3} items={[
+          { label: "Total presupuesto", value: formatCurrency(resumen.total_presupuesto_mxn, "MXN") },
+          { label: "Total real", value: formatCurrency(resumen.total_real_mxn, "MXN") },
+          { label: "Variación neta", value: formatCurrency(resumen.variacion_neta_mxn, "MXN") },
+        ]} />
 
-        <Text style={[styles.h3, { marginTop: 12 }]}>Detalle por categoría</Text>
-        <Text style={styles.paragraph}>
-          {soloExcesos ? "Filtro: Solo excesos (más del 110% del presupuesto)." : "Filtro: Todas las categorías."} Los indicadores superiores corresponden al periodo completo.
-        </Text>
+        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 12 }]}>Detalle por categoría</Text>
+        <ReportContext>
+          <Text style={styles.contextText}>
+            {soloExcesos ? "Filtro: Solo excesos (más del 110% del presupuesto)." : "Filtro: Todas las categorías."} Los indicadores superiores corresponden al periodo completo.
+          </Text>
+        </ReportContext>
         {filas.length === 0 ? (
-          <Text style={styles.paragraph}>{soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin categorías configuradas."}</Text>
+          <Text style={styles.emptyState}>{soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin categorías configuradas."}</Text>
         ) : (
           <DataTable columns={cols} rows={filas} />
         )}
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );
