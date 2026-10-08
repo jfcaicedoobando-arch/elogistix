@@ -8599,6 +8599,8 @@ export type Database = {
       proveedores: {
         Row: {
           aba_routing: string | null
+          aprobado_at: string | null
+          aprobado_por: string | null
           banco: string | null
           banco_direccion: string | null
           banco_intermediario: string | null
@@ -8617,6 +8619,7 @@ export type Database = {
           direccion: string | null
           email: string
           estado: string | null
+          estado_alta: string
           iban: string | null
           id: string
           moneda_preferida: Database["public"]["Enums"]["moneda"]
@@ -8639,6 +8642,8 @@ export type Database = {
         }
         Insert: {
           aba_routing?: string | null
+          aprobado_at?: string | null
+          aprobado_por?: string | null
           banco?: string | null
           banco_direccion?: string | null
           banco_intermediario?: string | null
@@ -8657,6 +8662,7 @@ export type Database = {
           direccion?: string | null
           email?: string
           estado?: string | null
+          estado_alta?: string
           iban?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
@@ -8679,6 +8685,8 @@ export type Database = {
         }
         Update: {
           aba_routing?: string | null
+          aprobado_at?: string | null
+          aprobado_por?: string | null
           banco?: string | null
           banco_direccion?: string | null
           banco_intermediario?: string | null
@@ -8697,6 +8705,7 @@ export type Database = {
           direccion?: string | null
           email?: string
           estado?: string | null
+          estado_alta?: string
           iban?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
@@ -10295,6 +10304,10 @@ export type Database = {
         Args: { _nc_id: string }
         Returns: undefined
       }
+      aprobar_proveedor_provisional: {
+        Args: { p_proveedor_id: string }
+        Returns: undefined
+      }
       archivar_version_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo?: string }
         Returns: number
@@ -10952,6 +10965,15 @@ export type Database = {
           subtotal: number
           total_count: number
         }[]
+      }
+      crear_agente_provisional: {
+        Args: {
+          p_contacto?: string
+          p_email?: string
+          p_nombre: string
+          p_pais?: string
+        }
+        Returns: string
       }
       crear_ajustes_factura_proveedor_rpc: {
         Args: { p_ajustes: Json; p_factura_id: string }
