@@ -16584,31 +16584,15 @@ BEGIN
     v_org := v_caller_org;
   END IF;
   RETURN QUERY
-  WITH pagado AS (
-    SELECT pp.proveedor_factura_id,
-           COALESCE(SUM(COALESCE(pp.monto_en_moneda_factura, pp.monto)), 0) AS pagado
-      FROM public.pagos_proveedor pp
-      JOIN public.proveedor_facturas pf ON pf.id = pp.proveedor_factura_id AND pf.deleted_at IS NULL
-     WHERE pp.deleted_at IS NULL
-       AND (v_org IS NULL OR pf.organization_id = v_org)
-     GROUP BY pp.proveedor_factura_id
-  ), nc AS (
-    SELECT pnc.proveedor_factura_id, COALESCE(SUM(pnc.monto), 0) AS aplicado
-      FROM public.proveedor_notas_credito pnc
-      JOIN public.proveedor_facturas pf ON pf.id = pnc.proveedor_factura_id AND pf.deleted_at IS NULL
-     WHERE pnc.estado = 'Aplicada' AND pnc.deleted_at IS NULL
-       AND (v_org IS NULL OR pf.organization_id = v_org)
-     GROUP BY pnc.proveedor_factura_id
-  ), saldos AS (
+  WITH saldos AS (
     SELECT pf.proveedor_id,
            pf.proveedor_nombre,
            COALESCE(pf.moneda, 'MXN')::text AS moneda,
            pf.id AS factura_id,
-           GREATEST(pf.total - COALESCE(pg.pagado, 0) - COALESCE(nc.aplicado, 0), 0) AS saldo,
+           GREATEST(canon.saldo, 0) AS saldo,
            (p_fecha - COALESCE(pf.fecha_vencimiento, pf.fecha_emision))::int AS dias_vencido
       FROM public.proveedor_facturas pf
-      LEFT JOIN pagado pg ON pg.proveedor_factura_id = pf.id
-      LEFT JOIN nc       ON nc.proveedor_factura_id = pf.id
+      JOIN public.v_proveedor_facturas_saldo canon ON canon.proveedor_factura_id = pf.id
      WHERE pf.deleted_at IS NULL
        AND pf.estado <> 'Cancelada'
        AND (v_org IS NULL OR pf.organization_id = v_org)

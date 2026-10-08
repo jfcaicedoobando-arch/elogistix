@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.43] - Unreleased
+
+- **fix(Aging · 70)**: antigüedad de saldos usa el saldo canónico por moneda de factura, neto de NC de proveedor Aplicadas y pagos/aplicaciones congelados. Conserva precisión, umbral abierto0.005 y cubetas por fecha de vencimiento.
+- Conserva35–42, captura62/130, cronología135, referencia NULL131/134, cierre139 y NC CxC Timbrada/Aplicada. No reescribe datos ni incorpora Por pagar001700.
+- Una migración: `20261007001600_audit70_aging_saldo_canonico.sql`. Sólo paquete local; sin SQL remoto, publicación ni GUI. Reintegración del replay tarifario20261006234000 de main acb pendiente antes de cualquier publicación.
+
 ## [13.824.42] - Unreleased
 
 - **fix(Cierre · 139)**: la deuda CxP de cada embarque usa sus asignaciones positivas efectivas; la cabecera sólo es respaldo cuando no hay asignaciones vigentes. Cantidades se aplican una vez, costes borrados y ajustes de presupuesto no crean pertenencia.
