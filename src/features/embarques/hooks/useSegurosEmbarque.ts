@@ -13,6 +13,14 @@ import { queryKeys } from "@/lib/query";
 
 const KEY = queryKeys.embarques.seguros;
 
+/** Traduce los rechazos del vínculo póliza ↔ factura (hallazgo 148). */
+function mensajeSeguro(e: Error, fallback: string): string {
+  const m = e?.message ?? "";
+  if (m.includes("ux_seguros_embarque_factura_activa")) return "Esa factura ya está ligada a otra póliza activa.";
+  if (m.includes("LC_SEGURO_FACTURA_INVALIDA")) return "La factura no está vigente o no pertenece a este embarque.";
+  return m || fallback;
+}
+
 export function useSegurosEmbarque(embarqueId: string | undefined) {
   return useQuery<SeguroEmbarque[]>({
     queryKey: KEY(embarqueId),
@@ -25,6 +33,7 @@ export function useSegurosEmbarque(embarqueId: string | undefined) {
 function invalidatePnl(qc: ReturnType<typeof useQueryClient>, embarqueId?: string) {
   qc.invalidateQueries({ queryKey: KEY(embarqueId) });
   qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueId) });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.segurosFacturasElegibles(embarqueId) });
 }
 
 export function useCreateSeguro(embarqueId: string) {
@@ -35,7 +44,7 @@ export function useCreateSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       notifySuccess(undefined, { title: "Póliza registrada" });
     },
-    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo guardar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_1" }),
+    onError: (e: Error) => notifyError(undefined, { title: mensajeSeguro(e, "No se pudo guardar la póliza"), error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_1" }),
   });
 }
 
@@ -48,7 +57,7 @@ export function useUpdateSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       notifySuccess(undefined, { title: "Póliza actualizada" });
     },
-    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo actualizar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_2" }),
+    onError: (e: Error) => notifyError(undefined, { title: mensajeSeguro(e, "No se pudo actualizar la póliza"), error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_2" }),
   });
 }
 
@@ -60,6 +69,6 @@ export function useDeleteSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       notifySuccess(undefined, { title: "Póliza eliminada" });
     },
-    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo eliminar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_3" }),
+    onError: (e: Error) => notifyError(undefined, { title: mensajeSeguro(e, "No se pudo eliminar la póliza"), error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_3" }),
   });
 }
