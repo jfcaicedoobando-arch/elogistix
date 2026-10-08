@@ -27,8 +27,17 @@ const COMPLEJIDADES = (Object.keys(ETIQUETA_COMPLEJIDAD) as Array<keyof typeof E
 
 export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
   const { data: usuarios = [] } = useUsuariosOrgCrm();
+  const { data: catalogo = [] } = usePuertos();
+  const puertos = catalogo as PuertoOption[];
+  const paises = useMemo(() => paisesDePuertos(puertos), [puertos]);
   const txt = (campo: keyof DatosSolicitud) => (v: string) => set(campo, (v || null) as never);
   const d = { disabled };
+  /** Cambio de país: limpia el puerto de ese extremo si ya no pertenece al país. */
+  const cambiarPais = (campoPais: "origen" | "destino", campoPuerto: "pol" | "pod") => (v: string | null) => {
+    set(campoPais, v);
+    const puerto = puertoTrasCambioPais(puertos, v, datos[campoPuerto]);
+    if (puerto !== datos[campoPuerto]) set(campoPuerto, puerto);
+  };
   return (
     <>
       <FormDialogSection title="Datos generales">
