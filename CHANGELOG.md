@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.44] - Unreleased
+
+- **fix(CxP Por pagar · 70)**: saldo y pagado se leen de `v_proveedor_facturas_saldo` en moneda documental. Las NC Aplicadas reducen saldo sin contarse como pagos; se conserva la precisión y la conversión congelada de la vista canónica.
+- **Recomposición revisada local (2026-10-08)**: candidato nuevo sobre main `a9816f5` más las 13 fuentes exactas de 43. Reutiliza seis fuentes archivadas de 44 sin cambiar sus bytes; no restaura el candidato histórico `ec34` ni el ZIP perdido de 12 archivos.
+- Una migración: `20261007001700_audit70_por_pagar_saldo_canonico.sql`. Conserva todas las entradas 35–43, las migraciones previas y los archivos de main fuera del delta. El baseline cambia únicamente el cuerpo de `cxp_por_pagar`.
+- Evidencia y límites propios en `docs/audits/audit70-payables-release44-reconstruction-review.md`. Los planes archivados conservan antecedentes de otras composiciones y sus pruebas no certifican este candidato. Sin SQL remoto, envelope, publicación, merge ni despliegue.
+
 ## [13.824.43] - Unreleased
 
 - **fix(Aging · 70)**: antigüedad de saldos usa el saldo canónico por moneda de factura, neto de NC de proveedor Aplicadas y pagos/aplicaciones congelados. Conserva precisión, umbral abierto0.005 y cubetas por fecha de vencimiento.

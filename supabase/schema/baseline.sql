@@ -16816,26 +16816,18 @@ CREATE FUNCTION public.cxp_por_pagar() RETURNS TABLE(factura_id uuid, proveedor_
     LANGUAGE sql STABLE
     SET search_path TO 'public'
     AS $$
-  WITH pagos_conv AS (
-    SELECT pp.proveedor_factura_id,
-           SUM(COALESCE(pp.monto_en_moneda_factura, pp.monto)) AS pagado
-      FROM public.pagos_proveedor pp
-     WHERE pp.deleted_at IS NULL
-     GROUP BY pp.proveedor_factura_id
-  )
   SELECT pf.id, pf.proveedor_id, pf.proveedor_nombre, p.origen_proveedor::text,
     pf.folio_proveedor,
     pf.embarque_id, e.expediente,
     pf.fecha_emision, pf.fecha_vencimiento,
     (pf.fecha_vencimiento - CURRENT_DATE)::int,
     pf.moneda::text, pf.total,
-    COALESCE(pc.pagado,0),
-    pf.total - COALESCE(pc.pagado,0),
+    s.pagado, s.saldo,
     pf.estado_captura, pf.tipo_cambio_usd, pf.fecha_programada_pago
   FROM public.proveedor_facturas pf
   LEFT JOIN public.embarques e ON e.id = pf.embarque_id
   LEFT JOIN public.proveedores p ON p.id = pf.proveedor_id
-  LEFT JOIN pagos_conv pc ON pc.proveedor_factura_id = pf.id
+  JOIN public.v_proveedor_facturas_saldo s ON s.proveedor_factura_id = pf.id
   WHERE pf.deleted_at IS NULL AND pf.estado::text = 'Vigente'
   ORDER BY pf.fecha_vencimiento NULLS LAST, pf.created_at DESC
   LIMIT 500;

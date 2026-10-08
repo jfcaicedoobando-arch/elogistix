@@ -37,6 +37,23 @@ describe("CxP por pagar — TC documental EUR (extensión 85)", () => {
     });
   });
 
+  it("extensión70: usa saldo canónico después de NC sin recalcular total menos pagos", () => {
+    const rows = [
+      factura({ moneda: "USD", total: 116, pagado: 0, saldo: 16, tipo_cambio_usd: 25 }),
+      factura({ factura_id: "resto-usd", moneda: "USD", total: 795.95, saldo: 795.95, tipo_cambio_usd: 20 }),
+      factura({ factura_id: "precision-eur", total: 1, pagado: 0, saldo: 0.945, tipo_cambio_usd: 25 }),
+    ];
+    const original = structuredClone(rows);
+    const result = resumirCxpPorPagar(rows);
+
+    expect(result.porMoneda.USD).toBeCloseTo(811.95, 8);
+    expect(result.porMoneda.EUR).toBe(0.945);
+    // Audit85 keeps the established two-decimal MXN homologation.
+    expect(result.saldoMXN).toBe(16342.63);
+    expect(result.faltaTipoCambio).toBe(0);
+    expect(rows).toEqual(original);
+  });
+
   it.each([null, 0, -20, 1, 0.5, NaN, Infinity])(
     "excluye sólo el equivalente cuando el TC EUR es inválido: %s",
     (tipo_cambio_usd) => {

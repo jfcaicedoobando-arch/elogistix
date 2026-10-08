@@ -17,3 +17,5 @@
 - CxP Por capturar: `cxp_por_capturar` compara subtotal fiscal capturado sin IVA, NC ni pagos con presupuesto por moneda. Las asignaciones positivas efectivas fijan pertenencia, con parcial sin expansión, exceso limitado y cabecera sólo como fallback; monto, conteo y fecha usan el mismo conjunto. Why: la captura documental no es deuda ni P&L y no debe duplicar fiscal/vínculos.
 - Cierre CxP: `validar_cierre_embarque` atribuye deuda por asignaciones positivas efectivas, conserva el residuo no asignado y limita sobreasignación; cabecera sólo sin asignaciones. Why: no duplicar facturas multiembarque ni fabricar linaje de pagos.
 - Aging CxP: `cxp_aging_proveedores` agrega `v_proveedor_facturas_saldo` sin redondear por factura; p_fecha reclasifica saldos actuales, no reconstruye un corte histórico. Why: reporte y detalle conservan el mismo saldo neto canónico por moneda.
+
+- CxP Por pagar: `cxp_por_pagar` consume saldo y pagado de `v_proveedor_facturas_saldo` en moneda documental. Why: NC Aplicadas reducen saldo sin convertirse en pagos ni duplicar conversión.
