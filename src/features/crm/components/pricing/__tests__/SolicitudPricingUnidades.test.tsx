@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { SolicitudPricingCampos, type DatosSolicitud } from "../SolicitudPricingCampos";
 
 vi.mock("@/features/crm/hooks/usePricingCrm", () => ({ useUsuariosOrgCrm: () => ({ data: [] }) }));
-vi.mock("@/features/catalogos/hooks", () => ({ usePuertos: () => ({ data: [] }) }));
+vi.mock("@/features/catalogos/hooks", () => ({
+  usePuertos: () => ({ data: [] }),
+  useTiposContenedor: () => ({ data: [] }),
+}));
 
 function Formulario({ unidad }: { unidad?: string | null }) {
   const [datos, setDatos] = useState<DatosSolicitud>({ solicitante_id: "u1", peso: "100", dimensiones: "10x20x30", unidad_medida: unidad });

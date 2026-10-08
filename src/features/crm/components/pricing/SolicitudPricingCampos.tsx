@@ -3,7 +3,7 @@
  */
 import { useMemo } from "react";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { usePuertos } from "@/features/catalogos/hooks";
+import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import type { PuertoOption } from "@/features/catalogos";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
 import { paisesDePuertos, puertoTrasCambioPais } from "@/features/crm/services/pricing/puertosPorPais";
@@ -28,6 +28,11 @@ const COMPLEJIDADES = (Object.keys(ETIQUETA_COMPLEJIDAD) as Array<keyof typeof E
 export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
   const { data: usuarios = [] } = useUsuariosOrgCrm();
   const { data: catalogo = [] } = usePuertos();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
+  const opcionesContenedor = useMemo(
+    () => tiposContenedor.map((t) => ({ value: t.name, label: t.name })),
+    [tiposContenedor],
+  );
   const puertos = catalogo as PuertoOption[];
   const paises = useMemo(() => paisesDePuertos(puertos), [puertos]);
   const txt = (campo: keyof DatosSolicitud) => (v: string) => set(campo, (v || null) as never);
@@ -56,7 +61,8 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
       <FormDialogSection title="Carga">
         <CampoSiNo id="pr-imo" label="IMO" {...d} value={datos.imo} onChange={(v) => set("imo", v)} />
         <CampoTexto id="pr-commodity" label="Commodity" {...d} value={datos.commodity} onChange={txt("commodity")} />
-        <CampoTexto id="pr-type" label="Type" {...d} value={datos.tipo_carga} onChange={txt("tipo_carga")} />
+        <CampoLista id="pr-type" label="Tipo de contenedor" {...d} value={datos.tipo_carga}
+          opciones={opcionesContenedor} onChange={(v) => set("tipo_carga", v)} />
         <CampoTexto id="pr-qty" label="Quantity" type="number" {...d} value={datos.cantidad}
           onChange={(v) => { const n = aNumero(v); set("cantidad", n != null && n > 0 ? Math.trunc(n) : null); }} />
         <CampoSiNo id="pr-estibable" label="Estibable" {...d} value={datos.estibable} onChange={(v) => set("estibable", v)} />
