@@ -1,7 +1,8 @@
 /** Vista 1 del tarifario: Tarifas (Puertos base) con 20"/40" en una fila. */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
+import { ImportarTarifasDialog } from "./ImportarTarifasDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +53,7 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
   const [filtro, setFiltro] = useState<FiltroVigencia>("vigentes");
   const [texto, setTexto] = useState("");
   const [nueva, setNueva] = useState(false);
+  const [importar, setImportar] = useState(false);
   const q = useQuery({ queryKey: costeo.tarifario.tarifas(filtro), queryFn: () => listarTarifasTarifario(filtro, hoyMx()) });
   const etiquetaFiltro = FILTROS_VIGENCIA.find((f) => f.valor === filtro)?.etiqueta ?? "";
   const filas = useMemo(() => {
@@ -77,6 +79,7 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
           <Button variant="outline" onClick={() => exportToCsv(`tarifario-${hoyMx()}.csv`, HEADERS, filas.map(aCsv))}>
             <Download className="mr-1 size-4" /> Descargar Excel
           </Button>
+          {puedeEditar && <Button variant="outline" onClick={() => setImportar(true)}><Upload className="mr-1 size-4" /> Importar CSV/Excel</Button>}
           {puedeEditar && <Button onClick={() => setNueva(true)}><Plus className="mr-1 size-4" /> Nueva tarifa</Button>}
         </div>
       </div>
@@ -84,6 +87,7 @@ export function TarifasBaseTab({ puedeEditar }: { puedeEditar: boolean }) {
         isError={q.isError} onRetry={() => { void q.refetch(); }}
         emptyMessage={filtro === "todas" ? "Sin tarifas capturadas." : `Sin tarifas ${etiquetaFiltro.toLowerCase()}.`} />
       <p className="text-caption text-muted-foreground">Para editar o duplicar una tarifa usa el catálogo de tarifas; la versión anterior se conserva como histórico.</p>
+      {importar && <ImportarTarifasDialog open={importar} onOpenChange={setImportar} onDone={() => { void q.refetch(); }} />}
       {nueva && <TarifaForm open={nueva} onOpenChange={setNueva} onSaved={() => { void q.refetch(); }} />}
     </div>
   );
