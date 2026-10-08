@@ -56,7 +56,6 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
       <FormDialogSection title="Carga">
         <CampoSiNo id="pr-imo" label="IMO" {...d} value={datos.imo} onChange={(v) => set("imo", v)} />
         <CampoTexto id="pr-commodity" label="Commodity" {...d} value={datos.commodity} onChange={txt("commodity")} />
-        <CampoTexto id="pr-size" label="Container Size" {...d} value={datos.container_size} onChange={txt("container_size")} />
         <CampoTexto id="pr-type" label="Type" {...d} value={datos.tipo_carga} onChange={txt("tipo_carga")} />
         <CampoTexto id="pr-qty" label="Quantity" type="number" {...d} value={datos.cantidad}
           onChange={(v) => { const n = aNumero(v); set("cantidad", n != null && n > 0 ? Math.trunc(n) : null); }} />
