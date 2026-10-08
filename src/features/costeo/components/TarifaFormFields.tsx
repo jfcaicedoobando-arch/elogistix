@@ -14,6 +14,7 @@ import { MultiRutaSelect } from "./MultiRutaSelect";
 interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: boolean; activa?: boolean }
 
 import { NavieraQuickCreate } from "./NavieraQuickCreate";
+import { AgenteProvisionalDialog } from "./AgenteProvisionalDialog";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
 import type { RutaOption } from "./MultiRutaSelect";
 
@@ -70,6 +71,9 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
               ))}
             </SelectContent>
           </Select>
+        )}
+        {!agenteBloqueado && (
+          <AgenteProvisionalDialog onCreado={(id) => setForm({ ...form, agente_id: id })} />
         )}
       </div>
       <div>

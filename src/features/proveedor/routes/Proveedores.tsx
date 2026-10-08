@@ -15,6 +15,7 @@ import {
 } from "../components/ProveedoresFiltros";
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
+import { ProveedoresProvisionalesAviso } from "../components/ProveedoresProvisionalesAviso";
 
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -76,7 +77,7 @@ export default function Proveedores() {
         }
       />
 
-
+      <ProveedoresProvisionalesAviso />
 
       <ProveedoresFiltros
         search={search}
