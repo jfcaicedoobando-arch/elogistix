@@ -40,6 +40,7 @@ import {
   CalendarCheck,
   Wallet,
   FileText,
+  BookOpen,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -109,13 +110,13 @@ export const SIDEBAR_SUPER_ADMIN_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
+  { title: "Tarifario", url: "/costeo/tarifario", icon: BookOpen },
   { title: "Comparador top 3", url: "/costeo/buscar", icon: Search },
   { title: "Solicitudes de pricing", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas marítimas", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
   { title: "Navieras (condiciones)", url: "/costeo/navieras", icon: Anchor },
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
-  { title: "Bandeja de pricing", url: "/costeo/solicitudes", icon: Inbox },
 ];
 
 /**

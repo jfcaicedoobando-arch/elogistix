@@ -1,86 +1,132 @@
 /**
- * useAutoSaveDatosFiscales — auto-guardado con debounce para la card
- * "Configuración de timbrado". Reemplaza al botón "Guardar cambios" manual.
- *
- * - Debounce 500 ms desde el último cambio antes de disparar el patch.
- * - `estado` expone 'idle' | 'saving' | 'saved' | 'error' para el indicador visual.
- * - No dispara guardado en el primer render (evita re-guardar los valores iniciales).
+ * Autosave del borrador: debounce cancelable antes de enviar, destino capturado
+ * y cola serial por factura/empresa. Nunca guarda desde el cleanup ni simula
+ * abortar una escritura ya enviada. Las pestañas editables conservan este estado.
  */
-import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { notifyError } from "@/lib/ui/appFeedback";
-import {
-  actualizarDatosTimbradoFactura,
-  type DatosTimbradoPatch,
-} from "@/features/facturacion/services";
-import type { DatosFiscalesEstado } from "@/features/facturacion/domain/datosFiscalesForm";
-import { buildDatosTimbradoPatch } from "@/features/facturacion/domain/datosFiscalesForm";
+import { actualizarDatosTimbradoFactura, type DatosTimbradoPatch } from "@/features/facturacion/services";
+import { useReconciliarAutoSave } from "./useReconciliarAutoSave";
+import { encolarAutoSave } from "./colaAutoSaveDatosFiscales";
+import type { FacturaDetalle } from "../services/detail";
+import { buildDatosTimbradoPatch, type DatosFiscalesEstado } from "@/features/facturacion/domain/datosFiscalesForm";
 
 export type AutoSaveEstado = "idle" | "saving" | "saved" | "error";
-
 const DEBOUNCE_MS = 500;
+interface Captura { facturaId: string; organizationId: string; patch: Partial<DatosTimbradoPatch>; revision: number; signal: AbortSignal; authScope: ReturnType<typeof captureAuthOperationScope> }
 
-export function useAutoSaveDatosFiscales(
-  facturaId: string,
-  moneda: string,
-  values: DatosFiscalesEstado,
-) {
+/** Cancelar el debounce no significa abortar una escritura que ya salió. */
+function esperarDebounce(signal: AbortSignal): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (signal.aborted) { resolve(false); return; }
+    const cancelar = () => { clearTimeout(timer); resolve(false); };
+    const timer = setTimeout(() => { signal.removeEventListener("abort", cancelar); resolve(true); }, DEBOUNCE_MS);
+    signal.addEventListener("abort", cancelar, { once: true });
+  });
+}
+
+export function useAutoSaveDatosFiscales(facturaId: string, moneda: string, values: DatosFiscalesEstado, organizationId: string, camposEditados?: readonly (keyof DatosTimbradoPatch)[]) {
   const qc = useQueryClient();
+  // El formulario pertenece a esta sesión. No recapturar al ejecutar una cola
+  // antigua ni permitir que otro usuario herede los campos sin reabrirlo.
+  const [authScope] = useState(captureAuthOperationScope);
   const [estado, setEstado] = useState<AutoSaveEstado>("idle");
   const [ultimoGuardado, setUltimoGuardado] = useState<number | null>(null);
-  const primeraRender = useRef(true);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const enVueloRef = useRef<AbortController | null>(null);
-  // Ref al último `values` — se depende de campos primitivos abajo; el ref
-  // permite leer el objeto completo al momento de guardar sin re-suscribir.
-  const valuesRef = useRef(values);
-  valuesRef.current = values;
+  const montado = useRef(false);
+  const revision = useRef(0);
+  const capturaActual = useRef<Captura | null>(null);
+  const destino = `${organizationId}:${facturaId}`;
+  const destinoAnterior = useRef(destino);
+  const { usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas } = values;
+  const candidato = useMemo(() => {
+    const todos = buildDatosTimbradoPatch({ usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas }, moneda);
+    return camposEditados ? Object.fromEntries(Object.entries(todos).filter(([key]) => camposEditados.includes(key as keyof DatosTimbradoPatch))) as Partial<DatosTimbradoPatch> : todos;
+  }, [usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas, moneda, camposEditados]);
+  // Comparar campos ya normalizados estabiliza el patch sin deserializar datos.
+  // Un espacio final o entero equivalente no aborta el debounce pendiente.
+  const { uso_cfdi, forma_pago, metodo_pago, dias_credito, notas: notasPatch, tipo_cambio } = candidato;
+  const patch = useMemo<Partial<DatosTimbradoPatch>>(() => ({
+    ...(uso_cfdi !== undefined ? { uso_cfdi } : {}),
+    ...(forma_pago !== undefined ? { forma_pago } : {}),
+    ...(metodo_pago !== undefined ? { metodo_pago } : {}),
+    ...(dias_credito !== undefined ? { dias_credito } : {}),
+    ...(notasPatch !== undefined ? { notas: notasPatch } : {}),
+    ...(tipo_cambio !== undefined ? { tipo_cambio } : {}),
+  }), [uso_cfdi, forma_pago, metodo_pago, dias_credito, notasPatch, tipo_cambio]);
+  const anterior = useRef(patch);
+  const reconciliacion = useReconciliarAutoSave(qc, facturaId, organizationId, authScope);
 
   useEffect(() => {
-    if (primeraRender.current) {
-      primeraRender.current = false;
-      return;
+    montado.current = true;
+    return () => { montado.current = false; revision.current += 1; };
+  }, []);
+
+  const { mutate } = useMutation({
+    mutationKey: queryKeys.facturacion.autosaveDatosTimbrado(facturaId, organizationId),
+    // La cola es efímera; no usar scope/pausa offline que el persister pueda rehidratar.
+    networkMode: "always",
+    retry: false,
+    gcTime: 0,
+    mutationFn: async (v: Captura) => {
+      if (!(await esperarDebounce(v.signal)) || v.signal.aborted) return false;
+      return encolarAutoSave(qc, `${v.organizationId}:${v.facturaId}`, async () => {
+        if (v.signal.aborted) return false;
+        v.authScope.assertCurrent();
+        await actualizarDatosTimbradoFactura(v.facturaId, v.patch, undefined, { organizationId: v.organizationId, borrador: true, authScope: v.authScope });
+        return true;
+      });
+    },
+    onSuccess: async (guardado, v) => {
+      if (!guardado || !v.authScope.isCurrent()) return;
+      // Una respuesta confirma sólo su destino. Nunca sobreescribir un CFDI ya emitido en caché.
+      const key = queryKeys.facturas.detail(v.facturaId);
+      qc.setQueryData<FacturaDetalle | null>(key, (cached) => esBorradorDestino(cached, v) ? { ...cached, ...v.patch } : cached);
+      await qc.invalidateQueries({ queryKey: key });
+      if (!v.authScope.isCurrent() || !montado.current || revision.current !== v.revision) return;
+      setEstado("saved");
+      setUltimoGuardado(Date.now());
+    },
+    onError: (error, v) => {
+      if (!v.authScope.isCurrent()) return;
+      if (montado.current && revision.current === v.revision) setEstado("error");
+      notifyError(undefined, { title: "No se pudieron guardar los datos fiscales", error,
+        method: "FACTURA_DATOS_FISCALES_AUTOSAVE", context: { facturaId: v.facturaId, organizationId: v.organizationId } });
+    },
+  });
+
+  useEffect(() => {
+    // Un consumidor que cambia destino sin key tampoco puede copiarle la captura anterior.
+    if (destinoAnterior.current !== destino) {
+      destinoAnterior.current = destino; anterior.current = patch; revision.current += 1;
+      setEstado("idle"); setUltimoGuardado(null); return;
     }
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      // Cancela un guardado anterior en vuelo si aún no terminó.
-      enVueloRef.current?.abort();
-      const ctrl = new AbortController();
-      enVueloRef.current = ctrl;
-      const patch: DatosTimbradoPatch = buildDatosTimbradoPatch(valuesRef.current, moneda);
-      setEstado("saving");
-      try {
-        await actualizarDatosTimbradoFactura(facturaId, patch);
-        if (ctrl.signal.aborted) return;
-        setEstado("saved");
-        setUltimoGuardado(Date.now());
-        qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
-      } catch (err) {
-        if (ctrl.signal.aborted) return;
-        setEstado("error");
-        notifyError(undefined, {
-          title: "No se pudo guardar",
-          error: err,
-          method: "FACTURA_DATOS_FISCALES_AUTOSAVE",
-        });
-      }
-    }, DEBOUNCE_MS);
+    // Incluye el doble montaje de efectos en StrictMode: hidratar no es editar.
+    if (anterior.current === patch) return;
+    anterior.current = patch;
+    const version = ++revision.current;
+    setEstado("saving");
+    const ctrl = new AbortController();
+    capturaActual.current = { facturaId, organizationId, patch, revision: version, signal: ctrl.signal, authScope };
+    mutate(capturaActual.current);
+    return () => ctrl.abort();
+  }, [destino, facturaId, organizationId, patch, mutate, authScope]);
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [
-    qc,
-    facturaId,
-    moneda,
-    values.usoCfdi,
-    values.formaPago,
-    values.metodoPago,
-    values.diasCredito,
-    values.tipoCambio,
-    values.notas,
-  ]);
+  const reintentar = () => {
+    if (reconciliacion.isError) return reconciliacion.reintentar();
+    const captura = capturaActual.current;
+    if (estado !== "error" || !captura || captura.signal.aborted || !captura.authScope.isCurrent()) return;
+    if (qc.isMutating({ mutationKey: queryKeys.facturacion.autosaveDatosTimbrado(facturaId, organizationId) })) return;
+    setEstado("saving");
+    mutate(captura);
+  };
+  const estadoVisible = reconciliacion.isPending ? "saving" : reconciliacion.isError ? "error" : estado;
+  return { estado: estadoVisible, ultimoGuardado, reintentar };
+}
 
-  return { estado, ultimoGuardado };
+function esBorradorDestino(cached: FacturaDetalle | null | undefined, v: Captura): cached is FacturaDetalle {
+  return !!cached && cached.id === v.facturaId && cached.organization_id === v.organizationId
+    && !cached.uuid_fiscal && !cached.facturapi_id && ["Borrador", "Por timbrar"].includes(cached.estado);
 }

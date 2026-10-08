@@ -13,18 +13,23 @@ import { MSG_PUE_REQUIERE_FORMA_REAL } from "@/lib/financial/formaMetodoPago";
 const crearFacturaManual = vi.fn();
 const emitirFacturapi = vi.fn();
 const toastSuccess = vi.fn();
+const successDescription = vi.fn();
+const fetchClienteFiscal = vi.fn();
 const notifyError = vi.fn();
 
 vi.mock("sonner", () => ({ toast: { success: (...a: unknown[]) => toastSuccess(...a) } }));
 vi.mock("@/features/facturacion/services/facturaManual", () => ({
   crearFacturaManual: (...a: unknown[]) => crearFacturaManual(...a),
 }));
+vi.mock("@/features/facturacion/services/datosFiscalesCliente", () => ({
+  fetchClienteFiscal: (...a: unknown[]) => fetchClienteFiscal(...a),
+}));
 vi.mock("@/features/facturacion/services/facturapi", () => ({
   emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
-  notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts?.title),
+  notifySuccess: (_t: unknown, opts: { title: string; description?: string }) => { toastSuccess(opts?.title); successDescription(opts?.description); },
 }));
 
 import { useCrearFacturaManual } from "../useCrearFacturaManual";
@@ -37,13 +42,16 @@ function wrapper(qc: QueryClient) {
 
 const fakeInput: CrearFacturaManualInput = {
   organizationId: "org-1", clienteId: "cliente-1", clienteNombre: "Cliente de prueba",
-  rfcCliente: "XAXX010101000", serie: "A", usoCfdi: "G03", formaPago: "99", metodoPago: "PPD",
+  rfcCliente: "AAA010101AAA", serie: "A", usoCfdi: "G03", formaPago: "99", metodoPago: "PPD",
   diasCredito: 0, fechaEmision: "2026-10-04", moneda: "MXN", tipoCambio: 1, tasaIva: 0.16,
   conceptos: [{ descripcion: "Servicio", cantidad: 1, precio_unitario: 100, clave_sat: "78101800", tipo_iva: "gravado_16" }],
 };
 
 beforeEach(() => {
   crearFacturaManual.mockReset();
+  fetchClienteFiscal.mockReset();
+  fetchClienteFiscal.mockResolvedValue({ rfc: "AAA010101AAA", regimen_fiscal: "601", codigo_postal: "64000" });
+  successDescription.mockReset();
   emitirFacturapi.mockReset();
   toastSuccess.mockReset();
   notifyError.mockReset();
@@ -106,7 +114,7 @@ describe("useCrearFacturaManual", () => {
 
     expect(crearFacturaManual).toHaveBeenCalledWith(fakeInput);
     expect(emitirFacturapi).toHaveBeenCalledWith("fac-99");
-    expect(result.current.data).toEqual({ facturaId: "fac-99", timbrada: true, uuid: "UUID9999-rest" });
+    expect(result.current.data).toEqual({ facturaId: "fac-99", timbrada: true, uuid: "UUID9999-rest", timbrado: { uuid: "UUID9999-rest", folio: 991 } });
     expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("UUID9999"));
     qc.clear();
   });

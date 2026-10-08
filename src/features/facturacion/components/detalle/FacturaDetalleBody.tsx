@@ -43,6 +43,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
   const tabs: DocumentoTabItem[] = [
     {
       id: "conceptos",
+      keepMounted: puedeEditarBorrador,
       label: "Conceptos",
       count: conceptosVivos.length,
       content: (
@@ -143,6 +144,6 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     },
   ];
 
-  return <DocumentoTabs tabs={tabs} />;
+  return <DocumentoTabs key={`${factura.organization_id}:${factura.id}`} tabs={tabs} />;
 }
 

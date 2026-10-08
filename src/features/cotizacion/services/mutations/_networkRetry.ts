@@ -30,13 +30,14 @@ function esperarOnline(timeoutMs: number): Promise<void> {
   });
 }
 
-export async function fetchConReintento(url: string, init: RequestInit): Promise<Response> {
+export async function fetchConReintento(url: string, init: RequestInit, beforeAttempt?: () => void): Promise<Response> {
   if (!isOnline()) throw new TypeError(OFFLINE_MSG);
   // 5 intentos: 0 / 1s / 2s / 4s / 8s (~15s totales) — cubre microcortes de red.
   const delays = [0, 1000, 2000, 4000, 8000];
   let lastErr: unknown;
   for (let i = 0; i < delays.length; i++) {
     if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
+    beforeAttempt?.();
     try {
       return await fetch(url, init);
     } catch (e) {

@@ -8,6 +8,7 @@
  * las demás bandejas migradas al primitivo unificado.
  */
 import { useCallback, useMemo } from "react";
+import { roundMoney } from "@/lib/financial/financialUtils";
 import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import type { CxpPorCapturarRow } from "@/features/bandejas/services/bandejas";
 import { referenciaCxpEmbarque } from "../domain/cxpReferenciaEmbarque";
@@ -33,10 +34,10 @@ export interface FiltersState {
  */
 export function estatusDeFila(row: CxpPorCapturarRow): EstatusFiltro {
   if (row.facturas_capturadas === 0) return "sin";
-  const presupMxn = Number(row.presupuestado_mxn) || 0;
-  const presupUsd = Number(row.presupuestado_usd) || 0;
-  const factMxn = Number(row.facturado_mxn) || 0;
-  const factUsd = Number(row.facturado_usd) || 0;
+  const presupMxn = roundMoney(Number(row.presupuestado_mxn));
+  const presupUsd = roundMoney(Number(row.presupuestado_usd));
+  const factMxn = roundMoney(Number(row.facturado_mxn));
+  const factUsd = roundMoney(Number(row.facturado_usd));
   const mxnOk = presupMxn <= 0 || factMxn >= presupMxn;
   const usdOk = presupUsd <= 0 || factUsd >= presupUsd;
   if (mxnOk && usdOk && (presupMxn > 0 || presupUsd > 0)) return "completo";

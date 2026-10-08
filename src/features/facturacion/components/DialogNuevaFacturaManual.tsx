@@ -89,6 +89,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
 
         <FormDialogSection flat title="Datos fiscales">
           <FacturaManualDatosFiscales
+            receptor={{ rfc: cliente?.rfc ?? "", regimen: cliente?.regimen_fiscal ?? "" }}
             value={fiscal} onChange={updateFiscal} diasReadonly={!!cliente}
             diasReadonlyReason={cliente ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente." : undefined}
           />

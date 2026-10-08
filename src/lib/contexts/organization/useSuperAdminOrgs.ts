@@ -1,3 +1,4 @@
+import { invalidateSessionCacheEntries } from "@/lib/auth/sessionCacheRegistry";
 /**
  * RG7/RG9/RG19/RG21 (Ola 3) — lógica de tenant activo del super admin.
  * Extraída de `OrganizationContext.tsx` para respetar el límite de 200 líneas.
@@ -86,6 +87,7 @@ export function useSuperAdminOrgs(enabled: boolean): SuperAdminOrgState {
       // resuelven con `org_scope()`. Se limpia la caché antes del round-trip y,
       // si sigue siendo el cambio más reciente, también después.
       const seq = ++tenantSeq.current;
+      invalidateSessionCacheEntries();
       queryClient.clear();
       void setSuperAdminOrg(id)
         // RG21: antes el catch era silencioso y el tenant quedaba distinto
@@ -94,7 +96,10 @@ export function useSuperAdminOrgs(enabled: boolean): SuperAdminOrgState {
           logger.warn("organization", "No se pudo persistir el tenant activo en el servidor", err),
         )
         .finally(() => {
-          if (seq === tenantSeq.current) queryClient.clear();
+          if (seq === tenantSeq.current) {
+            invalidateSessionCacheEntries();
+            queryClient.clear();
+          }
         });
     },
     [queryClient],

@@ -122,10 +122,11 @@ export interface DevolverAnticipoInput {
   id: string;
   /** Monto que el proveedor regresó, en la moneda del anticipo. */
   monto: number;
-  /** Fecha del depósito de regreso (ISO YYYY-MM-DD). */
+  /** Fecha real de devolución (ISO YYYY-MM-DD). */
   fecha: string;
   /** Cuenta bancaria donde entró el dinero. */
-  cuentaBancariaId: string;
+  cuentaBancariaId: string | null;
+  medio?: "Efectivo" | "Bancario";
   referencia?: string | null;
   motivo: string;
 }
@@ -135,11 +136,12 @@ export interface DevolverAnticipoInput {
  *
  * No es lo mismo que cancelar (eso es "lo registré por error" y borra el
  * movimiento bancario): aquí el pago sí ocurrió, así que el anticipo queda
- * `devuelto` con saldo cero y el reembolso entra al banco por conciliar.
+ * `devuelto` con saldo cero. Sólo el reembolso Bancario genera un abono por
+ * conciliar; Efectivo conserva sus propios hechos sin movimiento bancario.
  */
 export async function devolverAnticipo(input: DevolverAnticipoInput): Promise<Anticipo> {
   assertUuid(input.id, "INVALID_ID");
-  assertUuid(input.cuentaBancariaId, "INVALID_ID");
+  if (input.medio !== "Efectivo") assertUuid(input.cuentaBancariaId ?? "", "INVALID_ID");
   if (!Number.isFinite(input.monto) || input.monto <= 0) {
     throw new AnticipoError("LC_ANTICIPO_MONTO_INVALIDO", "El monto devuelto debe ser mayor a cero.");
   }
@@ -157,7 +159,9 @@ export async function devolverAnticipo(input: DevolverAnticipoInput): Promise<An
     p_id: input.id,
     p_monto: input.monto,
     p_fecha: input.fecha,
-    p_cuenta_bancaria_id: input.cuentaBancariaId,
+    // SAFE-CAST: el RPC acepta null cuando el medio es Efectivo; los tipos generados lo declaran string.
+    p_cuenta_bancaria_id: (input.medio === "Efectivo" ? null : input.cuentaBancariaId) as string,
+    p_medio: input.medio ?? "Bancario",
     p_referencia: input.referencia?.trim() || undefined,
     p_motivo: motivo,
   });

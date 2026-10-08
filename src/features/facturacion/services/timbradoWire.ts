@@ -21,6 +21,10 @@ export interface TimbradoExitoWire {
   facturapi_id: string;
   pdf_url: string;
   xml_url: string;
+  /** Opcionales: las versiones anteriores y REP no los envían. */
+  uso_cfdi_solicitado?: string;
+  uso_cfdi_efectivo?: string;
+  fuente_uso_cfdi?: "xml";
 }
 
 /** 202: el proveedor recibió el documento pero el SAT no ha sellado.
@@ -88,7 +92,7 @@ export function esExitoWire(data: unknown): data is TimbradoExitoWire {
   );
 }
 
-/** Copia sólo los seis campos del contrato (no propaga extras del proveedor). */
+/** Copia campos del contrato y metadatos aditivos válidos; extras nunca invalidan un timbre. */
 export function exitoWire(data: TimbradoExitoWire): TimbradoExitoWire {
   return {
     uuid: data.uuid,
@@ -97,5 +101,17 @@ export function exitoWire(data: TimbradoExitoWire): TimbradoExitoWire {
     facturapi_id: data.facturapi_id,
     pdf_url: data.pdf_url,
     xml_url: data.xml_url,
+    ...metadatosUsoCfdi(data),
+  };
+}
+
+function metadatosUsoCfdi(data: TimbradoExitoWire): Partial<TimbradoExitoWire> {
+  const solicitado = data.uso_cfdi_solicitado;
+  const efectivo = data.uso_cfdi_efectivo;
+  const clave = (v: unknown): v is string => typeof v === "string" && /^(G0[1-3]|I0[1-8]|D(0[1-9]|10)|S01|P01|CP01|CN01)$/.test(v);
+  return {
+    ...(clave(solicitado) ? { uso_cfdi_solicitado: solicitado } : {}),
+    ...(data.fuente_uso_cfdi === "xml" && clave(efectivo)
+      ? { uso_cfdi_efectivo: efectivo, fuente_uso_cfdi: "xml" } : {}),
   };
 }

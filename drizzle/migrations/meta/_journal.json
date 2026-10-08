@@ -71,6 +71,13 @@
       "when": 1791323024098,
       "tag": "0009_proforma_siempre_cancelar",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791393171886,
+      "tag": "0010_tarifario_pricing",
+      "breakpoints": true
     }
   ]
 }

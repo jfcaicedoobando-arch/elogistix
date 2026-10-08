@@ -6,7 +6,7 @@
  * cada suite esté en el manifiesto bloqueante, o
  * referenciada explícitamente en algún workflow de `.github/workflows/`.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const DIR_TESTS = "supabase/tests";
@@ -19,14 +19,16 @@ function leerManifiesto(ruta: string): string[] {
     .filter((l) => l.length > 0 && !l.startsWith("#"));
 }
 
-function rutasInexistentes(rutas: string[]): string[] {
+function rutasSinSuite(rutas: string[]): string[] {
   // El runner acepta suites anidadas (incluido rls/), no sólo archivos raíz.
   const existentes = new Set(
     readdirSync(DIR_TESTS, { encoding: "utf8", recursive: true })
       .filter((f) => f.endsWith(".sql"))
       .map((f) => `${DIR_TESTS}/${f}`),
   );
-  return rutas.filter((r) => !existentes.has(r));
+  return rutas.filter(
+    (ruta) => !existentes.has(ruta) || !statSync(ruta, { throwIfNoEntry: false })?.isFile(),
+  );
 }
 
 describe("suites SQL referenciadas en CI", () => {
@@ -64,11 +66,19 @@ describe("suites SQL referenciadas en CI", () => {
     const duplicadas = rutas.filter((r, i) => rutas.indexOf(r) !== i);
     expect(duplicadas, `Rutas duplicadas: ${duplicadas.join(", ")}`).toEqual([]);
 
-    const inexistentes = rutasInexistentes(rutas);
+    const inexistentes = rutasSinSuite(rutas);
     expect(
       inexistentes,
       `Rutas listadas que no existen: ${inexistentes.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("reconoce suites anidadas sin aceptar rutas ausentes o directorios", () => {
+    const suite = `${DIR_TESTS}/rls/tarifario_cargos_permisos.sql`;
+    const ausente = `${DIR_TESTS}/rls/suite_inexistente.sql`;
+    const directorio = `${DIR_TESTS}/rls`;
+    expect(rutasSinSuite([suite])).toEqual([]);
+    expect(rutasSinSuite([ausente, directorio])).toEqual([ausente, directorio]);
   });
 
   it("acepta suites RLS reales y sigue rechazando rutas inexistentes o ajenas", () => {
@@ -76,7 +86,7 @@ describe("suites SQL referenciadas en CI", () => {
       `${DIR_TESTS}/rls/__guard_inexistente__.sql`,
       `${DIR_TESTS}/../migrations/__guard_inexistente__.sql`,
     ];
-    expect(rutasInexistentes([
+    expect(rutasSinSuite([
       `${DIR_TESTS}/rls/test_rls_audit54_pue_tolerancia_cierre.sql`,
       `${DIR_TESTS}/rls/test_rls_audit54_saldo_visible.sql`,
       ...falsas,

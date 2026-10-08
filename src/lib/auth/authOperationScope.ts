@@ -1,3 +1,4 @@
+import { getSessionCacheGeneration, resetSessionCaches } from "./sessionCacheRegistry";
 import { getAuthSnapshot } from "./authSnapshot";
 import { captureErrorReportScope } from "@/lib/diagnostics/errorReportScope";
 import { clearErrorReports } from "@/lib/diagnostics/errorDetailsStore";
@@ -8,6 +9,7 @@ let active: ActiveContext = { userId: null, organizationId: null };
 /** Incluye el tenant efectivo del superadmin, separado de su perfil de plataforma. */
 export function syncActiveOrganizationScope(next: ActiveContext): void {
   if (next.userId !== active.userId || next.organizationId !== active.organizationId) {
+    resetSessionCaches();
     clearErrorReports();
   }
   active = next;
@@ -16,7 +18,8 @@ export function syncActiveOrganizationScope(next: ActiveContext): void {
 function currentContext() {
   const auth = getAuthSnapshot();
   return { userId: auth.userId, role: auth.effectiveRole,
-    organizationId: active.userId === auth.userId ? active.organizationId : auth.organizationId };
+    organizationId: auth.effectiveRole === "super_admin"
+      ? (active.userId === auth.userId ? active.organizationId : null) : auth.organizationId };
 }
 
 export class AuthOperationChangedError extends Error {
@@ -28,14 +31,21 @@ export class AuthOperationChangedError extends Error {
 }
 
 /** Sólo identidad y ámbito en memoria; nunca tokens ni datos de documentos. */
-export function captureAuthOperationScope() {
+export function captureAuthDataScope() {
   const started = currentContext();
+  const generation = getSessionCacheGeneration();
   const sameGeneration = captureErrorReportScope();
   const isCurrent = () => {
     const current = currentContext();
-    return sameGeneration() && started.userId === current.userId
+    return generation === getSessionCacheGeneration() && sameGeneration() && started.userId === current.userId
       && started.organizationId === current.organizationId && started.role === current.role;
   };
-  return { organizationId: started.organizationId, isCurrent,
+  return { ...started, generation, isCurrent,
     assertCurrent: () => { if (!isCurrent()) throw new AuthOperationChangedError(); } };
+}
+
+/** Keep the existing continuation contract independent of cache-key metadata. */
+export function captureAuthOperationScope() {
+  const { organizationId, isCurrent, assertCurrent } = captureAuthDataScope();
+  return { organizationId, isCurrent, assertCurrent };
 }

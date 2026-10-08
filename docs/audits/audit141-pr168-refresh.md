@@ -1,23 +1,45 @@
-# AUD141: actualización segregada de PR168
+# AUD141: actualización conservadora de PR168 sobre el núcleo54
 
-## Propósito y base
+## Base y alcance de esta actualización
 
-Sustituye el contenido obsoleto de PR168, anteriormente basado en release34, con los contadores actuales revisados sobre el núcleo54 `aa6ee73a9dd2a8e804ecfaaa10cf33a56886d1f2` y main38 `731f7903e82782a81391489c19cf178ee6051b81`. La base local equivalente `94e5c70` se comprobó contra todos los hashes del delta remoto. El traslado conserva exactamente la lógica54/141 revisada en `9f93e64`. PR168 se mantiene como la única entrega de141; no se abre un PR duplicado ni se conserva el envelope34.
+El candidato del 2026-10-08 conserva las 17 rutas propias de PR168 sobre el nuevo padre PR181 `9bdd95003b7837dbc8ab70d6f037985964828bf8`, árbol `ce890d38cb9b78833a4449c6074bbbcfa8e0f362`. Ese padre incorpora main `a9816f507ec006d378f358b9a4e2e453b7a10734`, versión `13.824.42`. La fuente de las 17 rutas es el head anterior de PR168 `d9a9dd5ccfd58882121a569629182d495b52df8b`, árbol `55ae8fbfed38be8b6f7e7f4dfef9a68aa7a77320`.
 
-Incluye sólo los RPC `cobranza_conteo_por_cobrar` y `cobranza_conteo_vencidas`, su transporte/tipos, invalidación tras pagos/REP y pruebas. Incluye el filtro monetario y su regresión en BandejaPorCobrar, necesarios para que la tabla y su contador descarten por igual el ruido0.0049/Sin saldo. Ambos usan el saldo neto monetario, el día de negocio de México, NC Timbrada/Aplicada y pagos activos; una Pagada histórica sin pago activo sigue excluida. Ayer pertenece a Vencidas; hoy/futuro/sin fecha pertenecen a Por cobrar. El ámbito de organización y las restricciones anon se conservan.
+La composición compara árboles completos sin truncamiento. No sustituye archivos compartidos con copias antiguas: conserva todo el padre y aplica sólo el delta propio de PR168. Las 16 rutas funcionales, de tipos, SQL y pruebas conservan su propósito anterior; este documento es la única actualización editorial propia. No se altera la lógica monetaria ni el contenido de la migración2356.
 
-## Partición verificable
+## Delta funcional conservado
 
-Los cuerpos de los dos RPC y sus grants son exactamente los revisados en el SQL mixto `20261007235600_audit54_collection_consumers.sql` del snapshot `2db2161bf6e41ffd64412c685dfb5eb13f4dc4c9`. Ahora se entregan solos en `20261007235600_audit141_cobranza_conteos.sql`. El ID es provisional, sin release asignado. Tipos y baseline agregan exclusivamente esos dos RPC.
+- Dos RPC: `cobranza_conteo_por_cobrar` y `cobranza_conteo_vencidas`, su transporte, tipos y la invalidación tras pagos/REP.
+- Filtro monetario de `BandejaPorCobrar` y su regresión: la tabla y el contador excluyen el ruido0.0049/Sin saldo y conservan el centavo real.
+- Saldo neto monetario, fecha de negocio de México, NC Timbrada/Aplicada y pagos activos. Una Pagada histórica sin pago activo sigue excluida. Ayer pertenece a Vencidas; hoy, futuro y sin fecha a Por cobrar.
+- Ámbito de organización, restricciones anon y las dos suites SQL141 originales conservados.
 
-No se importa `validar_cierre_embarque`, código Dirección, ni la cadena135→131→134→139. Dirección conserva su arreglo Decimal y el cierre54/139 en el candidato compuesto revisado, para una entrega separada que mantenga todas sus dependencias. El núcleo54 es prerrequisito de estos contadores: no se publica frontend antes de que estén aplicados ambos RPC.
+El núcleo54 continúa siendo prerrequisito. Los dos RPC deben existir en backend antes de publicar el frontend que los consume. Esta actualización no importa Dirección ni incorpora el cierre54/139 de la composición posterior; tampoco retira dependencias o correcciones que ya están en el padre.
 
-La prueba complementaria extrae los fixtures revisados de pagos documentados, Pagada legacy, ayer/hoy/mañana, fronteras0.0049/0.005/0.01 y tenant; elimina únicamente las verificaciones de cierre139 y verifica pertenencia al listado monetario. Las pruebas de integración141 originales se mantienen byte por byte.
+## Uniones verificables
 
-## Estado de entrega
+- `src/integrations/supabase/types.ts` conserva byte por byte todos los tipos del padre/main42, incluidos `p_medio` y las firmas131. Sólo agrega las dos firmas RPC141.
+- `supabase/schema/baseline.sql` conserva byte por byte el padre al retirar del candidato las dos funciones141 y sus seis líneas de permisos. No reemplaza ninguna función heredada.
+- `supabase/tests/_guards_manifest.txt` conserva las 199 suites del padre y agrega únicamente las dos suites141: 201 entradas únicas y existentes.
+- Las otras 13 rutas funcionales conservan exactamente los blobs del head anterior. El documento se revisa por separado.
+- Versión42, manifiesto de migraciones, changelog, SQL histórico y todos los demás archivos del padre permanecen intactos. No se usa `--update` ni se asigna un release a2355/2356.
 
-Manifests publicados33–38, SQL histórico, Drizzle y versiones permanecen intactos. `audit:manifest` sigue pendiente/no pasado hasta un envelope futuro; no se evita el guard. Sin SQL remoto, migraciones de datos, backfill, despliegue ni merge. La validación de la partición y el estado de CI se anotan en PR168. Los checks históricos del candidato completo no se presentan como una nueva ejecución sobre este árbol. La parte estática de audit:rpc-sync pasó; el catálogo vivo no se consultó con éxito después de detener el PostgreSQL local y no se afirma PASS de esa consulta.
+## Límite pendiente de AUD141
 
-AUD54 global sigue abierto hasta integrar Dirección/cierre y verificar el release/GUI completos. Véase [núcleo54](audit54-core-delivery.md).
+`20261007235600_audit141_cobranza_conteos.sql` sigue siendo la partición revisada de los dos contadores y sus grants. No incluye la corrección posterior `20261007235700_audit141_conteos_todas_monedas.sql`, destinada a los conteos de `cobranza_agregados` en todas las monedas. Por tanto, actualizar PR168 no demuestra el cierre global de141 y no autoriza marcarlo resuelto.
 
-Integración38 preserva la cronología135, SQL233700 y todos los guards. La base contiene los ajustes de fixtures/arquitectura revisados; el refinamiento de encoding:utf8 resuelve TS2339 sin cambiar qué rutas se aceptan.
+La entrega permanece draft. El guard `audit:manifest` debe seguir mostrando las migraciones2355/2356 pendientes de release; no se altera para ocultarlas. Sin SQL remoto, migraciones de datos, backfill, despliegue ni merge en esta fase. AUD54 global también continúa pendiente de su composición y verificación integradas.
+
+## Evidencia
+
+La validación nueva se registra sobre este candidato exacto. Los checks históricos del head anterior se mantienen como antecedentes y no se presentan como resultados de esta actualización. Véase también [la entrega del núcleo54](audit54-core-delivery.md).
+
+Comprobaciones locales nuevas, 2026-10-08:
+
+- Tipos completos app/node y lint focal: PASS.
+- 120 tests en16 archivos del delta168 y del padre54: PASS, con un worker y heap3072MiB.
+- Invariantes de las17 rutas, tipos, baseline, guards y conservación de versión/manifiesto42: PASS.
+- `audit:migrations`, `audit:schema-functions` y `audit:replay-mirror`: PASS. Este último conserva dos divergencias preexistentes con su huella exacta.
+- PostgreSQL17.9 desechable en loopback: replay de296 migraciones no consolidadas, candado service_role-only, cobertura RLS e integridad PASS;201/201 guards y50/50 suites RLS PASS. El reporte RPC-sync inspeccionó el catálogo local vivo y registró0 funciones sospechosas. El servidor se detuvo al terminar.
+- El runtime rechazó la creación de sockets Unix; se utilizó PostgreSQL sóloTCP local, sin acceso a bases remotas. El primer arranque fallido no se cuenta como validación.
+- `audit:manifest`: FAIL esperado y conservado, exclusivamente por2355/2356 sin release. No se ejecuta `--update`.
+- No se presenta esta ejecución focal como CI completa. No se corrieron build, Deno ni GUI, ni comparación del dump completo contra la baseline con la imagen pinneada de CI.

@@ -1,7 +1,8 @@
 -- Canonical schema para public.saldo_factura_proveedor (Ola 12 · R3P-01, migración 20260823100100;
 -- re-emitida con org guard en Ola 13 · Sprint 07 / R4BD-02, migración 20260824070000).
 -- Saldo de una factura de proveedor en su propia moneda; NC sólo 'Aplicada'
--- y pagos convertidos con monto_pago_en_moneda_factura.
+-- y pagos convertidos con monto_pago_en_moneda_factura. Los anticipos
+-- aplicados usan sólo el importe congelado en el pago; NULL es desconocido (audit134).
 -- Org guard: 42501 'LC_ORG_SIN_CONTEXTO' sin contexto; la factura debe
 -- pertenecer a la organización activa y no estar cancelada (NULL en otro caso,
 -- igual que inexistente/eliminada/ajena → no es oráculo de existencia).
@@ -34,16 +35,21 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
-         BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
+  SELECT COALESCE(SUM(p.monto_factura), 0), BOOL_OR(p.monto_factura IS NULL)
     INTO v_pagado, v_incompleto
-  FROM public.pagos_proveedor pp
-  WHERE pp.proveedor_factura_id = p_factura_id
-    AND pp.deleted_at IS NULL;
+  FROM (
+    SELECT public.monto_pago_proveedor_en_moneda_factura(
+      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text
+    ) AS monto_factura
+    FROM public.pagos_proveedor pp
+    WHERE pp.proveedor_factura_id = p_factura_id
+      AND pp.deleted_at IS NULL
+  ) p;
 
   -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
-         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+         BOOL_OR(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text) IS NULL)
     INTO v_nc, v_nc_incompleto
   FROM public.proveedor_notas_credito nc
   WHERE nc.proveedor_factura_id = p_factura_id
@@ -61,3 +67,7 @@ BEGIN
   );
 END;
 $function$;
+
+
+REVOKE ALL ON FUNCTION public.saldo_factura_proveedor(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_proveedor(uuid) TO authenticated, service_role;

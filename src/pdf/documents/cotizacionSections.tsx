@@ -112,11 +112,11 @@ export function SeccionDatosYMercancia({ c, tiposContenedor = [] }: PropsConCata
   return (
     <>
       <View wrap={false}>
-        <Text style={styles.h3}>Datos Generales</Text>
+        <Text style={[styles.h3, { marginTop: 10 }]}>Datos Generales</Text>
         <KeyValueGrid items={buildDatosGenerales(c)} columns={3} />
       </View>
-      <View wrap={false} style={{ marginTop: 8 }}>
-        <Text style={styles.h3}>Mercancía</Text>
+      <View wrap={false}>
+        <Text style={[styles.h3, { marginTop: 10 }]}>Mercancía</Text>
         <KeyValueGrid items={buildMercancia(c, tiposContenedor)} columns={3} />
       </View>
       {c.descripcion_mercancia?.trim() ? (

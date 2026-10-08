@@ -5,6 +5,7 @@
  * vO7 — queries al hook `useTimbradoContext` y footer a componente propio;
  * se elimina el `eslint-disable complexity`.
  */
+import { rfcReceptorFactura } from "@/lib/financial/usoCfdiFiscal";
 import { AlertTriangle, Stamp } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -24,6 +25,16 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
+function vistaCompactaDisponible(esFastPath: boolean, expandido: boolean, guardando: boolean) {
+  return esFastPath && !expandido && !guardando;
+}
+
+function AvisoAutosave({ pendiente, error }: { pendiente: boolean; error: boolean }) {
+  if (error) return <Alert variant="destructive"><AlertDescription>Hay datos fiscales sin guardar. Vuelve a Conceptos y reintenta el guardado antes de timbrar.</AlertDescription></Alert>;
+  if (!pendiente) return null;
+  return <Alert><AlertDescription>Guardando los datos fiscales elegidos. Espera a que termine antes de timbrar.</AlertDescription></Alert>;
+}
+
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const { factura, cliente, defaults, ambiente, emailDestino } = useTimbradoContext(facturaId);
   const dlg = useTimbrarFacturaDialog(factura, cliente, defaults, () => onOpenChange(false), { emailDestino, open });
@@ -40,7 +51,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   );
 
 
-  const mostrarCompacto = esFastPath && !dlg.modoExpandido;
+  const mostrarCompacto = vistaCompactaDisponible(esFastPath, dlg.modoExpandido, dlg.datosFiscalesSinGuardar);
   const ambienteDisponible = ambiente === "sandbox" || ambiente === "live";
 
   return (
@@ -58,7 +69,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       footer={
         <DialogTimbrarFacturaFooter
           mostrarCompacto={mostrarCompacto}
-          puedeTimbrar={puedeTimbrar && ambienteDisponible}
+          puedeTimbrar={puedeTimbrar && ambienteDisponible && !dlg.datosFiscalesSinGuardar}
           timbrando={dlg.timbrarPending}
           onExpandir={() => dlg.setModoExpandido(true)}
           onCancelar={() => onOpenChange(false)}
@@ -66,7 +77,8 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
         />
       }
     >
-      <TimbradoResumen ambiente={ambiente} cliente={factura.cliente_nombre ?? "Cliente no disponible"} rfc={cliente?.rfc ?? factura.rfc_cliente} total={Number(factura.total)} moneda={factura.moneda} />
+      <AvisoAutosave pendiente={dlg.datosFiscalesPending} error={dlg.datosFiscalesError} />
+      <TimbradoResumen ambiente={ambiente} cliente={factura.cliente_nombre ?? "Cliente no disponible"} rfc={rfcReceptorFactura(factura.rfc_cliente, cliente?.rfc)} total={Number(factura.total)} moneda={factura.moneda} />
       {mostrarCompacto ? (
         <TimbrarCompacto
           usoCfdi={dlg.usoCfdi}
@@ -79,6 +91,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       ) : (
         <TimbrarCompleto
           checks={checks}
+          receptor={{ rfc: rfcReceptorFactura(factura.rfc_cliente, cliente?.rfc), regimen: cliente?.regimen_fiscal ?? "" }}
           usoCfdi={dlg.usoCfdi}
           setUsoCfdi={dlg.setUsoCfdi}
           formaPago={dlg.formaPago}

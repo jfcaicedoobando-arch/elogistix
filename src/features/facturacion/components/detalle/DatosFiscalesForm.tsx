@@ -3,13 +3,14 @@
  * v13.164.3 — se removió el input Serie: FacturAPI es la fuente de verdad
  * para serie y folio (ver `supabase/functions/facturapi-emitir/index.ts`).
  */
+import { UsoCfdiIngresoSelect } from "../UsoCfdiIngresoSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { addDaysIso } from "@/lib/date/dateOnly";
 import { formatDate } from "@/lib/formatters/dates";
 import {
@@ -37,6 +38,7 @@ function SelectSAT({
 }
 
 export interface DatosFiscalesFormProps {
+  receptor?: { rfc: string; regimen: string };
   usoCfdi: string; setUsoCfdi: (v: string) => void;
   formaPago: string; setFormaPago: (v: string) => void;
   metodoPago: string; setMetodoPago: (v: string) => void;
@@ -57,7 +59,7 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        <SelectSAT label="Uso CFDI" value={p.usoCfdi} onChange={p.setUsoCfdi} options={USOS_CFDI_SAT} />
+        <UsoCfdiIngresoSelect value={p.usoCfdi} onChange={p.setUsoCfdi} receptor={p.receptor} />
         <SelectSAT label="Método de pago" value={p.metodoPago} onChange={p.setMetodoPago} options={METODOS_PAGO_SAT} />
         <SelectSAT label="Forma de pago" value={p.formaPago} onChange={p.setFormaPago} options={FORMAS_PAGO_SAT} />
         <div>

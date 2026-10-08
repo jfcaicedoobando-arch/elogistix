@@ -1,4 +1,6 @@
+import { readAuthSessionIdentity } from "@/lib/auth/authSessionIdentity";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { syncAuthSessionUser } from "@/lib/auth/authSnapshot";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   subscribeToAuthChanges,
@@ -24,6 +26,8 @@ export function useAuthSession(): AuthSession {
   const [lastEvent, setLastEvent] = useState<AuthSession["lastEvent"]>(null);
 
   const initialized = useRef(false);
+  const receivedEvent = useRef(false);
+  const mounted = useRef(false);
 
   const handleSilentRefresh = useCallback((newSession: Session | null) => {
     setSession((prev) =>
@@ -32,7 +36,12 @@ export function useAuthSession(): AuthSession {
   }, []);
 
   useEffect(() => {
+    mounted.current = true;
+    let subscribed = true;
     const subscription = subscribeToAuthChanges((eventoAuth, newSession) => {
+      if (!subscribed) return;
+      receivedEvent.current = true;
+      syncAuthSessionUser(newSession?.user.id ?? null, readAuthSessionIdentity(newSession?.access_token));
       if (eventoAuth === "TOKEN_REFRESHED") {
         handleSilentRefresh(newSession);
         return;
@@ -54,6 +63,8 @@ export function useAuthSession(): AuthSession {
       initialized.current = true;
       getCurrentSession()
         .then((existing) => {
+          if (!mounted.current || receivedEvent.current) return;
+          syncAuthSessionUser(existing?.user.id ?? null, readAuthSessionIdentity(existing?.access_token));
           setSession((prev) => prev ?? existing);
           setUser((prev) => prev ?? existing?.user ?? null);
           setLoading(false);
@@ -70,7 +81,11 @@ export function useAuthSession(): AuthSession {
         });
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscribed = false;
+      mounted.current = false;
+      subscription.unsubscribe();
+    };
   }, [handleSilentRefresh]);
 
   return { user, session, loading, lastEvent };

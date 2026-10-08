@@ -46,6 +46,7 @@ export function useEstadoResultados() {
   });
 
   return {
+    organizationId,
     mesActual,
     mesesDisponibles,
     setMesKey,

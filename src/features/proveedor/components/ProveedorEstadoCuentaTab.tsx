@@ -62,7 +62,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
   const apertura = data?.saldo_apertura ?? [];
 
   const datosExport = {
-    proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos,
+    proveedorId, proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos,
     saldoApertura: apertura, ...alcanceExport(data),
   };
 

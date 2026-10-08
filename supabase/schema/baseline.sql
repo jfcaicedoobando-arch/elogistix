@@ -10774,7 +10774,11 @@ CREATE TABLE public.anticipos_proveedor (
     devuelto_by uuid,
     monto_devuelto numeric(18,4),
     motivo_devolucion text,
+    fecha_devolucion date,
+    medio_devolucion text,
+    referencia_devolucion text,
     CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text, 'devuelto'::text]))),
+    CONSTRAINT anticipos_proveedor_medio_devolucion_check CHECK ((medio_devolucion = ANY (ARRAY['Efectivo'::text, 'Bancario'::text]))),
     CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT anticipos_proveedor_saldo_rango_check CHECK (((saldo_disponible IS NULL) OR ((saldo_disponible >= (0)::numeric) AND (saldo_disponible <= (monto + 0.01)))))
 );
@@ -15154,6 +15158,38 @@ BEGIN
   RETURN ROUND(COALESCE(v_total, 0), 2);
 END;
 $$;
+CREATE FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v record; t record;
+BEGIN
+  SELECT * INTO v FROM public.crm_solicitudes_pricing WHERE id = p_solicitud_id AND deleted_at IS NULL FOR UPDATE;
+  IF v.id IS NULL OR v.organization_id IS DISTINCT FROM public.org_scope() THEN
+    RAISE EXCEPTION 'LC_PRICING_NO_ENCONTRADA' USING ERRCODE = 'P0001';
+  END IF;
+  IF v.solicitante_id IS DISTINCT FROM auth.uid() AND v.created_by IS DISTINCT FROM auth.uid()
+     AND NOT public._crm_es_pricing(v.organization_id) THEN
+    RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  IF v.estado = 'respondida' AND v.tarifa_tarifario_id = p_tarifa_id THEN
+    RETURN jsonb_build_object('id', v.id, 'ya_respondida', true);
+  END IF;
+  IF v.estado NOT IN ('borrador','enviada') THEN
+    RAISE EXCEPTION 'LC_PRICING_ESTADO_INVALIDO' USING ERRCODE = 'P0001';
+  END IF;
+  SELECT * INTO t FROM public.costeo_tarifas
+   WHERE id = p_tarifa_id AND organization_id = v.organization_id AND estado = 'vigente'
+     AND (vigente_hasta IS NULL OR vigente_hasta >= current_date);
+  IF t.id IS NULL THEN RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE = 'P0001'; END IF;
+  PERFORM set_config('lc.pricing_rpc', '1', true);
+  UPDATE public.crm_solicitudes_pricing
+     SET tarifa_tarifario_id = p_tarifa_id, estado = 'respondida',
+         enviada_at = coalesce(enviada_at, now()), respondida_at = now()
+   WHERE id = p_solicitud_id;
+  PERFORM set_config('lc.pricing_rpc', '', true);
+  RETURN jsonb_build_object('id', v.id, 'ya_respondida', false);
+END $$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -16786,39 +16822,65 @@ CREATE FUNCTION public.cxp_por_capturar() RETURNS TABLE(embarque_id uuid, expedi
     LANGUAGE sql STABLE
     SET search_path TO 'public'
     AS $$
-  SELECT
-    e.id,
-    e.expediente,
-    c.nombre,
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda::text = 'MXN'), 0),
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda::text = 'USD'), 0),
-    COALESCE((
-      SELECT SUM(pf.total) FILTER (WHERE pf.moneda::text = 'MXN')
-      FROM public.proveedor_facturas pf
-      WHERE pf.embarque_id = e.id
-        AND pf.deleted_at IS NULL
-        AND pf.estado::text <> 'Cancelada'
-    ), 0),
-    COALESCE((
-      SELECT SUM(pf.total) FILTER (WHERE pf.moneda::text = 'USD')
-      FROM public.proveedor_facturas pf
-      WHERE pf.embarque_id = e.id
-        AND pf.deleted_at IS NULL
-        AND pf.estado::text <> 'Cancelada'
-    ), 0),
-    (SELECT COUNT(*)::int FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL),
-    (SELECT MAX(pf.fecha_emision) FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL),
-    (CURRENT_DATE - (SELECT MAX(pf.fecha_emision) FROM public.proveedor_facturas pf
-       WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL))::int
+  WITH presupuesto AS (
+    SELECT cc.embarque_id, cc.organization_id,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'MXN'),0) AS mxn,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'USD'),0) AS usd,
+      coalesce(sum(cc.monto) FILTER (WHERE cc.moneda::text = 'EUR'),0) AS eur
+    FROM public.conceptos_costo cc
+    WHERE cc.deleted_at IS NULL
+    GROUP BY cc.embarque_id, cc.organization_id
+  ), capturadas AS (
+    SELECT pf.id, pf.organization_id, pf.embarque_id, pf.moneda, pf.subtotal,
+      pf.fecha_emision
+    FROM public.proveedor_facturas pf
+    WHERE pf.deleted_at IS NULL AND pf.estado::text <> 'Cancelada'
+  ), asignaciones AS (
+    -- Fiscal rows and cost links describe the same expense. Only positive,
+    -- effective links determine membership (audits 124/130/139), never both.
+    SELECT pf.id AS factura_id, cc.embarque_id,
+      sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1)) AS monto
+    FROM capturadas pf
+    JOIN public.proveedor_facturas_conceptos pfc
+      ON pfc.proveedor_factura_id = pf.id AND pfc.organization_id = pf.organization_id
+    JOIN public.conceptos_costo cc
+      ON cc.id = pfc.concepto_costo_id AND cc.organization_id = pf.organization_id
+    JOIN public.embarques e
+      ON e.id = cc.embarque_id AND e.organization_id = pf.organization_id
+    WHERE cc.deleted_at IS NULL AND cc.origen <> 'ajuste_factura_proveedor'
+      AND pfc.monto > 0 AND coalesce(nullif(pfc.cantidad,0),1) > 0
+    GROUP BY pf.id, cc.embarque_id
+  ), asignado AS (
+    SELECT a.factura_id, sum(a.monto) AS total FROM asignaciones a GROUP BY a.factura_id
+  ), atribuidas AS (
+    SELECT pf.id, pf.organization_id, coalesce(a.embarque_id,pf.embarque_id) AS embarque_id,
+      pf.moneda, pf.fecha_emision,
+      CASE WHEN s.total IS NULL THEN pf.subtotal
+        -- Do not inflate a partial allocation to the full invoice. Multiply
+        -- before division only for the cap, avoiding round-trip ratio noise.
+        WHEN s.total <= pf.subtotal THEN a.monto
+        ELSE pf.subtotal * a.monto / s.total END AS base
+    FROM capturadas pf
+    LEFT JOIN asignado s ON s.factura_id = pf.id
+    LEFT JOIN asignaciones a ON a.factura_id = pf.id
+  ), captura AS (
+    -- Exactly one row per invoice/shipment feeds amount, count and dates.
+    SELECT a.embarque_id, a.organization_id,
+      coalesce(sum(a.base) FILTER (WHERE a.moneda::text = 'MXN'),0) AS mxn,
+      coalesce(sum(a.base) FILTER (WHERE a.moneda::text = 'USD'),0) AS usd,
+      count(*)::integer AS facturas, max(a.fecha_emision) AS ultima
+    FROM atribuidas a
+    WHERE a.embarque_id IS NOT NULL
+    GROUP BY a.embarque_id, a.organization_id
+  )
+  SELECT e.id, e.expediente, c.nombre, p.mxn, p.usd,
+    coalesce(a.mxn,0), coalesce(a.usd,0), coalesce(a.facturas,0),
+    a.ultima, (CURRENT_DATE - a.ultima)::integer
   FROM public.embarques e
-  LEFT JOIN public.clientes c ON c.id = e.cliente_id
-  LEFT JOIN public.conceptos_costo cc ON cc.embarque_id = e.id AND cc.deleted_at IS NULL
-  WHERE e.deleted_at IS NULL
-    AND e.estado::text <> 'Cerrado'
-  GROUP BY e.id, e.expediente, c.nombre
-  HAVING COALESCE(SUM(cc.monto), 0) > 0
+  JOIN presupuesto p ON p.embarque_id = e.id AND p.organization_id = e.organization_id
+  LEFT JOIN public.clientes c ON c.id = e.cliente_id AND c.organization_id = e.organization_id
+  LEFT JOIN captura a ON a.embarque_id = e.id AND a.organization_id = e.organization_id
+  WHERE e.deleted_at IS NULL AND e.estado::text <> 'Cerrado' AND (p.mxn > 0 OR p.usd > 0 OR p.eur > 0)
   ORDER BY e.created_at DESC
   LIMIT 500;
 $$;
@@ -17676,7 +17738,7 @@ BEGIN
   RETURN v_inserted;
 END;
 $$;
-CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text) RETURNS public.anticipos_proveedor
+CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text, p_medio text DEFAULT 'Bancario'::text) RETURNS public.anticipos_proveedor
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17753,9 +17815,17 @@ BEGIN
         v_cierre, p_fecha USING ERRCODE = 'P0001';
     END IF;
   END IF;
+  IF p_medio IS NULL OR p_medio NOT IN ('Efectivo', 'Bancario') THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MEDIO_DEVOLUCION: Selecciona Efectivo o Bancario.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Efectivo' AND p_cuenta_bancaria_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_EFECTIVO_CON_CUENTA: Una devolución en efectivo no lleva cuenta bancaria.' USING ERRCODE = '22023';
+  END IF;
+  IF p_medio = 'Bancario' THEN
   SELECT cb.organization_id INTO v_cuenta_org
     FROM public.cuentas_bancarias cb
-   WHERE cb.id = p_cuenta_bancaria_id;
+   WHERE cb.id = p_cuenta_bancaria_id AND cb.activa AND cb.deleted_at IS NULL
+     AND cb.moneda = v_row.moneda;
   IF v_cuenta_org IS NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_REQUERIDA: Selecciona la cuenta bancaria donde entró el dinero.';
   END IF;
@@ -17763,10 +17833,14 @@ BEGIN
     RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_OTRA_ORG: La cuenta bancaria pertenece a otra organización.'
       USING ERRCODE = '42501';
   END IF;
+  END IF;
   UPDATE public.anticipos_proveedor
     SET estado = 'devuelto',
         saldo_disponible = 0,
         monto_devuelto = p_monto,
+        fecha_devolucion = p_fecha,
+        medio_devolucion = p_medio,
+        referencia_devolucion = NULLIF(trim(COALESCE(p_referencia,'')),''),
         motivo_devolucion = trim(p_motivo),
         devuelto_at = now(),
         devuelto_by = v_uid,
@@ -17775,6 +17849,7 @@ BEGIN
     RETURNING * INTO v_row;
   -- F1: hash_dedupe es NOT NULL; sin él el INSERT lanzaba 23502 y toda la
   -- devolución hacía rollback.
+  IF p_medio = 'Bancario' THEN
   INSERT INTO public.bbva_movimientos
     (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
      cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en,
@@ -17784,6 +17859,7 @@ BEGIN
      'Devolución de anticipo ' || v_row.id::text, NULLIF(trim(COALESCE(p_referencia,'')),''),
      0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now(),
      'devolucion-' || v_row.id::text);
+  END IF;
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
@@ -17791,7 +17867,7 @@ BEGIN
     VALUES (v_row.organization_id, v_uid, COALESCE(v_email,''), 'devolver_anticipo_proveedor', 'cxp',
             v_row.id, 'Anticipo ' || v_row.id::text,
             jsonb_build_object('motivo', trim(p_motivo), 'monto_devuelto', p_monto,
-                               'moneda', v_row.moneda, 'fecha', p_fecha,
+                               'moneda', v_row.moneda, 'fecha', p_fecha, 'medio', p_medio,
                                'cuenta_bancaria_id', p_cuenta_bancaria_id,
                                'referencia', p_referencia));
   EXCEPTION WHEN OTHERS THEN
@@ -22735,7 +22811,7 @@ BEGIN
     -- AUD100: cada devolución es una entrada independiente. La salida original
     -- se conserva bruta; la fecha/cuenta/referencia proceden del asiento real.
     SELECT ap.id, 'devolucion_anticipo'::text AS tipo,
-      COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
+      COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date) AS fecha,
       pr.nombre AS contraparte, ap.proveedor_id AS contraparte_id,
       NULL::uuid AS documento_id, NULL::text AS documento_folio,
       ap.moneda::text AS moneda, ap.monto_devuelto AS monto,
@@ -22743,11 +22819,11 @@ BEGIN
       CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
            WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd
            ELSE NULL END AS monto_mxn,
-      CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
-      COALESCE(d.referencia, ap.referencia) AS referencia,
+      CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END AS metodo_pago,
+      CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END AS referencia,
       d.cuenta_bancaria_id,
       concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END) AS notas,
       ap.embarque_id, 0::numeric AS diferencia_cambiaria_mxn,
       NULL::text AS estado_rep, NULL::text AS folio_rep,
@@ -22765,7 +22841,7 @@ BEGIN
     ) d ON true
     WHERE ap.deleted_at IS NULL AND lower(COALESCE(ap.estado, 'vigente')) <> 'cancelado'
       AND ap.monto_devuelto > 0 AND (v_super OR ap.organization_id = v_org)
-      AND COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
+      AND COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date)
           BETWEEN p_desde AND p_hasta
   ),
   unidos AS (
@@ -23364,6 +23440,15 @@ BEGIN
     )
   );
 END;
+$$;
+CREATE FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) RETURNS numeric
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT CASE WHEN p_es_anticipo_aplicado THEN p_monto_en_moneda_factura
+    ELSE public.monto_pago_en_moneda_factura(
+      p_monto, p_moneda_pago, p_tc_pago, p_moneda_factura)
+  END;
 $$;
 CREATE FUNCTION public.movimiento_origen_por_hash(p_hash text) RETURNS text
     LANGUAGE sql IMMUTABLE
@@ -24194,17 +24279,17 @@ BEGIN
   ELSIF v_tipo = 'devolucion_anticipo' THEN
     SELECT ap.organization_id, jsonb_build_object(
       'id', ap.id, 'tipo', v_tipo,
-      'fecha', COALESCE(d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
+      'fecha', COALESCE(ap.fecha_devolucion, d.fecha, (ap.devuelto_at AT TIME ZONE 'America/Mexico_City')::date),
       'contraparte', pr.nombre, 'contraparte_id', ap.proveedor_id,
       'moneda', ap.moneda::text, 'monto', ap.monto_devuelto,
       'tipo_cambio', NULLIF(ap.tipo_cambio_usd, 0),
       'monto_mxn', CASE WHEN ap.moneda::text = 'MXN' THEN ap.monto_devuelto
         WHEN ap.tipo_cambio_usd > 0 THEN ap.monto_devuelto * ap.tipo_cambio_usd ELSE NULL END,
-      'metodo_pago', CASE WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
-      'referencia', COALESCE(d.referencia, ap.referencia),
+      'metodo_pago', CASE WHEN ap.medio_devolucion = 'Efectivo' THEN 'Efectivo' WHEN d.id IS NOT NULL THEN 'Devolución bancaria' ELSE NULL END,
+      'referencia', CASE WHEN ap.medio_devolucion IS NOT NULL THEN ap.referencia_devolucion ELSE COALESCE(d.referencia, ap.referencia) END,
       'cuenta_bancaria_id', d.cuenta_bancaria_id, 'cuenta_alias', cb.alias, 'cuenta_banco', cb.banco,
       'notas', concat_ws(' · ', NULLIF(ap.motivo_devolucion, ''),
-        CASE WHEN d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
+        CASE WHEN ap.fecha_devolucion IS NULL AND d.id IS NULL THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia' END,
         CASE WHEN ap.moneda::text <> 'MXN' THEN 'Equivalente MXN al TC registrado del anticipo original' END),
       'embarque_id', ap.embarque_id, 'diferencia_cambiaria_mxn', 0,
       'es_ajuste', false, 'created_by', ap.devuelto_by, 'created_at', ap.devuelto_at)
@@ -25708,10 +25793,13 @@ BEGIN
       AND nc.estado = 'Aplicada'
   ),
   pagos AS (
-    -- Ola 12 · R3P-06: el abono se convierte a la moneda de la factura; NULL = sin TC.
+    -- Audit134: la aplicación usa sólo su importe congelado; si falta,
+    -- no se reconstruye su FX histórico ni se reclasifica ninguna moneda.
     SELECT pp.id, pp.fecha_pago,
            pp.monto AS monto_pago, pp.moneda::text AS moneda_pago,
-           public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
+           public.monto_pago_proveedor_en_moneda_factura(
+             pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+             pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
            f.moneda AS moneda_factura,
            pp.referencia, pp.metodo_pago, pp.es_anticipo_aplicado,
            pp.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
@@ -25726,12 +25814,13 @@ BEGIN
            COALESCE(a.monto_devuelto, 0) AS monto_devuelto,
            -- La fecha bancaria conserva el periodo efectivo de la devolución.
            -- Legacy sin movimiento: usar la fecha de registro y explicitarlo.
-           COALESCE(d.fecha,
+           COALESCE(a.fecha_devolucion, d.fecha,
                     (a.devuelto_at AT TIME ZONE 'America/Mexico_City')::date,
                     (a.updated_at AT TIME ZONE 'America/Mexico_City')::date,
                     a.fecha_anticipo) AS fecha_devolucion,
-           d.referencia AS referencia_devolucion,
-           d.fecha IS NULL AS devolucion_sin_fecha_bancaria
+           COALESCE(a.referencia_devolucion, d.referencia) AS referencia_devolucion,
+           a.medio_devolucion,
+           a.fecha_devolucion IS NULL AND d.fecha IS NULL AS devolucion_sin_fecha_bancaria
     FROM public.anticipos_proveedor a
     LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
     LEFT JOIN LATERAL (
@@ -25777,19 +25866,31 @@ BEGIN
            -- R3P-06: el abono se expresa en la moneda del cargo (factura).
            p.moneda_factura AS moneda,
            0::numeric,
-           -- R3P-07: la aplicación de un anticipo es informativa (0/0); el
-           -- abono ya se contó en la fila "Anticipo" al entregarlo.
-           CASE WHEN p.es_anticipo_aplicado THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
+           -- Audit134: same-currency applications remain informative. A cross
+           -- reclassifies credit from advance currency to invoice currency.
+           CASE WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
+             THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
            CASE
-             WHEN p.es_anticipo_aplicado
+             WHEN p.es_anticipo_aplicado AND p.moneda_pago = p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · anticipo ya contado al entregarse'
              WHEN p.moneda_pago <> p.moneda_factura AND p.monto_factura IS NULL
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago || ' SIN TC (excluido del saldo)'
+             WHEN p.es_anticipo_aplicado
+               THEN 'Reclasificación de anticipo de ' || p.moneda_pago || ' a ' || p.moneda_factura || '; sin movimiento bancario'
              WHEN p.moneda_pago <> p.moneda_factura
                THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago
              ELSE p.metodo_pago
            END
     FROM pagos p
+    UNION ALL
+    SELECT p.fecha_pago, 'Anticipo aplicado', p.id,
+           COALESCE(p.folio_interno, 'Aplicación'), p.referencia,
+           COALESCE(p.expediente, ''), p.embarque_id, p.moneda_pago,
+           p.monto_pago, 0::numeric,
+           'Crédito consumido en ' || p.moneda_pago || ' y aplicado a ' || p.moneda_factura || '; sin movimiento bancario'
+    FROM pagos p
+    WHERE p.es_anticipo_aplicado AND p.moneda_pago <> p.moneda_factura
+      AND p.monto_factura IS NOT NULL
     UNION ALL
     SELECT a.fecha_anticipo, 'Anticipo', a.id, 'Anticipo', a.referencia,
            COALESCE(a.expediente, ''), a.embarque_id, a.moneda,
@@ -25798,24 +25899,24 @@ BEGIN
     FROM anticipos a
     UNION ALL
     SELECT a.fecha_devolucion, 'Devolución de anticipo', a.id, 'Devolución de anticipo',
-           COALESCE(a.referencia_devolucion, a.referencia), COALESCE(a.expediente, ''),
+           CASE WHEN a.medio_devolucion IS NOT NULL THEN a.referencia_devolucion ELSE COALESCE(a.referencia_devolucion, a.referencia) END, COALESCE(a.expediente, ''),
            a.embarque_id, a.moneda,
            -- Sólo el dinero devuelto revierte el abono original. Las aplicaciones
-           -- siguen informativas 0/0: no se cuenta de nuevo el monto aplicado.
+           -- sólo reclasifican moneda; no se cuenta de nuevo el dinero entregado.
            a.monto_devuelto, 0::numeric,
            CASE WHEN a.devolucion_sin_fecha_bancaria
              THEN 'Sin fecha bancaria de devolución; fecha de registro como referencia'
-             ELSE a.metodo_pago END
+             ELSE COALESCE(a.medio_devolucion, a.metodo_pago) END
     FROM anticipos a
     WHERE a.monto_devuelto > 0
   )
-  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(row_to_json(m) ORDER BY m.fecha, m.tipo, m.folio, m.moneda, m.ref_id), '[]'::jsonb)
   INTO v_todos
   FROM movs m;
   -- Detalle del periodo (R3P-09): el filtro se aplica sobre el universo
   -- completo, en memoria, ANTES de paginar (R3FE-04). (Las fechas son
   -- columnas `date`; el casteo desde jsonb es seguro.)
-  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio'), '[]'::jsonb)
+  SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio', m->>'moneda', m->>'ref_id'), '[]'::jsonb)
   INTO v_movs_full
   FROM jsonb_array_elements(v_todos) m
   WHERE (m->>'fecha')::date BETWEEN v_desde AND v_hasta;
@@ -25863,12 +25964,22 @@ BEGIN
   ),
   saldo_factura AS (
     SELECT f.id, f.moneda, f.fecha_vencimiento,
-           -- Ola 12 · R3BD-04: factura marcada 'Pagada' (legacy, sin pagos
-           -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
-           CASE WHEN f.estado = 'Pagada' THEN 0::numeric
+           -- Preserve the legacy Pagada shortcut unless an active advance
+           -- application lacks its frozen amount. That exceptional unknown
+           -- must use known payments/credits, not disappear behind the status.
+           CASE WHEN f.estado = 'Pagada' AND NOT EXISTS (
+                  SELECT 1 FROM public.pagos_proveedor pp
+                  WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL
+                    AND pp.es_anticipo_aplicado
+                    AND public.monto_pago_proveedor_en_moneda_factura(
+                      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) IS NULL
+                ) THEN 0::numeric
                 ELSE f.total
                   -- R3P-06: pagos convertidos a la moneda de la factura.
-                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
+                  - COALESCE((SELECT SUM(public.monto_pago_proveedor_en_moneda_factura(
+                                pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+                                pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
                               FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).
@@ -30284,15 +30395,20 @@ BEGIN
   IF v_f.id IS NULL THEN
     RETURN NULL;
   END IF;
-  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
-         BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
+  SELECT COALESCE(SUM(p.monto_factura), 0), BOOL_OR(p.monto_factura IS NULL)
     INTO v_pagado, v_incompleto
-  FROM public.pagos_proveedor pp
-  WHERE pp.proveedor_factura_id = p_factura_id
-    AND pp.deleted_at IS NULL;
+  FROM (
+    SELECT public.monto_pago_proveedor_en_moneda_factura(
+      pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+      pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text
+    ) AS monto_factura
+    FROM public.pagos_proveedor pp
+    WHERE pp.proveedor_factura_id = p_factura_id
+      AND pp.deleted_at IS NULL
+  ) p;
   -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
-         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+         BOOL_OR(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text) IS NULL)
     INTO v_nc, v_nc_incompleto
   FROM public.proveedor_notas_credito nc
   WHERE nc.proveedor_factura_id = p_factura_id
@@ -32880,6 +32996,9 @@ BEGIN
   END IF;
   SELECT EXISTS (SELECT 1 FROM embarque_contenedores
     WHERE embarque_id=p_embarque_id AND deleted_at IS NULL) INTO v_tiene_contenedores;
+  -- v13.820.6: las fechas de descarga/devolución sólo aplican a contenedores
+  -- completos (Marítimo FCL). En LCL (caja compartida) y otros modos no hay
+  -- contenedor que descargar/devolver, aunque existan filas de agrupación.
   IF v_tiene_contenedores AND v_emb.modo='Marítimo' AND COALESCE(v_emb.tipo_carga,'') ILIKE 'FCL%' THEN
     SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_cont_sin_fechas, v_cont_fechas_ids
     FROM embarque_contenedores WHERE embarque_id=p_embarque_id AND deleted_at IS NULL
@@ -32906,6 +33025,7 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','costo_conceptos_con_factura','ok',v_ok,
     'detalle', jsonb_build_object('sin_factura', v_costos_sin_factura)));
+  -- Buzón CxP: ningún invoice puede quedar sin capturar.
   SELECT COUNT(*),
          COALESCE(MAX(GREATEST(0, (now()::date - efe.created_at::date))), 0)
     INTO v_ent_pendientes, v_ent_dias_max
@@ -32922,6 +33042,11 @@ BEGIN
     'regla','facturas_entrantes_capturadas','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_ent_pendientes, 'dias_max', v_ent_dias_max,
       'buzon_vacio', v_ent_vacio, 'costos_sin_factura', v_costos_sin_factura)));
+  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el
+  -- buzón. v13.820.4: un costo ya ligado a una factura de proveedor vigente
+  -- cuenta como evidencia aunque la factura no haya entrado por el buzón
+  -- (captura directa desde Costos); antes el paso 1 quedaba pendiente para
+  -- siempre pese a que el paso 3 estaba completo.
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
@@ -32955,42 +33080,117 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
-  WITH agg AS (
-    SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
-      COALESCE(SUM((SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)),0)
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL)),0) AS pagado,
-      COUNT(*) FILTER (WHERE pf.total > COALESCE((
-        SELECT SUM(public.monto_pago_en_moneda_factura(
-          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text))
-        FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL),0) + 0.01) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE EXISTS (
-        SELECT 1 FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL
-          AND pp.moneda::text <> COALESCE(pf.moneda::text,'MXN')
-          AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)) AS pagos_sin_tipo_cambio
+  -- Audit139: assess each linked invoice after payments and applied credits.
+  -- Active allocations define shipment membership; header is legacy fallback.
+  -- Attribute the invoice residual by its active cost links, as in P&L.
+  -- Payments/credits remain invoice-level facts; this is a calculated share,
+  -- never a new claim that a specific payment settled a specific shipment.
+  WITH candidatas AS (
+    SELECT pf.*
     FROM proveedor_facturas pf
-    WHERE pf.embarque_id=p_embarque_id AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
-    GROUP BY COALESCE(pf.moneda,'MXN'))
+    WHERE pf.organization_id=v_emb.organization_id
+      AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
+      AND (EXISTS (
+        SELECT 1 FROM proveedor_facturas_conceptos pfc
+        JOIN conceptos_costo cc ON cc.id=pfc.concepto_costo_id
+        WHERE pfc.proveedor_factura_id=pf.id AND pfc.monto>0
+          AND pfc.monto*COALESCE(NULLIF(pfc.cantidad,0),1)>0
+          AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+          AND cc.origen<>'ajuste_factura_proveedor' AND cc.embarque_id=p_embarque_id)
+        OR (pf.embarque_id=p_embarque_id AND NOT EXISTS (
+          SELECT 1 FROM proveedor_facturas_conceptos pfc
+          JOIN conceptos_costo cc ON cc.id=pfc.concepto_costo_id
+          WHERE pfc.proveedor_factura_id=pf.id AND pfc.monto>0
+          AND pfc.monto*COALESCE(NULLIF(pfc.cantidad,0),1)>0
+            AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+            AND cc.origen<>'ajuste_factura_proveedor')))
+  ), asignadas AS (
+    SELECT pf.*, a.asignado, a.asignado_embarque
+    FROM candidatas pf CROSS JOIN LATERAL (
+      SELECT COALESCE(SUM(pc.monto * COALESCE(NULLIF(pc.cantidad,0),1)),0) AS asignado,
+        COALESCE(SUM(pc.monto * COALESCE(NULLIF(pc.cantidad,0),1))
+          FILTER (WHERE cc.embarque_id=p_embarque_id),0) AS asignado_embarque
+      FROM proveedor_facturas_conceptos pc
+      JOIN conceptos_costo cc ON cc.id=pc.concepto_costo_id
+      WHERE pc.proveedor_factura_id=pf.id AND pc.monto>0
+        AND pc.monto*COALESCE(NULLIF(pc.cantidad,0),1)>0
+        AND cc.organization_id=v_emb.organization_id AND cc.deleted_at IS NULL
+        AND cc.origen<>'ajuste_factura_proveedor'
+    ) a
+  ), facturas_cxp AS (
+    SELECT pf.*, CASE WHEN asignado>0
+      THEN asignado_embarque/GREATEST(subtotal,asignado)
+      ELSE 1::numeric END AS factor
+    FROM asignadas pf WHERE asignado_embarque>0
+      OR (asignado=0 AND embarque_id=p_embarque_id)
+  ), importes AS (
+    SELECT pf.id, pf.factor, COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(pf.total,0) AS total,
+      COALESCE((SELECT SUM(public.monto_pago_proveedor_en_moneda_factura(
+        pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+        pp.monto,pp.moneda::text,pp.tipo_cambio_usd,pf.moneda::text))
+        FROM pagos_proveedor pp WHERE pp.proveedor_factura_id=pf.id
+          AND pp.organization_id=v_emb.organization_id AND pp.deleted_at IS NULL),0) AS pagado,
+      COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(
+        nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text))
+        FROM proveedor_notas_credito nc WHERE nc.proveedor_factura_id=pf.id
+          AND nc.organization_id=v_emb.organization_id AND nc.deleted_at IS NULL
+          AND nc.estado='Aplicada'),0) AS notas_credito,
+      EXISTS (SELECT 1 FROM pagos_proveedor pp
+        WHERE pp.proveedor_factura_id=pf.id AND pp.organization_id=v_emb.organization_id
+          AND pp.deleted_at IS NULL AND public.monto_pago_proveedor_en_moneda_factura(
+            pp.es_anticipo_aplicado, pp.monto_en_moneda_factura,
+            pp.monto,pp.moneda::text,pp.tipo_cambio_usd,pf.moneda::text) IS NULL) AS pago_sin_tc,
+      EXISTS (SELECT 1 FROM proveedor_notas_credito nc
+        WHERE nc.proveedor_factura_id=pf.id AND nc.organization_id=v_emb.organization_id
+          AND nc.deleted_at IS NULL AND nc.estado='Aplicada'
+          AND public.monto_pago_en_moneda_factura(
+            nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text) IS NULL) AS nc_sin_tc
+    FROM facturas_cxp pf
+  ), saldos AS (
+    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo FROM importes
+  ), agg AS (
+    SELECT moneda, SUM(total*factor) AS total, SUM(pagado*factor) AS pagado,
+      SUM(notas_credito*factor) AS notas_credito, SUM(saldo) AS saldo,
+      COUNT(*) FILTER (WHERE saldo>0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE pago_sin_tc) AS pagos_sin_tipo_cambio,
+      COUNT(*) FILTER (WHERE nc_sin_tc) AS notas_sin_tipo_cambio,
+      BOOL_OR(factor<1) AS reparto_proporcional
+    FROM saldos GROUP BY moneda
+  )
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'moneda',moneda,'total',total,'pagado',pagado,
-      'saldo',GREATEST(total-pagado,0),'facturas_pendientes',facturas_pendientes,
-      'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio
-    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
+      'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
+      'saldo',saldo,'facturas_pendientes',facturas_pendientes,
+      'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio,'notas_sin_tipo_cambio',notas_sin_tipo_cambio,
+      'reparto_proporcional',reparto_proporcional
+    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(saldo),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0.01
+      OR (m->>'pagos_sin_tipo_cambio')::integer > 0
+      OR (m->>'notas_sin_tipo_cambio')::integer > 0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
-  -- P1 (v13.824.x): el vínculo concepto↔factura exige MISMA MONEDA
-  -- (conceptos_venta.moneda ↔ facturas.moneda), porque la facturación genera una
-  -- factura por moneda desde total_usd/total_mxn: una proforma mixta con la USD
-  -- Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y daba OK.
+  -- P1-1 (v13.824.x): `estado_facturacion='facturado'` se enciende en cuanto la
+  -- proforma queda 'facturada', y eso ocurre al crear una factura BORRADOR.
+  -- Fail-closed: un concepto sólo cuenta como facturado si (a) existe factura
+  -- vigente EMITIDA ligada a su proforma y (b) NO queda ninguna factura vigente
+  -- de esa misma proforma sin emitir (Borrador/Por timbrar). Esto cubre la
+  -- proforma partida por moneda (facturas USD + MXN comparten proforma_id):
+  -- emitir sólo una ya no da OK. Cancelada/Sustituida no bloquean ni acreditan.
+  -- P1 (v13.824.x): el vínculo además exige MISMA MONEDA que el concepto
+  -- (conceptos_venta.moneda ↔ facturas.moneda), porque construirFacturasAEmitir
+  -- genera una factura por moneda desde total_usd/total_mxn: una proforma mixta
+  -- con la USD Emitida y la MXN Cancelada dejaba el concepto MXN sin cubrir y
+  -- daba OK. Una factura emitida en otra moneda no acredita al concepto.
+  -- El vínculo factura↔proforma usa facturas.proforma_id, los punteros
+  -- proformas.factura_id / factura_secundaria_id y conceptos_factura
+  -- .proforma_id_origen (consolidadas). Conceptos legacy sin proforma se
+  -- validan contra cualquier factura emitida del embarque en su moneda.
   WITH cv AS (
     SELECT cv.id, cv.estado_facturacion, cv.proforma_id,
            COALESCE(cv.moneda::text,'MXN') AS moneda
@@ -33026,6 +33226,8 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
       'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
+  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
+  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
   SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
     FROM facturas f
    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
@@ -33048,6 +33250,8 @@ BEGIN
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
   INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01);
@@ -33066,6 +33270,13 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','rep_timbrados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_rep_pendientes, 'ids', v_rep_ids)));
+  -- Ola 2 · O2.2: se bloquea por pendientes REALES (nota de pendiente o
+  -- cola de recálculo), no por la bandera `definitiva` que sólo se marca al
+  -- cerrar (círculo vicioso que obligaba a "forzar" todos los cierres).
+  -- v13.823.291: si el embarque no genera comisión (override propio o cliente
+  -- marcado `sin_comision`), el check NO bloquea: la UI ya lo muestra en gris
+  -- "No aplica" y el checklist se veía completo mientras el candado contaba una
+  -- comisión huérfana (ELIMP00298: nota "Sin vendedora asignada al embarque").
   v_sin_comision := public.resolver_sin_comision(p_embarque_id);
   IF v_sin_comision THEN
     v_com_count := 0;
@@ -33622,6 +33833,36 @@ CREATE TABLE public.contactos_cliente (
     deleted_at timestamp with time zone,
     deleted_by uuid,
     updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.costeo_cargos_fob_agente (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    agente_id uuid NOT NULL,
+    concepto text DEFAULT 'Cargos FOB'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'USD'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_fob_agente_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_fob_agente_monto_check CHECK ((monto >= (0)::numeric))
+);
+CREATE TABLE public.costeo_cargos_locales_naviera (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    naviera_id uuid NOT NULL,
+    concepto text DEFAULT 'Revalidación'::text NOT NULL,
+    monto numeric(14,2) NOT NULL,
+    moneda text DEFAULT 'MXN'::text NOT NULL,
+    unidad text,
+    created_by uuid DEFAULT auth.uid(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT costeo_cargos_locales_naviera_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text, 'EUR'::text]))),
+    CONSTRAINT costeo_cargos_locales_naviera_monto_check CHECK ((monto >= (0)::numeric))
 );
 CREATE TABLE public.costeo_demoras_venta_tarifa (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -34224,6 +34465,7 @@ CREATE TABLE public.crm_solicitudes_pricing (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
     unidad_medida text,
+    tarifa_tarifario_id uuid,
     CONSTRAINT crm_solicitudes_pricing_cantidad_check CHECK (((cantidad IS NULL) OR (cantidad > 0))),
     CONSTRAINT crm_solicitudes_pricing_complejidad_check CHECK ((complejidad = ANY (ARRAY['baja'::text, 'media'::text, 'alta'::text]))),
     CONSTRAINT crm_solicitudes_pricing_estado_check CHECK ((estado = ANY (ARRAY['borrador'::text, 'enviada'::text, 'respondida'::text, 'cancelada'::text]))),
@@ -35336,6 +35578,10 @@ ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_organization_id_nombre_key UNIQUE (organization_id, nombre);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
     ADD CONSTRAINT costeo_demoras_venta_tarifa_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
@@ -35669,6 +35915,8 @@ CREATE UNIQUE INDEX comisiones_recalculo_pendiente_pago_etapa_key ON public.comi
 CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_costo USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
+CREATE INDEX costeo_cargos_fob_agente_org_idx ON public.costeo_cargos_fob_agente USING btree (organization_id, agente_id) WHERE (deleted_at IS NULL);
+CREATE INDEX costeo_cargos_locales_naviera_org_idx ON public.costeo_cargos_locales_naviera USING btree (organization_id, naviera_id) WHERE (deleted_at IS NULL);
 CREATE INDEX costeo_tarifas_solicitud_pricing_idx ON public.costeo_tarifas USING btree (solicitud_pricing_id) WHERE (solicitud_pricing_id IS NOT NULL);
 CREATE INDEX crm_empresas_org_estado_idx ON public.crm_empresas USING btree (organization_id, estado_crm);
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
@@ -36520,6 +36768,14 @@ ALTER TABLE ONLY public.contactos_cliente
     ADD CONSTRAINT contactos_cliente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.costeo_agentes
     ADD CONSTRAINT costeo_agentes_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_agente_id_fkey FOREIGN KEY (agente_id) REFERENCES public.costeo_agentes(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_fob_agente
+    ADD CONSTRAINT costeo_cargos_fob_agente_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_naviera_id_fkey FOREIGN KEY (naviera_id) REFERENCES public.navieras(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.costeo_cargos_locales_naviera
+    ADD CONSTRAINT costeo_cargos_locales_naviera_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.costeo_naviera_demoras_tarifa
     ADD CONSTRAINT costeo_demoras_tarifa_org_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.costeo_demoras_venta_tarifa
@@ -36664,6 +36920,8 @@ ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_oportunidad_id_fkey FOREIGN KEY (oportunidad_id) REFERENCES public.crm_oportunidades(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_solicitudes_pricing
     ADD CONSTRAINT crm_solicitudes_pricing_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.crm_solicitudes_pricing
+    ADD CONSTRAINT crm_solicitudes_pricing_tarifa_tarifario_id_fkey FOREIGN KEY (tarifa_tarifario_id) REFERENCES public.costeo_tarifas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_tableros
     ADD CONSTRAINT crm_tableros_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.crm_valores
@@ -37034,6 +37292,8 @@ CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_factu
 CREATE POLICY "Operaciones sube facturas entrantes" ON public.embarque_facturas_entrantes FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (subido_por = ( SELECT auth.uid() AS uid)) AND (estado = 'por_capturar'::text) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role)))));
 CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)) WITH CHECK (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id));
+CREATE POLICY "Org lee cargos FOB" ON public.costeo_cargos_fob_agente FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
+CREATE POLICY "Org lee cargos locales" ON public.costeo_cargos_locales_naviera FOR SELECT TO authenticated USING (((organization_id = public.org_scope()) AND (deleted_at IS NULL)));
 CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede borrar documentos de cliente" ON public.cliente_documentos FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
 CREATE POLICY "Org puede insertar documentos de cliente" ON public.cliente_documentos FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (EXISTS ( SELECT 1
@@ -37049,6 +37309,10 @@ CREATE POLICY "Org staff manage agente_users" ON public.agente_users TO authenti
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = agente_users.organization_id) AND (om.role = ANY (ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'gerente_operaciones'::public.app_role, 'coordinador_logistico'::public.app_role, 'ejecutivo_pricing'::public.app_role])))))));
 CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id))));
 CREATE POLICY "Org staff read client_users" ON public.client_users FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Pricing crea cargos FOB" ON public.costeo_cargos_fob_agente FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing crea cargos locales" ON public.costeo_cargos_locales_naviera FOR INSERT TO authenticated WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos FOB" ON public.costeo_cargos_fob_agente FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
+CREATE POLICY "Pricing edita cargos locales" ON public.costeo_cargos_locales_naviera FOR UPDATE TO authenticated USING (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id))) WITH CHECK (((organization_id = public.org_scope()) AND public._crm_es_pricing(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_aplicaciones AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_proveedor AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.auditoria_comentarios AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -37369,6 +37633,10 @@ CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes USING (((EXISTS 
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK (((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)) AND ((m.role)::text = ANY (ARRAY['admin'::text, 'admin_org'::text, 'gerente_operaciones'::text, 'ejecutivo_pricing'::text, 'operador'::text, 'coordinador_logistico'::text]))))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
+ALTER TABLE public.costeo_cargos_fob_agente ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_fob_agente_tenant_restrictive ON public.costeo_cargos_fob_agente AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
+ALTER TABLE public.costeo_cargos_locales_naviera ENABLE ROW LEVEL SECURITY;
+CREATE POLICY costeo_cargos_locales_naviera_tenant_restrictive ON public.costeo_cargos_locales_naviera AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = costeo_naviera_demoras_tarifa.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))));
@@ -38304,6 +38572,9 @@ GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uui
 GRANT ALL ON FUNCTION public.crear_tarifa_con_recargos_rpc(p_organization_id uuid, p_tarifa jsonb, p_recargos jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) TO service_role;
@@ -38448,9 +38719,9 @@ GRANT ALL ON FUNCTION public.default_user_org_id() TO service_role;
 REVOKE ALL ON FUNCTION public.detectar_alertas_app_logs() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO authenticated;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO service_role;
-REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO authenticated;
-GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO service_role;
+REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO authenticated;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text, p_medio text) TO service_role;
 REVOKE ALL ON FUNCTION public.direccion_totales(p_desde date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO authenticated;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO service_role;
@@ -38811,6 +39082,9 @@ GRANT ALL ON FUNCTION public.migrar_roles_legacy_dry_run() TO service_role;
 REVOKE ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO authenticated;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO service_role;
+REVOKE ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO authenticated;
+GRANT ALL ON FUNCTION public.monto_pago_proveedor_en_moneda_factura(p_es_anticipo_aplicado boolean, p_monto_en_moneda_factura numeric, p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO service_role;
 REVOKE ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO authenticated;
 GRANT ALL ON FUNCTION public.movimiento_origen_por_hash(p_hash text) TO service_role;
@@ -39434,6 +39708,10 @@ GRANT ALL ON TABLE public.configuracion_global TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.contactos_cliente TO authenticated;
 GRANT ALL ON TABLE public.contactos_cliente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_fob_agente TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_fob_agente TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.costeo_cargos_locales_naviera TO authenticated;
+GRANT ALL ON TABLE public.costeo_cargos_locales_naviera TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.costeo_demoras_venta_tarifa TO authenticated;
 GRANT ALL ON TABLE public.costeo_demoras_venta_tarifa TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.cotizacion_costos TO anon;

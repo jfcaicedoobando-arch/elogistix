@@ -2,16 +2,19 @@ import { avisoNcProveedorSinBase } from "@/lib/financial/baseNcProveedor";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
+import { ReportHeader } from "@/pdf/components/ReportHeader";
+import type { EmisorInfo } from "@/pdf/components/BrandHeader";
+import { ReportSummary } from "@/pdf/components/ReportSummary";
+import { ReportContext } from "@/pdf/components/ReportContext";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { EstadoResultados, ModoColumna, FilaER } from "@/features/profit/domain/estadoResultados";
-import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   periodo: string; // YYYY-MM
   fuente: "embarques" | "facturas";
   data: EstadoResultados;
-  emisor?: { razonSocial?: string };
+  emisor?: EmisorInfo;
 }
 
 const MODOS: ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"];
@@ -38,75 +41,57 @@ function aplanar(filas: FilaER[]): FilaPlana[] {
 
 const cols: PdfColumn<FilaPlana>[] = [
   { key: "desc", title: "Concepto", cellStyle: styles.cellDesc, render: (r) => r.concepto },
-  { key: "mar", title: "Marítimo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.maritimo, "MXN") },
-  { key: "aer", title: "Aéreo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.aereo, "MXN") },
-  { key: "ter", title: "Terrestre", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.terrestre, "MXN") },
-  { key: "otr", title: "Otros", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.otros, "MXN") },
-  { key: "tot", title: "Total", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.total, "MXN") },
+  { key: "mar", title: "Marítimo", cellStyle: [styles.cellNumWide, { width: 100 }], render: (r) => formatCurrency(r.maritimo, "MXN") },
+  { key: "aer", title: "Aéreo", cellStyle: [styles.cellNumWide, { width: 100 }], render: (r) => formatCurrency(r.aereo, "MXN") },
+  { key: "ter", title: "Terrestre", cellStyle: [styles.cellNumWide, { width: 100 }], render: (r) => formatCurrency(r.terrestre, "MXN") },
+  { key: "otr", title: "Otros", cellStyle: [styles.cellNumWide, { width: 100 }], render: (r) => formatCurrency(r.otros, "MXN") },
+  { key: "tot", title: "Total", cellStyle: [styles.cellNumWide, { width: 100 }], render: (r) => formatCurrency(r.total, "MXN") },
 ];
 
 export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
   const ingresos = aplanar(data.ingresos);
   const costos = aplanar(data.costos);
   const utilidadModos = MODOS.map((m) => data.utilidad.porModo[m] ?? 0);
+  const resumenModos = (
+    <View style={[styles.summaryBox, { padding: 7, marginTop: 6 }]} wrap={false}>
+      <Text style={styles.contextText}>
+        Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
+        Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
+        Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
+        Otros {formatCurrency(utilidadModos[3], "MXN")}
+      </Text>
+    </View>
+  );
 
   return (
-    <Document title={`EERR ${periodo}`} author={emisor?.razonSocial ?? "Libre Carga"}>
-      <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.h1}>Estado de Resultados</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
-              Periodo: {periodo} · Fuente: {fuente === "facturas" ? "Devengada (facturas)" : "Operativa (ETA)"}
-            </Text>
-          </View>
-        </View>
+    <Document title={`EERR ${periodo}`} author={emisor?.organizacionNombre || emisor?.razonSocial || "Libre Carga"}>
+      <Page size="LETTER" orientation="landscape" style={styles.page}>
+        <ReportHeader title="Estado de Resultados" emisor={emisor}>
+          <Text style={styles.contextText}>
+            Periodo: {periodo} · Fuente: {fuente === "facturas" ? "Devengada (facturas)" : "Operativa (ETA)"}
+          </Text>
+        </ReportHeader>
 
-        {!!data.notas_proveedor_sin_base?.length && <Text style={styles.paragraph}>{avisoNcProveedorSinBase(data.notas_proveedor_sin_base.length)}</Text>}
-        <View style={styles.kpiRow}>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Ingresos totales</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(data.totalIngresos.total, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Costos totales</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(data.totalCostos.total, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Utilidad bruta</Text>
-              <Text style={styles.kpiValue}>{formatCurrency(data.utilidad.total, "MXN")}</Text>
-            </View>
-          </View>
-          <View style={styles.kpiCard}>
-            <View style={styles.kpiInner}>
-              <Text style={styles.kpiLabel}>Margen</Text>
-              <Text style={styles.kpiValue}>{data.margen.total.toFixed(1)}%</Text>
-            </View>
-          </View>
-        </View>
+        {!!data.notas_proveedor_sin_base?.length && (
+          <ReportContext>
+            <Text style={styles.contextText}>{avisoNcProveedorSinBase(data.notas_proveedor_sin_base.length)}</Text>
+          </ReportContext>
+        )}
+        <ReportSummary columns={4} items={[
+          { label: "Ingresos totales", value: formatCurrency(data.totalIngresos.total, "MXN") },
+          { label: "Costos totales", value: formatCurrency(data.totalCostos.total, "MXN") },
+          { label: "Utilidad bruta", value: formatCurrency(data.utilidad.total, "MXN") },
+          { label: "Margen", value: `${data.margen.total.toFixed(1)}%` },
+        ]} />
 
-        <Text style={[styles.h3, { marginTop: 12 }]}>Ingresos</Text>
+        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 8 }]}>Ingresos</Text>
         <DataTable columns={cols} rows={ingresos} />
 
-        <Text style={[styles.h3, { marginTop: 12 }]}>Costos</Text>
-        <DataTable columns={cols} rows={costos} />
-
-        <View style={{ marginTop: 12, padding: 8, backgroundColor: COLORS.zebra, borderRadius: 4 }}>
-          <Text style={{ fontSize: 11, fontWeight: 700 }}>
-            Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
-            Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
-            Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
-            Otros {formatCurrency(utilidadModos[3], "MXN")}
-          </Text>
-        </View>
+        <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 8 }]}>Costos</Text>
+        <DataTable columns={cols} rows={costos} afterLastRow={resumenModos} />
 
 
-        <Footer empresaNombre={emisor?.razonSocial} />
+        <Footer emisor={emisor} empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

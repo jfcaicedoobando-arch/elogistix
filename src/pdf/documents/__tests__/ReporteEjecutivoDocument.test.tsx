@@ -83,4 +83,21 @@ describe("ReporteEjecutivoDocument", () => {
     expect(text).toContain("Deudor Importante");
     expect(text).not.toContain("Sin cartera vencida");
   });
+
+  it("conserva moneda original de bancos y muestra emisor configurado sin logo", () => {
+    const snapshot: SnapshotEjecutivo = {
+      ...mockSnapshot,
+      tesoreria: {
+        ...mockSnapshot.tesoreria,
+        cuentas: [{ id: "cuenta-eur", alias: "Operativa EUR", banco: "Banco sintético", moneda: "EUR", saldo: 1234.56 }],
+      },
+    };
+    const { container, queryByTestId } = render(<ReporteEjecutivoDocument snapshot={snapshot}
+      emisor={{ razonSocial: "Operadora Sintética SA", rfc: "AAA010101AAA" }} />);
+    expect(container).toHaveTextContent("Operadora Sintética SA");
+    expect(container).toHaveTextContent("Operativa EUR — Banco sintético");
+    expect(container).toHaveTextContent("EUR 1,234.56");
+    expect(container).not.toHaveTextContent("Sin cuentas activas");
+    expect(queryByTestId("pdf-image")).not.toBeInTheDocument();
+  });
 });

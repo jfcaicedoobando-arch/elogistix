@@ -20,3 +20,8 @@ export type { FilaConPuertos, PuertoIdentidad } from "./utils/puertoLabel";
 export { esTarifaUsableEn, resolverEstadoVigenciaTarifa } from "./utils/vigenciaTarifa";
 export type { EstadoCanonicoTarifa, TarifaVigenciaLike } from "./utils/vigenciaTarifa";
 export { TarifaForm } from "./components/TarifaForm";
+
+export * from "./services/tarifarioService";
+export * from "./services/cargosService";
+export * from "./tarifario/coincidencias";
+export { costeo as costeoQueryKeys } from "./queryKeys";

@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { CxpAvanceCaptura } from "../CxpAvanceCaptura";
 import { buildCxpPorCapturarColumns } from "../cxpPorCapturarColumns";
 import { DataTable } from "@/components/shared/DataTable";
-import { aplicarFiltros, type FiltersState } from "../../hooks/useCxpPorCapturarFilters";
+import { aplicarFiltros, estatusDeFila, type FiltersState } from "../../hooks/useCxpPorCapturarFilters";
 import { referenciaCxpEmbarque } from "../../domain/cxpReferenciaEmbarque";
 import type { CxpPorCapturarRow } from "../../services/bandejas";
 
@@ -64,5 +64,44 @@ describe("Por capturar — borradores identificables", () => {
     expect(aplicarFiltros([draft, other], filtros)).toEqual([draft]);
     expect(aplicarFiltros([draft, other], { ...filtros, query: "COT-2026-0026" })).toEqual([other]);
     expect(referenciaCxpEmbarque({ ...row, expediente: null })).toBe("Sin folio (3efb2cc8)");
+  });
+});
+
+describe("Por capturar — bases homogéneas 62/130", () => {
+  it("FP13 base1000/1000 muestra100% sin convertir IVA160 en exceso", () => {
+    render(<CxpAvanceCaptura row={{ ...row, presupuestado_usd: 0, facturado_usd: 0, facturado_mxn: 1000 }} />);
+    expect(screen.getByText("Base sin IVA")).toBeInTheDocument();
+    expect(screen.getByText("100%")).toBeInTheDocument();
+    expect(screen.queryByText(/Excede/)).not.toBeInTheDocument();
+  });
+
+  it("ELNAC17 refleja base100 asignada contra presupuesto120.44", () => {
+    const asignada = { ...row, presupuestado_mxn: 120.44, presupuestado_usd: 0,
+      facturado_mxn: 100, facturado_usd: 0, facturas_capturadas: 1 };
+    render(<CxpAvanceCaptura row={asignada} />);
+    expect(screen.getByText("83%")).toBeInTheDocument();
+    expect(screen.getByText("MXN 100.00 / MXN 120.44")).toBeInTheDocument();
+    expect(estatusDeFila(asignada)).toBe("parcial");
+  });
+
+  it("ELNAC16 suma base60 y asignación40, conserva dos documentos y queda completo", () => {
+    const asignada = { ...row, presupuestado_mxn: 100, presupuestado_usd: 0,
+      facturado_mxn: 100, facturado_usd: 0, facturas_capturadas: 2 };
+    render(<CxpAvanceCaptura row={asignada} />);
+    expect(screen.getByText("100%")).toBeInTheDocument();
+    expect(estatusDeFila(asignada)).toBe("completo");
+  });
+
+  it("compara los mismos centavos que presenta sin exceso0.00 ni tolerar un centavo faltante", () => {
+    const precisa = { ...row, presupuestado_mxn: 0.30, presupuestado_usd: 0,
+      facturado_mxn: 0.1 + 0.2, facturado_usd: 0, facturas_capturadas: 1 };
+    const { rerender } = render(<CxpAvanceCaptura row={precisa} />);
+    expect(screen.queryByText(/Excede/)).not.toBeInTheDocument();
+    expect(estatusDeFila(precisa)).toBe("completo");
+    expect(estatusDeFila({ ...precisa, facturado_mxn: 0.29 })).toBe("parcial");
+    const mitad = { ...precisa, presupuestado_mxn: 15.01, facturado_mxn: 15.005 };
+    rerender(<CxpAvanceCaptura row={mitad} />);
+    expect(screen.getByText("MXN 15.01 / MXN 15.01")).toBeInTheDocument();
+    expect(estatusDeFila(mitad)).toBe("completo");
   });
 });

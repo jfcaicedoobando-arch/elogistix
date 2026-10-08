@@ -31,9 +31,10 @@ describe("useLibroPagos · alcance por organización", () => {
   });
 
   it("pasa la organización activa al servicio", async () => {
-    renderHook(() => useLibroPagos("2026-08-01", "2026-08-31"), { wrapper });
+    const { result } = renderHook(() => useLibroPagos("2026-08-01", "2026-08-31"), { wrapper });
     await waitFor(() => expect(fetchLibroPagos).toHaveBeenCalled());
     expect(fetchLibroPagos).toHaveBeenCalledWith("2026-08-01", "2026-08-31", "org-a");
+    expect(result.current.organizationId).toBe("org-a");
   });
 
   it("al cambiar de tenant pide los datos del nuevo, no los del anterior", async () => {

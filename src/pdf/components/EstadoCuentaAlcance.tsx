@@ -1,5 +1,5 @@
 import { Text, View } from "@react-pdf/renderer";
-import { COLORS } from "../theme/tokens";
+import { styles } from "../theme/styles";
 
 export interface EstadoCuentaAlcance {
   parcial: boolean;
@@ -11,7 +11,7 @@ export function EstadoCuentaAlcanceResumen({ alcance, facturas }: {
   facturas: number;
 }) {
   return (
-    <View style={{ marginBottom: 10, fontSize: 8, color: COLORS.muted }} wrap={false}>
+    <View style={[styles.contextBox, styles.contextText]} wrap={false}>
       <Text>
         {alcance.parcial ? "Alcance parcial: subtotales del corte seleccionado." : "Alcance: cartera del cliente."}
         {` Facturas incluidas: ${facturas}.`}

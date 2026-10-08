@@ -20,18 +20,30 @@ const ESPEJO = path.resolve(
   "../../../supabase/schema/proveedores/proveedor_estado_cuenta.sql",
 );
 
-function readLatestContaining(marker: string): string {
+function readLatestContaining(marker: RegExp): string {
   const files = fs.readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort().reverse();
   for (const f of files) {
     const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-    if (body.includes(marker)) return body;
+    if (marker.test(body)) return body;
   }
   throw new Error(`No se encontró migración con marker: ${marker}`);
 }
 
-const MARCA = "CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta";
+const MARCA = /CREATE OR REPLACE FUNCTION public\.proveedor_estado_cuenta\s*\(/;
 
 describe("N2 — proveedor_estado_cuenta resta notas de crédito", () => {
+  it("identifica la función exacta sin confundir la RPC de movimientos", () => {
+    expect(MARCA.test("CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid)")).toBe(true);
+    expect(MARCA.test("CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta \n(p_proveedor_id uuid)")).toBe(true);
+    expect(MARCA.test("CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id uuid)")).toBe(false);
+    expect(MARCA.test("CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos \n(p_proveedor_id uuid)")).toBe(false);
+  });
+
+  it("falla si no encuentra una definición exacta, sin omitir el guardrail", () => {
+    const ausente = /CREATE OR REPLACE FUNCTION public\.proveedor_estado_cuenta_inexistente\s*\(/;
+    expect(() => readLatestContaining(ausente)).toThrow("No se encontró migración con marker:");
+  });
+
   const sql = readLatestContaining(MARCA);
   const espejo = fs.readFileSync(ESPEJO, "utf8");
 

@@ -44,10 +44,11 @@ export function TotalesChipDesglose({
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-label={`Subtotal ${formatCurrency(subtotal, moneda)}. Total del documento ${formatCurrency(total, moneda)}`}
           className="rounded-lg border bg-card px-3 py-1.5 text-right transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex items-center gap-1 text-label font-bold uppercase tracking-tight text-muted-foreground">
-            Subtotal {moneda}
+            Subtotal
             <ChevronDown className="h-3 w-3" aria-hidden />
           </span>
           <span className="block text-base font-semibold tabular-nums leading-tight">
@@ -69,7 +70,7 @@ export function TotalesChipDesglose({
           <Renglon label="Retenciones" value={`− ${formatCurrency(retenciones, moneda)}`} />
         )}
         <div className="border-t pt-1.5">
-          <Renglon label={`Total del documento ${moneda}`} value={formatCurrency(total, moneda)} />
+          <Renglon label="Total del documento" value={formatCurrency(total, moneda)} />
         </div>
         <p className="text-label text-muted-foreground">
           Subtotal + IVA{ieps > 0 ? " + IEPS" : ""}{retenciones > 0 ? " − retenciones" : ""}.

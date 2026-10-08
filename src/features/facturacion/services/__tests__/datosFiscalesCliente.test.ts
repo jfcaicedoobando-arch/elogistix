@@ -1,3 +1,5 @@
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { captureAuthOperationScope, syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
@@ -6,12 +8,20 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchClienteFiscal, actualizarDatosTimbradoFactura } from "../datosFiscalesCliente";
+import { fetchClienteFiscal, actualizarDatosTimbradoFactura, guardarDefaultsTimbradoCliente } from "../datosFiscalesCliente";
 
+function usuario(userId = "u1") {
+  setAuthSnapshot({ userId, organizationId: "org1", role: "admin", effectiveRole: "admin", email: null, organizationName: null });
+  syncActiveOrganizationScope({ userId, organizationId: "org1" });
+}
+const scope = () => ({ organizationId: "org1", borrador: true as const, authScope: captureAuthOperationScope() });
+const patch = { uso_cfdi: "S01", forma_pago: "99", metodo_pago: "PPD" };
 describe("datosFiscalesCliente service", () => {
   beforeEach(() => {
+    usuario();
     mock.resetResults();
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
   });
 
   it("fetchClienteFiscal devuelve la fila", async () => {
@@ -44,5 +54,68 @@ describe("datosFiscalesCliente service", () => {
     await expect(
       actualizarDatosTimbradoFactura("f1", { serie: "", uso_cfdi: "", forma_pago: "", metodo_pago: "" }),
     ).rejects.toThrow("nope");
+  });
+
+  it("autosave exige la empresa y una factura viva, borrador, sin UUID ni claim", async () => {
+    mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
+    await actualizarDatosTimbradoFactura("f1", { uso_cfdi: "S01", forma_pago: "99", metodo_pago: "PPD" }, undefined, scope());
+    const call = mock.tableCalls.find((c) => c.table === "facturas")!;
+    const args = (name: string) => call.ops.flatMap((op, i) => op === name ? [call.opArgs[i]] : []);
+    expect(args("eq")).toContainEqual(["id", "f1"]);
+    expect(args("eq")).toContainEqual(["organization_id", "org1"]);
+    expect(args("is")).toEqual(expect.arrayContaining([["deleted_at", null], ["uuid_fiscal", null], ["facturapi_id", null]]));
+    expect(args("in")).toContainEqual(["estado", ["Borrador", "Por timbrar"]]);
+    expect(mock.rpcCalls).toContainEqual({ fn: "registrar_bitacora", args: expect.objectContaining({ p_organization_id: "org1", p_entidad_id: "f1" }) });
+  });
+
+  it("autosave no declara éxito si el destino dejó de ser editable o no existe", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    await expect(actualizarDatosTimbradoFactura("f1", { uso_cfdi: "S01", forma_pago: "99", metodo_pago: "PPD" }, undefined,
+      scope())).rejects.toThrow();
+    expect(mock.rpcCalls).toHaveLength(0);
+  });
+
+  it("sin identidad de empresa no inicia ninguna escritura", async () => {
+    await expect(actualizarDatosTimbradoFactura("f1", { uso_cfdi: "S01", forma_pago: "99", metodo_pago: "PPD" }, undefined,
+      { ...scope(), organizationId: "" })).rejects.toThrow(/empresa/);
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+
+  it("no envía una captura de otro usuario ni de otra empresa activa", async () => {
+    const original = scope(); usuario("u2");
+    await expect(actualizarDatosTimbradoFactura("f1", patch, undefined, original)).rejects.toThrow(/canceló/);
+    await expect(actualizarDatosTimbradoFactura("f1", patch, undefined, { ...scope(), organizationId: "org2" })).rejects.toThrow(/canceló/);
+    expect(mock.tableCalls).toHaveLength(0); expect(mock.rpcCalls).toHaveLength(0);
+  });
+  it("si cambia sesión después del update confirmado no lo simula abortado ni registra con B", async () => {
+    mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
+    const pendiente = actualizarDatosTimbradoFactura("f1", patch, undefined, scope());
+    usuario("u2");
+    await expect(pendiente).resolves.toBeUndefined();
+    expect(mock.tableCalls).toHaveLength(1); expect(mock.rpcCalls).toHaveLength(0);
+  });
+  it("defaults explícitos filtran y registran la empresa capturada", async () => {
+    mock.setTableResult("clientes", { data: [{ id: "c1" }], error: null });
+    await guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope());
+    const call = mock.tableCalls.find(c => c.table === "clientes")!;
+    expect(call.opArgs).toContainEqual(["organization_id", "org1"]);
+    expect(mock.rpcCalls).toContainEqual({ fn: "registrar_bitacora", args: expect.objectContaining({ p_organization_id: "org1", p_entidad_id: "c1" }) });
+  });
+  it("defaults de cero filas no declaran éxito ni generan bitácora", async () => {
+    mock.setTableResult("clientes", { data: [], error: null });
+    await expect(guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope())).rejects.toThrow();
+    expect(mock.rpcCalls).toHaveLength(0);
+  });
+  it("defaults no se envían con una sesión o empresa distintas", async () => {
+    const original = scope(); usuario("u2");
+    await expect(guardarDefaultsTimbradoCliente("c1", {}, original)).rejects.toThrow(/canceló/);
+    await expect(guardarDefaultsTimbradoCliente("c1", {}, { ...scope(), organizationId: "org2" })).rejects.toThrow(/canceló/);
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+  it("defaults ya escritos no registran bajo la siguiente sesión", async () => {
+    mock.setTableResult("clientes", { data: [{ id: "c1" }], error: null });
+    const pending = guardarDefaultsTimbradoCliente("c1", { uso_cfdi_default: "G01" }, scope());
+    usuario("u2"); await expect(pending).resolves.toBeUndefined();
+    expect(mock.tableCalls).toHaveLength(1); expect(mock.rpcCalls).toHaveLength(0);
   });
 });

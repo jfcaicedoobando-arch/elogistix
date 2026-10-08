@@ -33,6 +33,7 @@ describe("usePresupuestoVsReal", () => {
       wrapper: createWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.organizationId).toBe("org-test");
     expect(result.current.data).toMatchObject({
       periodo: "2026-06",
       filas: [],

@@ -185,7 +185,9 @@ export type Database = {
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -196,6 +198,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -211,7 +214,9 @@ export type Database = {
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
+          fecha_devolucion?: string | null
           id?: string
+          medio_devolucion?: string | null
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -222,6 +227,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia?: string | null
+          referencia_devolucion?: string | null
           saldo_disponible: number
           tipo_cambio_usd?: number | null
           updated_at?: string
@@ -237,7 +243,9 @@ export type Database = {
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
+          fecha_devolucion?: string | null
           id?: string
+          medio_devolucion?: string | null
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
@@ -248,6 +256,7 @@ export type Database = {
           organization_id?: string
           proveedor_id?: string
           referencia?: string | null
+          referencia_devolucion?: string | null
           saldo_disponible?: number
           tipo_cambio_usd?: number | null
           updated_at?: string
@@ -1872,6 +1881,120 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_cargos_fob_agente: {
+        Row: {
+          agente_id: string
+          concepto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          moneda: string
+          monto: number
+          organization_id: string
+          unidad: string | null
+          updated_at: string
+        }
+        Insert: {
+          agente_id: string
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto: number
+          organization_id: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agente_id?: string
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto?: number
+          organization_id?: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_cargos_fob_agente_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_cargos_fob_agente_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_cargos_locales_naviera: {
+        Row: {
+          concepto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          moneda: string
+          monto: number
+          naviera_id: string
+          organization_id: string
+          unidad: string | null
+          updated_at: string
+        }
+        Insert: {
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto: number
+          naviera_id: string
+          organization_id: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Update: {
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          moneda?: string
+          monto?: number
+          naviera_id?: string
+          organization_id?: string
+          unidad?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_cargos_locales_naviera_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_cargos_locales_naviera_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -4559,6 +4682,7 @@ export type Database = {
           respondida_at: string | null
           servicio: string | null
           solicitante_id: string
+          tarifa_tarifario_id: string | null
           tipo_carga: string | null
           unidad_medida: string | null
           updated_at: string
@@ -4595,6 +4719,7 @@ export type Database = {
           respondida_at?: string | null
           servicio?: string | null
           solicitante_id: string
+          tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           unidad_medida?: string | null
           updated_at?: string
@@ -4631,6 +4756,7 @@ export type Database = {
           respondida_at?: string | null
           servicio?: string | null
           solicitante_id?: string
+          tarifa_tarifario_id?: string | null
           tipo_carga?: string | null
           unidad_medida?: string | null
           updated_at?: string
@@ -4649,6 +4775,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_solicitudes_pricing_tarifa_tarifario_id_fkey"
+            columns: ["tarifa_tarifario_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_solicitudes_pricing_tarifa_tarifario_id_fkey"
+            columns: ["tarifa_tarifario_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
             referencedColumns: ["id"]
           },
         ]
@@ -10335,7 +10475,9 @@ export type Database = {
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -10346,6 +10488,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -11050,6 +11193,10 @@ export type Database = {
         }
       }
       credito_en_uso_mxn: { Args: { p_cliente_id: string }; Returns: number }
+      crm_aplicar_tarifa_tarifario: {
+        Args: { p_solicitud_id: string; p_tarifa_id: string }
+        Returns: Json
+      }
       crm_autorizar_margen: {
         Args: { _margen_pct: number; _oportunidad_id: string }
         Returns: undefined
@@ -11322,6 +11469,7 @@ export type Database = {
           p_cuenta_bancaria_id: string
           p_fecha: string
           p_id: string
+          p_medio?: string
           p_monto: number
           p_motivo?: string
           p_referencia?: string
@@ -11337,7 +11485,9 @@ export type Database = {
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -11348,6 +11498,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -12023,6 +12174,17 @@ export type Database = {
         }
         Returns: number
       }
+      monto_pago_proveedor_en_moneda_factura: {
+        Args: {
+          p_es_anticipo_aplicado: boolean
+          p_moneda_factura: string
+          p_moneda_pago: string
+          p_monto: number
+          p_monto_en_moneda_factura: number
+          p_tc_pago: number
+        }
+        Returns: number
+      }
       movimiento_origen_por_hash: { Args: { p_hash: string }; Returns: string }
       nc_aplicadas_en_moneda_factura: {
         Args: { p_factura_id: string }
@@ -12429,7 +12591,9 @@ export type Database = {
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -12440,6 +12604,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
@@ -12895,7 +13060,9 @@ export type Database = {
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
+          fecha_devolucion: string | null
           id: string
+          medio_devolucion: string | null
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -12906,6 +13073,7 @@ export type Database = {
           organization_id: string
           proveedor_id: string
           referencia: string | null
+          referencia_devolucion: string | null
           saldo_disponible: number
           tipo_cambio_usd: number | null
           updated_at: string
