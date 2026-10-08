@@ -66,6 +66,7 @@ export const embarques = {
     ['embarques', 'reconciliacion3c', embarqueId, umbrales, ...scope] as const,
   reconciliacion: (embarqueId?: string) => ['embarques', 'reconciliacion', embarqueId] as const,
   seguros: (embarqueId?: string) => ['embarque', embarqueId, 'seguros'] as const,
+  segurosFacturasElegibles: (embarqueId?: string) => ['embarque', embarqueId, 'seguros', 'facturas-elegibles'] as const,
   sinComision: (embarqueId?: string) => ['embarque', embarqueId, 'sin-comision'] as const,
 } as const;
 
