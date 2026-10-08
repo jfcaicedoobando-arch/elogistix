@@ -98,5 +98,12 @@
     "replays": [
       "20261008145000_replay_audit148_seguro_factura.sql"
     ]
+  },
+  {
+    "file": "0013_proveedor_alta_provisional.sql",
+    "sha256": "d48549bb7e4a69e200919ded4fe89104cc5de7cae99ef4fa5ef1b827e3a61d5b",
+    "replays": [
+      "20261008190000_replay_proveedor_alta_provisional.sql"
+    ]
   }
 ]

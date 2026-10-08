@@ -230,3 +230,6 @@ supabase/tests/audit70_aging_saldo_canonico.sql
 
 # Audit70 Por pagar: canonical supplier balance, preserving payment identity.
 supabase/tests/audit70_por_pagar_saldo_canonico.sql
+
+# Proveedores provisionales 13.824.46: validación funcional de faltantes y aprobación idempotente.
+supabase/tests/proveedor_provisional_approval_validation.sql
