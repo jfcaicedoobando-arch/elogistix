@@ -1,8 +1,13 @@
 /**
  * Campos que llena el solicitante (formato de Sheets de Pricing).
  */
+import { useMemo } from "react";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { usePuertos } from "@/features/catalogos/hooks";
+import type { PuertoOption } from "@/features/catalogos";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
+import { paisesDePuertos, puertoTrasCambioPais } from "@/features/crm/services/pricing/puertosPorPais";
+import { CampoPuerto } from "./CampoPuerto";
 import {
   ETIQUETA_COMPLEJIDAD, INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
   aNumero, UNIDADES_MEDIDA_PRICING,
