@@ -2,9 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AgingDrillDownDialog } from "../AgingDrillDownDialog";
 import type { CxpAgingRow } from "../../services/cxpAging";
+import { exportarCxpAgingCsv } from "../../services/cxpAgingExport";
 import { addDaysIso } from "@/lib/date/dateOnly";
 
-const { fetchMock, csvRows } = vi.hoisted(() => ({ fetchMock: vi.fn(), csvRows: vi.fn() }));
+const { fetchMock, csvRows, aggregateCsv } = vi.hoisted(() => ({ fetchMock: vi.fn(), csvRows: vi.fn(), aggregateCsv: vi.fn() }));
+vi.mock("@/lib/ui/notifyCsvExport", () => ({ downloadCsvWithFeedback: aggregateCsv }));
 vi.mock("@/features/cxp/hooks", () => ({ useFacturasCxP: fetchMock }));
 vi.mock("@/components/shared/DataTable", () => ({
   defineColumns: (columns: unknown) => columns,
@@ -64,4 +66,34 @@ describe("aging CxP: moneda y cubeta del detalle/CSV", () => {
     expect(screen.queryByText("USD-referencia")).not.toBeInTheDocument();
     expect(screen.getByText("0 facturas")).toBeInTheDocument();
   });
+
+  it("extensión70 conserva las cuatro facturas y 811.945 en CSV agregado y detalle", () => {
+    const summary = { ...proveedor, saldo_total: 811.945, vigente: 111.945, d_1_30: 700, num_facturas: 4 };
+    const atReportDate = (id: string, saldo: number, dias: number) => ({
+      ...factura(id, "USD", saldo, dias), fecha_vencimiento: addDaysIso("2026-10-06", -dias),
+    });
+    fetchMock.mockReturnValue({ data: [
+      atReportDate("USD-700", 700, 6), atReportDate("USD-95", 95, 0),
+      atReportDate("FP12", 16, 0), atReportDate("USD-precision", 0.945, 0),
+      factura("USD-settled", "USD", 0, 0), factura("MXN-other", "MXN", 1160, 6),
+    ], isLoading: false });
+    vi.stubGlobal("Blob", class { constructor(parts: unknown[]) { csvRows(parts[0]); } });
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:test"), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    render(<AgingDrillDownDialog proveedor={summary} open onOpenChange={() => {}} fechaReferencia="2026-10-06" />);
+    expect(screen.getByText("4 facturas")).toBeInTheDocument();
+    expect(screen.getByText("FP12")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("CSV 4"));
+    const detail = String(csvRows.mock.lastCall?.[0]).split("\n").slice(1);
+    expect(detail).toHaveLength(summary.num_facturas);
+    expect(detail.reduce((sum, row) => sum + Number(row.split(",")[6]), 0)).toBeCloseTo(summary.saldo_total, 8);
+    expect(detail.some(row => row.includes(",USD,0.945,"))).toBe(true);
+    const inBucket = (bucket: string) => detail.filter(row => row.split(",")[4] === bucket)
+      .reduce((sum, row) => sum + Number(row.split(",")[6]), 0);
+    expect(inBucket("Vigente")).toBeCloseTo(summary.vigente, 8);
+    expect(inBucket("1-30 d")).toBe(summary.d_1_30);
+    exportarCxpAgingCsv([summary], "USD", "2026-10-06");
+    expect(aggregateCsv.mock.lastCall?.[0].csv).toContain('"Proveedor",USD,4,111.945,700,0,0,0,811.945,2026-10-06');
+  });
+
 });
