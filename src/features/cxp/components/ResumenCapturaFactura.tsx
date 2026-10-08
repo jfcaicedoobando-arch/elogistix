@@ -41,7 +41,7 @@ export function ResumenCapturaFactura({ values, total, vinculos, onEditarDatos }
               día en America/Mexico_City (frontend_hunter P2). */}
           <Dato label="Emisión" value={formatFechaDia(values.emision)} />
           <Dato label="Vencimiento" value={formatFechaDia(values.vencimiento)} />
-          <Dato label={`Total ${moneda}`} value={formatCurrency(total, moneda)} />
+          <Dato label="Total" value={formatCurrency(total, moneda)} />
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
           <p className="text-body-sm text-muted-foreground">

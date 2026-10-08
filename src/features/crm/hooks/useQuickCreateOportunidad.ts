@@ -1,31 +1,26 @@
 /**
  * Estado y lógica de alta express de oportunidad.
- * Extraído de `QuickCreateOportunidadDialog.tsx` (Power of 10 — límite de
- * líneas por archivo).
+ * El usuario elige empresa, etapa inicial (sólo abiertas) y valor estimado;
+ * el origen (cliente o prospecto calificado) se deduce de la empresa, así el
+ * guard `_crm_oportunidad_requiere_origen` sigue intacto.
  */
+import { crm } from "../queryKeys";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
-import { useClientesForSelect } from "@/features/cliente/hooks";
-import {
-  primeraEtapaAbierta,
-  MSG_SIN_ETAPA_ABIERTA,
-  type OrigenInicial,
-} from "@/features/crm/domain/oportunidadFormHelpers";
+import { primeraEtapaAbierta, type OrigenInicial } from "@/features/crm/domain/oportunidadFormHelpers";
 import type { RefRow } from "@/features/crm/services/objetosCrm";
+import { fetchOrigenEmpresa } from "@/features/crm/services/origenEmpresaCrm";
 
-/**
- * Borrador mínimo que viaja del alta express al formulario completo cuando el
- * usuario pulsa "Más campos →": sólo nombre y origen/ownership ya elegidos.
- */
+/** Lo capturado en el alta express que viaja a "Más campos →". */
 export interface OportunidadQuickDraft {
   nombre: string;
   origen: OrigenInicial | null;
   empresa?: RefRow | null;
+  etapaId?: string | null;
 }
-
-export type OrigenTipo = "prospecto" | "cliente";
 
 interface Params {
   open: boolean;
@@ -33,115 +28,81 @@ interface Params {
   onCreated: (id: string) => void;
 }
 
+function camposFaltantes(nombre: string, empresa: RefRow | null, etapa: unknown, valorListo: boolean) {
+  const faltantes: string[] = [];
+  if (!nombre.trim()) faltantes.push("nombre");
+  if (!empresa) faltantes.push("empresa asociada");
+  if (!etapa) faltantes.push("etapa");
+  if (!valorListo) faltantes.push("valor estimado");
+  return faltantes;
+}
+
 export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Params) {
   const { user } = useAuth();
   const crear = useCrearOportunidad();
   const enviandoRef = useRef(false);
   const { data: etapas = [] } = useEtapasPipeline();
-  const { data: clientes = [] } = useClientesForSelect() as { data: { id: string; nombre: string }[] | undefined };
+  const etapasAbiertas = useMemo(() => etapas.filter((e) => e.tipo === "abierta"), [etapas]);
   const [nombre, setNombre] = useState("");
   const [empresa, setEmpresa] = useState<RefRow | null>(null);
-  const [origenTipo, setOrigenTipo] = useState<OrigenTipo>("cliente");
-  const [clienteId, setClienteId] = useState("");
-  const [leadId, setLeadId] = useState("");
-  const [leadNombre, setLeadNombre] = useState("");
-  // v13.823.51 — el dueño canónico del prospecto (igual que el formulario
-  // completo): antes el quick create reasignaba la oportunidad a quien la
-  // capturaba, robándole el prospecto a su vendedor.
-  const [leadVendedorId, setLeadVendedorId] = useState<string | null>(null);
-  const [leadVendedorEmail, setLeadVendedorEmail] = useState("");
+  const [etapaId, setEtapaId] = useState("");
+  const [valorEstimado, setValorEstimado] = useState("");
 
-  // Reset sólo en la transición real abierto -> cerrado (la confirmación de
-  // descarte del shell mantiene `open` en true, así que no borra nada).
   const abiertoAntes = useRef(open);
   useEffect(() => {
     if (abiertoAntes.current && !open) {
-      setNombre("");
-      setEmpresa(null);
-      setOrigenTipo("cliente");
-      setClienteId(""); setLeadId(""); setLeadNombre("");
-      setLeadVendedorId(null); setLeadVendedorEmail("");
+      setNombre(""); setEmpresa(null); setEtapaId(""); setValorEstimado("");
     }
     abiertoAntes.current = open;
   }, [open]);
 
-  const limpiarOrigen = () => {
-    setClienteId(""); setLeadId(""); setLeadNombre("");
-    setLeadVendedorId(null); setLeadVendedorEmail("");
-  };
+  const etapa = etapasAbiertas.find((e) => e.id === etapaId) ?? (etapaId ? undefined : primeraEtapaAbierta(etapas));
+  const valor = Number(valorEstimado);
+  const valorListo = valorEstimado.trim() !== "" && Number.isFinite(valor) && valor > 0;
 
-  // v13.823.53 — sólo la primera etapa ABIERTA: antes se usaba `orden === 1`
-  // (o `etapas[0]`) sin mirar el tipo, así que un pipeline con una etapa
-  // terminal en la primera posición creaba oportunidades ganadas/perdidas.
-  const etapaInicial = useMemo(() => primeraEtapaAbierta(etapas), [etapas]);
-  const origenListo = origenTipo === "cliente" ? !!clienteId : !!leadId;
+  const origenQ = useQuery({
+    queryKey: crm.origenEmpresa(empresa?.id ?? ""),
+    queryFn: () => fetchOrigenEmpresa(empresa!.id),
+    enabled: !!empresa,
+  });
+  const origen = origenQ.data?.ok ? origenQ.data.origen : null;
+  const motivoOrigen = origenQ.data && !origenQ.data.ok ? origenQ.data.motivo : null;
 
-  /** Devuelve el mensaje de validación, o null si el formulario es válido. */
-  const validar = (): string | null => {
-    if (!nombre.trim()) return "Nombre requerido";
-    if (!etapaInicial) return MSG_SIN_ETAPA_ABIERTA;
-    if (!origenListo) return "Elige un prospecto o un cliente";
-    if (!empresa) return "Selecciona la empresa asociada";
-    return null;
-  };
+  const faltantes = camposFaltantes(nombre, empresa, etapa, valorListo);
+  const listo = faltantes.length === 0 && !!origen;
 
-  /** Dueño de la oportunidad: el vendedor del prospecto, o el usuario actual. */
-  const resolverVendedor = () => {
-    if (origenTipo === "prospecto") {
-      return {
-        vendedor_id: leadVendedorId ?? user?.id ?? null,
-        vendedor_email: leadVendedorEmail || user?.email || "",
-      };
-    }
-    return { vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" };
-  };
+  const construirBorrador = (): OportunidadQuickDraft => ({
+    nombre: nombre.trim(), empresa, origen, etapaId: etapa?.id ?? null,
+  });
 
-  /** Lo capturado hasta ahora, para no perderlo al pasar al formulario completo. */
-  const construirBorrador = (): OportunidadQuickDraft => {
-    const nombreLimpio = nombre.trim();
-    const cliente = clientes.find((c) => c.id === clienteId);
-    if (origenTipo === "cliente" && cliente) {
-      return { nombre: nombreLimpio, empresa, origen: { tipo: "cliente", id: cliente.id, nombre: cliente.nombre } };
-    }
-    if (origenTipo === "prospecto" && leadId) {
-      return {
-        nombre: nombreLimpio,
-        empresa,
-        origen: {
-          tipo: "prospecto",
-          id: leadId,
-          nombre: leadNombre,
-          vendedorId: leadVendedorId,
-          vendedorEmail: leadVendedorEmail,
-        },
-      };
-    }
-    return { nombre: nombreLimpio, origen: null, empresa };
-  };
+  const resolverVendedor = (o: OrigenInicial) =>
+    o.tipo === "prospecto" && o.vendedorId
+      ? { vendedor_id: o.vendedorId, vendedor_email: o.vendedorEmail ?? "" }
+      : { vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" };
 
   const submit = async () => {
     if (crear.isPending || enviandoRef.current) return;
-    const invalido = validar();
-    if (invalido || !etapaInicial || !empresa) {
-      notifyError(undefined, { title: invalido ?? "Selecciona la empresa asociada", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
+    if (!listo || !empresa || !etapa || !origen) {
+      notifyError(undefined, {
+        title: motivoOrigen ?? `Falta: ${faltantes.join(", ")}`,
+        method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1",
+      });
       return;
     }
-    const n = nombre.trim();
-    const cliente = clientes.find((c) => c.id === clienteId);
     enviandoRef.current = true;
     try {
       const r = await crear.mutateAsync({
-        nombre: n,
+        nombre: nombre.trim(),
         empresa_id: empresa.id,
-        cliente_id: origenTipo === "cliente" ? (cliente?.id ?? null) : null,
-        cliente_nombre: origenTipo === "cliente" ? (cliente?.nombre ?? "") : leadNombre,
-        lead_id: origenTipo === "prospecto" ? leadId : null,
-        etapa_id: etapaInicial.id,
+        cliente_id: origen.tipo === "cliente" ? origen.id : null,
+        cliente_nombre: origen.nombre,
+        lead_id: origen.tipo === "prospecto" ? origen.id : null,
+        etapa_id: etapa.id,
         moneda: "MXN",
-        probabilidad: etapaInicial.probabilidad_default ?? 10,
-        ...resolverVendedor(),
+        probabilidad: etapa.probabilidad_default ?? 10,
+        monto_meta: valor,
+        ...resolverVendedor(origen),
       });
-      // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated(r.id);
     } catch {
@@ -152,17 +113,10 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
   };
 
   return {
-    nombre, setNombre,
-    empresa, setEmpresa,
-    origenTipo, setOrigenTipo,
-    clienteId, setClienteId,
-    leadId, setLeadId, setLeadNombre,
-    setLeadVendedorId, setLeadVendedorEmail,
-    limpiarOrigen,
-    etapaInicial, origenListo,
-    clientes,
-    crear,
-    submit,
-    construirBorrador,
+    nombre, setNombre, empresa, setEmpresa,
+    etapasAbiertas, etapa, setEtapaId,
+    valorEstimado, setValorEstimado,
+    origenCargando: origenQ.isFetching, motivoOrigen, faltantes, listo,
+    crear, submit, construirBorrador,
   };
 }

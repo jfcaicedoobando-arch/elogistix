@@ -25,7 +25,7 @@ describe("real PDF renderer (on demand, without the normal Vitest stub)", () => 
     const long = { ...proforma, subtotal_usd: 0, total_usd: 0, subtotal_mxn: 60_000, iva_mxn: 9600, total_mxn: 69_600 };
     const doc = await inspectPdf("proforma-larga", <ProformaDocument proforma={long} embarque={embarque} conceptos={conceptos} emisor={emisor} />);
     expect(doc.pages).toBeGreaterThan(1);
-    for (const text of ["Servicio 01", "Servicio 60", "69,600.00", "LOGÍSTICA REGIOMONTANA QA"]) expect(doc.text).toContain(text);
+    for (const text of ["Servicio 01", "Servicio 60", "69,600.00", "Logística Regiomontana QA"]) expect(doc.text).toContain(text);
   });
   it("generates the actual treasury report, with MXN and USD bank balances", async () => {
     const resumen = calcularResumenTesoreria({

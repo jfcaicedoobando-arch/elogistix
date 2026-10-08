@@ -1,3 +1,4 @@
+import { useEmbarquePrivateScope } from "./useEmbarquePrivateScope";
 /**
  * Hook: lee los campos de decisión de tarifa de un embarque para mostrarlos en
  * sub-encabezados (TabConciliacion, etc.) sin volver a fetch del embarque entero.
@@ -13,9 +14,10 @@ import { queryKeys } from "@/lib/query";
 export type { EmbarqueTarifaInfo } from "@/features/embarques/services/tarifaInfo";
 
 export function useEmbarqueTarifaInfo(embarqueId: string | undefined) {
+  const scope = useEmbarquePrivateScope();
   return useQuery<EmbarqueTarifaInfo | null>({
-    queryKey: queryKeys.embarques.tarifaInfo(embarqueId),
-    enabled: Boolean(embarqueId),
+    queryKey: queryKeys.embarques.tarifaInfo(embarqueId, scope.key),
+    enabled: Boolean(embarqueId) && scope.ready,
     staleTime: 30_000,
     queryFn: () => obtenerEmbarqueTarifaInfo(embarqueId as string),
   });

@@ -8,6 +8,7 @@
  *   `moneda ∈ {USD, EUR}`. Reutiliza `useBanxicoTipoCambio`, que ya conoce
  *   ambas series (SF43718 para USD, SF46410 para EUR).
  */
+import { UsoCfdiIngresoSelect } from "./UsoCfdiIngresoSelect";
 import { Input } from "@/components/ui/input";
 import { Hint } from "@/components/shared/Hint";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 import { RefreshCcw, Loader2 } from "lucide-react";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
 import {
   ayudaTcContraMxn,
@@ -38,6 +39,7 @@ export interface DatosFiscalesValue {
 }
 
 interface Props {
+  receptor?: { rfc: string; regimen: string };
   value: DatosFiscalesValue;
   onChange: (patch: Partial<DatosFiscalesValue>) => void;
   /** Cuando true, los días de crédito se muestran readonly (source of truth = perfil del cliente). */
@@ -45,7 +47,7 @@ interface Props {
   diasReadonlyReason?: string;
 }
 
-export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, diasReadonlyReason }: Props) {
+export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, diasReadonlyReason, receptor }: Props) {
   // B-03: TC DOF vigente en la fecha de emisión capturada, no el de hoy.
   const traerTc = useBanxicoTipoCambio(value.moneda, (tc) => {
     if (tc && tc > 0) onChange({ tipoCambio: tc });
@@ -95,15 +97,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Uso CFDI</Label>
-        <Select value={value.usoCfdi} onValueChange={(v) => onChange({ usoCfdi: v })}>
-          <SelectTrigger ><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <UsoCfdiIngresoSelect receptor={receptor} value={value.usoCfdi} onChange={(usoCfdi) => onChange({ usoCfdi })} />
       <div className="space-y-1.5">
         <Label htmlFor="factura-manual-forma-pago">Forma de pago</Label>
         <Select value={value.formaPago} onValueChange={(v) => onChange({ formaPago: v })} disabled={value.metodoPago === "PPD"}>

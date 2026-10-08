@@ -3,6 +3,7 @@ export const cotizaciones = {
   byOrg: (organizationId?: string | null) => ['cotizaciones', organizationId] as const,
   aceptadas: (organizationId?: string | null) => ['cotizaciones', 'aceptadas', organizationId] as const,
   detail: (id: string) => ['cotizaciones', id] as const,
+  pdfPreview: (id: string, organizationId: string | null) => [...pdfPreviewCotizacion(id), organizationId] as const,
   costos: (id: string) => ['cotizacion_costos', id] as const,
   costosSnapshot: (id: string) => ['cotizacion_costos', id, 'snapshot'] as const,
   folio: (id: string) => ['cotizaciones', 'folio', id] as const,
@@ -35,4 +36,3 @@ export const cotizacionPlantillas = {
   byOrg: (organizationId?: string | null) => ['cotizacion_plantillas', organizationId] as const,
   detail: (id: string) => ['cotizacion_plantillas', 'detail', id] as const,
 } as const;
-

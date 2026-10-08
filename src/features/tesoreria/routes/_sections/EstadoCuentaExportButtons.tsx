@@ -15,6 +15,8 @@ import {
   alcanceEstadoCuentaExport,
 } from "@/features/tesoreria/services/estadoCuentaExport";
 import type { EstadoCuentaBancario, MovimientoEstadoCuenta, FiltrosEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
+import { cargarEmisorEntidad } from "@/pdf/emisor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 interface Props {
   estado: EstadoCuentaBancario;
@@ -44,15 +46,19 @@ export function EstadoCuentaExportButtons({ estado, movimientos, filtros }: Prop
   };
 
   const descargarPdfEstado = async () => {
+    const scope = captureAuthOperationScope();
     setGenerandoPdf(true);
     try {
-      const [{ descargarPdf }, { EstadoCuentaBancarioDocument }] = await Promise.all([
+      const [{ descargarPdf }, { EstadoCuentaBancarioDocument }, emisor] = await Promise.all([
         import("@/pdf/render/descargarPdf"),
         import("@/pdf/documents/EstadoCuentaBancarioDocument"),
+        cargarEmisorEntidad("cuentas_bancarias", estado.cuenta_id),
       ]);
+      scope.assertCurrent();
       await descargarPdf(
         <EstadoCuentaBancarioDocument
           cuenta={estado.alias}
+          emisor={emisor}
           banco={estado.banco}
           moneda={estado.moneda}
           resumen={resumenEstadoCuenta(estado)}

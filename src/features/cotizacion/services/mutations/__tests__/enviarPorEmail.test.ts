@@ -71,4 +71,19 @@ describe("fetchConReintento", () => {
     expect(result).toBe(resp);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
+  it("comprueba el ámbito otra vez después del backoff antes de reintentar", async () => {
+    let vigente = true;
+    const fetchSpy = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.stubGlobal("fetch", fetchSpy);
+    const pending = fetchConReintento("https://x.test", { method: "POST" }, () => {
+      if (!vigente) throw new Error("Ámbito cambiado");
+    });
+    const rejection = expect(pending).rejects.toThrow("Ámbito cambiado");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    vigente = false;
+    await vi.runAllTimersAsync();
+    await rejection;
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
 });

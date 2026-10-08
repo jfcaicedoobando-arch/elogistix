@@ -1,8 +1,13 @@
 /**
  * Campos que llena el solicitante (formato de Sheets de Pricing).
  */
+import { useMemo } from "react";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { usePuertos } from "@/features/catalogos/hooks";
+import type { PuertoOption } from "@/features/catalogos";
 import { useUsuariosOrgCrm } from "@/features/crm/hooks/usePricingCrm";
+import { paisesDePuertos, puertoTrasCambioPais } from "@/features/crm/services/pricing/puertosPorPais";
+import { CampoPuerto } from "./CampoPuerto";
 import {
   ETIQUETA_COMPLEJIDAD, INCOTERMS_PRICING, SERVICIOS_PRICING, type SolicitudPricingInsert,
   aNumero, UNIDADES_MEDIDA_PRICING,
@@ -22,8 +27,17 @@ const COMPLEJIDADES = (Object.keys(ETIQUETA_COMPLEJIDAD) as Array<keyof typeof E
 
 export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
   const { data: usuarios = [] } = useUsuariosOrgCrm();
+  const { data: catalogo = [] } = usePuertos();
+  const puertos = catalogo as PuertoOption[];
+  const paises = useMemo(() => paisesDePuertos(puertos), [puertos]);
   const txt = (campo: keyof DatosSolicitud) => (v: string) => set(campo, (v || null) as never);
   const d = { disabled };
+  /** Cambio de país: limpia el puerto de ese extremo si ya no pertenece al país. */
+  const cambiarPais = (campoPais: "origen" | "destino", campoPuerto: "pol" | "pod") => (v: string | null) => {
+    set(campoPais, v);
+    const puerto = puertoTrasCambioPais(puertos, v, datos[campoPuerto]);
+    if (puerto !== datos[campoPuerto]) set(campoPuerto, puerto);
+  };
   return (
     <>
       <FormDialogSection title="Datos generales">
@@ -53,10 +67,14 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
         <CampoTexto id="pr-dim" label="Dimensions" {...d} value={datos.dimensiones} onChange={txt("dimensiones")} />
       </FormDialogSection>
       <FormDialogSection title="Ruta">
-        <CampoTexto id="pr-pol" label="AOL/POL" {...d} value={datos.pol} onChange={txt("pol")} />
-        <CampoTexto id="pr-pod" label="AOD/POD" {...d} value={datos.pod} onChange={txt("pod")} />
-        <CampoTexto id="pr-origen" label="Origen" required {...d} value={datos.origen} onChange={txt("origen")} />
-        <CampoTexto id="pr-destino" label="Destino" required {...d} value={datos.destino} onChange={txt("destino")} />
+        <CampoLista id="pr-origen" label="País de Origen" required {...d} value={datos.origen}
+          opciones={paises} onChange={cambiarPais("origen", "pol")} />
+        <CampoPuerto id="pr-pol" label="Puerto origen" {...d} pais={datos.origen} value={datos.pol}
+          puertos={puertos} excluirEtiqueta={datos.pod} onChange={(v) => set("pol", v)} />
+        <CampoLista id="pr-destino" label="País de Destino" required {...d} value={datos.destino}
+          opciones={paises} onChange={cambiarPais("destino", "pod")} />
+        <CampoPuerto id="pr-pod" label="Puerto destino" {...d} pais={datos.destino} value={datos.pod}
+          puertos={puertos} excluirEtiqueta={datos.pol} onChange={(v) => set("pod", v)} />
         <CampoTexto id="pr-carga" label="Fecha tentativa de carga" type="date" {...d} value={datos.fecha_tentativa_carga}
           onChange={txt("fecha_tentativa_carga")} />
         <CampoTexto id="pr-delivery" label="Delivery" {...d} value={datos.delivery} onChange={txt("delivery")} />

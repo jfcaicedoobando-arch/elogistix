@@ -78,7 +78,7 @@ describe("R179-01/PDF-B — etiqueta de IVA en la caja de totales", () => {
       />,
     );
     const text = container.textContent ?? "";
-    expect(text).toContain("IVA MXN");
+    expect(text).toContain("MXN 8.00");
     expect(text).not.toContain("IVA (16%)");
   });
 

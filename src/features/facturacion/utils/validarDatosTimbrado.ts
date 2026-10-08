@@ -6,6 +6,7 @@
  * en moneda extranjera. MXN queda exento (TC implícito = 1).
  */
 
+import { validarUsoCfdiIngreso } from "@/lib/financial/usoCfdiFiscal";
 import { validarFormaMetodoPago } from "@/lib/financial/formaMetodoPago";
 
 export interface CheckTimbrado {
@@ -48,8 +49,7 @@ export function buildChecksTimbrado(p: ParametrosChecksTimbrado): ResultadoCheck
   const checks: CheckTimbrado[] = [
     { ok: !!p.rfc && p.rfc.length >= RFC_MIN_LENGTH, label: `RFC del cliente: ${p.rfc || "FALTA"}` },
     { ok: !!p.cp && CP_REGEX.test(p.cp), label: `Código postal: ${p.cp || "FALTA"}` },
-    { ok: !!p.regimen, label: `Régimen fiscal: ${p.regimen || "FALTA"}` },
-    { ok: !!p.usoCfdi, label: `Uso CFDI: ${p.usoCfdi}` },
+    ...buildChecksUsoCfdi(p),
     {
       ok: !issueForma,
       label: issueForma
@@ -71,4 +71,15 @@ export function buildChecksTimbrado(p: ParametrosChecksTimbrado): ResultadoCheck
     },
   ];
   return { checks, puedeTimbrar: checks.every((c) => c.ok) };
+}
+
+function buildChecksUsoCfdi(p: ParametrosChecksTimbrado): CheckTimbrado[] {
+  const issuesUso = validarUsoCfdiIngreso(p);
+  const issueRegimen = issuesUso.find((i) => i.field === "regimen_fiscal");
+  const motivosUso = issuesUso.filter((i) => i.field === "uso_cfdi").map((i) => i.message);
+
+  return [
+    { ok: !!p.regimen && !issueRegimen, label: issueRegimen?.message ?? `Régimen fiscal: ${p.regimen || "FALTA"}` },
+    { ok: motivosUso.length === 0, label: motivosUso.join(" ") || `Uso CFDI: ${p.usoCfdi}` },
+  ];
 }

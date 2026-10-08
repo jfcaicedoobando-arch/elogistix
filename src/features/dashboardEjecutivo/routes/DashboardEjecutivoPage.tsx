@@ -33,6 +33,7 @@ import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle"
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { useDocumentTitle } from "@/hooks/shared";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 const MES_MINIMO = "2026-04";
 
@@ -45,6 +46,7 @@ export default function DashboardEjecutivoPage() {
 
   const exportar = useMemo(() => async () => {
     if (!data || generandoPdf) return;
+    const scope = captureAuthOperationScope();
     setGenerandoPdf(true);
     try {
       // P12: dynamic import — @react-pdf/renderer + Document sólo entran al bundle al presionar Descargar.
@@ -52,7 +54,9 @@ export default function DashboardEjecutivoPage() {
         import("@react-pdf/renderer"),
         import("@/pdf/documents/ReporteEjecutivoDocument"),
       ]);
+      scope.assertCurrent();
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
+      scope.assertCurrent();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
       notifyError(undefined, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });

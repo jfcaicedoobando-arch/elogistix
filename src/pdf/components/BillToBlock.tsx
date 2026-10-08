@@ -4,7 +4,7 @@
  * del BrandHeader.
  */
 import { View, Text } from "@react-pdf/renderer";
-import { styles, COLORS } from "../theme/styles";
+import { styles, COLORS, FONTS } from "../theme/styles";
 
 export interface DestinatarioInfo {
   nombre: string;
@@ -25,10 +25,10 @@ export function BillToBlock({ titulo = "Facturar a", destinatario }: Props) {
     .filter(Boolean)
     .join("  ·  ");
   return (
-    <View style={{ marginBottom: 4 }}>
+    <View style={{ marginBottom: 4 }} wrap={false}>
       <Text style={styles.h3}>{titulo}</Text>
-      <View style={{ paddingVertical: 2 }}>
-        <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: COLORS.ink }}>
+      <View style={{ padding: 9, backgroundColor: COLORS.zebra, borderRadius: 5, borderWidth: 0.6, borderColor: COLORS.border }}>
+        <Text style={{ fontSize: 11, fontFamily: FONTS.bold, color: COLORS.ink }}>
           {destinatario.nombre}
         </Text>
         {destinatario.rfc ? (

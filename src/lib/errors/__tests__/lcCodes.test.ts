@@ -30,6 +30,16 @@ describe("lcCodes", () => {
     expect(getErrorMessage({ code: "22023", message: raw })).toBe(friendly);
   });
 
+  it.each([
+    ["LC_ANTICIPO_MEDIO_DEVOLUCION", "Selecciona si recibiste la devolución en efectivo o por depósito bancario."],
+    ["LC_ANTICIPO_EFECTIVO_CON_CUENTA", "La devolución en efectivo no lleva cuenta bancaria."],
+  ])("explica %s sin detalles técnicos", (code, friendly) => {
+    const raw = `${code}: detalle interno`;
+    expect(translateLcCode(raw)).toBe(friendly);
+    expect(getErrorMessage(new Error(raw))).toBe(friendly);
+    expect(getErrorMessage({ code: "22023", message: raw })).toBe(friendly);
+  });
+
   it("stripLcCode limpia tokens LC_*", () => {
     expect(stripLcCode("LC_FOO_BAR: mensaje humano")).toBe("mensaje humano");
     expect(stripLcCode("sin código")).toBe("sin código");

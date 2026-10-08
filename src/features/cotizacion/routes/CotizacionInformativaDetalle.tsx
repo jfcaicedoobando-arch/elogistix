@@ -13,6 +13,7 @@ import type { CotizacionRow } from "@/features/cotizacion/types";
 import { parseTarifasInformativas } from "@/features/cotizacion/services";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/lib/domain/tipoContenedor";
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,16 +23,19 @@ interface Props {
 }
 
 async function descargarTarifario(cotizacion: CotizacionRow) {
-  const [{ TarifarioDocument }, { descargarPdf }, { cargarEmisorEmpresa }, { slugifyOrg }] = await Promise.all([
+  const scope = captureAuthOperationScope();
+  const [{ TarifarioDocument }, { descargarPdf }, { cargarEmisorDocumento }, { slugifyOrg }] = await Promise.all([
     import("@/pdf/documents/TarifarioDocument"),
     import("@/pdf/render/descargarPdf"),
     import("@/pdf/emisor"),
     import("@/lib/filenames"),
   ]);
-  const emisor = await cargarEmisorEmpresa();
+  scope.assertCurrent();
+  const emisor = await cargarEmisorDocumento(cotizacion.organization_id);
+  scope.assertCurrent();
   await descargarPdf(
     <TarifarioDocument cotizacion={cotizacion} emisor={emisor} />,
-    `${slugifyOrg(emisor.razonSocial)}_tarifario-${cotizacion.folio}`,
+    `${slugifyOrg(emisor.organizacionNombre || emisor.razonSocial)}_tarifario-${cotizacion.folio}`,
   );
 }
 

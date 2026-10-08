@@ -10,6 +10,7 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  devolverAnticipo,
   AnticipoError,
 } from "../anticipos";
 
@@ -107,5 +108,31 @@ describe("anticipos.ts - RPC + mapeo de errores", () => {
   ])("mapea error RPC %j → %s", async (rpcError, expectedCode) => {
     mock.setRpcResult("aplicar_anticipo_a_factura", { data: null, error: rpcError });
     await expect(aplicarAnticipo(ANT, FAC, 10)).rejects.toMatchObject({ code: expectedCode });
+  });
+});
+
+
+describe("audit131 · contrato de devolución efectivo/bancario", () => {
+  beforeEach(() => {
+    mock.rpcCalls.length = 0;
+    mock.setRpcResult("devolver_anticipo_proveedor", { data: { id: ANT, estado: "devuelto" }, error: null });
+  });
+  it("manda efectivo con cuenta nula aunque quede una selección bancaria obsoleta", async () => {
+    await devolverAnticipo({ id: ANT, monto: 10, fecha: "2026-10-05", cuentaBancariaId: FAC,
+      medio: "Efectivo", referencia: " REC-1 ", motivo: " Reembolso " });
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.rpcCalls[0]).toMatchObject({ fn: "devolver_anticipo_proveedor", args: {
+      p_cuenta_bancaria_id: null, p_medio: "Efectivo", p_fecha: "2026-10-05",
+      p_monto: 10, p_referencia: "REC-1", p_motivo: "Reembolso",
+    } });
+  });
+  it("conserva Bancario por defecto para clientes anteriores y su cuenta explícita", async () => {
+    await devolverAnticipo({ id: ANT, monto: 10, fecha: "2026-10-05", cuentaBancariaId: FAC, motivo: "Reembolso" });
+    expect(mock.rpcCalls[0].args).toMatchObject({ p_cuenta_bancaria_id: FAC, p_medio: "Bancario" });
+  });
+  it("requiere cuenta bancaria antes de llamar al servidor para Bancario", async () => {
+    await expect(devolverAnticipo({ id: ANT, monto: 10, fecha: "2026-10-05", cuentaBancariaId: null,
+      medio: "Bancario", motivo: "Reembolso" })).rejects.toMatchObject({ code: "INVALID_ID" });
+    expect(mock.rpcCalls).toHaveLength(0);
   });
 });

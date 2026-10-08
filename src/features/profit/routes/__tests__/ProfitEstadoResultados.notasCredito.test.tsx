@@ -51,7 +51,7 @@ function errorDelMes() {
 
 function mostrar(error: NotaCreditoSinDesgloseError | null) {
   vi.mocked(useEstadoResultados).mockReturnValue({
-    mesActual: mes, mesesDisponibles: [mes], setMesKey: vi.fn(), irMesAnterior: vi.fn(), irMesSiguiente: vi.fn(),
+    organizationId: "org-test", mesActual: mes, mesesDisponibles: [mes], setMesKey: vi.fn(), irMesAnterior: vi.fn(), irMesSiguiente: vi.fn(),
     puedeIrAtras: false, puedeIrAdelante: false, data: datosConNc1(), isLoading: false, isError: !!error, error,
     refetch: vi.fn(), fuente: "facturas", setFuente: vi.fn(),
   });

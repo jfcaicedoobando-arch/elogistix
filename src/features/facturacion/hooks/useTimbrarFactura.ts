@@ -1,10 +1,12 @@
+import { TimbradoContratoError } from "../services/timbradoWire";
+import type { TimbradoScope } from "./useTimbradoScope";
+import { descripcionTimbradoExitoso } from "../utils/usoCfdiTimbrado";
 import { CancelacionContratoError } from "../services/cancelacionErrorWire";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
 import { emitirFacturapi, cancelarFacturapi, FacturapiError, type MotivoCancelacionSat, type CancelarFacturapiResult } from "@/features/facturacion/services/facturapi";
 import { esPendiente } from "@/features/facturacion/services/timbradoPendiente";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import { useMutationWithFeedback } from "@/hooks/shared";
 import { notifySuccess, notifyError, notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
@@ -12,36 +14,57 @@ import { invalidarTrasTimbrado } from "@/features/facturacion/hooks/invalidarTra
 import { getErrorMessage } from "@/lib/errors";
 
 /**
- * Timbrado. Usa `useMutationWithFeedback` para el error (traducido por
- * `getErrorMessage`) e invalidaciones; el éxito se emite manualmente porque
- * la descripción es dinámica (serie/folio del CFDI recién emitido).
+ * Timbrado: feedback e invalidaciones se acotan a la confirmación original.
+ * El resultado fiscal en vuelo no se cancela ni se convierte en un fallo local.
  */
 export function useTimbrarFactura() {
   const qc = useQueryClient();
-  return useMutationWithFeedback({
+  return useMutation({
     mutationKey: queryKeys.facturacion.emitirFactura,
-    mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
-    invalidate: facturasKeys.all,
-    errorTitle: "No se pudo timbrar",
-    errorMethod: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1",
-    onSuccess: (res) => {
+    mutationFn: (vars: string | { facturaId: string; facturaNumero?: string; scope: TimbradoScope }) => {
+      if (typeof vars !== "string") vars.scope.authScope.assertCurrent();
+      return emitirFacturapi(typeof vars === "string" ? vars : vars.facturaId);
+    },
+    onError: (error, vars) => {
+      if (typeof vars !== "string" && !vars.scope.isAuthCurrent()) return;
+      if (error instanceof TimbradoContratoError) {
+        const facturaId = typeof vars === "string" ? vars : vars.facturaId;
+        invalidarTrasTimbrado(qc, facturaId);
+        notifyWarning(undefined, {
+          title: `Timbrado sin confirmar · ${typeof vars === "string" ? vars : vars.facturaNumero ?? facturaId}`,
+          description: error.message, error, context: { facturaId },
+          method: "FACTURACION_TIMBRADO_RESULTADO_INCIERTO", duration: 15000,
+        });
+        return;
+      }
+      if (typeof vars !== "string" && !vars.scope.authScope.isCurrent()) return;
+      notifyError(undefined, { title: "No se pudo timbrar", description: getErrorMessage(error),
+        error, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" });
+    },
+    onSuccess: (res, vars) => {
+      // El resultado fiscal debe reconciliarse aunque se haya cerrado el diálogo.
+      // Nunca invalidar cachés de otra sesión; nunca continuar la confirmación vieja.
+      if (typeof vars !== "string" && !vars.scope.isAuthCurrent()) return;
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
+      invalidateHuecoFacturacion(qc);
+      invalidarTrasTimbrado(qc, typeof vars === "string" ? vars : vars.facturaId);
+      const dialogCurrent = typeof vars === "string" || vars.scope.authScope.isCurrent();
       if (esPendiente(res)) {
         // 202: no hay UUID ni folio y la factura sigue "Por timbrar". Decir
         // "timbrada" haría creer que ya facturó e invitaría a duplicar el CFDI.
         notifyInfo(undefined, {
-          title: "Timbrado en proceso",
-          description: res.message,
+          title: dialogCurrent ? "Timbrado en proceso"
+            : `Timbrado en proceso · ${typeof vars === "string" ? vars : vars.facturaNumero ?? vars.facturaId}`,
+          description: dialogCurrent ? res.message
+            : `${res.message} No vuelvas a timbrar esta factura; consulta su estado.`,
           duration: 15000,
         });
-      } else {
+      } else if (dialogCurrent) {
         notifySuccess(undefined, {
           title: "Factura timbrada correctamente",
-          description: `Serie ${res.serie} · Folio ${res.folio}`,
+          description: descripcionTimbradoExitoso(res),
         });
       }
-      invalidateHuecoFacturacion(qc);
-      // M-1: bandejas, conteos y cartera CxC también cambian al timbrar.
-      invalidarTrasTimbrado(qc);
     },
   });
 }

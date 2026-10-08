@@ -7,7 +7,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   crearContacto, crearEmpresa, fetchContacto, fetchContactos, fetchEmpresa, fetchEmpresas,
-  type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina,
+  type ContactoRow, type EmpresaRow, type NuevoContactoInput, type Pagina, type ValorInicial,
 } from "@/features/crm/services/objetosCrm";
 import { pasarAProspecto } from "@/features/crm/services/estadoEmpresaCrm";
 import {
@@ -95,7 +95,8 @@ function useInvalidarObjetos() {
 export function useCrearEmpresaCrm() {
   const invalidar = useInvalidarObjetos();
   return useMutation({
-    mutationFn: crearEmpresa,
+    mutationFn: (input: string | { nombre: string; valores: ValorInicial[] }) =>
+      typeof input === "string" ? crearEmpresa(input) : crearEmpresa(input.nombre, input.valores),
     onSuccess: () => { notifySuccess(undefined, { title: "Empresa creada" }); void invalidar(); },
     onError: (error: Error) => notifyError(undefined, { title: "No se pudo crear la empresa", description: error.message, error, method: "CRM_CREAR_EMPRESA" }),
   });

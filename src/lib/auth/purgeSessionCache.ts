@@ -4,9 +4,11 @@
  * `organization_id`, así que en una pestaña compartida el siguiente usuario
  * podría ver datos del tenant saliente hasta que expire el `staleTime`.
  */
+import { resetSessionCaches } from "./sessionCacheRegistry";
 import type { QueryClient } from "@tanstack/react-query";
 
 export function purgeSessionCache(queryClient: QueryClient): void {
+  resetSessionCaches();
   queryClient.clear();
 }
 

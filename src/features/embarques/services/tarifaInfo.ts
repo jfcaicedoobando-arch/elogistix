@@ -5,6 +5,7 @@
  * FIX2 · B-1: `tarifa_delta_jsonb` ya no es legible en `embarques` para
  * `authenticated`; se obtiene por `embarques_interno_v` (sólo staff).
  */
+import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerEmbarqueInterno } from "./internoEmbarque";
 
@@ -19,6 +20,7 @@ export interface EmbarqueTarifaInfo {
 export async function obtenerEmbarqueTarifaInfo(
   embarqueId: string,
 ): Promise<EmbarqueTarifaInfo | null> {
+  const scope = captureAuthOperationScope();
   const { data, error } = await supabase
     .from("embarques")
     .select(
@@ -26,9 +28,11 @@ export async function obtenerEmbarqueTarifaInfo(
     )
     .eq("id", embarqueId)
     .maybeSingle();
+  scope.assertCurrent();
   if (error) throw error;
   if (!data) return null;
   const interno = await obtenerEmbarqueInterno(embarqueId);
+  scope.assertCurrent();
   return {
     tarifa_id_original: data.tarifa_id_original ?? null,
     tarifa_id_aplicada: data.tarifa_id_aplicada ?? null,

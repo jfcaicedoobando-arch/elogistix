@@ -6,7 +6,7 @@ import type { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocum
 
 const mocks = vi.hoisted(() => ({ pdf: vi.fn(), csv: vi.fn() }));
 vi.mock("@/pdf/render/descargarPdf", () => ({ descargarPdf: mocks.pdf }));
-vi.mock("@/pdf/emisor", () => ({ cargarEmisorEmpresa: () => Promise.resolve({ razonSocial: "Organización sintética SA" }) }));
+vi.mock("@/features/configuracion/services/emisor", () => ({ fetchEmisorEmpresa: () => Promise.resolve({ razonSocial: "Organización sintética SA" }) }));
 vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: mocks.csv }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 

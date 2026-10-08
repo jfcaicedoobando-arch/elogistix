@@ -1,3 +1,4 @@
+import { registerSessionCache } from "@/lib/auth/sessionCacheRegistry";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -71,6 +72,21 @@ describe("OrganizationContext · super admin sin organización", () => {
     const next = captureAuthOperationScope();
     act(() => result.current.setActiveOrganization("org-b"));
     expect(next.isCurrent()).toBe(true);
+  });
+
+  it("clears short-lived data again after the server finishes switching tenant", async () => {
+    const { result } = renderHook(() => useOrganization(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    let finish!: () => void;
+    setSuperAdminOrg.mockImplementationOnce(() => new Promise<undefined>((resolve) => { finish = () => resolve(undefined); }));
+    const reset = vi.fn(); const unregister = registerSessionCache(reset);
+    try {
+      act(() => result.current.setActiveOrganization("org-b"));
+      expect(reset).toHaveBeenCalled();
+      reset.mockClear();
+      await act(async () => { finish(); });
+      expect(reset).toHaveBeenCalledOnce();
+    } finally { unregister(); }
   });
 
   it("no auto-selecciona ninguna organización", async () => {
