@@ -3,11 +3,9 @@
  * Si la prima ya está facturada por la aseguradora, ligarla evita que la
  * utilidad cuente el mismo gasto dos veces (se cuenta la factura).
  */
-import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchFacturasSeguroElegibles } from "@/features/embarques/services/seguros";
-import { queryKeys } from "@/lib/query";
+import { useFacturasSeguroElegibles } from "@/features/embarques/hooks/useFacturasSeguroElegibles";
 import { formatCurrency } from "@/lib/formatters";
 
 const SIN = "sin";
@@ -19,11 +17,7 @@ interface Props {
 }
 
 export function SeguroFacturaProveedorSelect({ embarqueId, value, onChange }: Props) {
-  const { data = [], isLoading, isError } = useQuery({
-    queryKey: queryKeys.embarques.segurosFacturasElegibles(embarqueId),
-    queryFn: () => fetchFacturasSeguroElegibles(embarqueId),
-    staleTime: 30_000,
-  });
+  const { data = [], isLoading, isError } = useFacturasSeguroElegibles(embarqueId);
 
   return (
     <div className="sm:col-span-2">
