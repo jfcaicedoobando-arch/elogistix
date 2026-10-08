@@ -1,0 +1,9 @@
+CREATE OR REPLACE FUNCTION public._pago_proveedor_no_provisional() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM proveedor_facturas f JOIN proveedores p ON p.id = f.proveedor_id
+             WHERE f.id = NEW.proveedor_factura_id AND p.estado_alta = 'provisional') THEN
+    RAISE EXCEPTION 'Este proveedor está pendiente de aprobación por Contabilidad' USING ERRCODE='23514'; END IF;
+  RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public._pago_proveedor_no_provisional() FROM PUBLIC, anon, authenticated RESTRICT;

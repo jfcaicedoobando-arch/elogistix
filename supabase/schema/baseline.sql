@@ -4874,6 +4874,16 @@ BEGIN
   RETURN NEW;
 END;
 $_$;
+CREATE FUNCTION public._pago_proveedor_no_provisional() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM proveedor_facturas f JOIN proveedores p ON p.id = f.proveedor_id
+             WHERE f.id = NEW.proveedor_factura_id AND p.estado_alta = 'provisional') THEN
+    RAISE EXCEPTION 'Este proveedor está pendiente de aprobación por Contabilidad' USING ERRCODE='23514'; END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._prohibir_delete_comisiones() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -4912,6 +4922,15 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._proveedor_factura_no_provisional() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.proveedor_id IS NOT NULL AND EXISTS (SELECT 1 FROM proveedores WHERE id = NEW.proveedor_id AND estado_alta = 'provisional') THEN
+    RAISE EXCEPTION 'Este proveedor está pendiente de aprobación por Contabilidad' USING ERRCODE='23514'; END IF;
+  RETURN NEW;
+END $$;
 CREATE FUNCTION public._reabrir_entrantes_factura() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -7778,6 +7797,27 @@ BEGIN
   WHERE id = _nc_id;
 END;
 $$;
+CREATE FUNCTION public.aprobar_proveedor_provisional(p_proveedor_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE r proveedores%ROWTYPE; v_faltan text[] := '{}';
+BEGIN
+  SELECT * INTO r FROM proveedores WHERE id = p_proveedor_id AND deleted_at IS NULL FOR UPDATE;
+  IF NOT FOUND OR r.organization_id IS DISTINCT FROM public.current_user_org_id() THEN
+    RAISE EXCEPTION 'Proveedor no encontrado' USING ERRCODE='P0002'; END IF;
+  IF NOT public.has_any_role_in_org(auth.uid(), ARRAY['admin','contador']::app_role[], r.organization_id) THEN
+    RAISE EXCEPTION 'Sólo Contabilidad puede aprobar proveedores' USING ERRCODE='42501'; END IF;
+  IF r.estado_alta = 'aprobado' THEN RETURN; END IF;
+  IF btrim(r.rfc) = '' THEN v_faltan := array_append(v_faltan, 'RFC / Tax ID'::text); END IF;
+  IF btrim(r.contacto) = '' THEN v_faltan := array_append(v_faltan, 'Contacto'::text); END IF;
+  IF btrim(r.email) = '' THEN v_faltan := array_append(v_faltan, 'Correo'::text); END IF;
+  IF coalesce(btrim(r.clabe),'') = '' AND coalesce(btrim(r.swift_bic),'') = '' AND coalesce(btrim(r.iban),'') = '' THEN
+    v_faltan := array_append(v_faltan, 'Datos bancarios (CLABE, SWIFT o IBAN)'::text); END IF;
+  IF array_length(v_faltan,1) > 0 THEN
+    RAISE EXCEPTION 'Faltan datos para aprobar: %', array_to_string(v_faltan, ', ') USING ERRCODE='23514'; END IF;
+  UPDATE proveedores SET estado_alta='aprobado', aprobado_por=auth.uid(), aprobado_at=now() WHERE id = r.id;
+END $$;
 CREATE FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text DEFAULT NULL::text) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -13659,6 +13699,30 @@ CREATE FUNCTION public.cotizaciones_listado(p_organization_id uuid DEFAULT NULL:
   LEFT JOIN emb_agg ea ON ea.cotizacion_id = c.id
   ORDER BY c.created_at DESC;
 $$;
+CREATE FUNCTION public.crear_agente_provisional(p_nombre text, p_pais text DEFAULT 'CN'::text, p_contacto text DEFAULT NULL::text, p_email text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_org uuid := public.current_user_org_id(); v_nombre text := btrim(coalesce(p_nombre,'')); v_prov uuid; v_ag uuid;
+BEGIN
+  IF v_org IS NULL THEN RAISE EXCEPTION 'Sin organización activa' USING ERRCODE='42501'; END IF;
+  IF NOT (public._crm_es_pricing(v_org) OR public.has_any_role_in_org(auth.uid(), ARRAY['admin']::app_role[], v_org)) THEN
+    RAISE EXCEPTION 'No tienes permiso para dar de alta agentes' USING ERRCODE='42501'; END IF;
+  IF length(v_nombre) < 2 THEN RAISE EXCEPTION 'El nombre del agente es obligatorio' USING ERRCODE='22023'; END IF;
+  PERFORM pg_advisory_xact_lock(hashtext(v_org::text || lower(v_nombre)));
+  SELECT a.id INTO v_ag FROM costeo_agentes a WHERE a.organization_id = v_org AND lower(btrim(a.nombre)) = lower(v_nombre) LIMIT 1;
+  IF v_ag IS NOT NULL THEN RETURN v_ag; END IF;
+  SELECT id INTO v_prov FROM proveedores WHERE organization_id = v_org AND deleted_at IS NULL AND tipo = 'Agente de Carga' AND lower(btrim(nombre)) = lower(v_nombre) LIMIT 1;
+  IF v_prov IS NULL THEN
+    INSERT INTO proveedores (nombre, tipo, pais, contacto, email, organization_id, origen_proveedor, estado_alta)
+    VALUES (v_nombre, 'Agente de Carga', coalesce(nullif(btrim(p_pais),''),'CN'), coalesce(p_contacto,''), coalesce(p_email,''), v_org, 'Extranjero', 'provisional')
+    RETURNING id INTO v_prov;
+  END IF;
+  INSERT INTO costeo_agentes (organization_id, proveedor_id, nombre, pais, contacto_tarifario, email, notas)
+  VALUES (v_org, v_prov, v_nombre, coalesce(nullif(btrim(p_pais),''),'CN'), p_contacto, p_email, 'Alta provisional desde tarifa')
+  RETURNING id INTO v_ag;
+  RETURN v_ag;
+END $$;
 CREATE FUNCTION public.crear_ajustes_factura_proveedor_rpc(p_factura_id uuid, p_ajustes jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -35192,8 +35256,12 @@ CREATE TABLE public.proveedores (
     dias_credito integer DEFAULT 0 NOT NULL,
     deleted_at timestamp with time zone,
     deleted_by uuid,
+    estado_alta text DEFAULT 'aprobado'::text NOT NULL,
+    aprobado_por uuid,
+    aprobado_at timestamp with time zone,
     CONSTRAINT proveedores_categoria_check CHECK ((((categoria = 'Logistico'::public.categoria_proveedor) AND (tipo IS NOT NULL)) OR ((categoria = 'GastoOperativo'::public.categoria_proveedor) AND (subtipo_gasto IS NOT NULL)))),
-    CONSTRAINT proveedores_dias_credito_check CHECK ((dias_credito >= 0))
+    CONSTRAINT proveedores_dias_credito_check CHECK ((dias_credito >= 0)),
+    CONSTRAINT proveedores_estado_alta_chk CHECK ((estado_alta = ANY (ARRAY['provisional'::text, 'aprobado'::text])))
 );
 CREATE TABLE public.provisioning_log (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -36503,6 +36571,7 @@ CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pa
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
 CREATE TRIGGER trg_pago_no_altera_historia_rep BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_no_altera_historia_rep();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
+CREATE TRIGGER trg_pago_proveedor_no_provisional BEFORE INSERT ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._pago_proveedor_no_provisional();
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
 CREATE TRIGGER trg_pago_sin_rep_vivo_delete BEFORE DELETE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_sin_rep_vivo_delete();
 CREATE TRIGGER trg_pagos_factura_autocierre AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_autocierre_por_liquidar();
@@ -36532,6 +36601,7 @@ CREATE TRIGGER trg_prohibir_delete_factura BEFORE DELETE ON public.facturas FOR 
 CREATE TRIGGER trg_prohibir_delete_liquidaciones BEFORE DELETE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_comisiones();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_proveedor_factura_no_provisional BEFORE INSERT OR UPDATE OF proveedor_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._proveedor_factura_no_provisional();
 CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
 CREATE TRIGGER trg_proveedor_facturas_folio_unico BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_assert_folio_unico();
 CREATE TRIGGER trg_proveedor_facturas_recalc_liq AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_proveedor_facturas_recalc_liq();
@@ -38102,12 +38172,16 @@ GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO service_role;
 REVOKE ALL ON FUNCTION public._notif_cliente_validar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._notif_cliente_validar() TO authenticated;
 GRANT ALL ON FUNCTION public._notif_cliente_validar() TO service_role;
+REVOKE ALL ON FUNCTION public._pago_proveedor_no_provisional() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._pago_proveedor_no_provisional() TO service_role;
 REVOKE ALL ON FUNCTION public._prohibir_delete_comisiones() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._prohibir_delete_comisiones() TO service_role;
 GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO authenticated;
 GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO service_role;
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO authenticated;
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO service_role;
+REVOKE ALL ON FUNCTION public._proveedor_factura_no_provisional() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._proveedor_factura_no_provisional() TO service_role;
 REVOKE ALL ON FUNCTION public._reabrir_entrantes_factura() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._reabrir_entrantes_factura() TO authenticated;
 GRANT ALL ON FUNCTION public._reabrir_entrantes_factura() TO service_role;
@@ -38247,6 +38321,9 @@ GRANT ALL ON FUNCTION public.aprobar_factura_proveedor(p_id uuid, p_aprobar bool
 REVOKE ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.aprobar_proveedor_provisional(p_proveedor_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.aprobar_proveedor_provisional(p_proveedor_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.aprobar_proveedor_provisional(p_proveedor_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text) TO service_role;
@@ -38487,6 +38564,9 @@ GRANT ALL ON FUNCTION public.cotizaciones_guard_en_operacion() TO service_role;
 REVOKE ALL ON FUNCTION public.cotizaciones_listado(p_organization_id uuid, p_search text, p_estado text, p_modo text, p_cliente_id uuid, p_fecha_desde date, p_fecha_hasta date, p_offset integer, p_limit integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cotizaciones_listado(p_organization_id uuid, p_search text, p_estado text, p_modo text, p_cliente_id uuid, p_fecha_desde date, p_fecha_hasta date, p_offset integer, p_limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.cotizaciones_listado(p_organization_id uuid, p_search text, p_estado text, p_modo text, p_cliente_id uuid, p_fecha_desde date, p_fecha_hasta date, p_offset integer, p_limit integer) TO service_role;
+REVOKE ALL ON FUNCTION public.crear_agente_provisional(p_nombre text, p_pais text, p_contacto text, p_email text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crear_agente_provisional(p_nombre text, p_pais text, p_contacto text, p_email text) TO authenticated;
+GRANT ALL ON FUNCTION public.crear_agente_provisional(p_nombre text, p_pais text, p_contacto text, p_email text) TO service_role;
 REVOKE ALL ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(p_factura_id uuid, p_ajustes jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(p_factura_id uuid, p_ajustes jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(p_factura_id uuid, p_ajustes jsonb) TO service_role;

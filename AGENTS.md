@@ -16,3 +16,5 @@
 
 - CxP Por pagar: `cxp_por_pagar` consume saldo y pagado de `v_proveedor_facturas_saldo` en moneda documental. Why: NC Aplicadas reducen saldo sin convertirse en pagos ni duplicar conversión.
 - Proveedores provisionales (`estado_alta`): alta vía `crear_agente_provisional`, aprobación sólo contador/admin vía `aprobar_proveedor_provisional`; triggers bloquean facturas/pagos. Why: tarifas sin esperar a Contabilidad, sin pagar a no verificados.
+
+- Replay de provisionales: Drizzle0013/190000 son historia literal;190100 cierra ejecución directa de los dos triggers y190200 corrige sólo los cuatro appends de faltantes, reafirmando la ACL original del RPC sin ampliar roles. La release13.824.46 conserva UI199 e historial35–44 sin crear45; su regresión funcional se registra como guard. Why: separar reconstrucción histórica, corrección forward, pruebas de catálogo y autorización de aplicación remota, sin ocultar drift ni reescribir historia.

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.824.46] - Unreleased
+
+- **fix(proveedores provisionales)**: empaqueta la UI revisada de PR199 (`e3e26ee2`, tree `bafcf460`), el replay literal de Drizzle0013 y el forward que cierra la ejecución directa de sus dos funciones trigger. Conserva las fuentes UI revisadas y el SQL histórico.
+- **fix(aprobación)**: un tercer forward corrige cuatro concatenaciones ambiguas de arreglos en `aprobar_proveedor_provisional` mediante `array_append` tipado. Los datos faltantes devuelven23514 con mensaje ordenado, en lugar de22P02. Reafirma exactamente las dos declaraciones ACL originales de0013, sin añadir roles; catálogo directo pre/post validado sin cambios de owner/ACL/atributos.
+- Tres migraciones reales: `20261008190000_replay_proveedor_alta_provisional.sql`, `20261008190100_cierre_acl_triggers_proveedor_provisional.sql` y `20261008190200_fix_aprobar_proveedor_validacion.sql`. El manifiesto46 enumera las1495 migraciones verificadas en disco; las entradas35–44 permanecen íntegras y no se crea45.
+- Esta46 es nueva y distinta del paquete histórico recuperado de P&L46. La baseline conserva el orden canónico verificado de dos funciones y sus ACL, más únicamente las cuatro correcciones aprobadas del cuerpo. La regresión SQL funcional queda registrada en el manifiesto de guards; no sustituye su ejecución por búsquedas textuales.
+- Envolvente local para revisión independiente: no implica CI remoto, cierre funcional GUI, publicación Git, aplicación de migraciones ni despliegue. La aplicación remota del cierre ACL requiere autorización de seguridad específica, no concedida en esta fase. Ver [alcance y preflight](docs/ops/proveedor-provisional-replay.md).
+
 ## [13.824.44] - Unreleased
 
 - **fix(CxP Por pagar · 70)**: saldo y pagado se leen de `v_proveedor_facturas_saldo` en moneda documental. Las NC Aplicadas reducen saldo sin contarse como pagos; conserva el SQL ya revisado de PR195 sin nuevas reglas funcionales.

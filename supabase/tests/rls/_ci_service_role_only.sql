@@ -76,6 +76,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._bitacora_cambio_financiero()'),
   -- FIX-H6-09: candado de pagos a proveedor; sólo lo dispara el motor.
   ('public.guard_pago_proveedor()'),
+  -- Proveedores provisionales: triggers internos cerrados por forward separado.
+  ('public._proveedor_factura_no_provisional()'),
+  ('public._pago_proveedor_no_provisional()'),
   ('public._liquidacion_guard_estado()'),
   ('public._prohibir_delete_comisiones()'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
