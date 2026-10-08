@@ -92,6 +92,13 @@
       "when": 1791470851213,
       "tag": "0012_audit148_seguro_factura_proveedor",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791483611085,
+      "tag": "0013_proveedor_alta_provisional",
+      "breakpoints": true
     }
   ]
 }

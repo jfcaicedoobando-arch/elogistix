@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import type { Tables } from "@/types/db";
 import { ProveedorCsfUpdateButton } from "./ProveedorCsfUpdateButton";
+import { AprobarProveedorButton } from "./AprobarProveedorButton";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { puedeAprobarProveedor } from "@/features/proveedor/services/altaProvisional";
 
 interface Props {
   proveedor: Tables<"proveedores">;
@@ -31,6 +34,8 @@ export function ProveedorDetalleHeader({
   proveedor, nombreFmt, rfcFmt, esNacional, categoriaLabel, volver,
   canEdit, isAdmin, isDeleting, onEditar, onEliminar, onUpdate,
 }: Props) {
+  const { effectiveRole } = useAuth();
+  const provisional = proveedor.estado_alta === "provisional";
   return (
     <DetailHeader
       backTo={volver}
@@ -44,10 +49,14 @@ export function ProveedorDetalleHeader({
           <Badge variant="outline" className="font-normal">
             {esNacional ? "Nacional" : "Extranjero"}
           </Badge>
+          {provisional && <Badge variant="destructive">Provisional · pendiente de Contabilidad</Badge>}
         </div>
       }
       trailing={canEdit ? (
         <>
+          {provisional && puedeAprobarProveedor(effectiveRole) && (
+            <AprobarProveedorButton proveedorId={proveedor.id} />
+          )}
           <Button size="sm" onClick={onEditar}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
