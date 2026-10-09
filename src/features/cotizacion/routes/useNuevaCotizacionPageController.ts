@@ -30,6 +30,10 @@ import { usePrefillProspectoOportunidad } from "@/features/cotizacion/hooks/wiza
 import { usePrefillTarifaPricing } from "@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing";
 import { useDraftRestore } from "./useDraftRestore";
 
+function permitePrefill(id: string | null, permitePrefillProspecto: boolean, cotizacionId: string | null) {
+  return Boolean(id) && permitePrefillProspecto && !cotizacionId;
+}
+
 export function useNuevaCotizacionPageController() {
   useDocumentTitle("Nueva cotización");
   const navigate = useNavigate();
@@ -95,13 +99,13 @@ export function useNuevaCotizacionPageController() {
   usePrefillProspectoOportunidad({
     form: w.form,
     oportunidadId: oportunidadPrefill,
-    enabled: Boolean(oportunidadPrefill) && permitePrefillProspecto && !w.cotizacionId,
+    enabled: permitePrefill(oportunidadPrefill, permitePrefillProspecto, w.cotizacionId),
   });
   usePrefillTarifaPricing({
     form: w.form,
     tarifaId: tarifaPrefill,
     esperarOportunidad: Boolean(oportunidadPrefill),
-    enabled: Boolean(tarifaPrefill) && permitePrefillProspecto && !w.cotizacionId,
+    enabled: permitePrefill(tarifaPrefill, permitePrefillProspecto, w.cotizacionId),
   });
 
   // B-003 (v13.320.32) — Autoguardado persiste `cotizacionId` en el draft para
