@@ -23,13 +23,11 @@ interface Props {
 
 const PREVIEW_LIMIT = 50;
 
-function DuplicadoCelda({ c, revisionFallo }: { c?: Coincidencia; revisionFallo?: boolean }) {
-  if (!c) {
-    return revisionFallo ? (
-      <span className="text-destructive">Sin revisar</span>
-    ) : (
-      <span className="text-muted-foreground">Nuevo</span>
-    );
+function DuplicadoCelda({ c, revisionFallo, revisando }: {
+  c?: Coincidencia; revisionFallo?: boolean; revisando?: boolean;
+}) {
+  if (revisionFallo || revisando || !c) {
+    return <span className={revisionFallo ? "text-destructive" : "text-muted-foreground"}>Sin revisar</span>;
   }
   if (c.nivel === "nuevo") return <span className="text-muted-foreground">Nuevo</span>;
   return (
@@ -81,7 +79,7 @@ export function ImportarLeadsCsvPreview({
                 <TableCell>{r.email || "—"}</TableCell>
                 <TableCell>{r.estado}</TableCell>
                 <TableCell>{r.fuente}</TableCell>
-                <TableCell><DuplicadoCelda c={duplicados?.[i]} revisionFallo={duplicadosError} /></TableCell>
+                <TableCell><DuplicadoCelda c={duplicados?.[i]} revisionFallo={duplicadosError} revisando={duplicadosCargando} /></TableCell>
                 <TableCell className="text-destructive">{r.__error ?? ""}</TableCell>
               </TableRow>
             ))}

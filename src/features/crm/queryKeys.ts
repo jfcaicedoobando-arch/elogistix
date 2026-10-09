@@ -63,14 +63,20 @@ export const crm = {
     /** Duplicados de un lote (importación CSV). */
     duplicados: (
       claves: ReadonlyArray<{ empresa: string; email: string; telefono: string }>,
-    ) => ['crm', 'leads', 'duplicados', claves] as const,
+      organizationId?: string | null,
+    ) => organizationId === undefined
+      ? ['crm', 'leads', 'duplicados', claves] as const
+      : ['crm', 'leads', 'duplicados', claves, organizationId] as const,
     /** Duplicado de un solo lead (alta manual). */
     duplicado: (
       empresa?: string | null,
       email?: string | null,
       telefono?: string | null,
+      organizationId?: string | null,
     ) =>
-      ['crm', 'leads', 'duplicado', empresa, email, telefono] as const,
+      organizationId === undefined
+        ? ['crm', 'leads', 'duplicado', empresa, email, telefono] as const
+        : ['crm', 'leads', 'duplicado', empresa, email, telefono, organizationId] as const,
   },
   prospectos: {
     all: ['crm', 'prospectos'] as const,

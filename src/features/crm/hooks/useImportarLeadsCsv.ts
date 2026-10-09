@@ -56,14 +56,15 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
 
   const dup = useDuplicadosLote(rows);
   const { coincidencias, isFetching: duplicadosCargando, isError: duplicadosError } = dup;
-  const duplicadosListo = rows.length === 0 || dup.listo;
+  const duplicadosListo = dup.listo && !duplicadosCargando && !duplicadosError &&
+    coincidencias.length === rows.length && rows.every((_, i) => coincidencias[i] !== undefined);
 
   const validRows = useMemo(
     () =>
       rows.filter(
-        (r, i) => !r.__error && coincidencias[i]?.nivel !== "exacto",
+        (r, i) => duplicadosListo && !r.__error && coincidencias[i]?.nivel !== "exacto",
       ),
-    [rows, coincidencias],
+    [rows, coincidencias, duplicadosListo],
   );
   const errorCount = rows.filter((r) => Boolean(r.__error)).length;
   const duplicadosCount = coincidencias.filter((c) => c.nivel === "exacto").length;

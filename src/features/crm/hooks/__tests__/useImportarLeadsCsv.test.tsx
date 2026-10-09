@@ -13,8 +13,8 @@ vi.mock("@/features/crm/hooks", () => ({
 }));
 
 vi.mock("@/features/crm/hooks/useLeadsDuplicados", () => ({
-  useDuplicadosLote: () => ({
-    coincidencias: [],
+  useDuplicadosLote: (filas: unknown[]) => ({
+    coincidencias: filas.map(() => ({ nivel: "nuevo", campos: [] })),
     isLoading: false,
     isFetching: false,
     isError: false,

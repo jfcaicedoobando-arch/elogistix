@@ -4,6 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { buscarLeadsDuplicados } from "@/features/crm/services/leadsDuplicados";
 import {
   clasificarDuplicado,
@@ -22,18 +23,20 @@ const STALE = 30_000;
  * bloquear la importación y ofrecer reintentar.
  */
 export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
+  const { organizationId, orgListo } = useOrgFilter();
   const claves = filas.map((f) => ({
     empresa: f.empresa ?? "",
     email: f.email ?? "",
     telefono: f.telefono ?? "",
   }));
   const q = useQuery({
-    queryKey: queryKeys.crm.leads.duplicados(claves),
+    queryKey: queryKeys.crm.leads.duplicados(claves, organizationId),
     queryFn: () => buscarLeadsDuplicados(claves),
-    enabled: claves.length > 0,
+    enabled: orgListo && claves.length > 0,
     staleTime: STALE,
   });
-  const listo = claves.length > 0 && q.data !== undefined;
+  const listo = orgListo && claves.length > 0 && q.isSuccess &&
+    !q.isFetching && !q.isError && !q.isPlaceholderData && q.data !== undefined;
   const coincidencias: Coincidencia[] =
     listo ? clasificarLote(filas, q.data ?? []) : [];
   return {
@@ -44,7 +47,7 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
     error: q.error,
     listo,
     refetch: q.refetch,
-    existentes: q.data ?? [],
+    existentes: listo ? q.data ?? [] : [],
   };
 }
 
@@ -55,14 +58,17 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
  * "no pudimos comprobar duplicados" en vez de fingir que no hay coincidencias.
  */
 export function useDuplicadoLead(clave: LeadClave, habilitado = true) {
+  const { organizationId, orgListo } = useOrgFilter();
   const tiene = Boolean(clave.empresa || clave.email || clave.telefono);
   const q = useQuery({
-    queryKey: queryKeys.crm.leads.duplicado(clave.empresa, clave.email, clave.telefono),
+    queryKey: queryKeys.crm.leads.duplicado(clave.empresa, clave.email, clave.telefono, organizationId),
     queryFn: () => buscarLeadsDuplicados([clave]),
-    enabled: habilitado && tiene,
+    enabled: orgListo && habilitado && tiene,
     staleTime: STALE,
   });
-  const coincidencia = tiene ? clasificarDuplicado(clave, q.data ?? []) : null;
+  const listo = orgListo && habilitado && tiene && q.isSuccess &&
+    !q.isFetching && !q.isError && !q.isPlaceholderData && q.data !== undefined;
+  const coincidencia = listo ? clasificarDuplicado(clave, q.data ?? []) : null;
   return {
     coincidencia,
     isLoading: q.isLoading,

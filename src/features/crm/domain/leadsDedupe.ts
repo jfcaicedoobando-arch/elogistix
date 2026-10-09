@@ -45,7 +45,7 @@ function ultimos10(v: string): string {
   return v.slice(-10);
 }
 
-/** Clasifica una fila contra el catálogo de leads existentes. */
+/** Un exacto prevalece; si no existe, conserva la primera coincidencia posible. */
 export function clasificarDuplicado(
   fila: LeadClave,
   existentes: ReadonlyArray<LeadExistente>,
@@ -53,6 +53,7 @@ export function clasificarDuplicado(
   const email = normEmail(fila.email);
   const tel = normTelefono(fila.telefono);
   const empresa = normEmpresa(fila.empresa);
+  let posible: Coincidencia | undefined;
 
   for (const ex of existentes) {
     const campos: string[] = [];
@@ -71,9 +72,10 @@ export function clasificarDuplicado(
     // Correo igual (o empresa + teléfono) = mismo lead; una sola señal débil
     // se marca como "posible" para que el usuario decida.
     const exacto = campos.includes("correo") || campos.length >= 2;
-    return { nivel: exacto ? "exacto" : "posible", campos, existente: ex };
+    if (exacto) return { nivel: "exacto", campos, existente: ex };
+    posible ??= { nivel: "posible", campos, existente: ex };
   }
-  return { nivel: "nuevo", campos: [] };
+  return posible ?? { nivel: "nuevo", campos: [] };
 }
 
 /** Detecta también duplicados internos del propio archivo CSV. */
