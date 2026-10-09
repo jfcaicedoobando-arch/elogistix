@@ -15570,7 +15570,7 @@ $$;
 CREATE FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v record;
   t record;
@@ -15676,7 +15676,7 @@ BEGIN
    WHERE id = p_solicitud_id;
   PERFORM set_config('lc.pricing_rpc', '', true);
   RETURN jsonb_build_object('id', v.id, 'ya_respondida', false);
-END $$;
+END $_$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
