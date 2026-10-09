@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.54] - Unreleased
+
+- **Candidato CI · activación autorizada del selector148**: habilita el selector y su RPC de lectura únicamente tras verificar el cuerpo, owner, atributos, ACL e integridad exactos. Conserva los cinco roles de negocio, organización activa y cinco campos visibles; añade sólo EXECUTE de authenticated sin grant option.
+- Forward nuevo `20261009043000` exige los seis FK previamente instalados, validados y correctamente configurados. No instala ni repara prerrequisitos o datos; un estado desconocido aborta. Registra 1,511 migraciones y conserva literalmente las entradas anteriores, incluidos leads52 y AUD54/AUD14453.
+- Baseline y espejo cambian sólo el literal de activación y su grant; firma, tipos generados, cálculos, cobertura financiera y flujos previos permanecen íntegros. CI usa el forward real en los 65 controles de integridad existentes y nueve controles nuevos de deriva, más rollback tardío; conserva 53 suites RLS y 212 guards.
+- Composición estática pendiente de CI del commit exacto y equivalencia de baseline PostgreSQL17.9. La aplicación requiere prerrequisitos admitidos, preflight de destino fresco y transporte transaccional íntegro; la validación GUI requiere backend y UI coincidentes. Registrar o publicar este candidato no acredita aplicación, despliegue ni cierre global de AUD148. Ver [contrato y gates](docs/ops/selector148-activation.md).
+
 ## [13.824.53] - Unreleased
 
 - **Candidato CI · AUD54 y AUD144 sobre leads 52**: Dirección y cierre CxC usan saldo canónico en moneda documental, conservando Pagada sin evidencia activa como caso histórico. La clasificación por centavos se separa de la conversión a MXN; no modifica facturas, pagos, NC ni estados almacenados.

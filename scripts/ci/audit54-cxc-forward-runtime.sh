@@ -29,6 +29,13 @@ CLONE_CREATED=0
 ROLE_CREATED=0
 
 psql_run() { "${PSQL[@]}" "$@"; }
+public_schema_metadata() {
+  psql_run "$@" -c "SELECT jsonb_build_object(
+    'owner', pg_get_userbyid(n.nspowner),
+    'acl', (SELECT jsonb_agg(a.acl::text ORDER BY a.acl::text)
+      FROM unnest(COALESCE(n.nspacl, acldefault('n', n.nspowner))) AS a(acl))
+  )::text FROM pg_namespace n WHERE n.nspname='public';"
+}
 fail() { echo "FAILED: $*" >&2; exit 1; }
 pass() { CASES=$((CASES + 1)); echo "PASS: $1"; }
 catalog_hash() {
@@ -62,21 +69,29 @@ available="$(psql_run -d postgres -c "SELECT current_database()='postgres' AND c
   AND NOT EXISTS(SELECT 1 FROM pg_database WHERE datname='audit54_cxc_contract')
   AND NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='audit54_cxc_unexpected');")"
 [[ "$available" == t ]] || fail 'checkpoint clone or QA role already exists; refusing to overwrite'
+source_public_metadata="$(public_schema_metadata -d postgres)"
+[[ -n "$source_public_metadata" ]] || fail 'source checkpoint requires an existing public schema'
+printf '%s\n' "$source_public_metadata" > "$LOG_DIR/source-public-metadata.json"
 createdb --maintenance-db=postgres audit54_cxc_contract > "$LOG_DIR/create-clone.log" 2>&1
 CLONE_CREATED=1
 
 empty="$(psql_run -c "SELECT current_database()='audit54_cxc_contract' AND current_user='postgres'
+  AND EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='public')
   AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public')
   AND NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public');")"
 [[ "$empty" == t ]] || fail 'runtime contract requires a fresh empty public schema'
-# pg_dump recreates public with its original owner/ACL; remove only this newly
-# created clone's proven-empty default namespace before restoring the checkpoint.
-psql_run -c 'DROP SCHEMA public;' > "$LOG_DIR/empty-clone.log" 2>&1
+# pg_dump treats public as a preexisting namespace and restores its owner/ACL
+# rather than CREATE SCHEMA. Keep only this newly created clone's proven-empty
+# default namespace; verify the restored owner/ACL against the source below.
 python3 scripts/ci/audit54-cxc-runtime-fixtures.py "$ROOT" "$FIXTURES"
 
 # Restore the actual pre-forward schema once; never rerun its migration history.
 # Cluster roles are those already bootstrapped by the mandatory SQL job.
 psql_run --single-transaction -f "$AUD54_CXC_CHECKPOINT" > "$LOG_DIR/restore-checkpoint.log" 2>&1
+restored_public_metadata="$(public_schema_metadata)"
+printf '%s\n' "$restored_public_metadata" > "$LOG_DIR/restored-public-metadata.json"
+[[ "$restored_public_metadata" == "$source_public_metadata" ]] \
+  || fail 'checkpoint restore changed the public schema owner or ACL'
 psql_run -c 'CREATE ROLE audit54_cxc_unexpected NOLOGIN;' > "$LOG_DIR/bootstrap.log" 2>&1
 ROLE_CREATED=1
 psql_run >> "$LOG_DIR/bootstrap.log" 2>&1 <<'SQL'

@@ -31663,7 +31663,7 @@ CREATE FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima num
     AS $$
 DECLARE
   -- Reviewed source change required; never a caller-controlled GUC/parameter.
-  _selector148_enabled CONSTANT boolean := false; -- ENABLEMENT_GATE
+  _selector148_enabled CONSTANT boolean := true; -- ENABLEMENT_GATE
   _uid uuid := auth.uid();
   _org uuid;
   _premium numeric(14,2);
@@ -40816,6 +40816,7 @@ REVOKE ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid
 GRANT ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima numeric, p_moneda text, p_seguro_id uuid, p_limit integer, p_cursor_fecha date, p_cursor_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima numeric, p_moneda text, p_seguro_id uuid, p_limit integer, p_cursor_fecha date, p_cursor_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer) TO service_role;
 GRANT ALL ON FUNCTION public.set_auditoria_revisado_at() TO authenticated;

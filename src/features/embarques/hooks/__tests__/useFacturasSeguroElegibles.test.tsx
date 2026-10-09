@@ -8,9 +8,6 @@ const state = vi.hoisted(() => ({ fetch: vi.fn(), user: "user-a", org: "org-a", 
 vi.mock("@/features/embarques/services/seguros", () => ({ fetchFacturasSeguroElegibles: state.fetch }));
 vi.mock("@/lib/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: state.user }, effectiveRole: state.role, loading: state.loading }) }));
 vi.mock("@/lib/contexts/OrganizationContext", () => ({ useOrganization: () => ({ organizationId: state.org, loading: false }) }));
-vi.mock("../../domain/seguroFacturaSelector", async (importOriginal) => ({
-  ...await importOriginal<typeof import("../../domain/seguroFacturaSelector")>(), SEGURO_FACTURA_SELECTOR_ENABLED: true,
-}));
 import { useFacturasSeguroElegibles, type FacturasSeguroContext } from "../useFacturasSeguroElegibles";
 import { invalidateSeguroFacturaDependencies } from "@/lib/query/invalidateSeguroFacturaDependencies";
 import { resetSessionCaches } from "@/lib/auth/sessionCacheRegistry";

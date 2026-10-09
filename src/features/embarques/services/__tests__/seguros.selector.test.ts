@@ -2,12 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn(), abort: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, from: mocks.from } }));
 vi.mock("../bitacoraEmbarques", () => ({ registrarBitacoraEmbarque: vi.fn() }));
-vi.mock("../../domain/seguroFacturaSelector", async (importOriginal) => ({
-  ...await importOriginal<typeof import("../../domain/seguroFacturaSelector")>(),
-  SEGURO_FACTURA_SELECTOR_ENABLED: true,
-}));
 import { fetchFacturasSeguroElegibles, type FacturasSeguroPage, type FacturasSeguroRequest } from "../seguros";
-import { SEGURO_FACTURA_SELECTOR_ERROR } from "../../domain/seguroFacturaSelector";
+import { SEGURO_FACTURA_SELECTOR_ENABLED, SEGURO_FACTURA_SELECTOR_ERROR } from "../../domain/seguroFacturaSelector";
 
 const uuid = (i: number) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
 const input: FacturasSeguroRequest = { embarqueId: uuid(1), prima: "100.005", moneda: "MXN", seguroId: uuid(2) };
@@ -20,6 +16,9 @@ function reply(data: unknown, error: unknown = null) {
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe("selector148 RPC boundary", () => {
+  it("ships the authorized enabled gate without mocking the release constant", () => {
+    expect(SEGURO_FACTURA_SELECTOR_ENABLED).toBe(true);
+  });
   it("sends the exact parameter contract and normalized decimal premium, preserving subtotal text", async () => {
     const cursor = { fecha_emision: "2026-10-01", id: uuid(3) };
     const page = { items: [item(4)], next_cursor: null };

@@ -9,7 +9,9 @@ const installer=fs.readFileSync(path.join(root,state.installer),'utf8');
 require('./installer.cjs').verifyInstaller(installer);
 // Variants are derived only from the SHA-verified registered disabled body.
 const {sig,variants}=require('./variants.cjs');
-const {installEnabled,enableSql,disabledFunctionSql}=variants(installer);
+const {installEnabled,disabledFunctionSql}=variants(installer);
+// Every existing enablement/mutation proof now uses the exact release forward.
+const enableSql=require('./activation.cjs').verifyActivation(installer);
 let admin;
 async function clone(label,template=state.parent) {
   assert(/^[a-z0-9_]+$/.test(label)); assert(state.databases.includes(template));
@@ -89,6 +91,36 @@ pass('premature activation rejected atomically on pre-installer schema');
 const forward=await clone('forward',control);q=await c(forward);const base=await snap(q,'forward-base');
 await q.query(installer);const disabled=await snap(q,'forward-disabled');preserved(base,disabled);enableContract(disabled,false);assert.equal(await ready(q),true);
 sqlFile(forward,'disabled-before','tests/disabled-gate.sql');
+// Bounded admission regression: unknown function/ACL state is never repaired to green.
+const bare=sql=>sql.replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'');
+const admissionProofs=[];
+async function rejectsDrift(label,mutation) {
+  await q.query('BEGIN');
+  try {
+    await q.query(mutation);const mutated=await snap(q,'admission-'+label+'-before');
+    await q.query('SAVEPOINT activation_attempt');let rejected;
+    try{await q.query(bare(enableSql))}catch(e){rejected=e}
+    assert.equal(rejected?.message,'LC_SELECTOR148_FUNCTION_CONTRACT_DRIFT',label);
+    await q.query('ROLLBACK TO SAVEPOINT activation_attempt');
+    assert.deepEqual(await snap(q,'admission-'+label+'-after'),mutated);
+    admissionProofs.push(label);
+  } finally {await q.query('ROLLBACK')}
+  assert.deepEqual(await snap(q,'admission-'+label+'-restored'),disabled);
+}
+for(const role of ['PUBLIC','authenticated','anon','service_role'])await rejectsDrift('grant-'+role.toLowerCase(),`GRANT EXECUTE ON FUNCTION ${sig} TO ${role}`);
+await rejectsDrift('owner',`ALTER FUNCTION ${sig} OWNER TO authenticated`);
+await rejectsDrift('config',`ALTER FUNCTION ${sig} SET search_path TO public`);
+await rejectsDrift('invoker',`ALTER FUNCTION ${sig} SECURITY INVOKER`);
+await rejectsDrift('volatility',`ALTER FUNCTION ${sig} IMMUTABLE`);
+await rejectsDrift('source',bare(disabledFunctionSql).replace('-- Reviewed source change required;','-- Synthetic source drift;'));
+assert.equal(admissionProofs.length,9);save('activation-admission',admissionProofs);
+// A late failure in the actual activation forward restores disabled source and ACL.
+let activationAbort;
+try {await q.query(enableSql.replace(/^COMMIT;$/m,"DO $activation_abort$ BEGIN RAISE EXCEPTION 'synthetic activation late abort'; END $activation_abort$;\nCOMMIT;"))}
+catch(e){activationAbort=e;await q.query('ROLLBACK')}
+assert.equal(activationAbort?.message,'synthetic activation late abort');
+assert.deepEqual(await snap(q,'activation-late-abort-restored'),disabled);
+pass('actual activation rejects nine source/metadata/ACL drifts and late failure preserves the exact disabled state');
 await q.query(enableSql);const enabled=await snap(q,'forward-enabled');preserved(base,enabled);enableContract(enabled,true);
 assert.equal(enabled.triggers.length-base.triggers.length,24);assert.equal(enabled.structure.indexes.length-base.structure.indexes.length,1);assert.equal(enabled.structure.constraints.length-base.structure.constraints.length,7);
 await q.query(enableSql);assert.deepEqual(await snap(q,'enabled-idempotent'),enabled);
@@ -156,5 +188,5 @@ assert.equal(fs.readFileSync(budgetAfter,'utf8'),fs.readFileSync(budgetBefore,'u
 pass('10001 committed candidates in 41 batches at max_locks=64 reject without partial output or mutations');
 // Restore and verify disabled state in all test-activated lineages before teardown.
 for(const db of [forward,freshDb,gates,concurrencyDb]){q=await c(db);await q.query(disabledFunctionSql);enableContract(await snap(q,db+'-disabled-final'),false);await close(q);sqlFile(db,db+'-disabled-final','tests/disabled-gate.sql');}
-save('result',{status:'PASS',tests,structural_cases:gateProofs.length,remote_or_real_data:false});
+save('result',{status:'PASS',tests,structural_cases:gateProofs.length,activation_admission_cases:admissionProofs.length,activation_migration:require('./activation-contract.json'),remote_or_real_data:false});
 })().catch(e=>{console.error(e);save('failure',{message:e.message,code:e.code,stack:e.stack,tests_completed:tests.length});process.exitCode=1;}).finally(async()=>{for(const q of clients){try{await q.query('ROLLBACK');await q.end()}catch{}}});

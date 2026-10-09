@@ -254,4 +254,4 @@ supabase/tests/audit148_full_coverage_write.sql
 supabase/tests/insurance_trash_restore.sql
 
 # Read-only disabled selector contract; behavioral/DDL proofs run serially in owned clones.
-supabase/tests/selector148_disabled_gate.sql
+supabase/tests/selector148_enabled_gate.sql

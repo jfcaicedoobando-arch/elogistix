@@ -12,6 +12,7 @@ DECLARE
   pago uuid;
   nc uuid;
   caso record;
+  caso_indice integer := 0;
   check_row jsonb;
   money_row jsonb;
   before_facts jsonb;
@@ -47,8 +48,9 @@ BEGIN
     estado_nc,saldo_esperado,ok_esperado,pendientes_esperados) LOOP
     PERFORM pg_temp.as_postgres();
     embarque := gen_random_uuid(); fac := gen_random_uuid();
+    caso_indice := caso_indice + 1;
     INSERT INTO public.embarques(id,organization_id,cliente_id,expediente,modo,tipo)
-    VALUES(embarque,fx.org_a,cli,'AUD54-CXC-'||caso.nombre,'Aéreo','Importación');
+    VALUES(embarque,fx.org_a,cli,'ELCXC54'||lpad(caso_indice::text,3,'0'),'Aéreo','Importación');
     INSERT INTO public.facturas(id,organization_id,cliente_id,cliente_nombre,embarque_id,numero,
       fecha_emision,fecha_vencimiento,moneda,tipo_cambio,subtotal,iva,total,estado,metodo_pago)
     VALUES(fac,fx.org_a,cli,'Fixture',embarque,'AUD54-CXC-'||caso.nombre,hoy,hoy+30,
@@ -154,7 +156,7 @@ BEGIN
   PERFORM pg_temp.as_postgres();
   embarque := gen_random_uuid();
   INSERT INTO public.embarques(id,organization_id,cliente_id,expediente,modo,tipo)
-  VALUES(embarque,fx.org_a,cli,'AUD54-CXC-NATIVE-SUM','Aéreo','Importación');
+  VALUES(embarque,fx.org_a,cli,'ELAUD54001','Aéreo','Importación');
   FOR caso IN SELECT * FROM (VALUES('subcent-A','USD',23.11::numeric),
     ('subcent-B','USD',23.11),('zero-MXN','MXN',1.16)) AS c(nombre,moneda,monto_pago) LOOP
     PERFORM pg_temp.as_postgres();

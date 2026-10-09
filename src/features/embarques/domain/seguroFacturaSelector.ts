@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 
-/** Local candidate only. Enable only after destination/security acceptance. */
-export const SEGURO_FACTURA_SELECTOR_ENABLED = false;
+/** Authorized selector148 activation; SQL admission and exact-head CI are release gates. */
+export const SEGURO_FACTURA_SELECTOR_ENABLED = true;
 export const SEGURO_FACTURA_SELECTOR_VERSION = "selector148-v1";
 export const SEGURO_FACTURA_SELECTOR_ERROR = "No se pudieron cargar las facturas del embarque.";
 

@@ -6,7 +6,8 @@ for(const [file,hash] of Object.entries(contract.frozen_files))assert.equal(cryp
 const manifest=fs.readFileSync(path.join(root,'supabase/tests/_guards_manifest.txt'),'utf8').split('\n').filter(x=>x.trim()&&!x.startsWith('#'));
 assert.equal(manifest.length,new Set(manifest).size,'Duplicate manifest paths');
 assert(!manifest.some(x=>/(^|\/)test_rls_.*\.sql$/.test(x)),'RLS pattern suites must not also appear in manifest');
-assert.equal(manifest.filter(x=>x==='supabase/tests/selector148_disabled_gate.sql').length,1);
+assert.equal(manifest.filter(x=>x==='supabase/tests/selector148_disabled_gate.sql').length,0);
+assert.equal(manifest.filter(x=>x==='supabase/tests/selector148_enabled_gate.sql').length,1);
 assert.equal(manifest.filter(x=>x==='supabase/tests/insurance_trash_restore.sql').length,1);
 assert(!manifest.some(x=>x.includes('scripts/ci/selector148/')),'Serial/committed/DDL tests must not enter parallel manifest');
 for(const file of ['run.cjs','concurrency.cjs','control.cjs']) {
@@ -47,3 +48,5 @@ assert(!disabledFunctionSql.includes('GRANT EXECUTE'));
 assert.deepEqual(contract.business_roles,['admin','admin_org','super_admin','coordinador_logistico','gerente_operaciones']);
 assert(installer.includes("ARRAY['admin','admin_org','super_admin',\n        'coordinador_logistico','gerente_operaciones']::public.app_role[]"));
 console.log('PASS selector148 static contract, frozen inputs, exact variants, discovery and portable paths'+(sourceOnly?' (registration not checked)':''));
+
+if(!sourceOnly) { require('./activation.cjs').verifyActivation(installer); console.log('PASS selector148 actual activation forward, canonical body, enabled baseline/UI, immutable derivation and exact artifact hashes'); }
