@@ -135,4 +135,27 @@ describe("useImportarLeadsCsv — error RPC de duplicados", () => {
     expect(result.current.duplicadosCount).toBe(1);
     expect(result.current.puedeImportar).toBe(false); // 0 válidas: nada que importar
   });
+
+  it("bloquea filas sin clasificación aunque el detector anuncie listo", async () => {
+    duplicadosLote.mockReturnValue({ ...loteOk, listo: true, coincidencias: [] });
+    const { result } = renderHook(() => useImportarLeadsCsv({ onDone: vi.fn() }));
+    await act(async () => { await result.current.handleFile(archivoCsv()); });
+    expect(result.current.validRows).toEqual([]);
+    expect(result.current.puedeImportar).toBe(false);
+    await act(async () => { await result.current.handleImport(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it.each(["pendiente", "error"])("no usa clasificaciones de caché en estado %s", async (estado) => {
+    duplicadosLote.mockReturnValue({
+      ...loteOk, listo: true, isFetching: estado === "pendiente", isError: estado === "error",
+      coincidencias: [{ nivel: "nuevo", campos: [] }],
+    });
+    const { result } = renderHook(() => useImportarLeadsCsv({ onDone: vi.fn() }));
+    await act(async () => { await result.current.handleFile(archivoCsv()); });
+    expect(result.current.validRows).toEqual([]);
+    expect(result.current.puedeImportar).toBe(false);
+    await act(async () => { await result.current.handleImport(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
 });

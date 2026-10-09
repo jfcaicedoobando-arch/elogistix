@@ -9,6 +9,7 @@ import {
   clasificarLote,
   resumenDuplicados,
   normTelefono,
+  type LeadExistente,
 } from "../leadsDedupe";
 
 const EXISTENTES = [
@@ -56,5 +57,38 @@ describe("leadsDedupe", () => {
     expect(cs[1].nivel).toBe("exacto");
     expect(cs[1].campos).toContain("repetido en el archivo");
     expect(resumenDuplicados(cs)).toEqual({ nuevos: 1, posibles: 0, exactos: 1 });
+  });
+});
+
+describe("prioridad exacta de leadsDedupe", () => {
+  const fila = { empresa: "ACME S.A.", email: " ventas@acme.test ", telefono: "+52 (81) 1234-5678" };
+  const posible: LeadExistente = { id: "a-posible", empresa: "Acme SA", email: "otro@example.test" };
+  const porCorreo: LeadExistente = { id: "z-correo", empresa: "Otra Empresa", email: "VENTAS@ACME.TEST" };
+  const porEmpresaTelefono: LeadExistente = { id: "z-dos-campos", empresa: "Acme SA", telefono: "8112345678" };
+
+  it.each([
+    { orden: "posible antes de correo", candidatos: [posible, porCorreo], exacto: porCorreo },
+    { orden: "correo antes de posible", candidatos: [porCorreo, posible], exacto: porCorreo },
+    { orden: "posible antes de dos campos", candidatos: [posible, porEmpresaTelefono], exacto: porEmpresaTelefono },
+    { orden: "dos campos antes de posible", candidatos: [porEmpresaTelefono, posible], exacto: porEmpresaTelefono },
+  ])("prefiere exacto: $orden", ({ candidatos, exacto }) => {
+    const c = clasificarDuplicado(fila, candidatos);
+    expect(c.nivel).toBe("exacto");
+    expect(c.existente).toBe(exacto);
+    expect(clasificarLote([fila], candidatos)[0]).toEqual(c);
+  });
+
+  it.each([false, true])("sin exacto conserva primera posible (invertido=%s)", (invertido) => {
+    const porTelefono: LeadExistente = { id: "b-posible", empresa: "Otra Empresa", telefono: "8112345678" };
+    const candidatos = invertido ? [porTelefono, posible] : [posible, porTelefono];
+    const c = clasificarDuplicado(fila, candidatos);
+    expect(c.nivel).toBe("posible");
+    expect(c.existente).toBe(candidatos[0]);
+    expect(c.campos).toEqual(invertido ? ["teléfono"] : ["empresa"]);
+  });
+
+  it.each([false, true])("con varios exactos conserva el primero (invertido=%s)", (invertido) => {
+    const exactos = invertido ? [porEmpresaTelefono, porCorreo] : [porCorreo, porEmpresaTelefono];
+    expect(clasificarDuplicado(fila, [posible, ...exactos]).existente).toBe(exactos[0]);
   });
 });
