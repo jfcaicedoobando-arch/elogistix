@@ -14,9 +14,20 @@ const services = vi.hoisted(() => ({
 vi.mock("@/features/crm/services/pricing/pricingCrm", () => services);
 vi.mock("@/features/crm/services/pricing/tarifasParaPricing", () => ({ listarTarifasParaPricing: vi.fn() }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
-import { useGuardarSolicitud, useAccionSolicitud, useGuardarOpcion, useEliminarOpcion } from "../usePricingCrm";
+import { ErrorEnvioSolicitudPricing, useGuardarSolicitud, useAccionSolicitud, useGuardarOpcion, useEliminarOpcion } from "../usePricingCrm";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
+import { AuthOperationChangedError, syncActiveOrganizationScope } from "@/lib/auth/authOperationScope";
+import { purgeSessionCache } from "@/lib/auth/purgeSessionCache";
 
 const datos: SolicitudPricingInsert = { folio: "", organization_id: "org1", oportunidad_id: "o1", solicitante_id: "u1" };
+const auth = { userId: "u1", email: null, organizationId: "org1", organizationName: null, role: "operador", effectiveRole: "operador" };
+function diferido<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((si, no) => { resolve = si; reject = no; });
+  return { promise, resolve, reject };
+}
 let client: QueryClient;
 let subscriptions: (() => void)[];
 const Wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -43,6 +54,8 @@ function expectReads(reads: ReturnType<typeof activeQueries>, refreshed: (keyof 
   }
 }
 beforeEach(() => {
+  setAuthSnapshot(auth);
+  vi.mocked(notifyError).mockClear(); vi.mocked(notifySuccess).mockClear();
   for (const fn of Object.values(services)) fn.mockReset().mockResolvedValue(undefined);
   services.crearSolicitud.mockResolvedValue({ id: "s1" });
   client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false, gcTime: Infinity }, mutations: { retry: false } } });
@@ -69,6 +82,49 @@ describe("invalidación acotada de Pricing", () => {
     expect(services.actualizarSolicitud).toHaveBeenCalledWith("s1", datos);
     expectReads(reads, ["solicitud", "oportunidad", "bandeja", "otraPagina"]);
     await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ErrorEnvioSolicitudPricing);
+    expect(result.current.error).toMatchObject({ solicitudId: "s1" });
+  });
+
+  it("un alta seguida de fallo de envío conserva ID, fila y caché aun sin refetch", async () => {
+    const creada = { ...datos, id: "s1", folio: "SP1", estado: "borrador" };
+    const existente = { id: "s2", folio: "SP2", estado: "borrador" };
+    const errorEnvio = { message: "LC_PRICING_INCOMPLETA" };
+    client.setQueryData(keys.oportunidad("o1"), [existente]);
+    services.crearSolicitud.mockResolvedValue(creada);
+    services.enviarSolicitud.mockRejectedValue(errorEnvio);
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ datos, enviar: true })).rejects.toMatchObject({
+        solicitudId: "s1", errorEnvio,
+      });
+    });
+    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
+    expect(services.enviarSolicitud).toHaveBeenCalledWith("s1");
+    expect(client.getQueryData(keys.solicitud("s1"))).toEqual(creada);
+    expect(client.getQueryData(keys.oportunidad("o1"))).toEqual([creada, existente]);
+    expect(invalidar.mock.calls).toEqual([
+      [{ queryKey: keys.solicitud("s1"), exact: true }],
+      [{ queryKey: keys.bandejas }],
+      [{ queryKey: keys.oportunidad("o1"), exact: true }],
+    ]);
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Solicitud guardada; envío sin confirmar", error: errorEnvio,
+      description: "Falta el servicio, el origen o el destino.",
+    }));
+  });
+
+  it("no repite automáticamente un alta parcial aunque el cliente configure retries", async () => {
+    client.setDefaultOptions({ mutations: { retry: 2, retryDelay: 0 } });
+    services.enviarSolicitud.mockRejectedValue(new Error("falló el envío"));
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ datos, enviar: true })).rejects.toBeInstanceOf(ErrorEnvioSolicitudPricing);
+    });
+    expect(services.crearSolicitud).toHaveBeenCalledTimes(1);
+    expect(services.enviarSolicitud).toHaveBeenCalledTimes(1);
   });
 
   it.each(["enviar", "responder", "cancelar"] as const)("%s refresca también la respuesta final, sin usuarios ni catálogos", async (accion) => {
@@ -124,5 +180,90 @@ describe("invalidación acotada de Pricing", () => {
     expectReads(reads, []);
     expect(services.enviarSolicitud).not.toHaveBeenCalled();
     await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe("vigencia de la mutación de Pricing después de limpiar sesión", () => {
+  it.each(["organización", "usuario", "purga", "tenant", "limpieza directa"])("INSERT tardío no repuebla caché ni envía después de cambiar %s", async (cambio) => {
+    if (cambio === "tenant") {
+      setAuthSnapshot({ ...auth, organizationId: null, role: "super_admin", effectiveRole: "super_admin" });
+      syncActiveOrganizationScope({ userId: "u1", organizationId: "org1" });
+    }
+    const insert = diferido<{ id: string }>();
+    services.crearSolicitud.mockReturnValueOnce(insert.promise);
+    client.setQueryData(keys.oportunidad("o1"), []);
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    let completada!: Promise<unknown>;
+    const callbacks = { onSuccess: vi.fn(), onError: vi.fn(), onSettled: vi.fn() };
+    act(() => { completada = result.current.mutateAsync({ datos, enviar: true }, callbacks).catch((error: unknown) => error); });
+    await waitFor(() => expect(services.crearSolicitud).toHaveBeenCalledTimes(1));
+    if (cambio === "organización") setAuthSnapshot({ ...auth, organizationId: "org2" });
+    if (cambio === "usuario") setAuthSnapshot({ ...auth, userId: "u2" });
+    if (cambio === "tenant") syncActiveOrganizationScope({ userId: "u1", organizationId: "org2" });
+    if (cambio === "limpieza directa") client.clear(); else purgeSessionCache(client);
+    const nueva = { id: "s2", organization_id: "org2" };
+    client.setQueryData(keys.solicitud("s2"), nueva);
+    await act(async () => { insert.resolve({ id: "s1" }); expect(await completada).toBeInstanceOf(AuthOperationChangedError); });
+    expect(client.getQueryData(keys.solicitud("s1"))).toBeUndefined();
+    expect(client.getQueryData(keys.oportunidad("o1"))).toBeUndefined();
+    expect(client.getQueryData(keys.solicitud("s2"))).toEqual(nueva);
+    expect(services.enviarSolicitud).not.toHaveBeenCalled();
+    expect(invalidar).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+    for (const callback of Object.values(callbacks)) expect(callback).not.toHaveBeenCalled();
+  });
+
+  it.each([true, false])("respuesta de envío tardía no invalida ni avisa en la sesión nueva (fallo=%s)", async (falla) => {
+    const envio = diferido<void>();
+    services.enviarSolicitud.mockReturnValueOnce(envio.promise);
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    let completada!: Promise<unknown>;
+    act(() => { completada = result.current.mutateAsync({ id: "s1", datos, enviar: true }).catch((error: unknown) => error); });
+    await waitFor(() => expect(services.enviarSolicitud).toHaveBeenCalledTimes(1));
+    setAuthSnapshot({ ...auth, userId: "u2" }); purgeSessionCache(client);
+    await act(async () => {
+      if (falla) envio.reject(new Error("falló enviar")); else envio.resolve();
+      expect(await completada).toBeInstanceOf(AuthOperationChangedError);
+    });
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+    expect(invalidar).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+  });
+
+  it("revalida antes de la segunda escritura si una suscripción purga durante la primera", async () => {
+    const nueva = [{ id: "s2", organization_id: "org2" }];
+    let purgada = false;
+    const unsubscribe = client.getQueryCache().subscribe((event) => {
+      if (event.type === "updated" && event.query.queryKey.join("/") === keys.solicitud("s1").join("/") && !purgada) {
+        purgada = true; purgeSessionCache(client);
+        client.setQueryData(keys.oportunidad("o1"), nueva);
+      }
+    });
+    subscriptions.push(unsubscribe);
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ datos, enviar: true })).rejects.toBeInstanceOf(AuthOperationChangedError);
+    });
+    expect(purgada).toBe(true);
+    expect(client.getQueryData(keys.oportunidad("o1"))).toEqual(nueva);
+    expect(client.getQueryData(keys.solicitud("s1"))).toBeUndefined();
+    expect(services.enviarSolicitud).not.toHaveBeenCalled(); expect(invalidar).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+  });
+
+  it("detiene las invalidaciones restantes y callbacks si la primera invalida la sesión", async () => {
+    const invalidar = vi.spyOn(client, "invalidateQueries").mockImplementationOnce(async () => { purgeSessionCache(client); });
+    const callbacks = { onSuccess: vi.fn(), onError: vi.fn(), onSettled: vi.fn() };
+    const { result } = renderHook(useGuardarSolicitud, { wrapper: Wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ datos, enviar: false }, callbacks)).rejects.toBeInstanceOf(AuthOperationChangedError);
+    });
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+    expect(notifySuccess).not.toHaveBeenCalled(); expect(notifyError).not.toHaveBeenCalled();
+    for (const callback of Object.values(callbacks)) expect(callback).not.toHaveBeenCalled();
   });
 });
