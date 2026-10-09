@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.62] - 2026-10-09
+
+- Condiciones de naviera: conserva el proveedor y los cambios sin guardar al alternar entre Condiciones y Demoras; evita que un evento vacío del selector borre el proveedor requerido durante el montaje.
+- La edición se reinicia al cambiar de organización, naviera o condición y al cerrar el diálogo; se bloquea la edición de condiciones de otra organización.
+- Regresiones para montaje frío y caliente, cambios de pestaña, borradores, cambios de entidad y envío explícito. Sin nuevas migraciones ni cambios de cálculos, permisos o contratos de base de datos.
+
 ## [13.824.61] - 2026-10-09
 
 - Comparador de tarifas: presenta el importe de demora con la moneda y rango del mismo tramo del día 6. La etiqueta identifica esa consulta puntual; no redefine días libres ni convierte importes.
