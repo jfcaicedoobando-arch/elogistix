@@ -65,14 +65,14 @@ describe('FCL comparte el catálogo activo y conserva datos guardados', () => {
   it('preserva un nombre legacy sin convertirlo ni duplicar la opción', async () => {
     render(<Form initial="20' Dry" />);
     expect(screen.getByTestId('persistido')).toHaveTextContent("20' Dry");
-    expect((await openTipos()).getAllByRole('option', { name: "20' Dry", exact: true })).toHaveLength(1);
+    expect((await openTipos()).getAllByRole('option', { name: "20' Dry" })).toHaveLength(1);
   });
 
   it('preserva UUID legacy equivalente y muestra Dry, nunca GP', async () => {
     render(<Form initial={DV} />);
     expect(screen.getAllByRole('combobox')[0]).toHaveTextContent("20' Dry (Standard)");
     expect(screen.getByTestId('persistido')).toHaveTextContent(DV);
-    expect((await openTipos()).getAllByRole('option', { name: "20' Dry (Standard)", exact: true })).toHaveLength(1);
+    expect((await openTipos()).getAllByRole('option', { name: "20' Dry (Standard)" })).toHaveLength(1);
   });
 
   it('catálogo todavía vacío conserva el dato y no inventa opciones nuevas', async () => {
@@ -95,13 +95,13 @@ describe('FCL comparte el catálogo activo y conserva datos guardados', () => {
   ])('conserva LCL legacy por %s sin reescribirlo', async (_caso, valor, etiqueta) => {
     render(<Form initial={valor} />);
     expect(screen.getByTestId('persistido')).toHaveTextContent(valor);
-    expect((await openTipos()).getAllByRole('option', { name: etiqueta, exact: true })).toHaveLength(1);
+    expect((await openTipos()).getAllByRole('option', { name: etiqueta })).toHaveLength(1);
   });
 
   it('un UUID GP histórico sigue siendo GP y no se reescribe a Dry', async () => {
     render(<Form initial={GP} />);
     expect(screen.getAllByRole('combobox')[0]).toHaveTextContent("20' GP");
     expect(screen.getByTestId('persistido')).toHaveTextContent(GP);
-    expect((await openTipos()).getAllByRole('option', { name: "20' GP", exact: true })).toHaveLength(1);
+    expect((await openTipos()).getAllByRole('option', { name: "20' GP" })).toHaveLength(1);
   });
 });
