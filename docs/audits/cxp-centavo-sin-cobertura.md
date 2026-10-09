@@ -12,7 +12,7 @@ El badge administrativo sigue consumiendo su resumen histórico; ahora invita a 
 
 ## Migración
 
-`20261009174000_cxp_centavo_sin_cobertura.sql` reemplaza sólo dos funciones. Antes exige los cuerpos revisados, propietario, ACL, SECURITY DEFINER y search_path esperados. Después confirma la misma metadata. No ejecuta backfill, pagos, DML de negocio, GRANT/REVOKE ni cambios de RLS. Un drift aborta la transacción. No aplicar manualmente el espejo de esquema, que conserva sus instrucciones históricas de permisos.
+`20261009174000_cxp_centavo_sin_cobertura.sql` reemplaza sólo dos funciones. Antes exige los cuerpos revisados, propietario, ACL, SECURITY DEFINER y search_path esperados. Después confirma la misma metadata. No ejecuta backfill, pagos, DML de negocio, GRANT/REVOKE ni cambios de RLS. El guard acepta únicamente los MD5 de recálculo live `e719e55c03aa28b1593cb86695581522` y squash `e105b05e12e94cc27d372ecdbbdd8d1a`, que difieren sólo en seis líneas vacías del cuerpo. No normaliza SQL; cualquier otro cuerpo, incluso otro cambio de espacios, aborta la transacción. No aplicar manualmente el espejo de esquema, que conserva sus instrucciones históricas de permisos.
 
 ## Integración con auditorías históricas
 

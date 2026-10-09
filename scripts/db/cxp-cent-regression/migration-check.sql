@@ -42,6 +42,39 @@ DO $$ BEGIN
  IF (SELECT snapshot FROM before_data) IS DISTINCT FROM qa_data_snapshot() THEN RAISE EXCEPTION 'REJECTED REAPPLY WROTE DATA'; END IF;
  IF EXISTS(SELECT 1 FROM after_metadata b JOIN pg_proc p ON p.oid=b.oid WHERE (p.prosrc,p.proacl) IS DISTINCT FROM (b.prosrc,b.proacl)) THEN RAISE EXCEPTION 'REJECTED REAPPLY CHANGED FUNCTION'; END IF;
 END $$;
+-- The exact historical squash is accepted without normalizing unknown source.
+\ir fixtures/recalc-squash.sql
+\ir fixtures/cierre-live.sql
+;
+DO $$ BEGIN
+ IF (SELECT md5(prosrc) FROM pg_proc WHERE oid='public._recalc_estado_proveedor_factura(uuid)'::regprocedure) IS DISTINCT FROM 'e105b05e12e94cc27d372ecdbbdd8d1a' THEN RAISE EXCEPTION 'SQUASH FIXTURE HASH DRIFT'; END IF;
+END $$;
+\i :candidate_migration
+DO $$ BEGIN
+ IF (SELECT snapshot FROM before_data) IS DISTINCT FROM qa_data_snapshot() THEN RAISE EXCEPTION 'SQUASH INSTALL WROTE DATA'; END IF;
+ IF EXISTS(SELECT 1 FROM before_metadata b JOIN pg_proc p ON p.oid=b.oid WHERE (pg_get_userbyid(p.proowner),p.proacl,p.prosecdef,p.proconfig) IS DISTINCT FROM (b.owner,b.proacl,b.prosecdef,b.proconfig)) THEN RAISE EXCEPTION 'SQUASH INSTALL METADATA CHANGED'; END IF;
+ IF EXISTS(SELECT 1 FROM after_metadata b JOIN pg_proc p ON p.oid=b.oid WHERE (p.prosrc,p.proacl) IS DISTINCT FROM (b.prosrc,b.proacl)) THEN RAISE EXCEPTION 'SQUASH INSTALL DIFFERS FROM LIVE INSTALL'; END IF;
+END $$;
+-- Even one additional blank line is unknown source and must reject atomically.
+\ir fixtures/recalc-live.sql
+;
+\ir fixtures/cierre-live.sql
+;
+DO $$ DECLARE ddl text; BEGIN
+ SELECT pg_get_functiondef('public._recalc_estado_proveedor_factura(uuid)'::regprocedure) INTO ddl;
+ EXECUTE replace(ddl, E'\nDECLARE', E'\n\nDECLARE');
+ IF (SELECT md5(prosrc) FROM pg_proc WHERE oid='public._recalc_estado_proveedor_factura(uuid)'::regprocedure) IN ('e719e55c03aa28b1593cb86695581522','e105b05e12e94cc27d372ecdbbdd8d1a') THEN RAISE EXCEPTION 'UNKNOWN SOURCE FIXTURE NOT MUTATED'; END IF;
+END $$;
+TRUNCATE after_metadata;
+INSERT INTO after_metadata SELECT oid,prosrc,proacl FROM pg_proc WHERE oid IN ('public._recalc_estado_proveedor_factura(uuid)'::regprocedure,'public.validar_cierre_embarque(uuid)'::regprocedure);
+\set ON_ERROR_STOP off
+\i :candidate_migration
+\set ON_ERROR_STOP on
+DO $$ BEGIN
+ IF (SELECT snapshot FROM before_data) IS DISTINCT FROM qa_data_snapshot() THEN RAISE EXCEPTION 'REJECTED UNKNOWN SOURCE WROTE DATA'; END IF;
+ IF EXISTS(SELECT 1 FROM after_metadata b JOIN pg_proc p ON p.oid=b.oid WHERE (p.prosrc,p.proacl) IS DISTINCT FROM (b.prosrc,b.proacl)) THEN RAISE EXCEPTION 'REJECTED UNKNOWN SOURCE CHANGED FUNCTION'; END IF;
+END $$;
+SELECT 'SQUASH_INSTALL_NO_DML_METADATA_PASS; UNKNOWN_SOURCE_ROLLBACK_PASS' AS result;
 -- Restore live bodies but deliberately drift ACL; installer must reject before writes.
 \ir fixtures/recalc-live.sql
 ;

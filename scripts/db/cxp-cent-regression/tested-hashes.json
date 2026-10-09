@@ -23,9 +23,12 @@
     "sql-tests/results.csv": "9adbbccdde41714071391f015d6752066caa2aa946ab84e5cc21b844082bda16"
   },
   "migration": {
-    "sha256": "475dd768e0388bf6b3d07f09c435b2b17b246ffd8b73d69eaa25ae89becdbadf",
+    "sha256": "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be",
     "install_no_dml_metadata": "PASS",
     "source_drift_reject_rollback": "PASS",
-    "acl_drift_reject_rollback": "PASS"
+    "acl_drift_reject_rollback": "PASS",
+    "tested_at_utc": "2026-10-09T17:58:15Z",
+    "squash_install_same_source_metadata_no_dml": "PASS",
+    "unknown_source_whitespace_reject_rollback": "PASS"
   }
 }

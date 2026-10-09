@@ -74,7 +74,7 @@ paid residual. See `matrix.sql` for all inputs and `results.csv` for all 130 out
 
 ## Migration transaction verification
 
-The complete migration was separately executed locally with exact live owner/ACL/security-definer/search-path metadata. It preserved every public fixture table row, both function OIDs and all metadata. Reapplication was rejected by the reviewed-source precondition, and explicit ACL drift was rejected by metadata precondition; both transactions rolled back without data/function changes. The portable script additionally runs this transaction test and verifies both expected error markers. Migration SHA256: 475dd768e0388bf6b3d07f09c435b2b17b246ffd8b73d69eaa25ae89becdbadf. This does not prove full-production-schema compatibility or concurrent behavior.
+The complete migration was separately executed locally with exact live owner/ACL/security-definer/search-path metadata. It preserved every public fixture table row, both function OIDs and all metadata. Reapplication was rejected by the reviewed-source precondition, and explicit ACL drift was rejected by metadata precondition; both transactions rolled back without data/function changes. The portable script additionally runs this transaction test and verifies both expected error markers. Migration SHA256: d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be. This does not prove full-production-schema compatibility or concurrent behavior.
 
 ## Packaging validation
 
@@ -85,3 +85,7 @@ separate complete-migration transaction test described above. It uses explicit
 127.0.0.1 host and hostaddr, explicit port/user/database, clears inherited libpq
 service/options/credential variables, and starts its own newly initialized cluster
 before any psql call. No connector or remote database endpoint is present.
+
+## Exact source guard follow-up
+
+At 17:58 UTC the migration transaction checks were rerun against the final dual-hash guard: live and exact historical squash both install identical function bodies and preserve OIDs, owner, ACL, SECURITY DEFINER, search_path, and table data. An unknown body with one extra blank line, reapplication, and ACL drift reject with full rollback. The original 65-assertion business matrix was not rerun because its source bodies did not change. `fixtures/recalc-squash.sql` copies the body in main 3b9ba4852bdc9dfb5fd67f1221c6b13f34c5df85 baseline, changing only CREATE to CREATE OR REPLACE for isolated fixture loading. The original live/squash bodies differ only in six blank lines.

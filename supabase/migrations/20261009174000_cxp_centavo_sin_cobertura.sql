@@ -22,8 +22,11 @@ END;
 $metadata$;
 DO $preconditions$
 BEGIN
-  IF (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public._recalc_estado_proveedor_factura(uuid)'))
-       IS DISTINCT FROM 'e719e55c03aa28b1593cb86695581522'
+  -- Live y squash revisados: difieren únicamente en seis líneas vacías.
+  IF ((SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public._recalc_estado_proveedor_factura(uuid)'))
+         IS DISTINCT FROM 'e719e55c03aa28b1593cb86695581522'
+      AND (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public._recalc_estado_proveedor_factura(uuid)'))
+         IS DISTINCT FROM 'e105b05e12e94cc27d372ecdbbdd8d1a')
      OR (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public.validar_cierre_embarque(uuid)'))
        IS DISTINCT FROM '2cefb1d13bd74842820b010485f0ed11' THEN
     RAISE EXCEPTION 'CXPCENT_PRECONDITION: definiciones distintas de las revisadas';

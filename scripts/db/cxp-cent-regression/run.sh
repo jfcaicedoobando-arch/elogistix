@@ -39,4 +39,5 @@ psql_args=(-X -h 127.0.0.1 -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1
 grep -q 'ERROR:  CXPCENT_PRECONDITION:' "$OUT_DIR/migration-check.log"
 grep -q 'ERROR:  CXPCENT_METADATA:' "$OUT_DIR/migration-check.log"
 grep -q 'MIGRATION_INSTALL_NO_DML_METADATA_PASS; REAPPLY_SOURCE_DRIFT_ROLLBACK_PASS; ACL_DRIFT_ROLLBACK_PASS' "$OUT_DIR/migration-check.log"
+grep -q 'SQUASH_INSTALL_NO_DML_METADATA_PASS; UNKNOWN_SOURCE_ROLLBACK_PASS' "$OUT_DIR/migration-check.log"
 printf 'CxP matrix and migration transaction checks passed. Results: %s\n' "$OUT_DIR"

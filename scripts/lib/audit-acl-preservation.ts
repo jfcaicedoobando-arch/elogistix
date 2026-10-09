@@ -7,7 +7,7 @@ import { scanSecurityDefiner, type Violation } from "./audit-sql-signatures";
  * This is not an annotation-based or general SECURITY DEFINER exemption.
  */
 const REVIEWED_FORWARD = "20261009174000_cxp_centavo_sin_cobertura.sql";
-const REVIEWED_SHA256 = "475dd768e0388bf6b3d07f09c435b2b17b246ffd8b73d69eaa25ae89becdbadf";
+const REVIEWED_SHA256 = "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be";
 
 export function scanSecurityDefinerWithPreservedAcl(
   file: string,
