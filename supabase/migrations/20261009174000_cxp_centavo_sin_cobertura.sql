@@ -1,3 +1,101 @@
+-- Release 13.824.58: deuda íntegra positiva no es un remanente de redondeo.
+-- Sólo funciones: sin backfill, DML, grants, cambios de RLS ni pagos.
+-- Aplicar sólo sobre las definiciones revisadas; fallar antes de cualquier cambio.
+BEGIN;
+DO $metadata$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('public._recalc_estado_proveedor_factura(uuid)', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[]),
+      ('public.validar_cierre_embarque(uuid)', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[])
+    ) expected(signature, acl)
+    LEFT JOIN pg_proc p ON p.oid=to_regprocedure(expected.signature)
+    WHERE p.oid IS NULL OR pg_get_userbyid(p.proowner)<>'postgres'
+      OR p.prosecdef IS DISTINCT FROM true
+      OR p.proconfig IS DISTINCT FROM ARRAY['search_path=public']::text[]
+      OR NOT (p.proacl @> expected.acl AND p.proacl <@ expected.acl)
+      OR p.proacl IS NULL
+  ) THEN
+    RAISE EXCEPTION 'CXPCENT_METADATA: owner, ACL, SECURITY DEFINER o search_path inesperado';
+  END IF;
+END;
+$metadata$;
+DO $preconditions$
+BEGIN
+  IF (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public._recalc_estado_proveedor_factura(uuid)'))
+       IS DISTINCT FROM 'e719e55c03aa28b1593cb86695581522'
+     OR (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('public.validar_cierre_embarque(uuid)'))
+       IS DISTINCT FROM '2cefb1d13bd74842820b010485f0ed11' THEN
+    RAISE EXCEPTION 'CXPCENT_PRECONDITION: definiciones distintas de las revisadas';
+  END IF;
+END;
+$preconditions$;
+
+CREATE OR REPLACE FUNCTION public._recalc_estado_proveedor_factura(p_factura_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_estado text;
+  v_captura text;
+  v_saldo  numeric;
+  v_cobertura numeric;
+  v_nuevo  text;
+  v_nueva_captura text;
+BEGIN
+  SELECT estado::text, estado_captura
+    INTO v_estado, v_captura
+  FROM public.proveedor_facturas
+  WHERE id = p_factura_id;
+
+  IF v_estado IS NULL THEN RETURN; END IF;
+  IF v_estado IN ('Cancelada','Borrador') THEN RETURN; END IF;
+
+  SELECT saldo, pagado + notas_credito_aplicadas INTO v_saldo, v_cobertura
+  FROM public.v_proveedor_facturas_saldo
+  WHERE proveedor_factura_id = p_factura_id;
+
+  IF v_saldo IS NULL OR v_cobertura IS NULL THEN RETURN; END IF;
+
+  -- La tolerancia sólo absorbe remanentes con cobertura neta viva.
+  IF v_saldo <= 0 OR (v_saldo <= 0.01 AND v_cobertura > 0) THEN
+    v_nuevo := 'Pagada';
+  ELSE
+    v_nuevo := 'Vigente';
+  END IF;
+
+  -- R2-32: sincroniza estado_captura con el estado financiero
+  IF v_nuevo = 'Pagada' THEN
+    v_nueva_captura := 'pagada';
+  ELSIF v_captura = 'pagada' THEN
+    -- Reabrió saldo: retrocede de 'pagada' → 'capturada'
+    v_nueva_captura := 'capturada';
+  ELSE
+    v_nueva_captura := v_captura;
+  END IF;
+
+  IF v_nuevo IS DISTINCT FROM v_estado
+     OR v_nueva_captura IS DISTINCT FROM v_captura THEN
+    PERFORM set_config('app.recalc_cxp','1', true);
+    BEGIN
+      UPDATE public.proveedor_facturas
+         SET estado         = v_nuevo::estado_proveedor_factura,
+             estado_captura = v_nueva_captura,
+             updated_at     = now()
+       WHERE id = p_factura_id
+         AND (estado::text IS DISTINCT FROM v_nuevo
+              OR estado_captura IS DISTINCT FROM v_nueva_captura);
+      PERFORM set_config('app.recalc_cxp','0', true);
+    EXCEPTION WHEN OTHERS THEN
+      PERFORM set_config('app.recalc_cxp','0', true);
+      RAISE;
+    END;
+  END IF;
+END;
+$function$;
+
 -- Fuente canónica de public.validar_cierre_embarque
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
@@ -401,6 +499,24 @@ BEGIN
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $$;
 
-REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;
 
+
+DO $metadata$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('public._recalc_estado_proveedor_factura(uuid)', '{postgres=X/postgres,service_role=X/postgres}'::aclitem[]),
+      ('public.validar_cierre_embarque(uuid)', '{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}'::aclitem[])
+    ) expected(signature, acl)
+    LEFT JOIN pg_proc p ON p.oid=to_regprocedure(expected.signature)
+    WHERE p.oid IS NULL OR pg_get_userbyid(p.proowner)<>'postgres'
+      OR p.prosecdef IS DISTINCT FROM true
+      OR p.proconfig IS DISTINCT FROM ARRAY['search_path=public']::text[]
+      OR NOT (p.proacl @> expected.acl AND p.proacl <@ expected.acl)
+      OR p.proacl IS NULL
+  ) THEN
+    RAISE EXCEPTION 'CXPCENT_METADATA: owner, ACL, SECURITY DEFINER o search_path inesperado';
+  END IF;
+END;
+$metadata$;
+COMMIT;

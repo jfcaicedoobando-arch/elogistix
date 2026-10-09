@@ -14,6 +14,7 @@ interface SaldoPorMoneda {
   saldo?: number;
   notas_credito?: number;
   facturas_pendientes?: number;
+  facturas_sin_cobertura?: number;
   pagos_sin_tipo_cambio?: number;
   notas_sin_tipo_cambio?: number;
   reparto_proporcional?: boolean;
@@ -69,7 +70,10 @@ export const fmtCxp = (d: unknown): string | null => {
   const rows = readPorMoneda(d);
   if (rows) {
     const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
-    const saldoTxt = fmtSaldoPorMoneda(rows);
+    const saldoTxt = rows
+      .filter((r) => Number(r.saldo ?? 0) > 0.01
+        || (Number(r.facturas_sin_cobertura ?? 0) > 0 && Number(r.saldo) > 0))
+      .map((r) => fmtMoney(r.saldo, (r.moneda ?? "MXN").toUpperCase())).join(" + ");
     const partes: string[] = [];
     if (pendientes > 0) partes.push(`${pendientes} factura(s) de proveedor por pagar`);
     if (saldoTxt) partes.push(`monto ${saldoTxt}`);
@@ -197,3 +201,4 @@ export const fmtMargenMinimoPct = (d: unknown): string | null => {
   if (utilidad != null) partes.push(`utilidad ${fmtMoney(utilidad)}`);
   return partes.join(" · ");
 };
+

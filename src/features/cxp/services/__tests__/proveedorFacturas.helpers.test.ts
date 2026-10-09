@@ -201,3 +201,34 @@ describe("aplicarFiltrosCliente", () => {
     expect(r.map((x) => x.id)).toEqual(["3"]);
   });
 });
+
+
+describe("deuda íntegra de un centavo", () => {
+  it.each(["MXN", "USD"] as const)("%s sin aplicaciones conserva vencimiento y no dice Pagada", (moneda) => {
+    const r = mapJoinedRow(baseJoined({ total: 0.01, subtotal: 0.01, moneda, estado: "Vigente" }));
+    expect(r.estatus).toBe("Vencida");
+    expect(r.dias_vencido).toBe(6);
+    expect(r.saldo).toBe(0.01);
+  });
+  it("NC canónica y pagos canónicos mantienen tolerancia sin doble conteo", () => {
+    for (const [pagado, notas_credito] of [[0.01, 0], [0, 0.01], [99.99, 0]]) {
+      const r = mapJoinedRow(baseJoined({ total: pagado + notas_credito + 0.01 }),
+        { pagado, notas_credito, saldo: 0.01 });
+      expect(r.estatus).toBe("Pagada");
+      expect(r.dias_vencido).toBe(0);
+    }
+  });
+  it("sin cobertura canónica no usa pagos crudos como respaldo", () => {
+    const r = mapJoinedRow(baseJoined({ total: 0.01 }), { pagado: 0, notas_credito: 0, saldo: 0.01 });
+    expect(r.estatus).toBe("Vencida");
+  });
+  it("remanente decimal local 100/99.99 conserva borde inclusivo", () => {
+    const r = mapJoinedRow(baseJoined({ total: 100, pagos_proveedor: [{ monto: 99.99, monto_en_moneda_factura: 99.99, deleted_at: null }] }));
+    expect(r.saldo).toBe(0.01);
+    expect(r.estatus).toBe("Pagada");
+  });
+  it("saldo o cobertura no finitos no producen Pagada", () => {
+    expect(clasificar(NaN, 0, 6, "Vigente", "aprobada")).toBe("Vencida");
+    expect(clasificar(0.01, Infinity, 6, "Vigente", "aprobada")).toBe("Vencida");
+  });
+});

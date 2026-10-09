@@ -1,27 +1,21 @@
-/**
- * 13.116.0 (Sprint A) — Helpers puros de CxP extraídos para testear bordes.
- *
- * El umbral `<= 0.01` resuelve el clásico problema de "Pagada con $0.001 de
- * diferencia". Antes vivía hardcoded dentro de `pagosProveedor.ts` sin tests
- * en los bordes — un cambio a `< 0.01` (estricto) dejaría facturas con
- * saldo de exactamente 1 centavo marcadas como Vigentes para siempre.
- */
-
+/** CxP: la tolerancia absorbe remanentes después de cobertura financiera real. */
 export const SALDO_TOLERANCIA_MXN = 0.01;
-
 export type EstadoFacturaProveedor = "Pagada" | "Vigente" | "Cancelada" | "Borrador";
 
-/**
- * Decide el nuevo estado de una factura proveedor según su saldo restante.
- * - Facturas Canceladas/Borrador NUNCA se mueven (regla de negocio: no reabrir).
- * - Saldo ≤ tolerancia → Pagada (cubre redondeos de centavos).
- * - Saldo > tolerancia → Vigente.
- */
+/** Cobertura neta en moneda documental: pagos vivos (incluidos anticipos/ajustes)
+ * más NC aplicadas vivas. Una deuda íntegra positiva nunca es redondeo. */
+export function saldoProveedorLiquidado(saldo: number, cobertura: number): boolean {
+  if (!Number.isFinite(saldo) || !Number.isFinite(cobertura)) return false;
+  return saldo <= 0 || (saldo <= SALDO_TOLERANCIA_MXN && cobertura > 0);
+}
+
+/** Recalcular explícitamente permite reabrir tras reversar la última aplicación. */
 export function decidirEstadoFactura(
   estadoActual: EstadoFacturaProveedor,
   saldo: number,
+  cobertura = 0,
 ): EstadoFacturaProveedor {
   if (estadoActual === "Cancelada" || estadoActual === "Borrador") return estadoActual;
-  if (!Number.isFinite(saldo)) return estadoActual; // datos corruptos: no tocar
-  return saldo <= SALDO_TOLERANCIA_MXN ? "Pagada" : "Vigente";
+  if (!Number.isFinite(saldo) || !Number.isFinite(cobertura)) return estadoActual;
+  return saldoProveedorLiquidado(saldo, cobertura) ? "Pagada" : "Vigente";
 }

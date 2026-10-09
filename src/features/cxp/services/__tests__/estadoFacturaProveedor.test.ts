@@ -8,7 +8,7 @@ import { decidirEstadoFactura, SALDO_TOLERANCIA_MXN } from "../estadoFacturaProv
 
 describe("decidirEstadoFactura", () => {
   it("saldo exactamente igual a la tolerancia → Pagada (borde inclusivo)", () => {
-    expect(decidirEstadoFactura("Vigente", SALDO_TOLERANCIA_MXN)).toBe("Pagada");
+    expect(decidirEstadoFactura("Vigente", SALDO_TOLERANCIA_MXN, 99.99)).toBe("Pagada");
   });
 
   it("saldo 1 centavo arriba de la tolerancia → Vigente", () => {
@@ -38,4 +38,19 @@ describe("decidirEstadoFactura", () => {
   it("saldo NaN → no toca el estado (datos sucios no deben falsear pagos)", () => {
     expect(decidirEstadoFactura("Vigente", NaN)).toBe("Vigente");
   });
+});
+
+
+it.each([0.001, 0.01])("deuda íntegra %s sin cobertura queda vigente y reabre al reversar", (saldo) => {
+  expect(decidirEstadoFactura("Vigente", saldo, 0)).toBe("Vigente");
+  expect(decidirEstadoFactura("Pagada", saldo, 0)).toBe("Vigente");
+});
+it.each([0.01, 99.99])("remanente inclusivo con cobertura neta %s conserva Pagada", (cubierto) => {
+  expect(decidirEstadoFactura("Vigente", 0.01, cubierto)).toBe("Pagada");
+});
+it.each([NaN, Infinity, -Infinity])("cobertura no finita %s nunca produce Pagada", (cubierto) => {
+  expect(decidirEstadoFactura("Vigente", 0.01, cubierto)).toBe("Vigente");
+});
+it("cobertura negativa no salda una deuda positiva", () => {
+  expect(decidirEstadoFactura("Vigente", 0.01, -1)).toBe("Vigente");
 });

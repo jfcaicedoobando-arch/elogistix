@@ -199,3 +199,9 @@ describe("CxC: residuo monetario de cierre sin cambiar el umbral CxP", () => {
       .toBe("1 factura(s) de proveedor por pagar");
   });
 });
+
+
+it("fmtCxp: explica el centavo íntegro bloqueado sin cambiar tolerancia legacy", () => {
+  expect(fmtCxp({ por_moneda: [{ moneda: "MXN", saldo: 0.01, facturas_pendientes: 1, facturas_sin_cobertura: 1 }] })).toContain("0.01");
+  expect(fmtCxp({ por_moneda: [{ moneda: "USD", saldo: 0.01, facturas_pendientes: 0, facturas_sin_cobertura: 0 }] })).toBeNull();
+});
