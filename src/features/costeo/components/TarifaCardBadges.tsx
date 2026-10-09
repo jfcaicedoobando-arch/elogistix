@@ -6,10 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Clock, CreditCard, Timer } from "lucide-react";
 import { CartaGarantiaIndicator } from "./CartaGarantiaIndicator";
-import { usdTarifa } from "@/features/costeo/utils/tarifaFormatters";
+import { formatCurrency } from "@/lib/formatters";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
 export function TarifaCardBadges({ row }: { row: TopTarifaRow }) {
+  const monedaDemora = row.naviera_demora_moneda?.trim().toUpperCase();
+  const importeDemora = monedaDemora && /^[A-Z]{3}$/.test(monedaDemora)
+    ? `${formatCurrency(Number(row.naviera_demora_dia_6), monedaDemora)}/día`
+    : "Moneda de demora no disponible";
+  const tramoDemora = row.naviera_demora_desde_dia == null
+    ? "Tramo no disponible"
+    : `Tramo desde el día ${row.naviera_demora_desde_dia}${row.naviera_demora_hasta_dia == null ? " en adelante" : ` hasta el ${row.naviera_demora_hasta_dia}`}`;
   return (
     <>
       <div className="flex flex-wrap gap-1.5 text-body-sm">
@@ -28,17 +35,16 @@ export function TarifaCardBadges({ row }: { row: TopTarifaRow }) {
             <Timer className="size-3" /> {row.transit_time_dias} días tránsito
           </Badge>
         )}
-        {row.naviera_demora_dia_6 != null && row.dias_libres_demoras != null && (
+        {row.naviera_demora_dia_6 != null && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 gap-1 cursor-help">
-                <AlertTriangle className="size-3" /> Demora desde el día{" "}
-                {row.dias_libres_demoras + 1}: {usdTarifa(row.naviera_demora_dia_6)}/día
+                <AlertTriangle className="size-3" /> Demora (día 6): {importeDemora}
               </Badge>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-body-sm">
-              Después de agotar los {row.dias_libres_demoras} días libres, la naviera cobra este
-              monto por contenedor y por cada día adicional.
+              Consulta del día 6 del tabulador de la naviera. {tramoDemora}.
+              Importe diario por contenedor en la moneda del tramo.
             </TooltipContent>
           </Tooltip>
         )}
