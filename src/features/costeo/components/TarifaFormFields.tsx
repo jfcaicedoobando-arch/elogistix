@@ -56,7 +56,10 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
         ) : (
           <Select
             value={form.agente_id}
-            onValueChange={(v) => setForm({ ...form, agente_id: v })}
+            onValueChange={(v) => {
+              // Radix emite vacío si el id creado aún no está en las opciones nativas.
+              if (v) setForm({ ...form, agente_id: v });
+            }}
           >
             <SelectTrigger
               id="tarifa-agente"
