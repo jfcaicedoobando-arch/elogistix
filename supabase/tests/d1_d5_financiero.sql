@@ -161,12 +161,14 @@ BEGIN
   IF round(v_venta, 2) IS DISTINCT FROM 800.00 THEN
     RAISE EXCEPTION 'D1 FAIL: venta real % en lugar de 800 (base NC10USD @20, bruto11.60USD, factura MXN1000)', v_venta;
   END IF;
-  -- Timbrada already has fiscal effect; Aplicada must retain the same base.
+  -- Timbrada/Aplicada retain the same base. This legacy note has no lineage;
+  -- AUD144 keeps its known amount provisional even on a single shipment.
   UPDATE public.factura_notas_credito SET estado = 'Aplicada'
     WHERE uuid_fiscal = 'd1d50000-0000-4000-8000-00000000dddd';
   v_pnl := public.pnl_financiero_embarque('d1d50000-0000-4000-8000-0000000000e1');
   IF (v_pnl #>> '{venta,real_mxn}')::numeric IS DISTINCT FROM 800
-     OR v_pnl->>'estado_ingresos' IS DISTINCT FROM 'completo'
+     OR v_pnl->>'estado_ingresos' IS DISTINCT FROM 'incompleto'
+     OR (v_pnl #>> '{ingresos_documentacion,repartos_provisionales}')::int IS DISTINCT FROM 1
      OR (v_pnl #>> '{ingresos_documentacion,notas_credito_activas}')::int IS DISTINCT FROM 1 THEN
     RAISE EXCEPTION 'D1 FAIL: Timbrada/Aplicada no conservan base convertida conocida: %', v_pnl;
   END IF;

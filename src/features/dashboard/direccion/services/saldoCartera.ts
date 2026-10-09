@@ -11,14 +11,16 @@
  *    una conversión cruzada, la NC aporta 0 (no se inventa fallback).
  * Sólo el saldo NETO resultante se convierte a MXN con el TC de la factura.
  */
-import { esPagoAnulado } from "@/lib/financial/saldoFactura";
+import Decimal from "decimal.js";
+import { calcularSaldoFactura, esEstadoSinSaldo } from "@/lib/financial/saldoFactura";
+import { tcConfiable } from "@/lib/financial/convertir";
+import { roundMoney } from "@/lib/financial/financialUtils";
 import { mxnFactura, type TcFallbacks } from "./mxn";
 import type { FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 
 type MonedaLike = string | null | undefined;
 
 const norm = (m: MonedaLike): string => (m ?? "MXN").toUpperCase();
-const tcValido = (tc: number | null | undefined): boolean => Number(tc ?? 0) > 1;
 
 /**
  * Monto de una NC expresado en la moneda de la factura (espejo de
@@ -29,15 +31,17 @@ export function ncEnMonedaFactura(
   monedaFactura: MonedaLike,
   tcFactura: number | null | undefined,
 ): number {
-  const monto = Number(nc.monto ?? 0);
+  const monto = new Decimal(nc.monto ?? 0);
   const mf = norm(monedaFactura);
   const mn = norm(nc.moneda);
-  if (mn === mf) return monto;
-  if (mf === "MXN" && mn !== "MXN") return tcValido(nc.tipo_cambio) ? monto * Number(nc.tipo_cambio) : 0;
-  if (mf !== "MXN" && mn === "MXN") return tcValido(tcFactura) ? monto / Number(tcFactura) : 0;
+  if (mn === mf) return monto.toNumber();
+  const origen = tcConfiable(nc.tipo_cambio);
+  const destino = tcConfiable(tcFactura);
+  if (mf === "MXN" && mn !== "MXN") return origen == null ? 0 : monto.times(origen).toNumber();
+  if (mf !== "MXN" && mn === "MXN") return destino == null ? 0 : monto.dividedBy(destino).toNumber();
   // Cruzada divisa↔divisa: exige AMBOS tipos de cambio.
-  if (tcValido(nc.tipo_cambio) && tcValido(tcFactura)) {
-    return (monto * Number(nc.tipo_cambio)) / Number(tcFactura);
+  if (origen != null && destino != null) {
+    return monto.times(origen).dividedBy(destino).toNumber();
   }
   return 0;
 }
@@ -53,34 +57,57 @@ export function saldoEnMonedaFactura(
   pagos: readonly Pick<PagoRow, "monto_aplicado_factura" | "estado_rep">[],
   ncs: readonly Pick<NotaCreditoRow, "monto" | "moneda" | "tipo_cambio">[],
 ): number {
-  let saldo = Number(factura.total ?? 0);
-  for (const p of pagos) {
-    if (esPagoAnulado(p)) continue;
-    saldo -= Number(p.monto_aplicado_factura ?? 0);
-  }
-  for (const nc of ncs) saldo -= ncEnMonedaFactura(nc, factura.moneda, factura.tipo_cambio);
-  return saldo;
+  return calcularSaldoFactura(
+    factura.total ?? 0, pagos,
+    ncs.map((nc) => ({ monto: ncEnMonedaFactura(nc, factura.moneda, factura.tipo_cambio) })),
+  ).saldo;
+}
+
+export interface SaldoCartera {
+  /** Saldo exacto en moneda documental; se clasifica antes de convertir. */
+  saldo: number;
+  tieneSaldo: boolean;
+  monto_mxn: number;
 }
 
 /**
- * Saldo MXN equivalente por factura (id → MXN). Las NC en borrador,
+ * Clasificación nativa y saldo MXN equivalente por factura. Las NC en borrador,
  * canceladas o eliminadas no llegan aquí: el loader ya las filtra.
+ * AUD54: Pagada sin aplicaciones activas positivas conserva su ámbito legado.
+ * El estado persistido, los pagos y los saldos exactos no se reescriben.
  */
-export function calcularSaldosCarteraMxn(
+export function calcularSaldosCartera(
   facturas: readonly FacturaRow[],
   pagos: readonly PagoRow[],
   ncs: readonly NotaCreditoRow[],
   fallbacks: TcFallbacks,
-): Map<string, number> {
+): Map<string, SaldoCartera> {
   const pagosPorFactura = agrupar(pagos);
   const ncsPorFactura = agrupar(ncs);
-  const saldos = new Map<string, number>();
+  const saldos = new Map<string, SaldoCartera>();
   for (const f of facturas) {
-    if (f.estado === "Cancelada") continue;
-    const neto = saldoEnMonedaFactura(f, pagosPorFactura.get(f.id) ?? [], ncsPorFactura.get(f.id) ?? []);
-    saldos.set(f.id, mxnFactura(neto, f.moneda, f.tipo_cambio, fallbacks));
+    if (esEstadoSinSaldo(f.estado)) continue;
+    const resultado = calcularSaldoFactura(
+      f.total ?? 0, pagosPorFactura.get(f.id) ?? [],
+      (ncsPorFactura.get(f.id) ?? []).map((nc) => ({ monto: ncEnMonedaFactura(nc, f.moneda, f.tipo_cambio) })),
+      f.estado,
+    );
+    if (f.estado === "Pagada" && resultado.pagado <= 0) continue;
+    saldos.set(f.id, {
+      saldo: resultado.saldo, tieneSaldo: !resultado.liquidada,
+      monto_mxn: roundMoney(mxnFactura(resultado.saldo, f.moneda, f.tipo_cambio, fallbacks)),
+    });
   }
   return saldos;
+}
+
+/** Compatibilidad para lectores que sólo necesitan la valuación existente. */
+export function calcularSaldosCarteraMxn(
+  facturas: readonly FacturaRow[], pagos: readonly PagoRow[],
+  ncs: readonly NotaCreditoRow[], fallbacks: TcFallbacks,
+): Map<string, number> {
+  return new Map(Array.from(calcularSaldosCartera(facturas, pagos, ncs, fallbacks),
+    ([id, resultado]) => [id, resultado.monto_mxn]));
 }
 
 function agrupar<T extends { factura_id: string }>(filas: readonly T[]): Map<string, T[]> {

@@ -62,7 +62,7 @@ function PnlIngresosIncompletos({ ingresos, ingresosNoEvaluados }: Pick<Props, "
     repartos_provisionales = 0, desbordamientos = 0 } = ingresos ?? {};
   return (
     <Alert variant="warning">
-      <AlertCircle className="size-4" />
+      <AlertCircle className="h-4 w-4" />
       <AlertTitle>Ingresos incompletos</AlertTitle>
       <AlertDescription>
         La venta observada conserva únicamente el importe conocido y es provisional.
@@ -71,7 +71,7 @@ function PnlIngresosIncompletos({ ingresos, ingresosNoEvaluados }: Pick<Props, "
         {notas_credito_sin_base > 0 && ` Hay ${notas_credito_sin_base} nota(s) de crédito de cliente sin base verificable; no se considera cero ni se usa su monto total como base fiscal.`}
         {notas_credito_sin_valoracion > 0 && ` Hay ${notas_credito_sin_valoracion} nota(s) de crédito de cliente sin valoración utilizable; revisa sus monedas y tipos de cambio.`}
         {facturas_sin_valoracion > 0 && ` Hay ${facturas_sin_valoracion} factura(s) de venta sin valoración utilizable.`}
-        {repartos_provisionales > 0 && ` Hay ${repartos_provisionales} factura(s) multiembarque con notas de crédito en reparto proporcional provisional. Ese reparto no acredita a qué concepto corresponde el crédito.`}
+        {repartos_provisionales > 0 && ` Hay ${repartos_provisionales} factura(s) con notas de crédito sin linaje verificable en reparto proporcional provisional. Ese reparto no acredita a qué concepto corresponde el crédito.`}
         {desbordamientos > 0 && " Se detectaron importes fuera del rango de cálculo; un total no representable se muestra como No calculable."}
       </AlertDescription>
     </Alert>

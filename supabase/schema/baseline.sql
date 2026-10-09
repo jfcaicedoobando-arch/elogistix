@@ -16414,7 +16414,20 @@ CREATE FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) RETURNS TABLE
         AND lower(regexp_replace(coalesce(l.empresa, ''), '[^a-z0-9]', '', 'gi')) = k.empresa_norm)
   )
   WHERE l.deleted_at IS NULL
-    AND public.rls_tenant_scope_ok(l.organization_id);
+    AND (SELECT auth.uid()) IS NOT NULL
+    AND l.organization_id = (SELECT public.org_scope())
+    AND public.is_org_member(l.organization_id)
+    AND public.rls_tenant_scope_ok(l.organization_id)
+    AND (
+      public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['admin', 'gerente_comercial']::public.app_role[], l.organization_id)
+      OR public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['viewer', 'operador']::public.app_role[], l.organization_id)
+      OR (l.vendedor_id IS NULL AND public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['vendedor']::public.app_role[], l.organization_id))
+      OR (l.vendedor_id = (SELECT auth.uid()) AND public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['vendedor']::public.app_role[], l.organization_id))
+    );
 $$;
 CREATE FUNCTION public.crm_notify_comentario_oportunidad() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -24948,6 +24961,11 @@ DECLARE
   _fnc_data jsonb := '[]'; _net_data jsonb := '[]';
   _detail_data jsonb := '{}'; _detail_rows jsonb := '[]';
   _factor numeric; _tagged numeric; _shipment numeric; _tc_doc numeric;
+  -- Audit144: read-only attribution; never manufacture historical lineage.
+  _nc_line record; _note_credit numeric; _line_credit numeric;
+  _running_base numeric; _running_doc numeric; _previous_doc numeric;
+  _note_total_doc numeric; _all_credit_doc numeric; _note_credit_mxn numeric; _invoice_credit_mxn numeric;
+  _note_detail jsonb; _invoice_proportional boolean;
   _subtotal numeric; _credit numeric; _net numeric; _net_mxn numeric;
   _credit_mxn numeric; _line_mxn numeric; _detail_sum numeric;
   _income_total numeric := 0; _pending_total numeric := 0;
@@ -24976,7 +24994,7 @@ BEGIN
      AND _org IS DISTINCT FROM public.current_user_org_id() THEN
     RAISE EXCEPTION 'Sin acceso al embarque %', _embarque_id USING ERRCODE='42501';
   END IF;
-  -- Keep the existing invoice membership and proportional attribution. Every
+  -- Keep invoice membership and gross attribution; NC lines use exact lineage. Every
   -- numeric operation introduced by the income path is guarded per document;
   -- an unknown NC never silently becomes a valid zero discount.
   FOR _invoice IN
@@ -24989,9 +25007,9 @@ BEGIN
           AND cf.embarque_id = _embarque_id))
     ORDER BY fa.id
   LOOP
-    _invoice_bad := false;
+    _invoice_bad := false; _invoice_proportional := false;
     _factor := NULL; _subtotal := NULL; _net := NULL; _net_mxn := NULL;
-    _credit := 0; _nc_count := 0; _tc_doc := NULL; _tagged_shipments := 0;
+    _credit := 0; _all_credit_doc := 0; _invoice_credit_mxn := 0; _nc_count := 0; _tc_doc := NULL; _tagged_shipments := 0;
     _factura_moneda := _invoice.moneda::text;
     _factura_tc := _invoice.tipo_cambio;
     BEGIN
@@ -25105,15 +25123,79 @@ EXCEPTION
     _nc_base_factura := NULL;
 END credit132_convert_base;
       _credit_mxn := NULL;
+      _note_credit := 0; _note_credit_mxn := 0; _note_detail := '[]';
+      _note_total_doc := _nc_base_factura;
+      _running_base := 0; _previous_doc := 0;
       IF _nc_base IS NULL THEN _nc_no_base := _nc_no_base + 1; END IF;
       BEGIN
-        _nc_base_factura := _nc_base_factura * _factor;
-        IF _factura_moneda = 'MXN' OR (_tc_doc > 1
-          AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
-          _credit_mxn := public.a_mxn(_nc_base_factura,_factura_moneda,_tc_doc,_tc_doc);
-        END IF;
-        IF _credit_mxn IS NOT NULL AND _credit IS NOT NULL THEN
-          _credit := _credit + _nc_base_factura;
+        -- The reviewed132 parser/conversion above validate the WHOLE note first.
+        -- An invalid line never leaves a partially credited, apparently known NC.
+        IF _nc_base_factura IS NOT NULL THEN
+          FOR _nc_line IN
+            SELECT cf.id AS source_id, cf.embarque_id,
+                   lower(trim(coalesce(nullif(cf.descripcion,''),'(sin concepto)'))) AS concepto,
+                   round((l->>'cantidad')::numeric * (l->>'precio_unitario')::numeric,2) AS base
+            FROM jsonb_array_elements(_nc_conceptos) WITH ORDINALITY AS lines(l,position)
+            LEFT JOIN public.conceptos_factura cf
+              ON cf.id = CASE WHEN lower(btrim(l->>'concepto_factura_id'))
+                   ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                 THEN lower(btrim(l->>'concepto_factura_id'))::uuid END
+              AND cf.factura_id = _invoice.id AND cf.organization_id = _org
+              AND _invoice.organization_id = _org AND _note.organization_id = _org
+              AND cf.deleted_at IS NULL AND cf.embarque_id IS NOT NULL
+              AND EXISTS (SELECT 1 FROM public.embarques e
+                WHERE e.id = cf.embarque_id AND e.organization_id = _org AND e.deleted_at IS NULL)
+            ORDER BY lines.position
+          LOOP
+            -- Cumulative conversion preserves132's full converted note exactly.
+            -- Never round/convert each tiny line independently then add it up.
+            _running_base := _running_base + _nc_line.base;
+            _running_doc := CASE WHEN _running_base = _nc_base THEN _nc_base_factura
+              ELSE public.nc_convertida_a_moneda_factura(
+                _running_base,_nc_moneda,_nc_tc,_factura_moneda,_factura_tc) END;
+            _line_credit := CASE WHEN _nc_line.source_id IS NULL
+              THEN _running_doc * _factor - _previous_doc * _factor
+              ELSE _running_doc - _previous_doc END;
+            _line_mxn := NULL;
+            IF _factura_moneda = 'MXN' OR (_tc_doc > 1
+              AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
+              -- Allocate the rounded GLOBAL invoice debit before shipment filtering.
+              -- All line debits telescope to132's full converted invoice net; tiny
+              -- FX residues follow persisted JSON order instead of being duplicated.
+              _line_mxn := (public.a_mxn(_invoice.subtotal-_all_credit_doc-_previous_doc,_factura_moneda,_tc_doc,_tc_doc)
+                - public.a_mxn(_invoice.subtotal-_all_credit_doc-_running_doc,_factura_moneda,_tc_doc,_tc_doc))
+                * CASE WHEN _nc_line.source_id IS NULL THEN _factor ELSE 1::numeric END;
+            END IF;
+            _previous_doc := _running_doc;
+            IF _nc_line.source_id IS NULL THEN
+              -- Missing, malformed, orphaned or inconsistent lineage stays provisional.
+              -- This also warns for a legacy single-shipment invoice: its concept is unknown.
+              _invoice_proportional := true;
+            ELSIF _nc_line.embarque_id <> _embarque_id THEN
+              CONTINUE; -- The selected credit must never reduce a different shipment.
+            END IF;
+            _note_credit := _note_credit + _line_credit;
+            _note_credit_mxn := _note_credit_mxn + _line_mxn;
+            _note_detail := _note_detail || jsonb_build_array(jsonb_build_object(
+              'concepto',CASE WHEN _nc_line.source_id IS NULL THEN '(nota de crédito)' ELSE _nc_line.concepto END,
+              'monto_mxn',_line_mxn));
+          END LOOP;
+          _nc_base_factura := _note_credit;
+          IF _note_credit IS NOT NULL AND (_factura_moneda = 'MXN' OR (_tc_doc > 1
+            AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity'))) THEN
+            _credit_mxn := _note_credit_mxn;
+          END IF;
+          IF _credit_mxn IS NOT NULL AND _credit IS NOT NULL THEN
+            DECLARE
+              next_credit numeric; next_mxn numeric; next_all numeric;
+            BEGIN
+              -- Publish all accumulators together only after every sum succeeds.
+              next_credit := _credit + _note_credit;
+              next_mxn := _invoice_credit_mxn + _note_credit_mxn;
+              next_all := _all_credit_doc + _note_total_doc;
+              _credit := next_credit; _invoice_credit_mxn := next_mxn; _all_credit_doc := next_all;
+            END;
+          END IF;
         END IF;
       EXCEPTION WHEN numeric_value_out_of_range THEN
         _nc_base_factura := NULL; _credit_mxn := NULL;
@@ -25122,19 +25204,18 @@ END credit132_convert_base;
       IF _nc_base IS NOT NULL AND _credit_mxn IS NULL THEN
         _nc_no_value := _nc_no_value + 1;
       END IF;
-      _fnc_data := _fnc_data || jsonb_build_array(jsonb_build_object(
-        'factura_id',_invoice.id,'monto',_nc_base_factura,
-        'monto_mxn',_credit_mxn,'moneda',_factura_moneda));
+      IF _credit_mxn IS NULL THEN
+        -- Discard partial details if any conversion/operation was indeterminate.
+        _note_detail := jsonb_build_array(jsonb_build_object(
+          'concepto','(nota de crédito)','monto_mxn',NULL));
+      END IF;
+      _fnc_data := _fnc_data || _note_detail;
     END LOOP;
-    -- Exact lineage is a separate concern (144). Keep this allocation visible
-    -- and provisional instead of describing the existing ratio as exact.
-    IF _nc_count > 0 AND _tagged_shipments > 1 THEN
-      _proportional := _proportional + 1;
-    END IF;
+    IF _invoice_proportional THEN _proportional := _proportional + 1; END IF;
     BEGIN
       IF NOT _invoice_bad THEN
         _net := _subtotal - _credit;
-        _net_mxn := public.a_mxn(_net,_factura_moneda,_tc_doc,_tc_doc);
+        _net_mxn := public.a_mxn(_subtotal,_factura_moneda,_tc_doc,_tc_doc) - _invoice_credit_mxn;
         _income_total := _income_total + _net_mxn;
       END IF;
     EXCEPTION WHEN numeric_value_out_of_range THEN
@@ -25157,8 +25238,8 @@ END credit132_convert_base;
     EXCEPTION WHEN numeric_value_out_of_range THEN
       _pending_total := NULL; _invoice_bad := true; _overflows := _overflows + 1;
     END;
-    -- Reuse exactly the current positive line attribution; NC rows below use
-    -- the same converted base and ratio as the headline, including NULLs.
+    -- Preserve positive line attribution; attributed NC details below reconcile
+    -- to the same exact/provisional debit as the headline, including NULLs.
     _invoice_valued := NOT _invoice_bad;
     FOR _line_income IN
       SELECT lower(trim(coalesce(nullif(cf.descripcion,''),'(sin concepto)'))) AS concepto,
@@ -25187,8 +25268,8 @@ END credit132_convert_base;
     IF _invoice_bad THEN _invoice_no_value := _invoice_no_value + 1; END IF;
   END LOOP;
   _detail_rows := _detail_rows || coalesce((SELECT jsonb_agg(jsonb_build_object(
-    'concepto','(nota de crédito)','real_mxn',-n.monto_mxn))
-    FROM jsonb_to_recordset(_fnc_data) n(monto_mxn numeric)),'[]'::jsonb);
+    'concepto',n.concepto,'real_mxn',-n.monto_mxn))
+    FROM jsonb_to_recordset(_fnc_data) n(concepto text,monto_mxn numeric)),'[]'::jsonb);
   FOR _line_income IN SELECT * FROM jsonb_to_recordset(_detail_rows)
     AS x(concepto text,real_mxn numeric)
   LOOP
@@ -34479,35 +34560,49 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
       'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
-  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
-  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
-  SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
+  -- AUD54: clasificar en moneda documental antes de cualquier agregado.
+  -- Pagada sin pago aplicado vigente conserva el alcance histórico: no inventar deuda.
+  -- El saldo exacto y los hechos de pago/NC siguen en el canon, sin escritura.
+  WITH facturas_cxc AS (
+    SELECT f.*, public.saldo_factura(f.id) AS saldo_exacto,
+      EXISTS (SELECT 1 FROM pagos_factura px
+        WHERE px.factura_id=f.id AND px.organization_id=v_emb.organization_id
+          AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+          AND px.monto_aplicado_factura>0) AS tiene_pago_activo
     FROM facturas f
-   WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
-     AND public.saldo_factura(f.id) > 0.01;
-  WITH agg AS (
+    WHERE f.embarque_id=p_embarque_id AND f.organization_id=v_emb.organization_id
+      AND f.deleted_at IS NULL AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
+  ), saldos_cxc AS (
+    SELECT f.*, CASE WHEN f.estado='Pagada' AND NOT f.tiene_pago_activo THEN 0
+      ELSE GREATEST(ROUND(f.saldo_exacto,2),0) END AS saldo
+    FROM facturas_cxc f
+  ), agg AS (
     SELECT COALESCE(f.moneda,'MXN') AS moneda, COALESCE(SUM(f.total),0) AS total,
-      COALESCE(SUM(CASE WHEN f.estado='Pagada' THEN 0
-                        ELSE public.saldo_factura(f.id) END),0) AS saldo,
+      COALESCE(SUM(f.saldo),0) AS saldo,
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
-        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
-      COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
-        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada'))),0) AS notas_credito,
-      COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
-    FROM facturas f
-    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
-      AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
-    GROUP BY COALESCE(f.moneda,'MXN'))
+        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
+          AND NOT public.pago_rep_anulado(pf.estado_rep)
+          AND pf.organization_id=v_emb.organization_id)),0) AS pagado,
+      COALESCE(SUM((SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+          nc.monto,nc.moneda::text,nc.tipo_cambio,f.moneda::text,f.tipo_cambio)),0)
+        FROM factura_notas_credito nc
+        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada')
+          AND nc.organization_id=v_emb.organization_id)),0) AS notas_credito,
+      COUNT(*) FILTER (WHERE f.saldo>0) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE f.estado='Pagada' AND NOT f.tiene_pago_activo
+        AND ROUND(f.saldo_exacto,2)>0) AS pagadas_sin_pago_registrado
+    FROM saldos_cxc f GROUP BY COALESCE(f.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
-    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
-  INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
-  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
-  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
+    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0),
+    COALESCE(SUM(pagadas_sin_pago_registrado),0)
+  INTO v_cxc_por_moneda, v_cxc_saldo, v_cxc_pagadas_sin_pago FROM agg;
+  -- La suma ya contiene saldos monetarios positivos POR factura y moneda.
+  -- Sobrepagos o residuos subcentavo de otra factura no compensan deuda real.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxc_cobrada','ok',v_ok,

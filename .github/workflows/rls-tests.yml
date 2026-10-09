@@ -24,9 +24,12 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/audit54-cxc-forward-runtime.sh"
+      - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/pricing-container/**"
+      - "scripts/ci/leads-scope/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -44,9 +47,12 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/audit54-cxc-forward-runtime.sh"
+      - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
       - "scripts/ci/pricing-container/**"
+      - "scripts/ci/leads-scope/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -121,12 +127,21 @@ jobs:
           npm ci --prefix scripts/ci/selector148 --ignore-scripts --omit=optional --no-audit --no-fund
           node scripts/ci/selector148/static-check.cjs
 
+      - name: Validate AUD54 catalog runtime harness syntax
+        run: |
+          bash -n scripts/ci/rls-prepare-db.sh
+          bash -n scripts/ci/audit54-cxc-forward-runtime.sh
+          python3 -c "import ast, pathlib; ast.parse(pathlib.Path('scripts/ci/audit54-cxc-runtime-fixtures.py').read_text(encoding='utf-8'))"
+
       # Bootstrap + squash (con su inventario) + replay ordenado de TODAS las
       # migraciones posteriores.
       - name: Preparar BD (bootstrap + squash + replay de migraciones)
         env:
+          AUD54_CI: '1'
+          ISOLATED_QA_DB: '1'
           FINANCIAL49_CI: '1'
           PRICING_CONTAINER_CI: '1'
+          LEADS_SCOPE_CI: '1'
         run: bash scripts/ci/rls-prepare-db.sh
 
       - name: Candado service_role-only en migraciones (bidireccional)
@@ -266,6 +281,25 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 3
+
+      - name: Evidencia de controles del instalador de leads
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: leads-scope-envelope-evidence
+          path: .leads-scope-logs/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Evidencia de controles AUD54 CxC
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: audit54-cxc-forward-runtime-evidence
+          path: /tmp/audit54-cxc-forward-runtime/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Subir logs y diff (sólo al fallar)
         if: failure()

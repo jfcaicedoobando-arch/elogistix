@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.824.53] - Unreleased
+
+- **Candidato CI · AUD54 y AUD144 sobre leads 52**: Dirección y cierre CxC usan saldo canónico en moneda documental, conservando Pagada sin evidencia activa como caso histórico. La clasificación por centavos se separa de la conversión a MXN; no modifica facturas, pagos, NC ni estados almacenados.
+- AUD144 añade atribución selectiva de NC con linaje a las líneas vinculadas, mantiene el cálculo legacy para NC sin linaje y conserva conversión, redondeo por línea, costos y cobertura. Los casos no determinables se señalan sin inventar saldos ni modificar auxiliares compartidos.
+- Dos forwards nuevos, `20261009005400` y `20261009033000`, elevan el inventario a 1,510 migraciones. Se preservan literalmente las entradas 35–52 existentes, incluida la ausencia histórica de 45; la nueva entrada no reescribe migraciones anteriores.
+- AUD54 conserva owner, firma, ACL directa y privilegios efectivos, incluidos herencia y grant option implícito del propietario; sus 27 controles de catálogo/transacción se integran al gate RLS con opt-in explícito de Actions. Se preservan todos los hooks financieros, selector, container y leads; la baseline cambia sólo los dos cuerpos revisados sobre la composición vigente.
+- Integración local para revisión y CI del commit exacto: replay, paridad de baseline PostgreSQL 17.9, controles/RLS completos y validación GUI siguen pendientes. No implica SQL remoto, despliegue, activación del selector ni cierre global de auditoría. Ver [AUD54](docs/audits/audit54-consumers-direccion-cxc.md) y [AUD144](docs/audits/audit144-pnl-selectivo.md).
+
+## [13.824.52] - Unreleased
+
+- **Candidato CI · aislamiento de leads duplicados**: limita `crm_leads_buscar_duplicados` a usuario autenticado, organización activa y permisos vigentes de lectura; conserva normalización, nueve columnas, DISTINCT y exclusión de borrados. No altera helpers, policies, ACL ni datos históricos.
+- Forward inmutable `20261009031000`: acepta sólo cuerpos revisados, propietario y atributos conocidos; conserva OID, privilegios directos y efectivos dentro de la transacción del llamador. Sin UID o scope autorizado devuelve vacío, incluido service_role sin usuario.
+- Sobre el candidato 51 registra 1,508 migraciones, conservando literalmente todos los registros anteriores. Integra 25 controles focalizados de instalador y una regresión con 17 roles, dos tenants y oráculo SELECT/RLS independiente en el workflow existente, con opt-in explícito para Actions.
+- Preserva el selector deshabilitado, container, finanzas 49 y la normalización de delimitadores de baseline ya revisada. El replay completo, baseline PostgreSQL 17.9 y CI del commit publicado siguen pendientes; esta composición no aplica SQL remoto ni despliega. Ver [contrato y evidencia](docs/ops/crm-leads-duplicados-isolation.md).
+
 ## [13.824.51] - Unreleased
 
 - **Candidato CI · guarda de contenedores en RPC directa**: añade el predicado revisado a `crm_aplicar_tarifa_tarifario`, antes de la respuesta idempotente. Conserva tipo principal/legacy, aliases, tipos personalizados y rechaza contradicciones parciales nombre/código; no modifica vínculos históricos ni el catálogo.

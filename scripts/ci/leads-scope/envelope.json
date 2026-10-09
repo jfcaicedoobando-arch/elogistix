@@ -1,0 +1,5 @@
+{
+  "migration": "supabase/migrations/20261009031000_crm_leads_duplicados_scope.sql",
+  "sha256": "d55c2e99c1946bd7deca6aa5b33fcda19181404ce399455918936a2709ff2d6d",
+  "signature": "public.crm_leads_buscar_duplicados(jsonb)"
+}

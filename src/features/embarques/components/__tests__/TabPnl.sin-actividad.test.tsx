@@ -316,3 +316,34 @@ it("audit132 venta negativa conserva actividad y pérdida sin inventar margen po
   expect(screen.getAllByText("No calculable")).toHaveLength(1);
   expect(screen.queryByText("107.4%")).toBeNull();
 });
+
+it("audit144 NC con linaje exacto no muestra advertencia proporcional", () => {
+  mockUsePnlFinanciero.mockReturnValue({ data: { ...dataConActividad,
+    venta: { ...dataConActividad.venta, real_mxn: 40 },
+    costo: { ...dataConActividad.costo, real_mxn: 20 },
+    ingresos_documentacion: { ...dataConActividad.ingresos_documentacion,
+      notas_credito_activas: 1, repartos_provisionales: 0 },
+    por_concepto: [
+      { concepto: "A seleccionado", presupuestada_mxn: 60, real_mxn: 0 },
+      { concepto: "A no seleccionado", presupuestada_mxn: 40, real_mxn: 40 },
+    ],
+  }, isLoading: false, error: null, refetch: vi.fn() });
+  render(<TabPnl embarqueId="exact144" />);
+  expect(screen.queryByText("Ingresos incompletos")).toBeNull();
+  expect(screen.queryByText(/reparto proporcional provisional/)).toBeNull();
+  expect(screen.getByText("Venta real")).toBeTruthy();
+  expect(screen.getByText("A seleccionado")).toBeTruthy();
+  expect(screen.getByText("A no seleccionado")).toBeTruthy();
+});
+
+it("audit144 NC sin linaje advierte incluso con una factura de un embarque", () => {
+  mockUsePnlFinanciero.mockReturnValue({ data: { ...dataConActividad,
+    estado_ingresos: "incompleto",
+    ingresos_documentacion: { ...dataConActividad.ingresos_documentacion,
+      facturas: 1, notas_credito_activas: 1, repartos_provisionales: 1 },
+  }, isLoading: false, error: null, refetch: vi.fn() });
+  render(<TabPnl embarqueId="legacy144" />);
+  expect(screen.getByText(/sin linaje verificable en reparto proporcional provisional/)).toBeTruthy();
+  expect(screen.queryByText(/factura\(s\) multiembarque/)).toBeNull();
+  expect(screen.getAllByText("No calculable")).toHaveLength(2);
+});
