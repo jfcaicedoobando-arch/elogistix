@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.57] - Unreleased
+
+- **Cierre de embarques · saldo CxC**: el diagnóstico muestra también el residual monetario de 0.01 MXN o USD, alineado con el bloqueo vigente del servidor. Conserva monedas separadas, conteos y notas históricas.
+- La presentación usa redondeo monetario canónico; el fallback legacy resta con precisión decimal antes de redondear. CxP conserva su umbral estricto mayor que 0.01. No cambia reglas de cierre, backend, datos ni permisos.
+- Pruebas focalizadas cubren centavo exacto, cero, negativos, subcentavos y compatibilidad CxP. La entrada 57 repite las 1,512 migraciones de 56 sin SQL nuevo y conserva todas las entradas anteriores. CI completo y validación de interfaz publicada siguen pendientes.
+
 ## [13.824.56] - Unreleased
 
 - **Cotizaciones · resumen de utilidad**: el resumen del paso 4, el detalle y la barra del paso 3 usan la venta vigente al cliente sin IVA, incluidos precios ajustados y conceptos manuales. Conservan costos internos y monedas separadas; el paso 2 mantiene la simulación del costeo.
