@@ -46,7 +46,7 @@ const dialog = (seleccion: FilaNaviera | null) => (
   <MemoryRouter><NavieraCondicionesDialog seleccion={seleccion} onOpenChange={onOpenChange} onSaved={onSaved} /></MemoryRouter>
 );
 function tab(name: "Condiciones" | "Tabulador de demoras") {
-  fireEvent.mouseDown(screen.getByRole("tab", { name, exact: true }), { button: 0, ctrlKey: false });
+  fireEvent.mouseDown(screen.getByRole("tab", { name }), { button: 0, ctrlKey: false });
 }
 const notas = () => screen.getByLabelText("Notas generales");
 const proveedorControl = () => screen.getByLabelText("Proveedor vinculado *");
@@ -112,7 +112,7 @@ describe("audit147 · selector y borrador de condiciones de naviera", () => {
     const view = render(dialog(fila()));
     fireEvent.change(notas(), { target: { value: "No transferir" } }); tab("Tabulador de demoras");
     view.rerender(dialog(fila("msc")));
-    expect(screen.getByRole("tab", { name: "Condiciones", exact: true })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Condiciones" })).toHaveAttribute("aria-selected", "true");
     expect(notas()).toHaveValue("Guardada msc"); expect(proveedorControl()).toHaveTextContent(proveedor.nombre);
     sinEscrituras();
   });
