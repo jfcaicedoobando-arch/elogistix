@@ -23,4 +23,3 @@
 
 
 - CxP: la tolerancia inclusiva de 0.01 requiere cobertura financiera neta positiva; el cierre detecta deuda íntegra por factura antes del reparto. Why: no confundir deuda pequeña sin aplicaciones con redondeo, sin alterar históricos por barrido.
-- Coincidencias Pricing↔Tarifario: filtran por modo marítimo, tipo de contenedor, país (`puertos.country`) y vigencia; el puerto sólo ordena y no hay tope. Cotizar desde Pricing usa `/cotizaciones/nueva?oportunidad=&tarifa=` y `aplicarTarifaAlForm`; el paso 1 ofrece respuestas de oportunidades "En negociación". Why: sugerencias amplias sin copiar tarifas ni migrar datos.
