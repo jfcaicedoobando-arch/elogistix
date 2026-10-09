@@ -76,12 +76,12 @@ describe("compatibilidad comercial del contenedor de Pricing", () => {
   ])("campos parciales coherentes: pedido %s, nombre %s, código %s", (tipo_carga, name, code) => {
     expect(ids({ tipo_carga }, [tarifa(code, { tipo: { name, code } })])).toEqual([code]);
   });
-  it("conserva ruta, vigencia, orden de precios y límite de diez", () => {
+  it("conserva ruta, vigencia y orden de precios sin límite", () => {
     const opciones = Array.from({ length: 12 }, (_, i) => tarifa("40HC", { id: String(i), flete_base: 12 - i }));
     opciones.push(tarifa("40HC", { id: "vencida", vigente_hasta: "2026-10-07" }));
     opciones.push(tarifa("40HC", { id: "futura", vigente_desde: "2026-10-20" }));
     opciones.push(tarifa("40HC", { id: "otra ruta", ruta: { origen: { name: "Busan" }, destino: { name: "Manzanillo" } } }));
-    expect(ids({}, opciones)).toEqual(["11", "10", "9", "8", "7", "6", "5", "4", "3", "2"]);
+    expect(ids({}, opciones)).toEqual(["11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0"]);
     expect(ids({ fecha_tentativa_carga: "2026-11-01" }, opciones)).toEqual([]);
   });
 });

@@ -79,3 +79,18 @@ export async function fetchRecargosDeTarifa(tarifaId: string): Promise<CosteoTar
   if (error) throw error;
   return (data ?? []) as CosteoTarifaRecargo[];
 }
+
+/** Una tarifa vigente por id (para precargar la cotización desde Pricing). */
+export async function fetchTarifaVigentePorId(id: string): Promise<TopTarifaRow | null> {
+  const { data, error } = await supabase.from("costeo_tarifas_vigentes_v").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data as TopTarifaRow | null) ?? null;
+}
+
+/** Varias tarifas vigentes por id. */
+export async function fetchTarifasVigentesPorIds(ids: readonly string[]): Promise<TopTarifaRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from("costeo_tarifas_vigentes_v").select("*").in("id", [...ids]).limit(200);
+  if (error) throw error;
+  return (data ?? []) as TopTarifaRow[];
+}

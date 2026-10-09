@@ -51,7 +51,7 @@ export function SolicitudPricingCampos({ datos, set, disabled }: Props) {
           onChange={(v) => v && set("solicitante_id", v)} />
         <CampoTexto id="pr-fecha" label="Fecha" type="date" {...d} value={datos.fecha} onChange={txt("fecha")} />
         <CampoTexto id="pr-cliente" label="Cliente" {...d} value={datos.cliente} onChange={txt("cliente")} />
-        <CampoLista id="pr-servicio" label="Service" required {...d} value={datos.servicio}
+        <CampoLista id="pr-servicio" label="Modo de transporte" required {...d} value={datos.servicio}
           opciones={SERVICIOS_PRICING} onChange={(v) => set("servicio", v)} />
         <CampoLista id="pr-complejidad" label="Complejidad" {...d} value={datos.complejidad ?? "media"}
           opciones={COMPLEJIDADES} onChange={(v) => v && set("complejidad", v)} />

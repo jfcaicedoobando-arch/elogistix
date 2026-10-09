@@ -7,7 +7,7 @@ import { CAP_POSTGREST } from "@/constants/queryCaps";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 
-const nombre = z.object({ name: z.string() }).passthrough().nullable();
+const nombre = z.object({ name: z.string(), country: z.string().nullable().optional() }).passthrough().nullable();
 const tarifaDbSchema = z.array(z.object({
   id: z.string(),
   flete_base: z.number(),
@@ -28,7 +28,7 @@ export type TarifaTarifario = z.infer<typeof tarifaDbSchema>[number];
 const COLS = [
   "id, flete_base, moneda, dias_libres_demoras, vigente_desde, vigente_hasta, notas, solicitud_pricing_id",
   "agente:costeo_agentes(id, nombre), naviera:navieras(id, name), tipo:tipos_contenedor(code, name)",
-  "ruta:costeo_rutas(origen:puertos!costeo_rutas_puerto_origen_id_fkey(name), destino:puertos!costeo_rutas_puerto_destino_id_fkey(name))",
+  "ruta:costeo_rutas(origen:puertos!costeo_rutas_puerto_origen_id_fkey(name, country), destino:puertos!costeo_rutas_puerto_destino_id_fkey(name, country))",
 ].join(", ");
 
 const DIA_MS = 86_400_000;

@@ -7,6 +7,7 @@ import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/Draf
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
+import { OpcionesPricingCotizacion } from "@/features/cotizacion/components/wizard/OpcionesPricingCotizacion";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useNuevaCotizacionPageController } from "./useNuevaCotizacionPageController";
 
@@ -59,6 +60,8 @@ function NuevaCotizacionScope() {
           form={w.form}
         />
       )}
+
+      {w.currentStep === 1 && !w.cotizacionId && <OpcionesPricingCotizacion form={w.form} />}
 
       <CotizacionWizardLayout
         w={w}

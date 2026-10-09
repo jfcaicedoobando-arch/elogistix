@@ -21,7 +21,7 @@ export function useOpcionesTarifario(s: SolicitudPricingRow) {
     ? (tarifas.data ?? []).filter((t) => t.id === elegida)
     : tarifasCoincidentes(s, tarifas.data ?? [], hoy);
 
-  const elegir = async (id: string) => {
+  const elegir = async (id: string): Promise<boolean> => {
     setBusy(id);
     try {
       const tarifa = tarifas.data?.find((t) => t.id === id);
@@ -31,11 +31,13 @@ export function useOpcionesTarifario(s: SolicitudPricingRow) {
       await aplicarTarifaTarifario(s.id, id);
       notifySuccess(undefined, { title: "Opción guardada en la solicitud" });
       await qc.invalidateQueries();
+      return true;
     } catch (error) {
       notifyError(undefined, {
         title: "No se pudo guardar la opción. Verifica el tipo de contenedor y la vigencia de la tarifa.",
         error, method: "CRM_APLICAR_TARIFA_TARIFARIO",
       });
+      return false;
     } finally { setBusy(null); }
   };
 

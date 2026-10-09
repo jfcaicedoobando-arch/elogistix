@@ -27,6 +27,7 @@ import {
   clearDraft,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { usePrefillProspectoOportunidad } from "@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad";
+import { usePrefillTarifaPricing } from "@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing";
 import { useDraftRestore } from "./useDraftRestore";
 
 export function useNuevaCotizacionPageController() {
@@ -35,6 +36,8 @@ export function useNuevaCotizacionPageController() {
   const [searchParams] = useSearchParams();
   // CRM-COT-01: llegada desde una oportunidad de prospecto del CRM.
   const oportunidadPrefill = searchParams.get("oportunidad");
+  // Llegada desde una opción de Pricing ("Cotizar con esta opción").
+  const tarifaPrefill = searchParams.get("tarifa");
   const { toast } = useToast();
   const { user } = useAuth();
   const { organizationId } = useOrgActiva();
@@ -93,6 +96,12 @@ export function useNuevaCotizacionPageController() {
     form: w.form,
     oportunidadId: oportunidadPrefill,
     enabled: Boolean(oportunidadPrefill) && permitePrefillProspecto && !w.cotizacionId,
+  });
+  usePrefillTarifaPricing({
+    form: w.form,
+    tarifaId: tarifaPrefill,
+    esperarOportunidad: Boolean(oportunidadPrefill),
+    enabled: Boolean(tarifaPrefill) && permitePrefillProspecto && !w.cotizacionId,
   });
 
   // B-003 (v13.320.32) — Autoguardado persiste `cotizacionId` en el draft para

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("react-router", async (o) => ({ ...(await o<typeof import("react-router")>()), useNavigate: () => vi.fn() }));
 import { SolicitudPricingCampos, type DatosSolicitud } from "../SolicitudPricingCampos";
 import { OpcionesTarifario } from "../OpcionesTarifario";
 import { useOpcionesTarifario } from "@/features/crm/hooks/useOpcionesTarifario";
