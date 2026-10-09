@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * FacturaResumenCard — "Datos generales" del CFDI (bloque operativo).
  * v13.308.16: los campos fiscales (Uso CFDI / Forma / Método de pago)
@@ -99,7 +100,7 @@ function VencimientoValor(
   { fecha, saldo, estaCancelada }: { fecha?: string | null; saldo: number; estaCancelada: boolean },
 ) {
   const dias = calcularDiasVencidoFactura(fecha);
-  const mostrarMora = dias !== null && dias > 0 && saldo > 0.01 && !estaCancelada;
+  const mostrarMora = dias !== null && dias > 0 && tieneSaldoMonetario(saldo) && !estaCancelada;
   return (
     <span className="inline-flex items-center gap-1.5">
       {fecha ? formatDate(fecha) : "—"}

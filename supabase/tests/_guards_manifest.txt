@@ -233,3 +233,24 @@ supabase/tests/audit70_por_pagar_saldo_canonico.sql
 
 # Proveedores provisionales 13.824.46: validación funcional de faltantes y aprobación idempotente.
 supabase/tests/proveedor_provisional_approval_validation.sql
+# AUD99/121: ajustes no monetarios
+supabase/tests/audit99_121_historial_ajustes.sql
+supabase/tests/audit99_121_ajuste_sin_banco.sql
+supabase/tests/audit99_121_ajuste_aislamiento.sql
+
+# AUD54: saldo real y cierre monetario, sólo fixtures con ROLLBACK.
+supabase/tests/rls/test_rls_audit54_pue_tolerancia_cierre.sql
+supabase/tests/rls/test_rls_audit54_saldo_visible.sql
+
+# AUD141: complementary monetary counters and documentary counts across currencies.
+supabase/tests/audit141_cobranza_conteo.sql
+supabase/tests/audit141_contadores_complementarios.sql
+supabase/tests/audit141_conteos_todas_monedas.sql
+supabase/tests/audit147_demoras_moneda_unica.sql
+# Audit145: identidad estable y conservación de ventas manuales.
+supabase/tests/audit145_cotizacion_venta_lineage.sql
+
+# Audit148 exact coverage/write and insurance-only trash restore; rollback-only fixtures.
+supabase/tests/audit148_exact_coverage.sql
+supabase/tests/audit148_full_coverage_write.sql
+supabase/tests/insurance_trash_restore.sql

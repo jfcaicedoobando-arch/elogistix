@@ -17,6 +17,7 @@ interface Props {
   onLimpiar: () => void;
   /** v13.592.0: alguna seleccionada tiene cancelación en trámite ante el SAT. */
   hayEnCancelacion?: boolean;
+  bloqueoCobro?: string | null;
 }
 
 function motivoInvalido(total: number, hayEnCancelacion: boolean): string {
@@ -33,6 +34,7 @@ export function CarteraSelectionBar({
   onCobroLote,
   onLimpiar,
   hayEnCancelacion = false,
+  bloqueoCobro,
 }: Props) {
   if (total === 0) return null;
 
@@ -53,7 +55,7 @@ export function CarteraSelectionBar({
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {motivoInvalido(total, hayEnCancelacion)}
+          {bloqueoCobro ?? motivoInvalido(total, hayEnCancelacion)}
         </p>
       )}
       <p className="hidden text-xs text-muted-foreground lg:block">

@@ -12,6 +12,7 @@ import { esPagoAnticipo, origenPagoAnticipo, type PagoConOrigenAnticipo } from "
 
 import { TableCell, TableRow } from "@/components/ui/table";
 export interface PagoRow extends PagoConOrigenAnticipo {
+  es_ajuste?: boolean;
   id: string;
   /** Sello de versión para el bloqueo optimista al editar (H5). */
   updated_at?: string | null;
@@ -48,7 +49,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
   const dif = p.diferencia_cambiaria_mxn != null
     ? formatCurrency(Number(p.diferencia_cambiaria_mxn), "MXN")
     : "—";
-  const mov = (p.bbva_movimientos ?? []).find(m => m.estado_conciliacion === "Conciliado") ?? null;
+  const mov = (p.bbva_movimientos ?? []).find(m => p.es_ajuste || m.estado_conciliacion === "Conciliado") ?? null;
   const esAnticipo = esPagoAnticipo(p);
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
@@ -70,6 +71,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
       <TableCell className="text-right tabular-nums text-body-sm text-muted-foreground">{dif}</TableCell>
       <TableCell>
         <ConciliacionPagoCell
+          esAjuste={p.es_ajuste === true}
           pagoId={p.id}
           fechaPago={p.fecha_pago}
           monto={Number(p.monto)}
@@ -80,7 +82,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
         />
       </TableCell>
       <TableCell className="text-right">
-        {canEdit && onEditar && !esAnticipo && (
+        {canEdit && onEditar && !esAnticipo && !p.es_ajuste && (
           <Hint label="Editar pago">
             <Button
               variant="ghost"

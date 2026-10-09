@@ -100,12 +100,34 @@ export function sinCostosAutoGenerados<T extends FilaConNota>(filas: T[]): T[] {
   return filas.filter((f) => !esCostoAutoGenerado(f));
 }
 
+/** Same exact automatic source keeps its business identity across regeneration. */
+function conservarOrigenVenta(anterior: FilaCostoLocal, nueva: FilaCostoLocal): FilaCostoLocal {
+  if (!anterior.origen_venta_id) return { ...nueva, venta_vinculo_pendiente: anterior.venta_vinculo_pendiente };
+  return { ...nueva, origen_venta_id: anterior.origen_venta_id,
+    venta_vinculo_pendiente: anterior.venta_vinculo_pendiente };
+}
+
+/** Replaced unresolved sources require a choice; never create a duplicate legacy sale. */
+function conservarRevisionPendiente(anteriores: FilaCostoLocal[], nueva: FilaCostoLocal): FilaCostoLocal {
+  return anteriores.some(c => c.venta_vinculo_pendiente)
+    ? { ...nueva, venta_vinculo_pendiente: true } : nueva;
+}
+
 /** Reemplaza sólo las filas de tarifa por las nuevas, al final de la lista. */
 export function reemplazarCostosAutoTarifa(
   filas: FilaCostoLocal[],
   nuevas: FilaCostoLocal[],
 ): FilaCostoLocal[] {
-  return [...sinCostosAutoTarifa(filas), ...nuevas];
+  const anteriores = filas.filter(esCostoAutoTarifa);
+  const key = (c: FilaCostoLocal) => c.costeo_tarifa_id
+    ? `${c.costeo_tarifa_id}:${c.costeo_tarifa_recargo_id ?? "base"}` : null;
+  const conservadas = nuevas.map(c => {
+    const identidad = key(c);
+    if (!identidad || nuevas.filter(x => key(x) === identidad).length !== 1) return conservarRevisionPendiente(anteriores, c);
+    const matches = anteriores.filter(x => key(x) === identidad);
+    return matches.length === 1 ? conservarOrigenVenta(matches[0], c) : conservarRevisionPendiente(anteriores, c);
+  });
+  return [...sinCostosAutoTarifa(filas), ...conservadas];
 }
 
 /** Reemplaza sólo la fila del flete LCL manual por la nueva. */
@@ -113,7 +135,10 @@ export function reemplazarCostosAutoFleteLcl(
   filas: FilaCostoLocal[],
   nuevas: FilaCostoLocal[],
 ): FilaCostoLocal[] {
-  return [...sinCostosAutoFleteLcl(filas), ...nuevas];
+  const anteriores = filas.filter(esCostoAutoFleteLcl);
+  const conservadas = anteriores.length === 1 && nuevas.length === 1
+    ? [conservarOrigenVenta(anteriores[0], nuevas[0])] : nuevas.map(c => conservarRevisionPendiente(anteriores, c));
+  return [...sinCostosAutoFleteLcl(filas), ...conservadas];
 }
 
 /**

@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Política PURA del borrador de nota de crédito (sin React, Query, toast ni
  * Supabase): valores por omisión, derivados/validación y construcción del
@@ -102,7 +103,7 @@ export function derivadosNC(draft: DraftNC, ctx: ContextoFacturaNC): DerivadosNC
   const monto = totales.total;
 
   const excedeSaldo = monto > ctx.saldoFactura + 0.01;
-  const facturaLiquidada = ctx.saldoFactura <= 0.01;
+  const facturaLiquidada = !tieneSaldoMonetario(ctx.saldoFactura);
   const sinUuid = !ctx.uuidFacturaOriginal;
   const conceptosValidos =
     draft.conceptos.length > 0 &&

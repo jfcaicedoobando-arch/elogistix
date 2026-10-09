@@ -1,5 +1,5 @@
 -- Fuente canónica de public.assert_movimiento_pago_consistente().
--- 1:1 con supabase/migrations/20260917182140_3783eacb-667c-4501-b6f6-b175b44e3bd8.sql.
+-- AUD99/121: ajustes tipificados no representan un origen bancario.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.assert_movimiento_pago_consistente()
@@ -13,6 +13,7 @@ DECLARE
   v_pago_moneda text;
   v_pago_monto numeric;
   v_pago_tc numeric;
+  v_pago_es_ajuste boolean;
   v_cuenta_moneda text;
   v_vinculos int;
   v_mov numeric;
@@ -21,6 +22,19 @@ DECLARE
   v_es_devolucion boolean := false;
   v_tol numeric := 0; -- MNY P1.3: tolerancia según la MONEDA del movimiento
 BEGIN
+  IF NEW.pago_proveedor_id IS NOT NULL OR NEW.pago_proveedor_lote_id IS NOT NULL THEN
+    -- BEFORE se ejecuta antes del WITH CHECK de RLS. Validar el ámbito antes
+    -- de consultar clasificaciones que el caller podría no poder leer.
+    -- role/session_user conservan el caller SQL aun dentro de SECURITY DEFINER;
+    -- current_user aquí sería el owner y no sirve para reconocer llamadas internas.
+    IF COALESCE(NULLIF(NULLIF(current_setting('role', true), 'none'), ''), session_user::text)
+         NOT IN ('postgres', 'service_role', 'supabase_admin')
+       AND (public.org_scope() IS NULL OR NEW.organization_id IS DISTINCT FROM public.org_scope()) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el movimiento está fuera de la organización activa'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
     + (CASE WHEN NEW.pago_proveedor_id IS NOT NULL THEN 1 ELSE 0 END)
@@ -79,8 +93,8 @@ BEGIN
   END IF;
 
   IF NEW.pago_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd
-      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc
+    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd, es_ajuste
+      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc, v_pago_es_ajuste
     FROM public.pagos_proveedor
     WHERE id = NEW.pago_proveedor_id AND deleted_at IS NULL;
 
@@ -91,6 +105,13 @@ BEGIN
 
     IF v_pago_org IS DISTINCT FROM NEW.organization_id THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el pago de proveedor pertenece a otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    -- AUD99/121: la clasificación es inmutable desde INSERT. No necesita
+    -- locks cruzados ni escrituras al pago para impedir carreras de reclasificación.
+    IF v_pago_es_ajuste THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede vincularse a un movimiento bancario'
         USING ERRCODE = 'P0001';
     END IF;
 
@@ -142,6 +163,24 @@ BEGIN
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del lote (%) no coincide con la cuenta bancaria (%)',
         v_pago_moneda, v_cuenta_moneda
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    -- Una composición histórica cruzada se rechaza por ámbito, sin revelar
+    -- si sus miembros inaccesibles son pagos o ajustes.
+    IF EXISTS (SELECT 1 FROM public.pagos_proveedor p
+               WHERE p.lote_id = NEW.pago_proveedor_lote_id
+                 AND p.organization_id IS DISTINCT FROM NEW.organization_id) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el lote contiene registros de otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+
+    -- No convertir una composición histórica inconsistente en dinero nuevo.
+    -- El guard de pagos impide agregar o mover ajustes a lotes desde este forward.
+    IF EXISTS (SELECT 1 FROM public.pagos_proveedor p
+               WHERE p.lote_id = NEW.pago_proveedor_lote_id
+                 AND p.organization_id = NEW.organization_id AND p.es_ajuste) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un lote con ajustes no monetarios no puede vincularse a un movimiento bancario'
         USING ERRCODE = 'P0001';
     END IF;
 

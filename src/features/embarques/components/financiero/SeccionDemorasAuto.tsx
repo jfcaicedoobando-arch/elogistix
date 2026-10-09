@@ -33,8 +33,13 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleRecalcular = async () => {
-    const res = await recalc.mutateAsync();
-    setLast(res);
+    try {
+      const res = await recalc.mutateAsync();
+      setLast(res);
+    } catch {
+      // El hook muestra la causa; no presentar un desglose anterior como vigente.
+      setLast(null);
+    }
   };
 
   return (
@@ -108,7 +113,8 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
 
 function DemorasResumen({ data }: { data: DemoraDesglose }) {
   const excedidos = data.dias_excedidos ?? 0;
-  const moneda = (data.moneda_costo ?? 'USD') as 'USD';
+  const costos = Object.entries(data.totales_costo_por_moneda ?? {});
+  if (costos.length === 0) costos.push([data.moneda_costo ?? 'USD', data.total_costo_usd]);
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-body">
@@ -124,8 +130,10 @@ function DemorasResumen({ data }: { data: DemoraDesglose }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border p-3">
-          <p className="text-body-sm text-muted-foreground uppercase">Costo total (naviera, {moneda})</p>
-          <p className="text-kpi tabular-nums">{formatCurrency(data.total_costo_usd, moneda)}</p>
+          <p className="text-body-sm text-muted-foreground uppercase">Costo total por moneda (naviera)</p>
+          {costos.map(([moneda, monto]) => (
+            <p key={moneda} className="text-kpi tabular-nums">{formatCurrency(monto, moneda)}</p>
+          ))}
         </div>
         <div className="rounded-md border p-3">
           <p className="text-body-sm text-muted-foreground uppercase">Venta total (cliente)</p>

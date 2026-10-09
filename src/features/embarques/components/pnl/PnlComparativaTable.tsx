@@ -18,8 +18,9 @@ interface Props {
 
 export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
   const totPresup = rows.reduce((a, r) => a + (r.presupuestado_mxn ?? 0), 0);
-  const totReal = rows.reduce((a, r) => a + (r.real_mxn ?? 0), 0);
-  const totDesv = totReal - totPresup;
+  const sumaReal = rows.reduce((a, r) => a + (r.real_mxn ?? NaN), 0);
+  const totReal = Number.isFinite(sumaReal) ? sumaReal : null;
+  const totDesv = totReal === null ? null : totReal - totPresup;
   return (
     <Card>
       <CardHeader>
@@ -41,22 +42,23 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
               <DetailTableEmptyRow colSpan={5} message="Sin datos" />
             )}
             {rows.map((r, idx) => {
-              const d = deltaPnl(r.real_mxn, r.presupuestado_mxn);
+              const conocido = r.real_mxn !== null && Number.isFinite(r.real_mxn);
+              const d = deltaPnl(r.real_mxn ?? 0, r.presupuestado_mxn);
               const isBad = invertirAlerta ? d.abs > 0 : d.abs < 0;
               const Icon = d.abs >= 0 ? TrendingUp : TrendingDown;
               return (
                 <DetailTableRow key={`${r.concepto}-${idx}`}>
                   <TableCell className="capitalize">{r.concepto}</TableCell>
                   <TableCell className="text-right tabular-nums">{fmtPnl(r.presupuestado_mxn)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmtPnl(r.real_mxn)}</TableCell>
-                  <TableCell className={`text-right tabular-nums ${isBad ? "text-destructive" : "text-success"}`}>
+                  <TableCell className="text-right tabular-nums">{conocido ? fmtPnl(r.real_mxn!) : "No calculable"}</TableCell>
+                  <TableCell className={`text-right tabular-nums ${!conocido ? "text-muted-foreground" : isBad ? "text-destructive" : "text-success"}`}>
                     <span className="inline-flex items-center gap-1 justify-end">
-                      <Icon className="h-3 w-3" />
-                      {fmtPnl(d.abs)}
+                      {conocido && <Icon className="h-3 w-3" />}
+                      {conocido && Number.isFinite(d.abs) ? fmtPnl(d.abs) : "—"}
                     </span>
                   </TableCell>
-                  <TableCell className={`text-right tabular-nums ${isBad ? "text-destructive" : "text-success"}`}>
-                    {r.presupuestado_mxn > 0 ? pctPnl(d.pct) : "—"}
+                  <TableCell className={`text-right tabular-nums ${!conocido ? "text-muted-foreground" : isBad ? "text-destructive" : "text-success"}`}>
+                    {conocido && r.presupuestado_mxn > 0 && Number.isFinite(d.pct) ? pctPnl(d.pct) : "—"}
                   </TableCell>
                 </DetailTableRow>
               );
@@ -67,12 +69,12 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
               <TableRow className="font-semibold border-t-2">
                 <TableCell>Total</TableCell>
                 <TableCell className="text-right tabular-nums">{fmtPnl(totPresup)}</TableCell>
-                <TableCell className="text-right tabular-nums">{fmtPnl(totReal)}</TableCell>
-                <TableCell className={`text-right tabular-nums ${(invertirAlerta ? totDesv > 0 : totDesv < 0) ? "text-destructive" : "text-success"}`}>
-                  {fmtPnl(totDesv)}
+                <TableCell className="text-right tabular-nums">{totReal === null ? "No calculable" : fmtPnl(totReal)}</TableCell>
+                <TableCell className={`text-right tabular-nums ${totDesv === null ? "text-muted-foreground" : (invertirAlerta ? totDesv > 0 : totDesv < 0) ? "text-destructive" : "text-success"}`}>
+                  {totDesv === null || !Number.isFinite(totDesv) ? "—" : fmtPnl(totDesv)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {totPresup > 0 ? pctPnl((totDesv / totPresup) * 100) : "—"}
+                  {totDesv !== null && totPresup > 0 && Number.isFinite((totDesv / totPresup) * 100) ? pctPnl((totDesv / totPresup) * 100) : "—"}
                 </TableCell>
               </TableRow>
             </TableFooter>

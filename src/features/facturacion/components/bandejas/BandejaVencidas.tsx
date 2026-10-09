@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Bandeja "Vencidas": facturas con vencimiento pasado y saldo > 0.
  * Estados unificados vía `<BandejaShell />`.
@@ -67,7 +68,7 @@ const columns = defineColumns<FilaVencida>([
 export function BandejaVencidas() {
   const { data, isLoading, isError, refetch } = useCobranza({ estatus: "todos", moneda: "todas" });
   const filas = useMemo<FilaVencida[]>(
-    () => (data ?? []).filter((f) => f.saldo > 0 && f.estatus_cobranza === "Vencida"),
+    () => (data ?? []).filter((f) => tieneSaldoMonetario(f.saldo) && f.estatus_cobranza === "Vencida"),
     [data],
   );
   const monedas = useMemo(

@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 import { roundMoney } from "@/lib/financial/financialUtils";
 /**
  * Dominio puro del reporte contable de Cartera y Antigüedad (CxC + CxP).
@@ -119,7 +120,7 @@ export function construirFilasCartera(
   tc: TcCorte | null,
 ): FilaCartera[] {
   return (facturas ?? [])
-    .filter((f) => f.saldo > 0.01)
+    .filter((f) => tieneSaldoMonetario(f.saldo))
     .map((f) => {
       const diasVencido = diasVencidoAlCorte(f.fechaVencimiento, fechaCorte);
       return {

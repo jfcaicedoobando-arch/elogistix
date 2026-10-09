@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Servicio de Estado de Cuenta por cliente.
  *
@@ -79,5 +80,5 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
   // SAFE-CAST: el shape de joins embebidos no lo infiere Supabase.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map(mapFacturaEstadoCuenta);
 
-  return filters.soloConSaldo ? rows.filter((r) => r.saldo > 0.01) : rows;
+  return filters.soloConSaldo ? rows.filter((r) => tieneSaldoMonetario(r.saldo)) : rows;
 }

@@ -100,6 +100,9 @@ describe("conciliacion service", () => {
   });
 
   describe("conciliarConPago", () => {
+    beforeEach(() => {
+      mock.setTableResult("pagos_proveedor", { data: { es_ajuste: false }, error: null });
+    });
     it("escribe pago_factura_id (no pago_proveedor_id) cuando tipo=cxc", async () => {
       // N5: un cobro sólo se concilia con un abono (entrada de dinero).
       mock.setTableResult("bbva_movimientos", { data: [{ id: "m1", cargo: 0, abono: 100 }], error: null });

@@ -13,15 +13,12 @@ const savePasoFinal = vi.fn();
 const notifyError = vi.fn();
 const notifySuccess = vi.fn();
 
-vi.mock("@/features/cotizacion/services", () => ({
+vi.mock("@/features/cotizacion/services", async () => ({
   savePaso1: (...a: unknown[]) => savePaso1(...a),
   savePaso2: (...a: unknown[]) => savePaso2(...a),
   savePaso3: (...a: unknown[]) => savePaso3(...a),
   savePasoFinal: (...a: unknown[]) => savePasoFinal(...a),
-  buildConceptosFromCostos: (_costos: unknown, _iva: number) => ({
-    usd: [{ descripcion: "Flete", monto: 100 }],
-    mxn: [{ descripcion: "Despacho", monto: 200 }],
-  }),
+  buildConceptosFromCostos: (await import("@/features/cotizacion/domain/cotizacion.conceptos")).buildConceptosFromCostos,
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
@@ -109,20 +106,21 @@ describe("useCotizacionWizardSteps", () => {
       // Q7 (v13.823.396): el dominio exige una fila con importes reales,
       // concepto y proveedor; {id, monto, moneda} ya no es un costo válido.
       costosInternos: [{
-        id: "x",
+        origen_venta_id: "cost-A",
         concepto: "Flete",
         proveedor: "Maersk",
         moneda: "USD",
         cantidad: 1,
         costo_unitario: 100,
         precio_venta: 115,
-      } as never],
+        unidad_medida: "Servicio",
+      }],
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(savePaso2).toHaveBeenCalledTimes(1);
-    expect(refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
-    expect(refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
+    expect(refs.setConceptosUSD).toHaveBeenCalledWith([expect.objectContaining({ origen_costo_id: "cost-A", descripcion: "Flete", moneda: "USD", precio_unitario: 115, total: 115 })]);
+    expect(refs.setConceptosMXN).toHaveBeenCalledWith([]);
     expect(refs.setCostosPreLlenados).toHaveBeenCalledWith(true);
     expect(refs.setCurrentStep).toHaveBeenCalledWith(3);
   });
@@ -146,12 +144,14 @@ describe("useCotizacionWizardSteps", () => {
     // editó costos, y vuelve a avanzar. La firma nueva difiere de la inicial → regenerar.
     const initial = makeDeps({
       currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
-      costosInternos: [{ concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, precio_venta: 100 } as never],
+      costosInternos: [{ origen_venta_id: "cost-A", concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, costo_unitario: 50, precio_venta: 100, unidad_medida: "Servicio" }],
+      conceptosUSD: [{ origen_costo_id: "cost-A", descripcion: "Flete", moneda: "USD", cantidad: 1, precio_unitario: 100, unidad_medida: "Servicio", aplica_iva: true, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16, total: 116 }],
     });
     const { result, rerender } = renderHook((deps) => useCotizacionWizardSteps(deps), { initialProps: initial.deps });
     const editados = makeDeps({
       currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
-      costosInternos: [{ concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, precio_venta: 250 } as never],
+      costosInternos: [{ ...initial.deps.costosInternos[0], precio_venta: 250 }],
+      conceptosUSD: initial.deps.conceptosUSD,
     });
     // Reutilizamos los refs originales para verificar setters
     (editados.deps as unknown as { setConceptosUSD: unknown }).setConceptosUSD = initial.refs.setConceptosUSD;
@@ -159,8 +159,8 @@ describe("useCotizacionWizardSteps", () => {
     (editados.deps as unknown as { setCurrentStep: unknown }).setCurrentStep = initial.refs.setCurrentStep;
     rerender(editados.deps);
     await act(async () => { await result.current.handleSiguiente(); });
-    expect(initial.refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
-    expect(initial.refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
+    expect(initial.refs.setConceptosUSD).toHaveBeenCalledWith([expect.objectContaining({ origen_costo_id: "cost-A", precio_unitario: 250, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16, total: 290 })]);
+    expect(initial.refs.setConceptosMXN).toHaveBeenCalledWith([]);
     expect(initial.refs.setCurrentStep).toHaveBeenCalledWith(3);
   });
 
@@ -175,7 +175,10 @@ describe("useCotizacionWizardSteps", () => {
 
 
   it("handleGuardar: éxito navega a /cotizaciones/:id y notifySuccess", async () => {
-    const { deps, refs } = makeDeps({ cotizacionId: "cot-1" });
+    const { deps, refs } = makeDeps({ cotizacionId: "cot-1",
+      form: { getValues: (key?: string) => key === "sinDesgloseCostos" ? true : { clienteId: "cli-1", esProspecto: false } } as never,
+      conceptosUSD: [{ descripcion: "Manual", unidad_medida: "Servicio", cantidad: 1, precio_unitario: 150, moneda: "USD", total: 150, aplica_iva: false }],
+    });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleGuardar(); });
     expect(savePasoFinal).toHaveBeenCalledTimes(1);
@@ -196,4 +199,19 @@ describe("useCotizacionWizardSteps", () => {
     act(() => { result.current.handleBack(); });
     expect(refs.setCurrentStep).toHaveBeenCalledWith(expect.any(Function));
   });
+});
+
+it("restaurar baseline protege precio local al volver a paso2 y permite cambios posteriores", async () => {
+  const costo: Parameters<typeof useCotizacionWizardSteps>[0]["costosInternos"][number] = { origen_venta_id: "cost-A", concepto: "Flete", proveedor: "Maersk", moneda: "USD", cantidad: 1, costo_unitario: 50, precio_venta: 100, unidad_medida: "Servicio" };
+  const venta = { origen_costo_id: "cost-A", descripcion: "Flete", moneda: "USD", cantidad: 1, precio_unitario: 150, unidad_medida: "Servicio", aplica_iva: true, tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16, total: 174 };
+  const initial = makeDeps({ currentStep: 2, cotizacionId: "cot-1", costosInternos: [costo], conceptosUSD: [venta] });
+  const { result, rerender } = renderHook(deps => useCotizacionWizardSteps(deps), { initialProps: initial.deps });
+  act(() => result.current.restaurarCostosSincronizados([costo]));
+  expect(result.current.getCostosSincronizados()).toEqual([costo]);
+  await act(async () => result.current.handleSiguiente());
+  expect(initial.refs.setConceptosUSD).not.toHaveBeenCalled();
+  rerender({ ...initial.deps, costosPreLlenados: true, costosInternos: [{ ...costo, precio_venta: 200 }] });
+  await act(async () => result.current.handleSiguiente());
+  expect(initial.refs.setConceptosUSD).toHaveBeenCalledWith([expect.objectContaining({ precio_unitario: 200, total: 232 })]);
+  expect(result.current.getCostosSincronizados()[0].precio_venta).toBe(200);
 });

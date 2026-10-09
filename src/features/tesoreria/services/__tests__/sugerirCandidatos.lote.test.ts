@@ -22,7 +22,7 @@ function mov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
 
 const pagoEnLote = {
   id: "p1",
-  fecha_pago: "2026-06-10",
+  es_ajuste: false, fecha_pago: "2026-06-10",
   monto: 1000,
   moneda: "MXN",
   referencia: "R1",

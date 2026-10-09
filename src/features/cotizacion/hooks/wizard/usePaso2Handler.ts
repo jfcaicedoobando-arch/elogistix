@@ -12,6 +12,9 @@ import { validarPaso2, sincronizarConceptosPaso2 } from "./paso2Helpers";
 import type { WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 interface Paso2Deps {
+  conceptosUSD: Deps["conceptosUSD"];
+  conceptosMXN: Deps["conceptosMXN"];
+  costosAnteriores: MutableRefObject<Deps["costosInternos"]>;
   cotizacionId: Deps["cotizacionId"];
   costosInternos: Deps["costosInternos"];
   costosDesajuste: Deps["costosDesajuste"];
@@ -28,6 +31,7 @@ interface Paso2Deps {
 
 export function usePaso2Handler({
   cotizacionId, costosInternos, costosDesajuste, costosPreLlenados, setCostosPreLlenados,
+  conceptosUSD, conceptosMXN, costosAnteriores,
   setConceptosUSD, setConceptosMXN, setCurrentStep, tasaIva,
   updateCotizacion, upsertCostos, lastCostosHash,
 }: Paso2Deps) {
@@ -61,6 +65,7 @@ export function usePaso2Handler({
       }
 
       sincronizarConceptosPaso2({
+        conceptosUSD, conceptosMXN, costosAnteriores,
         costosInternos,
         tasaIva,
         lastCostosHash,
@@ -85,5 +90,5 @@ export function usePaso2Handler({
         context: { cotizacionId, paso: 2 },
       });
     }
-  }, [costosInternos, costosDesajuste, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, updateCotizacion, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, lastCostosHash]);
+  }, [conceptosUSD, conceptosMXN, costosAnteriores, costosInternos, costosDesajuste, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, updateCotizacion, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, lastCostosHash]);
 }

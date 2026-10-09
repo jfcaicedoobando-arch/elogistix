@@ -115,3 +115,37 @@ describe("embarques/services/demorasEmbarque", () => {
     expect(mock.rpcCalls[0].args).toEqual({ p_embarque_id: "" });
   });
 });
+
+describe("audit147 · totales separados", () => {
+  it("conserva importes nativos por moneda sin inventar TC", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: {
+      total_costo: null, moneda_costo: null,
+      totales_costo_por_moneda: { USD: 1, MXN: 20, EUR: 0.33 },
+    }, error: null });
+    const r = await calcularDemorasEmbarque("emb-1");
+    expect(r.totales_costo_por_moneda).toEqual({ USD: 1, MXN: 20, EUR: 0.33 });
+  });
+});
+
+
+describe("audit147 · fechas efectivas del cálculo", () => {
+  it("muestra el desglose si el RPC resolvió las fechas desde el contenedor", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: {
+      fecha_descarga_embarque: null, fecha_devolucion_embarque: null,
+      totales_costo_por_moneda: { MXN: 20 },
+      contenedores: [{ fecha_descarga: "2026-10-03", fecha_devolucion: "2026-10-05", dias_excedidos: 2 }],
+    }, error: null });
+    const r = await calcularDemorasEmbarque("emb");
+    expect(r.sin_eventos).toBe(false);
+    expect(r.dias_excedidos).toBe(2);
+    expect(r.totales_costo_por_moneda).toEqual({ MXN: 20 });
+  });
+  it.each([{ contenedores: [] }, { contenedores: [{ fecha_descarga: "2026-10-03", fecha_devolucion: null }] }, { contenedores: [
+    { fecha_descarga: "2026-10-03", fecha_devolucion: "2026-10-05" },
+    { fecha_descarga: null, fecha_devolucion: "2026-10-05" },
+  ] }])("mantiene aviso con fechas realmente incompletas: %j", async ({ contenedores }) => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: { contenedores }, error: null });
+    const r = await calcularDemorasEmbarque("emb");
+    expect(r.sin_eventos).toBe(true);
+  });
+});

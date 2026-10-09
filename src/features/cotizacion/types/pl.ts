@@ -7,6 +7,10 @@
  */
 
 export interface FilaCostoLocal {
+  /** Local review state only; never guess a legacy sale identity. */
+  venta_vinculo_pendiente?: boolean;
+  /** Stable identity shared with the derived sale, independent of cost row replacement. */
+  origen_venta_id?: string | null;
   concepto: string;
   moneda: "USD" | "MXN";
   proveedor: string;
@@ -52,6 +56,8 @@ export interface FilaCostoLocal {
 
 
 export interface FilaCostoDetalle {
+  /** Stable identity shared with the derived sale, independent of cost row replacement. */
+  origen_venta_id?: string | null;
   concepto: string;
   moneda: "USD" | "MXN";
   proveedor: string;

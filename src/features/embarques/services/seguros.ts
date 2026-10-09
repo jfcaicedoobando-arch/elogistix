@@ -49,7 +49,8 @@ export interface FacturaSeguroElegible {
 
 /**
  * Facturas de proveedor vigentes del embarque que pueden documentar una prima.
- * La base valida otra vez pertenencia, organización y que no la use otra póliza.
+ * Lista orientativa: sólo cabeceras visibles, sin acreditar cobertura.
+ * Al guardar, la base valida pertenencia, cobertura completa y unicidad activa.
  */
 export async function fetchFacturasSeguroElegibles(embarqueId: string): Promise<FacturaSeguroElegible[]> {
   const data = await unwrapOr(

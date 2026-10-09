@@ -13,6 +13,7 @@ import {
   importeMovimiento,
   montosCuadran,
 } from "@/features/tesoreria/domain/conciliacionMonto";
+import { assertPagoProveedorMonetario } from "./conciliacionPagoProveedorGuard";
 import { toleranciaMonto } from "@/features/tesoreria/domain/tolerancia";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
@@ -79,6 +80,7 @@ export async function conciliarConPago(
   pagoId: string,
   userId: string | null,
 ) {
+  if (tipo === "cxp") await assertPagoProveedorMonetario(pagoId);
   // N15 (Ola 4): guard 409 previo — un pago sólo puede conciliarse con UN
   // movimiento vivo. El índice único parcial uq_bbva_movimientos_pago_* sigue
   // siendo la última línea de defensa ante una carrera de dos usuarios (su

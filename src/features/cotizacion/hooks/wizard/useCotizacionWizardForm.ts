@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router";
 import type { ConceptoVentaCotizacion, CotizacionRow, CreateCotizacionInput } from "@/features/cotizacion/hooks/useCotizaciones";
@@ -14,6 +14,7 @@ import {
 } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
 import { esBorradorSinImportes, monedaDeImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
+import { prepararCostosConOrigen } from "@/features/cotizacion/domain/sincronizarVentasConCostos";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useInvalidarTarifaAutomatica } from "./useInvalidarTarifaAutomatica";
 import { useCambiarTipoEmbarque } from "./useCambiarTipoEmbarque";
@@ -100,7 +101,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const [cotizacionId, setCotizacionId] = useState<string | null>(initialData?.id ?? null);
   const [currentStep, setCurrentStep] = useState(1);
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
-  const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
+  const [costosInternos, setCostosState] = useState<FilaCostoLocal[]>(() => prepararCostosConOrigen(initialCostosLocales, initialConceptosVenta ?? []));
+  const setCostosInternos = useCallback((update: SetStateAction<FilaCostoLocal[]>) => {
+    setCostosState(prev => (typeof update === "function" ? update(prev) : update)
+      .map(c => c.origen_venta_id ? c : { ...c, origen_venta_id: crypto.randomUUID() }));
+  }, []);
   const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
   // Q2/Q6 (v13.823.396): el Paso 2 reporta aquí si sus costos automáticos
   // quedaron desactualizados respecto al Paso 1; bloquea "Siguiente".
@@ -148,7 +153,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form, clientes, userEmail, conceptosUSD, conceptosMXN, costosInternos, cotizacionId]);
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
-  const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = useCotizacionWizardSteps({
+  const { getCostosSincronizados, restaurarCostosSincronizados, handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = useCotizacionWizardSteps({
     form, toast, navigate, isEditMode, estadoInicial: initialData?.estado ?? null,
     cotizacionId, setCotizacionId,
     currentStep, setCurrentStep,
@@ -171,13 +176,14 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     msdsFile, setMsdsFile,
     esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,
-    conceptosUSD, conceptosMXN,
+    conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
     actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
-    totalUSD, subtotalMXN, ivaMXN, totalMXN,
+    totalUSD, subtotalMXN, ivaMXN, totalMXN, tasaIva,
     tipoCambioUsd, setTipoCambioUsd,
     plUSD, plMXN,
     costosUSD: costosUSDFiltered,
     costosMXN: costosMXNFiltered,
+    getCostosSincronizados, restaurarCostosSincronizados,
     handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose,
     /** v13.823.69: sello optimista vigente (lo persiste el borrador). */
     selloActual: updateGuardado.selloActual,

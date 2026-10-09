@@ -36,9 +36,11 @@ function DetallePagoConvencional({ ref_pago, onOpenChange }: Props) {
     <Sheet open={!!ref_pago} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Detalle del pago</SheetTitle>
+          <SheetTitle>{data?.pago.es_ajuste ? "Detalle del ajuste" : "Detalle del pago"}</SheetTitle>
           <SheetDescription>
-            Datos del pago, aplicaciones a facturas y conciliación bancaria.
+            {data?.pago.es_ajuste
+              ? "Ajuste no monetario y aplicaciones a facturas."
+              : "Datos del pago, aplicaciones a facturas y conciliación bancaria."}
           </SheetDescription>
         </SheetHeader>
 
@@ -63,6 +65,7 @@ function DetallePagoConvencional({ ref_pago, onOpenChange }: Props) {
                 monedaCuentaPago={data.pago.moneda}
                 cuentaBancariaPagoId={data.pago.cuenta_bancaria_id}
                 metodoPago={data.pago.metodo_pago}
+                esAjuste={data.pago.es_ajuste}
               />
 
               {data.tipo === "devolucion_anticipo" ? (

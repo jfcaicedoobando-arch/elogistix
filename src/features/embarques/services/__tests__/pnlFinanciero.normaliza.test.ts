@@ -38,3 +38,13 @@ describe("fetchPnlEmbarque · normalización del desglose", () => {
     expect(pnl.por_concepto).toEqual([]);
   });
 });
+
+
+it.each([null, undefined, Infinity, "NaN", "", false, "100"])("audit132 conserva importe desconocido de concepto (%s)", async (real) => {
+  rpc.mockResolvedValue({ data: { por_concepto: [
+    { concepto: "NC desconocida", presupuestada_mxn: 100, real_mxn: real },
+  ] }, error: null });
+  expect((await fetchPnlEmbarque("e1")).por_concepto[0]).toMatchObject({
+    real_mxn: null, desviacion_mxn: null,
+  });
+});

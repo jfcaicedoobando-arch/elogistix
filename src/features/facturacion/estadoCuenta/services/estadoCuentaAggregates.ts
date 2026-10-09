@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Agregados puros para el módulo Estado de Cuenta.
  * Sin I/O — testeable de forma aislada.
@@ -32,7 +33,7 @@ function bucket(rows: FacturaEstadoCuenta[], predicate: (f: FacturaEstadoCuenta)
 }
 
 export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstadoCuenta {
-  const adeudado = bucket(rows, (f) => f.saldo > 0);
+  const adeudado = bucket(rows, (f) => tieneSaldoMonetario(f.saldo));
   // Mismo predicado que Cobranza, Tesorería y el Dashboard (canon compartido).
   const vencido = bucket(rows, esCxcVencida);
 
@@ -50,7 +51,7 @@ export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstad
   }
 
   const facturasVencidas = rows.filter(esCxcVencida).length;
-  const facturasAdeudadas = rows.filter((f) => f.saldo > 0).length;
+  const facturasAdeudadas = rows.filter((f) => tieneSaldoMonetario(f.saldo)).length;
 
 
   return {

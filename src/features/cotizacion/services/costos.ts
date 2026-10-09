@@ -91,6 +91,7 @@ export async function upsertCotizacionCostos(
   const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
+      origen_venta_id: c.origen_venta_id ?? null,
       concepto: c.concepto,
       moneda: c.moneda,
       proveedor: c.proveedor,

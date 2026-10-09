@@ -14,7 +14,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
-export function invalidarTrasTimbrado(qc: QueryClient, facturaId?: string): void {
+export async function invalidarTrasTimbrado(qc: QueryClient, facturaId?: string): Promise<void> {
   if (facturaId) {
     qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
   }
@@ -26,4 +26,11 @@ export function invalidarTrasTimbrado(qc: QueryClient, facturaId?: string): void
   qc.invalidateQueries({ queryKey: queryKeys.cxc.all });
   qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
   invalidateProfitDependencies(qc);
+  // La cabecera de una factura no enumera todos sus embarques. Refrescar esta
+  // familia precisa incluye vínculos multiembarque, incluso sin detalle en cache.
+  // No usar pnlFinanciero() como prefijo: su segundo segmento es undefined.
+  const key = queryKeys.embarques.pnlFinanciero();
+  await qc.invalidateQueries({ predicate: ({ queryKey }) =>
+    queryKey.length === key.length && queryKey[0] === key[0] && typeof queryKey[1] === "string" && queryKey[2] === key[2],
+  });
 }

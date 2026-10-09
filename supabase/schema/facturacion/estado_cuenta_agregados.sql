@@ -78,17 +78,17 @@ BEGIN
       AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
   )
   SELECT jsonb_build_object(
-    'adeudado_mxn',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0), 0),
-    'adeudado_usd',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0), 0),
-    'adeudado_eur',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0), 0),
-    'vencido_mxn',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_usd',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_eur',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0 AND dias_vencido > 0), 0),
+    'adeudado_mxn',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_usd',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_eur',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0), 0),
+    'vencido_mxn',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_eur',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
     'a_favor_mxn',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'MXN'), 0),
     'a_favor_usd',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'USD'), 0),
     'a_favor_eur',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'EUR'), 0),
-    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE saldo > 0 AND dias_vencido > 0),
-    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE saldo > 0)
+    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0 AND dias_vencido > 0),
+    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0)
   ) INTO v_result;
   RETURN v_result;
 END;

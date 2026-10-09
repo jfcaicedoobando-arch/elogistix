@@ -34,9 +34,19 @@ export interface AlertasPnl {
   alertaMargen: boolean;
 }
 
+function calcularRentabilidad(ventaReal: number | null, costoReal: number | null, incompleto: boolean) {
+  const resultado = ventaReal !== null && costoReal !== null ? ventaReal - costoReal : NaN;
+  const utilidadReal = incompleto || !Number.isFinite(resultado)
+    ? null : resultado;
+  const margen = utilidadReal !== null && ventaReal !== null && ventaReal > 0
+    ? (utilidadReal / ventaReal) * 100 : NaN;
+  const margenReal = Number.isFinite(margen) ? margen : null;
+  return { utilidadReal, margenReal };
+}
+
 export function calcularAlertasPnl(args: {
-  ventaReal: number;
-  costoReal: number;
+  ventaReal: number | null;
+  costoReal: number | null;
   ventaPresup: number;
   costoPresup: number;
   /** Δ% del costo real vs presupuestado (salida de `deltaPnl`). */
@@ -44,11 +54,15 @@ export function calcularAlertasPnl(args: {
   /** Estado del embarque; sólo informativo para el copy de los avisos. */
   estadoEmbarque?: string | null;
   costosIncompletos?: boolean;
+  ingresosIncompletos?: boolean;
+  /** Documentos emitidos mantienen actividad incluso si una NC deja el neto en cero. */
+  actividadIngresos?: boolean;
 }): AlertasPnl {
   const { ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct } = args;
-  const utilidadReal = args.costosIncompletos ? null : ventaReal - costoReal;
-  const margenReal = utilidadReal === null ? null : ventaReal > 0 ? (utilidadReal / ventaReal) * 100 : 0;
-  const sinActividadReal = ventaReal <= 0 && costoReal <= 0;
+  const { utilidadReal, margenReal } = calcularRentabilidad(ventaReal, costoReal,
+    Boolean(args.costosIncompletos || args.ingresosIncompletos));
+  const sinActividadReal = ventaReal === 0 && costoReal === 0
+    && !args.actividadIngresos && !args.ingresosIncompletos;
   if (sinActividadReal) {
     return {
       utilidadReal, margenReal, sinActividadReal,
@@ -60,7 +74,7 @@ export function calcularAlertasPnl(args: {
     margenReal,
     sinActividadReal,
     alertaSobrecosto: costoPresup > 0 && deltaCostoPct > PNL_UMBRAL_SOBRECOSTO_PCT,
-    alertaVenta: ventaPresup > 0 && ventaReal < ventaPresup,
-    alertaMargen: margenReal !== null && ventaReal > 0 && margenReal < PNL_UMBRAL_MARGEN_MIN_PCT,
+    alertaVenta: !args.ingresosIncompletos && ventaReal !== null && ventaPresup > 0 && ventaReal < ventaPresup,
+    alertaMargen: margenReal !== null && ventaReal !== null && ventaReal > 0 && margenReal < PNL_UMBRAL_MARGEN_MIN_PCT,
   };
 }

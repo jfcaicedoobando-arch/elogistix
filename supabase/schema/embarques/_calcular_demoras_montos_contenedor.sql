@@ -13,17 +13,29 @@ STABLE
 SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
+DECLARE
+  v_monedas integer;
 BEGIN
   monto_costo := 0;
   monto_venta := 0;
   moneda_costo := COALESCE(p_moneda_default, 'USD');
 
-  IF p_dias_excedidos <= 0 OR p_tipo_cont_id IS NULL THEN
+  IF p_dias_excedidos IS NULL OR p_dias_excedidos <= 0 OR p_tipo_cont_id IS NULL THEN
     RETURN NEXT;
     RETURN;
   END IF;
 
   IF p_cond_id IS NOT NULL THEN
+    -- El contrato devuelve un importe y una moneda, sin TC ni fecha de conversión.
+    -- Revisar todo el tabulador, incluso tramos futuros o de importe cero.
+    SELECT COUNT(DISTINCT moneda) INTO v_monedas
+    FROM public.costeo_naviera_demoras_tarifa
+    WHERE naviera_condicion_id = p_cond_id
+      AND tipo_contenedor_id = p_tipo_cont_id;
+    IF v_monedas > 1 THEN
+      RAISE EXCEPTION 'LC_DEMORAS_MONEDAS_MIXTAS: el tabulador de este tipo de contenedor mezcla monedas. Usa una sola moneda por tabulador; no hay conversión automática.';
+    END IF;
+
     SELECT
       COALESCE(SUM(
         CASE WHEN d >= t.desde_dia AND (t.hasta_dia IS NULL OR d <= t.hasta_dia) THEN t.monto_por_dia ELSE 0 END
@@ -63,4 +75,6 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public._calcular_demoras_montos_contenedor(uuid, uuid, uuid, integer, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._calcular_demoras_montos_contenedor(uuid, uuid, uuid, integer, text) FROM PUBLIC, anon;
+-- Preservar ACL efectiva del historial: este helper no otorga EXECUTE a service_role.
+GRANT EXECUTE ON FUNCTION public._calcular_demoras_montos_contenedor(uuid, uuid, uuid, integer, text) TO authenticated;

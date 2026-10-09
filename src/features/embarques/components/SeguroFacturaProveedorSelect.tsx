@@ -1,7 +1,7 @@
 /**
  * Hallazgo 148 — Vínculo opcional póliza ↔ factura de proveedor.
- * Si la prima ya está facturada por la aseguradora, ligarla evita que la
- * utilidad cuente el mismo gasto dos veces (se cuenta la factura).
+ * La selección declara cobertura completa; esta lista no la verifica.
+ * Conservar siempre el vínculo guardado aunque su información no esté disponible.
  */
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ interface Props {
 
 export function SeguroFacturaProveedorSelect({ embarqueId, value, onChange }: Props) {
   const { data = [], isLoading, isError } = useFacturasSeguroElegibles(embarqueId);
+  const seleccionAusente = value !== null && !data.some((factura) => factura.id === value);
 
   return (
     <div className="sm:col-span-2">
@@ -26,18 +27,28 @@ export function SeguroFacturaProveedorSelect({ embarqueId, value, onChange }: Pr
         <SelectTrigger id="seguro-factura"><SelectValue placeholder="Sin factura ligada" /></SelectTrigger>
         <SelectContent>
           <SelectItem value={SIN}>Sin factura ligada (la prima cuenta como costo)</SelectItem>
+          {seleccionAusente && (
+            <SelectItem value={value}>Factura ligada guardada · información no disponible en esta lista</SelectItem>
+          )}
           {data.map((f) => (
             <SelectItem key={f.id} value={f.id}>
-              {(f.folio_interno ?? "Sin folio")} · {f.proveedor_nombre ?? "Sin proveedor"} · {formatCurrency(f.subtotal, f.moneda)}
+              {(f.folio_interno ?? "Sin folio")} · {f.proveedor_nombre ?? "Sin proveedor"} · Subtotal de factura: {formatCurrency(f.subtotal, f.moneda)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <p className="text-body-sm text-muted-foreground mt-1">
-        {isError
-          ? "No se pudieron cargar las facturas del embarque."
-          : "Si eliges una factura, la utilidad cuenta la factura y no la prima, para no sumar dos veces el mismo gasto."}
+        La factura debe documentar toda la prima y puede incluir otros gastos. El subtotal mostrado
+        es el de la factura; esta lista no verifica la cobertura atribuida al embarque.
+        La cobertura completa se valida al guardar.
       </p>
+      {isLoading && <p className="text-body-sm text-muted-foreground mt-1">Cargando facturas; se conserva la selección.</p>}
+      {isError && <p className="text-body-sm text-muted-foreground mt-1">No se pudieron cargar las facturas del embarque.</p>}
+      {seleccionAusente && (
+        <p className="text-body-sm text-muted-foreground mt-1">
+          Se conserva el vínculo guardado. Su ausencia en esta lista no permite determinar su vigencia ni su cobertura.
+        </p>
+      )}
     </div>
   );
 }

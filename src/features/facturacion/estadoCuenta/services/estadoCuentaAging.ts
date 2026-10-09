@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Agregados puros del Estado de Cuenta: antigüedad de saldos (aging),
  * saldo acumulado (running balance) y agrupación/subtotales por moneda.
@@ -62,7 +63,7 @@ export function calcularAging(rows: ReadonlyArray<FacturaEstadoCuenta>): AgingBu
   for (const id of BUCKETS_ORDEN) acc.set(id, { mxn: [], usd: [], eur: [], conteo: 0 });
 
   for (const f of rows) {
-    if (f.saldo <= 0.01) continue;
+    if (!tieneSaldoMonetario(f.saldo)) continue;
     const entry = acc.get(bucketDeFactura(f.dias_vencido));
     if (!entry) continue;
     entry.conteo += 1;

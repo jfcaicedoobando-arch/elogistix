@@ -21,7 +21,7 @@ import {
   useReemplazarTramos,
   useTiposContenedorDemoras,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
-import { encontrarSolapeTramos, tramosSucios } from "@/features/costeo/utils/demorasTramos";
+import { encontrarSolapeTramos, tramosSucios, mezclaMonedasTramos, MENSAJE_MONEDAS_DEMORAS } from "@/features/costeo/utils/demorasTramos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 import { nuevoTramo, tramosEditablesDeTipo, type TramoEditable } from "./demorasTarifaEditor.helpers";
@@ -36,6 +36,7 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
   const { data: tramos = [] } = useDemorasTramos(navieraCondicionId);
   const reemplazar = useReemplazarTramos();
   const [rows, setRows] = useState<TramoEditable[]>([]);
+  const monedasMixtas = mezclaMonedasTramos(rows);
 
   useEffect(() => {
     if (!tipoSel && tipos.length > 0) setTipoSel(tipos[0].id);
@@ -113,11 +114,12 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
         <Button variant="outline" size="sm" onClick={add}>
           <Plus className="size-4 mr-1" /> Tramo
         </Button>
-        <Button size="sm" onClick={guardar} disabled={reemplazar.isPending}>
+        <Button size="sm" onClick={guardar} disabled={reemplazar.isPending || monedasMixtas}>
           <Save className="size-4 mr-1" /> Guardar tabulador
         </Button>
       </div>
 
+      {monedasMixtas && <p role="alert" className="text-body-sm text-destructive">{MENSAJE_MONEDAS_DEMORAS}</p>}
       <Table>
         <TableHeader>
           <TableRow>
@@ -184,7 +186,7 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
         </TableBody>
       </Table>
       <p className="text-body-sm text-muted-foreground">
-        Deja "Hasta día" vacío para indicar "en adelante". Los días se cuentan desde el primer día con cargo.
+        Cada tabulador usa una sola moneda. Deja "Hasta día" vacío para indicar "en adelante". Los días se cuentan desde el primer día con cargo.
       </p>
     </div>
   );

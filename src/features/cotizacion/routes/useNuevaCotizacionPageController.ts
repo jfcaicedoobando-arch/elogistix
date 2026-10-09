@@ -6,10 +6,9 @@
  * catálogo de clientes, instanciación explícita de las cuatro mutaciones,
  * estado del success dialog y de la plantilla, `onFinalized` + limpieza del
  * borrador, wizard, restauración de borrador (reutiliza `useDraftRestore`,
- * que NO se modifica), prefill del CRM y autoguardado/conflicto.
+ * con snapshot de ventas), prefill del CRM y autoguardado/conflicto.
  *
- * La ruta queda sólo como composición/render. Sin cambios funcionales:
- * mismas reglas del sello, mismas rutas y mismos textos.
+ * La ruta queda como composición/render; la identidad monta un wizard aislado.
  */
 import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
@@ -47,9 +46,11 @@ export function useNuevaCotizacionPageController() {
   const [guardarPlantillaOpen, setGuardarPlantillaOpen] = useState(false);
 
   // P0 — Success dialog post-guardado.
+  const [draftFinalizado, setDraftFinalizado] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const handleFinalized = useCallback((id: string) => {
     setSavedId(id);
+    setDraftFinalizado(true);
     clearDraft(userId, organizationId);
   }, [userId, organizationId]);
 
@@ -69,7 +70,7 @@ export function useNuevaCotizacionPageController() {
   });
 
   const {
-    restaurando, draftDetectado, banderaBorrador, conflictoSello, permitePrefillProspecto,
+    restaurando, pendienteBorrador, draftDetectado, banderaBorrador, conflictoSello, permitePrefillProspecto,
     resincronizando, handleResincronizar, handleRestore, handleDiscard,
   } = useDraftRestore({
     form: w.form,
@@ -78,6 +79,11 @@ export function useNuevaCotizacionPageController() {
     setCotizacionId: w.setCotizacionId,
     setCurrentStep: w.setCurrentStep,
     setCostosInternos: w.setCostosInternos,
+    cotizacionId: w.cotizacionId,
+    setConceptosUSD: w.setConceptosUSD,
+    setConceptosMXN: w.setConceptosMXN,
+    setTipoCambioUsd: w.setTipoCambioUsd,
+    restaurarCostosSincronizados: w.restaurarCostosSincronizados,
     resincronizarSello: w.resincronizarSello,
   });
 
@@ -96,13 +102,17 @@ export function useNuevaCotizacionPageController() {
     form: w.form,
     userId,
     organizationId,
-    enabled: true,
+    enabled: Boolean(userId && organizationId) && !draftFinalizado,
     cotizacionId: w.cotizacionId,
     currentStep: w.currentStep,
     costosInternos: w.costosInternos,
+    conceptosUSD: w.conceptosUSD,
+    conceptosMXN: w.conceptosMXN,
+    tipoCambioUsd: w.tipoCambioUsd,
+    getCostosSincronizados: w.getCostosSincronizados,
     // v13.823.69: el borrador guarda el sello optimista vigente.
     selloActual: w.selloActual,
-    paused: restaurando,
+    paused: restaurando || Boolean(pendienteBorrador) || conflictoSello,
   });
 
   const closeSuccessAndGoTo = useCallback((to: string) => {
@@ -113,13 +123,14 @@ export function useNuevaCotizacionPageController() {
   const cerrarSuccess = useCallback(() => setSavedId(null), []);
 
   const recargarPorConflictoSello = useCallback(() => {
-    navigate(w.cotizacionId ? `/cotizaciones/${w.cotizacionId}/editar` : "/cotizaciones");
-  }, [navigate, w.cotizacionId]);
+    const id = w.cotizacionId ?? draftDetectado?.cotizacionId;
+    navigate(id ? `/cotizaciones/${id}/editar` : "/cotizaciones");
+  }, [navigate, w.cotizacionId, draftDetectado]);
 
   const irAlListado = useCallback(() => navigate("/cotizaciones"), [navigate]);
 
   return {
-    w,
+    w: { ...w, isPending: w.isPending || restaurando || Boolean(pendienteBorrador) || conflictoSello },
     clientes,
     organizationId,
     userId,

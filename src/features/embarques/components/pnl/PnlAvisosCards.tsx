@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl } from "@/lib/formatters/pnl";
+import type { PnlDocumentacionIngresos } from "@/features/embarques/services/pnlFinanciero";
 
 interface Props {
   sinActividadReal: boolean;
@@ -17,14 +18,25 @@ interface Props {
   dCostoPct: number;
   margenReal: number | null;
   costosIncompletos?: boolean;
+  ingresosIncompletos?: boolean;
+  ingresosNoEvaluados?: boolean;
+  ingresos?: PnlDocumentacionIngresos | null;
   notasCreditoSinBase?: number;
   costoSinAsignar?: number;
   facturasSobreasignadas?: number;
+  coberturaNoEvaluada?: boolean;
+  segurosInconsistentes?: number;
+  documentacionNoEvaluada?: boolean;
+  conceptosSinDocumentar?: number;
 }
 
 function PnlCostosIncompletos({
   costoSinAsignar = 0, facturasSobreasignadas = 0, notasCreditoSinBase = 0,
-}: Pick<Props, "costoSinAsignar" | "facturasSobreasignadas" | "notasCreditoSinBase">) {
+  coberturaNoEvaluada = false, segurosInconsistentes = 0,
+  documentacionNoEvaluada = false, conceptosSinDocumentar = 0,
+}: Pick<Props, "costoSinAsignar" | "facturasSobreasignadas" | "notasCreditoSinBase"
+  | "coberturaNoEvaluada" | "segurosInconsistentes"
+  | "documentacionNoEvaluada" | "conceptosSinDocumentar">) {
   return (
     <Alert variant="warning">
       <AlertCircle className="h-4 w-4" />
@@ -36,6 +48,31 @@ function PnlCostosIncompletos({
         {costoSinAsignar > 0 && ` Las facturas vinculadas tienen ${fmtPnl(costoSinAsignar)} de base sin asignar a embarques; completa sus vínculos para determinar la utilidad.`}
         {facturasSobreasignadas > 0 && ` Las asignaciones de ${facturasSobreasignadas} factura(s) exceden su base fiscal. El costo y el saldo por embarque muestran un reparto proporcional provisional; revisa sus vínculos antes de determinar la utilidad.`}
         {notasCreditoSinBase > 0 && ` Hay ${notasCreditoSinBase} nota(s) de crédito sin base fiscal verificable; su reversión de costo está pendiente de validar.`}
+        {documentacionNoEvaluada && " La documentación de costos operativos no fue evaluada en esta respuesta; la utilidad no está confirmada."}
+        {conceptosSinDocumentar > 0 && ` Hay ${conceptosSinDocumentar} concepto(s) de costo operativo sin asignación positiva a una factura de proveedor vigente. Una prima independiente u otra factura no documentan esos conceptos. El importe facturado no tiene que igualar el presupuesto.`}
+        {coberturaNoEvaluada && " La cobertura de seguros no fue evaluada en esta respuesta. El costo observado es provisional y la utilidad no está confirmada."}
+        {segurosInconsistentes > 0 && ` Hay ${segurosInconsistentes} vínculo(s) de seguro cuya cobertura completa no se pudo acreditar. Se conservan sus relaciones y el costo documental observado, sin agregar otra prima ni una prima residual; la utilidad no está confirmada.`}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function PnlIngresosIncompletos({ ingresos, ingresosNoEvaluados }: Pick<Props, "ingresos" | "ingresosNoEvaluados">) {
+  const { notas_credito_sin_base = 0, notas_credito_sin_valoracion = 0, facturas_sin_valoracion = 0,
+    repartos_provisionales = 0, desbordamientos = 0 } = ingresos ?? {};
+  return (
+    <Alert variant="warning">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Ingresos incompletos</AlertTitle>
+      <AlertDescription>
+        La venta observada conserva únicamente el importe conocido y es provisional.
+        La utilidad y el margen no son calculables hasta verificar los ingresos.
+        {ingresosNoEvaluados && " La documentación de ingresos no fue evaluada en esta respuesta; la utilidad no está confirmada."}
+        {notas_credito_sin_base > 0 && ` Hay ${notas_credito_sin_base} nota(s) de crédito de cliente sin base verificable; no se considera cero ni se usa su monto total como base fiscal.`}
+        {notas_credito_sin_valoracion > 0 && ` Hay ${notas_credito_sin_valoracion} nota(s) de crédito de cliente sin valoración utilizable; revisa sus monedas y tipos de cambio.`}
+        {facturas_sin_valoracion > 0 && ` Hay ${facturas_sin_valoracion} factura(s) de venta sin valoración utilizable.`}
+        {repartos_provisionales > 0 && ` Hay ${repartos_provisionales} factura(s) multiembarque con notas de crédito en reparto proporcional provisional. Ese reparto no acredita a qué concepto corresponde el crédito.`}
+        {desbordamientos > 0 && " Se detectaron importes fuera del rango de cálculo; un total no representable se muestra como No calculable."}
       </AlertDescription>
     </Alert>
   );
@@ -43,12 +80,18 @@ function PnlCostosIncompletos({
 
 export function PnlAvisosCards({
   sinActividadReal, alertaSobrecosto, alertaVenta, alertaMargen, dCostoPct, margenReal,
-  costosIncompletos = false, notasCreditoSinBase = 0, costoSinAsignar = 0, facturasSobreasignadas = 0,
+  costosIncompletos, notasCreditoSinBase, costoSinAsignar, facturasSobreasignadas,
+  coberturaNoEvaluada, segurosInconsistentes,
+  documentacionNoEvaluada, conceptosSinDocumentar,
+  ingresosIncompletos, ingresosNoEvaluados, ingresos,
 }: Props) {
   return (
     <>
+      {ingresosIncompletos && <PnlIngresosIncompletos ingresos={ingresos} ingresosNoEvaluados={ingresosNoEvaluados} />}
       {costosIncompletos && (
         <PnlCostosIncompletos costoSinAsignar={costoSinAsignar}
+          coberturaNoEvaluada={coberturaNoEvaluada} segurosInconsistentes={segurosInconsistentes}
+          documentacionNoEvaluada={documentacionNoEvaluada} conceptosSinDocumentar={conceptosSinDocumentar}
           facturasSobreasignadas={facturasSobreasignadas} notasCreditoSinBase={notasCreditoSinBase} />
       )}
       {sinActividadReal && (

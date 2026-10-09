@@ -80,3 +80,13 @@ describe("vigenciasSeSolapan (B-096)", () => {
     expect(vigenciasSeSolapan("2026-01-01", null, "2030-01-01", "2030-12-31")).toBe(true);
   });
 });
+
+describe("audit147 · moneda única", () => {
+  it("vacío y moneda única son válidos; incluye tramos futuros y cero", async () => {
+    const { mezclaMonedasTramos } = await import("../demorasTramos");
+    expect(mezclaMonedasTramos([])).toBe(false);
+    expect(mezclaMonedasTramos([{ moneda: "MXN" }, { moneda: "MXN" }])).toBe(false);
+    expect(mezclaMonedasTramos([{ moneda: "USD" }, { moneda: "EUR" }])).toBe(true);
+    expect(mezclaMonedasTramos([{ moneda: "" }, { moneda: "USD" }])).toBe(false);
+  });
+});

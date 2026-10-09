@@ -160,6 +160,9 @@ export function buildCotizacionDefaultValues(d?: CotizacionInitialData): Cotizac
 
 export function buildCotizacionInitialCostos(initialCostos?: CotizacionInitialCosto[]): FilaCostoLocal[] {
   return (initialCostos ?? []).map((c) => ({
+    origen_venta_id: c.origen_venta_id,
+    costeo_tarifa_id: c.costeo_tarifa_id,
+    costeo_tarifa_recargo_id: c.costeo_tarifa_recargo_id,
     concepto: c.concepto,
     moneda: c.moneda as "USD" | "MXN",
     proveedor: c.proveedor,
@@ -172,4 +175,3 @@ export function buildCotizacionInitialCostos(initialCostos?: CotizacionInitialCo
     notas: c.notas ?? "",
   }));
 }
-

@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Aging de mora para el detalle de factura CxC. Re-exporta el canon compartido
  * (`@/lib/domain/facturaDiasVencido`) para que otras features no importen
@@ -14,5 +15,5 @@ export function puedeEnviarRecordatorio(params: {
   saldo: number;
   estaCancelada: boolean;
 }): boolean {
-  return !params.estaCancelada && params.saldo > 0.01;
+  return !params.estaCancelada && tieneSaldoMonetario(params.saldo);
 }

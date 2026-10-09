@@ -61,11 +61,11 @@ describe("derivarEstadoPago (cross-moneda)", () => {
 
   it.each([
     { monto: "1.16", residual: 0, incompleto: false },
-    { monto: "1.15", residual: 0.01, incompleto: false },
+    { monto: "1.15", residual: 0.01, incompleto: true },
     { monto: "1.14", residual: 0.02, incompleto: true },
     { monto: "1.12", residual: 0.04, incompleto: true },
     { monto: "1.11", residual: 0.05, incompleto: true },
-  ])("AUD54: PUE con residual $residual respeta el cierre de 0.01", ({ monto, residual, incompleto }) => {
+  ])("AUD54: PUE con residual $residual exige cierre monetario completo", ({ monto, residual, incompleto }) => {
     const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "MXN", saldo: 1.16, metodoPagoFactura: "PUE" });
     expect(d.montoAplicado).toBe(Number(monto));
     expect(1.16 - d.montoAplicado).toBeCloseTo(residual, 4);
@@ -74,9 +74,12 @@ describe("derivarEstadoPago (cross-moneda)", () => {
   });
 
   it.each([
-    { monto: "23", aplicado: 1.15, incompleto: false },
+    { monto: "23.20", aplicado: 1.16, incompleto: false },
+    { monto: "23.11", aplicado: 1.1555, incompleto: false },
+    { monto: "23.10", aplicado: 1.155, incompleto: true },
+    { monto: "23", aplicado: 1.15, incompleto: true },
     { monto: "22.99", aplicado: 1.1495, incompleto: true },
-  ])("AUD54: PUE cross-moneda valida saldo exacto sin redondear a centavos ($monto)", ({ monto, aplicado, incompleto }) => {
+  ])("AUD54: PUE cross-moneda conserva el aplicado exacto y valida deuda monetaria ($monto)", ({ monto, aplicado, incompleto }) => {
     const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "USD", saldo: 1.16, metodoPagoFactura: "PUE", tcManual: "20" });
     expect(d.montoAplicado).toBe(aplicado);
     expect(d.pueIncompleto).toBe(incompleto);
@@ -97,7 +100,8 @@ describe("derivarEstadoPago (cross-moneda)", () => {
   });
 
   it.each([
-    { monto: "57.99", incompleto: false },
+    { monto: "58", incompleto: false },
+    { monto: "57.99", incompleto: true },
     { monto: "57.98", incompleto: true },
   ])("AUD54: límite de cierre sobre saldo neto de NC ($monto)", ({ monto, incompleto }) => {
     const d = derivarEstadoPago({ ...base, monto, monedaPago: "MXN", monedaFactura: "MXN", saldo: 58, metodoPagoFactura: "PUE" });

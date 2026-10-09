@@ -72,6 +72,7 @@ export default function Facturacion() {
   const setActiveBandeja = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("bandeja", next);
+    params.delete("page");
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 

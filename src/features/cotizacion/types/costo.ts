@@ -4,6 +4,8 @@
  * sin que `services/` dependa de `hooks/`.
  */
 export interface CostoCotizacion {
+  /** Stable identity shared with the derived sale, independent of cost row replacement. */
+  origen_venta_id?: string | null;
   id: string;
   cotizacion_id: string;
   concepto: string;

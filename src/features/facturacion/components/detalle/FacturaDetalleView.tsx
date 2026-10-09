@@ -124,6 +124,8 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
             factura={factura}
             saldoError={props.saldoError}
             onRetrySaldo={props.onRetrySaldo}
+            saldo={saldoFactura}
+            totalPagado={props.totalPagado}
           />
         }
         rail={<FacturaBitacoraCard facturaId={factura.id} />}

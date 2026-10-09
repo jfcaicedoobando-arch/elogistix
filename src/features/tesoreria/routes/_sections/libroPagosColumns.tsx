@@ -5,13 +5,14 @@
  */
 import { etiquetaMetodoPago } from "@/features/tesoreria/domain/metodoPago";
 import { estadoConciliacionPago } from "@/features/tesoreria/domain/conciliacionPago";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
-  TIPO_PAGO_LABELS, esEntrada, normalizarTextoPago,
+  etiquetaTipoPagoLibro, esEntrada, normalizarTextoPago,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
 
@@ -43,10 +44,12 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
     {
       id: "tipo",
       header: "Tipo",
-      accessorFn: (p) => TIPO_PAGO_LABELS[p.tipo],
+      accessorFn: etiquetaTipoPagoLibro,
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <StatusBadge domain="pago_tipo" status={row.original.tipo} />
+        row.original.es_ajuste
+          ? <Badge variant="outline">{etiquetaTipoPagoLibro(row.original)}</Badge>
+          : <StatusBadge domain="pago_tipo" status={row.original.tipo} />
       ),
     },
     {
@@ -127,7 +130,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       meta: { align: "right", width: "w-32 min-w-[8rem]" },
       cell: ({ row }) => (
         <span
-          className={`whitespace-nowrap tabular-nums ${esEntrada(row.original) ? "text-success" : "text-destructive"}`}
+          className={`whitespace-nowrap tabular-nums ${row.original.es_ajuste ? "text-foreground" : esEntrada(row.original) ? "text-success" : "text-destructive"}`}
         >
           {formatCurrency(row.original.monto, row.original.moneda)}
         </span>

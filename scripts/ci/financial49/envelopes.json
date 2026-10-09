@@ -1,0 +1,22 @@
+{
+  "supabase/migrations/20261009010000_audit148_cobertura_documental_exacta.sql": {
+    "sha256": "1a578a5fb1eda52529f313c6b5e9f22f248322a79e1bcb62aaf53f0afe58af61",
+    "key": "coverage49",
+    "signatures": [
+      "public._seguro_validar_factura_proveedor()",
+      "public.pnl_financiero_embarque(uuid)"
+    ],
+    "callable": "public.pnl_financiero_embarque(uuid)",
+    "privateTrigger": "public._seguro_validar_factura_proveedor()"
+  },
+  "supabase/migrations/20261009010100_audit148_papelera_seguros.sql": {
+    "sha256": "565950e4d06c9b7e183d240b1d3354f2b6c31c3d79f04a1b1172525355d8d539",
+    "key": "restore49",
+    "signatures": [
+      "public.list_trash(text,integer,integer)",
+      "public.restore_record(text,uuid)"
+    ],
+    "callable": "public.list_trash(text,integer,integer)",
+    "privateTrigger": null
+  }
+}

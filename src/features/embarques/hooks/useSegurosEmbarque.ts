@@ -17,6 +17,8 @@ const KEY = queryKeys.embarques.seguros;
 function mensajeSeguro(e: Error, fallback: string): string {
   const m = e?.message ?? "";
   if (m.includes("ux_seguros_embarque_factura_activa")) return "Esa factura ya está ligada a otra póliza activa.";
+  if (m.includes("LC_SEGURO_COBERTURA_INCOMPLETA")) return "La base de la factura atribuida a este embarque debe cubrir toda la prima y tener una valoración comprobable. Revisa la factura, la prima y la moneda.";
+  if (m.includes("LC_CONFLICTO_CONCURRENCIA")) return "La factura o el embarque cambió mientras guardabas. Recarga y revisa los datos antes de volver a guardar.";
   if (m.includes("LC_SEGURO_FACTURA_INVALIDA")) return "La factura no está vigente o no pertenece a este embarque.";
   return m || fallback;
 }

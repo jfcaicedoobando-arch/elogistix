@@ -20,8 +20,14 @@ function leerManifiesto(ruta: string): string[] {
 }
 
 function rutasSinSuite(rutas: string[]): string[] {
+  // El runner acepta suites anidadas (incluido rls/), no sólo archivos raíz.
+  const existentes = new Set(
+    readdirSync(DIR_TESTS, { encoding: "utf8", recursive: true })
+      .filter((f) => f.endsWith(".sql"))
+      .map((f) => `${DIR_TESTS}/${f}`),
+  );
   return rutas.filter(
-    (ruta) => !ruta.endsWith(".sql") || !statSync(ruta, { throwIfNoEntry: false })?.isFile(),
+    (ruta) => !existentes.has(ruta) || !statSync(ruta, { throwIfNoEntry: false })?.isFile(),
   );
 }
 
@@ -73,6 +79,18 @@ describe("suites SQL referenciadas en CI", () => {
     const directorio = `${DIR_TESTS}/rls`;
     expect(rutasSinSuite([suite])).toEqual([]);
     expect(rutasSinSuite([ausente, directorio])).toEqual([ausente, directorio]);
+  });
+
+  it("acepta suites RLS reales y sigue rechazando rutas inexistentes o ajenas", () => {
+    const falsas = [
+      `${DIR_TESTS}/rls/__guard_inexistente__.sql`,
+      `${DIR_TESTS}/../migrations/__guard_inexistente__.sql`,
+    ];
+    expect(rutasSinSuite([
+      `${DIR_TESTS}/rls/test_rls_audit54_pue_tolerancia_cierre.sql`,
+      `${DIR_TESTS}/rls/test_rls_audit54_saldo_visible.sql`,
+      ...falsas,
+    ])).toEqual(falsas);
   });
 
   it("las trece suites recuperadas y nuevos cobros usan fixtures transaccionales", () => {

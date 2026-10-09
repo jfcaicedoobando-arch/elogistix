@@ -40,7 +40,7 @@ describe("calcularAlertasPnl", () => {
       ventaReal: 0, costoReal: 0, ventaPresup: 0, costoPresup: 0, deltaCostoPct: 0,
     });
     expect(r.alertaMargen).toBe(false);
-    expect(r.margenReal).toBe(0);
+    expect(r.margenReal).toBeNull();
   });
 
   // v13.823.366 — Borrador sin importes reales no es desviación financiera.
@@ -90,5 +90,32 @@ describe("calcularAlertasPnl", () => {
     });
     expect(r.sinActividadReal).toBe(false);
     expect(r.alertaVenta).toBe(true);
+  });
+});
+
+
+describe("audit132 ingresos y actividad documental", () => {
+  const args = { ventaReal: 100, costoReal: 40, ventaPresup: 150, costoPresup: 20, deltaCostoPct: 100 };
+  it("mantiene avisos de costo pero no declara margen o venta menor con ingresos provisionales", () => {
+    expect(calcularAlertasPnl({ ...args, ingresosIncompletos: true })).toMatchObject({
+      utilidadReal: null, margenReal: null, alertaMargen: false, alertaVenta: false, alertaSobrecosto: true,
+    });
+  });
+  it("una factura totalmente acreditada sigue siendo actividad con margen indeterminado", () => {
+    expect(calcularAlertasPnl({ ...args, ventaReal: 0, costoReal: 0, actividadIngresos: true })).toMatchObject({
+      utilidadReal: 0, margenReal: null, sinActividadReal: false,
+    });
+  });
+  it.each([null, Infinity, NaN])("un importe no calculable nunca produce utilidad (%s)", (ventaReal) => {
+    expect(calcularAlertasPnl({ ...args, ventaReal })).toMatchObject({ utilidadReal: null, margenReal: null });
+  });
+  it("controla overflow de resta y de porcentaje", () => {
+    expect(calcularAlertasPnl({ ...args, ventaReal: 1e308, costoReal: -1e308 }).utilidadReal).toBeNull();
+    expect(calcularAlertasPnl({ ...args, ventaReal: 1e-300, costoReal: 1e308 }).margenReal).toBeNull();
+  });
+  it("un saldo negativo no implica ausencia de actividad", () => {
+    expect(calcularAlertasPnl({ ...args, ventaReal: -20, costoReal: 0 })).toMatchObject({
+      sinActividadReal: false, utilidadReal: -20, margenReal: null,
+    });
   });
 });

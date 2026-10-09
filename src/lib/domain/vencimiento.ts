@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * CANON ÚNICO de "vencido / por vencer" del ERP.
  *
@@ -54,7 +55,7 @@ export function esCxcVencida(f: {
   estatus?: string | null;
   dias_vencido?: number | null;
 }): boolean {
-  if (num(f.saldo) <= 0) return false;
+  if (!tieneSaldoMonetario(num(f.saldo))) return false;
   const estatus = f.estatus_cobranza ?? f.estatus ?? null;
   if (estatus != null) return estatus === ESTATUS_VENCIDA;
   return esVencidoPorDias(f.dias_vencido);

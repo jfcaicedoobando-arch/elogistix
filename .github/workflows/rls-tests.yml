@@ -24,6 +24,7 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/financial49/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -41,6 +42,7 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/financial49/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -108,6 +110,8 @@ jobs:
       # Bootstrap + squash (con su inventario) + replay ordenado de TODAS las
       # migraciones posteriores.
       - name: Preparar BD (bootstrap + squash + replay de migraciones)
+        env:
+          FINANCIAL49_CI: '1'
         run: bash scripts/ci/rls-prepare-db.sh
 
       - name: Candado service_role-only en migraciones (bidireccional)
@@ -203,6 +207,16 @@ jobs:
         env:
           ISOLATED_QA_DB: '1'
         run: bash scripts/ci/concurrencia-factura-manual.sh
+
+      - name: Subir evidencia de envelopes financieros
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: financial49-envelope-evidence
+          path: .financial49-logs/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Subir logs y diff (sólo al fallar)
         if: failure()

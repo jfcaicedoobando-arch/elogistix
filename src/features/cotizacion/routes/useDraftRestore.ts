@@ -1,15 +1,16 @@
 /**
  * Lógica de detección/restauración del borrador de "Nueva cotización"
  * (extraída de `NuevaCotizacion.tsx` para mantenerlo bajo el límite
- * Power-of-10 de 200 líneas). No cambia comportamiento.
+ * Power-of-10 de 200 líneas). Valida la captura antes de aplicarla.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types/form";
 import { loadDraft, clearDraft, draftTieneContenido } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
-import { fetchCotizacionSello } from "@/features/cotizacion/services";
-import { resolverSelloBorrador, resincronizarSelloConflicto } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
-import { notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
+import { fetchCotizacionDraftSnapshot } from "../services/draftSnapshot";
+import { resolverContenidoBorrador } from "../hooks/wizard/resolverContenidoBorrador";
+import { notifyWarning } from "@/lib/ui/appFeedback";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types/pl";
 
 interface DraftRestoreDeps {
@@ -19,12 +20,17 @@ interface DraftRestoreDeps {
   setCotizacionId: (id: string) => void;
   setCurrentStep: (step: number) => void;
   setCostosInternos: (c: FilaCostoLocal[]) => void;
+  cotizacionId?: string | null;
+  setConceptosUSD: (c: ConceptoVentaCotizacion[]) => void;
+  setConceptosMXN: (c: ConceptoVentaCotizacion[]) => void;
+  setTipoCambioUsd: (tc: number | null) => void;
+  restaurarCostosSincronizados: (costos: FilaCostoLocal[]) => void;
   resincronizarSello: (sello: string | null) => void;
 }
 
 export function useDraftRestore({
   form, userId, organizationId, setCotizacionId, setCurrentStep,
-  setCostosInternos, resincronizarSello,
+  setCostosInternos, resincronizarSello, cotizacionId, setConceptosUSD, setConceptosMXN, setTipoCambioUsd, restaurarCostosSincronizados,
 }: DraftRestoreDeps) {
   const [restaurando, setRestaurando] = useState(false);
 
@@ -34,7 +40,7 @@ export function useDraftRestore({
   const draftDetectado = useMemo(() => {
     const draft = userId ? loadDraft(userId, organizationId) : null;
     if (!draft) return null;
-    return draftTieneContenido(draft.values, draft.costosInternos) ? draft : null;
+    return draftTieneContenido(draft.values, draft.costosInternos, [...(draft.conceptosUSD ?? []), ...(draft.conceptosMXN ?? [])]) ? draft : null;
   }, [userId, organizationId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
   // CRM-COT-01: la decisión sobre el borrador se resuelve explícitamente.
@@ -54,77 +60,72 @@ export function useDraftRestore({
 
   // v13.823.69: conflicto detectado al restaurar (otra sesión ya guardó).
   const [conflictoSello, setConflictoSello] = useState(false);
-  // P0-12: id vigente para poder resincronizar sin depender de `draftDetectado`
-  // (que se limpia tras restaurar).
-  const [cotizacionIdConflicto, setCotizacionIdConflicto] = useState<string | null>(null);
   const [resincronizando, setResincronizando] = useState(false);
+  const requestRef = useRef(0);
+  const restoringRef = useRef(false);
+  const scope = `${organizationId ?? ""}:${userId}`;
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
+  const idRef = useRef(cotizacionId);
+  idRef.current = cotizacionId;
+  useEffect(() => () => { requestRef.current += 1; restoringRef.current = false; }, [scope]);
 
   const handleRestore = useCallback(async () => {
-    if (draftDetectado) {
-      // R-09: congelamos el autoguardado mientras RHF aplica el reset.
-      setRestaurando(true);
-      form.reset(draftDetectado.values);
-      // B-003: restaurar el id garantiza que el siguiente "Guardar" haga UPDATE
-      // en la cotización huérfana en vez de INSERTar una nueva.
-      if (draftDetectado.cotizacionId) {
-        setCotizacionId(draftDetectado.cotizacionId);
-        // Antes de permitir cualquier UPDATE se valida el sello canónico: sin
-        // esto el candado quedaba en null y el guardado pasaba en silencio.
-        const { sello, conflicto } = await resolverSelloBorrador({
-          cotizacionId: draftDetectado.cotizacionId,
-          selloDraft: draftDetectado.updatedAt,
-          fetchSello: fetchCotizacionSello,
-        });
-        resincronizarSello(sello);
-        setConflictoSello(conflicto);
-        setCotizacionIdConflicto(draftDetectado.cotizacionId);
-      }
-      // Q-12: restaurar paso y costos internos (viven fuera de RHF).
-      setCurrentStep(draftDetectado.currentStep);
-      setCostosInternos(draftDetectado.costosInternos);
-      if (draftDetectado.noRestaurado.length > 0) {
-        notifyWarning(undefined, {
-          title: "Borrador restaurado parcialmente",
-          description: `No se pudo recuperar: ${draftDetectado.noRestaurado.join("; ")}.`,
-        });
-      }
-    }
-    setBanderaBorrador(false);
-    setDecisionBorrador("restaurado");
-    // Se reanuda en el siguiente tick, ya con los valores restaurados aplicados.
-    setTimeout(() => setRestaurando(false), 0);
-  }, [draftDetectado, form, setCotizacionId, resincronizarSello, setCurrentStep, setCostosInternos]);
-
-  // P0-12: "Resincronizar" — vuelve a leer el sello canónico antes de
-  // levantar el bloqueo. Si sigue sin poder leerse (o la fila ya no existe),
-  // el candado permanece cerrado y se explica al usuario qué pasó.
-  const handleResincronizar = useCallback(async () => {
-    if (!cotizacionIdConflicto || resincronizando) return;
-    setResincronizando(true);
+    if (!draftDetectado || decisionBorrador !== "pendiente" || restoringRef.current) return;
+    if (cotizacionId && cotizacionId !== draftDetectado.cotizacionId) return;
+    restoringRef.current = true;
+    const request = ++requestRef.current;
+    const vigente = () => requestRef.current === request && scopeRef.current === scope && idRef.current === cotizacionId;
+    setRestaurando(true);
     try {
-      const { sello, conflicto } = await resincronizarSelloConflicto({
-        cotizacionId: cotizacionIdConflicto,
-        fetchSello: fetchCotizacionSello,
+      const snapshot = draftDetectado.cotizacionId && organizationId
+        ? await fetchCotizacionDraftSnapshot(draftDetectado.cotizacionId, organizationId) : null;
+      if (!vigente()) return;
+      const contenido = resolverContenidoBorrador(draftDetectado, snapshot, organizationId);
+      // Aplicar juntos sólo después de validar servidor, tenant e identidad.
+      form.reset(draftDetectado.values);
+      if (draftDetectado.cotizacionId) setCotizacionId(draftDetectado.cotizacionId);
+      resincronizarSello(contenido.sello);
+      setCurrentStep(contenido.currentStep);
+      setCostosInternos(contenido.costosInternos);
+      restaurarCostosSincronizados(contenido.costosSincronizados);
+      setConceptosUSD(contenido.conceptosUSD);
+      setConceptosMXN(contenido.conceptosMXN);
+      setTipoCambioUsd(contenido.tipoCambioUsd);
+      setConflictoSello(false);
+      setBanderaBorrador(false);
+      setDecisionBorrador("restaurado");
+      if (draftDetectado.noRestaurado.length > 0) notifyWarning(undefined, {
+        title: "Borrador restaurado parcialmente",
+        description: `No se pudo recuperar: ${draftDetectado.noRestaurado.join("; ")}.`,
       });
-      resincronizarSello(sello);
-      setConflictoSello(conflicto);
-      if (conflicto) {
-        notifyWarning(undefined, {
-          title: "No se pudo confirmar la versión actual",
-          description: "La cotización no se pudo leer (permisos, red o fue eliminada). El guardado sigue bloqueado; intenta de nuevo en un momento.",
-        });
-      } else {
-        notifyInfo(undefined, {
-          title: "Versión actualizada",
-          description: "Se leyó la versión más reciente de la cotización. Ya puedes continuar guardando sobre ella.",
-        });
-      }
+    } catch (error) {
+      if (!vigente()) return;
+      setConflictoSello(true);
+      notifyWarning(undefined, {
+        title: "No se pudo restaurar el borrador",
+        description: error instanceof Error ? error.message : "No se pudo consultar la cotización. El borrador local se conserva; vuelve a intentar.",
+      });
     } finally {
-      setResincronizando(false);
+      if (requestRef.current === request && scopeRef.current === scope) {
+        restoringRef.current = false;
+        setRestaurando(false);
+      }
     }
-  }, [cotizacionIdConflicto, resincronizando, resincronizarSello]);
+  }, [draftDetectado, decisionBorrador, cotizacionId, scope, organizationId, form, setCotizacionId, resincronizarSello,
+    setCurrentStep, setCostosInternos, setConceptosUSD, setConceptosMXN, setTipoCambioUsd, restaurarCostosSincronizados]);
+
+  // Reintentar la misma comparación; jamás adoptar un sello nuevo sobre captura vieja.
+  const handleResincronizar = useCallback(async () => {
+    setResincronizando(true);
+    try { await handleRestore(); } finally { setResincronizando(false); }
+  }, [handleRestore]);
 
   const handleDiscard = useCallback(() => {
+    requestRef.current += 1;
+    restoringRef.current = false;
+    setRestaurando(false);
+    setConflictoSello(false);
     clearDraft(userId, organizationId);
     setBanderaBorrador(false);
     setDecisionBorrador("descartado");
@@ -141,6 +142,7 @@ export function useDraftRestore({
 
   return {
     restaurando,
+    pendienteBorrador: Boolean(draftDetectado) && decisionBorrador === "pendiente",
     draftDetectado,
     decisionBorrador,
     permitePrefillProspecto,

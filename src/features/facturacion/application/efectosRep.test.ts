@@ -8,7 +8,7 @@ describe("REP operation read effects", () => {
   it("covers payment history, document, pending queue and financial read models", () => {
     expect(lecturasAfectadasPorRep("f1")).toEqual([
       queryKeys.facturas.pagos("f1"), queryKeys.facturas.detail("f1"), queryKeys.facturas.all,
-      queryKeys.facturacion.repPendientes, queryKeys.bandejas.all,
+      queryKeys.facturacion.repPendientes, queryKeys.facturacion.bandejaPrefix(), queryKeys.bandejas.all,
       queryKeys.dashboardEjecutivo.all, queryKeys.presupuesto.all, queryKeys.profit.all, queryKeys.direccion.all,
     ]);
   });

@@ -1,4 +1,4 @@
--- AUD-57: leer eventos reales; los datos actuales no son snapshots del pasado.
+-- AUD-57/121: eventos reales; clasifica ajustes sólo desde el flag persistido.
 -- Sin backfill ni modificación de facturas, pagos o notas de crédito existentes.
 CREATE OR REPLACE FUNCTION public.historial_proveedor_factura(p_id uuid)
  RETURNS TABLE(ts timestamp with time zone, tipo text, descripcion text, actor_email text, monto numeric, moneda text, detalles jsonb)
@@ -69,10 +69,12 @@ BEGIN
     UNION ALL
 
     SELECT pp.created_at, 'pago'::text,
-      ('Pago registrado' || CASE WHEN COALESCE(pp.referencia, '') <> ''
+      (CASE WHEN pp.es_ajuste THEN 'Ajuste no monetario registrado' ELSE 'Pago registrado' END
+        || CASE WHEN COALESCE(pp.referencia, '') <> ''
         THEN ' · ref ' || pp.referencia ELSE '' END)::text,
       COALESCE(u.email, '')::text, pp.monto, pp.moneda::text,
-      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago)
+      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago,
+        'pago_id', pp.id, 'es_ajuste', pp.es_ajuste, 'motivo_ajuste', pp.motivo_ajuste)
     FROM public.pagos_proveedor pp
     LEFT JOIN auth.users u ON u.id = pp.created_by
     WHERE pp.proveedor_factura_id = p_id AND pp.organization_id = v_org AND pp.deleted_at IS NULL

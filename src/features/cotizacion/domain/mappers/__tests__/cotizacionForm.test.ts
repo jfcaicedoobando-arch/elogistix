@@ -100,4 +100,11 @@ describe("buildCotizacionInitialCostos", () => {
     ]);
     expect(out[0].notas).toBe("costo sin venta");
   });
+  it.each([null, "recargo-A"])("restaura la identidad persistida de tarifa y recargo %s", (recargoId) => {
+    const out = buildCotizacionInitialCostos([
+      { concepto: "Flete", moneda: "USD", proveedor: "X", cantidad: 1, costo_unitario: 100,
+        origen_venta_id: "linea-A", costeo_tarifa_id: "tarifa-A", costeo_tarifa_recargo_id: recargoId },
+    ]);
+    expect(out[0]).toMatchObject({ origen_venta_id: "linea-A", costeo_tarifa_id: "tarifa-A", costeo_tarifa_recargo_id: recargoId });
+  });
 });

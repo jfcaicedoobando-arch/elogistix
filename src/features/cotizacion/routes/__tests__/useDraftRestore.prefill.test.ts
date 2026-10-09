@@ -19,8 +19,8 @@ vi.mock("@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave", () => (
   clearDraft: (...a: unknown[]) => clearDraft(...a),
   draftTieneContenido: () => true,
 }));
-vi.mock("@/features/cotizacion/services", () => ({
-  fetchCotizacionSello: vi.fn(async () => null),
+vi.mock("../../services/draftSnapshot", () => ({
+  fetchCotizacionDraftSnapshot: vi.fn(async () => null),
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifyInfo: vi.fn(), notifyWarning: vi.fn() }));
 
@@ -49,6 +49,8 @@ function render(userId = "u-1") {
       setCurrentStep: vi.fn(),
       setCostosInternos: vi.fn(),
       resincronizarSello: vi.fn(),
+      restaurarCostosSincronizados: vi.fn(),
+      setConceptosUSD: vi.fn(), setConceptosMXN: vi.fn(), setTipoCambioUsd: vi.fn(),
     }),
   );
 }

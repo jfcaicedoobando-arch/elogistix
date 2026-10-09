@@ -5,6 +5,7 @@
  * P16 (perf 2026-07-25): reemplazados los 8 `form.watch()` globales por
  * `useWatch` por campo para evitar re-renders del wizard completo al teclear.
  */
+import { VincularVentasHeredadas } from "./VincularVentasHeredadas";
 import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWatch } from "react-hook-form";
@@ -78,11 +79,17 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
       {w.currentStep === 3 && (
         <>
           {sinDesgloseFlag && <SinDesgloseBanner onCargarCostos={irACargarCostos} />}
+          <VincularVentasHeredadas costos={w.costosInternos} ventas={[...w.conceptosUSD, ...w.conceptosMXN]} tasaIva={w.tasaIva}
+            onVincular={(costos, ventas) => {
+              w.setCostosInternos(costos);
+              w.setConceptosUSD(ventas.filter(v => v.moneda === "USD"));
+              w.setConceptosMXN(ventas.filter(v => v.moneda === "MXN"));
+            }} />
           {w.costosPreLlenados && !sinDesgloseFlag && (
             <Alert variant="info">
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Pre-llenado desde Costos y utilidad. Puedes ajustar si es necesario.
+                Las partidas vinculadas se actualizan desde Costos y utilidad. Tus conceptos manuales e impuestos se conservan.
               </AlertDescription>
             </Alert>
           )}

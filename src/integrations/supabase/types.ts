@@ -2457,6 +2457,7 @@ export type Database = {
           deleted_by: string | null
           id: string
           moneda: string
+          origen_venta_id: string | null
           notas: string
           organization_id: string
           porcentaje_profit: number | null
@@ -2480,6 +2481,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           moneda: string
+          origen_venta_id?: string | null
           notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
@@ -2503,6 +2505,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           moneda?: string
+          origen_venta_id?: string | null
           notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
@@ -10655,6 +10658,14 @@ export type Database = {
           total_count: number
           total_embarques: number
         }[]
+      }
+      cobranza_conteo_por_cobrar: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
+      cobranza_conteo_vencidas: {
+        Args: { p_organization_id: string }
+        Returns: number
       }
       cobranza_agregados: {
         Args: { p_cliente_id?: string; p_moneda?: string }

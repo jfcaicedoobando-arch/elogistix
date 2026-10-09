@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Estado local de la vista Estado de Cuenta: rango, filtros, búsqueda,
  * bucket de antigüedad, orden y paginación progresiva. Deja al componente
@@ -52,7 +53,7 @@ export function useEstadoCuentaVista(clienteIds: string[], defaultSoloConSaldo: 
       rows.filter(
         (f) =>
           coincideBusqueda(f, busqueda) &&
-          (bucket === null || (f.saldo > 0.01 && bucketDeFactura(f.dias_vencido) === bucket)),
+          (bucket === null || (tieneSaldoMonetario(f.saldo) && bucketDeFactura(f.dias_vencido) === bucket)),
       ),
     [rows, busqueda, bucket],
   );

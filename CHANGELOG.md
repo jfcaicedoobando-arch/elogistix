@@ -1,5 +1,29 @@
 # Changelog
 
+## [13.824.49] - Unreleased
+
+- **Candidato para CI · finanzas y seguros148**: compone los cambios financieros revisados de las propuestas47/48 con cobertura documental exacta, sus guards y restauración de seguros. El baseline normalizado conserva los bytes revisados y coincidentes con los dumps17.9 ya registrados; esta fase no repite ejecución SQL.
+- Registra dos forwards nuevos de cobertura y papelera, después de `20261008210000`, sin editar las1503 migraciones existentes. El manifest49 enumera1505 SQL; conserva literalmente35–44,46,47,48 y no crea45. Las entradas anteriores documentan sus candidatos originales y no acreditan aplicación remota.
+- Reconcilia main `3f962cc9` y el árbol47 revisado `9389d782`: conserva los30 cambios concurrentes de CRM/tarifario y todo el alcance de PR179. La rama remota de ese PR sigue sin modificaciones. El SQL23000 mantiene el comentario revisado de procedencia; los bytes posteriores son idénticos al PR original.
+- Registro local para revisión de empaquetado y GitHub Actions. No incluye el selector autoritativo ni integridad multiempresa, que se compone aparte; tampoco implica publicación, ejecución de migraciones, despliegue o cierre GUI. Consultar [procedencia, checks y bloqueos](docs/ops/financial-coverage-restore-ci49.md).
+
+## [13.824.48] - Unreleased
+
+- **Empaquetado local combinado**: registra los cinco forwards revisados de cobranza54/141, demoras147 y cotización145, más el forward P&L129/132/148 `20261008210000`, sobre la composición original congelada y la propuesta47. No incorpora el fix148 de escritura ni el trabajo nuevo de precisión.
+- El manifest48 enumera1503 archivos SQL reales. Se conservan byte a byte las entradas35–44,46 y47, sin crear45; también se preservan todos los SQL anteriores y los guards. El registro describe archivos del repositorio y no acredita aplicación en una base.
+- P&L conserva exactamente el SQL revisado con SAVEPOINT y ACL no expansiva. Requiere una transacción única del caller y stop-on-error; no hace BEGIN ni COMMIT. Baseline: sólo se normaliza esa declaración, sin sustituir el dump completo.
+- Candidato local para revisión y gates posteriores: snapshot real con pg_dump17.9 pinneado, validación SQL combinada final, CI completo y preflight del catálogo/runner del destino. No implica publicación, aplicación de migraciones, despliegue ni aprobación fiscal.
+- Véase [contrato, procedencia y gates](docs/ops/combined-release48-packaging.md).
+
+## [13.824.47] - Unreleased
+
+- **fix(CxP/Tesorería · 99/121)**: los ajustes no monetarios se identifican sólo por `es_ajuste` persistido en historial, libro desktop/móvil, detalle y CSV/PDF; conservan el importe documental y la conciliación «No aplica».
+- **fix(banco)**: guards de clasificación, vinculación, activación/restauración y regeneración impiden convertir ajustes en movimientos bancarios; se conservan pagos ordinarios, efectivo, devoluciones y REP.
+- Composición local sobre la base46 propuesta y no publicada, árbol `4f9c15bea974ce8ed2a22ab3c265ebd1e86ef06f`, con UI199, replay literal0013, cierre ACL190100, validación190200 y guard registrado. No es una composición sobre main ni importa el antiguo paquete P&L46.
+- Conserva el delta47 revisado en árbol `25dcd775cd051b071e00946c1da8d16890274256`, incluidos los barrels públicos y `size-4`; sólo recompone los envoltorios comunes y la procedencia. Baseline: cuatro funciones, dos helpers/triggers nuevos y sus ACL, con todos los bytes ajenos preservados.
+- Dos migraciones exactas: `20261007023000` y `20261007024500`. Manifest47 enumera1497 migraciones reales y conserva completas35–44 y46, sin crear45. Se preservan canónicos, types, AGENTS, UI199 y los tres SQL provisionales.
+- Primera fase local: invariantes, pruebas focales, tipos y gates estáticos bajo lock compartido. El SQL histórico de otras bases no acredita esta composición; las futuras pruebas SQL serán independientes. Sin Git remoto, SQL ejecutado, browser, build ni despliegue.
+
 ## [13.824.46] - Unreleased
 
 - **fix(proveedores provisionales)**: empaqueta la UI revisada de PR199 (`e3e26ee2`, tree `bafcf460`), el replay literal de Drizzle0013 y el forward que cierra la ejecución directa de sus dos funciones trigger. Conserva las fuentes UI revisadas y el SQL histórico.

@@ -38,6 +38,7 @@ export function mapearCostosAFilas(
       ? subtotalLinea(Number(c.cantidad) || 0, Number(c.precio_venta))
       : (cv ? subtotalLinea(cv.cantidad, cv.precio_unitario) : 0);
     return {
+      origen_venta_id: c.origen_venta_id,
       concepto: c.concepto,
       moneda: c.moneda,
       proveedor: c.proveedor,
@@ -76,6 +77,7 @@ export function mapearFilasACostos(
 ): CostoCotizacion[] {
   return filas.map((f) => ({
     id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
+    origen_venta_id: f.origen_venta_id,
     proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
     costo_total: subtotalLinea(f.cantidad, f.costo_unitario),
     // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta.

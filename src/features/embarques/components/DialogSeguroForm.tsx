@@ -73,12 +73,17 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
 
   const handleSubmit = async () => {
     if (!validarSeguroForm(form, isEdit)) return;
-    if (isEdit && seguro) {
-      await update.mutateAsync({ id: seguro.id, patch: form });
-    } else {
-      await create.mutateAsync({ ...form, embarque_id: embarqueId });
+    try {
+      if (isEdit && seguro) {
+        await update.mutateAsync({ id: seguro.id, patch: form });
+      } else {
+        await create.mutateAsync({ ...form, embarque_id: embarqueId });
+      }
+      onOpenChange(false);
+    } catch {
+      // The mutation displays the server error. Keep the user's values and
+      // dialog open; a rejected or stale selection is never a successful save.
     }
-    onOpenChange(false);
   };
 
   return (

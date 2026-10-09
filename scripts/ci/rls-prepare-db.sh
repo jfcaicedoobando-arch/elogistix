@@ -84,6 +84,11 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   fi
 
 
+  # Focused financial-envelope controls supplied by the financial49 package.
+  if [[ "${FINANCIAL49_CI:-}" == 1 ]] && [[ "$base" == 20261009010000_audit148_cobertura_documental_exacta.sql || "$base" == 20261009010100_audit148_papelera_seguros.sql ]]; then
+    node scripts/ci/financial49/test-envelope.mjs "$f"
+  fi
+
   echo "▶ $base"
   if stub_extensiones "$f" | "${PSQL[@]}" --single-transaction; then
     aplicadas=$((aplicadas + 1))

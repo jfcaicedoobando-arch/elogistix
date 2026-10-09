@@ -10,7 +10,7 @@ import { useEliminarBorradorFactura } from "./useEliminarBorradorFactura";
 import { useTimbrarRep } from "./useTimbrarRep";
 import { useFactura, usePagosFactura } from ".";
 import { useNotasCreditoAplicadas, useSaldoFacturaServidor } from "./useSaldoFactura";
-import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
+import { calcularSaldoFactura, esPagoAnulado } from "@/lib/financial/saldoFactura";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { usePermissions } from "@/hooks/shared";
 
@@ -46,7 +46,7 @@ export function useFacturaDetalleController(id: string | undefined) {
     (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
   ).length;
   const flags = deriveFacturaFlags(factura, canEdit, {
-    saldo, pagosRepPendientes, saldoError: saldoError || saldoCargando,
+    saldo, pagosActivos: pagos.filter((p) => !esPagoAnulado(p)).length, pagosRepPendientes, saldoError: saldoError || saldoCargando,
   }, canRegistrarCobro);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();

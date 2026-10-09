@@ -23,11 +23,14 @@ import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGen
 export function firmaCostos(costos: FilaCostoLocal[]): string {
   return JSON.stringify(
     costos.map(c => ({
+      id: c.origen_venta_id,
+      pendiente: c.venta_vinculo_pendiente,
       c: c.concepto,
       m: c.moneda,
       u: c.unidad_medida,
       q: c.cantidad,
       p: c.precio_venta,
+      n: c.notas,
     })),
   );
 }

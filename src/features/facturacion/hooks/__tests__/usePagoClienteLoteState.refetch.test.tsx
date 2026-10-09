@@ -85,4 +85,44 @@ describe("usePagoClienteLoteState · refetch no reinicia la captura", () => {
     const id2 = await requestIdDe(result.current.submit);
     expect(id2).not.toBe(id1);
   });
+  it("AUD54: refetch con PUE ya cobrado bloquea el submit conservando la captura", async () => {
+    const inicial = [{ ...facturas()[0], metodo_pago: "PUE", pagado: 0 }, facturas()[1]];
+    const { result, rerender } = renderHook((p: ReturnType<typeof args>) => usePagoClienteLoteState(p), {
+      initialProps: args(inicial),
+    });
+    const captura = result.current.total;
+    rerender(args([{ ...inicial[0], pagado: 999.99, saldo: .01 }, inicial[1]]));
+    expect(result.current.total).toBe(captura);
+    expect(result.current.erroresRenglon.f1).toBeTruthy();
+    await act(async () => { await result.current.submit(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("AUD54: dato nuevo durante la espera de REP se revalida antes de mutate", async () => {
+    const inicial = [{ ...facturas()[0], metodo_pago: "PUE", pagado: 0 }, facturas()[1]];
+    const { result, rerender } = renderHook((p: ReturnType<typeof args>) => usePagoClienteLoteState(p), {
+      initialProps: args(inicial),
+    });
+    await act(async () => {});
+    let resolver!: (ids: string[]) => void;
+    vi.mocked(svc.obtenerFacturasConRep).mockImplementationOnce(() => new Promise((r) => { resolver = r; }));
+    let envio!: Promise<void>;
+    act(() => { envio = result.current.submit(); });
+    rerender(args([{ ...inicial[0], pagado: 999.99, saldo: .01 }, inicial[1]]));
+    await act(async () => { resolver([]); await envio; });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("AUD54: cerrar el diálogo durante la espera de REP no inicia un cobro", async () => {
+    const { result, unmount } = renderHook(() => usePagoClienteLoteState(args(facturas())));
+    await act(async () => {});
+    let resolver!: (ids: string[]) => void;
+    vi.mocked(svc.obtenerFacturasConRep).mockImplementationOnce(() => new Promise((r) => { resolver = r; }));
+    let envio!: Promise<void>;
+    act(() => { envio = result.current.submit(); });
+    unmount();
+    await act(async () => { resolver([]); await envio; });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
 });

@@ -66,3 +66,11 @@ function firma(rows: TramoComparable[]): string {
 export function tramosSucios(actuales: TramoComparable[], guardados: TramoComparable[]): boolean {
   return firma(actuales) !== firma(guardados);
 }
+
+/** Un tabulador devuelve un solo importe/moneda; no dispone de TC ni fecha. */
+export const MENSAJE_MONEDAS_DEMORAS =
+  "Usa una sola moneda en todos los tramos de este tipo de contenedor. No hay conversión automática entre monedas.";
+
+export function mezclaMonedasTramos(tramos: { moneda: string }[]): boolean {
+  return new Set(tramos.map((t) => t.moneda || "USD")).size > 1;
+}
