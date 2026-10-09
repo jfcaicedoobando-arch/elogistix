@@ -45,10 +45,8 @@ const CATEGORIAS: ReadonlyArray<[RegExp, string]> = [
   [/\b(flat rack|flatrack|fr)\b/, "flatrack"],
   [/\b(iso tank|tank|tanque)\b/, "tank"],
   [/\b(platform|plataforma)\b/, "platform"],
-  // GP es una variante del catálogo, no una equivalencia comercial de Dry.
-  // Conservar DRY/DV/ST como duplicados legacy sin mezclar sus tarifas con GP.
-  [/\bgp\b/, "gp"],
-  [/\b(dry|standard|std|estandar|st|dv)\b/, "dry"],
+  // La búsqueda comercial conserva la equivalencia histórica GP/Dry.
+  [/\b(dry|standard|std|estandar|gp|st|dv)\b/, "dry"],
 ];
 
 /** Clave semántica canónica de un tipo de contenedor (tamaño + categoría). */
@@ -60,6 +58,16 @@ export function claveCanonicaTipoContenedor(t: Pick<TipoContenedor, "code" | "na
   const categoria = CATEGORIAS.find(([re]) => re.test(separado))?.[1];
   if (tamano && categoria) return `${tamano}|${categoria}`;
   return `raw:${normalizarTexto(t.name) || normalizarTexto(t.code)}`;
+}
+
+/** Identidad de selección: permite guardar Dry sin sustituirlo por el UUID GP. */
+export function claveIdentidadCatalogo(t: Pick<TipoContenedor, "code" | "name">): string {
+  const comercial = claveCanonicaTipoContenedor(t);
+  const texto = `${normalizarTexto(t.name)} ${normalizarTexto(t.code)}`
+    .replace(/(\d+)([a-z]+)/g, "$1 $2").replace(/([a-z]+)(\d+)/g, "$1 $2");
+  return comercial.endsWith("|dry") && /\bgp\b/.test(texto)
+    ? comercial.replace(/\|dry$/, "|gp")
+    : comercial;
 }
 
 export interface TipoContenedorCanonico extends TipoContenedor {
@@ -83,7 +91,7 @@ export function dedupeTiposContenedor(
 ): TipoContenedorCanonico[] {
   const grupos = new Map<string, TipoContenedor[]>();
   for (const r of rows) {
-    const clave = claveCanonicaTipoContenedor(r);
+    const clave = claveIdentidadCatalogo(r);
     const actual = grupos.get(clave);
     if (actual) actual.push(r);
     else grupos.set(clave, [r]);
@@ -123,3 +131,27 @@ export function resolverIdCanonicoTipo(
   return catalogo.find((t) => coincideId(t, id))?.id ?? id;
 }
 
+
+/**
+ * Vista de búsqueda comercial sobre el catálogo activo/visible ya filtrado.
+ * Reúne las opciones GP y Dry y sus aliases sin modificar el catálogo ni IDs
+ * guardados. Su representante conserva el orden histórico fecha + UUID.
+ */
+export function agruparTiposContenedorComerciales(
+  catalogo: ReadonlyArray<TipoContenedorCanonico>,
+): TipoContenedorCanonico[] {
+  const grupos = new Map<string, TipoContenedorCanonico[]>();
+  for (const tipo of catalogo) {
+    const clave = claveCanonicaTipoContenedor(tipo);
+    const grupo = grupos.get(clave) ?? [];
+    grupo.push(tipo);
+    grupos.set(clave, grupo);
+  }
+  return [...grupos.values()].map((grupo) => {
+    const canonico = grupo.reduce((mejor, tipo) => (esMasCanonico(tipo, mejor) ? tipo : mejor));
+    return {
+      ...canonico,
+      idsEquivalentes: [...new Set(grupo.flatMap((tipo) => tipo.idsEquivalentes ?? [tipo.id]))].sort(),
+    };
+  });
+}

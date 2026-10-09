@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { claveCanonicaTipoContenedor, dedupeTiposContenedor, idsEquivalentesDeTipo, resolverIdCanonicoTipo } from '../tiposContenedorCanonico';
+import { claveIdentidadCatalogo, claveCanonicaTipoContenedor, dedupeTiposContenedor, idsEquivalentesDeTipo, resolverIdCanonicoTipo } from '../tiposContenedorCanonico';
 import { resolverTipoId } from '@/features/cotizacion/components/seccionRuta/resolverCatalogos';
 import type { TipoContenedor } from '@/features/catalogos/services/catalogosTypes';
 
@@ -32,7 +32,8 @@ describe('catálogo contenedor: GP separado de Dry', () => {
     const empate = [tipo('000-gp', '20GP', "20' GP"), tipo('zzz-dry', '20DRY', "20' Dry (Standard)")];
     expect(dedupeTiposContenedor(empate)).toEqual(dedupeTiposContenedor([...empate].reverse()));
     expect(idsEquivalentesDeTipo(dedupeTiposContenedor(empate), '000-gp')).toEqual(['000-gp']);
-    expect(claveCanonicaTipoContenedor(empate[0])).not.toBe(claveCanonicaTipoContenedor(empate[1]));
+    expect(claveIdentidadCatalogo(empate[0])).not.toBe(claveIdentidadCatalogo(empate[1]));
+    expect(claveCanonicaTipoContenedor(empate[0])).toBe(claveCanonicaTipoContenedor(empate[1]));
   });
 
   it('conserva tamaño, High Cube y fallback desconocido', () => {

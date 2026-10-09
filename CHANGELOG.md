@@ -2,7 +2,7 @@
 
 ## [13.824.63] - 2026-10-09
 
-- Catálogo de contenedores: separa GP de Dry y conserva la equivalencia entre DRY, DV y ST, evitando cruces de sugerencias de tarifas entre GP y Dry.
+- Catálogo de contenedores: separa GP de Dry en las opciones de captura para conservar el UUID elegido; mantiene la equivalencia comercial histórica GP/DRY/DV/ST en las búsquedas de tarifas.
 - El wizard marítimo FCL utiliza el catálogo activo y visible de la empresa, alineado con Nueva Tarifa; excluye LCL de nuevas selecciones FCL y conserva valores históricos sin reescribirlos.
 - Agrega regresiones de catálogo, visibilidad, consulta de tarifas y selector FCL. Sin cambios de tarifas existentes, condiciones de navieras, migraciones ni datos.
 
