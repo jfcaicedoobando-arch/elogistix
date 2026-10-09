@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.61] - 2026-10-09
+
+- Comparador de tarifas: presenta el importe de demora con la moneda y rango del mismo tramo del día 6. La etiqueta identifica esa consulta puntual; no redefine días libres ni convierte importes.
+- La vista agrega metadatos al final y conserva columnas anteriores, RPC, permisos y RLS. Cuando faltan datos de moneda, la interfaz lo informa sin asumir USD.
+- CI incorpora una matriz aislada de compatibilidad de vista, monedas y aislamiento organizacional.
+
 ## [13.824.60] - 2026-10-09
 
 - Demoras por contenedor: al guardar, refresca también la cabecera del presupuesto sin recargar la página; conserva la actualización del detalle y PnL.

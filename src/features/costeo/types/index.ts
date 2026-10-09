@@ -132,6 +132,10 @@ export interface TopTarifaRow {
   naviera_carta_garantia_activa: boolean;
   naviera_dias_libres_default: number | null;
   naviera_demora_dia_6: number | null;
+  /** Metadata from the same day-6 bracket; optional during staged deployment. */
+  naviera_demora_moneda?: string | null;
+  naviera_demora_desde_dia?: number | null;
+  naviera_demora_hasta_dia?: number | null;
   // v13.47.0: heredables al wizard de cotización (ventas solo captura ruta+contenedor).
   dias_libres_almacenaje_lcl: number | null;
   frecuencia_resuelta: string | null;

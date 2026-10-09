@@ -121,6 +121,14 @@ jobs:
       - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
         uses: ./.github/actions/setup-pg-client
 
+      - name: AUD147 comparator — native currency and view compatibility
+        timeout-minutes: 3
+        # Independent disposable cluster; no access to the main RLS service or network.
+        run: |
+          docker run --rm --network none --user postgres --entrypoint bash \
+            -v "$PWD:/repo:ro" "$POSTGRES_IMAGE" \
+            -c 'cd /repo && PG_BIN=/usr/lib/postgresql/17/bin bash scripts/db/audit147-comparador/run.sh'
+
       - name: Pendiente por embarque — control rojo y linaje fiscal
         env:
           ISOLATED_QA_DB: '1'

@@ -21730,11 +21730,7 @@ CREATE VIEW public.costeo_tarifas_vigentes_v WITH (security_invoker='on') AS
     nc.carta_garantia_vigente_hasta AS naviera_carta_garantia_vigente_hasta,
     ((nc.tiene_carta_garantia = true) AND (nc.carta_garantia_vigente_hasta IS NOT NULL) AND (nc.carta_garantia_vigente_hasta >= ((now() AT TIME ZONE 'America/Mexico_City'::text))::date)) AS naviera_carta_garantia_activa,
     nc.dias_libres_demoras_default AS naviera_dias_libres_default,
-    ( SELECT dt.monto_por_dia
-           FROM public.costeo_naviera_demoras_tarifa dt
-          WHERE ((dt.naviera_condicion_id = nc.id) AND (dt.tipo_contenedor_id = t.tipo_contenedor_id) AND (dt.desde_dia <= 6) AND ((dt.hasta_dia IS NULL) OR (dt.hasta_dia >= 6)))
-          ORDER BY dt.desde_dia DESC
-         LIMIT 1) AS naviera_demora_dia_6,
+    demora.monto_por_dia AS naviera_demora_dia_6,
     t.dias_libres_almacenaje_lcl,
     COALESCE(t.frecuencia_override, nc.frecuencia) AS frecuencia_resuelta,
     nc.frecuencia AS naviera_frecuencia,
@@ -21742,8 +21738,11 @@ CREATE VIEW public.costeo_tarifas_vigentes_v WITH (security_invoker='on') AS
     po.code AS puerto_origen_code,
     po.country AS puerto_origen_country,
     pd.code AS puerto_destino_code,
-    pd.country AS puerto_destino_country
-   FROM (((((((public.costeo_tarifas t
+    pd.country AS puerto_destino_country,
+    demora.moneda AS naviera_demora_moneda,
+    demora.desde_dia AS naviera_demora_desde_dia,
+    demora.hasta_dia AS naviera_demora_hasta_dia
+   FROM ((((((((public.costeo_tarifas t
      JOIN public.costeo_agentes a ON ((a.id = t.agente_id)))
      JOIN public.navieras n ON ((n.id = t.naviera_id)))
      JOIN public.costeo_rutas r ON ((r.id = t.ruta_id)))
@@ -21751,6 +21750,14 @@ CREATE VIEW public.costeo_tarifas_vigentes_v WITH (security_invoker='on') AS
      JOIN public.puertos pd ON ((pd.id = r.puerto_destino_id)))
      JOIN public.tipos_contenedor tc ON ((tc.id = t.tipo_contenedor_id)))
      LEFT JOIN public.costeo_navieras_condiciones nc ON (((nc.naviera_id = t.naviera_id) AND (nc.organization_id = t.organization_id))))
+     LEFT JOIN LATERAL ( SELECT dt.monto_por_dia,
+            dt.moneda,
+            dt.desde_dia,
+            dt.hasta_dia
+           FROM public.costeo_naviera_demoras_tarifa dt
+          WHERE ((dt.naviera_condicion_id = nc.id) AND (dt.tipo_contenedor_id = t.tipo_contenedor_id) AND (dt.desde_dia <= 6) AND ((dt.hasta_dia IS NULL) OR (dt.hasta_dia >= 6)))
+          ORDER BY dt.desde_dia DESC
+         LIMIT 1) demora ON (true))
   WHERE ((t.estado_aprobacion = 'vigente'::text) AND (t.estado = 'vigente'::text) AND (a.activo = true) AND ((t.vigente_hasta IS NULL) OR (t.vigente_hasta >= ((now() AT TIME ZONE 'America/Mexico_City'::text))::date)));
 CREATE FUNCTION public.get_top_tarifas(p_puerto_origen_id uuid, p_puerto_destino_id uuid, p_tipo_contenedor_id uuid, p_fecha date DEFAULT CURRENT_DATE, p_organization_id uuid DEFAULT NULL::uuid) RETURNS SETOF public.costeo_tarifas_vigentes_v
     LANGUAGE sql STABLE SECURITY DEFINER
