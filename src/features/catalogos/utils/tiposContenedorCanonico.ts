@@ -45,7 +45,10 @@ const CATEGORIAS: ReadonlyArray<[RegExp, string]> = [
   [/\b(flat rack|flatrack|fr)\b/, "flatrack"],
   [/\b(iso tank|tank|tanque)\b/, "tank"],
   [/\b(platform|plataforma)\b/, "platform"],
-  [/\b(dry|standard|std|estandar|st|dv|gp)\b/, "dry"],
+  // GP es una variante del catálogo, no una equivalencia comercial de Dry.
+  // Conservar DRY/DV/ST como duplicados legacy sin mezclar sus tarifas con GP.
+  [/\bgp\b/, "gp"],
+  [/\b(dry|standard|std|estandar|st|dv)\b/, "dry"],
 ];
 
 /** Clave semántica canónica de un tipo de contenedor (tamaño + categoría). */
@@ -119,3 +122,4 @@ export function resolverIdCanonicoTipo(
   if (!id) return "";
   return catalogo.find((t) => coincideId(t, id))?.id ?? id;
 }
+
