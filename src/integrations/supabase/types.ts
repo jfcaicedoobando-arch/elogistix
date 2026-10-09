@@ -9580,7 +9580,10 @@ export type Database = {
           naviera_carta_garantia_activa: boolean | null
           naviera_carta_garantia_vigente_hasta: string | null
           naviera_condicion_id: string | null
+          naviera_demora_desde_dia: number | null
           naviera_demora_dia_6: number | null
+          naviera_demora_hasta_dia: number | null
+          naviera_demora_moneda: string | null
           naviera_dias_libres_default: number | null
           naviera_frecuencia: string | null
           naviera_id: string | null
@@ -12010,7 +12013,10 @@ export type Database = {
           naviera_carta_garantia_activa: boolean | null
           naviera_carta_garantia_vigente_hasta: string | null
           naviera_condicion_id: string | null
+          naviera_demora_desde_dia: number | null
           naviera_demora_dia_6: number | null
+          naviera_demora_hasta_dia: number | null
+          naviera_demora_moneda: string | null
           naviera_dias_libres_default: number | null
           naviera_frecuencia: string | null
           naviera_id: string | null
@@ -12064,7 +12070,10 @@ export type Database = {
           naviera_carta_garantia_activa: boolean | null
           naviera_carta_garantia_vigente_hasta: string | null
           naviera_condicion_id: string | null
+          naviera_demora_desde_dia: number | null
           naviera_demora_dia_6: number | null
+          naviera_demora_hasta_dia: number | null
+          naviera_demora_moneda: string | null
           naviera_dias_libres_default: number | null
           naviera_frecuencia: string | null
           naviera_id: string | null

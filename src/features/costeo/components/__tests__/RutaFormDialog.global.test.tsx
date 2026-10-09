@@ -86,4 +86,18 @@ describe("RutaFormDialog — rutas globales", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Guardar" })).not.toBeDisabled();
   });
+
+  it("notifica onCreada con el id de la ruta recién creada", async () => {
+    const crear = crearMock() as unknown as { mutateAsync: ReturnType<typeof vi.fn> };
+    const onCreada = vi.fn();
+    render(
+      <RutaFormDialog open onOpenChange={() => {}} crear={crear as never} rutas={[]} onCreada={onCreada} />,
+    );
+    abrir("ruta-origen");
+    fireEvent.click(screen.getByText("Rotterdam, Países Bajos (NLRTM)"));
+    abrir("ruta-destino");
+    fireEvent.click(screen.getByText("Veracruz, México (MXVER)"));
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(onCreada).toHaveBeenCalledWith("r1"));
+  });
 });
