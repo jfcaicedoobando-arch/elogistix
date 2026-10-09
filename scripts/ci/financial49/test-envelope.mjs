@@ -83,6 +83,42 @@ try {
   record("second-apply", second); mustPass(second);
   assert.deepEqual(snapshot(database), once, "Second apply changed schema/data or target identities");
 
+  if (config.historicalPredecessor) {
+    const historical = config.historicalPredecessor;
+    assert.equal(historical.signature, "public.list_trash(text,integer,integer)");
+    assert.deepEqual(Object.keys(historical.afterSha256), config.signatures);
+    const definition = readFileSync(new URL(historical.fixture, import.meta.url), "utf8");
+    assert.equal(hash(definition), historical.definitionSha256, "Historical fixture bytes changed");
+    const variant = clone("historical_predecessor");
+    const targets = config.signatures.map((signature) => `${quote(signature)}::regprocedure`).join(",");
+    const metadata = () => mustPass(psql(variant, `SELECT jsonb_build_object(
+      'functions', (SELECT jsonb_agg(to_jsonb(p)-'prosrc' ORDER BY p.oid)
+        FROM pg_catalog.pg_proc p WHERE p.oid IN (${targets})),
+      'acl', (SELECT jsonb_agg(jsonb_build_object('oid',p.oid,'entry',to_jsonb(a))
+        ORDER BY p.oid,a.grantor,a.grantee,a.privilege_type,a.is_grantable)
+        FROM pg_catalog.pg_proc p CROSS JOIN LATERAL pg_catalog.aclexplode(p.proacl) a
+        WHERE p.oid IN (${targets})),
+      'effective', (SELECT jsonb_agg(jsonb_build_object('oid',p.oid,'role',r.rolname,
+        'execute',pg_catalog.has_function_privilege(r.oid,p.oid,'EXECUTE'),
+        'grant_option',pg_catalog.has_function_privilege(r.oid,p.oid,'EXECUTE WITH GRANT OPTION'))
+        ORDER BY p.oid,r.rolname) FROM pg_catalog.pg_proc p CROSS JOIN pg_catalog.pg_roles r
+        WHERE p.oid IN (${targets})));`));
+    const bodyHash = (signature) => mustPass(psql(variant, `SELECT
+      pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(p.prosrc,'UTF8')),'hex')
+      FROM pg_catalog.pg_proc p WHERE p.oid=${quote(signature)}::regprocedure;`));
+    const originalMetadata = metadata();
+    mustPass(psql(variant, `${definition}\n;`, true));
+    assert.equal(bodyHash(historical.signature), historical.prosrcSha256, "Historical raw body mismatch");
+    assert.equal(metadata(), originalMetadata, "Historical fixture changed metadata or ACL");
+    const result = psql(variant, source, true);
+    record("historical-predecessor", result, { before_sha256: historical.prosrcSha256 });
+    mustPass(result);
+    for (const signature of config.signatures) {
+      assert.equal(bodyHash(signature), historical.afterSha256[signature], "Unexpected final body");
+    }
+    assert.equal(metadata(), originalMetadata, "Historical apply changed metadata or ACL");
+  }
+
   const rollback = clone("caller_rollback");
   const before = snapshot(rollback);
   const result = psql(rollback, `BEGIN;\n${source}\nROLLBACK;`);

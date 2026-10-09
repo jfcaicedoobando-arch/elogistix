@@ -61,7 +61,10 @@ BEGIN
       RAISE EXCEPTION 'FIN49_PRECONDITION: unexpected target owner, signature or attributes: %',v_item->>'signature';
     END IF;
     v_source_hash := pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(v_proc.prosrc,'UTF8')),'hex');
-    IF v_source_hash NOT IN (v_item->>'before_sha256',v_item->>'after_sha256') THEN
+    -- Exact historical list_trash body: three extra empty code lines, no token changes.
+    IF v_source_hash NOT IN (v_item->>'before_sha256',v_item->>'after_sha256')
+       AND NOT (v_item->>'signature' = 'public.list_trash(text,integer,integer)'
+         AND v_source_hash = 'e22add636e68c503bd302cd7711db80be628a4f228e5cb46a20512a717835c5f') THEN
       RAISE EXCEPTION 'FIN49_PRECONDITION: unreviewed target body: %',v_item->>'signature';
     END IF;
     IF EXISTS (SELECT 1 FROM pg_catalog.aclexplode(v_proc.proacl) a

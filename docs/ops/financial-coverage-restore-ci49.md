@@ -109,3 +109,31 @@ published commit; this document does not label omitted stages as passed.
 CI green does not prove remote database state, published frontend, deployment,
 fiscal activity or GUI acceptance. No database application or deploy is part of
 this candidate.
+
+## Exact historical predecessor admission (2026-10-09)
+
+The restore49 installer also admits one exact historical raw `list_trash`
+predecessor: `e22add636e68c503bd302cd7711db80be628a4f228e5cb46a20512a717835c5f`.
+The canonical predecessor `f121b65e081df7977f02f4ee45f7720b1fe5d9426cb711b96847033db71e3085`
+and final target `37156604926923420499bfeba6b921d9c9ad0343b371de32002c5260be5c75fd`
+remain unchanged. Exact source comparison identified only three extra empty
+lines in code, outside quotes/comments; all 67 quoted tokens are byte-identical.
+The historical variant was observed in the preserved 2026-10-08 catalog and
+reconfirmed by a read-only destination query on 2026-10-09. The ten financial
+migration IDs/names were absent at that admission check; no applied migration
+or destination ledger was rewritten.
+
+No whitespace normalization is used for admission. The additional hash is
+accepted only for `public.list_trash(text,integer,integer)`. Every other body,
+owner, identity, attribute and ACL gate remains unchanged, as do both exact
+final bodies, the embedded reviewed source and the normalized baseline.
+The release manifest records filenames rather than source hashes; its entries
+and bytes are unchanged. The CI config pins the revised installer bytes.
+
+One extra owned-clone Actions control installs the exact hash-pinned historical
+definition without DCL, checks its raw body and unchanged metadata/ACL, runs
+the real installer in a caller-owned stop-on-error transaction, then verifies
+both exact final bodies plus raw/expanded/effective ACL and nonbody metadata.
+The existing unknown-body rejection control remains intact. The clone joins
+the existing owned-only cleanup. This brings the planned envelope controls to
+20 (10 coverage, 10 restore); runtime success requires the new exact-head CI.

@@ -10,13 +10,23 @@
     "privateTrigger": "public._seguro_validar_factura_proveedor()"
   },
   "supabase/migrations/20261009010100_audit148_papelera_seguros.sql": {
-    "sha256": "565950e4d06c9b7e183d240b1d3354f2b6c31c3d79f04a1b1172525355d8d539",
+    "sha256": "1155adf1c1f6c8b76db9edcc9577819e1ed5469e3fec151c49e2f35e446d234c",
     "key": "restore49",
     "signatures": [
       "public.list_trash(text,integer,integer)",
       "public.restore_record(text,uuid)"
     ],
     "callable": "public.list_trash(text,integer,integer)",
-    "privateTrigger": null
+    "privateTrigger": null,
+    "historicalPredecessor": {
+      "fixture": "./fixtures/list-trash-historical.sql",
+      "definitionSha256": "bbf87edc5f223e562636362e171d4aaf16b3dfdaded445a4442df3ecd9891956",
+      "signature": "public.list_trash(text,integer,integer)",
+      "prosrcSha256": "e22add636e68c503bd302cd7711db80be628a4f228e5cb46a20512a717835c5f",
+      "afterSha256": {
+        "public.list_trash(text,integer,integer)": "37156604926923420499bfeba6b921d9c9ad0343b371de32002c5260be5c75fd",
+        "public.restore_record(text,uuid)": "95673738af0796daa5fdb0eb3719b965aca24b27a331616e756f973a399d9284"
+      }
+    }
   }
 }
