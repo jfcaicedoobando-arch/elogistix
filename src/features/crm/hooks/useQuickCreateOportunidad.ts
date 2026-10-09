@@ -20,6 +20,7 @@ export interface OportunidadQuickDraft {
   origen: OrigenInicial | null;
   empresa?: RefRow | null;
   etapaId?: string | null;
+  valorEstimado: string;
 }
 
 interface Params {
@@ -73,6 +74,7 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
 
   const construirBorrador = (): OportunidadQuickDraft => ({
     nombre: nombre.trim(), empresa, origen, etapaId: etapa?.id ?? null,
+    valorEstimado,
   });
 
   const resolverVendedor = (o: OrigenInicial) =>
