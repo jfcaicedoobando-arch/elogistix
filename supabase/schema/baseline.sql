@@ -5077,23 +5077,18 @@ BEGIN
     INTO v_estado, v_captura
   FROM public.proveedor_facturas
   WHERE id = p_factura_id;
-
   IF v_estado IS NULL THEN RETURN; END IF;
   IF v_estado IN ('Cancelada','Borrador') THEN RETURN; END IF;
-
   SELECT saldo, pagado + notas_credito_aplicadas INTO v_saldo, v_cobertura
   FROM public.v_proveedor_facturas_saldo
   WHERE proveedor_factura_id = p_factura_id;
-
   IF v_saldo IS NULL OR v_cobertura IS NULL THEN RETURN; END IF;
-
   -- La tolerancia sólo absorbe remanentes con cobertura neta viva.
   IF v_saldo <= 0 OR (v_saldo <= 0.01 AND v_cobertura > 0) THEN
     v_nuevo := 'Pagada';
   ELSE
     v_nuevo := 'Vigente';
   END IF;
-
   -- R2-32: sincroniza estado_captura con el estado financiero
   IF v_nuevo = 'Pagada' THEN
     v_nueva_captura := 'pagada';
@@ -5103,7 +5098,6 @@ BEGIN
   ELSE
     v_nueva_captura := v_captura;
   END IF;
-
   IF v_nuevo IS DISTINCT FROM v_estado
      OR v_nueva_captura IS DISTINCT FROM v_captura THEN
     PERFORM set_config('app.recalc_cxp','1', true);
@@ -34701,7 +34695,6 @@ BEGIN
                                             'Vencida','Cancelada','Sustituida'))))
     INTO v_venta_pendientes, v_venta_en_proforma, v_venta_sin_emitir
     FROM cv c;
-
   v_ok := (v_venta_pendientes=0 AND v_venta_en_proforma=0 AND v_venta_sin_emitir=0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
@@ -34794,7 +34787,6 @@ BEGIN
     'regla','comisiones_definitivas','ok',v_ok,
     'detalle', jsonb_build_object('no_definitivas', v_com_count,
       'sin_comision', v_sin_comision)));
-
   BEGIN
     v_pnl := public.pnl_financiero_embarque(p_embarque_id);
     v_utilidad_mxn := COALESCE((v_pnl->>'utilidad_mxn')::numeric, 0);
@@ -41632,4 +41624,3 @@ GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
 GRANT ALL ON TABLE public.vendedora_config TO service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
-
