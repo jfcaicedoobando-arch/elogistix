@@ -4,9 +4,8 @@
  * límite de tamaño de componentes.
  */
 import { descargarBlob } from "@/lib/downloadBlob";
-// Este snapshot aún no incluye tenant: conservar sólo el emisor configurado.
-import { fetchEmisorEmpresa as cargarEmisorEmpresa } from "@/features/configuracion/services/emisor";
-import { captureAuthOperationScope } from "@/lib/auth/authOperationScope";
+import { fetchEmisorReporte } from "@/features/configuracion/services/emisorPdf";
+import { assertCarteraScopeCurrent, type CarteraDataScope } from "./carteraSnapshot";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import {
   carteraACsv,
@@ -32,7 +31,7 @@ function armarFilas(bloques: readonly BloqueCartera[]): FilaCarteraExport[] {
   return bloques.flatMap((b) => filasCarteraExport(b.titulo, b.filas));
 }
 
-export function descargarCarteraCsv(fechaCorte: string, bloques: readonly BloqueCartera[], busqueda = ""): void {
+export function descargarCarteraCsv(fechaCorte: string, bloques: readonly BloqueCartera[], dataScope: CarteraDataScope, busqueda = ""): void {
   const detalle = armarFilas(bloques);
   if (detalle.length === 0) {
     notifyWarning(undefined, {
@@ -42,6 +41,7 @@ export function descargarCarteraCsv(fechaCorte: string, bloques: readonly Bloque
     return;
   }
   try {
+    assertCarteraScopeCurrent(dataScope);
     const csv = carteraACsv(
       detalle,
       bloques.map((b) => ({
@@ -68,16 +68,17 @@ export async function descargarCarteraPdf(
   fechaCorte: string,
   leyendaTc: string,
   bloques: readonly BloqueCartera[],
+  dataScope: CarteraDataScope,
   busqueda = "",
 ): Promise<void> {
-  const scope = captureAuthOperationScope();
   try {
+    assertCarteraScopeCurrent(dataScope);
     const [{ descargarPdf }, { ReporteCarteraDocument }, emisor] = await Promise.all([
       import("@/pdf/render/descargarPdf"),
       import("@/pdf/documents/ReporteCarteraDocument"),
-      cargarEmisorEmpresa(),
+      fetchEmisorReporte(dataScope.organizationId),
     ]);
-    scope.assertCurrent();
+    assertCarteraScopeCurrent(dataScope);
     await descargarPdf(
       <ReporteCarteraDocument
         fechaCorte={fechaCorte}
@@ -92,6 +93,7 @@ export async function descargarCarteraPdf(
       />,
       nombreArchivoCartera(fechaCorte, "pdf", !!busqueda.trim()),
     );
+    assertCarteraScopeCurrent(dataScope);
     notifySuccess(undefined, { title: "Cartera descargada en PDF" });
   } catch (error) {
     notifyError(undefined, {
@@ -101,3 +103,4 @@ export async function descargarCarteraPdf(
     });
   }
 }
+

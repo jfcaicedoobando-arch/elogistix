@@ -6,17 +6,15 @@ import type { TcDofVigente } from "@/features/catalogos/services/tipoCambioDof";
 
 const mocks = vi.hoisted(() => ({ fetchTc: vi.fn(), refetchCxc: vi.fn(), refetchCxp: vi.fn() }));
 vi.mock("@/features/catalogos/services/tipoCambioDof", () => ({ fetchTcDofPorFecha: mocks.fetchTc }));
-vi.mock("@/features/facturacion/hooks/useCobranza", () => ({
-  useCobranza: () => ({ data: [], isLoading: false, isError: false, refetch: mocks.refetchCxc }),
-}));
-vi.mock("@/features/cxp/hooks", () => ({
-  useFacturasCxP: () => ({
-    data: [{
+vi.mock("../useCarteraSnapshot", () => ({
+  useCarteraSnapshot: () => ({
+    data: { scope: { userId: "user-a", organizationId: "org-a", role: "admin", generation: 1 }, cxc: [], cxp: [{
       id: "fp-7", folio_interno: "FP-000007", proveedor_nombre: "Agente marítimo Monterrey",
       embarque_expediente: "ELIMP00010", moneda: "USD", saldo: 700,
       fecha_emision: "2026-09-26", fecha_vencimiento: "2026-09-27", tipo_cambio_usd: 17.5,
-    }],
-    isLoading: false, isError: false, refetch: mocks.refetchCxp,
+    }] },
+    isLoading: false, isError: false,
+    refetch: () => { mocks.refetchCxc(); mocks.refetchCxp(); },
   }),
 }));
 
@@ -33,6 +31,7 @@ describe("Cartera — resolución del tipo de cambio", () => {
     expect(result.current.isLoading).toBe(true);
     act(() => resolver(tc));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.dataScope?.organizationId).toBe("org-a");
     expect(result.current.cxp.total.mxnHistorico).toBe(12250);
     expect(result.current.cxp.total.mxnCorte).toBe(12649.7);
     expect(result.current.cxp.total.diferencia).toBe(399.7);
@@ -61,3 +60,4 @@ describe("Cartera — resolución del tipo de cambio", () => {
     expect(result.current.cxp.total.mxnCorte).toBe(12649.7);
   });
 });
+

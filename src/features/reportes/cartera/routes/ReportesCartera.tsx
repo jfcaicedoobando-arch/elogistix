@@ -34,19 +34,19 @@ export default function ReportesCartera() {
   const [busqueda, setBusqueda] = useState("");
   const [generandoPdf, setGenerandoPdf] = useState(false);
 
-  const { tc, tcLoading, tcError, cxc, cxp, isLoading, isError, refetch } = useCarteraAging(fechaCorte, busqueda);
+  const { dataScope, tc, tcLoading, tcError, cxc, cxp, isLoading, isError, refetch } = useCarteraAging(fechaCorte, busqueda);
   const bloques = useMemo(() => [cxc, cxp], [cxc, cxp]);
   const leyenda = tcLoading ? "Consultando TC DOF…"
     : tcError ? "No se pudo consultar el TC DOF. Reintenta para generar el reporte."
     : leyendaTcCorte(tc);
   const sinDatos = cxc.filas.length === 0 && cxp.filas.length === 0;
-  const puedeExportar = !sinDatos && !isLoading && !isError;
+  const puedeExportar = !!dataScope && !sinDatos && !isLoading && !isError;
 
   const exportarPdf = async () => {
-    if (!puedeExportar || generandoPdf) return;
+    if (!puedeExportar || !dataScope || generandoPdf) return;
     setGenerandoPdf(true);
     try {
-      await descargarCarteraPdf(fechaCorte, leyenda, bloques, busqueda);
+      await descargarCarteraPdf(fechaCorte, leyenda, bloques, dataScope, busqueda);
     } finally {
       setGenerandoPdf(false);
     }
@@ -63,7 +63,7 @@ export default function ReportesCartera() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { if (puedeExportar) descargarCarteraCsv(fechaCorte, bloques, busqueda); }}
+              onClick={() => { if (puedeExportar && dataScope) descargarCarteraCsv(fechaCorte, bloques, dataScope, busqueda); }}
               disabled={!puedeExportar}
             >
               <FileSpreadsheet className="mr-2 h-4 w-4" aria-hidden /> Exportar CSV
@@ -141,3 +141,4 @@ export default function ReportesCartera() {
     </PageContainer>
   );
 }
+

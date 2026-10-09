@@ -141,6 +141,19 @@ jobs:
           bun run audit:replay-mirror
           bun run audit:rpc-sync
 
+      # Cartera pagination must use the real renderer: normal shards use a PDF stub.
+      # Synthetic fixtures only; no backend, credentials, or full PDF-suite replay.
+      - name: Cartera PDF real (2 pagination regressions)
+        if: needs.detector.outputs.frontend == 'true'
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          if ! command -v pdfinfo >/dev/null || ! command -v pdftotext >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
+          bun run test:pdf -- tests/pdf/carteraPagination.test.tsx
+
       - name: Build (sin ANALYZE)
         if: needs.detector.outputs.frontend == 'true'
         env:
