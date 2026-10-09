@@ -1,3 +1,4 @@
+-- Prepared CI successor: retain 60 supported restore assertions and add 4 explicit cross-tenant INSERT rejection/rollback assertions. Not yet executed in Actions.
 -- Local candidate regression; real authenticated callers, rollback-only synthetic fixtures.
 BEGIN;
 \i supabase/tests/rls/_helpers.sql
@@ -34,6 +35,17 @@ BEGIN
  INSERT INTO public.proveedor_facturas(id,organization_id,proveedor_id,categoria_presupuesto_id,embarque_id,folio_proveedor,moneda,subtotal,iva,total,tipo_cambio_usd,estado)
  VALUES(result,org,provider,category,ship,result::text,'MXN',base,base*.16,base*1.16,20,'Vigente');
  RETURN result;
+END $$;
+CREATE FUNCTION pg_temp.reject_fk(stmt text,expected_constraint text,label text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE actual_constraint text; rejected boolean:=false;
+BEGIN
+ BEGIN EXECUTE stmt;
+ EXCEPTION WHEN foreign_key_violation THEN
+  GET STACKED DIAGNOSTICS actual_constraint=CONSTRAINT_NAME;
+  IF actual_constraint IS DISTINCT FROM expected_constraint THEN RAISE; END IF;
+  rejected:=true;
+ END;
+ PERFORM pg_temp.ok(rejected,label || ' [23503/' || expected_constraint || ']');
 END $$;
 DO $cases$
 DECLARE
@@ -116,7 +128,18 @@ BEGIN
  SELECT to_jsonb(x) INTO before_row FROM seguros_embarque x WHERE id=s;
  PERFORM restore_record('seguros_embarque',s);
  PERFORM pg_temp.ok((SELECT deleted_at IS NULL AND proveedor_factura_id=pf AND (to_jsonb(x)-'deleted_at'-'updated_at')=(before_row-'deleted_at'-'updated_at') FROM seguros_embarque x WHERE id=s),'sufficiently covered linked policy restores with full identity preserved');
- FOREACH failure_case IN ARRAY ARRAY['insufficient','cancelled','deleted','wrong_org','duplicate'] LOOP
+ -- A cross-tenant tombstone cannot now be seeded. Assert the rejection at
+ -- INSERT instead of bypassing the FK to manufacture an invalid restore fixture.
+ PERFORM pg_temp.as_postgres();
+ pf:=pg_temp.invoice(other_e,fx.org_b,other_prov,other_cat);
+ SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) INTO before_row FROM seguros_embarque x;
+ PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','gate is off before rejected wrong-tenant tombstone insert');
+ PERFORM pg_temp.reject_fk(format('SELECT pg_temp.policy(%L,%L,%L,100,now())',pf,e,fx.org_a),
+  'insurance_pf_same_org_fk','wrong-tenant tombstone INSERT is rejected by the exact composite FK');
+ PERFORM pg_temp.ok((SELECT jsonb_agg(to_jsonb(x) ORDER BY x.id) FROM seguros_embarque x)=before_row,
+  'rejected wrong-tenant tombstone insert preserves every existing policy row');
+ PERFORM pg_temp.ok(current_setting('app.papelera_restore',true)='off','rejected wrong-tenant tombstone insert leaves restore gate off');
+ FOREACH failure_case IN ARRAY ARRAY['insufficient','cancelled','deleted','duplicate'] LOOP
   PERFORM pg_temp.as_postgres();
   IF failure_case='wrong_org' THEN pf:=pg_temp.invoice(other_e,fx.org_b,other_prov,other_cat);
   ELSE pf:=pg_temp.invoice(e,fx.org_a,prov,cat); END IF;

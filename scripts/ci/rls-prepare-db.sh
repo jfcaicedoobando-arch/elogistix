@@ -60,6 +60,13 @@ requerir_archivo "${SQUASH_INCLUDED:-}" "inventario incluido en el squash"
 echo "▶ Baseline squash: $SQUASH_FILE"
 stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction
 
+# Opt-in snapshot for selector installer negatives. The exact hash is reviewed;
+# capture before its atomic migration, while no psql connection owns postgres.
+selector148_installer=""
+if [[ "${SELECTOR148_ISOLATED_CI:-}" == 1 ]]; then
+  selector148_installer="$(node scripts/ci/selector148/control.cjs locate)"
+fi
+
 echo "▶ Replay de migraciones posteriores al squash"
 shopt -s nullglob
 aplicadas=0
@@ -87,6 +94,15 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   # Focused financial-envelope controls supplied by the financial49 package.
   if [[ "${FINANCIAL49_CI:-}" == 1 ]] && [[ "$base" == 20261009010000_audit148_cobertura_documental_exacta.sql || "$base" == 20261009010100_audit148_papelera_seguros.sql ]]; then
     node scripts/ci/financial49/test-envelope.mjs "$f"
+  fi
+
+  if [[ -n "$selector148_installer" && "$f" == "$selector148_installer" ]]; then
+    node scripts/ci/selector148/control.cjs capture
+  fi
+
+  # Narrow real-schema installer controls run before the exact container forward.
+  if [[ "${PRICING_CONTAINER_CI:-}" == 1 && "$base" == 20261009014000_pricing_container_rpc_guard.sql ]]; then
+    node scripts/ci/pricing-container/test-envelope.mjs "$f"
   fi
 
   echo "▶ $base"

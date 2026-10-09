@@ -33,6 +33,8 @@ END $$;
 -- emitirlos explícitamente o cualquier SELECT bajo el rol authenticated
 -- falla con "permission denied". RLS sigue siendo el único gate de aislamiento.
 -- ============================================================================
+\ir _ci_selector148_capture_acl.sql
+
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 -- FIX-45-HARDENING: ya NO se otorga todo a `anon`. El grant masivo a anon
@@ -43,6 +45,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authentic
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
+\ir _ci_selector148_restore_acl.sql
 
 -- ============================================================================
 -- Re-cierre de funciones de plataforma (regla H6).

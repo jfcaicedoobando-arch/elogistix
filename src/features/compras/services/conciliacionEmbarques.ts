@@ -163,7 +163,7 @@ async function leerTodosLosConceptos(filtros: FiltrosConciliacion): Promise<RowC
     let q = supabase
       .from("conceptos_costo")
       .select(
-        "id, embarque_id, concepto, proveedor_nombre, monto, moneda, origen, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
+        "id, embarque_id, concepto, proveedor_nombre, monto, moneda, origen, estado_liquidacion, embarques!conceptos_costo_embarque_id_fkey!inner(expediente, cliente_nombre, estado)",
       )
       .is("deleted_at", null)
       .order("id", { ascending: true })

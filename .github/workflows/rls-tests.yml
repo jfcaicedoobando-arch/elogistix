@@ -10,7 +10,7 @@ name: rls-tests
 #   bootstrap → squash + replay ordenado → candado service_role-only →
 #   post-migrate → verify RLS → integrity guard → baseline de esquema
 #   (ANTES de cualquier fixture) → guards del manifiesto → suites RLS →
-#   concurrencia de cotización ganadora.
+#   pruebas selector148 seriales en clones propios → concurrencia existente.
 #
 # Fail-closed: si el bootstrap o la preparación falla, el job falla y el
 # check "RLS tests result" queda rojo.
@@ -24,7 +24,9 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
+      - "scripts/ci/pricing-container/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -42,7 +44,9 @@ on:
       - "supabase/tests/**"
       - "supabase/schema/**"
       - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
+      - "scripts/ci/pricing-container/**"
       - "scripts/ci/run-rls-suites.sh"
       - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
@@ -97,6 +101,8 @@ jobs:
       PGDATABASE: postgres
       PSQL: psql -v ON_ERROR_STOP=1 -X -q
       BASELINE: supabase/schema/baseline.sql
+      # Never set this outside the disposable Actions PostgreSQL service.
+      SELECTOR148_ISOLATED_CI: '1'
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -107,17 +113,29 @@ jobs:
       - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
         uses: ./.github/actions/setup-pg-client
 
+      - name: Dependencia mínima del runner serial selector148
+        # Node/npm are provided by ubuntu-24.04; use a separate exact lockfile,
+        # no root frontend install and no lifecycle scripts.
+        run: |
+          node -e "require('node:assert/strict')(Number(process.versions.node.split('.')[0]) >= 20)"
+          npm ci --prefix scripts/ci/selector148 --ignore-scripts --omit=optional --no-audit --no-fund
+          node scripts/ci/selector148/static-check.cjs
+
       # Bootstrap + squash (con su inventario) + replay ordenado de TODAS las
       # migraciones posteriores.
       - name: Preparar BD (bootstrap + squash + replay de migraciones)
         env:
           FINANCIAL49_CI: '1'
+          PRICING_CONTAINER_CI: '1'
         run: bash scripts/ci/rls-prepare-db.sh
 
       - name: Candado service_role-only en migraciones (bidireccional)
         # Corre DESPUÉS de aplicar migraciones y ANTES del GRANT masivo +
         # re-cierre de _ci_post_migrate.sql.
         run: $PSQL -f supabase/tests/rls/_ci_check_service_role_only.sql
+
+      - name: Pricing RPC exact ACL before harness grants
+        run: $PSQL -f supabase/tests/rls/_ci_check_pricing_container_acl.sql
 
       - name: Post-migrate (drop auth.users FKs para CI)
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
@@ -193,6 +211,13 @@ jobs:
           LOG_DIR: .rls-logs
         run: bash scripts/ci/run-rls-suites.sh
 
+      - name: Selector148 — instalador, mutaciones y concurrencia serial
+        # DDL mutation, activation and committed seeds live only in clones of
+        # the pre-selector template, never in the parallel rollback guard pool.
+        env:
+          SELECTOR148_GUARD_LOG_DIR: /tmp/guards-logs
+        run: node scripts/ci/selector148/run.cjs
+
       - name: Concurrencia de dos sesiones — cotización ganadora única
         # No cabe en una suite BEGIN…ROLLBACK: necesita dos conexiones
         # compitiendo por la misma oportunidad. El script limpia su fixture.
@@ -208,12 +233,36 @@ jobs:
           ISOLATED_QA_DB: '1'
         run: bash scripts/ci/concurrencia-factura-manual.sh
 
+      - name: Eliminar sólo las bases desechables propias de selector148
+        if: always()
+        run: node scripts/ci/selector148/control.cjs cleanup
+
+      - name: Subir evidencia selector148
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: selector148-ci-evidence
+          path: .selector148-logs/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
+
       - name: Subir evidencia de envelopes financieros
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: financial49-envelope-evidence
           path: .financial49-logs/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Subir evidencia de container RPC installer
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pricing-container-installer
+          path: .pricing-container-logs/
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 3
@@ -227,6 +276,7 @@ jobs:
             .rls-logs/
             /tmp/guards-logs/
             /tmp/schema.diff
+            /tmp/schema.actual.sql
             /tmp/integrity.txt
           include-hidden-files: true
           if-no-files-found: ignore

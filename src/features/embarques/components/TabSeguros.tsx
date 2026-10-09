@@ -23,6 +23,8 @@ import { contarVigenciasSeguros, diasRestantesSeguro } from "@/features/embarque
 interface Props {
   embarqueId: string;
   canEdit: boolean;
+  tipoCambioUsd?: number | null;
+  tipoCambioEur?: number | null;
 }
 
 function VigenciaBadge({ hasta }: { hasta: string }) {
@@ -32,7 +34,7 @@ function VigenciaBadge({ hasta }: { hasta: string }) {
   return <Badge variant="secondary">Vigente · {dias}d</Badge>;
 }
 
-export function TabSeguros({ embarqueId, canEdit }: Props) {
+export function TabSeguros({ embarqueId, canEdit, tipoCambioUsd = null, tipoCambioEur = null }: Props) {
   const { data: seguros = [] } = useSegurosEmbarque(embarqueId);
   const del = useDeleteSeguro(embarqueId);
   const [open, setOpen] = useState(false);
@@ -156,6 +158,8 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
         onOpenChange={setOpen}
         embarqueId={embarqueId}
         seguro={editing}
+        tipoCambioUsd={tipoCambioUsd}
+        tipoCambioEur={tipoCambioEur}
       />
 
       <ConfirmDeleteAlert

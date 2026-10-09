@@ -239,8 +239,6 @@ supabase/tests/audit99_121_ajuste_sin_banco.sql
 supabase/tests/audit99_121_ajuste_aislamiento.sql
 
 # AUD54: saldo real y cierre monetario, sólo fixtures con ROLLBACK.
-supabase/tests/rls/test_rls_audit54_pue_tolerancia_cierre.sql
-supabase/tests/rls/test_rls_audit54_saldo_visible.sql
 
 # AUD141: complementary monetary counters and documentary counts across currencies.
 supabase/tests/audit141_cobranza_conteo.sql
@@ -254,3 +252,6 @@ supabase/tests/audit145_cotizacion_venta_lineage.sql
 supabase/tests/audit148_exact_coverage.sql
 supabase/tests/audit148_full_coverage_write.sql
 supabase/tests/insurance_trash_restore.sql
+
+# Read-only disabled selector contract; behavioral/DDL proofs run serially in owned clones.
+supabase/tests/selector148_disabled_gate.sql

@@ -41,7 +41,7 @@ export async function fetchConceptosCostoAbiertosDeProveedor(
   if (!proveedorId) return [];
   let q = supabase
     .from("conceptos_costo")
-    .select("id, embarque_id, concepto, monto, moneda, fecha_vencimiento, embarques(expediente, estado)")
+    .select("id, embarque_id, concepto, monto, moneda, fecha_vencimiento, embarques!conceptos_costo_embarque_id_fkey(expediente, estado)")
     .eq("proveedor_id", proveedorId)
     .eq("estado_liquidacion", "Pendiente")
     .is("deleted_at", null)

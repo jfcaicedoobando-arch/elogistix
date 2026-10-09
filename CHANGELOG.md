@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.824.51] - Unreleased
+
+- **Candidato CI · guarda de contenedores en RPC directa**: añade el predicado revisado a `crm_aplicar_tarifa_tarifario`, antes de la respuesta idempotente. Conserva tipo principal/legacy, aliases, tipos personalizados y rechaza contradicciones parciales nombre/código; no modifica vínculos históricos ni el catálogo.
+- Forward inmutable `20261009014000`: exige cuerpo predecesor conocido, owner/atributos y exactamente los grants existentes de authenticated/service_role; conserva OID, ACL y permisos efectivos, sin añadir helpers ni acceso. Drizzle0010 y su replay quedan íntegros.
+- Sobre el padre50, registra1507 migraciones y preserva todos los registros anteriores. Añade20 controles de instalación/rollback y57 casos con esquema y roles reales al CI existente, junto con una aserción de privilegios anterior a los grants del harness.
+- Baseline con proyección acotada al cuerpo de esta RPC; la paridad nativa PostgreSQL17.9 y el runtime siguen pendientes de Actions. Sin SQL local, publicación, migración remota ni despliegue. Ver [contrato, CI y límites](docs/ops/pricing-container-rpc-ci51.md).
+
+## [13.824.50] - Unreleased
+
+- **Candidato dependiente · selector148 e integridad de empresa**: sobre el padre financiero49, registra una instalación atómica con seis FK compuestas validadas, clave única de conceptos y el selector de sólo lectura revisado. Una anomalía histórica cancela toda la instalación; no se reparan ni borran datos.
+- RPC y UI permanecen deshabilitados mientras GitHub Actions valida este commit y se comprueba el destino. La autorización existente del selector cubre su activación acotada después de esas comprobaciones; no se pide una autorización duplicada. Conserva los cinco roles, organización activa, cinco campos visibles y aritmética exacta.
+- Añade el runner serial de integridad, concurrencia y seguridad al workflow RLS existente, conserva la ACL anterior al GRANT de CI y adapta la prueba de papelera para exigir rechazo de la inserción de otra empresa. No crea un workflow amplio ni altera historia45/144.
+- El baseline y los tipos se componen de forma estática con el catálogo local ya revisado; la equivalencia con el dump PostgreSQL17.9 y el runtime se resuelven en Actions. Ver [alcance y activación](docs/ops/selector148-ci50.md).
+
 ## [13.824.49] - Unreleased
 
 - **Candidato para CI · finanzas y seguros148**: compone los cambios financieros revisados de las propuestas47/48 con cobertura documental exacta, sus guards y restauración de seguros. El baseline normalizado conserva los bytes revisados y coincidentes con los dumps17.9 ya registrados; esta fase no repite ejecución SQL.

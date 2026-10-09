@@ -1,0 +1,8 @@
+{
+  "migration": "supabase/migrations/20261009014000_pricing_container_rpc_guard.sql",
+  "sha256": "8471dd83275d8fbc115350e48fb17ae49b282d79513bf7dd6a7d086ab0550920",
+  "signature": "public.crm_aplicar_tarifa_tarifario(uuid,uuid)",
+  "beforeBodySha256": "2ec27dcc73f65c294b5d147d4eb4c2aaebef89f4000233c99bdc624076d0cf6d",
+  "afterBodySha256": "30f6bf09d3098b3494ca1655b3dac6cfa1f71e185d5fbff1fa4117735a77b97e",
+  "reviewedDraftSha256": "9c1c1871d7f365fa1981a5cec3b28bfdf0f5fe53f76ea07578dbdeeb9295c98f"
+}
