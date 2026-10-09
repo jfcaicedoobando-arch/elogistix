@@ -23,7 +23,7 @@ describe("tarifario", () => {
   });
   it("encuentra coincidencias por ruta, contenedor y vigencia", () => {
     const ts = [base({ id: "a" }), base({ id: "b", tipo: { code: "40HC" } }), base({ id: "c", vigente_hasta: "2026-10-05" })];
-    const s = { pol: "shanghai", pod: "Manzanillo", origen: null, destino: null, container_size: "20'", fecha_tentativa_carga: null };
+    const s = { pol: "shanghai", pod: "Manzanillo", origen: null, destino: null, tipo_carga: "20' Dry (Standard)", container_size: null, fecha_tentativa_carga: null };
     expect(tarifasCoincidentes(s, ts, "2026-10-07").map((t) => t.id)).toEqual(["a"]);
   });
   it("clasifica la vigencia respecto de la fecha dada", () => {

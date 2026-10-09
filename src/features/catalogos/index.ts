@@ -8,3 +8,4 @@ export { TipoContenedorSelect } from "./components/TipoContenedorSelect";
 export { etiquetaPuerto, filtrarPuertos } from "./components/PortIdSelect.helpers";
 export type { PuertoOption } from "./components/PortIdSelect.helpers";
 export { NavieraSelect } from "./components/NavieraSelect";
+export { claveCanonicaTipoContenedor } from "./utils/tiposContenedorCanonico";
