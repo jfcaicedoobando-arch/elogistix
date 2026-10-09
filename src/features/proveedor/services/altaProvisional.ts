@@ -42,8 +42,8 @@ export async function fetchProveedoresProvisionales(): Promise<ProveedorProvisio
   ) as Promise<ProveedorProvisional[]>;
 }
 
-/** Roles que pueden aprobar un proveedor provisional (espejo de la RPC). */
-export const ROLES_APRUEBAN_PROVEEDOR = ["admin", "contador"] as const;
+/** Roles que muestran la aprobación en la UI: subconjunto restringido de la autoridad existente del backend. */
+export const ROLES_APRUEBAN_PROVEEDOR = ["admin", "admin_org", "contador"] as const;
 
 export function puedeAprobarProveedor(rol: string | null | undefined): boolean {
   return (ROLES_APRUEBAN_PROVEEDOR as readonly string[]).includes(rol ?? "");
