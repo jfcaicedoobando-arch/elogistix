@@ -8,8 +8,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchCostosConFactura } from "../costosConFactura";
 import { fetchVinculosReconciliacion } from "../reconciliacionCostos.lecturas";
 import { fetchPartidasHuerfanasCount } from "../reconciliacionCostos";
-import { fetchConceptosCostoAbiertosDeProveedor } from "@/features/cxp/services/conceptosCostoVinculables";
-import { PROVEEDOR_FACTURAS_SELECT } from "@/features/cxp/services/proveedorFacturas.types";
+import { fetchConceptosCostoAbiertosDeProveedor, PROVEEDOR_FACTURAS_SELECT } from "@/features/cxp/services";
 import { listarConciliacionEmbarques } from "@/features/compras/services/conciliacionEmbarques";
 
 const invoiceHint = "!proveedor_facturas_conceptos_proveedor_factura_id_fkey";

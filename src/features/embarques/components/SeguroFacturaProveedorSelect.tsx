@@ -1,4 +1,5 @@
 /** Hallazgo 148 — Optional link. Saved IDs survive unavailable or incomplete lists. */
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,7 +60,9 @@ function SeguroFacturaCarga({ query }: QueryProps) {
     {(query.isLoading || query.isRefetching) && <p className="text-body-sm text-muted-foreground mt-1">Cargando facturas; se conserva la selección.</p>}
     {(query.isError || query.unavailable) && <p role="alert" className="text-body-sm text-muted-foreground mt-1">{SEGURO_FACTURA_SELECTOR_ERROR}</p>}
     {query.isFetchNextPageError && <p className="text-body-sm text-muted-foreground mt-1">La lista está incompleta. Puedes reintentar cargar más.</p>}
-    {query.complete && query.items.length === 0 && <p className="text-body-sm text-muted-foreground mt-1">No hay facturas elegibles para estos datos.</p>}
+    {query.complete && query.items.length === 0 && (
+      <EmptyStateInline density="compact" message="No hay facturas elegibles para estos datos." />
+    )}
   </>;
 }
 
