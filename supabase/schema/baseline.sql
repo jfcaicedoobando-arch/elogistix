@@ -25225,19 +25225,148 @@ END credit132_convert_base;
     _net_data := _net_data || jsonb_build_array(jsonb_build_object(
       'id',_invoice.id,'moneda',_factura_moneda,'estado',_invoice.estado,
       'tc_doc',_tc_doc,'monto',_net,'monto_mxn',_net_mxn));
+    -- Fiscal receivable is separate from untaxed P&L. Collection has no line lineage.
+    <<receivable_lineage>>
+    DECLARE
+      r_line record; r_note record; r_item jsonb; r_key text; r_cf uuid;
+      r_debts jsonb := '{}'; r_note_lines jsonb; r_entry jsonb;
+      r_balance numeric; r_pending numeric; r_amount numeric; r_base numeric;
+      r_iva numeric; r_isr numeric; r_retiva numeric; r_gross numeric;
+      r_bases numeric := 0; r_gross_total numeric := 0; r_net_total numeric := 0;
+      r_note_total numeric; r_running numeric; r_previous numeric; r_converted numeric;
+      r_positive bigint; r_shipments bigint; r_single uuid; r_rows bigint;
+      r_type text; r_value text; r_field text;
+      r_decimal constant text := '^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$';
     BEGIN
-      IF _invoice.estado::text IN ('Emitida','Vencida','Parcialmente pagada','Por timbrar') THEN
-        IF _invoice_bad THEN _pending_total := NULL;
-        ELSE _pending_total := _pending_total + public.a_mxn(
-          public.saldo_factura(_invoice.id) * _factor,_factura_moneda,_tc_doc,_tc_doc);
-          IF _pending_total::text IN ('NaN','Infinity','-Infinity') THEN
-            _pending_total := NULL; _invoice_bad := true;
-          END IF;
-        END IF;
+      IF _invoice.estado::text NOT IN ('Emitida','Vencida','Parcialmente pagada','Por timbrar') THEN
+        EXIT receivable_lineage;
       END IF;
-    EXCEPTION WHEN numeric_value_out_of_range THEN
-      _pending_total := NULL; _invoice_bad := true; _overflows := _overflows + 1;
-    END;
+      r_pending := NULL;
+      <<attribute_receivable>>
+      BEGIN
+        IF _invoice_bad OR _invoice.organization_id IS DISTINCT FROM _org THEN EXIT attribute_receivable; END IF;
+        r_balance := public.saldo_factura(_invoice.id);
+        IF r_balance IS NULL OR r_balance::text IN ('NaN','Infinity','-Infinity') THEN EXIT attribute_receivable; END IF;
+        IF r_balance <= 0 THEN r_pending := 0; EXIT attribute_receivable; END IF;
+        -- A wholly single-shipment invoice needs no inferred concept/payment split.
+        SELECT count(*),count(DISTINCT cf.embarque_id),min(cf.embarque_id::text)::uuid
+          INTO r_rows,r_shipments,r_single
+        FROM public.conceptos_factura cf
+        WHERE cf.factura_id=_invoice.id AND cf.deleted_at IS NULL;
+        IF (r_shipments=0 AND _invoice.embarque_id=_embarque_id)
+          OR (r_shipments=1 AND r_single=_embarque_id AND NOT EXISTS (
+            SELECT 1 FROM public.conceptos_factura cf WHERE cf.factura_id=_invoice.id
+              AND cf.deleted_at IS NULL AND (cf.embarque_id IS NULL OR cf.organization_id IS DISTINCT FROM _org))) THEN
+          r_pending := r_balance; EXIT attribute_receivable;
+        END IF;
+        IF r_rows=0 OR _invoice.subtotal IS NULL OR _invoice.total IS NULL
+          OR _invoice.subtotal::text IN ('NaN','Infinity','-Infinity')
+          OR _invoice.total::text IN ('NaN','Infinity','-Infinity') THEN EXIT attribute_receivable; END IF;
+        FOR r_line IN SELECT cf.* FROM public.conceptos_factura cf
+          WHERE cf.factura_id=_invoice.id AND cf.deleted_at IS NULL ORDER BY cf.id
+        LOOP
+          IF r_line.organization_id IS DISTINCT FROM _org OR r_line.embarque_id IS NULL
+            OR NOT EXISTS (SELECT 1 FROM public.embarques e WHERE e.id=r_line.embarque_id
+              AND e.organization_id=_org AND e.deleted_at IS NULL) THEN EXIT attribute_receivable; END IF;
+          r_type := r_line.tipo_iva;
+          r_iva := CASE r_type WHEN 'gravado_16' THEN .16 WHEN 'gravado_8' THEN .08
+            WHEN 'tasa_0' THEN 0 WHEN 'exento' THEN 0 WHEN 'no_objeto' THEN 0 END;
+          r_base := r_line.total; r_isr := coalesce(r_line.monto_ret_isr,0); r_retiva := coalesce(r_line.monto_ret_iva,0);
+          IF r_iva IS NULL OR (r_line.tasa_iva_aplicada IS NOT NULL AND r_line.tasa_iva_aplicada<>r_iva)
+            OR r_base IS NULL OR r_base<0 OR r_isr<0 OR r_retiva<0
+            OR r_base::text IN ('NaN','Infinity','-Infinity') OR r_isr::text IN ('NaN','Infinity','-Infinity')
+            OR r_retiva::text IN ('NaN','Infinity','-Infinity') THEN EXIT attribute_receivable; END IF;
+          r_gross := r_base+round(r_base*r_iva,2)-r_isr-r_retiva;
+          IF r_gross<0 THEN EXIT attribute_receivable; END IF;
+          r_bases := r_bases+r_base; r_gross_total := r_gross_total+r_gross;
+          r_key := r_line.embarque_id::text;
+          r_debts := jsonb_set(r_debts,ARRAY[r_key],to_jsonb(coalesce((r_debts->>r_key)::numeric,0)+r_gross));
+        END LOOP;
+        -- Never distribute an undocumented tax/rounding residue across shipments.
+        IF r_bases<>_invoice.subtotal OR r_gross_total<>_invoice.total THEN EXIT attribute_receivable; END IF;
+        FOR r_note IN SELECT n.* FROM public.factura_notas_credito n
+          WHERE n.factura_id=_invoice.id AND n.deleted_at IS NULL
+            AND n.estado::text IN ('Timbrada','Aplicada') ORDER BY n.id
+        LOOP
+          IF r_note.organization_id IS DISTINCT FROM _org OR jsonb_typeof(r_note.conceptos) IS DISTINCT FROM 'array'
+            OR jsonb_array_length(r_note.conceptos)=0 OR r_note.monto IS NULL OR r_note.monto<0
+            OR r_note.monto::text IN ('NaN','Infinity','-Infinity')
+            OR coalesce(r_note.moneda::text,'') NOT IN ('MXN','USD','EUR') THEN EXIT attribute_receivable; END IF;
+          IF r_note.moneda::text<>_factura_moneda AND (
+            (r_note.moneda::text<>'MXN' AND (r_note.tipo_cambio IS NULL OR r_note.tipo_cambio<=1
+              OR r_note.tipo_cambio::text IN ('NaN','Infinity','-Infinity')))
+            OR (_factura_moneda<>'MXN' AND (_factura_tc IS NULL OR _factura_tc<=1
+              OR _factura_tc::text IN ('NaN','Infinity','-Infinity')))) THEN EXIT attribute_receivable; END IF;
+          r_note_lines := '[]'; r_note_total := 0;
+          FOR r_item IN SELECT value FROM jsonb_array_elements(r_note.conceptos)
+          LOOP
+            IF jsonb_typeof(r_item) IS DISTINCT FROM 'object' THEN EXIT attribute_receivable; END IF;
+            FOREACH r_field IN ARRAY ARRAY['cantidad','precio_unitario'] LOOP
+              r_value := btrim(r_item->>r_field);
+              IF coalesce(jsonb_typeof(r_item->r_field),'null') NOT IN ('number','string')
+                OR r_value !~ r_decimal THEN EXIT attribute_receivable; END IF;
+            END LOOP;
+            IF (r_item->>'cantidad')::numeric<=0 OR (r_item->>'precio_unitario')::numeric<0 THEN EXIT attribute_receivable; END IF;
+            r_base := round((r_item->>'cantidad')::numeric*(r_item->>'precio_unitario')::numeric,2);
+            r_type := r_item->>'tipo_iva';
+            r_iva := CASE r_type WHEN 'gravado_16' THEN .16 WHEN 'gravado_8' THEN .08
+              WHEN 'tasa_0' THEN 0 WHEN 'exento' THEN 0 WHEN 'no_objeto' THEN 0 END;
+            IF r_iva IS NULL THEN EXIT attribute_receivable; END IF;
+            r_isr := 0; r_retiva := 0;
+            FOREACH r_field IN ARRAY ARRAY['tasa_iva','tasa_ret_isr','tasa_ret_iva'] LOOP
+              IF coalesce(jsonb_typeof(r_item->r_field),'null')='null' THEN CONTINUE; END IF;
+              r_value := btrim(r_item->>r_field);
+              IF jsonb_typeof(r_item->r_field) NOT IN ('number','string') OR r_value !~ r_decimal THEN EXIT attribute_receivable; END IF;
+              r_amount := r_value::numeric;
+              IF r_amount<0 THEN EXIT attribute_receivable; END IF;
+              IF r_field='tasa_iva' AND r_amount<>r_iva THEN EXIT attribute_receivable; END IF;
+              IF r_field='tasa_ret_isr' THEN r_isr:=r_amount; END IF;
+              IF r_field='tasa_ret_iva' THEN r_retiva:=r_amount; END IF;
+            END LOOP;
+            r_gross := r_base+round(r_base*r_iva,2)-round(r_base*r_isr,2)-round(r_base*r_retiva,2);
+            IF r_gross<0 THEN EXIT attribute_receivable; END IF;
+            r_cf := NULL; r_key := NULL;
+            IF lower(btrim(r_item->>'concepto_factura_id')) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+              r_cf := lower(btrim(r_item->>'concepto_factura_id'))::uuid;
+            END IF;
+            SELECT cf.embarque_id::text INTO r_key FROM public.conceptos_factura cf
+              WHERE cf.id=r_cf AND cf.factura_id=_invoice.id AND cf.organization_id=_org
+                AND cf.deleted_at IS NULL AND cf.embarque_id IS NOT NULL
+                AND EXISTS (SELECT 1 FROM public.embarques e WHERE e.id=cf.embarque_id
+                  AND e.organization_id=_org AND e.deleted_at IS NULL);
+            IF r_key IS NULL OR NOT (r_debts ? r_key) THEN EXIT attribute_receivable; END IF;
+            r_note_total := r_note_total+r_gross;
+            r_note_lines := r_note_lines||jsonb_build_array(jsonb_build_object('shipment',r_key,'gross',r_gross));
+          END LOOP;
+          -- NC.monto is fiscal gross. Do not rescale base or guess a tax rate.
+          IF r_note_total<>r_note.monto THEN EXIT attribute_receivable; END IF;
+          r_running := 0; r_previous := 0;
+          FOR r_entry IN SELECT value FROM jsonb_array_elements(r_note_lines) LOOP
+            r_running := r_running+(r_entry->>'gross')::numeric;
+            r_converted := public.nc_convertida_a_moneda_factura(r_running,r_note.moneda::text,
+              r_note.tipo_cambio,_factura_moneda,_factura_tc);
+            r_key := r_entry->>'shipment';
+            r_debts := jsonb_set(r_debts,ARRAY[r_key],to_jsonb((r_debts->>r_key)::numeric-(r_converted-r_previous)));
+            r_previous := r_converted;
+          END LOOP;
+        END LOOP;
+        IF EXISTS (SELECT 1 FROM jsonb_each_text(r_debts) d WHERE d.value::numeric<0
+          OR d.value IN ('NaN','Infinity','-Infinity')) THEN EXIT attribute_receivable; END IF;
+        SELECT sum(d.value::numeric),count(*) FILTER (WHERE d.value::numeric>0)
+          INTO r_net_total,r_positive FROM jsonb_each_text(r_debts) d;
+        r_amount := coalesce((r_debts->>_embarque_id::text)::numeric,0);
+        IF r_net_total IS NULL OR r_balance>r_net_total THEN EXIT attribute_receivable; END IF;
+        IF r_amount=0 THEN r_pending:=0;
+        ELSIF r_balance=r_net_total THEN r_pending:=r_amount; -- no active collection
+        ELSIF r_positive=1 THEN r_pending:=r_balance; -- sole remaining debtor
+        END IF; -- otherwise collection has no shipment lineage: unknown, not proration
+      END attribute_receivable;
+      _pending_total := _pending_total+public.a_mxn(r_pending,_factura_moneda,_tc_doc,_tc_doc);
+      IF _pending_total::text IN ('NaN','Infinity','-Infinity') THEN _pending_total:=NULL; END IF;
+    EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN
+      -- Unknown debt must not invalidate independently verified sale income.
+      _pending_total := NULL;
+    END receivable_lineage;
     -- Preserve positive line attribution; attributed NC details below reconcile
     -- to the same exact/provisional debit as the headline, including NULLs.
     _invoice_valued := NOT _invoice_bad;
