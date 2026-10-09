@@ -28,6 +28,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
+      - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
       - "scripts/ci/leads-scope/**"
       - "scripts/ci/run-rls-suites.sh"
@@ -51,6 +52,7 @@ on:
       - "scripts/ci/audit54-cxc-runtime-fixtures.py"
       - "scripts/ci/selector148/**"
       - "scripts/ci/financial49/**"
+      - "scripts/ci/receivable155/**"
       - "scripts/ci/pricing-container/**"
       - "scripts/ci/leads-scope/**"
       - "scripts/ci/run-rls-suites.sh"
@@ -118,6 +120,11 @@ jobs:
 
       - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
         uses: ./.github/actions/setup-pg-client
+
+      - name: Pendiente por embarque — control rojo y linaje fiscal
+        env:
+          ISOLATED_QA_DB: '1'
+        run: bash scripts/ci/receivable155/run-ci.sh
 
       - name: Dependencia mínima del runner serial selector148
         # Node/npm are provided by ubuntu-24.04; use a separate exact lockfile,
@@ -254,6 +261,16 @@ jobs:
       - name: Eliminar sólo las bases desechables propias de selector148
         if: always()
         run: node scripts/ci/selector148/control.cjs cleanup
+
+      - name: Subir evidencia de pendiente por embarque
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: receivable155-evidence
+          path: .receivable155-logs/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Subir evidencia selector148
         if: always()

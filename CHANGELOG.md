@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.55] - Unreleased
+
+- **Pendiente de cobro por embarque**: corrige el prorrateo residual tras una NC selectiva. Factura A 100 / B 300 con NC 100 sólo contra A muestra pendiente A 0 / B 300; Venta real y todos los demás campos del P&L permanecen iguales.
+- Atribuye deuda fiscal con IVA y retenciones por linaje verificado, exige conciliación exacta y conserva saldo canónico en documentos de un solo embarque. Con cobros sin asignación demostrable y varios remanentes, muestra «No calculable»; no inventa linaje desde la cabecera del pago.
+- Forward nuevo `20261009152000` reemplaza sólo el cuerpo de la RPC, con pre/post hash y catálogo/ACL intactos. Añade una entrada de 1,512 migraciones sin modificar los inventarios históricos.
+- Regresión focalizada: 31 casos, 62 aserciones de saldo y comparación de todos los campos ajenos al pendiente contra el reader anterior; control rojo reproduce A 75. CI integra esta prueba en el workflow RLS existente. Aplicación remota, publicación y revalidación GUI siguen pendientes. Ver [contrato](docs/audits/pnl-pendiente-linaje-fiscal.md).
+
 ## [13.824.54] - Unreleased
 
 - **Candidato CI · activación autorizada del selector148**: habilita el selector y su RPC de lectura únicamente tras verificar el cuerpo, owner, atributos, ACL e integridad exactos. Conserva los cinco roles de negocio, organización activa y cinco campos visibles; añade sólo EXECUTE de authenticated sin grant option.

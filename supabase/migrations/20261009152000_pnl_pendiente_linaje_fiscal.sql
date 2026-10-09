@@ -1,5 +1,98 @@
--- Audit 124/129/130: canonical supplier allocation and explicit incomplete costs.
--- Read-only calculation; no historical data rewrite. Existing ACL unchanged.
+-- Receivable155: exact fiscal credit attribution for shipment pending receivables.
+-- Existing caller-owned transaction with stop-on-error is required.
+-- No data changes, DCL, helpers, fiscal rewrites, or inferred historical links.
+-- The reviewed audit144 body or this exact post-body is required.
+-- Existing signature, owner, raw/effective ACL, catalog and structure are preserved.
+SAVEPOINT receivable155_pnl_exact_acl_forward;
+DO $receivable155_acl_pre$
+DECLARE
+  v_oid oid;
+  v_owner oid;
+  v_authenticated oid;
+  v_anon oid;
+  v_service oid;
+  v_source_hash text;
+  v_before jsonb;
+  v_after jsonb;
+  v_proc pg_catalog.pg_proc%ROWTYPE;
+  v_capture CONSTANT text := $pnl_catalog$
+SELECT pg_catalog.jsonb_build_object(
+ 'functions', (SELECT jsonb_agg(CASE WHEN p.oid=$1 THEN to_jsonb(p)-'prosrc' ELSE to_jsonb(p) END ORDER BY p.oid) FROM pg_catalog.pg_proc p),
+ 'relations', (SELECT jsonb_agg(to_jsonb(c) ORDER BY c.oid) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'attributes', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.attrelid,a.attnum) FROM pg_catalog.pg_attribute a JOIN pg_catalog.pg_class c ON c.oid=a.attrelid JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'attribute_defaults', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.oid) FROM pg_catalog.pg_attrdef a JOIN pg_catalog.pg_class c ON c.oid=a.adrelid JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'constraints', (SELECT jsonb_agg(to_jsonb(c) ORDER BY c.oid) FROM pg_catalog.pg_constraint c),
+ 'triggers', (SELECT jsonb_agg(to_jsonb(t) ORDER BY t.oid) FROM pg_catalog.pg_trigger t),
+ 'rewrite_rules', (SELECT jsonb_agg(to_jsonb(r) ORDER BY r.oid) FROM pg_catalog.pg_rewrite r),
+ 'policies', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.oid) FROM pg_catalog.pg_policy p),
+ 'types', (SELECT jsonb_agg(to_jsonb(t) ORDER BY t.oid) FROM pg_catalog.pg_type t),
+ 'enums', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.oid) FROM pg_catalog.pg_enum e),
+ 'namespaces', (SELECT jsonb_agg(to_jsonb(n) ORDER BY n.oid) FROM pg_catalog.pg_namespace n),
+ 'dependencies', (SELECT jsonb_agg(to_jsonb(d) ORDER BY to_jsonb(d)) FROM pg_catalog.pg_depend d),
+ 'shared_dependencies', (SELECT jsonb_agg(to_jsonb(d) ORDER BY to_jsonb(d)) FROM pg_catalog.pg_shdepend d),
+ 'default_acl', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.oid) FROM pg_catalog.pg_default_acl a),
+ 'roles', (SELECT jsonb_agg(to_jsonb(r) ORDER BY r.rolname) FROM pg_catalog.pg_roles r),
+ 'memberships', (SELECT jsonb_agg(to_jsonb(m) ORDER BY m.oid) FROM pg_catalog.pg_auth_members m),
+ 'target_acl', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.grantor,a.grantee,a.privilege_type,a.is_grantable) FROM pg_catalog.pg_proc p CROSS JOIN LATERAL pg_catalog.aclexplode(COALESCE(p.proacl,pg_catalog.acldefault('f',p.proowner))) a WHERE p.oid=$1),
+ 'target_effective', (SELECT jsonb_agg(jsonb_build_object('role_oid',r.oid,'role',r.rolname,'execute',pg_catalog.has_function_privilege(r.oid,$1,'EXECUTE'),'grant_option',pg_catalog.has_function_privilege(r.oid,$1,'EXECUTE WITH GRANT OPTION')) ORDER BY r.rolname) FROM pg_catalog.pg_roles r)
+)
+$pnl_catalog$;
+BEGIN
+  v_oid := pg_catalog.to_regprocedure('public.pnl_financiero_embarque(uuid)');
+  IF v_oid IS NULL THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: target function must already exist';
+  END IF;
+  SELECT p.* INTO STRICT v_proc FROM pg_catalog.pg_proc p WHERE p.oid=v_oid;
+  v_owner := v_proc.proowner;
+  v_authenticated := pg_catalog.to_regrole('authenticated');
+  v_anon := pg_catalog.to_regrole('anon');
+  v_service := pg_catalog.to_regrole('service_role');
+  IF current_user <> 'postgres' OR session_user <> current_user
+     OR v_owner IS DISTINCT FROM pg_catalog.to_regrole(current_user)::oid THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: execute as the existing postgres owner/grantor';
+  END IF;
+  IF v_authenticated IS NULL OR v_anon IS NULL OR v_proc.proacl IS NULL THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: explicit existing ACL and client roles required';
+  END IF;
+  IF v_proc.pronamespace <> 'public'::regnamespace
+     OR v_proc.prolang <> (SELECT oid FROM pg_catalog.pg_language WHERE lanname='plpgsql')
+     OR (to_jsonb(v_proc)-ARRAY['oid','proowner','pronamespace','prolang','proacl','prosrc'])
+        IS DISTINCT FROM $pnl_attributes${"probin":null,"procost":100,"prokind":"f","proname":"pnl_financiero_embarque","prorows":0,"pronargs":1,"proconfig":["search_path=public"],"proretset":false,"prosecdef":true,"prorettype":"3802","prosqlbody":null,"prosupport":"-","proargmodes":null,"proargnames":["_embarque_id"],"proargtypes":["2950"],"proisstrict":false,"proparallel":"u","protrftypes":null,"provariadic":"0","provolatile":"s","proleakproof":false,"proallargtypes":null,"proargdefaults":null,"pronargdefaults":0}$pnl_attributes$::jsonb THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: unexpected target signature or attributes';
+  END IF;
+  v_source_hash := pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(v_proc.prosrc,'UTF8')),'hex');
+  IF v_source_hash NOT IN ('cd4d4d5c389cd4553f996dc74e0684aad9c4eb33633e1356cc590127641d53b4','6473e5d6c123c38ab20ff0fdb8898e01a08fb4d2d260a0c26a50288031f4e898') THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: unreviewed target body';
+  END IF;
+  -- Require the direct authenticated entry from the EXACT grantor used below.
+  -- Inherited access, different grantors, and grant options do not qualify.
+  IF (SELECT count(*) FROM pg_catalog.aclexplode(v_proc.proacl) a
+      WHERE a.grantee=v_authenticated AND a.grantor=v_owner
+        AND a.privilege_type='EXECUTE' AND NOT a.is_grantable) <> 1
+     OR (SELECT count(*) FROM pg_catalog.aclexplode(v_proc.proacl) a
+      WHERE a.grantee=v_owner AND a.grantor=v_owner
+        AND a.privilege_type='EXECUTE' AND NOT a.is_grantable) <> 1 THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: missing matching direct owner/authenticated grants';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_catalog.aclexplode(v_proc.proacl) a
+      WHERE a.grantee=0 OR a.grantee=v_anon)
+     OR pg_catalog.has_function_privilege(v_anon,v_oid,'EXECUTE')
+     OR pg_catalog.has_function_privilege(v_anon,v_oid,'EXECUTE WITH GRANT OPTION') THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: PUBLIC and anon must already be closed';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_catalog.aclexplode(v_proc.proacl) a
+      WHERE a.grantor<>v_owner OR a.is_grantable OR a.privilege_type<>'EXECUTE'
+         OR NOT (a.grantee=v_owner OR a.grantee=v_authenticated
+                 OR (v_service IS NOT NULL AND a.grantee=v_service))) THEN
+    RAISE EXCEPTION 'PNL_ACL_PRECONDITION: unexpected ACL role, grantor or grant option';
+  END IF;
+  EXECUTE v_capture INTO v_before USING v_oid;
+  PERFORM pg_catalog.set_config('librecarga.receivable155_pnl_exact_acl_snapshot',v_before::text,true);
+  PERFORM pg_catalog.set_config('librecarga.receivable155_pnl_exact_acl_txid',pg_catalog.pg_current_xact_id()::text,true);
+END
+$receivable155_acl_pre$;
+
+-- audit:allow-no-grants
 CREATE OR REPLACE FUNCTION public.pnl_financiero_embarque(_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -933,5 +1026,55 @@ END credit132_convert_base;
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.pnl_financiero_embarque(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.pnl_financiero_embarque(uuid) TO authenticated, service_role;
+DO $receivable155_acl_post$
+DECLARE
+  v_oid oid;
+  v_before jsonb;
+  v_after jsonb;
+  v_source_hash text;
+  v_capture CONSTANT text := $pnl_catalog$
+SELECT pg_catalog.jsonb_build_object(
+ 'functions', (SELECT jsonb_agg(CASE WHEN p.oid=$1 THEN to_jsonb(p)-'prosrc' ELSE to_jsonb(p) END ORDER BY p.oid) FROM pg_catalog.pg_proc p),
+ 'relations', (SELECT jsonb_agg(to_jsonb(c) ORDER BY c.oid) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'attributes', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.attrelid,a.attnum) FROM pg_catalog.pg_attribute a JOIN pg_catalog.pg_class c ON c.oid=a.attrelid JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'attribute_defaults', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.oid) FROM pg_catalog.pg_attrdef a JOIN pg_catalog.pg_class c ON c.oid=a.adrelid JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','auth')),
+ 'constraints', (SELECT jsonb_agg(to_jsonb(c) ORDER BY c.oid) FROM pg_catalog.pg_constraint c),
+ 'triggers', (SELECT jsonb_agg(to_jsonb(t) ORDER BY t.oid) FROM pg_catalog.pg_trigger t),
+ 'rewrite_rules', (SELECT jsonb_agg(to_jsonb(r) ORDER BY r.oid) FROM pg_catalog.pg_rewrite r),
+ 'policies', (SELECT jsonb_agg(to_jsonb(p) ORDER BY p.oid) FROM pg_catalog.pg_policy p),
+ 'types', (SELECT jsonb_agg(to_jsonb(t) ORDER BY t.oid) FROM pg_catalog.pg_type t),
+ 'enums', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.oid) FROM pg_catalog.pg_enum e),
+ 'namespaces', (SELECT jsonb_agg(to_jsonb(n) ORDER BY n.oid) FROM pg_catalog.pg_namespace n),
+ 'dependencies', (SELECT jsonb_agg(to_jsonb(d) ORDER BY to_jsonb(d)) FROM pg_catalog.pg_depend d),
+ 'shared_dependencies', (SELECT jsonb_agg(to_jsonb(d) ORDER BY to_jsonb(d)) FROM pg_catalog.pg_shdepend d),
+ 'default_acl', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.oid) FROM pg_catalog.pg_default_acl a),
+ 'roles', (SELECT jsonb_agg(to_jsonb(r) ORDER BY r.rolname) FROM pg_catalog.pg_roles r),
+ 'memberships', (SELECT jsonb_agg(to_jsonb(m) ORDER BY m.oid) FROM pg_catalog.pg_auth_members m),
+ 'target_acl', (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.grantor,a.grantee,a.privilege_type,a.is_grantable) FROM pg_catalog.pg_proc p CROSS JOIN LATERAL pg_catalog.aclexplode(COALESCE(p.proacl,pg_catalog.acldefault('f',p.proowner))) a WHERE p.oid=$1),
+ 'target_effective', (SELECT jsonb_agg(jsonb_build_object('role_oid',r.oid,'role',r.rolname,'execute',pg_catalog.has_function_privilege(r.oid,$1,'EXECUTE'),'grant_option',pg_catalog.has_function_privilege(r.oid,$1,'EXECUTE WITH GRANT OPTION')) ORDER BY r.rolname) FROM pg_catalog.pg_roles r)
+)
+$pnl_catalog$;
+BEGIN
+  IF pg_catalog.current_setting('librecarga.receivable155_pnl_exact_acl_txid',true)
+     IS DISTINCT FROM pg_catalog.pg_current_xact_id()::text THEN
+    RAISE EXCEPTION 'PNL_ACL_TRANSACTION: pre/post checks must share the caller transaction';
+  END IF;
+  v_oid := pg_catalog.to_regprocedure('public.pnl_financiero_embarque(uuid)');
+  v_before := NULLIF(pg_catalog.current_setting('librecarga.receivable155_pnl_exact_acl_snapshot',true),'')::jsonb;
+  IF v_before IS NULL THEN
+    RAISE EXCEPTION 'PNL_ACL_TRANSACTION: missing transaction-local catalog snapshot';
+  END IF;
+  EXECUTE v_capture INTO v_after USING v_oid;
+  IF v_after IS DISTINCT FROM v_before THEN
+    RAISE EXCEPTION 'PNL_ACL_INVARIANT: catalog or privilege changed; atomic forward rolled back';
+  END IF;
+  SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(p.prosrc,'UTF8')),'hex')
+    INTO v_source_hash FROM pg_catalog.pg_proc p WHERE p.oid=v_oid;
+  IF v_source_hash IS DISTINCT FROM '6473e5d6c123c38ab20ff0fdb8898e01a08fb4d2d260a0c26a50288031f4e898' THEN
+    RAISE EXCEPTION 'PNL_BODY_INVARIANT: target body differs; atomic forward rolled back';
+  END IF;
+  PERFORM pg_catalog.set_config('librecarga.receivable155_pnl_exact_acl_snapshot','',true);
+  PERFORM pg_catalog.set_config('librecarga.receivable155_pnl_exact_acl_txid','',true);
+END
+$receivable155_acl_post$;
+RELEASE SAVEPOINT receivable155_pnl_exact_acl_forward;
