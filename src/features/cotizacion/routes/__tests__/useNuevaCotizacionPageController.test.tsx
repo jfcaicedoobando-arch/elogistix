@@ -69,6 +69,7 @@ vi.mock("@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave", () => (
 }));
 
 const prefillArgs: Record<string, unknown>[] = [];
+vi.mock("@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing", () => ({ usePrefillTarifaPricing: () => undefined }));
 vi.mock("@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad", () => ({
   usePrefillProspectoOportunidad: (args: Record<string, unknown>) => { prefillArgs.push(args); },
 }));

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("react-router", async (o) => ({ ...(await o<typeof import("react-router")>()), useNavigate: () => vi.fn() }));
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
 import type { TarifaTarifario } from "@/features/costeo";
 import { costeo } from "@/features/costeo/queryKeys";
