@@ -2,6 +2,7 @@
  * Diálogo de condiciones de naviera: carta garantía, días libres y tabulador
  * de demoras. Compartido por `CosteoNavieras` y `AgenteGarantias`.
  */
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature } from "lucide-react";
@@ -16,10 +17,16 @@ interface NavieraCondicionesDialogProps {
 }
 
 export function NavieraCondicionesDialog({
-  seleccion,
+  seleccion: seleccionRecibida,
   onOpenChange,
   onSaved,
 }: NavieraCondicionesDialogProps) {
+  const { organizationId } = useOrganization();
+  // No reutilizar un borrador ni una condición de la organización anterior.
+  const seleccion = organizationId && (!seleccionRecibida?.condicion ||
+    seleccionRecibida.condicion.organization_id === organizationId)
+    ? seleccionRecibida : null;
+
   return (
     <FormDialogShell
       open={!!seleccion}
@@ -31,7 +38,10 @@ export function NavieraCondicionesDialog({
       footer={null}
     >
       {seleccion && (
-        <Tabs defaultValue="condiciones">
+        <Tabs
+          key={`${organizationId}:${seleccion.naviera_id}:${seleccion.condicion?.id ?? "nueva"}`}
+          defaultValue="condiciones"
+        >
           <TabsList>
             <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
             <TabsTrigger
@@ -46,7 +56,7 @@ export function NavieraCondicionesDialog({
               Tabulador de demoras
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="condiciones" className="pt-4">
+          <TabsContent value="condiciones" forceMount className="pt-4 data-[state=inactive]:hidden">
             <NavieraCondicionForm
               navieraId={seleccion.naviera_id}
               navieraNombre={seleccion.naviera_nombre}
@@ -54,7 +64,7 @@ export function NavieraCondicionesDialog({
               onSaved={onSaved}
             />
           </TabsContent>
-          <TabsContent value="demoras" className="pt-4">
+          <TabsContent value="demoras" forceMount className="pt-4 data-[state=inactive]:hidden">
             {seleccion.condicion ? (
               <DemorasTarifaEditor navieraCondicionId={seleccion.condicion.id} />
             ) : (
@@ -68,3 +78,4 @@ export function NavieraCondicionesDialog({
     </FormDialogShell>
   );
 }
+

@@ -2,7 +2,7 @@
  * Formulario de condiciones por naviera (carta garantía + días libres).
  * Vínculo obligatorio a proveedor tipo "Naviera".
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,25 +44,20 @@ const empty = (navieraId: string): NavieraCondicionInput => ({
 export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
   const { data: proveedores = [] } = useProveedoresNaviera();
   const { guardar } = useCondicionNavieraMutations();
-  const [form, setForm] = useState<NavieraCondicionInput>(empty(navieraId));
-
-  useEffect(() => {
-    if (existente) {
-      setForm({
-        naviera_id: existente.naviera_id,
-        proveedor_id: existente.proveedor_id,
-        tiene_carta_garantia: existente.tiene_carta_garantia,
-        carta_garantia_vigente_hasta: existente.carta_garantia_vigente_hasta,
-        carta_garantia_folio: existente.carta_garantia_folio,
-        carta_garantia_notas: existente.carta_garantia_notas,
-        dias_libres_demoras_default: existente.dias_libres_demoras_default,
-        moneda_demoras: existente.moneda_demoras,
-        notas: existente.notas,
-      });
-    } else {
-      setForm(empty(navieraId));
-    }
-  }, [existente, navieraId]);
+  // El diálogo remonta por organización/naviera/condición. Hidratar antes del
+  // primer render evita que el Select nativo de Radix emita un vacío al montar
+  // con opciones en caché; un refetch del mismo registro no borra el borrador.
+  const [form, setForm] = useState<NavieraCondicionInput>(() => existente ? {
+    naviera_id: existente.naviera_id,
+    proveedor_id: existente.proveedor_id,
+    tiene_carta_garantia: existente.tiene_carta_garantia,
+    carta_garantia_vigente_hasta: existente.carta_garantia_vigente_hasta,
+    carta_garantia_folio: existente.carta_garantia_folio,
+    carta_garantia_notas: existente.carta_garantia_notas,
+    dias_libres_demoras_default: existente.dias_libres_demoras_default,
+    moneda_demoras: existente.moneda_demoras,
+    notas: existente.notas,
+  } : empty(navieraId));
 
   // P2 (auditoría v13.823.143 · bug 4): sin proveedor tipo "Naviera" vinculado
   // no se puede guardar nada; los campos quedan deshabilitados para no invitar
@@ -90,7 +85,9 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
       ) : (
         <div>
           <Label htmlFor="nav-proveedor">Proveedor vinculado *</Label>
-          <Select value={form.proveedor_id} onValueChange={(v) => setForm({ ...form, proveedor_id: v })}>
+          <Select value={form.proveedor_id} onValueChange={(v) => {
+            if (v) setForm((actual) => ({ ...actual, proveedor_id: v }));
+          }}>
             <SelectTrigger id="nav-proveedor"><SelectValue placeholder="Selecciona proveedor tipo 'Naviera'" /></SelectTrigger>
             <SelectContent>
               {(proveedores as ProveedorOpcion[]).map((p) => (
@@ -158,3 +155,4 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
     </form>
   );
 }
+
