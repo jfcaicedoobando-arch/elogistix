@@ -4,6 +4,7 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchTopTarifas, type TopTarifasParams } from "@/features/costeo/services/topTarifas";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import {
+  agruparTiposContenedorComerciales,
   idsEquivalentesDeTipo,
   resolverIdCanonicoTipo,
 } from "@/features/catalogos/utils/tiposContenedorCanonico";
@@ -39,8 +40,9 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
   // P1: el tipo elegido puede ser un registro legacy equivalente; buscamos con
   // todos los IDs del grupo y cacheamos por el ID canónico, para que elegir
   // cualquiera de las opciones duplicadas dé el mismo resultado.
-  const tipoCanonico = resolverIdCanonicoTipo(tipos, p.tipoContenedorId);
-  const tipoContenedorIds = idsEquivalentesDeTipo(tipos, p.tipoContenedorId);
+  const tiposComerciales = agruparTiposContenedorComerciales(tipos);
+  const tipoCanonico = resolverIdCanonicoTipo(tiposComerciales, p.tipoContenedorId);
+  const tipoContenedorIds = idsEquivalentesDeTipo(tiposComerciales, p.tipoContenedorId);
   const enabled = !!organizationId && idsValidos;
   const query = useQuery({
     queryKey: queryKeys.costeo.tarifas.top({
@@ -64,3 +66,4 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
   });
   return { ...query, idsValidos, tipoContenedorIds };
 }
+

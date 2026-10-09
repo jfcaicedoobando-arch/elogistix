@@ -5,7 +5,6 @@ import {
 } from "@/components/ui/select";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
-import { TIPOS_CONTENEDOR_DEFAULT } from "@/features/cotizacion/domain/tiposContenedorDefault";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { opcionTipoGuardada } from "@/features/embarques/domain/opcionTipoContenedor";
 
@@ -20,12 +19,16 @@ export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: P
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const tipoContenedor = watch("tipoContenedor");
+  // Misma fuente activa/deduplicada que Costeo, sin ofrecer LCL dentro de FCL.
+  // La captura manual conserva nombres y toda selección legacy se preserva.
+  const tiposFCL = tiposContenedor.filter((tipo) => tipo.code !== "LCL");
+  const nombresTipos = tiposFCL.map((tipo) => tipo.name);
   // R219-UI-02: al aplicar una tarifa el campo guarda el UUID del catálogo, que
   // no está en la lista de nombres; sin esta opción el selector se veía vacío.
   const opcionGuardada = opcionTipoGuardada(
     tipoContenedor,
     tiposContenedor,
-    TIPOS_CONTENEDOR_DEFAULT,
+    nombresTipos,
   );
 
   return (
@@ -39,7 +42,9 @@ export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: P
               {opcionGuardada && (
                 <SelectItem value={opcionGuardada.value}>{opcionGuardada.label}</SelectItem>
               )}
-              {TIPOS_CONTENEDOR_DEFAULT.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {tiposFCL.filter((tipo) => tipo.name !== opcionGuardada?.label).map((tipo) => (
+                <SelectItem key={tipo.id} value={tipo.name}>{tipo.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -54,3 +59,4 @@ export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: P
     </SeccionMercanciaWrapper>
   );
 }
+
