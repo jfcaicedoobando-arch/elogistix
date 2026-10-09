@@ -3,11 +3,13 @@
 --
 -- `buzon_localizar_duplicado` es SECURITY DEFINER y decide si expone
 -- factura_id/embarque_id/folio de un duplicado. Este test cubre una
--- relación CORRUPTA cross-org (documento del buzón de la Org A cuya
--- `proveedor_factura_id` apunta a una factura de la Org B, y por separado
--- una factura cuyo `embarque_id` apunta a un embarque de otra org): en
--- ambos casos debe devolver 'ajeno' sin ids ni folio, nunca los datos de
--- la organización ajena.
+-- relación CORRUPTA cross-org todavía representable (documento del buzón
+-- de la Org A cuya `proveedor_factura_id` apunta a una factura de la Org B)
+-- y un duplicado fiscal válido de la Org B: ambos devuelven 'ajeno' sin ids.
+-- La nueva FK compuesta impide crear una factura A con embarque B. El
+-- antiguo caso de lectura de ese segundo salto imposible se sustituye por
+-- rechazo exacto del INSERT y preservación de todas las filas existentes.
+-- Esto no afirma cobertura de lectura de aquella relación histórica.
 --
 -- Corre en CI como paso del workflow rls-tests.
 --
@@ -31,7 +33,11 @@ DECLARE
   v_prov_a uuid;
   v_prov_b uuid;
   v_fact_b uuid;      -- factura VIVA de la org B
-  v_fact_a_huerfana uuid; -- factura de la org A con embarque_id de la org B
+  v_fact_b_duplicada uuid; -- factura válida de la org B para el control de lectura
+  v_estado_antes jsonb;
+  v_estado_despues jsonb;
+  v_sqlstate text;
+  v_constraint text;
   v_doc_a uuid;        -- documento del buzón de la org A que apunta a v_fact_b
 BEGIN
   INSERT INTO public.organizations (id, nombre, rfc, plan, activo)
@@ -90,23 +96,68 @@ BEGIN
     'capturada', v_fact_b, 'UUID-CORRUPTO-0001'
   ) RETURNING id INTO v_doc_a;
 
-  -- CASO CORRUPTO #2: factura de la org A cuyo `embarque_id` quedó apuntando
-  -- al embarque de la org B (para probarlo aislado, sin documento del buzón,
-  -- usamos un UUID fiscal propio).
-  -- El guard `_assert_padre_misma_org` impide crear esta corrupción por vías
-  -- normales; se desactiva sólo para SEMBRAR el caso histórico que la RPC debe
-  -- seguir cubriendo.
+  -- CASO RECHAZADO #2: la FK compuesta hace imposible una factura A con
+  -- embarque B. Se conserva sólo el bypass del trigger de negocio que usaba
+  -- este fixture para alcanzar la FK; ninguna FK ni trigger RI se desactiva.
+  -- El bloque interior exige 23503 y el nombre exacto, no cualquier error.
+  IF (SELECT tgenabled FROM pg_trigger
+       WHERE tgrelid = 'public.proveedor_facturas'::regclass
+         AND tgname = 'trg_org_proveedor_facturas_embarque_id') IS DISTINCT FROM 'O' THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: el trigger de organización debe estar habilitado antes del fixture';
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
+    'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
+    'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
+  ) INTO v_estado_antes;
+
   ALTER TABLE public.proveedor_facturas DISABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
+  BEGIN
+    INSERT INTO public.proveedor_facturas (
+      organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
+      folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion,
+      uuid_fiscal
+    ) VALUES (
+      v_org_a, v_prov_a, 'DEDUPE-A-02', v_cat_a, 'FP-DEDUPE-A2', v_emb_b, 500, 500,
+      'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada',
+      'UUID-CORRUPTO-RECHAZADO-0002'
+    );
+    RAISE EXCEPTION 'CASO 2 FALLÓ: la FK permitió una factura A con embarque B';
+  EXCEPTION WHEN foreign_key_violation THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_constraint = CONSTRAINT_NAME;
+    IF v_sqlstate IS DISTINCT FROM '23503' OR v_constraint IS DISTINCT FROM 'pf_shipment_same_org_fk' THEN
+      RAISE EXCEPTION 'CASO 2 FALLÓ: esperaba 23503/pf_shipment_same_org_fk, obtuvo %/%',
+        v_sqlstate, v_constraint;
+    END IF;
+  END;
+  ALTER TABLE public.proveedor_facturas ENABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
+
+  IF (SELECT tgenabled FROM pg_trigger
+       WHERE tgrelid = 'public.proveedor_facturas'::regclass
+         AND tgname = 'trg_org_proveedor_facturas_embarque_id') IS DISTINCT FROM 'O' THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: el trigger de organización no quedó restaurado';
+  END IF;
+  SELECT jsonb_build_object(
+    'facturas', (SELECT jsonb_agg(to_jsonb(f) ORDER BY f.id) FROM public.proveedor_facturas f),
+    'embarques', (SELECT jsonb_agg(to_jsonb(e) ORDER BY e.id) FROM public.embarques e),
+    'documentos', (SELECT jsonb_agg(to_jsonb(d) ORDER BY d.id) FROM public.embarque_facturas_entrantes d)
+  ) INTO v_estado_despues;
+  IF v_estado_despues IS DISTINCT FROM v_estado_antes THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: el INSERT rechazado alteró facturas, embarques o documentos existentes';
+  END IF;
+  RAISE NOTICE 'CASO 2 INTEGRIDAD OK: INSERT cross-org rechazado por 23503/pf_shipment_same_org_fk; filas intactas y trigger restaurado';
+
+  -- Control representable con todas las protecciones activas: factura y
+  -- embarque de la org B. La org A detecta el UUID ocupado sin recibir ids.
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
     folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion,
     uuid_fiscal
   ) VALUES (
-    v_org_a, v_prov_a, 'DEDUPE-A-02', v_cat_a, 'FP-DEDUPE-A2', v_emb_b, 500, 500,
+    v_org_b, v_prov_b, 'DEDUPE-B-02', v_cat_b, 'FP-DEDUPE-B2', v_emb_b, 500, 500,
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada',
-    'UUID-CORRUPTO-0002'
-  ) RETURNING id INTO v_fact_a_huerfana;
-  ALTER TABLE public.proveedor_facturas ENABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
+    'UUID-DUPLICADO-ORG-B-0002'
+  ) RETURNING id INTO v_fact_b_duplicada;
 END
 $fixture$ LANGUAGE plpgsql;
 
@@ -138,8 +189,8 @@ END
 $caso1$;
 
 -- -------------------------------------------------------------
--- CASO 2: UUID fiscal de la factura de la org A cuyo embarque_id apunta a
--- la org B → 'ajeno' sin ids (nunca se expone el embarque de la org B).
+-- CASO 2: UUID fiscal de una factura válida de la org B consultado por la
+-- org A → 'ajeno' sin ids. El INSERT corrupto ya fue rechazado en el fixture.
 -- -------------------------------------------------------------
 DO $caso2$
 DECLARE
@@ -152,7 +203,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid_a)::text, true);
 
   SELECT caso, factura_id, embarque_id INTO v_caso, v_fac_id, v_emb_id
-    FROM public.buzon_localizar_duplicado(NULL, 'archivo_hash', 'UUID-CORRUPTO-0002', NULL);
+    FROM public.buzon_localizar_duplicado(NULL, 'archivo_hash', 'UUID-DUPLICADO-ORG-B-0002', NULL);
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
@@ -160,7 +211,7 @@ BEGIN
     RAISE EXCEPTION 'CASO 2 FALLÓ: esperaba ajeno sin ids, obtuvo caso=% factura_id=% embarque_id=%',
       v_caso, v_fac_id, v_emb_id;
   END IF;
-  RAISE NOTICE 'CASO 2 OK: proveedor_facturas.embarque_id cross-org corrupto → ajeno sin ids';
+  RAISE NOTICE 'CASO 2 OK: UUID fiscal de factura válida de otra org → ajeno sin ids';
 END
 $caso2$;
 
