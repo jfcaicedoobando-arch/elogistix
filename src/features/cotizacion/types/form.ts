@@ -179,6 +179,11 @@ export interface CotizacionInitialData {
 }
 
 export interface CotizacionInitialCosto {
+  /** Stable identity shared with the derived sale, independent of cost row replacement. */
+  origen_venta_id?: string | null;
+  /** Exact automatic source needed to preserve sale lineage when recalculating. */
+  costeo_tarifa_id?: string | null;
+  costeo_tarifa_recargo_id?: string | null;
   concepto: string;
   moneda: string;
   proveedor: string;
@@ -189,4 +194,3 @@ export interface CotizacionInitialCosto {
   /** Nota capturada en el paso 2; se rehidrata al editar (P2 13.823.159). */
   notas?: string | null;
 }
-

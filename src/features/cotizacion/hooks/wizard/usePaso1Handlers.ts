@@ -154,7 +154,6 @@ export function usePaso1Handlers({
       });
     }
   }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, validar]);
-
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
    * y salta directo al Paso 3 (Cotización Cliente). Bitácora: cotizacion_sin_desglose_creada.
@@ -187,5 +186,12 @@ export function usePaso1Handlers({
     }
   }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm, validar]);
 
-  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
+  const validarParaFinalizar = useCallback(async () => {
+    const error = vinculoCrmError ?? await validar(form.getValues());
+    if (!error) return true;
+    marcarErrorPaso1(error);
+    return false;
+  }, [vinculoCrmError, validar, form, marcarErrorPaso1]);
+
+  return { validarParaFinalizar, handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }

@@ -95,7 +95,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     const raw = window.localStorage.getItem(draftKey(USER));
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
-    expect(parsed.version).toBe(3);
+    expect(parsed.version).toBe(4);
     expect(parsed.values.cliente_id).toBe("c-42");
   });
 
@@ -195,9 +195,10 @@ describe("loadDraft — Q-12: restauración de paso y costos internos", () => {
 
     expect(out?.currentStep).toBe(2);
     expect(out?.costosInternos).toEqual([{ id: "f1", concepto: "Flete", monto: 100 }]);
-    // Sólo se avisa lo que nunca sobrevive a JSON.stringify (el MSDS).
+    // v3 aún no guardaba ventas locales ni el tipo de cambio.
     expect(out?.noRestaurado).toEqual([
       "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo",
+      "Las ventas e impuestos locales y el tipo de cambio no se guardaban en este borrador; revisa el Paso 3",
     ]);
   });
 
@@ -211,6 +212,7 @@ describe("loadDraft — Q-12: restauración de paso y costos internos", () => {
     expect(out?.costosInternos).toEqual([]);
     expect(out?.noRestaurado).toEqual([
       "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo",
+      "Las ventas e impuestos locales y el tipo de cambio no se guardaban en este borrador; revisa el Paso 3",
       "El paso del asistente en el que ibas — se reinicia en el Paso 1",
       "Los costos internos capturados — tendrás que volver a agregarlos",
     ]);
@@ -250,5 +252,13 @@ describe("draftTieneContenido — gating del banner de restaurar borrador", () =
       dimensionesLCL: [{ largo: 1, ancho: 1, alto: 1, cantidad: 1 } as never],
     };
     expect(draftTieneContenido(valores, [])).toBe(true);
+  });
+});
+
+describe("snapshot de ventas locales", () => {
+  it("una captura sólo de ventas cuenta como contenido sin contar filas por defecto", () => {
+    const vacia = { descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, total: 0, moneda: "USD", aplica_iva: false };
+    expect(draftTieneContenido(COTIZACION_FORM_DEFAULTS, [], [vacia])).toBe(false);
+    expect(draftTieneContenido(COTIZACION_FORM_DEFAULTS, [], [{ ...vacia, precio_unitario: 150 }])).toBe(true);
   });
 });

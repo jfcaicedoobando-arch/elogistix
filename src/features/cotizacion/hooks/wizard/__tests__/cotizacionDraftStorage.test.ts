@@ -83,7 +83,7 @@ describe("loadDraft (cotizacionDraftStorage)", () => {
     expect(loadDraft(USER)).not.toBeNull();
   });
 
-  it("draft v3 completo: no agrega avisos de paso/costos, sólo el de MSDS", () => {
+  it("draft v3 completo: no agrega avisos de paso/costos, advierte ventas ausentes y MSDS", () => {
     const fresh = {
       version: 3,
       savedAt: Date.now(),
@@ -100,6 +100,7 @@ describe("loadDraft (cotizacionDraftStorage)", () => {
     expect(out?.costosInternos).toEqual([{ concepto: "Flete", monto: 100 }]);
     expect(out?.noRestaurado).toEqual([
       "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo",
+      "Las ventas e impuestos locales y el tipo de cambio no se guardaban en este borrador; revisa el Paso 3",
     ]);
   });
 
@@ -108,7 +109,7 @@ describe("loadDraft (cotizacionDraftStorage)", () => {
     window.localStorage.setItem(draftKey(USER), JSON.stringify(legacy));
     const out = loadDraft(USER);
     expect(out?.version).toBe(3);
-    expect(out?.noRestaurado).toHaveLength(3);
+    expect(out?.noRestaurado).toHaveLength(4);
     expect(out?.noRestaurado).toEqual(
       expect.arrayContaining([
         expect.stringMatching(/paso del asistente/i),

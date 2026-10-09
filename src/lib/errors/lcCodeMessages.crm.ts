@@ -19,6 +19,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
   LC_CRM_ETAPA_PROSPECTO_FALTANTE:
     "Configura una etapa Prospecto activa en el pipeline antes de convertir esta empresa a prospecto.",
   LC_SCORING_OBJETO_INVALIDO: "El puntaje sólo puede calcularse para empresas u oportunidades del CRM.",
+  LC_PRICING_CONTENEDOR_REQUERIDO:
+    "Captura el tipo y tamaño de contenedor de la solicitud antes de aplicar una tarifa.",
+  LC_TARIFA_CONTENEDOR_INCOMPATIBLE:
+    "El tipo o tamaño de contenedor de la solicitud no coincide con la tarifa seleccionada. Revisa ambos datos y elige una tarifa compatible.",
   LC_PRICING_ESTADO_INVALIDO: "La solicitud no está en un estado válido para esta acción. Actualiza la bandeja.",
   LC_PRICING_ESTADO_SOLO_RPC: "Cambia el estado desde las acciones de la solicitud de pricing.",
   LC_PRICING_INCOMPLETA: "Completa los datos obligatorios de la solicitud antes de enviarla a pricing.",

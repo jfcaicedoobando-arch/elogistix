@@ -41,7 +41,7 @@ describe("sugerirCandidatos · errores de lectura", () => {
     mock.setTableResult("pagos_proveedor", {
       data: [
         {
-          id: "p1", fecha_pago: "2026-06-10", monto: 100, moneda: "MXN",
+          id: "p1", es_ajuste: false, fecha_pago: "2026-06-10", monto: 100, moneda: "MXN",
           referencia: "R", proveedor_facturas: null,
         },
       ],
@@ -58,7 +58,7 @@ describe("sugerirCandidatosDetalle · ambigüedad por exceso de candidatos", () 
   it("marca truncado cuando hay más candidatos que el límite", async () => {
     const filas = Array.from({ length: LIMITE_SUGERENCIAS + 1 }, (_, i) => ({
       id: `p${i}`,
-      fecha_pago: "2026-06-10",
+      es_ajuste: false, fecha_pago: "2026-06-10",
       monto: 100,
       moneda: "MXN",
       referencia: "R",

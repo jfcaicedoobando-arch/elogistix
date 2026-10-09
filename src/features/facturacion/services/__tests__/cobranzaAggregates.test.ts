@@ -91,14 +91,27 @@ describe("calcularKPIs", () => {
     expect(r.por_vencer_7d_usd).toBe(5);
   });
 
-  it("ignora monedas no canónicas en KPIs", () => {
+  it("cuenta documentos vencidos en todas las monedas sin mezclar sus montos", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const r = calcularKPIs([
       f({ moneda: "EUR" as never, saldo: 99, estatus_cobranza: "Vencida", dias_vencido: 5 }),
     ]);
     expect(r.vencido_mxn).toBe(0);
     expect(r.vencido_usd).toBe(0);
-    expect(r.facturas_vencidas).toBe(0);
+    expect(r.facturas_vencidas).toBe(1);
+  });
+
+  it("aplica el umbral monetario documental también a EUR", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const r = calcularKPIs([
+      f({ moneda: "EUR", saldo: 0.0049, estatus_cobranza: "Vencida", dias_vencido: 1 }),
+      f({ moneda: "EUR", saldo: 0.005, estatus_cobranza: "Vencida", dias_vencido: 1 }),
+      f({ moneda: "EUR", saldo: 0.01, estatus_cobranza: "Vencida", dias_vencido: 1 }),
+      f({ moneda: "EUR", saldo: 20, estatus_cobranza: "Vigente", dias_vencido: 0 }),
+    ]);
+    expect(r.facturas_vencidas).toBe(2);
+    expect(r.total_mxn).toBe(0);
+    expect(r.total_usd).toBe(0);
   });
 
   it("totales reflejan agrupación de saldos pendientes", () => {

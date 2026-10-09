@@ -1,22 +1,10 @@
-/**
- * Autoguardado de borrador del wizard de cotización (P0 — v13.293.0).
- *
- * - Persiste los valores del formulario en localStorage con debounce 800 ms.
- * - TTL 24 h: cualquier borrador más viejo se descarta al leerlo.
- * - El gating de "modo edición" o "ya avanzó a paso 2+" lo hace `enabled`
- *   desde el consumidor (`NuevaCotizacion`); dentro del hook siempre se
- *   escribe mientras `enabled=true` (React Hook Form ya deduplica watches).
- *
- * El formato del draft y su lectura viven en `cotizacionDraftStorage.ts`
- * (v13.342.0, límite de 200 líneas por archivo); aquí sólo va la orquestación.
- *
- * Consumido por `NuevaCotizacion` + `DraftRestoreBanner`.
- */
+/** Autoguardado local de formulario, costos y ventas; TTL/validación en storage. */
 import { useEffect, useRef, useCallback, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
-import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import { ventasTienenContenido } from "./cotizacionDraftVentas";
+import type { ConceptoVentaCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
 import {
   DEBOUNCE_MS,
   clearDraft,
@@ -26,7 +14,6 @@ import {
 } from "./cotizacionDraftStorage";
 
 export { clearDraft, draftKey, loadDraft };
-
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
   userId: string;
@@ -43,6 +30,10 @@ interface Params {
    *  reabrir el `useEffect` de watch en cada cambio (se leen al vuelo). */
   currentStep: number;
   costosInternos: FilaCostoLocal[];
+  conceptosUSD?: ConceptoVentaCotizacion[];
+  conceptosMXN?: ConceptoVentaCotizacion[];
+  tipoCambioUsd?: number | null;
+  getCostosSincronizados?: () => FilaCostoLocal[];
   /** v13.823.69: lector del sello optimista vigente de la cotización; se
    *  persiste en el borrador para que al restaurar no se guarde a ciegas. */
   selloActual?: () => string | null;
@@ -65,8 +56,8 @@ interface Params {
  */
 const CLAVES_SIN_SEÑAL: ReadonlySet<string> = new Set(["prospectoModo"]);
 
-export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCostoLocal[]): boolean {
-  if (costos.length > 0) return true;
+export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCostoLocal[], ventas: ConceptoVentaCotizacion[] = []): boolean {
+  if (costos.length > 0 || ventasTienenContenido(ventas)) return true;
   // SAFE-CAST: sólo se recorren las claves del formulario para detectar si hay
   // algún valor capturado; no se accede a ningún campo de forma tipada.
   const v = values as unknown as Record<string, unknown>;
@@ -80,7 +71,7 @@ export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCo
   });
 }
 
-export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, selloActual, paused = false }: Params): {
+export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, conceptosUSD, conceptosMXN, tipoCambioUsd = null, getCostosSincronizados, selloActual, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
   /** M-12: true cuando OTRA pestaña sobrescribió el borrador de este wizard. */
@@ -95,6 +86,10 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
   stepRef.current = currentStep;
   const costosRef = useRef<FilaCostoLocal[]>(costosInternos);
   costosRef.current = costosInternos;
+  const ventasRef = useRef({ conceptosUSD, conceptosMXN, tipoCambioUsd, getCostosSincronizados });
+  ventasRef.current = { conceptosUSD, conceptosMXN, tipoCambioUsd, getCostosSincronizados };
+  const scopeRef = useRef({ userId, organizationId });
+  const wroteRef = useRef(false);
   const selloRef = useRef<(() => string | null) | undefined>(selloActual);
   selloRef.current = selloActual;
   const pausedRef = useRef<boolean>(paused);
@@ -110,7 +105,12 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
   }, [userId, organizationId]);
 
   const buildPayload = useCallback((values: CotizacionFormValues): StoredDraft => ({
-    version: 3,
+    version: 4,
+    userId, organizationId,
+    conceptosUSD: ventasRef.current.conceptosUSD ?? [],
+    conceptosMXN: ventasRef.current.conceptosMXN ?? [],
+    tipoCambioUsd: ventasRef.current.tipoCambioUsd,
+    costosSincronizados: ventasRef.current.getCostosSincronizados?.() ?? costosRef.current,
     savedAt: Date.now(),
     cotizacionId: cotIdRef.current,
     updatedAt: selloRef.current?.() ?? null,
@@ -119,13 +119,17 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     costosInternos: costosRef.current,
     noRestaurado: [],
     tabId: tabIdRef.current,
-  }), []);
+  }), [userId, organizationId]);
 
   const persist = useCallback((values: CotizacionFormValues) => {
-    if (pausedRef.current) return;
-    if (!draftTieneContenido(values, costosRef.current)) return;
+    if (pausedRef.current || !userId || scopeRef.current.userId !== userId || scopeRef.current.organizationId !== organizationId) return;
+    if (!cotIdRef.current && !draftTieneContenido(values, costosRef.current, [...(ventasRef.current.conceptosUSD ?? []), ...(ventasRef.current.conceptosMXN ?? [])])) {
+      if (wroteRef.current) clearDraft(userId, organizationId);
+      return;
+    }
     try {
       safeLocalStorage.setItem(draftKey(userId, organizationId), JSON.stringify(buildPayload(values)));
+      wroteRef.current = true;
     } catch {
       // safeLocalStorage ya loguea.
     }
@@ -142,9 +146,9 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
 
   useEffect(() => {
     if (!enabled) return;
-    const subscription = form.watch((values) => {
+    const subscription = form.watch(() => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => persist(values as CotizacionFormValues), DEBOUNCE_MS);
+      timerRef.current = setTimeout(() => persist(form.getValues()), DEBOUNCE_MS);
     });
     return () => {
       subscription.unsubscribe();
@@ -152,12 +156,12 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     };
   }, [enabled, form, persist, userId]);
 
-  // Q-12: cambios de paso o de costos internos son estado fuera de RHF
+  // Cambios de paso, costos, ventas y TC son estado fuera de RHF
   // (`form.watch` no los ve) — se escriben de inmediato para no perderlos.
   useEffect(() => {
     if (!enabled) return;
     persist(form.getValues());
-  }, [enabled, form, currentStep, costosInternos, persist]);
+  }, [enabled, form, currentStep, costosInternos, conceptosUSD, conceptosMXN, tipoCambioUsd, paused, persist]);
 
   // B-003: al cambiar el `cotizacionId` (transición paso 1 → 2), escribimos
   // inmediatamente para no perderlo si el usuario recarga en ese momento.

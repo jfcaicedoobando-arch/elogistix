@@ -4,7 +4,7 @@
  * al recargar). No se ejecuta ninguna eliminación real: los hooks se simulan.
  */
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const recalcular = { mutateAsync: vi.fn(), isPending: false };
 const eliminar = { mutate: vi.fn(), isPending: false };
@@ -44,5 +44,25 @@ describe("SeccionDemorasAuto", () => {
     render(<SeccionDemorasAuto embarqueId="e-1" canEdit={false} />);
     expect(screen.queryByRole("button", { name: /Eliminar auto/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /Recalcular/i })).toBeNull();
+  });
+});
+
+
+describe("audit147 · resumen sin suma nominal", () => {
+  it("muestra USD y MXN separados y limpia el resumen si otro recálculo falla", async () => {
+    existentes.data = 0;
+    recalcular.mutateAsync.mockResolvedValueOnce({
+      sin_eventos: false, dias_excedidos: 2, total_costo_usd: 0, total_venta_usd: 2,
+      totales_costo_por_moneda: { USD: 1, MXN: 20 }, contenedores: [],
+    });
+    render(<SeccionDemorasAuto embarqueId="e-1" canEdit />);
+    fireEvent.click(screen.getByRole("button", { name: /Recalcular/ }));
+    expect(await screen.findByText("USD 1.00")).toBeInTheDocument();
+    expect(screen.getByText("MXN 20.00")).toBeInTheDocument();
+    expect(screen.queryByText(/21.00/)).toBeNull();
+    recalcular.mutateAsync.mockRejectedValueOnce(new Error("LC_DEMORAS_MONEDAS_MIXTAS"));
+    fireEvent.click(screen.getByRole("button", { name: /Recalcular/ }));
+    await screen.findByText(/No hay demoras automáticas aplicadas/);
+    expect(screen.queryByText("USD 1.00")).toBeNull();
   });
 });

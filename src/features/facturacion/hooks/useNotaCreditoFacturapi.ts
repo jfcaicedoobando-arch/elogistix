@@ -18,11 +18,14 @@ export function useTimbrarNotaCredito(facturaId: string) {
     mutationFn: (notaCreditoId: string) => timbrarNotaCreditoFacturapi(notaCreditoId),
     onSuccess: (res) => {
       notifySuccess(undefined, { title: tituloTimbrado("Nota de crédito timbrada", res.uuid) });
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
-      // M-1: la NC cambia el saldo cobrable (saldo = total − pagos − NC aplicadas).
-      invalidarTrasTimbrado(qc, facturaId);
     },
+    // Una respuesta incierta o un error tras persistir también exige relectura.
+    // Esperar el P&L activo no transforma un fallo fiscal en éxito ni lo reintenta.
+    onSettled: () => Promise.all([
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) }),
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() }),
+      invalidarTrasTimbrado(qc, facturaId),
+    ]),
     onError: (err: Error) =>
       notifyError(undefined, {
         title: "No se pudo timbrar la nota de crédito", description: getErrorMessage(err),
@@ -57,11 +60,14 @@ export function useCancelarNotaCredito(facturaId: string) {
           title: res.pending ? "Cancelación enviada al SAT (pendiente de aceptación del receptor)" : "Nota de crédito cancelada",
         });
       }
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
-      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
-      // M-1: la NC cambia el saldo cobrable (saldo = total − pagos − NC aplicadas).
-      invalidarTrasTimbrado(qc, facturaId);
     },
+    // Una respuesta incierta o un error tras persistir también exige relectura.
+    // Esperar el P&L activo no transforma un fallo fiscal en éxito ni lo reintenta.
+    onSettled: () => Promise.all([
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) }),
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() }),
+      invalidarTrasTimbrado(qc, facturaId),
+    ]),
     onError: (err: Error) =>
       notifyError(undefined, {
         title: "No se pudo cancelar la nota de crédito", description: getErrorMessage(err),

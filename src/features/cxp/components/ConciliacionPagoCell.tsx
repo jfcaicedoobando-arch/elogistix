@@ -26,6 +26,7 @@ interface MovimientoVinculado {
 }
 
 interface Props {
+  esAjuste?: boolean;
   pagoId: string;
   fechaPago: string;
   monto: number;
@@ -35,7 +36,17 @@ interface Props {
   origenAnticipo?: OrigenPagoAnticipo | null;
 }
 
-export function ConciliacionPagoCell({ origenAnticipo, ...props }: Props) {
+export function ConciliacionPagoCell({ origenAnticipo, esAjuste, ...props }: Props) {
+  // Separar componentes evita instanciar queries o mutaciones para ajustes.
+  if (esAjuste) return (
+    <div className="text-label text-muted-foreground">
+      <ToneBadge tone={props.movimiento ? "warning" : "neutral"} size="md">
+        {props.movimiento ? "Vínculo bancario por revisar" : "No aplica"}
+      </ToneBadge>
+      <p>Ajuste no monetario: no requiere conciliación bancaria.</p>
+      {props.movimiento && <p>Existe un vínculo histórico. Requiere revisión; no representa una conciliación válida.</p>}
+    </div>
+  );
   if (origenAnticipo) return <PagoAnticipoBancoCell origen={origenAnticipo} />;
   return <ConciliacionPagoBancarioCell {...props} />;
 }

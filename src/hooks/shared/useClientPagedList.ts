@@ -10,7 +10,7 @@
  * migre a paginación real, el call-site cambia a `useServerPagedList` sin
  * tocar la UI (misma prop `pagination`, mismo `controlledSort`, misma barra).
  */
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useTableFilters, type UseTableFiltersOpts, type ChipItem } from "@/hooks/shared/useTableFilters";
 import type { SortDir, DataTablePagination } from "@/components/shared/dataTable/types";
@@ -123,14 +123,23 @@ export function useClientPagedList<
 
   const filteredCount = processed.length;
   const totalPages = Math.max(1, Math.ceil(filteredCount / f.pageSize));
+  // Una bandeja o una invalidación pueden reducir el conjunto sin cambiar la URL.
+  // Corrige el slice desde este render y después sincroniza la URL; no borres
+  // una página enlazada mientras todavía se está cargando el primer dataset.
+  const page = isLoading || data === undefined ? f.page : Math.max(0, Math.min(f.page, totalPages - 1));
+  const { page: requestedPage, setPage } = f;
+  useEffect(() => {
+    if (page !== requestedPage) setPage(page);
+  }, [page, requestedPage, setPage]);
+
   const rows = useMemo(
-    () => processed.slice(f.page * f.pageSize, (f.page + 1) * f.pageSize),
-    [processed, f.page, f.pageSize],
+    () => processed.slice(page * f.pageSize, (page + 1) * f.pageSize),
+    [processed, page, f.pageSize],
   );
 
   const pagination = useMemo<DataTablePagination>(
     () => ({
-      page: f.page,
+      page,
       totalPages,
       onPageChange: f.setPage,
       pageSize: f.pageSize,
@@ -138,7 +147,7 @@ export function useClientPagedList<
       pageSizeOptions: [10, 20, 50, 100],
       total: filteredCount,
     }),
-    [f.page, f.pageSize, f.setPage, f.setPageSize, totalPages, filteredCount],
+    [page, f.pageSize, f.setPage, f.setPageSize, totalPages, filteredCount],
   );
 
   return {
@@ -151,7 +160,7 @@ export function useClientPagedList<
     filters: f.filters,
     dateFrom: f.dateFrom,
     dateTo: f.dateTo,
-    page: f.page,
+    page,
     pageSize: f.pageSize,
     sortKey,
     sortDir,

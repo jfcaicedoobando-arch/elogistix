@@ -1,13 +1,14 @@
 import { useCallback, useRef } from "react";
-import { savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { savePaso3, savePasoFinal } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
-import { costosSinConcepto, errorConceptosVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { errorConceptosVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { conceptosPaso3Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 import { usePaso2Handler } from "./usePaso2Handler";
+import { validarPaso2 } from "./paso2Helpers";
 
 /**
  * Encapsula la navegación entre pasos del wizard de cotización.
@@ -24,7 +25,7 @@ export function useCotizacionWizardSteps({
 }: Deps) {
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
-  const { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = usePaso1Handlers({
+  const { validarParaFinalizar, handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = usePaso1Handlers({
     form, cotizacionId, setCotizacionId, setCurrentStep,
     msdsFile, buildPaso1Data,
     mutations: {
@@ -37,9 +38,18 @@ export function useCotizacionWizardSteps({
   // Firma del último snapshot de `costosInternos` que produjo conceptos de venta.
   // Se compara en cada avance al paso 3 para re-sincronizar si el usuario editó
   // costos y volvió a avanzar (fix del guard "una sola vez" — LCL bug COT-2026-0123).
+  const costosAnteriores = useRef(costosPreLlenados ? costosInternos.map(c => ({ ...c })) : []);
   const lastCostosHash = useRef<string | null>(costosPreLlenados ? firmaCostos(costosInternos) : null);
 
+  const getCostosSincronizados = useCallback(() => costosAnteriores.current, []);
+  const restaurarCostosSincronizados = useCallback((costos: Deps["costosInternos"]) => {
+    costosAnteriores.current = costos.map(c => ({ ...c }));
+    lastCostosHash.current = firmaCostos(costos);
+    setCostosPreLlenados(true);
+  }, [setCostosPreLlenados]);
+
   const handlePaso2 = usePaso2Handler({
+    conceptosUSD, conceptosMXN, costosAnteriores,
     cotizacionId, costosInternos, costosDesajuste: costosDesajuste ?? null,
     costosPreLlenados, setCostosPreLlenados,
     setConceptosUSD, setConceptosMXN, setCurrentStep, tasaIva,
@@ -87,78 +97,51 @@ export function useCotizacionWizardSteps({
     if (currentStep === 3) return handlePaso3();
   }, [currentStep, handlePaso1, handlePaso2, handlePaso3]);
 
+  const finalizandoRef = useRef(false);
   const handleGuardar = useCallback(async () => {
-    if (!cotizacionId) return;
+    if (!cotizacionId || finalizandoRef.current) return;
+    finalizandoRef.current = true;
     try {
-      // B-074: no finalizar una cotización con costos con precio de venta y
-      // `conceptos_venta` vacío (P&L ficticio en rojo y embarque sin ventas).
-      // Si el prefill del paso 3 no se materializó (p. ej. tras override +
-      // ida/vuelta entre pasos), regeneramos desde los costos actuales.
-      let conceptosValidos = [...conceptosUSD, ...conceptosMXN].filter(c => c.descripcion?.trim());
-      const hayVentasEnCostos = costosInternos.some(c => Number(c.precio_venta) > 0);
-      if (conceptosValidos.length === 0 && hayVentasEnCostos) {
-        const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
-        conceptosValidos = [...usd, ...mxn].filter(c => c.descripcion?.trim());
-        if (conceptosValidos.length > 0) {
-          setConceptosUSD(usd);
-          setConceptosMXN(mxn);
-          lastCostosHash.current = firmaCostos(costosInternos);
-          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), monedaFallback: form.getValues("monedaCrm"), tipoCambioUsd: tipoCambioUsd ?? null, mutations: { updateCotizacion } });
-        }
-      }
-      if (conceptosValidos.length === 0 && hayVentasEnCostos) {
-        notifyError(undefined, {
-          title: "La cotización no tiene conceptos de venta",
-          description: "Hay costos con precio de venta pero ningún concepto válido. Revisa el paso 3 antes de guardar.",
-        });
+      if (!(await validarParaFinalizar())) { setCurrentStep(1); return; }
+      const requiereCostos = !form.getValues("sinDesgloseCostos") || costosInternos.length > 0;
+      if (requiereCostos && !validarPaso2(costosInternos, costosDesajuste ?? null)) { setCurrentStep(2); return; }
+      // No dar por guardados costos modificados que saltaron el Paso 2.
+      if (JSON.stringify(costosInternos) !== JSON.stringify(costosAnteriores.current)) {
+        notifyError(undefined, { title: "Guarda los cambios de costos en el Paso 2 antes de finalizar." });
+        setCurrentStep(2);
         return;
       }
-      // B-081: si algún renglón con venta quedó fuera por no tener concepto, no
-      // damos por buena la cotización (terminaría con importes incompletos).
-      const descartados = costosSinConcepto(costosInternos);
-      if (descartados.length > 0) {
-        notifyError(undefined, {
-          title: "Renglones de costo sin concepto",
-          description: `${descartados.length === 1 ? "1 renglón tiene" : `${descartados.length} renglones tienen`} importes sin concepto y no se incluirían en la venta. Regresa al paso 2 y captura el concepto.`,
-        });
-        return;
-      }
-      // v13.823.357: no finalizar con cantidad/precio no positivos ni moneda no
-      // soportada; la conversión a embarque lo rechazaría después.
-      const errorVenta = errorConceptosVenta(conceptosValidos);
+      const conceptosValidos = [...conceptosUSD, ...conceptosMXN].filter(c => c.descripcion?.trim());
+      const errorVenta = primerError(conceptosPaso3Schema, { conceptosValidos: conceptosValidos.length })
+        ?? errorConceptosVenta(conceptosValidos);
       if (errorVenta) {
         notifyError(undefined, { title: "Conceptos de venta incompletos", description: errorVenta });
+        setCurrentStep(3);
         return;
       }
-
-
-
+      // Guardar exactamente lo confirmado, también al saltar directamente al resumen.
+      // Una sola mutación conserva el candado optimista y evita éxitos parciales.
       await savePasoFinal({
         cotizacionId, isEditMode, estadoActual: estadoInicial,
-        mutations: { updateCotizacion },
-        registrarActividad: registrarActividad.mutate,
+        venta: { conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), monedaFallback: form.getValues("monedaCrm"), tipoCambioUsd: tipoCambioUsd ?? null },
+        mutations: { updateCotizacion }, registrarActividad: registrarActividad.mutate,
       });
       notifySuccess(undefined, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
-      if (onFinalized) {
-        onFinalized(cotizacionId);
-      } else {
-        navigate(`/cotizaciones/${cotizacionId}`);
-      }
+      if (onFinalized) onFinalized(cotizacionId);
+      else navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: unknown) {
       notifyError(undefined, {
-        title: "Error al finalizar cotización",
-        description: getErrorMessage(err),
-        error: err,
-        method: "FINALIZE_COTIZACION",
-        context: { cotizacionId, isEditMode },
+        title: "Error al finalizar cotización", description: getErrorMessage(err), error: err,
+        method: "FINALIZE_COTIZACION", context: { cotizacionId, isEditMode },
       });
-    }
-  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN, form, tipoCambioUsd]);
+    } finally { finalizandoRef.current = false; }
+  }, [cotizacionId, validarParaFinalizar, setCurrentStep, form, costosInternos, costosDesajuste, conceptosUSD, conceptosMXN,
+    isEditMode, estadoInicial, tipoCambioUsd, updateCotizacion, registrarActividad, onFinalized, navigate]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);
     else navigate("/cotizaciones");
   }, [currentStep, navigate, setCurrentStep]);
 
-  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
+  return { getCostosSincronizados, restaurarCostosSincronizados, handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }

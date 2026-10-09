@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Deriva los flags booleanos que gobiernan la UI del detalle de factura.
  * Se extrae como helper puro para reducir la complejidad ciclomática del
@@ -13,6 +14,7 @@ export {
 
 export interface FacturaFlagsInput {
   estado?: string | null;
+  metodo_pago?: string | null;
   facturapi_id?: string | null;
   uuid_fiscal?: string | null;
   fecha_emision?: string | null;
@@ -30,6 +32,8 @@ export interface FacturaFlagsInput {
 export interface FacturaFlagsContext {
   /** Saldo pendiente en la moneda de la factura. */
   saldo?: number;
+  /** Pagos vigentes documentados; excluye REP cancelados y soft-delete. */
+  pagosActivos?: number;
   /** Cuántos pagos aún tienen REP pendiente o con error. */
   pagosRepPendientes?: number;
   /**
@@ -149,9 +153,14 @@ function puedeCobrarse(
   // verifying) NO admite cobros — espejo del candado LC_FACTURA_EN_CANCELACION.
   // P1: si la lectura de pagos/NC falló, el saldo no es confiable — fail-closed.
   if (ctx.saldoError) return false;
+  // Un PUE previo se revisa, nunca se completa con una segunda exhibición.
+  if (f.metodo_pago === "PUE" && (ctx.pagosActivos ?? 0) > 0) return false;
+  // No reabrir Pagada histórica sin pagos documentados.
+  const estadoCobrable = ESTADOS_COBRABLES.has(f.estado ?? "") ||
+    (f.estado === "Pagada" && (ctx.pagosActivos ?? 0) > 0);
   const vigenteCobrable =
-    ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada && !enTramiteCancelacion(f);
-  return vigenteCobrable && canRegistrarCobro && (ctx.saldo ?? 0) > 0.01;
+    estadoCobrable && !estaCancelada && !enTramiteCancelacion(f);
+  return vigenteCobrable && canRegistrarCobro && tieneSaldoMonetario(ctx.saldo ?? 0);
 }
 
 function deriveActionFlags(

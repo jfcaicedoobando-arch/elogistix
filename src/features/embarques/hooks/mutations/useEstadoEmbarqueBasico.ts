@@ -35,6 +35,12 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
+    // Entregado can materialize costs even if the response is interrupted.
+    onSettled: (_resultado, _error, vars) => {
+      if (vars.nuevoEstado === 'Entregado') {
+        return queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(vars.embarqueId), exact: true });
+      }
+    },
     // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
     // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
     onError: () => {

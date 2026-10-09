@@ -6,7 +6,7 @@
  * cambian comportamiento.
  */
 import type { MutableRefObject } from "react";
-import { buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { sincronizarVentasConCostos } from "@/features/cotizacion/domain/sincronizarVentasConCostos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { costosSinConcepto, costosSinProveedor, tieneImportes } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { costosPaso2Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
@@ -71,6 +71,9 @@ function descripcionErrorPaso2(
 }
 
 interface SyncConceptosArgs {
+  conceptosUSD: ConceptoVentaCotizacion[];
+  conceptosMXN: ConceptoVentaCotizacion[];
+  costosAnteriores: MutableRefObject<FilaCostoLocal[]>;
   costosInternos: FilaCostoLocal[];
   tasaIva: number;
   lastCostosHash: MutableRefObject<string | null>;
@@ -86,14 +89,17 @@ interface SyncConceptosArgs {
  */
 export function sincronizarConceptosPaso2(args: SyncConceptosArgs): void {
   const hashActual = firmaCostos(args.costosInternos);
-  if (hashActual === args.lastCostosHash.current) return;
+  if (hashActual === args.lastCostosHash.current) {
+    // El guardado también confirmó proveedor/costo interno, aunque no cambie la venta.
+    args.costosAnteriores.current = args.costosInternos.map(c => ({ ...c }));
+    return;
+  }
 
-  const { usd, mxn } = buildConceptosFromCostos(args.costosInternos, args.tasaIva);
-  // Bug 6: la escritura es incondicional. Con el guard `length > 0` anterior, al
-  // borrar todos los costos de una moneda el concepto de venta de esa moneda
-  // quedaba huérfano y el paso 3 bloqueaba por "monedas mezcladas".
+  const { usd, mxn } = sincronizarVentasConCostos(args.costosInternos, args.costosAnteriores.current, [...args.conceptosUSD, ...args.conceptosMXN], args.tasaIva);
+  // Only linked removed costs disappear; manual and unresolved entries survive.
   args.setConceptosUSD(usd);
   args.setConceptosMXN(mxn);
   args.lastCostosHash.current = hashActual;
+  args.costosAnteriores.current = args.costosInternos.map(c => ({ ...c }));
   if (!args.costosPreLlenados) args.setCostosPreLlenados(true);
 }

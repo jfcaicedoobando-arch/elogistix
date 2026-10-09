@@ -67,3 +67,15 @@ describe("P2-1 / P2-2 · alta de naviera", () => {
     expect(queryKeys.costeo.navieras.catalogo().slice(0, all.length)).toEqual([...all]);
   });
 });
+
+describe("audit147 · defensa del servicio", () => {
+  it("rechaza mezcla antes de RPC, sin borrar ni registrar éxito", async () => {
+    const base = { tipo_contenedor_id: "40", hasta_dia: 1, monto_por_dia: 1 };
+    await expect(replaceDemorasTramos("cond", "40", [
+      { ...base, desde_dia: 1, moneda: "USD" },
+      { ...base, desde_dia: 2, hasta_dia: null, monto_por_dia: 20, moneda: "MXN" },
+    ])).rejects.toThrow("una sola moneda");
+    expect(rpc).not.toHaveBeenCalled();
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+});

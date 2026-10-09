@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * A1 (auditoría 2026-07-29) — Canon ÚNICO del saldo de factura en el cliente.
  *
@@ -17,7 +18,7 @@
  * NO reimplementar esta fórmula en componentes ni services.
  */
 
-import { sumarMontos } from "./financialUtils";
+import Decimal from "decimal.js";
 
 export interface PagoAplicadoLike {
   monto_aplicado_factura?: number | string | null;
@@ -87,18 +88,19 @@ export function calcularSaldoFactura(
   saldoServidor?: number | null,
 ): SaldoFactura {
   const totalFactura = num(total);
-  const pagado = sumarMontos(
-    pagos.filter((p) => !esPagoAnulado(p)).map((p) => num(p.monto_aplicado_factura)),
-  );
+  // Aplicaciones FX y NC convertidas conservan subcentavos: sumar y restar
+  // antes de clasificar evita convertir 1.16 - 1.155 en un falso saldo cero.
+  const pagado = pagos.filter((p) => !esPagoAnulado(p))
+    .reduce((s, p) => s.plus(num(p.monto_aplicado_factura)), new Decimal(0)).toNumber();
   const usaServidor = typeof saldoServidor === "number" && Number.isFinite(saldoServidor);
-  const ncLocal = sumarMontos(notasCredito.map((n) => num(n.monto)));
+  const ncLocal = notasCredito.reduce((s, n) => s.plus(num(n.monto)), new Decimal(0)).toNumber();
   const ncServidor = usaServidor
-    ? Math.max(0, sumarMontos([totalFactura, -pagado, -(saldoServidor as number)]))
+    ? Math.max(0, new Decimal(totalFactura).minus(pagado).minus(saldoServidor as number).toNumber())
     : ncLocal;
   const nc = usaServidor ? ncServidor : ncLocal;
   const bruto = usaServidor
     ? (saldoServidor as number)
-    : sumarMontos([totalFactura, -pagado, -nc]);
+    : new Decimal(totalFactura).minus(pagado).minus(nc).toNumber();
   const saldo = esEstadoSinSaldo(estadoFactura) || bruto <= 0 ? 0 : bruto;
 
   return {
@@ -106,7 +108,7 @@ export function calcularSaldoFactura(
     pagado,
     notasCredito: nc,
     saldo,
-    liquidada: saldo < 0.01,
+    liquidada: !tieneSaldoMonetario(saldo),
   };
 }
 

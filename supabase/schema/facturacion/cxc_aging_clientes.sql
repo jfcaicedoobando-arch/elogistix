@@ -40,7 +40,7 @@ BEGIN
              ncf.monto, ncf.moneda::text, ncf.tipo_cambio, f.moneda::text, f.tipo_cambio)), 0) AS aplicado
     FROM public.factura_notas_credito ncf
     JOIN public.facturas f ON f.id = ncf.factura_id AND f.deleted_at IS NULL
-    WHERE ncf.estado = 'Aplicada' AND ncf.deleted_at IS NULL
+    WHERE ncf.estado IN ('Timbrada','Aplicada') AND ncf.deleted_at IS NULL
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY ncf.factura_id
   ),
@@ -56,7 +56,8 @@ BEGIN
     LEFT JOIN pagado pg ON pg.factura_id = f.id
     LEFT JOIN nc ON nc.factura_id = f.id
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0))
       AND COALESCE(f.cancellation_status, 'none') NOT IN ('pending','verifying','accepted')
       AND f.sustituida_por IS NULL
       AND NOT EXISTS (
@@ -69,17 +70,17 @@ BEGIN
     s.cliente_id,
     MAX(s.cliente_nombre),
     s.moneda,
-    SUM(s.saldo),
-    SUM(CASE WHEN s.dias_vencido <= 0 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido > 90 THEN s.saldo ELSE 0 END),
+    SUM(ROUND(s.saldo, 2)),
+    SUM(CASE WHEN s.dias_vencido <= 0 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido > 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
     COUNT(*)::int
   FROM saldos s
-  WHERE s.saldo > 0.005
+  WHERE ROUND(s.saldo, 2) > 0
   GROUP BY s.cliente_id, s.moneda
-  ORDER BY SUM(s.saldo) DESC;
+  ORDER BY SUM(ROUND(s.saldo, 2)) DESC;
 END;
 $function$;
 

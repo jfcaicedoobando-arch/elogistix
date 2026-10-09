@@ -1,5 +1,9 @@
 /** Contrato de concepto de cotización usado por cálculos puros y el feature. */
 export interface ConceptoVentaCotizacion {
+  /** Exact cost lineage; absent means manually captured/legacy, never discard automatically. */
+  origen_costo_id?: string;
+  /** Clave SAT heredada del catálogo/costo; también viaja en borradores locales. */
+  clave_sat?: string;
   /** Identificador estable cuando el concepto viene de una tabla (opcional en jsonb). */
   id?: string;
   descripcion: string;

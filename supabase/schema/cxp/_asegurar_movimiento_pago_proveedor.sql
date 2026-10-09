@@ -22,6 +22,12 @@ BEGIN
   IF v_pago.id IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
   END IF;
+  -- AUD99/121: rechazar antes de reutilizar históricos o generar efectivo.
+  IF v_pago.es_ajuste THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede generar ni reutilizar un movimiento bancario'
+      USING ERRCODE = 'P0001';
+  END IF;
+
   -- Auditoría 23: antes de cualquier lookup/INSERT por pago, reconocer la
   -- aplicación y reutilizar su origen. Nunca reparar un vínculo con dinero.
   IF v_pago.es_anticipo_aplicado

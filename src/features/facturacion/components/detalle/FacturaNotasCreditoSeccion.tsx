@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * FacturaNotasCreditoSeccion — lista las NCs ligadas a una factura y
  * permite crear, timbrar, descargar, reenviar y cancelar cada una.
@@ -59,7 +60,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
   );
 
   // Fail-closed: sin saldo confiable no se emiten NC (evita acreditar de más).
-  const facturaLiquidada = saldoFactura <= 0.01;
+  const facturaLiquidada = !tieneSaldoMonetario(saldoFactura);
   const bloqueado = facturaLiquidada || Boolean(saldoError);
 
   return (

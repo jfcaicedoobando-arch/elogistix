@@ -30,7 +30,7 @@ describe("sugerirCandidatos · pagos ya vinculados (Ola 4 · N15)", () => {
       data: [
         {
           id: "p1",
-          fecha_pago: "2026-06-10",
+          es_ajuste: false, fecha_pago: "2026-06-10",
           monto: 1000,
           moneda: "MXN",
           referencia: "R1",
@@ -55,7 +55,7 @@ describe("sugerirCandidatos · pagos ya vinculados (Ola 4 · N15)", () => {
       data: [
         {
           id: "p1",
-          fecha_pago: "2026-06-10",
+          es_ajuste: false, fecha_pago: "2026-06-10",
           monto: 1000,
           moneda: "MXN",
           referencia: "R1",

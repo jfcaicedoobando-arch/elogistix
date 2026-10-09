@@ -1,3 +1,4 @@
+import { FacturaSaldoResidualAlert } from "./FacturaSaldoResidualAlert";
 /**
  * FacturaDetalleBanners — avisos superiores del detalle de factura
  * (claim pendiente, cancelación en trámite, sustituta cancelada).
@@ -15,10 +16,12 @@ interface Props {
   factura: FacturaDetalle;
   /** P1: la lectura de pagos y/o notas de crédito aplicadas falló. */
   saldoError?: boolean;
+  saldo?: number;
+  totalPagado?: number;
   onRetrySaldo?: () => void;
 }
 
-export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo }: Props) {
+export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo, saldo = 0, totalPagado = 0 }: Props) {
   const cancellationStatus = factura.cancellation_status ?? null;
   const enTramite = CANCELACION_EN_TRAMITE.includes(cancellationStatus ?? "");
   const sustitutaCancelada =
@@ -34,6 +37,8 @@ export function FacturaDetalleBanners({ factura, saldoError, onRetrySaldo }: Pro
           className="py-4"
         />
       )}
+      {!saldoError && <FacturaSaldoResidualAlert saldo={saldo} pagado={totalPagado}
+        estado={factura.estado} metodoPago={factura.metodo_pago} moneda={factura.moneda} />}
       <ClaimPendingBanner
         facturaId={factura.id}
         facturapiId={factura.facturapi_id ?? null}

@@ -5,6 +5,7 @@
  *
  * v13.190.0 · Ola 2 · Item 3 — Conciliación bancaria en detalle de factura.
  */
+import { esAjusteProveedorPersistido } from "@/features/tesoreria/services";
 import { supabase } from "@/integrations/supabase/client";
 import {
   TOLERANCIA_MONTO_MXN,
@@ -31,6 +32,7 @@ export async function sugerirMovsParaPagoProveedor(pago: {
   cuenta_bancaria_id: string | null;
 }): Promise<MovimientoCandidato[]> {
   if (pago.monto <= 0) return [];
+  if (await esAjusteProveedorPersistido(pago.id)) return [];
   const { desde, hasta } = rangoFechasIso(pago.fecha_pago, TOLERANCIA_DIAS);
   const min = pago.monto - TOLERANCIA_MONTO_MXN;
   const max = pago.monto + TOLERANCIA_MONTO_MXN;

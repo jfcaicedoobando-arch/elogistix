@@ -8,3 +8,5 @@ export * from "./pagosProgramados";
 export * from "./movimientoManual";
 export { renglonesFlujoMonedas } from "./flujoMonedas";
 export type { RenglonFlujoMoneda } from "./flujoMonedas";
+export { totalesLibroPagos } from "./libroPagos";
+export type { PagoLibro } from "./libroPagos";

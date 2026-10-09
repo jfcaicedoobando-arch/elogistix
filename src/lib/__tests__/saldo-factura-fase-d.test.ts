@@ -80,12 +80,16 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
   });
 
   it("validar_cierre_embarque regla cxc_cobrada evalúa saldo por moneda", () => {
-    // La regla CxC compara el saldo por moneda contra 0.01; no compara saldo
-    // total mezclado porque sumar USD + MXN ocultaría facturas pendientes.
-    expect(validarSql).toMatch(/public\.saldo_factura\(f\.id\)/);
-    expect(validarSql).toMatch(
-      /WHERE \(m->>'saldo'\)::numeric > 0\.01/,
-    );
+    // ROUND nativo por factura: un centavo positivo bloquea; residuos o
+    // sobrepagos de otra factura/moneda no compensan una deuda real.
+    const inicioCxc = validarSql.indexOf("WITH facturas_cxc AS");
+    const cxcSql = validarSql.slice(inicioCxc,
+      validarSql.indexOf("SELECT COUNT(*), COALESCE(array_agg(pf.id)", inicioCxc));
+    expect(cxcSql).toMatch(/public\.saldo_factura\(f\.id\)/);
+    expect(cxcSql).toMatch(/GREATEST\(ROUND\(f\.saldo_exacto,2\),0\)/);
+    expect(cxcSql).toMatch(/WHERE \(m->>'saldo'\)::numeric > 0\)/);
+    expect(cxcSql).toMatch(/f\.estado='Pagada' AND NOT f\.tiene_pago_activo THEN 0/);
+    expect(cxcSql).toMatch(/NOT public\.pago_rep_anulado\(px\.estado_rep\)/);
     // Y expone total, pagado, notas_credito y saldo por moneda.
     expect(validarSql).toMatch(/'notas_credito',\s*notas_credito/);
     expect(validarSql).toMatch(/'saldo',\s*GREATEST\(saldo,0\)/);

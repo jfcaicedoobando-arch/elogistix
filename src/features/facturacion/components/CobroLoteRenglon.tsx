@@ -1,3 +1,4 @@
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { roundMoney } from "@/lib/financial/financialUtils";
 /**
  * Fila del reparto del cobro en lote de cliente.
@@ -46,9 +47,10 @@ function ChipVencimiento({ iso }: { iso: string | null }) {
 }
 
 export function CobroLoteRenglon(p: Props) {
+  const bloqueoPue = errorCobroPuePrevio(p.factura);
   const queda = Math.max(0, roundMoney(p.factura.saldo - p.monto));
   // BUG-15: tolerancia canónica (medio centavo), igual que DialogRegistrarPago.
-  const liquidada = p.monto > 0 && queda <= TOLERANCIA_SOBREPAGO;
+  const liquidada = !bloqueoPue && p.monto > 0 && queda <= TOLERANCIA_SOBREPAGO;
   const parcial = p.monto > 0 && !liquidada;
 
   return (
@@ -78,6 +80,7 @@ export function CobroLoteRenglon(p: Props) {
         <div className="flex items-center justify-end gap-1.5">
           <MoneyInput
             className={cn("h-9 w-full max-w-[140px] text-right", p.error && "border-destructive")}
+            disabled={!!bloqueoPue}
             value={p.monto === 0 ? null : p.monto}
             currency={p.moneda}
             aria-label={`Importe aplicado a la factura ${p.factura.numero ?? ""}`}
@@ -90,12 +93,14 @@ export function CobroLoteRenglon(p: Props) {
               variant="ghost"
               size="sm"
               className="h-9 px-2 text-body-sm"
+              disabled={!!bloqueoPue}
               onClick={p.onAsignarSaldo}
             >
               Saldo
             </Button>
           </Hint>
         </div>
+        {bloqueoPue && <p className="mt-1 text-right text-label text-destructive">{bloqueoPue}</p>}
         {p.error && <p className="mt-1 text-right text-label text-destructive">{p.error}</p>}
       </TableCell>
       <TableCell className="text-right">

@@ -1,6 +1,7 @@
 /**
  * Servicio: condiciones por naviera y tabulador escalonado de demoras.
  */
+import { mezclaMonedasTramos, MENSAJE_MONEDAS_DEMORAS } from "@/features/costeo/utils/demorasTramos";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -107,6 +108,7 @@ export async function replaceDemorasTramos(
   tipoContenedorId: string,
   tramos: DemorasTramoInput[],
 ): Promise<void> {
+  if (mezclaMonedasTramos(tramos)) throw new Error(MENSAJE_MONEDAS_DEMORAS);
   const { data, error } = await supabase.rpc("reemplazar_demoras_tramos_rpc", {
     p_naviera_condicion_id: navieraCondicionId,
     p_tipo_contenedor_id: tipoContenedorId,

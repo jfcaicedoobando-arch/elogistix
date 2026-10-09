@@ -7,6 +7,7 @@
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
+import { errorCobroPuePrevio } from "@/features/facturacion/domain/pueCobroPrevio";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -26,7 +27,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
-import { derivarLoteCobro, hayEnTramiteCancelacion } from "./_sections/carteraLote";
+import { derivarLoteCobro, hayEnTramiteCancelacion, puedeSeleccionarCobro } from "./_sections/carteraLote";
 import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -60,7 +61,7 @@ export default function Cartera() {
     columns,
   } = useCarteraPage((row) => setRecordatorio(row));
 
-  const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
+  const selectedIds = useMemo(() => Object.keys(rowSelection).filter((id) => rowSelection[id]), [rowSelection]);
   const seleccionadas = useMemo(
     () => data.filter((r) => selectedIds.includes(r.factura_id)),
     [data, selectedIds],
@@ -80,6 +81,7 @@ export default function Cartera() {
           total={selectedIds.length}
           lote={lote}
           hayEnCancelacion={hayEnCancelacion}
+          bloqueoCobro={seleccionadas.map(errorCobroPuePrevio).find(Boolean)}
           onCobroLote={() => setLoteOpen(true)}
           onLimpiar={() => setRowSelection({})}
         />
@@ -163,6 +165,7 @@ export default function Cartera() {
             emptyIcon={Inbox}
             emptyMessage={empty.message}
             emptyHint={empty.hint}
+            enableRowSelection={(row) => canRegistrarCobro && puedeSeleccionarCobro(row.original)}
             rowSelection={canRegistrarCobro ? rowSelection : undefined}
             onRowSelectionChange={canRegistrarCobro ? setRowSelection : undefined}
             mobileCard={(r) => <CarteraMobileCard row={r} />}

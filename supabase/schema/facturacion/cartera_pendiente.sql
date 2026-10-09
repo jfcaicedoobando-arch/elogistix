@@ -33,11 +33,15 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
         FROM public.factura_notas_credito nc
         WHERE nc.factura_id = f.id
           AND nc.deleted_at IS NULL
-          AND nc.estado = 'Aplicada'
+          AND nc.estado IN ('Timbrada','Aplicada')
       ), 0) AS nc_aplicadas
     FROM public.facturas f
     WHERE f.deleted_at IS NULL
-      AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+      AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
   )
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
@@ -50,7 +54,7 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   FROM base b
   LEFT JOIN public.clientes c ON c.id = b.cliente_id
   LEFT JOIN public.embarques e ON e.id = b.embarque_id AND e.deleted_at IS NULL
-  WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
+  WHERE ROUND(b.total - b.pagado - b.nc_aplicadas, 2) > 0
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $function$;

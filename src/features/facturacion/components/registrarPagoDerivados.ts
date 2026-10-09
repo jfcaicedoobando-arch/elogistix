@@ -2,9 +2,8 @@
  * Cálculos derivados del formulario de "Registrar pago" (extraído de
  * `DialogRegistrarPago` para mantener el componente ≤200 líneas).
  */
-import Decimal from "decimal.js";
 import { formaPagoCobroValida } from "../domain/formaPagoCobro";
-import { TOLERANCIA_CIERRE_FACTURA, TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
+import { tieneSaldoMonetario, TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 
 export interface RatesTc {
@@ -117,11 +116,11 @@ export function derivarEstadoPago(a: {
   const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
-  // PUE debe cerrar con la misma tolerancia de recalcular_estado_factura y
-  // _assert_pago_pue_exhibicion_unica. Decimal preserva el límite exacto de 0.01.
+  // PUE debe cubrir toda deuda monetaria: mismo ROUND(saldo - aplicado, 2)
+  // que _assert_pago_pue_exhibicion_unica, sin modificar el aplicado exacto.
   const pueIncompleto =
     a.metodoPagoFactura === "PUE" && montoAplicado > 0 &&
-    new Decimal(a.saldo).minus(montoAplicado).greaterThan(TOLERANCIA_CIERRE_FACTURA);
+    tieneSaldoMonetario(a.saldo, montoAplicado);
   const formaPagoInvalida = a.metodoPagoFactura === "PPD" && !formaPagoCobroValida(a.formaPago);
   return {
     montoNum,

@@ -1,0 +1,12 @@
+{
+  "migration": "supabase/migrations/20261009043000_audit148_activar_selector_autorizado.sql",
+  "migration_sha256": "a4a94c43682fb48856c5e34aeea3bc36ffa1ce78029a96e8febd27d854b6f520",
+  "disabled_source_sha256": "8580c9eb0d22ed2ce1dc483de09c406de8bb301b823a2cba92d3002ad6b8c490",
+  "enabled_source_sha256": "b3f26ef5a798ee04f243c3039ebd5ff0b548b07c75c39ebcba305fd6c4c14dc9",
+  "enabled_guard": "supabase/tests/selector148_enabled_gate.sql",
+  "enabled_guard_sha256": "3a189d13640fb1a3ae3ffef23a94b2840ba9cf9d9818d39f044701be3b0207e9",
+  "admission_query": "scripts/db/selector148-admission-readonly.sql",
+  "admission_query_sha256": "0f89a98ca642f79618336270a06b87257be091a45d215587c84014a4e9898984",
+  "global_release": "13.824.54",
+  "signature": "public.seguro_facturas_elegibles(uuid,numeric,text,uuid,integer,date,uuid)"
+}

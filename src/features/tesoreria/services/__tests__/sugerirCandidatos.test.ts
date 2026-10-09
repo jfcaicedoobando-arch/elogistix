@@ -55,7 +55,7 @@ describe("sugerirCandidatos (helpers)", () => {
       data: [
         {
           id: "p1",
-          fecha_pago: "2026-06-12",
+          es_ajuste: false, fecha_pago: "2026-06-12",
           monto: 1000.5,
           moneda: "MXN",
           referencia: "TR-1",
@@ -88,7 +88,7 @@ describe("sugerirCandidatos (helpers)", () => {
       data: [
         {
           id: "f1",
-          fecha_pago: "2026-06-10",
+          es_ajuste: false, fecha_pago: "2026-06-10",
           monto: 500,
           moneda: "USD",
           referencia: null,
@@ -110,9 +110,9 @@ describe("sugerirCandidatos (helpers)", () => {
   it("ordena por delta_monto y luego por delta_dias asc", async () => {
     mock.setTableResult("pagos_proveedor", {
       data: [
-        { id: "p1", fecha_pago: "2026-06-08", monto: 1001, moneda: "MXN", referencia: "A", proveedor_facturas: null },
-        { id: "p2", fecha_pago: "2026-06-10", monto: 1000, moneda: "MXN", referencia: "B", proveedor_facturas: null },
-        { id: "p3", fecha_pago: "2026-06-11", monto: 1000, moneda: "MXN", referencia: "C", proveedor_facturas: null },
+        { id: "p1", es_ajuste: false, fecha_pago: "2026-06-08", monto: 1001, moneda: "MXN", referencia: "A", proveedor_facturas: null },
+        { id: "p2", es_ajuste: false, fecha_pago: "2026-06-10", monto: 1000, moneda: "MXN", referencia: "B", proveedor_facturas: null },
+        { id: "p3", es_ajuste: false, fecha_pago: "2026-06-11", monto: 1000, moneda: "MXN", referencia: "C", proveedor_facturas: null },
       ],
       error: null,
     });

@@ -102,7 +102,7 @@ describe("calcularKPIs (cobranza — consistencia con agruparSaldosPorMoneda)", 
     expect(k.facturas_vencidas).toBe(2);
   });
 
-  it("excluye monedas ajenas de los KPIs canónicos", () => {
+  it("cuenta documentos EUR sin incluirlos en los montos MXN/USD", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const k = calcularKPIs([
       f({ moneda: "MXN", saldo: 100 }),
@@ -112,7 +112,7 @@ describe("calcularKPIs (cobranza — consistencia con agruparSaldosPorMoneda)", 
     expect(k.total_usd).toBe(0);
     expect(k.vencido_mxn).toBe(0);
     expect(k.vencido_usd).toBe(0);
-    expect(k.facturas_vencidas).toBe(0);
+    expect(k.facturas_vencidas).toBe(1);
     expect(warn).toHaveBeenCalled();
   });
 });

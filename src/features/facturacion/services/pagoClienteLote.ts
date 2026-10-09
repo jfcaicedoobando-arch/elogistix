@@ -31,6 +31,8 @@ export interface FacturaCobroCandidata {
   /** Desempata el FIFO cuando dos facturas vencen el mismo día. */
   fecha_emision?: string | null;
   saldo: number;
+  /** Suma exacta de cobros vigentes del RPC de cartera; ausencia no equivale a cero. */
+  pagado?: number | null;
   metodo_pago?: string | null;
   /** PPD ya timbrada: requiere REP por cada pago aplicado. */
   es_ppd_timbrada?: boolean;

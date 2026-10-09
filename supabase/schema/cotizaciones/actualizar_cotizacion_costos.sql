@@ -72,13 +72,20 @@ BEGIN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
   END IF;
 
+  -- Ambiguous source keys cannot associate multiple costs with one sale.
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_costos) x
+    WHERE NULLIF(x->>'origen_venta_id', '') IS NOT NULL
+    GROUP BY (x->>'origen_venta_id')::uuid HAVING count(*) > 1) THEN
+    RAISE EXCEPTION 'LC_COT_ORIGEN_VENTA_DUPLICADO' USING ERRCODE = '22023';
+  END IF;
+
   DELETE FROM cotizacion_costos WHERE cotizacion_id = p_cotizacion_id;
 
   FOR c IN SELECT * FROM jsonb_array_elements(p_costos) LOOP
     INSERT INTO cotizacion_costos (
       cotizacion_id, concepto, moneda, proveedor, cantidad,
       costo_unitario, precio_venta, unidad_medida, notas, organization_id,
-      costeo_tarifa_id, costeo_tarifa_recargo_id
+      costeo_tarifa_id, costeo_tarifa_recargo_id, origen_venta_id
     ) VALUES (
       p_cotizacion_id,
       c->>'concepto',
@@ -91,7 +98,8 @@ BEGIN
       COALESCE(c->>'notas', ''),
       v_org_id,
       NULLIF(c->>'costeo_tarifa_id', '')::uuid,
-      NULLIF(c->>'costeo_tarifa_recargo_id', '')::uuid
+      NULLIF(c->>'costeo_tarifa_recargo_id', '')::uuid,
+      NULLIF(c->>'origen_venta_id', '')::uuid
     );
     v_count := v_count + 1;
   END LOOP;

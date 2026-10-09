@@ -4,10 +4,10 @@
  * Se separa de `pagoClienteLote.ts` para respetar el límite de 200 líneas y la
  * complejidad máxima (Power of 10): `validarCobroLote` sólo orquesta.
  */
-import Decimal from "decimal.js";
+import { errorCobroPuePrevio } from "../domain/pueCobroPrevio";
 import { TC_MXN_MIN, TC_MXN_MAX } from "@/lib/financial/tcBanda";
 import { round2 } from "@/features/cxp/services";
-import { TOLERANCIA_SOBREPAGO, TOLERANCIA_CIERRE_FACTURA } from "@/lib/financial/toleranciaPago";
+import { TOLERANCIA_SOBREPAGO, tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 import { todayLocalISO } from "@/lib/date/today";
@@ -87,8 +87,11 @@ export function errorRenglonExcedeSaldo(
 export function errorRenglonPue(facturas: FacturaCobroCandidata[], renglones: RenglonCobro[]): string | null {
   for (const r of renglones) {
     const f = facturas.find((x) => x.factura_id === r.factura_id);
+    if (!f && r.monto > 0) return "Una factura del reparto ya no está en la cartera actual. Actualiza la selección antes de cobrar.";
+    const previo = f && r.monto > 0 ? errorCobroPuePrevio(f) : null;
+    if (previo) return `La factura ${f?.numero ?? r.factura_id}: ${previo}`;
     if (f?.metodo_pago === "PUE" && r.monto > 0 &&
-      new Decimal(f.saldo).minus(r.monto).greaterThan(TOLERANCIA_CIERRE_FACTURA)) {
+      tieneSaldoMonetario(f.saldo, r.monto)) {
       return `La factura ${f.numero ?? f.factura_id} es PUE: el cobro debe liquidar el saldo total.`;
     }
   }

@@ -47,6 +47,12 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  -- AUD99/121: rechazar antes de reutilizar históricos o generar efectivo.
+  IF v_pago.es_ajuste THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede generar ni reutilizar un movimiento bancario'
+      USING ERRCODE = 'P0001';
+  END IF;
+
   -- Auditoría 23: el helper reconoce el origen del anticipo antes de crear
   -- nada. El lock del pago serializa reintentos y comparte la ruta idempotente
   -- con el registro/edición normal. Efectivo aplicado válido devuelve NULL.

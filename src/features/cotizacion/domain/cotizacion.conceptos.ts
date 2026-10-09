@@ -8,6 +8,7 @@ import { esNoObjetoIva } from "@/lib/financial/tipoIvaSat";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 export interface ConceptoVentaPrellenado {
+  origen_costo_id?: string;
   descripcion: string;
   unidad_medida: string;
   cantidad: number;
@@ -58,6 +59,7 @@ export function buildConceptosFromCostos(
       // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
       const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
       return {
+        origen_costo_id: c.origen_venta_id ?? undefined,
         descripcion: c.concepto,
         unidad_medida: c.unidad_medida,
         cantidad: c.cantidad,
@@ -87,6 +89,7 @@ export function buildConceptosFromCostos(
       // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
       const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
       return {
+        origen_costo_id: c.origen_venta_id ?? undefined,
         descripcion: c.concepto,
         unidad_medida: c.unidad_medida,
         cantidad: c.cantidad,

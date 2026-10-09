@@ -5,13 +5,15 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { sincronizarConceptosPaso2 } from "@/features/cotizacion/hooks/wizard/paso2Helpers";
+import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion.conceptos";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 function fila(moneda: "USD" | "MXN", precio: number): FilaCostoLocal {
   return {
+    origen_venta_id: `costo-${moneda}`,
     concepto: `Flete ${moneda}`, moneda, proveedor: "ACME", cantidad: 1,
-    costo_unitario: 100, precio_venta: precio, notas: "",
-  } as FilaCostoLocal;
+    costo_unitario: 100, precio_venta: precio, notas: "", unidad_medida: "Servicio",
+  };
 }
 
 describe("sincronizarConceptosPaso2", () => {
@@ -19,6 +21,9 @@ describe("sincronizarConceptosPaso2", () => {
     const setConceptosUSD = vi.fn();
     const setConceptosMXN = vi.fn();
     sincronizarConceptosPaso2({
+      costosAnteriores: { current: [fila("USD", 200)] },
+      conceptosUSD: buildConceptosFromCostos([fila("USD", 200)], 0.16).usd,
+      conceptosMXN: [],
       costosInternos: [fila("MXN", 4000)],
       tasaIva: 0.16,
       lastCostosHash: { current: null },

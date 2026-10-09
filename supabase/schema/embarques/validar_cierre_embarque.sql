@@ -286,35 +286,49 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
       'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
-  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
-  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
-  SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
+  -- AUD54: clasificar en moneda documental antes de cualquier agregado.
+  -- Pagada sin pago aplicado vigente conserva el alcance histórico: no inventar deuda.
+  -- El saldo exacto y los hechos de pago/NC siguen en el canon, sin escritura.
+  WITH facturas_cxc AS (
+    SELECT f.*, public.saldo_factura(f.id) AS saldo_exacto,
+      EXISTS (SELECT 1 FROM pagos_factura px
+        WHERE px.factura_id=f.id AND px.organization_id=v_emb.organization_id
+          AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+          AND px.monto_aplicado_factura>0) AS tiene_pago_activo
     FROM facturas f
-   WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
-     AND public.saldo_factura(f.id) > 0.01;
-  WITH agg AS (
+    WHERE f.embarque_id=p_embarque_id AND f.organization_id=v_emb.organization_id
+      AND f.deleted_at IS NULL AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
+  ), saldos_cxc AS (
+    SELECT f.*, CASE WHEN f.estado='Pagada' AND NOT f.tiene_pago_activo THEN 0
+      ELSE GREATEST(ROUND(f.saldo_exacto,2),0) END AS saldo
+    FROM facturas_cxc f
+  ), agg AS (
     SELECT COALESCE(f.moneda,'MXN') AS moneda, COALESCE(SUM(f.total),0) AS total,
-      COALESCE(SUM(CASE WHEN f.estado='Pagada' THEN 0
-                        ELSE public.saldo_factura(f.id) END),0) AS saldo,
+      COALESCE(SUM(f.saldo),0) AS saldo,
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
-        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
-      COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
-        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada'))),0) AS notas_credito,
-      COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
-    FROM facturas f
-    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
-      AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
-    GROUP BY COALESCE(f.moneda,'MXN'))
+        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
+          AND NOT public.pago_rep_anulado(pf.estado_rep)
+          AND pf.organization_id=v_emb.organization_id)),0) AS pagado,
+      COALESCE(SUM((SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+          nc.monto,nc.moneda::text,nc.tipo_cambio,f.moneda::text,f.tipo_cambio)),0)
+        FROM factura_notas_credito nc
+        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada')
+          AND nc.organization_id=v_emb.organization_id)),0) AS notas_credito,
+      COUNT(*) FILTER (WHERE f.saldo>0) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE f.estado='Pagada' AND NOT f.tiene_pago_activo
+        AND ROUND(f.saldo_exacto,2)>0) AS pagadas_sin_pago_registrado
+    FROM saldos_cxc f GROUP BY COALESCE(f.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
-    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
-  INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
-  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
-  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
+    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0),
+    COALESCE(SUM(pagadas_sin_pago_registrado),0)
+  INTO v_cxc_por_moneda, v_cxc_saldo, v_cxc_pagadas_sin_pago FROM agg;
+  -- La suma ya contiene saldos monetarios positivos POR factura y moneda.
+  -- Sobrepagos o residuos subcentavo de otra factura no compensan deuda real.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxc_cobrada','ok',v_ok,

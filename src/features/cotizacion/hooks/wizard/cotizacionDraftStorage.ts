@@ -6,7 +6,8 @@
  */
 import { getStorageRef, safeLocalStorage } from "@/lib/browserStorage";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
-import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import { leerSnapshotVentasBorrador } from "./cotizacionDraftVentas";
+import type { ConceptoVentaCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
 
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
 /** VF-17: tolerancia de sesgo de reloj; un savedAt más allá es inválido. */
@@ -23,7 +24,13 @@ export const draftKey = (userId: string, organizationId?: string | null): string
   `${DRAFT_KEY_PREFIX}${organizationId || "sin-org"}:${userId || "anon"}`;
 
 export interface StoredDraft {
-  version: 3;
+  version: 3 | 4;
+  userId?: string;
+  organizationId?: string | null;
+  conceptosUSD?: ConceptoVentaCotizacion[];
+  conceptosMXN?: ConceptoVentaCotizacion[];
+  tipoCambioUsd?: number | null;
+  costosSincronizados?: FilaCostoLocal[];
   savedAt: number;
   /** B-003 (v13.320.32): sin esto, recargar el wizard tras paso 1 duplicaba
    *  la cotización — el `cotizacionId` vivía sólo en memoria React. */
@@ -32,7 +39,7 @@ export interface StoredDraft {
    * v13.823.69: sello (`cotizaciones.updated_at`) vigente cuando se autoguardó
    * el borrador. Al restaurar se compara contra el sello canónico del servidor:
    * si cambió, hay conflicto y no se guarda encima. Ausente en drafts legacy
-   * (entonces se consulta el canónico antes de permitir escrituras).
+   * (si tienen id pero no sello se exige abrir la versión servidor).
    */
   updatedAt?: string | null;
   values: CotizacionFormValues;
@@ -74,6 +81,12 @@ interface RawDraftShape {
   currentStep?: unknown;
   costosInternos?: unknown;
   tabId?: unknown;
+  userId?: unknown;
+  organizationId?: unknown;
+  conceptosUSD?: unknown;
+  conceptosMXN?: unknown;
+  tipoCambioUsd?: unknown;
+  costosSincronizados?: unknown;
 }
 
 /** El archivo MSDS nunca sobrevive a `JSON.stringify`; siempre se avisa. */
@@ -85,8 +98,8 @@ function leerBag(raw: string): RawDraftShape | null {
   if (!parsedUnknown || typeof parsedUnknown !== "object") return null;
   const bag = parsedUnknown as RawDraftShape;
   if (typeof bag.savedAt !== "number") return null;
-  // Aceptamos v1/v2 (legacy, sin paso/costos) y v3 (completo).
-  if (bag.version !== 1 && bag.version !== 2 && bag.version !== 3) return null;
+  // v1/v2: form; v3: paso/costos; v4: ventas/TC con identidad explícita.
+  if (bag.version !== 1 && bag.version !== 2 && bag.version !== 3 && bag.version !== 4) return null;
   return bag;
 }
 
@@ -102,11 +115,26 @@ function esFresco(savedAt: number): boolean {
 
 function avisosNoRestaurado(version: unknown): string[] {
   const noRestaurado: string[] = [AVISO_MSDS];
-  if (version !== 3) {
+  if (version !== 4) noRestaurado.push("Las ventas e impuestos locales y el tipo de cambio no se guardaban en este borrador; revisa el Paso 3");
+  if (version !== 3 && version !== 4) {
     noRestaurado.push("El paso del asistente en el que ibas — se reinicia en el Paso 1");
     noRestaurado.push("Los costos internos capturados — tendrás que volver a agregarlos");
   }
   return noRestaurado;
+}
+
+function normalizarPaso(raw: unknown): number {
+  return typeof raw === "number" && Number.isInteger(raw) && raw >= 1 && raw <= 4 ? raw : 1;
+}
+function normalizarCamposLegacy(bag: RawDraftShape) {
+  return {
+    cotizacionId: typeof bag.cotizacionId === "string" ? bag.cotizacionId : null,
+    updatedAt: typeof bag.updatedAt === "string" ? bag.updatedAt : null,
+    currentStep: normalizarPaso(bag.currentStep),
+    // SAFE-CAST: compatibilidad con costos de borradores previos a v4.
+    costosInternos: Array.isArray(bag.costosInternos) ? bag.costosInternos as FilaCostoLocal[] : [],
+    tabId: typeof bag.tabId === "string" ? bag.tabId : undefined,
+  };
 }
 
 export function loadDraft(userId: string, organizationId?: string | null): StoredDraft | null {
@@ -121,17 +149,16 @@ export function loadDraft(userId: string, organizationId?: string | null): Store
       return null;
     }
 
-    // SAFE-CAST: shape mínimo validado + rehidratación de fechas.
+    if (!bag.values || typeof bag.values !== "object" || Array.isArray(bag.values)) return null;
+    const snapshot = bag.version === 4 ? leerSnapshotVentasBorrador(bag, userId, organizationId) : undefined;
+    if (snapshot === null) return null;
     const parsed: StoredDraft = {
-      version: 3,
+      ...normalizarCamposLegacy(bag),
+      version: bag.version === 4 ? 4 : 3,
       savedAt: savedAtNum,
-      cotizacionId: typeof bag.cotizacionId === "string" ? bag.cotizacionId : null,
-      updatedAt: typeof bag.updatedAt === "string" ? bag.updatedAt : null,
-      values: bag.values as CotizacionFormValues,
-      currentStep: typeof bag.currentStep === "number" && bag.currentStep >= 1 ? bag.currentStep : 1,
-      costosInternos: Array.isArray(bag.costosInternos) ? (bag.costosInternos as FilaCostoLocal[]) : [],
+      values: bag.values,
       noRestaurado: avisosNoRestaurado(bag.version),
-      tabId: typeof bag.tabId === "string" ? bag.tabId : undefined,
+      ...snapshot,
     };
     reviveDateFields(parsed.values);
     return parsed;

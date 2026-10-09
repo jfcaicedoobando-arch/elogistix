@@ -1440,6 +1440,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cc_shipment_same_org_fk"
+            columns: ["embarque_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "conceptos_costo_contenedor_id_fkey"
             columns: ["contenedor_id"]
             isOneToOne: false
@@ -2457,6 +2464,7 @@ export type Database = {
           deleted_by: string | null
           id: string
           moneda: string
+          origen_venta_id: string | null
           notas: string
           organization_id: string
           porcentaje_profit: number | null
@@ -2480,6 +2488,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           moneda: string
+          origen_venta_id?: string | null
           notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
@@ -2503,6 +2512,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           moneda?: string
+          origen_venta_id?: string | null
           notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
@@ -8380,6 +8390,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "pf_shipment_same_org_fk"
+            columns: ["embarque_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "proveedor_facturas_categoria_presupuesto_id_fkey"
             columns: ["categoria_presupuesto_id"]
             isOneToOne: false
@@ -8453,6 +8470,34 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pfc_cc_same_org_fk"
+            columns: ["concepto_costo_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "conceptos_costo"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pfc_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pfc_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pfc_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
           {
             foreignKeyName: "proveedor_facturas_conceptos_concepto_costo_id_fkey"
             columns: ["concepto_costo_id"]
@@ -9010,6 +9055,34 @@ export type Database = {
           vigencia_hasta?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "insurance_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "insurance_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "insurance_pf_same_org_fk"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "insurance_shipment_same_org_fk"
+            columns: ["embarque_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id", "organization_id"]
+          },
           {
             foreignKeyName: "seguros_embarque_embarque_id_fkey"
             columns: ["embarque_id"]
@@ -10655,6 +10728,14 @@ export type Database = {
           total_count: number
           total_embarques: number
         }[]
+      }
+      cobranza_conteo_por_cobrar: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
+      cobranza_conteo_vencidas: {
+        Args: { p_organization_id: string }
+        Returns: number
       }
       cobranza_agregados: {
         Args: { p_cliente_id?: string; p_moneda?: string }
@@ -12884,6 +12965,18 @@ export type Database = {
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
         Returns: undefined
+      }
+      seguro_facturas_elegibles: {
+        Args: {
+          p_cursor_fecha?: string
+          p_cursor_id?: string
+          p_embarque_id: string
+          p_limit?: number
+          p_moneda: string
+          p_prima: number
+          p_seguro_id?: string
+        }
+        Returns: Json
       }
       seleccionar_lote_sat_semanal: {
         Args: { p_max_orgs?: number }

@@ -1,0 +1,8 @@
+{
+  "name": "selector148-ci",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "pg": "npm:@supabase/pg@8.21.1"
+  }
+}

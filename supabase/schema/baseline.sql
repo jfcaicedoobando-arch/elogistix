@@ -283,6 +283,11 @@ BEGIN
   IF v_pago.id IS NULL THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
   END IF;
+  -- AUD99/121: rechazar antes de reutilizar históricos o generar efectivo.
+  IF v_pago.es_ajuste THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede generar ni reutilizar un movimiento bancario'
+      USING ERRCODE = 'P0001';
+  END IF;
   -- Auditoría 23: antes de cualquier lookup/INSERT por pago, reconocer la
   -- aplicación y reutilizar su origen. Nunca reparar un vínculo con dinero.
   IF v_pago.es_anticipo_aplicado
@@ -823,11 +828,11 @@ BEGIN
     AND COALESCE(p.estado_rep, '') <> 'Cancelado'
     AND p.id IS DISTINCT FROM NEW.id;
   IF v_otros > 0 THEN
-    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Cancela el pago previo si fue un error.'
+    RAISE EXCEPTION 'LC_PAGO_PUE_EXHIBICION_UNICA: la factura es PUE y ya tiene un pago registrado; PUE exige liquidar en una sola exhibición. Revisa el pago previo con Cobranza antes de corregirlo.'
       USING ERRCODE = 'P0001';
   END IF;
-  -- Mismo umbral que recalcular_estado_factura: el saldo exacto no se redondea ni se ajusta.
-  IF COALESCE(NEW.monto_aplicado_factura, NEW.monto) < v_total - 0.01 THEN
+  -- Valida la deuda monetaria, sin condonar un centavo ni alterar el aplicado exacto.
+  IF ROUND(v_total - COALESCE(NEW.monto_aplicado_factura, NEW.monto), 2) > 0 THEN
     RAISE EXCEPTION 'LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL: registra el cobro por el saldo neto pendiente (%) en una sola exhibición, considerando las notas de crédito vigentes.', v_total
       USING ERRCODE = 'P0001';
   END IF;
@@ -1969,15 +1974,26 @@ CREATE FUNCTION public._calcular_demoras_montos_contenedor(p_cond_id uuid, p_org
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_monedas integer;
 BEGIN
   monto_costo := 0;
   monto_venta := 0;
   moneda_costo := COALESCE(p_moneda_default, 'USD');
-  IF p_dias_excedidos <= 0 OR p_tipo_cont_id IS NULL THEN
+  IF p_dias_excedidos IS NULL OR p_dias_excedidos <= 0 OR p_tipo_cont_id IS NULL THEN
     RETURN NEXT;
     RETURN;
   END IF;
   IF p_cond_id IS NOT NULL THEN
+    -- El contrato devuelve un importe y una moneda, sin TC ni fecha de conversión.
+    -- Revisar todo el tabulador, incluso tramos futuros o de importe cero.
+    SELECT COUNT(DISTINCT moneda) INTO v_monedas
+    FROM public.costeo_naviera_demoras_tarifa
+    WHERE naviera_condicion_id = p_cond_id
+      AND tipo_contenedor_id = p_tipo_cont_id;
+    IF v_monedas > 1 THEN
+      RAISE EXCEPTION 'LC_DEMORAS_MONEDAS_MIXTAS: el tabulador de este tipo de contenedor mezcla monedas. Usa una sola moneda por tabulador; no hay conversión automática.';
+    END IF;
     SELECT
       COALESCE(SUM(
         CASE WHEN d >= t.desde_dia AND (t.hasta_dia IS NULL OR d <= t.hasta_dia) THEN t.monto_por_dia ELSE 0 END
@@ -4293,6 +4309,51 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._guard_movimiento_ajuste_activacion() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org uuid;
+BEGIN
+  -- BEFORE se ejecuta antes del WITH CHECK de RLS. Validar el ámbito antes
+  -- de consultar clasificaciones que el caller podría no poder leer.
+  -- role/session_user conservan el caller SQL aun dentro de SECURITY DEFINER;
+  -- current_user aquí sería el owner y no sirve para reconocer llamadas internas.
+  IF COALESCE(NULLIF(NULLIF(current_setting('role', true), 'none'), ''), session_user::text)
+       NOT IN ('postgres', 'service_role', 'supabase_admin')
+     AND (public.org_scope() IS NULL OR NEW.organization_id IS DISTINCT FROM public.org_scope()) THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el movimiento está fuera de la organización activa'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF NEW.pago_proveedor_id IS NOT NULL THEN
+    SELECT organization_id INTO v_org FROM public.pagos_proveedor WHERE id = NEW.pago_proveedor_id;
+    IF FOUND AND v_org IS DISTINCT FROM NEW.organization_id THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el pago de proveedor pertenece a otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  IF NEW.pago_proveedor_lote_id IS NOT NULL THEN
+    SELECT organization_id INTO v_org FROM public.pagos_proveedor_lote WHERE id = NEW.pago_proveedor_lote_id;
+    IF FOUND AND v_org IS DISTINCT FROM NEW.organization_id THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el lote de pago pertenece a otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (SELECT 1 FROM public.pagos_proveedor p
+               WHERE p.lote_id = NEW.pago_proveedor_lote_id
+                 AND p.organization_id IS DISTINCT FROM NEW.organization_id) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el lote contiene registros de otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.pagos_proveedor p WHERE p.organization_id = NEW.organization_id AND p.es_ajuste
+             AND (p.id = NEW.pago_proveedor_id OR p.lote_id = NEW.pago_proveedor_lote_id)) THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede activar una asociación bancaria'
+      USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._guard_movimiento_anticipo_aplicado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -4330,6 +4391,25 @@ BEGIN
           OR NEW.es_anticipo_aplicado IS DISTINCT FROM OLD.es_anticipo_aplicado) THEN
     RAISE EXCEPTION 'LC_PAGO_ANTICIPO_NO_EDITABLE: el pago proviene de un anticipo; usa Revertir aplicación y vuelve a aplicar el anticipo'
       USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._guard_pago_clasificacion() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.es_ajuste IS DISTINCT FROM OLD.es_ajuste THEN
+    RAISE EXCEPTION 'LC_PAGO_CLASIFICACION_INMUTABLE: no se puede cambiar la clasificación monetaria de un pago existente'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- Un lote es una agrupación monetaria. Conservar legado sin reescribirlo,
+  -- pero nunca crear ni cambiar una asociación de ajuste con un lote.
+  IF NEW.es_ajuste AND NEW.lote_id IS NOT NULL
+     AND (TG_OP = 'INSERT' OR NEW.lote_id IS DISTINCT FROM OLD.lote_id) THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede incorporarse a un lote de pagos'
+      USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
 END;
@@ -5270,6 +5350,14 @@ CREATE FUNCTION public._seguro_validar_factura_proveedor() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  -- Audit 148 exact documentary coverage; private state, no new callable API.
+  _cov_policy record; _cov_invoice record; _cov_org uuid;
+  _cov_a numeric; _cov_s numeric; _cov_n numeric; _cov_c numeric;
+  _cov_p numeric; _cov_r numeric; _cov_tc numeric; _cov_fx numeric;
+  _cov_usd numeric; _cov_eur numeric; _cov_base_mxn numeric;
+  _cov_bad boolean; _cov_negative boolean; _cov_full boolean;
+  _cov_state text;
 BEGIN
   IF NEW.proveedor_factura_id IS NULL OR NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
@@ -5290,7 +5378,173 @@ BEGIN
     RAISE EXCEPTION 'LC_SEGURO_FACTURA_INVALIDA: la factura no es vigente, no es de tu organización o no pertenece a este embarque.'
       USING ERRCODE = 'check_violation';
   END IF;
-  RETURN NEW;
+  -- A full form payload is not a new financial decision. Keep the existing
+  -- identity check above, but do not reject note-only edits to historical links
+  -- solely because a later invoice edit reduced their coverage.
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
+      AND NEW.embarque_id IS NOT DISTINCT FROM OLD.embarque_id
+      AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id
+      AND NEW.prima IS NOT DISTINCT FROM OLD.prima
+      AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+      AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+  -- The existing invoice SHARE lock serializes header and PFC writers (the
+  -- latter already lock their parent FOR UPDATE NOWAIT). Lock the remaining
+  -- valuation dependencies without waiting in an inverse parent/child order.
+  -- This changes no identity gate, ACL, policy, restore RPC or stored relation.
+  BEGIN
+    PERFORM 1 FROM public.conceptos_costo cc
+      JOIN public.proveedor_facturas_conceptos pfc ON pfc.concepto_costo_id = cc.id
+      WHERE pfc.proveedor_factura_id = NEW.proveedor_factura_id
+      ORDER BY cc.id FOR SHARE OF cc NOWAIT;
+    PERFORM 1 FROM public.embarques e WHERE e.id = NEW.embarque_id
+      FOR SHARE OF e NOWAIT;
+  EXCEPTION WHEN lock_not_available THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: los datos de la factura o del embarque están cambiando. Recarga y revisa antes de guardar la póliza.'
+      USING ERRCODE = '40001';
+  END;
+  -- Read committed dependencies after the preserved locks. The official
+  -- cascade restores linked concepts and policies before the shipment header.
+  _cov_policy := NEW; _cov_org := NEW.organization_id;
+  SELECT coalesce(e.tipo_cambio_usd,0),coalesce(e.tipo_cambio_eur,0)
+    INTO _cov_usd,_cov_eur FROM public.embarques e WHERE e.id = NEW.embarque_id;
+  -- The reader and existing write trigger use this identical decision block.
+  -- B*S/A remains a rational until comparison. No quotient establishes
+  -- membership or complete coverage; accounting factors remain unchanged.
+  _cov_state := 'sin_atribucion'; _cov_base_mxn := NULL;
+  _cov_c := NULL; _cov_n := NULL; _cov_tc := NULL; _cov_full := false;
+  <<exact_coverage>>
+  BEGIN
+    SELECT pf.* INTO _cov_invoice FROM public.proveedor_facturas pf
+      WHERE pf.id = _cov_policy.proveedor_factura_id
+        AND pf.organization_id = _cov_org
+        AND pf.deleted_at IS NULL AND pf.estado::text NOT IN ('Borrador','Cancelada');
+    IF NOT FOUND THEN EXIT exact_coverage; END IF;
+    IF _cov_invoice.subtotal IS NULL
+      OR _cov_invoice.subtotal::text IN ('NaN','Infinity','-Infinity') THEN
+      EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.subtotal < 0 THEN EXIT exact_coverage; END IF;
+    _cov_p := _cov_policy.prima;
+    IF _cov_p IS NULL OR _cov_p::text IN ('NaN','Infinity','-Infinity') THEN
+      _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+    END IF;
+    IF _cov_p < 0 THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    -- Validate BEFORE arithmetic. PostgreSQL numeric multiplication can silently
+    -- round at scale 16383; unsupported intermediate scale is unknown/rejected,
+    -- never epsilon or a rounded product. Integer-digit overflow is caught below.
+    SELECT coalesce(bool_or(pfc.monto::text IN ('NaN','Infinity','-Infinity')
+             OR coalesce(nullif(pfc.cantidad,0),1)::text IN ('NaN','Infinity','-Infinity')
+             OR scale(pfc.monto)+scale(coalesce(nullif(pfc.cantidad,0),1)) > 16383),false),
+           coalesce(bool_or(coalesce(nullif(pfc.cantidad,0),1) < 0),false)
+      INTO _cov_bad, _cov_negative
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor'
+        AND (pfc.monto > 0 OR pfc.monto::text IN ('NaN','Infinity','-Infinity'));
+    IF _cov_bad THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    IF _cov_negative THEN _cov_state := 'asignacion_indeterminada'; EXIT exact_coverage; END IF;
+    SELECT coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1)),0),
+           coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1))
+             FILTER (WHERE cc.embarque_id = _cov_policy.embarque_id),0)
+      INTO _cov_a, _cov_s
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor' AND pfc.monto > 0;
+    IF _cov_a > 0 AND _cov_s > 0 THEN
+      -- Cancel identities symbolically before any potentially large product.
+      IF _cov_invoice.subtotal >= _cov_a THEN _cov_c := _cov_s;
+      ELSIF _cov_s = _cov_a THEN _cov_c := _cov_invoice.subtotal;
+      ELSE
+        IF scale(_cov_invoice.subtotal)+scale(_cov_s) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_n := _cov_invoice.subtotal * _cov_s;
+      END IF;
+    ELSIF _cov_a = 0 AND _cov_invoice.embarque_id = _cov_policy.embarque_id THEN
+      _cov_c := _cov_invoice.subtotal;
+    ELSE EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.moneda::text = _cov_policy.moneda::text THEN
+      IF _cov_c IS NOT NULL THEN _cov_full := _cov_c >= _cov_p;
+      ELSE
+        IF scale(_cov_p)+scale(_cov_a) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_full := _cov_n >= _cov_p * _cov_a;
+      END IF;
+      _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+      -- Nominal eligibility needs no FX. Keep the existing separate diagnostic
+      -- that a nominally complete link can still have unvalued accounting cost.
+      BEGIN
+        SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+          _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+          CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+        IF _cov_invoice.moneda::text = 'MXN' OR (_cov_tc > 1
+          AND _cov_tc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
+          _cov_base_mxn := public.a_mxn(coalesce(_cov_c,
+            _cov_invoice.subtotal * (_cov_s / nullif(_cov_a,0))),
+            _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+          IF _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN _cov_base_mxn := NULL; END IF;
+        END IF;
+      EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN _cov_base_mxn := NULL;
+      END;
+      EXIT exact_coverage;
+    END IF;
+    _cov_state := 'sin_valoracion';
+    _cov_fx := CASE WHEN _cov_policy.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END;
+    IF _cov_policy.moneda::text <> 'MXN' AND (_cov_fx IS NULL
+      OR _cov_fx::text IN ('NaN','Infinity','-Infinity') OR _cov_fx <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_policy.moneda::text <> 'MXN' AND scale(_cov_p)+scale(_cov_fx) > 16383 THEN EXIT exact_coverage; END IF;
+    _cov_r := public.a_mxn(_cov_p,_cov_policy.moneda::text,nullif(_cov_usd,0),nullif(_cov_eur,0));
+    IF _cov_r IS NULL OR _cov_r::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+    -- Premium is stored numeric(14,2); a_mxn foreign output is on the 4-place
+    -- grid. Check the precondition rather than silently rely on future schema.
+    IF _cov_r <> round(_cov_r,4) THEN EXIT exact_coverage; END IF;
+    SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+      _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+      CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+    IF _cov_invoice.moneda::text <> 'MXN' AND (_cov_tc IS NULL
+      OR _cov_tc::text IN ('NaN','Infinity','-Infinity') OR _cov_tc <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_c IS NOT NULL THEN
+      IF _cov_invoice.moneda::text <> 'MXN' AND scale(_cov_c)+scale(_cov_tc) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_base_mxn := public.a_mxn(_cov_c,_cov_invoice.moneda::text,_cov_tc,_cov_tc);
+      IF _cov_base_mxn IS NULL OR _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_base_mxn >= _cov_r;
+    ELSIF _cov_invoice.moneda::text = 'MXN' THEN
+      IF scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_n >= _cov_r * _cov_a;
+      -- This private value is only checked for NULL; no amount is exposed.
+      _cov_base_mxn := _cov_invoice.subtotal * (_cov_s / _cov_a);
+    ELSIF _cov_invoice.moneda::text IN ('USD','EUR') THEN
+      IF scale(_cov_n)+scale(_cov_tc) > 16383
+        OR scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      -- EXACT inverse of existing round(nonnegative MXN,4), half away from 0.
+      -- 20000 is twice the currency grid; it is not a new monetary tolerance.
+      _cov_full := _cov_r <= 0 OR 20000 * _cov_n * _cov_tc >= (20000 * _cov_r - 1) * _cov_a;
+      _cov_base_mxn := public.a_mxn(_cov_invoice.subtotal * (_cov_s / _cov_a),
+        _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+    ELSE EXIT exact_coverage;
+    END IF;
+    _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+  EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN
+    -- One unrepresentable coverage may not abort all other P&L documents.
+    -- The existing writer turns this same unknown state into its coverage error.
+    _cov_state := 'sin_valoracion'; _cov_base_mxn := NULL;
+  END exact_coverage;
+  IF _cov_state = 'completa' THEN RETURN NEW; END IF;
+  RAISE EXCEPTION 'LC_SEGURO_COBERTURA_INCOMPLETA: la factura debe cubrir toda la prima con la base atribuida al embarque y una valoración comprobable.'
+    USING ERRCODE = 'check_violation';
+EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN
+  RAISE EXCEPTION 'LC_SEGURO_COBERTURA_INCOMPLETA: no se puede valorar la cobertura completa de la prima.'
+    USING ERRCODE = 'check_violation';
 END;
 $$;
 CREATE FUNCTION public._sync_user_roles_desde_membership() RETURNS trigger
@@ -6463,12 +6717,18 @@ BEGIN
      OR v_actual IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
   END IF;
+  -- Ambiguous source keys cannot associate multiple costs with one sale.
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_costos) x
+    WHERE NULLIF(x->>'origen_venta_id', '') IS NOT NULL
+    GROUP BY (x->>'origen_venta_id')::uuid HAVING count(*) > 1) THEN
+    RAISE EXCEPTION 'LC_COT_ORIGEN_VENTA_DUPLICADO' USING ERRCODE = '22023';
+  END IF;
   DELETE FROM cotizacion_costos WHERE cotizacion_id = p_cotizacion_id;
   FOR c IN SELECT * FROM jsonb_array_elements(p_costos) LOOP
     INSERT INTO cotizacion_costos (
       cotizacion_id, concepto, moneda, proveedor, cantidad,
       costo_unitario, precio_venta, unidad_medida, notas, organization_id,
-      costeo_tarifa_id, costeo_tarifa_recargo_id
+      costeo_tarifa_id, costeo_tarifa_recargo_id, origen_venta_id
     ) VALUES (
       p_cotizacion_id,
       c->>'concepto',
@@ -6481,7 +6741,8 @@ BEGIN
       COALESCE(c->>'notas', ''),
       v_org_id,
       NULLIF(c->>'costeo_tarifa_id', '')::uuid,
-      NULLIF(c->>'costeo_tarifa_recargo_id', '')::uuid
+      NULLIF(c->>'costeo_tarifa_recargo_id', '')::uuid,
+      NULLIF(c->>'origen_venta_id', '')::uuid
     );
     v_count := v_count + 1;
   END LOOP;
@@ -8218,6 +8479,7 @@ DECLARE
   v_pago_moneda text;
   v_pago_monto numeric;
   v_pago_tc numeric;
+  v_pago_es_ajuste boolean;
   v_cuenta_moneda text;
   v_vinculos int;
   v_mov numeric;
@@ -8226,6 +8488,18 @@ DECLARE
   v_es_devolucion boolean := false;
   v_tol numeric := 0; -- MNY P1.3: tolerancia según la MONEDA del movimiento
 BEGIN
+  IF NEW.pago_proveedor_id IS NOT NULL OR NEW.pago_proveedor_lote_id IS NOT NULL THEN
+    -- BEFORE se ejecuta antes del WITH CHECK de RLS. Validar el ámbito antes
+    -- de consultar clasificaciones que el caller podría no poder leer.
+    -- role/session_user conservan el caller SQL aun dentro de SECURITY DEFINER;
+    -- current_user aquí sería el owner y no sirve para reconocer llamadas internas.
+    IF COALESCE(NULLIF(NULLIF(current_setting('role', true), 'none'), ''), session_user::text)
+         NOT IN ('postgres', 'service_role', 'supabase_admin')
+       AND (public.org_scope() IS NULL OR NEW.organization_id IS DISTINCT FROM public.org_scope()) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el movimiento está fuera de la organización activa'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
     + (CASE WHEN NEW.pago_proveedor_id IS NOT NULL THEN 1 ELSE 0 END)
@@ -8275,8 +8549,8 @@ BEGIN
     END IF;
   END IF;
   IF NEW.pago_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd
-      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc
+    SELECT organization_id, moneda::text, COALESCE(monto,0), tipo_cambio_usd, es_ajuste
+      INTO v_pago_org, v_pago_moneda, v_pago_monto, v_pago_tc, v_pago_es_ajuste
     FROM public.pagos_proveedor
     WHERE id = NEW.pago_proveedor_id AND deleted_at IS NULL;
     IF v_pago_org IS NULL THEN
@@ -8285,6 +8559,12 @@ BEGIN
     END IF;
     IF v_pago_org IS DISTINCT FROM NEW.organization_id THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el pago de proveedor pertenece a otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+    -- AUD99/121: la clasificación es inmutable desde INSERT. No necesita
+    -- locks cruzados ni escrituras al pago para impedir carreras de reclasificación.
+    IF v_pago_es_ajuste THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede vincularse a un movimiento bancario'
         USING ERRCODE = 'P0001';
     END IF;
     -- AUD42: comparar en la moneda de la cuenta, igual que _asegurar_movimiento_pago_proveedor.
@@ -8329,6 +8609,22 @@ BEGIN
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del lote (%) no coincide con la cuenta bancaria (%)',
         v_pago_moneda, v_cuenta_moneda
+        USING ERRCODE = 'P0001';
+    END IF;
+    -- Una composición histórica cruzada se rechaza por ámbito, sin revelar
+    -- si sus miembros inaccesibles son pagos o ajustes.
+    IF EXISTS (SELECT 1 FROM public.pagos_proveedor p
+               WHERE p.lote_id = NEW.pago_proveedor_lote_id
+                 AND p.organization_id IS DISTINCT FROM NEW.organization_id) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_ORG_MISMATCH: el lote contiene registros de otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+    -- No convertir una composición histórica inconsistente en dinero nuevo.
+    -- El guard de pagos impide agregar o mover ajustes a lotes desde este forward.
+    IF EXISTS (SELECT 1 FROM public.pagos_proveedor p
+               WHERE p.lote_id = NEW.pago_proveedor_lote_id
+                 AND p.organization_id = NEW.organization_id AND p.es_ajuste) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un lote con ajustes no monetarios no puede vincularse a un movimiento bancario'
         USING ERRCODE = 'P0001';
     END IF;
     -- N5: el lote de pago a proveedores también es salida de dinero.
@@ -10540,14 +10836,22 @@ DECLARE
   v_desglose jsonb := '[]'::jsonb;
   v_dias_en_tramo integer;
   v_top integer;
+  v_monedas integer;
 BEGIN
   IF p_dias_excedidos IS NULL OR p_dias_excedidos < 1 THEN
     RETURN QUERY SELECT 0::numeric, v_moneda, v_desglose;
     RETURN;
   END IF;
+  SELECT COUNT(DISTINCT t.moneda) INTO v_monedas
+  FROM public.costeo_naviera_demoras_tarifa t
+  WHERE t.naviera_condicion_id = p_naviera_condicion_id
+    AND t.tipo_contenedor_id = p_tipo_contenedor_id;
+  IF v_monedas > 1 THEN
+    RAISE EXCEPTION 'LC_DEMORAS_MONEDAS_MIXTAS: el tabulador de este tipo de contenedor mezcla monedas. Usa una sola moneda por tabulador; no hay conversión automática.';
+  END IF;
   FOR r IN
-    SELECT desde_dia, hasta_dia, monto_por_dia, moneda
-    FROM public.costeo_naviera_demoras_tarifa
+    SELECT t.desde_dia, t.hasta_dia, t.monto_por_dia, t.moneda
+    FROM public.costeo_naviera_demoras_tarifa t
     WHERE naviera_condicion_id = p_naviera_condicion_id
       AND tipo_contenedor_id = p_tipo_contenedor_id
       AND desde_dia <= p_dias_excedidos
@@ -10591,6 +10895,8 @@ DECLARE
   v_monto_costo numeric := 0;
   v_monto_venta numeric := 0;
   v_total_costo numeric := 0;
+  v_totales_costo jsonb := '{}'::jsonb;
+  v_monedas_costo integer;
   v_total_venta numeric := 0;
   v_resultado jsonb := '[]'::jsonb;
   v_fecha_desc_c date;
@@ -10705,7 +11011,8 @@ BEGIN
         format('Demoras %s días — contenedor %s', v_dias_excedidos_c, COALESCE(NULLIF(v_contenedor.numero_contenedor,''), v_contenedor.orden::text)),
         v_monto_costo, COALESCE(v_moneda_tier,'USD')::moneda, 'Pendiente'::estado_liquidacion, v_contenedor.id, 'demoras_auto'
       );
-      v_total_costo := v_total_costo + v_monto_costo;
+      v_totales_costo := jsonb_set(v_totales_costo, ARRAY[v_moneda_tier],
+        to_jsonb(COALESCE((v_totales_costo->>v_moneda_tier)::numeric, 0) + v_monto_costo));
     END IF;
     IF v_monto_venta > 0 THEN
       INSERT INTO public.conceptos_venta (
@@ -10732,12 +11039,23 @@ BEGIN
       'monto_venta_usd', v_monto_venta
     );
   END LOOP;
+  -- El total escalar sólo existe si todos los cargos tienen la misma moneda.
+  -- Tabuladores independientes siguen siendo válidos, sin sumar sus nominales.
+  SELECT COUNT(*) INTO v_monedas_costo FROM jsonb_each(v_totales_costo);
+  IF v_monedas_costo = 1 THEN
+    SELECT key, value::numeric INTO v_moneda_costo, v_total_costo
+    FROM jsonb_each_text(v_totales_costo);
+  ELSIF v_monedas_costo > 1 THEN
+    v_moneda_costo := NULL;
+    v_total_costo := NULL;
+  END IF;
   RETURN jsonb_build_object(
     'embarque_id', p_embarque_id,
     'fecha_descarga_embarque', v_fecha_descarga_emb,
     'fecha_devolucion_embarque', v_fecha_devolucion_emb,
     'dias_libres_default', v_dias_libres_default,
     'total_costo', v_total_costo,
+    'totales_costo_por_moneda', v_totales_costo,
     'moneda_costo', v_moneda_costo,
     'total_venta_usd', v_total_venta,
     'contenedores', v_resultado
@@ -11214,7 +11532,11 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
       ), 0) AS nc_aplicadas
     FROM public.facturas f
     WHERE f.deleted_at IS NULL
-      AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+      AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
   )
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
@@ -11227,7 +11549,7 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   FROM base b
   LEFT JOIN public.clientes c ON c.id = b.cliente_id
   LEFT JOIN public.embarques e ON e.id = b.embarque_id AND e.deleted_at IS NULL
-  WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
+  WHERE ROUND(b.total - b.pagado - b.nc_aplicadas, 2) > 0
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $$;
@@ -11238,8 +11560,12 @@ CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
   SELECT count(*)::bigint
   FROM public.facturas f
   WHERE f.deleted_at IS NULL
-    AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
-    AND (
+    AND (f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
+        OR (f.estado = 'Pagada' AND EXISTS (
+          SELECT 1 FROM public.pagos_factura px WHERE px.factura_id = f.id
+            AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+            AND px.monto_aplicado_factura > 0)))
+    AND ROUND(
       f.total
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
@@ -11252,7 +11578,7 @@ CREATE FUNCTION public.cartera_pendiente_total() RETURNS bigint
             AND nc.deleted_at IS NULL
             AND nc.estado IN ('Timbrada','Aplicada')
         ), 0)
-    ) > 0.005
+    , 2) > 0
 $$;
 CREATE FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid DEFAULT NULL::uuid, p_motivo text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
@@ -11874,7 +12200,7 @@ BEGIN
     SELECT
       f.moneda::text AS moneda,
       GREATEST(0, f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0)) AS saldo,
-      ((now() AT TIME ZONE 'America/Mexico_City')::date - f.fecha_vencimiento) AS dias_vencido
+      (public.fecha_negocio_mx() - f.fecha_vencimiento) AS dias_vencido
     FROM facturas f
     LEFT JOIN LATERAL (
       SELECT SUM(pf.monto_aplicado_factura) AS pagado
@@ -11883,27 +12209,71 @@ BEGIN
         AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
     LEFT JOIN LATERAL (
-      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+      SELECT public._nc_aplicadas_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0
+          AND ROUND(f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0), 2) > 0))
       AND f.organization_id = public.org_scope()
       AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
       AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
   )
   SELECT jsonb_build_object(
-    'total_mxn',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0), 0),
-    'total_usd',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0), 0),
-    'vencido_mxn',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_usd',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
-    'por_vencer_7d_mxn',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
-    'por_vencer_7d_usd',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
-    'facturas_vencidas',  COUNT(*) FILTER (WHERE moneda IN ('MXN','USD') AND saldo > 0 AND dias_vencido > 0),
-    'facturas_con_saldo', COUNT(*) FILTER (WHERE saldo > 0)
+    'total_mxn',          COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0), 0),
+    'total_usd',          COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0), 0),
+    'vencido_mxn',        COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',        COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'por_vencer_7d_mxn',  COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'por_vencer_7d_usd',  COALESCE(SUM(ROUND(saldo, 2)) FILTER (WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'facturas_vencidas',  COUNT(*) FILTER (WHERE ROUND(saldo, 2) > 0 AND dias_vencido > 0),
+    'facturas_con_saldo', COUNT(*) FILTER (WHERE ROUND(saldo, 2) > 0)
   ) INTO v_result
   FROM cartera;
   RETURN v_result;
 END;
+$$;
+CREATE FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT COUNT(*)
+  FROM public.facturas f
+  LEFT JOIN LATERAL (
+    SELECT SUM(pf.monto_aplicado_factura) AS pagado
+    FROM public.pagos_factura pf
+    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
+  ) pg ON true
+  WHERE f.organization_id = public.org_scope()
+    AND f.organization_id = p_organization_id
+    AND f.deleted_at IS NULL
+    AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      OR (f.estado='Pagada' AND COALESCE(pg.pagado,0)>0))
+    AND (f.fecha_vencimiento IS NULL OR f.fecha_vencimiento >= public.fecha_negocio_mx())
+    AND ROUND(f.total - COALESCE(pg.pagado, 0)
+      - COALESCE(public._nc_aplicadas_moneda_factura(f.id), 0),2) > 0;
+$$;
+CREATE FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT COUNT(*)
+  FROM public.facturas f
+  LEFT JOIN LATERAL (
+    SELECT SUM(pf.monto_aplicado_factura) AS pagado
+    FROM public.pagos_factura pf
+    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+      AND NOT public.pago_rep_anulado(pf.estado_rep)
+  ) pg ON true
+  WHERE f.organization_id = public.org_scope()
+    AND f.organization_id = p_organization_id
+    AND f.deleted_at IS NULL
+    AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      OR (f.estado='Pagada' AND COALESCE(pg.pagado,0)>0))
+    AND f.fecha_vencimiento < public.fecha_negocio_mx()
+    AND ROUND(f.total - COALESCE(pg.pagado, 0)
+      - COALESCE(public._nc_aplicadas_moneda_factura(f.id), 0),2) > 0;
 $$;
 CREATE FUNCTION public.cobranza_listado(p_cliente_id uuid DEFAULT NULL::uuid, p_moneda text DEFAULT NULL::text, p_search text DEFAULT NULL::text, p_estatus text DEFAULT NULL::text, p_limit integer DEFAULT 2000) RETURNS TABLE(id uuid, numero text, cliente_id uuid, cliente_nombre text, expediente text, moneda text, total numeric, pagado numeric, notas_credito_aplicadas numeric, saldo numeric, fecha_emision date, fecha_vencimiento date, dias_vencido integer, estatus_cobranza text, estado_factura text, tipo_cambio numeric)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
@@ -11942,10 +12312,12 @@ BEGIN
         AND NOT public.pago_rep_anulado(pf.estado_rep)
     ) pg ON true
     LEFT JOIN LATERAL (
-      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+      SELECT public._nc_aplicadas_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0
+          AND ROUND(f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0), 2) > 0))
       AND f.organization_id = v_org
       AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
       AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
@@ -11957,7 +12329,7 @@ BEGIN
   ), clasificada AS (
     SELECT c.*,
       CASE
-        WHEN c.saldo <= 0.01 THEN 'Sin saldo'
+        WHEN ROUND(c.saldo, 2) <= 0 THEN 'Sin saldo'
         WHEN c.dias_vencido > 0 THEN 'Vencida'
         WHEN c.dias_vencido BETWEEN -7 AND 0 THEN 'Por vencer'
         ELSE 'Vigente'
@@ -15198,10 +15570,17 @@ $$;
 CREATE FUNCTION public.crm_aplicar_tarifa_tarifario(p_solicitud_id uuid, p_tarifa_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
-DECLARE v record; t record;
+    AS $_$
+DECLARE
+  v record;
+  t record;
+  v_pedido text;
+  v_tipo_code text;
+  v_tipo_name text;
+  v_compatible boolean;
 BEGIN
-  SELECT * INTO v FROM public.crm_solicitudes_pricing WHERE id = p_solicitud_id AND deleted_at IS NULL FOR UPDATE;
+  SELECT * INTO v FROM public.crm_solicitudes_pricing
+   WHERE id = p_solicitud_id AND deleted_at IS NULL FOR UPDATE;
   IF v.id IS NULL OR v.organization_id IS DISTINCT FROM public.org_scope() THEN
     RAISE EXCEPTION 'LC_PRICING_NO_ENCONTRADA' USING ERRCODE = 'P0001';
   END IF;
@@ -15209,6 +15588,77 @@ BEGIN
      AND NOT public._crm_es_pricing(v.organization_id) THEN
     RAISE EXCEPTION 'LC_PRICING_SIN_PERMISO' USING ERRCODE = '42501';
   END IF;
+  -- The form persists tipo_carga. container_size is a legacy fallback only.
+  v_pedido := coalesce(
+    nullif(regexp_replace(v.tipo_carga, '^\s+|\s+$', '', 'g'), ''),
+    nullif(regexp_replace(v.container_size, '^\s+|\s+$', '', 'g'), ''));
+  IF v_pedido IS NULL THEN
+    RAISE EXCEPTION 'LC_PRICING_CONTENEDOR_REQUERIDO' USING ERRCODE = 'P0001';
+  END IF;
+  SELECT tc.code, tc.name INTO v_tipo_code, v_tipo_name
+    FROM public.costeo_tarifas ct
+    JOIN public.tipos_contenedor tc ON tc.id = ct.tipo_contenedor_id
+   WHERE ct.id = p_tarifa_id AND ct.organization_id = v.organization_id
+   FOR SHARE OF ct, tc;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_TARIFA_NO_VIGENTE' USING ERRCODE = 'P0001';
+  END IF;
+  -- Mirror claveCanonicaTipoContenedor without adding a public helper or ACL.
+  -- A full semantic key accepts aliases, but never substitutes dry for HC.
+  -- Raw keys preserve the shared helper's normalized-name-first priority.
+  -- Conflicting known code/name size or category and empty raw keys fail closed.
+  WITH entradas AS (
+    SELECT 'pedido'::text AS fuente, v_pedido AS nombre, ''::text AS codigo
+    UNION ALL
+    SELECT 'tarifa', v_tipo_name, v_tipo_code
+    UNION ALL
+    SELECT 'tarifa_codigo', '', v_tipo_code
+    UNION ALL
+    SELECT 'tarifa_nombre', v_tipo_name, ''
+  ), normalizados AS (
+    SELECT fuente,
+      btrim(regexp_replace(lower(regexp_replace(normalize(coalesce(nombre, ''), NFD),
+        U&'[\0300-\036f]', '', 'g')), '[^a-z0-9]+', ' ', 'g')) AS nombre,
+      btrim(regexp_replace(lower(regexp_replace(normalize(coalesce(codigo, ''), NFD),
+        U&'[\0300-\036f]', '', 'g')), '[^a-z0-9]+', ' ', 'g')) AS codigo
+    FROM entradas
+  ), separados AS (
+    SELECT *, regexp_replace(regexp_replace(btrim(nombre || ' ' || codigo),
+      '([0-9]+)([a-z]+)', '\1 \2', 'g'), '([a-z]+)([0-9]+)', '\1 \2', 'g') AS texto
+    FROM normalizados
+  ), categorias AS (
+    SELECT *, (regexp_match(texto, '\m(20|40|45|53)\M'))[1] AS tamano,
+      CASE
+        WHEN texto ~ '\m(reefer|refrigerad[[:alnum:]_]*|rf)\M' THEN 'reefer'
+        WHEN texto ~ '\m(high cube|highcube|hc|hq)\M' THEN 'hc'
+        WHEN texto ~ '\m(open top|opentop|ot)\M' THEN 'opentop'
+        WHEN texto ~ '\m(flat rack|flatrack|fr)\M' THEN 'flatrack'
+        WHEN texto ~ '\m(iso tank|tank|tanque)\M' THEN 'tank'
+        WHEN texto ~ '\m(platform|plataforma)\M' THEN 'platform'
+        WHEN texto ~ '\m(dry|standard|std|estandar|st|dv|gp)\M' THEN 'dry'
+      END AS categoria
+    FROM separados
+  ), claves AS (
+    SELECT *, CASE WHEN tamano IS NOT NULL AND categoria IS NOT NULL
+      THEN tamano || '|' || categoria
+      ELSE 'raw:' || coalesce(nullif(nombre, ''), codigo) END AS clave
+    FROM categorias
+  )
+  SELECT pedido.clave = tarifa.clave
+    AND pedido.clave <> 'raw:' AND tarifa.clave <> 'raw:'
+    AND NOT (codigo.tamano IS NOT NULL AND nombre.tamano IS NOT NULL
+      AND codigo.tamano <> nombre.tamano)
+    AND NOT (codigo.categoria IS NOT NULL AND nombre.categoria IS NOT NULL
+      AND codigo.categoria <> nombre.categoria)
+    INTO v_compatible
+    FROM claves pedido CROSS JOIN claves tarifa
+    CROSS JOIN claves codigo CROSS JOIN claves nombre
+   WHERE pedido.fuente = 'pedido' AND tarifa.fuente = 'tarifa'
+     AND codigo.fuente = 'tarifa_codigo' AND nombre.fuente = 'tarifa_nombre';
+  IF v_compatible IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'LC_TARIFA_CONTENEDOR_INCOMPATIBLE' USING ERRCODE = 'P0001';
+  END IF;
+  -- Recheck compatibility even for an idempotent call, without rewriting history.
   IF v.estado = 'respondida' AND v.tarifa_tarifario_id = p_tarifa_id THEN
     RETURN jsonb_build_object('id', v.id, 'ya_respondida', true);
   END IF;
@@ -15226,7 +15676,7 @@ BEGIN
    WHERE id = p_solicitud_id;
   PERFORM set_config('lc.pricing_rpc', '', true);
   RETURN jsonb_build_object('id', v.id, 'ya_respondida', false);
-END $$;
+END $_$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -15964,7 +16414,20 @@ CREATE FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) RETURNS TABLE
         AND lower(regexp_replace(coalesce(l.empresa, ''), '[^a-z0-9]', '', 'gi')) = k.empresa_norm)
   )
   WHERE l.deleted_at IS NULL
-    AND public.rls_tenant_scope_ok(l.organization_id);
+    AND (SELECT auth.uid()) IS NOT NULL
+    AND l.organization_id = (SELECT public.org_scope())
+    AND public.is_org_member(l.organization_id)
+    AND public.rls_tenant_scope_ok(l.organization_id)
+    AND (
+      public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['admin', 'gerente_comercial']::public.app_role[], l.organization_id)
+      OR public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['viewer', 'operador']::public.app_role[], l.organization_id)
+      OR (l.vendedor_id IS NULL AND public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['vendedor']::public.app_role[], l.organization_id))
+      OR (l.vendedor_id = (SELECT auth.uid()) AND public.has_any_role_in_org((SELECT auth.uid()),
+        ARRAY['vendedor']::public.app_role[], l.organization_id))
+    );
 $$;
 CREATE FUNCTION public.crm_notify_comentario_oportunidad() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -16604,6 +17067,7 @@ BEGIN
       AND (v_org IS NULL OR f.organization_id = v_org)
     GROUP BY pf.factura_id
   ),
+  -- Ola v17: antes restaba ncf.monto EN CRUDO (NC en USD contra facturas MXN).
   nc AS (
     SELECT ncf.factura_id,
            COALESCE(SUM(public.nc_convertida_a_moneda_factura(
@@ -16626,7 +17090,8 @@ BEGIN
     LEFT JOIN pagado pg ON pg.factura_id = f.id
     LEFT JOIN nc ON nc.factura_id = f.id
     WHERE f.deleted_at IS NULL
-      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND (f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+        OR (f.estado = 'Pagada' AND COALESCE(pg.pagado, 0) > 0))
       AND COALESCE(f.cancellation_status, 'none') NOT IN ('pending','verifying','accepted')
       AND f.sustituida_por IS NULL
       AND NOT EXISTS (
@@ -16639,17 +17104,17 @@ BEGIN
     s.cliente_id,
     MAX(s.cliente_nombre),
     s.moneda,
-    SUM(s.saldo),
-    SUM(CASE WHEN s.dias_vencido <= 0 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN s.saldo ELSE 0 END),
-    SUM(CASE WHEN s.dias_vencido > 90 THEN s.saldo ELSE 0 END),
+    SUM(ROUND(s.saldo, 2)),
+    SUM(CASE WHEN s.dias_vencido <= 0 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 1 AND 30 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 31 AND 60 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido BETWEEN 61 AND 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
+    SUM(CASE WHEN s.dias_vencido > 90 THEN ROUND(s.saldo, 2) ELSE 0 END),
     COUNT(*)::int
   FROM saldos s
-  WHERE s.saldo > 0.005
+  WHERE ROUND(s.saldo, 2) > 0
   GROUP BY s.cliente_id, s.moneda
-  ORDER BY SUM(s.saldo) DESC;
+  ORDER BY SUM(ROUND(s.saldo, 2)) DESC;
 END;
 $$;
 CREATE FUNCTION public.cxp_aging_proveedores(p_org uuid DEFAULT NULL::uuid, p_fecha date DEFAULT CURRENT_DATE) RETURNS TABLE(proveedor_id uuid, proveedor_nombre text, moneda text, saldo_total numeric, vigente numeric, d_1_30 numeric, d_31_60 numeric, d_61_90 numeric, mas_90 numeric, num_facturas integer)
@@ -20202,17 +20667,17 @@ BEGIN
       AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
   )
   SELECT jsonb_build_object(
-    'adeudado_mxn',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0), 0),
-    'adeudado_usd',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0), 0),
-    'adeudado_eur',      COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0), 0),
-    'vencido_mxn',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_usd',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
-    'vencido_eur',       COALESCE((SELECT SUM(saldo) FROM cartera WHERE moneda = 'EUR' AND saldo > 0 AND dias_vencido > 0), 0),
+    'adeudado_mxn',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_usd',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0), 0),
+    'adeudado_eur',      COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0), 0),
+    'vencido_mxn',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'MXN' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'USD' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
+    'vencido_eur',       COALESCE((SELECT SUM(ROUND(saldo, 2)) FROM cartera WHERE moneda = 'EUR' AND ROUND(saldo, 2) > 0 AND dias_vencido > 0), 0),
     'a_favor_mxn',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'MXN'), 0),
     'a_favor_usd',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'USD'), 0),
     'a_favor_eur',       COALESCE((SELECT SUM(no_aplicado) FROM anticipos WHERE moneda = 'EUR'), 0),
-    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE saldo > 0 AND dias_vencido > 0),
-    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE saldo > 0)
+    'facturas_vencidas', (SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0 AND dias_vencido > 0),
+    'facturas_adeudadas',(SELECT COUNT(*) FROM cartera WHERE ROUND(saldo, 2) > 0)
   ) INTO v_result;
   RETURN v_result;
 END;
@@ -22345,10 +22810,12 @@ BEGIN
       )
     UNION ALL
     SELECT pp.created_at, 'pago'::text,
-      ('Pago registrado' || CASE WHEN COALESCE(pp.referencia, '') <> ''
+      (CASE WHEN pp.es_ajuste THEN 'Ajuste no monetario registrado' ELSE 'Pago registrado' END
+        || CASE WHEN COALESCE(pp.referencia, '') <> ''
         THEN ' · ref ' || pp.referencia ELSE '' END)::text,
       COALESCE(u.email, '')::text, pp.monto, pp.moneda::text,
-      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago)
+      jsonb_build_object('metodo_pago', pp.metodo_pago, 'referencia', pp.referencia, 'fecha_pago', pp.fecha_pago,
+        'pago_id', pp.id, 'es_ajuste', pp.es_ajuste, 'motivo_ajuste', pp.motivo_ajuste)
     FROM public.pagos_proveedor pp
     LEFT JOIN auth.users u ON u.id = pp.created_by
     WHERE pp.proveedor_factura_id = p_id AND pp.organization_id = v_org AND pp.deleted_at IS NULL
@@ -23051,10 +23518,22 @@ BEGIN
     WHEN 'proveedor_notas_credito' THEN 'descripcion'
     WHEN 'factura_notas_credito' THEN 'folio'
     WHEN 'cuentas_bancarias' THEN 'alias'
-    WHEN 'seguros_embarque' THEN 'poliza'
+    WHEN 'seguros_embarque' THEN 'numero_poliza'
     WHEN 'embarque_contenedores' THEN 'numero_contenedor'
     ELSE 'id'
   END;
+  IF _table = 'seguros_embarque' THEN
+    RETURN QUERY
+      SELECT t.id, t.organization_id, t.deleted_at,
+             NULL::uuid AS deleted_by, NULL::text AS deleted_by_email,
+             COALESCE(NULLIF(t.numero_poliza::text, ''), '(sin etiqueta)') AS label
+      FROM public.seguros_embarque t
+      WHERE t.deleted_at IS NOT NULL
+        AND t.organization_id = _scope
+      ORDER BY t.deleted_at DESC
+      LIMIT _limit OFFSET _offset;
+    RETURN;
+  END IF;
   RETURN QUERY EXECUTE format(
     'SELECT t.id, t.organization_id, t.deleted_at, t.deleted_by,
             (SELECT u.email::text FROM auth.users u WHERE u.id = t.deleted_by) AS deleted_by_email,
@@ -24471,10 +24950,39 @@ $$;
 CREATE FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   _tc_usd numeric; _tc_eur numeric; _org uuid;
   _base jsonb;
+  -- Audit132: local reader state only; no helper/RPC or persisted valuation.
+  _invoice record; _note record; _line_income record;
+  _nc_conceptos jsonb; _nc_base numeric; _nc_base_factura numeric;
+  _nc_moneda text; _nc_tc numeric; _factura_moneda text; _factura_tc numeric;
+  _fnc_data jsonb := '[]'; _net_data jsonb := '[]';
+  _detail_data jsonb := '{}'; _detail_rows jsonb := '[]';
+  _factor numeric; _tagged numeric; _shipment numeric; _tc_doc numeric;
+  -- Audit144: read-only attribution; never manufacture historical lineage.
+  _nc_line record; _note_credit numeric; _line_credit numeric;
+  _running_base numeric; _running_doc numeric; _previous_doc numeric;
+  _note_total_doc numeric; _all_credit_doc numeric; _note_credit_mxn numeric; _invoice_credit_mxn numeric;
+  _note_detail jsonb; _invoice_proportional boolean;
+  _subtotal numeric; _credit numeric; _net numeric; _net_mxn numeric;
+  _credit_mxn numeric; _line_mxn numeric; _detail_sum numeric;
+  _income_total numeric := 0; _pending_total numeric := 0;
+  _invoice_bad boolean; _invoice_valued boolean; _income_overflow boolean := false;
+  _line_name text; _nc_count bigint; _tagged_shipments bigint;
+  _invoice_count bigint := 0; _active_nc bigint := 0; _nc_no_base bigint := 0;
+  _nc_no_value bigint := 0; _invoice_no_value bigint := 0;
+  _proportional bigint := 0; _overflows bigint := 0;
+  _income_incomplete boolean;
+  -- Audit 148 exact documentary coverage; private state, no new callable API.
+  _cov_policy record; _cov_invoice record; _cov_org uuid;
+  _cov_a numeric; _cov_s numeric; _cov_n numeric; _cov_c numeric;
+  _cov_p numeric; _cov_r numeric; _cov_tc numeric; _cov_fx numeric;
+  _cov_usd numeric; _cov_eur numeric; _cov_base_mxn numeric;
+  _cov_bad boolean; _cov_negative boolean; _cov_full boolean;
+  _cov_state text;
+  _cov_data jsonb := '[]';
 BEGIN
   SELECT COALESCE(tipo_cambio_usd,0), COALESCE(tipo_cambio_eur,0), organization_id
     INTO _tc_usd, _tc_eur, _org
@@ -24486,6 +24994,437 @@ BEGIN
      AND _org IS DISTINCT FROM public.current_user_org_id() THEN
     RAISE EXCEPTION 'Sin acceso al embarque %', _embarque_id USING ERRCODE='42501';
   END IF;
+  -- Keep invoice membership and gross attribution; NC lines use exact lineage. Every
+  -- numeric operation introduced by the income path is guarded per document;
+  -- an unknown NC never silently becomes a valid zero discount.
+  FOR _invoice IN
+    SELECT fa.* FROM public.facturas fa
+    WHERE fa.deleted_at IS NULL
+      AND fa.estado::text NOT IN ('Borrador','Cancelada','Sustituida')
+      AND (fa.embarque_id = _embarque_id OR EXISTS (
+        SELECT 1 FROM public.conceptos_factura cf
+        WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
+          AND cf.embarque_id = _embarque_id))
+    ORDER BY fa.id
+  LOOP
+    _invoice_bad := false; _invoice_proportional := false;
+    _factor := NULL; _subtotal := NULL; _net := NULL; _net_mxn := NULL;
+    _credit := 0; _all_credit_doc := 0; _invoice_credit_mxn := 0; _nc_count := 0; _tc_doc := NULL; _tagged_shipments := 0;
+    _factura_moneda := _invoice.moneda::text;
+    _factura_tc := _invoice.tipo_cambio;
+    BEGIN
+      SELECT coalesce(sum(coalesce(cf.total,0)) FILTER (WHERE cf.embarque_id IS NOT NULL),0),
+             coalesce(sum(coalesce(cf.total,0)) FILTER (WHERE cf.embarque_id = _embarque_id),0),
+             count(DISTINCT cf.embarque_id)
+        INTO _tagged, _shipment, _tagged_shipments
+      FROM public.conceptos_factura cf
+      WHERE cf.factura_id = _invoice.id AND cf.deleted_at IS NULL;
+      _factor := CASE WHEN _tagged > 0 THEN _shipment / _tagged
+        WHEN _invoice.embarque_id = _embarque_id THEN 1::numeric ELSE 0::numeric END;
+      IF _factor::text IN ('NaN','Infinity','-Infinity')
+        OR _tagged::text IN ('NaN','Infinity','-Infinity')
+        OR _shipment::text IN ('NaN','Infinity','-Infinity') THEN _factor := NULL; END IF;
+    EXCEPTION WHEN numeric_value_out_of_range THEN
+      _overflows := _overflows + 1;
+    END;
+    IF _factor <= 0 THEN CONTINUE; END IF;
+    _invoice_count := _invoice_count + 1;
+    BEGIN
+      SELECT t.tc INTO _tc_doc FROM public.tc_para_documento(
+        _invoice.fecha_emision, _factura_moneda, _factura_tc,
+        CASE WHEN _factura_moneda = 'EUR' THEN _tc_eur ELSE _tc_usd END) t;
+      IF _factor IS NOT NULL AND _invoice.subtotal IS NOT NULL
+        AND _invoice.subtotal::text NOT IN ('NaN','Infinity','-Infinity')
+        AND _factura_moneda IN ('MXN','USD','EUR')
+        AND (_factura_moneda = 'MXN' OR (_tc_doc > 1
+          AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity'))) THEN
+        _subtotal := round(_invoice.subtotal * _factor,2);
+        -- Validate invoice -> MXN even when no NC exists or its net is zero.
+        _net_mxn := public.a_mxn(_subtotal,_factura_moneda,_tc_doc,_tc_doc);
+      END IF;
+    EXCEPTION WHEN numeric_value_out_of_range THEN
+      _subtotal := NULL; _net_mxn := NULL; _overflows := _overflows + 1;
+    END;
+    _invoice_bad := _net_mxn IS NULL;
+    FOR _note IN SELECT n.* FROM public.factura_notas_credito n
+      WHERE n.factura_id = _invoice.id AND n.deleted_at IS NULL
+        AND n.estado::text IN ('Timbrada','Aplicada') ORDER BY n.id
+    LOOP
+      _active_nc := _active_nc + 1; _nc_count := _nc_count + 1;
+      _nc_conceptos := _note.conceptos;
+      _nc_moneda := _note.moneda::text; _nc_tc := _note.tipo_cambio;
+<<credit132_parse_base>>
+DECLARE
+  _line jsonb;
+  _q_text text;
+  _p_text text;
+  _q numeric;
+  _p numeric;
+  _sum numeric := 0;
+  _decimal constant text := '^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$';
+BEGIN
+  _nc_base := NULL;
+  IF jsonb_typeof(_nc_conceptos) IS DISTINCT FROM 'array' THEN
+    EXIT credit132_parse_base;
+  END IF;
+  IF jsonb_array_length(_nc_conceptos) = 0 THEN
+    EXIT credit132_parse_base;
+  END IF;
+  FOR _line IN SELECT value FROM jsonb_array_elements(_nc_conceptos) LOOP
+    IF jsonb_typeof(_line) IS DISTINCT FROM 'object'
+      OR coalesce(jsonb_typeof(_line->'cantidad'),'null') NOT IN ('number','string')
+      OR coalesce(jsonb_typeof(_line->'precio_unitario'),'null') NOT IN ('number','string') THEN
+      EXIT credit132_parse_base;
+    END IF;
+    _q_text := btrim(_line->>'cantidad');
+    _p_text := btrim(_line->>'precio_unitario');
+    IF _q_text !~ _decimal OR _p_text !~ _decimal THEN
+      EXIT credit132_parse_base;
+    END IF;
+    _q := _q_text::numeric;
+    _p := _p_text::numeric;
+    IF _q <= 0 OR _p < 0 THEN
+      EXIT credit132_parse_base;
+    END IF;
+    -- Match subtotalLinea: round AFTER multiplication, separately per line.
+    -- Cast, multiplication, rounding and total overflow all fail closed below.
+    _sum := _sum + round(_q * _p, 2);
+  END LOOP;
+  _nc_base := _sum;
+EXCEPTION
+  WHEN invalid_text_representation OR numeric_value_out_of_range THEN
+    _nc_base := NULL;
+END credit132_parse_base;
+<<credit132_convert_base>>
+BEGIN
+  _nc_base_factura := NULL;
+  IF _nc_base IS NULL OR _nc_base < 0
+    OR _nc_base::text IN ('NaN','Infinity','-Infinity')
+    OR coalesce(_nc_moneda,'') NOT IN ('MXN','USD','EUR')
+    OR coalesce(_factura_moneda,'') NOT IN ('MXN','USD','EUR') THEN
+    EXIT credit132_convert_base;
+  END IF;
+  IF _nc_moneda <> _factura_moneda THEN
+    IF _nc_moneda <> 'MXN' AND (
+      _nc_tc IS NULL OR _nc_tc <= 1
+      OR _nc_tc::text IN ('NaN','Infinity','-Infinity')) THEN
+      EXIT credit132_convert_base;
+    END IF;
+    IF _factura_moneda <> 'MXN' AND (
+      _factura_tc IS NULL OR _factura_tc <= 1
+      OR _factura_tc::text IN ('NaN','Infinity','-Infinity')) THEN
+      EXIT credit132_convert_base;
+    END IF;
+  END IF;
+  _nc_base_factura := public.nc_convertida_a_moneda_factura(
+    _nc_base, _nc_moneda, _nc_tc, _factura_moneda, _factura_tc);
+EXCEPTION
+  WHEN numeric_value_out_of_range THEN
+    _nc_base_factura := NULL;
+END credit132_convert_base;
+      _credit_mxn := NULL;
+      _note_credit := 0; _note_credit_mxn := 0; _note_detail := '[]';
+      _note_total_doc := _nc_base_factura;
+      _running_base := 0; _previous_doc := 0;
+      IF _nc_base IS NULL THEN _nc_no_base := _nc_no_base + 1; END IF;
+      BEGIN
+        -- The reviewed132 parser/conversion above validate the WHOLE note first.
+        -- An invalid line never leaves a partially credited, apparently known NC.
+        IF _nc_base_factura IS NOT NULL THEN
+          FOR _nc_line IN
+            SELECT cf.id AS source_id, cf.embarque_id,
+                   lower(trim(coalesce(nullif(cf.descripcion,''),'(sin concepto)'))) AS concepto,
+                   round((l->>'cantidad')::numeric * (l->>'precio_unitario')::numeric,2) AS base
+            FROM jsonb_array_elements(_nc_conceptos) WITH ORDINALITY AS lines(l,position)
+            LEFT JOIN public.conceptos_factura cf
+              ON cf.id = CASE WHEN lower(btrim(l->>'concepto_factura_id'))
+                   ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                 THEN lower(btrim(l->>'concepto_factura_id'))::uuid END
+              AND cf.factura_id = _invoice.id AND cf.organization_id = _org
+              AND _invoice.organization_id = _org AND _note.organization_id = _org
+              AND cf.deleted_at IS NULL AND cf.embarque_id IS NOT NULL
+              AND EXISTS (SELECT 1 FROM public.embarques e
+                WHERE e.id = cf.embarque_id AND e.organization_id = _org AND e.deleted_at IS NULL)
+            ORDER BY lines.position
+          LOOP
+            -- Cumulative conversion preserves132's full converted note exactly.
+            -- Never round/convert each tiny line independently then add it up.
+            _running_base := _running_base + _nc_line.base;
+            _running_doc := CASE WHEN _running_base = _nc_base THEN _nc_base_factura
+              ELSE public.nc_convertida_a_moneda_factura(
+                _running_base,_nc_moneda,_nc_tc,_factura_moneda,_factura_tc) END;
+            _line_credit := CASE WHEN _nc_line.source_id IS NULL
+              THEN _running_doc * _factor - _previous_doc * _factor
+              ELSE _running_doc - _previous_doc END;
+            _line_mxn := NULL;
+            IF _factura_moneda = 'MXN' OR (_tc_doc > 1
+              AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
+              -- Allocate the rounded GLOBAL invoice debit before shipment filtering.
+              -- All line debits telescope to132's full converted invoice net; tiny
+              -- FX residues follow persisted JSON order instead of being duplicated.
+              _line_mxn := (public.a_mxn(_invoice.subtotal-_all_credit_doc-_previous_doc,_factura_moneda,_tc_doc,_tc_doc)
+                - public.a_mxn(_invoice.subtotal-_all_credit_doc-_running_doc,_factura_moneda,_tc_doc,_tc_doc))
+                * CASE WHEN _nc_line.source_id IS NULL THEN _factor ELSE 1::numeric END;
+            END IF;
+            _previous_doc := _running_doc;
+            IF _nc_line.source_id IS NULL THEN
+              -- Missing, malformed, orphaned or inconsistent lineage stays provisional.
+              -- This also warns for a legacy single-shipment invoice: its concept is unknown.
+              _invoice_proportional := true;
+            ELSIF _nc_line.embarque_id <> _embarque_id THEN
+              CONTINUE; -- The selected credit must never reduce a different shipment.
+            END IF;
+            _note_credit := _note_credit + _line_credit;
+            _note_credit_mxn := _note_credit_mxn + _line_mxn;
+            _note_detail := _note_detail || jsonb_build_array(jsonb_build_object(
+              'concepto',CASE WHEN _nc_line.source_id IS NULL THEN '(nota de crédito)' ELSE _nc_line.concepto END,
+              'monto_mxn',_line_mxn));
+          END LOOP;
+          _nc_base_factura := _note_credit;
+          IF _note_credit IS NOT NULL AND (_factura_moneda = 'MXN' OR (_tc_doc > 1
+            AND _tc_doc::text NOT IN ('NaN','Infinity','-Infinity'))) THEN
+            _credit_mxn := _note_credit_mxn;
+          END IF;
+          IF _credit_mxn IS NOT NULL AND _credit IS NOT NULL THEN
+            DECLARE
+              next_credit numeric; next_mxn numeric; next_all numeric;
+            BEGIN
+              -- Publish all accumulators together only after every sum succeeds.
+              next_credit := _credit + _note_credit;
+              next_mxn := _invoice_credit_mxn + _note_credit_mxn;
+              next_all := _all_credit_doc + _note_total_doc;
+              _credit := next_credit; _invoice_credit_mxn := next_mxn; _all_credit_doc := next_all;
+            END;
+          END IF;
+        END IF;
+      EXCEPTION WHEN numeric_value_out_of_range THEN
+        _nc_base_factura := NULL; _credit_mxn := NULL;
+        _overflows := _overflows + 1;
+      END;
+      IF _nc_base IS NOT NULL AND _credit_mxn IS NULL THEN
+        _nc_no_value := _nc_no_value + 1;
+      END IF;
+      IF _credit_mxn IS NULL THEN
+        -- Discard partial details if any conversion/operation was indeterminate.
+        _note_detail := jsonb_build_array(jsonb_build_object(
+          'concepto','(nota de crédito)','monto_mxn',NULL));
+      END IF;
+      _fnc_data := _fnc_data || _note_detail;
+    END LOOP;
+    IF _invoice_proportional THEN _proportional := _proportional + 1; END IF;
+    BEGIN
+      IF NOT _invoice_bad THEN
+        _net := _subtotal - _credit;
+        _net_mxn := public.a_mxn(_subtotal,_factura_moneda,_tc_doc,_tc_doc) - _invoice_credit_mxn;
+        _income_total := _income_total + _net_mxn;
+      END IF;
+    EXCEPTION WHEN numeric_value_out_of_range THEN
+      _net := NULL; _net_mxn := NULL; _invoice_bad := true;
+      _income_overflow := true; _overflows := _overflows + 1;
+    END;
+    _net_data := _net_data || jsonb_build_array(jsonb_build_object(
+      'id',_invoice.id,'moneda',_factura_moneda,'estado',_invoice.estado,
+      'tc_doc',_tc_doc,'monto',_net,'monto_mxn',_net_mxn));
+    BEGIN
+      IF _invoice.estado::text IN ('Emitida','Vencida','Parcialmente pagada','Por timbrar') THEN
+        IF _invoice_bad THEN _pending_total := NULL;
+        ELSE _pending_total := _pending_total + public.a_mxn(
+          public.saldo_factura(_invoice.id) * _factor,_factura_moneda,_tc_doc,_tc_doc);
+          IF _pending_total::text IN ('NaN','Infinity','-Infinity') THEN
+            _pending_total := NULL; _invoice_bad := true;
+          END IF;
+        END IF;
+      END IF;
+    EXCEPTION WHEN numeric_value_out_of_range THEN
+      _pending_total := NULL; _invoice_bad := true; _overflows := _overflows + 1;
+    END;
+    -- Preserve positive line attribution; attributed NC details below reconcile
+    -- to the same exact/provisional debit as the headline, including NULLs.
+    _invoice_valued := NOT _invoice_bad;
+    FOR _line_income IN
+      SELECT lower(trim(coalesce(nullif(cf.descripcion,''),'(sin concepto)'))) AS concepto,
+             cf.total, cf.embarque_id
+      FROM public.conceptos_factura cf
+      WHERE cf.factura_id = _invoice.id AND cf.deleted_at IS NULL
+        AND (cf.embarque_id = _embarque_id OR cf.embarque_id IS NULL)
+    LOOP
+      _line_mxn := NULL;
+      BEGIN
+        IF coalesce(_line_income.total,0)::text IN ('NaN','Infinity','-Infinity') THEN
+          _invoice_bad := true;
+        END IF;
+        IF _invoice_valued AND coalesce(_line_income.total,0)::text
+          NOT IN ('NaN','Infinity','-Infinity') THEN
+          _line_mxn := public.a_mxn(coalesce(_line_income.total,0)
+            * CASE WHEN _line_income.embarque_id = _embarque_id THEN 1::numeric ELSE _factor END,
+            _factura_moneda,_tc_doc,_tc_doc);
+        END IF;
+      EXCEPTION WHEN numeric_value_out_of_range THEN
+        _invoice_bad := true; _overflows := _overflows + 1;
+      END;
+      _detail_rows := _detail_rows || jsonb_build_array(jsonb_build_object(
+        'concepto',_line_income.concepto,'real_mxn',_line_mxn));
+    END LOOP;
+    IF _invoice_bad THEN _invoice_no_value := _invoice_no_value + 1; END IF;
+  END LOOP;
+  _detail_rows := _detail_rows || coalesce((SELECT jsonb_agg(jsonb_build_object(
+    'concepto',n.concepto,'real_mxn',-n.monto_mxn))
+    FROM jsonb_to_recordset(_fnc_data) n(concepto text,monto_mxn numeric)),'[]'::jsonb);
+  FOR _line_income IN SELECT * FROM jsonb_to_recordset(_detail_rows)
+    AS x(concepto text,real_mxn numeric)
+  LOOP
+    _line_name := _line_income.concepto;
+    BEGIN
+      _detail_sum := CASE WHEN _detail_data ? _line_name
+        THEN (_detail_data->>_line_name)::numeric ELSE 0::numeric END;
+      _detail_sum := _detail_sum + _line_income.real_mxn;
+    EXCEPTION WHEN numeric_value_out_of_range THEN
+      _detail_sum := NULL; _income_overflow := true; _overflows := _overflows + 1;
+    END;
+    _detail_data := jsonb_set(_detail_data,ARRAY[_line_name],coalesce(to_jsonb(_detail_sum),'null'::jsonb));
+  END LOOP;
+  IF _income_overflow THEN _income_total := NULL; END IF;
+  _income_incomplete := _nc_no_base > 0 OR _nc_no_value > 0
+    OR _invoice_no_value > 0 OR _proportional > 0 OR _overflows > 0;
+  -- Insurance coverage is isolated per policy. Existing supplier cost,
+  -- credit-note, debt and detail CTEs below keep their original arithmetic.
+  _cov_usd := _tc_usd; _cov_eur := _tc_eur; _cov_org := _org;
+  FOR _cov_policy IN SELECT s.* FROM public.seguros_embarque s
+    WHERE s.embarque_id = _embarque_id AND s.deleted_at IS NULL
+      AND s.proveedor_factura_id IS NOT NULL
+    ORDER BY s.id
+  LOOP
+  -- The reader and existing write trigger use this identical decision block.
+  -- B*S/A remains a rational until comparison. No quotient establishes
+  -- membership or complete coverage; accounting factors remain unchanged.
+  _cov_state := 'sin_atribucion'; _cov_base_mxn := NULL;
+  _cov_c := NULL; _cov_n := NULL; _cov_tc := NULL; _cov_full := false;
+  <<exact_coverage>>
+  BEGIN
+    SELECT pf.* INTO _cov_invoice FROM public.proveedor_facturas pf
+      WHERE pf.id = _cov_policy.proveedor_factura_id
+        AND pf.organization_id = _cov_org
+        AND pf.deleted_at IS NULL AND pf.estado::text NOT IN ('Borrador','Cancelada');
+    IF NOT FOUND THEN EXIT exact_coverage; END IF;
+    IF _cov_invoice.subtotal IS NULL
+      OR _cov_invoice.subtotal::text IN ('NaN','Infinity','-Infinity') THEN
+      EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.subtotal < 0 THEN EXIT exact_coverage; END IF;
+    _cov_p := _cov_policy.prima;
+    IF _cov_p IS NULL OR _cov_p::text IN ('NaN','Infinity','-Infinity') THEN
+      _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+    END IF;
+    IF _cov_p < 0 THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    -- Validate BEFORE arithmetic. PostgreSQL numeric multiplication can silently
+    -- round at scale 16383; unsupported intermediate scale is unknown/rejected,
+    -- never epsilon or a rounded product. Integer-digit overflow is caught below.
+    SELECT coalesce(bool_or(pfc.monto::text IN ('NaN','Infinity','-Infinity')
+             OR coalesce(nullif(pfc.cantidad,0),1)::text IN ('NaN','Infinity','-Infinity')
+             OR scale(pfc.monto)+scale(coalesce(nullif(pfc.cantidad,0),1)) > 16383),false),
+           coalesce(bool_or(coalesce(nullif(pfc.cantidad,0),1) < 0),false)
+      INTO _cov_bad, _cov_negative
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor'
+        AND (pfc.monto > 0 OR pfc.monto::text IN ('NaN','Infinity','-Infinity'));
+    IF _cov_bad THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    IF _cov_negative THEN _cov_state := 'asignacion_indeterminada'; EXIT exact_coverage; END IF;
+    SELECT coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1)),0),
+           coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1))
+             FILTER (WHERE cc.embarque_id = _cov_policy.embarque_id),0)
+      INTO _cov_a, _cov_s
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor' AND pfc.monto > 0;
+    IF _cov_a > 0 AND _cov_s > 0 THEN
+      -- Cancel identities symbolically before any potentially large product.
+      IF _cov_invoice.subtotal >= _cov_a THEN _cov_c := _cov_s;
+      ELSIF _cov_s = _cov_a THEN _cov_c := _cov_invoice.subtotal;
+      ELSE
+        IF scale(_cov_invoice.subtotal)+scale(_cov_s) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_n := _cov_invoice.subtotal * _cov_s;
+      END IF;
+    ELSIF _cov_a = 0 AND _cov_invoice.embarque_id = _cov_policy.embarque_id THEN
+      _cov_c := _cov_invoice.subtotal;
+    ELSE EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.moneda::text = _cov_policy.moneda::text THEN
+      IF _cov_c IS NOT NULL THEN _cov_full := _cov_c >= _cov_p;
+      ELSE
+        IF scale(_cov_p)+scale(_cov_a) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_full := _cov_n >= _cov_p * _cov_a;
+      END IF;
+      _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+      -- Nominal eligibility needs no FX. Keep the existing separate diagnostic
+      -- that a nominally complete link can still have unvalued accounting cost.
+      BEGIN
+        SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+          _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+          CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+        IF _cov_invoice.moneda::text = 'MXN' OR (_cov_tc > 1
+          AND _cov_tc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
+          _cov_base_mxn := public.a_mxn(coalesce(_cov_c,
+            _cov_invoice.subtotal * (_cov_s / nullif(_cov_a,0))),
+            _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+          IF _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN _cov_base_mxn := NULL; END IF;
+        END IF;
+      EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN _cov_base_mxn := NULL;
+      END;
+      EXIT exact_coverage;
+    END IF;
+    _cov_state := 'sin_valoracion';
+    _cov_fx := CASE WHEN _cov_policy.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END;
+    IF _cov_policy.moneda::text <> 'MXN' AND (_cov_fx IS NULL
+      OR _cov_fx::text IN ('NaN','Infinity','-Infinity') OR _cov_fx <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_policy.moneda::text <> 'MXN' AND scale(_cov_p)+scale(_cov_fx) > 16383 THEN EXIT exact_coverage; END IF;
+    _cov_r := public.a_mxn(_cov_p,_cov_policy.moneda::text,nullif(_cov_usd,0),nullif(_cov_eur,0));
+    IF _cov_r IS NULL OR _cov_r::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+    -- Premium is stored numeric(14,2); a_mxn foreign output is on the 4-place
+    -- grid. Check the precondition rather than silently rely on future schema.
+    IF _cov_r <> round(_cov_r,4) THEN EXIT exact_coverage; END IF;
+    SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+      _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+      CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+    IF _cov_invoice.moneda::text <> 'MXN' AND (_cov_tc IS NULL
+      OR _cov_tc::text IN ('NaN','Infinity','-Infinity') OR _cov_tc <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_c IS NOT NULL THEN
+      IF _cov_invoice.moneda::text <> 'MXN' AND scale(_cov_c)+scale(_cov_tc) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_base_mxn := public.a_mxn(_cov_c,_cov_invoice.moneda::text,_cov_tc,_cov_tc);
+      IF _cov_base_mxn IS NULL OR _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_base_mxn >= _cov_r;
+    ELSIF _cov_invoice.moneda::text = 'MXN' THEN
+      IF scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_n >= _cov_r * _cov_a;
+      -- This private value is only checked for NULL; no amount is exposed.
+      _cov_base_mxn := _cov_invoice.subtotal * (_cov_s / _cov_a);
+    ELSIF _cov_invoice.moneda::text IN ('USD','EUR') THEN
+      IF scale(_cov_n)+scale(_cov_tc) > 16383
+        OR scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      -- EXACT inverse of existing round(nonnegative MXN,4), half away from 0.
+      -- 20000 is twice the currency grid; it is not a new monetary tolerance.
+      _cov_full := _cov_r <= 0 OR 20000 * _cov_n * _cov_tc >= (20000 * _cov_r - 1) * _cov_a;
+      _cov_base_mxn := public.a_mxn(_cov_invoice.subtotal * (_cov_s / _cov_a),
+        _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+    ELSE EXIT exact_coverage;
+    END IF;
+    _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+  EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN
+    -- One unrepresentable coverage may not abort all other P&L documents.
+    -- The existing writer turns this same unknown state into its coverage error.
+    _cov_state := 'sin_valoracion'; _cov_base_mxn := NULL;
+  END exact_coverage;
+    _cov_data := _cov_data || jsonb_build_array(jsonb_build_object(
+      'estado',_cov_state,'base_mxn',_cov_base_mxn));
+  END LOOP;
   WITH
   -- P1 (v13.823.274): el presupuesto usa EXCLUSIVAMENTE el T/C congelado del
   -- embarque (misma base que la pestaña Costos). Antes se derivaba del DOF de
@@ -24512,10 +25451,9 @@ BEGIN
            CASE WHEN UPPER(moneda::text) = 'EUR' THEN NULLIF(_tc_eur,0) ELSE NULLIF(_tc_usd,0) END AS tc_doc
     FROM public.seguros_embarque s
     WHERE s.embarque_id = _embarque_id AND s.deleted_at IS NULL
-      AND NOT EXISTS (SELECT 1 FROM public.proveedor_facturas pfx
-                      WHERE pfx.id = s.proveedor_factura_id AND pfx.organization_id = _org
-                        AND pfx.deleted_at IS NULL
-                        AND pfx.estado::text NOT IN ('Borrador','Cancelada'))
+      -- An existing link is never replaced with a guessed premium/residual.
+      -- Its current coverage is diagnosed below from the same canonical pf.
+      AND s.proveedor_factura_id IS NULL
   ),
   -- C29 (v13.823.381): una factura fusionada puede cubrir VARIOS embarques
   -- (`factura_embarques` + `conceptos_factura.embarque_id`). Antes se filtraba
@@ -24532,63 +25470,9 @@ BEGIN
   -- Los importes de nivel factura (nota de crédito y saldo) se reparten con el
   -- MISMO factor: es una asignación proporcional explícita a los importes de
   -- las líneas, no un dato fiscal nuevo.
-  f_cand AS (
-    SELECT fa.id, coalesce(fa.subtotal,0)::numeric AS subtotal, fa.moneda::text AS moneda,
-           fa.estado::text AS estado, fa.total::numeric AS total,
-           fa.tipo_cambio::numeric AS tc_factura,
-           (SELECT t.tc FROM public.tc_para_documento(fa.fecha_emision, fa.moneda::text, fa.tipo_cambio, CASE WHEN UPPER(fa.moneda::text) = 'EUR' THEN _tc_eur ELSE _tc_usd END) t) AS tc_doc,
-           coalesce((SELECT sum(coalesce(cf.total,0)) FROM public.conceptos_factura cf
-                      WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
-                        AND cf.embarque_id IS NOT NULL), 0)::numeric AS lineas_etiquetadas,
-           coalesce((SELECT sum(coalesce(cf.total,0)) FROM public.conceptos_factura cf
-                      WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
-                        AND cf.embarque_id = _embarque_id), 0)::numeric AS lineas_embarque,
-           (fa.embarque_id = _embarque_id) AS es_header
-    FROM public.facturas fa
-    WHERE fa.deleted_at IS NULL
-      AND fa.estado::text NOT IN ('Borrador','Cancelada','Sustituida')
-      AND (
-        fa.embarque_id = _embarque_id
-        OR EXISTS (SELECT 1 FROM public.conceptos_factura cf
-                     WHERE cf.factura_id = fa.id AND cf.deleted_at IS NULL
-                       AND cf.embarque_id = _embarque_id)
-      )
-  ),
-  f AS (
-    SELECT id, moneda, estado, total, tc_doc, tc_factura,
-           factor,
-           round(subtotal * factor, 2) AS subtotal
-    FROM (
-      SELECT c.*,
-             CASE
-               WHEN c.lineas_etiquetadas > 0 THEN c.lineas_embarque / c.lineas_etiquetadas
-               WHEN c.es_header THEN 1::numeric
-               ELSE 0::numeric
-             END AS factor
-      FROM f_cand c
-    ) z
-    WHERE z.factor > 0
-  ),
-  fnc AS (
-    -- D1: primero a la moneda de la factura (mismo canon que saldo_factura),
-    -- después el factor de atribución multiembarque.
-    SELECT n.factura_id,
-           public.nc_convertida_a_moneda_factura(
-             coalesce(n.monto,0)::numeric, n.moneda::text, n.tipo_cambio,
-             f.moneda, f.tc_factura) * f.factor AS monto,
-           f.moneda AS moneda
-    FROM public.factura_notas_credito n
-    JOIN f ON f.id = n.factura_id
-    WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
-  ),
   f_neto AS (
-    SELECT f.id, f.moneda, f.estado, f.tc_doc,
-           f.subtotal - coalesce((SELECT sum(monto) FROM fnc WHERE factura_id = f.id),0) AS monto
-    FROM f
-  ),
-  f_saldo AS (
-    SELECT f.id, f.moneda, f.estado, f.tc_doc,
-           public.saldo_factura(f.id) * f.factor AS saldo FROM f
+    SELECT * FROM jsonb_to_recordset(_net_data) AS x(id uuid,moneda text,estado text,
+      tc_doc numeric,monto numeric,monto_mxn numeric)
   ),
   -- Audit 124/130: allocations and fiscal lines are two representations of
   -- the same expense. Allocations define membership; the header is a fallback
@@ -24611,7 +25495,8 @@ BEGIN
   pf_asignaciones AS (
     SELECT pfc.proveedor_factura_id AS factura_id, cc.embarque_id,
            lower(trim(coalesce(nullif(pfc.descripcion,''),cc.concepto,'(sin concepto)'))) AS concepto,
-           pfc.monto * coalesce(nullif(pfc.cantidad,0),1) AS monto
+           pfc.monto * coalesce(nullif(pfc.cantidad,0),1) AS monto,
+           coalesce(nullif(pfc.cantidad,0),1) AS cantidad_efectiva
     FROM public.proveedor_facturas_conceptos pfc
     JOIN pf_cand pf ON pf.id = pfc.proveedor_factura_id
     JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
@@ -24636,6 +25521,11 @@ BEGIN
                     WHEN embarque_id = _embarque_id THEN 1::numeric ELSE 0::numeric END AS factor
     FROM pf_reparto p
     WHERE asignado_embarque > 0 OR (asignado = 0 AND embarque_id = _embarque_id)
+  ),
+  -- Coverage decisions are exact and guarded above, independent of rounded
+  -- accounting factors. Aggregate diagnostics retain their existing contract.
+  seg_cobertura AS (
+    SELECT * FROM jsonb_to_recordset(_cov_data) AS x(estado text,base_mxn numeric)
   ),
   pnc AS (
     -- Expense base is explicit, not gross credit / a guessed tax rate.
@@ -24688,17 +25578,34 @@ BEGIN
              WHERE pfc.proveedor_factura_id = pf.id AND pfc.concepto_costo_id IS NULL),0)
     FROM pf WHERE pf.asignado = 0
   ),
+  -- Audit 129: a premium or an unrelated invoice cannot document an active
+  -- operational concept. Only its explicit positive effective allocation to a
+  -- current canonical supplier invoice establishes documentary presence.
+  -- This does not compare the invoiced amount with the budget or alter 124/130.
+  cc_documentacion AS (
+    SELECT EXISTS (
+      SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+      JOIN pf ON pf.id = pfc.proveedor_factura_id
+      WHERE pfc.concepto_costo_id = c.id AND pfc.monto > 0
+        AND pfc.monto * coalesce(nullif(pfc.cantidad,0),1) > 0
+    ) AS documentado
+    FROM public.conceptos_costo c
+    WHERE c.embarque_id = _embarque_id AND c.organization_id = _org
+      AND c.deleted_at IS NULL AND c.origen <> 'ajuste_factura_proveedor'
+  ),
   estado_costos AS (
     SELECT CASE WHEN (NOT EXISTS (SELECT 1 FROM pf) AND NOT EXISTS (SELECT 1 FROM seg))
+      OR EXISTS (SELECT 1 FROM cc_documentacion WHERE NOT documentado)
       OR EXISTS (SELECT 1 FROM pnc WHERE base IS NULL OR base_mxn IS NULL)
       OR EXISTS (SELECT 1 FROM pf WHERE asignado > 0 AND abs(base_gravable - asignado) > 0.01)
       OR EXISTS (SELECT 1 FROM pf WHERE moneda <> 'MXN' AND tc_doc IS NULL)
       OR EXISTS (SELECT 1 FROM seg WHERE moneda <> 'MXN' AND tc_doc IS NULL)
+      OR EXISTS (SELECT 1 FROM seg_cobertura WHERE estado <> 'completa' OR base_mxn IS NULL)
       THEN 'incompleto' ELSE 'completo' END AS estado
   ),
   totales AS (
     SELECT
-      (SELECT coalesce(sum(public.a_mxn(monto, moneda, tc_doc, tc_doc)),0) FROM f_neto) AS venta_real_mxn,
+      _income_total AS venta_real_mxn,
       (SELECT coalesce(sum(monto_mxn),0) FROM pf_neto)
         + (SELECT coalesce(sum(public.a_mxn(monto, moneda, tc_doc, tc_doc)),0) FROM seg) AS costo_real_mxn
   )
@@ -24707,6 +25614,31 @@ BEGIN
     'tipo_cambio_usd', _tc_usd,
     'tipo_cambio_eur', _tc_eur,
     'estado_costos', (SELECT estado FROM estado_costos),
+    'estado_ingresos', CASE WHEN _income_incomplete THEN 'incompleto' ELSE 'completo' END,
+    'ingresos_documentacion', jsonb_build_object(
+      'evaluada',true,'facturas',_invoice_count,'notas_credito_activas',_active_nc,
+      'notas_credito_sin_base',_nc_no_base,'notas_credito_sin_valoracion',_nc_no_value,
+      'facturas_sin_valoracion',_invoice_no_value,'repartos_provisionales',_proportional,
+      'desbordamientos',_overflows
+    ),
+    -- Aggregate presence only; no guessed links, budget equality or identities.
+    'costos_documentacion', jsonb_build_object(
+      'evaluada', true,
+      'conceptos', (SELECT count(*) FROM cc_documentacion),
+      'documentados', (SELECT count(*) FROM cc_documentacion WHERE documentado),
+      'sin_documentar', (SELECT count(*) FROM cc_documentacion WHERE NOT documentado)
+    ),
+    -- Additive aggregate only: no new invoice/policy identities or candidates.
+    'seguros_cobertura', jsonb_build_object(
+      'evaluada', true,
+      'vinculados', (SELECT count(*) FROM seg_cobertura),
+      'completos', (SELECT count(*) FROM seg_cobertura WHERE estado = 'completa'),
+      'inconsistentes', (SELECT count(*) FROM seg_cobertura WHERE estado <> 'completa'),
+      'sin_atribucion', (SELECT count(*) FROM seg_cobertura WHERE estado = 'sin_atribucion'),
+      'asignacion_indeterminada', (SELECT count(*) FROM seg_cobertura WHERE estado = 'asignacion_indeterminada'),
+      'sin_valoracion', (SELECT count(*) FROM seg_cobertura WHERE estado = 'sin_valoracion'),
+      'insuficientes', (SELECT count(*) FROM seg_cobertura WHERE estado = 'insuficiente')
+    ),
     'notas_credito_sin_base', (SELECT count(*) FROM pnc WHERE base IS NULL OR base_mxn IS NULL),
     'costo_sin_asignar_mxn', (SELECT coalesce(sum(public.a_mxn(greatest(base_gravable-asignado,0), moneda,tc_doc,tc_doc)),0) FROM pf WHERE asignado > 0),
     'facturas_sobreasignadas', (SELECT count(*) FROM pf WHERE asignado > base_gravable + 0.01),
@@ -24721,8 +25653,7 @@ BEGIN
     'venta', jsonb_build_object(
       'presupuestada_mxn', (SELECT coalesce(sum(public.a_mxn(monto, moneda, tc_doc, tc_doc)),0) FROM cv),
       'real_mxn', t.venta_real_mxn,
-      'pdte_cobro_mxn', (SELECT coalesce(sum(public.a_mxn(saldo, moneda, tc_doc, tc_doc)),0)
-                          FROM f_saldo WHERE estado IN ('Emitida','Vencida','Parcialmente pagada','Por timbrar'))
+      'pdte_cobro_mxn', _pending_total
     ),
     'costo', jsonb_build_object(
       'presupuestado_mxn', (SELECT coalesce(sum(public.a_mxn(monto, moneda, tc_doc, tc_doc)),0) FROM cc),
@@ -24730,41 +25661,20 @@ BEGIN
       'pdte_pago_mxn', (SELECT coalesce(sum(public.a_mxn(saldo, moneda, tc_doc, tc_doc)),0)
                          FROM pf_saldo)
     ),
-    'utilidad_mxn', CASE
-      WHEN (SELECT estado FROM estado_costos) = 'incompleto' THEN NULL
-      ELSE round((t.venta_real_mxn - t.costo_real_mxn)::numeric, 2)
-    END,
+    'utilidad_mxn', NULL,
     'por_concepto', (
-      SELECT coalesce(jsonb_agg(row_to_json(x) ORDER BY (x.presupuestada_mxn + x.real_mxn) DESC), '[]'::jsonb) FROM (
+      SELECT coalesce(jsonb_agg(row_to_json(x) ORDER BY x.real_mxn DESC NULLS LAST, x.presupuestada_mxn DESC), '[]'::jsonb) FROM (
         SELECT concepto,
                coalesce(sum(presup),0) AS presupuestada_mxn,
-               coalesce(sum(real),0) AS real_mxn
+               CASE WHEN count(*) FILTER (WHERE real IS NULL)>0 THEN NULL
+                 ELSE coalesce(sum(real),0) END AS real_mxn
         FROM (
           SELECT concepto,
                  public.a_mxn(monto, moneda, tc_doc, tc_doc) AS presup,
                  0::numeric AS real FROM cv
           UNION ALL
-          -- C29: sólo las líneas de ESTE embarque a valor pleno; las líneas sin
-          -- embarque asignado se reparten con el factor de atribución.
-          SELECT lower(trim(coalesce(NULLIF(fc.descripcion,''), '(sin concepto)'))),
-                 0::numeric,
-                 public.a_mxn(
-                   coalesce(fc.total,0) * CASE WHEN fc.embarque_id = _embarque_id THEN 1::numeric ELSE f.factor END,
-                   f.moneda, f.tc_doc, f.tc_doc)
-          FROM public.conceptos_factura fc
-          JOIN f ON f.id = fc.factura_id
-          WHERE fc.deleted_at IS NULL
-            AND (fc.embarque_id = _embarque_id OR fc.embarque_id IS NULL)
-          UNION ALL
-          -- M1 (v13.823.384): la nota de crédito ya restada en `f_neto` se
-          -- muestra como AJUSTE NEGATIVO visible, con el MISMO canon `fnc`
-          -- (conversión a la moneda de la factura ANTES del factor
-          -- multiembarque). Sin esta línea el desglose no reconciliaba con
-          -- venta.real_mxn en cuanto había una NC aplicada.
-          SELECT '(nota de crédito)'::text,
-                 0::numeric,
-                 -public.a_mxn(fnc.monto, fnc.moneda, f.tc_doc, f.tc_doc)
-          FROM fnc JOIN f ON f.id = fnc.factura_id
+          SELECT d.key, 0::numeric, (d.value #>> '{}')::numeric
+          FROM jsonb_each(_detail_data) d
         ) u GROUP BY concepto
       ) x
     ),
@@ -24809,9 +25719,23 @@ BEGIN
       ) x
     )
   ) INTO _base FROM totales t;
+  BEGIN
+    IF NOT _income_incomplete AND _base->>'estado_costos' = 'completo' THEN
+      _net := round((_base#>>'{venta,real_mxn}')::numeric - (_base#>>'{costo,real_mxn}')::numeric,2);
+      _base := _base || jsonb_build_object('utilidad_mxn',_net,'margen_real_pct',
+        CASE WHEN (_base#>>'{venta,real_mxn}')::numeric > 0
+          THEN _net / (_base#>>'{venta,real_mxn}')::numeric * 100 ELSE NULL END);
+    ELSE
+      _base := _base || jsonb_build_object('margen_real_pct',NULL);
+    END IF;
+  EXCEPTION WHEN numeric_value_out_of_range THEN
+    _base := _base || jsonb_build_object('utilidad_mxn',NULL,'margen_real_pct',NULL,
+      'estado_ingresos','incompleto');
+    _base := jsonb_set(_base,'{ingresos_documentacion,desbordamientos}',to_jsonb(_overflows+1));
+  END;
   RETURN _base;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) RETURNS TABLE(total numeric, pagado numeric, notas_credito numeric, saldo numeric, num_pagos integer, num_notas integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -27205,7 +28129,7 @@ BEGIN
   FROM pagos_factura
   WHERE factura_id = v_factura_id AND deleted_at IS NULL
     AND COALESCE(estado_rep, '') <> 'Cancelado';
-  IF v_saldo <= 0.01 THEN
+  IF ROUND(v_saldo, 2) <= 0 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN
     v_nuevo_estado := 'Parcialmente pagada';
@@ -27817,6 +28741,11 @@ BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CONDICION_NAVIERA_NO_ENCONTRADA';
   END IF;
+  -- Validar antes de borrar: conservar íntegro el tabulador anterior ante error.
+  IF (SELECT COUNT(DISTINCT COALESCE(NULLIF(t->>'moneda', ''), 'USD'))
+      FROM jsonb_array_elements(COALESCE(p_tramos, '[]'::jsonb)) AS t) > 1 THEN
+    RAISE EXCEPTION 'LC_DEMORAS_MONEDAS_MIXTAS: el tabulador de este tipo de contenedor mezcla monedas. Usa una sola moneda por tabulador; no hay conversión automática.';
+  END IF;
   DELETE FROM public.costeo_naviera_demoras_tarifa
   WHERE naviera_condicion_id = p_naviera_condicion_id
     AND tipo_contenedor_id = p_tipo_contenedor_id;
@@ -28333,6 +29262,11 @@ BEGIN
     public.has_any_role(auth.uid(), ARRAY['tesorero','contador','admin','admin_org','super_admin']::app_role[])
   ) THEN
     RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_PERMISO: se requiere permiso de tesorería para regenerar el movimiento bancario'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- AUD99/121: rechazar antes de reutilizar históricos o generar efectivo.
+  IF v_pago.es_ajuste THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_AJUSTE_NO_MONETARIO: un ajuste no monetario no puede generar ni reutilizar un movimiento bancario'
       USING ERRCODE = 'P0001';
   END IF;
   -- Auditoría 23: el helper reconoce el origen del anticipo antes de crear
@@ -29828,8 +30762,12 @@ BEGIN
   END IF;
   -- D-01: puerta oficial de restauración.
   PERFORM set_config('app.papelera_restore', 'on', true);
-  EXECUTE format('UPDATE public.%I SET deleted_at = NULL, deleted_by = NULL WHERE id = $1', _table)
-    USING _id;
+  IF _table = 'seguros_embarque' THEN
+    UPDATE public.seguros_embarque SET deleted_at = NULL WHERE id = _id;
+  ELSE
+    EXECUTE format('UPDATE public.%I SET deleted_at = NULL, deleted_by = NULL WHERE id = $1', _table)
+      USING _id;
+  END IF;
   PERFORM set_config('app.papelera_restore', 'off', true);
 END;
 $_$;
@@ -30717,6 +31655,387 @@ BEGIN
     (v_org, 'Costos directos de embarque (COGS)', 'CostoDirectoEmbarque', 10, true),
     (v_org, 'Gastos de administración',           'Administracion',        20, true),
     (v_org, 'Gastos de venta',                    'Venta',                 30, true);
+END;
+$$;
+CREATE FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima numeric, p_moneda text, p_seguro_id uuid DEFAULT NULL::uuid, p_limit integer DEFAULT 25, p_cursor_fecha date DEFAULT NULL::date, p_cursor_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  -- Reviewed source change required; never a caller-controlled GUC/parameter.
+  _selector148_enabled CONSTANT boolean := true; -- ENABLEMENT_GATE
+  _uid uuid := auth.uid();
+  _org uuid;
+  _premium numeric(14,2);
+  _candidate record;
+  _items jsonb := '[]'::jsonb;
+  _last_cursor jsonb := NULL;
+  _has_more boolean := false;
+  _seen integer := 0;
+  _returned integer := 0;
+  _cov_policy public.seguros_embarque%ROWTYPE;
+  _cov_invoice public.proveedor_facturas%ROWTYPE;
+  _cov_org uuid;
+  _cov_usd numeric; _cov_eur numeric;
+  _cov_state text; _cov_base_mxn numeric;
+  _cov_c numeric; _cov_n numeric; _cov_tc numeric; _cov_full boolean;
+  _cov_p numeric; _cov_a numeric; _cov_s numeric; _cov_r numeric; _cov_fx numeric;
+  _cov_bad boolean; _cov_negative boolean;
+BEGIN
+  IF NOT _selector148_enabled THEN
+    RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE';
+  END IF;
+  -- Positive exact audience prevents operador + viewer/finance from composing
+  -- an unauthorized entitlement. Existing read/write helper semantics remain.
+  IF _uid IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.user_roles ur WHERE ur.user_id = _uid
+      AND ur.role = ANY(ARRAY['admin','admin_org','super_admin',
+        'coordinador_logistico','gerente_operaciones']::public.app_role[])
+  ) OR NOT public.has_any_role(_uid, ARRAY['viewer']::public.app_role[])
+    OR NOT public.has_any_role(_uid, ARRAY['admin','operador','super_admin']::public.app_role[])
+  THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  _org := public.current_user_org_id();
+  IF _org IS NULL OR public.rls_tenant_scope_ok(_org) IS NOT TRUE THEN
+    RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE';
+  END IF;
+  -- Fail closed if any exact validated FK, its unique parent key, or any RI
+  -- trigger stops enforcing this all-row invariant. No row values are scanned
+  -- or disclosed by this catalog precondition. It is not a remote attestation.
+  IF (
+    current_setting('session_replication_role') = 'origin'
+    AND (
+    WITH expected(name, child, child_id, parent, delete_action) AS (VALUES
+      ('pfc_pf_same_org_fk', 'public.proveedor_facturas_conceptos'::regclass, 'proveedor_factura_id', 'public.proveedor_facturas'::regclass, 'c'),
+      ('pfc_cc_same_org_fk', 'public.proveedor_facturas_conceptos'::regclass, 'concepto_costo_id', 'public.conceptos_costo'::regclass, 'n'),
+      ('cc_shipment_same_org_fk', 'public.conceptos_costo'::regclass, 'embarque_id', 'public.embarques'::regclass, 'c'),
+      ('pf_shipment_same_org_fk', 'public.proveedor_facturas'::regclass, 'embarque_id', 'public.embarques'::regclass, 'n'),
+      ('insurance_pf_same_org_fk', 'public.seguros_embarque'::regclass, 'proveedor_factura_id', 'public.proveedor_facturas'::regclass, 'r'),
+      ('insurance_shipment_same_org_fk', 'public.seguros_embarque'::regclass, 'embarque_id', 'public.embarques'::regclass, 'c')
+    )
+    SELECT count(*) = 6 AND bool_and((
+      c.oid IS NOT NULL AND c.contype = 'f' AND c.convalidated
+      AND c.connamespace = 'public'::regnamespace
+      AND c.conrelid = x.child AND c.confrelid = x.parent
+      AND c.conislocal AND c.coninhcount = 0 AND c.conparentid = 0
+      AND NOT c.condeferrable AND NOT c.condeferred
+      AND c.confmatchtype = 's' AND c.confupdtype = 'a'
+      AND c.confdeltype::text = x.delete_action
+      AND c.conkey = ARRAY[ca.attnum, co.attnum]::smallint[]
+      AND c.confkey = ARRAY[pa.attnum, po.attnum]::smallint[]
+      AND c.confdelsetcols IS NOT DISTINCT FROM
+        CASE WHEN x.delete_action = 'n' THEN ARRAY[ca.attnum]::smallint[] ELSE NULL::smallint[] END
+      AND co.attnotnull AND po.attnotnull AND pa.attnotnull
+      AND NOT ca.attisdropped AND NOT co.attisdropped
+      AND NOT pa.attisdropped AND NOT po.attisdropped
+      AND ix.indrelid = x.parent AND ix.indisunique AND ix.indisvalid
+      AND ix.indisready AND ix.indislive AND ix.indimmediate
+      AND ix.indnkeyatts = 2 AND ix.indnatts = 2
+      AND ix.indpred IS NULL AND ix.indexprs IS NULL
+      AND (SELECT array_agg(k ORDER BY ord) FROM unnest(ix.indkey) WITH ORDINALITY AS a(k,ord)) = ARRAY[pa.attnum,po.attnum]::smallint[]
+      AND (SELECT count(*) = 4 AND count(DISTINCT (t.tgrelid,t.tgtype)) = 4 AND bool_and((
+        t.tgisinternal AND t.tgenabled IN ('O','A')
+        AND t.tgnargs = 0 AND t.tgqual IS NULL
+        AND cardinality(t.tgattr::smallint[]) = 0
+        AND t.tgoldtable IS NULL AND t.tgnewtable IS NULL
+        AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+        AND t.tgparentid = 0
+        AND CASE
+          WHEN t.tgrelid = x.child AND t.tgconstrrelid = x.parent AND t.tgtype = 5
+            THEN t.tgfoid = 'pg_catalog."RI_FKey_check_ins"()'::regprocedure
+          WHEN t.tgrelid = x.child AND t.tgconstrrelid = x.parent AND t.tgtype = 17
+            THEN t.tgfoid = 'pg_catalog."RI_FKey_check_upd"()'::regprocedure
+          WHEN t.tgrelid = x.parent AND t.tgconstrrelid = x.child AND t.tgtype = 17
+            THEN t.tgfoid = 'pg_catalog."RI_FKey_noaction_upd"()'::regprocedure
+          WHEN t.tgrelid = x.parent AND t.tgconstrrelid = x.child AND t.tgtype = 9
+            THEN t.tgfoid = CASE x.delete_action
+              WHEN 'c' THEN 'pg_catalog."RI_FKey_cascade_del"()'::regprocedure
+              WHEN 'n' THEN 'pg_catalog."RI_FKey_setnull_del"()'::regprocedure
+              WHEN 'r' THEN 'pg_catalog."RI_FKey_restrict_del"()'::regprocedure END
+          ELSE false END
+      ) IS TRUE) FROM pg_catalog.pg_trigger t WHERE t.tgconstraint = c.oid)
+    ) IS TRUE)
+    FROM expected x
+    LEFT JOIN pg_catalog.pg_constraint c ON c.conrelid = x.child AND c.conname = x.name
+    LEFT JOIN pg_catalog.pg_attribute ca ON ca.attrelid = x.child AND ca.attname = x.child_id
+    LEFT JOIN pg_catalog.pg_attribute co ON co.attrelid = x.child AND co.attname = 'organization_id'
+    LEFT JOIN pg_catalog.pg_attribute pa ON pa.attrelid = x.parent AND pa.attname = 'id'
+    LEFT JOIN pg_catalog.pg_attribute po ON po.attrelid = x.parent AND po.attname = 'organization_id'
+    LEFT JOIN pg_catalog.pg_index ix ON ix.indexrelid = c.conindid
+    )
+   AND (
+    WITH graph(rel, pk_name) AS (VALUES
+      ('public.embarques'::regclass, 'embarques_pkey'),
+      ('public.proveedor_facturas'::regclass, 'proveedor_facturas_pkey'),
+      ('public.conceptos_costo'::regclass, 'conceptos_costo_pkey'),
+      ('public.proveedor_facturas_conceptos'::regclass, 'proveedor_facturas_conceptos_pkey'),
+      ('public.seguros_embarque'::regclass, 'seguros_embarque_pkey')
+    )
+    SELECT count(*) = 5 AND bool_and((
+      t.relkind = 'r' AND NOT t.relispartition
+      AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_inherits h WHERE h.inhrelid = g.rel OR h.inhparent = g.rel)
+      AND a.attnotnull AND NOT a.attisdropped
+      AND c.contype = 'p' AND c.convalidated AND c.conislocal
+      AND c.coninhcount = 0 AND c.conparentid = 0
+      AND NOT c.condeferrable AND NOT c.condeferred
+      AND c.conkey = ARRAY[a.attnum]::smallint[]
+      AND ix.indrelid = g.rel AND ix.indisprimary AND ix.indisunique
+      AND ix.indisvalid AND ix.indisready AND ix.indislive AND ix.indimmediate
+      AND ix.indnkeyatts = 1 AND ix.indnatts = 1
+      AND ix.indpred IS NULL AND ix.indexprs IS NULL
+      AND (SELECT array_agg(k ORDER BY ord) FROM unnest(ix.indkey) WITH ORDINALITY AS key(k,ord)) = ARRAY[a.attnum]::smallint[]
+    ) IS TRUE)
+    FROM graph g
+    LEFT JOIN pg_catalog.pg_class t ON t.oid = g.rel
+    LEFT JOIN pg_catalog.pg_attribute a ON a.attrelid = g.rel AND a.attname = 'id'
+    LEFT JOIN pg_catalog.pg_constraint c ON c.conrelid = g.rel AND c.conname = g.pk_name
+    LEFT JOIN pg_catalog.pg_index ix ON ix.indexrelid = c.conindid
+  ) AND (
+    -- Preserve the original active-policy uniqueness used by the write path.
+    SELECT count(*) = 1 AND bool_and((
+      ix.indrelid = 'public.seguros_embarque'::regclass
+      AND ix.indisunique AND ix.indisvalid AND ix.indisready AND ix.indislive AND ix.indimmediate
+      AND ix.indnkeyatts = 1 AND ix.indnatts = 1 AND ix.indexprs IS NULL
+      AND (SELECT array_agg(k ORDER BY ord) FROM unnest(ix.indkey) WITH ORDINALITY AS key(k,ord)) = ARRAY[a.attnum]::smallint[]
+      AND pg_catalog.pg_get_expr(ix.indpred,ix.indrelid) = '((proveedor_factura_id IS NOT NULL) AND (deleted_at IS NULL))'
+    ) IS TRUE)
+    FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_index ix ON ix.indexrelid = c.oid
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = ix.indrelid AND a.attname = 'proveedor_factura_id' AND NOT a.attisdropped
+    WHERE c.relnamespace = 'public'::regnamespace AND c.relname = 'ux_seguros_embarque_factura_activa'
+  )
+  ) IS NOT TRUE THEN
+    RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE';
+  END IF;
+  -- The viewer + exact tenant gates reproduce both current PF and shipment
+  -- policies. No super-admin bypass of the active tenant restriction.
+  SELECT e.tipo_cambio_usd, e.tipo_cambio_eur INTO _cov_usd, _cov_eur
+    FROM public.embarques e WHERE e.id = p_embarque_id
+      AND e.organization_id = _org AND e.deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  IF p_seguro_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.seguros_embarque s WHERE s.id = p_seguro_id
+      AND s.organization_id = _org AND s.embarque_id = p_embarque_id
+      AND s.deleted_at IS NULL
+  ) THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  IF p_prima IS NULL OR p_prima::text IN ('NaN','Infinity','-Infinity')
+    OR p_moneda IS NULL OR p_moneda NOT IN ('MXN','USD','EUR')
+    OR p_limit IS NULL OR p_limit NOT BETWEEN 1 AND 100
+    OR (p_cursor_fecha IS NULL) <> (p_cursor_id IS NULL)
+    OR (p_cursor_fecha IS NOT NULL AND (NOT isfinite(p_cursor_fecha)
+      OR p_cursor_fecha NOT BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'))
+  THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  _premium := p_prima; -- matches seguros_embarque.prima numeric(14,2)
+  IF _premium < 0 THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  -- CONTAINMENT ONLY, NOT permission to enable this endpoint. A generic failure
+  -- can reveal one bit about corruption. A verified clean global invariant and
+  -- reviewed persistent preservation contract remain separate release gates.
+  -- STABLE gives these checks and the exact block one statement snapshot; there
+  -- is no preflight-to-read gap inside a call. Future calls recheck. No canonical
+  -- rows are silently filtered by pfc.organization_id or other-shipment status.
+  IF EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    LEFT JOIN public.embarques e ON e.id = pf.embarque_id
+    WHERE pf.organization_id = _org AND pf.deleted_at IS NULL
+      AND pf.estado::text NOT IN ('Borrador','Cancelada')
+      AND pf.embarque_id IS NOT NULL
+      AND (e.id IS NULL OR e.organization_id IS DISTINCT FROM _org)
+  ) OR EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    JOIN public.proveedor_facturas_conceptos pfc ON pfc.proveedor_factura_id = pf.id
+      AND pfc.concepto_costo_id IS NOT NULL
+    LEFT JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+    LEFT JOIN public.embarques e ON e.id = cc.embarque_id
+    WHERE pf.organization_id = _org AND pf.deleted_at IS NULL
+      AND pf.estado::text NOT IN ('Borrador','Cancelada')
+      AND (pfc.organization_id IS DISTINCT FROM _org OR cc.id IS NULL
+        OR cc.organization_id IS DISTINCT FROM _org OR e.id IS NULL
+        OR e.organization_id IS DISTINCT FROM _org)
+  ) OR EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    JOIN public.seguros_embarque s ON s.proveedor_factura_id = pf.id
+    LEFT JOIN public.embarques e ON e.id = s.embarque_id
+    WHERE pf.organization_id = _org AND pf.deleted_at IS NULL
+      AND pf.estado::text NOT IN ('Borrador','Cancelada') AND s.deleted_at IS NULL
+      AND (s.organization_id IS DISTINCT FROM _org OR e.id IS NULL
+        OR e.organization_id IS DISTINCT FROM _org)
+  ) THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+  _cov_org := _org;
+  _cov_policy.embarque_id := p_embarque_id;
+  _cov_policy.organization_id := _org;
+  _cov_policy.prima := _premium;
+  _cov_policy.moneda := p_moneda;
+  FOR _candidate IN
+    SELECT pf.id, pf.fecha_emision
+    FROM public.proveedor_facturas pf
+    WHERE pf.organization_id = _org AND pf.deleted_at IS NULL
+      AND pf.estado::text NOT IN ('Borrador','Cancelada')
+      AND (p_cursor_id IS NULL OR (pf.fecha_emision, pf.id) < (p_cursor_fecha, p_cursor_id))
+      AND (pf.embarque_id = p_embarque_id OR EXISTS (
+        SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+        JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+        WHERE pfc.proveedor_factura_id = pf.id AND cc.embarque_id = p_embarque_id
+          AND cc.organization_id = _org AND cc.deleted_at IS NULL
+          AND cc.origen <> 'ajuste_factura_proveedor' AND pfc.monto > 0
+      ))
+      AND NOT EXISTS (
+        SELECT 1 FROM public.seguros_embarque s
+        WHERE s.proveedor_factura_id = pf.id AND s.deleted_at IS NULL
+          AND (p_seguro_id IS NULL OR s.id <> p_seguro_id)
+      )
+    ORDER BY pf.fecha_emision DESC, pf.id DESC
+  LOOP
+    IF NOT isfinite(_candidate.fecha_emision) OR _candidate.fecha_emision
+      NOT BETWEEN DATE '0001-01-01' AND DATE '9999-12-31' THEN
+      RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE';
+    END IF;
+    _seen := _seen + 1;
+    -- Work budget never produces false completion or a rejected-row cursor.
+    -- A request exceeding it fails wholly, without returning partial items.
+    IF _seen > 10000 THEN RAISE EXCEPTION 'LC_SELECTOR148_NO_DISPONIBLE'; END IF;
+    _cov_policy.proveedor_factura_id := _candidate.id;
+  -- The reader and existing write trigger use this identical decision block.
+  -- B*S/A remains a rational until comparison. No quotient establishes
+  -- membership or complete coverage; accounting factors remain unchanged.
+  _cov_state := 'sin_atribucion'; _cov_base_mxn := NULL;
+  _cov_c := NULL; _cov_n := NULL; _cov_tc := NULL; _cov_full := false;
+  <<exact_coverage>>
+  BEGIN
+    SELECT pf.* INTO _cov_invoice FROM public.proveedor_facturas pf
+      WHERE pf.id = _cov_policy.proveedor_factura_id
+        AND pf.organization_id = _cov_org
+        AND pf.deleted_at IS NULL AND pf.estado::text NOT IN ('Borrador','Cancelada');
+    IF NOT FOUND THEN EXIT exact_coverage; END IF;
+    IF _cov_invoice.subtotal IS NULL
+      OR _cov_invoice.subtotal::text IN ('NaN','Infinity','-Infinity') THEN
+      EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.subtotal < 0 THEN EXIT exact_coverage; END IF;
+    _cov_p := _cov_policy.prima;
+    IF _cov_p IS NULL OR _cov_p::text IN ('NaN','Infinity','-Infinity') THEN
+      _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+    END IF;
+    IF _cov_p < 0 THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    -- Validate BEFORE arithmetic. PostgreSQL numeric multiplication can silently
+    -- round at scale 16383; unsupported intermediate scale is unknown/rejected,
+    -- never epsilon or a rounded product. Integer-digit overflow is caught below.
+    SELECT coalesce(bool_or(pfc.monto::text IN ('NaN','Infinity','-Infinity')
+             OR coalesce(nullif(pfc.cantidad,0),1)::text IN ('NaN','Infinity','-Infinity')
+             OR scale(pfc.monto)+scale(coalesce(nullif(pfc.cantidad,0),1)) > 16383),false),
+           coalesce(bool_or(coalesce(nullif(pfc.cantidad,0),1) < 0),false)
+      INTO _cov_bad, _cov_negative
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor'
+        AND (pfc.monto > 0 OR pfc.monto::text IN ('NaN','Infinity','-Infinity'));
+    IF _cov_bad THEN _cov_state := 'sin_valoracion'; EXIT exact_coverage; END IF;
+    IF _cov_negative THEN _cov_state := 'asignacion_indeterminada'; EXIT exact_coverage; END IF;
+    SELECT coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1)),0),
+           coalesce(sum(pfc.monto * coalesce(nullif(pfc.cantidad,0),1))
+             FILTER (WHERE cc.embarque_id = _cov_policy.embarque_id),0)
+      INTO _cov_a, _cov_s
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc ON cc.id = pfc.concepto_costo_id
+      WHERE pfc.proveedor_factura_id = _cov_invoice.id
+        AND cc.deleted_at IS NULL AND cc.organization_id = _cov_org
+        AND cc.origen <> 'ajuste_factura_proveedor' AND pfc.monto > 0;
+    IF _cov_a > 0 AND _cov_s > 0 THEN
+      -- Cancel identities symbolically before any potentially large product.
+      IF _cov_invoice.subtotal >= _cov_a THEN _cov_c := _cov_s;
+      ELSIF _cov_s = _cov_a THEN _cov_c := _cov_invoice.subtotal;
+      ELSE
+        IF scale(_cov_invoice.subtotal)+scale(_cov_s) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_n := _cov_invoice.subtotal * _cov_s;
+      END IF;
+    ELSIF _cov_a = 0 AND _cov_invoice.embarque_id = _cov_policy.embarque_id THEN
+      _cov_c := _cov_invoice.subtotal;
+    ELSE EXIT exact_coverage;
+    END IF;
+    IF _cov_invoice.moneda::text = _cov_policy.moneda::text THEN
+      IF _cov_c IS NOT NULL THEN _cov_full := _cov_c >= _cov_p;
+      ELSE
+        IF scale(_cov_p)+scale(_cov_a) > 16383 THEN
+          _cov_state := 'sin_valoracion'; EXIT exact_coverage;
+        END IF;
+        _cov_full := _cov_n >= _cov_p * _cov_a;
+      END IF;
+      _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+      -- Nominal eligibility needs no FX. Keep the existing separate diagnostic
+      -- that a nominally complete link can still have unvalued accounting cost.
+      BEGIN
+        SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+          _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+          CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+        IF _cov_invoice.moneda::text = 'MXN' OR (_cov_tc > 1
+          AND _cov_tc::text NOT IN ('NaN','Infinity','-Infinity')) THEN
+          _cov_base_mxn := public.a_mxn(coalesce(_cov_c,
+            _cov_invoice.subtotal * (_cov_s / nullif(_cov_a,0))),
+            _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+          IF _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN _cov_base_mxn := NULL; END IF;
+        END IF;
+      EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN _cov_base_mxn := NULL;
+      END;
+      EXIT exact_coverage;
+    END IF;
+    _cov_state := 'sin_valoracion';
+    _cov_fx := CASE WHEN _cov_policy.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END;
+    IF _cov_policy.moneda::text <> 'MXN' AND (_cov_fx IS NULL
+      OR _cov_fx::text IN ('NaN','Infinity','-Infinity') OR _cov_fx <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_policy.moneda::text <> 'MXN' AND scale(_cov_p)+scale(_cov_fx) > 16383 THEN EXIT exact_coverage; END IF;
+    _cov_r := public.a_mxn(_cov_p,_cov_policy.moneda::text,nullif(_cov_usd,0),nullif(_cov_eur,0));
+    IF _cov_r IS NULL OR _cov_r::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+    -- Premium is stored numeric(14,2); a_mxn foreign output is on the 4-place
+    -- grid. Check the precondition rather than silently rely on future schema.
+    IF _cov_r <> round(_cov_r,4) THEN EXIT exact_coverage; END IF;
+    SELECT t.tc INTO _cov_tc FROM public.tc_para_documento(
+      _cov_invoice.fecha_emision,_cov_invoice.moneda::text,_cov_invoice.tipo_cambio_usd,
+      CASE WHEN _cov_invoice.moneda::text = 'EUR' THEN _cov_eur ELSE _cov_usd END) t;
+    IF _cov_invoice.moneda::text <> 'MXN' AND (_cov_tc IS NULL
+      OR _cov_tc::text IN ('NaN','Infinity','-Infinity') OR _cov_tc <= 1) THEN EXIT exact_coverage; END IF;
+    IF _cov_c IS NOT NULL THEN
+      IF _cov_invoice.moneda::text <> 'MXN' AND scale(_cov_c)+scale(_cov_tc) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_base_mxn := public.a_mxn(_cov_c,_cov_invoice.moneda::text,_cov_tc,_cov_tc);
+      IF _cov_base_mxn IS NULL OR _cov_base_mxn::text IN ('NaN','Infinity','-Infinity') THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_base_mxn >= _cov_r;
+    ELSIF _cov_invoice.moneda::text = 'MXN' THEN
+      IF scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      _cov_full := _cov_n >= _cov_r * _cov_a;
+      -- This private value is only checked for NULL; no amount is exposed.
+      _cov_base_mxn := _cov_invoice.subtotal * (_cov_s / _cov_a);
+    ELSIF _cov_invoice.moneda::text IN ('USD','EUR') THEN
+      IF scale(_cov_n)+scale(_cov_tc) > 16383
+        OR scale(_cov_r)+scale(_cov_a) > 16383 THEN EXIT exact_coverage; END IF;
+      -- EXACT inverse of existing round(nonnegative MXN,4), half away from 0.
+      -- 20000 is twice the currency grid; it is not a new monetary tolerance.
+      _cov_full := _cov_r <= 0 OR 20000 * _cov_n * _cov_tc >= (20000 * _cov_r - 1) * _cov_a;
+      _cov_base_mxn := public.a_mxn(_cov_invoice.subtotal * (_cov_s / _cov_a),
+        _cov_invoice.moneda::text,_cov_tc,_cov_tc);
+    ELSE EXIT exact_coverage;
+    END IF;
+    _cov_state := CASE WHEN _cov_full THEN 'completa' ELSE 'insuficiente' END;
+  EXCEPTION WHEN numeric_value_out_of_range OR division_by_zero THEN
+    -- One unrepresentable coverage may not abort all other P&L documents.
+    -- The existing writer turns this same unknown state into its coverage error.
+    _cov_state := 'sin_valoracion'; _cov_base_mxn := NULL;
+  END exact_coverage;
+    IF _cov_state = 'completa' THEN
+      IF _returned = p_limit THEN _has_more := true; EXIT; END IF;
+      _items := _items || jsonb_build_array(jsonb_build_object(
+        'id', _cov_invoice.id, 'folio_interno', _cov_invoice.folio_interno,
+        'proveedor_nombre', _cov_invoice.proveedor_nombre,
+        'subtotal', _cov_invoice.subtotal::text, 'moneda', _cov_invoice.moneda::text));
+      _returned := _returned + 1;
+      _last_cursor := jsonb_build_object('fecha_emision', _candidate.fecha_emision, 'id', _candidate.id);
+    END IF;
+  END LOOP;
+  RETURN jsonb_build_object('items', _items,
+    'next_cursor', CASE WHEN _has_more THEN _last_cursor ELSE NULL END);
+EXCEPTION WHEN query_canceled OR OTHERS THEN
+  -- Do not expose invoice/assignment/policy identities, diagnostics or counts.
+  RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'LC_SELECTOR148_NO_DISPONIBLE';
 END;
 $$;
 CREATE FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer DEFAULT 5) RETURNS TABLE(organization_id uuid)
@@ -33241,35 +34560,49 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes,
       'en_proforma', v_venta_en_proforma, 'facturados_sin_emitir', v_venta_sin_emitir)));
-  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
-  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
-  SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
+  -- AUD54: clasificar en moneda documental antes de cualquier agregado.
+  -- Pagada sin pago aplicado vigente conserva el alcance histórico: no inventar deuda.
+  -- El saldo exacto y los hechos de pago/NC siguen en el canon, sin escritura.
+  WITH facturas_cxc AS (
+    SELECT f.*, public.saldo_factura(f.id) AS saldo_exacto,
+      EXISTS (SELECT 1 FROM pagos_factura px
+        WHERE px.factura_id=f.id AND px.organization_id=v_emb.organization_id
+          AND px.deleted_at IS NULL AND NOT public.pago_rep_anulado(px.estado_rep)
+          AND px.monto_aplicado_factura>0) AS tiene_pago_activo
     FROM facturas f
-   WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
-     AND public.saldo_factura(f.id) > 0.01;
-  WITH agg AS (
+    WHERE f.embarque_id=p_embarque_id AND f.organization_id=v_emb.organization_id
+      AND f.deleted_at IS NULL AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
+  ), saldos_cxc AS (
+    SELECT f.*, CASE WHEN f.estado='Pagada' AND NOT f.tiene_pago_activo THEN 0
+      ELSE GREATEST(ROUND(f.saldo_exacto,2),0) END AS saldo
+    FROM facturas_cxc f
+  ), agg AS (
     SELECT COALESCE(f.moneda,'MXN') AS moneda, COALESCE(SUM(f.total),0) AS total,
-      COALESCE(SUM(CASE WHEN f.estado='Pagada' THEN 0
-                        ELSE public.saldo_factura(f.id) END),0) AS saldo,
+      COALESCE(SUM(f.saldo),0) AS saldo,
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
-        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
-      COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
-        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada'))),0) AS notas_credito,
-      COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
-    FROM facturas f
-    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
-      AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
-    GROUP BY COALESCE(f.moneda,'MXN'))
+        WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
+          AND NOT public.pago_rep_anulado(pf.estado_rep)
+          AND pf.organization_id=v_emb.organization_id)),0) AS pagado,
+      COALESCE(SUM((SELECT COALESCE(SUM(public.nc_convertida_a_moneda_factura(
+          nc.monto,nc.moneda::text,nc.tipo_cambio,f.moneda::text,f.tipo_cambio)),0)
+        FROM factura_notas_credito nc
+        WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado IN ('Timbrada','Aplicada')
+          AND nc.organization_id=v_emb.organization_id)),0) AS notas_credito,
+      COUNT(*) FILTER (WHERE f.saldo>0) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE f.estado='Pagada' AND NOT f.tiene_pago_activo
+        AND ROUND(f.saldo_exacto,2)>0) AS pagadas_sin_pago_registrado
+    FROM saldos_cxc f GROUP BY COALESCE(f.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
-    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
-  INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
-  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
-  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
+    ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0),
+    COALESCE(SUM(pagadas_sin_pago_registrado),0)
+  INTO v_cxc_por_moneda, v_cxc_saldo, v_cxc_pagadas_sin_pago FROM agg;
+  -- La suma ya contiene saldos monetarios positivos POR factura y moneda.
+  -- Sobrepagos o residuos subcentavo de otra factura no compensan deuda real.
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
-    WHERE (m->>'saldo')::numeric > 0.01);
+    WHERE (m->>'saldo')::numeric > 0);
   v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxc_cobrada','ok',v_ok,
@@ -33921,6 +35254,7 @@ END) STORED,
     deleted_by uuid,
     costeo_tarifa_id uuid,
     costeo_tarifa_recargo_id uuid,
+    origen_venta_id uuid,
     CONSTRAINT cotizacion_costos_cantidad_pos CHECK ((cantidad >= (1)::numeric)),
     CONSTRAINT cotizacion_costos_costo_unit_nonneg CHECK ((costo_unitario >= (0)::numeric)),
     CONSTRAINT cotizacion_costos_moneda_check CHECK ((moneda = ANY (ARRAY['USD'::text, 'MXN'::text]))),
@@ -35573,6 +36907,8 @@ ALTER TABLE ONLY public.comisiones_recuperaciones
 ALTER TABLE ONLY public.comisiones_recuperaciones
     ADD CONSTRAINT comisiones_recuperaciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.conceptos_costo
+    ADD CONSTRAINT conceptos_costo_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.conceptos_costo
     ADD CONSTRAINT conceptos_costo_pkey PRIMARY KEY (id);
 ALTER TABLE public.conceptos_factura
     ADD CONSTRAINT conceptos_factura_no_objeto_sin_tasa_chk CHECK (((tipo_iva <> 'no_objeto'::text) OR (tasa_iva_aplicada IS NULL))) NOT VALID;
@@ -35938,6 +37274,7 @@ CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores US
 CREATE INDEX costeo_cargos_fob_agente_org_idx ON public.costeo_cargos_fob_agente USING btree (organization_id, agente_id) WHERE (deleted_at IS NULL);
 CREATE INDEX costeo_cargos_locales_naviera_org_idx ON public.costeo_cargos_locales_naviera USING btree (organization_id, naviera_id) WHERE (deleted_at IS NULL);
 CREATE INDEX costeo_tarifas_solicitud_pricing_idx ON public.costeo_tarifas USING btree (solicitud_pricing_id) WHERE (solicitud_pricing_id IS NOT NULL);
+CREATE UNIQUE INDEX cotizacion_costos_origen_venta_unique ON public.cotizacion_costos USING btree (cotizacion_id, origen_venta_id) WHERE (origen_venta_id IS NOT NULL);
 CREATE INDEX crm_empresas_org_estado_idx ON public.crm_empresas USING btree (organization_id, estado_crm);
 CREATE INDEX crm_pricing_opciones_sol_idx ON public.crm_pricing_opciones USING btree (solicitud_id);
 CREATE INDEX crm_reportes_tablero_idx ON public.crm_reportes USING btree (tablero_id);
@@ -36324,6 +37661,7 @@ CREATE TRIGGER set_proformas_updated_at BEFORE UPDATE ON public.proformas FOR EA
 CREATE TRIGGER set_updated_at_proveedor_documentos BEFORE UPDATE ON public.proveedor_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_00_movimiento_anticipo_aplicado BEFORE INSERT OR UPDATE OF pago_proveedor_id, cuenta_bancaria_id, cargo, abono ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._guard_movimiento_anticipo_aplicado();
 CREATE TRIGGER trg_00_pago_anticipo_aplicado_edicion BEFORE UPDATE OF proveedor_factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio_usd, metodo_pago, referencia, cuenta_bancaria_id, notas, es_anticipo_aplicado ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._guard_pago_anticipo_aplicado_edicion();
+CREATE TRIGGER trg_00_pago_clasificacion BEFORE INSERT OR UPDATE OF es_ajuste, lote_id ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._guard_pago_clasificacion();
 CREATE TRIGGER trg_agentes_propaga_nombre AFTER UPDATE OF nombre ON public.costeo_agentes FOR EACH ROW EXECUTE FUNCTION public.trg_agentes_propaga_nombre();
 CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.anticipos_aplicaciones FOR EACH ROW EXECUTE FUNCTION public.tg_anticipo_saldo();
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -36516,6 +37854,7 @@ CREATE TRIGGER trg_liq_com_updated BEFORE UPDATE ON public.liquidaciones_comisio
 CREATE TRIGGER trg_liquidacion_guard_estado BEFORE UPDATE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public._liquidacion_guard_estado();
 CREATE TRIGGER trg_log_role_change_om AFTER UPDATE OF role ON public.organization_members FOR EACH ROW EXECUTE FUNCTION public._log_role_change_om();
 CREATE TRIGGER trg_log_role_change_ur AFTER UPDATE OF role ON public.user_roles FOR EACH ROW EXECUTE FUNCTION public._log_role_change_ur();
+CREATE TRIGGER trg_movimiento_ajuste_activacion BEFORE UPDATE OF estado_conciliacion, deleted_at ON public.bbva_movimientos FOR EACH ROW WHEN (((new.deleted_at IS NULL) AND ((new.pago_proveedor_id IS NOT NULL) OR (new.pago_proveedor_lote_id IS NOT NULL)))) EXECUTE FUNCTION public._guard_movimiento_ajuste_activacion();
 CREATE TRIGGER trg_movimiento_pago_consistente BEFORE INSERT OR UPDATE OF pago_factura_id, pago_proveedor_id, cuenta_bancaria_id, organization_id, anticipo_proveedor_id, pago_proveedor_lote_id, pago_factura_lote_id, traspaso_id, cargo, abono ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public.assert_movimiento_pago_consistente();
 CREATE TRIGGER trg_navieras_propaga_nombre AFTER UPDATE OF name ON public.navieras FOR EACH ROW EXECUTE FUNCTION public.trg_navieras_propaga_nombre();
 CREATE TRIGGER trg_nc_alerta_retenciones AFTER INSERT OR UPDATE OF estado ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_alerta_retenciones_pagadas();
@@ -36615,7 +37954,7 @@ CREATE TRIGGER trg_recalcular_estado_factura AFTER INSERT OR DELETE OR UPDATE ON
 CREATE TRIGGER trg_recalcular_estado_factura_nc AFTER INSERT OR UPDATE OF estado, monto, deleted_at ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.recalcular_estado_factura();
 CREATE TRIGGER trg_reversar_movimiento_rep_cancelado AFTER UPDATE OF estado_rep ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._trg_reversar_movimiento_rep_cancelado();
 CREATE TRIGGER trg_reverse_ajustes_factura_proveedor AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW WHEN ((((new.estado IS DISTINCT FROM old.estado) AND (new.estado = 'Cancelada'::public.estado_proveedor_factura)) OR ((new.deleted_at IS DISTINCT FROM old.deleted_at) AND (new.deleted_at IS NOT NULL)))) EXECUTE FUNCTION public.tg_reverse_ajustes_factura_proveedor();
-CREATE TRIGGER trg_seguro_validar_factura_proveedor BEFORE INSERT OR UPDATE OF proveedor_factura_id, deleted_at, embarque_id, organization_id ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public._seguro_validar_factura_proveedor();
+CREATE TRIGGER trg_seguro_validar_factura_proveedor BEFORE INSERT OR UPDATE OF proveedor_factura_id, deleted_at, embarque_id, organization_id, prima, moneda ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public._seguro_validar_factura_proveedor();
 CREATE TRIGGER trg_seguros_embarque_updated_at BEFORE UPDATE ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_set_embarque_created_by BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.set_embarque_created_by();
 CREATE TRIGGER trg_set_estado_rep_pago BEFORE INSERT ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.set_estado_rep_pago();
@@ -36722,6 +38061,8 @@ ALTER TABLE ONLY public.catalogo_claves_sat
     ADD CONSTRAINT catalogo_claves_sat_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.catalogo_org_desactivado
     ADD CONSTRAINT catalogo_org_desactivado_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.conceptos_costo
+    ADD CONSTRAINT cc_shipment_same_org_fk FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.cierre_embarque_log
     ADD CONSTRAINT cierre_embarque_log_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.client_users
@@ -37040,6 +38381,10 @@ ALTER TABLE ONLY public.facturas
     ADD CONSTRAINT facturas_sustituida_por_fkey FOREIGN KEY (sustituida_por) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.facturas
     ADD CONSTRAINT facturas_sustituye_a_fkey FOREIGN KEY (sustituye_a) REFERENCES public.facturas(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.seguros_embarque
+    ADD CONSTRAINT insurance_pf_same_org_fk FOREIGN KEY (proveedor_factura_id, organization_id) REFERENCES public.proveedor_facturas(id, organization_id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.seguros_embarque
+    ADD CONSTRAINT insurance_shipment_same_org_fk FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.notas_embarque
     ADD CONSTRAINT notas_embarque_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.notas_embarque
@@ -37078,6 +38423,12 @@ ALTER TABLE ONLY public.proforma_conceptos_consolidados
     ADD CONSTRAINT pcc_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
     ADD CONSTRAINT pcc_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.proveedor_facturas
+    ADD CONSTRAINT pf_shipment_same_org_fk FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE SET NULL (embarque_id);
+ALTER TABLE ONLY public.proveedor_facturas_conceptos
+    ADD CONSTRAINT pfc_cc_same_org_fk FOREIGN KEY (concepto_costo_id, organization_id) REFERENCES public.conceptos_costo(id, organization_id) ON DELETE SET NULL (concepto_costo_id);
+ALTER TABLE ONLY public.proveedor_facturas_conceptos
+    ADD CONSTRAINT pfc_pf_same_org_fk FOREIGN KEY (proveedor_factura_id, organization_id) REFERENCES public.proveedor_facturas(id, organization_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.presupuesto_mensual
     ADD CONSTRAINT presupuesto_mensual_categoria_id_fkey FOREIGN KEY (categoria_id) REFERENCES public.presupuesto_categorias(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
@@ -38121,10 +39472,16 @@ GRANT ALL ON FUNCTION public._garantia_historial_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_historial_trg() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_movimiento_ajuste_activacion() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_movimiento_ajuste_activacion() TO authenticated;
+GRANT ALL ON FUNCTION public._guard_movimiento_ajuste_activacion() TO service_role;
 REVOKE ALL ON FUNCTION public._guard_movimiento_anticipo_aplicado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._guard_movimiento_anticipo_aplicado() TO service_role;
 REVOKE ALL ON FUNCTION public._guard_pago_anticipo_aplicado_edicion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._guard_pago_anticipo_aplicado_edicion() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_pago_clasificacion() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_pago_clasificacion() TO authenticated;
+GRANT ALL ON FUNCTION public._guard_pago_clasificacion() TO service_role;
 REVOKE ALL ON FUNCTION public._guard_soft_delete() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
@@ -38490,6 +39847,12 @@ GRANT ALL ON FUNCTION public.clientes_sync_cp() TO service_role;
 REVOKE ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO authenticated;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO service_role;
+REVOKE ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cobranza_conteo_por_cobrar(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cobranza_conteo_vencidas(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) TO authenticated;
 GRANT ALL ON FUNCTION public.cobranza_listado(p_cliente_id uuid, p_moneda text, p_search text, p_estatus text, p_limit integer) TO service_role;
@@ -39452,6 +40815,8 @@ GRANT ALL ON FUNCTION public.seed_demo_organization_guarded(p_skip_ms bigint) TO
 REVOKE ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima numeric, p_moneda text, p_seguro_id uuid, p_limit integer, p_cursor_fecha date, p_cursor_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.seguro_facturas_elegibles(p_embarque_id uuid, p_prima numeric, p_moneda text, p_seguro_id uuid, p_limit integer, p_cursor_fecha date, p_cursor_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer) TO service_role;
 GRANT ALL ON FUNCTION public.set_auditoria_revisado_at() TO authenticated;

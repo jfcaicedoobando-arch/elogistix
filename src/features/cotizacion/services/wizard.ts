@@ -13,7 +13,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
 import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estadosEditables";
-import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
+import { buildVentaCotizacionPayload, type VentaCotizacionPayloadInput } from "./ventaPayload";
 
 
 interface Mutations {
@@ -118,6 +118,7 @@ export async function savePaso2(opts: {
 
   const costos: CostoCotizacion[] = costosInternos.map(f => ({
     id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
+    origen_venta_id: f.origen_venta_id,
     proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
     costo_total: f.cantidad * f.costo_unitario, precio_venta: f.precio_venta,
     unidad_medida: f.unidad_medida, notas: f.notas ?? "", created_at: "", updated_at: "",
@@ -148,16 +149,8 @@ export async function savePaso3(opts: {
   tipoCambioUsd?: number | null;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
-  const { cotizacionId, conceptosVenta, monedaFallback, tipoCambioUsd, mutations } = opts;
-  // Lanza MSG_COTIZACION_MIXTA antes de tocar la BD: nada se persiste y los
-  // conceptos capturados siguen en pantalla.
-  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta, monedaFallback, tipoCambioUsd);
-  const data: Record<string, unknown> = { conceptos_venta: conceptosVenta, subtotal, moneda };
-  // `undefined` = la pantalla no capturó TC (no se toca la columna).
-  if (tipoCambioUsd !== undefined) {
-    data.tipo_cambio_usd = Number(tipoCambioUsd) > 0 ? Number(tipoCambioUsd) : null;
-  }
-  await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
+  const data = buildVentaCotizacionPayload(opts);
+  await opts.mutations.updateCotizacion.mutateAsync({ id: opts.cotizacionId, data });
 }
 
 
@@ -167,15 +160,16 @@ export async function savePasoFinal(opts: {
   isEditMode: boolean;
   /** Estado actual de la cotización al abrir el wizard (P0-1 R5). */
   estadoActual?: string | null;
+  /** Snapshot confirmado en el resumen; se guarda junto con el estado final. */
+  venta?: VentaCotizacionPayloadInput;
   mutations: Pick<Mutations, "updateCotizacion">;
   registrarActividad: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string }) => void;
 }): Promise<void> {
   const { cotizacionId, isEditMode, estadoActual, mutations, registrarActividad } = opts;
-  // P0-1 (R5): una cotización `Solicitada` (portal) pasa a `Borrador` al costearse,
-  // para que siga el flujo estándar Borrador → Enviada → Aceptada.
-  if (!isEditMode || requiereTransicionABorrador(estadoActual)) {
-    await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } });
-  }
+  const data: Record<string, unknown> = opts.venta ? buildVentaCotizacionPayload(opts.venta) : {};
+  if (!isEditMode || requiereTransicionABorrador(estadoActual)) data.estado = "Borrador";
+  // Una escritura con el sello optimista: nunca confirmar estado sin las ventas.
+  if (Object.keys(data).length > 0) await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
 
   registrarActividad({
     accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",

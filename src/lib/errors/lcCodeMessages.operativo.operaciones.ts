@@ -191,4 +191,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Esta tarifa ya está vinculada a una solicitud de pricing y no puede cambiar de solicitud. Crea otra tarifa si necesitas responder una solicitud distinta.",
   LC_RECARGO_DUPLICADO:
     "El mismo recargo aparece dos veces en la edición. Recarga la tarifa y revisa los recargos.",
+  LC_COT_ORIGEN_VENTA_DUPLICADO:
+    "Más de un costo intenta vincularse al mismo concepto de venta de origen. Revisa los vínculos de venta antes de guardar la cotización.",
+  LC_DEMORAS_MONEDAS_MIXTAS:
+    "El tabulador de este tipo de contenedor mezcla monedas. Usa una sola moneda por tabulador; no se realiza conversión automática.",
 };

@@ -1,3 +1,5 @@
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import CotizacionWizardLayout from "@/features/cotizacion/components/CotizacionWizardLayout";
 import { ConflictoPestanaAlert } from "@/features/cotizacion/components/wizard/ConflictoPestanaAlert";
 import { ConflictoSelloAlert } from "@/features/cotizacion/components/wizard/ConflictoSelloAlert";
@@ -9,6 +11,13 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { useNuevaCotizacionPageController } from "./useNuevaCotizacionPageController";
 
 export default function NuevaCotizacion() {
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
+  // Cambiar de usuario/tenant descarta la memoria React anterior antes de leer/escribir.
+  return <NuevaCotizacionScope key={`${organizationId ?? ""}:${user?.id ?? ""}`} />;
+}
+
+function NuevaCotizacionScope() {
   const {
     w, clientes, organizationId, userId, canCrearEmbarqueDesdeCotizacion,
     draftDetectado, banderaBorrador, handleRestore, handleDiscard,

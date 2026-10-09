@@ -50,6 +50,12 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El desglose fiscal y la valuación de esta nota de crédito ya están protegidos por su estado. No se puede modificar la base ni su tipo de cambio.",
   LC_NC_PROV_TC_INCONSISTENTE:
     "La valuación a pesos y la conversión contra la factura no coinciden. Revisa la moneda y los tipos de cambio de la nota de crédito.",
+  LC_SELECTOR148_FUNCTION_CONTRACT_DRIFT:
+    "El selector de facturas no se puede activar porque su configuración cambió. Solicita una revisión técnica antes de continuar.",
+  LC_SELECTOR148_INTEGRITY_NOT_READY:
+    "El selector de facturas no está disponible en este momento. Vuelve a intentarlo más tarde.",
+  LC_SELECTOR148_NO_DISPONIBLE:
+    "El selector de facturas no está disponible en este momento. Vuelve a intentarlo más tarde.",
   LC_BITACORA_ACCION_RESERVADA:
     "Las aprobaciones y rechazos se registran automáticamente al realizar esa acción en la factura.",
 };

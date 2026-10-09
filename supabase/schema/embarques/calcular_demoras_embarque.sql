@@ -23,6 +23,8 @@ DECLARE
   v_monto_costo numeric := 0;
   v_monto_venta numeric := 0;
   v_total_costo numeric := 0;
+  v_totales_costo jsonb := '{}'::jsonb;
+  v_monedas_costo integer;
   v_total_venta numeric := 0;
   v_resultado jsonb := '[]'::jsonb;
   v_fecha_desc_c date;
@@ -152,7 +154,8 @@ BEGIN
         format('Demoras %s días — contenedor %s', v_dias_excedidos_c, COALESCE(NULLIF(v_contenedor.numero_contenedor,''), v_contenedor.orden::text)),
         v_monto_costo, COALESCE(v_moneda_tier,'USD')::moneda, 'Pendiente'::estado_liquidacion, v_contenedor.id, 'demoras_auto'
       );
-      v_total_costo := v_total_costo + v_monto_costo;
+      v_totales_costo := jsonb_set(v_totales_costo, ARRAY[v_moneda_tier],
+        to_jsonb(COALESCE((v_totales_costo->>v_moneda_tier)::numeric, 0) + v_monto_costo));
     END IF;
 
     IF v_monto_venta > 0 THEN
@@ -182,12 +185,24 @@ BEGIN
     );
   END LOOP;
 
+  -- El total escalar sólo existe si todos los cargos tienen la misma moneda.
+  -- Tabuladores independientes siguen siendo válidos, sin sumar sus nominales.
+  SELECT COUNT(*) INTO v_monedas_costo FROM jsonb_each(v_totales_costo);
+  IF v_monedas_costo = 1 THEN
+    SELECT key, value::numeric INTO v_moneda_costo, v_total_costo
+    FROM jsonb_each_text(v_totales_costo);
+  ELSIF v_monedas_costo > 1 THEN
+    v_moneda_costo := NULL;
+    v_total_costo := NULL;
+  END IF;
+
   RETURN jsonb_build_object(
     'embarque_id', p_embarque_id,
     'fecha_descarga_embarque', v_fecha_descarga_emb,
     'fecha_devolucion_embarque', v_fecha_devolucion_emb,
     'dias_libres_default', v_dias_libres_default,
     'total_costo', v_total_costo,
+    'totales_costo_por_moneda', v_totales_costo,
     'moneda_costo', v_moneda_costo,
     'total_venta_usd', v_total_venta,
     'contenedores', v_resultado

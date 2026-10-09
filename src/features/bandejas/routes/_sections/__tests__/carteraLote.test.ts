@@ -14,6 +14,7 @@ function row(over: Partial<CarteraRow>): CarteraRow {
     cliente_nombre: "ACME",
     moneda: "MXN",
     saldo: 100,
+    pagado: 0,
     fecha_vencimiento: "2026-01-01",
     fecha_emision: "2025-12-01",
     metodo_pago: "PUE",
@@ -65,9 +66,9 @@ describe("derivarLoteCobro", () => {
       clienteNombre: "ACME",
       moneda: "MXN",
       facturas: [
-        { factura_id: "f1", numero: "A-1", fecha_vencimiento: "2026-01-01", saldo: 100,
+        { factura_id: "f1", numero: "A-1", fecha_vencimiento: "2026-01-01", saldo: 100, pagado: 0,
           fecha_emision: "2025-12-01", metodo_pago: "PUE", es_ppd_timbrada: false },
-        { factura_id: "f2", numero: "A-2", fecha_vencimiento: "2026-01-01", saldo: 250,
+        { factura_id: "f2", numero: "A-2", fecha_vencimiento: "2026-01-01", saldo: 250, pagado: 0,
           fecha_emision: "2025-12-15", metodo_pago: "PPD", es_ppd_timbrada: true },
       ],
     });

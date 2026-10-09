@@ -44,7 +44,7 @@ function coincideCuenta(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
 }
 
 function coincideConciliacion(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
-  if (f.conciliacion === "conciliados") return pago.conciliado;
+  if (f.conciliacion === "conciliados") return estadoConciliacionPago(pago) === "Conciliado";
   if (f.conciliacion === "pendientes") return estadoConciliacionPago(pago) === "Pendiente";
   return true;
 }

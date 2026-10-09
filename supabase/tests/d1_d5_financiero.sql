@@ -2,8 +2,8 @@
 -- Lote D1–D5 (v13.823.382)
 --  D1 · pnl_financiero_embarque: las notas de crédito se convierten a la
 --       moneda de la factura ANTES de restarse y de aplicar el factor de
---       atribución multiembarque (funcional: factura MXN 1000 con NC USD 10
---       @20 → venta real 800).
+--       atribución multiembarque (funcional: factura MXN 1000 con NC de base USD10,
+--       monto fiscal USD11.60 @20 → venta real800).
 --  D2 · registrar_pago_factura_atomico: cobro + abono bancario en la misma
 --       transacción, idempotente por client_request_id (contrato).
 --  D3 · registrar_traspaso_bancario: fecha nula o futura se rechaza en SQL y
@@ -23,16 +23,11 @@ DO $contratos$
 DECLARE
   v_def text;
 BEGIN
-  -- D1
+  -- D1 client-NC behavior is verified below without depending on SQL aliases.
+  -- Preserve the existing supplier-NC conversion guard in this same suite.
   v_def := pg_get_functiondef('public.pnl_financiero_embarque(uuid)'::regprocedure);
-  IF v_def !~ 'nc_convertida_a_moneda_factura' THEN
-    RAISE EXCEPTION 'D1 FAIL: la NC de cliente vuelve a restarse sin convertir';
-  END IF;
   IF v_def !~ 'monto_pago_en_moneda_factura' THEN
     RAISE EXCEPTION 'D1 FAIL: la NC de proveedor vuelve a restarse sin convertir';
-  END IF;
-  IF v_def !~ 'tipo_cambio::numeric AS tc_factura' THEN
-    RAISE EXCEPTION 'D1 FAIL: falta el T/C de la factura para convertir la NC';
   END IF;
 
   -- D2
@@ -119,7 +114,7 @@ VALUES ('d1d50000-0000-4000-8000-0000000000e1'::uuid,
         'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
         'd1d50000-0000-4000-8000-000000000001'::uuid, 20);
 
--- ── D1 funcional: factura MXN 1000 con NC en USD 10 @20 → venta real 800 ──
+-- ── D1: base NC10USD @20 resta200; monto fiscal11.60USD no es base ──
 INSERT INTO public.facturas (
   id, numero, cliente_id, cliente_nombre, embarque_id, organization_id,
   subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
@@ -144,27 +139,75 @@ UPDATE public.facturas SET estado = 'Emitida'::public.estado_factura
 WHERE id = 'd1d50000-0000-4000-8000-0000000000f1'::uuid;
 
 INSERT INTO public.factura_notas_credito (
-  factura_id, folio, monto, moneda, tipo_cambio, estado, organization_id, uuid_fiscal
+  factura_id, folio, monto, moneda, tipo_cambio, estado, organization_id, uuid_fiscal, conceptos
 ) VALUES (
-  'd1d50000-0000-4000-8000-0000000000f1'::uuid, 'D1-NC-1', 10,
-  'USD'::public.moneda, 20, 'Aplicada'::public.estado_nota_credito,
+  'd1d50000-0000-4000-8000-0000000000f1'::uuid, 'D1-NC-1', 11.60,
+  'USD'::public.moneda, 20, 'Timbrada'::public.estado_nota_credito,
   'd1d50000-0000-4000-8000-000000000001'::uuid,
-  'd1d50000-0000-4000-8000-00000000dddd'
+  'd1d50000-0000-4000-8000-00000000dddd',
+  '[{"cantidad":1,"precio_unitario":10,"tasa_iva":0.16}]'::jsonb
 );
 
 DO $d1$
 DECLARE
   v_venta numeric;
+  v_pnl jsonb;
 BEGIN
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub', 'd1d50000-0000-4000-8000-0000000000a1')::text, true);
 
   v_venta := (public.pnl_financiero_embarque('d1d50000-0000-4000-8000-0000000000e1'::uuid)
                 #>> '{venta,real_mxn}')::numeric;
-  IF round(v_venta, 2) <> 800.00 THEN
-    RAISE EXCEPTION 'D1 FAIL: venta real % en lugar de 800 (NC USD 10 @20 sobre factura MXN 1000)', v_venta;
+  IF round(v_venta, 2) IS DISTINCT FROM 800.00 THEN
+    RAISE EXCEPTION 'D1 FAIL: venta real % en lugar de 800 (base NC10USD @20, bruto11.60USD, factura MXN1000)', v_venta;
   END IF;
-  RAISE NOTICE '✓ D1: la NC en USD se resta convertida (1000 − 200 = 800)';
+  -- Timbrada/Aplicada retain the same base. This legacy note has no lineage;
+  -- AUD144 keeps its known amount provisional even on a single shipment.
+  UPDATE public.factura_notas_credito SET estado = 'Aplicada'
+    WHERE uuid_fiscal = 'd1d50000-0000-4000-8000-00000000dddd';
+  v_pnl := public.pnl_financiero_embarque('d1d50000-0000-4000-8000-0000000000e1');
+  IF (v_pnl #>> '{venta,real_mxn}')::numeric IS DISTINCT FROM 800
+     OR v_pnl->>'estado_ingresos' IS DISTINCT FROM 'incompleto'
+     OR (v_pnl #>> '{ingresos_documentacion,repartos_provisionales}')::int IS DISTINCT FROM 1
+     OR (v_pnl #>> '{ingresos_documentacion,notas_credito_activas}')::int IS DISTINCT FROM 1 THEN
+    RAISE EXCEPTION 'D1 FAIL: Timbrada/Aplicada no conservan base convertida conocida: %', v_pnl;
+  END IF;
+  IF (SELECT sum((x->>'real_mxn')::numeric)
+      FROM jsonb_array_elements(v_pnl->'por_concepto') x) IS DISTINCT FROM 800 THEN
+    RAISE EXCEPTION 'D1 FAIL: detalle de venta no concilia la base convertida: %', v_pnl;
+  END IF;
+
+  -- Fiscal debt still uses the gross11.60USD×20=232MXN. Economic income
+  -- above subtracts only the base10USD×20=200MXN, independently of invoice tax.
+  IF public.saldo_factura('d1d50000-0000-4000-8000-0000000000f1') IS DISTINCT FROM
+     (SELECT total - 232 FROM public.facturas WHERE id='d1d50000-0000-4000-8000-0000000000f1') THEN
+    RAISE EXCEPTION 'D1 FAIL: saldo fiscal no conserva el bruto NC11.60USD convertido';
+  END IF;
+
+  -- An existing legacy NC may have no economic concepts. Its gross monto is
+  -- fiscal debt, not an inferred P&L base; keep the known amount provisional.
+  INSERT INTO public.factura_notas_credito (
+    factura_id, folio, monto, moneda, tipo_cambio, estado, organization_id,
+    uuid_fiscal, conceptos
+  ) VALUES (
+    'd1d50000-0000-4000-8000-0000000000f1', 'D1-NC-UNKNOWN', 1, 'USD', 20,
+    'Timbrada', 'd1d50000-0000-4000-8000-000000000001',
+    'd1d50000-0000-4000-8000-00000000ddde', '[]'::jsonb
+  );
+  v_pnl := public.pnl_financiero_embarque('d1d50000-0000-4000-8000-0000000000e1');
+  IF (v_pnl #>> '{venta,real_mxn}')::numeric IS DISTINCT FROM 800
+     OR v_pnl->>'estado_ingresos' IS DISTINCT FROM 'incompleto'
+     OR (v_pnl #>> '{ingresos_documentacion,notas_credito_activas}')::int IS DISTINCT FROM 2
+     OR (v_pnl #>> '{ingresos_documentacion,notas_credito_sin_base}')::int IS DISTINCT FROM 1
+     OR v_pnl->'utilidad_mxn' IS DISTINCT FROM 'null'::jsonb
+     OR v_pnl->'margen_real_pct' IS DISTINCT FROM 'null'::jsonb THEN
+    RAISE EXCEPTION 'D1 FAIL: NC sin base debe preservar venta conocida e incompletitud: %', v_pnl;
+  END IF;
+  IF (SELECT x->'real_mxn' FROM jsonb_array_elements(v_pnl->'por_concepto') x
+      WHERE x->>'concepto' = '(nota de crédito)') IS DISTINCT FROM 'null'::jsonb THEN
+    RAISE EXCEPTION 'D1 FAIL: detalle de NC desconocida se convirtió en cero conocido: %', v_pnl;
+  END IF;
+  RAISE NOTICE '✓ D1: base NC USD convertida; Timbrada/Aplicada iguales; legado desconocido permanece provisional';
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 END

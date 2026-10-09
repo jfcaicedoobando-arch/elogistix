@@ -1,0 +1,32 @@
+{
+  "installer_sha256": "a402f3f649d19a13c75d353b18ba866fcc6e7581d8a1a784a7da2e0128722522",
+  "installer_state": "disabled",
+  "business_roles": [
+    "admin",
+    "admin_org",
+    "super_admin",
+    "coordinador_logistico",
+    "gerente_operaciones"
+  ],
+  "frozen_files": {
+    "scripts/ci/selector148/fixtures/catalog.sql": "0a5ac345c5d41d5e5b8a0589ba03ebd908bf58a65ce3334b1c1db54742d64100",
+    "scripts/ci/selector148/fixtures/columns.sql": "4e746f491a2bc218c923fe08b88dae54b61560f0531b6c79b61a4a254f0357b4",
+    "scripts/ci/selector148/fixtures/data.sql": "f5e415ba18f6507b74f53a5c61d75bff18b1973eea5df5fbb6c6979729d40b82",
+    "scripts/ci/selector148/fixtures/effective.sql": "beca4b878b0e77d6f6c7107b5f37af4d2959ad3c42acf19be18d1d51b9e5e6b6",
+    "scripts/ci/selector148/fixtures/integrity-ready.sql": "9e3b67160f56f0243eb814d6809eb8e5b5bcdddc06883e1275c2878b594adfc3",
+    "scripts/ci/selector148/fixtures/procs.sql": "5d2f33eaf398156ac9a67e151065cf2cd4aad39b74a8841a3fc039ce75501c5e",
+    "scripts/ci/selector148/fixtures/relations.sql": "5335f6a024acad9ac2706829b2ae5e0eb56cc848db08970907b39f162194f36b",
+    "scripts/ci/selector148/fixtures/roles.sql": "289f7374f95d2a83af59189bb98c785a489d4708e4795380f9d73eaf3d1e6403",
+    "scripts/ci/selector148/fixtures/structure.sql": "018a7d106eca7408adb09f5ea662273d130b6bc1019737593b808812637c6758",
+    "scripts/ci/selector148/fixtures/triggers.sql": "34a74f99742c737225224bfadc347814fb1a15b0c4cc9981c0e7e28a6a70303d",
+    "scripts/ci/selector148/tests/disabled-gate.sql": "ba241a741f5a7b5c4a7940411790da8601ed680bdd6c07327ce0d7d0da3b96af",
+    "scripts/ci/selector148/tests/exact-triple-parity.sql": "e2ed6e7e35da65418e4972e54d6edde2692b57326aec0c87552d37301cb00e11",
+    "scripts/ci/selector148/tests/security-pagination-integrated.sql": "5f1ac64cbd3624c8381b8d1edb56292a17bfce4548e64e4faa9e32699173dca9",
+    "scripts/ci/selector148/tests/work-budget.sql": "9c50b7c0f60cc543f3b98685f573f75ccceb75907c0ecd8fedfa11d142b72b66",
+    "scripts/ci/selector148/expectations.json": "c41e3d1bff930aeefc855186701fa23dd49a9dbddc2e3f5e1bc5b424299dcc08",
+    "supabase/tests/insurance_trash_restore.sql": "78f0c001eed881e51ffdae23c0ce736f40e2b23bd613099c8ebda0fd680c68ac",
+    "supabase/tests/selector148_disabled_gate.sql": "ba241a741f5a7b5c4a7940411790da8601ed680bdd6c07327ce0d7d0da3b96af"
+  },
+  "registered_installer_sha256": "a9d4cca98c6b2737faf57a389de482c9e1e454cedb9d7f30db6946de769d6b10",
+  "registration_marker": "-- audit:allow-no-grants -- Disabled selector; all application roles remain revoked.\n"
+}

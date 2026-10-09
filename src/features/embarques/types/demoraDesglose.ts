@@ -15,6 +15,8 @@ export interface DemoraDesglose {
   dias_libres: number;
   dias_excedidos: number;
   total_costo_usd: number;
+  /** Costos separados, sin convertir ni sumar monedas distintas. */
+  totales_costo_por_moneda?: Record<string, number>;
   /** Moneda del costo de la naviera (tabulador). Default 'USD'. */
   moneda_costo?: string;
   total_venta_usd: number;

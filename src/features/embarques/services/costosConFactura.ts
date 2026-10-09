@@ -37,7 +37,7 @@ export async function fetchCostosConFactura(embarqueId: string): Promise<Set<str
 
   const { data: pfc, error: errPfc } = await supabase
     .from("proveedor_facturas_conceptos")
-    .select("concepto_costo_id, proveedor_facturas(estado, deleted_at)")
+    .select("concepto_costo_id, proveedor_facturas!proveedor_facturas_conceptos_proveedor_factura_id_fkey(estado, deleted_at)")
     .in("concepto_costo_id", ids);
   if (errPfc) throw errPfc;
 

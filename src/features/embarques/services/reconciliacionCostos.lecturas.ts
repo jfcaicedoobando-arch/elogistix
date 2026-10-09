@@ -15,7 +15,7 @@ export async function fetchVinculosReconciliacion(
   for (const ids of chunkIds(conceptoIds)) {
     const lote = await leerTodasLasPaginas("embarques.vinculosReconciliacion", (ini, fin) => {
       let query = supabase.from("proveedor_facturas_conceptos")
-        .select("monto, cantidad, concepto_costo_id, descripcion, proveedor_facturas(id, folio_interno, folio_proveedor, fecha_emision, fecha_vencimiento, estado, estado_aprobacion, moneda, tipo_cambio_usd, deleted_at)")
+        .select("monto, cantidad, concepto_costo_id, descripcion, proveedor_facturas!proveedor_facturas_conceptos_proveedor_factura_id_fkey(id, folio_interno, folio_proveedor, fecha_emision, fecha_vencimiento, estado, estado_aprobacion, moneda, tipo_cambio_usd, deleted_at)")
         .in("concepto_costo_id", ids);
       if (organizationId) query = query.eq("organization_id", organizationId);
       return query.order("id").range(ini, fin);

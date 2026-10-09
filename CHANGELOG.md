@@ -1,5 +1,65 @@
 # Changelog
 
+## [13.824.54] - Unreleased
+
+- **Candidato CI · activación autorizada del selector148**: habilita el selector y su RPC de lectura únicamente tras verificar el cuerpo, owner, atributos, ACL e integridad exactos. Conserva los cinco roles de negocio, organización activa y cinco campos visibles; añade sólo EXECUTE de authenticated sin grant option.
+- Forward nuevo `20261009043000` exige los seis FK previamente instalados, validados y correctamente configurados. No instala ni repara prerrequisitos o datos; un estado desconocido aborta. Registra 1,511 migraciones y conserva literalmente las entradas anteriores, incluidos leads52 y AUD54/AUD14453.
+- Baseline y espejo cambian sólo el literal de activación y su grant; firma, tipos generados, cálculos, cobertura financiera y flujos previos permanecen íntegros. CI usa el forward real en los 65 controles de integridad existentes y nueve controles nuevos de deriva, más rollback tardío; conserva 53 suites RLS y 212 guards.
+- Composición estática pendiente de CI del commit exacto y equivalencia de baseline PostgreSQL17.9. La aplicación requiere prerrequisitos admitidos, preflight de destino fresco y transporte transaccional íntegro; la validación GUI requiere backend y UI coincidentes. Registrar o publicar este candidato no acredita aplicación, despliegue ni cierre global de AUD148. Ver [contrato y gates](docs/ops/selector148-activation.md).
+
+## [13.824.53] - Unreleased
+
+- **Candidato CI · AUD54 y AUD144 sobre leads 52**: Dirección y cierre CxC usan saldo canónico en moneda documental, conservando Pagada sin evidencia activa como caso histórico. La clasificación por centavos se separa de la conversión a MXN; no modifica facturas, pagos, NC ni estados almacenados.
+- AUD144 añade atribución selectiva de NC con linaje a las líneas vinculadas, mantiene el cálculo legacy para NC sin linaje y conserva conversión, redondeo por línea, costos y cobertura. Los casos no determinables se señalan sin inventar saldos ni modificar auxiliares compartidos.
+- Dos forwards nuevos, `20261009005400` y `20261009033000`, elevan el inventario a 1,510 migraciones. Se preservan literalmente las entradas 35–52 existentes, incluida la ausencia histórica de 45; la nueva entrada no reescribe migraciones anteriores.
+- AUD54 conserva owner, firma, ACL directa y privilegios efectivos, incluidos herencia y grant option implícito del propietario; sus 27 controles de catálogo/transacción se integran al gate RLS con opt-in explícito de Actions. Se preservan todos los hooks financieros, selector, container y leads; la baseline cambia sólo los dos cuerpos revisados sobre la composición vigente.
+- Integración local para revisión y CI del commit exacto: replay, paridad de baseline PostgreSQL 17.9, controles/RLS completos y validación GUI siguen pendientes. No implica SQL remoto, despliegue, activación del selector ni cierre global de auditoría. Ver [AUD54](docs/audits/audit54-consumers-direccion-cxc.md) y [AUD144](docs/audits/audit144-pnl-selectivo.md).
+
+## [13.824.52] - Unreleased
+
+- **Candidato CI · aislamiento de leads duplicados**: limita `crm_leads_buscar_duplicados` a usuario autenticado, organización activa y permisos vigentes de lectura; conserva normalización, nueve columnas, DISTINCT y exclusión de borrados. No altera helpers, policies, ACL ni datos históricos.
+- Forward inmutable `20261009031000`: acepta sólo cuerpos revisados, propietario y atributos conocidos; conserva OID, privilegios directos y efectivos dentro de la transacción del llamador. Sin UID o scope autorizado devuelve vacío, incluido service_role sin usuario.
+- Sobre el candidato 51 registra 1,508 migraciones, conservando literalmente todos los registros anteriores. Integra 25 controles focalizados de instalador y una regresión con 17 roles, dos tenants y oráculo SELECT/RLS independiente en el workflow existente, con opt-in explícito para Actions.
+- Preserva el selector deshabilitado, container, finanzas 49 y la normalización de delimitadores de baseline ya revisada. El replay completo, baseline PostgreSQL 17.9 y CI del commit publicado siguen pendientes; esta composición no aplica SQL remoto ni despliega. Ver [contrato y evidencia](docs/ops/crm-leads-duplicados-isolation.md).
+
+## [13.824.51] - Unreleased
+
+- **Candidato CI · guarda de contenedores en RPC directa**: añade el predicado revisado a `crm_aplicar_tarifa_tarifario`, antes de la respuesta idempotente. Conserva tipo principal/legacy, aliases, tipos personalizados y rechaza contradicciones parciales nombre/código; no modifica vínculos históricos ni el catálogo.
+- Forward inmutable `20261009014000`: exige cuerpo predecesor conocido, owner/atributos y exactamente los grants existentes de authenticated/service_role; conserva OID, ACL y permisos efectivos, sin añadir helpers ni acceso. Drizzle0010 y su replay quedan íntegros.
+- Sobre el padre50, registra1507 migraciones y preserva todos los registros anteriores. Añade20 controles de instalación/rollback y57 casos con esquema y roles reales al CI existente, junto con una aserción de privilegios anterior a los grants del harness.
+- Baseline con proyección acotada al cuerpo de esta RPC; la paridad nativa PostgreSQL17.9 y el runtime siguen pendientes de Actions. Sin SQL local, publicación, migración remota ni despliegue. Ver [contrato, CI y límites](docs/ops/pricing-container-rpc-ci51.md).
+
+## [13.824.50] - Unreleased
+
+- **Candidato dependiente · selector148 e integridad de empresa**: sobre el padre financiero49, registra una instalación atómica con seis FK compuestas validadas, clave única de conceptos y el selector de sólo lectura revisado. Una anomalía histórica cancela toda la instalación; no se reparan ni borran datos.
+- RPC y UI permanecen deshabilitados mientras GitHub Actions valida este commit y se comprueba el destino. La autorización existente del selector cubre su activación acotada después de esas comprobaciones; no se pide una autorización duplicada. Conserva los cinco roles, organización activa, cinco campos visibles y aritmética exacta.
+- Añade el runner serial de integridad, concurrencia y seguridad al workflow RLS existente, conserva la ACL anterior al GRANT de CI y adapta la prueba de papelera para exigir rechazo de la inserción de otra empresa. No crea un workflow amplio ni altera historia45/144.
+- El baseline y los tipos se componen de forma estática con el catálogo local ya revisado; la equivalencia con el dump PostgreSQL17.9 y el runtime se resuelven en Actions. Ver [alcance y activación](docs/ops/selector148-ci50.md).
+
+## [13.824.49] - Unreleased
+
+- **Candidato para CI · finanzas y seguros148**: compone los cambios financieros revisados de las propuestas47/48 con cobertura documental exacta, sus guards y restauración de seguros. El baseline normalizado conserva los bytes revisados y coincidentes con los dumps17.9 ya registrados; esta fase no repite ejecución SQL.
+- Registra dos forwards nuevos de cobertura y papelera, después de `20261008210000`, sin editar las1503 migraciones existentes. El manifest49 enumera1505 SQL; conserva literalmente35–44,46,47,48 y no crea45. Las entradas anteriores documentan sus candidatos originales y no acreditan aplicación remota.
+- Reconcilia main `3f962cc9` y el árbol47 revisado `9389d782`: conserva los30 cambios concurrentes de CRM/tarifario y todo el alcance de PR179. La rama remota de ese PR sigue sin modificaciones. El SQL23000 mantiene el comentario revisado de procedencia; los bytes posteriores son idénticos al PR original.
+- Registro local para revisión de empaquetado y GitHub Actions. No incluye el selector autoritativo ni integridad multiempresa, que se compone aparte; tampoco implica publicación, ejecución de migraciones, despliegue o cierre GUI. Consultar [procedencia, checks y bloqueos](docs/ops/financial-coverage-restore-ci49.md).
+
+## [13.824.48] - Unreleased
+
+- **Empaquetado local combinado**: registra los cinco forwards revisados de cobranza54/141, demoras147 y cotización145, más el forward P&L129/132/148 `20261008210000`, sobre la composición original congelada y la propuesta47. No incorpora el fix148 de escritura ni el trabajo nuevo de precisión.
+- El manifest48 enumera1503 archivos SQL reales. Se conservan byte a byte las entradas35–44,46 y47, sin crear45; también se preservan todos los SQL anteriores y los guards. El registro describe archivos del repositorio y no acredita aplicación en una base.
+- P&L conserva exactamente el SQL revisado con SAVEPOINT y ACL no expansiva. Requiere una transacción única del caller y stop-on-error; no hace BEGIN ni COMMIT. Baseline: sólo se normaliza esa declaración, sin sustituir el dump completo.
+- Candidato local para revisión y gates posteriores: snapshot real con pg_dump17.9 pinneado, validación SQL combinada final, CI completo y preflight del catálogo/runner del destino. No implica publicación, aplicación de migraciones, despliegue ni aprobación fiscal.
+- Véase [contrato, procedencia y gates](docs/ops/combined-release48-packaging.md).
+
+## [13.824.47] - Unreleased
+
+- **fix(CxP/Tesorería · 99/121)**: los ajustes no monetarios se identifican sólo por `es_ajuste` persistido en historial, libro desktop/móvil, detalle y CSV/PDF; conservan el importe documental y la conciliación «No aplica».
+- **fix(banco)**: guards de clasificación, vinculación, activación/restauración y regeneración impiden convertir ajustes en movimientos bancarios; se conservan pagos ordinarios, efectivo, devoluciones y REP.
+- Composición local sobre la base46 propuesta y no publicada, árbol `4f9c15bea974ce8ed2a22ab3c265ebd1e86ef06f`, con UI199, replay literal0013, cierre ACL190100, validación190200 y guard registrado. No es una composición sobre main ni importa el antiguo paquete P&L46.
+- Conserva el delta47 revisado en árbol `25dcd775cd051b071e00946c1da8d16890274256`, incluidos los barrels públicos y `size-4`; sólo recompone los envoltorios comunes y la procedencia. Baseline: cuatro funciones, dos helpers/triggers nuevos y sus ACL, con todos los bytes ajenos preservados.
+- Dos migraciones exactas: `20261007023000` y `20261007024500`. Manifest47 enumera1497 migraciones reales y conserva completas35–44 y46, sin crear45. Se preservan canónicos, types, AGENTS, UI199 y los tres SQL provisionales.
+- Primera fase local: invariantes, pruebas focales, tipos y gates estáticos bajo lock compartido. El SQL histórico de otras bases no acredita esta composición; las futuras pruebas SQL serán independientes. Sin Git remoto, SQL ejecutado, browser, build ni despliegue.
+
 ## [13.824.46] - Unreleased
 
 - **fix(proveedores provisionales)**: empaqueta la UI revisada de PR199 (`e3e26ee2`, tree `bafcf460`), el replay literal de Drizzle0013 y el forward que cierra la ejecución directa de sus dos funciones trigger. Conserva las fuentes UI revisadas y el SQL histórico.

@@ -40,6 +40,7 @@ function invalidarFacturasYPagos(qc: ReturnType<typeof useQueryClient>, facturaI
   // quedaban obsoletos hasta que vencía el staleTime.
   qc.invalidateQueries({ queryKey: queryKeys.cxc.all });
   qc.invalidateQueries({ queryKey: queryKeys.bandejas.carteraPendiente });
+  qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() });
   invalidateProfitDependencies(qc);
 }
 

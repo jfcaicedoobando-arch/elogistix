@@ -4,11 +4,14 @@ export function esPagoEfectivo(metodo: string | null): boolean {
 }
 
 export function estadoConciliacionPago(pago: {
+  es_ajuste: boolean;
   conciliado: boolean;
   metodo_pago: string | null;
   cuenta_bancaria_id: string | null;
   movimiento_id: string | null;
 }): "Conciliado" | "Pendiente" | "No aplica" {
+  // El ajuste cancela saldo documental; no representa dinero por conciliar.
+  if (pago.es_ajuste) return "No aplica";
   if (pago.conciliado) return "Conciliado";
   if (!pago.cuenta_bancaria_id && !pago.movimiento_id && esPagoEfectivo(pago.metodo_pago)) return "No aplica";
   return "Pendiente";

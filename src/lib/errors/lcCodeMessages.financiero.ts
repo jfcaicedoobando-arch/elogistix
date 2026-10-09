@@ -164,4 +164,6 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "No puedes fusionar una proforma consolidada con proformas individuales. Convierte cada tipo por separado.",
   LC_PROFORMA_DIAS_CREDITO_DISTINTOS:
     "Las proformas seleccionadas tienen plazos de crédito distintos. Iguala el plazo o indica el plazo de la factura antes de fusionarlas.",
+  LC_SEGURO_COBERTURA_INCOMPLETA:
+    "La factura no acredita cobertura completa de la prima. Revisa la base atribuida al embarque y la valuación antes de vincular o restaurar la póliza.",
 };

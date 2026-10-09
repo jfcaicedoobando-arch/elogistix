@@ -23,16 +23,16 @@ export function ConflictoSelloAlert({ onRecargar, onResincronizar, resincronizan
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="text-body-sm flex flex-wrap items-center justify-between gap-2">
           <span>
-            <strong>Otra persona actualizó esta cotización.</strong> Tus cambios locales
-            no se han guardado y no se guardarán encima de los suyos. Puedes recargar los
-            datos actuales o revisar tu captura y reintentar después.
+            <strong>No se pudo validar este borrador.</strong> La cotización cambió,
+            ya no es editable o no está disponible. Tu borrador local se conserva.
+            Abre los datos actuales o reintenta la consulta; no se sobrescribirá otra versión.
           </span>
           <span className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onRecargar}>
               Recargar datos
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={onResincronizar} disabled={resincronizando}>
-              {resincronizando ? "Resincronizando…" : "Resincronizar"}
+              {resincronizando ? "Consultando…" : "Reintentar consulta"}
             </Button>
           </span>
         </AlertDescription>

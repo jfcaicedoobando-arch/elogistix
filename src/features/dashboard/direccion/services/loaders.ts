@@ -48,7 +48,7 @@ export type PagoRow = {
   /** Ola v17: un pago con REP cancelado está ANULADO y no cuenta como cobrado. */
   estado_rep?: string | null;
 };
-/** NC de cliente APLICADAS (canon de Cobranza): restan del saldo de la factura. */
+/** NC de cliente Timbradas/Aplicadas vigentes: restan del saldo de la factura. */
 export type NotaCreditoRow = {
   factura_id: string; monto: number | null; moneda: string; tipo_cambio: number | null;
 };
@@ -143,9 +143,10 @@ function loadNotasCredito(ids: string[]): Promise<NotaCreditoRow[]> {
  * P1-6: la cartera abierta (aging/vencido) debe incluir TODA factura viva con
  * saldo potencial > 0, sin importar cuándo se emitió — el loader de tendencia
  * (`loadFacturas`, ventana de 6 meses) borraba facturas abiertas más viejas.
- * Estados abiertos alineados con `cartera_pendiente()` (canon SQL).
+ * Incluye Pagada para clasificar residuos documentados con pagos activos;
+ * el consumidor conserva fuera los legados sin evidencia de cobro.
  */
-const ESTADOS_CARTERA_ABIERTA = ["Emitida", "Vencida", "Parcialmente pagada"] as const;
+const ESTADOS_CARTERA_ABIERTA = ["Emitida", "Vencida", "Parcialmente pagada", "Pagada"] as const;
 
 export async function loadCarteraAbierta(orgId: string | null): Promise<{
   facturas: FacturaRow[]; pagos: PagoRow[]; ncs: NotaCreditoRow[];
@@ -162,8 +163,8 @@ export async function loadCarteraAbierta(orgId: string | null): Promise<{
   if (ids.length === 0) {
     return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[], ncs: [] as NotaCreditoRow[] };
   }
-  // Canon de Cobranza: saldo = total − pagos − NC APLICADAS (vigentes).
-  // Borrador/Aprobada/Timbrada/Cancelada y NC eliminadas no restan.
+  // Canon de Cobranza: saldo = total − pagos − NC Timbradas/Aplicadas vigentes.
+  // Borrador/Aprobada/Cancelada y NC eliminadas no restan.
   const [pagos, ncs] = await Promise.all([
     loadPagos(ids, "direccion.loadCarteraAbiertaPagos"),
     loadNotasCredito(ids),

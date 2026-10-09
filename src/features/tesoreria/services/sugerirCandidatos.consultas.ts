@@ -83,7 +83,8 @@ export async function candidatosCxp(v: Ventana): Promise<SugerenciasResultado> {
     (desde, hasta) =>
       supabase
         .from("pagos_proveedor")
-        .select("id, fecha_pago, monto, moneda, referencia, lote_id, proveedor_facturas(proveedor_nombre)")
+        .select("id, fecha_pago, monto, moneda, referencia, lote_id, es_ajuste, proveedor_facturas(proveedor_nombre)")
+        .eq("es_ajuste", false)
         .gte("fecha_pago", v.desdeIso)
         .lte("fecha_pago", v.hastaIso)
         .gte("monto", v.min)
@@ -98,6 +99,7 @@ export async function candidatosCxp(v: Ventana): Promise<SugerenciasResultado> {
 }
 
 interface FilaCxp {
+  es_ajuste: boolean;
   id: string;
   fecha_pago: string;
   monto: number | string;
@@ -108,7 +110,9 @@ interface FilaCxp {
 }
 
 /** Descarta pagos ya conciliados (individuales y miembros de un lote vivo). */
-async function candidatosCxpDePagina(filas: FilaCxp[], v: Ventana): Promise<Candidato[]> {
+async function candidatosCxpDePagina(pagina: FilaCxp[], v: Ventana): Promise<Candidato[]> {
+  // Defensa adicional: sólo el false persistido entra al conteo de matches.
+  const filas = pagina.filter(p => p.es_ajuste === false);
   if (filas.length === 0) return [];
   const vinculados = await pagosYaVinculados(filas.map((p) => p.id), "cxp");
   const loteIds = Array.from(

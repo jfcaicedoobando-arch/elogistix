@@ -4,8 +4,8 @@ import path from "node:path";
 
 const leer = (rel: string) => fs.readFileSync(path.join(process.cwd(), rel), "utf8");
 const espejo = leer("supabase/schema/cxp/historial_proveedor_factura.sql");
-// AUD-57 reemplaza el RPC y conserva el contrato DATE/timestamp de AUD-F05.
-const migracion = leer("supabase/migrations/20261004055700_cxp_historial_eventos_reales.sql");
+// AUD-121 vuelve a emitir el RPC y conserva el contrato DATE/timestamp de AUD-F05.
+const migracion = leer("supabase/migrations/20261007023000_audit99_121_historial_ajustes_no_monetarios.sql");
 const baseline = leer("supabase/schema/baseline.sql");
 const cuerpo = (sql: string) => sql.match(/(?:CREATE (?:OR REPLACE )?FUNCTION public\.historial_proveedor_factura)[\s\S]*?AS (\$[\w]*\$)([\s\S]*?)\1;/)?.[2]?.replace(/\s+/g, " ").trim();
 

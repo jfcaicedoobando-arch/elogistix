@@ -5,7 +5,7 @@ import { estadoConciliacionPago } from "@/features/tesoreria/domain/conciliacion
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { toCsv } from "@/lib/csv/serializeCsv";
 import {
-  TIPO_PAGO_LABELS,
+  etiquetaTipoPagoLibro,
   type PagoLibro,
   type TotalesLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
@@ -61,7 +61,7 @@ export function filasLibroPagosExport(
 ): FilaLibroPagosExport[] {
   return pagos.map((p) => ({
     fecha: formatDate(p.fecha),
-    tipo: TIPO_PAGO_LABELS[p.tipo],
+    tipo: etiquetaTipoPagoLibro(p),
     contraparte: p.contraparte ?? "—",
     documento: p.documento_folio ?? "—",
     metodo: p.metodo_pago ?? "—",

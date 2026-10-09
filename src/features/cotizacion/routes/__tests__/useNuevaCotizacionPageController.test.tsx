@@ -37,6 +37,8 @@ const wizardState = {
   cotizacionId: null as string | null,
   currentStep: 1,
   costosInternos: [],
+  conceptosUSD: [], conceptosMXN: [], tipoCambioUsd: 20.4,
+  setConceptosUSD: vi.fn(), setConceptosMXN: vi.fn(), setTipoCambioUsd: vi.fn(),
   selloActual: null,
   setCotizacionId: vi.fn(),
   setCurrentStep: vi.fn(),
@@ -73,6 +75,7 @@ vi.mock("@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad", () 
 
 const draftRestore = {
   restaurando: false,
+  pendienteBorrador: false,
   draftDetectado: null as { savedAt: string } | null,
   banderaBorrador: false,
   conflictoSello: false,
@@ -106,6 +109,7 @@ beforeEach(() => {
   wizardState.cotizacionId = null;
   wizardState.currentStep = 1;
   draftRestore.restaurando = false;
+  draftRestore.pendienteBorrador = false;
   draftRestore.permitePrefillProspecto = true;
   draftRestore.conflictoSello = false;
   draftRestore.draftDetectado = null;
@@ -200,6 +204,7 @@ describe("useNuevaCotizacionPageController — autosave y conflictos", () => {
     });
     expect(autosaveArgs.at(-1)).toHaveProperty("selloActual");
     expect(autosaveArgs.at(-1)).toHaveProperty("costosInternos");
+    expect(autosaveArgs.at(-1)).toMatchObject({ conceptosUSD: [], conceptosMXN: [], tipoCambioUsd: 20.4 });
   });
 
   it("se pausa mientras se restaura el borrador", () => {
@@ -235,5 +240,23 @@ describe("useNuevaCotizacionPageController — autosave y conflictos", () => {
     const { result } = render();
     act(() => { result.current.recargarPorConflictoSello(); });
     expect(navigateSpy).toHaveBeenCalledWith("/cotizaciones");
+  });
+});
+
+
+describe("barrera de captura durante recuperación", () => {
+  it("decisión pendiente congela autosave y escrituras del wizard", () => {
+    draftRestore.pendienteBorrador = true;
+    const { result } = render();
+    expect(result.current.w.isPending).toBe(true);
+    expect(autosaveArgs.at(-1)?.paused).toBe(true);
+  });
+  it("finalizar deshabilita autosave antes de que pueda revivir el draft borrado", () => {
+    const { result } = render();
+    const done = wizardArgs.at(-1)?.onFinalized as (id: string) => void;
+    act(() => done("cot-1"));
+    expect(autosaveArgs.at(-1)?.enabled).toBe(false);
+    act(() => result.current.cerrarSuccess());
+    expect(autosaveArgs.at(-1)?.enabled).toBe(false);
   });
 });

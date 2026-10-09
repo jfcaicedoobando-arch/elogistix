@@ -4,7 +4,7 @@
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
 import { diaNegocio, mesDeFechaNegocio, mxnFactura, type TcFallbacks } from "./mxn";
-import { calcularSaldosCarteraMxn } from "./saldoCartera";
+import { calcularSaldosCartera } from "./saldoCartera";
 
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
@@ -12,15 +12,13 @@ import type { EmbarqueAgg } from "./calculos";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
-/** Tolerancia de saldo (MXN) para considerar una factura cubierta. */
-const TOLERANCIA_SALDO_MXN = 0.5;
 const ESTADOS_FACTURADOS = new Set<string>(FACTURA_ESTADOS_VIVOS);
 
 
 export function calcularAntiguedad(
   facturas: FacturaRow[], pagos: PagoRow[], fallbacks: TcFallbacks, hoy: Date, ncs: NotaCreditoRow[] = [],
 ): BucketAntiguedad[] {
-  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbacks);
+  const saldo = calcularSaldosCartera(facturas, pagos, ncs, fallbacks);
   const buckets: Record<BucketAntiguedad["bucket"], BucketAntiguedad> = {
     "Corriente": { bucket: "Corriente", monto_mxn: 0, facturas: 0 },
     "1-30": { bucket: "1-30", monto_mxn: 0, facturas: 0 },
@@ -28,11 +26,11 @@ export function calcularAntiguedad(
     "+60": { bucket: "+60", monto_mxn: 0, facturas: 0 },
   };
   for (const f of facturas) {
-    const s = saldo.get(f.id) ?? 0;
-    if (s <= TOLERANCIA_SALDO_MXN) continue;
+    const s = saldo.get(f.id);
+    if (!s?.tieneSaldo) continue;
     const dias = f.fecha_vencimiento ? diasVencidos(f.fecha_vencimiento, hoy) : 0;
     const key: BucketAntiguedad["bucket"] = dias <= 0 ? "Corriente" : dias <= 30 ? "1-30" : dias <= 60 ? "31-60" : "+60";
-    buckets[key].monto_mxn += s; buckets[key].facturas += 1;
+    buckets[key].monto_mxn += s.monto_mxn; buckets[key].facturas += 1;
   }
   return [buckets.Corriente, buckets["1-30"], buckets["31-60"], buckets["+60"]];
 }
@@ -67,13 +65,12 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const facturado = facturas
     .filter((f) => ESTADOS_FACTURADOS.has(f.estado) && f.fecha_emision.slice(0, 7) === mesActual)
     .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbacks), 0);
-  const saldos = calcularSaldosCarteraMxn(
+  const saldos = calcularSaldosCartera(
     facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbacks,
   );
   const vencidas = facturasCartera.filter((f) => {
-    if (f.estado === "Cancelada" || f.estado === "Pagada") return false;
     if (!f.fecha_vencimiento) return false;
-    if ((saldos.get(f.id) ?? 0) <= TOLERANCIA_SALDO_MXN) return false;
+    if (!saldos.get(f.id)?.tieneSaldo) return false;
     // P2: mismo criterio que el aging — vencer HOY no es estar vencida.
     return diasVencidos(f.fecha_vencimiento, hoy) > 0;
   });

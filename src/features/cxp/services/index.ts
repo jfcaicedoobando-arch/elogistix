@@ -30,3 +30,4 @@ export * from "./proveedorFacturas.helpers";
 export * from "./proveedorNotasCredito";
 export * from "./proveedorSalud";
 export * from "./uuidsCapturados";
+export { sugerirMovsParaPagoProveedor } from "./conciliacionBancaria";

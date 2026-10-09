@@ -12,10 +12,10 @@ import type { PagoLibro } from "../../domain/libroPagos";
 function celdaConciliacion(metodo_pago: string) {
   const col = libroPagosColumns().find((c) => c.id === "conciliado");
   if (typeof col?.cell !== "function") throw new Error("falta celda conciliación");
-  const row: Pick<PagoLibro, "conciliado" | "metodo_pago" | "cuenta_bancaria_id" | "movimiento_id"> = {
-    conciliado: false, metodo_pago, cuenta_bancaria_id: null, movimiento_id: null,
+  const row: Pick<PagoLibro, "es_ajuste" | "conciliado" | "metodo_pago" | "cuenta_bancaria_id" | "movimiento_id"> = {
+    es_ajuste: false, conciliado: false, metodo_pago, cuenta_bancaria_id: null, movimiento_id: null,
   };
-  // SAFE-CAST: la celda sólo necesita las cuatro propiedades de conciliación.
+  // SAFE-CAST: la celda sólo necesita las propiedades de conciliación.
   return col.cell({ row: { original: row } } as never) as React.ReactElement;
 }
 const devolucion: PagoDetalleEncabezado = {

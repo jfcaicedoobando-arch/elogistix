@@ -14,6 +14,36 @@ set -euo pipefail
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 CUTOFF_ENV="supabase/schema/squash/cutoff.env"
 
+AUD54_FORWARD="20261009005400_audit54_cierre_cxc_saldo_real.sql"
+audit54_runtime_checked=0
+
+# The mandatory Actions SQL job tests AUD54 against the actual pre-forward
+# replay state. Clone a schema-only checkpoint once, never replay history twice.
+# The harness owns and removes its clone and transient QA role; caller DB stays
+# untouched until the normal ordered migration replay resumes below.
+audit54_checkpoint_runtime() {
+  if [[ "${ISOLATED_QA_DB:-}" != 1 || "${PGDATABASE:-}" != postgres || "${PGUSER:-}" != postgres ]]; then
+    echo "::error::AUD54 runtime requires the isolated Actions postgres service" >&2
+    return 1
+  fi
+  local checkpoint before after status=0
+  checkpoint="$(mktemp)"
+  before="$("${PSQL[@]}" -A -t -c "SELECT md5(to_jsonb(p)::text) FROM pg_proc p WHERE p.oid='public.validar_cierre_embarque(uuid)'::regprocedure;")"
+  if pg_dump --schema-only --file="$checkpoint"; then
+    PGDATABASE=audit54_cxc_contract AUD54_CXC_CHECKPOINT="$checkpoint" \
+      bash scripts/ci/audit54-cxc-forward-runtime.sh || status=$?
+  else
+    status=1
+  fi
+  rm -f -- "$checkpoint"
+  [[ "$status" == 0 ]] || return "$status"
+  after="$("${PSQL[@]}" -A -t -c "SELECT md5(to_jsonb(p)::text) FROM pg_proc p WHERE p.oid='public.validar_cierre_embarque(uuid)'::regprocedure;")"
+  if [[ "$before" != "$after" ]]; then
+    echo "::error::AUD54 runtime changed the source checkpoint function" >&2
+    return 1
+  fi
+}
+
 # Stubbea CREATE EXTENSION de extensiones no disponibles en la imagen de CI.
 stub_extensiones() {
   sed -E \
@@ -60,6 +90,13 @@ requerir_archivo "${SQUASH_INCLUDED:-}" "inventario incluido en el squash"
 echo "▶ Baseline squash: $SQUASH_FILE"
 stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction
 
+# Opt-in snapshot for selector installer negatives. The exact hash is reviewed;
+# capture before its atomic migration, while no psql connection owns postgres.
+selector148_installer=""
+if [[ "${SELECTOR148_ISOLATED_CI:-}" == 1 ]]; then
+  selector148_installer="$(node scripts/ci/selector148/control.cjs locate)"
+fi
+
 echo "▶ Replay de migraciones posteriores al squash"
 shopt -s nullglob
 aplicadas=0
@@ -84,6 +121,33 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   fi
 
 
+  # AUD54 controls are opt-in in the disposable Actions service.
+  if [[ "${AUD54_CI:-}" == 1 && "$base" == "$AUD54_FORWARD" ]]; then
+    [[ "$audit54_runtime_checked" == 0 ]] || { echo "::error::AUD54 runtime checkpoint repeated"; exit 1; }
+    echo "AUD54 mandatory catalog/transaction runtime on pre-forward checkpoint"
+    audit54_checkpoint_runtime
+    audit54_runtime_checked=1
+  fi
+
+  # Focused financial-envelope controls supplied by the financial49 package.
+  if [[ "${FINANCIAL49_CI:-}" == 1 ]] && [[ "$base" == 20261009010000_audit148_cobertura_documental_exacta.sql || "$base" == 20261009010100_audit148_papelera_seguros.sql ]]; then
+    node scripts/ci/financial49/test-envelope.mjs "$f"
+  fi
+
+  if [[ -n "$selector148_installer" && "$f" == "$selector148_installer" ]]; then
+    node scripts/ci/selector148/control.cjs capture
+  fi
+
+  # Narrow real-schema installer controls run before the exact container forward.
+  if [[ "${PRICING_CONTAINER_CI:-}" == 1 && "$base" == 20261009014000_pricing_container_rpc_guard.sql ]]; then
+    node scripts/ci/pricing-container/test-envelope.mjs "$f"
+  fi
+
+  # Leads installer controls are opt-in only in the disposable Actions service.
+  if [[ "${LEADS_SCOPE_CI:-}" == 1 && "$base" == 20261009031000_crm_leads_duplicados_scope.sql ]]; then
+    node scripts/ci/leads-scope/test-envelope.mjs "$f"
+  fi
+
   echo "▶ $base"
   if stub_extensiones "$f" | "${PSQL[@]}" --single-transaction; then
     aplicadas=$((aplicadas + 1))
@@ -92,5 +156,10 @@ for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
   echo "::error file=$f::la migración no aplica sobre el baseline squash"
   exit 1
 done
+
+if [[ "${AUD54_CI:-}" == 1 && "$audit54_runtime_checked" != 1 ]]; then
+  echo "::error::AUD54 runtime checkpoint was not executed before its forward"
+  exit 1
+fi
 
 echo "✓ BD preparada · $aplicadas migraciones aplicadas · $omitidas_datos de datos omitidas"

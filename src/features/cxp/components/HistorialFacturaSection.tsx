@@ -53,7 +53,8 @@ function iconoTipo(tipo: string) {
 }
 
 function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
-  const { Icon, color, ring } = iconoTipo(ev.tipo);
+  const tipoVisible = ev.tipo === "pago" && ev.detalles?.es_ajuste === true ? "ajuste" : ev.tipo;
+  const { Icon, color, ring } = iconoTipo(tipoVisible);
   const motivo =
     ev.tipo === "rechazada" && typeof ev.detalles?.motivo_rechazo === "string" && ev.detalles.motivo_rechazo.trim()
       ? ev.detalles.motivo_rechazo

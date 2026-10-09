@@ -26,6 +26,7 @@ export function useTabDemorasController(embarqueId: string) {
   const updateMut = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: DraftPatch }) =>
       actualizarDemorasContenedor(id, patch),
+    onMutate: () => ({ embarqueId }),
     onSuccess: (_, vars) => {
       notifySuccess(undefined, { title: "Demoras del contenedor actualizadas" });
       setDrafts((d) => {
@@ -36,6 +37,12 @@ export function useTabDemorasController(embarqueId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
+    },
+    // The existing trigger can materialize costs before a transport error.
+    onSettled: (_data, _error, _variables, context) => {
+      if (context?.embarqueId) {
+        return qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(context.embarqueId), exact: true });
+      }
     },
     onError: (err: Error) => notifyError(undefined, {
       title: "No se pudieron actualizar las demoras", description: getErrorMessage(err), error: err,

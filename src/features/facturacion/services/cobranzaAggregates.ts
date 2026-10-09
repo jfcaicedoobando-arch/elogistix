@@ -1,3 +1,4 @@
+import { tieneSaldoMonetario } from "@/lib/financial/toleranciaPago";
 /**
  * Agregados puros de Cobranza (KPIs y saldos por moneda).
  * Extraído de `cobranza.ts` en 12.61.18 (Sprint 2.1, Power-of-10 #1: ≤200 líneas).
@@ -39,7 +40,7 @@ export function agruparSaldosPorMoneda(filas: FacturaCobranza[]): SaldosPorMoned
   let descartadas = 0;
 
   for (const f of filas) {
-    if (f.saldo <= 0) continue;
+    if (!tieneSaldoMonetario(f.saldo)) continue;
     if (f.moneda === "MXN") bucketMXN.push(f.saldo);
     else if (f.moneda === "USD") bucketUSD.push(f.saldo);
     else {
@@ -74,11 +75,13 @@ export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
   let facturas_vencidas = 0;
 
   for (const f of filas) {
-    if (f.saldo <= 0) continue;
+    if (!tieneSaldoMonetario(f.saldo)) continue;
+    const vencida = esCxcVencida(f);
+    // El conteo es documental: incluye todas las monedas, sin convertir montos.
+    if (vencida) facturas_vencidas++;
     if (f.moneda !== "MXN" && f.moneda !== "USD") continue;
     const esUsd = f.moneda === "USD";
-    if (esCxcVencida(f)) {
-      facturas_vencidas++;
+    if (vencida) {
       (esUsd ? vencidoUSD : vencidoMXN).push(f.saldo);
     }
     if (estaPorVencer(f.dias_vencido)) {

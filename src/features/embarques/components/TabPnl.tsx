@@ -3,7 +3,6 @@
  *
  * v13.56.2 — auditoría (paso 5): descompuesto de 289 → ~115 líneas.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -12,7 +11,7 @@ import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarq
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
+import { PnlDetalleFinanciero } from "./pnl/PnlDetalleFinanciero";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
 import { PnlTipoCambioNota } from "./pnl/PnlTipoCambioNota";
 import { PnlAvisosCards } from "./pnl/PnlAvisosCards";
@@ -51,20 +50,36 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
   // P2-7: redondeo a centavos antes de restar, igual que `computeEmbarqueKpis`
   // en el tab Costos. Así Costos y Utilidad muestran la misma cifra y la
   // utilidad mostrada es la resta de la venta y el costo mostrados.
-  const ventaReal = centavosPnl(data.venta.real_mxn);
-  const costoReal = centavosPnl(data.costo.real_mxn);
+  const ventaReal = data.venta.real_mxn !== null && Number.isFinite(data.venta.real_mxn)
+    ? centavosPnl(data.venta.real_mxn) : null;
+  const costoReal = data.costo.real_mxn !== null && Number.isFinite(data.costo.real_mxn)
+    ? centavosPnl(data.costo.real_mxn) : null;
   const ventaPresup = centavosPnl(data.venta.presupuestada_mxn);
   const costoPresup = centavosPnl(data.costo.presupuestado_mxn);
   const utilidadPresup = centavosPnl(ventaPresup - costoPresup);
   const margenPresup = ventaPresup > 0 ? (utilidadPresup / ventaPresup) * 100 : 0;
 
 
-  const costosIncompletos = data.estado_costos === "incompleto";
-  const dVenta = deltaPnl(ventaReal, ventaPresup);
-  const dCosto = deltaPnl(costoReal, costoPresup);
+  const coberturaNoEvaluada = data.seguros_cobertura?.evaluada !== true;
+  const segurosInconsistentes = data.seguros_cobertura?.inconsistentes ?? 0;
+  const documentacionNoEvaluada = data.costos_documentacion?.evaluada !== true;
+  const conceptosSinDocumentar = data.costos_documentacion?.sin_documentar ?? 0;
+  const costosIncompletos = data.estado_costos === "incompleto" || costoReal === null
+    || coberturaNoEvaluada || segurosInconsistentes > 0
+    || documentacionNoEvaluada || conceptosSinDocumentar > 0;
+  const ingresos = data.ingresos_documentacion;
+  const ingresosNoEvaluados = ingresos?.evaluada !== true;
+  const ingresosIncompletos = data.estado_ingresos !== "completo" || ingresosNoEvaluados || ventaReal === null
+    || (ingresos?.notas_credito_sin_base ?? 0) > 0 || (ingresos?.notas_credito_sin_valoracion ?? 0) > 0
+    || (ingresos?.facturas_sin_valoracion ?? 0) > 0 || (ingresos?.repartos_provisionales ?? 0) > 0
+    || (ingresos?.desbordamientos ?? 0) > 0;
+  const actividadIngresos = (ingresos?.facturas ?? 0) > 0 || (ingresos?.notas_credito_activas ?? 0) > 0;
+  const dVenta = deltaPnl(ventaReal ?? 0, ventaPresup);
+  const dCosto = deltaPnl(costoReal ?? 0, costoPresup);
   const { utilidadReal, margenReal, alertaSobrecosto, alertaVenta, alertaMargen, sinActividadReal } =
     calcularAlertasPnl({
       ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct, estadoEmbarque, costosIncompletos,
+      ingresosIncompletos, actividadIngresos,
     });
   const dUtilidad = deltaPnl(utilidadReal ?? 0, utilidadPresup);
 
@@ -79,20 +94,20 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
             muestran neutrales: sólo presupuesto como contexto, sin Δ ni tonos
             de alerta; pintar Δ −100% sería una pérdida ficticia. */}
         <KpiCard
-          label="Venta real"
-          value={fmtPnl(ventaReal)}
+          label={ingresosIncompletos ? "Venta observada · provisional" : "Venta real"}
+          value={ventaReal === null ? "No calculable" : fmtPnl(ventaReal)}
           delta={
-            sinActividadReal
+            sinActividadReal || ingresosIncompletos
               ? `Presup. ${fmtPnl(ventaPresup)}`
               : `Presup. ${fmtPnl(ventaPresup)} · Δ ${fmtPnl(dVenta.abs)}`
           }
-          variant={sinActividadReal ? "default" : ventaReal >= ventaPresup ? "success" : "warning"}
+          variant={sinActividadReal || ingresosIncompletos || ventaReal === null ? "default" : ventaReal >= ventaPresup ? "success" : "warning"}
         />
         <KpiCard
-          label="Costo real"
-          value={fmtPnl(costoReal)}
+          label={costosIncompletos ? "Costo observado · provisional" : "Costo real"}
+          value={costoReal === null ? "No calculable" : fmtPnl(costoReal)}
           delta={
-            sinActividadReal
+            sinActividadReal || costoReal === null
               ? `Presup. ${fmtPnl(costoPresup)}`
               : `Presup. ${fmtPnl(costoPresup)} · Δ ${fmtPnl(dCosto.abs)}`
           }
@@ -102,7 +117,7 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
           label="Utilidad real"
           value={utilidadReal === null ? "No calculable" : fmtPnl(utilidadReal)}
           delta={
-            sinActividadReal || costosIncompletos
+            sinActividadReal || utilidadReal === null
               ? `Presup. ${fmtPnl(utilidadPresup)}`
               : `Presup. ${fmtPnl(utilidadPresup)} · Δ ${fmtPnl(dUtilidad.abs)}`
           }
@@ -111,7 +126,7 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
         <KpiCard
           label="Margen real"
           // UIA-10: sin venta real el margen no es 0%, es indeterminado.
-          value={margenReal === null ? "No calculable" : ventaReal > 0 ? pctPnl(margenReal) : "n/a"}
+          value={margenReal === null ? "No calculable" : pctPnl(margenReal)}
           delta={`Presup. ${pctPnl(margenPresup)}`}
 
           variant={
@@ -129,9 +144,16 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
       <PnlAvisosCards
         sinActividadReal={sinActividadReal}
         costosIncompletos={costosIncompletos}
+        ingresosIncompletos={ingresosIncompletos}
+        ingresosNoEvaluados={ingresosNoEvaluados}
+        ingresos={ingresos}
         notasCreditoSinBase={data.notas_credito_sin_base}
         costoSinAsignar={data.costo_sin_asignar_mxn}
         facturasSobreasignadas={data.facturas_sobreasignadas}
+        coberturaNoEvaluada={coberturaNoEvaluada}
+        segurosInconsistentes={segurosInconsistentes}
+        documentacionNoEvaluada={documentacionNoEvaluada}
+        conceptosSinDocumentar={conceptosSinDocumentar}
         alertaSobrecosto={alertaSobrecosto}
         alertaVenta={alertaVenta}
         alertaMargen={alertaMargen}
@@ -139,49 +161,7 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
         margenReal={margenReal}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Pendiente de cobro a cliente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-kpi">{fmtPnl(data.venta.pdte_cobro_mxn)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Pendiente de pago a proveedores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-kpi">{fmtPnl(data.costo.pdte_pago_mxn)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* v13.823.367 — Sin actividad real no se pintan comparativas
-          Presupuestado vs. Real: con Real = 0 toda fila leería Δ −100%,
-          una desviación ficticia. El card de contexto ya lo explica. */}
-      {!sinActividadReal && (
-        <>
-          <PnlComparativaTable
-            titulo="Ingresos por concepto (Presupuestado vs. Real)"
-            rows={data.por_concepto}
-            invertirAlerta={false}
-          />
-          <PnlComparativaTable
-            titulo="Costos por concepto (Presupuestado vs. Real)"
-            rows={data.por_concepto_costo}
-            invertirAlerta
-          />
-          <p className="text-body-sm text-muted-foreground">
-        {/* v13.552.0: el KPI "Costo real" ya usa la base gravable (sin IVA) y
-            descuenta notas de crédito prorrateadas, igual que el desglose. La
-            diferencia restante viene de facturas sin conceptos capturados. */}
-        El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
-        proveedor no tiene conceptos capturados, la base pendiente de desglosar aparece como "(factura completa / base sin detalle)".
-          </p>
-        </>
-      )}
+      <PnlDetalleFinanciero data={data} sinActividadReal={sinActividadReal} />
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />

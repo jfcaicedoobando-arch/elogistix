@@ -7,7 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
-import { todayLocalISO } from "@/lib/date/today";
+import { z } from "zod";
 
 export interface BandejaConteos {
   porTimbrar: number;
@@ -17,12 +17,12 @@ export interface BandejaConteos {
 }
 
 /**
- * Conteos livianos con `head: true` (no trae filas, sólo el `count`).
+ * Conteos livianos. Vencidas usa el saldo neto del canon de Cobranza,
+ * sin cargar ni truncar filas para contar.
  * "Por facturar" (hueco) no se cuenta aquí: se lee del hook
  * `useHuecoFacturacion` que ya calcula su total.
  */
 export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos> {
-  const hoy = todayLocalISO();
   const [porTimbrar, porCobrar, vencidas, reps] = await Promise.all([
     supabase
       .from("facturas")
@@ -32,22 +32,8 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .is("facturapi_id", null)
       .is("deleted_at", null)
       .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10)),
-    supabase
-      .from("facturas")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .in("estado", ["Emitida", "Parcialmente pagada"])
-      .is("deleted_at", null)
-      // EC-19: facturas sin fecha de vencimiento (import/migración o captura
-      // incompleta) no entraban a ninguna cubeta; se cuentan como "por cobrar".
-      .or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${hoy}`),
-    supabase
-      .from("facturas")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .in("estado", ["Emitida", "Parcialmente pagada"])
-      .is("deleted_at", null)
-      .lt("fecha_vencimiento", hoy),
+    supabase.rpc("cobranza_conteo_por_cobrar", { p_organization_id: orgId }),
+    supabase.rpc("cobranza_conteo_vencidas", { p_organization_id: orgId }),
     supabase
       .from("pagos_factura")
       .select("id", { count: "exact", head: true })
@@ -62,8 +48,8 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
   }
   return {
     porTimbrar: porTimbrar.count ?? 0,
-    porCobrar: porCobrar.count ?? 0,
-    vencidas: vencidas.count ?? 0,
+    porCobrar: z.number().int().nonnegative().parse(porCobrar.data),
+    vencidas: z.number().int().nonnegative().parse(vencidas.data),
     repPendientes: reps.count ?? 0,
   };
 }

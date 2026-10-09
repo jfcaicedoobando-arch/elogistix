@@ -66,7 +66,7 @@ export function BandejaTabs({ activeBandeja, onSelect }: {
   activeBandeja: BandejaId;
   onSelect: (id: BandejaId) => void;
 }) {
-  const { data: conteos } = useBandejaConteos();
+  const { data: conteos, isError, isFetching, refetch } = useBandejaConteos();
   const { totalEmbarques } = useHuecoFacturacion();
   const { data: proformasListasCount = 0 } = useProformasListasCount();
 
@@ -144,6 +144,16 @@ export function BandejaTabs({ activeBandeja, onSelect }: {
           );
         })}
       </TabsList>
+      {isError && (
+        <div role="alert" className="flex flex-wrap items-center gap-2 px-3 py-2 text-body-sm text-destructive">
+          <span>{conteos
+            ? "No se pudieron actualizar los conteos. Se muestran los últimos disponibles."
+            : "No se pudieron cargar los conteos."}</span>
+          <Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+            Reintentar conteos
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

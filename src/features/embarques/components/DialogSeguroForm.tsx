@@ -18,6 +18,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   embarqueId: string;
   seguro?: SeguroEmbarque | null;
+  tipoCambioUsd?: number | null;
+  tipoCambioEur?: number | null;
 }
 
 type FormState = Omit<SeguroEmbarqueInput, "embarque_id">;
@@ -38,7 +40,7 @@ const emptyState = (): FormState => ({
   proveedor_factura_id: null,
 });
 
-export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Props) {
+export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro, tipoCambioUsd = null, tipoCambioEur = null }: Props) {
   const [form, setForm] = useState<FormState>(emptyState());
   const create = useCreateSeguro(embarqueId);
   const update = useUpdateSeguro(embarqueId);
@@ -66,19 +68,24 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           }
         : emptyState(),
     );
-  }, [open, seguro]);
+  }, [open, seguro, embarqueId]);
 
   const setField = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const handleSubmit = async () => {
     if (!validarSeguroForm(form, isEdit)) return;
-    if (isEdit && seguro) {
-      await update.mutateAsync({ id: seguro.id, patch: form });
-    } else {
-      await create.mutateAsync({ ...form, embarque_id: embarqueId });
+    try {
+      if (isEdit && seguro) {
+        await update.mutateAsync({ id: seguro.id, patch: form });
+      } else {
+        await create.mutateAsync({ ...form, embarque_id: embarqueId });
+      }
+      onOpenChange(false);
+    } catch {
+      // The mutation displays the server error. Keep the user's values and
+      // dialog open; a rejected or stale selection is never a successful save.
     }
-    onOpenChange(false);
   };
 
   return (
@@ -100,6 +107,8 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         <SeguroFormCamposPrincipales form={form} setField={setField} />
         <SeguroFormCamposAdicionales form={form} setField={setField} />
         <SeguroFacturaProveedorSelect embarqueId={embarqueId} value={form.proveedor_factura_id}
+          savedValue={seguro?.proveedor_factura_id} prima={form.prima} moneda={form.moneda}
+          seguroId={seguro?.id ?? null} tipoCambioUsd={tipoCambioUsd} tipoCambioEur={tipoCambioEur} open={open}
           onChange={(id) => setField("proveedor_factura_id", id)} />
       </div>
     </FormDialogShell>

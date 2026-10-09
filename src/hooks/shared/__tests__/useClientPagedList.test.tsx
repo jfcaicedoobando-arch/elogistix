@@ -132,4 +132,31 @@ describe("useClientPagedList", () => {
     await act(async () => result.current.setSearch("sin resultados"));
     expect(result.current.filteredRows).toEqual([]);
   });
+  it("clamps a stale URL page and persists the correction when rows shrink", async () => {
+    const { result, rerender } = renderHook(({data}: {data: Row[]}) => useClientPagedList({data, defaultFilters: DEFAULTS}), {
+      initialProps: {data: DATA},
+      wrapper: withNuqsTestingAdapter({hasMemory: true, searchParams: {page: "2", ps: "2"}}),
+    });
+    expect(result.current.rows).toHaveLength(1);
+    rerender({data: DATA.slice(0, 2)});
+    expect(result.current.rows).toHaveLength(2);
+    expect(result.current.page).toBe(0);
+    expect(result.current.pagination.page).toBe(0);
+    await act(async () => {});
+    rerender({data: DATA});
+    expect(result.current.page).toBe(0);
+  });
+
+  it("does not discard a deep-linked page while the dataset is loading", async () => {
+    const { result, rerender } = renderHook(({data, isLoading}: {data: Row[] | undefined; isLoading: boolean}) =>
+      useClientPagedList({data, isLoading, defaultFilters: DEFAULTS}), {
+        initialProps: {data: undefined as Row[] | undefined, isLoading: true},
+        wrapper: withNuqsTestingAdapter({hasMemory: true, searchParams: {page: "2", ps: "2"}}),
+      });
+    await act(async () => {});
+    rerender({data: DATA, isLoading: false});
+    expect(result.current.page).toBe(2);
+    expect(result.current.rows).toHaveLength(1);
+  });
+
 });

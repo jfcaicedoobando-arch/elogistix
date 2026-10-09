@@ -43,6 +43,28 @@ describe("loadCarteraAbierta", () => {
     expect(out).toEqual({ facturas: [], pagos: [], ncs: [] });
   });
 
+  it("lee Pagada para clasificar su evidencia sin ampliar org ni estados terminales", async () => {
+    await loadCarteraAbierta("org-54");
+    const factura = llamadas.find((l) => l.tabla === "facturas")!;
+    expect(factura.filtros).toEqual(expect.arrayContaining([
+      { op: "in", args: ["estado", ["Emitida", "Vencida", "Parcialmente pagada", "Pagada"]] },
+      { op: "eq", args: ["organization_id", "org-54"] },
+      { op: "is", args: ["deleted_at", null] },
+    ]));
+    expect(factura.filtros.some((f) => f.op === "gte")).toBe(false);
+  });
+
+  it("acota pagos y NC a IDs de facturas autorizadas y excluye borrados", async () => {
+    datosPorTabla.set("facturas", [{ id: "f-org54", estado: "Pagada" }]);
+    await loadCarteraAbierta("org-54");
+    for (const tabla of ["pagos_factura", "factura_notas_credito"]) {
+      expect(llamadas.find((l) => l.tabla === tabla)!.filtros).toEqual(expect.arrayContaining([
+        { op: "in", args: ["factura_id", ["f-org54"]] },
+        { op: "is", args: ["deleted_at", null] },
+      ]));
+    }
+  });
+
   it("consulta NC sólo con estado Timbrada o Aplicada y sin eliminar", async () => {
     datosPorTabla.set("facturas", [{ id: "f1", total: 1000, moneda: "MXN", estado: "Emitida" }]);
     datosPorTabla.set("pagos_factura", [{ factura_id: "f1", monto_aplicado_factura: 200, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }]);

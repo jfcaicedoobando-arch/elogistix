@@ -59,7 +59,7 @@ export async function fetchPartidasHuerfanasCount(embarqueId: string): Promise<n
   for (const lote of chunkIds(fids)) {
     const data = await leerTodasLasPaginas("embarques.partidasParaHuerfanas", (ini, fin) => supabase
       .from("proveedor_facturas_conceptos")
-      .select("proveedor_factura_id, concepto_costo_id, conceptos_costo(embarque_id, deleted_at, origen)")
+      .select("proveedor_factura_id, concepto_costo_id, conceptos_costo!proveedor_facturas_conceptos_concepto_costo_id_fkey(embarque_id, deleted_at, origen)")
       .in("proveedor_factura_id", lote)
       .order("id").range(ini, fin));
     // SAFE-CAST: columnas y embed corresponden a PartidaParaHuerfanas.
