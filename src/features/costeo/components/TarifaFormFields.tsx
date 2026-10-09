@@ -15,6 +15,7 @@ interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: bo
 
 import { NavieraQuickCreate } from "./NavieraQuickCreate";
 import { AgenteProvisionalDialog } from "./AgenteProvisionalDialog";
+import { RutaQuickCreate } from "./RutaQuickCreate";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo/utils/puertoLabel";
 import type { RutaOption } from "./MultiRutaSelect";
 
