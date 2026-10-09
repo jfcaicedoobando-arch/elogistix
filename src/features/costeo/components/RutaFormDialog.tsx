@@ -45,7 +45,8 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas, onCreada }: P
     setIntentoEnvio(true);
     if (!origenId || !destinoId || rutaDuplicada || mismoPuerto) return;
     try {
-      await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
+      const ruta = await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
+      onCreada?.(ruta.id);
       setOrigenId("");
       setDestinoId("");
       setIntentoEnvio(false);

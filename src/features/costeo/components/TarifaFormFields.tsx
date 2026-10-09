@@ -116,6 +116,10 @@ interface RutaTipoProps {
 export function RutaTipoFields({
   form, setForm, rutas, tipos, errores, multiple, rutaIds, onRutaIdsChange,
 }: RutaTipoProps) {
+  const elegirRutaNueva = (id: string) => {
+    if (multiple) onRutaIdsChange?.([...(rutaIds ?? []), id]);
+    else setForm({ ...form, ruta_id: id });
+  };
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
@@ -158,6 +162,7 @@ export function RutaTipoFields({
             </SelectContent>
           </Select>
         )}
+        <RutaQuickCreate rutas={rutas} onCreada={elegirRutaNueva} />
       </div>
       <div>
         <Label htmlFor="tarifa-tipo">Tipo de contenedor *</Label>
