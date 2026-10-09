@@ -3,8 +3,7 @@
  * (facturas de proveedor) y el TC DOF de la fecha de corte para valuar.
  */
 import { useMemo } from "react";
-import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
-import { useFacturasCxP } from "@/features/cxp/hooks";
+import { useCarteraSnapshot } from "./useCarteraSnapshot";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import {
   construirFilasCartera,
@@ -31,8 +30,7 @@ function filtrar(bloque: BloqueCartera, busqueda: string): BloqueCartera {
 }
 
 export function useCarteraAging(fechaCorte: string, busqueda: string) {
-  const cxc = useCobranza({});
-  const cxp = useFacturasCxP({});
+  const snapshot = useCarteraSnapshot();
   const tcQuery = useTcDofPorFecha(fechaCorte);
 
   const tc: TcCorte | null = useMemo(
@@ -50,7 +48,7 @@ export function useCarteraAging(fechaCorte: string, busqueda: string) {
 
   const bloqueCxc = useMemo<BloqueCartera>(() => {
     const filas = construirFilasCartera(
-      facturasCarteraDeCobranza(cxc.data ?? []),
+      facturasCarteraDeCobranza(snapshot.data?.cxc ?? []),
       fechaCorte,
       tc,
     );
@@ -60,30 +58,31 @@ export function useCarteraAging(fechaCorte: string, busqueda: string) {
       buckets: totalesPorBucket(filas),
       total: totalCartera(filas),
     };
-  }, [cxc.data, fechaCorte, tc]);
+  }, [snapshot.data?.cxc, fechaCorte, tc]);
 
   const bloqueCxp = useMemo<BloqueCartera>(() => {
-    const filas = construirFilasCartera(facturasCarteraDeCxp(cxp.data ?? []), fechaCorte, tc);
+    const filas = construirFilasCartera(facturasCarteraDeCxp(snapshot.data?.cxp ?? []), fechaCorte, tc);
     return {
       titulo: "Cuentas por pagar",
       filas,
       buckets: totalesPorBucket(filas),
       total: totalCartera(filas),
     };
-  }, [cxp.data, fechaCorte, tc]);
+  }, [snapshot.data?.cxp, fechaCorte, tc]);
 
   return {
+    dataScope: snapshot.data?.scope,
     tc,
     tcLoading: tcQuery.isLoading,
     tcError: tcQuery.isError,
     cxc: useMemo(() => filtrar(bloqueCxc, busqueda), [bloqueCxc, busqueda]),
     cxp: useMemo(() => filtrar(bloqueCxp, busqueda), [bloqueCxp, busqueda]),
-    isLoading: cxc.isLoading || cxp.isLoading || tcQuery.isLoading,
-    isError: cxc.isError || cxp.isError || tcQuery.isError,
+    isLoading: snapshot.isLoading || tcQuery.isLoading,
+    isError: snapshot.isError || tcQuery.isError,
     refetch: () => {
-      void cxc.refetch();
-      void cxp.refetch();
+      void snapshot.refetch();
       void tcQuery.refetch();
     },
   };
 }
+

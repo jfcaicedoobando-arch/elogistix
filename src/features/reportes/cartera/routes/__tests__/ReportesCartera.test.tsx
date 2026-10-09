@@ -16,7 +16,8 @@ const filas = construirFilasCartera([{
 }], "2026-09-30", null);
 const bloque = { titulo: "Cuentas por pagar", filas, buckets: totalesPorBucket(filas), total: totalCartera(filas) };
 const vacio = { titulo: "Cuentas por cobrar", filas: [], buckets: totalesPorBucket([]), total: totalCartera([]) };
-const listo = { tc: null, tcLoading: false, tcError: false, cxc: vacio, cxp: bloque, isLoading: false, isError: false, refetch: vi.fn() };
+const dataScope = { userId: "user-a", organizationId: "org-a", role: "admin", generation: 1 };
+const listo = { dataScope, tc: null, tcLoading: false, tcError: false, cxc: vacio, cxp: bloque, isLoading: false, isError: false, refetch: vi.fn() };
 
 function montar() {
   return render(<MemoryRouter><TooltipProvider><ReportesCartera /></TooltipProvider></MemoryRouter>);
@@ -53,9 +54,9 @@ describe("Cartera — exportaciones completas y estados", () => {
     montar();
     fireEvent.change(screen.getByRole("textbox", { name: "Cliente, proveedor, folio o expediente" }), { target: { value: "FP-000007" } });
     fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-    expect(mocks.csv).toHaveBeenCalledWith("2026-09-30", [vacio, bloque], "FP-000007");
+    expect(mocks.csv).toHaveBeenCalledWith("2026-09-30", [vacio, bloque], dataScope, "FP-000007");
     fireEvent.click(screen.getByRole("button", { name: "Exportar PDF" }));
-    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.stringContaining("Sin TC DOF disponible"), [vacio, bloque], "FP-000007"));
+    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.stringContaining("Sin TC DOF disponible"), [vacio, bloque], dataScope, "FP-000007"));
     await waitFor(() => expect(screen.getByRole("button", { name: "Exportar PDF" })).toBeEnabled());
   });
 
@@ -65,6 +66,13 @@ describe("Cartera — exportaciones completas y estados", () => {
     expect(screen.getByRole("button", { name: "Exportar CSV" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Exportar PDF" })).toBeDisabled();
     expect(screen.queryByText("FP-000007")).not.toBeInTheDocument();
+  });
+
+  it("bloquea ambos archivos cuando las filas no tienen ámbito acreditado", () => {
+    mocks.hook.mockReturnValue({ ...listo, dataScope: undefined });
+    montar();
+    expect(screen.getByRole("button", { name: "Exportar CSV" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Exportar PDF" })).toBeDisabled();
   });
 
   it("un resultado vacío resuelto no habilita descargas", () => {
@@ -99,7 +107,7 @@ describe("Cartera: copy EUR coherente con la valuación disponible", () => {
     expect(fila.getAllByText(/2,200\.00/)).toHaveLength(2);
     expect(eur.filas[0]).toMatchObject({ saldo: 100, mxnHistorico: 2200, mxnCorte: 2200, diferencia: 0 });
     fireEvent.click(screen.getByRole("button", { name: "Exportar PDF" }));
-    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.any(String), [vacio, eur], ""));
+    await waitFor(() => expect(mocks.pdf).toHaveBeenCalledWith("2026-09-30", expect.any(String), [vacio, eur], dataScope, ""));
   });
 
   it("muestra la revaluación EUR cuando CxC tiene histórico y TC del corte", () => {
@@ -128,3 +136,4 @@ describe("Cartera: copy EUR coherente con la valuación disponible", () => {
     expect(fila.getAllByText("MXN 0.00")).toHaveLength(3);
   });
 });
+

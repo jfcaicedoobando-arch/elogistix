@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.59] - 2026-10-09
+
+- Cartera PDF: conserva juntos título, encabezado y resumen de antigüedad para evitar recortes al cambiar de página; mantiene el detalle multipágina.
+- Cartera: vincula datos e identidad comercial al mismo ámbito de usuario y organización, y bloquea exportaciones obsoletas después de cambiar de sesión u organización. Sin cambios de cálculos financieros, base de datos ni permisos.
+- CI incorpora dos regresiones focalizadas con renderer PDF real para Cartera.
+
 ## [13.824.58] - 2026-10-09
 
 - CxP: una deuda íntegra positiva sin cobertura conserva su estatus y vencimiento; la tolerancia inclusiva de un centavo sólo absorbe remanentes después de pagos o NC válidos.

@@ -93,8 +93,12 @@ export function ReporteCarteraDocument({ fechaCorte, leyendaTc, bloques, emisor,
 
         {bloques.map((b) => (
           <View key={b.titulo}>
-            <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
-            <DataTable columns={colsTotales} rows={b.totales} headerTextStyle={reporteHeaderTextStyle} />
+            {/* Five aging buckets plus their total are a bounded summary: move
+                the entire section rather than painting a clipped fixed header. */}
+            <View wrap={false}>
+              <Text style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Antigüedad</Text>
+              <DataTable columns={colsTotales} rows={b.totales} headerTextStyle={reporteHeaderTextStyle} />
+            </View>
 
             <Text minPresenceAhead={70} style={[styles.h3, { marginTop: 10 }]}>{b.titulo} — Detalle de facturas</Text>
             {b.facturas.length === 0 ? (
