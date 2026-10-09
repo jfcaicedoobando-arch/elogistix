@@ -2,6 +2,7 @@
  * Opciones del tarifario que coinciden con la solicitud. Elegir una la guarda
  * en la solicitud y la marca respondida sin esperar a Pricing.
  */
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -16,6 +17,15 @@ interface Props { solicitud: SolicitudPricingRow; puedeElegir: boolean }
 
 export function OpcionesTarifario({ solicitud: s, puedeElegir }: Props) {
   const { opciones, elegida, esFob, cargosFob, cargosLocales, isLoading, busy, elegir } = useOpcionesTarifario(s);
+  const navigate = useNavigate();
+  const irACotizar = (tarifaId: string) => {
+    const q = new URLSearchParams({ tarifa: tarifaId });
+    if (s.oportunidad_id) q.set("oportunidad", s.oportunidad_id);
+    navigate(`/cotizaciones/nueva?${q.toString()}`);
+  };
+  const cotizar = async (id: string) => {
+    if (elegida === id || await elegir(id)) irACotizar(id);
+  };
   if (!elegida && s.estado !== "borrador" && s.estado !== "enviada") return null;
 
   return (
@@ -27,7 +37,8 @@ export function OpcionesTarifario({ solicitud: s, puedeElegir }: Props) {
       {opciones.map((t) => (
         <OpcionTarifarioCard key={t.id} tarifa={t}
           cargosFob={esFob ? cargosFob : []} cargosLocales={cargosLocales}
-          puedeElegir={!elegida && puedeElegir} busy={busy !== null} elegir={elegir} />
+          puedeElegir={!elegida && puedeElegir} busy={busy !== null} elegir={elegir}
+          puedeCotizar={puedeElegir && (!elegida || elegida === t.id)} cotizar={cotizar} />
       ))}
     </div>
   );
@@ -39,10 +50,12 @@ interface CardProps {
   cargosLocales: CargoTarifario[];
   puedeElegir: boolean;
   busy: boolean;
-  elegir: (id: string) => Promise<void>;
+  elegir: (id: string) => Promise<boolean>;
+  puedeCotizar: boolean;
+  cotizar: (id: string) => Promise<void>;
 }
 
-function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir, busy, elegir }: CardProps) {
+function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir, busy, elegir, puedeCotizar, cotizar }: CardProps) {
   const cargos = [
     ...cargosFob.filter((c) => c.entidad_id === t.agente?.id),
     ...cargosLocales.filter((c) => c.entidad_id === t.naviera?.id),
@@ -50,18 +63,23 @@ function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir,
   return (
     <Card>
       <CardContent className="grid gap-2 p-4 text-body-sm md:grid-cols-4">
-        <div><span className="text-muted-foreground">Ruta: </span>{t.ruta?.origen?.name ?? "—"} → {t.ruta?.destino?.name ?? "—"}</div>
+        <div><span className="text-muted-foreground">Puertos: </span>{t.ruta?.origen?.name ?? "—"} → {t.ruta?.destino?.name ?? "—"}</div>
         <div><span className="text-muted-foreground">Agente / Naviera: </span>{t.agente?.nombre ?? "—"} / {t.naviera?.name ?? "—"}</div>
         <div><span className="text-muted-foreground">{t.tipo?.code ?? ""}: </span>{formatCurrency(t.flete_base, t.moneda || "USD")}</div>
-        <div><span className="text-muted-foreground">Vigente hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
+        <div><span className="text-muted-foreground">Vigencia hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
         {cargos.map((c) => (
           <div key={c.id} className="md:col-span-2 text-muted-foreground">
             + {c.concepto}: {formatCurrency(c.monto, c.moneda)} {c.unidad ?? ""}
           </div>
         ))}
-        {puedeElegir && (
-          <div className="md:col-span-4">
-            <Button size="sm" disabled={busy} onClick={() => void elegir(t.id)}>Usar esta opción</Button>
+        {(puedeElegir || puedeCotizar) && (
+          <div className="flex flex-wrap gap-2 md:col-span-4">
+            {puedeElegir && (
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => void elegir(t.id)}>Usar esta opción</Button>
+            )}
+            {puedeCotizar && (
+              <Button size="sm" disabled={busy} onClick={() => void cotizar(t.id)}>Cotizar con esta opción</Button>
+            )}
           </div>
         )}
       </CardContent>
