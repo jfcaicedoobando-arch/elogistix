@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.64] - 2026-10-09
+
+- Alta rápida de rutas: aísla el envío del formulario de Ruta para que Guardar ruta no envíe también el formulario padre de Tarifa.
+- Agrega regresiones con portal real para creación y edición de tarifa, error y cancelación de ruta, y guardado posterior explícito de la tarifa. Sin migraciones ni cambios de datos o cálculos.
+
 ## [13.824.63] - 2026-10-09
 
 - Catálogo de contenedores: separa GP de Dry en las opciones de captura para conservar el UUID elegido; mantiene la equivalencia comercial histórica GP/DRY/DV/ST en las búsquedas de tarifas.

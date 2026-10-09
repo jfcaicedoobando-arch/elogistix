@@ -42,6 +42,8 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas, onCreada }: P
 
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
+    // El portal conserva el árbol React: no enviar la tarifa que contiene este diálogo.
+    e.stopPropagation();
     setIntentoEnvio(true);
     if (!origenId || !destinoId || rutaDuplicada || mismoPuerto) return;
     try {
@@ -117,3 +119,4 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas, onCreada }: P
     </FormDialogShell>
   );
 }
+
