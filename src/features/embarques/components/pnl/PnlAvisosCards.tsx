@@ -62,7 +62,7 @@ function PnlIngresosIncompletos({ ingresos, ingresosNoEvaluados }: Pick<Props, "
     repartos_provisionales = 0, desbordamientos = 0 } = ingresos ?? {};
   return (
     <Alert variant="warning">
-      <AlertCircle className="h-4 w-4" />
+      <AlertCircle className="size-4" />
       <AlertTitle>Ingresos incompletos</AlertTitle>
       <AlertDescription>
         La venta observada conserva únicamente el importe conocido y es provisional.

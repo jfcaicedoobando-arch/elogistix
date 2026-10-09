@@ -227,6 +227,9 @@ jobs:
         run: bash scripts/ci/run-rls-suites.sh
 
       - name: Selector148 — instalador, mutaciones y concurrencia serial
+        # Serial coverage: supabase/tests/selector148_disabled_gate.sql is the
+        # hash-verified copy run by tests/disabled-gate.sql in owned clones
+        # before activation and after restoring the disabled state.
         # DDL mutation, activation and committed seeds live only in clones of
         # the pre-selector template, never in the parallel rollback guard pool.
         env:

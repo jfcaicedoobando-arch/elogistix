@@ -70,7 +70,17 @@ BEGIN
       VALUES(fac,fx.org_a,hoy,0.50,caso.moneda::public.moneda,
         CASE WHEN caso.moneda='USD' THEN 20 ELSE 1 END,'Transferencia',
         CASE WHEN caso.pago_cancelado THEN 'Cancelado' ELSE 'NoAplica' END,
-        CASE WHEN caso.pago_borrado THEN now() ELSE NULL END,0.50);
+        CASE WHEN caso.pago_borrado THEN now() ELSE NULL END,0.50) RETURNING id INTO pago;
+      -- The INSERT trigger derives estado_rep; prepare cancellation afterward
+      -- with all triggers enabled, as in the existing canceled-REP guards.
+      IF caso.pago_cancelado THEN
+        UPDATE public.pagos_factura SET estado_rep='Cancelado' WHERE id=pago;
+      END IF;
+      PERFORM pg_temp.assert(EXISTS(
+        SELECT 1 FROM public.pagos_factura p WHERE p.id=pago
+          AND p.estado_rep=CASE WHEN caso.pago_cancelado THEN 'Cancelado' ELSE 'NoAplica' END
+          AND (p.deleted_at IS NOT NULL)=caso.pago_borrado),
+        'AUD54 canceled/deleted payment fixture must match its case: '||caso.nombre);
     END IF;
     IF caso.monto_pago IS NOT NULL THEN
       INSERT INTO public.pagos_factura(factura_id,organization_id,fecha_pago,monto,moneda,
