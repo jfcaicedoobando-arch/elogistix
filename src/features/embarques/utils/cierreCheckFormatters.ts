@@ -19,15 +19,15 @@ interface SaldoPorMoneda {
   notas_sin_tipo_cambio?: number;
   reparto_proporcional?: boolean;
 }
-
 function readPorMoneda(d: unknown): SaldoPorMoneda[] | null {
   const arr = pick(d, "por_moneda");
   return Array.isArray(arr) ? (arr as SaldoPorMoneda[]) : null;
 }
 
-function fmtSaldoPorMoneda(rows: SaldoPorMoneda[], umbral = 0.01): string | null {
+function fmtSaldoPorMoneda(rows: SaldoPorMoneda[], umbral = 0.01, sinCobertura = false): string | null {
   const partes = rows
-    .filter((r) => Number(r.saldo ?? 0) > umbral)
+    .filter((r) => Number(r.saldo ?? 0) > umbral
+      || (sinCobertura && Number(r.facturas_sin_cobertura ?? 0) > 0 && Number(r.saldo) > 0))
     .map((r) => fmtMoney(r.saldo, (r.moneda ?? "MXN").toUpperCase()));
   return partes.length > 0 ? partes.join(" + ") : null;
 }
@@ -65,15 +65,11 @@ export const fmtCxc = (d: unknown): string | null => {
   if (saldo > 0) partes.push(`saldo ${fmtMoney(saldo)}`);
   return partes.length > 0 ? partes.join(" · ") : null;
 };
-
 export const fmtCxp = (d: unknown): string | null => {
   const rows = readPorMoneda(d);
   if (rows) {
     const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
-    const saldoTxt = rows
-      .filter((r) => Number(r.saldo ?? 0) > 0.01
-        || (Number(r.facturas_sin_cobertura ?? 0) > 0 && Number(r.saldo) > 0))
-      .map((r) => fmtMoney(r.saldo, (r.moneda ?? "MXN").toUpperCase())).join(" + ");
+    const saldoTxt = fmtSaldoPorMoneda(rows, 0.01, true);
     const partes: string[] = [];
     if (pendientes > 0) partes.push(`${pendientes} factura(s) de proveedor por pagar`);
     if (saldoTxt) partes.push(`monto ${saldoTxt}`);
@@ -201,4 +197,3 @@ export const fmtMargenMinimoPct = (d: unknown): string | null => {
   if (utilidad != null) partes.push(`utilidad ${fmtMoney(utilidad)}`);
   return partes.join(" · ");
 };
-

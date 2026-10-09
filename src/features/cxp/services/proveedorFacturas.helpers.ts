@@ -62,12 +62,12 @@ export function diasVencido(fechaVenc: string | null, hoyIso = todayLocalISO()):
  */
 export function clasificar(
   saldo: number,
-  pagado: number,
+  pagos: number | { pagado: number; notasCredito: number },
   dias: number,
   estado: EstadoProveedorFactura,
   aprobacion: "pendiente" | "aprobada" | "rechazada",
-  notasCredito = 0,
 ): EstatusCxP {
+  const { pagado, notasCredito } = typeof pagos === "number" ? { pagado: pagos, notasCredito: 0 } : pagos;
   if (estado === "Cancelada") return "Cancelada";
   if (aprobacion === "rechazada") return "Rechazada";
   if (estado === "Borrador") return "Borrador";
@@ -159,7 +159,7 @@ export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP, hoyIso
     notas_credito: nc,
     saldo,
     estado: f.estado,
-    estatus: clasificar(saldo, pagado, dv, f.estado, f.estado_aprobacion, nc),
+    estatus: clasificar(saldo, { pagado, notasCredito: nc }, dv, f.estado, f.estado_aprobacion),
     tipo_cambio_usd: Number(f.tipo_cambio_usd),
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,

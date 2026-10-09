@@ -14,6 +14,12 @@ El badge administrativo sigue consumiendo su resumen histórico; ahora invita a 
 
 `20261009174000_cxp_centavo_sin_cobertura.sql` reemplaza sólo dos funciones. Antes exige los cuerpos revisados, propietario, ACL, SECURITY DEFINER y search_path esperados. Después confirma la misma metadata. No ejecuta backfill, pagos, DML de negocio, GRANT/REVOKE ni cambios de RLS. Un drift aborta la transacción. No aplicar manualmente el espejo de esquema, que conserva sus instrucciones históricas de permisos.
 
+## Integración con auditorías históricas
+
+El runtime de catálogo AUD54 corre en su checkpoint anterior a release58. Su oracle usa una copia histórica inmutable del cuerpo post-AUD54, con SHA256 explícito, en lugar del espejo de esquema que evoluciona con nuevas migraciones. Dos pruebas sin BD verifican independencia del espejo y rechazo de drift. Las comprobaciones de hash y rollback originales no se relajan.
+
+La auditoría H6 reconoce únicamente el nombre y SHA256 exactos de esta migración revisada como preservación de permisos existentes. Cambiar un byte o el nombre pierde la excepción. El control de GRANT a PUBLIC permanece activo; no se incorpora DCL para satisfacer un detector estático.
+
 ## Verificación
 
 - Vitest focalizado: 82/82; sobre las fuentes originales, 13 de esas 82 pruebas fallan.

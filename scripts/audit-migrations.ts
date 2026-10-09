@@ -46,10 +46,10 @@ import { pathToFileURL } from "node:url";
 import { indexReplayRepairs, scanNonIdempotentIndexes, functionReplayRepairs,
   isFunctionReplayRepair } from "./lib/audit-hygiene-replay";
 import {
-  scanSecurityDefiner,
   scanBackfillTenantGuard,
   type Violation,
 } from "./lib/audit-sql-signatures";
+import { scanSecurityDefinerWithPreservedAcl } from "./lib/audit-acl-preservation";
 import { scanVersionesDuplicadas } from "./lib/audit-migration-versions";
 import { scanDrizzleReplay, type DrizzleReplayEntry } from "./lib/audit-drizzle-replay";
 
@@ -339,7 +339,7 @@ export function scanFile(file: string, body: string, auditPostBaseline = true,
   }
 
   // H6 — SECURITY DEFINER requiere REVOKE + GRANT EXECUTE apropiados
-  out.push(...scanSecurityDefiner(file, body, auditPostBaseline));
+  out.push(...scanSecurityDefinerWithPreservedAcl(file, body, auditPostBaseline));
 
   // H7 (P-10) — `ALTER TYPE ... RENAME VALUE` no reescribe los cuerpos de las
   // funciones: cualquier función creada antes con el literal viejo queda rota
@@ -449,3 +449,4 @@ function main() {
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   main();
 }
+

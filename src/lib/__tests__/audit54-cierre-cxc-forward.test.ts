@@ -9,7 +9,9 @@ const root = path.resolve(__dirname, "../../..");
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8").replace(/\r\n/g, "\n");
 const forward = read("supabase/migrations/20261009005400_audit54_cierre_cxc_saldo_real.sql");
 const previous = read("supabase/migrations/20261007001300_audit139_cierre_saldo_atribuido.sql");
-const mirror = read("supabase/schema/embarques/validar_cierre_embarque.sql");
+// Historical AUD54 contract precedes later forwards; current baseline still tracks the live mirror.
+const mirror = read("scripts/ci/fixtures/audit54-cierre-post-forward.sql");
+const currentMirror = read("supabase/schema/embarques/validar_cierre_embarque.sql");
 const baseline = read("supabase/schema/baseline.sql");
 
 function source(sql: string): string {
@@ -29,7 +31,7 @@ describe("AUD54 shipment CxC forward composition", () => {
     expect(scanFile("20261009005400_audit54_cierre_cxc_saldo_real.sql", forward)).toEqual([]);
   });
 
-  it("re-emits one complete function matching the canonical mirror", () => {
+  it("re-emits one complete function matching its pinned historical mirror", () => {
     const definitions = extraerFunciones(forward);
     expect(definitions.map((definition) => definition.firma)).toEqual(["validar_cierre_embarque(uuid)"]);
     expect(definitions).toEqual(extraerFunciones(mirror));
@@ -77,8 +79,8 @@ describe("AUD54 shipment CxC forward composition", () => {
     expect(cxc).not.toContain("tipo_cambio_usd");
   });
 
-  it("updates only the matching pg_dump function body in baseline", () => {
-    expect(compact(source(baseline))).toBe(compact(newSource));
+  it("keeps the current pg_dump baseline aligned with the current schema mirror", () => {
+    expect(compact(source(baseline))).toBe(compact(source(currentMirror)));
     expect(baseline).toContain("REVOKE ALL ON FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) FROM PUBLIC;");
     expect(baseline).toContain("GRANT ALL ON FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) TO authenticated;");
     expect(baseline).toContain("GRANT ALL ON FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) TO service_role;");
@@ -179,3 +181,4 @@ describe("AUD54 shipment CxC forward composition", () => {
     expect(forward).not.toMatch(/(?:INSERT INTO|UPDATE|DELETE FROM|ALTER|DROP)\s+public\./i);
   });
 });
+
