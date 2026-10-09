@@ -19,7 +19,7 @@ const tarifaDbSchema = z.array(z.object({
   solicitud_pricing_id: z.string().nullable(),
   agente: z.object({ id: z.string(), nombre: z.string() }).passthrough().nullable(),
   naviera: z.object({ id: z.string(), name: z.string() }).passthrough().nullable(),
-  tipo: z.object({ code: z.string() }).passthrough().nullable(),
+  tipo: z.object({ code: z.string(), name: z.string().optional() }).passthrough().nullable(),
   ruta: z.object({ origen: nombre, destino: nombre }).passthrough().nullable(),
 }).passthrough());
 
@@ -27,7 +27,7 @@ export type TarifaTarifario = z.infer<typeof tarifaDbSchema>[number];
 
 const COLS = [
   "id, flete_base, moneda, dias_libres_demoras, vigente_desde, vigente_hasta, notas, solicitud_pricing_id",
-  "agente:costeo_agentes(id, nombre), naviera:navieras(id, name), tipo:tipos_contenedor(code)",
+  "agente:costeo_agentes(id, nombre), naviera:navieras(id, name), tipo:tipos_contenedor(code, name)",
   "ruta:costeo_rutas(origen:puertos!costeo_rutas_puerto_origen_id_fkey(name), destino:puertos!costeo_rutas_puerto_destino_id_fkey(name))",
 ].join(", ");
 
