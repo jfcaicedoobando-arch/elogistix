@@ -28,7 +28,7 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
     estado: f.estado,
     estadoAprobacion: f.estado_aprobacion,
     estatus: f.estatus,
-    diasVencido: f.saldo > 0.01 ? f.dias_vencido : 0,
+    diasVencido: f.dias_vencido,
   });
 
   return (
@@ -73,3 +73,4 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
     />
   );
 }
+

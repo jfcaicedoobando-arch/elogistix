@@ -20,3 +20,6 @@
 - Replay de provisionales: Drizzle0013/190000 son historia literal;190100 cierra ejecución directa de los dos triggers y190200 corrige sólo los cuatro appends de faltantes, reafirmando la ACL original del RPC sin ampliar roles. La release13.824.46 conserva UI199 e historial35–44 sin crear45; su regresión funcional se registra como guard. Why: separar reconstrucción histórica, corrección forward, pruebas de catálogo y autorización de aplicación remota, sin ocultar drift ni reescribir historia.
 
 - Ajustes CxP: `es_ajuste` persistido determina la clasificación no monetaria; historial, libro, CSV/PDF y conciliación conservan el importe documental y muestran «No aplica» sin crear dinero. Los guards bloquean vínculos bancarios y reclasificación sin reescribir históricos. Why: una sola clasificación explícita, sin inferirla del texto libre.
+
+
+- CxP: la tolerancia inclusiva de 0.01 requiere cobertura financiera neta positiva; el cierre detecta deuda íntegra por factura antes del reparto. Why: no confundir deuda pequeña sin aplicaciones con redondeo, sin alterar históricos por barrido.

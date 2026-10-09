@@ -1,0 +1,34 @@
+{
+  "postgres": "17.9",
+  "tested_at_utc": "2026-10-09T17:28:17Z",
+  "baseline": {
+    "assertions": 65,
+    "pass": 37,
+    "fail": 28
+  },
+  "candidate": {
+    "assertions": 65,
+    "pass": 65,
+    "fail": 0
+  },
+  "sha256": {
+    "recalc-live.sql": "9d6daa03b3aa9ca202a986d3fb476aa8cb85d611e524816e24a1388f86fe8206",
+    "cierre-live.sql": "cdec4a4a77e95d63a7d8ce99c6d0a11393a9332608c24199ddf751fb1172e901",
+    "sql-tests/dependencies-live.sql": "735185dee7413e2d2492b5fa402a2d6f933eea51cbb92820d2f7e073f9a255c4",
+    "sql-tests/dependencies-executable.sql": "adae9b29dff7b07e11bd8a4bc00c8f7582cfb93940e8eba7d6e0820cffa04278",
+    "candidate/supabase/schema/cxp/_recalc_estado_proveedor_factura.sql": "55bb18889710e0cfc045c75cf2c6ea2bb3c45470e972a28f1764e61b13e3e879",
+    "candidate/supabase/schema/embarques/validar_cierre_embarque.sql": "3f1e10e43a37b4f02c6f90bd1d8b5376d8130872db3c25fc2c2404db9296e1a0",
+    "sql-tests/matrix.sql": "18a96f13ee84bc0a1a3d5c43548b823f1e66c3c27420f5441afcbe32cd03b4b2",
+    "sql-tests/harness.sql": "3fcb537d061e18c0f596e226022adb5058ad82dab1c3df7e22ab07d86868da5b",
+    "sql-tests/results.csv": "9adbbccdde41714071391f015d6752066caa2aa946ab84e5cc21b844082bda16"
+  },
+  "migration": {
+    "sha256": "d54365354a0dbbe59353247adead9f93d298f48a7a1b5796fb23045040a873be",
+    "install_no_dml_metadata": "PASS",
+    "source_drift_reject_rollback": "PASS",
+    "acl_drift_reject_rollback": "PASS",
+    "tested_at_utc": "2026-10-09T17:58:15Z",
+    "squash_install_same_source_metadata_no_dml": "PASS",
+    "unknown_source_whitespace_reject_rollback": "PASS"
+  }
+}

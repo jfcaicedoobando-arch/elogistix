@@ -1,3 +1,6 @@
+-- Frozen AUD54 post-forward catalog oracle, before CxP release58.
+-- Source: main 3b9ba4852bdc9dfb5fd67f1221c6b13f34c5df85; prosrc md5 2cefb1d13bd74842820b010485f0ed11.
+-- Read by the isolated catalog fixture generator, never applied as a migration.
 -- Fuente canónica de public.validar_cierre_embarque
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
@@ -206,15 +209,11 @@ BEGIN
             nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text) IS NULL) AS nc_sin_tc
     FROM facturas_cxp pf
   ), saldos AS (
-    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo,
-      -- Evaluar por factura antes del reparto: una deuda íntegra no es redondeo.
-      total-pagado-notas_credito>0 AND pagado+notas_credito<=0 AS sin_cobertura
-    FROM importes
+    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo FROM importes
   ), agg AS (
     SELECT moneda, SUM(total*factor) AS total, SUM(pagado*factor) AS pagado,
       SUM(notas_credito*factor) AS notas_credito, SUM(saldo) AS saldo,
-      COUNT(*) FILTER (WHERE saldo>0.01 OR sin_cobertura) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE sin_cobertura) AS facturas_sin_cobertura,
+      COUNT(*) FILTER (WHERE saldo>0.01) AS facturas_pendientes,
       COUNT(*) FILTER (WHERE pago_sin_tc) AS pagos_sin_tipo_cambio,
       COUNT(*) FILTER (WHERE nc_sin_tc) AS notas_sin_tipo_cambio,
       BOOL_OR(factor<1) AS reparto_proporcional
@@ -223,7 +222,6 @@ BEGIN
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',saldo,'facturas_pendientes',facturas_pendientes,
-      'facturas_sin_cobertura',facturas_sin_cobertura,
       'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio,'notas_sin_tipo_cambio',notas_sin_tipo_cambio,
       'reparto_proporcional',reparto_proporcional
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(saldo),0)
@@ -233,7 +231,6 @@ BEGIN
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01
-      OR (m->>'facturas_sin_cobertura')::integer > 0
       OR (m->>'pagos_sin_tipo_cambio')::integer > 0
       OR (m->>'notas_sin_tipo_cambio')::integer > 0);
   v_puede := v_puede AND v_ok;

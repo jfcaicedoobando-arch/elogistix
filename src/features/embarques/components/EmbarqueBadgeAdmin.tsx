@@ -1,5 +1,5 @@
 /**
- * v13.89.0 — Sub-badge "Admin pendiente · N" / "Listo para cerrar".
+ * v13.89.0 — Sub-badge "Admin pendiente · N" / "Revisar cierre".
  *
  * Sólo se muestra en embarques que ya cerraron su ciclo operativo
  * (Entregado o EIR) pero no han sido marcados como Cerrado.
@@ -34,16 +34,16 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado, onIrACierre }: Props) {
           <button
             type="button"
             onClick={onIrACierre}
-            aria-label="Listo para cerrar. Ir a la pestaña de cierre"
+            aria-label="Sin pendientes en el resumen. Revisar cierre"
             className="inline-flex"
           >
             <Badge variant="success" className="gap-1 cursor-pointer">
               <CheckCircle2 className="h-3 w-3" />
-              Listo para cerrar
+              Revisar cierre
             </Badge>
           </button>
         </TooltipTrigger>
-        <TooltipContent>Todos los pendientes administrativos están cubiertos.</TooltipContent>
+        <TooltipContent>Sin pendientes en el resumen. Revisa el diagnóstico de cierre.</TooltipContent>
       </Tooltip>
     );
   }
@@ -77,3 +77,4 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado, onIrACierre }: Props) {
     </Tooltip>
   );
 }
+

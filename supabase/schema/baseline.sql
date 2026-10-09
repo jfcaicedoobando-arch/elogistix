@@ -5069,6 +5069,7 @@ DECLARE
   v_estado text;
   v_captura text;
   v_saldo  numeric;
+  v_cobertura numeric;
   v_nuevo  text;
   v_nueva_captura text;
 BEGIN
@@ -5078,11 +5079,16 @@ BEGIN
   WHERE id = p_factura_id;
   IF v_estado IS NULL THEN RETURN; END IF;
   IF v_estado IN ('Cancelada','Borrador') THEN RETURN; END IF;
-  SELECT COALESCE(saldo, 0) INTO v_saldo
+  SELECT saldo, pagado + notas_credito_aplicadas INTO v_saldo, v_cobertura
   FROM public.v_proveedor_facturas_saldo
   WHERE proveedor_factura_id = p_factura_id;
-  IF v_saldo IS NULL THEN v_saldo := 0; END IF;
-  IF v_saldo <= 0.01 THEN v_nuevo := 'Pagada'; ELSE v_nuevo := 'Vigente'; END IF;
+  IF v_saldo IS NULL OR v_cobertura IS NULL THEN RETURN; END IF;
+  -- La tolerancia sólo absorbe remanentes con cobertura neta viva.
+  IF v_saldo <= 0 OR (v_saldo <= 0.01 AND v_cobertura > 0) THEN
+    v_nuevo := 'Pagada';
+  ELSE
+    v_nuevo := 'Vigente';
+  END IF;
   -- R2-32: sincroniza estado_captura con el estado financiero
   IF v_nuevo = 'Pagada' THEN
     v_nueva_captura := 'pagada';
@@ -34610,11 +34616,15 @@ BEGIN
             nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text) IS NULL) AS nc_sin_tc
     FROM facturas_cxp pf
   ), saldos AS (
-    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo FROM importes
+    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo,
+      -- Evaluar por factura antes del reparto: una deuda íntegra no es redondeo.
+      total-pagado-notas_credito>0 AND pagado+notas_credito<=0 AS sin_cobertura
+    FROM importes
   ), agg AS (
     SELECT moneda, SUM(total*factor) AS total, SUM(pagado*factor) AS pagado,
       SUM(notas_credito*factor) AS notas_credito, SUM(saldo) AS saldo,
-      COUNT(*) FILTER (WHERE saldo>0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE saldo>0.01 OR sin_cobertura) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE sin_cobertura) AS facturas_sin_cobertura,
       COUNT(*) FILTER (WHERE pago_sin_tc) AS pagos_sin_tipo_cambio,
       COUNT(*) FILTER (WHERE nc_sin_tc) AS notas_sin_tipo_cambio,
       BOOL_OR(factor<1) AS reparto_proporcional
@@ -34623,6 +34633,7 @@ BEGIN
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',saldo,'facturas_pendientes',facturas_pendientes,
+      'facturas_sin_cobertura',facturas_sin_cobertura,
       'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio,'notas_sin_tipo_cambio',notas_sin_tipo_cambio,
       'reparto_proporcional',reparto_proporcional
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(saldo),0)
@@ -34632,6 +34643,7 @@ BEGIN
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01
+      OR (m->>'facturas_sin_cobertura')::integer > 0
       OR (m->>'pagos_sin_tipo_cambio')::integer > 0
       OR (m->>'notas_sin_tipo_cambio')::integer > 0);
   v_puede := v_puede AND v_ok;

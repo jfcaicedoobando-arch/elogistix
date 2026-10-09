@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Prepare isolated catalog fixtures; never connect to PostgreSQL."""
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -42,9 +43,13 @@ $runtime_assert$;
 def main() -> None:
     root, output = (Path(value).resolve() for value in sys.argv[1:])
     previous = read(root / "supabase/migrations/20261007001300_audit139_cierre_saldo_atribuido.sql")
-    mirror = read(root / "supabase/schema/embarques/validar_cierre_embarque.sql")
+    # This contract runs immediately after AUD54, before later forwards.
+    # Never use the evolving current schema mirror as the historical oracle.
+    mirror = read(root / "scripts/ci/fixtures/audit54-cierre-post-forward.sql")
     forward = read(root / "supabase/migrations/20261009005400_audit54_cierre_cxc_saldo_real.sql")
     old_source, new_source = source(previous), source(mirror)
+    if hashlib.sha256(new_source.encode("utf-8")).hexdigest() != "17217b03c4a5d5241347d41f1edffe261ef7b905ddd7b0dcb26078a9f1ccaf77":
+        raise ValueError("AUD54 historical post-forward fixture changed")
     output.mkdir(parents=True, exist_ok=True)
 
     # Generated files alter catalog fixtures or a disposable test copy only.
@@ -93,3 +98,4 @@ $runtime_inherited$;
 
 if __name__ == "__main__":
     main()
+

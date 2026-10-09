@@ -3,7 +3,9 @@
  * Extraídos para mantener el service ≤200 líneas (Power of 10 #4).
  * Sin Supabase, sin React: testeables en aislamiento.
  */
+import Decimal from "decimal.js";
 import type { FacturaCxP, EstatusCxP, FetchCxPFiltros } from "./proveedorFacturas";
+import { saldoProveedorLiquidado } from "./estadoFacturaProveedor";
 import { todayLocalISO } from "@/lib/date/today";
 import { diasVencidos } from "@/lib/date/dateOnly";
 import { estaPorVencer } from "@/lib/domain/vencimiento";
@@ -60,16 +62,17 @@ export function diasVencido(fechaVenc: string | null, hoyIso = todayLocalISO()):
  */
 export function clasificar(
   saldo: number,
-  pagado: number,
+  pagos: number | { pagado: number; notasCredito: number },
   dias: number,
   estado: EstadoProveedorFactura,
   aprobacion: "pendiente" | "aprobada" | "rechazada",
 ): EstatusCxP {
+  const { pagado, notasCredito } = typeof pagos === "number" ? { pagado: pagos, notasCredito: 0 } : pagos;
   if (estado === "Cancelada") return "Cancelada";
   if (aprobacion === "rechazada") return "Rechazada";
   if (estado === "Borrador") return "Borrador";
   if (aprobacion === "pendiente") return "Por aprobar";
-  if (estado === "Pagada" || saldo <= 0.01) return "Pagada";
+  if (estado === "Pagada" || saldoProveedorLiquidado(saldo, pagado + notasCredito)) return "Pagada";
   if (dias > 0) return "Vencida";
   if (estaPorVencer(dias)) return "Por vencer";
   if (pagado > 0.01) return "Parcial";
@@ -130,12 +133,12 @@ function resolverSaldo(f: Joined, servidor?: SaldoServidorCxP) {
   }
   const pagado = sumarPagosEnMonedaFactura(f.pagos_proveedor);
   const nc = sumarNotasCreditoAplicadas(f.proveedor_notas_credito);
-  return { total, pagado, nc, saldo: Math.max(0, total - pagado - nc) };
+  return { total, pagado, nc, saldo: Math.max(0, new Decimal(total).minus(pagado).minus(nc).toNumber()) };
 }
 
 export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP, hoyIso = todayLocalISO()): FacturaCxP {
   const { total, pagado, nc, saldo } = resolverSaldo(f, saldoServidor);
-  const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
+  const yaSaldada = f.estado === "Pagada" || saldoProveedorLiquidado(saldo, pagado + nc);
   const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento, hoyIso);
   return {
     id: f.id,
@@ -156,7 +159,7 @@ export function mapJoinedRow(f: Joined, saldoServidor?: SaldoServidorCxP, hoyIso
     notas_credito: nc,
     saldo,
     estado: f.estado,
-    estatus: clasificar(saldo, pagado, dv, f.estado, f.estado_aprobacion),
+    estatus: clasificar(saldo, { pagado, notasCredito: nc }, dv, f.estado, f.estado_aprobacion),
     tipo_cambio_usd: Number(f.tipo_cambio_usd),
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,
@@ -187,3 +190,4 @@ export function aplicarFiltrosCliente(rows: FacturaCxP[], filtros: FetchCxPFiltr
   if (filtros.aprobacion && filtros.aprobacion !== "todos") r = r.filter(x => x.estado_aprobacion === filtros.aprobacion);
   return r;
 }
+

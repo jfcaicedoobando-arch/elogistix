@@ -1,19 +1,9 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
--- N-BL-01 (v13.666.0): pagado CxP convertido a la moneda de la factura con
--- monto_pago_en_moneda_factura; fail-closed (pago sin TC se excluye y se reporta
--- en pagos_sin_tipo_cambio), consistente con saldo_factura_proveedor.
--- v13.823.291: alineado con resolver_sin_comision (clientes con sin_comision).
--- P1-1: venta_conceptos_facturados exige factura vigente EMITIDA por concepto y
--- fail-closed si queda otra factura vigente SIN emitir de la misma proforma
--- (proforma partida por moneda); se reportan en detalle.facturados_sin_emitir.
-
-CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
+CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 DECLARE
   v_emb embarques%ROWTYPE;
   v_checks jsonb := '[]'::jsonb; v_puede boolean := true; v_ok boolean;
@@ -206,15 +196,11 @@ BEGIN
             nc.monto,nc.moneda::text,nc.tipo_cambio,pf.moneda::text) IS NULL) AS nc_sin_tc
     FROM facturas_cxp pf
   ), saldos AS (
-    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo,
-      -- Evaluar por factura antes del reparto: una deuda íntegra no es redondeo.
-      total-pagado-notas_credito>0 AND pagado+notas_credito<=0 AS sin_cobertura
-    FROM importes
+    SELECT *, GREATEST(total-pagado-notas_credito,0)*factor AS saldo FROM importes
   ), agg AS (
     SELECT moneda, SUM(total*factor) AS total, SUM(pagado*factor) AS pagado,
       SUM(notas_credito*factor) AS notas_credito, SUM(saldo) AS saldo,
-      COUNT(*) FILTER (WHERE saldo>0.01 OR sin_cobertura) AS facturas_pendientes,
-      COUNT(*) FILTER (WHERE sin_cobertura) AS facturas_sin_cobertura,
+      COUNT(*) FILTER (WHERE saldo>0.01) AS facturas_pendientes,
       COUNT(*) FILTER (WHERE pago_sin_tc) AS pagos_sin_tipo_cambio,
       COUNT(*) FILTER (WHERE nc_sin_tc) AS notas_sin_tipo_cambio,
       BOOL_OR(factor<1) AS reparto_proporcional
@@ -223,7 +209,6 @@ BEGIN
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,'notas_credito',notas_credito,
       'saldo',saldo,'facturas_pendientes',facturas_pendientes,
-      'facturas_sin_cobertura',facturas_sin_cobertura,
       'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio,'notas_sin_tipo_cambio',notas_sin_tipo_cambio,
       'reparto_proporcional',reparto_proporcional
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(saldo),0)
@@ -233,7 +218,6 @@ BEGIN
   v_ok := NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
     WHERE (m->>'saldo')::numeric > 0.01
-      OR (m->>'facturas_sin_cobertura')::integer > 0
       OR (m->>'pagos_sin_tipo_cambio')::integer > 0
       OR (m->>'notas_sin_tipo_cambio')::integer > 0);
   v_puede := v_puede AND v_ok;
@@ -399,8 +383,5 @@ BEGIN
       'utilidad_mxn', v_utilidad_mxn, 'venta_mxn', v_venta_mxn,
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $$;
-
-REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;
+END $function$
 

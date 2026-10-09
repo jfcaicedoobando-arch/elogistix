@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.58] - 2026-10-09
+
+- CxP: una deuda íntegra positiva sin cobertura conserva su estatus y vencimiento; la tolerancia inclusiva de un centavo sólo absorbe remanentes después de pagos o NC válidos.
+- Cierre CxP: bloquea facturas sin cobertura antes del reparto por embarque, manteniendo conversión y umbrales por moneda. Sin backfill ni cambios de permisos.
+- El resumen administrativo invita a revisar el cierre sin afirmar que su diagnóstico está aprobado.
+
 ## [13.824.57] - Unreleased
 
 - **Cierre de embarques · saldo CxC**: el diagnóstico muestra también el residual monetario de 0.01 MXN o USD, alineado con el bloqueo vigente del servidor. Conserva monedas separadas, conteos y notas históricas.
@@ -6870,3 +6876,4 @@ Bloque R170 (10 hallazgos reproducidos en v13.823.170). Sin migraciones, sin cam
 
 > Entradas de `13.0.0` a `13.499.3` archivadas en [`docs/changelog-archive-v13.md`](./docs/changelog-archive-v13.md).
 > Histórico pre-`13.0.0` en [`docs/changelog-archive.md`](./docs/changelog-archive.md).
+
