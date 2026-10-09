@@ -13,6 +13,9 @@ export const cotizaciones = {
     ['cotizacion', cotizacionId, 'filtros-tarifa'] as const,
   envios: (cotizacionId?: string) => ['cotizacion-envios', cotizacionId] as const,
   tarifaVinculada: (tarifaId: string | null) => ['cotizacion', 'tarifa-vinculada', tarifaId] as const,
+  opcionesPricing: (oportunidadId?: string | null, clienteId?: string | null) =>
+    ['cotizacion', 'opciones-pricing', oportunidadId ?? null, clienteId ?? null] as const,
+  prefillTarifaPricing: (tarifaId: string | null) => ['cotizacion', 'prefill-tarifa-pricing', tarifaId] as const,
   pendientesReaprobacion: {
     all: ['cotizaciones', 'pendientes-reaprobacion', 'all'] as const,
     mias: (email: string | null) => ['cotizaciones', 'pendientes-reaprobacion', 'mias', email] as const,

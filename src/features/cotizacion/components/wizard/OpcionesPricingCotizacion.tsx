@@ -4,7 +4,6 @@
  * respuesta y pasar sus datos (ruta, contenedor, agente, naviera, tarifa).
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,8 +11,9 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
-import { fetchOpcionesPricingCotizacion, type OpcionPricingCotizacion } from "@/features/cotizacion/services/opcionesPricingCotizacion";
+import type { OpcionPricingCotizacion } from "@/features/cotizacion/services/opcionesPricingCotizacion";
 import { aplicarTarifaAlForm } from "@/features/cotizacion/components/seccionRuta/aplicarTarifa";
+import { useOpcionesPricingCotizacion } from "@/features/cotizacion/hooks/wizard/useOpcionesPricingCotizacion";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props { form: UseFormReturn<CotizacionFormValues> }
@@ -22,11 +22,7 @@ export function OpcionesPricingCotizacion({ form }: Props) {
   const [abierto, setAbierto] = useState(false);
   const oportunidadId = form.watch("oportunidadId") || undefined;
   const clienteId = form.watch("clienteId") || undefined;
-  const { data: opciones = [] } = useQuery({
-    queryKey: ["cotizacion", "opciones-pricing", oportunidadId ?? null, clienteId ?? null],
-    queryFn: () => fetchOpcionesPricingCotizacion({ oportunidadId, clienteId }),
-    enabled: Boolean(oportunidadId || clienteId),
-  });
+  const { data: opciones = [] } = useOpcionesPricingCotizacion({ oportunidadId, clienteId });
   if (opciones.length === 0) return null;
 
   const usar = (o: OpcionPricingCotizacion) => {

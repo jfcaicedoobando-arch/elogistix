@@ -69,7 +69,8 @@ vi.mock("@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave", () => (
 }));
 
 const prefillArgs: Record<string, unknown>[] = [];
-vi.mock("@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing", () => ({ usePrefillTarifaPricing: () => undefined }));
+const pricingPrefillArgs: Record<string, unknown>[] = [];
+vi.mock("@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing", () => ({ usePrefillTarifaPricing: (args: Record<string, unknown>) => { pricingPrefillArgs.push(args); } }));
 vi.mock("@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad", () => ({
   usePrefillProspectoOportunidad: (args: Record<string, unknown>) => { prefillArgs.push(args); },
 }));
@@ -107,6 +108,7 @@ beforeEach(() => {
   wizardArgs.length = 0;
   autosaveArgs.length = 0;
   prefillArgs.length = 0;
+  pricingPrefillArgs.length = 0;
   wizardState.cotizacionId = null;
   wizardState.currentStep = 1;
   draftRestore.restaurando = false;
@@ -259,5 +261,20 @@ describe("barrera de captura durante recuperación", () => {
     expect(autosaveArgs.at(-1)?.enabled).toBe(false);
     act(() => result.current.cerrarSuccess());
     expect(autosaveArgs.at(-1)?.enabled).toBe(false);
+  });
+});
+
+describe("useNuevaCotizacionPageController — guard Pricing", () => {
+  it.each([
+    ["", true, null, false, false],
+    ["?tarifa=t1", true, null, true, false],
+    ["?tarifa=t1&oportunidad=opp-1", true, null, true, true],
+    ["?tarifa=t1", false, null, false, false],
+    ["?tarifa=t1", true, "cot-1", false, false],
+  ])("preserva el prefill para %s (permiso %s, cotización %s)", (search, permiso, cotizacionId, enabled, esperarOportunidad) => {
+    draftRestore.permitePrefillProspecto = permiso;
+    wizardState.cotizacionId = cotizacionId;
+    render(search);
+    expect(pricingPrefillArgs.at(-1)).toMatchObject({ enabled, esperarOportunidad });
   });
 });

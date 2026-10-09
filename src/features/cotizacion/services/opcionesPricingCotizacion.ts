@@ -33,7 +33,7 @@ export async function fetchOpcionesPricingCotizacion(
   q = filtro.oportunidadId ? q.eq("oportunidad_id", filtro.oportunidadId) : q.eq("oportunidad.cliente_id", filtro.clienteId ?? "");
   const { data, error } = await q;
   if (error) throw error;
-  const solicitudes = ((data ?? []) as unknown as FilaSolicitud[]).filter((s) => esEnNegociacion(s.oportunidad?.etapa?.nombre));
+  const solicitudes = (data ?? []).filter((s) => esEnNegociacion(s.oportunidad?.etapa?.nombre));
   if (solicitudes.length === 0) return [];
 
   // Respuesta = opción elegida del tarifario + tarifas capturadas por Pricing en la solicitud.

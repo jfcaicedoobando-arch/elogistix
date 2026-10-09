@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.65] - 2026-10-09
+
+- Pricing/cotización: separa la consulta del componente y centraliza sus claves, conservando filtros, caché y condiciones de precarga existentes.
+- Reduce complejidad y elimina una aserción de tipos redundante para recuperar lint y guardias de arquitectura; agrega regresiones de consulta y precarga. Sin cambios de comportamiento, migraciones ni datos.
+
 ## [13.824.64] - 2026-10-09
 
 - Alta rápida de rutas: aísla el envío del formulario de Ruta para que Guardar ruta no envíe también el formulario padre de Tarifa.

@@ -63,10 +63,7 @@ function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir,
   return (
     <Card>
       <CardContent className="grid gap-2 p-4 text-body-sm md:grid-cols-4">
-        <div><span className="text-muted-foreground">Puertos: </span>{t.ruta?.origen?.name ?? "—"} → {t.ruta?.destino?.name ?? "—"}</div>
-        <div><span className="text-muted-foreground">Agente / Naviera: </span>{t.agente?.nombre ?? "—"} / {t.naviera?.name ?? "—"}</div>
-        <div><span className="text-muted-foreground">{t.tipo?.code ?? ""}: </span>{formatCurrency(t.flete_base, t.moneda || "USD")}</div>
-        <div><span className="text-muted-foreground">Vigencia hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
+        <ResumenTarifa tarifa={t} />
         {cargos.map((c) => (
           <div key={c.id} className="md:col-span-2 text-muted-foreground">
             + {c.concepto}: {formatCurrency(c.monto, c.moneda)} {c.unidad ?? ""}
@@ -84,5 +81,16 @@ function OpcionTarifarioCard({ tarifa: t, cargosFob, cargosLocales, puedeElegir,
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ResumenTarifa({ tarifa: t }: Pick<CardProps, "tarifa">) {
+  return (
+    <>
+      <div><span className="text-muted-foreground">Puertos: </span>{t.ruta?.origen?.name ?? "—"} → {t.ruta?.destino?.name ?? "—"}</div>
+      <div><span className="text-muted-foreground">Agente / Naviera: </span>{t.agente?.nombre ?? "—"} / {t.naviera?.name ?? "—"}</div>
+      <div><span className="text-muted-foreground">{t.tipo?.code ?? ""}: </span>{formatCurrency(t.flete_base, t.moneda || "USD")}</div>
+      <div><span className="text-muted-foreground">Vigencia hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
+    </>
   );
 }

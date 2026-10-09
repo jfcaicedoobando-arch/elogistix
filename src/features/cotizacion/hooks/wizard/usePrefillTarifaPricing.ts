@@ -9,6 +9,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import { fetchTarifaVigentePorId } from "@/features/costeo/services/topTarifas";
 import { aplicarTarifaAlForm } from "@/features/cotizacion/components/seccionRuta/aplicarTarifa";
+import { cotizaciones } from "@/features/cotizacion/queryKeys";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Deps {
@@ -21,7 +22,7 @@ interface Deps {
 export function usePrefillTarifaPricing({ form, tarifaId, esperarOportunidad, enabled }: Deps) {
   const aplicado = useRef(false);
   const { data: row, isFetched } = useQuery({
-    queryKey: ["cotizacion", "prefill-tarifa-pricing", tarifaId],
+    queryKey: cotizaciones.prefillTarifaPricing(tarifaId),
     queryFn: () => fetchTarifaVigentePorId(tarifaId ?? ""),
     enabled: enabled && Boolean(tarifaId),
   });
