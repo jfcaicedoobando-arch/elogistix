@@ -1,4 +1,5 @@
 import { crmPricingKeys } from "@/features/crm/queryKeys.performance";
+import { useInvalidarSolicitud } from "./useInvalidarSolicitud";
 /**
  * Hooks de la Solicitud a Pricing (CRM Fase 5). Llaves bajo ['crm','pricing'].
  */
@@ -21,15 +22,6 @@ export class ErrorEnvioSolicitudPricing extends Error {
   }
 }
 
-function useInvalidarSolicitud() {
-  const qc = useQueryClient();
-  return (id: string, oportunidadId: string | null | undefined, vigente = () => true) => Promise.all([
-    { queryKey: crmPricingKeys.solicitud(id), exact: true },
-    // Un cambio de estado mueve filas entre filtros/páginas de la bandeja.
-    { queryKey: crmPricingKeys.bandejas },
-    ...(oportunidadId ? [{ queryKey: crmPricingKeys.oportunidad(oportunidadId), exact: true }] : []),
-  ].map((options) => vigente() ? qc.invalidateQueries(options) : undefined));
-}
 const onError = (error: unknown, variables: unknown) => notifyError(undefined, { title: "No se pudo actualizar la solicitud de Pricing",
   description: mensajeErrorPricing(error), error, method: "CRM_PRICING_MUTACION", context: { variables } });
 
