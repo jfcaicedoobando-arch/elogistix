@@ -25,6 +25,7 @@ vi.mock("@/features/cotizacion/components/CotizacionWizardLayout", () => ({ defa
 vi.mock("@/features/cotizacion/components/wizard/CotizacionSuccessDialog", () => ({ CotizacionSuccessDialog: () => null }));
 vi.mock("@/features/cotizacion/components/wizard/GuardarPlantillaDialog", () => ({ GuardarPlantillaDialog: () => null }));
 vi.mock("@/features/cotizacion/components/wizard/PlantillaSelectorPaso1", () => ({ PlantillaSelectorPaso1: () => null }));
+vi.mock("@/features/cotizacion/components/wizard/OpcionesPricingCotizacion", () => ({ OpcionesPricingCotizacion: () => null }));
 
 import NuevaCotizacion from "../NuevaCotizacion";
 function capture(value: string) {
