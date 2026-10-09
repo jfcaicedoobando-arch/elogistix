@@ -17,9 +17,11 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   crear: ReturnType<typeof useCosteoRutaMutations>["crear"];
   rutas: CosteoRuta[];
+  /** Si se provee, se llama con el id de la ruta recién creada. */
+  onCreada?: (rutaId: string) => void;
 }
 
-export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
+export function RutaFormDialog({ open, onOpenChange, crear, rutas, onCreada }: Props) {
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
   const [intentoEnvio, setIntentoEnvio] = useState(false);
