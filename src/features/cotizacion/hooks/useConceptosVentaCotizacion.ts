@@ -103,7 +103,8 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
   const eliminarConcepto = useCallback((moneda: "USD" | "MXN", index: number) => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
     setter(prev => {
-      if (prev.length <= 1) return prev;
+      // Los conceptos MXN son opcionales: se puede quitar el último.
+      if (moneda === "USD" && prev.length <= 1) return prev;
       return prev.filter((_, i) => i !== index);
     });
   }, []);
