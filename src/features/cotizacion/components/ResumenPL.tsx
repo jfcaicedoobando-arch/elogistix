@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TrendingUp, ChevronDown } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
+import { resumirUtilidadCotizacion } from "@/features/cotizacion/domain/resumenUtilidadCotizacion";
 import { ProfitBadge, RentabilidadGlobalBadge } from "@/features/cotizacion/components/ProfitBadge";
 
 interface TotalesMoneda {
@@ -16,16 +18,32 @@ interface Props {
   totalesMXN: TotalesMoneda;
   tieneUSD: boolean;
   tieneMXN: boolean;
+  conceptosVenta?: ConceptoVentaCotizacion[];
+  conceptosDescartados?: number;
+  sinCostosRegistrados?: boolean;
   /** Mostrar badge de rentabilidad global (modo local) */
   mostrarRentabilidadGlobal?: boolean;
   /** Nota al pie opcional */
   notaPie?: string;
 }
 
+function margenDefinido(tieneMoneda: boolean, venta: number): boolean {
+  return !tieneMoneda || venta > 0;
+}
+
 export default function ResumenPL({
-  totalesUSD, totalesMXN, tieneUSD, tieneMXN,
-  mostrarRentabilidadGlobal = false, notaPie,
+  totalesUSD: costoUSD, totalesMXN: costoMXN, tieneUSD: costosUSD, tieneMXN: costosMXN,
+  mostrarRentabilidadGlobal = false, notaPie, conceptosVenta, conceptosDescartados, sinCostosRegistrados,
 }: Props) {
+  const resumen = resumirUtilidadCotizacion(costoUSD, costoMXN, conceptosVenta, { conceptosDescartados, sinCostosRegistrados });
+  if (!resumen.ok) return (
+    <Card><CardHeader><CardTitle>Resumen de utilidad</CardTitle></CardHeader>
+      <CardContent><p role="status" className="text-body-sm text-muted-foreground">{resumen.mensaje}</p></CardContent>
+    </Card>
+  );
+  const { totalesUSD, totalesMXN } = resumen;
+  const tieneUSD = costosUSD || resumen.tieneVentaUSD;
+  const tieneMXN = costosMXN || resumen.tieneVentaMXN;
   if (!tieneUSD && !tieneMXN) return null;
 
   const renderCard = (moneda: "USD" | "MXN", totales: TotalesMoneda) => (
@@ -63,7 +81,7 @@ export default function ResumenPL({
               <TrendingUp className="h-4 w-4 text-primary" />
               Resumen de utilidad
               <div className="ml-auto flex items-center gap-2">
-                {mostrarRentabilidadGlobal && (
+                {mostrarRentabilidadGlobal && margenDefinido(tieneUSD, totalesUSD.totalVenta) && margenDefinido(tieneMXN, totalesMXN.totalVenta) && (
                   <RentabilidadGlobalBadge
                     porcentajeUSD={totalesUSD.porcentaje}
                     porcentajeMXN={totalesMXN.porcentaje}
@@ -82,6 +100,9 @@ export default function ResumenPL({
               {tieneUSD && renderCard("USD", totalesUSD)}
               {tieneMXN && renderCard("MXN", totalesMXN)}
             </div>
+            {conceptosVenta && resumen.usaCosteo && (
+              <p className="text-body-sm text-muted-foreground mt-3">Sin conceptos de venta: se muestra la estimación del costeo.</p>
+            )}
             {notaPie && (
               <p className="text-body-sm text-muted-foreground mt-3">* {notaPie}</p>
             )}

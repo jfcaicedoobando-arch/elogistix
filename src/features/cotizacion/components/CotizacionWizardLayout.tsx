@@ -133,7 +133,9 @@ export default function CotizacionWizardLayout({
           <>
             {/* v13.823.286: los totales viven en el pie, no flotando sobre el
                 contenido del paso. */}
-            {mostrarTotales && <WizardTotalsBar plUSD={w.plUSD} plMXN={w.plMXN} />}
+            {mostrarTotales && <WizardTotalsBar plUSD={w.plUSD} plMXN={w.plMXN}
+              conceptosVenta={w.currentStep === 3 ? [...w.conceptosUSD, ...w.conceptosMXN] : undefined}
+              sinCostosRegistrados={w.currentStep === 3 && w.costosInternos.length === 0} />}
             <CotizacionWizardFooter
               currentStep={w.currentStep}
               isPending={w.isPending}

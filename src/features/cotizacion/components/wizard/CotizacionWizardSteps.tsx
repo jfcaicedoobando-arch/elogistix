@@ -119,6 +119,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
         <>
           {sinDesgloseFlag && <SinDesgloseBanner onCargarCostos={irACargarCostos} />}
           <PasoResumenCotizacion
+            conceptosVenta={[...w.conceptosUSD, ...w.conceptosMXN]}
             plUSD={w.plUSD}
             plMXN={w.plMXN}
             tieneCostosUSD={w.costosUSD.length > 0}
