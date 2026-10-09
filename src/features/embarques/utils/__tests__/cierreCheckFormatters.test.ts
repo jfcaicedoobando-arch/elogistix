@@ -26,7 +26,7 @@ describe("cierreCheckFormatters", () => {
     expect(res).toContain("60.00");
 
     expect(fmtCxc({ total: 100, pagado: 100, facturas_pendientes: 0 })).toBeNull();
-    expect(fmtCxc({ total: 50, pagado: 49.995, facturas_pendientes: 0 })).toBeNull();
+    expect(fmtCxc({ total: 50, pagado: 49.995, facturas_pendientes: 0 })).toBe("saldo MXN 0.01");
   });
 
   it("fmtCxc: agrupa por moneda (nuevo shape)", () => {
@@ -152,4 +152,50 @@ it("audit139 identifies calculated invoice attribution without inventing payment
   expect(res).toContain("Conversión pendiente");
   expect(fmtCxp({ por_moneda: [{ moneda: "MXN", saldo: 20, facturas_pendientes: 1 }] }))
     .not.toContain("proporcionalmente");
+});
+
+
+describe("CxC: residuo monetario de cierre sin cambiar el umbral CxP", () => {
+  it.each(["MXN", "USD"])("muestra exactamente 0.01 %s incluso sin contador pendiente", (moneda) => {
+    expect(fmtCxc({ por_moneda: [{ moneda, saldo: 0.01, facturas_pendientes: 0 }] }))
+      .toBe(`saldo ${moneda} 0.01`);
+  });
+
+  it("conserva monedas, contador y nota de cobro histórico", () => {
+    expect(fmtCxc({ por_moneda: [
+      { moneda: "MXN", saldo: 0.01, facturas_pendientes: 1 },
+      { moneda: "USD", saldo: 0.01, facturas_pendientes: 1 },
+    ], pagadas_sin_pago_registrado: 1 })).toBe(
+      '2 factura(s) por cobrar · saldo MXN 0.01 + USD 0.01 · 1 factura(s) se dan por cobradas por su estado "Pagada" (sin pago capturado)',
+    );
+  });
+
+  it.each([0, -0.01, -0.005, 0.004, 0.004999])("omite saldo no monetario positivo %s", (saldo) => {
+    expect(fmtCxc({ por_moneda: [{ moneda: "MXN", saldo }] })).toBeNull();
+    expect(fmtCxc({ total: saldo, pagado: 0 })).toBeNull();
+  });
+
+  it.each([0.005, 0.009, 0.01])("redondea %s con el canon monetario CxC", (saldo) => {
+    expect(fmtCxc({ por_moneda: [{ moneda: "USD", saldo }] })).toBe("saldo USD 0.01");
+    expect(fmtCxc({ total: saldo, pagado: 0 })).toBe("saldo MXN 0.01");
+  });
+
+  it("resta legacy con precisión decimal antes del redondeo", () => {
+    expect(fmtCxc({ total: 100, pagado: 99.99 })).toBe("saldo MXN 0.01");
+    expect(fmtCxc({ total: 50, pagado: 49.995 })).toBe("saldo MXN 0.01");
+    expect(fmtCxc({ total: 100, pagado: 99.996 })).toBeNull();
+    expect(fmtCxc({ total: 100, pagado: 100.01 })).toBeNull();
+  });
+
+  it.each([0, -0.01, 0.004, 0.005, 0.01])("CxP conserva umbral estricto para %s", (saldo) => {
+    expect(fmtCxp({ por_moneda: [{ moneda: "MXN", saldo }, { moneda: "USD", saldo }] })).toBeNull();
+    expect(fmtCxp({ total: saldo, pagado: 0 })).toBeNull();
+  });
+
+  it("CxP sigue mostrando importes superiores a 0.01 sin redondear antes de filtrar", () => {
+    expect(fmtCxp({ por_moneda: [{ moneda: "USD", saldo: 0.0101 }] })).toBe("monto USD 0.01");
+    expect(fmtCxp({ total: 0.0101, pagado: 0 })).toBe("monto MXN 0.01");
+    expect(fmtCxp({ por_moneda: [{ moneda: "MXN", saldo: 0.01, facturas_pendientes: 1 }] }))
+      .toBe("1 factura(s) de proveedor por pagar");
+  });
 });

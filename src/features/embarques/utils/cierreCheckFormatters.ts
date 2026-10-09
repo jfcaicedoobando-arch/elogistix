@@ -1,4 +1,6 @@
 /** Texto de los resultados del diagnóstico de cierre. */
+import Decimal from "decimal.js";
+import { roundMoney } from "@/lib/financial/financialUtils";
 import { formatCurrencySafe } from "@/lib/formatters";
 const fmtMoney = (n: unknown, moneda = "MXN"): string => formatCurrencySafe(n, moneda);
 
@@ -22,9 +24,9 @@ function readPorMoneda(d: unknown): SaldoPorMoneda[] | null {
   return Array.isArray(arr) ? (arr as SaldoPorMoneda[]) : null;
 }
 
-function fmtSaldoPorMoneda(rows: SaldoPorMoneda[]): string | null {
+function fmtSaldoPorMoneda(rows: SaldoPorMoneda[], umbral = 0.01): string | null {
   const partes = rows
-    .filter((r) => Number(r.saldo ?? 0) > 0.01)
+    .filter((r) => Number(r.saldo ?? 0) > umbral)
     .map((r) => fmtMoney(r.saldo, (r.moneda ?? "MXN").toUpperCase()));
   return partes.length > 0 ? partes.join(" + ") : null;
 }
@@ -44,7 +46,7 @@ export const fmtCxc = (d: unknown): string | null => {
   const rows = readPorMoneda(d);
   if (rows) {
     const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
-    const saldoTxt = fmtSaldoPorMoneda(rows);
+    const saldoTxt = fmtSaldoPorMoneda(rows.map((r) => ({ ...r, saldo: roundMoney(Number(r.saldo ?? 0)) })), 0);
     const partes: string[] = [];
     if (pendientes > 0) partes.push(`${pendientes} factura(s) por cobrar`);
     if (saldoTxt) partes.push(`saldo ${saldoTxt}`);
@@ -55,11 +57,11 @@ export const fmtCxc = (d: unknown): string | null => {
   // Legacy shape (retrocompat con caché): asume MXN.
   const total = Number(pick(d, "total") ?? 0);
   const pagado = Number(pick(d, "pagado") ?? 0);
-  const saldo = total - pagado;
+  const saldo = roundMoney(new Decimal(total).minus(pagado).toNumber());
   const facturas = pick(d, "facturas_pendientes");
   const partes: string[] = [];
   if (Number(facturas) > 0) partes.push(`${facturas} factura(s) por cobrar`);
-  if (saldo > 0.01) partes.push(`saldo ${fmtMoney(saldo)}`);
+  if (saldo > 0) partes.push(`saldo ${fmtMoney(saldo)}`);
   return partes.length > 0 ? partes.join(" · ") : null;
 };
 
@@ -152,8 +154,6 @@ export const fmtEntrantesEvidencia = (d: unknown): string | null => {
   }
   return `${n} proveedor(es) sin archivo recibido ni factura vigente vinculada`;
 };
-
-
 
 export const fmtContenedores = (d: unknown): string | null => {
   const sin = Number(pick(d, "contenedores_incompletos") ?? pick(d, "sin_datos") ?? 0);
