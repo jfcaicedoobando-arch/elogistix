@@ -1,20 +1,23 @@
 /**
  * Barra flotante de totales del wizard de cotización (P1 — v13.294.0).
  *
- * Se muestra en pasos 2 y 3 y consume los totales que ya calcula
- * `useCotizacionWizardForm` (P&L en USD/MXN + venta total en MXN).
- *
- * NO hace matemática nueva: sólo formatea + colorea el margen.
+ * Paso 2 presenta el presupuesto del costeo. Paso 3 lo combina con
+ * conceptos cliente vigentes usando el mismo helper neto que el resumen.
+ * Las dos monedas se presentan separadas, sin IVA ni conversión.
  *  - Verde  ≥15%
  *  - Ámbar  5-15%
  *  - Rojo   <5%
  */
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
+import { resumirUtilidadCotizacion } from "@/features/cotizacion/domain/resumenUtilidadCotizacion";
 import { formatPercent } from "@/lib/formatters";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 interface Props {
+  conceptosVenta?: ConceptoVentaCotizacion[];
+  sinCostosRegistrados?: boolean;
   plUSD: TotalesPL;
   plMXN: TotalesPL;
 }
@@ -25,12 +28,15 @@ function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
   return { color: "text-destructive", icon: TrendingDown };
 }
 
-export function WizardTotalsBar({ plUSD, plMXN }: Props) {
+export function WizardTotalsBar({ plUSD: costoUSD, plMXN: costoMXN, conceptosVenta, sinCostosRegistrados }: Props) {
+  const resumen = resumirUtilidadCotizacion(costoUSD, costoMXN, conceptosVenta, { sinCostosRegistrados });
+  if (!resumen.ok) return <p role="status" className="text-body-sm text-muted-foreground">{resumen.mensaje}</p>;
+  const { totalesUSD: plUSD, totalesMXN: plMXN } = resumen;
   // W-06 (QA r2): antes se mostraba un solo margen "consolidado" que
   // priorizaba USD e ignoraba por completo la utilidad en pesos. Ahora se
   // muestra un margen por moneda con venta; nunca se suman monedas distintas.
-  const hayUSD = plUSD.totalVenta > 0;
-  const hayMXN = plMXN.totalVenta > 0;
+  const hayUSD = plUSD.totalVenta > 0 || (conceptosVenta !== undefined && (plUSD.totalCosto > 0 || resumen.tieneVentaUSD));
+  const hayMXN = plMXN.totalVenta > 0 || (conceptosVenta !== undefined && (plMXN.totalCosto > 0 || resumen.tieneVentaMXN));
 
   return (
     // v13.823.286 — ya no flota sobre el contenido: vive dentro del pie del
@@ -43,10 +49,8 @@ export function WizardTotalsBar({ plUSD, plMXN }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-body">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <Metric label="Costo" mxn={plMXN.totalCosto} usd={plUSD.totalCosto} />
-          {/* Bugs 4 y 5: costo, venta y margen salen de la MISMA fuente (los
-              costos capturados) y sin IVA; antes la venta MXN venía de los
-              conceptos ya generados (con IVA) y no coincidía con el margen. */}
-          <Metric label="Venta (sin IVA)" mxn={plMXN.totalVenta} usd={plUSD.totalVenta} />
+          {/* Paso 2: presupuesto del costeo. Paso 3: venta cliente neta vigente. */}
+          <Metric label="Venta (sin IVA)" mxn={plMXN.totalVenta} usd={plUSD.totalVenta} mostrarUSD={hayUSD} mostrarMXN={hayMXN} />
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {hayUSD && <Margen moneda="USD" pl={plUSD} />}
@@ -56,11 +60,18 @@ export function WizardTotalsBar({ plUSD, plMXN }: Props) {
           )}
         </div>
       </div>
+      {conceptosVenta && resumen.usaCosteo && <p className="text-body-sm text-muted-foreground">Sin conceptos de venta: se muestra la estimación del costeo.</p>}
     </div>
   );
 }
 
 function Margen({ moneda, pl }: { moneda: "USD" | "MXN"; pl: TotalesPL }) {
+  if (pl.totalVenta <= 0) return (
+    <div className="text-body-sm text-muted-foreground">
+      <span>Utilidad {moneda}: {formatCurrency(pl.profit, moneda)}</span>
+      <span className="ml-2">Margen: no calculable (sin venta capturada)</span>
+    </div>
+  );
   const { color, icon: Icon } = nivel(pl.porcentaje);
   return (
     <div className={`flex items-center gap-2 font-semibold ${color}`}>
@@ -75,9 +86,9 @@ function Margen({ moneda, pl }: { moneda: "USD" | "MXN"; pl: TotalesPL }) {
   );
 }
 
-function Metric({ label, mxn, usd }: { label: string; mxn: number; usd: number }) {
-  const hayMXN = mxn > 0;
-  const hayUSD = usd > 0;
+function Metric({ label, mxn, usd, mostrarUSD, mostrarMXN }: { label: string; mxn: number; usd: number; mostrarUSD?: boolean; mostrarMXN?: boolean }) {
+  const hayMXN = mostrarMXN || mxn > 0;
+  const hayUSD = mostrarUSD || usd > 0;
 
   return (
     <div className="flex flex-col leading-tight">

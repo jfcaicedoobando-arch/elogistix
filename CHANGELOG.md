@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.56] - Unreleased
+
+- **Cotizaciones · resumen de utilidad**: el resumen del paso 4, el detalle y la barra del paso 3 usan la venta vigente al cliente sin IVA, incluidos precios ajustados y conceptos manuales. Conservan costos internos y monedas separadas; el paso 2 mantiene la simulación del costeo.
+- Una venta explícita en cero conserva la pérdida y no repone el precio presupuestado; su margen se muestra no calculable. Los conceptos incompletos o descartados bloquean el resumen y la ausencia total de costos pide cargar el desglose. Sólo históricos sin conceptos recurren a la estimación del costeo, con aviso visible.
+- Corrección exclusivamente de lectura/presentación: no reescribe conceptos, costos, impuestos, linaje ni persistencia. Registra el mismo inventario de 1,512 migraciones de 55, sin SQL nuevo y conservando literalmente todas las entradas anteriores.
+- Reproducción de COT-2026-0039: venta USD 150 contra costo 50 muestra utilidad 100; la línea manual MXN 10,200 aparece en su moneda. Pruebas focalizadas y límites en [contrato y verificación](docs/audits/quotation-profit-sales-summary.md). CI completo y revalidación de la interfaz publicada siguen pendientes.
+
 ## [13.824.55] - Unreleased
 
 - **Pendiente de cobro por embarque**: corrige el prorrateo residual tras una NC selectiva. Factura A 100 / B 300 con NC 100 sólo contra A muestra pendiente A 0 / B 300; Venta real y todos los demás campos del P&L permanecen iguales.

@@ -14,7 +14,8 @@ vi.mock("@/components/ui/select", () => ({
 }));
 vi.mock("@/features/cotizacion/components/SeccionConceptosVentaCotizacion", () => ({ default: () => <div>Conceptos de venta</div> }));
 vi.mock("@/features/cotizacion/components/SeccionCostosInternosPLUnificado", () => ({ default: () => <div>Costos internos</div> }));
-vi.mock("@/features/cotizacion/components/PasoResumenCotizacion", () => ({ default: () => null }));
+const renderResumen = vi.hoisted(() => vi.fn());
+vi.mock("@/features/cotizacion/components/PasoResumenCotizacion", () => ({ default: (props: unknown) => { renderResumen(props); return null; } }));
 vi.mock("../PasoDatosGenerales", () => ({ default: () => null }));
 vi.mock("../Paso1ProgressSidebar", () => ({ default: () => null }));
 vi.mock("../TipoCambioCotizacionCard", () => ({ TipoCambioCotizacionCard: () => null }));
@@ -51,6 +52,14 @@ function wizard(currentStep: number) {
 }
 
 describe("Audit145: integración del vínculo legado en el paso de ventas", () => {
+  it("el paso 4 entrega la venta vigente y manual al resumen, sin regenerarla", () => {
+    const { w, setCostosInternos, setConceptosUSD, setConceptosMXN } = wizard(4);
+    render(<CotizacionWizardSteps w={w} clientes={[]} esMaritimo sinDesgloseFlag={false} irACargarCostos={vi.fn()} />);
+    expect(renderResumen).toHaveBeenLastCalledWith(expect.objectContaining({ conceptosVenta: [venta, manualUSD, manualMXN] }));
+    expect(setCostosInternos).not.toHaveBeenCalled();
+    expect(setConceptosUSD).not.toHaveBeenCalled();
+    expect(setConceptosMXN).not.toHaveBeenCalled();
+  });
   it("sólo presenta la revisión en el paso 3 y no cambia datos al abrirla", () => {
     const { w, setCostosInternos, setConceptosUSD, setConceptosMXN } = wizard(2);
     const props = { clientes: [], esMaritimo: true, sinDesgloseFlag: false, irACargarCostos: vi.fn() };

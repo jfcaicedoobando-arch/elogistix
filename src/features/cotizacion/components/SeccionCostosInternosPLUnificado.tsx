@@ -21,6 +21,7 @@ interface PropsDetalle {
   cotizacionId: string;
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
+  conceptosDescartados?: number;
   /** Sello optimista de la cotización abierta (ver componente de detalle). */
   cotizacionUpdatedAt?: string | null;
   /** v13.823.362 — El aviso de sincronización respeta estados inmutables. */
@@ -49,6 +50,7 @@ export default function SeccionCostosInternosPLUnificado(props: Props) {
       cotizacionId={props.cotizacionId}
       conceptosUSD={props.conceptosUSD}
       conceptosMXN={props.conceptosMXN}
+      conceptosDescartados={props.conceptosDescartados}
       cotizacionUpdatedAt={props.cotizacionUpdatedAt}
       estadoCotizacion={props.estadoCotizacion}
     />

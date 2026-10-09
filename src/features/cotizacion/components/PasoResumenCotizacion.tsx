@@ -2,6 +2,7 @@ import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { formatCurrency } from "@/lib/formatters";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import ResumenPL from "@/features/cotizacion/components/ResumenPL";
 
 interface TotalesPL {
@@ -12,6 +13,7 @@ interface TotalesPL {
 }
 
 interface Props {
+  conceptosVenta?: ConceptoVentaCotizacion[];
   plUSD: TotalesPL;
   plMXN: TotalesPL;
   tieneCostosUSD: boolean;
@@ -35,7 +37,7 @@ interface Props {
 const DATO = (label: string, valor: string) => ({ label, valor });
 
 export default function PasoResumenCotizacion({
-  plUSD, plMXN, tieneCostosUSD, tieneCostosMXN,
+  plUSD, plMXN, tieneCostosUSD, tieneCostosMXN, conceptosVenta,
   nombreCliente, origen, destino, numContenedores, cargaLcl,
   modo, incoterm, tipo, totalUSD, totalMXN, esEdicion = false,
 }: Props) {
@@ -59,6 +61,8 @@ export default function PasoResumenCotizacion({
       {/* Mismo componente de resumen que el detalle de la cotización: una sola
           forma de presentar costo, venta, utilidad y margen. */}
       <ResumenPL
+        conceptosVenta={conceptosVenta}
+        sinCostosRegistrados={!tieneCostosUSD && !tieneCostosMXN}
         totalesUSD={plUSD}
         totalesMXN={plMXN}
         tieneUSD={tieneCostosUSD}

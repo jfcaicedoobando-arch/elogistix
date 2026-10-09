@@ -23,6 +23,7 @@ interface Props {
   cotizacionId: string;
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
+  conceptosDescartados?: number;
   /**
    * v13.823.164 — Sello (`cotizaciones.updated_at`) de los datos abiertos para
    * editar. Sin él el servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA.
@@ -37,7 +38,7 @@ interface Props {
  * Usado en CotizacionDetalle.
  */
 export default function SeccionCostosInternosPLDetalle({
-  cotizacionId, conceptosUSD, conceptosMXN, estadoCotizacion,
+  cotizacionId, conceptosUSD, conceptosMXN, estadoCotizacion, conceptosDescartados,
 }: Props) {
   const { canWriteCotizaciones, canEdit, motivoBloqueoEstado } =
     useGateEdicionCostos(estadoCotizacion);
@@ -179,6 +180,8 @@ export default function SeccionCostosInternosPLDetalle({
         totales={totalesMXN} canEdit={canEdit && editMode} onUpdate={updateFila}
       />
       <ResumenPL
+        conceptosVenta={[...conceptosUSD, ...conceptosMXN]} conceptosDescartados={conceptosDescartados}
+        sinCostosRegistrados={!snapshot?.costos.length}
         totalesUSD={totalesUSD} totalesMXN={totalesMXN}
         tieneUSD={filasUSD.length > 0} tieneMXN={filasMXN.length > 0}
         notaPie="El IVA no forma parte de la utilidad"
