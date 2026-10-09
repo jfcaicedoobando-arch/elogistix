@@ -3,7 +3,6 @@
  *
  * v13.56.2 — auditoría (paso 5): descompuesto de 289 → ~115 líneas.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -12,7 +11,7 @@ import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarq
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
+import { PnlDetalleFinanciero } from "./pnl/PnlDetalleFinanciero";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
 import { PnlTipoCambioNota } from "./pnl/PnlTipoCambioNota";
 import { PnlAvisosCards } from "./pnl/PnlAvisosCards";
@@ -162,49 +161,7 @@ export function TabPnl({ embarqueId, estadoEmbarque, monedasExtranjeras = [] }: 
         margenReal={margenReal}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Pendiente de cobro a cliente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-kpi">{data.venta.pdte_cobro_mxn === null ? "No calculable" : fmtPnl(data.venta.pdte_cobro_mxn)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Pendiente de pago a proveedores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-kpi">{fmtPnl(data.costo.pdte_pago_mxn)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* v13.823.367 — Sin actividad real no se pintan comparativas
-          Presupuestado vs. Real: con Real = 0 toda fila leería Δ −100%,
-          una desviación ficticia. El card de contexto ya lo explica. */}
-      {!sinActividadReal && (
-        <>
-          <PnlComparativaTable
-            titulo="Ingresos por concepto (Presupuestado vs. Real)"
-            rows={data.por_concepto}
-            invertirAlerta={false}
-          />
-          <PnlComparativaTable
-            titulo="Costos por concepto (Presupuestado vs. Real)"
-            rows={data.por_concepto_costo}
-            invertirAlerta
-          />
-          <p className="text-body-sm text-muted-foreground">
-        {/* v13.552.0: el KPI "Costo real" ya usa la base gravable (sin IVA) y
-            descuenta notas de crédito prorrateadas, igual que el desglose. La
-            diferencia restante viene de facturas sin conceptos capturados. */}
-        El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
-        proveedor no tiene conceptos capturados, la base pendiente de desglosar aparece como "(factura completa / base sin detalle)".
-          </p>
-        </>
-      )}
+      <PnlDetalleFinanciero data={data} sinActividadReal={sinActividadReal} />
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />

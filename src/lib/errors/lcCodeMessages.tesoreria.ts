@@ -177,4 +177,8 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "No hay tipo de cambio DOF publicado para esa fecha y moneda. Captura o actualiza el tipo de cambio antes de continuar.",
   LC_CUENTA_CON_MOVIMIENTOS:
     "Esa cuenta bancaria tiene movimientos registrados: no se puede eliminar. Desactívala en su lugar.",
+  LC_MOVIMIENTO_AJUSTE_NO_MONETARIO:
+    "Un ajuste no monetario no puede generar ni vincular movimientos bancarios, ni incorporarse a un lote de pagos.",
+  LC_PAGO_CLASIFICACION_INMUTABLE:
+    "No se puede cambiar la clasificación monetaria de un pago existente.",
 };

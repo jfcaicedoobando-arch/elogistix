@@ -89,7 +89,7 @@ describe("detalle de proveedor provisional desde su proyección real", () => {
     expect(mocks.chain.is).toHaveBeenCalledWith("deleted_at", null);
   });
 
-  it.each(["admin", "contador"])("muestra insignia y aprobación para %s", async (role) => {
+  it.each(["admin", "contador", "admin_org"])("muestra insignia y aprobación para %s", async (role) => {
     mocks.state.role = role;
     renderHeader(await cargarProveedor());
     expect(screen.getByText(/Provisional.*pendiente de Contabilidad/)).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("detalle de proveedor provisional desde su proyección real", () => {
     expect(mocks.state.mutate).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["admin", "contador"])("oculta insignia y aprobación si ya fue aprobado, para %s", async (role) => {
+  it.each(["admin", "contador", "admin_org"])("oculta insignia y aprobación si ya fue aprobado, para %s", async (role) => {
     mocks.state.role = role;
     mocks.state.row.estado_alta = "aprobado";
     const proveedor = await cargarProveedor();
@@ -110,7 +110,9 @@ describe("detalle de proveedor provisional desde su proyección real", () => {
   });
 
   const sinPermiso = [
-    ...Constants.public.Enums.app_role.filter((role) => role !== "admin" && role !== "contador"),
+    ...Constants.public.Enums.app_role.filter(
+      (role) => role !== "admin" && role !== "contador" && role !== "admin_org",
+    ),
     null,
     undefined,
   ];
@@ -122,7 +124,7 @@ describe("detalle de proveedor provisional desde su proyección real", () => {
     expect(mocks.state.aprobar).not.toHaveBeenCalled();
   });
 
-  it.each(["admin", "contador"])("conserva el bloqueo de acciones con canEdit=false para %s", async (role) => {
+  it.each(["admin", "contador", "admin_org"])("conserva el bloqueo de acciones con canEdit=false para %s", async (role) => {
     mocks.state.role = role;
     renderHeader(await cargarProveedor(), false);
     expect(screen.getByText(/Provisional.*pendiente de Contabilidad/)).toBeInTheDocument();

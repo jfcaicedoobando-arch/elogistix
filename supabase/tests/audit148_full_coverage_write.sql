@@ -33,8 +33,8 @@ RETURNS uuid LANGUAGE plpgsql AS $$
 DECLARE result uuid:=gen_random_uuid();
 BEGIN
  INSERT INTO public.proveedor_facturas(id,organization_id,proveedor_id,categoria_presupuesto_id,
-  embarque_id,folio_proveedor,moneda,subtotal,iva,total,tipo_cambio_usd,estado)
- VALUES(result,org,provider,category,ship,result::text,currency::public.moneda,base,base*.16,base*1.16,tc,'Vigente');
+  embarque_id,folio_proveedor,moneda,subtotal,iva,total,tipo_cambio_usd,estado,fecha_emision)
+ VALUES(result,org,provider,category,ship,result::text,currency::public.moneda,base,base*.16,base*1.16,tc,'Vigente',public.fecha_negocio_mx());
  RETURN result;
 END $$;
 DO $cases$
