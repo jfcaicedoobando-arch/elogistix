@@ -140,7 +140,7 @@ export default function SeccionConceptosVentaCotizacion({
               key={i}
               concepto={c}
               index={i}
-              total={conceptosMXN.length}
+              total={conceptosMXN.length + 1}
               actualizar={actualizarConceptoMXN}
               eliminar={eliminarConceptoMXN}
               tasaIva={tasaIva}
