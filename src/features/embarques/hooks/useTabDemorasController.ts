@@ -38,10 +38,14 @@ export function useTabDemorasController(embarqueId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
-    // The existing trigger can materialize costs before a transport error.
+    // The trigger updates costs and full-detail budget totals, even before a
+    // transport error. Refresh the submitted shipment after navigation too.
     onSettled: (_data, _error, _variables, context) => {
       if (context?.embarqueId) {
-        return qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(context.embarqueId), exact: true });
+        return Promise.all([
+          qc.invalidateQueries({ queryKey: queryKeys.embarques.full(context.embarqueId), exact: true }),
+          qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(context.embarqueId), exact: true }),
+        ]);
       }
     },
     onError: (err: Error) => notifyError(undefined, {

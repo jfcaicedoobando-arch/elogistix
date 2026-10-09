@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.60] - 2026-10-09
+
+- Demoras por contenedor: al guardar, refresca también la cabecera del presupuesto sin recargar la página; conserva la actualización del detalle y PnL.
+- La invalidación permanece acotada al embarque enviado, incluso al navegar durante el guardado o recibir un error posterior al recálculo. Sin cambios de importes, monedas, SQL ni permisos.
+
 ## [13.824.59] - 2026-10-09
 
 - Cartera PDF: conserva juntos título, encabezado y resumen de antigüedad para evitar recortes al cambiar de página; mantiene el detalle multipágina.
