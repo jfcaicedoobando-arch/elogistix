@@ -32,6 +32,7 @@ interface Precapturado {
   nombre?: string | null;
   etapaId?: string | null;
   empresa?: RefRow | null;
+  valorEstimado?: string | null;
 }
 
 function datosIniciales(datos?: Precapturado) {
@@ -40,6 +41,7 @@ function datosIniciales(datos?: Precapturado) {
     nombreInicial: datos?.nombre ?? null,
     empresaInicial: datos?.empresa ?? null,
     etapaIdInicial: datos?.etapaId ?? null,
+    valorEstimadoInicial: datos?.valorEstimado ?? null,
   };
 }
 
@@ -55,11 +57,11 @@ export function useOportunidadForm(
   user: User | null,
   /**
    * Datos precapturados que viajan del alta express al formulario completo
-   * (origen/ownership ya elegido y nombre escrito).
+   * (origen/ownership ya elegido, nombre e importe escritos).
    */
   precapturado?: Precapturado,
 ) {
-  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial } = datosIniciales(precapturado);
+  const { origenInicial, nombreInicial, empresaInicial, etapaIdInicial, valorEstimadoInicial } = datosIniciales(precapturado);
   // CTA de columna del Kanban: etapa destino prefijada (sólo si es abierta).
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
@@ -76,6 +78,7 @@ export function useOportunidadForm(
   const nombreRef = useRef(nombreInicial);
   const empresaRef = useRef(empresaInicial);
   const etapaRef = useRef(etapaIdInicial);
+  const valorRef = useRef(valorEstimadoInicial);
   const formRef = useRef(form);
   etapasRef.current = etapas;
   userRef.current = user;
@@ -84,6 +87,7 @@ export function useOportunidadForm(
   nombreRef.current = nombreInicial;
   empresaRef.current = empresaInicial;
   etapaRef.current = etapaIdInicial;
+  valorRef.current = valorEstimadoInicial;
   formRef.current = form;
 
   /** Fotografía del estado inicial construido: base para `isDirty`. */
@@ -95,6 +99,7 @@ export function useOportunidadForm(
   const nombreKey = nombreInicial ?? "";
   const empresaKey = empresaInicial?.id ?? "";
   const etapaKey = etapaIdInicial ?? "";
+  const valorKey = valorEstimadoInicial ?? "";
 
   useEffect(() => {
     const current = oportunidadRef.current;
@@ -107,6 +112,10 @@ export function useOportunidadForm(
       if (nombrePrecapturado) inicial = { ...inicial, nombre: nombrePrecapturado };
       const empresa = empresaRef.current;
       if (empresa) inicial = { ...inicial, empresa_id: empresa.id, empresa_nombre: empresa.nombre };
+      const valor = Number(valorRef.current);
+      if (valorRef.current != null && Number.isFinite(valor) && valor >= 0) {
+        inicial = { ...inicial, monto_meta: valor };
+      }
       // Etapa prefijada por el CTA de la columna: sólo se respeta si existe
       // y es ABIERTA (la regla "nunca crear en Ganada/Perdida" se mantiene).
       const etapaPreId = etapaRef.current;
@@ -120,10 +129,10 @@ export function useOportunidadForm(
     inicialRef.current = inicial;
     setForm(inicial);
     // La dependencia real es la *identidad* del registro (oportunidadId), el
-    // origen prefijado, el nombre/etapa precapturados y `open`; los objetos
+    // origen prefijado, el nombre/etapa/importe precapturados y `open`; los objetos
     // se leen vía ref para evitar loops cuando el backend devuelve una
     // referencia nueva con el mismo id.
-  }, [oportunidadId, open, origenKey, nombreKey, etapaKey, empresaKey]);
+  }, [oportunidadId, open, origenKey, nombreKey, etapaKey, empresaKey, valorKey]);
 
   // Etapas que llegan tarde (creación): si el pipeline aún no había cargado al
   // abrir, hidratamos SÓLO etapa/probabilidad y sincronizamos la fotografía
