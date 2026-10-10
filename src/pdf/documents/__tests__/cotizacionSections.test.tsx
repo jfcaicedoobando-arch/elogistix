@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { SeccionProspecto, SeccionDatosYMercancia, SeccionDimensiones } from "../cotizacionSections";
+import { SeccionProspecto, SeccionDatosYMercancia, SeccionDimensiones, SeccionResumenRuta } from "../cotizacionSections";
 import { render } from "@testing-library/react";
 import { makeCotizacionRow } from "@/test/fixtures/cotizacionFactory";
 
@@ -11,6 +11,21 @@ vi.mock("@/generators/cotizacion/datosGenerales", () => ({
 const mockCotizacion = makeCotizacionRow({ es_prospecto: false });
 
 describe("cotizacionSections", () => {
+  it.each(["DPU", "DAT"] as const)("%s conserva la regla de flete sin afirmar seguro incluido", (incoterm) => {
+    const { container } = render(<SeccionResumenRuta c={makeCotizacionRow({ modo: "Marítimo", incoterm })} />);
+    expect(container.textContent).toContain(`Términos ${incoterm}`);
+    expect(container.textContent).toContain("únicamente a servicios locales");
+    expect(container.textContent).not.toContain("y el seguro");
+  });
+  it("FAS conserva el literal sin exclusión de flete inventada", () => {
+    const { container } = render(<SeccionResumenRuta c={makeCotizacionRow({ modo: "Marítimo", incoterm: "FAS" })} />);
+    expect(container.textContent).toContain("FAS");
+    expect(container.textContent).not.toContain("únicamente a servicios locales");
+  });
+  it("DPU aéreo no añade la exclusión marítima", () => {
+    const { container } = render(<SeccionResumenRuta c={makeCotizacionRow({ modo: "Aéreo", incoterm: "DPU" })} />);
+    expect(container.textContent).not.toContain("únicamente a servicios locales");
+  });
   it("SeccionProspecto retorna null cuando es_prospecto=false", () => {
     const { container } = render(<SeccionProspecto c={mockCotizacion} />);
     expect(container.textContent).toBe("");

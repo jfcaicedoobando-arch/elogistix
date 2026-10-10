@@ -70,7 +70,7 @@ vi.mock("@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave", () => (
 
 const prefillArgs: Record<string, unknown>[] = [];
 const pricingPrefillArgs: Record<string, unknown>[] = [];
-vi.mock("@/features/cotizacion/hooks/wizard/usePrefillTarifaPricing", () => ({ usePrefillTarifaPricing: (args: Record<string, unknown>) => { pricingPrefillArgs.push(args); } }));
+vi.mock("@/features/cotizacion/hooks/wizard/usePrefillContextoPricing", () => ({ usePrefillContextoPricing: (args: Record<string, unknown>) => { pricingPrefillArgs.push(args); } }));
 vi.mock("@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad", () => ({
   usePrefillProspectoOportunidad: (args: Record<string, unknown>) => { prefillArgs.push(args); },
 }));
@@ -265,6 +265,11 @@ describe("barrera de captura durante recuperación", () => {
 });
 
 describe("useNuevaCotizacionPageController — guard Pricing", () => {
+  it("envía solicitud y deshabilita prefill prospecto paralelo", () => {
+    render("?tarifa=t1&oportunidad=opp-1&solicitud=sol-1");
+    expect(pricingPrefillArgs.at(-1)).toMatchObject({ solicitudId: "sol-1", oportunidadId: "opp-1", tarifaId: "t1", enabled: true });
+    expect(prefillArgs.at(-1)).toMatchObject({ enabled: false });
+  });
   it.each([
     ["", true, null, false, false],
     ["?tarifa=t1", true, null, true, false],
@@ -275,6 +280,6 @@ describe("useNuevaCotizacionPageController — guard Pricing", () => {
     draftRestore.permitePrefillProspecto = permiso;
     wizardState.cotizacionId = cotizacionId;
     render(search);
-    expect(pricingPrefillArgs.at(-1)).toMatchObject({ enabled, esperarOportunidad });
+    expect(pricingPrefillArgs.at(-1)).toMatchObject({ enabled, oportunidadId: esperarOportunidad ? "opp-1" : null, organizationId: "org-1" });
   });
 });

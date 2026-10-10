@@ -8,6 +8,13 @@
 - Fija Node 22.22.0 y separa su caché. Cambios exclusivamente SQL omiten lint/build/PDF, pero conservan Vitest y controles de BD.
 - Sin cambios de versión, protección de main, despliegue ni datos. Se conservan cinco shards/dos workers hasta contar con un benchmark controlado.
 
+## [13.824.68] - Unreleased
+
+- Pricing/cotización: conserva la solicitud, oportunidad, tarifa y respuesta exactas al transferir al wizard; bloquea metadatos incompatibles antes de modificar el formulario y permite reintentar sin duplicar el vínculo.
+- Incoterms: admite FAS y DPU sin convertirlos ni sustituir valores históricos. DPU usa la exclusión de flete marítimo internacional ya documentada para el grupo D; FAS conserva la rama estándar y el seguro automático continúa limitado a CIF/CIP. El linaje de Pricing se conserva aunque el Incoterm excluya ese flete.
+- Agrega el origen de solicitud y una RPC exclusiva para clientes con guardas de empresa, rol, edición y compatibilidad. La RPC queda sin EXECUTE para roles de aplicación; su activación exige aprobación específica posterior. No reemplaza los RPC existentes de prospectos o aplicación de tarifa.
+- Dos migraciones nuevas posteriores a release67 y una regresión enum descubierta por el runner RLS habitual; conserva íntegros los inventarios históricos. CI completo, snapshot generado, ejecución SQL, aplicación remota y despliegue se verifican por separado.
+
 ## [13.824.67] - 2026-10-10
 
 - CRM/cotizaciones: sincroniza el importe de la oportunidad abierta cuando una actualización cambia únicamente `conceptos_venta`; conserva el cálculo server-side del subtotal y el linaje de Pricing.

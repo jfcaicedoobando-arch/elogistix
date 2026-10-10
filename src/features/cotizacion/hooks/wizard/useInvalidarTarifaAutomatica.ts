@@ -10,11 +10,14 @@
  * DAP/DDP/DAT) la UI oculta la tarifa, pero el flete internacional y sus
  * recargos seguían vivos en el formulario y en los costos.
  *
- * En ambos casos se rompe el vínculo y se eliminan SÓLO las filas de costo
+ * Se conserva la tarifa como identidad de una respuesta Pricing exacta;
+ * excluir su flete no borra el origen. Fuera de ese caso se rompe el vínculo.
+ * Se eliminan SÓLO las filas de costo
  * auto-generadas desde la tarifa; los renglones capturados a mano (por ejemplo
  * gastos locales en destino) se conservan intactos.
  */
 import { useEffect, useRef } from "react";
+import { identidadPricingCoincide } from "./identidadPricing";
 import type { UseFormReturn } from "react-hook-form";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
@@ -37,6 +40,7 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
   const incoterm = form.watch("incoterm");
   const tipoEmbarque = form.watch("tipoEmbarque");
   const tipoContenedor = form.watch("tipoContenedor");
+  const pricingOrigen = form.watch("pricingOrigen");
 
   const { data: tarifa } = useTarifaVinculada(tarifaId);
   const { data: tiposContenedor = [] } = useTiposContenedor();
@@ -58,23 +62,25 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
       !!tipoActualId &&
       tipoActualId !== tarifa.tipo_contenedor_id;
 
-    const motivo = sinFleteVenta ? "incoterm" : tipoIncompatible ? "tipo" : null;
-    if (!motivo) return;
+    const motivo = tipoIncompatible ? "tipo" : sinFleteVenta ? "incoterm" : null;
+    if (!motivo) { avisadoRef.current = null; return; }
+    const conservarOrigen = motivo === "incoterm" && identidadPricingCoincide(form.getValues());
 
-    const marca = `${tarifaId}:${motivo}`;
+    const marca = `${tarifaId}:${motivo}:${conservarOrigen}`;
     if (avisadoRef.current === marca) return;
     avisadoRef.current = marca;
 
-    form.setValue("tarifaId", null, OPTS);
+    if (!conservarOrigen) form.setValue("tarifaId", null, OPTS);
     form.setValue("tarifaOverride", {}, OPTS);
     setCostosInternos((prev) => sinCostosAutoTarifa(prev));
 
     notifyWarning(undefined, {
-      title: "Tarifa marítima desvinculada",
-      description:
-        motivo === "incoterm"
+      title: conservarOrigen ? "Flete automático excluido" : "Tarifa marítima desvinculada",
+      description: conservarOrigen
+        ? `Con Incoterm ${incoterm} no se generan costos automáticos de flete ni recargos. Se conserva la tarifa como origen de la respuesta de Pricing.`
+        : motivo === "incoterm"
           ? `Con Incoterm ${incoterm} el flete internacional lo paga el proveedor en origen: se quitó la tarifa vinculada y sus costos automáticos de flete y recargos.`
           : "Cambiaste el tipo de contenedor: se quitó la tarifa vinculada y sus costos automáticos. Elige una tarifa del tipo correcto.",
     });
-  }, [tarifaId, incoterm, modo, tipoEmbarque, tipoContenedor, tarifa, tiposContenedor, form, setCostosInternos]);
+  }, [tarifaId, incoterm, modo, tipoEmbarque, tipoContenedor, pricingOrigen, tarifa, tiposContenedor, form, setCostosInternos]);
 }

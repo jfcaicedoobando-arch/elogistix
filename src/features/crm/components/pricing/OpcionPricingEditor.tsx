@@ -70,7 +70,7 @@ export function OpcionPricingEditor({ solicitudId, organizationId, orden, opcion
           <CampoTexto id={`${idBase}-agente`} label="Agente" disabled={off} value={datos.agente}
             onChange={(v) => set({ agente: v || null })} />
           <div className="space-y-1.5">
-            <Label>Carrier</Label>
+            <Label>Naviera</Label>
             <NavieraSelect value={datos.naviera_id ?? null} disabled={off} onSelect={(n) => set({ naviera_id: n.id })} />
           </div>
           <CampoSiNo id={`${idBase}-carta`} label="Carta garantía" disabled={off} value={datos.carta_garantia}

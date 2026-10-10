@@ -86,9 +86,11 @@ describe("formulario → persistencia → coincidencias → selección", () => {
     expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({ tipo_carga: "40' High Cube" }));
     expect(mocks.insert.mock.calls[0][0]).not.toHaveProperty("container_size");
     expect(guardada.container_size).toBeNull();
-    expect(screen.getByText("40HC:")).toBeInTheDocument();
-    expect(screen.queryByText("20GP:")).toBeNull();
-    expect(screen.queryByText("40GP:")).toBeNull();
+    const resumenContenedor = screen.getByText("Tipo de contenedor:").parentElement;
+    expect(resumenContenedor).toHaveTextContent(/^Tipo de contenedor:\s*40HC\s*Flete base:/);
+    expect(screen.queryByText(/\b20GP\b/)).toBeNull();
+    expect(screen.queryByText(/\b40GP\b/)).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Usar esta opción" })).toHaveLength(1);
     fireEvent.click(elegir);
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("crm_aplicar_tarifa_tarifario", { p_solicitud_id: "s1", p_tarifa_id: "40HC" }));
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
@@ -103,11 +105,14 @@ describe("formulario → persistencia → coincidencias → selección", () => {
   it("la selección directa del hook rechaza un id incompatible y permite el compatible", async () => {
     const { result } = renderHook(() => useOpcionesTarifario({ ...inicial, tipo_carga: "40HC" }), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => result.current.elegir("20GP"));
-    expect(mocks.rpc).not.toHaveBeenCalled();
-    expect(mocks.error).toHaveBeenCalledWith(undefined, expect.objectContaining({
-      error: expect.objectContaining({ message: "LC_PRICING_TARIFA_INCOMPATIBLE" }),
-    }));
+    for (const incompatible of ["20GP", "40GP"]) {
+      await act(async () => result.current.elegir(incompatible));
+      expect(mocks.rpc).not.toHaveBeenCalled();
+      expect(mocks.error).toHaveBeenLastCalledWith(undefined, expect.objectContaining({
+        error: expect.objectContaining({ message: "LC_PRICING_TARIFA_INCOMPATIBLE" }),
+      }));
+    }
+    expect(mocks.error).toHaveBeenCalledTimes(2);
     await act(async () => result.current.elegir("40HC"));
     expect(mocks.rpc).toHaveBeenCalledWith("crm_aplicar_tarifa_tarifario", { p_solicitud_id: "s1", p_tarifa_id: "40HC" });
   });
