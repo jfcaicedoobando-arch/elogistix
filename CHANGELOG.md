@@ -1,5 +1,13 @@
 # Changelog
 
+## Sin publicar — mantenimiento de CI
+
+- Integra actionlint en el detector de CI y retira su workflow independiente sin perder la validación de YAML.
+- Smoke de duplicación: exige HTTP 404/P0002 y el mensaje esperado; rechaza errores de autenticación, proxy, límite y respuestas inválidas.
+- Serializa E2E entre ramas desde provisioning; amplía filtros de RLS para cobros y fixtures; limita las pruebas visuales a sus entradas.
+- Fija Node 22.22.0 y separa su caché. Cambios exclusivamente SQL omiten lint/build/PDF, pero conservan Vitest y controles de BD.
+- Sin cambios de versión, protección de main, despliegue ni datos. Se conservan cinco shards/dos workers hasta contar con un benchmark controlado.
+
 ## [13.824.67] - 2026-10-10
 
 - CRM/cotizaciones: sincroniza el importe de la oportunidad abierta cuando una actualización cambia únicamente `conceptos_venta`; conserva el cálculo server-side del subtotal y el linaje de Pricing.

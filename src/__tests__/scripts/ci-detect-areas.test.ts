@@ -126,9 +126,31 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
   ])("%s activa las comprobaciones de BD", (ruta) => {
     const head = commit([ruta], base);
     expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head })).toMatchObject({
-      frontend: "true",
+      frontend: ruta.endsWith(".sql") ? "false" : "true",
       database: "true",
     });
+  });
+
+  it.each([
+    ["supabase/migrations/new.sql", "false", "false", "true", "false"],
+    ["supabase/schema/function.sql", "false", "false", "true", "false"],
+    ["supabase/tests/check.sql", "false", "false", "true", "false"],
+    ["supabase/functions/new/index.ts", "true", "true", "false", "false"],
+    ["package.json", "true", "false", "true", "false"],
+    ["unknown/new.config", "true", "false", "false", "false"],
+    [".github/workflows/e2e.yml", "true", "false", "false", "true"],
+    ["scripts/ci/lint-workflows.sh", "true", "false", "false", "true"],
+    [".github/dependabot.yml", "true", "false", "false", "true"],
+  ])("clasifica %s sin perder verificaciones", (ruta, frontend, edge, database, workflows) => {
+    const head = commit([ruta], base);
+    expect(detectar({ EVENT_NAME: "pull_request", BASE_SHA: base, HEAD_SHA: head }))
+      .toEqual({ frontend, edge, database, workflows });
+  });
+
+  it("un diff mixto SQL/UI conserva frontend y BD", () => {
+    const head = commit(["supabase/migrations/new.sql", "src/App.tsx"], base);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head }))
+      .toMatchObject({ frontend: "true", database: "true" });
   });
 
   it("base inexistente o diff vacío corre TODO (conservador)", () => {

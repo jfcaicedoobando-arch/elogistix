@@ -4,6 +4,18 @@ name: Isolated UI audit (119/126)
 # provisioning, credentials, deploys, or financial/backend writes from this job.
 on:
   pull_request:
+    # Incluye todo src: no perder imports transitivos de las fixtures.
+    paths:
+      - 'src/**'
+      - 'e2e/visual/**'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig*.json'
+      - '*tailwind*'
+      - '*postcss*'
+      - '*vite*'
+      - '.github/actions/setup-bun/**'
+      - '.github/workflows/isolated-ui-audit.yml'
   workflow_dispatch:
 
 permissions:

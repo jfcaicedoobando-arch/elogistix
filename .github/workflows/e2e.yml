@@ -37,8 +37,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: e2e-${{ github.ref }}
-  cancel-in-progress: true
+  # Todas las ramas comparten credenciales/fixtures; incluye provisioning.
+  group: e2e-shared-fixtures
+  cancel-in-progress: false
 
 env:
   E2E_BASE_URL: ${{ github.event.inputs.base_url || secrets.E2E_BASE_URL }}
