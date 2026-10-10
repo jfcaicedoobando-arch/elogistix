@@ -37912,7 +37912,7 @@ CREATE TRIGGER trg_crm_registrar_cambio_etapa BEFORE UPDATE ON public.crm_oportu
 CREATE TRIGGER trg_crm_reportes_guard BEFORE INSERT OR UPDATE ON public.crm_reportes FOR EACH ROW EXECUTE FUNCTION public._crm_reportes_guard();
 CREATE TRIGGER trg_crm_sol_pricing_ins BEFORE INSERT ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_ins();
 CREATE TRIGGER trg_crm_sol_pricing_upd BEFORE UPDATE ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_upd();
-CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
+CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id, conceptos_venta ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_crm_tableros_touch BEFORE UPDATE ON public.crm_tableros FOR EACH ROW EXECUTE FUNCTION public._crm_tableros_touch();
 CREATE TRIGGER trg_crm_validar_motivo_perdida BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_validar_motivo_perdida();
 CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._cuenta_bancaria_guard_baja();
