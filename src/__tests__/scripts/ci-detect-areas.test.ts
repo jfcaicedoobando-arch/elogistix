@@ -11,12 +11,14 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 
 const SCRIPT = join(process.cwd(), "scripts/ci/detect-areas.sh");
 // CI runs this integration test on Linux. On Windows, skip only if bash truly
 // is not installed instead of failing the whole local Vitest run with ENOENT.
 const BASH_DISPONIBLE = spawnSync("bash", ["--version"], { stdio: "ignore" }).status === 0;
+const FULL_RUN = { frontend: "true", edge: "true", database: "true", workflows: "true" };
+const EMPTY_DIFF = { frontend: "false", edge: "false", database: "false", workflows: "false" };
 
 const IDENTIDAD = {
   GIT_AUTHOR_NAME: "CI",
@@ -36,11 +38,11 @@ function git(args: string[], env: Record<string, string> = {}): string {
 }
 
 /** Crea un commit con las rutas dadas (contenido irrelevante). */
-function commit(rutas: string[], padre?: string): string {
+function commit(rutas: string[], padre?: string, contenido = `contenido ${Math.random()}\n`): string {
   const index = join(repo, `idx-${Math.random().toString(36).slice(2)}`);
   const env = { GIT_INDEX_FILE: index };
   const blobPath = join(repo, "blob.tmp");
-  writeFileSync(blobPath, `contenido ${Math.random()}\n`);
+  writeFileSync(blobPath, contenido);
   const blob = git(["hash-object", "-w", blobPath]);
   for (const r of rutas) {
     git(["update-index", "--add", "--cacheinfo", `100644,${blob},${r}`], env);
@@ -58,7 +60,15 @@ function detectar(env: Record<string, string>): Record<string, string> {
   execFileSync("bash", [SCRIPT], {
     cwd: repo,
     encoding: "utf8",
-    env: { ...process.env, GITHUB_OUTPUT: outFile, ...env },
+    env: {
+      ...process.env,
+      EVENT_NAME: "",
+      BASE_SHA: "",
+      BEFORE_SHA: "",
+      HEAD_SHA: "",
+      GITHUB_OUTPUT: outFile,
+      ...env,
+    },
   });
   const salidas: Record<string, string> = {};
   for (const linea of readFileSync(outFile, "utf8").split("\n")) {
@@ -75,7 +85,9 @@ beforeAll(() => {
   git(["init", "-q", "-b", "main"]);
   // Reproduce el entorno real: git entrecomilla rutas no ASCII.
   git(["config", "core.quotePath", "true"]);
+  git(["config", "diff.renames", "true"]);
   base = commit(["README.md"]);
+  git(["update-ref", "refs/heads/main", base]);
 });
 
 afterAll(() => {
@@ -107,12 +119,34 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head })).toMatchObject({ edge: "true" });
   });
 
-  it("sin base utilizable corre TODO (conservador)", () => {
-    expect(detectar({ EVENT_NAME: "workflow_dispatch", HEAD_SHA: base })).toMatchObject({
-      frontend: "true",
-      edge: "true",
-      database: "true",
-    });
+  it.each(["workflow_dispatch", "schedule", "merge_group", "desconocido", ""])(
+    "el evento %s conserva TODO incluso con base y head iguales",
+    (event) => {
+      expect(detectar({ EVENT_NAME: event, BASE_SHA: base, BEFORE_SHA: base, HEAD_SHA: base }))
+        .toEqual(FULL_RUN);
+    },
+  );
+
+  it.each(["push", "pull_request"])("%s con base igual a head es un diff válido vacío", (event) => {
+    expect(detectar({ EVENT_NAME: event, BASE_SHA: base, BEFORE_SHA: base, HEAD_SHA: base }))
+      .toEqual(EMPTY_DIFF);
+  });
+
+  it("un commit vacío distinto de su padre no activa áreas", () => {
+    const tree = git(["rev-parse", `${base}^{tree}`]);
+    const head = git(["commit-tree", tree, "-p", base, "-m", "commit vacío"]);
+    expect(head).not.toBe(base);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head })).toEqual(EMPTY_DIFF);
+  });
+
+  it("un PR sin delta de árbol no activa áreas", () => {
+    const tree = git(["rev-parse", `${base}^{tree}`]);
+    const head = git(["commit-tree", tree, "-p", base, "-m", "PR sin delta"]);
+    expect(detectar({ EVENT_NAME: "pull_request", BASE_SHA: base, HEAD_SHA: head })).toEqual(EMPTY_DIFF);
+  });
+
+  it("HEAD sigue siendo el default cuando no se pasa HEAD_SHA", () => {
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base })).toEqual(EMPTY_DIFF);
   });
 
   it.each([
@@ -141,6 +175,11 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
     [".github/workflows/e2e.yml", "true", "false", "false", "true"],
     ["scripts/ci/lint-workflows.sh", "true", "false", "false", "true"],
     [".github/dependabot.yml", "true", "false", "false", "true"],
+    ["scripts/ci/test-catalog.mjs", "true", "false", "false", "false"],
+    ["scripts/ci/test-catalog/sql-support.json", "true", "false", "false", "false"],
+    ["scripts/ci/verify-test-evidence.mjs", "true", "false", "false", "false"],
+    ["scripts/ci/vitest-evidence-reporter.ts", "true", "false", "false", "false"],
+    ["scripts/__tests__/audit-acl-preservation.test.ts", "true", "false", "false", "false"],
   ])("clasifica %s sin perder verificaciones", (ruta, frontend, edge, database, workflows) => {
     const head = commit([ruta], base);
     expect(detectar({ EVENT_NAME: "pull_request", BASE_SHA: base, HEAD_SHA: head }))
@@ -153,15 +192,81 @@ describe.skipIf(!BASH_DISPONIBLE)("scripts/ci/detect-areas.sh", () => {
       .toMatchObject({ frontend: "true", database: "true" });
   });
 
-  it("base inexistente o diff vacío corre TODO (conservador)", () => {
-    expect(
-      detectar({ EVENT_NAME: "push", BEFORE_SHA: "0".repeat(40), HEAD_SHA: base }),
-    ).toMatchObject({ frontend: "true", edge: "true", database: "true" });
-    // Mismo commit en base y head → diff vacío.
-    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: base })).toMatchObject({
-      frontend: "true",
-      edge: "true",
-      database: "true",
-    });
+  it.each(["", "0".repeat(40), "f".repeat(40), "referencia-inexistente"])(
+    "una base ausente o inválida (%s) conserva TODO",
+    (invalidBase) => {
+      for (const event of ["push", "pull_request"]) {
+        expect(detectar({ EVENT_NAME: event, BEFORE_SHA: invalidBase, BASE_SHA: invalidBase, HEAD_SHA: base }))
+          .toEqual(FULL_RUN);
+      }
+    },
+  );
+
+  it("una base que existe como blob no cuenta como commit válido", () => {
+    const blob = git(["rev-parse", `${base}:README.md`]);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: blob, HEAD_SHA: base })).toEqual(FULL_RUN);
+  });
+
+  it("un head inválido conserva TODO", () => {
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: "head-inexistente" }))
+      .toEqual(FULL_RUN);
+  });
+
+  it.each(["", "docs/parcial.md"])("un git diff fallido no acepta salida parcial '%s'", (partial) => {
+    const bin = mkdtempSync(join(repo, "fake-bin-"));
+    // Sólo falla diff; la validación previa de ambos commits continúa siendo real.
+    writeFileSync(join(bin, "git"), [
+      "#!/usr/bin/env bash",
+      'if [ "$1" = diff ]; then',
+      '  if [ -n "$PARTIAL_DIFF" ]; then printf "%s\\0" "$PARTIAL_DIFF"; fi',
+      "  exit 1",
+      "fi",
+      'exec "$REAL_GIT" "$@"',
+      "",
+    ].join("\n"), { mode: 0o755 });
+    const realGit = execFileSync("bash", ["-c", "command -v git"], { encoding: "utf8" }).trim();
+    expect(detectar({
+      EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: base,
+      PATH: `${bin}${delimiter}${process.env.PATH ?? ""}`, REAL_GIT: realGit, PARTIAL_DIFF: partial,
+    })).toEqual(FULL_RUN);
+  });
+
+  it("si no se puede preparar el archivo del diff conserva TODO", () => {
+    expect(detectar({
+      EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: base,
+      TMPDIR: join(repo, "carpeta-inexistente"),
+    })).toEqual(FULL_RUN);
+  });
+
+  it.each([
+    ["src/Componente.tsx", "docs/Componente.md", "true", "false"],
+    ["supabase/migrations/previa.sql", "docs/previa.md", "false", "true"],
+    ["docs/anterior-ñ.md", "docs/nueva-con-á.md", "false", "false"],
+  ])("renombrar %s a %s conserva la clasificación de ambos extremos", (origin, destination, frontend, database) => {
+    const contenido = "mismo contenido para que Git detecte el rename\n";
+    const before = commit([origin], undefined, contenido);
+    const head = commit([destination], before, contenido);
+    expect(git(["diff", "--name-status", "--find-renames", before, head])).toContain("R100");
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: before, HEAD_SHA: head }))
+      .toEqual({ frontend, edge: "false", database, workflows: "false" });
+  });
+
+  it.each([
+    ["src/Eliminado.tsx", "true", "false", "false", "false"],
+    ["supabase/migrations/eliminada.sql", "false", "false", "true", "false"],
+    ["supabase/functions/eliminada/index.ts", "true", "true", "false", "false"],
+    [".github/workflows/eliminado.yml", "true", "false", "false", "true"],
+    ["docs/eliminado.md", "false", "false", "false", "false"],
+  ])("borrar %s conserva sus comprobaciones", (path, frontend, edge, database, workflows) => {
+    const before = commit([path]);
+    const head = commit([], before);
+    expect(detectar({ EVENT_NAME: "pull_request", BASE_SHA: before, HEAD_SHA: head }))
+      .toEqual({ frontend, edge, database, workflows });
+  });
+
+  it("preserva Unicode, espacios, tabs y saltos de línea sin partir rutas", () => {
+    const head = commit(["docs/con acento-ñ\nsegunda\tlínea.md", "src/nombre extraño-ñ\narchivo.tsx"], base);
+    expect(detectar({ EVENT_NAME: "push", BEFORE_SHA: base, HEAD_SHA: head }))
+      .toEqual({ ...EMPTY_DIFF, frontend: "true" });
   });
 });

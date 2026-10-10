@@ -35,6 +35,15 @@ Vitest por sus contratos SQL y los guards DB. Los paths desconocidos conservan
 frontend activo. Actionlint vive en el detector (ya no tiene workflow separado)
 y cualquier fallo bloquea el agregador; también corre en dispatch/fallback.
 
+El selector distingue un diff **válido sin rutas** (incluidos base=head y un
+commit nuevo con el mismo árbol) de no poder calcularlo. Sólo el primero deja
+todas las áreas inactivas. Dispatch, eventos desconocidos, base/head inválidos
+y errores de Git o del archivo temporal conservan todas las comprobaciones.
+Las rutas se leen delimitadas por NUL; un rename evalúa origen y destino y una
+eliminación conserva el área del archivo borrado. Los contratos están en
+`src/__tests__/scripts/ci-detect-areas.test.ts`. Detector, agregador y gitleaks
+siguen presentes; una omisión válida no es evidencia de ejecución de suites.
+
 ### Deno: CLI de pruebas vs. runtime desplegado
 
 `ci.yml` y `post-deploy-smoke.yml` fijan el CLI en **2.9.7**. Edge usa Sentry
