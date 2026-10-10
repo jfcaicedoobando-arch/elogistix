@@ -1,0 +1,55 @@
+{
+  "prepared_date_utc": "2026-10-09",
+  "source": "Reviewed bounded synthetic Pricing customer-link RPC replay",
+  "frozen_sql_sha256": [
+    {
+      "path": "bootstrap-synthetic.sql",
+      "sha256": "455a321391d56480e6b22b63746d0038366fdec98bced22e038eb24fbfd91bec"
+    },
+    {
+      "path": "auth-uid.sql",
+      "sha256": "3acbf7a57c49b5f8c7d0f1d3f089ca30e21a0485b35d13a4cf4e8e562cd7005b"
+    },
+    {
+      "path": "auth-jwt.sql",
+      "sha256": "8ce6c06e58701d6598e3d081514be3b54e4016a02b867b4d880e48b0056a0273"
+    },
+    {
+      "path": "auth-role.sql",
+      "sha256": "6e377a3e008f44a4eff964fe18ada3044deff50db3cd0d2eceed5ea141fcb873"
+    },
+    {
+      "path": "replay.sql",
+      "sha256": "77d60cb54a2cc7804b08a9fe69d2f42f38481e123c143a590dabd6e2c742c41e"
+    },
+    {
+      "path": "assertions.sql",
+      "sha256": "ba9836667f8b20886d73e75c8cda911f303792511b9aa2ca483a6e35351b3f75"
+    }
+  ],
+  "sql_modified_by_ci_port": true,
+  "runtime_result": "Original assertions failed before C01 in PostgreSQL 17.9 CI run 38009229871; corrected assertions have not yet run.",
+  "reviewed_repository_conventions": {
+    "repository": "jfcaicedoobando-arch/elogistix",
+    "ref": "main",
+    "AGENTS.md_blob": "f4d1f0d7a05bae1d45de18070b737eba5e0138f4",
+    ".github/workflows/rls-tests.yml_blob": "6a02d623f6fcd17b769d44a7877f1100dd84659b",
+    ".github/workflows/ci.yml_blob": "64549e671ec28d2bae3751d360c365d82e06bfea"
+  },
+  "ci_assertion_corrections": [
+    {
+      "date_utc": "2026-10-10",
+      "source_assertions_sha256": "6751487e7000abb4fe2f692f03a137dc05702eff6ab8dfc421e1d8e8c58948cf",
+      "corrected_assertions_sha256": "ba9836667f8b20886d73e75c8cda911f303792511b9aa2ca483a6e35351b3f75",
+      "source_lines": [
+        24,
+        477
+      ],
+      "change": "Insert the missing array-constructor keyword: FOREACH t IN ARRAY[...] becomes FOREACH t IN ARRAY ARRAY[...].",
+      "scope": "Syntax only; relation lists, assertion conditions, notices, rollback and ACL checks unchanged.",
+      "triggering_ci_run_id": "38009229871",
+      "triggering_runtime_error": "psql:/bundle/assertions.sql:31: ERROR: syntax error at or near \"[\"",
+      "corrected_sql_runtime_executed": false
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+name: Pricing RPC bounded replay
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ci/pricing-rpc-bounded/**'
+      - '.github/workflows/pricing-rpc-bounded.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/ci/pricing-rpc-bounded/**'
+      - '.github/workflows/pricing-rpc-bounded.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pricing-rpc-bounded-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bounded-replay:
+    name: Pricing RPC bounded SQL (no app EXECUTE)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Frozen synthetic replay in isolated PostgreSQL 17
+        run: bash scripts/ci/pricing-rpc-bounded/run-ci.sh
+      - name: Preserve bounded replay evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pricing-rpc-bounded-${{ github.run_id }}-${{ github.run_attempt }}
+          path: pricing-rpc-evidence/
+          if-no-files-found: error
+          retention-days: 14
