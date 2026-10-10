@@ -1,0 +1,5 @@
+[
+  "PASS CP01: authenticated existing prospect link and no-write retry preserve NULL Pricing origin; full fixture restored",
+  "PASS CP02: authenticated customer acceptance closes CRM, historical retry is no-write, and winner soft-delete preserves lineage/history; full fixture restored",
+  "PASS CP03: deleted quote/customer/opportunity/request and deleted stage reject fresh linkage with exact errors and no writes; full fixture restored"
+]

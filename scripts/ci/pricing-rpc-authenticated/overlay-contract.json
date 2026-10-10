@@ -1,0 +1,7 @@
+{
+  "baseline-assertions.sql": "68c58b527a3f2e95cf612d8b20b4d61dc30cc4b27b57ad293748e213f9913579",
+  "baseline-expected-notices.json": "b4ab191d643126c679a500bca88b2a1938748addedf88d30b581607ee9833cc0",
+  "candidate-assertions.sql": "f826460c6e5bea1e0986f29e134ab120e184d98435888cf735f2ebda3692bc4e",
+  "candidate-expected-notices.json": "c70004ae10aafeeddff0915acdc4310b887730b3885c76b3d71b2b973637f8ea",
+  "overlay-manifest.json": "6ac46b6487887ff2399dc1ab0247f2c024b0381371be0a2fdc02f1caab774e11"
+}
