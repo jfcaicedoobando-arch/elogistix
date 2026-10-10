@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { createTreeSampler, measureCommand, MEMORY_METHOD, parseIdentity, type ExitVerification, type RecoveryDiagnostic } from '../../../scripts/ci/measure-vitest-memory.mjs';
+import { createTreeSampler, measureCommand, MEMORY_DIAGNOSTIC_VERSION, MEMORY_METHOD, parseIdentity, type ExitVerification, type RecoveryDiagnostic, type StatusReads } from '../../../scripts/ci/measure-vitest-memory.mjs';
 
 const directories: string[] = [];
 const temporary = () => { const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-memory-')); directories.push(directory); return directory; };
@@ -14,8 +14,8 @@ const readReport = (directory: string) => JSON.parse(fs.readFileSync(reportFile(
 const command = (code: string) => [process.execPath, '-e', code];
 afterEach(() => { for (const directory of directories.splice(0)) fs.rmSync(directory, { recursive: true, force: true }); });
 
-function stat(parent: number, start: string, state = 'S', pid = 100) {
-  const fields = Array(22).fill('0'); fields[0] = state; fields[1] = String(parent); fields[19] = start;
+function stat(parent: number, start: string, state = 'S', pid = 100, exitFlag = false) {
+  const fields = Array(22).fill('0'); fields[0] = state; fields[1] = String(parent); fields[6] = exitFlag ? '4' : '0'; fields[19] = start;
   return `${pid} (fixture ) name) ${fields.join(' ')}`;
 }
 function procStatus(pid: number, rss?: number | string, state = 'S', tgid = pid) {
@@ -74,6 +74,58 @@ function recoveryTree() {
   fake.files['/proc/100/task/102/status'] = procStatus(102, 48 * 1024, 'S', 100);
   fake.files['/proc/100/task/102/children'] = '';
   return fake;
+}
+
+type DiagnosticRoute = 'rss-absent' | 'uncaptured-new-task' | 'pending-representative-once' | 'control' | 'unread-children-once' | 'unread-children-persistent' | 'terminal-history' | 'truncated-observation';
+function diagnosticTree(route: DiagnosticRoute) {
+  const fake = recoveryTree(); let lists = 0; let representativeCalls = 0; let taskReads = 0; let childrenReads = 0;
+  fake.files['/proc/100/stat'] = stat(process.pid, '1000', 'Z', 100, true);
+  fake.files['/proc/100/task/100/stat'] = stat(process.pid, '1000', 'Z', 100, true);
+  if (route === 'rss-absent') fake.files['/proc/100/task/102/status'] = procStatus(102, undefined, 'S', 100);
+  const counts: StatusReads = { groupAttempts: 0, groupReads: 0, groupWithoutVmRss: 0, groupDiscarded: 0, representativeAttempts: 0, representativeReads: 0, representativeWithoutVmRss: 0, representativeDiscarded: 0 };
+  const baseRead = (file: string) => {
+    if (file === '/proc/100/task/103/stat' && route === 'uncaptured-new-task') throw procError('ENOENT');
+    if (file === '/proc/100/task/102/stat') {
+      if (route === 'truncated-observation' && lists >= 2) throw procError('EACCES');
+      if (route === 'terminal-history') return stat(process.pid, '1002', ++taskReads <= 3 ? 'Z' : 'S', 102);
+    }
+    if (file === '/proc/100/task/102/children') {
+      childrenReads++;
+      if ((route === 'unread-children-once' && childrenReads === 2) || (route === 'unread-children-persistent' && childrenReads >= 2)) throw procError('ENOENT');
+    }
+    if (file === '/proc/100/task/102/status') {
+      representativeCalls++;
+      if (route === 'pending-representative-once' && representativeCalls === 2) throw procError('ENOENT');
+      if (route === 'rss-absent' || (route !== 'terminal-history' && representativeCalls === 1)) return procStatus(102, undefined, 'S', 100);
+    }
+    return fake.read(file);
+  };
+  const read = (file: string) => {
+    const group = file === '/proc/100/status'; const representative = file === '/proc/100/task/102/status';
+    if (group) counts.groupAttempts++;
+    if (representative) counts.representativeAttempts++;
+    const value = baseRead(file);
+    if (group) { counts.groupReads++; if (!/^VmRSS:/m.test(value)) counts.groupWithoutVmRss++; }
+    if (representative) { counts.representativeReads++; if (!/^VmRSS:/m.test(value)) counts.representativeWithoutVmRss++; }
+    return value;
+  };
+  const list = (file: string) => {
+    if (file !== '/proc/100/task') return fake.list(file);
+    lists++;
+    return route === 'uncaptured-new-task' && lists === 2 ? ['100', '102', '103'] : ['100', '102'];
+  };
+  return { ...fake, read, list, counts };
+}
+async function diagnosticReport(fake: ReturnType<typeof diagnosticTree>) {
+  const sample = createTreeSampler(100, fake); let samples = 0;
+  return measureCommand(command('process.exit(0)'), {
+    env: environment(temporary()), platform: 'linux', write: () => {},
+    samplerFactory: () => () => samples++ === 0 ? sample() : {
+      rssBytes: 0, processCount: 0, taskCount: 0, exitRaces: 0, durationMs: 0,
+      exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null,
+      recoveryCount: 0, recoveryWallMs: 0, lastRecovery: null,
+    },
+  });
 }
 
 describe('job-scoped process tree sampling', () => {
@@ -752,7 +804,7 @@ describe('job-scoped process tree sampling', () => {
     expect(rssReads).toBeGreaterThan(0);
     expect(result).toMatchObject({ rssBytes: 48 * 1024 * 1024, processCount: 1, recoveryCount: route === 'child-stat' ? 2 : 1, exitVerificationCount: route === 'child-stat' ? 1 : 0 });
     expect(result.lastRecovery).toMatchObject({ outcome: route === 'child-stat' ? 'gone' : 'rss-recovered', initialPhase: route === 'child-stat' ? 'group-stat' : route, initialCause: route === 'task-list' ? 'EMPTY_TASK_LIST' : 'ENOENT' });
-    expect(result.lastRecovery?.rssAttempts).toBeGreaterThanOrEqual(route === 'child-stat' ? 1 : 2);
+    expect(result.lastRecovery?.observationAttempts).toBeGreaterThanOrEqual(route === 'child-stat' ? 1 : 2);
     expect(fake.now()).toBeLessThanOrEqual(MEMORY_METHOD.exitVerificationMs);
   });
   it('keeps a stable live thread with persistently unknown RSS incomplete throughout recovery', () => {
@@ -935,11 +987,154 @@ describe('job-scoped process tree sampling', () => {
     fake.files['/proc/100/status'] = statuses[change];
     expect(createTreeSampler(100, fake)).toThrow('INVALID_PROC_STATUS');
   });
+  it.each([
+    ['rss-absent', 'RSS_ABSENT', 27, 27, { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 }],
+    ['uncaptured-new-task', 'UNCAPTURED_TASKS', 1, 1, { uncapturedTasks: 1, unreadChildren: 0, pendingRepresentatives: 0 }],
+    ['pending-representative-once', 'PENDING_REPRESENTATIVE', 2, 1, { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 1 }],
+  ] as const)('distinguishes %s from missing RSS despite the same initial failure and terminal-check trace', async (route, finalReason, attempts, reads, pendingObligations) => {
+    const fake = diagnosticTree(route); const result = await diagnosticReport(fake);
+    expect(result.code).toBe(0);
+    expect(result.report).toMatchObject({ schemaVersion: 1, diagnosticVersion: 2, status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], peakRssBytes: null, sampleCount: 0 });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ outcome: 'unconfirmed', initialPhase: 'rss-result', initialCause: 'RSS_ABSENT', observationAttempts: 27, checks: 26, finalReason, pendingObligations });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads).toMatchObject({ groupAttempts: 27, groupReads: 27, groupWithoutVmRss: 27, representativeAttempts: attempts, representativeReads: reads, representativeWithoutVmRss: route === 'rss-absent' ? 27 : 1 });
+    expect(diagnostic.trace.at(-1)).toMatchObject({ state: 'Z', exitFlag: true, nonTerminalTasks: 1, stableTasks: true, observation: { reason: finalReason, pendingObligations } });
+    expect(diagnostic.trace.reduce((sum, point) => sum + (point.observation?.statusReads.representativeAttempts ?? 0), 0) + 1).toBe(attempts);
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+    // The obligation cases leave a real, legible counter. That is insufficient
+    // to complete a sample whose earlier identity or child capture is pending.
+    if (route !== 'rss-absent') expect(fake.files['/proc/100/task/102/status']).toContain('VmRSS: 49152 kB');
+  });
+  it('recovers the real 48 MiB counter when the same observation has no pending obligations', async () => {
+    const fake = diagnosticTree('control'); const result = await diagnosticReport(fake);
+    expect(result.report).toMatchObject({ status: 'complete', errors: [], peakRssBytes: 48 * 1024 * 1024, peakProcessCount: 1 });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ outcome: 'rss-recovered', observationAttempts: 2, finalReason: 'NONE', pendingObligations: { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 } });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads).toMatchObject({ groupAttempts: 2, groupReads: 2, groupWithoutVmRss: 2, representativeAttempts: 2, representativeReads: 2, representativeWithoutVmRss: 1 });
+    expect(diagnostic.trace[0].observation).toMatchObject({ reason: 'NONE', statusReads: { groupAttempts: 1, groupReads: 1, representativeAttempts: 1, representativeReads: 1, representativeWithoutVmRss: 0 } });
+  });
+  it.each([false, true])('reports the latest unread children obligation and clears it only after complete capture, persistent=%s', async (persistent) => {
+    const fake = diagnosticTree(persistent ? 'unread-children-persistent' : 'unread-children-once');
+    const result = await diagnosticReport(fake); const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    if (persistent) {
+      expect(result.report).toMatchObject({ status: 'unavailable', errors: ['CHILD_DISCOVERY_UNAVAILABLE', 'NO_MEMORY_SAMPLES'], peakRssBytes: null });
+      expect(diagnostic).toMatchObject({ finalReason: 'UNREAD_CHILDREN', observationAttempts: 27, pendingObligations: { uncapturedTasks: 2, unreadChildren: 1, pendingRepresentatives: 0 } });
+      expect(diagnostic.statusReads.representativeAttempts).toBe(1);
+      expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+    } else {
+      expect(result.report).toMatchObject({ status: 'complete', peakRssBytes: 48 * 1024 * 1024 });
+      expect(diagnostic).toMatchObject({ finalReason: 'NONE', observationAttempts: 3, pendingObligations: { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 } });
+      expect(diagnostic.trace.map((point) => point.observation?.reason)).toEqual(['UNREAD_CHILDREN', 'NONE']);
+      expect(diagnostic.statusReads.representativeAttempts).toBe(2);
+    }
+  });
+  it('reports a truncated observation without inheriting the initial RSS absence or inventing task counters', async () => {
+    const fake = diagnosticTree('truncated-observation'); const result = await diagnosticReport(fake);
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['PROC_READ_FAILED', 'NO_MEMORY_SAMPLES'], peakRssBytes: null });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ initialPhase: 'rss-result', initialCause: 'RSS_ABSENT', finalReason: 'OBSERVATION_INCOMPLETE', observationAttempts: 2 });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.trace).toHaveLength(1);
+    expect(diagnostic.trace[0]).toMatchObject({ nonTerminalTasks: null, stableTasks: null, observation: { reason: 'OBSERVATION_INCOMPLETE', statusReads: { groupAttempts: 1, groupReads: 1, representativeAttempts: 0 } } });
+  });
+  it('never labels rejected recovery complete when the deadline expires just after guarded RSS observation', async () => {
+    const fake = diagnosticTree('control'); let finalGuards = 0; let clockReads = 0; let guarded = false;
+    const read = (file: string) => {
+      const value = fake.read(file);
+      if (file === '/proc/100/stat' && fake.counts.representativeReads === 2 && ++finalGuards === 2) guarded = true;
+      return value;
+    };
+    // The observer's final budget check still fits. The following result check
+    // sees time expire after the same RSS and identity reads have completed.
+    const now = () => guarded && ++clockReads >= 2 ? MEMORY_METHOD.exitVerificationMs + 1 : fake.now();
+    const result = await diagnosticReport({ ...fake, read, now });
+    expect(guarded).toBe(true);
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], peakRssBytes: null, sampleCount: 0 });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ outcome: 'unconfirmed', elapsedMs: MEMORY_METHOD.exitVerificationMs + 1, observationAttempts: 2, finalReason: 'OBSERVATION_INCOMPLETE' });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads).toMatchObject({ representativeAttempts: 2, representativeReads: 2, representativeWithoutVmRss: 1 });
+    expect(diagnostic.trace.at(-1)?.observation).toMatchObject({ reason: 'OBSERVATION_INCOMPLETE', statusReads: { representativeAttempts: 1, representativeReads: 1, representativeWithoutVmRss: 0 } });
+  });
+  it.each([3, 4])('does not inherit RSS absence when certificate enumeration %s exceeds the original deadline', async (expiresAtList) => {
+    const fake = diagnosticTree('rss-absent'); let lists = 0;
+    const list = (file: string) => {
+      const value = fake.list(file);
+      if (file === '/proc/100/task' && ++lists === expiresAtList) fake.pause(MEMORY_METHOD.exitVerificationMs + 1);
+      return value;
+    };
+    const result = await diagnosticReport({ ...fake, list });
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], peakRssBytes: null });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ outcome: 'unconfirmed', elapsedMs: 26, observationAttempts: 2, checks: 1, initialPhase: 'rss-result', initialCause: 'RSS_ABSENT', finalReason: 'OBSERVATION_INCOMPLETE', pendingObligations: { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 } });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads).toMatchObject({ groupAttempts: 2, groupReads: 2, groupWithoutVmRss: 2, representativeAttempts: 2, representativeReads: 2, representativeWithoutVmRss: 2 });
+    expect(diagnostic.trace[0]).toMatchObject({ nonTerminalTasks: null, stableTasks: null, observation: { reason: 'OBSERVATION_INCOMPLETE' } });
+  });
+  it('preserves newly observed task obligations when a gone certificate exceeds its deadline', async () => {
+    const fake = diagnosticTree('rss-absent'); let lists = 0; let finalGroupReads = 0;
+    const list = (file: string) => {
+      const value = fake.list(file);
+      if (file === '/proc/100/task' && ++lists >= 3) return ['100', '102', '103'];
+      return value;
+    };
+    const read = (file: string) => {
+      if (file === '/proc/100/task/103/stat') return stat(process.pid, '1003', 'Z', 103);
+      if (file === '/proc/100/stat' && lists === 4 && ++finalGroupReads === 2) {
+        fake.pause(MEMORY_METHOD.exitVerificationMs + 1);
+        throw procError('ENOENT');
+      }
+      return fake.read(file);
+    };
+    const result = await diagnosticReport({ ...fake, read, list });
+    expect(finalGroupReads).toBe(2);
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], peakRssBytes: null, sampleCount: 0 });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    const pendingObligations = { uncapturedTasks: 1, unreadChildren: 0, pendingRepresentatives: 0 };
+    expect(diagnostic).toMatchObject({ outcome: 'unconfirmed', elapsedMs: 26, observationAttempts: 2, checks: 1, finalReason: 'OBSERVATION_INCOMPLETE', pendingObligations });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads).toMatchObject({ groupAttempts: 2, groupReads: 2, representativeAttempts: 2, representativeReads: 2 });
+    expect(diagnostic.trace[0]).toMatchObject({ nonTerminalTasks: null, stableTasks: null, observation: { reason: 'OBSERVATION_INCOMPLETE', pendingObligations } });
+  });
+  it('distinguishes terminal history from a missing counter without reading suppressed representative RSS', async () => {
+    const fake = diagnosticTree('terminal-history'); const result = await diagnosticReport(fake);
+    expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], peakRssBytes: null });
+    const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
+    expect(diagnostic).toMatchObject({ finalReason: 'TERMINAL_HISTORY', observationAttempts: 27, pendingObligations: { uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 } });
+    expect(diagnostic.statusReads).toEqual(fake.counts);
+    expect(diagnostic.statusReads.representativeAttempts).toBe(0);
+    expect(fake.files['/proc/100/task/102/status']).toContain('VmRSS: 49152 kB');
+    expect(fake.now()).toBe(MEMORY_METHOD.exitVerificationMs);
+  });
+  it('counts real leader RSS discarded by the terminal guard separately from missing VmRSS', () => {
+    const fake = diagnosticTree('control'); let failed = false;
+    fake.files['/proc/100/status'] = procStatus(100, 48 * 1024, 'Z');
+    const read = (file: string) => {
+      if (file === '/proc/100/status' && !failed) { failed = true; fake.counts.groupAttempts++; throw procError('ENOENT'); }
+      return fake.read(file);
+    };
+    const result = createTreeSampler(100, { ...fake, read })();
+    expect(result).toMatchObject({ rssBytes: 48 * 1024 * 1024, processCount: 1 });
+    expect(result.lastRecovery).toMatchObject({ finalReason: 'NONE', statusReads: { groupAttempts: 3, groupReads: 2, groupWithoutVmRss: 0, groupDiscarded: 2, representativeAttempts: 2, representativeReads: 2, representativeWithoutVmRss: 1, representativeDiscarded: 0 } });
+    expect(result.lastRecovery?.trace[0].observation?.reason).toBe('RSS_UNUSABLE');
+  });
+  it('counts returned representative RSS discarded after terminal transition without calling it absent', () => {
+    const fake = recoveryTree(); let taskReads = 0;
+    const read = (file: string) => {
+      if (file === '/proc/100/task/102/stat') return stat(process.pid, '1002', ++taskReads <= 3 ? 'S' : 'Z', 102);
+      return fake.read(file);
+    };
+    const result = createTreeSampler(100, { ...fake, read })();
+    expect(result).toMatchObject({ rssBytes: 0, processCount: 0, lastRecovery: { outcome: 'terminal', finalReason: 'NONE', statusReads: { representativeAttempts: 1, representativeReads: 1, representativeWithoutVmRss: 0, representativeDiscarded: 1 } } });
+  });
   it.each([true, false])('serializes only internally constructed recovery categories and counters, recovered=%s', async (recovers) => {
     const fake = recoveryTree(); let injected = false; let samples = 0;
     if (!recovers) fake.files['/proc/100/task/102/status'] = procStatus(102, undefined, 'S', 100);
     const privateError = Object.assign(new Error('/proc/9999/status private-start-ticks'), {
-      code: 'ENOENT', initialPhase: '/proc/9999/status', initialCause: 'private-start-ticks', rssAttempts: 9999, pid: 9999,
+      code: 'ENOENT', initialPhase: '/proc/9999/status', initialCause: 'private-start-ticks', observationAttempts: 9999, finalReason: '/proc/9999/stat', statusReads: { groupReads: 9999, pid: 9999 }, pendingObligations: { uncapturedTasks: 'private-start-ticks' }, pid: 9999,
     });
     const read = (file: string) => { if (file === '/proc/100/status' && !injected) { injected = true; throw privateError; } return fake.read(file); };
     const sample = createTreeSampler(100, { ...fake, read });
@@ -953,16 +1148,29 @@ describe('job-scoped process tree sampling', () => {
       },
     });
     expect(result.code).toBe(0);
+    expect(MEMORY_DIAGNOSTIC_VERSION).toBe(2);
+    expect(result.report).toMatchObject({ schemaVersion: 1, diagnosticVersion: MEMORY_DIAGNOSTIC_VERSION });
     expect(result.report.status).toBe(recovers ? 'complete' : 'unavailable');
     expect(result.report.recoveryCount).toBe(1);
     const diagnostic = result.report.lastRecovery as RecoveryDiagnostic;
     expect(diagnostic).toMatchObject({ outcome: recovers ? 'rss-recovered' : 'unconfirmed', initialPhase: 'group-status', initialCause: 'ENOENT' });
-    expect(Object.keys(diagnostic).sort()).toEqual(['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'rssAttempts'].sort());
-    expect(diagnostic.rssAttempts).toBeGreaterThanOrEqual(2);
-    expect(diagnostic.rssAttempts).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks + 1);
+    expect(Object.keys(diagnostic).sort()).toEqual(['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'observationAttempts', 'finalReason', 'statusReads', 'pendingObligations'].sort());
+    expect(diagnostic.observationAttempts).toBeGreaterThanOrEqual(2);
+    expect(diagnostic.observationAttempts).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks + 1);
     expect(diagnostic.checks).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks);
     expect(diagnostic.trace).toHaveLength(diagnostic.checks);
-    for (const point of diagnostic.trace) expect(Object.keys(point).sort()).toEqual(['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks'].sort());
+    const statusKeys = ['groupAttempts', 'groupReads', 'groupWithoutVmRss', 'groupDiscarded', 'representativeAttempts', 'representativeReads', 'representativeWithoutVmRss', 'representativeDiscarded'].sort();
+    const pendingKeys = ['uncapturedTasks', 'unreadChildren', 'pendingRepresentatives'].sort();
+    expect(Object.keys(diagnostic.statusReads).sort()).toEqual(statusKeys);
+    expect(Object.keys(diagnostic.pendingObligations).sort()).toEqual(pendingKeys);
+    for (const point of diagnostic.trace) {
+      expect(Object.keys(point).sort()).toEqual(['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks', 'observation'].sort());
+      if (point.observation !== null) {
+        expect(Object.keys(point.observation).sort()).toEqual(['reason', 'statusReads', 'pendingObligations'].sort());
+        expect(Object.keys(point.observation.statusReads).sort()).toEqual(statusKeys);
+        expect(Object.keys(point.observation.pendingObligations).sort()).toEqual(pendingKeys);
+      }
+    }
     expect(JSON.stringify(diagnostic)).not.toMatch(/pid|\/proc|9999|private-start-ticks|startTicks/i);
     expect(serialized.every((value) => !/private-start-ticks|\/proc\//.test(value))).toBe(true);
   });

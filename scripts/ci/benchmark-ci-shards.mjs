@@ -5,39 +5,76 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createShardPlan } from './vitest-shard-plan.mjs';
-import { MEMORY_METHOD } from './measure-vitest-memory.mjs';
+import { MEMORY_METHOD, MEMORY_DIAGNOSTIC_VERSION } from './measure-vitest-memory.mjs';
 
 const hash = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
 const recoveryPhases = ['group-stat', 'group-status', 'task-list', 'task-stat-before', 'task-children', 'task-stat-after', 'child-stat', 'representative-stat-before', 'representative-status', 'representative-stat-after', 'group-recheck', 'rss-result'];
 const recoveryCauses = ['ENOENT', 'ESRCH', 'RSS_ABSENT', 'EMPTY_TASK_LIST'];
+const observationReasons = ['NONE', 'RSS_ABSENT', 'UNCAPTURED_TASKS', 'PENDING_REPRESENTATIVE', 'UNREAD_CHILDREN', 'TERMINAL_HISTORY', 'RSS_UNUSABLE', 'OBSERVATION_INCOMPLETE'];
+const statusReadKeys = ['groupAttempts', 'groupReads', 'groupWithoutVmRss', 'groupDiscarded', 'representativeAttempts', 'representativeReads', 'representativeWithoutVmRss', 'representativeDiscarded'];
+const pendingKeys = ['uncapturedTasks', 'unreadChildren', 'pendingRepresentatives'];
+const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && Object.keys(value).every((key) => keys.includes(key));
+const validateObservation = (observation, totalReads, maxGroupAttempts = MEMORY_METHOD.exitMaxChecks + 1) => {
+  invariant(exactKeys(observation, ['reason', 'statusReads', 'pendingObligations']) && observationReasons.includes(observation.reason), 'Invalid memory observation reason');
+  const reads = observation.statusReads;
+  invariant(exactKeys(reads, statusReadKeys) && statusReadKeys.every((key) => Number.isSafeInteger(reads[key]) && reads[key] >= 0), 'Invalid memory status-read counters');
+  for (const source of ['group', 'representative']) {
+    invariant(reads[`${source}Reads`] <= reads[`${source}Attempts`] && reads[`${source}WithoutVmRss`] + reads[`${source}Discarded`] <= reads[`${source}Reads`], 'Inconsistent memory status-read counters');
+  }
+  invariant(reads.groupAttempts <= maxGroupAttempts && reads.representativeAttempts <= MEMORY_METHOD.maxTasks, 'Memory status-read counters exceed observation/task limits');
+  if (totalReads) invariant(statusReadKeys.every((key) => reads[key] <= totalReads[key]), 'Memory observation reads exceed recovery totals');
+  invariant(exactKeys(observation.pendingObligations, pendingKeys) && pendingKeys.every((key) => Number.isSafeInteger(observation.pendingObligations[key]) && observation.pendingObligations[key] >= 0 && observation.pendingObligations[key] <= MEMORY_METHOD.maxTasks), 'Invalid memory pending obligations');
+  invariant(observation.pendingObligations.unreadChildren <= observation.pendingObligations.uncapturedTasks, 'Memory unread children lack a capture obligation');
+  const reasonObligation = { UNCAPTURED_TASKS: 'uncapturedTasks', UNREAD_CHILDREN: 'unreadChildren', PENDING_REPRESENTATIVE: 'pendingRepresentatives' }[observation.reason];
+  if (reasonObligation) invariant(observation.pendingObligations[reasonObligation] > 0, 'Memory observation reason lacks its pending obligation');
+  if (observation.reason === 'RSS_UNUSABLE') invariant(reads.groupDiscarded + reads.representativeDiscarded > 0, 'Memory unusable RSS reason lacks a guarded discard');
+  if (observation.reason === 'RSS_ABSENT') invariant(reads.groupWithoutVmRss + reads.representativeWithoutVmRss > 0, 'Memory absent RSS reason lacks a validated status read');
+};
+const validateDiagnostic = (diagnostic, memory, exit = false) => {
+  invariant(diagnostic && (exit ? ['gone', 'terminal'] : ['rss-recovered', 'gone', 'terminal']).includes(diagnostic.outcome), exit ? 'Unconfirmed memory process exit' : 'Unconfirmed memory recovery');
+  const keys = ['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'observationAttempts', 'finalReason', 'statusReads', 'pendingObligations'];
+  invariant(exactKeys(diagnostic, keys) && recoveryPhases.includes(diagnostic.initialPhase) && recoveryCauses.includes(diagnostic.initialCause), 'Invalid memory recovery origin');
+  invariant(Number.isFinite(diagnostic.elapsedMs) && diagnostic.elapsedMs >= 0 && diagnostic.elapsedMs <= MEMORY_METHOD.exitVerificationMs && diagnostic.elapsedMs <= memory.recoveryWallMs, 'Invalid memory recovery time');
+  invariant(Number.isSafeInteger(diagnostic.observationAttempts) && diagnostic.observationAttempts >= 1 && diagnostic.observationAttempts <= MEMORY_METHOD.exitMaxChecks + 1, 'Invalid memory recovery observation attempts');
+  invariant(Array.isArray(diagnostic.trace) && Number.isSafeInteger(diagnostic.checks) && diagnostic.checks === diagnostic.trace.length && diagnostic.checks <= MEMORY_METHOD.exitMaxChecks, 'Invalid memory recovery trace');
+  invariant(diagnostic.observationAttempts <= diagnostic.checks + 1, 'Memory recovery attempts exceed checks');
+  validateObservation({ reason: diagnostic.finalReason, statusReads: diagnostic.statusReads, pendingObligations: diagnostic.pendingObligations }, undefined, diagnostic.observationAttempts);
+  invariant(diagnostic.finalReason === 'NONE', 'Complete memory diagnostic retains a blocker');
+  if (diagnostic.outcome !== 'gone') invariant(pendingKeys.every((key) => diagnostic.pendingObligations[key] === 0), 'Complete memory diagnostic has pending obligations');
+  if (diagnostic.outcome === 'rss-recovered') {
+    invariant(['group', 'representative'].some((source) => diagnostic.statusReads[`${source}Reads`] > diagnostic.statusReads[`${source}WithoutVmRss`] + diagnostic.statusReads[`${source}Discarded`]), 'Memory RSS recovery lacks an observed RSS');
+  }
+  let previousAt = 0;
+  const tracedReads = Object.fromEntries(statusReadKeys.map((key) => [key, 0]));
+  let tracedObservations = 0;
+  for (const point of diagnostic.trace) {
+    invariant(exactKeys(point, ['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks', 'observation']) && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= diagnostic.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory recovery state/timing');
+    const unknownTasks = point.nonTerminalTasks === null && point.stableTasks === null;
+    const observedTasks = Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0 && typeof point.stableTasks === 'boolean';
+    invariant(unknownTasks || observedTasks, 'Invalid memory task-group diagnostic');
+    if (point.observation !== null) {
+      validateObservation(point.observation, diagnostic.statusReads, 1);
+      for (const key of statusReadKeys) tracedReads[key] += point.observation.statusReads[key];
+      tracedObservations++;
+    }
+    previousAt = point.atMs;
+  }
+  invariant(statusReadKeys.every((key) => Number.isSafeInteger(tracedReads[key]) && tracedReads[key] <= diagnostic.statusReads[key]) && tracedObservations < diagnostic.observationAttempts, 'Inconsistent memory recovery observation totals');
+  if (diagnostic.outcome === 'terminal') {
+    const last = diagnostic.trace.at(-1);
+    invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory process exit is not fully terminal');
+  }
+};
 const validateRecovery = (memory) => {
   invariant(Number.isSafeInteger(memory.recoveryCount) && memory.recoveryCount >= 0 && Number.isFinite(memory.recoveryWallMs) && memory.recoveryWallMs >= 0 && memory.recoveryWallMs <= memory.samplingWallMs, 'Invalid memory recovery counters');
+  invariant(memory.exitVerificationCount <= memory.recoveryCount && memory.exitVerificationWallMs <= memory.recoveryWallMs, 'Memory exit verification exceeds recovery counters');
   if (memory.recoveryCount === 0) {
     invariant(memory.lastRecovery === null && memory.recoveryWallMs === 0, 'Unexpected memory recovery');
     return;
   }
-  const recovery = memory.lastRecovery;
-  invariant(recovery && ['rss-recovered', 'gone', 'terminal'].includes(recovery.outcome), 'Unconfirmed memory recovery');
-  const keys = ['outcome', 'elapsedMs', 'checks', 'trace', 'initialPhase', 'initialCause', 'rssAttempts'];
-  invariant(Object.keys(recovery).length === keys.length && Object.keys(recovery).every((key) => keys.includes(key)) && recoveryPhases.includes(recovery.initialPhase) && recoveryCauses.includes(recovery.initialCause), 'Invalid memory recovery origin');
-  invariant(Number.isFinite(recovery.elapsedMs) && recovery.elapsedMs >= 0 && recovery.elapsedMs <= MEMORY_METHOD.exitVerificationMs && recovery.elapsedMs <= memory.recoveryWallMs, 'Invalid memory recovery time');
-  invariant(Number.isSafeInteger(recovery.rssAttempts) && recovery.rssAttempts >= 0 && recovery.rssAttempts <= MEMORY_METHOD.exitMaxChecks + 1 && (recovery.outcome !== 'rss-recovered' || recovery.rssAttempts > 0), 'Invalid memory recovery RSS attempts');
-  invariant(recovery.outcome === 'rss-recovered' || memory.exitVerificationCount > 0, 'Memory recovery exit lacks verification');
-  invariant(Array.isArray(recovery.trace) && Number.isSafeInteger(recovery.checks) && recovery.checks === recovery.trace.length && recovery.checks <= MEMORY_METHOD.exitMaxChecks, 'Invalid memory recovery trace');
-  invariant(recovery.rssAttempts <= recovery.checks + 1, 'Memory recovery attempts exceed checks');
-  let previousAt = 0;
-  for (const point of recovery.trace) {
-    invariant(point && Object.keys(point).length === 5 && Object.keys(point).every((key) => ['atMs', 'state', 'exitFlag', 'nonTerminalTasks', 'stableTasks'].includes(key)) && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= recovery.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory recovery state/timing');
-    const unknownTasks = point.nonTerminalTasks === null && point.stableTasks === null;
-    const observedTasks = Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0 && typeof point.stableTasks === 'boolean';
-    invariant(unknownTasks || observedTasks, 'Invalid memory recovery task-group diagnostic');
-    previousAt = point.atMs;
-  }
-  if (recovery.outcome === 'terminal') {
-    const last = recovery.trace.at(-1);
-    invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory recovery exit is not fully terminal');
-  }
+  validateDiagnostic(memory.lastRecovery, memory);
+  if (memory.lastRecovery.outcome !== 'rss-recovered') invariant(memory.exitVerificationCount > 0 && JSON.stringify(stable(memory.lastRecovery)) === JSON.stringify(stable(memory.lastExitVerification)), 'Memory recovery exit lacks matching verification');
 };
 const time = (value, label) => {
   invariant(typeof value === 'string' && Number.isFinite(Date.parse(value)), `Missing/invalid ${label}`);
@@ -198,31 +235,17 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     invariant(memory.schemaVersion === 1 && memory.sha === report.sha && JSON.stringify(stable(memory.run)) === JSON.stringify(stable(report.run)) && JSON.stringify(stable(memory.shard)) === JSON.stringify(stable(report.shard)), 'Memory SHA/run/attempt/shard mismatch');
     invariant(typeof report.memoryMeasurementId === 'string' && /^[0-9a-f-]{36}$/.test(report.memoryMeasurementId) && memory.measurementId === report.memoryMeasurementId, 'Memory measurement ID mismatch');
     invariant(JSON.stringify(stable(memory.method)) === JSON.stringify(stable(MEMORY_METHOD)), 'Unknown/mixed memory measurement method');
+    invariant(memory.diagnosticVersion === MEMORY_DIAGNOSTIC_VERSION, 'Unknown/missing memory diagnostic version');
     invariant(memory.status === 'complete' && Array.isArray(memory.errors) && memory.errors.length === 0, 'Memory sensor incomplete/unavailable');
     invariant(memory.commandExit?.code === 0 && memory.commandExit.signal === null && memory.cancelledSignal === null && memory.cleanupRequired === false, 'Memory command failed/cancelled or leaked descendants');
     invariant(Number.isSafeInteger(memory.sampleCount) && memory.sampleCount >= 2 && Number.isSafeInteger(memory.peakRssBytes) && memory.peakRssBytes > 0 && Number.isSafeInteger(memory.peakProcessCount) && memory.peakProcessCount > 1, 'Missing/invalid memory samples or parent-only observation');
     for (const field of ['elapsedMs', 'samplingWallMs', 'maxSampleDurationMs', 'maxObservedGapMs', 'sensorCpuMicros', 'sensorMaxRssBytes', 'exitRaces', 'exitVerificationWallMs']) invariant(Number.isFinite(memory[field]) && memory[field] >= 0, `Invalid memory ${field}`);
-    invariant(Number.isSafeInteger(memory.exitVerificationCount) && memory.exitVerificationCount >= 0 && memory.exitVerificationWallMs <= memory.samplingWallMs, 'Invalid memory exit verification counters');
-    if (memory.exitVerificationCount === 0) invariant(memory.lastExitVerification === null, 'Unexpected memory exit verification');
+    invariant(Number.isSafeInteger(memory.exitVerificationCount) && memory.exitVerificationCount >= 0 && Number.isSafeInteger(memory.exitRaces) && memory.exitRaces >= memory.exitVerificationCount && memory.exitVerificationWallMs <= memory.samplingWallMs, 'Invalid memory exit verification counters');
+    if (memory.exitVerificationCount === 0) invariant(memory.lastExitVerification === null && memory.exitVerificationWallMs === 0, 'Unexpected memory exit verification');
     else {
       const verification = memory.lastExitVerification;
-      invariant(verification && ['terminal', 'gone'].includes(verification.outcome) && Number.isFinite(verification.elapsedMs) && verification.elapsedMs >= 0 && verification.elapsedMs <= MEMORY_METHOD.exitVerificationMs, 'Unconfirmed memory process exit');
+      validateDiagnostic(verification, memory, true);
       invariant(memory.exitVerificationWallMs >= verification.elapsedMs, 'Memory exit verification time is inconsistent');
-      invariant(Array.isArray(verification.trace) && Number.isSafeInteger(verification.checks) && verification.checks === verification.trace.length && verification.checks <= MEMORY_METHOD.exitMaxChecks, 'Invalid memory exit verification trace');
-      let previousAt = 0;
-      for (const point of verification.trace) {
-        invariant(point && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= verification.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory exit state/timing');
-        // Task diagnostics are unknown until enumeration and identity rechecks
-        // finish. A partial count must never look like a verified empty group.
-        const unknownTasks = point.nonTerminalTasks === null && point.stableTasks === null;
-        const observedTasks = Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0 && typeof point.stableTasks === 'boolean';
-        invariant(unknownTasks || observedTasks, 'Invalid memory task-group diagnostic');
-        previousAt = point.atMs;
-      }
-      if (verification.outcome === 'terminal') {
-        const last = verification.trace.at(-1);
-        invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory process exit is not fully terminal');
-      }
     }
     validateRecovery(memory);
     invariant(memory.maxObservedGapMs <= MEMORY_METHOD.maxGapMs && memory.maxSampleDurationMs <= MEMORY_METHOD.maxSampleMs, 'Memory sampling budget/gap exceeded');
@@ -230,6 +253,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
   }
   const memory = {
     method: MEMORY_METHOD,
+    diagnosticVersion: MEMORY_DIAGNOSTIC_VERSION,
     // Each shard has its own runner. This maximum is not a simultaneous
     // aggregate across runners, VM memory usage, or the account's peak.
     shardPeakRssMaxBytes: Math.max(...memoryReports.map((item) => item.peakRssBytes)),
@@ -251,7 +275,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
   const comparisonContext = {
     sha: ci.sha, treeDigest: digest, environment, runnerLabels: runnerLabels[0], cacheClass, cacheRef: ci.ref, loadClass,
     parallelism: plan.maxParallel === plan.count ? 'full-matrix' : `capped-${plan.maxParallel}`,
-    expectedWorkflows: [...expectedWorkflows].sort(), coverageFingerprint, memoryMethod: MEMORY_METHOD,
+    expectedWorkflows: [...expectedWorkflows].sort(), coverageFingerprint, memoryMethod: MEMORY_METHOD, memoryDiagnosticVersion: MEMORY_DIAGNOSTIC_VERSION,
   };
   const created = Math.min(...workflows.map((run) => run.createdAt));
   const completed = Math.max(...workflows.map((run) => run.completedAt));

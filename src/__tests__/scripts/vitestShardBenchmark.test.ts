@@ -3,11 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { createShardPlan, planFromEnvironment, assessCapacity } from '../../../scripts/ci/vitest-shard-plan.mjs';
 import { summarizeActionsRun, summarizeSample, compareSamples, jobsFromPayload, peakConcurrentJobs, percentile } from '../../../scripts/ci/benchmark-ci-shards.mjs';
 
-import { MEMORY_METHOD } from '../../../scripts/ci/measure-vitest-memory.mjs';
-import type { RecoveryDiagnostic } from '../../../scripts/ci/measure-vitest-memory.mjs';
+import { MEMORY_METHOD, MEMORY_DIAGNOSTIC_VERSION } from '../../../scripts/ci/measure-vitest-memory.mjs';
+import type { RecoveryDiagnostic, ExitVerificationPoint, StatusReads } from '../../../scripts/ci/measure-vitest-memory.mjs';
 
 const sha = 'a'.repeat(40);
 const stamp = (seconds: number) => new Date(Date.UTC(2026, 9, 10, 12, 0, seconds)).toISOString();
+const statusReads = (): StatusReads => ({ groupAttempts: 0, groupReads: 0, groupWithoutVmRss: 0, groupDiscarded: 0, representativeAttempts: 0, representativeReads: 0, representativeWithoutVmRss: 0, representativeDiscarded: 0 });
+const pendingObligations = () => ({ uncapturedTasks: 0, unreadChildren: 0, pendingRepresentatives: 0 });
+function makeRecovery(outcome: RecoveryDiagnostic['outcome'] = 'rss-recovered', trace?: ExitVerificationPoint[]): RecoveryDiagnostic {
+  const reads = statusReads();
+  reads.groupAttempts = 1; reads.groupReads = 1; reads.groupWithoutVmRss = 1;
+  if (outcome === 'rss-recovered') { reads.representativeAttempts = 1; reads.representativeReads = 1; }
+  if (outcome === 'terminal' && trace === undefined) { reads.groupAttempts++; reads.groupReads++; reads.groupWithoutVmRss++; }
+  const points = trace ?? (outcome === 'gone' ? [] : [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: outcome === 'terminal' ? 0 : 1, stableTasks: true, observation: { reason: outcome === 'rss-recovered' ? 'NONE' : 'RSS_ABSENT', statusReads: outcome === 'rss-recovered' ? { ...statusReads(), representativeAttempts: 1, representativeReads: 1 } : { ...statusReads(), groupAttempts: 1, groupReads: 1, groupWithoutVmRss: 1 }, pendingObligations: pendingObligations() } }]);
+  return { outcome, elapsedMs: 2, checks: points.length, trace: points, initialPhase: 'group-status', initialCause: 'RSS_ABSENT', observationAttempts: points.length + 1, finalReason: 'NONE', statusReads: reads, pendingObligations: pendingObligations() };
+}
 function makeRun(count: number, id = count, duration = 100) {
   const run = { id, head_sha: sha, head_branch: 'benchmark', run_attempt: 1, status: 'completed', conclusion: 'success', name: 'CI', event: 'workflow_dispatch', created_at: stamp(0) };
   const jobs = Array.from({ length: count }, (_, index) => ({
@@ -24,10 +34,16 @@ function makeSample(count: number, id = count) {
   primary.jobs.total_count++;
   const measurementId = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
   return {
-    memoryReports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, measurementId: measurementId(index), run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, method: { ...MEMORY_METHOD }, status: 'complete', errors: [] as string[], commandExit: { code: 0, signal: null }, cancelledSignal: null, cleanupRequired: false, sampleCount: 361, peakRssBytes: 500_000_000, peakProcessCount: 4, elapsedMs: 91_000, samplingWallMs: 300, maxSampleDurationMs: 3, maxObservedGapMs: 260, sensorCpuMicros: 200_000, sensorMaxRssBytes: 40_000_000, exitRaces: 0, recoveryCount: 0, recoveryWallMs: 0, lastRecovery: null as RecoveryDiagnostic | null, exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null as null | { outcome: string; elapsedMs: number; checks: number; trace: unknown[] } })),
+    memoryReports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, diagnosticVersion: MEMORY_DIAGNOSTIC_VERSION as number, sha, measurementId: measurementId(index), run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, method: { ...MEMORY_METHOD }, status: 'complete', errors: [] as string[], commandExit: { code: 0, signal: null }, cancelledSignal: null, cleanupRequired: false, sampleCount: 361, peakRssBytes: 500_000_000, peakProcessCount: 4, elapsedMs: 91_000, samplingWallMs: 300, maxSampleDurationMs: 3, maxObservedGapMs: 260, sensorCpuMicros: 200_000, sensorMaxRssBytes: 40_000_000, exitRaces: 0, recoveryCount: 0, recoveryWallMs: 0, lastRecovery: null as RecoveryDiagnostic | null, exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null as RecoveryDiagnostic | null })),
     label: `sample-${id}`, shardCount: count, maxParallel: count, loadClass: 'isolated', expectedWorkflows: ['CI'], runs: [primary],
     reports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, memoryMeasurementId: measurementId(index), treeDigest: 'catalog', status: 'passed', unhandledErrors: 0, run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, environment, cacheHit: true, wallTimeMs: 90_000, discovered: files.map(({ path, project }) => ({ path, project })), selected: files.filter((_, i) => i % count === index).map(({ path, project }) => ({ path, project })), files: files.filter((_, i) => i % count === index) })),
   };
+}
+function recordExit(memory: ReturnType<typeof makeSample>['memoryReports'][number], outcome: 'terminal' | 'gone', trace?: ExitVerificationPoint[]) {
+  memory.exitRaces = 1; memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+  memory.recoveryCount = 1; memory.recoveryWallMs = 2;
+  memory.lastExitVerification = makeRecovery(outcome, trace);
+  memory.lastRecovery = memory.lastExitVerification;
 }
 
 describe('native shard plan', () => {
@@ -176,6 +192,14 @@ describe('memory evidence required for promotion samples, independent from funct
     expect(MEMORY_METHOD.exitVerificationMs).toBe(25);
     expect(MEMORY_METHOD.maxSampleMs).toBe(50);
     expect(summarizeSample(makeSample(5)).memory.method).toEqual(MEMORY_METHOD);
+    expect(MEMORY_DIAGNOSTIC_VERSION).toBe(2);
+    expect(summarizeSample(makeSample(5)).memory.diagnosticVersion).toBe(2);
+    expect(summarizeSample(makeSample(5)).comparisonContext.memoryDiagnosticVersion).toBe(2);
+  });
+  it.each([undefined, null, 1, 3, '2'])('rejects missing/unknown diagnostic version %s even without recovery windows', (version) => {
+    const sample = makeSample(5);
+    sample.memoryReports[0].diagnosticVersion = version as number;
+    expect(() => summarizeSample(sample)).toThrow(/memory diagnostic version/);
   });
   it.each([1, 2, 3, 4])('rejects preceding memory method version %i for promotion', (version) => {
     const sample = makeSample(5);
@@ -185,14 +209,117 @@ describe('memory evidence required for promotion samples, independent from funct
   it('accepts RSS recovery from a live thread without declaring a process exit', () => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
     memory.recoveryCount = 1; memory.recoveryWallMs = 2;
-    memory.lastRecovery = { outcome: 'rss-recovered', elapsedMs: 2, checks: 1, initialPhase: 'task-list', initialCause: 'EMPTY_TASK_LIST', rssAttempts: 2, trace: [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 1, stableTasks: true }] };
+    memory.lastRecovery = { ...makeRecovery(), initialPhase: 'task-list', initialCause: 'EMPTY_TASK_LIST' };
     const result = summarizeSample(sample);
     expect(result.memory.shards[0]).toMatchObject({ recoveryCount: 1, recoveryWallMs: 2, exitVerificationCount: 0, exitRaces: 0 });
+  });
+  it.each(['RSS_ABSENT', 'UNCAPTURED_TASKS', 'PENDING_REPRESENTATIVE', 'UNREAD_CHILDREN', 'TERMINAL_HISTORY', 'RSS_UNUSABLE', 'OBSERVATION_INCOMPLETE'] as const)('rejects complete evidence retaining %s instead of inventing a recovered RSS', (reason) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2;
+    memory.lastRecovery = makeRecovery(); memory.lastRecovery.finalReason = reason;
+    if (reason === 'UNCAPTURED_TASKS') memory.lastRecovery.pendingObligations.uncapturedTasks = 1;
+    if (reason === 'PENDING_REPRESENTATIVE') memory.lastRecovery.pendingObligations.pendingRepresentatives = 1;
+    if (reason === 'UNREAD_CHILDREN') { memory.lastRecovery.pendingObligations.unreadChildren = 1; memory.lastRecovery.pendingObligations.uncapturedTasks = 1; }
+    if (reason === 'RSS_UNUSABLE') memory.lastRecovery.statusReads.representativeDiscarded = 1;
+    expect(() => summarizeSample(sample)).toThrow(/retains a blocker/);
+  });
+  it.each(['uncapturedTasks', 'unreadChildren', 'pendingRepresentatives'] as const)('rejects recovered RSS with unresolved %s', (obligation) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+    memory.lastRecovery.pendingObligations[obligation] = 1;
+    if (obligation === 'unreadChildren') memory.lastRecovery.pendingObligations.uncapturedTasks = 1;
+    expect(() => summarizeSample(sample)).toThrow(/pending obligations/);
+  });
+  it('keeps failed observation reasons and real status reads separate from the successful final attempt', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    const attempts: ExitVerificationPoint[] = [
+      { atMs: 0, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: { reason: 'UNCAPTURED_TASKS', statusReads: { ...statusReads(), groupAttempts: 1, groupReads: 1, groupWithoutVmRss: 1 }, pendingObligations: { ...pendingObligations(), uncapturedTasks: 1 } } },
+      { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: { reason: 'NONE', statusReads: { ...statusReads(), representativeAttempts: 1, representativeReads: 1 }, pendingObligations: pendingObligations() } },
+    ];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery('rss-recovered', attempts);
+    memory.lastRecovery.statusReads.groupAttempts = 2; memory.lastRecovery.statusReads.groupReads = 2; memory.lastRecovery.statusReads.groupWithoutVmRss = 2;
+    expect(summarizeSample(sample).memory.shards[0].recoveryCount).toBe(1);
+  });
+  it.each(['legacy-attempts', 'unknown-reason', 'missing-observation', 'read-without-attempt', 'missing-without-read', 'discarded-without-read', 'negative-pending', 'null-pending', 'trace-totals', 'trace-identifier', 'status-identifier', 'pending-path'])('rejects %s diagnostic contract violations', (change) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+    const diagnostic = memory.lastRecovery;
+    if (change === 'legacy-attempts') Object.assign(diagnostic, { rssAttempts: 2 });
+    if (change === 'unknown-reason') diagnostic.finalReason = 'PID 42' as RecoveryDiagnostic['finalReason'];
+    if (change === 'missing-observation') delete (diagnostic.trace[0] as Partial<ExitVerificationPoint>).observation;
+    if (change === 'read-without-attempt') diagnostic.statusReads.groupAttempts = 0;
+    if (change === 'missing-without-read') diagnostic.statusReads.groupWithoutVmRss = 2;
+    if (change === 'discarded-without-read') diagnostic.statusReads.groupDiscarded = 1;
+    if (change === 'negative-pending') diagnostic.pendingObligations.uncapturedTasks = -1;
+    if (change === 'null-pending') diagnostic.pendingObligations.unreadChildren = null as unknown as number;
+    if (change === 'trace-totals') diagnostic.trace[0].observation!.statusReads.groupAttempts = 2;
+    if (change === 'trace-identifier') Object.assign(diagnostic.trace[0].observation!, { tid: 42 });
+    if (change === 'status-identifier') Object.assign(diagnostic.statusReads, { pid: 42 });
+    if (change === 'pending-path') Object.assign(diagnostic.pendingObligations, { path: '/proc/42/task' });
+    expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
+  });
+  it('does not accept parsed-but-missing or guarded-away status as recovered RSS', () => {
+    for (const discarded of [false, true]) {
+      const sample = makeSample(5); const memory = sample.memoryReports[0];
+      memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+      const reads = memory.lastRecovery.statusReads;
+      if (discarded) reads.representativeDiscarded = 1;
+      else reads.representativeWithoutVmRss = 1;
+      expect(() => summarizeSample(sample)).toThrow(/lacks an observed RSS/);
+    }
+  });
+  it.each(['group-total', 'group-point', 'representative-total', 'representative-point', 'uncapturedTasks', 'unreadChildren', 'pendingRepresentatives', 'unread-without-capture'])('rejects bounded but impossible %s counters', (change) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+    const diagnostic = memory.lastRecovery;
+    if (change === 'group-total') diagnostic.statusReads.groupAttempts = diagnostic.observationAttempts + 1;
+    if (change === 'group-point') { diagnostic.statusReads.groupAttempts = 2; diagnostic.trace[0].observation!.statusReads.groupAttempts = 2; }
+    if (change === 'representative-total') diagnostic.statusReads.representativeAttempts = MEMORY_METHOD.maxTasks + 1;
+    if (change === 'representative-point') { diagnostic.statusReads.representativeAttempts = MEMORY_METHOD.maxTasks; diagnostic.trace[0].observation!.statusReads.representativeAttempts = MEMORY_METHOD.maxTasks + 1; }
+    if (['uncapturedTasks', 'unreadChildren', 'pendingRepresentatives'].includes(change)) diagnostic.pendingObligations[change as keyof RecoveryDiagnostic['pendingObligations']] = MEMORY_METHOD.maxTasks + 1;
+    if (change === 'unread-without-capture') diagnostic.pendingObligations.unreadChildren = 1;
+    expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
+  });
+  it.each(['RSS_ABSENT', 'UNCAPTURED_TASKS', 'UNREAD_CHILDREN', 'PENDING_REPRESENTATIVE', 'RSS_UNUSABLE'] as const)('rejects %s in a trace without its observed blocker', (reason) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+    memory.lastRecovery.trace[0].observation!.reason = reason;
+    expect(() => summarizeSample(sample)).toThrow(/reason lacks/);
+  });
+  it('allows a terminal-history omission without claiming an RSS read or discard', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery('rss-recovered', [
+      { atMs: 0, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: { reason: 'TERMINAL_HISTORY', statusReads: statusReads(), pendingObligations: pendingObligations() } },
+      { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: { reason: 'NONE', statusReads: { ...statusReads(), representativeAttempts: 1, representativeReads: 1 }, pendingObligations: pendingObligations() } },
+    ]);
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it('rejects exit time without an exit verification and admits measured zero-duration recovery', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.recoveryCount = 1; memory.recoveryWallMs = 2; memory.lastRecovery = makeRecovery();
+    memory.exitVerificationWallMs = 1;
+    expect(() => summarizeSample(sample)).toThrow(/Unexpected memory exit verification/);
+    memory.exitVerificationWallMs = 0; memory.recoveryWallMs = 0;
+    memory.lastRecovery.elapsedMs = 0; memory.lastRecovery.trace[0].atMs = 0;
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it('retains historical obligations when TGID disappearance is independently certified', () => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    recordExit(memory, 'gone'); memory.lastRecovery!.pendingObligations.pendingRepresentatives = 1;
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
+  it('rejects process identifiers in exit verification and trace points as well as recovery', () => {
+    for (const location of ['exit', 'trace']) {
+      const sample = makeSample(5); const memory = sample.memoryReports[0];
+      recordExit(memory, 'terminal');
+      Object.assign(location === 'exit' ? memory.lastExitVerification! : memory.lastExitVerification!.trace[0], { pid: 42 });
+      expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
+    }
   });
   it.each(['missing-count', 'negative-time', 'unexpected', 'unknown', 'late', 'underreported-time', 'phase', 'cause', 'identifiers', 'zero-attempts', 'negative-attempts', 'too-many-attempts', 'unaccounted-attempts', 'too-many-checks', 'live-terminal', 'gone-without-verification', 'partial-tasks'])('rejects %s recovery evidence for promotion', (change) => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
     memory.recoveryCount = 1; memory.recoveryWallMs = 2;
-    memory.lastRecovery = { outcome: 'rss-recovered', elapsedMs: 2, checks: 1, initialPhase: 'group-status', initialCause: 'ENOENT', rssAttempts: 1, trace: [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 1, stableTasks: true }] };
+    memory.lastRecovery = { ...makeRecovery(), initialCause: 'ENOENT' };
     const recovery = memory.lastRecovery;
     if (change === 'missing-count') memory.recoveryCount = undefined as unknown as number;
     if (change === 'negative-time') memory.recoveryWallMs = -1;
@@ -203,28 +330,27 @@ describe('memory evidence required for promotion samples, independent from funct
     if (change === 'phase') recovery.initialPhase = '/proc/100/status' as RecoveryDiagnostic['initialPhase'];
     if (change === 'cause') recovery.initialCause = 'arbitrary secret' as RecoveryDiagnostic['initialCause'];
     if (change === 'identifiers') Object.assign(recovery, { pid: 100 });
-    if (change === 'zero-attempts') recovery.rssAttempts = 0;
-    if (change === 'negative-attempts') recovery.rssAttempts = -1;
-    if (change === 'too-many-attempts') recovery.rssAttempts = MEMORY_METHOD.exitMaxChecks + 2;
-    if (change === 'unaccounted-attempts') recovery.rssAttempts = recovery.checks + 2;
+    if (change === 'zero-attempts') recovery.observationAttempts = 0;
+    if (change === 'negative-attempts') recovery.observationAttempts = -1;
+    if (change === 'too-many-attempts') recovery.observationAttempts = MEMORY_METHOD.exitMaxChecks + 2;
+    if (change === 'unaccounted-attempts') recovery.observationAttempts = recovery.checks + 2;
     if (change === 'too-many-checks') { recovery.trace = Array(27).fill(recovery.trace[0]); recovery.checks = 27; }
     if (change === 'live-terminal') recovery.outcome = 'terminal';
     if (change === 'gone-without-verification') recovery.outcome = 'gone';
-    if (change === 'partial-tasks') recovery.trace[0] = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: true } as unknown as RecoveryDiagnostic['trace'][number];
+    if (change === 'partial-tasks') recovery.trace[0] = { ...recovery.trace[0], nonTerminalTasks: null, stableTasks: true } as unknown as RecoveryDiagnostic['trace'][number];
     expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
   });
   it.each(['live-thread', 'live-leader', 'unstable', 'unknown-group', 'unknown-count', 'unknown-stability', 'empty', 'late', 'bad-state', 'underreported-time'])('rejects contradictory %s exit diagnostics', (change) => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0 as number | null, stableTasks: true as boolean | null };
-    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
-    memory.lastExitVerification = { outcome: 'terminal', elapsedMs: 2, checks: 1, trace: [point] };
+    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0 as number | null, stableTasks: true as boolean | null, observation: null };
+    recordExit(memory, 'terminal', [point as ExitVerificationPoint]);
     if (change === 'live-thread') point.nonTerminalTasks = 1;
     if (change === 'live-leader') point.state = 'R';
     if (change === 'unstable') point.stableTasks = false;
     if (change === 'unknown-group') { point.nonTerminalTasks = null; point.stableTasks = null; }
     if (change === 'unknown-count') point.nonTerminalTasks = null;
     if (change === 'unknown-stability') point.stableTasks = null;
-    if (change === 'empty') { memory.lastExitVerification.trace = []; memory.lastExitVerification.checks = 0; }
+    if (change === 'empty') { memory.lastExitVerification!.trace = []; memory.lastExitVerification!.checks = 0; }
     if (change === 'late') point.atMs = 3;
     if (change === 'bad-state') point.state = 'invalid';
     if (change === 'underreported-time') memory.exitVerificationWallMs = 0;
@@ -232,30 +358,26 @@ describe('memory evidence required for promotion samples, independent from funct
   });
   it.each(['terminal', 'gone'])('accepts consistent %s confirmation diagnostics', (outcome) => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
-    memory.lastExitVerification = { outcome, elapsedMs: 2, checks: outcome === 'terminal' ? 1 : 0, trace: outcome === 'terminal' ? [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true }] : [] };
+    recordExit(memory, outcome as 'terminal' | 'gone');
     expect(summarizeSample(sample).memory.shards).toHaveLength(5);
   });
   it('preserves unknown task diagnostics before independently verified TGID disappearance', () => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
-    memory.lastExitVerification = { outcome: 'gone', elapsedMs: 2, checks: 1, trace: [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null }] };
+    recordExit(memory, 'gone', [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: null }]);
     expect(summarizeSample(sample).memory.shards).toHaveLength(5);
   });
   it.each(['count', 'stability'])('rejects partially known %s diagnostics even when TGID later disappears', (unknown) => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: unknown === 'count' ? null : 0, stableTasks: unknown === 'stability' ? null : true };
-    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
-    memory.lastExitVerification = { outcome: 'gone', elapsedMs: 2, checks: 1, trace: [point] };
+    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: unknown === 'count' ? null : 0, stableTasks: unknown === 'stability' ? null : true, observation: null };
+    recordExit(memory, 'gone', [point as ExitVerificationPoint]);
     expect(() => summarizeSample(sample)).toThrow(/Invalid memory task-group diagnostic/);
   });
   it('accepts initially unknown tasks when a later complete enumeration verifies terminal exit', () => {
     const sample = makeSample(5); const memory = sample.memoryReports[0];
-    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
-    memory.lastExitVerification = { outcome: 'terminal', elapsedMs: 2, checks: 2, trace: [
-      { atMs: 0, state: 'R', exitFlag: true, nonTerminalTasks: null, stableTasks: null },
-      { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true },
-    ] };
+    recordExit(memory, 'terminal', [
+      { atMs: 0, state: 'R', exitFlag: true, nonTerminalTasks: null, stableTasks: null, observation: null },
+      { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true, observation: null },
+    ]);
     expect(summarizeSample(sample).memory.shards).toHaveLength(5);
   });
   it.each(['peakRssBytes', 'peakProcessCount'])('rejects complete memory evidence with unknown %s', (field) => {
@@ -291,7 +413,7 @@ describe('memory evidence required for promotion samples, independent from funct
     if (change === 'window') memory.elapsedMs = 200;
     if (change === 'cancelled') memory.commandExit.code = 130;
     if (change === 'leaked') memory.cleanupRequired = true;
-    if (change === 'pending-exit') { memory.exitVerificationCount = 1; memory.lastExitVerification = { outcome: 'unconfirmed', elapsedMs: 25, checks: 0, trace: [] }; }
+    if (change === 'pending-exit') { recordExit(memory, 'gone'); memory.lastExitVerification!.outcome = 'unconfirmed'; }
     expect(() => summarizeSample(sample)).toThrow(/Memory|memory/);
   });
 });

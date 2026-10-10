@@ -18,6 +18,7 @@ export const MEMORY_METHOD = Object.freeze({
   exitVerificationMs: 25, exitPollMs: 1, exitMaxChecks: 26,
   scope: 'command-and-discovered-descendants-excluding-sensor',
 });
+export const MEMORY_DIAGNOSTIC_VERSION = 2;
 const gone = (error) => ['ENOENT', 'ESRCH'].includes(error.code);
 const sensorError = (code) => Object.assign(new Error(code), { code });
 const positive = (value) => Number.isSafeInteger(value) && value > 0;
@@ -94,20 +95,27 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
     const ambiguous = (error) => gone(error) || ['MISSING_RSS', 'EMPTY_TASK_LIST'].includes(error.code);
     // One window resolves a failed observation. Re-observation and exit checks
     // share its deadline and the original sample's process/task/time budgets.
-    const resolveObservation = (pid, expectedStart, observe, initial, canRetire, capturedTask, missingCode) => {
+    const resolveObservation = (pid, expectedStart, observe, initial, canRetire, capturedTask, missingCode, observationEvidence, diagnosticEvidence) => {
       const begin = verificationBegin;
-      const trace = []; let rssAttempts = 1;
+      const trace = []; let observationAttempts = 1; let activePoint = null;
       const result = (outcome, value) => {
         const elapsedMs = now() - begin;
         if (['rss-recovered', 'terminal', 'gone'].includes(outcome)) {
-          checkBudget();
-          if (elapsedMs > MEMORY_METHOD.exitVerificationMs) throw sensorError('MISSING_RSS');
+          try {
+            checkBudget();
+            if (elapsedMs > MEMORY_METHOD.exitVerificationMs) throw sensorError('MISSING_RSS');
+          } catch (error) {
+            if (activePoint) activePoint.observation = observationEvidence('incomplete');
+            throw error;
+          }
+          if (activePoint?.observation) activePoint.observation = observationEvidence('certified');
         }
-        return { outcome, elapsedMs, checks: trace.length, trace, ...initial, rssAttempts, ...(value === undefined ? {} : { value }) };
+        return { outcome, elapsedMs, checks: trace.length, trace, ...initial, observationAttempts, ...diagnosticEvidence(outcome), ...(value === undefined ? {} : { value }) };
       };
       let outcome = 'read-error';
       try {
         for (let check = 0; check < MEMORY_METHOD.exitMaxChecks; check++) {
+          activePoint = null;
           checkBudget();
           let raw; let identity;
           try { ({ raw, identity } = readIdentity('/proc/' + pid + '/stat', pid)); }
@@ -116,14 +124,20 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
           if (identity.start !== expectedStart()) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
           const flags = Number(raw.slice(raw.lastIndexOf(')') + 2).trim().split(/\s+/)[6]);
           if (!Number.isSafeInteger(flags) || flags < 0) throw sensorError('INVALID_PROC_STAT');
-          const point = { atMs: now() - begin, state: identity.state, exitFlag: Boolean(flags & 4), nonTerminalTasks: null, stableTasks: null };
+          const point = { atMs: now() - begin, state: identity.state, exitFlag: Boolean(flags & 4), nonTerminalTasks: null, stableTasks: null, observation: null };
           trace.push(point);
+          activePoint = point;
           // A live TGID is not an exit. Retry actual RSS and complete discovery
           // before considering a whole-group terminal certificate.
-          rssAttempts++;
+          observationAttempts++;
           try { return result('rss-recovered', observe(true)); }
-          catch (error) { if (!ambiguous(error)) throw error; }
+          catch (error) {
+            observationEvidence('failed-result');
+            if (!ambiguous(error)) throw error;
+          }
+          finally { point.observation = observationEvidence(); }
           if (terminal(identity.state)) {
+            point.observation = observationEvidence('incomplete');
             const identities = new Map(); const liveTasks = new Set();
             let first = []; let second = []; let enumerated = true; let captured = true;
             try {
@@ -145,16 +159,30 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
                 if (identities.has(tid) && task.start !== identities.get(tid)) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
                 if (!terminal(task.state)) liveTasks.add(tid);
               }
-            } catch (error) { if (!gone(error)) throw error; enumerated = false; }
+            } catch (error) {
+              point.observation = observationEvidence('incomplete');
+              if (!gone(error)) throw error;
+              enumerated = false;
+            }
             let finalIdentity;
             try { finalIdentity = readGroupIdentity(pid, expectedStart()); }
-            catch (error) { if (gone(error)) return result('gone'); throw error; }
+            catch (error) {
+              if (gone(error)) return result('gone');
+              point.observation = observationEvidence('incomplete');
+              throw error;
+            }
             if (enumerated) {
               point.nonTerminalTasks = liveTasks.size;
               point.stableTasks = first.length === second.length && second.every((tid) => identities.has(tid));
             }
-            checkBudget();
-            if (captured && canRetire() && terminal(finalIdentity.state) && point.nonTerminalTasks === 0 && point.stableTasks === true) return result('terminal');
+            point.observation = observationEvidence(enumerated ? 'certificate' : 'incomplete');
+            try {
+              checkBudget();
+              if (captured && canRetire() && terminal(finalIdentity.state) && point.nonTerminalTasks === 0 && point.stableTasks === true) return result('terminal');
+            } catch (error) {
+              point.observation = observationEvidence('incomplete');
+              throw error;
+            }
           }
           const remaining = Math.min(MEMORY_METHOD.exitVerificationMs - (now() - begin), MEMORY_METHOD.maxSampleMs - (now() - started));
           if (remaining <= 0) break;
@@ -193,6 +221,41 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
       const unreadChildren = new Set();
       const pendingRepresentatives = new Map();
       const terminalTaskGenerations = new Map();
+      const statusReads = {
+        groupAttempts: 0, groupReads: 0, groupWithoutVmRss: 0, groupDiscarded: 0,
+        representativeAttempts: 0, representativeReads: 0, representativeWithoutVmRss: 0, representativeDiscarded: 0,
+      };
+      const pendingObligations = () => ({
+        uncapturedTasks: uncapturedTasks.size, unreadChildren: unreadChildren.size,
+        pendingRepresentatives: pendingRepresentatives.size,
+      });
+      let observationReason = 'OBSERVATION_INCOMPLETE'; let lastObservation = null;
+      const diagnosticEvidence = (outcome) => ({
+        finalReason: ['rss-recovered', 'terminal', 'gone'].includes(outcome) ? 'NONE'
+          : ['read-error', 'pid-reused'].includes(outcome) || observationReason === 'NONE' ? 'OBSERVATION_INCOMPLETE' : observationReason,
+        statusReads: { ...statusReads }, pendingObligations: pendingObligations(),
+      });
+      const observationEvidence = (certificate) => {
+        if (lastObservation === null) return null;
+        if (certificate === 'incomplete') observationReason = 'OBSERVATION_INCOMPLETE';
+        if (certificate === 'failed-result' && observationReason === 'NONE') observationReason = 'OBSERVATION_INCOMPLETE';
+        if (certificate === 'certified') observationReason = 'NONE';
+        if (certificate === 'certificate') {
+          observationReason = lastObservation.reason;
+          if (unreadChildren.size) observationReason = 'UNREAD_CHILDREN';
+          else if (uncapturedTasks.size) observationReason = 'UNCAPTURED_TASKS';
+          else if (pendingRepresentatives.size) observationReason = 'PENDING_REPRESENTATIVE';
+        }
+        return { ...lastObservation, reason: observationReason, statusReads: { ...lastObservation.statusReads }, pendingObligations: pendingObligations() };
+      };
+      const readStatusRss = (file, kind, tid = pid) => {
+        statusReads[kind + 'Attempts']++;
+        const raw = read(file, 'utf8');
+        if (typeof raw === 'string') statusReads[kind + 'Reads']++;
+        const value = statusRss(raw, pid, tid);
+        if (value === null) statusReads[kind + 'WithoutVmRss']++;
+        return value;
+      };
       const rememberTerminal = (tid, task) => { if (terminal(task.state)) terminalTaskGenerations.set(tid, task.start); };
       const capturedTask = (tid, task) => {
         const capturedStart = taskGenerations.get(tid);
@@ -210,6 +273,17 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         return !uncapturedTasks.has(tid) && !unreadChildren.has(tid);
       };
       const observe = (retry) => {
+        const beforeReads = { ...statusReads };
+        observationReason = 'OBSERVATION_INCOMPLETE';
+        let terminalHistory = false; let unusableRss = false;
+        const blockedReason = () => unreadChildren.size ? 'UNREAD_CHILDREN'
+          : uncapturedTasks.size ? 'UNCAPTURED_TASKS'
+          : pendingRepresentatives.size ? 'PENDING_REPRESENTATIVE'
+          : terminalHistory ? 'TERMINAL_HISTORY' : unusableRss ? 'RSS_UNUSABLE'
+          : statusReads.groupWithoutVmRss > beforeReads.groupWithoutVmRss
+            || statusReads.representativeWithoutVmRss > beforeReads.representativeWithoutVmRss ? 'RSS_ABSENT'
+            : 'OBSERVATION_INCOMPLETE';
+        try {
         phase = 'group-stat';
         ({ identity } = readIdentity('/proc/' + pid + '/stat', pid));
         const previous = known.get(pid);
@@ -221,8 +295,12 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         expectedStart = identity.start; known.set(pid, identity.start); provisionalDescendants.delete(pid);
         rememberTerminal(String(pid), identity);
         phase = 'group-status'; checkBudget();
-        let rss = statusRss(read('/proc/' + pid + '/status', 'utf8'), pid);
-        if (terminalTaskGenerations.get(String(pid)) === identity.start) rss = null;
+        let rss = readStatusRss('/proc/' + pid + '/status', 'group');
+        if (terminalTaskGenerations.get(String(pid)) === identity.start) {
+          terminalHistory = !terminal(identity.state);
+          if (rss !== null) { statusReads.groupDiscarded++; unusableRss = true; }
+          rss = null;
+        }
         phase = 'task-list'; let tids = tasks(pid);
         if (!tids.length) throw sensorError('EMPTY_TASK_LIST');
         const discoverChildren = (current, verifyTasks) => {
@@ -253,6 +331,7 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
             catch (error) {
               if (!gone(error)) throw error;
               unreadChildren.add(tid);
+              observationReason = 'UNREAD_CHILDREN';
               // Missing children can be retried for this same task, but its
               // obligation survives if a later task list omits it.
               throw error;
@@ -315,9 +394,10 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
           }
         };
         if (rss === null || terminal(identity.state)) {
+          if (rss !== null) { statusReads.groupDiscarded++; unusableRss = true; }
           rss = null;
           discoverChildren(tids, true);
-          if (uncapturedTasks.size) { phase = 'rss-result'; throw sensorError('MISSING_RSS'); }
+          if (uncapturedTasks.size) { phase = 'rss-result'; observationReason = blockedReason(); throw sensorError('MISSING_RSS'); }
           const verifyTaskGone = (tid) => {
             phase = 'group-recheck'; readGroupIdentity(pid, identity.start);
             const requireAbsent = () => {
@@ -326,11 +406,12 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
               try { current = readIdentity('/proc/' + pid + '/task/' + tid + '/stat', Number(tid)).identity; }
               catch (error) { if (gone(error)) return; throw error; }
               if (current.start !== (pendingRepresentatives.get(tid) ?? taskGenerations.get(tid))) throw sensorError('PID_REUSED');
+              observationReason = 'PENDING_REPRESENTATIVE';
               throw sensorError('MISSING_RSS');
             };
             requireAbsent();
             phase = 'task-list'; const current = tasks(pid);
-            if (current.includes(tid)) throw sensorError('MISSING_RSS');
+            if (current.includes(tid)) { observationReason = 'PENDING_REPRESENTATIVE'; throw sensorError('MISSING_RSS'); }
             requireAbsent();
             phase = 'group-recheck'; readGroupIdentity(pid, identity.start);
             discoverChildren(current, true);
@@ -351,13 +432,15 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
               const before = readIdentity(file + '/stat', Number(tid)).identity;
               if (before.start !== taskGenerations.get(tid)) throw sensorError('PID_REUSED');
               rememberTerminal(tid, before);
+              if (!terminal(before.state) && terminalTaskGenerations.get(tid) === before.start) terminalHistory = true;
               if (!terminal(before.state) && terminalTaskGenerations.get(tid) !== before.start) {
                 phase = 'representative-status'; checkBudget();
-                candidate = statusRss(read(file + '/status', 'utf8'), pid, Number(tid));
+                candidate = readStatusRss(file + '/status', 'representative', Number(tid));
                 phase = 'representative-stat-after';
                 after = readIdentity(file + '/stat', Number(tid)).identity;
                 if (after.start !== before.start) throw sensorError('PID_REUSED');
                 rememberTerminal(tid, after);
+                if (candidate !== null && terminal(after.state)) { statusReads.representativeDiscarded++; unusableRss = true; }
               }
             } catch (error) {
               if (!gone(error)) throw error;
@@ -372,10 +455,23 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
           }
         } else discoverChildren(tids, retry);
         phase = 'rss-result';
-        if (rss === null || uncapturedTasks.size || pendingRepresentatives.size) throw sensorError('MISSING_RSS');
+        if (rss === null || uncapturedTasks.size || pendingRepresentatives.size) { observationReason = blockedReason(); throw sensorError('MISSING_RSS'); }
         phase = 'group-recheck'; readGroupIdentity(pid, identity.start);
         checkBudget();
+        observationReason = 'NONE';
         return rss;
+        } catch (error) {
+          if (gone(error) && ['task-stat-before', 'task-stat-after', 'child-stat'].includes(phase)) {
+            observationReason = unreadChildren.size ? 'UNREAD_CHILDREN' : 'UNCAPTURED_TASKS';
+          }
+          throw error;
+        } finally {
+          lastObservation = {
+            reason: observationReason,
+            statusReads: Object.fromEntries(Object.keys(statusReads).map((key) => [key, statusReads[key] - beforeReads[key]])),
+            pendingObligations: pendingObligations(),
+          };
+        }
       };
       let rss;
       try {
@@ -384,14 +480,15 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
           checkBudget();
           const elapsedMs = now() - verificationBegin;
           if (elapsedMs > MEMORY_METHOD.exitVerificationMs) throw sensorError('MISSING_RSS');
-          const diagnostic = { outcome: 'rss-recovered', elapsedMs, checks: 0, trace: [], ...initialFailure, rssAttempts: 1 };
+          const diagnostic = { outcome: 'rss-recovered', elapsedMs, checks: 0, trace: [], ...initialFailure, observationAttempts: 1, ...diagnosticEvidence('rss-recovered') };
           recoveryCount++; recoveryWallMs += diagnostic.elapsedMs; lastRecovery = diagnostic;
         }
       }
       catch (error) {
         if (!ambiguous(error)) {
           if (initialFailure !== null) {
-            const diagnostic = { outcome: error.code === 'PID_REUSED' ? 'pid-reused' : 'read-error', elapsedMs: now() - verificationBegin, checks: 0, trace: [], ...initialFailure, rssAttempts: 1 };
+            const outcome = error.code === 'PID_REUSED' ? 'pid-reused' : 'read-error';
+            const diagnostic = { outcome, elapsedMs: now() - verificationBegin, checks: 0, trace: [], ...initialFailure, observationAttempts: 1, ...diagnosticEvidence(outcome) };
             exitDiagnostics.set(error, diagnostic);
             recoveryDiagnostics.set(error, { count: recoveryCount + 1, wallMs: recoveryWallMs + diagnostic.elapsedMs, last: diagnostic });
           }
@@ -401,7 +498,8 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         const diagnostic = resolveObservation(pid, () => expectedStart, observe, initialFailure,
           () => uncapturedTasks.size === 0 && pendingRepresentatives.size === 0,
           capturedTask,
-          () => unreadChildren.size ? 'CHILD_DISCOVERY_UNAVAILABLE' : 'MISSING_RSS');
+          () => unreadChildren.size ? 'CHILD_DISCOVERY_UNAVAILABLE' : 'MISSING_RSS',
+          observationEvidence, diagnosticEvidence);
         const { value, ...evidence } = diagnostic;
         recoveryCount++; recoveryWallMs += diagnostic.elapsedMs; lastRecovery = evidence;
         if (diagnostic.outcome === 'rss-recovered') {
@@ -450,7 +548,7 @@ export async function measureCommand(command, {
   const measurementId = randomUUID();
   const output = validShard ? path.join(env.CI_EVIDENCE_DIR ?? 'reports/ci-evidence', `vitest-memory-${index}-of-${total}.json`) : null;
   const report = {
-    schemaVersion: 1, measurementId, sha: env.GITHUB_SHA ?? null,
+    schemaVersion: 1, diagnosticVersion: MEMORY_DIAGNOSTIC_VERSION, measurementId, sha: env.GITHUB_SHA ?? null,
     run: { id: env.GITHUB_RUN_ID ?? null, attempt: env.GITHUB_RUN_ATTEMPT ?? null, event: env.GITHUB_EVENT_NAME ?? null },
     shard: { index, total, maxParallel }, method: MEMORY_METHOD,
     status: 'running', errors: [], sampleCount: 0, peakRssBytes: null,

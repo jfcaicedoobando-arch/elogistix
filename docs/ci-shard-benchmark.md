@@ -145,7 +145,8 @@ parcial, sólo del padre, intervalos excedidos o artifacts antiguos. Las muestra
 sale no-cero; no se convierten en tiempos cero ni éxitos.
 
 Cohortes separadas por SHA, inventario/casos por archivo, entorno, cache class,
-ref/ámbito de caché, labels del runner, carga, perfiles full-matrix/capped y conjunto de workflows. Los casos cambiados
+ref/ámbito de caché, labels del runner, carga, perfiles full-matrix/capped,
+conjunto de workflows, método de memoria y versión de diagnóstico. Los casos cambiados
 no se agrupan con el control. Las muestras con distinto ref no se mezclan aunque compartan SHA; revisar
 además los logs de caché al interpretar la comparación.
 
@@ -184,8 +185,8 @@ los hijos de todos sus hilos. Cuenta RSS **una vez por proceso/TGID**; no suma
 una copia por hilo. No busca procesos por nombre, escanea procesos ajenos ni lee
 `environ`, `cmdline`, mapas o memoria de aplicación. Sigue descendientes conocidos
 tras reparenting y comprueba start ticks para evitar reutilización de PID.
-Si falta `children` para un hilo vivo o no puede leer un descendiente, falla el
-sensor; **no sustituye por RSS del padre**.
+Si no logra leer `children` para un hilo vivo o verificar un descendiente,
+falla el sensor; **no sustituye por RSS del padre**.
 La versión 5 puede leer `/proc/TGID/task/TID/status` de un representante vivo
 cuando el líder carece de VmRSS, incluso si está zombie. Comprueba PID/TID,
 start ticks y pertenencia `Pid`/`Tgid` del status, y revalida las identidades
@@ -236,7 +237,9 @@ del representante.
 La recuperación y la confirmación comparten como máximo 25 ms nominales por
 TGID desde el primer evento recuperable, con pausas de 1 ms y
 hasta 26 comprobaciones, incluidas dentro del presupuesto global de 50 ms y
-4.096 lecturas/listados de hilos del recorrido. No se publica la suma parcial
+4.096 entradas de tareas acumuladas en las enumeraciones del recorrido.
+Cada lista repetida vuelve a consumir sus entradas; este límite no cuenta
+llamadas stat/status ni acredita un censo de 4.096 hilos simultáneos. No se publica la suma parcial
 mientras está pendiente. Sin RSS verificable, un proceso aún vivo, un hilo
 activo o confirmación agotada invalidan el muestreo; también lo hacen una
 identidad cambiada o permiso denegado. Un representante vivo verificado se
@@ -249,34 +252,97 @@ hijos, confirmación de salida y redescubrimiento consumen los mismos límites
 La pausa consume tiempo del sampler y puede demorar brevemente la atención de
 señales, dentro de ese recorrido; no cambia la señal ni salida funcional.
 
-`exitVerificationCount`, `exitVerificationWallMs` y `lastExitVerification`
-registran el coste y el último resultado, también al fallar. El diagnóstico se
-limita a hasta 26 estados, booleano PF_EXITING, conteo de hilos no terminales,
-estabilidad del conjunto y tiempos relativos. El conteo y la estabilidad son
-ambos `null` hasta completar enumeración y comprobaciones; cero sólo expresa
-un conteo conocido. No guarda PID, start ticks,
-rutas, nombres, argumentos ni entorno. El analizador rechaza confirmaciones
-pendientes o fuera de presupuesto incluso si el resto del sidecar afirma
-complete. Desactivar el sensor conserva el error primario, sin añadir un gap
-artificial por el tiempo posterior no observado. El analizador exige método 5;
-rechaza las versiones anteriores, incluidas la 3 y la 4, y no mezcla sus cohortes.
+El sidecar conserva `schemaVersion: 1` y método 5, y declara
+`diagnosticVersion: 2` (`MEMORY_DIAGNOSTIC_VERSION`). El analizador exige esa
+versión incluso si no hubo recuperaciones. Rechaza métodos anteriores y
+diagnósticos antiguos o ausentes sin rellenarlos con ceros. La versión de
+diagnóstico se devuelve en el resumen y forma parte de la clave de cohorte.
 
-`recoveryCount` y `recoveryWallMs` registran todas las ventanas de recuperación
-iniciadas, incluidas las que terminan en salida comprobada o fallo.
+`exitVerificationCount`, `exitVerificationWallMs` y `lastExitVerification`
+registran las comprobaciones de salida, su coste y el último resultado,
+también al fallar. `recoveryCount` y `recoveryWallMs` registran todas las
+ventanas de recuperación iniciadas, incluidas salida comprobada y fallo.
 `lastRecovery` admite `rss-recovered`, `gone`, `terminal`, `unconfirmed`,
-`pid-reused` o `read-error`. `gone`/`terminal` se registran también como salida
-real en `lastExitVerification`; RSS recuperada o un fallo no inventan una salida
-ni permiten retirar el proceso. El diagnóstico conserva
-`outcome`, `elapsedMs`, `checks` y `trace`, y añade `initialPhase`, `initialCause`
-y `rssAttempts`. La fase identifica dónde comenzó la recuperación; las causas
-admitidas son `ENOENT`, `ESRCH`, `RSS_ABSENT` y `EMPTY_TASK_LIST`. `rssAttempts`
-cuenta invocaciones de la observación del TGID: el intento inicial fallido más
-hasta 26 observaciones, máximo 27; no cuenta lecturas de status ni afirma que
-cada intento alcanzó RSS.
-Las trazas usan los mismos estados y conteos desconocidos `null`, sin guardar
-identidades o rutas. Un resultado pendiente o error mantiene la evidencia incompleta. Los tiempos
-de recuperación y verificación pueden solaparse: no sumar ambos para estimar
-coste; `samplingWallMs` registra el tiempo real total del muestreo.
+`pid-reused` o `read-error`. `gone`/`terminal` acreditan salida real y aparecen
+también en `lastExitVerification`; recuperar RSS o registrar un fallo no
+acredita salida ni autoriza retirar el proceso.
+
+Cada diagnóstico presente tiene exactamente diez claves: `outcome`,
+`elapsedMs`, `checks`, `trace`, `initialPhase`, `initialCause`,
+`observationAttempts`, `finalReason`, `statusReads` y `pendingObligations`.
+`lastExitVerification` usa la misma forma, sin outcome `rss-recovered`.
+`initialPhase` identifica el inicio de la ventana, no una causa probada del
+fallo: admite `group-stat`, `group-status`, `task-list`, `task-stat-before`,
+`task-children`, `task-stat-after`, `child-stat`, `representative-stat-before`,
+`representative-status`, `representative-stat-after`, `group-recheck` y
+`rss-result`. `initialCause` admite `ENOENT`, `ESRCH`, `RSS_ABSENT` y
+`EMPTY_TASK_LIST`. `observationAttempts` sustituye a `rssAttempts`: cuenta el
+intento inicial más las observaciones posteriores del TGID, entre 1 y 27 y
+nunca más de `checks + 1`. No cuenta lecturas de status ni afirma que cada
+observación alcanzó RSS.
+
+`statusReads` contiene exactamente ocho contadores: `groupAttempts`,
+`groupReads`, `groupWithoutVmRss`, `groupDiscarded`,
+`representativeAttempts`, `representativeReads`,
+`representativeWithoutVmRss` y `representativeDiscarded`. Separa status del
+TGID de status de representantes. Attempts cuenta la llamada antes de leer;
+Reads cuenta texto devuelto; WithoutVmRss requiere identidad status válida
+y VmRSS ausente; Discarded cuenta sólo VmRSS real bien formado excluido por
+una guarda de estado/historial. Una omisión por historial terminal no inventa
+una lectura ni un descarte. Para cada origen, Reads no supera Attempts y
+WithoutVmRss + Discarded no supera Reads.
+
+`pendingObligations` tiene exactamente `uncapturedTasks`, `unreadChildren` y
+`pendingRepresentatives`: tamaños conocidos de las obligaciones internas de
+captura, hijos sin leer y certificados pendientes de representantes. No son
+un censo completo de hilos; tres ceros no prueban por sí solos que la
+enumeración terminó. Cada tamaño y representativeAttempts están acotados a
+4.096; unreadChildren no supera uncapturedTasks. groupAttempts no supera
+observationAttempts, y en un intento individual no supera uno. Todos estos
+contadores son enteros seguros no negativos.
+
+`finalReason` y la razón de cada check admiten sólo `NONE`, `RSS_ABSENT`,
+`UNCAPTURED_TASKS`, `PENDING_REPRESENTATIVE`, `UNREAD_CHILDREN`,
+`TERMINAL_HISTORY`, `RSS_UNUSABLE` y `OBSERVATION_INCOMPLETE`. Distinguen
+ausencia de RSS validada, RSS excluida y obligaciones que impiden completar
+la lectura. Las razones de obligaciones requieren un contador correspondiente
+positivo; RSS_ABSENT requiere status válido sin VmRSS y RSS_UNUSABLE un
+descarte real. Son resultados de comprobaciones observadas, no una atribución
+retrospectiva de la causa del piloto. NONE sólo expresa RSS o salida acreditada.
+
+Cada punto de `trace` tiene exactamente `atMs`, `state`, `exitFlag`,
+`nonTerminalTasks`, `stableTasks` y `observation`. Los estados son
+`R/S/D/T/t/Z/X/I/P`, con PF_EXITING booleano y tiempos relativos monotónicos.
+El conteo y la estabilidad permanecen ambos `null` hasta completar las
+enumeraciones y comprobaciones de ese check; cero sólo expresa un conteo
+conocido. stableTasks compara sus dos listas, sin afirmar estabilidad durante
+toda la ventana. `observation` es `null` si no empezó una observación, o tiene
+exactamente `reason`, `statusReads` y `pendingObligations` del check actual.
+Sus lecturas son incrementos locales; el diagnóstico superior acumula las
+lecturas de la ventana y conserva las obligaciones finales. La suma de
+incrementos no supera los totales. Un certificado truncado marca
+OBSERVATION_INCOMPLETE y conserva las obligaciones actuales; uno completo
+sin salida conserva el bloqueo observado en ese mismo check. NONE para
+terminal/gone sólo aparece tras acreditar salida, satisfacer las guardas
+finales y respetar los límites 25/50 ms. No cambia snapshots de checks anteriores ni
+convierte incertidumbre en RSS ausente.
+No se serializan PID/TID, start ticks, rutas, nombres, mensajes, argumentos
+ni entorno.
+
+El gate comprueba las claves y categorías cerradas, contadores, tiempos y
+coherencia de ambos diagnósticos y trazas. Si hubo recuperaciones, un sidecar
+complete sólo puede tener último outcome `rss-recovered`, `gone` o `terminal`
+y finalReason NONE.
+RSS recuperada exige una lectura no ausente ni descartada y las tres
+obligaciones en cero; terminal exige además último estado Z/X, cero hilos no
+terminales y stableTasks true. gone puede conservar obligaciones históricas
+si la desaparición del TGID quedó acreditada. La última recuperación que
+termina en salida debe coincidir con la última verificación de salida.
+Una confirmación pendiente o fuera de presupuesto se rechaza aunque el
+resto del sidecar afirme complete. Desactivar el sensor conserva el error
+primario, sin añadir un gap artificial por el tiempo posterior no observado.
+Los tiempos de recuperación y verificación pueden solaparse: no sumarlos
+para estimar coste; `samplingWallMs` registra el tiempo real total del muestreo.
 
 El piloto Actions `38083872299` aprobó 2.213 archivos y 14.573 casos, pero
 aportó sólo 3/5 mediciones RSS completas: shard 3 falló con `EMPTY_TASK_LIST`
@@ -295,12 +361,14 @@ sólo 4/5 mediciones RSS completas con método 4. Su diagnóstico no basta para
 atribuir el fallo a una fase concreta; la causa real sigue desconocida. Las
 recuperaciones V3 no convierten ese piloto en evidencia de memoria aprobada.
 El siguiente piloto Actions debe aportar 5/5 sidecars completos del método 5
+con `diagnosticVersion: 2`
 y validar toda la evidencia antes de formar cohortes; no se declara ese
 resultado alcanzado.
 Fuentes: [salida de tareas Linux](https://raw.githubusercontent.com/torvalds/linux/master/kernel/exit.c)
 y [estado/memoria en proc](https://raw.githubusercontent.com/torvalds/linux/master/fs/proc/array.c).
 
-Muestrea cada 250 ms, sin lecturas solapadas; máximo 512 procesos, 4.096 hilos,
+Muestrea cada 250 ms, sin lecturas solapadas; máximo 512 procesos recorridos
+y 4.096 entradas de tareas acumuladas en las enumeraciones,
 50 ms por recorrido y gap observado máximo de 1.000 ms. Superar los límites
 invalida la evidencia y un fallo de lectura detiene el sensor. Se registra el
 número de muestras, mayor gap, carreras de salida, tiempo de muestreo, CPU y RSS
