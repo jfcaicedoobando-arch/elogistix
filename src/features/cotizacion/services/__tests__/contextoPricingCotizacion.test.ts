@@ -81,7 +81,7 @@ describe("resolver Pricing real con I/O sustituido", () => {
     const c = await fetchContextoPricingCotizacion({ ...params, solicitudId: null }); expect(c.solicitud).toBeNull();
     expect(m.calls.some((x) => x.table === "crm_solicitudes_pricing")).toBe(false);
   });
-  it.each(["cancelada", "borrador"])("rechaza solicitud %s", async (estado) => {
+  it.each(["cancelada", "borrador", "enviada"])("rechaza solicitud %s", async (estado) => {
     m.rows.crm_solicitudes_pricing = [{ ...solicitud, estado }]; await expect(fetchContextoPricingCotizacion(params)).rejects.toThrow("solicitud");
   });
   it("rechaza solicitud de otra oportunidad", async () => {
@@ -91,6 +91,25 @@ describe("resolver Pricing real con I/O sustituido", () => {
     m.rows.crm_solicitudes_pricing = [{ ...solicitud, tarifa_tarifario_id: null }];
     await expect(fetchContextoPricingCotizacion(params)).rejects.toThrow("no pertenece");
     m.rows.costeo_tarifas = [{ id: "tarifa", organization_id: "org", solicitud_pricing_id: "sol" }]; expect((await fetchContextoPricingCotizacion(params)).tarifa.id).toBe("tarifa");
+  });
+  it("cotiza Respondida/En negociación desde la respuesta sin elegir una tarifa de catálogo", async () => {
+    m.rows.crm_solicitudes_pricing = [{ ...solicitud, tarifa_tarifario_id: null, incoterm: "FAS", cantidad: 1 }];
+    m.rows.costeo_tarifas = [{ id: "tarifa", organization_id: "org", solicitud_pricing_id: "sol" }];
+    const contexto = await fetchContextoPricingCotizacion(params);
+    expect(contexto.destinatario).toMatchObject({ oportunidadId: "op", clienteId: "cliente", etapaNombre: "En negociación" });
+    expect(contexto.solicitud).toMatchObject({ id: "sol", tarifa_tarifario_id: null, incoterm: "FAS", cantidad: 1 });
+    expect(contexto.tarifa.id).toBe("tarifa");
+    const opciones = await fetchOpcionesPricingCotizacion({ organizationId: "org", oportunidadId: "op" });
+    expect(opciones).toHaveLength(1);
+    expect(opciones[0]).toMatchObject({ organizationId: "org", solicitudId: "sol", oportunidadId: "op", incoterm: "FAS", cantidad: 1 });
+  });
+  it.each([
+    { organization_id: "otra-org", solicitud_pricing_id: "sol" },
+    { organization_id: "org", solicitud_pricing_id: "otra-solicitud" },
+  ])("rechaza una tarifa de respuesta con otro tenant o linaje (%o)", async (vinculo) => {
+    m.rows.crm_solicitudes_pricing = [{ ...solicitud, tarifa_tarifario_id: null }];
+    m.rows.costeo_tarifas = [{ id: "tarifa", ...vinculo }];
+    await expect(fetchContextoPricingCotizacion(params)).rejects.toThrow("no pertenece");
   });
   it("rechaza empresa eliminada, tarifa vencida y error explícito", async () => {
     m.rows.clientes = []; await expect(fetchContextoPricingCotizacion(params)).rejects.toThrow("empresa");

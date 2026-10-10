@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.69] - Unreleased
+
+- Pricing: agrega «Cotizar con esta opción» a las tarifas de una solicitud Respondida, tanto en CRM como en la bandeja. Abre el wizard con la tarifa, solicitud y oportunidad exactas, sin volver a seleccionar la tarifa ni cambiar el estado de la solicitud.
+- La acción conserva el acceso de Pricing, creador o solicitante y exige permiso de escritura de cotizaciones; mantiene las validaciones existentes de empresa, vigencia y linaje en el destino. Agrega regresiones de transición a Respondida, En negociación, permisos y respuestas ajenas.
+- Sin migraciones, cambios de ACL ni escrituras de datos. La entrada de versión conserva el inventario de 1,517 migraciones y todos los registros históricos. CI y validación de la interfaz publicada se verifican por separado.
+
 ## Sin publicar — mantenimiento de CI
 
 - Integra actionlint en el detector de CI y retira su workflow independiente sin perder la validación de YAML.

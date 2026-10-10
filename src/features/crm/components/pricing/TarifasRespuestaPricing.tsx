@@ -19,13 +19,23 @@ interface Props {
   isLoading: boolean;
   isError: boolean;
   onSaved: () => void;
+  onCotizar?: (tarifaId: string) => void;
 }
 
 const carta = (v: boolean | null) => (v === true ? "Sí" : v === false ? "No" : "—");
 const moneda = (n: number, m: string) =>
   formatCurrency(Number(n) || 0, m || "USD");
 
-function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
+function AccionCotizarRespuesta({ tarifaId, onCotizar }: { tarifaId: string; onCotizar?: Props["onCotizar"] }) {
+  if (!onCotizar) return null;
+  return (
+    <div className="col-span-2 md:col-span-4">
+      <Button size="sm" onClick={() => onCotizar(tarifaId)}>Cotizar con esta opción</Button>
+    </div>
+  );
+}
+
+function FilaTarifa({ t, n, onCotizar }: { t: TarifaRespuestaRow; n: number; onCotizar?: Props["onCotizar"] }) {
   return (
     <Card>
       <CardContent className="grid grid-cols-2 gap-2 p-4 text-body-sm md:grid-cols-4">
@@ -38,17 +48,18 @@ function FilaTarifa({ t, n }: { t: TarifaRespuestaRow; n: number }) {
         <div><span className="text-muted-foreground">Tránsito: </span>{t.transit_time_dias != null ? `${t.transit_time_dias} días` : "—"}</div>
         <div><span className="text-muted-foreground">Carta garantía: </span>{carta(t.carta_garantia)}</div>
         <div><span className="text-muted-foreground">Vigente hasta: </span>{t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}</div>
+        <AccionCotizarRespuesta tarifaId={t.id} onCotizar={onCotizar} />
       </CardContent>
     </Card>
   );
 }
 
-export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas, tarifas, isLoading, isError, onSaved }: Props) {
+export function TarifasRespuestaPricing({ solicitudId, editable, hayOpcionesViejas, tarifas, isLoading, isError, onSaved, onCotizar }: Props) {
   const [abierto, setAbierto] = useState(false);
 
   return (
     <div className="space-y-3">
-      {tarifas.map((t, i) => <FilaTarifa key={t.id} t={t} n={i + 1} />)}
+      {tarifas.map((t, i) => <FilaTarifa key={t.id} t={t} n={i + 1} onCotizar={onCotizar} />)}
       {isError && <p className="text-body-sm text-destructive">No se pudieron cargar las tarifas de respuesta.</p>}
       {tarifas.length === 0 && !hayOpcionesViejas && !editable && !isLoading && !isError && (
         <p className="text-body-sm text-muted-foreground">Pricing aún no agrega tarifas.</p>
