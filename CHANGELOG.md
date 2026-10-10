@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.67] - 2026-10-10
+
+- CRM/cotizaciones: sincroniza el importe de la oportunidad abierta cuando una actualización cambia únicamente `conceptos_venta`; conserva el cálculo server-side del subtotal y el linaje de Pricing.
+- Migración puntual del trigger existente: agrega una columna observada sin reescribir funciones, permisos ni importes históricos. Aborta ante diferencias del catálogo; no activa el RPC candidato de vinculación.
+- Regresión en PostgreSQL 17 aislado: el caso base conserva el fallo 300/251; la corrección alcanza 300/300 y mantiene el payload habitual del wizard, reintentos sin reescritura de CRM, ciclo de envío y rollback/ACL. La aplicación remota y el despliegue se verifican por separado.
+
 ## [13.824.66] - 2026-10-09
 
 - Alta de clientes: conserva la CSF seleccionada entre pasos incluso cuando falla la extracción y descarta respuestas de extracción obsoletas.
