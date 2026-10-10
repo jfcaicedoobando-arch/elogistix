@@ -26,7 +26,7 @@ import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { destinoDe, etiquetaRutaCompleta, origenDe } from "@/features/costeo";
-import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
+import { resolveTipoContenedorId, computeTarifaWarnings, faltaCatalogoParaValidarTipo } from "./tarifaVinculadaPanel.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 
@@ -45,7 +45,7 @@ export default function TarifaVinculadaPanel({
 }: Props = {}) {
   const form = useFormContext<CotizacionFormValues>();
   const { watch, setValue, trigger } = form;
-  const { data: tiposContenedor = [] } = useTiposContenedor();
+  const { data: tiposContenedor = [], isLoading: cargandoTipos } = useTiposContenedor();
   const [open, setOpen] = useState(false);
 
   const modo = watch("modo");
@@ -55,9 +55,10 @@ export default function TarifaVinculadaPanel({
 
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
+  const sinCatalogoParaValidar = faltaCatalogoParaValidarTipo(tarifa, tipoContenedorActual, tiposContenedor, cargandoTipos);
 
   const tipoContenedorIdInicial = resolveTipoContenedorId(
-    tipoContenedorActual ?? undefined,
+    tipoContenedorActual,
     tiposContenedor,
   );
 
@@ -83,7 +84,8 @@ export default function TarifaVinculadaPanel({
   const { vencidaAntesDeValidez, tipoMismatch } = computeTarifaWarnings(
     tarifa,
     validez,
-    tipoContenedorActual ?? undefined,
+    tipoContenedorActual,
+    tiposContenedor,
   );
 
   return (
@@ -166,6 +168,11 @@ export default function TarifaVinculadaPanel({
                 <AlertTriangle className="size-3.5 mt-0.5" />
                 El tipo de contenedor del Paso 1 difiere del de la tarifa. Considera cambiar la tarifa.
               </div>
+            )}
+            {sinCatalogoParaValidar && (
+              <p className="text-body-sm text-warning">
+                No se pudo comprobar el tipo de contenedor: el catálogo no está disponible.
+              </p>
             )}
           </div>
         )}

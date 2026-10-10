@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.824.70] - Unreleased
+
+- Pricing/cotización: compara el contenedor por identidad de catálogo (UUID, código y nombres equivalentes), conserva la precarga al elegir FCL por primera vez y mantiene la limpieza ante cambios reales FCL/LCL. Explica cuándo el catálogo no permite comprobar la coincidencia, sin ocultar discrepancias reales.
+- Guardado de venta desde Pricing: conserva la moneda y el linaje confirmados. Convierte sólo el subtotal neto entre USD/MXN con un tipo de cambio explícito, finito y positivo cuando existe venta extranjera; mantiene los conceptos originales y el control optimista en el wizard y la sincronización.
+- Servidor: una migración nueva calcula ese subtotal en la moneda canónica y sincroniza la oportunidad cuando cambia únicamente el tipo de cambio. Rechaza moneda/TC inválidos, conserva el bloqueo de cotizaciones aceptadas o en operación y no altera el contrato de cotizaciones ajenas a Pricing ni reescribe importes históricos.
+- Conserva permisos, RLS, funciones de linaje e historial. Registra 1,518 migraciones y preserva todas las entradas anteriores; agrega regresiones de catálogo, precarga, moneda, guardado y SQL. La aplicación remota y la validación de la interfaz publicada se verifican por separado.
+
 ## [13.824.69] - Unreleased
 
 - Pricing: agrega «Cotizar con esta opción» a las tarifas de una solicitud Respondida, tanto en CRM como en la bandeja. Abre el wizard con la tarifa, solicitud y oportunidad exactas, sin volver a seleccionar la tarifa ni cambiar el estado de la solicitud.

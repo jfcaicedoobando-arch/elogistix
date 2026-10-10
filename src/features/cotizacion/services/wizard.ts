@@ -147,6 +147,8 @@ export async function savePaso3(opts: {
    * expresar el subtotal del encabezado cuando hay conceptos en ambas monedas.
    */
   tipoCambioUsd?: number | null;
+  /** Pricing confirmado no puede cambiar la moneda del vínculo. */
+  conservarMoneda?: boolean;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
   const data = buildVentaCotizacionPayload(opts);

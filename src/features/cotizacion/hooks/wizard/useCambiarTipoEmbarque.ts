@@ -27,11 +27,16 @@ interface Args {
 
 export function useCambiarTipoEmbarque({ form, setCostosInternos }: Args) {
   return useCallback((nuevoTipo: "FCL" | "LCL") => {
+    const tipoAnterior = form.getValues("tipoEmbarque");
+    if (tipoAnterior === nuevoTipo) return;
+    // La respuesta Pricing puede llegar antes de la primera elección FCL/LCL.
+    // Sólo esa elección inicial conserva el contenedor heredado de la tarifa.
+    const conservarPrecarga = !tipoAnterior && nuevoTipo === "FCL" && !!form.getValues("tarifaId");
     // 12.35.0: setValue con shouldValidate/shouldDirty + trigger() para que el wizard
     // recalcule errors y avance step (mem://core RHF rule).
     const opts = { shouldValidate: true, shouldDirty: true } as const;
     form.setValue("tipoEmbarque", nuevoTipo, opts);
-    form.setValue("tipoContenedor", "", opts);
+    if (!conservarPrecarga) form.setValue("tipoContenedor", "", opts);
     form.setValue("tipoPeso", "Peso Normal", opts);
     form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }], opts);
     // P1-3: el tipo de servicio no cambia la naturaleza de la mercancía; la

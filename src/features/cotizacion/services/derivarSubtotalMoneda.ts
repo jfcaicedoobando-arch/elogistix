@@ -3,9 +3,11 @@
  *
  * Extraído de `wizard.ts` (Power-of-10 #4: archivos ≤ 200 líneas).
  */
+import Decimal from "decimal.js";
+import { importeVentaSinIva } from "../domain/importeVentaSinIva";
 import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { tcValido } from "@/lib/financial/tcValido";
-import { roundMoney, subtotalLinea } from "@/lib/financial/financialUtils";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 /**
  * Mensaje único del bloqueo por cotización mixta (P1-A, 13.823.70).
@@ -32,22 +34,6 @@ export const MSG_COTIZACION_MIXTA =
  * A1/A7 (13.823.159): con venta en cero la moneda se toma del `monedaFallback`
  * canónico del vínculo y, sin él, de los propios renglones.
  */
-/**
- * Importe sin IVA de un renglón: `cantidad * precio_unitario`. Es la misma
- * base que usa `subtotalesPorMoneda` para la lista, de modo que el encabezado
- * y el listado no puedan divergir.
- */
-function importeSinIva(c: Record<string, unknown>): number {
-  const cantidad = Number(c?.cantidad);
-  const precio = Number(c?.precio_unitario);
-  if (Number.isFinite(cantidad) && Number.isFinite(precio) && precio !== 0) {
-    return subtotalLinea(cantidad, precio);
-  }
-  // Respaldo para renglones legados sin desglose: `subtotal` ya viene sin IVA.
-  const sub = Number(c?.subtotal);
-  if (Number.isFinite(sub) && sub !== 0) return roundMoney(sub);
-  return Number(c?.total) || 0;
-}
 
 /**
  * v13.823.357 (Auditoría YAGNI P2 #7): sólo MXN y USD están soportados. Antes
@@ -68,6 +54,7 @@ export function derivarSubtotalMoneda(
   conceptosVenta: Record<string, unknown>[],
   monedaFallback?: string | null,
   tipoCambioUsd?: number | null,
+  conservarMoneda = false,
 ): { subtotal: number; moneda: "USD" | "MXN" } {
   let usd = 0;
   let mxn = 0;
@@ -79,12 +66,13 @@ export function derivarSubtotalMoneda(
     // subtotal al reguardar una cotización con impuesto: lista, KPIs y CRM
     // mostraban un importe mayor al real. `total`/IVA quedan sólo para la
     // presentación (tablas y PDF).
-    const base = importeSinIva(c);
+    const base = importeVentaSinIva(c);
     if (monedaConcepto(c) === "MXN") { mxn += base; filasMxn += 1; }
     else { usd += base; filasUsd += 1; }
   }
   usd = roundMoney(usd);
   mxn = roundMoney(mxn);
+  if (conservarMoneda) return subtotalMonedaCanonica(usd, mxn, monedaFallback, tipoCambioUsd);
   if (usd > 0 && mxn > 0) return mezclaConTipoCambio(usd, mxn, monedaFallback, tipoCambioUsd);
   if (mxn > 0) return { subtotal: mxn, moneda: "MXN" };
   if (usd > 0) return { subtotal: usd, moneda: "USD" };
@@ -117,4 +105,22 @@ function mezclaConTipoCambio(
       : (usd * tc >= mxn ? "USD" : "MXN");
   const subtotal = objetivo === "MXN" ? mxn + usd * tc : usd + mxn / tc;
   return { subtotal: roundMoney(subtotal), moneda: objetivo };
+}
+
+
+/** Pricing confirmado conserva su moneda; sólo el encabezado se convierte. */
+function subtotalMonedaCanonica(
+  usd: number, mxn: number, moneda: string | null | undefined, tipoCambioUsd: number | null | undefined,
+): { subtotal: number; moneda: "USD" | "MXN" } {
+  if (moneda !== "MXN" && moneda !== "USD") {
+    throw new ReglaNegocioError("No se pudo recuperar la moneda de Pricing. Recarga la cotización para revisar el vínculo.");
+  }
+  const extranjero = moneda === "MXN" ? usd : mxn;
+  if (extranjero === 0) return { moneda, subtotal: moneda === "MXN" ? mxn : usd };
+  const tc = tcValido(tipoCambioUsd);
+  if (!tc) {
+    throw new ReglaNegocioError("Captura el tipo de cambio de la cotización en el paso 3 para conservar la moneda de Pricing. Los conceptos mantendrán su moneda original.");
+  }
+  const subtotal = moneda === "MXN" ? new Decimal(usd).times(tc).plus(mxn) : new Decimal(mxn).div(tc).plus(usd);
+  return { moneda, subtotal: subtotal.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber() };
 }

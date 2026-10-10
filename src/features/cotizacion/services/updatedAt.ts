@@ -18,12 +18,13 @@ export interface CotizacionSelloSync {
   updatedAt: string | null;
   moneda: string | null;
   tipoCambioUsd: number | null;
+  pricingSolicitudId: string | null;
 }
 
 export async function fetchCotizacionSelloSync(id: string): Promise<CotizacionSelloSync> {
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("updated_at, moneda, tipo_cambio_usd")
+    .select("updated_at, moneda, tipo_cambio_usd, pricing_solicitud_id")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -32,6 +33,7 @@ export async function fetchCotizacionSelloSync(id: string): Promise<CotizacionSe
   return {
     updatedAt: data.updated_at ?? null,
     moneda: data.moneda ?? null,
+    pricingSolicitudId: data.pricing_solicitud_id ?? null,
     tipoCambioUsd: data.tipo_cambio_usd == null ? null : Number(data.tipo_cambio_usd),
   };
 }

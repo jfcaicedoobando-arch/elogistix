@@ -44,6 +44,11 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
 
   const { data: tarifa } = useTarifaVinculada(tarifaId);
   const { data: tiposContenedor = [] } = useTiposContenedor();
+  const tipoActualId = resolveTipoContenedorId(tipoContenedor ?? undefined, tiposContenedor);
+  const tipoTarifaId = resolveTipoContenedorId(tarifa?.tipo_contenedor_id, tiposContenedor)
+    ?? tarifa?.tipo_contenedor_id;
+  const tipoIncompatible = tipoEmbarque === "FCL" && !!tipoActualId && !!tipoTarifaId
+    && tipoActualId !== tipoTarifaId;
 
   // Evita repetir el aviso mientras React vuelve a renderear con el mismo estado.
   const avisadoRef = useRef<string | null>(null);
@@ -55,13 +60,6 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
     }
 
     const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
-    const tipoActualId = resolveTipoContenedorId(tipoContenedor ?? undefined, tiposContenedor);
-    const tipoIncompatible =
-      tipoEmbarque === "FCL" &&
-      !!tarifa?.tipo_contenedor_id &&
-      !!tipoActualId &&
-      tipoActualId !== tarifa.tipo_contenedor_id;
-
     const motivo = tipoIncompatible ? "tipo" : sinFleteVenta ? "incoterm" : null;
     if (!motivo) { avisadoRef.current = null; return; }
     const conservarOrigen = motivo === "incoterm" && identidadPricingCoincide(form.getValues());
@@ -82,5 +80,5 @@ export function useInvalidarTarifaAutomatica({ form, setCostosInternos }: Args):
           ? `Con Incoterm ${incoterm} el flete internacional lo paga el proveedor en origen: se quitó la tarifa vinculada y sus costos automáticos de flete y recargos.`
           : "Cambiaste el tipo de contenedor: se quitó la tarifa vinculada y sus costos automáticos. Elige una tarifa del tipo correcto.",
     });
-  }, [tarifaId, incoterm, modo, tipoEmbarque, tipoContenedor, pricingOrigen, tarifa, tiposContenedor, form, setCostosInternos]);
+  }, [tarifaId, incoterm, modo, tipoIncompatible, pricingOrigen, form, setCostosInternos]);
 }
