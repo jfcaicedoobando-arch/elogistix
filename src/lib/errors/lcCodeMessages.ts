@@ -50,6 +50,10 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El desglose fiscal y la valuación de esta nota de crédito ya están protegidos por su estado. No se puede modificar la base ni su tipo de cambio.",
   LC_NC_PROV_TC_INCONSISTENTE:
     "La valuación a pesos y la conversión contra la factura no coinciden. Revisa la moneda y los tipos de cambio de la nota de crédito.",
+  LC_CRM_CONCEPT_SYNC_DRIFT:
+    "No se puede actualizar la sincronización de cotizaciones con el CRM porque la configuración de la base de datos no coincide con la esperada. Solicita una revisión técnica antes de continuar.",
+  LC_CRM_CONCEPT_SYNC_POSTCHECK:
+    "La actualización de sincronización de cotizaciones con el CRM no superó la verificación de integridad. Solicita una revisión técnica antes de volver a aplicarla.",
   LC_SELECTOR148_FUNCTION_CONTRACT_DRIFT:
     "El selector de facturas no se puede activar porque su configuración cambió. Solicita una revisión técnica antes de continuar.",
   LC_SELECTOR148_INTEGRITY_NOT_READY:
