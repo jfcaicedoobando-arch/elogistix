@@ -22,15 +22,26 @@ interface Props {
   monedaCanonica?: string | null;
 }
 
+/** Valida la entrada completa: nunca convierte «-1» en 1 ni «20,5» en 205. */
+function tipoCambioDesdeTexto(texto: string): number | null {
+  const limpio = texto.trim();
+  if (!/^(?:\d+\.?\d*|\.\d+)$/.test(limpio)) return null;
+  const n = Number(limpio);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export function TipoCambioCotizacionCard({ value, onChange, monedaCanonica }: Props) {
   const hoy = hoyMx();
   const { data: dof, isFetching } = useTcDofPorFecha(hoy);
   // Texto crudo mientras se teclea: sin esto, "18." se renderiza como "18"
   // (String(18)) y el siguiente dígito produce "185" en vez de "18.5".
   const [texto, setTexto] = useState<string | null>(null);
+  const [errorCaptura, setErrorCaptura] = useState(false);
 
   useEffect(() => {
-    setTexto(null);
+    // Conservar «-» al invalidar un TC previo: el siguiente dígito no puede volverse positivo.
+    setTexto(actual => value == null && actual?.trim() && tipoCambioDesdeTexto(actual) == null ? actual : null);
+    if (value != null && Number.isFinite(value) && value > 0) setErrorCaptura(false);
   }, [value]);
 
   return (
@@ -66,17 +77,21 @@ export function TipoCambioCotizacionCard({ value, onChange, monedaCanonica }: Pr
             <Input
               id="cot-tc-usd"
               inputMode="decimal"
+              aria-invalid={errorCaptura}
+              aria-describedby={errorCaptura ? "cot-tc-usd-error" : undefined}
               value={texto ?? (value == null ? "" : String(value))}
               placeholder="0.0000"
               onFocus={(e) => setTexto(e.target.value)}
-              onBlur={() => setTexto(null)}
+              onBlur={() => { if (!errorCaptura) setTexto(null); }}
               onChange={(e) => {
-                const limpio = e.target.value.replace(/[^\d.]/g, "");
-                setTexto(limpio);
-                const n = Number(limpio);
-                onChange(limpio === "" || !Number.isFinite(n) || n <= 0 ? null : n);
+                const entrada = e.target.value;
+                setTexto(entrada);
+                const n = tipoCambioDesdeTexto(entrada);
+                setErrorCaptura(entrada.trim() !== "" && n == null);
+                onChange(n);
               }}
             />
+            {errorCaptura && <p id="cot-tc-usd-error" role="alert" className="text-body-sm text-destructive">Captura un número mayor que cero, usando punto para los decimales.</p>}
           </div>
           <p className="text-body-sm text-muted-foreground">
             {dof?.usdMxn
