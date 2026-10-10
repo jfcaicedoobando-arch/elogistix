@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createShardPlan } from './vitest-shard-plan.mjs';
+import { MEMORY_METHOD } from './measure-vitest-memory.mjs';
 
 const hash = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
@@ -102,7 +103,7 @@ function stable(value) {
 }
 
 /** Call only after PR1's complete/disjoint/inventory gate succeeds. */
-export function summarizeSample({ label, shardCount, maxParallel, loadClass, expectedWorkflows, runs, reports }) {
+export function summarizeSample({ label, shardCount, maxParallel, loadClass, expectedWorkflows, runs, reports, memoryReports }) {
   invariant(typeof label === 'string' && label.length > 0, 'Missing sample label');
   const plan = createShardPlan({ count: shardCount, maxParallel });
   invariant(['isolated', 'shared-load'].includes(loadClass), 'loadClass must be isolated or shared-load');
@@ -154,6 +155,33 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     }
   }
   invariant(cacheStates.size === 1, 'Mixed cache hits/misses; analyze separately');
+  // Memory is a separate observational sidecar. It never weakens PR1's gate
+  // or changes the functional CI result, but missing/incomplete data cannot
+  // become a valid promotion sample. UUID joins also reject stale artifacts
+  // from a failed write or a second execution within the same run/attempt.
+  invariant(Array.isArray(memoryReports) && memoryReports.length === reports.length, 'Missing/extra memory reports');
+  const memoryIndexes = new Set();
+  for (const memory of memoryReports) {
+    const report = reports.find((candidate) => candidate.shard.index === memory.shard?.index);
+    invariant(report && !memoryIndexes.has(memory.shard.index), 'Duplicate/unmatched memory shard');
+    memoryIndexes.add(memory.shard.index);
+    invariant(memory.schemaVersion === 1 && memory.sha === report.sha && JSON.stringify(stable(memory.run)) === JSON.stringify(stable(report.run)) && JSON.stringify(stable(memory.shard)) === JSON.stringify(stable(report.shard)), 'Memory SHA/run/attempt/shard mismatch');
+    invariant(typeof report.memoryMeasurementId === 'string' && /^[0-9a-f-]{36}$/.test(report.memoryMeasurementId) && memory.measurementId === report.memoryMeasurementId, 'Memory measurement ID mismatch');
+    invariant(JSON.stringify(stable(memory.method)) === JSON.stringify(stable(MEMORY_METHOD)), 'Unknown/mixed memory measurement method');
+    invariant(memory.status === 'complete' && Array.isArray(memory.errors) && memory.errors.length === 0, 'Memory sensor incomplete/unavailable');
+    invariant(memory.commandExit?.code === 0 && memory.commandExit.signal === null && memory.cancelledSignal === null && memory.cleanupRequired === false, 'Memory command failed/cancelled or leaked descendants');
+    invariant(Number.isSafeInteger(memory.sampleCount) && memory.sampleCount >= 2 && Number.isSafeInteger(memory.peakRssBytes) && memory.peakRssBytes > 0 && Number.isSafeInteger(memory.peakProcessCount) && memory.peakProcessCount > 1, 'Missing/invalid memory samples or parent-only observation');
+    for (const field of ['elapsedMs', 'samplingWallMs', 'maxSampleDurationMs', 'maxObservedGapMs', 'sensorCpuMicros', 'sensorMaxRssBytes', 'exitRaces']) invariant(Number.isFinite(memory[field]) && memory[field] >= 0, `Invalid memory ${field}`);
+    invariant(memory.maxObservedGapMs <= MEMORY_METHOD.maxGapMs && memory.maxSampleDurationMs <= MEMORY_METHOD.maxSampleMs, 'Memory sampling budget/gap exceeded');
+    invariant(memory.elapsedMs >= report.wallTimeMs && memory.elapsedMs > 0 && memory.samplingWallMs <= memory.elapsedMs, 'Memory observation window incomplete');
+  }
+  const memory = {
+    method: MEMORY_METHOD,
+    // Each shard has its own runner. This maximum is not a simultaneous
+    // aggregate across runners, VM memory usage, or the account's peak.
+    shardPeakRssMaxBytes: Math.max(...memoryReports.map((item) => item.peakRssBytes)),
+    shards: memoryReports.map((item) => ({ index: item.shard.index, peakRssBytes: item.peakRssBytes, sampleCount: item.sampleCount, peakProcessCount: item.peakProcessCount, samplingWallMs: item.samplingWallMs, sensorCpuMicros: item.sensorCpuMicros, sensorMaxRssBytes: item.sensorMaxRssBytes, maxObservedGapMs: item.maxObservedGapMs, exitRaces: item.exitRaces })).sort((a, b) => a.index - b.index),
+  };
   const aggregators = ci.jobs.filter((job) => job.name === 'CI Success (aggregator)');
   invariant(aggregators.length === 1 && !aggregators[0].skipped, 'Missing/skipped CI Success (aggregator)');
   const shardJobs = ci.jobs.filter((job) => /^Vitest shard \d+\/\d+$/.test(job.name));
@@ -170,7 +198,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
   const comparisonContext = {
     sha: ci.sha, treeDigest: digest, environment, runnerLabels: runnerLabels[0], cacheClass, cacheRef: ci.ref, loadClass,
     parallelism: plan.maxParallel === plan.count ? 'full-matrix' : `capped-${plan.maxParallel}`,
-    expectedWorkflows: [...expectedWorkflows].sort(), coverageFingerprint,
+    expectedWorkflows: [...expectedWorkflows].sort(), coverageFingerprint, memoryMethod: MEMORY_METHOD,
   };
   const created = Math.min(...workflows.map((run) => run.createdAt));
   const completed = Math.max(...workflows.map((run) => run.completedAt));
@@ -186,7 +214,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     createdToStartP95Seconds: Math.max(...workflows.map((run) => run.createdToStartP95Seconds)),
     shardWallMaxSeconds: Math.max(...shardTimings),
     peakObservedCheckSetJobs: peakConcurrentJobs(runs.flatMap(({ jobs }) => jobsFromPayload(jobs))),
-    workflows,
+    memory, shardPeakRssMaxBytes: memory.shardPeakRssMaxBytes, workflows,
   };
 }
 
@@ -205,7 +233,7 @@ export function compareSamples(samples) {
       const selected = group.filter((sample) => sample.shardCount === count);
       if (!selected.length) continue;
       const stats = { n: selected.length };
-      for (const metric of ['ciLatencySeconds', 'checkSetLatencySeconds', 'runnerSeconds', 'createdToStartP95Seconds']) {
+      for (const metric of ['ciLatencySeconds', 'checkSetLatencySeconds', 'runnerSeconds', 'createdToStartP95Seconds', 'shardPeakRssMaxBytes']) {
         stats[metric] = { p50: percentile(selected.map((sample) => sample[metric]), 0.5), p95: percentile(selected.map((sample) => sample[metric]), 0.95) };
       }
       configurations[count] = stats;
@@ -242,8 +270,9 @@ async function main(manifestPath) {
       const evidenceDir = resolve(base, sample.evidenceDir);
       const catalog = JSON.parse(readFileSync(resolve(evidenceDir, 'inventory.json'), 'utf8'));
       const reports = readdirSync(evidenceDir).filter((name) => /^vitest-shard-\d+-of-\d+\.json$/.test(name)).map((name) => JSON.parse(readFileSync(resolve(evidenceDir, name), 'utf8')));
+      const memoryReports = readdirSync(evidenceDir).filter((name) => /^vitest-memory-\d+-of-\d+\.json$/.test(name)).map((name) => JSON.parse(readFileSync(resolve(evidenceDir, name), 'utf8')));
       validateEvidence(catalog, reports, sample.shardCount);
-      results.push(summarizeSample({ ...sample, reports, runs: sample.runs.map((entry) => ({ run: read(entry.run), jobs: read(entry.jobs) })) }));
+      results.push(summarizeSample({ ...sample, reports, memoryReports, runs: sample.runs.map((entry) => ({ run: read(entry.run), jobs: read(entry.jobs) })) }));
     } catch (error) { rejected.push({ label: sample.label, reason: error.message }); }
   }
   console.log(JSON.stringify({ schemaVersion: 1, source: 'GitHub Actions evidence', samples: results, rejected, comparisons: results.length ? compareSamples(results) : [], caveats: [
@@ -253,6 +282,7 @@ async function main(manifestPath) {
     'loadClass is an operator observation; account-wide headroom needs separate verification.',
     'Runtime/cache/runner comparability is enforced only for Vitest shards. CI non-shard jobs and companion workflows require separate environment/cache confirmation; CI/check-set comparisons remain observational until then.',
     'No automatic promotion; validate reliability, memory, shared load and applicable checks before changing defaults.',
+    'Memory is sampled RSS summed over discovered command descendants, excluding the sensor. Shared pages can be counted repeatedly; short-lived processes and brief peaks can be missed. Per-shard maxima are not a simultaneous account/VM peak.',
   ] }, null, 2));
   if (rejected.length || !results.length) process.exitCode = 1;
 }

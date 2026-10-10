@@ -98,6 +98,7 @@ describe("docs de shards", () => {
     expect(ci).toContain("matrix: ${{ fromJSON(needs.detector.outputs.shard_matrix) }}");
     expect(ci).toContain("Vitest shard ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
     expect(ci).toContain("--shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
+    expect(ci).toContain("run: node scripts/ci/measure-vitest-memory.mjs -- bun run test -- --shard=");
     expect(ci).toContain("CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}");
     expect(ci).toContain("CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}");
     expect(ci).toContain("-of-${{ needs.detector.outputs.shard_count }}");

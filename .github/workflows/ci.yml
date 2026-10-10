@@ -274,7 +274,7 @@ jobs:
           CI_TEST_SHARD: ${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
           CI_TEST_MAX_PARALLEL: ${{ needs.detector.outputs.shard_max_parallel }}
           CI_CACHE_HIT: ${{ steps.setup.outputs.cache-hit }}
-        run: bun run test -- --shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
+        run: node scripts/ci/measure-vitest-memory.mjs -- bun run test -- --shard=${{ matrix.shard }}/${{ needs.detector.outputs.shard_count }}
 
       - name: Evidencia Vitest por shard
         if: always()

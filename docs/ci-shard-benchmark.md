@@ -77,11 +77,11 @@ para forzar cola sin coordinar previamente su alcance y consumo.
    ventana adecuada, documentando qué corrió y qué esperó. Un perfil limitado a
    tres y uno de matriz completa forman cohortes distintas. La carga declarada
    `isolated`/`shared-load` es observación humana; el script no descubre otros repos.
-7. Conservar memoria pico y preparación/importación por separado. El reporter
-   registra fases y tiempo de Vitest, no checkout/install ni RSS de todos los
-   forks. `/usr/bin/time -v` puede complementar, pero su máximo por proceso no
-   es la suma instantánea de RSS de todos los workers. Sin medición de memoria
-   no afirmar una mejora de RSS ni completar esa condición de promoción.
+7. Hacer el piloto con telemetría de memoria antes de congelar las cohortes.
+   Cada shard debe aportar el sidecar `vitest-memory-i-of-n.json` completo y
+   unido a su reporter. Si el kernel, acceso o límites del sensor impiden medir,
+   el CI funcional conserva su resultado, pero la muestra se rechaza para
+   promoción. Ver alcance, precisión y coste en la sección siguiente.
 
 ## Evidencia y análisis sin acceso remoto
 
@@ -97,9 +97,10 @@ gh api --paginate --slurp "repos/$REPO/actions/runs/$RUN/attempts/1/jobs?per_pag
 gh run download "$RUN" --repo "$REPO" --pattern 'vitest-evidence-*' --dir reports/shard-benchmark/run-123/artifacts
 ```
 
-Cada artifact contiene `inventory.json` y su archivo único de shard. Para
+Cada artifact contiene `inventory.json`, su archivo único de shard y el sidecar
+`vitest-memory-i-of-n.json`. Para
 preparar `evidence/`, comprobar que **todos** los inventory.json son idénticos
-antes de copiar uno, y copiar todos los `vitest-shard-i-of-n.json` sin
+antes de copiar uno, y copiar todos los `vitest-shard-i-of-n.json` y `vitest-memory-i-of-n.json` sin
 sobrescribir nombres. No descargar o mezclar intentos posteriores. Guardar el
 JSON original completo, incluidas todas las páginas de jobs.
 
@@ -138,7 +139,9 @@ unión exacta/disjunta, casos ejecutados y cero skips/retries/errores. La versi�
 actual de Vitest 5 llama onTestRunStart antes de repartir; selected procede
 de onTestModuleQueued, no de ese descubrimiento inicial. Exige también
 mismo run/intento, SHA, digest, lockfile, versiones y runner, cuenta y límite
-exactos de shards. Las muestras inválidas quedan en `rejected` y el proceso
+exactos de shards. Une memoria y ejecución uno-a-uno por SHA/run/intento/evento,
+coordenadas de shard y UUID generado por el wrapper. Rechaza memoria ausente,
+parcial, sólo del padre, intervalos excedidos o artifacts antiguos. Las muestras inválidas quedan en `rejected` y el proceso
 sale no-cero; no se convierten en tiempos cero ni éxitos.
 
 Cohortes separadas por SHA, inventario/casos por archivo, entorno, cache class,
@@ -166,6 +169,66 @@ Métricas:
   p95 de esos valores (máximo por muestra si hay companions).
 - Pico de jobs: sólo los jobs observados del run, con intervalos semiabiertos.
   No se confunde con el pico total de la cuenta ni el límite de 20.
+
+## Memoria: alcance y límites explícitos
+
+`node scripts/ci/measure-vitest-memory.mjs -- bun run test -- --shard=i/n`
+ejecuta exactamente los mismos argumentos de Bun/Vitest con stdio heredado.
+Mantiene dos workers, pool forks, aislamiento y el gate de PR1. Añade sólo el
+UUID `CI_MEMORY_MEASUREMENT_ID` para unir la ejecución con su sidecar; no guarda
+el resto del entorno ni argumentos del comando.
+
+La métrica `discovered-process-tree-rss-sum-sampled` suma VmRSS de Linux para
+el comando y descendientes descubiertos a través de `task/*/children`, en todos
+sus hilos. No busca procesos por nombre, escanea procesos ajenos ni lee
+`environ`, `cmdline`, mapas o memoria de aplicación. Sigue descendientes conocidos
+tras reparenting y comprueba start ticks para evitar reutilización de PID.
+Si falta `children` para un hilo vivo o no puede leer un descendiente, falla el
+sensor; **no sustituye por RSS del padre**.
+
+Muestrea cada 250 ms, sin lecturas solapadas; máximo 512 procesos, 4.096 hilos,
+50 ms por recorrido y gap observado máximo de 1.000 ms. Superar los límites
+invalida la evidencia y un fallo de lectura detiene el sensor. Se registra el
+número de muestras, mayor gap, carreras de salida, tiempo de muestreo, CPU y RSS
+máximo del propio sensor (estos dos últimos son contadores del wrapper, no de
+Vitest). Revisar su coste en el piloto; no extrapolarlo desde mocks locales.
+
+`status: complete` significa que se completó la **ventana de muestreo** sin
+fallos detectados, no que se haya obtenido un pico continuo exacto. Los
+contadores RSS y las lecturas del árbol son aproximados/no atómicos; los procesos
+que nacen y terminan entre muestras, picos de menos de 250 ms y descendientes
+reparentados antes de descubrirlos pueden no observarse. Las páginas compartidas
+se suman en cada proceso: RSS agregado no equivale a memoria física única,
+memoria de VM/cgroup, heap de JS ni memoria de toda la cuenta. El sensor queda
+excluido de la suma de Vitest. No se suman máximos de shards independientes:
+`shardPeakRssMaxBytes` es el mayor pico **observado** de un shard en su propio
+runner; el contraste informa p50/p95 de ese valor con método/intervalo idénticos.
+
+Cada ejecución empieza con sidecar `running` y termina con escritura atómica.
+Un SIGKILL abrupto puede dejar `running` o ningún sidecar, ambos rechazados; no
+se puede instalar un handler para SIGKILL. SIGINT/SIGTERM/SIGHUP se propagan al
+grupo propio del comando y se conservan como señal final del wrapper, incluso
+si el comando atrapa la señal y sale cero. Después de un segundo se fuerza la
+salida del grupo que ignore la cancelación. Descendientes del grupo vivos al
+terminar el comando se limpian y la evidencia se invalida; su exit code original
+no se convierte en éxito ni cambia por un fallo del sensor. Un proceso que se
+separa deliberadamente de ese grupo está fuera de la garantía de cleanup;
+Vitest/Bun de este contrato no deben daemonizarse.
+Un descendiente ya descubierto que sobreviva fuera del grupo también invalida
+la evidencia, aunque su PID no se use para ampliar la limpieza fuera del grupo.
+Otras señales de terminación del comando usan el código de shell 128+señal,
+con la señal original en el sidecar, para no activar señales reservadas de Node
+(por ejemplo SIGUSR1 y su debugger).
+
+El analizador exige datos completos y válidos, pero **no inventa un presupuesto
+de memoria** ni automatiza la promoción. Revisar los máximos observados,
+variabilidad, errores/OOM y margen real del runner antes de decidir. La
+comparación seguirá limitada por los picos que el muestreo no puede ver.
+El máximo por proceso de `/usr/bin/time -v` tampoco sustituye esta suma.
+
+Fuentes oficiales: [proc de Linux](https://www.kernel.org/doc/html/latest/filesystems/proc.html),
+[grupos y señales de procesos Node](https://nodejs.org/api/child_process.html#optionsdetached),
+[señales y resourceUsage de Node](https://nodejs.org/api/process.html).
 
 ## Decisión y rollback
 

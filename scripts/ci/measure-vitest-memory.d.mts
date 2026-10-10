@@ -1,0 +1,4 @@
+export const MEMORY_METHOD: Readonly<{ metric: string; version: number; source: string; intervalMs: number; maxGapMs: number; maxSampleMs: number; maxProcesses: number; maxTasks: number; scope: string }>;
+export function parseIdentity(stat: string): { parent: number; start: string; state: string };
+export function createTreeSampler(rootPid: number, options?: { read?: (path: string, encoding: string) => string; list?: (path: string) => string[]; now?: () => number }): () => { rssBytes: number; processCount: number; taskCount: number; exitRaces: number; durationMs: number };
+export function measureCommand(command: string[], options?: { env?: NodeJS.ProcessEnv; platform?: NodeJS.Platform; samplerFactory?: typeof createTreeSampler; write?: (file: string, value: unknown) => void; now?: () => number }): Promise<{ code: number | null; signal: NodeJS.Signals | null; report: Record<string, unknown> }>;
