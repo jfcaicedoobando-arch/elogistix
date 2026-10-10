@@ -36,6 +36,7 @@ function wizard(currentStep: number) {
     currentStep, form: result.current, costosInternos: [costo], tasaIva: 0.16,
     conceptosUSD: [venta, manualUSD], conceptosMXN: [manualMXN], costosPreLlenados: true,
     isEditMode: true, setCurrentStep: vi.fn(), cotizacionId: "cot-1", setCotizacionId: vi.fn(),
+    origenesCostosConfirmados: new Set(["cost-A"]),
     isPending: false, costosDesajuste: null, setCostosDesajuste: vi.fn(),
     msdsFile: null, setMsdsFile: vi.fn(), esMaritimo: true, esAereo: false, clienteSeleccionado: undefined,
     handleCambiarTipoEmbarque: vi.fn(), actualizarConcepto: vi.fn(), agregarConcepto: vi.fn(),

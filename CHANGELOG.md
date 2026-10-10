@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.824.71] - Unreleased
+
+- Pricing/cotización: permite recuperar explícitamente los conceptos de venta desde los costos conservados al editar un borrador vacío. Mantiene sus orígenes estables y no restaura automáticamente renglones que el usuario decidió quitar.
+- La recuperación usa el tipo de cambio explícito del borrador cuando hay monedas distintas. La ficha orienta a editar la cotización si falta ese dato; el campo rechaza valores negativos sin convertirlos en positivos.
+- Agrega regresiones de recuperación, tipo de cambio, reintento y linaje. Sin SQL, migraciones ni cambios de permisos; conserva el inventario de 1,518 migraciones y todos los registros históricos. CI y validación de la interfaz publicada se verifican por separado.
+
 ## [13.824.70] - Unreleased
 
 - Pricing/cotización: compara el contenedor por identidad de catálogo (UUID, código y nombres equivalentes), conserva la precarga al elegir FCL por primera vez y mantiene la limpieza ante cambios reales FCL/LCL. Explica cuándo el catálogo no permite comprobar la coincidencia, sin ocultar discrepancias reales.

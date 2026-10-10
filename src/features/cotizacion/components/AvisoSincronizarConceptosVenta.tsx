@@ -124,9 +124,17 @@ export function AvisoSincronizarConceptosVenta({
               : " Un usuario de ventas u operación debe regenerar los conceptos de venta desde los costos."}
         </p>
         {puedeSincronizar && !estadoInmutable && (
-          <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
-          </Button>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => void handleSync()} loading={update.isPending}>
+                <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar conceptos de venta desde costos
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <a href={`/cotizaciones/${cotizacionId}/editar`}>Editar cotización y revisar conceptos</a>
+              </Button>
+            </div>
+            <p>Si falta el tipo de cambio de Pricing, abre Editar, ve a Cliente y elige «Preparar conceptos desde costos». Revisa los conceptos y captura el tipo de cambio antes de guardar.</p>
+          </div>
         )}
       </AlertDescription>
     </Alert>

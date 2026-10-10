@@ -20,6 +20,7 @@ import { useInvalidarTarifaAutomatica } from "./useInvalidarTarifaAutomatica";
 import { useCambiarTipoEmbarque } from "./useCambiarTipoEmbarque";
 import type { DesajusteCostos } from "@/features/cotizacion/domain/costosAutoGenerados";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
+import { useCostosOrigenConfirmado } from "./useCostosOrigenConfirmado";
 import { useCotizacionUpdateGuard } from "@/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard";
 
 // Re-exports para preservar la API pública existente
@@ -81,9 +82,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   // fila nueva; sin eso el segundo guardado del mismo usuario daba un conflicto
   // falso (la base firma la fila al insertarla).
   const updateGuardado = useCotizacionUpdateGuard(updateCotizacion, initialData?.updated_at, crearCotizacion);
+  const costosGuardados = useCostosOrigenConfirmado(upsertCostos, initialCostos);
   const mutationsGuardadas = {
     ...mutations,
     updateCotizacion: updateGuardado,
+    upsertCostos: costosGuardados.mutation,
     crearCotizacion: updateGuardado.crearCotizacion ?? crearCotizacion,
   };
 
@@ -173,6 +176,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
 
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
     costosDesajuste, setCostosDesajuste,
+    origenesCostosConfirmados: costosGuardados.origenes,
     msdsFile, setMsdsFile,
     esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,

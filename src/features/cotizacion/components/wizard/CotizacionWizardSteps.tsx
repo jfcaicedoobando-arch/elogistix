@@ -6,6 +6,7 @@
  * `useWatch` por campo para evitar re-renders del wizard completo al teclear.
  */
 import { VincularVentasHeredadas } from "./VincularVentasHeredadas";
+import { RecuperarConceptosDesdeCostos } from "./RecuperarConceptosDesdeCostos";
 import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWatch } from "react-hook-form";
@@ -81,6 +82,12 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
       {w.currentStep === 3 && (
         <>
           {sinDesgloseFlag && <SinDesgloseBanner onCargarCostos={irACargarCostos} />}
+          <RecuperarConceptosDesdeCostos esEdicion={w.isEditMode} pricingSolicitudId={pricingSolicitudId}
+              origenesConfirmados={w.origenesCostosConfirmados} onIrACostos={() => w.setCurrentStep(2)} costos={w.costosInternos} ventas={[...w.conceptosUSD, ...w.conceptosMXN]} tasaIva={w.tasaIva}
+              onPreparar={ventas => {
+                w.setConceptosUSD(ventas.filter(v => v.moneda === "USD"));
+                w.setConceptosMXN(ventas.filter(v => v.moneda === "MXN"));
+              }} />
           <VincularVentasHeredadas costos={w.costosInternos} ventas={[...w.conceptosUSD, ...w.conceptosMXN]} tasaIva={w.tasaIva}
             onVincular={(costos, ventas) => {
               w.setCostosInternos(costos);
