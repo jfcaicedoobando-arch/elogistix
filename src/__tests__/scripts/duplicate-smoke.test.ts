@@ -17,8 +17,7 @@ describe("smoke de duplicar cotización: aceptación estricta", () => {
   it.each(["PGRST202", "42501", "42703", "42883", "P0001"])("rechaza código %s", code => {
     expect(validate(404, JSON.stringify({ ...missing, code }))).toBe(1);
   });
-  it.each(["<html>unavailable</html>", "", "null", "[]", "{}", '{"code":"P0002","message":"otro error"}'])
-  ("rechaza payload inesperado: %s", payload => {
+  it.each(["<html>unavailable</html>", "", "null", "[]", "{}", '{"code":"P0002","message":"otro error"}'])("rechaza payload inesperado: %s", payload => {
     expect(validate(404, payload)).toBe(1);
   });
 });
