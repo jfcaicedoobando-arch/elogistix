@@ -77,7 +77,7 @@ export function useCotizacionWizardSteps({
         // A1/A7 (13.823.159): la moneda del vínculo CRM (o la ya persistida)
         // es el respaldo cuando la venta queda en cero; antes se guardaba USD.
         // 13.823.281: el TC de la cotización sólo se usa si hay mezcla USD+MXN.
-        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), monedaFallback: form.getValues("monedaCrm"), tipoCambioUsd: tipoCambioUsd ?? null, mutations: { updateCotizacion } });
+        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), monedaFallback: form.getValues("monedaCrm"), conservarMoneda: Boolean(form.getValues("pricingSolicitudId")), tipoCambioUsd: tipoCambioUsd ?? null, mutations: { updateCotizacion } });
       }
       setCurrentStep(4);
     } catch (e: unknown) {
@@ -123,7 +123,7 @@ export function useCotizacionWizardSteps({
       // Una sola mutación conserva el candado optimista y evita éxitos parciales.
       await savePasoFinal({
         cotizacionId, isEditMode, estadoActual: estadoInicial,
-        venta: { conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), monedaFallback: form.getValues("monedaCrm"), tipoCambioUsd: tipoCambioUsd ?? null },
+        venta: { conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), monedaFallback: form.getValues("monedaCrm"), conservarMoneda: Boolean(form.getValues("pricingSolicitudId")), tipoCambioUsd: tipoCambioUsd ?? null },
         mutations: { updateCotizacion }, registrarActividad: registrarActividad.mutate,
       });
       notifySuccess(undefined, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });

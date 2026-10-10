@@ -34346,7 +34346,36 @@ CREATE FUNCTION public.trg_cotizacion_subtotal_server() RETURNS trigger
 DECLARE
   v_t record;
   v_n int;
+  v_extranjero numeric;
 BEGIN
+  IF NEW.pricing_solicitud_id IS NOT NULL THEN
+    IF NEW.moneda IS NULL OR NEW.moneda::text NOT IN ('USD', 'MXN') THEN
+      RAISE EXCEPTION 'LC_COT_PRICING_MONEDA_INVALIDA' USING ERRCODE='22023';
+    END IF;
+    -- Existing canonical helper validates concepts and rounds each sales line
+    -- before summing each currency. IVA never enters the header subtotal.
+    SELECT * INTO v_t FROM public.cotizacion_totales_conceptos(NEW.conceptos_venta);
+    IF v_t.subtotal_usd::text IN ('NaN','Infinity','-Infinity')
+       OR v_t.subtotal_mxn::text IN ('NaN','Infinity','-Infinity') THEN
+      RAISE EXCEPTION 'LC_COTIZACION_CONCEPTO_INVALIDO: subtotal no finito'
+        USING ERRCODE='23514';
+    END IF;
+    v_extranjero := CASE WHEN NEW.moneda::text='USD'
+      THEN v_t.subtotal_mxn ELSE v_t.subtotal_usd END;
+    IF v_extranjero <> 0 AND (NEW.tipo_cambio_usd IS NULL
+       OR NEW.tipo_cambio_usd <= 0
+       OR NEW.tipo_cambio_usd::text IN ('NaN','Infinity','-Infinity')) THEN
+      RAISE EXCEPTION 'LC_COT_PRICING_TC_REQUERIDO' USING ERRCODE='22023';
+    END IF;
+    NEW.subtotal := ROUND(CASE WHEN NEW.moneda::text='USD'
+      THEN v_t.subtotal_usd + CASE WHEN v_extranjero=0 THEN 0
+                                 ELSE v_t.subtotal_mxn / NEW.tipo_cambio_usd END
+      ELSE v_t.subtotal_mxn + CASE WHEN v_extranjero=0 THEN 0
+                                 ELSE v_t.subtotal_usd * NEW.tipo_cambio_usd END
+    END, 2);
+    RETURN NEW;
+  END IF;
+  -- Unchanged legacy behavior for quotations without Pricing lineage.
   v_n := CASE WHEN jsonb_typeof(NEW.conceptos_venta) = 'array'
               THEN jsonb_array_length(NEW.conceptos_venta) ELSE 0 END;
   IF v_n = 0 THEN
@@ -38066,6 +38095,7 @@ CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas
 CREATE TRIGGER trg_cotizacion_oportunidad_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizacion_oportunidad_misma_org();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cotizaciones_bloquear_envio_sin_importes BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_importes();
+CREATE TRIGGER trg_cotizaciones_calcular_pricing_tc BEFORE UPDATE OF tipo_cambio_usd ON public.cotizaciones FOR EACH ROW WHEN (((new.pricing_solicitud_id IS NOT NULL) AND (new.tipo_cambio_usd IS DISTINCT FROM old.tipo_cambio_usd))) EXECUTE FUNCTION public.trg_cotizacion_subtotal_server();
 CREATE TRIGGER trg_cotizaciones_envio_sin_oportunidad BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad();
 CREATE TRIGGER trg_cotizaciones_guard_en_operacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
 CREATE TRIGGER trg_cotizaciones_sod_aceptacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_auto_aceptacion();
@@ -38099,6 +38129,7 @@ CREATE TRIGGER trg_crm_reportes_guard BEFORE INSERT OR UPDATE ON public.crm_repo
 CREATE TRIGGER trg_crm_sol_pricing_ins BEFORE INSERT ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_ins();
 CREATE TRIGGER trg_crm_sol_pricing_upd BEFORE UPDATE ON public.crm_solicitudes_pricing FOR EACH ROW EXECUTE FUNCTION public._crm_sol_pricing_before_upd();
 CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id, conceptos_venta ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
+CREATE TRIGGER trg_crm_sync_pricing_tc AFTER UPDATE OF tipo_cambio_usd ON public.cotizaciones FOR EACH ROW WHEN (((new.pricing_solicitud_id IS NOT NULL) AND (new.tipo_cambio_usd IS DISTINCT FROM old.tipo_cambio_usd))) EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_crm_tableros_touch BEFORE UPDATE ON public.crm_tableros FOR EACH ROW EXECUTE FUNCTION public._crm_tableros_touch();
 CREATE TRIGGER trg_crm_validar_motivo_perdida BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_validar_motivo_perdida();
 CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._cuenta_bancaria_guard_baja();

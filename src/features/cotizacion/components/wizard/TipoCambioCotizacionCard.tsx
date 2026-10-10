@@ -1,8 +1,8 @@
 /**
  * 13.823.281 — Tipo de cambio de la cotización (paso 3).
  *
- * Sólo se muestra cuando la cotización mezcla conceptos en USD y en MXN: en ese
- * caso el encabezado necesita UNA moneda y el TC congelado permite calcularlo.
+ * Se muestra cuando hay mezcla o una venta en divisa distinta de la cabecera
+ * fija de Pricing; el TC explícito permite calcular el subtotal canónico.
  * Los conceptos NO se convierten: cada renglón conserva su moneda e importe.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +19,10 @@ interface Props {
   /** TC USD/MXN capturado en la cotización (`null` = sin capturar). */
   value: number | null;
   onChange: (v: number | null) => void;
+  monedaCanonica?: string | null;
 }
 
-export function TipoCambioCotizacionCard({ value, onChange }: Props) {
+export function TipoCambioCotizacionCard({ value, onChange, monedaCanonica }: Props) {
   const hoy = hoyMx();
   const { data: dof, isFetching } = useTcDofPorFecha(hoy);
   // Texto crudo mientras se teclea: sin esto, "18." se renderiza como "18"
@@ -53,9 +54,10 @@ export function TipoCambioCotizacionCard({ value, onChange }: Props) {
         <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-foreground">
           <AlertTriangle className="size-4 mt-0.5 shrink-0" />
           <span>
-            Esta cotización tiene conceptos en USD y en MXN. Captura el tipo de cambio para
-            calcular el total del encabezado en una sola moneda. Los importes de cada concepto
-            se conservan en su moneda original.
+            {monedaCanonica
+              ? `La moneda de Pricing es ${monedaCanonica}. Captura el tipo de cambio para calcular el subtotal del encabezado en esa moneda.`
+              : "Esta cotización tiene conceptos en USD y en MXN. Captura el tipo de cambio para calcular el total del encabezado en una sola moneda."}
+            {" "}Los importes de cada concepto se conservan en su moneda original.
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[16rem_1fr] items-end gap-3">

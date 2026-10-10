@@ -38,6 +38,7 @@ interface Props {
 function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
   return {
     concepto: c.concepto ?? "",
+    origen_venta_id: c.origen_venta_id,
     moneda: c.moneda,
     proveedor: c.proveedor ?? "",
     cantidad: Number(c.cantidad) || 1,
@@ -90,6 +91,7 @@ export function AvisoSincronizarConceptosVenta({
         conceptosJson,
         sello.moneda,
         sello.tipoCambioUsd,
+        Boolean(sello.pricingSolicitudId),
       );
       await update.mutateAsync({
         id: cotizacionId,

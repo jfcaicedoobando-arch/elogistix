@@ -256,3 +256,4 @@ supabase/tests/insurance_trash_restore.sql
 # Read-only disabled selector contract; behavioral/DDL proofs run serially in owned clones.
 supabase/tests/selector148_enabled_gate.sql
 supabase/tests/audit147_comparador_moneda_tramo.sql
+supabase/tests/pricing_subtotal_moneda_canonica.sql
