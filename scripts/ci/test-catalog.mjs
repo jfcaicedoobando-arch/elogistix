@@ -43,7 +43,9 @@ export function classifyFiles(files, guards, sqlSupport) {
         if (typeof reason !== 'string' || !reason.trim()) throw new Error(`Missing SQL support rationale: ${file}`);
       }
     } else if (candidate.test(file)) {
-      if (/^(src|scripts)\//.test(file) && normal.test(file) && !perf.test(file)) lane = 'vitest-normal';
+      // Exact npm-test target; unrelated/new CJS tests must still fail closed.
+      if (file === 'scripts/ci/selector148/tests/profile.test.cjs') lane = 'node-selector148';
+      else if (/^(src|scripts)\//.test(file) && normal.test(file) && !perf.test(file)) lane = 'vitest-normal';
       else if (file.startsWith('src/') && perf.test(file)) { lane = 'vitest-perf'; mode = 'manual'; }
       else if (/^tests\/pdf\/.+\.test\.tsx$/.test(file)) {
         lane = 'pdf-real'; mode = file === 'tests/pdf/carteraPagination.test.tsx' ? 'automatic' : 'manual';

@@ -1,10 +1,12 @@
 // Serial installer/mutation proofs. No production database or parallel guard pool.
 const {Client}=require('pg');
-const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),cp=require('node:child_process');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process');
 const {root,guard,locate,readState,writeState,identifier,literal}=require('./control.cjs');
 guard(); const state=readState(); assert.equal(state.installer,locate());
 const cfg={ssl:false}, clients=[]; let tests=[];
 const E=path.join(root,'.selector148-logs'); fs.mkdirSync(E,{recursive:true});
+const profile=require('./profile.cjs').createProfile();
+const save=require('./evidence.cjs').createEvidenceWriter(E,profile);
 const installer=fs.readFileSync(path.join(root,state.installer),'utf8');
 require('./installer.cjs').verifyInstaller(installer);
 // Variants are derived only from the SHA-verified registered disabled body.
@@ -13,7 +15,7 @@ const {installEnabled,disabledFunctionSql}=variants(installer);
 // Every existing enablement/mutation proof now uses the exact release forward.
 const enableSql=require('./activation.cjs').verifyActivation(installer);
 let admin;
-async function clone(label,template=state.parent) {
+async function clone(label,template=state.parent) {return profile.async('database.clone',async()=>{
   assert(/^[a-z0-9_]+$/.test(label)); assert(state.databases.includes(template));
   const db=state.parent.replace(/_parent$/,'_'+label); assert(db.length<=63);
   const owner=(await admin.query("SELECT shobj_description(oid,'pg_database') marker,pg_get_userbyid(datdba) owner FROM pg_database WHERE datname=$1",[template])).rows[0];
@@ -21,11 +23,9 @@ async function clone(label,template=state.parent) {
   await admin.query('CREATE DATABASE '+identifier(db)+' TEMPLATE '+identifier(template));
   await admin.query('COMMENT ON DATABASE '+identifier(db)+' IS '+literal(state.marker));
   state.databases.push(db);writeState(state);return db;
-}
+});}
 const U=n=>'00000000-0000-4000-9000-'+String(n).padStart(12,'0'),A=U(1),B=U(2),UA=U(11),UB=U(12);
-const read=p=>fs.readFileSync(path.join(__dirname,p),'utf8'),hash=s=>crypto.createHash('sha256').update(typeof s==='string'?s:JSON.stringify(s)).digest('hex');
-const snapshots={};
-const save=(n,o)=>{const raw=JSON.stringify(o,null,2)+'\n';if(n.startsWith('snapshot-')){const bytes=require('node:zlib').gzipSync(raw,{level:1});fs.writeFileSync(path.join(E,n+'.json.gz'),bytes);snapshots[n]={raw_sha256:hash(raw),gzip_sha256:crypto.createHash('sha256').update(bytes).digest('hex'),raw_bytes:Buffer.byteLength(raw),gzip_bytes:bytes.length};fs.writeFileSync(path.join(E,'snapshot-manifest.json'),JSON.stringify(snapshots,null,2)+'\n')}else fs.writeFileSync(path.join(E,n+'.json'),raw)};
+const read=p=>fs.readFileSync(path.join(__dirname,p),'utf8');
 const pass=(n,detail)=>{tests.push({name:n,status:'PASS',detail});console.log('PASS '+n);save('proof-progress',tests)};
 const fks=[['pfc_pf_same_org_fk','proveedor_facturas_conceptos','proveedor_factura_id','proveedor_facturas','c'],['pfc_cc_same_org_fk','proveedor_facturas_conceptos','concepto_costo_id','conceptos_costo','n'],['cc_shipment_same_org_fk','conceptos_costo','embarque_id','embarques','c'],['pf_shipment_same_org_fk','proveedor_facturas','embarque_id','embarques','n'],['insurance_pf_same_org_fk','seguros_embarque','proveedor_factura_id','proveedor_facturas','r'],['insurance_shipment_same_org_fk','seguros_embarque','embarque_id','embarques','c']];
 async function c(db) {
@@ -46,7 +46,7 @@ for(const [o,cl,pr,cat] of [[A,21,31,41],[B,22,32,42]]){await q.query("INSERT IN
 await ship(q,101);await ship(q,102,B);await ship(q,103);await pf(q,201,U(101));await pf(q,202,U(102),B);await pf(q,203);await cc(q,301,U(101));await cc(q,302,U(102),B);await pfc(q,401,U(201),U(301));await pfc(q,402,U(203));await insurance(q,501,U(101),U(201));await insurance(q,502,U(101));await insurance(q,503,U(101),U(201),A,'2026-01-01');}
 
 // Complete raw snapshots are compared only inside the same replay lineage.
-async function snap(q,tag){const out={};for(const k of ['catalog','procs','relations','columns','structure','roles','effective','triggers','data']){if(k==='data')await q.query('DROP FUNCTION IF EXISTS pg_temp.snapshot_data()');let r=await q.query(read('fixtures/'+k+'.sql'));if(Array.isArray(r))r=r.at(-1);out[k]=JSON.parse(r.rows[0].jsonb_pretty)}save('snapshot-'+tag,out);return out}
+const snap=require('./snapshots.cjs').createSnapshotter({read,save,profile});
 const signature='seguro_facturas_elegibles(uuid,numeric,text,uuid,integer,date,uuid)';
 function preserved(a,b){for(const k of ['columns','roles','data'])assert.deepEqual(b[k],a[k],k+' changed');for(const k of ['catalog','effective'])assert.deepEqual(b[k].filter(x=>x.signature!==signature),a[k].filter(x=>x.signature!==signature),k+' changed');assert.deepEqual(b.procs.filter(x=>x.proname!=='seguro_facturas_elegibles'),a.procs.filter(x=>x.proname!=='seguro_facturas_elegibles'),'existing raw pg_proc changed');
 assert.deepEqual(b.relations.policies,a.relations.policies);assert.deepEqual(b.relations.default_acl,a.relations.default_acl);assert.deepEqual(b.relations.relations.filter(x=>x.name!=='conceptos_costo_id_org_uniq'),a.relations.relations.filter(x=>x.name!=='conceptos_costo_id_org_uniq'));
@@ -58,17 +58,17 @@ async function ready(q){return (await q.query('SELECT '+read('fixtures/integrity
 
 const expectations=require('./expectations.json');
 const extractNotices=log=>[...log.matchAll(/NOTICE:\s+(?:[A-Z0-9]{5}:\s+)?(PASS(?::| SELECTOR148:).*)/g)].map(m=>m[1]);
-function sqlFile(db,label,file,profile,zone='UTC',variables={}) {
+function sqlFile(db,label,file,noticeProfile,zone='UTC',variables={}) {
   assert(state.databases.includes(db));
   const args=['-X','-q','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose'];
   for(const [key,value] of Object.entries(variables))args.push('-v',key+'='+value);
   args.push('-f',path.join(__dirname,file));
-  const p=cp.spawnSync('psql',args,{cwd:root,encoding:'utf8',env:{...process.env,PGDATABASE:db,PGSSLMODE:'disable',PGOPTIONS:'-c statement_timeout=120000 -c lock_timeout=5000 -c timezone='+zone},maxBuffer:1e7});
+  const p=profile.sync('process.psql',()=>cp.spawnSync('psql',args,{cwd:root,encoding:'utf8',env:{...process.env,PGDATABASE:db,PGSSLMODE:'disable',PGOPTIONS:'-c statement_timeout=120000 -c lock_timeout=5000 -c timezone='+zone},maxBuffer:1e7}));
   const log=(p.stdout??'')+(p.stderr??'');fs.writeFileSync(path.join(E,label+'.log'),log);
   save(label+'.process',{exit:p.status,signal:p.signal??null,error:p.error?.message??null});
   assert.equal(p.status,0,label+': '+log.slice(-4000));assert.equal(p.signal,null);assert.equal(p.error,undefined);
   assert(!/\b(?:ERROR|FATAL|PANIC):/.test(log));
-  if(profile)assert.deepEqual(extractNotices(log),expectations[profile]);
+  if(noticeProfile)assert.deepEqual(extractNotices(log),expectations[noticeProfile]);
   return log;
 }
 async function failedInstall(q,tag,expected){const before=await snap(q,tag+'-before');let err;try{await q.query(installEnabled)}catch(e){err=e;await q.query('ROLLBACK')}assert.equal(err?.code,'23503',tag+': '+err?.message);assert.equal(err.constraint,expected);assert.deepEqual(await snap(q,tag+'-after'),before);assert.equal(await ready(q),false);assert.equal((await q.query("SELECT count(*)::int n FROM pg_constraint WHERE conname=ANY($1)",[fks.map(x=>x[0])])).rows[0].n,0);pass(tag+': full atomic install/validation/enablement rollback with all historical bytes unchanged',{code:err.code,constraint:err.constraint});}
@@ -176,7 +176,7 @@ q=await c(await clone('history_nan',control));await pf(q,820);await pfc(q,920,U(
 // Rollback also after all constraints, function creation and grants have succeeded.
 q=await c(await clone('late_abort',control));let before=await snap(q,'late-abort-before');let late;try{await q.query(installEnabled.replace(/^COMMIT;$/m,"DO $lateabort$ BEGIN RAISE EXCEPTION 'synthetic late abort'; END $lateabort$;\nCOMMIT;"))}catch(e){late=e;await q.query('ROLLBACK')}assert.equal(late?.message,'synthetic late abort');assert.deepEqual(await snap(q,'late-abort-after'),before);pass('post-grant synthetic late failure rolls back constraints, unique key, function, ACL and all data');await close(q);
 const concurrencyDb=await clone('concurrency',forward);
-const child=cp.spawnSync(process.execPath,[path.join(__dirname,'concurrency.cjs'),concurrencyDb],{cwd:root,encoding:'utf8',env:process.env,maxBuffer:1e7});
+const child=profile.sync('process.concurrency',()=>cp.spawnSync(process.execPath,[path.join(__dirname,'concurrency.cjs'),concurrencyDb],{cwd:root,encoding:'utf8',env:process.env,maxBuffer:1e7}));
 fs.writeFileSync(path.join(E,'concurrency.log'),(child.stdout??'')+(child.stderr??''));save('concurrency.process',{exit:child.status,signal:child.signal??null,error:child.error?.message??null});
 assert.equal(child.status,0);assert.equal(child.signal,null);assert.equal(child.error,undefined);
 assert.match(child.stdout,/PASS 6 existing writer races/);assert.match(child.stdout,/1 exact parent-tenant FK rejection and 2 controlled interruptions/);
@@ -189,4 +189,7 @@ pass('10001 committed candidates in 41 batches at max_locks=64 reject without pa
 // Restore and verify disabled state in all test-activated lineages before teardown.
 for(const db of [forward,freshDb,gates,concurrencyDb]){q=await c(db);await q.query(disabledFunctionSql);enableContract(await snap(q,db+'-disabled-final'),false);await close(q);sqlFile(db,db+'-disabled-final','tests/disabled-gate.sql');}
 save('result',{status:'PASS',tests,structural_cases:gateProofs.length,activation_admission_cases:admissionProofs.length,activation_migration:require('./activation-contract.json'),remote_or_real_data:false});
-})().catch(e=>{console.error(e);save('failure',{message:e.message,code:e.code,stack:e.stack,tests_completed:tests.length});process.exitCode=1;}).finally(async()=>{for(const q of clients){try{await q.query('ROLLBACK');await q.end()}catch{}}});
+})().catch(e=>{process.exitCode=1;console.error(e);save('failure',{message:e.message,code:e.code,stack:e.stack,tests_completed:tests.length});}).finally(async()=>{
+  await profile.async('database.close',async()=>{for(const q of clients){try{await q.query('ROLLBACK');await q.end()}catch{}}});
+  profile.writeReport(path.join(E,'profile.json'),process.exitCode?'FAIL':'PASS',{snapshot_transport:'jsonb_pretty',node:process.versions.node,source_sha:/^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA||'')?process.env.GITHUB_SHA:null});
+});
