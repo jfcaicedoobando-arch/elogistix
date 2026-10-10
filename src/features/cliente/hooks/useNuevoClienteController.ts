@@ -8,8 +8,7 @@ import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { normalizarRazonSocial } from "@/lib/text/razonSocial";
-import { cpLooksValid, emailLooksValid, rfcLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
+import { isClienteStep1Valid, mergeClienteCsf } from "./nuevoClienteFormState";
 import { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE, type ClienteForm, type ModoAlta } from "./useNuevoClienteController.constants";
 export { DOC_CSF, DOCS_OBLIGATORIOS, EMPTY_CLIENTE } from "./useNuevoClienteController.constants";
 export type { ClienteForm, ModoAlta } from "./useNuevoClienteController.constants";
@@ -45,25 +44,7 @@ export function useNuevoClienteController(onClose: () => void) {
       [field]: field === "nombre" ? value.toLocaleUpperCase("es-MX") : value,
     }));
 
-  // B-024 · email/teléfono/contacto son NOT NULL en BD (trigger NULLIF('')→NULL
-  // provocaba 23502 crudo). Los exigimos aquí para bloquear el paso 1.
-  // v13.823.77 — el correo además debe tener forma válida: antes "Siguiente"
-  // avanzaba con "qa.cliente@" y el alta fallaba al final.
-  const isStep1Valid = () =>
-    Boolean(
-      form.nombre.trim() &&
-      rfcLooksValid(form.rfc) &&
-      cpLooksValid(form.cp) &&
-      form.regimen_fiscal.trim() &&
-      form.uso_cfdi_default.trim() &&
-      form.forma_pago_default.trim() &&
-      form.metodo_pago_default.trim() &&
-      emailLooksValid(form.email) &&
-      form.telefono.trim() &&
-      form.contacto.trim()
-    );
-
-
+  const isStep1Valid = () => isClienteStep1Valid(form);
 
   // El archivo seleccionado es la única fuente del checklist, incluso si falla la extracción.
   const documentos: DocumentoChecklist[] = step === 2 ? DOCS_OBLIGATORIOS.map(nombre => ({
@@ -166,17 +147,7 @@ export function useNuevoClienteController(onClose: () => void) {
     try {
       const datos = await parseCsf(file);
       if (request !== parseRequest.current) return;
-      setForm(prev => ({
-        ...prev,
-        nombre: normalizarRazonSocial(datos.nombre) || prev.nombre,
-
-        rfc: datos.rfc || prev.rfc,
-        cp: datos.cp || prev.cp,
-        direccion: datos.direccion || prev.direccion,
-        ciudad: datos.ciudad || prev.ciudad,
-        estado: datos.estado || prev.estado,
-        regimen_fiscal: datos.regimen_fiscal || prev.regimen_fiscal,
-      }));
+      setForm(prev => mergeClienteCsf(prev, datos));
 
       setCsfParsed(true);
       notifySuccess(undefined, {
