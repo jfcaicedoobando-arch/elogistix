@@ -10,8 +10,34 @@ vi.mock("@/features/cliente/services/clienteDocumentos", () => ({ subirDocumento
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: mock.success, notifyError: mock.error }));
 
 const pdf = (name = "synthetic.pdf") => new File(["%PDF-1.4\n% synthetic test fixture\n%%EOF"], name, { type: "application/pdf" });
-function event(file?: File) {
-  return { target: { files: file ? [file] : [], value: "" } } as ChangeEvent<HTMLInputElement>;
+function event(file?: File): ChangeEvent<HTMLInputElement> {
+  const input = document.createElement("input");
+  input.type = "file";
+  const files: FileList = {
+    length: file ? 1 : 0,
+    item: index => index === 0 ? file ?? null : null,
+    [Symbol.iterator]: () => (file ? [file] : []).values(),
+  };
+  if (file) files[0] = file;
+  Object.defineProperty(input, "files", { value: files });
+  const nativeEvent = new Event("change", { bubbles: true });
+  return {
+    target: input,
+    currentTarget: input,
+    nativeEvent,
+    bubbles: nativeEvent.bubbles,
+    cancelable: nativeEvent.cancelable,
+    defaultPrevented: nativeEvent.defaultPrevented,
+    eventPhase: nativeEvent.eventPhase,
+    isTrusted: nativeEvent.isTrusted,
+    preventDefault: () => nativeEvent.preventDefault(),
+    isDefaultPrevented: () => nativeEvent.defaultPrevented,
+    stopPropagation: () => nativeEvent.stopPropagation(),
+    isPropagationStopped: () => nativeEvent.cancelBubble,
+    persist: () => {},
+    timeStamp: nativeEvent.timeStamp,
+    type: nativeEvent.type,
+  };
 }
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -168,7 +194,7 @@ describe("single CSF selection across client wizard", () => {
     const { result } = setup();
     const file = pdf();
     const inputEvent = event(file);
-    inputEvent.target.value = "selected";
+    Object.defineProperty(inputEvent.target, "value", { value: "selected", writable: true });
     await act(async () => { await result.current.handleCsfUpload(inputEvent); });
     expect(inputEvent.target.value).toBe("");
     await act(async () => { await result.current.handleCsfUpload(event(file)); });
