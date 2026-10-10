@@ -12,20 +12,26 @@ import { pathToFileURL } from 'node:url';
 import { constants } from 'node:os';
 
 export const MEMORY_METHOD = Object.freeze({
-  metric: 'discovered-process-tree-rss-sum-sampled', version: 2,
+  metric: 'discovered-process-tree-rss-sum-sampled', version: 3,
   source: 'linux-proc-status-VmRSS', intervalMs: 250,
   maxGapMs: 1000, maxSampleMs: 50, maxProcesses: 512, maxTasks: 4096,
+  exitVerificationMs: 25, exitPollMs: 1, exitMaxChecks: 26,
   scope: 'command-and-discovered-descendants-excluding-sensor',
 });
 const gone = (error) => ['ENOENT', 'ESRCH'].includes(error.code);
 const sensorError = (code) => Object.assign(new Error(code), { code });
 const positive = (value) => Number.isSafeInteger(value) && value > 0;
+const terminal = (state) => state === 'Z' || state === 'X';
+const pauseWord = new Int32Array(new SharedArrayBuffer(4));
+// Only diagnostics built here can cross into evidence, never arbitrary error
+// fields/messages from an injected reader. No PIDs, names, paths or env values.
+const exitDiagnostics = new WeakMap();
 
 // Parse only identity fields, never retain the executable name or command line.
 export function parseIdentity(stat) {
   const fields = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/);
   const identity = { parent: Number(fields[1]), start: fields[19], state: fields[0] };
-  if (!Number.isSafeInteger(identity.parent) || !/^\d+$/.test(identity.start ?? '')) throw sensorError('INVALID_PROC_STAT');
+  if (!Number.isSafeInteger(identity.parent) || !/^\d+$/.test(identity.start ?? '') || !/^[RSDTtZXIP]$/.test(identity.state)) throw sensorError('INVALID_PROC_STAT');
   return identity;
 }
 
@@ -33,13 +39,106 @@ export function parseIdentity(stat) {
  * Known descendants stay tracked after reparenting; start ticks prevent PID reuse.
  * Kernel counters and tree discovery are non-atomic and may miss short-lived forks.
  */
-export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.readdirSync, now = () => performance.now() } = {}) {
+export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.readdirSync, now = () => performance.now(), pause = (ms) => Atomics.wait(pauseWord, 0, 0, ms) } = {}) {
   const known = new Map([[rootPid, null]]);
   return () => {
     const started = now();
     const queue = [...known.keys()];
     const seen = new Set();
     let rssBytes = 0; let processCount = 0; let taskCount = 0; let exitRaces = 0;
+    let exitVerificationCount = 0; let exitVerificationWallMs = 0; let lastExitVerification = null;
+    const checkBudget = () => {
+      if (now() - started > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
+    };
+    const tasks = (pid) => {
+      checkBudget();
+      const tids = list(`/proc/${pid}/task`).filter((tid) => /^\d+$/.test(tid));
+      taskCount += tids.length;
+      if (!tids.length) throw sensorError('EMPTY_TASK_LIST');
+      if (taskCount > MEMORY_METHOD.maxTasks) throw sensorError('TASK_BUDGET_EXCEEDED');
+      return tids;
+    };
+    const confirmExit = (pid, expectedStart) => {
+      const begin = now();
+      const trace = [];
+      const result = (outcome) => {
+        const elapsedMs = now() - begin;
+        if (outcome === 'terminal' || outcome === 'gone') {
+          checkBudget();
+          if (elapsedMs > MEMORY_METHOD.exitVerificationMs) throw sensorError('MISSING_RSS');
+        }
+        return { outcome, elapsedMs, checks: trace.length, trace };
+      };
+      let outcome = 'read-error';
+      try {
+        for (let check = 0; check < MEMORY_METHOD.exitMaxChecks; check++) {
+          checkBudget();
+          if (now() - begin > MEMORY_METHOD.exitVerificationMs) { outcome = 'unconfirmed'; throw sensorError('MISSING_RSS'); }
+          let raw;
+          try { raw = read(`/proc/${pid}/stat`, 'utf8'); }
+          catch (error) { if (gone(error)) return result('gone'); throw error; }
+          const identity = parseIdentity(raw);
+          if (identity.start !== expectedStart) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
+          const flags = Number(raw.slice(raw.lastIndexOf(')') + 2).trim().split(/\s+/)[6]);
+          if (!Number.isSafeInteger(flags) || flags < 0) throw sensorError('INVALID_PROC_STAT');
+          const point = { atMs: now() - begin, state: identity.state, exitFlag: Boolean(flags & 4), nonTerminalTasks: null, stableTasks: null };
+          trace.push(point);
+          if (terminal(identity.state)) {
+            // A zombie leader can have live threads. Verify the entire TGID,
+            // re-enumerate it, then recheck every remaining task and TGID identity.
+            const identities = new Map();
+            const liveTasks = new Set();
+            point.nonTerminalTasks = 0;
+            for (const tid of tasks(pid)) {
+              checkBudget();
+              try {
+                const task = Number(tid) === pid ? identity : parseIdentity(read(`/proc/${pid}/task/${tid}/stat`, 'utf8'));
+                identities.set(tid, task.start);
+                if (!terminal(task.state)) liveTasks.add(tid);
+              } catch (error) { if (!gone(error)) throw error; }
+            }
+            point.stableTasks = true;
+            for (const tid of tasks(pid)) {
+              checkBudget();
+              if (!identities.has(tid)) { point.stableTasks = false; continue; }
+              try {
+                const task = parseIdentity(read(Number(tid) === pid ? `/proc/${pid}/stat` : `/proc/${pid}/task/${tid}/stat`, 'utf8'));
+                if (task.start !== identities.get(tid)) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
+                if (!terminal(task.state)) liveTasks.add(tid);
+              } catch (error) { if (!gone(error)) throw error; }
+            }
+            let finalIdentity;
+            try { finalIdentity = parseIdentity(read(`/proc/${pid}/stat`, 'utf8')); }
+            catch (error) { if (gone(error)) return result('gone'); throw error; }
+            if (finalIdentity.start !== expectedStart) { outcome = 'pid-reused'; throw sensorError('PID_REUSED'); }
+            point.nonTerminalTasks = liveTasks.size;
+            checkBudget();
+            if (now() - begin <= MEMORY_METHOD.exitVerificationMs && terminal(finalIdentity.state) && point.nonTerminalTasks === 0 && point.stableTasks) return result('terminal');
+          }
+          const remaining = Math.min(MEMORY_METHOD.exitVerificationMs - (now() - begin), MEMORY_METHOD.maxSampleMs - (now() - started));
+          if (remaining <= 0) break;
+          pause(Math.min(MEMORY_METHOD.exitPollMs, remaining));
+        }
+        outcome = 'unconfirmed';
+        throw sensorError('MISSING_RSS');
+      } catch (error) {
+        // Missing task paths alone never prove TGID exit: recheck its identity.
+        if (gone(error)) {
+          try {
+            if (parseIdentity(read(`/proc/${pid}/stat`, 'utf8')).start !== expectedStart) { outcome = 'pid-reused'; error = sensorError('PID_REUSED'); }
+            else error = sensorError('MISSING_RSS');
+          } catch (again) { if (gone(again)) return result('gone'); error = again; }
+        }
+        if (error.code === 'MISSING_RSS') outcome = 'unconfirmed';
+        exitDiagnostics.set(error, result(outcome));
+        throw error;
+      }
+    };
+    const removeVerifiedExit = (pid, identity) => {
+      const diagnostic = confirmExit(pid, identity.start);
+      known.delete(pid); exitRaces++; exitVerificationCount++;
+      exitVerificationWallMs += diagnostic.elapsedMs; lastExitVerification = diagnostic;
+    };
     for (let cursor = 0; cursor < queue.length; cursor++) {
       if (now() - started > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
       const pid = queue[cursor];
@@ -54,26 +153,18 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
         // Newly discovered PIDs must still belong to the observed tree.
         if (previous === undefined && !known.has(identity.parent)) throw sensorError('UNVERIFIED_DESCENDANT');
         known.set(pid, identity.start);
-        if (identity.state === 'Z' || identity.state === 'X') { known.delete(pid); continue; }
+        if (terminal(identity.state)) { removeVerifiedExit(pid, identity); continue; }
         const status = read(`/proc/${pid}/status`, 'utf8');
         const match = /^VmRSS:\s+(\d+) kB$/m.exec(status);
         if (!match) {
-          // A userspace process can exit after the first stat read and lose
-          // its mm/VmRSS before status is read. Verify its generation/state:
-          // never turn an unreadable or still-live process into zero RSS.
-          const after = parseIdentity(read(`/proc/${pid}/stat`, 'utf8'));
-          if (after.start !== identity.start) throw sensorError('PID_REUSED');
-          if (after.state === 'Z' || after.state === 'X') { known.delete(pid); exitRaces++; continue; }
-          throw sensorError('MISSING_RSS');
+          removeVerifiedExit(pid, identity);
+          continue;
         }
         const rss = Number(match[1]) * 1024;
         if (!Number.isSafeInteger(rss) || rss < 0) throw sensorError('INVALID_RSS');
         // Read all threads' children: a worker spawned by a non-main thread
         // would be missed by reading only /proc/PID/task/PID/children.
-        const tids = list(`/proc/${pid}/task`).filter((tid) => /^\d+$/.test(tid));
-        if (!tids.length) throw sensorError('EMPTY_TASK_LIST');
-        taskCount += tids.length;
-        if (taskCount > MEMORY_METHOD.maxTasks) throw sensorError('TASK_BUDGET_EXCEEDED');
+        const tids = tasks(pid);
         for (const tid of tids) {
           if (now() - started > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
           try {
@@ -103,7 +194,7 @@ export function createTreeSampler(rootPid, { read = fs.readFileSync, list = fs.r
     }
     const durationMs = now() - started;
     if (durationMs > MEMORY_METHOD.maxSampleMs) throw sensorError('SAMPLE_BUDGET_EXCEEDED');
-    return { rssBytes, processCount, taskCount, exitRaces, durationMs };
+    return { rssBytes, processCount, taskCount, exitRaces, durationMs, exitVerificationCount, exitVerificationWallMs, lastExitVerification };
   };
 }
 
@@ -135,6 +226,7 @@ export async function measureCommand(command, {
     peakProcessCount: 0, exitRaces: 0, maxObservedGapMs: 0,
     samplingWallMs: 0, maxSampleDurationMs: 0, elapsedMs: 0,
     sensorCpuMicros: 0, sensorMaxRssBytes: null,
+    exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null,
     commandExit: null, cancelledSignal: null, cleanupRequired: false,
     limits: ['Not a continuous peak; short-lived processes and between-sample peaks may be missed.',
       'RSS sums count shared pages more than once; proc RSS counters/tree reads are approximate and non-atomic.',
@@ -158,11 +250,15 @@ export async function measureCommand(command, {
     report.maxObservedGapMs = Math.max(report.maxObservedGapMs, at - lastSampleAt);
     if (at - lastSampleAt > MEMORY_METHOD.maxGapMs) fail('SAMPLING_GAP_EXCEEDED');
     lastSampleAt = at;
+    const sensingStarted = performance.now();
     try {
       const value = sampler();
       report.samplingWallMs += value.durationMs;
       report.maxSampleDurationMs = Math.max(report.maxSampleDurationMs, value.durationMs);
       report.exitRaces += value.exitRaces;
+      report.exitVerificationCount += value.exitVerificationCount;
+      report.exitVerificationWallMs += value.exitVerificationWallMs;
+      if (value.lastExitVerification) report.lastExitVerification = value.lastExitVerification;
       if (value.processCount > 0) {
         report.sampleCount++;
         report.peakProcessCount = Math.max(report.peakProcessCount, value.processCount);
@@ -170,9 +266,18 @@ export async function measureCommand(command, {
       }
       return value;
     } catch (error) {
+      const failedDuration = performance.now() - sensingStarted;
+      report.samplingWallMs += failedDuration;
+      report.maxSampleDurationMs = Math.max(report.maxSampleDurationMs, failedDuration);
       // No paths/messages: only a bounded, allowlisted sensor failure category.
       const allowed = ['SAMPLE_BUDGET_EXCEEDED', 'PROCESS_BUDGET_EXCEEDED', 'TASK_BUDGET_EXCEEDED', 'PID_REUSED', 'UNVERIFIED_ROOT', 'UNVERIFIED_DESCENDANT', 'EMPTY_TASK_LIST', 'CHILD_DISCOVERY_UNAVAILABLE', 'MISSING_RSS', 'INVALID_RSS', 'INVALID_PROC_STAT', 'INVALID_CHILD_PID'];
       fail(allowed.includes(error.code) ? error.code : 'PROC_READ_FAILED');
+      const diagnostic = exitDiagnostics.get(error);
+      if (diagnostic) {
+        report.exitVerificationCount++;
+        report.exitVerificationWallMs += diagnostic.elapsedMs;
+        report.lastExitVerification = diagnostic;
+      }
       sampler = null;
       clearInterval(timer);
     }

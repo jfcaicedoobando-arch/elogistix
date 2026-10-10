@@ -23,7 +23,7 @@ function makeSample(count: number, id = count) {
   primary.jobs.total_count++;
   const measurementId = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
   return {
-    memoryReports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, measurementId: measurementId(index), run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, method: { ...MEMORY_METHOD }, status: 'complete', errors: [] as string[], commandExit: { code: 0, signal: null }, cancelledSignal: null, cleanupRequired: false, sampleCount: 361, peakRssBytes: 500_000_000, peakProcessCount: 4, elapsedMs: 91_000, samplingWallMs: 300, maxSampleDurationMs: 3, maxObservedGapMs: 260, sensorCpuMicros: 200_000, sensorMaxRssBytes: 40_000_000, exitRaces: 0 })),
+    memoryReports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, measurementId: measurementId(index), run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, method: { ...MEMORY_METHOD }, status: 'complete', errors: [] as string[], commandExit: { code: 0, signal: null }, cancelledSignal: null, cleanupRequired: false, sampleCount: 361, peakRssBytes: 500_000_000, peakProcessCount: 4, elapsedMs: 91_000, samplingWallMs: 300, maxSampleDurationMs: 3, maxObservedGapMs: 260, sensorCpuMicros: 200_000, sensorMaxRssBytes: 40_000_000, exitRaces: 0, exitVerificationCount: 0, exitVerificationWallMs: 0, lastExitVerification: null as null | { outcome: string; elapsedMs: number; checks: number; trace: unknown[] } })),
     label: `sample-${id}`, shardCount: count, maxParallel: count, loadClass: 'isolated', expectedWorkflows: ['CI'], runs: [primary],
     reports: Array.from({ length: count }, (_, index) => ({ schemaVersion: 1, sha, memoryMeasurementId: measurementId(index), treeDigest: 'catalog', status: 'passed', unhandledErrors: 0, run: { id: String(id), attempt: '1', event: 'workflow_dispatch' }, shard: { index: index + 1, total: count, maxParallel: count }, environment, cacheHit: true, wallTimeMs: 90_000, discovered: files.map(({ path, project }) => ({ path, project })), selected: files.filter((_, i) => i % count === index).map(({ path, project }) => ({ path, project })), files: files.filter((_, i) => i % count === index) })),
   };
@@ -170,6 +170,27 @@ describe('comparable 5/8 evidence', () => {
 
 
 describe('memory evidence required for promotion samples, independent from functional CI', () => {
+  it.each(['live-thread', 'live-leader', 'unstable', 'empty', 'late', 'bad-state', 'old-method', 'underreported-time'])('rejects contradictory %s exit diagnostics', (change) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    const point = { atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true };
+    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+    memory.lastExitVerification = { outcome: 'terminal', elapsedMs: 2, checks: 1, trace: [point] };
+    if (change === 'live-thread') point.nonTerminalTasks = 1;
+    if (change === 'live-leader') point.state = 'R';
+    if (change === 'unstable') point.stableTasks = false;
+    if (change === 'empty') { memory.lastExitVerification.trace = []; memory.lastExitVerification.checks = 0; }
+    if (change === 'late') point.atMs = 3;
+    if (change === 'bad-state') point.state = 'invalid';
+    if (change === 'old-method') memory.method.version = 2;
+    if (change === 'underreported-time') memory.exitVerificationWallMs = 0;
+    expect(() => summarizeSample(sample)).toThrow(/[Mm]emory/);
+  });
+  it.each(['terminal', 'gone'])('accepts consistent %s confirmation diagnostics', (outcome) => {
+    const sample = makeSample(5); const memory = sample.memoryReports[0];
+    memory.exitVerificationCount = 1; memory.exitVerificationWallMs = 2;
+    memory.lastExitVerification = { outcome, elapsedMs: 2, checks: outcome === 'terminal' ? 1 : 0, trace: outcome === 'terminal' ? [{ atMs: 1, state: 'Z', exitFlag: true, nonTerminalTasks: 0, stableTasks: true }] : [] };
+    expect(summarizeSample(sample).memory.shards).toHaveLength(5);
+  });
   it('summarizes the maximum observed shard RSS, never a sum of runner peaks', () => {
     const sample = makeSample(5);
     sample.memoryReports[2].peakRssBytes = 800_000_000;
@@ -178,7 +199,7 @@ describe('memory evidence required for promotion samples, independent from funct
     expect(result.memory.shards).toHaveLength(5);
     expect(compareSamples([result])[0].configurations[5].shardPeakRssMaxBytes).toEqual({ p50: 800_000_000, p95: 800_000_000 });
   });
-  it.each(['missing', 'duplicate', 'unavailable', 'incomplete', 'running', 'errors', 'sha', 'attempt', 'run', 'shard', 'id', 'method', 'zero', 'parent-only', 'gap', 'duration', 'window', 'cancelled', 'leaked'])('rejects %s memory evidence', (change) => {
+  it.each(['missing', 'duplicate', 'unavailable', 'incomplete', 'running', 'errors', 'sha', 'attempt', 'run', 'shard', 'id', 'method', 'zero', 'parent-only', 'gap', 'duration', 'window', 'cancelled', 'leaked', 'pending-exit'])('rejects %s memory evidence', (change) => {
     const sample = makeSample(5);
     const memory = sample.memoryReports[0];
     if (change === 'missing') sample.memoryReports.pop();
@@ -198,6 +219,7 @@ describe('memory evidence required for promotion samples, independent from funct
     if (change === 'window') memory.elapsedMs = 200;
     if (change === 'cancelled') memory.commandExit.code = 130;
     if (change === 'leaked') memory.cleanupRequired = true;
+    if (change === 'pending-exit') { memory.exitVerificationCount = 1; memory.lastExitVerification = { outcome: 'unconfirmed', elapsedMs: 25, checks: 0, trace: [] }; }
     expect(() => summarizeSample(sample)).toThrow(/Memory|memory/);
   });
 });

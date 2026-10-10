@@ -185,12 +185,38 @@ sus hilos. No busca procesos por nombre, escanea procesos ajenos ni lee
 tras reparenting y comprueba start ticks para evitar reutilización de PID.
 Si falta `children` para un hilo vivo o no puede leer un descendiente, falla el
 sensor; **no sustituye por RSS del padre**.
-Desde la versión 2 del método, si VmRSS desaparece entre `stat` y `status`,
-se relee `stat`: sólo se considera carrera de salida si desapareció el proceso
-o la misma identidad/start ticks ya está zombie/terminada. Un proceso vivo sin
-VmRSS, otra generación de PID o un error de permisos siguen invalidando la
-muestra. Desactivar el sensor conserva ese error; no se añade un gap artificial
-por el tiempo posterior sin observación. No mezclar versiones del método.
+La versión 3 confirma la salida de forma acotada cuando desaparece VmRSS o
+el líder parece zombie/terminado. PF_EXITING y el estado del líder son sólo
+diagnóstico: pueden coexistir con otros hilos vivos del mismo proceso. Se
+relee la identidad/start ticks del TGID, se comprueban todos sus hilos, se
+re-enumeran y se vuelven a comprobar identidades/estados antes de una última
+verificación del TGID. Sólo una desaparición verificada o todo el grupo
+terminal permite retirar el proceso de esa lectura.
+
+La confirmación espera como máximo 25 ms nominales, con pausas de 1 ms y
+hasta 26 comprobaciones, incluidas dentro del presupuesto global de 50 ms y
+4.096 lecturas/listados de hilos del recorrido. No se publica la suma parcial
+mientras está pendiente. Un proceso aún vivo, un hilo activo, identidad
+cambiada, permiso denegado o confirmación agotada invalidan el muestreo. Los
+presupuestos se comprueban antes y después: una lectura/planificación que los
+exceda también invalida; no se promete interrumpir una llamada del kernel.
+La pausa consume tiempo del sampler y puede demorar brevemente la atención de
+señales, dentro de ese recorrido; no cambia la señal ni salida funcional.
+
+`exitVerificationCount`, `exitVerificationWallMs` y `lastExitVerification`
+registran el coste y el último resultado, también al fallar. El diagnóstico se
+limita a hasta 26 estados, booleano PF_EXITING, conteo de hilos no terminales,
+estabilidad del conjunto y tiempos relativos; no guarda PID, start ticks,
+rutas, nombres, argumentos ni entorno. El analizador rechaza confirmaciones
+pendientes o fuera de presupuesto incluso si el resto del sidecar afirma
+complete. Desactivar el sensor conserva el error primario, sin añadir un gap
+artificial por el tiempo posterior no observado. No mezclar versiones del método.
+
+La carrera concreta del piloto fallido no está demostrada retrospectivamente:
+sus artifacts no guardaban estado/flags en el momento del fallo. El siguiente
+piloto debe validar el diagnóstico nativo y toda la evidencia antes de cohortes.
+Fuentes: [salida de tareas Linux](https://raw.githubusercontent.com/torvalds/linux/master/kernel/exit.c)
+y [estado/memoria en proc](https://raw.githubusercontent.com/torvalds/linux/master/fs/proc/array.c).
 
 Muestrea cada 250 ms, sin lecturas solapadas; máximo 512 procesos, 4.096 hilos,
 50 ms por recorrido y gap observado máximo de 1.000 ms. Superar los límites

@@ -171,7 +171,25 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     invariant(memory.status === 'complete' && Array.isArray(memory.errors) && memory.errors.length === 0, 'Memory sensor incomplete/unavailable');
     invariant(memory.commandExit?.code === 0 && memory.commandExit.signal === null && memory.cancelledSignal === null && memory.cleanupRequired === false, 'Memory command failed/cancelled or leaked descendants');
     invariant(Number.isSafeInteger(memory.sampleCount) && memory.sampleCount >= 2 && Number.isSafeInteger(memory.peakRssBytes) && memory.peakRssBytes > 0 && Number.isSafeInteger(memory.peakProcessCount) && memory.peakProcessCount > 1, 'Missing/invalid memory samples or parent-only observation');
-    for (const field of ['elapsedMs', 'samplingWallMs', 'maxSampleDurationMs', 'maxObservedGapMs', 'sensorCpuMicros', 'sensorMaxRssBytes', 'exitRaces']) invariant(Number.isFinite(memory[field]) && memory[field] >= 0, `Invalid memory ${field}`);
+    for (const field of ['elapsedMs', 'samplingWallMs', 'maxSampleDurationMs', 'maxObservedGapMs', 'sensorCpuMicros', 'sensorMaxRssBytes', 'exitRaces', 'exitVerificationWallMs']) invariant(Number.isFinite(memory[field]) && memory[field] >= 0, `Invalid memory ${field}`);
+    invariant(Number.isSafeInteger(memory.exitVerificationCount) && memory.exitVerificationCount >= 0 && memory.exitVerificationWallMs <= memory.samplingWallMs, 'Invalid memory exit verification counters');
+    if (memory.exitVerificationCount === 0) invariant(memory.lastExitVerification === null, 'Unexpected memory exit verification');
+    else {
+      const verification = memory.lastExitVerification;
+      invariant(verification && ['terminal', 'gone'].includes(verification.outcome) && Number.isFinite(verification.elapsedMs) && verification.elapsedMs >= 0 && verification.elapsedMs <= MEMORY_METHOD.exitVerificationMs, 'Unconfirmed memory process exit');
+      invariant(memory.exitVerificationWallMs >= verification.elapsedMs, 'Memory exit verification time is inconsistent');
+      invariant(Array.isArray(verification.trace) && Number.isSafeInteger(verification.checks) && verification.checks === verification.trace.length && verification.checks <= MEMORY_METHOD.exitMaxChecks, 'Invalid memory exit verification trace');
+      let previousAt = 0;
+      for (const point of verification.trace) {
+        invariant(point && Number.isFinite(point.atMs) && point.atMs >= previousAt && point.atMs <= verification.elapsedMs && /^[RSDTtZXIP]$/.test(point.state) && typeof point.exitFlag === 'boolean', 'Invalid memory exit state/timing');
+        invariant((point.nonTerminalTasks === null || (Number.isSafeInteger(point.nonTerminalTasks) && point.nonTerminalTasks >= 0)) && (point.stableTasks === null || typeof point.stableTasks === 'boolean'), 'Invalid memory task-group diagnostic');
+        previousAt = point.atMs;
+      }
+      if (verification.outcome === 'terminal') {
+        const last = verification.trace.at(-1);
+        invariant(last && ['Z', 'X'].includes(last.state) && last.nonTerminalTasks === 0 && last.stableTasks === true, 'Memory process exit is not fully terminal');
+      }
+    }
     invariant(memory.maxObservedGapMs <= MEMORY_METHOD.maxGapMs && memory.maxSampleDurationMs <= MEMORY_METHOD.maxSampleMs, 'Memory sampling budget/gap exceeded');
     invariant(memory.elapsedMs >= report.wallTimeMs && memory.elapsedMs > 0 && memory.samplingWallMs <= memory.elapsedMs, 'Memory observation window incomplete');
   }
@@ -180,7 +198,7 @@ export function summarizeSample({ label, shardCount, maxParallel, loadClass, exp
     // Each shard has its own runner. This maximum is not a simultaneous
     // aggregate across runners, VM memory usage, or the account's peak.
     shardPeakRssMaxBytes: Math.max(...memoryReports.map((item) => item.peakRssBytes)),
-    shards: memoryReports.map((item) => ({ index: item.shard.index, peakRssBytes: item.peakRssBytes, sampleCount: item.sampleCount, peakProcessCount: item.peakProcessCount, samplingWallMs: item.samplingWallMs, sensorCpuMicros: item.sensorCpuMicros, sensorMaxRssBytes: item.sensorMaxRssBytes, maxObservedGapMs: item.maxObservedGapMs, exitRaces: item.exitRaces })).sort((a, b) => a.index - b.index),
+    shards: memoryReports.map((item) => ({ index: item.shard.index, peakRssBytes: item.peakRssBytes, sampleCount: item.sampleCount, peakProcessCount: item.peakProcessCount, samplingWallMs: item.samplingWallMs, sensorCpuMicros: item.sensorCpuMicros, sensorMaxRssBytes: item.sensorMaxRssBytes, maxObservedGapMs: item.maxObservedGapMs, exitRaces: item.exitRaces, exitVerificationCount: item.exitVerificationCount, exitVerificationWallMs: item.exitVerificationWallMs })).sort((a, b) => a.index - b.index),
   };
   const aggregators = ci.jobs.filter((job) => job.name === 'CI Success (aggregator)');
   invariant(aggregators.length === 1 && !aggregators[0].skipped, 'Missing/skipped CI Success (aggregator)');

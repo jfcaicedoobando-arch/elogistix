@@ -19,6 +19,7 @@ function stat(parent: number, start: string, state = 'S') {
   return `100 (fixture ) name) ${fields.join(' ')}`;
 }
 function fakeTree() {
+  let clock = 0;
   const files: Record<string, string> = {
     '/proc/100/stat': stat(process.pid, '1000'), '/proc/100/status': 'VmRSS: 10 kB',
     '/proc/100/task/100/children': '', '/proc/100/task/102/children': '101',
@@ -27,7 +28,7 @@ function fakeTree() {
   const reads: string[] = [];
   const read = (file: string) => { reads.push(file); if (!(file in files)) throw Object.assign(new Error('gone'), { code: 'ENOENT' }); return files[file]; };
   const list = (file: string) => file === '/proc/100/task' ? ['100', '102'] : ['101'];
-  return { files, reads, read, list };
+  return { files, reads, read, list, now: () => clock, pause: (ms: number) => { clock += ms; } };
 }
 
 describe('job-scoped process tree sampling', () => {
@@ -63,7 +64,7 @@ describe('job-scoped process tree sampling', () => {
       return fake.read(file);
     };
     expect(createTreeSampler(100, { ...fake, read })()).toMatchObject({ rssBytes: 10 * 1024, processCount: 1, exitRaces: 1 });
-    expect(childStatReads).toBe(2);
+    expect(childStatReads).toBe(4);
   });
   it.each(['ENOENT', 'ESRCH'])('handles verified disappearance %s during the missing-RSS recheck', (code) => {
     const fake = fakeTree(); let childStatReads = 0;
@@ -89,6 +90,51 @@ describe('job-scoped process tree sampling', () => {
     };
     const expected = { live: 'MISSING_RSS', 'reused-zombie': 'PID_REUSED', permission: 'permission denied', 'invalid-stat': 'INVALID_PROC_STAT' }[change];
     expect(createTreeSampler(100, { ...fake, read })).toThrow(expected);
+  });
+  it('waits a bounded time for verified whole-process exit without publishing partial RSS', () => {
+    const fake = fakeTree(); fake.files['/proc/101/status'] = 'State: R';
+    const read = (file: string) => file === '/proc/101/stat' ? stat(100, '1001', fake.now() >= 3 ? 'Z' : 'R') : fake.read(file);
+    const result = createTreeSampler(100, { ...fake, read })();
+    expect(result).toMatchObject({ rssBytes: 10 * 1024, processCount: 1, exitRaces: 1, exitVerificationCount: 1, exitVerificationWallMs: 3 });
+    expect(result.lastExitVerification).toMatchObject({ outcome: 'terminal', elapsedMs: 3, checks: 4 });
+    expect(result.lastExitVerification?.trace.map((point) => point.state)).toEqual(['R', 'R', 'R', 'Z']);
+  });
+  it.each(['S', 'Z'])('does not discard a zombie leader while another thread is %s unless the entire group is terminal', (state) => {
+    const fake = fakeTree(); fake.files['/proc/101/stat'] = stat(100, '1001', 'Z');
+    fake.files['/proc/101/task/103/stat'] = stat(100, '1003', state);
+    const sample = createTreeSampler(100, { ...fake, list: (file) => file === '/proc/101/task' ? ['101', '103'] : fake.list(file) });
+    if (state === 'S') { expect(sample).toThrow('MISSING_RSS'); expect(fake.now()).toBe(25); }
+    else expect(sample()).toMatchObject({ processCount: 1, exitVerificationCount: 1, lastExitVerification: { outcome: 'terminal' } });
+  });
+  it('does not miss a live thread added between task enumerations', () => {
+    const fake = fakeTree(); let lists = 0;
+    fake.files['/proc/101/stat'] = stat(100, '1001', 'Z');
+    fake.files['/proc/101/task/103/stat'] = stat(100, '1003', 'S');
+    const list = (file: string) => file === '/proc/101/task' ? (++lists === 1 ? ['101'] : ['101', '103']) : fake.list(file);
+    expect(createTreeSampler(100, { ...fake, list })).toThrow('MISSING_RSS');
+  });
+  it('rechecks TGID generation after the terminal task group was re-enumerated', () => {
+    const fake = fakeTree(); let reads = 0;
+    fake.files['/proc/101/status'] = 'State: Z';
+    const read = (file: string) => file === '/proc/101/stat' ? stat(100, ++reads === 4 ? '2000' : '1001', reads === 1 ? 'S' : 'Z') : fake.read(file);
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('PID_REUSED');
+  });
+  it('does not certify exit from PF_EXITING alone and bounds checks even if a test clock stalls', () => {
+    const fake = fakeTree(); let reads = 0; let pauses = 0;
+    fake.files['/proc/101/status'] = 'State: R';
+    const read = (file: string) => {
+      if (file === '/proc/101/stat') { reads++; const fields = stat(100, '1001', 'R').split(') '); const tail = fields.pop()!.split(' '); tail[6] = '4'; return `${fields.join(') ')}) ${tail.join(' ')}`; }
+      return fake.read(file);
+    };
+    expect(createTreeSampler(100, { ...fake, read, pause: () => { pauses++; } })).toThrow('MISSING_RSS');
+    expect(pauses).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks);
+    expect(reads).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks + 1);
+  });
+  it('keeps deferred classification inside the existing overall sample budget', () => {
+    const fake = fakeTree(); fake.files['/proc/101/status'] = 'State: S';
+    const read = (file: string) => { if (file === '/proc/100/status') fake.pause(40); return fake.read(file); };
+    expect(createTreeSampler(100, { ...fake, read })).toThrow('MISSING_RSS');
+    expect(fake.now()).toBeLessThanOrEqual(MEMORY_METHOD.maxSampleMs);
   });
   it('rejects malformed counters, unverified descendants and exceeded sampling budgets', () => {
     const fake = fakeTree(); fake.files['/proc/101/status'] = 'VmSize: 100 kB';
@@ -164,6 +210,19 @@ describe.runIf(process.platform === 'linux')('transparent command wrapper', () =
     });
     expect(result.code).toBe(0);
     expect(result.report).toMatchObject({ status: 'unavailable', errors: ['MISSING_RSS', 'NO_MEMORY_SAMPLES'], maxObservedGapMs: 10, elapsedMs: 100_000 });
+  });
+  it('records bounded non-sensitive state diagnostics when a live process never confirms exit', async () => {
+    const result = await measureCommand(command('setTimeout(()=>{},150)'), {
+      env: environment(temporary()),
+      samplerFactory: (rootPid) => createTreeSampler(rootPid, { read: (file, encoding) => file === `/proc/${rootPid}/status` ? 'State: S' : fs.readFileSync(file, encoding as BufferEncoding) }),
+    });
+    expect(result.code).toBe(0);
+    expect(result.report).toMatchObject({ status: 'unavailable', lastExitVerification: { outcome: 'unconfirmed' } });
+    const diagnostic = result.report.lastExitVerification as { elapsedMs: number; checks: number; trace: object[] };
+    expect(diagnostic.checks).toBeLessThanOrEqual(MEMORY_METHOD.exitMaxChecks);
+    expect(diagnostic.trace.length).toBe(diagnostic.checks);
+    expect(JSON.stringify(diagnostic)).not.toMatch(/pid|environ|cmdline|\/proc|startTicks/i);
+    expect(Number(result.report.samplingWallMs)).toBeGreaterThanOrEqual(diagnostic.elapsedMs);
   });
   it('does not mistake spawn failure for functional success', async () => {
     const result = await measureCommand(['/nonexistent/ci-memory-command'], { env: environment(temporary()) });
