@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { crmPricingKeys } from "@/features/crm/queryKeys.performance";
 import type { SolicitudPricingRow } from "@/features/crm/services/pricing/tiposPricing";
@@ -41,7 +42,11 @@ const tarifa: TarifaRespuestaRow = {
   transit_time_dias: null, vigente_hasta: null, agente: { nombre: "Agente nuevo" }, naviera: null, tipo: null, ruta: null,
 };
 let client: QueryClient;
-const view = (estado = "enviada") => <QueryClientProvider client={client}><SolicitudPricingDetalle solicitud={{ ...solicitud, estado }} /></QueryClientProvider>;
+const view = (estado = "enviada") => (
+  <MemoryRouter>
+    <QueryClientProvider client={client}><SolicitudPricingDetalle solicitud={{ ...solicitud, estado }} /></QueryClientProvider>
+  </MemoryRouter>
+);
 async function flush() { await act(async () => { await vi.advanceTimersByTimeAsync(1); }); }
 
 beforeEach(() => {
