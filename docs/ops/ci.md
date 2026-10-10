@@ -1,7 +1,7 @@
 # CI de Libre Carga
 
 Fuente de verdad: `.github/workflows/` y `.github/actions/`.
-Revisado el **2026-10-05**. Esta guía no configura protección de rama.
+Workflows revisados el **2026-10-10**. Esta guía no configura protección de rama.
 
 ## CI principal
 
@@ -11,7 +11,7 @@ El agregador comprueba omisiones válidas, no las presenta como tests pasados.
 
 | Job | Trabajo |
 | --- | --- |
-| `Detectar áreas` | Clasificación del diff |
+| `Detectar áreas` | Clasificación del diff y actionlint cuando cambia su configuración |
 | `ESLint` | Lint `--max-warnings=0`, caché por contenido |
 | `Typecheck · guards DB · build · Deno` | Steps condicionados por área |
 | `Vitest shard 1/5` … `5/5` | Cinco shards de la suite normal |
@@ -29,6 +29,11 @@ correr en paralelo.
 Bun **1.4.0** vía `setup-bun`. Cada job tiene instalación/caché propia;
 `node_modules` no se comparte en memoria entre runners.
 Sin caché: lockfile congelado, `--ignore-scripts`.
+La acción compartida fija Node **22.22.0**, con caché por SO/arquitectura/runtime.
+SQL-only conocido omite lint/typecheck/build/PDF, pero conserva todos los shards
+Vitest por sus contratos SQL y los guards DB. Los paths desconocidos conservan
+frontend activo. Actionlint vive en el detector (ya no tiene workflow separado)
+y cualquier fallo bloquea el agregador; también corre en dispatch/fallback.
 
 ### Deno: CLI de pruebas vs. runtime desplegado
 
@@ -70,15 +75,23 @@ Esto no cambia el CLI del workflow ni agrega otro pipeline. Ver
 | --- | --- | --- |
 | `gitleaks.yml` | PR, push main, manual | Secretos |
 | `rls-tests.yml` | PR/push por rutas DB, manual | Postgres efímero y reglas DB |
-| `actionlint.yml` | Rutas workflows/actions, manual | Actions |
 | `dependency-review.yml` | PR por rutas configuradas | Dependencias |
 | `codeql.yml` | Lunes 06:00 UTC y manual | JavaScript/TypeScript |
 | `e2e.yml` | Sólo manual | Playwright/provisioning/staging |
 | `post-deploy-smoke.yml` | Sólo manual | Smoke del destino seleccionado |
+| `isolated-ui-audit.yml` | PR por rutas de UI/configuración, manual | 28 casos sintéticos sin backend |
+| `pricing-rpc-bounded.yml` | PR por rutas del harness, manual | Baseline congelado y candidato CRM |
+| `pricing-rpc-authenticated.yml` | PR por rutas del harness, manual | Roles autenticados y compatibilidad |
+| `test-diagnostics.yml` | Sólo manual | Diagnósticos PDF/visuales |
 
 Consultar filtros exactos en YAML. E2E contiene mutadores; smoke tampoco
 debe suponerse read-only. Confirmar destino/efectos antes del dispatch.
 Estos workflows no publican automáticamente frontend en Lovable.
+E2E serializa todas las ramas en `e2e-shared-fixtures`, incluyendo provisioning,
+sin cancelar el run activo por otro dispatch. GitHub puede sustituir un run
+pendiente: no es una cola FIFO. Los jobs dentro del mismo run mantienen su
+paralelismo. El smoke de duplicación exige HTTP 404, P0002 y el mensaje canónico
+para el UUID inexistente; errores de autenticación/proxy no cuentan como éxito.
 
 ### Cobertura de mantenimiento de dependencias
 
@@ -104,7 +117,10 @@ PostgreSQL **17.9 pinneado por digest**, cliente 17:
 4. Baseline antes de fixtures.
 5. Guards bloqueantes del manifiesto.
 6. Suites `test_rls_*.sql`, aisladas `BEGIN … ROLLBACK`.
-7. Concurrencia de cotización ganadora.
+7. Concurrencia de cotización ganadora, cobros y factura manual.
+
+Los filtros incluyen `scripts/ci/concurrencia-cobro.sh` y todas las fixtures
+de `scripts/ci/fixtures/`, tanto en PR como en push a main.
 
 Logs/diff al fallar, retención tres días.
 Ver [baseline](baseline-esquema.md) y
