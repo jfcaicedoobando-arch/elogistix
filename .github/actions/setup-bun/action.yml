@@ -1,5 +1,9 @@
 name: "Setup Bun + Install"
 description: "Setup Bun, restore install cache, and run `bun install --frozen-lockfile`."
+outputs:
+  cache-hit:
+    description: "Exact node_modules cache hit, false if repaired/reinstalled."
+    value: ${{ steps.cache-node-modules.outputs.cache-hit == 'true' && steps.verify-cache.outputs.reinstalled != 'true' }}
 runs:
   using: "composite"
   steps:
@@ -50,6 +54,7 @@ runs:
       run: bun install --frozen-lockfile --ignore-scripts
 
     - name: Verify node_modules (cache hit)
+      id: verify-cache
       if: steps.cache-node-modules.outputs.cache-hit == 'true'
       shell: bash
       # Red de seguridad: si el cache trajo un árbol corrupto/incompleto,
@@ -57,6 +62,7 @@ runs:
       run: |
         if ! bun pm ls > /dev/null 2>&1; then
           echo "::warning::node_modules restaurado del cache no es válido; reinstalando."
+          echo "reinstalled=true" >> "$GITHUB_OUTPUT"
           rm -rf node_modules
           bun install --frozen-lockfile --ignore-scripts
         fi

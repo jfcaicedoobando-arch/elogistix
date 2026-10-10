@@ -67,7 +67,10 @@ export default defineConfig({
     // para que dashboards externos (GitHub Actions test reporter, Jenkins, etc.)
     // puedan consumir resultados estructurados. Default + junit en paralelo para
     // no perder el output legible en consola.
-    reporters: process.env.CI ? ["default", "junit"] : ["default"],
+    reporters: [
+      ...(process.env.CI ? ["default", "junit"] : ["default"]),
+      ...(process.env.CI_EVIDENCE_DIR ? ["./scripts/ci/vitest-evidence-reporter.ts"] : []),
+    ],
     outputFile: { junit: "./reports/junit.xml" },
 
     coverage: {

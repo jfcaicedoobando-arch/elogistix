@@ -18,6 +18,13 @@ PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 
 mkdir -p "$LOG_DIR"
 
+# Fail before opening psql if a newly added test cannot be selected by this runner.
+mapfile -t UNROUTED < <(find "$DIR" -maxdepth 1 -name 'test_*.sql' ! -name 'test_rls_*.sql' | LC_ALL=C sort)
+if [ "${#UNROUTED[@]}" -gt 0 ]; then
+  printf '::error::SQL test sin runner RLS: %s\n' "${UNROUTED[@]}"
+  exit 1
+fi
+
 mapfile -t SUITES < <(find "$DIR" -maxdepth 1 -name 'test_rls_*.sql' | LC_ALL=C sort)
 
 if [ "${#SUITES[@]}" -eq 0 ]; then
@@ -44,18 +51,24 @@ fi
 
 echo "Ejecutando ${#SUITES[@]} suites RLS…"
 
+printf 'path\tstatus\tdurationMs\n' > "$LOG_DIR/execution.tsv"
 fallidas=()
 for suite in "${SUITES[@]}"; do
   nombre="$(basename "$suite" .sql)"
   echo "::group::$nombre"
+  started=$(date +%s%3N)
+  status=passed
   # Cada suite corre aunque la anterior falle: un PR ve TODOS los fallos.
   if "${PSQL[@]}" -f "$suite" >"$LOG_DIR/$nombre.log" 2>&1; then
     echo "✓ $nombre"
   else
+    status=failed
     tail -n 40 "$LOG_DIR/$nombre.log"
     echo "::error::RLS suite fallida: $nombre"
     fallidas+=("$nombre")
   fi
+  elapsed=$(( $(date +%s%3N) - started ))
+  printf '%s\t%s\t%s\n' "$suite" "$status" "$elapsed" >> "$LOG_DIR/execution.tsv"
   echo "::endgroup::"
 done
 
