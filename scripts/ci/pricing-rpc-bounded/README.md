@@ -18,6 +18,11 @@ constructor keyword in a FOREACH expression. Relation lists, conditions, all 30
 notices, rollback logic and ACL checks are unchanged. `provenance.json` records
 the current six SQL hashes and the original/corrected assertion hashes. The first
 CI attempt failed before C01 on this syntax; it is not a runtime pass.
+The syntax-corrected CI attempt then passed 26 notices and stopped at L04's
+concepts-only update synchronization check. L04 retains its expected 300 amounts
+and now adds synthetic scalar diagnostics to its failure message. Normal wizard
+sales saves also send subtotal and currency, so this narrower database probe does
+not by itself establish a failure of that frontend save path.
 `SHA256SUMS` covers every bundle input except itself;
 both runner-side validation and container-side verification fail on mismatches.
 Hashes detect unintended changes, not malicious changes to an entire reviewed PR.

@@ -24,11 +24,11 @@
     },
     {
       "path": "assertions.sql",
-      "sha256": "ba9836667f8b20886d73e75c8cda911f303792511b9aa2ca483a6e35351b3f75"
+      "sha256": "6a1933e7ff623bd47c52c65e4f0ba32ce524d9522e127dbf2c75b192b54975ed"
     }
   ],
   "sql_modified_by_ci_port": true,
-  "runtime_result": "Original assertions failed before C01 in PostgreSQL 17.9 CI run 38009229871; corrected assertions have not yet run.",
+  "runtime_result": "Syntax-corrected assertions reached 26 of 30 notices in PostgreSQL 17.9 CI run 38009769073, then failed L04; diagnostic-only revision has not yet run.",
   "reviewed_repository_conventions": {
     "repository": "jfcaicedoobando-arch/elogistix",
     "ref": "main",
@@ -50,6 +50,17 @@
       "triggering_ci_run_id": "38009229871",
       "triggering_runtime_error": "psql:/bundle/assertions.sql:31: ERROR: syntax error at or near \"[\"",
       "corrected_sql_runtime_executed": false
+    }
+  ],
+  "ci_assertion_diagnostics": [
+    {
+      "date_utc": "2026-10-10",
+      "source_assertions_sha256": "ba9836667f8b20886d73e75c8cda911f303792511b9aa2ca483a6e35351b3f75",
+      "diagnostic_assertions_sha256": "6a1933e7ff623bd47c52c65e4f0ba32ce524d9522e127dbf2c75b192b54975ed",
+      "change": "Add JSON DETAIL with expected and observed synthetic scalar amounts and lineage match to the existing L04 exception.",
+      "scope": "Diagnostic only; input UPDATE, both failure predicates, expected 300 amounts, exception severity, notices, rollback and ACL checks unchanged.",
+      "triggering_ci_run_id": "38009769073",
+      "diagnostic_runtime_executed": false
     }
   ]
 }

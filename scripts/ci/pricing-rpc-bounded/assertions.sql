@@ -424,7 +424,16 @@ UPDATE public.cotizaciones SET conceptos_venta='[{"descripcion":"Synthetic revis
  WHERE id='10000000-0000-4000-8000-000000000080';
 DO $assert$ BEGIN
  IF NOT EXISTS(SELECT 1 FROM public.cotizaciones WHERE id='10000000-0000-4000-8000-000000000080' AND subtotal=300 AND pricing_solicitud_id='10000000-0000-4000-8000-000000000050')
- OR NOT EXISTS(SELECT 1 FROM public.crm_oportunidades WHERE id='10000000-0000-4000-8000-000000000040' AND monto_estimado=300) THEN RAISE EXCEPTION 'L04: ordinary save lost lineage or failed recalculation'; END IF;
+ OR NOT EXISTS(SELECT 1 FROM public.crm_oportunidades WHERE id='10000000-0000-4000-8000-000000000040' AND monto_estimado=300) THEN
+  RAISE EXCEPTION 'L04: ordinary save lost lineage or failed recalculation'
+    USING DETAIL = jsonb_build_object(
+      'expected_subtotal', 300,
+      'expected_opportunity_amount', 300,
+      'quotation_subtotal', (SELECT subtotal FROM public.cotizaciones WHERE id='10000000-0000-4000-8000-000000000080'),
+      'pricing_lineage_matches', (SELECT pricing_solicitud_id='10000000-0000-4000-8000-000000000050'::uuid FROM public.cotizaciones WHERE id='10000000-0000-4000-8000-000000000080'),
+      'opportunity_amount', (SELECT monto_estimado FROM public.crm_oportunidades WHERE id='10000000-0000-4000-8000-000000000040')
+    )::text;
+ END IF;
  RAISE NOTICE 'PASS L04: authenticated ordinary save recalculates totals and opportunity amount without changing lineage';
 END $assert$;
 UPDATE public.cotizaciones SET estado='Enviada' WHERE id='10000000-0000-4000-8000-000000000080';
