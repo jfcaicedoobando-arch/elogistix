@@ -17,6 +17,14 @@ No deducir “cuatro forks activos” ni RSS multiplicando proyectos por workers
 la concurrencia efectiva se mide. Cinco runners reducen latencia pero pueden
 aumentar minutos totales facturados.
 
+## Experimento controlado 5/8
+
+El [procedimiento reproducible](ci-shard-benchmark.md) añade configuración manual,
+análisis de metadatos Actions y comprobación de evidencia completa por archivo.
+El default permanece en cinco hasta validar latencia del conjunto, consumo,
+estabilidad y presión dentro de los 20 jobs compartidos. Todavía no hay un
+resultado comparativo 5/8 del mismo SHA que autorice promover ocho.
+
 ## Medir antes de ajustar
 
 Muestra de tres ejecuciones verdes observadas el 2026-10-10 (duración del
