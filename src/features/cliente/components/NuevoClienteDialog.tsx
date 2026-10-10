@@ -33,10 +33,12 @@ function textoGuardar(isSaving: boolean, clienteCreado: boolean): string {
   return clienteCreado ? "Reintentar constancia" : "Crear cliente";
 }
 
-function descripcionDocumentos(clienteCreado: boolean): string {
+function descripcionDocumentos(clienteCreado: boolean, tieneCsf: boolean): string {
   return clienteCreado
     ? "El cliente ya se creó. Falta guardar la constancia; reintenta sin crear un duplicado."
-    : "Adjunta la CSF en PDF. Los demás documentos se suben después desde el detalle del cliente.";
+    : tieneCsf
+      ? "Tu CSF ya está adjunta. Se guardará en el expediente al crear el cliente; no necesitas subirla otra vez."
+      : "Adjunta la CSF en PDF. Los demás documentos se suben después desde el detalle del cliente.";
 }
 
 function descripcionSalida(clienteCreado: boolean): string {
@@ -58,6 +60,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
     );
 
   const intentarCerrar = () => {
+    if (c.isSaving) return;
     if (hayCambios) setConfirmarSalida(true);
     else c.resetAndClose();
   };
@@ -70,11 +73,11 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
     fileInputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
   };
 
-  const prefilled = !!c.csfFile;
+  const prefilled = c.csfParsed;
 
-  const headerAside = prefilled ? (
+  const headerAside = c.csfFile ? (
     <div className="flex flex-col items-end gap-0.5">
-      <span className="text-2xs font-semibold uppercase tracking-wide text-success">CSF detectada</span>
+      <span className="text-2xs font-semibold uppercase tracking-wide text-success">CSF adjunta</span>
       <span className="text-xs text-muted-foreground truncate max-w-[180px]">{c.csfFile?.name}</span>
     </div>
   ) : undefined;
@@ -83,13 +86,14 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
     <>
     <FormDialogShell
       open={open}
+      busy={c.isSaving}
       onOpenChange={(abierto) => { if (!abierto) intentarCerrar(); else onOpenChange(abierto); }}
       icon={UserPlus}
       title="Nuevo cliente"
       description={
         c.step === 1
           ? "Captura los datos del cliente o sube su CSF para prellenar el formulario."
-          : "Adjunta la Constancia de Situación Fiscal; el resto del expediente puede completarse después."
+          : "Revisa la Constancia de Situación Fiscal; el resto del expediente puede completarse después."
       }
       size="lg"
       stepper={{ step: c.step, totalSteps: 2, labels: ["Datos del cliente", "Documentación"] }}
@@ -97,7 +101,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       footer={c.step === 1 ? (
         <>
           <Button variant="outline" onClick={intentarCerrar}>Cancelar</Button>
-          <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
+          <Button onClick={c.handleNext} disabled={!c.isStep1Valid || c.parsingCsf}>
             Siguiente <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </>
@@ -160,7 +164,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
           documentos={c.documentos.filter((d) => d.requerido)}
           onFileChange={c.handleFileChange}
           accept=".pdf"
-          descripcion={descripcionDocumentos(!!c.clienteCreado)}
+          descripcion={descripcionDocumentos(!!c.clienteCreado, !!c.csfFile)}
         />
       )}
     </FormDialogShell>
@@ -172,6 +176,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         confirmLabel="Descartar"
         cancelLabel="Seguir editando"
         variant="destructive"
+        confirmDisabled={c.isSaving}
         onConfirm={() => { setConfirmarSalida(false); c.resetAndClose(); }}
       />
     </>

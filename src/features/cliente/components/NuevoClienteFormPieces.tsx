@@ -41,7 +41,10 @@ export function CsfDropZone({ parsingCsf, fileName, onFile }: CsfDropZoneProps) 
         type="file"
         accept="application/pdf"
         className="hidden"
-        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          onFile(e.target.files?.[0] ?? null);
+          e.target.value = "";
+        }}
       />
       {parsingCsf ? (
         <SkeletonGroup loadingLabel="Extrayendo datos del CSF" className="flex flex-col items-center gap-2">

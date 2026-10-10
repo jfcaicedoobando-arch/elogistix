@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.824.66] - 2026-10-09
+
+- Alta de clientes: conserva la CSF seleccionada entre pasos incluso cuando falla la extracción y descarta respuestas de extracción obsoletas.
+- Bloquea envíos y descartes repetidos durante el guardado; permite reintentar la constancia sin crear otro cliente y evita callbacks tardíos tras desmontar. Agrega regresiones de CSF y ciclo de guardado. Sin migraciones ni cambios de datos.
+
 ## [13.824.65] - 2026-10-09
 
 - Pricing/cotización: separa la consulta del componente y centraliza sus claves, conservando filtros, caché y condiciones de precarga existentes.
